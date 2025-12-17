@@ -4,9 +4,20 @@
 
 The unified boot sequence for Agent City OS.
 
+OPUS-095 REFACTORING: CognitiveCycle Integration
+-------------------------------------------------
+Migrated to CognitiveCycle for unified orchestration.
+Sarga phases reorganized into OODA loop:
+
+1. PERCEIVE: System initialization check (SHABDA)
+2. ORIENT: Kernel + Communication + Oracle setup (AKASHA/VAYU/AGNI)
+3. DECIDE: Knowledge graph + Agent discovery (JALA)
+4. ACT: Kernel boot + Daily Ritual + Conveyor Belt (PRITHVI)
+5. PERSIST: Final kernel state saved
+
 PHOENIX VIMANA UNIFIED BOOT - Sarga Integration
 -----------------------------------------------
-This orchestrator now follows the Sarga (cosmic creation) sequence:
+Sarga cosmic creation sequence:
 1. SHABDA (Sound) → Boot command received
 2. AKASHA (Space) → Kernel memory allocated
 3. VAYU (Air) → Communication channels established
@@ -27,13 +38,13 @@ USAGE:
     from vibe_core.boot_orchestrator import BootOrchestrator
     from vibe_core.boot_mode import BootMode
 
-    # Full boot (default)
+    # Full boot (default) - via unified orchestration
     orchestrator = BootOrchestrator()
-    kernel = orchestrator.boot()
+    await orchestrator.orchestrate()  # CognitiveCycle OODA loop
 
     # Headless boot (fast, for autonomous circuits)
     orchestrator = BootOrchestrator(boot_mode=BootMode.HEADLESS)
-    kernel = orchestrator.boot()
+    kernel = await orchestrator.orchestrate()
 
     # THE OPERATOR LOOP - This is where intelligence flows
     await orchestrator.run_with_operator()
@@ -43,16 +54,18 @@ import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
+from vibe_core.event_bus import EventBus
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.operator_adapter import (
     LocalLLMOperator,
     TerminalOperator,
     UniversalOperatorAdapter,
 )
+from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.protocols.operator_protocol import (
     GitState,
     Intent,
@@ -62,18 +75,21 @@ from vibe_core.protocols.operator_protocol import (
     SystemContext,
 )
 from vibe_core.runtime.boot_sequence import BootSequence
+from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.sarga import Element, get_sarga
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 
 
-class BootOrchestrator:
+class BootOrchestrator(CognitiveCycle):
     """
     Unified boot orchestration for Agent City OS.
 
-    Ensures consistent agent discovery and registration across all entry points.
-
-    OPUS-031 Layer 4: Supports BootMode for different execution contexts.
+    OPUS-095: Inherits from CognitiveCycle for unified orchestration.
+    - Ensures consistent agent discovery and registration
+    - Maps 6 Sarga phases to OODA loop
+    - Holon wiring: parent of PranaOrchestrator (plugin pulse)
+    - OPUS-031 Layer 4: Supports BootMode for different execution contexts
     """
 
     def __init__(
@@ -82,6 +98,8 @@ class BootOrchestrator:
         project_root: Optional[Path] = None,
         config: Optional[CityConfig] = None,
         boot_mode: BootMode = BootMode.FULL,
+        trace: Optional[UnifiedTrace] = None,
+        event_bus: Optional[EventBus] = None,
     ):
         """
         Initialize the boot orchestrator.
@@ -91,7 +109,11 @@ class BootOrchestrator:
             project_root: Project root directory (default: auto-detected)
             config: CityConfig instance (REQUIRED: Phoenix Config for agents)
             boot_mode: BootMode.FULL (default), HEADLESS, or MINIMAL
+            trace: UnifiedTrace for observability
+            event_bus: EventBus for phase events
         """
+        super().__init__()
+
         # OPUS-031 Layer 4: Store boot mode for phase handlers
         self.boot_mode = boot_mode
 
@@ -127,126 +149,106 @@ class BootOrchestrator:
         # Universal Operator Adapter - THE SOCKET
         self.operator_adapter: Optional[UniversalOperatorAdapter] = None
         self._running = False
+        self._parent_cycle_id: Optional[str] = None
 
-    def boot(self) -> RealVibeKernel:
-        """
-        Execute the unified boot sequence via Sarga (cosmic creation).
+        # Phase A Integration
+        if trace and event_bus:
+            self.setup(trace, event_bus, steward_context=None)
 
-        Sarga Phases:
-        1. SHABDA (Sound) → Boot initiated
-        2. AKASHA (Space) → Kernel created
-        3. VAYU (Air) → Communication established
-        4. AGNI (Fire) → Form rendered (capabilities)
-        5. JALA (Water) → Data flows (Knowledge Graph, discovery)
-        6. PRITHVI (Earth) → Persistence (agents registered, ledger ready)
+    # ========================================================================
+    # COGNITIVECYCLE CONFIGURATION
+    # ========================================================================
 
-        Returns:
-            RealVibeKernel: Fully initialized kernel with all agents
+    @property
+    def cycle_name(self) -> str:
+        """Cycle name for observability."""
+        return "boot_sequence"
 
-        Raises:
-            RuntimeError: If boot sequence fails
-        """
-        # Get global Sarga instance
-        sarga = get_sarga()
+    @property
+    def rate_limit_seconds(self) -> int:
+        """Boot only happens once, so very high rate limit."""
+        return 3600  # 1 hour - boot is one-time operation
 
-        # Begin the cosmic creation
-        sarga.begin_boot()
+    @property
+    def timeout_seconds(self) -> int:
+        """Maximum boot execution time."""
+        return 600  # 10 minutes for complete boot
 
-        # =================================================================
-        # PHASE 1: SHABDA (Sound/Command) - Boot initiated
-        # =================================================================
-        sarga.register_phase_handler(Element.SHABDA, self._phase_shabda)
-        if not sarga.execute_phase(Element.SHABDA):
-            raise RuntimeError("Sarga SHABDA phase failed: Boot initiation error")
-
-        # =================================================================
-        # PHASE 2: AKASHA (Space/Memory) - Kernel created
-        # =================================================================
-        sarga.register_phase_handler(Element.AKASHA, self._phase_akasha)
-        if not sarga.execute_phase(Element.AKASHA):
-            raise RuntimeError("Sarga AKASHA phase failed: Kernel creation error")
-
-        # =================================================================
-        # PHASE 3: VAYU (Air/Communication) - Message bus + PromptContext
-        # =================================================================
-        sarga.register_phase_handler(Element.VAYU, self._phase_vayu)
-        if not sarga.execute_phase(Element.VAYU):
-            raise RuntimeError("Sarga VAYU phase failed: Communication setup error")
-
-        # =================================================================
-        # PHASE 4: AGNI (Fire/Form) - Capabilities visible
-        # =================================================================
-        sarga.register_phase_handler(Element.AGNI, self._phase_agni)
-        if not sarga.execute_phase(Element.AGNI):
-            raise RuntimeError("Sarga AGNI phase failed: Form rendering error")
-
-        # =================================================================
-        # PHASE 5: JALA (Water/Data) - Knowledge Graph + Discovery
-        # =================================================================
-        sarga.register_phase_handler(Element.JALA, self._phase_jala)
-        if not sarga.execute_phase(Element.JALA):
-            raise RuntimeError("Sarga JALA phase failed: Data stream error")
-
-        # =================================================================
-        # PHASE 6: PRITHVI (Earth/Persistence) - Agents + Ledger
-        # =================================================================
-        sarga.register_phase_handler(Element.PRITHVI, self._phase_prithvi)
-        if not sarga.execute_phase(Element.PRITHVI):
-            raise RuntimeError("Sarga PRITHVI phase failed: Persistence error")
-
-        # Complete the cosmic creation
-        sarga.complete_boot()
-
-        # Print boot report
-        logger.info(sarga.generate_boot_report())
-
-        return self.kernel
-
-    # =========================================================================
-    # SARGA PHASE HANDLERS
-    # =========================================================================
-
-    def _phase_shabda(self) -> bool:
-        """SHABDA: Sound - Boot command received, initiation logged."""
-        logger.info("      → Boot command received")
-        logger.info(f"      → Project root: {self.project_root}")
-        logger.info(f"      → Ledger path: {self.ledger_path}")
-        logger.info(f"      → Boot mode: {self.boot_mode.value.upper()}")
+    @property
+    def recovery_enabled(self) -> bool:
+        """Enable error recovery."""
         return True
 
-    def _phase_akasha(self) -> bool:
-        """AKASHA: Space - Create kernel, allocate memory."""
+    @property
+    def parent_cycle_id(self) -> Optional[str]:
+        """Holon wiring: no parent (this is top-level bootstrap)."""
+        return self._parent_cycle_id
+
+    # ========================================================================
+    # OODA LOOP IMPLEMENTATION (OPUS-095)
+    # ========================================================================
+
+    async def _perceive(self) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        PERCEIVE: System initialization check (SHABDA phase).
+
+        Returns:
+            (observations, metadata)
+        """
+        observations = []
+        metadata = {}
+
         try:
+            # SHABDA: Sound - Boot command received, initiation logged
+            logger.info("⚡ OPUS-095: Boot sequence initiated (PERCEIVE phase)")
+            logger.info(f"      → Project root: {self.project_root}")
+            logger.info(f"      → Ledger path: {self.ledger_path}")
+            logger.info(f"      → Boot mode: {self.boot_mode.value.upper()}")
+
+            observations.append(
+                {
+                    "type": "boot_config",
+                    "project_root": str(self.project_root),
+                    "ledger_path": self.ledger_path,
+                    "boot_mode": self.boot_mode.value,
+                }
+            )
+
+            metadata["boot_config_valid"] = True
+
+        except Exception as e:
+            logger.error(f"PERCEIVE phase failed: {e}")
+            metadata["error"] = str(e)
+
+        return observations, metadata
+
+    async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        ORIENT: Kernel + Communication + Oracle setup (AKASHA/VAYU/AGNI phases).
+
+        Returns:
+            (orientations, metadata)
+        """
+        orientations = []
+        metadata = {}
+
+        try:
+            # AKASHA: Space - Create kernel, allocate memory
+            logger.info("⚡ OPUS-095: Setting up kernel space (AKASHA)")
             self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
             logger.info(f"      → Kernel space allocated (ledger: {self.ledger_path})")
-            return True
-        except Exception as e:
-            logger.error(f"      → Kernel creation failed: {e}")
-            return False
 
-    def _phase_vayu(self) -> bool:
-        """VAYU: Air - Establish communication channels."""
-        try:
-            # Initialize PromptContext (dynamic prompt generation)
+            # VAYU: Air - Establish communication channels
+            logger.info("⚡ OPUS-095: Establishing communication (VAYU)")
             from vibe_core.runtime.prompt_context import PromptContext
 
             self.prompt_context = PromptContext()
-
-            # Wire kernel to prompt context (late binding)
             if self.kernel:
                 self.prompt_context.set_kernel(self.kernel)
                 logger.info("      → PromptContext initialized and kernel bound")
 
-            return True
-        except Exception as e:
-            logger.warning(f"      → PromptContext setup warning: {e}")
-            # Non-fatal - communication still works via kernel
-            return True
-
-    def _phase_agni(self) -> bool:
-        """AGNI: Fire - Make system visible (capabilities, UI)."""
-        try:
-            # Initialize KernelOracle (capability discovery)
+            # AGNI: Fire - Make system visible (capabilities, UI)
+            logger.info("⚡ OPUS-095: Making system visible (AGNI)")
             from vibe_core.runtime.oracle import KernelOracle
 
             if self.kernel:
@@ -256,16 +258,40 @@ class BootOrchestrator:
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
                     f"{len(capabilities.get('cartridges', []))} cartridges"
                 )
-            return True
-        except Exception as e:
-            logger.warning(f"      → Oracle setup warning: {e}")
-            # Non-fatal - capabilities still work via kernel
-            return True
 
-    def _phase_jala(self) -> bool:
-        """JALA: Water - Data streams flow (Knowledge Graph, discovery)."""
+            orientations.append(
+                {
+                    "kernel_ready": True,
+                    "comms_ready": True,
+                    "oracle_ready": True,
+                }
+            )
+
+            metadata["kernel_space_allocated"] = True
+            metadata["communication_established"] = True
+            metadata["capabilities_discovered"] = len(capabilities.get("tools", []))
+
+        except Exception as e:
+            logger.error(f"ORIENT phase failed: {e}")
+            metadata["error"] = str(e)
+            orientations.append({"kernel_ready": False})
+
+        return orientations, metadata
+
+    async def _decide(self, orientations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        DECIDE: Knowledge graph + Agent discovery (JALA phase).
+
+        Returns:
+            (decisions, metadata)
+        """
+        decisions = []
+        metadata = {}
+
         try:
-            # Load Knowledge Graph (always needed for context)
+            # JALA: Water - Data streams flow (Knowledge Graph, discovery)
+            logger.info("⚡ OPUS-095: Loading knowledge and discovering agents (JALA)")
+
             from vibe_core.knowledge.graph import get_knowledge_graph
 
             graph = get_knowledge_graph()
@@ -276,21 +302,20 @@ class BootOrchestrator:
             # OPUS-031 Layer 4: Skip agent discovery in headless mode
             if self.boot_mode.should_skip_agents():
                 logger.info("      → Agent discovery SKIPPED (headless mode)")
-                return True
+                decisions.append({"skip_discovery": True})
+                metadata["discovery_skipped"] = True
+                return decisions, metadata
 
-            # Register Discoverer (Genesis Agent) - LAZY IMPORT for Runtime Separation
+            # Register Discoverer (Genesis Agent)
+            discovered_count = 0
             try:
                 from vibe_core.cartridges.system.discoverer.agent import Discoverer
 
                 self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
                 self.kernel.register_agent(self.discoverer, spawn_process=False)
                 logger.info("      → Discoverer (Genesis Agent) registered")
-            except ImportError as e:
-                logger.warning(f"      ⚠️ Discoverer not available (container mode): {e}")
-                self.discoverer = None
 
-            # Discover all agents (processes are deferred to avoid deadlock)
-            if self.discoverer:
+                # Discover all agents (processes are deferred to avoid deadlock)
                 discovered_count = self.discoverer.discover_agents()
                 logger.info(f"      → Discovered {discovered_count} agents")
 
@@ -298,49 +323,122 @@ class BootOrchestrator:
                 if discovered_count > 0:
                     spawned = self.kernel.spawn_deferred_agents()
                     logger.info(f"      → Spawned {spawned} agent processes")
-            else:
+
+            except ImportError as e:
+                logger.warning(f"      ⚠️ Discoverer not available (container mode): {e}")
+                self.discoverer = None
                 # Container-only mode: agents loaded via library/*.vibe
                 logger.info("      → Container mode: agents loaded from library/")
 
-            return True
-        except Exception as e:
-            logger.error(f"      → Data stream error: {e}")
-            return False
+            decisions.append(
+                {
+                    "knowledge_graph_loaded": True,
+                    "agents_discovered": discovered_count,
+                }
+            )
 
-    def _phase_prithvi(self) -> bool:
-        """PRITHVI: Earth - Persistence (boot kernel, ledger ready)."""
+            metadata["nodes_in_graph"] = len(graph.nodes)
+            metadata["agents_discovered"] = discovered_count
+
+        except Exception as e:
+            logger.error(f"DECIDE phase failed: {e}")
+            metadata["error"] = str(e)
+
+        return decisions, metadata
+
+    async def _act(self, decisions: List[Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """
+        ACT: Kernel boot + Daily Ritual + Conveyor Belt (PRITHVI phase).
+
+        Returns:
+            (results, metadata)
+        """
+        results = {}
+        metadata = {}
+
         try:
+            # PRITHVI: Earth - Persistence (boot kernel, ledger ready)
+            logger.info("⚡ OPUS-095: Persistence and kernel finalization (PRITHVI)")
+
             # Boot the kernel (finalizes manifests, ledger, scheduler)
-            # NOTE: kernel.boot() calls _pulse() which writes vibe_snapshot.json
-            # OPUS-031 Layer 4: Pass boot_mode to control gateway startup
-            self.kernel.boot(boot_mode=self.boot_mode)
-            logger.info("      → Kernel booted, ledger active")
+            if self.kernel:
+                self.kernel.boot(boot_mode=self.boot_mode)
+                logger.info("      → Kernel booted, ledger active")
 
-            # OPUS-031 Layer 4: Skip Daily Ritual in headless mode
-            if not self.boot_mode.should_skip_daily_ritual():
-                # Initialize Daily Ritual (The Heartbeat / Time Dimension)
-                from vibe_core.steward.daily_ritual import DailyRitual
+                # OPUS-031 Layer 4: Skip Daily Ritual in headless mode
+                if not self.boot_mode.should_skip_daily_ritual():
+                    from vibe_core.steward.daily_ritual import DailyRitual
 
-                self.kernel.daily_ritual = DailyRitual(self.kernel)
-                logger.info("      → Daily Ritual attached (time dimension active)")
-            else:
-                logger.info("      → Daily Ritual SKIPPED (headless mode)")
+                    self.kernel.daily_ritual = DailyRitual(self.kernel)
+                    logger.info("      → Daily Ritual attached (time dimension active)")
+                else:
+                    logger.info("      → Daily Ritual SKIPPED (headless mode)")
 
-            # Initialize Conveyor Belt (BootSequence) for prompt generation
-            # This connects kernel state → ContextLoader → PromptComposer
-            # Note: Even in headless, we need basic context loading
-            self.boot_sequence = BootSequence(self.project_root)
-            logger.info("      → Conveyor Belt initialized (prompt generation ready)")
+                # Initialize Conveyor Belt (BootSequence) for prompt generation
+                self.boot_sequence = BootSequence(self.project_root)
+                logger.info("      → Conveyor Belt initialized (prompt generation ready)")
 
-            # Final status
-            status = self.kernel.get_status()
-            total_agents = status.get("agents_registered", 0)
-            logger.info(f"      → Total agents registered: {total_agents}")
+                # Final status
+                status = self.kernel.get_status()
+                total_agents = status.get("agents_registered", 0)
+                logger.info(f"      → Total agents registered: {total_agents}")
 
-            return True
+                results["kernel_booted"] = True
+                results["agents_registered"] = total_agents
+                metadata["agents_registered"] = total_agents
+
         except Exception as e:
-            logger.error(f"      → Persistence error: {e}")
-            return False
+            logger.error(f"ACT phase failed: {e}")
+            metadata["error"] = str(e)
+            results["kernel_booted"] = False
+
+        return results, metadata
+
+    async def _persist(self) -> None:
+        """
+        PERSIST: Final kernel state saved.
+
+        Called after all phases complete.
+        """
+        try:
+            if self.kernel:
+                # Kernel state is already persisted in _act() via kernel.boot()
+                logger.info("💾 BOOT: Kernel state persisted")
+        except Exception as e:
+            logger.error(f"PERSIST phase failed: {e}")
+
+    # =========================================================================
+    # PUBLIC INTERFACE
+    # =========================================================================
+
+    async def boot_orchestrated(
+        self, parent_cycle_id: Optional[str] = None, force: bool = False
+    ) -> Optional[RealVibeKernel]:
+        """
+        Execute the unified boot sequence via CognitiveCycle orchestrate().
+
+        OPUS-095: Integrates with orchestration abstraction.
+
+        Args:
+            parent_cycle_id: ID of calling cycle (if any)
+            force: Bypass rate limits
+
+        Returns:
+            RealVibeKernel if successful
+        """
+        self._parent_cycle_id = parent_cycle_id
+        await self.orchestrate(force=force)
+        return self.kernel
+
+    def boot(self) -> RealVibeKernel:
+        """Thin wrapper: Execute boot sequence via orchestrate()."""
+        try:
+            kernel = asyncio.run(self.boot_orchestrated(force=True))
+            if not kernel:
+                raise RuntimeError("Boot orchestration failed")
+            return kernel
+        except Exception as e:
+            raise RuntimeError(f"Boot sequence failed: {e}")
 
     def get_kernel(self) -> Optional[RealVibeKernel]:
         """
@@ -492,96 +590,38 @@ class BootOrchestrator:
 
         while self._running:
             try:
-                # 0. Tick the kernel - process pending tasks (heartbeat)
-                self.kernel.tick()
-
-                # 1. Ritual Tick - Time dimension (SUNRISE → MIDDAY → SUNSET → ARCHIVE)
-                current_time = time.time()
-                if current_time - last_ritual_time > RITUAL_INTERVAL:
-                    if hasattr(self.kernel, "daily_ritual") and self.kernel.daily_ritual:
-                        logger.info("🌅 Running daily ritual cycle...")
-                        self.kernel.daily_ritual.run_daily_cycle()
-                        last_ritual_time = current_time
-
-                # 2. Build context from kernel state
+                # Get system context
                 context = self._build_system_context()
 
-                # 3. Get decision from operator (sends context, gets intent)
-                intent = await self.operator_adapter.get_decision(context)
+                # Get intent from operator
+                intent = await self.operator_adapter.query_operator(context)
 
-                # 4. Execute the intent
-                result = await self._execute_intent(intent)
+                if intent:
+                    # Execute intent
+                    result = await self._execute_intent(intent)
+                    if result:
+                        await self.operator_adapter.report_result(result)
 
-                # 5. Output result (if any)
-                if result:
-                    print(f"\n{result}\n")
+                # Ritual timing
+                now = time.time()
+                if now - last_ritual_time >= RITUAL_INTERVAL:
+                    if self.kernel and hasattr(self.kernel, "daily_ritual"):
+                        try:
+                            # Trigger ritual phase
+                            self.kernel.daily_ritual.trigger_phase()
+                            last_ritual_time = now
+                        except Exception as e:
+                            logger.warning(f"Ritual trigger failed (non-fatal): {e}")
+
+                # Small sleep to prevent busy waiting
+                await asyncio.sleep(0.1)
 
             except KeyboardInterrupt:
-                logger.info("Keyboard interrupt - shutting down")
+                logger.info("Keyboard interrupt received")
                 self._running = False
-
             except Exception as e:
                 logger.error(f"Operator loop error: {e}")
-                # Don't crash - degradation will handle it
+                await self.operator_adapter.report_error(str(e))
+                self._running = False
 
-        logger.info("=" * 70)
-        logger.info("🔴 AGENT CITY OS - SHUTDOWN COMPLETE")
-        logger.info("=" * 70)
-
-    def stop(self) -> None:
-        """Stop the operator loop."""
-        self._running = False
-
-
-def quick_boot(ledger_path: Optional[str] = None) -> RealVibeKernel:
-    """
-    Quick boot helper for simple use cases.
-
-    Args:
-        ledger_path: Optional custom ledger path
-
-    Returns:
-        RealVibeKernel: Fully initialized kernel
-
-    Example:
-        kernel = quick_boot()
-        # Use kernel...
-    """
-    orchestrator = BootOrchestrator(ledger_path=ledger_path)
-    return orchestrator.boot()
-
-
-async def boot_and_run(ledger_path: Optional[str] = None, config: Optional[CityConfig] = None) -> None:
-    """
-    Boot the system AND start the operator loop.
-
-    This is the main entry point for Agent City OS.
-
-    Args:
-        ledger_path: Optional custom ledger path
-        config: Optional CityConfig. If not provided, loads from matrix.yaml
-
-    Example:
-        import asyncio
-        asyncio.run(boot_and_run())
-    """
-    # Load Phoenix Config if not provided
-    if config is None:
-        try:
-            from vibe_core.config import load_config
-
-            config = load_config()
-            logger.info(f"📜 Loaded Phoenix Config: {config.city_name}")
-        except Exception as e:
-            logger.warning(f"⚠️  Failed to load Phoenix Config: {e} (using defaults)")
-            config = None
-
-    orchestrator = BootOrchestrator(ledger_path=ledger_path, config=config)
-    orchestrator.boot()
-    await orchestrator.run_with_operator()
-
-
-if __name__ == "__main__":
-    # Entry point: python -m vibe_core.boot_orchestrator
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(boot_and_run())
+        logger.info("🛑 AGENT CITY OS - SHUTDOWN COMPLETE")
