@@ -148,8 +148,16 @@ class JnanaHandler:
         # Memory store (lazy loaded)
         self._memory = None
 
-        # LLM provider (optional - set externally or via configure())
-        self._llm_provider = None
+        # LLM provider (auto-loaded from config/env via factory)
+        # OPUS-076: NO PUSSY MODE - real LLM calls, not simulation!
+        try:
+            from vibe_core.runtime.providers.factory import get_default_provider
+
+            self._llm_provider = get_default_provider()
+            logger.info(f"🧠 JNANA: LLM provider loaded ({type(self._llm_provider).__name__})")
+        except Exception as e:
+            logger.warning(f"🧠 JNANA: No LLM provider available ({e}), basic mode")
+            self._llm_provider = None
 
     def _register_veda_handlers(self) -> None:
         """
@@ -393,6 +401,38 @@ class JnanaHandler:
             {"role": "system", "content": system_content},
             {"role": "user", "content": msg.content},
         ]
+
+    def _invoke_llm(self, messages: List[Dict[str, str]]) -> str:
+        """
+        Invoke LLM provider with messages format.
+
+        Converts messages to single prompt string for provider.invoke().
+
+        Args:
+            messages: List of {"role": ..., "content": ...} dicts
+
+        Returns:
+            LLM response content string
+        """
+        if not self._llm_provider:
+            raise RuntimeError("No LLM provider configured")
+
+        # Convert messages to prompt string
+        # Format: system context + user message
+        parts = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                parts.append(f"<system>\n{content}\n</system>")
+            else:
+                parts.append(content)
+
+        prompt = "\n\n".join(parts)
+
+        # Invoke provider and return content
+        response = self._llm_provider.invoke(prompt)
+        return response.content
 
     def _format_context(self, ctx: Dict[str, Any]) -> str:
         """Format context dict for prompt."""
@@ -661,7 +701,7 @@ class JnanaHandler:
                     prompt = self._kriya.extend_prompt_for_action(prompt, msg.content)
                     logger.debug("KRIYA: Extended prompt for action request")
 
-                response_text = self._llm_provider.chat(prompt)
+                response_text = self._invoke_llm(prompt)
 
                 # OPUS-045: Process response through KRIYA to extract intents
                 if is_action:
@@ -746,7 +786,7 @@ class JnanaHandler:
                     prompt = self._kriya.extend_prompt_for_action(prompt, msg.content)
                     logger.debug("KRIYA: Extended prompt for action request")
 
-                response_text = self._llm_provider.chat(prompt)
+                response_text = self._invoke_llm(prompt)
 
                 # OPUS-045: Process response through KRIYA to extract intents
                 if is_action:
