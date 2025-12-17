@@ -155,7 +155,11 @@ class IntentRouter:
 
         # Architecture audit → DHARMA
         self._handlers["audit_architecture"] = self._handle_dharma
+        self._handlers["architecture_audit"] = self._handle_dharma  # Sankalpa alias
         self._handlers["check_drift"] = self._handle_dharma
+
+        # Hygiene → Shell (lint, format, test)
+        self._handlers["hygiene_check"] = self._handle_hygiene
 
         # Strategy → SANKALPA
         self._handlers["plan_strategy"] = self._handle_sankalpa
@@ -698,6 +702,81 @@ class IntentRouter:
                 }
         except Exception as e:
             return {"success": False, "handler": "ShellCortex", "error": str(e)}
+
+    def _handle_hygiene(self, intent: Intent) -> Dict[str, Any]:
+        """
+        🧹 Daily Hygiene: Run lint, format check, and quick tests.
+
+        OPUS-089: Sankalpa Hygiene Check
+        Triggered by Sankalpa during idle times to keep codebase healthy.
+
+        Actions from intent template:
+            - lint: Run ruff check
+            - format: Run ruff format --check
+            - test_quick: Run pytest with minimal tests
+        """
+        import subprocess
+
+        logger.info("🧹 MANAS: Running Daily Hygiene Check...")
+
+        results = {"success": True, "checks": {}}
+        actions = intent.params.get("actions", ["lint", "format", "test_quick"])
+
+        try:
+            # Run ruff lint
+            if "lint" in actions:
+                lint_result = subprocess.run(
+                    ["ruff", "check", "."],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    cwd=str(self._workspace),
+                )
+                results["checks"]["lint"] = {
+                    "passed": lint_result.returncode == 0,
+                    "issues": lint_result.stdout.count("\n") if lint_result.stdout else 0,
+                }
+                if lint_result.returncode != 0:
+                    results["success"] = False
+
+            # Run ruff format check
+            if "format" in actions:
+                format_result = subprocess.run(
+                    ["ruff", "format", "--check", "."],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    cwd=str(self._workspace),
+                )
+                results["checks"]["format"] = {
+                    "passed": format_result.returncode == 0,
+                }
+                if format_result.returncode != 0:
+                    results["success"] = False
+
+            # Run quick tests (only MANAS tests for speed)
+            if "test_quick" in actions:
+                test_result = subprocess.run(
+                    ["python", "-m", "pytest", "tests/manas/", "-x", "-q", "--timeout=30"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    cwd=str(self._workspace),
+                )
+                results["checks"]["test_quick"] = {
+                    "passed": test_result.returncode == 0,
+                    "output": test_result.stdout[-500:] if test_result.stdout else "",
+                }
+                if test_result.returncode != 0:
+                    results["success"] = False
+
+            results["handler"] = "Hygiene"
+            logger.info(f"🧹 Hygiene complete: {results['success']}")
+            return results
+
+        except Exception as e:
+            logger.error(f"🧹 Hygiene failed: {e}")
+            return {"success": False, "handler": "Hygiene", "error": str(e)}
 
     def _execute_git_commit(self, intent: Intent) -> Dict[str, Any]:
         """

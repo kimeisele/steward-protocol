@@ -433,6 +433,79 @@ class CognitiveKernel:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def _execute_memory_review(self, intent: Intent) -> Dict[str, Any]:
+        """
+        🌙 Execute Dreaming: Consolidate wisdom from past actions.
+
+        OPUS-089: Shiva/Sankalpa Memory Review
+        Triggered by Sankalpa during idle times (The Void).
+        This closes the cognitive loop: Experience → Wisdom.
+
+        The digital equivalent of REM sleep - pattern consolidation.
+        """
+        logger.info("🌙 MANAS: Entering Dream State (Memory Review)...")
+
+        try:
+            # 1. Extract successful patterns (What works?)
+            successful_patterns = self._memory.get_successful_patterns(limit=5)
+
+            # 2. Extract failure patterns (What to avoid?)
+            # Group recent failures by intent_type
+            failure_counts: Dict[str, int] = {}
+            for mem in self._memory.get_all_memories():
+                if mem.outcome == "failed":
+                    failure_counts[mem.intent_type] = failure_counts.get(mem.intent_type, 0) + 1
+
+            # Sort by failure count
+            failure_patterns = sorted(failure_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+            # 3. Wisdom Synthesis - Log insights for dashboard
+            insights = []
+
+            if successful_patterns:
+                logger.info("🧠 Dream Insights - Successful Patterns:")
+                for pattern in successful_patterns:
+                    success_rate = self._memory.get_success_rate(pattern)
+                    insight = f"  ✅ {pattern}: {success_rate:.0%} success rate"
+                    logger.info(insight)
+                    insights.append({"type": pattern, "success_rate": success_rate, "status": "trusted"})
+
+            if failure_patterns:
+                logger.info("🧠 Dream Insights - Failure Patterns (to avoid):")
+                for pattern, count in failure_patterns:
+                    insight = f"  ⚠️ {pattern}: {count} failures"
+                    logger.info(insight)
+                    insights.append({"type": pattern, "failure_count": count, "status": "avoid"})
+
+            if not successful_patterns and not failure_patterns:
+                logger.info("🧠 Dream: No clear patterns formed yet. Mind is still young.")
+
+            # 4. Record dream summary to memory (meta-learning)
+            self._memory.record_intent_outcome(
+                intent_type="memory_review",
+                description="Dream cycle completed",
+                outcome="success",
+                context={
+                    "successful_patterns": successful_patterns,
+                    "failure_patterns": [p[0] for p in failure_patterns],
+                    "insights_count": len(insights),
+                },
+            )
+
+            logger.info(f"🌙 MANAS: Dream complete. {len(insights)} insights consolidated.")
+
+            return {
+                "success": True,
+                "insights": insights,
+                "successful_patterns": successful_patterns,
+                "failure_patterns": [{"type": p[0], "count": p[1]} for p in failure_patterns],
+                "wisdom": "Patterns consolidated into memory",
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Nightmare (Dream failed): {e}")
+            return {"success": False, "error": str(e)}
+
     # =========================================================================
     # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
     # =========================================================================
@@ -1233,6 +1306,10 @@ class CognitiveKernel:
             # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
             if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
                 result = self._execute_healing(intent)
+                success = result.get("success", False)
+            # 🌙 SHIVA/SANKALPA: Handle dreaming/wisdom consolidation
+            elif intent.intent_type == "memory_review":
+                result = self._execute_memory_review(intent)
                 success = result.get("success", False)
             elif self._execution_callback:
                 result = self._execution_callback(intent)
