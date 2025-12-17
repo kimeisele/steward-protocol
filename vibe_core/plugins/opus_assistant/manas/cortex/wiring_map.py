@@ -81,6 +81,8 @@ class WiringMap:
         "update_readme",
         "document_manas",
         "commit_pending_changes",
+        "commit_and_push",  # Commit + auto-push to remote
+        "git_push",  # Standalone push to remote
         "cleanup_stale_branches",
         "revive_archived_tests",
         "run_tests",
