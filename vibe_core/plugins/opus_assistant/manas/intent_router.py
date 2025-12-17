@@ -128,6 +128,8 @@ class IntentRouter:
         self._handlers["commit_pending_changes"] = self._handle_shell
         self._handlers["commit_and_push"] = self._handle_shell  # Commit + auto push
         self._handlers["git_push"] = self._handle_shell  # Standalone push
+        self._handlers["create_pr"] = self._handle_shell  # Create Pull Request
+        self._handlers["merge_pr"] = self._handle_shell  # Merge Pull Request
         self._handlers["cleanup_stale_branches"] = self._handle_shell
         self._handlers["cleanup_old_logs"] = self._handle_shell
 
@@ -651,6 +653,10 @@ class IntentRouter:
                 git = GitTools()
                 branch = intent.params.get("branch")
                 return self._execute_git_push(git, branch)
+            elif intent.intent_type == "create_pr":
+                return self._execute_create_pr(intent)
+            elif intent.intent_type == "merge_pr":
+                return self._execute_merge_pr(intent)
 
             shell = ShellCortex(workspace=self._workspace)
             if self._kernel:
@@ -789,6 +795,161 @@ class IntentRouter:
         except Exception as e:
             logger.error(f"❌ Git push failed: {e}")
             return {"success": False, "error": str(e)}
+
+    def _execute_create_pr(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-SILPA: Create a Pull Request via GitHub CLI.
+
+        Intent params:
+            - title: PR title (default: intent title)
+            - body: PR body/description
+            - base: Base branch (default: main)
+            - draft: Create as draft PR (default: False)
+
+        Returns:
+            Result dict with PR URL on success
+        """
+        import subprocess
+
+        logger.info(f"📝 MANAS creating PR: {intent.title}")
+
+        try:
+            # Build PR title and body
+            title = intent.params.get("title", intent.title)
+            body = intent.params.get(
+                "body", f"## Summary\n\n{intent.description}\n\n---\n*Created by MANAS (Intent: {intent.id})*"
+            )
+            base = intent.params.get("base", "main")
+            draft = intent.params.get("draft", False)
+
+            # Build gh command
+            cmd = ["gh", "pr", "create", "--title", title, "--body", body, "--base", base]
+            if draft:
+                cmd.append("--draft")
+
+            # Execute
+            result = subprocess.run(
+                cmd,
+                cwd=self._workspace,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                pr_url = result.stdout.strip()
+                logger.info(f"✅ MANAS created PR: {pr_url}")
+                return {
+                    "success": True,
+                    "handler": "GitHub CLI",
+                    "action": "pr_created",
+                    "pr_url": pr_url,
+                    "message": f"PR created: {pr_url}",
+                }
+            else:
+                error = result.stderr.strip() or result.stdout.strip()
+                logger.error(f"❌ PR creation failed: {error}")
+                return {
+                    "success": False,
+                    "handler": "GitHub CLI",
+                    "action": "pr_create_failed",
+                    "error": error,
+                }
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "handler": "GitHub CLI", "error": "PR creation timed out"}
+        except Exception as e:
+            logger.error(f"❌ PR creation failed: {e}")
+            return {"success": False, "handler": "GitHub CLI", "error": str(e)}
+
+    def _execute_merge_pr(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-SILPA: Merge a Pull Request via GitHub CLI.
+
+        Intent params:
+            - pr_number: PR number to merge (required if no pr_url)
+            - pr_url: PR URL to merge (alternative to pr_number)
+            - merge_method: "merge", "squash", or "rebase" (default: "squash")
+            - delete_branch: Delete branch after merge (default: True)
+            - auto: Use auto-merge if checks pending (default: False)
+
+        Returns:
+            Result dict with merge status
+        """
+        import subprocess
+
+        logger.info(f"🔀 MANAS merging PR: {intent.title}")
+
+        try:
+            # Get PR identifier
+            pr_number = intent.params.get("pr_number")
+            pr_url = intent.params.get("pr_url")
+
+            if not pr_number and not pr_url:
+                # Try to get current branch's PR
+                pr_identifier = None
+            elif pr_url:
+                pr_identifier = pr_url
+            else:
+                pr_identifier = str(pr_number)
+
+            # Build merge command
+            merge_method = intent.params.get("merge_method", "squash")
+            delete_branch = intent.params.get("delete_branch", True)
+            auto_merge = intent.params.get("auto", False)
+
+            cmd = ["gh", "pr", "merge"]
+            if pr_identifier:
+                cmd.append(pr_identifier)
+
+            # Add merge method
+            if merge_method == "squash":
+                cmd.append("--squash")
+            elif merge_method == "rebase":
+                cmd.append("--rebase")
+            else:
+                cmd.append("--merge")
+
+            # Add flags
+            if delete_branch:
+                cmd.append("--delete-branch")
+            if auto_merge:
+                cmd.append("--auto")
+
+            # Execute
+            result = subprocess.run(
+                cmd,
+                cwd=self._workspace,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+
+            if result.returncode == 0:
+                logger.info("✅ MANAS merged PR successfully")
+                return {
+                    "success": True,
+                    "handler": "GitHub CLI",
+                    "action": "pr_merged",
+                    "merge_method": merge_method,
+                    "message": f"PR merged via {merge_method}",
+                    "output": result.stdout.strip(),
+                }
+            else:
+                error = result.stderr.strip() or result.stdout.strip()
+                logger.error(f"❌ PR merge failed: {error}")
+                return {
+                    "success": False,
+                    "handler": "GitHub CLI",
+                    "action": "pr_merge_failed",
+                    "error": error,
+                }
+
+        except subprocess.TimeoutExpired:
+            return {"success": False, "handler": "GitHub CLI", "error": "PR merge timed out"}
+        except Exception as e:
+            logger.error(f"❌ PR merge failed: {e}")
+            return {"success": False, "handler": "GitHub CLI", "error": str(e)}
 
     def _handle_test(self, intent: Intent) -> Dict[str, Any]:
         """Route to TestCortex for test-related tasks."""
