@@ -977,13 +977,15 @@ class IntentRouter:
             parts = doc_name.split("-")
             module_name = parts[1].lower() if len(parts) > 1 else doc_name.lower()
 
-            # Use the circuit executor to run generate_harness
-            from .circuit_executor import MANASCircuitExecutor
+            # Direkt das Script aufrufen statt über Circuit (schneller!)
+            from .circuit_executor import CognitiveCircuitExecutor
 
-            executor = MANASCircuitExecutor(workspace=self._workspace)
-            result = executor.execute(
-                circuit_path="vibe_core/plugins/opus_assistant/circuits/generate_harness.yaml",
-                params={"opus_file": target, "module_name": module_name},
+            executor = CognitiveCircuitExecutor(workspace=self._workspace)
+            result = executor._script_generate_harness(
+                {
+                    "opus_file": target,
+                    "module_name": module_name,
+                }
             )
 
             if result.get("success"):
