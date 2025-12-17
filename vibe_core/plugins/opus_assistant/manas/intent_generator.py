@@ -64,6 +64,9 @@ class Intent:
     params: Dict[str, Any] = field(default_factory=dict)  # Parameters for execution
     auto_executable: bool = False  # Can this run without approval?
     expires_at: Optional[str] = None  # When this intent becomes stale
+    # WEAVING: Semantic links to related code/docs
+    related_files: List[str] = field(default_factory=list)  # e.g., ["jnana.py:151"]
+    related_docs: List[str] = field(default_factory=list)  # e.g., ["076-NO-PUSSY-MODE.md"]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -80,6 +83,8 @@ class Intent:
             "params": self.params,
             "auto_executable": self.auto_executable,
             "expires_at": self.expires_at,
+            "related_files": self.related_files,
+            "related_docs": self.related_docs,
         }
 
     def is_expired(self) -> bool:
