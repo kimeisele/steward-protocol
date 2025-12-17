@@ -619,6 +619,16 @@ class CognitiveKernel:
             raw_intents = self._sutra_sense.generate_gap_intents(limit=2)
 
             for raw in raw_intents:
+                # Extract weaving from params
+                params = raw.get("params", {})
+                related_files = []
+                related_docs = []
+                if params.get("code_path"):
+                    related_files.append(str(params["code_path"]))
+                if params.get("doc_path"):
+                    doc_name = Path(params["doc_path"]).name
+                    related_docs.append(doc_name)
+
                 intent = Intent(
                     id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"),
                     intent_type=raw.get("intent_type", "doc_modify"),
@@ -627,8 +637,11 @@ class CognitiveKernel:
                     reasoning=raw.get("reasoning", "SUTRA SENSE detected documentation gap"),
                     priority=IntentPriority(raw.get("priority", "medium")),
                     risk=IntentRisk(raw.get("risk", "low")),
-                    params=raw.get("params", {}),
+                    params=params,
                     auto_executable=raw.get("auto_executable", False),
+                    # WEAVING: Link code + doc from gap
+                    related_files=related_files,
+                    related_docs=related_docs,
                 )
                 gap_intents.append(intent)
 
