@@ -40,5 +40,59 @@
     "topic": "vedic_governance",
     "title": "Implement bhakti tracking",
     "timestamp": "2025-12-17T01:29:20.268714"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+    "timestamp": "2025-12-17T01:39:21.943580"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+    "timestamp": "2025-12-17T01:39:21.965136"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Update state manager docs",
+    "timestamp": "2025-12-17T01:39:25.876927"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "state_management",
+    "title": "Fix state sync bug",
+    "timestamp": "2025-12-17T01:39:25.879516"
+  },
+  {
+    "intent_type": "test_create",
+    "topic": "state_management",
+    "title": "Add state tests",
+    "timestamp": "2025-12-17T01:39:25.881900"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Document state flow",
+    "timestamp": "2025-12-17T01:39:25.884248"
+  },
+  {
+    "intent_type": "review",
+    "topic": "vedic_governance",
+    "title": "Review dharma gates",
+    "timestamp": "2025-12-17T01:39:25.887112"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "vedic_governance",
+    "title": "Update governance docs",
+    "timestamp": "2025-12-17T01:39:25.889734"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "vedic_governance",
+    "title": "Implement bhakti tracking",
+    "timestamp": "2025-12-17T01:39:25.892067"
   }
 ]

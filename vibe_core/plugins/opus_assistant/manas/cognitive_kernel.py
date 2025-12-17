@@ -635,6 +635,75 @@ class CognitiveKernel:
 
         return gap_intents
 
+    def _record_intent_for_clustering(self, intent: Intent) -> None:
+        """
+        Record intent to SutraSense for pattern detection.
+
+        OPUS-054 Phase 2: When MANAS generates intents repeatedly for
+        similar topics, this indicates a need for structured documentation.
+
+        Args:
+            intent: The intent to record
+        """
+        if not self._sutra_sense:
+            return
+
+        try:
+            # Extract topic from intent type or params
+            topic = self._extract_topic_from_intent(intent)
+            if topic:
+                self._sutra_sense.record_intent(
+                    intent_type=intent.intent_type,
+                    topic=topic,
+                    title=intent.title,
+                )
+        except Exception as e:
+            logger.debug(f"📜 SUTRA SENSE: Could not record intent: {e}")
+
+    def _extract_topic_from_intent(self, intent: Intent) -> Optional[str]:
+        """
+        Extract topic category from an intent.
+
+        Maps intent types and content to topic categories for clustering.
+        """
+        # Map common intent types to topics
+        type_to_topic = {
+            "doc_modify": "documentation",
+            "code_modify": "codebase",
+            "test_create": "testing",
+            "git_commit": "version_control",
+            "state_heal": "state_management",
+            "heal_system_state": "state_management",
+            "fix_lobotomy": "state_management",
+            "sutra_missing_harness": "documentation",
+            "sutra_missing_doc": "documentation",
+            "sutra_stale_doc": "documentation",
+        }
+
+        # Check direct mapping first
+        if intent.intent_type in type_to_topic:
+            return type_to_topic[intent.intent_type]
+
+        # Extract from intent type prefix
+        if intent.intent_type.startswith("sutra_"):
+            return "documentation"
+        if intent.intent_type.startswith("roadmap_"):
+            return "roadmap"
+        if "dharma" in intent.intent_type.lower():
+            return "vedic_governance"
+        if "state" in intent.intent_type.lower():
+            return "state_management"
+
+        # Extract from params if available
+        if intent.params:
+            if "gap_type" in intent.params:
+                return "documentation"
+            if "module" in intent.params:
+                return intent.params["module"]
+
+        # Default to intent type as topic
+        return intent.intent_type.replace("_", " ").split()[0] if "_" in intent.intent_type else None
+
     def _record_to_ledger(
         self,
         event_type: str,
@@ -770,6 +839,9 @@ class CognitiveKernel:
 
                 self._intent_buffer.append(entry)
                 added.append(intent)
+
+                # 📜 SUTRA SENSE: Record intent for clustering (OPUS-054 Phase 2)
+                self._record_intent_for_clustering(intent)
 
                 # ⚡ VAJRA: Record intent proposal to ledger
                 self._record_to_ledger(
