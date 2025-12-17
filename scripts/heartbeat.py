@@ -312,6 +312,9 @@ class HeartbeatEngine:
 
         Replaces the old system_chronicle Plugin with direct GitTools call.
         GPG signing is configurable via config/prana.yaml.
+
+        RESILIENCE: Gracefully degrades GPG signing in CI environments where keys
+        are not available, preventing silent commit failures.
         """
         # Check if chronicle is enabled
         prana_config = load_prana_config() if PRANA_AVAILABLE else {}
@@ -322,6 +325,8 @@ class HeartbeatEngine:
             return
 
         try:
+            import os
+
             from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
 
             logger.info("📜 Chronicle: Checking repository status...")
@@ -347,10 +352,23 @@ class HeartbeatEngine:
             gpg_sign = chronicle_config.get("gpg_sign_commits", True)
             commit_prefix = chronicle_config.get("commit_prefix", "🫀 Heartbeat Pulse:")
 
+            # RESILIENCE: Detect if we're in CI environment
+            # If running in GitHub Actions without GPG setup, gracefully degrade
+            is_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+            if is_ci and gpg_sign:
+                # Check if GPG key is available
+                gpg_available = self._check_gpg_key_available()
+                if not gpg_available:
+                    logger.warning(
+                        "⚠️  Chronicle: GPG signing requested but no key found in CI environment. "
+                        "Falling back to unsigned commits (configure GPG_SIGNING_KEY secret if needed)."
+                    )
+                    gpg_sign = False
+
             commit_result = tools.seal_history(
                 message=f"{commit_prefix} System auto-save",
                 files=None,  # Commit all staged (or all modified if nothing staged)
-                sign=gpg_sign,  # Configurable GPG signing!
+                sign=gpg_sign,  # Configurable GPG signing (with CI fallback)
             )
 
             if commit_result.get("success"):
@@ -358,12 +376,38 @@ class HeartbeatEngine:
                 sign_status = "signed" if gpg_sign else "unsigned"
                 logger.info(f"✅ Chronicle: History sealed ({commit_hash}, {sign_status})")
             else:
-                logger.warning(f"⚠️  Chronicle: Commit failed - {commit_result.get('error', 'unknown error')}")
+                logger.warning(f"⚠️  Chronicle: Commit failed - {commit_result.get('message', 'unknown error')}")
 
         except ImportError as e:
             logger.warning(f"⚠️  Chronicle: GitTools not available ({e})")
         except Exception as e:
             logger.error(f"❌ Chronicle: Unexpected error - {e}", exc_info=True)
+
+    @staticmethod
+    def _check_gpg_key_available() -> bool:
+        """
+        Check if GPG key is available for signing.
+
+        Returns:
+            True if GPG key exists and is usable, False otherwise
+        """
+
+        try:
+            # List available GPG keys
+            result = subprocess.run(
+                ["gpg", "--list-secret-keys", "--quiet"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            # If there are keys, return True
+            return result.returncode == 0 and bool(result.stdout.strip())
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            # GPG not installed or timed out
+            return False
+        except Exception:
+            # Any other error, assume key not available
+            return False
 
 
 def main():
