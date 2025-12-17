@@ -67,6 +67,14 @@ from vibe_core.plugins.opus_assistant.manas.cortex.mukha import (
     MukhaGenerator,
 )
 
+# OPUS-009: PRAKRITI SENSE (Das sechste Jnanendriya)
+from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import (
+    GunaSummary,
+    LobotomyReport,
+    PrakritiSense,
+    handle_prakriti_query,
+)
+
 # OPUS-042: SAMVADA (The Dialogue)
 from vibe_core.plugins.opus_assistant.manas.cortex.samvada import (
     SamvadaClient,
@@ -194,4 +202,9 @@ __all__ = [
     "MukhaGenerator",
     "IdentityScanner",
     "AgentIdentity",
+    # OPUS-009: PRAKRITI SENSE (Das sechste Jnanendriya)
+    "PrakritiSense",
+    "GunaSummary",
+    "LobotomyReport",
+    "handle_prakriti_query",
 ]

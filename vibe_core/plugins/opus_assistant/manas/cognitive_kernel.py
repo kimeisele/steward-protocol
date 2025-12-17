@@ -31,6 +31,10 @@ from .memory_store import MemoryStore
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+    from .cortex.dharma_sense import DharmaSense, DharmaSummary
+    from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+    from .cortex.sutra_sense import SutraSense, SutraSummary
+
 logger = logging.getLogger("MANAS.Kernel")
 
 # ⚡ PHOENIX INJECTION: Import ManasConfig from Phoenix section (Dharma)
@@ -233,6 +237,17 @@ class CognitiveKernel:
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
+        # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
+        self._prakriti_sense: Optional["PrakritiSense"] = None
+
+        # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
+        self._dharma_sense: Optional["DharmaSense"] = None
+        self._init_dharma_sense()
+
+        # 📜 SUTRA SENSE: The Third Eye - Doc/Code Gap Detection (OPUS-054)
+        self._sutra_sense: Optional["SutraSense"] = None
+        self._init_sutra_sense()
+
         logger.info("MANAS Cognitive Kernel initialized")
 
     # =========================================================================
@@ -264,6 +279,430 @@ class CognitiveKernel:
         """
         self._ledger = ledger
         logger.info("⚡ VAJRA: Standalone Ledger injected into MANAS (headless mode)")
+
+    # =========================================================================
+    # 👁️ PRAKRITI SENSE: THE SIXTH JNANENDRIYA (OPUS-009)
+    # =========================================================================
+
+    def inject_prakriti_sense(self, sense: "PrakritiSense") -> None:
+        """
+        Inject the sixth sense for unified state awareness.
+
+        OPUS-009: MANAS (Mind) needs Jnanendriyas (sense organs) to perceive
+        Prakriti (state). This IS that sixth sense.
+
+        With this injected, MANAS can:
+        - Perceive system state health (Sattva/Rajas/Tamas)
+        - Detect lobotomy (.gitignore violations)
+        - Generate healing intents automatically
+
+        Args:
+            sense: PrakritiSense instance
+        """
+        self._prakriti_sense = sense
+        logger.info("👁️ PRAKRITI SENSE: Sixth Jnanendriya injected - MANAS can now perceive state")
+
+    def _perceive_and_generate_healing_intents(self) -> List[Intent]:
+        """
+        Use PrakritiSense to perceive state and generate healing intents.
+
+        Called at the start of think() to ensure MANAS is aware of
+        system state health before generating other intents.
+
+        Returns:
+            List of healing intents (if any state needs attention)
+        """
+        if not self._prakriti_sense:
+            return []
+
+        healing_intents = []
+
+        try:
+            # Perceive state
+            summary = self._prakriti_sense.on_manas_tick()
+
+            if summary and summary.needs_attention:
+                logger.info(
+                    f"👁️ PRAKRITI SENSE: State needs attention - "
+                    f"Tamas: {summary.tamas_count}, Rajas: {summary.rajas_count}"
+                )
+
+                # Generate healing intent for Tamas paths
+                if summary.tamas_count > 0:
+                    tamas_paths = self._prakriti_sense.get_tamas_paths()
+                    path_names = [str(p.path.name) for p in tamas_paths[:3]]
+
+                    intent = Intent(
+                        id=f"heal_state_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="heal_system_state",
+                        title=f"Heal {summary.tamas_count} Tamas state paths",
+                        description=(
+                            f"System state health check detected {summary.tamas_count} paths in Tamas (stale/broken). "
+                            f"Paths: {', '.join(path_names)}{'...' if len(tamas_paths) > 3 else ''}. "
+                            f"Healing will push state Tamas → Rajas → Sattva."
+                        ),
+                        reasoning="PRAKRITI SENSE detected unhealthy state that needs healing.",
+                        priority=IntentPriority.HIGH,  # State health is important
+                        risk=IntentRisk.SAFE,  # Healing is always safe
+                        params={
+                            "tamas_count": summary.tamas_count,
+                            "rajas_count": summary.rajas_count,
+                            "paths": [str(p.path) for p in tamas_paths],
+                        },
+                        auto_executable=True,  # Healing can auto-execute
+                    )
+                    healing_intents.append(intent)
+
+            # Check for lobotomy
+            lobotomy = self._prakriti_sense.sense_lobotomy()
+            if lobotomy.has_lobotomy:
+                logger.critical(f"👁️ PRAKRITI SENSE: LOBOTOMY DETECTED! {len(lobotomy.violations)} violations")
+
+                intent = Intent(
+                    id=f"fix_lobotomy_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                    intent_type="fix_lobotomy",
+                    title=f"Fix LOBOTOMY: {len(lobotomy.violations)} state files in .gitignore",
+                    description=(
+                        f"CRITICAL: State files are being ignored by git! "
+                        f"This causes memory loss (lobotomy). "
+                        f"Affected plugins: {', '.join(lobotomy.affected_plugins)}. "
+                        f"Must remove these paths from .gitignore."
+                    ),
+                    reasoning="State files in .gitignore = Lobotomy. The system is losing its memory.",
+                    priority=IntentPriority.CRITICAL,  # Lobotomy is critical!
+                    risk=IntentRisk.MEDIUM,  # Modifying .gitignore needs care
+                    params={
+                        "violations": lobotomy.violations,
+                        "affected_plugins": lobotomy.affected_plugins,
+                    },
+                    auto_executable=False,  # Human should review .gitignore changes
+                )
+                healing_intents.append(intent)
+
+        except Exception as e:
+            logger.warning(f"👁️ PRAKRITI SENSE: Perception failed: {e}")
+
+        return healing_intents
+
+    def _execute_healing(self, intent: Intent) -> Dict[str, Any]:
+        """
+        Execute a healing intent via PrakritiSense.
+
+        Args:
+            intent: The healing intent to execute
+
+        Returns:
+            Execution result
+        """
+        if not self._prakriti_sense:
+            return {"success": False, "error": "PrakritiSense not available"}
+
+        try:
+            if intent.intent_type == "heal_system_state":
+                paths = intent.params.get("paths", [])
+                healed = 0
+                for path_str in paths:
+                    path = Path(path_str)
+                    new_guna = self._prakriti_sense.heal(path)
+                    if new_guna.value in ("sattva", "rajas"):
+                        healed += 1
+
+                return {
+                    "success": True,
+                    "healed_count": healed,
+                    "total_paths": len(paths),
+                }
+
+            elif intent.intent_type == "fix_lobotomy":
+                # Lobotomy fix is more complex - for now just report
+                return {
+                    "success": False,
+                    "error": "Lobotomy fix requires manual .gitignore edit",
+                    "violations": intent.params.get("violations", []),
+                }
+
+            else:
+                return {"success": False, "error": f"Unknown healing intent type: {intent.intent_type}"}
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
+    # =========================================================================
+
+    def _init_dharma_sense(self) -> None:
+        """
+        Initialize Dharma Sense - the Vedic Conscience.
+
+        This provides ethical alignment checks before intent execution.
+        """
+        try:
+            from .cortex.dharma_sense import DharmaSense
+
+            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas")
+            # Boot registration
+            summary = self._dharma_sense.on_manas_boot()
+            logger.info(
+                f"🙏 DHARMA SENSE: Conscience initialized - Ashrama: {summary.ashrama}, Bhakti: {summary.bhakti}"
+            )
+        except Exception as e:
+            logger.warning(f"🙏 DHARMA SENSE: Could not initialize: {e}")
+            self._dharma_sense = None
+
+    def inject_dharma_sense(self, sense: "DharmaSense") -> None:
+        """
+        Inject the Dharma Sense for ethical alignment checks.
+
+        OPUS-009 Extension: MANAS needs both senses:
+        - PRAKRITI SENSE: "What is the state of the world?"
+        - DHARMA SENSE: "Is this action righteous?"
+
+        Args:
+            sense: DharmaSense instance
+        """
+        self._dharma_sense = sense
+        logger.info("🙏 DHARMA SENSE: Vedic Conscience injected - MANAS now has ethical awareness")
+
+    def _check_dharma_gate(self, intent: Intent) -> tuple:
+        """
+        Check Dharma Gate before intent execution.
+
+        This is the ethical conscience check. Even if NARASIMHA (technical guardian)
+        approves, DHARMA SENSE (ethical conscience) must also approve.
+
+        "An efficient mind without dharma makes efficient catastrophes."
+
+        Args:
+            intent: The intent to check
+
+        Returns:
+            (is_permitted, reason)
+        """
+        if not self._dharma_sense:
+            # No conscience = permissive (legacy mode)
+            return True, "Dharma Sense not available - defaulting to permissive"
+
+        try:
+            verdict = self._dharma_sense.check_dharmic_alignment(intent, agent_id="manas")
+
+            if verdict.is_dharmic:
+                logger.debug(f"🙏 DHARMA GATE: PASSED - {verdict.reason}")
+                return True, verdict.reason
+            else:
+                logger.warning(
+                    f"🙏 DHARMA GATE: BLOCKED - {intent.intent_type} - "
+                    f"Missing: {verdict.missing_permissions}, Bhakti: {verdict.agent_bhakti}"
+                )
+                return False, verdict.reason
+
+        except Exception as e:
+            logger.warning(f"🙏 DHARMA GATE: Check failed: {e}")
+            # On error, default to permissive (don't block due to bugs)
+            return True, f"Dharma check error: {e}"
+
+    def _on_dharma_success(self, intent: Intent) -> None:
+        """Record successful dharmic action - increases Bhakti."""
+        if self._dharma_sense:
+            try:
+                self._dharma_sense.on_intent_success(intent)
+            except Exception as e:
+                logger.debug(f"🙏 DHARMA SENSE: Could not record success: {e}")
+
+    def get_dharma_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Dharma summary for OPUS.md display."""
+        if not self._dharma_sense:
+            return None
+        try:
+            summary = self._dharma_sense.get_dharma_summary()
+            return summary.to_dict()
+        except Exception:
+            return None
+
+    # =========================================================================
+    # 📜 SUTRA SENSE: THE THIRD EYE (OPUS-054)
+    # =========================================================================
+
+    def _init_sutra_sense(self) -> None:
+        """
+        Initialize Sutra Sense - the Third Eye.
+
+        This provides doc/code gap detection for MANAS.
+        MANAS becomes the curator of its own documentation.
+
+        Bhagavad Gita 9.22:
+        "ananyāś cintayanto māṁ... yoga-kṣemaṁ vahāmy aham"
+        "I bring what is lacking (Yoga) and preserve what they have (Kshema)"
+        """
+        try:
+            from .cortex.sutra_sense import SutraSense
+
+            self._sutra_sense = SutraSense(workspace=self._workspace)
+            # Boot perception
+            summary = self._sutra_sense.perceive_gaps(refresh=True)
+            logger.info(
+                f"📜 SUTRA SENSE: Third Eye opened - "
+                f"{summary.total_docs} docs, {summary.gaps_found} gaps, {summary.health_ratio:.0%} health"
+            )
+        except Exception as e:
+            logger.warning(f"📜 SUTRA SENSE: Could not initialize: {e}")
+            self._sutra_sense = None
+
+    def inject_sutra_sense(self, sense: "SutraSense") -> None:
+        """
+        Inject the Sutra Sense for doc/code gap detection.
+
+        OPUS-054: MANAS needs three senses:
+        - PRAKRITI SENSE: "What is the state of the world?"
+        - DHARMA SENSE: "Is this action righteous?"
+        - SUTRA SENSE: "What knowledge is missing?"
+
+        Args:
+            sense: SutraSense instance
+        """
+        self._sutra_sense = sense
+        logger.info("📜 SUTRA SENSE: Third Eye injected - MANAS can now perceive documentation gaps")
+
+    def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Sutra summary for OPUS.md display."""
+        if not self._sutra_sense:
+            return None
+        try:
+            summary = self._sutra_sense.perceive_gaps(refresh=False)
+            gaps = self._sutra_sense.get_gaps()  # Get actual gap objects
+            high_severity_gaps = [g for g in gaps if g.severity in ("high", "critical")]
+
+            return {
+                "total_docs": summary.total_docs,
+                "docs_with_harness": summary.docs_with_harness,
+                "docs_without_harness": summary.docs_without_harness,
+                "gaps_count": summary.gaps_found,
+                "health_ratio": summary.health_ratio,
+                "critical_gaps": len(high_severity_gaps),
+                "top_gaps": [
+                    {
+                        "type": g.gap_type,
+                        "doc": g.doc_path.name if g.doc_path else None,
+                        "code": g.code_path.name if g.code_path else None,
+                        "severity": g.severity,
+                        "message": g.description,
+                    }
+                    for g in gaps[:5]  # Top 5 gaps
+                ],
+            }
+        except Exception as e:
+            logger.debug(f"📜 SUTRA SENSE: Could not get summary: {e}")
+            return None
+
+    def _perceive_and_generate_gap_intents(self) -> List[Intent]:
+        """
+        Use SutraSense to perceive documentation gaps and generate intents.
+
+        Called during think() to ensure MANAS is aware of documentation
+        health and can propose curation actions.
+
+        Returns:
+            List of gap intents (if any documentation needs attention)
+        """
+        if not self._sutra_sense:
+            return []
+
+        gap_intents = []
+
+        try:
+            # Generate gap intents from SutraSense
+            raw_intents = self._sutra_sense.generate_gap_intents(limit=2)
+
+            for raw in raw_intents:
+                intent = Intent(
+                    id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"),
+                    intent_type=raw.get("intent_type", "doc_modify"),
+                    title=raw.get("title", "Documentation gap detected"),
+                    description=raw.get("description", ""),
+                    reasoning=raw.get("reasoning", "SUTRA SENSE detected documentation gap"),
+                    priority=IntentPriority(raw.get("priority", "medium")),
+                    risk=IntentRisk(raw.get("risk", "low")),
+                    params=raw.get("params", {}),
+                    auto_executable=raw.get("auto_executable", False),
+                )
+                gap_intents.append(intent)
+
+            if gap_intents:
+                logger.info(f"📜 SUTRA SENSE: Generated {len(gap_intents)} documentation gap intents")
+
+        except Exception as e:
+            logger.warning(f"📜 SUTRA SENSE: Gap perception failed: {e}")
+
+        return gap_intents
+
+    def _record_intent_for_clustering(self, intent: Intent) -> None:
+        """
+        Record intent to SutraSense for pattern detection.
+
+        OPUS-054 Phase 2: When MANAS generates intents repeatedly for
+        similar topics, this indicates a need for structured documentation.
+
+        Args:
+            intent: The intent to record
+        """
+        if not self._sutra_sense:
+            return
+
+        try:
+            # Extract topic from intent type or params
+            topic = self._extract_topic_from_intent(intent)
+            if topic:
+                self._sutra_sense.record_intent(
+                    intent_type=intent.intent_type,
+                    topic=topic,
+                    title=intent.title,
+                )
+        except Exception as e:
+            logger.debug(f"📜 SUTRA SENSE: Could not record intent: {e}")
+
+    def _extract_topic_from_intent(self, intent: Intent) -> Optional[str]:
+        """
+        Extract topic category from an intent.
+
+        Maps intent types and content to topic categories for clustering.
+        """
+        # Map common intent types to topics
+        type_to_topic = {
+            "doc_modify": "documentation",
+            "code_modify": "codebase",
+            "test_create": "testing",
+            "git_commit": "version_control",
+            "state_heal": "state_management",
+            "heal_system_state": "state_management",
+            "fix_lobotomy": "state_management",
+            "sutra_missing_harness": "documentation",
+            "sutra_missing_doc": "documentation",
+            "sutra_stale_doc": "documentation",
+        }
+
+        # Check direct mapping first
+        if intent.intent_type in type_to_topic:
+            return type_to_topic[intent.intent_type]
+
+        # Extract from intent type prefix
+        if intent.intent_type.startswith("sutra_"):
+            return "documentation"
+        if intent.intent_type.startswith("roadmap_"):
+            return "roadmap"
+        if "dharma" in intent.intent_type.lower():
+            return "vedic_governance"
+        if "state" in intent.intent_type.lower():
+            return "state_management"
+
+        # Extract from params if available
+        if intent.params:
+            if "gap_type" in intent.params:
+                return "documentation"
+            if "module" in intent.params:
+                return intent.params["module"]
+
+        # Default to intent type as topic
+        return intent.intent_type.replace("_", " ").split()[0] if "_" in intent.intent_type else None
 
     def _record_to_ledger(
         self,
@@ -352,11 +791,25 @@ class CognitiveKernel:
         logger.info("MANAS: Beginning thought cycle...")
         self._last_thought_time = datetime.utcnow()
 
+        # 👁️ PRAKRITI SENSE: Perceive state FIRST (OPUS-009)
+        # Before generating other intents, check system state health
+        healing_intents = self._perceive_and_generate_healing_intents()
+
+        # 📜 SUTRA SENSE: Perceive documentation gaps (OPUS-054)
+        # MANAS is the curator of its own knowledge base
+        gap_intents = self._perceive_and_generate_gap_intents()
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
+
+        # Prepend healing intents (survival first!) then gap intents
+        if healing_intents:
+            new_intents = healing_intents + new_intents
+        if gap_intents:
+            new_intents = gap_intents + new_intents
 
         # OPUS-035: Throttling - Prioritize survival over growth
         if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
@@ -386,6 +839,9 @@ class CognitiveKernel:
 
                 self._intent_buffer.append(entry)
                 added.append(intent)
+
+                # 📜 SUTRA SENSE: Record intent for clustering (OPUS-054 Phase 2)
+                self._record_intent_for_clustering(intent)
 
                 # ⚡ VAJRA: Record intent proposal to ledger
                 self._record_to_ledger(
@@ -681,8 +1137,26 @@ class CognitiveKernel:
             extra_data={"timestamp": start_time.isoformat()},
         )
 
+        # 🙏 DHARMA GATE: Check ethical alignment before execution (OPUS-009)
+        dharma_permitted, dharma_reason = self._check_dharma_gate(intent)
+        if not dharma_permitted:
+            logger.warning(f"🙏 DHARMA GATE BLOCKED: {intent.title}")
+            entry.status = "blocked_adharmic"
+            entry.execution_result = {"error": f"BLOCKED BY DHARMA GATE: {dharma_reason}"}
+            self._record_to_ledger(
+                event_type="MANAS_INTENT_BLOCKED_ADHARMIC",
+                intent=intent,
+                extra_data={"reason": dharma_reason},
+            )
+            self._save_intent_buffer()
+            return False
+
         try:
-            if self._execution_callback:
+            # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
+            if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
+                result = self._execute_healing(intent)
+                success = result.get("success", False)
+            elif self._execution_callback:
                 result = self._execution_callback(intent)
                 success = result.get("success", False)
             elif intent.circuit_to_execute:
@@ -732,6 +1206,8 @@ class CognitiveKernel:
         self._save_intent_buffer()
 
         if success:
+            # 🙏 DHARMA SENSE: Record success to increase Bhakti (OPUS-009)
+            self._on_dharma_success(intent)
             logger.info(f"MANAS: Intent {intent.id} executed successfully")
         else:
             logger.warning(f"MANAS: Intent {intent.id} execution failed: {result.get('error')}")

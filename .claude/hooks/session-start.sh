@@ -76,7 +76,7 @@ AUTO_BOOT="false"
 
 if [ -f "$PRANA_CONFIG" ]; then
     # Parse auto_boot_kernel from YAML (simple grep, no deps needed)
-    AUTO_BOOT=$(grep -A1 "session_start:" "$PRANA_CONFIG" | grep "auto_boot_kernel:" | awk '{print $2}' | tr -d ' ')
+    AUTO_BOOT=$(grep -A3 "session_start:" "$PRANA_CONFIG" | grep "auto_boot_kernel:" | awk '{print $2}' | tr -d ' ')
 fi
 
 if [ "$AUTO_BOOT" = "true" ]; then
