@@ -81,10 +81,6 @@ class WiringMap:
         "update_readme",
         "document_manas",
         "commit_pending_changes",
-        "commit_and_push",  # Commit + auto-push to remote
-        "git_push",  # Standalone push to remote
-        "create_pr",  # Create Pull Request via gh CLI
-        "merge_pr",  # Merge Pull Request via gh CLI
         "cleanup_stale_branches",
         "revive_archived_tests",
         "run_tests",

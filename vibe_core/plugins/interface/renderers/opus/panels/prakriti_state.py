@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from . import BasePanel
 
 if TYPE_CHECKING:
-    from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import GunaSummary
+    pass
 
 
 class PrakritiStatePanel(BasePanel):
@@ -95,25 +95,6 @@ class PrakritiStatePanel(BasePanel):
         if not sync_status["synced"]:
             lines.append("⚠️ **Drift Detected**: Git and Ledger are out of sync")
             lines.append("")
-
-        # 🔮 TRI-GUNA Status (OPUS-009 Wire 1)
-        guna_summary = self._get_guna_summary()
-        if guna_summary:
-            lines.append("### 🔮 Tri-Guna (State Health)")
-            lines.append("")
-            lines.append("| Guna | Count | Meaning |")
-            lines.append("| --- | --- | --- |")
-            lines.append(f"| ✅ Sattva | {guna_summary.sattva_count} | Synced & Clean |")
-            lines.append(f"| 🟡 Rajas | {guna_summary.rajas_count} | Active & Dirty |")
-            lines.append(f"| ❌ Tamas | {guna_summary.tamas_count} | Stale & Broken |")
-            lines.append("")
-
-            if guna_summary.needs_attention:
-                lines.append(f"⚠️ **Healing Required**: {guna_summary.tamas_count} paths in Tamas")
-                lines.append("")
-            elif guna_summary.rajas_count > 0:
-                lines.append(f"🔄 **Activity Detected**: {guna_summary.rajas_count} paths changing")
-                lines.append("")
 
         return "\n".join(lines)
 
@@ -220,28 +201,3 @@ class PrakritiStatePanel(BasePanel):
             result["sync_icon"] = "❌"
 
         return result
-
-    def _get_guna_summary(self) -> Optional["GunaSummary"]:
-        """Get Tri-Guna summary from PrakritiSense (OPUS-009 Wire 1)."""
-        try:
-            # Try to get from MANAS CognitiveKernel first
-            manas = getattr(self.kernel, "manas", None)
-            if manas and hasattr(manas, "_prakriti_sense"):
-                prakriti_sense = manas._prakriti_sense
-                if prakriti_sense:
-                    return prakriti_sense.perceive_state()
-
-            # Fallback: Create standalone PrakritiSense for read-only
-            from pathlib import Path
-
-            from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
-
-            root = getattr(self, "_root", None) or Path(".")
-            sense = PrakritiSense(root)
-            return sense.perceive_state()
-        except Exception as e:
-            # Log but don't crash - Tri-Guna is nice to have
-            import logging
-
-            logging.getLogger("PRAKRITI_PANEL").debug(f"PrakritiSense unavailable: {e}")
-            return None

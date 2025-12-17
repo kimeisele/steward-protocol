@@ -40,14 +40,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("TEST_ORCHESTRATION")
 
-# OPUS-009 Wire 3: PrakritiSense for state healing before tests
-try:
-    from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
-
-    PRAKRITI_SENSE_AVAILABLE = True
-except ImportError:
-    PRAKRITI_SENSE_AVAILABLE = False
-
 
 # ============================================================================
 # TEST RESULT (recorded to ledger)
@@ -203,24 +195,6 @@ class TestOrchestrationPlugin(KernelPlugin):
 
     def run_all_tests(self) -> List[TestResult]:
         """Run ALL tests for ALL components."""
-        # OPUS-009 Wire 3: Heal state before running tests
-        if PRAKRITI_SENSE_AVAILABLE and self._kernel:
-            try:
-                from pathlib import Path
-
-                workspace = Path(getattr(self._kernel, "workspace", "."))
-                sense = PrakritiSense(workspace)
-                guna = sense.perceive_state()
-                if guna.needs_attention:
-                    logger.info(f"🔮 PRAKRITI: Healing {guna.tamas_count} Tamas paths before tests...")
-                    for plugin_id, paths in sense._discovered_paths.items():
-                        for path_info in paths:
-                            if sense.diagnose(path_info.path).value == "tamas":
-                                sense.heal(path_info.path)
-                    logger.info("✅ State healed - proceeding with tests")
-            except Exception as e:
-                logger.warning(f"⚠️ PrakritiSense pre-test check failed: {e}")
-
         # GUARDIAN CHECK: Validate tests haven't mutated
         validation = self.validate_tests_before_run()
         if validation["mutated"] > 0:

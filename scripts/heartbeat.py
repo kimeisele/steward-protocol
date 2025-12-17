@@ -28,9 +28,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from vibe_core.task_management.models import TaskStatus
-from vibe_core.task_management.task_manager import TaskManager
-
 # Import Unified Router for task execution/routing
 try:
     from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate, UnifiedRouter
@@ -105,7 +102,8 @@ class HeartbeatEngine:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.task_manager = TaskManager(project_root)
+        # NOTE: TaskManager is now provided by TaskManagerPlugin
+        # No longer instantiated here - it's plugin-local with state sovereignty
 
         # Initialize Unified Router for intelligent task execution
         self.router = None

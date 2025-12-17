@@ -20,14 +20,6 @@ from .kernel_state import AgentSnapshot, KernelSnapshot, KernelState, QueueSnaps
 from .ledger_state import LedgerHead, LedgerState, SyncEvent
 from .persona import AgentPersona, PersonaManager
 from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
-from .sync_holon import (
-    GovernanceViolation,
-    PluginStateContract,
-    StateGuna,
-    StatePathInfo,
-    StateSyncHolon,
-    WatcherConfig,
-)
 
 __all__ = [
     # Main engine
@@ -52,11 +44,4 @@ __all__ = [
     # Layer 3: Identity (PURUSHA)
     "PersonaManager",
     "AgentPersona",
-    # StateSyncHolon (OPUS-009 Unified Weaver)
-    "StateSyncHolon",
-    "StateGuna",
-    "StatePathInfo",
-    "PluginStateContract",
-    "WatcherConfig",
-    "GovernanceViolation",
 ]
