@@ -216,6 +216,10 @@ class CognitiveKernel:
         self._workspace = workspace or Path.cwd()
         self._config = config or ManasConfig()
 
+        # 🔌 WIRE: Load full config/manas.yaml for feature configs
+        # ManasConfig only has core fields - features need their own sections
+        self._full_config = self._load_full_config()
+
         # Core components
         self._memory = MemoryStore(workspace=self._workspace)
         self._intent_generator = IntentGenerator(workspace=self._workspace, memory_store=self._memory)
@@ -263,6 +267,36 @@ class CognitiveKernel:
         self._init_observation_logger()
 
         logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
+
+    # =========================================================================
+    # 🔌 CONFIG LOADING (OPUS-092)
+    # =========================================================================
+
+    def _load_full_config(self) -> Dict[str, Any]:
+        """
+        Load full config/manas.yaml.
+
+        Phoenix ManasConfig only loads core fields (8 fields).
+        Features (Sankalpa, Shiva, etc.) need their own config sections.
+
+        Returns:
+            Full config dict with all sections, or empty dict if file missing
+        """
+        import yaml
+
+        config_file = Path("config/manas.yaml")
+        if not config_file.exists():
+            logger.warning(f"⚠️ Config file not found: {config_file}")
+            return {}
+
+        try:
+            with open(config_file) as f:
+                full_config = yaml.safe_load(f) or {}
+            logger.info(f"🔌 Loaded full config with {len(full_config)} sections")
+            return full_config
+        except Exception as e:
+            logger.error(f"❌ Failed to load {config_file}: {e}")
+            return {}
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
@@ -698,8 +732,9 @@ class CognitiveKernel:
         try:
             from .cortex.sankalpa import SankalpaOrchestrator
 
-            self._sankalpa = SankalpaOrchestrator(workspace=self._workspace)
-            logger.info("🌙 SANKALPA: Strategic Will initialized - proactive planning active")
+            sankalpa_config = self._full_config.get("sankalpa", {})
+            self._sankalpa = SankalpaOrchestrator(workspace=self._workspace, config=sankalpa_config)
+            logger.info(f"🌙 SANKALPA: Strategic Will initialized (config: {len(sankalpa_config)} keys)")
         except Exception as e:
             logger.warning(f"🌙 SANKALPA: Could not initialize: {e}")
             self._sankalpa = None
