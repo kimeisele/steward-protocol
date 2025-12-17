@@ -496,14 +496,158 @@
     {
       "intent_type": "review_todos",
       "intent_description": "Review 46 TODOs in codebase",
-      "timestamp": "2025-12-16T21:36:39.976979",
-      "outcome": "success",
+      "timestamp": "2025-12-16T23:30:00.051038",
+      "outcome": "failed",
       "context": {
         "todo_count": 46
       },
-      "feedback": null,
-      "execution_time_ms": 5
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "update_opus_documentation",
+      "intent_description": "Update OPUS.md (3 files changed)",
+      "timestamp": "2025-12-16T23:30:00.053556",
+      "outcome": "failed",
+      "context": {
+        "changed_files": [
+          "cognitive_kernel.py",
+          "__init__.py",
+          "prakriti_sense.py"
+        ],
+        "hours_behind": 1.4
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+      "timestamp": "2025-12-17T01:14:00.442199",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "vibe_core/path/to/file.py",
+        "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+      "timestamp": "2025-12-17T01:14:00.446095",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "tests/test_something.py",
+        "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+      "timestamp": "2025-12-17T01:39:21.961858",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "vibe_core/path/to/file.py",
+        "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+      "timestamp": "2025-12-17T01:39:21.968668",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "tests/test_something.py",
+        "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+      "timestamp": "2025-12-17T01:58:17.303873",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "vibe_core/path/to/file.py",
+        "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+      "timestamp": "2025-12-17T01:58:17.311212",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "tests/test_something.py",
+        "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+      "timestamp": "2025-12-17T02:08:19.498639",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "vibe_core/path/to/file.py",
+        "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+      "timestamp": "2025-12-17T02:08:19.506105",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "tests/test_something.py",
+        "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
     }
   ],
-  "updated_at": "2025-12-16T21:36:39.978178"
+  "updated_at": "2025-12-17T02:08:19.506964"
 }

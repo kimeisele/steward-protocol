@@ -23,6 +23,7 @@
     - architecture_plans: list of { name, path }
     - code_health: { todos, hacks, fixmes }
     - test_health: { active, archived, organized }
+    - sutra: { total_docs, docs_with_harness, gaps_count, health_pct, top_gaps } or null (OPUS-054)
     - preserved: { current_work, blockers, notes }
 #}
 
@@ -437,6 +438,91 @@ _No active session (kernel may be stopped)_
 | --- | --- | --- |
 | Git HEAD | `{{ git.sha[:12] }}` | {{ '✅' if zipper.synced else '⚪' }} |
 | Ledger HEAD | `{{ zipper.ledger_hash[:12] }}` | {{ '✅' if zipper.synced else '⚪' }} |
+
+{% if tri_guna %}
+### 🔮 Tri-Guna (State Health)
+
+| Guna | Count | Meaning |
+| --- | --- | --- |
+| ✅ Sattva | {{ tri_guna.sattva }} | Synced & Clean |
+| 🟡 Rajas | {{ tri_guna.rajas }} | Active & Dirty |
+| ❌ Tamas | {{ tri_guna.tamas }} | Stale & Broken |
+
+{% if tri_guna.tamas > 0 %}
+⚠️ **Healing Required**: {{ tri_guna.tamas }} paths in Tamas
+{% elif tri_guna.rajas > 0 %}
+🔄 **Activity Detected**: {{ tri_guna.rajas }} paths changing
+{% endif %}
+{% endif %}
+
+{% if dharma %}
+### 🙏 Dharma (Vedic Conscience)
+
+| Aspect | Value | Description |
+| --- | --- | --- |
+| Agent | `{{ dharma.agent_id }}` | The entity being governed |
+| Ashrama | **{{ dharma.ashrama }}** | Lifecycle stage |
+| Varna | {{ dharma.varna }} | Functional role |
+| Bhakti | {% if dharma.bhakti >= 100 %}🟢{% elif dharma.bhakti >= 50 %}🟡{% else %}⚪{% endif %} **{{ dharma.bhakti }}/200** | Earned trust (devotion) |
+
+{% if dharma.permissions_granted %}
+**Granted Permissions:** `{{ dharma.permissions_granted|join('`, `') }}`
+{% else %}
+⚠️ **Restricted Mode**: No permissions granted (Brahmachari defaults)
+{% endif %}
+
+{% if not dharma.is_registered %}
+_Agent not registered in Vedic Governance - using safe defaults_
+{% endif %}
+{% endif %}
+
+{% if sutra %}
+### 📜 Sutra (Documentation Curation) {% if sutra.phase == 2 %}*Phase 2: Proactive*{% endif %}
+
+*Bhagavad Gita 9.22: "yoga-kṣemaṁ vahāmy aham" - I bring what is lacking*
+
+| Metric | Value | Status |
+| --- | --- | --- |
+| Total OPUS Docs | {{ sutra.total_docs }} | - |
+| With @HARNESS | {{ sutra.docs_with_harness }} | ✅ |
+| Without @HARNESS | {{ sutra.docs_without_harness }} | {% if sutra.docs_without_harness > 0 %}⚠️{% else %}✅{% endif %} |
+| Doc/Code Gaps | {{ sutra.gaps_count }} | {% if sutra.gaps_count == 0 %}✅{% elif sutra.critical_gaps > 0 %}🔴{% else %}🟡{% endif %} |
+| Health Ratio | **{{ sutra.health_pct }}%** | {% if sutra.health_pct >= 80 %}🟢{% elif sutra.health_pct >= 50 %}🟡{% else %}🔴{% endif %} |
+
+{% if sutra.top_gaps %}
+**Top Gaps (Need Attention):**
+{% for gap in sutra.top_gaps %}
+- {% if gap.severity == 'high' %}🔴{% elif gap.severity == 'medium' %}🟡{% else %}⚪{% endif %} `{{ gap.type }}`: {{ gap.message }}{% if gap.doc %} ({{ gap.doc }}){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if sutra.phase == 2 %}
+#### 🔍 Phase 2: Proactive Mode
+
+| Capability | Count | Status |
+| --- | --- | --- |
+| Hidden Code Elements | {{ sutra.hidden_code_count }} | {% if sutra.hidden_code_high > 0 %}⚠️ {{ sutra.hidden_code_high }} high priority{% else %}✅{% endif %} |
+| Roadmap Items | {{ sutra.roadmap_count }} | {% if sutra.roadmap_count > 0 %}📋 Action needed{% else %}✅{% endif %} |
+| Intent Clusters | {{ sutra.cluster_count }} | {% if sutra.cluster_count > 0 %}🔄 Patterns detected{% else %}⚪{% endif %} |
+
+{% if sutra.roadmap_preview %}
+**Roadmap Preview (Top 5):**
+{% for item in sutra.roadmap_preview %}
+- [P{{ item.priority }}] `{{ item.action }}` → {{ item.target }} ({{ item.effort }})
+{% endfor %}
+{% endif %}
+
+{% if sutra.clusters %}
+**Intent Clusters:**
+{% for c in sutra.clusters %}
+- `{{ c.topic }}`: {{ c.intents }} intents
+{% endfor %}
+{% endif %}
+
+*Last Scan: {{ sutra.last_scan }} UTC*
+{% endif %}
+{% endif %}
 
 <!-- /@LIVE -->
 

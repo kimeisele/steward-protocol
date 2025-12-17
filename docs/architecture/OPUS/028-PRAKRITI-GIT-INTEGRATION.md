@@ -729,7 +729,7 @@ If issues arise:
 ## Related Documents
 
 - **OPUS-027**: Unified State Implementation (master plan - this is a sub-document)
-- **OPUS-009**: Unified State Management (concept, partial implementation)
+- **OPUS-009**: GOLDEN FOUNDATION - conceptual source of truth for all Prakriti
 - **OPUS-024**: Kernel Protection Audit (VISNU)
 - **GAD-000**: Operator Inversion (API design principles)
 
