@@ -238,6 +238,9 @@ class HeartbeatEngine:
             # Phase 1: MANAS thinks (OPUS-073)
             self._manas_think()
 
+            # Phase 2: Chronicle seals changes in git (OPUS-091)
+            self._chronicle_commit()
+
             logger.info("✅ HEARTBEAT PULSE COMPLETED")
         except Exception as e:
             logger.error(f"❌ HEARTBEAT FAILED: {e}", exc_info=True)
@@ -302,6 +305,65 @@ class HeartbeatEngine:
         except Exception as e:
             logger.warning(f"⚠️ MANAS cognitive cycle failed: {e}")
             # Don't raise - MANAS failure shouldn't stop heartbeat
+
+    def _chronicle_commit(self):
+        """
+        OPUS-091: Seal changes in git history using Chronicle Cartridge.
+
+        Replaces the old system_chronicle Plugin with direct GitTools call.
+        GPG signing is configurable via config/prana.yaml.
+        """
+        # Check if chronicle is enabled
+        prana_config = load_prana_config() if PRANA_AVAILABLE else {}
+        chronicle_config = prana_config.get("chronicle", {})
+
+        if not chronicle_config.get("enabled", True):
+            logger.debug("📜 Chronicle: Disabled in config, skipping")
+            return
+
+        try:
+            from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
+
+            logger.info("📜 Chronicle: Checking repository status...")
+
+            tools = GitTools()
+            status = tools.get_status()
+
+            if not status.get("success"):
+                logger.warning("⚠️  Chronicle: Could not get git status")
+                return
+
+            # Only commit if dirty (configurable)
+            commit_only_if_dirty = chronicle_config.get("commit_only_if_dirty", True)
+            if commit_only_if_dirty and not status.get("dirty"):
+                logger.debug("📝 Chronicle: No changes to commit")
+                return
+
+            # Git is dirty - create commit
+            files_changed = status.get("files_changed", [])
+            logger.info(f"📜 Chronicle: Found {len(files_changed)} changed files. Sealing history...")
+
+            # Get config values
+            gpg_sign = chronicle_config.get("gpg_sign_commits", True)
+            commit_prefix = chronicle_config.get("commit_prefix", "🫀 Heartbeat Pulse:")
+
+            commit_result = tools.seal_history(
+                message=f"{commit_prefix} System auto-save",
+                files=None,  # Commit all staged (or all modified if nothing staged)
+                sign=gpg_sign,  # Configurable GPG signing!
+            )
+
+            if commit_result.get("success"):
+                commit_hash = commit_result.get("commit_hash", "unknown")[:8]
+                sign_status = "signed" if gpg_sign else "unsigned"
+                logger.info(f"✅ Chronicle: History sealed ({commit_hash}, {sign_status})")
+            else:
+                logger.warning(f"⚠️  Chronicle: Commit failed - {commit_result.get('error', 'unknown error')}")
+
+        except ImportError as e:
+            logger.warning(f"⚠️  Chronicle: GitTools not available ({e})")
+        except Exception as e:
+            logger.error(f"❌ Chronicle: Unexpected error - {e}", exc_info=True)
 
 
 def main():

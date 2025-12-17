@@ -245,6 +245,7 @@ class CognitiveKernel:
 
         # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
         self._prakriti_sense: Optional["PrakritiSense"] = None
+        self._init_prakriti_sense()
 
         # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
         self._dharma_sense: Optional["DharmaSense"] = None
@@ -332,6 +333,30 @@ class CognitiveKernel:
     # =========================================================================
     # 👁️ PRAKRITI SENSE: THE SIXTH JNANENDRIYA (OPUS-009)
     # =========================================================================
+
+    def _init_prakriti_sense(self) -> None:
+        """
+        Initialize Prakriti Sense - the Sixth Jnanendriya.
+
+        This provides unified state perception for MANAS.
+        """
+        try:
+            from .cortex.prakriti_sense import PrakritiSense
+
+            prakriti_config = self._full_config.get("prakriti_sense", {})
+            self._prakriti_sense = PrakritiSense(
+                workspace=self._workspace,
+                config=prakriti_config,
+            )
+            # Boot perception
+            summary = self._prakriti_sense.on_manas_boot()
+            logger.info(
+                f"👁️ PRAKRITI SENSE: Sixth Jnanendriya initialized - "
+                f"Total: {summary.total_paths}, Health: {summary.health_ratio:.0%}"
+            )
+        except Exception as e:
+            logger.warning(f"👁️ PRAKRITI SENSE: Could not initialize: {e}")
+            self._prakriti_sense = None
 
     def inject_prakriti_sense(self, sense: "PrakritiSense") -> None:
         """
@@ -562,7 +587,8 @@ class CognitiveKernel:
         try:
             from .cortex.dharma_sense import DharmaSense
 
-            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas")
+            dharma_config = self._full_config.get("dharma_sense", {})
+            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas", config=dharma_config)
             # Boot registration
             summary = self._dharma_sense.on_manas_boot()
             logger.info(
