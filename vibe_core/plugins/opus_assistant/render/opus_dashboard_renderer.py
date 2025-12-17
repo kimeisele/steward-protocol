@@ -278,6 +278,7 @@ class OpusDashboardRenderer:
             "hot_paths": self._gather_hot_paths(),  # NEW: Most changed files
             "dependency_graph": self._gather_dependency_graph(),  # 🎯 SENIOR AI COCKPIT
             "tri_guna": self._gather_tri_guna(),  # 🔮 OPUS-009: State Health
+            "dharma": self._gather_dharma(),  # 🙏 OPUS-009: Vedic Conscience
             "preserved": {},  # Will be injected separately
         }
 
@@ -838,6 +839,17 @@ class OpusDashboardRenderer:
                 "tamas": guna.tamas_count,
                 "total": guna.total_paths,
             }
+        except Exception:
+            return None
+
+    def _gather_dharma(self) -> Optional[Dict[str, Any]]:
+        """Gather Dharma state from DharmaSense (OPUS-009 Extension)."""
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.dharma_sense import DharmaSense
+
+            sense = DharmaSense(workspace=self._root, agent_id="manas")
+            summary = sense.get_dharma_summary()
+            return summary.to_dict()
         except Exception:
             return None
 

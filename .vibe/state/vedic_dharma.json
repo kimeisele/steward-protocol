@@ -1,5 +1,36 @@
 {
   "version": "1.0",
   "created_at": "2025-12-16T23:59:32.643847",
-  "agents": {}
+  "agents": {
+    "manas": {
+      "ashrama": "grihastha",
+      "varna": "manusha",
+      "bhakti": 5,
+      "task_completions": 0,
+      "history": [
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "Successful intent: heal_system_state",
+          "timestamp": "2025-12-17T00:42:12.023142"
+        }
+      ],
+      "registered_at": "2025-12-17T00:42:12.022365"
+    },
+    "devotee": {
+      "ashrama": "brahmachari",
+      "varna": "manusha",
+      "bhakti": 60,
+      "task_completions": 0,
+      "history": [
+        {
+          "type": "bhakti",
+          "delta": 60,
+          "reason": "Testing Bhakti override",
+          "timestamp": "2025-12-17T00:42:12.024918"
+        }
+      ],
+      "registered_at": "2025-12-17T00:42:12.024299"
+    }
+  }
 }
