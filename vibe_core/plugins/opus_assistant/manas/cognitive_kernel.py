@@ -17,6 +17,7 @@ The Cognitive Kernel transforms OPUS from a reactive system
 to a proactive autonomous agent.
 """
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -24,7 +25,11 @@ import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+
+from vibe_core.event_bus import EventBus
+from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
+from vibe_core.runtime.unified_trace import UnifiedTrace
 
 from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
 from .memory_store import MemoryStore
@@ -178,16 +183,21 @@ class IntentBufferEntry:
     execution_result: Optional[Dict[str, Any]] = None
 
 
-class CognitiveKernel:
+class CognitiveKernel(CognitiveCycle):
     """
     The Mind of OPUS - Proactive Autonomous Cognition.
 
+    OPUS-095 REFACTORING: Inherits from CognitiveCycle
+    - Uses unified orchestration loop (UnifiedTrace, EventBus)
+    - OODA phases: _perceive(), _orient(), _decide(), _act(), _persist()
+    - Integrated with system observability
+
     This kernel:
-    1. Monitors system state via Prakriti
-    2. Generates intents when opportunities arise
+    1. Monitors system state via Prakriti (PERCEIVE)
+    2. Generates intents when opportunities arise (DECIDE)
     3. Manages intent buffer (displayed in OPUS.md)
     4. Handles approval/rejection flow
-    5. Executes approved intents
+    5. Executes approved intents (via CircuitExecutor as CognitiveProcess)
     6. Learns from outcomes via MemoryStore
 
     Rate Limiting:
@@ -205,16 +215,29 @@ class CognitiveKernel:
         self,
         workspace: Optional[Path] = None,
         config: Optional[ManasConfig] = None,
+        trace: Optional[UnifiedTrace] = None,
+        event_bus: Optional[EventBus] = None,
     ):
         """
         Initialize MANAS Cognitive Kernel.
 
+        OPUS-095: Integrated with CognitiveCycle for unified orchestration.
+
         Args:
             workspace: Workspace root
             config: Optional configuration
+            trace: Optional UnifiedTrace for observability (Phase A integration)
+            event_bus: Optional EventBus for phase transition events (Phase A integration)
         """
+        # Initialize CognitiveCycle base class
+        super().__init__()
+
         self._workspace = workspace or Path.cwd()
         self._config = config or ManasConfig()
+
+        # Phase A System Integration: Setup trace and event bus if provided
+        if trace and event_bus:
+            self.setup(trace, event_bus, steward_context=None)
 
         # 🔌 WIRE: Load full config/manas.yaml for feature configs
         # ManasConfig only has core fields - features need their own sections
@@ -269,6 +292,31 @@ class CognitiveKernel:
         self._init_observation_logger()
 
         logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
+
+    # =========================================================================
+    # OPUS-095: COGNITIVECYCLE PROPERTIES
+    # =========================================================================
+
+    @property
+    def cycle_name(self) -> str:
+        """Cycle name for orchestration tracking."""
+        return "cognitive_kernel"
+
+    @property
+    def rate_limit_seconds(self) -> int:
+        """Rate limit based on config (default 15 minutes = 900 seconds)."""
+        thinking_interval_minutes = self._config.thinking_interval_minutes
+        return thinking_interval_minutes * 60
+
+    @property
+    def timeout_seconds(self) -> int:
+        """Max thinking time (5 minutes)."""
+        return 300
+
+    @property
+    def recovery_enabled(self) -> bool:
+        """Enable error recovery."""
+        return True
 
     # =========================================================================
     # 🔌 CONFIG LOADING (OPUS-092)
@@ -1068,6 +1116,188 @@ class CognitiveKernel:
             return None
 
     # =========================================================================
+    # OPUS-095: OODA PHASE METHODS (Abstract from orchestrate())
+    # =========================================================================
+
+    async def _perceive(self) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        PERCEIVE Phase: Collect system state observations.
+
+        Returns:
+            (observations, metadata) where observations is list of intents discovered
+        """
+        observations = []
+
+        # 👁️ PRAKRITI SENSE: Perceive state and generate healing intents
+        healing_intents = self._perceive_and_generate_healing_intents()
+        observations.extend(healing_intents)
+
+        # 📜 SUTRA SENSE: Perceive documentation gaps
+        gap_intents = self._perceive_and_generate_gap_intents()
+        observations.extend(gap_intents)
+
+        # 🌙 SANKALPA: Strategic proactive intents
+        sankalpa_intents = self._generate_sankalpa_intents({})
+        observations.extend(sankalpa_intents)
+
+        # Clean up expired intents
+        self._cleanup_expired_intents()
+
+        metadata = {
+            "healing_count": len(healing_intents),
+            "gap_count": len(gap_intents),
+            "sankalpa_count": len(sankalpa_intents),
+        }
+
+        return observations, metadata
+
+    async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        ORIENT Phase: Organize and prioritize observations.
+
+        Args:
+            observations: List of intents from perceive phase
+
+        Returns:
+            (orientations, metadata) where orientations is organized/prioritized intent list
+        """
+        # 🕉️ SHIVA: Sweep stale intents (destroy illusions)
+        swept = self._shiva.sweep_stale_intents()
+        if swept > 0:
+            logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents")
+
+        # Generate new intents from current context
+        new_intents = self._intent_generator.generate_intents({})
+
+        # Combine perceptions with generated intents
+        all_intents = observations + new_intents
+
+        # Organize by priority: healing → gap → sankalpa → generated
+        orientations = all_intents
+
+        metadata = {
+            "new_generated": len(new_intents),
+            "total_oriented": len(orientations),
+            "swept_count": swept,
+        }
+
+        return orientations, metadata
+
+    async def _decide(self, orientations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+        """
+        DECIDE Phase: Select which intents to execute.
+
+        Args:
+            orientations: Organized intent list from orient phase
+
+        Returns:
+            (decisions, metadata) where decisions is throttled/prioritized intent list
+        """
+        new_intents = orientations
+
+        # OPUS-035: Throttling - Prioritize survival over growth
+        if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
+            new_intents = self._prioritize_survival(new_intents)
+
+        # Throttle to max_intents_per_tick
+        if len(new_intents) > self._config.max_intents_per_tick:
+            logger.debug(f"⚡ MANAS: Throttling {len(new_intents)} → {self._config.max_intents_per_tick}")
+            new_intents = new_intents[: self._config.max_intents_per_tick]
+
+        decisions = new_intents
+
+        metadata = {
+            "throttled_from": len(orientations),
+            "decided_count": len(decisions),
+        }
+
+        return decisions, metadata
+
+    async def _act(self, decisions: List[Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """
+        ACT Phase: Execute decided intents.
+
+        Args:
+            decisions: List of intents to execute from decide phase
+
+        Returns:
+            (results, metadata) where results is execution summary dict
+        """
+        added = []
+
+        for intent in decisions:
+            if not self._is_intent_duplicate(intent):
+                entry = IntentBufferEntry(intent=intent)
+
+                # 🦁 NARASIMHA JUDGMENT: Judge before buffering
+                verdict = self._narasimha.judge_intent(intent)
+                if verdict.status == "GUILTY":
+                    logger.critical(f"🦁 NARASIMHA BLOCKED INTENT: {intent.title}")
+                    entry.status = "blocked"
+                    entry.execution_result = {
+                        "error": f"BLOCKED BY NARASIMHA: {verdict.reason}",
+                        "verdict": str(verdict),
+                    }
+
+                self._intent_buffer.append(entry)
+                added.append(intent)
+
+                # 📜 SUTRA SENSE: Record intent for clustering
+                self._record_intent_for_clustering(intent)
+
+                # ⚡ VAJRA: Record intent proposal to ledger
+                self._record_to_ledger(
+                    event_type="MANAS_INTENT_PROPOSED",
+                    intent=intent,
+                    extra_data={
+                        "proposed_at": datetime.utcnow().isoformat(),
+                        "auto_executable": intent.auto_executable,
+                    },
+                )
+
+                # Auto-execute if safe OR if karma gate allows
+                is_safe = self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE
+                is_trusted = self._karma_allows_auto_execute(intent)
+
+                if is_safe or is_trusted:
+                    reason = "SAFE" if is_safe else "KARMA GATE"
+                    logger.info(f"🙏 MANAS: Auto-executing [{reason}]: {intent.title}")
+                    self._execute_intent(entry)
+
+        results = {
+            "added_count": len(added),
+            "added_intents": [i.title for i in added],
+        }
+
+        metadata = {
+            "execution_phase": "act",
+            "intents_processed": len(decisions),
+        }
+
+        return results, metadata
+
+    async def _persist(self) -> None:
+        """
+        PERSIST Phase: Save state to disk.
+
+        Called after all phases complete to ensure durability.
+        """
+        # Trim buffer to max size
+        while len(self._intent_buffer) > self._config.max_intent_buffer_size:
+            removed = False
+            for i, entry in enumerate(self._intent_buffer):
+                if entry.status != "pending":
+                    self._intent_buffer.pop(i)
+                    removed = True
+                    break
+            if not removed:
+                self._intent_buffer.pop(0)
+
+        # Save intent buffer to disk
+        self._save_intent_buffer()
+        logger.debug("💾 MANAS: Persisted intent buffer")
+
+    # =========================================================================
     # RE-ENTRANCY GUARD (OPUS-088: Mirror Test)
     # =========================================================================
 
@@ -1115,139 +1345,23 @@ class CognitiveKernel:
     # =========================================================================
 
     def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
-        """
-        Execute a thought cycle - analyze state and generate intents.
-
-        This is rate-limited unless force=True.
-
-        Args:
-            context: Optional context from Prakriti
-            force: Force thinking even if rate limit hasn't passed
-
-        Returns:
-            List of newly generated intents
-        """
-        # Rate limit check
+        """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""
         if not force and not self._should_think():
-            logger.debug("MANAS: Rate limited, skipping thought cycle")
             return []
-
-        # 🪞 Mirror Test: Don't react to our own commits (OPUS-088)
-        # Prevents infinite feedback loop: commit → wake → think → commit → ...
-        trigger = (context or {}).get("trigger")
-        if trigger in ("git_change", "file_change") and self._is_self_triggered_change():
+        if (context or {}).get("trigger") in ("git_change", "file_change") and self._is_self_triggered_change():
             logger.info("🪞 MANAS: Chill. Das warst du selbst.")
             return []
-
-        logger.info("MANAS: Beginning thought cycle...")
         self._last_thought_time = datetime.utcnow()
-
-        # 👁️ PRAKRITI SENSE: Perceive state FIRST (OPUS-009)
-        # Before generating other intents, check system state health
-        healing_intents = self._perceive_and_generate_healing_intents()
-
-        # 📜 SUTRA SENSE: Perceive documentation gaps (OPUS-054)
-        # MANAS is the curator of its own knowledge base
-        gap_intents = self._perceive_and_generate_gap_intents()
-
-        # 🌙 SANKALPA: Strategic proactive intents (OPUS-089)
-        # Evaluates missions/strategies based on time, idle, conditions
-        sankalpa_intents = self._generate_sankalpa_intents(context or {})
-
-        # Clean up expired intents
-        self._cleanup_expired_intents()
-
-        # 🕉️ SHIVA: Sweep stale intents (destroy illusions)
-        # If reality already satisfied an intent, archive it
-        swept = self._shiva.sweep_stale_intents()
-        if swept > 0:
-            logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents (illusions destroyed)")
-
-        # Generate new intents
-        new_intents = self._intent_generator.generate_intents(context or {})
-
-        # Prepend healing intents (survival first!) then gap intents, then sankalpa
-        if healing_intents:
-            new_intents = healing_intents + new_intents
-        if gap_intents:
-            new_intents = gap_intents + new_intents
-        if sankalpa_intents:
-            # Sankalpa intents are proactive - add after gap intents
-            new_intents = sankalpa_intents + new_intents
-
-        # OPUS-035: Throttling - Prioritize survival over growth
-        if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
-            new_intents = self._prioritize_survival(new_intents)
-
-        # OPUS-035: Throttle to max_intents_per_tick
-        if len(new_intents) > self._config.max_intents_per_tick:
-            logger.debug(f"⚡ MANAS: Throttling {len(new_intents)} → {self._config.max_intents_per_tick} intents")
-            new_intents = new_intents[: self._config.max_intents_per_tick]
-
-        # Add to buffer (if not already present)
-        added = []
-        for intent in new_intents:
-            if not self._is_intent_duplicate(intent):
-                entry = IntentBufferEntry(intent=intent)
-
-                # 🦁 NARASIMHA JUDGMENT: Judge before buffering
-                verdict = self._narasimha.judge_intent(intent)
-                if verdict.status == "GUILTY":
-                    logger.critical(f"🦁 NARASIMHA BLOCKED INTENT: {intent.title} - {verdict.reason}")
-                    entry.status = "blocked"  # New status for sinful intents
-                    entry.execution_result = {
-                        "error": f"BLOCKED BY NARASIMHA: {verdict.reason}",
-                        "verdict": str(verdict),
-                    }
-                    # We still buffer it as a record of sin, but it can never run
-
-                self._intent_buffer.append(entry)
-                added.append(intent)
-
-                # 📜 SUTRA SENSE: Record intent for clustering (OPUS-054 Phase 2)
-                self._record_intent_for_clustering(intent)
-
-                # ⚡ VAJRA: Record intent proposal to ledger
-                self._record_to_ledger(
-                    event_type="MANAS_INTENT_PROPOSED",
-                    intent=intent,
-                    extra_data={
-                        "proposed_at": datetime.utcnow().isoformat(),
-                        "auto_executable": intent.auto_executable,
-                    },
-                )
-
-                # Auto-execute if safe OR if karma gate allows (earned autonomy)
-                is_safe = self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE
-                is_trusted = self._karma_allows_auto_execute(intent)
-
-                if is_safe or is_trusted:
-                    reason = "SAFE" if is_safe else f"KARMA GATE (>={self._config.karma_auto_execute_threshold})"
-                    logger.info(f"🙏 MANAS: Auto-executing [{reason}]: {intent.title}")
-                    self._execute_intent(entry)
-
-        # Trim buffer to max size
-        while len(self._intent_buffer) > self._config.max_intent_buffer_size:
-            # Remove oldest non-pending intents first
-            removed = False
-            for i, entry in enumerate(self._intent_buffer):
-                if entry.status != "pending":
-                    self._intent_buffer.pop(i)
-                    removed = True
-                    break
-            if not removed:
-                # Remove oldest pending
-                self._intent_buffer.pop(0)
-
-        # Persist
-        self._save_intent_buffer()
-
-        if added:
-            logger.info(f"MANAS: Generated {len(added)} new intents")
-        else:
-            logger.debug("MANAS: No new intents generated")
-
-        return added
+        try:
+            ctx = asyncio.run(self.orchestrate(force=True))
+            if ctx and ctx.results:
+                added = ctx.results.get("added_intents", [])
+                if added:
+                    logger.info(f"MANAS: Generated {len(added)} new intents")
+                return added
+        except Exception as e:
+            logger.error(f"MANAS: Error in orchestrate(): {e}")
+        return []
 
     def approve_intent(self, intent_id: str) -> bool:
         """
