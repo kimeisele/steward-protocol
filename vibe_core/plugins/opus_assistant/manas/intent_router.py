@@ -141,6 +141,12 @@ class IntentRouter:
         self._handlers["genesis_tests"] = self._handle_silpa
         self._handlers["create_tests"] = self._handle_silpa
 
+        # SutraSense Roadmap intents → Doc/Harness handlers
+        self._handlers["roadmap_add_harness"] = self._handle_roadmap_harness
+        self._handlers["roadmap_fix_code_reference"] = self._handle_roadmap_fix
+        self._handlers["sutra_missing_code"] = self._handle_roadmap_fix
+        self._handlers["sutra_missing_harness"] = self._handle_roadmap_harness
+
         # Architecture audit → DHARMA
         self._handlers["audit_architecture"] = self._handle_dharma
         self._handlers["check_drift"] = self._handle_dharma
@@ -950,6 +956,86 @@ class IntentRouter:
         except Exception as e:
             logger.error(f"❌ PR merge failed: {e}")
             return {"success": False, "handler": "GitHub CLI", "error": str(e)}
+
+    def _handle_roadmap_harness(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-054 SUTRA: Handle roadmap add_harness intents.
+
+        Triggers the generate_harness circuit to add @HARNESS blocks.
+        """
+        logger.info(f"📜 SUTRA handling harness generation: {intent.title}")
+
+        try:
+            target = intent.params.get("target", "")
+            if not target:
+                return {"success": False, "handler": "SUTRA", "error": "No target file specified"}
+
+            # Extract module name from file path (e.g., 050-VEDA.md -> veda)
+            from pathlib import Path
+
+            doc_name = Path(target).stem  # e.g., "050-VEDA"
+            parts = doc_name.split("-")
+            module_name = parts[1].lower() if len(parts) > 1 else doc_name.lower()
+
+            # Use the circuit executor to run generate_harness
+            from .circuit_executor import MANASCircuitExecutor
+
+            executor = MANASCircuitExecutor(workspace=self._workspace)
+            result = executor.execute(
+                circuit_path="vibe_core/plugins/opus_assistant/circuits/generate_harness.yaml",
+                params={"opus_file": target, "module_name": module_name},
+            )
+
+            if result.get("success"):
+                logger.info(f"✅ Harness generated for {doc_name}")
+                return {
+                    "success": True,
+                    "handler": "SUTRA/generate_harness",
+                    "action": "harness_generated",
+                    "target": target,
+                    "message": f"@HARNESS added to {doc_name}",
+                }
+            else:
+                return {
+                    "success": False,
+                    "handler": "SUTRA/generate_harness",
+                    "action": "harness_failed",
+                    "error": result.get("error", "Unknown error"),
+                }
+
+        except Exception as e:
+            logger.error(f"❌ Harness generation failed: {e}")
+            return {"success": False, "handler": "SUTRA", "error": str(e)}
+
+    def _handle_roadmap_fix(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-054 SUTRA: Handle roadmap fix intents (broken references, etc).
+
+        For now, logs the issue and returns success with a TODO.
+        Full auto-fix requires more sophisticated code editing.
+        """
+        logger.info(f"🔧 SUTRA handling fix: {intent.title}")
+
+        try:
+            target = intent.params.get("target", "")
+            description = intent.params.get("description", intent.description)
+
+            # For now, we acknowledge the issue but don't auto-fix
+            # This is the safe approach - broken refs need human review
+            logger.warning(f"⚠️ Fix needed: {description}")
+
+            return {
+                "success": True,
+                "handler": "SUTRA/fix",
+                "action": "fix_acknowledged",
+                "target": target,
+                "needs_manual_review": True,
+                "message": f"Issue acknowledged: {description[:100]}. Manual review recommended.",
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Fix handling failed: {e}")
+            return {"success": False, "handler": "SUTRA", "error": str(e)}
 
     def _handle_test(self, intent: Intent) -> Dict[str, Any]:
         """Route to TestCortex for test-related tasks."""
