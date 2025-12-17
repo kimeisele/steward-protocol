@@ -91,6 +91,7 @@ class OpusDashboardRenderer:
         self._opus_path = self._root / "OPUS.md"
         self._template_path = self._root / "vibe_core/plugins/opus_assistant/templates/opus_dashboard.md.j2"
         self._config = self._load_config()
+        self._manas_config = self._load_manas_config()  # OPUS-092: Load MANAS config for Senses
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from config/opus.yaml."""
@@ -100,6 +101,23 @@ class OpusDashboardRenderer:
                 return yaml.safe_load(config_path.read_text())
         except Exception:
             pass
+        return {}
+
+    def _load_manas_config(self) -> Dict[str, Any]:
+        """
+        Load MANAS configuration from config/manas.yaml.
+
+        OPUS-092: Senses need config to function properly.
+        This ensures Prakriti/Dharma get their config when instantiated for reporting.
+        """
+        config_path = self._root / "config" / "manas.yaml"
+        try:
+            if config_path.exists():
+                full_config = yaml.safe_load(config_path.read_text()) or {}
+                logger.debug(f"📝 Loaded MANAS config with {len(full_config)} sections")
+                return full_config
+        except Exception as e:
+            logger.debug(f"⚠️  Failed to load MANAS config: {e}")
         return {}
 
     def render(self, quick: bool = False) -> str:
@@ -832,7 +850,9 @@ class OpusDashboardRenderer:
         try:
             from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
 
-            sense = PrakritiSense(self._root)
+            # OPUS-092: Pass config to Sense for proper initialization
+            prakriti_config = self._manas_config.get("prakriti_sense", {})
+            sense = PrakritiSense(workspace=self._root, config=prakriti_config)
             guna = sense.perceive_state()
             return {
                 "sattva": guna.sattva_count,
@@ -848,7 +868,9 @@ class OpusDashboardRenderer:
         try:
             from vibe_core.plugins.opus_assistant.manas.cortex.dharma_sense import DharmaSense
 
-            sense = DharmaSense(workspace=self._root, agent_id="manas")
+            # OPUS-092: Pass config to Sense for proper initialization
+            dharma_config = self._manas_config.get("dharma_sense", {})
+            sense = DharmaSense(workspace=self._root, agent_id="manas", config=dharma_config)
             summary = sense.get_dharma_summary()
             return summary.to_dict()
         except Exception:
@@ -869,7 +891,9 @@ class OpusDashboardRenderer:
 
             from vibe_core.plugins.opus_assistant.manas.cortex.sutra_sense import SutraSense
 
-            sense = SutraSense(workspace=self._root)
+            # OPUS-092: Pass config to Sense for proper initialization
+            sutra_config = self._manas_config.get("sutra_sense", {})
+            sense = SutraSense(workspace=self._root, config=sutra_config)
             summary = sense.perceive_gaps(refresh=True)  # Fresh scan for OPUS.md
             gaps = sense.get_gaps()
 
