@@ -137,6 +137,10 @@ INTENT_PERMISSION_MAP: Dict[str, List[str]] = {
     "update_documentation": ["doc_modify"],
     "cleanup_branches": ["git_modify"],
     "commit_pending_changes": ["git_commit"],
+    "commit_and_push": ["git_commit", "git_push"],  # Commit + push combo
+    "git_push": ["git_push"],  # Standalone push to remote
+    "create_pr": ["git_push", "pr_create"],  # Create Pull Request
+    "merge_pr": ["pr_merge"],  # Merge Pull Request (high privilege!)
     # Safe intents (most agents can do)
     "heal_system_state": ["state_heal"],
     "doc_update": ["doc_modify"],
@@ -151,14 +155,17 @@ ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
     "grihastha": [
         "code_modify",
         "git_commit",
+        "git_push",  # Can push to remote
         "git_modify",
+        "pr_create",  # Can create PRs
+        "pr_merge",  # Can merge PRs - FULL AUTONOMOUS CYCLE!
         "test_create",
         "doc_modify",
         "review",
         "state_heal",
-    ],  # Householder: productive
-    "vanaprastha": ["code_modify", "doc_modify", "review", "mentor"],  # Elder: mentoring
-    "sannyasi": ["review", "mentor", "admin", "system_control"],  # Renunciate: governance
+    ],  # Householder: productive - NO PUSSY SHIT!
+    "vanaprastha": ["code_modify", "doc_modify", "review", "mentor", "pr_create"],  # Elder: mentoring
+    "sannyasi": ["review", "mentor", "admin", "system_control", "pr_merge"],  # Renunciate: governance + merge power
 }
 
 
