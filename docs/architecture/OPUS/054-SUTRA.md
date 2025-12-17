@@ -158,18 +158,18 @@ Every OPUS doc in MANAS territory MUST have a @HARNESS block:
 ```markdown
 <!-- @HARNESS
 files:
-  - path: vibe_core/path/to/file.py
+  - path: your/module/file.py          # <-- Replace with actual path
     required: true
     rationale: "Why this file matters"
 
 wiring:
-  - pattern: "class ClassName"
-    in: vibe_core/path/to/file.py
-  - pattern: "def function_name"
-    in: vibe_core/path/to/other.py
+  - pattern: "class YourClassName"     # <-- Replace with actual pattern
+    in: your/module/file.py
+  - pattern: "def your_function"
+    in: your/module/other.py
 
 tests:
-  - path: tests/test_something.py
+  - path: tests/test_your_module.py    # <-- Replace with actual test
     required: false
 -->
 ```

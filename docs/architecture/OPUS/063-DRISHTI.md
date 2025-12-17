@@ -19,6 +19,25 @@ When kernel dies:
 External observer that doesn't depend on kernel.
 
 ```python
+
+<!-- @HARNESS
+files:
+  - path: scripts/drishti.py
+    required: true
+
+wiring:
+  - pattern: "def get_kernel_pid"
+    in: scripts/drishti.py
+  - pattern: "def is_process_running"
+    in: scripts/drishti.py
+  - pattern: "def get_opus_last_modified"
+    in: scripts/drishti.py
+  - pattern: "def extract_opus_timestamp"
+    in: scripts/drishti.py
+  - pattern: "def diagnose"
+    in: scripts/drishti.py
+-->
+
 # scripts/drishti.py
 
 def diagnose():
