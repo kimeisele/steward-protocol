@@ -58,16 +58,17 @@ class MemoryStore:
     - Prevents repeated failures (cooldown period)
 
     Storage location: .opus_state/manas_memory.json
+
+    Configuration: Reads from config/opus.yaml under 'memory' section.
+    Falls back to defaults if config not available.
     """
 
-    # How long to remember things (days)
-    MEMORY_RETENTION_DAYS = 30
-
-    # Cooldown after failure (hours) - don't suggest same thing too soon
-    FAILURE_COOLDOWN_HOURS = 24
-
-    # Max memories to keep (prevent unbounded growth)
-    MAX_MEMORIES = 500
+    # Default values (overridden by config/opus.yaml)
+    DEFAULT_MEMORY_RETENTION_DAYS = 30
+    DEFAULT_FAILURE_COOLDOWN_HOURS = 24
+    DEFAULT_MAX_MEMORIES = 500
+    DEFAULT_SUCCESS_RATE_THRESHOLD = 0.7
+    DEFAULT_MIN_ATTEMPTS_FOR_TRUST = 2
 
     def __init__(self, workspace: Optional[Path] = None):
         """
@@ -79,7 +80,52 @@ class MemoryStore:
         self._workspace = workspace or Path.cwd()
         self._memory_file = self._workspace / ".opus_state" / "manas_memory.json"
         self._memories: List[MemoryEntry] = []
+
+        # Load config from opus.yaml
+        self._config = self._load_config()
         self._load()
+
+    def _load_config(self) -> Dict[str, Any]:
+        """
+        Load memory configuration from config/opus.yaml.
+
+        Returns config dict with defaults for any missing keys.
+        """
+        config = {
+            "max_memories": self.DEFAULT_MAX_MEMORIES,
+            "retention_days": self.DEFAULT_MEMORY_RETENTION_DAYS,
+            "failure_cooldown_hours": self.DEFAULT_FAILURE_COOLDOWN_HOURS,
+            "success_rate_threshold": self.DEFAULT_SUCCESS_RATE_THRESHOLD,
+            "min_attempts_for_trust": self.DEFAULT_MIN_ATTEMPTS_FOR_TRUST,
+        }
+
+        config_path = self._workspace / "config" / "opus.yaml"
+        if config_path.exists():
+            try:
+                import yaml
+
+                with open(config_path) as f:
+                    data = yaml.safe_load(f)
+                    memory_config = data.get("memory", {})
+                    config.update(memory_config)
+                    logger.debug(f"Loaded memory config from opus.yaml: {memory_config}")
+            except Exception as e:
+                logger.warning(f"Could not load memory config: {e}")
+
+        return config
+
+    # Properties for backward compatibility
+    @property
+    def MEMORY_RETENTION_DAYS(self) -> int:
+        return self._config.get("retention_days", self.DEFAULT_MEMORY_RETENTION_DAYS)
+
+    @property
+    def FAILURE_COOLDOWN_HOURS(self) -> int:
+        return self._config.get("failure_cooldown_hours", self.DEFAULT_FAILURE_COOLDOWN_HOURS)
+
+    @property
+    def MAX_MEMORIES(self) -> int:
+        return self._config.get("max_memories", self.DEFAULT_MAX_MEMORIES)
 
     def _load(self) -> None:
         """Load memories from disk."""
@@ -250,12 +296,20 @@ class MemoryStore:
         """
         Get intent types that have been consistently successful.
 
+        Uses configurable thresholds from config/opus.yaml:
+        - success_rate_threshold: Minimum success rate (default 0.7)
+        - min_attempts_for_trust: Minimum attempts needed (default 2)
+
         Args:
             limit: Max patterns to return
 
         Returns:
             List of intent types with high success rates
         """
+        # Get thresholds from config
+        success_threshold = self._config.get("success_rate_threshold", self.DEFAULT_SUCCESS_RATE_THRESHOLD)
+        min_attempts = self._config.get("min_attempts_for_trust", self.DEFAULT_MIN_ATTEMPTS_FOR_TRUST)
+
         # Group by intent type
         intent_stats: Dict[str, Dict[str, int]] = {}
         for m in self._memories:
@@ -264,12 +318,12 @@ class MemoryStore:
             intent_stats[m.intent_type][m.outcome] = intent_stats[m.intent_type].get(m.outcome, 0) + 1
             intent_stats[m.intent_type]["total"] += 1
 
-        # Filter for successful patterns (>70% success, at least 2 attempts)
+        # Filter for successful patterns using config thresholds
         successful = []
         for intent_type, stats in intent_stats.items():
-            if stats["total"] >= 2:
+            if stats["total"] >= min_attempts:
                 success_rate = stats.get("success", 0) / stats["total"]
-                if success_rate >= 0.7:
+                if success_rate >= success_threshold:
                     successful.append((intent_type, success_rate))
 
         # Sort by success rate and return top N
