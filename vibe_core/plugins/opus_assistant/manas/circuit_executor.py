@@ -1,15 +1,16 @@
 """
 OPUS-083: CognitiveCircuitExecutor - The Hand of MANAS.
 
-This is the bridge from thought to action.
-MANAS generates intents with `circuit_to_execute`.
-This executor runs those circuits WITHOUT requiring full kernel boot.
+OPUS-095: CognitiveProcess Integration
+--------------------------------------
+Migrated to CognitiveProcess for stateless execution.
+CircuitExecutor is NOT a repeating cycle - it's a linear processor.
 
 Architecture:
-    CognitiveKernel (Brain)
+    CognitiveKernel (Brain - CognitiveCycle)
            │
            ▼
-    CognitiveCircuitExecutor (Hand)
+    CognitiveCircuitExecutor (Hand - CognitiveProcess)
            │
            ▼
     Action Handlers (Fingers)
@@ -18,6 +19,9 @@ Philosophy:
     An intent without execution is a hallucination.
     A circuit without a runner is dead code.
     This makes both real.
+
+    CircuitExecutor receives Intent → executes Circuit → returns Result
+    (stateless processor, no repeating loop)
 """
 
 import logging
@@ -26,10 +30,12 @@ from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 
+from vibe_core.orchestration_cycle import CognitiveProcess
+
 logger = logging.getLogger("MANAS.CIRCUIT_EXECUTOR")
 
 
-class CognitiveCircuitExecutor:
+class CognitiveCircuitExecutor(CognitiveProcess):
     """
     Headless circuit runner for MANAS.
 
@@ -54,10 +60,36 @@ class CognitiveCircuitExecutor:
         Args:
             workspace: Project root directory
         """
+        super().__init__()
         self._workspace = workspace
         self._circuits_dir = workspace / "vibe_core" / "plugins" / "opus_assistant" / "circuits"
         self._action_handlers = self._build_action_handlers()
         logger.info("⚡ CognitiveCircuitExecutor initialized")
+
+    # =========================================================================
+    # COGNITIVEPROCESS INTERFACE (OPUS-095)
+    # =========================================================================
+
+    async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        OPUS-095: Execute CognitiveProcess interface method.
+
+        Takes inputs (circuit name, parameters), runs the circuit, returns result.
+
+        Args:
+            inputs: {
+                "circuit_name": "maintenance_pulse",
+                "params": { ... }  (optional)
+            }
+
+        Returns:
+            Execution result with success/failure and details
+        """
+        circuit_name = inputs.get("circuit_name", "")
+        if not circuit_name:
+            return {"success": False, "error": "Missing circuit_name in inputs"}
+
+        return self.execute_circuit(circuit_name)
 
     def execute_circuit(self, circuit_name: str) -> Dict[str, Any]:
         """
