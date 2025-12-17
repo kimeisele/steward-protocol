@@ -277,6 +277,7 @@ class OpusDashboardRenderer:
             "module_index": self._gather_module_index(),  # NEW: Codebase navigation
             "hot_paths": self._gather_hot_paths(),  # NEW: Most changed files
             "dependency_graph": self._gather_dependency_graph(),  # 🎯 SENIOR AI COCKPIT
+            "tri_guna": self._gather_tri_guna(),  # 🔮 OPUS-009: State Health
             "preserved": {},  # Will be injected separately
         }
 
@@ -823,6 +824,22 @@ class OpusDashboardRenderer:
             }
         except Exception:
             return {"git_sha": "unknown", "ledger_hash": "unknown", "synced": False}
+
+    def _gather_tri_guna(self) -> Optional[Dict[str, int]]:
+        """Gather Tri-Guna state health from PrakritiSense (OPUS-009)."""
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
+
+            sense = PrakritiSense(self._root)
+            guna = sense.perceive_state()
+            return {
+                "sattva": guna.sattva_count,
+                "rajas": guna.rajas_count,
+                "tamas": guna.tamas_count,
+                "total": guna.total_paths,
+            }
+        except Exception:
+            return None
 
     def _gather_code_health(self) -> Dict[str, List[Dict[str, Any]]]:
         """Gather code health markers (TODO/HACK/FIXME)."""
