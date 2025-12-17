@@ -184,7 +184,7 @@ class TaskManagerPlugin(KernelPlugin):
                         guna = sense.perceive_state(refresh=True)
                         if guna.needs_attention:
                             logger.error(f"❌ TAMAS GATE: Still {guna.tamas_count} paths in Tamas after heal")
-                            task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                            self.manager.update_status(next_task.id, TaskStatus.BLOCKED)
                             return HookResult.ok(data={"executed": 0, "blocked_by": "tamas_gate", "phase": "actuators"})
                         logger.info("   ✅ Healed to Sattva - proceeding with task")
                 except Exception as e:
