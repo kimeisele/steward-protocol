@@ -147,9 +147,9 @@ def _detect_provider() -> str:
 
     Priority order (NO VENDOR LOCK-IN!):
     1. OPENROUTER_API_KEY → openrouter (FIRST! Routes to any model)
-    2. GOOGLE_API_KEY → google
-    3. ANTHROPIC_API_KEY → anthropic
-    4. OPENAI_API_KEY → openai
+    2. OPENAI_API_KEY → openai (Industry standard fallback)
+    3. GOOGLE_API_KEY → google
+    4. ANTHROPIC_API_KEY → anthropic
     5. None available → noop (will use NoOpProvider)
 
     Returns:
@@ -165,19 +165,20 @@ def _detect_provider() -> str:
         return not any(placeholder in key.lower() for placeholder in placeholders)
 
     openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
     google_key = os.environ.get("GOOGLE_API_KEY")
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
 
     # OpenRouter FIRST - no vendor lock-in, routes to any model!
     if is_valid_key(openrouter_key):
         return "openrouter"
+    # OpenAI SECOND - industry standard
+    elif is_valid_key(openai_key):
+        return "openai"
     elif is_valid_key(google_key):
         return "google"
     elif is_valid_key(anthropic_key):
         return "anthropic"
-    elif is_valid_key(openai_key):
-        return "openai"
     else:
         logger.info("No API keys detected. Activating Mock/Offline Mode (NoOp provider)")
         return "noop"
