@@ -438,6 +438,22 @@ _No active session (kernel may be stopped)_
 | Git HEAD | `{{ git.sha[:12] }}` | {{ '✅' if zipper.synced else '⚪' }} |
 | Ledger HEAD | `{{ zipper.ledger_hash[:12] }}` | {{ '✅' if zipper.synced else '⚪' }} |
 
+{% if tri_guna %}
+### 🔮 Tri-Guna (State Health)
+
+| Guna | Count | Meaning |
+| --- | --- | --- |
+| ✅ Sattva | {{ tri_guna.sattva }} | Synced & Clean |
+| 🟡 Rajas | {{ tri_guna.rajas }} | Active & Dirty |
+| ❌ Tamas | {{ tri_guna.tamas }} | Stale & Broken |
+
+{% if tri_guna.tamas > 0 %}
+⚠️ **Healing Required**: {{ tri_guna.tamas }} paths in Tamas
+{% elif tri_guna.rajas > 0 %}
+🔄 **Activity Detected**: {{ tri_guna.rajas }} paths changing
+{% endif %}
+{% endif %}
+
 <!-- /@LIVE -->
 
 {# ============================================================================
