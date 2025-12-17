@@ -419,8 +419,9 @@ class KernelTickHandler:
                         events_to_subscribe.add(event_name)
 
             # Fallback if no circuits loaded
+            # OPUS-075: KERNEL_BOOT is critical for MANAS awakening
             if not events_to_subscribe:
-                events_to_subscribe = {"KERNEL_TICK", "GIT_COMMIT"}
+                events_to_subscribe = {"KERNEL_TICK", "KERNEL_BOOT", "GIT_COMMIT"}
 
             for event_name in events_to_subscribe:
                 try:
