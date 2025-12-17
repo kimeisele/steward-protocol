@@ -44,6 +44,49 @@ from vibe_core.runtime.unified_trace import UnifiedTrace
 
 logger = logging.getLogger("ORCHESTRATION.CYCLE")
 
+# =============================================================================
+# GLOBAL CYCLE REGISTRY (Singleton)
+# =============================================================================
+# CRITICAL: This is the single source of truth for all cycle lifecycle tracking.
+# Auto-registration happens in orchestrate(), so all cycles are automatically
+# tracked without requiring manual registration.
+_global_cycle_registry: Optional["CycleRegistry"] = None
+
+
+def get_cycle_registry() -> "CycleRegistry":
+    """
+    Get the global cycle registry (creates if needed).
+
+    USAGE (from within any CognitiveCycle):
+        registry = get_cycle_registry()
+        # registry now has all active/completed/error cycles
+    """
+    global _global_cycle_registry
+    if _global_cycle_registry is None:
+        from vibe_core.orchestration_cycle import CycleRegistry, RetentionPolicy
+
+        _global_cycle_registry = CycleRegistry(retention_policy=RetentionPolicy())
+        logger.info("📊 Global CycleRegistry initialized (singleton pattern)")
+    return _global_cycle_registry
+
+
+def set_cycle_registry(registry: "CycleRegistry") -> None:
+    """
+    Override the global registry (useful for testing with custom retention policies).
+    """
+    global _global_cycle_registry
+    _global_cycle_registry = registry
+    logger.info("🔄 Global CycleRegistry overridden (custom instance)")
+
+
+def reset_cycle_registry() -> None:
+    """
+    Reset registry to None (useful for cleanup between test runs).
+    """
+    global _global_cycle_registry
+    _global_cycle_registry = None
+    logger.debug("🔄 Global CycleRegistry reset")
+
 
 class CyclePhase(Enum):
     """Standard orchestration phases for all cycles."""
@@ -391,6 +434,10 @@ class CognitiveCycle(ABC):
 
         logger.info(f"🔄 {self.cycle_name} starting (trace_id={trace_id}, parent={self.parent_cycle_id})")
 
+        # AUTO-REGISTER cycle with global registry (no manual registration needed)
+        registry = get_cycle_registry()
+        registry.register_cycle(context)
+
         try:
             # ================================================================
             # PERCEIVE PHASE
@@ -549,6 +596,8 @@ class CognitiveCycle(ABC):
                 f"errors={len(context.errors)})"
             )
 
+            # Mark cycle as complete in registry
+            registry.complete_cycle(context)
             return context
 
         except Exception as e:
@@ -564,6 +613,8 @@ class CognitiveCycle(ABC):
             )
 
             self._trace.error(trace_id, f"cycle_crash: {e}")
+            # Mark cycle as failed in registry
+            registry.error_cycle(context)
             return context
 
 
@@ -707,15 +758,3 @@ class CycleRegistry:
                 for c in self._cycles.values()
             ],
         }
-
-
-# Module-level singleton for easy access
-_cycle_registry_instance: Optional[CycleRegistry] = None
-
-
-def get_cycle_registry(retention_policy: Optional[RetentionPolicy] = None) -> CycleRegistry:
-    """Get or create the global CycleRegistry singleton."""
-    global _cycle_registry_instance
-    if _cycle_registry_instance is None:
-        _cycle_registry_instance = CycleRegistry(retention_policy)
-    return _cycle_registry_instance
