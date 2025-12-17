@@ -438,6 +438,29 @@ renderers:
         source: arch.plugins
         element_type: table
 
+  # COGNITION - Real-time orchestration cycle monitoring (OPUS-095)
+  cognition:
+    enabled: true
+    output: COGNITION.md
+    view_type: dashboard
+    interval: 5  # Aggressive refresh for live debugging
+    sections:
+      - id: holon_hierarchy
+        owner: live
+        source: cycles.active
+      - id: phase_metrics
+        owner: live
+        source: cycles.metrics
+      - id: memory_safety
+        owner: live
+        source: cycles.status
+      - id: completed_cycles
+        owner: live
+        source: cycles.completed
+      - id: error_tracking
+        owner: live
+        source: cycles.errors
+
 # =============================================================================
 # CUSTOM RENDERERS (user/agent defined)
 # =============================================================================
