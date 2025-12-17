@@ -28,6 +28,39 @@ Config-Driven Kernel Lifecycle. PRANA enables kernel auto-management without tou
 ## Configuration
 
 ```yaml
+
+<!-- @HARNESS
+files:
+  - path: vibe_core/prana.py
+    required: true
+
+semantic:
+  - type: class_exists
+    name: prana_sessionstartconfig
+    in: vibe_core/prana.py
+    class: SessionStartConfig
+  - type: class_exists
+    name: prana_heartbeatconfig
+    in: vibe_core/prana.py
+    class: HeartbeatConfig
+  - type: class_exists
+    name: prana_kernelconfig
+    in: vibe_core/prana.py
+    class: KernelConfig
+
+wiring:
+  - pattern: "def load_config"
+    in: vibe_core/prana.py
+  - pattern: "def get_section"
+    in: vibe_core/prana.py
+  - pattern: "def is_kernel_running"
+    in: vibe_core/prana.py
+  - pattern: "def ensure_kernel_running"
+    in: vibe_core/prana.py
+  - pattern: "def get_last_heartbeat"
+    in: vibe_core/prana.py
+-->
+
 # config/prana.yaml
 session_start:
   auto_boot_kernel: true
