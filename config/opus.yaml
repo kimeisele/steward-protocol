@@ -276,3 +276,23 @@ karma:
   success_weight: 1.0
   failure_weight: 2.0
   decay_rate: 0.95
+
+# =============================================================================
+# OPUS-090: MANAS MEMORY CONFIGURATION
+# =============================================================================
+# Settings for the MemoryStore - how MANAS remembers and learns
+memory:
+  # Maximum memories to keep (prevents unbounded growth)
+  max_memories: 500
+
+  # How long to remember things (days)
+  retention_days: 30
+
+  # Cooldown after failure (hours) - don't suggest same thing too soon
+  failure_cooldown_hours: 24
+
+  # Minimum success rate to consider a pattern "successful" (0.0-1.0)
+  success_rate_threshold: 0.7
+
+  # Minimum attempts before trusting success rate
+  min_attempts_for_trust: 2
