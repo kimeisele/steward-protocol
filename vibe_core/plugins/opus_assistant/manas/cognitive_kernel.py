@@ -255,7 +255,8 @@ class CognitiveKernel:
         self._init_sutra_sense()
 
         # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
-        self._shiva = ShivaLifecycleManager(workspace=self._workspace)
+        shiva_config = self._full_config.get("shiva", {})
+        self._shiva = ShivaLifecycleManager(workspace=self._workspace, config=shiva_config)
         self._shiva.inject_kernel(self)
 
         # 🌙 SANKALPA: Strategic Will - Proactive Mission Planning (OPUS-089)
@@ -658,7 +659,8 @@ class CognitiveKernel:
         try:
             from .cortex.sutra_sense import SutraSense
 
-            self._sutra_sense = SutraSense(workspace=self._workspace)
+            sutra_config = self._full_config.get("sutra_sense", {})
+            self._sutra_sense = SutraSense(workspace=self._workspace, config=sutra_config)
             # Boot perception
             summary = self._sutra_sense.perceive_gaps(refresh=True)
             logger.info(
@@ -812,8 +814,9 @@ class CognitiveKernel:
                 ObservationLogger,
             )
 
-            self._observation_logger = ObservationLogger(workspace_root=self._workspace)
-            logger.info("📓 MANAS: ObservationLogger wired - thoughts now visible in OPUS.md")
+            obs_config = self._full_config.get("observation_logger", {})
+            self._observation_logger = ObservationLogger(workspace_root=self._workspace, config=obs_config)
+            logger.info(f"📓 OBSERVATION LOGGER: Initialized (config: {len(obs_config)} keys)")
         except Exception as e:
             logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
             self._observation_logger = None

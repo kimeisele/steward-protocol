@@ -42,7 +42,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 logger = logging.getLogger("OPUS_JOURNAL")
 
@@ -127,6 +127,7 @@ class ObservationLogger:
         workspace_root: Path,
         max_entries: int = 50,
         state_manager: Optional["OpusStateManager"] = None,
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize observation logger.
@@ -138,6 +139,7 @@ class ObservationLogger:
         """
         self._workspace = workspace_root
         self._opus_path = workspace_root / "OPUS.md"
+        self._config = config or {}
         self._journal = ObservationJournal(max_entries=max_entries)
         self._pending_flush = False
         self._state_manager = state_manager
