@@ -1,0 +1,44 @@
+[
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Update state manager docs",
+    "timestamp": "2025-12-17T01:29:20.261268"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "state_management",
+    "title": "Fix state sync bug",
+    "timestamp": "2025-12-17T01:29:20.262054"
+  },
+  {
+    "intent_type": "test_create",
+    "topic": "state_management",
+    "title": "Add state tests",
+    "timestamp": "2025-12-17T01:29:20.262713"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Document state flow",
+    "timestamp": "2025-12-17T01:29:20.264536"
+  },
+  {
+    "intent_type": "review",
+    "topic": "vedic_governance",
+    "title": "Review dharma gates",
+    "timestamp": "2025-12-17T01:29:20.266070"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "vedic_governance",
+    "title": "Update governance docs",
+    "timestamp": "2025-12-17T01:29:20.267410"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "vedic_governance",
+    "title": "Implement bhakti tracking",
+    "timestamp": "2025-12-17T01:29:20.268714"
+  }
+]
