@@ -145,11 +145,12 @@ def _detect_provider() -> str:
     """
     Auto-detect which provider to use based on available API keys.
 
-    Priority order:
-    1. GOOGLE_API_KEY → google
-    2. ANTHROPIC_API_KEY → anthropic
-    3. OPENAI_API_KEY → openai
-    4. None available → noop (will use NoOpProvider)
+    Priority order (NO VENDOR LOCK-IN!):
+    1. OPENROUTER_API_KEY → openrouter (FIRST! Routes to any model)
+    2. GOOGLE_API_KEY → google
+    3. ANTHROPIC_API_KEY → anthropic
+    4. OPENAI_API_KEY → openai
+    5. None available → noop (will use NoOpProvider)
 
     Returns:
         Provider name string
@@ -163,17 +164,18 @@ def _detect_provider() -> str:
         placeholders = ["your-", "xxx", "placeholder", "example", "test-key"]
         return not any(placeholder in key.lower() for placeholder in placeholders)
 
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
     google_key = os.environ.get("GOOGLE_API_KEY")
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
-    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
 
-    if is_valid_key(google_key):
+    # OpenRouter FIRST - no vendor lock-in, routes to any model!
+    if is_valid_key(openrouter_key):
+        return "openrouter"
+    elif is_valid_key(google_key):
         return "google"
     elif is_valid_key(anthropic_key):
         return "anthropic"
-    elif is_valid_key(openrouter_key):
-        return "openrouter"
     elif is_valid_key(openai_key):
         return "openai"
     else:
