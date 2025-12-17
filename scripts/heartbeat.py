@@ -316,9 +316,19 @@ class HeartbeatEngine:
         RESILIENCE: Gracefully degrades GPG signing in CI environments where keys
         are not available, preventing silent commit failures.
         """
-        # Check if chronicle is enabled
-        prana_config = load_prana_config() if PRANA_AVAILABLE else {}
-        chronicle_config = prana_config.get("chronicle", {})
+        # Load chronicle config from YAML directly
+        chronicle_config = {}
+        if PRANA_AVAILABLE:
+            try:
+                import yaml
+
+                config_path = self.project_root / "config" / "prana.yaml"
+                if config_path.exists():
+                    with open(config_path) as f:
+                        full_config = yaml.safe_load(f) or {}
+                        chronicle_config = full_config.get("chronicle", {})
+            except Exception as e:
+                logger.warning(f"Could not load chronicle config: {e}")
 
         if not chronicle_config.get("enabled", True):
             logger.debug("📜 Chronicle: Disabled in config, skipping")
