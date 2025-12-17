@@ -312,6 +312,14 @@ class SutraSense:
 
         logger.info("[SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)")
 
+        # 🧠 SEMANTIC ENGINE (Lazy Injection)
+        self._semantic_engine: Any = None
+
+    def inject_semantic_engine(self, engine: Any) -> None:
+        """Inject the Semantic Engine for Level 2 intelligence."""
+        self._semantic_engine = engine
+        logger.info("📜 SUTRA SENSE: Semantic Engine injected")
+
     # =========================================================================
     # Core Perception Methods
     # =========================================================================
@@ -380,6 +388,29 @@ class SutraSense:
     # =========================================================================
     # Internal Scanning Methods
     # =========================================================================
+
+    async def find_semantic_matches(self, query: str, context_type: str = "doc") -> List[str]:
+        """
+        Use semantic engine to find matches for a query.
+
+        Args:
+            query: Text to match (e.g. code file name)
+            context_type: "doc" or "code"
+
+        Returns:
+            List of matching names (doc titles or code files)
+        """
+        if not self._semantic_engine:
+            return []
+
+        try:
+            # Analyze query to get concepts
+            concepts = await self._semantic_engine.analyze(query)
+            # This is a simplification - real weaving would search a vector store of docs.
+            # But we can at least return concepts found.
+            return [c.name for c in concepts if c.confidence > 0.6]
+        except Exception:
+            return []
 
     def _scan_opus_docs(self) -> None:
         """Scan OPUS docs for @HARNESS blocks."""

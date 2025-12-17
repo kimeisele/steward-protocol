@@ -125,6 +125,14 @@ class IntentGenerator:
         # OPUS-032: Modular class-based analyzers (the new way)
         self._modular_analyzers = self._register_modular_analyzers()
 
+        # 🧠 SEMANTIC ENGINE (Lazy Injection)
+        self._semantic_engine = None
+
+    def inject_semantic_engine(self, engine: Any) -> None:
+        """Inject the Semantic Engine for Level 2 intelligence."""
+        self._semantic_engine = engine
+        logger.info("🧠 IntentGenerator: Semantic Engine injected")
+
     def _register_analyzers(self) -> List[callable]:
         """Register all intent analyzers (legacy method-based)."""
         return [
@@ -157,9 +165,9 @@ class IntentGenerator:
             PratyayaAnalyzer(workspace=self._workspace),  # OPUS-077 - Self-Falsification
         ]
 
-    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
+    async def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
         """
-        Generate intents based on current system state.
+        Generate intents based on current system state. (Async for semantic analysis)
 
         Args:
             context: Optional additional context (e.g., from Prakriti)
@@ -197,6 +205,14 @@ class IntentGenerator:
                     intents.append(intent)
             except Exception as e:
                 logger.debug(f"Analyzer {analyzer.__name__} failed: {e}")
+
+        # 🧠 SEMANTIC ANALYSIS (Level 2)
+        if self._semantic_engine:
+            try:
+                semantic_intents = await self._analyze_semantic_opportunities(context)
+                intents.extend(semantic_intents)
+            except Exception as e:
+                logger.warning(f"🧠 Semantic analysis failed: {e}")
 
         # BHAKTI ↔ MEMORY: Boost intents that have proven successful ("muscle memory")
         if self._memory:
@@ -479,6 +495,53 @@ class IntentGenerator:
             logger.debug(f"Log cleanup analysis failed: {e}")
 
         return None
+
+    # =========================================================================
+    # 🧠 SEMANTIC ANALYZER (Level 2)
+    # =========================================================================
+
+    async def _analyze_semantic_opportunities(self, context: Dict[str, Any]) -> List[Intent]:
+        """
+        Use Semantic Engine to find hidden connections (Weaving).
+        """
+        intents = []
+        if not self._semantic_engine:
+            return []
+
+        # Example: Analyze recent errors for semantic concepts
+        errors = context.get("recent_errors", [])
+        for error in errors[:2]:  # Check top 2 errors
+            msg = error.get("message", "")
+            if len(msg) < 10:
+                continue
+
+            try:
+                # 🧠 ASYNC SEMANTIC ANALYSIS
+                concepts = await self._semantic_engine.analyze(msg)
+
+                # Filter high confidence concepts (> 0.6)
+                relevant = [c for c in concepts if c.confidence > 0.6]
+
+                if relevant:
+                    concept_names = ", ".join([c.name for c in relevant[:3]])
+
+                    intents.append(
+                        Intent(
+                            id=self._next_intent_id(),
+                            intent_type="semantic_weaving",
+                            title=f"🧠 Weave: Connect error to {concept_names}",
+                            description=f"Semantic Engine detected concepts {concept_names} in error: '{msg[:50]}...'. This suggests a conceptual gap.",
+                            reasoning="Intelligent error analysis found underlying concepts that need attention.",
+                            priority=IntentPriority.MEDIUM,
+                            risk=IntentRisk.LOW,
+                            params={"error": msg, "concepts": [c.name for c in relevant]},
+                            auto_executable=False,
+                        )
+                    )
+            except Exception as e:
+                logger.warning(f"Semantic analyze failed for error: {e}")
+
+        return intents
 
     # =========================================================================
     # OPUS-032: Self-Documentation Analyzers

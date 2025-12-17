@@ -35,11 +35,11 @@ test-integration:
 
 # Linting & Formatting
 lint:
-	ruff check vibe_core steward scripts
+	ruff check vibe_core scripts
 
 format:
-	ruff format vibe_core steward scripts
-	ruff check --fix vibe_core steward scripts
+	ruff format vibe_core scripts
+	ruff check --fix vibe_core scripts
 
 # Container Building (OPUS-020)
 containers:

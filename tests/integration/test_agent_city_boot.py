@@ -21,7 +21,17 @@ from vibe_core.scheduling import Task
 def test_agent_city_boot():
     """Test the complete Agent City boot sequence."""
     # PHASE 1: BOOT
-    orchestrator = BootOrchestrator(ledger_path=":memory:")
+    from unittest.mock import MagicMock
+
+    from vibe_core.event_bus import EventBus
+    from vibe_core.runtime.unified_trace import UnifiedTrace
+
+    # Mock dependencies for orchestration
+    trace = MagicMock(spec=UnifiedTrace)
+    event_bus = MagicMock(spec=EventBus)
+
+    # PHASE 1: BOOT
+    orchestrator = BootOrchestrator(ledger_path=":memory:", trace=trace, event_bus=event_bus)
     kernel = orchestrator.boot()
 
     assert kernel is not None, "Kernel boot failed"

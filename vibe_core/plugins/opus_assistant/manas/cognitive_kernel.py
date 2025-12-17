@@ -245,7 +245,15 @@ class CognitiveKernel(CognitiveCycle):
 
         # Core components
         self._memory = MemoryStore(workspace=self._workspace)
+
+        # 🧠 SEMANTIC ENGINE: The "Brain" (Lazy Loaded)
+        self._semantic_engine: Any = None
+        self._init_semantic_engine()
+
         self._intent_generator = IntentGenerator(workspace=self._workspace, memory_store=self._memory)
+        # Inject engine if available
+        if self._semantic_engine:
+            self._intent_generator.inject_semantic_engine(self._semantic_engine)
 
         # Intent buffer (persisted to .opus_state/manas_intents.json)
         self._intent_buffer: List[IntentBufferEntry] = []
@@ -277,6 +285,9 @@ class CognitiveKernel(CognitiveCycle):
         # 📜 SUTRA SENSE: The Third Eye - Doc/Code Gap Detection (OPUS-054)
         self._sutra_sense: Optional["SutraSense"] = None
         self._init_sutra_sense()
+        # Inject engine if available
+        if self._sutra_sense and self._semantic_engine:
+            self._sutra_sense.inject_semantic_engine(self._semantic_engine)
 
         # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
         shiva_config = self._full_config.get("shiva", {})
@@ -292,6 +303,54 @@ class CognitiveKernel(CognitiveCycle):
         self._init_observation_logger()
 
         logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
+
+    # =========================================================================
+    # 🧠 SEMANTIC ENGINE: INTELLIGENCE UPGRADE (OPUS-096)
+    # =========================================================================
+
+    def _init_semantic_engine(self) -> None:
+        """
+        Initialize the Semantic Engine (optional).
+
+        This is the "Slim Build / Smart Integration" implementation.
+        We attempt to graft intelligence from the environment (The Garden).
+        If available (in ~/.steward/lib or site-packages), we load it.
+        """
+        try:
+            # OPUS-096: Smart Integration - Grafting the Garden
+            # We must extend runtime to find extensions in ~/.steward/lib
+            try:
+                from vibe_core.runtime_extensions import extend_runtime
+
+                extend_runtime()
+            except ImportError:
+                # Should not happen in bundled env, but safe fallback
+                pass
+
+            # Now we can safely attempt to import the engine
+            # The engine itself handles the heavy imports (numpy/torch/transformers)
+            # VERIFY: Do we actually have the heavy deps?
+            # SemanticRouter is lazy, so we must check explicitly to avoid False positives.
+            import sentence_transformers
+
+            from vibe_core.cortex.engines.semantic_engine import SemanticRouter
+
+            knowledge_dir = self._workspace / "knowledge"
+            self._semantic_engine = SemanticRouter(knowledge_dir=str(knowledge_dir))
+            logger.info("🧠 SEMANTIC ENGINE: Connected (Intelligence Level 2)")
+
+        except ImportError as e:
+            # Graceful fallback - Slim Mode
+            self._semantic_engine = None
+            logger.info(f"🧠 SEMANTIC ENGINE: Not available ({e}) - Running in Lean Mode")
+        except Exception as e:
+            self._semantic_engine = None
+            logger.warning(f"🧠 SEMANTIC ENGINE: Failed to initialize: {e}")
+
+    @property
+    def has_intelligence(self) -> bool:
+        """Check if MANAS has active semantic intelligence."""
+        return self._semantic_engine is not None
 
     # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
@@ -1167,7 +1226,8 @@ class CognitiveKernel(CognitiveCycle):
             logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents")
 
         # Generate new intents from current context
-        new_intents = self._intent_generator.generate_intents({})
+        # OPUS-096: Async generation for Semantic Engine
+        new_intents = await self._intent_generator.generate_intents({})
 
         # Combine perceptions with generated intents
         all_intents = observations + new_intents
