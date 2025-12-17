@@ -48,66 +48,6 @@
     },
     {
       "intent": {
-        "id": "ci_caps_4dad8c3a",
-        "intent_type": "ci_capabilities_failure",
-        "title": "Capabilities Check Failed",
-        "description": "The 'capabilities' command returned exit code 1.",
-        "reasoning": "MANAS could not retrieve system capabilities. This may indicate a broken installation.",
-        "priority": "high",
-        "risk": "safe",
-        "created_at": "2025-12-16T15:55:14.469351",
-        "circuit_to_execute": null,
-        "params": {
-          "exit_code": 1,
-          "error": "Traceback (most recent call last):\n  File \"/usr/local/bin/steward\", line 3, in <module>\n    from steward.cli import main\nModuleNotFoundError: No module named 'steward'\n"
-        },
-        "auto_executable": false,
-        "expires_at": null
-      },
-      "status": "failed",
-      "added_at": "2025-12-16T15:55:15.178802",
-      "executed_at": "2025-12-16T15:55:16.301771",
-      "execution_result": {
-        "error": "No execution method available"
-      }
-    },
-    {
-      "intent": {
-        "id": "genesis_0002",
-        "intent_type": "semantic_gap_test",
-        "title": "Create tests for MANAS cognitive kernel",
-        "description": "The brain of OPUS needs tests: cognitive_kernel.py, intent_generator.py, memory_store.py, analyzers/doc_harness_analyzer.py, analyzers/semantic_analyzer.py, analyzers/contract_analyzer.py, analyzers/pratyaya_analyzer.py, analyzers/ci_monitor_analyzer.py",
-        "reasoning": "MANAS is the cognitive core. Tests ensure the mind stays sharp.",
-        "priority": "medium",
-        "risk": "safe",
-        "created_at": "2025-12-16T16:54:39.940281",
-        "circuit_to_execute": null,
-        "params": {
-          "plugin": "opus_assistant",
-          "untested_files": [
-            "cognitive_kernel.py",
-            "intent_generator.py",
-            "memory_store.py",
-            "analyzers/doc_harness_analyzer.py",
-            "analyzers/semantic_analyzer.py",
-            "analyzers/contract_analyzer.py",
-            "analyzers/pratyaya_analyzer.py",
-            "analyzers/ci_monitor_analyzer.py"
-          ],
-          "type": "manas"
-        },
-        "auto_executable": true,
-        "expires_at": null
-      },
-      "status": "failed",
-      "added_at": "2025-12-16T16:54:41.593481",
-      "executed_at": "2025-12-16T16:54:41.833995",
-      "execution_result": {
-        "error": "No execution method available"
-      }
-    },
-    {
-      "intent": {
         "id": "manas_0001",
         "intent_type": "review_todos",
         "title": "Review 46 TODOs in codebase",
@@ -274,7 +214,65 @@
       "execution_result": {
         "error": "No execution method available"
       }
+    },
+    {
+      "intent": {
+        "id": "gap_20251217_015814",
+        "intent_type": "sutra_missing_code",
+        "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+        "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+        "reasoning": "SutraSense detected missing_code gap with high severity",
+        "priority": "high",
+        "risk": "safe",
+        "created_at": "2025-12-17T01:58:14.473442",
+        "circuit_to_execute": null,
+        "params": {
+          "gap_type": "missing_code",
+          "severity": "high",
+          "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+          "code_path": "vibe_core/path/to/file.py",
+          "description": "Doc 054-SUTRA.md references vibe_core/path/to/file.py but it doesn't exist",
+          "suggested_action": "Either create the file or update the harness"
+        },
+        "auto_executable": false,
+        "expires_at": null
+      },
+      "status": "failed",
+      "added_at": "2025-12-17T01:58:17.286532",
+      "executed_at": "2025-12-17T01:58:17.303857",
+      "execution_result": {
+        "error": "No execution method available"
+      }
+    },
+    {
+      "intent": {
+        "id": "gap_20251217_015814",
+        "intent_type": "sutra_missing_code",
+        "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+        "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+        "reasoning": "SutraSense detected missing_code gap with high severity",
+        "priority": "high",
+        "risk": "safe",
+        "created_at": "2025-12-17T01:58:14.473456",
+        "circuit_to_execute": null,
+        "params": {
+          "gap_type": "missing_code",
+          "severity": "high",
+          "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+          "code_path": "tests/test_something.py",
+          "description": "Doc 054-SUTRA.md references tests/test_something.py but it doesn't exist",
+          "suggested_action": "Either create the file or update the harness"
+        },
+        "auto_executable": false,
+        "expires_at": null
+      },
+      "status": "failed",
+      "added_at": "2025-12-17T01:58:17.307203",
+      "executed_at": "2025-12-17T01:58:17.311203",
+      "execution_result": {
+        "error": "No execution method available"
+      }
     }
   ],
-  "updated_at": "2025-12-17T01:39:21.971607"
+  "updated_at": "2025-12-17T01:58:17.314480"
 }
