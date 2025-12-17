@@ -24,7 +24,7 @@
 #   - .github/workflows/* (ALL 10 workflow files) - The Supreme Court
 #   - .pre-commit-config.yaml - The Local Police
 #
-# Total: 7 kernel + 3 governance + 10 workflows + 1 pre-commit = 21 files
+# Total: 7 kernel + 3 governance + 10 workflows + 2 config = 22 files
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
@@ -58,6 +58,7 @@ PROTECTED_FILES=(
     ".github/workflows/system-cycle.yml"
     # Infrastructure - Config (The Local Police)
     ".pre-commit-config.yaml"
+    ".gitignore"
 )
 
 # Fetch origin/main - die WAHRE QUELLE
