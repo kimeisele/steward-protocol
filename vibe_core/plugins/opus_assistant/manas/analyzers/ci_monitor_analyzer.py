@@ -122,6 +122,8 @@ class CIMonitorAnalyzer(BaseAnalyzer):
                     "stdout": result.stdout[:500] if result.stdout else "",
                     "stderr": result.stderr[:500] if result.stderr else "",
                 },
+                # WEAVING: Link to kernel/CI docs
+                related_docs=["024-KERNEL-PROTECTION-AUDIT.md"],
             )
 
         # Parse status output for issues
@@ -149,6 +151,7 @@ class CIMonitorAnalyzer(BaseAnalyzer):
                 params={
                     "status_output": result.stdout[:1000],
                 },
+                related_docs=["024-KERNEL-PROTECTION-AUDIT.md"],
             )
 
         return None
@@ -181,6 +184,7 @@ class CIMonitorAnalyzer(BaseAnalyzer):
                     "exit_code": result.exit_code,
                     "error": result.stderr[:500] if result.stderr else "",
                 },
+                related_docs=["024-KERNEL-PROTECTION-AUDIT.md"],
             )
 
         # Try to parse capabilities JSON
@@ -201,6 +205,7 @@ class CIMonitorAnalyzer(BaseAnalyzer):
                     params={
                         "capabilities": caps,
                     },
+                    related_docs=["024-KERNEL-PROTECTION-AUDIT.md"],
                 )
 
         except json.JSONDecodeError:
@@ -217,6 +222,7 @@ class CIMonitorAnalyzer(BaseAnalyzer):
                 params={
                     "raw_output": result.stdout[:500],
                 },
+                related_docs=["024-KERNEL-PROTECTION-AUDIT.md"],
             )
 
         return None
