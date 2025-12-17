@@ -126,6 +126,8 @@ class IntentRouter:
 
         # Git/Shell intents → ShellCortex
         self._handlers["commit_pending_changes"] = self._handle_shell
+        self._handlers["commit_and_push"] = self._handle_shell  # Commit + auto push
+        self._handlers["git_push"] = self._handle_shell  # Standalone push
         self._handlers["cleanup_stale_branches"] = self._handle_shell
         self._handlers["cleanup_old_logs"] = self._handle_shell
 
@@ -639,6 +641,16 @@ class IntentRouter:
             # OPUS-SILPA: Real Git operations via GitTools
             if intent.intent_type == "commit_pending_changes":
                 return self._execute_git_commit(intent)
+            elif intent.intent_type == "commit_and_push":
+                # Override auto_push for this intent type
+                intent.params["auto_push"] = True
+                return self._execute_git_commit(intent)
+            elif intent.intent_type == "git_push":
+                from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
+
+                git = GitTools()
+                branch = intent.params.get("branch")
+                return self._execute_git_push(git, branch)
 
             shell = ShellCortex(workspace=self._workspace)
             if self._kernel:
@@ -675,6 +687,11 @@ class IntentRouter:
 
         This gives MANAS actual hands to commit code changes.
         The commit message references the intent for audit trail.
+
+        Intent params:
+            - files: Optional list of files to commit (default: all staged)
+            - auto_push: If True, push to remote after commit (default: False)
+            - branch: Branch to push to (default: current branch)
         """
         from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
 
@@ -706,17 +723,7 @@ class IntentRouter:
                 sign=False,  # Skip signing to avoid GPG complexity
             )
 
-            if result.get("success"):
-                logger.info(f"✅ MANAS committed: {result.get('commit_hash_short')}")
-                return {
-                    "success": True,
-                    "handler": "GitTools",
-                    "action": "committed",
-                    "commit_hash": result.get("commit_hash"),
-                    "commit_hash_short": result.get("commit_hash_short"),
-                    "message": f"MANAS committed: {result.get('commit_hash_short')} - {intent.title}",
-                }
-            else:
+            if not result.get("success"):
                 return {
                     "success": False,
                     "handler": "GitTools",
@@ -724,9 +731,64 @@ class IntentRouter:
                     "error": result.get("message", "Unknown error"),
                 }
 
+            commit_hash = result.get("commit_hash_short")
+            logger.info(f"✅ MANAS committed: {commit_hash}")
+
+            # Check if we should auto-push
+            auto_push = intent.params.get("auto_push", False)
+            push_result = None
+
+            if auto_push:
+                branch = intent.params.get("branch")
+                push_result = self._execute_git_push(git, branch)
+
+                if not push_result.get("success"):
+                    logger.warning(f"⚠️ Commit succeeded but push failed: {push_result.get('error')}")
+                    return {
+                        "success": True,  # Commit worked
+                        "handler": "GitTools",
+                        "action": "committed_push_failed",
+                        "commit_hash": result.get("commit_hash"),
+                        "commit_hash_short": commit_hash,
+                        "push_error": push_result.get("error"),
+                        "message": f"MANAS committed {commit_hash} but push failed",
+                    }
+                else:
+                    logger.info("🚀 MANAS pushed to remote")
+
+            return {
+                "success": True,
+                "handler": "GitTools",
+                "action": "committed_and_pushed" if auto_push and push_result else "committed",
+                "commit_hash": result.get("commit_hash"),
+                "commit_hash_short": commit_hash,
+                "pushed": auto_push and push_result and push_result.get("success"),
+                "message": f"MANAS committed: {commit_hash} - {intent.title}" + (" (pushed)" if auto_push else ""),
+            }
+
         except Exception as e:
             logger.error(f"❌ Git commit failed: {e}")
             return {"success": False, "handler": "GitTools", "error": str(e)}
+
+    def _execute_git_push(self, git, branch: str = None) -> Dict[str, Any]:
+        """
+        OPUS-SILPA: Push commits to remote.
+
+        Args:
+            git: GitTools instance
+            branch: Optional branch to push (default: current)
+
+        Returns:
+            Result dict with success status
+        """
+        try:
+            result = git.push_to_remote(remote="origin", branch=branch)
+            if result.get("success"):
+                logger.info(f"🚀 MANAS pushed to origin/{branch or 'current'}")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Git push failed: {e}")
+            return {"success": False, "error": str(e)}
 
     def _handle_test(self, intent: Intent) -> Dict[str, Any]:
         """Route to TestCortex for test-related tasks."""

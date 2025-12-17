@@ -137,6 +137,8 @@ INTENT_PERMISSION_MAP: Dict[str, List[str]] = {
     "update_documentation": ["doc_modify"],
     "cleanup_branches": ["git_modify"],
     "commit_pending_changes": ["git_commit"],
+    "commit_and_push": ["git_commit", "git_push"],  # Commit + push combo
+    "git_push": ["git_push"],  # Standalone push to remote
     # Safe intents (most agents can do)
     "heal_system_state": ["state_heal"],
     "doc_update": ["doc_modify"],
@@ -151,6 +153,7 @@ ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
     "grihastha": [
         "code_modify",
         "git_commit",
+        "git_push",  # Can push to remote
         "git_modify",
         "test_create",
         "doc_modify",
