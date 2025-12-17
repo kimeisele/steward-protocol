@@ -5,7 +5,7 @@
     "manas": {
       "ashrama": "grihastha",
       "varna": "manusha",
-      "bhakti": 20,
+      "bhakti": 35,
       "task_completions": 0,
       "history": [
         {
@@ -31,6 +31,24 @@
           "delta": 5,
           "reason": "Successful intent: sutra_missing_code",
           "timestamp": "2025-12-17T11:19:04.627583"
+        },
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "Successful intent: maintenance",
+          "timestamp": "2025-12-17T12:54:05.565449"
+        },
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "Successful intent: maintenance",
+          "timestamp": "2025-12-17T12:55:11.936583"
+        },
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "Successful intent: maintenance",
+          "timestamp": "2025-12-17T12:55:52.656573"
         }
       ],
       "registered_at": "2025-12-17T00:42:12.022365"
