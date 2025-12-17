@@ -277,6 +277,34 @@
       "execution_result": {
         "error": "No execution method available"
       }
+    },
+    {
+      "intent": {
+        "id": "manas_0002",
+        "intent_type": "review_todos",
+        "title": "Review 46 TODOs in codebase",
+        "description": "Found 46 TODO comments in the codebase. Some may be outdated or no longer relevant.",
+        "reasoning": "TODOs are technical debt markers. Regular review ensures they're still valid and prioritized appropriately.",
+        "priority": "low",
+        "risk": "safe",
+        "created_at": "2025-12-16T21:36:37.467268",
+        "circuit_to_execute": null,
+        "params": {
+          "todo_count": 46
+        },
+        "auto_executable": false,
+        "expires_at": null
+      },
+      "status": "executed",
+      "added_at": "2025-12-16T21:36:37.667569",
+      "executed_at": "2025-12-16T21:36:39.973211",
+      "execution_result": {
+        "success": true,
+        "handler": "SANKALPA",
+        "error": null,
+        "action": "strategy_acknowledged",
+        "message": "SANKALPA acknowledged: Review 46 TODOs in codebase"
+      }
     }
   ],
   "updated_at": "2025-12-17T02:08:19.509548"
