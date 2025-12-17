@@ -468,12 +468,22 @@ class TestCognitiveKernelMigration:
 class TestPranaOrchestratorMigration:
     """These tests FAIL before Phase C, PASS after Phase C migration."""
 
-    @pytest.mark.skip(reason="Phase C: PranaOrchestrator migration not yet done")
     def test_prana_orchestrator_is_cycle(self):
         """PranaOrchestrator properly inherits from CognitiveCycle."""
         from vibe_core.prana_orchestrator import PranaOrchestrator
 
         assert issubclass(PranaOrchestrator, CognitiveCycle)
+
+    def test_prana_orchestrator_pulse_is_thin(self):
+        """pulse() method is thin wrapper delegating to orchestrate()."""
+        import inspect
+
+        from vibe_core.prana_orchestrator import PranaOrchestrator
+
+        source = inspect.getsource(PranaOrchestrator.pulse)
+        lines = [l.strip() for l in source.split("\n") if l.strip() and not l.strip().startswith("#")]
+
+        assert len(lines) < 15, f"pulse() is {len(lines)} lines - should be <15 (thin wrapper)"
 
 
 class TestBootOrchestratorMigration:
