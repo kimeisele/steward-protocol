@@ -160,6 +160,66 @@ class TestIntent:
         assert d["risk"] == "high"  # String value, not enum
         assert isinstance(d["risk"], str)
 
+    def test_weaving_fields_default_to_empty_lists(self):
+        """Mutation killer: Weaving fields must default to empty lists."""
+        intent = Intent(
+            id="test_001",
+            intent_type="test",
+            title="Test",
+            description="Test",
+            reasoning="Test",
+        )
+        assert intent.related_files == []
+        assert intent.related_docs == []
+        assert isinstance(intent.related_files, list)
+        assert isinstance(intent.related_docs, list)
+
+    def test_weaving_fields_can_be_populated(self):
+        """Mutation killer: Weaving fields must accept values."""
+        intent = Intent(
+            id="test_001",
+            intent_type="test",
+            title="Test",
+            description="Test",
+            reasoning="Test",
+            related_files=["jnana.py:151", "factory.py:172"],
+            related_docs=["076-NO-PUSSY-MODE.md"],
+        )
+        assert len(intent.related_files) == 2
+        assert len(intent.related_docs) == 1
+        assert "jnana.py:151" in intent.related_files
+        assert "076-NO-PUSSY-MODE.md" in intent.related_docs
+
+    def test_weaving_fields_serialized_in_to_dict(self):
+        """Mutation killer: Weaving fields MUST appear in serialized output."""
+        intent = Intent(
+            id="test_001",
+            intent_type="test",
+            title="Test",
+            description="Test",
+            reasoning="Test",
+            related_files=["code.py"],
+            related_docs=["doc.md"],
+        )
+        d = intent.to_dict()
+        assert "related_files" in d
+        assert "related_docs" in d
+        assert d["related_files"] == ["code.py"]
+        assert d["related_docs"] == ["doc.md"]
+
+    def test_weaving_fields_empty_serialization(self):
+        """Mutation killer: Empty weaving fields must serialize as empty lists."""
+        intent = Intent(
+            id="test_001",
+            intent_type="test",
+            title="Test",
+            description="Test",
+            reasoning="Test",
+        )
+        d = intent.to_dict()
+        assert d["related_files"] == []
+        assert d["related_docs"] == []
+
 
 # =============================================================================
 # SECTION 2: CAPABILITY GENESIS SECURITY TESTS (MOST CRITICAL)

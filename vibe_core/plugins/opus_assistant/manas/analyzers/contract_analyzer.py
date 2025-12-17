@@ -158,6 +158,9 @@ class ContractAnalyzer(BaseAnalyzer):
                     **details,
                 },
                 auto_executable=False,  # Creating files needs approval
+                # WEAVING: Link the missing file + harness doc
+                related_files=[path],
+                related_docs=[harness_source] if harness_source else [],
             )
 
         if failure_type == ContractFailureType.FILE_EXTRA:
@@ -175,6 +178,8 @@ class ContractAnalyzer(BaseAnalyzer):
                     "harness_source": harness_source,
                 },
                 auto_executable=False,
+                related_files=[path],
+                related_docs=[harness_source] if harness_source else [],
             )
 
         # === PATTERN-LEVEL FAILURES ===
@@ -194,6 +199,8 @@ class ContractAnalyzer(BaseAnalyzer):
                     "harness_source": harness_source,
                 },
                 auto_executable=False,
+                related_files=[path],
+                related_docs=[harness_source] if harness_source else [],
             )
 
         if failure_type == ContractFailureType.PATTERN_BROKEN:
@@ -211,6 +218,8 @@ class ContractAnalyzer(BaseAnalyzer):
                     "harness_source": harness_source,
                 },
                 auto_executable=False,
+                related_files=[path],
+                related_docs=[harness_source] if harness_source else [],
             )
 
         # === DOC-LEVEL FAILURES (Auto-fixable!) ===
@@ -230,6 +239,7 @@ class ContractAnalyzer(BaseAnalyzer):
                     "harness_source": harness_source,
                 },
                 auto_executable=True,  # 🙏 Earned autonomy for doc fixes
+                related_docs=[path],  # The stale doc itself
             )
 
         if failure_type == ContractFailureType.DOC_INCOMPLETE:
@@ -247,6 +257,7 @@ class ContractAnalyzer(BaseAnalyzer):
                     "missing_sections": details.get("missing_sections", []),
                 },
                 auto_executable=True,
+                related_docs=[path],  # The incomplete doc
             )
 
         # === SEMANTIC FAILURES ===
@@ -265,6 +276,8 @@ class ContractAnalyzer(BaseAnalyzer):
                     "import_error": details.get("error"),
                 },
                 auto_executable=False,  # Never auto-fix import errors
+                related_files=[path],
+                related_docs=[harness_source] if harness_source else [],
             )
 
         if failure_type == ContractFailureType.SEMANTIC_TEST_FAIL:
@@ -282,6 +295,7 @@ class ContractAnalyzer(BaseAnalyzer):
                     "test_output": details.get("output"),
                 },
                 auto_executable=False,
+                related_files=[path],
             )
 
         logger.warning(f"Unhandled failure type: {failure_type}")
