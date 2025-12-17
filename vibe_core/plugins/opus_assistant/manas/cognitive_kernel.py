@@ -618,7 +618,7 @@ class CognitiveKernel:
             # Generate gap intents from SutraSense
             raw_intents = self._sutra_sense.generate_gap_intents(limit=2)
 
-            for raw in raw_intents:
+            for idx, raw in enumerate(raw_intents):
                 # Extract weaving from params
                 params = raw.get("params", {})
                 related_files = []
@@ -629,8 +629,9 @@ class CognitiveKernel:
                     doc_name = Path(params["doc_path"]).name
                     related_docs.append(doc_name)
 
+                # Generate unique ID with timestamp + counter to avoid duplicates
                 intent = Intent(
-                    id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"),
+                    id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{idx:02d}"),
                     intent_type=raw.get("intent_type", "doc_modify"),
                     title=raw.get("title", "Documentation gap detected"),
                     description=raw.get("description", ""),
@@ -639,6 +640,8 @@ class CognitiveKernel:
                     risk=IntentRisk(raw.get("risk", "low")),
                     params=params,
                     auto_executable=raw.get("auto_executable", False),
+                    # Gap intents expire after 24h - if not addressed, re-perceive fresh
+                    expires_at=(datetime.utcnow() + timedelta(hours=24)).isoformat(),
                     # WEAVING: Link code + doc from gap
                     related_files=related_files,
                     related_docs=related_docs,
