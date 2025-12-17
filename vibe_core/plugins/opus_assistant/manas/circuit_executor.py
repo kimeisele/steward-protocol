@@ -529,16 +529,48 @@ class CognitiveCircuitExecutor:
             return {"success": False, "error": f"OPUS file not found: {opus_path}"}
 
         try:
-            # Find the module file
-            cortex_dir = self._workspace / "vibe_core" / "plugins" / "opus_assistant" / "manas" / "cortex"
-            module_path = cortex_dir / f"{module_name}.py"
+            # Find the module file - search multiple locations (OPUS-054 DNA Folding)
+            search_paths = [
+                self._workspace / "vibe_core" / "plugins" / "opus_assistant" / "manas" / "cortex" / f"{module_name}.py",
+                self._workspace / "vibe_core" / "plugins" / "opus_assistant" / "manas" / f"{module_name}.py",
+                self._workspace / "vibe_core" / f"{module_name}.py",
+                self._workspace / "vibe_core" / f"{module_name}_orchestrator.py",
+                self._workspace / "vibe_core" / "plugins" / f"{module_name}" / "plugin_main.py",
+                self._workspace / "vibe_core" / "state" / f"{module_name}.py",
+                self._workspace / "vibe_core" / "steward" / f"{module_name}.py",
+            ]
 
-            if not module_path.exists():
-                return {"success": False, "error": f"Module not found: {module_path}"}
+            module_path = None
+            for path in search_paths:
+                if path.exists():
+                    module_path = path
+                    break
 
-            # Find test file if exists
-            test_path = self._workspace / "tests" / "manas" / f"test_{module_name}.py"
-            has_test = test_path.exists()
+            if not module_path:
+                # Try glob search as last resort
+                for pattern in [f"**/{module_name}.py", f"**/{module_name}_*.py"]:
+                    matches = list(self._workspace.glob(pattern))
+                    matches = [m for m in matches if "__pycache__" not in str(m) and "test" not in str(m)]
+                    if matches:
+                        module_path = matches[0]
+                        break
+
+            if not module_path:
+                return {"success": False, "error": f"Module not found for: {module_name}"}
+
+            # Find test file if exists - search multiple locations
+            test_search_paths = [
+                self._workspace / "tests" / "manas" / f"test_{module_name}.py",
+                self._workspace / "tests" / "unit" / f"test_{module_name}.py",
+                self._workspace / "tests" / "integration" / f"test_{module_name}.py",
+                self._workspace / "tests" / f"test_{module_name}.py",
+            ]
+            test_path = None
+            for tp in test_search_paths:
+                if tp.exists():
+                    test_path = tp
+                    break
+            has_test = test_path is not None
 
             # Analyze module for key patterns
             module_content = module_path.read_text()
