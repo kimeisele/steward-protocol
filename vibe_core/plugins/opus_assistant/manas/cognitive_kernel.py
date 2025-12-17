@@ -254,6 +254,10 @@ class CognitiveKernel:
         self._shiva = ShivaLifecycleManager(workspace=self._workspace)
         self._shiva.inject_kernel(self)
 
+        # 📓 OBSERVATION LOGGER: Make MANAS thoughts visible in OPUS.md
+        self._observation_logger = None
+        self._init_observation_logger()
+
         logger.info("MANAS Cognitive Kernel initialized (with Shiva Lifecycle)")
 
     # =========================================================================
@@ -459,26 +463,26 @@ class CognitiveKernel:
             # Sort by failure count
             failure_patterns = sorted(failure_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
-            # 3. Wisdom Synthesis - Log insights for dashboard
+            # 3. Wisdom Synthesis - Log insights to OPUS.md journal
             insights = []
 
             if successful_patterns:
-                logger.info("🧠 Dream Insights - Successful Patterns:")
+                self.log_insight("🧠 Dream Insights - Successful Patterns:")
                 for pattern in successful_patterns:
                     success_rate = self._memory.get_success_rate(pattern)
-                    insight = f"  ✅ {pattern}: {success_rate:.0%} success rate"
-                    logger.info(insight)
+                    insight_msg = f"✅ {pattern}: {success_rate:.0%} success rate"
+                    self.log_insight(insight_msg)
                     insights.append({"type": pattern, "success_rate": success_rate, "status": "trusted"})
 
             if failure_patterns:
-                logger.info("🧠 Dream Insights - Failure Patterns (to avoid):")
+                self.log_insight("🧠 Dream Insights - Failure Patterns (to avoid):")
                 for pattern, count in failure_patterns:
-                    insight = f"  ⚠️ {pattern}: {count} failures"
-                    logger.info(insight)
+                    insight_msg = f"⚠️ {pattern}: {count} failures"
+                    self.log_insight(insight_msg)
                     insights.append({"type": pattern, "failure_count": count, "status": "avoid"})
 
             if not successful_patterns and not failure_patterns:
-                logger.info("🧠 Dream: No clear patterns formed yet. Mind is still young.")
+                self.log_insight("🧠 Dream: No clear patterns formed yet. Mind is still young.")
 
             # 4. Record dream summary to memory (meta-learning)
             self._memory.record_intent_outcome(
@@ -672,6 +676,60 @@ class CognitiveKernel:
         except Exception as e:
             logger.debug(f"📜 SUTRA SENSE: Could not get summary: {e}")
             return None
+
+    # =========================================================================
+    # 📓 OBSERVATION LOGGER: MANAS THOUGHTS → OPUS.md (OPUS-089)
+    # =========================================================================
+
+    def _init_observation_logger(self) -> None:
+        """
+        Initialize ObservationLogger for making MANAS thoughts visible.
+
+        OPUS-089: The journal in OPUS.md should show MANAS's internal state,
+        not just events. Dreams, insights, patterns - all visible.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.observation_logger import (
+                ObservationLogger,
+            )
+
+            self._observation_logger = ObservationLogger(workspace=self._workspace)
+            logger.info("📓 MANAS: ObservationLogger wired - thoughts now visible in OPUS.md")
+        except Exception as e:
+            logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
+            self._observation_logger = None
+
+    def log_insight(self, message: str) -> None:
+        """
+        Log an insight to OPUS.md journal.
+
+        Use this to make MANAS's internal thoughts visible:
+        - Dream insights from memory_review
+        - Pattern recognitions
+        - Self-debugging observations
+        """
+        if self._observation_logger:
+            self._observation_logger.log_insight(message, source="MANAS")
+        # Also log to Python logger for file logs
+        logger.info(f"💡 MANAS INSIGHT: {message}")
+
+    def log_observation(self, message: str, severity: str = "info") -> None:
+        """
+        Log an observation to OPUS.md journal.
+
+        Args:
+            message: The observation message
+            severity: "info", "warn", "alert", or "insight"
+        """
+        if self._observation_logger:
+            if severity == "insight":
+                self._observation_logger.log_insight(message, source="MANAS")
+            elif severity == "warn":
+                self._observation_logger.log_warn(message, source="MANAS")
+            elif severity == "alert":
+                self._observation_logger.log_alert(message, source="MANAS")
+            else:
+                self._observation_logger.log_info(message, source="MANAS")
 
     def _perceive_and_generate_gap_intents(self) -> List[Intent]:
         """
