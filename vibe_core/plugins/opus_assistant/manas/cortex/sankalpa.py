@@ -707,14 +707,16 @@ class SankalpaOrchestrator:
     "The orchestrator is the conductor of will."
     """
 
-    def __init__(self, workspace: Optional[Path] = None):
+    def __init__(self, workspace: Optional[Path] = None, config: Optional[Dict[str, Any]] = None):
         """
         Initialize the orchestrator.
 
         Args:
             workspace: Workspace path
+            config: Optional config dict from config/manas.yaml (sankalpa section)
         """
         self._workspace = workspace or Path.cwd()
+        self._config = config or {}  # Store config for future use
         self._registry = SankalpaRegistry(workspace=self._workspace)
         self._planner = SankalpaPlanner(self._registry, workspace=self._workspace)
 

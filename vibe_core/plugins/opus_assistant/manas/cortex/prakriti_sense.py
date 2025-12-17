@@ -182,6 +182,7 @@ class PrakritiSense:
             enable_watcher: Enable realtime file watching
         """
         self._workspace = workspace or Path.cwd()
+        self._config: Dict[str, Any] = {}  # For future config
         self._prakriti = prakriti
         self._sync_holon: Optional[StateSyncHolon] = None
         self._enable_watcher = enable_watcher
