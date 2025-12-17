@@ -32,6 +32,23 @@ if TYPE_CHECKING:
 logger = logging.getLogger("PRANA_ORCHESTRATOR")
 
 # =============================================================================
+# CONFIGURATION (Backward Compatibility)
+# =============================================================================
+
+
+@dataclass
+class PranaOrchestratorConfig:
+    """Configuration for PRANA Orchestrator (backward compatible)."""
+
+    rate_limit_seconds: int = 60
+    max_pulse_duration: int = 300
+    enable_recovery: bool = True
+
+    # Deprecated: Kept for backward compatibility with existing tests
+    pass
+
+
+# =============================================================================
 # MUTATION SCHEMA
 # =============================================================================
 
@@ -99,8 +116,8 @@ class PulseTransaction:
     - Git state is too complex for safe rollback
     """
 
-    transaction_id: str
-    timestamp: float
+    transaction_id: str = field(default_factory=lambda: f"tx_{uuid.uuid4().hex[:8]}")
+    timestamp: float = field(default_factory=time.time)
     mutations: List[StateMutation] = field(default_factory=list)
     status: str = "pending"  # pending, committed, failed
     validation_errors: List[str] = field(default_factory=list)
@@ -131,6 +148,11 @@ class PulseTransaction:
                 self.validation_errors.append(f"Mutation validation failed: {mutation}")
                 return False
         return True
+
+    # Backward compatibility: support old register() method
+    def register(self, mutation: StateMutation) -> bool:
+        """Legacy method: add mutation (deprecated, use add_mutation)."""
+        return self.add_mutation(mutation)
 
 
 # =============================================================================
