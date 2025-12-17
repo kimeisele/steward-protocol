@@ -23,6 +23,7 @@
     - architecture_plans: list of { name, path }
     - code_health: { todos, hacks, fixmes }
     - test_health: { active, archived, organized }
+    - sutra: { total_docs, docs_with_harness, gaps_count, health_pct, top_gaps } or null (OPUS-054)
     - preserved: { current_work, blockers, notes }
 #}
 
@@ -472,6 +473,30 @@ _No active session (kernel may be stopped)_
 
 {% if not dharma.is_registered %}
 _Agent not registered in Vedic Governance - using safe defaults_
+{% endif %}
+{% endif %}
+
+{% if sutra %}
+### 📜 Sutra (Documentation Curation)
+
+*Bhagavad Gita 9.22: "yoga-kṣemaṁ vahāmy aham" - I bring what is lacking*
+
+| Metric | Value | Status |
+| --- | --- | --- |
+| Total OPUS Docs | {{ sutra.total_docs }} | - |
+| With @HARNESS | {{ sutra.docs_with_harness }} | ✅ |
+| Without @HARNESS | {{ sutra.docs_without_harness }} | {% if sutra.docs_without_harness > 0 %}⚠️{% else %}✅{% endif %} |
+| Doc/Code Gaps | {{ sutra.gaps_count }} | {% if sutra.gaps_count == 0 %}✅{% elif sutra.critical_gaps > 0 %}🔴{% else %}🟡{% endif %} |
+| Health Ratio | **{{ sutra.health_pct }}%** | {% if sutra.health_pct >= 80 %}🟢{% elif sutra.health_pct >= 50 %}🟡{% else %}🔴{% endif %} |
+
+{% if sutra.top_gaps %}
+**Top Gaps (Need Attention):**
+{% for gap in sutra.top_gaps %}
+- {% if gap.severity == 'high' %}🔴{% elif gap.severity == 'medium' %}🟡{% else %}⚪{% endif %} `{{ gap.type }}`: {{ gap.message }}{% if gap.doc %} ({{ gap.doc }}){% endif %}
+
+{% endfor %}
+{% else %}
+_No critical gaps detected - documentation is healthy_
 {% endif %}
 {% endif %}
 
