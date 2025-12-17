@@ -68,10 +68,11 @@ class ShivaLifecycleManager:
     3. Keep the intent buffer clean
     """
 
-    def __init__(self, workspace: Path):
+    def __init__(self, workspace: Path, config: Optional[Dict[str, Any]] = None):
         self._workspace = workspace
+        self._config = config or {}
         self._kernel: Optional["CognitiveKernel"] = None
-        logger.info("🕉️ Shiva: Lifecycle Manager initialized")
+        logger.info(f"🕉️ Shiva: Lifecycle Manager initialized (config: {len(self._config)} keys)")
 
     def inject_kernel(self, kernel: "CognitiveKernel") -> None:
         """Inject the CognitiveKernel for access to intent buffer."""
