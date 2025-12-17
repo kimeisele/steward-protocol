@@ -993,8 +993,9 @@ class SutraSense:
         try:
             full_content = doc_path.read_text()
             # Extract section (simplified - find heading)
+            # NOTE: Use {{1,3}} to escape curly braces in f-string for regex quantifier
             section_pattern = re.compile(
-                rf"^#{1, 3}\s*{re.escape(section)}.*?(?=^#{1, 3}|\Z)", re.MULTILINE | re.DOTALL
+                rf"^#{{1,3}}\s*{re.escape(section)}.*?(?=^#{{1,3}}|\Z)", re.MULTILINE | re.DOTALL
             )
             match = section_pattern.search(full_content)
             current_content = match.group(0) if match else ""
