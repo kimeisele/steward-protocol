@@ -16,7 +16,7 @@
             "hour": null,
             "day_of_week": null,
             "condition": null,
-            "idle_minutes": 60
+            "idle_minutes": 15
           },
           "frequency": "daily",
           "intent_type": "hygiene_check",
@@ -29,7 +29,7 @@
             ]
           },
           "requires_ci_green": false,
-          "requires_no_pending_intents": true,
+          "requires_no_pending_intents": false,
           "max_executions_per_day": 1,
           "last_executed": null,
           "execution_count_today": 0,
@@ -83,7 +83,7 @@
             "hour": null,
             "day_of_week": null,
             "condition": null,
-            "idle_minutes": 120
+            "idle_minutes": 30
           },
           "frequency": "daily",
           "intent_type": "memory_review",
@@ -95,7 +95,7 @@
             ]
           },
           "requires_ci_green": false,
-          "requires_no_pending_intents": true,
+          "requires_no_pending_intents": false,
           "max_executions_per_day": 1,
           "last_executed": null,
           "execution_count_today": 0,

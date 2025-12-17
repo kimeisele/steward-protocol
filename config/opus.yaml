@@ -239,9 +239,24 @@ manas:
   # - autonomous: Full autopilot (use with caution)
   mode: "hybrid"
 
+  # OPUS-075: Rate Limiting (Thinking Frequency)
+  thinking_interval_minutes: 15  # How often MANAS thinks (default was 60)
+  idle_threshold_minutes: 15     # Idle time before activating (default was 30)
+
+  # OPUS-075: Intent Management
+  max_intents_per_tick: 3        # Max intents to generate per cycle
+  max_intent_buffer_size: 10     # Max intents to keep in buffer
+  intent_expiry_hours: 24        # When intents expire
+  survival_first: true           # Prioritize CRITICAL/ERROR over GENESIS
+
   # Confidence threshold for auto-execution
   # Intents with confidence >= this value execute without asking
-  auto_execute_threshold: 0.85
+  # FIXED: 0.85 → 0.70 (was blocking all SAFE intents)
+  auto_execute_threshold: 0.70
+
+  # OPUS-009: Karma Gate (Earned Autonomy)
+  # High karma grants trust for LOW risk auto-execute
+  karma_auto_execute_threshold: 90  # Bhakti threshold for auto-execution
 
   # Safety limit: max autonomous actions per session
   max_autonomous_steps: 10
@@ -269,6 +284,153 @@ manas:
     git_operations: 0.85
     code_generation: 0.9
     system_config: 0.95
+
+# =============================================================================
+# OPUS-088: MIRROR TEST (Re-entrancy Guard)
+# =============================================================================
+# Prevents infinite loop: MANAS commits → triggers itself → commits → ...
+mirror_test:
+  enabled: true
+  # Commit messages that indicate self-triggered changes
+  self_trigger_patterns:
+    - "chore\\(manas\\):"
+    - "chore: vedic dharma state update"
+    - "chore: session state update"
+    - "🫀 Heartbeat Pulse:"
+
+# =============================================================================
+# OPUS-089: SANKALPA (Strategic Will)
+# =============================================================================
+# Proactive mission-based intent generation
+sankalpa:
+  enabled: true
+  config_file: ".opus_state/sankalpa.json"  # External config for missions
+
+  # Default triggers if config file missing
+  default_idle_minutes: 30
+  default_requires_no_pending: false  # FIXED: was blocking all strategies
+
+  # Mission evaluation frequency
+  evaluation_interval_minutes: 15
+
+# =============================================================================
+# OPUS-089: SHIVA LIFECYCLE (Destroyer of Illusions)
+# =============================================================================
+# Sweeps stale/fulfilled intents to keep buffer clean
+shiva:
+  enabled: true
+  sweep_interval_minutes: 30  # How often to sweep
+
+  # Intent is "fulfilled" if reality already satisfies it
+  fulfillment_checks:
+    - "commit_pending_changes: git status --short"  # Check if clean
+    - "cleanup_stale_branches: git branch"          # Check if branches gone
+
+  # Archive instead of delete
+  archive_fulfilled: true
+  archive_path: ".opus_state/archived_intents.json"
+
+# =============================================================================
+# OPUS-089: OBSERVATION LOGGER (Transparency)
+# =============================================================================
+# Makes MANAS thoughts visible in OPUS.md System Journal
+observation_logger:
+  enabled: true
+  log_to_opus: true           # Render in OPUS.md System Journal
+  log_to_file: true           # Also write to .opus_state/observations.json
+  log_file: ".opus_state/observations.json"
+
+  # What to log
+  log_events:
+    - think_cycle_start
+    - think_cycle_complete
+    - intent_generated
+    - intent_auto_executed
+    - intent_blocked
+    - sensor_perception
+
+  # Retention
+  max_observations: 100
+  retention_days: 7
+
+# =============================================================================
+# OPUS-089: DREAMING (Memory Review)
+# =============================================================================
+# Shiva's Dreaming - consolidates patterns during idle time
+dreaming:
+  enabled: true
+  trigger_idle_minutes: 120  # Dream after 2h idle
+  max_dreams_per_day: 1
+
+  # What to analyze
+  analyze:
+    - success_patterns      # What worked?
+    - failure_patterns      # What failed?
+    - intent_clusters       # Similar intents?
+    - strategy_effectiveness # Which strategies work?
+
+# =============================================================================
+# OPUS-054: SUTRA SENSE (Documentation Curator)
+# =============================================================================
+# Doc/Code gap detection
+sutra_sense:
+  enabled: true
+  scan_interval_minutes: 60   # How often to scan for gaps
+
+  # Gap severity
+  severity:
+    missing_code: "high"       # Doc references non-existent file
+    missing_test: "medium"     # Doc references non-existent test
+    missing_harness: "medium"  # Doc has no @HARNESS
+    stale_reference: "low"     # Doc references old path
+
+  # Auto-fix
+  auto_fix_enabled: true
+  auto_fix_types:
+    - "missing_harness"  # Can auto-generate
+    - "stale_reference"  # Can auto-update
+
+# =============================================================================
+# OPUS-009: PRAKRITI SENSE (State Health Monitor)
+# =============================================================================
+# Perceives unified system state and generates healing intents
+prakriti_sense:
+  enabled: true
+  scan_interval_minutes: 15
+
+  # Health thresholds
+  thresholds:
+    git_uncommitted_changes: 10   # Trigger intent if > 10 files
+    test_failure_rate: 0.1         # Trigger if > 10% tests fail
+    doc_staleness_hours: 24        # Trigger if docs not updated
+
+  # Guna classification
+  guna_weights:
+    sattva: 1.0  # Clean, synced, tested
+    rajas: 0.5   # Active, dirty, changing
+    tamas: 0.0   # Stale, broken, untested
+
+# =============================================================================
+# OPUS-009: DHARMA SENSE (Vedic Governance)
+# =============================================================================
+# Tracks agent permissions, Bhakti, and enforces Ashrama rules
+dharma_sense:
+  enabled: true
+  state_file: ".vibe/state/vedic_dharma.json"
+
+  # Bhakti (earned trust)
+  bhakti:
+    success_reward: 5       # Points per successful intent
+    failure_penalty: -10    # Penalty per failure
+    min_bhakti: 0
+    max_bhakti: 200
+
+  # Ashrama (lifecycle stages)
+  ashrama_rules:
+    brahmachari: ["read", "learn"]                    # Student
+    grihastha: ["code_modify", "git_commit"]          # Householder
+    vanaprastha: ["review", "mentor"]                 # Forest dweller
+    sannyasa: ["pr_merge", "deploy"]                  # Renunciate
 
 # Karma feedback settings
 karma:
