@@ -158,11 +158,12 @@ ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
         "git_push",  # Can push to remote
         "git_modify",
         "pr_create",  # Can create PRs
+        "pr_merge",  # Can merge PRs - FULL AUTONOMOUS CYCLE!
         "test_create",
         "doc_modify",
         "review",
         "state_heal",
-    ],  # Householder: productive
+    ],  # Householder: productive - NO PUSSY SHIT!
     "vanaprastha": ["code_modify", "doc_modify", "review", "mentor", "pr_create"],  # Elder: mentoring
     "sannyasi": ["review", "mentor", "admin", "system_control", "pr_merge"],  # Renunciate: governance + merge power
 }
