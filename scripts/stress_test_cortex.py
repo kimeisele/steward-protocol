@@ -108,10 +108,8 @@ async def stress_test(num_intents: int, timeout_seconds: float):
         active_cycles.append(cycle)
 
         try:
-            # Register with registry
-            registry.register_cycle(cycle.cycle_name, {})
-
             # Fire orchestrate() without awaiting (gather all)
+            # NOTE: Cycles auto-register with registry during orchestrate()
             task = asyncio.create_task(cycle.orchestrate(force=True))
             # Don't await - let them run in parallel
 
@@ -128,9 +126,9 @@ async def stress_test(num_intents: int, timeout_seconds: float):
                 {
                     "count": i + 1,
                     "time": elapsed,
-                    "active_in_registry": len(registry.active_cycles),
-                    "completed_in_registry": len(registry.completed_cycles),
-                    "errors_in_registry": len(registry.error_cycles),
+                    "active_in_registry": len(registry.get_active_cycles()),
+                    "completed_in_registry": len(registry.get_completed_cycles()),
+                    "errors_in_registry": len(registry.get_error_cycles()),
                 }
             )
 
@@ -166,11 +164,11 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     print(f"   Within timeout: {'✅ YES' if elapsed_total <= timeout_seconds else '❌ NO'}")
 
     print("\n📈 Registry Status (Final):")
-    print(f"   Active cycles: {len(registry.active_cycles)}")
-    print(f"   Completed cycles: {len(registry.completed_cycles)}")
-    print(f"   Error cycles: {len(registry.error_cycles)}")
+    print(f"   Active cycles: {len(registry.get_active_cycles())}")
+    print(f"   Completed cycles: {len(registry.get_completed_cycles())}")
+    print(f"   Error cycles: {len(registry.get_error_cycles())}")
     print(
-        f"   Total in registry: {len(registry.active_cycles) + len(registry.completed_cycles) + len(registry.error_cycles)}"
+        f"   Total in registry: {len(registry.get_active_cycles()) + len(registry.get_completed_cycles()) + len(registry.get_error_cycles())}"
     )
 
     print("\n💾 Memory Snapshots:")
@@ -183,11 +181,11 @@ async def stress_test(num_intents: int, timeout_seconds: float):
         )
 
     # Check retention policy
-    if len(registry.completed_cycles) <= retention.max_completed_cycles:
+    if len(registry.get_completed_cycles()) <= retention.max_completed_cycles:
         print("\n✅ Retention Policy: ENFORCED (completed cycles pruned)")
     else:
         print(
-            f"\n⚠️  Retention Policy: NOT ENFORCED ({len(registry.completed_cycles)} > {retention.max_completed_cycles})"
+            f"\n⚠️  Retention Policy: NOT ENFORCED ({len(registry.get_completed_cycles())} > {retention.max_completed_cycles})"
         )
 
     if errors:
@@ -204,7 +202,7 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     success = (
         elapsed_total <= timeout_seconds * 1.5  # Allow 50% buffer
         and len(errors) == 0
-        and len(registry.completed_cycles) <= retention.max_completed_cycles
+        and len(registry.get_completed_cycles()) <= retention.max_completed_cycles
     )
 
     if success:
