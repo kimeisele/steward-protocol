@@ -156,13 +156,20 @@ class IntentGenerator:
         These are the new-style analyzers that inherit from BaseAnalyzer.
         They provide better separation of concerns and are easier to test.
         """
-        from .analyzers import CIMonitorAnalyzer, ContractAnalyzer, PratyayaAnalyzer, SemanticAnalyzer
+        from .analyzers import (
+            CIMonitorAnalyzer,
+            ContractAnalyzer,
+            DocHarnessAnalyzer,
+            PratyayaAnalyzer,
+            SemanticAnalyzer,
+        )
 
         return [
             ContractAnalyzer(workspace=self._workspace),
             SemanticAnalyzer(workspace=self._workspace),  # 51% - The Genesis Impulse
             CIMonitorAnalyzer(workspace=self._workspace),  # OPUS-041 - VAK (The Voice)
             PratyayaAnalyzer(workspace=self._workspace),  # OPUS-077 - Self-Falsification
+            DocHarnessAnalyzer(workspace=self._workspace),  # OPUS-083 - Self-Healing Docs
         ]
 
     async def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:

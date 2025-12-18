@@ -79,6 +79,11 @@ class GitTools(Tool):
                 "required": False,
                 "description": "Whether to sign commit (default: True)",
             },
+            "no_verify": {
+                "type": "boolean",
+                "required": False,
+                "description": "Skip pre-commit hooks (default: False, set True for runtime state)",
+            },
             "pattern": {
                 "type": "string",
                 "required": False,
@@ -144,6 +149,7 @@ class GitTools(Tool):
                     message=parameters["message"],
                     files=parameters.get("files"),
                     sign=parameters.get("sign", True),
+                    no_verify=parameters.get("no_verify", False),
                 )
                 return ToolResult(
                     success=result["success"],
@@ -240,7 +246,13 @@ class GitTools(Tool):
             self.logger.error(f"❌ {msg}")
             return (1, "", msg)
 
-    def seal_history(self, message: str, files: Optional[List[str]] = None, sign: bool = True) -> Dict[str, any]:
+    def seal_history(
+        self,
+        message: str,
+        files: Optional[List[str]] = None,
+        sign: bool = True,
+        no_verify: bool = False,
+    ) -> Dict[str, any]:
         """
         Seal the timeline: Create a signed commit.
 
@@ -251,6 +263,7 @@ class GitTools(Tool):
             message: Commit message
             files: List of files to commit (if None, commits all staged)
             sign: Whether to sign the commit (default: True)
+            no_verify: Skip pre-commit hooks (default: False, set True for runtime state)
 
         Returns:
             Dict with:
@@ -290,6 +303,8 @@ class GitTools(Tool):
 
             # 3. Create commit
             commit_cmd = ["commit", "-m", message]
+            if no_verify:
+                commit_cmd.append("--no-verify")  # Skip pre-commit hooks (runtime state)
             if sign:
                 commit_cmd.append("-S")  # Sign the commit
 
