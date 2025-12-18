@@ -497,9 +497,72 @@ class IntentRouter:
         except Exception:
             return {"total_karma": 0, "entries": 0, "success_rate": 0.0}
 
+    # =========================================================================
+    # OPUS-101: HYBRID ROUTER - ActionLoader Integration
+    # =========================================================================
+
+    def _try_action_loader(self, intent: Intent) -> Optional[RouteResult]:
+        """
+        OPUS-101: Try to route via ActionLoader (VEDA-4 auto-discovery).
+
+        This enables the new BaseAction-based actions to be discovered
+        automatically without manual registration in _register_handlers().
+
+        Returns:
+            RouteResult if action found and executed, None to fall back to legacy
+        """
+        try:
+            from vibe_core.loaders import ActionLoader
+
+            # Check if ActionLoader has a handler for this intent type
+            action = ActionLoader.get_action_for_intent(intent.intent_type, workspace=self._workspace)
+
+            if action is None:
+                logger.debug(f"[HYBRID] ActionLoader: no handler for {intent.intent_type}")
+                return None
+
+            logger.info(f"⚡ [HYBRID] ActionLoader routing {intent.intent_type} -> {action.name}")
+
+            # Execute via the action's act() method
+            action_result = action.act(intent)
+
+            # Validate output against Sruti (Ledger)
+            result_dict = {
+                "success": action_result.success,
+                "handler": action_result.action_name,
+                "action_result": action_result.result,
+                "error": action_result.error,
+                **(action_result.metadata or {}),
+            }
+
+            validation = self._validator.validate_intent_output(result_dict)
+            if not validation.valid:
+                logger.warning(f"⚠️ SRUTI VIOLATION: {validation.errors}")
+                result_dict["sruti_validation"] = validation.to_dict()
+            elif validation.warnings:
+                logger.info(f"📝 SRUTI: {validation.warnings}")
+                result_dict["sruti_validation"] = validation.to_dict()
+
+            return RouteResult(
+                success=action_result.success,
+                handler=f"ActionLoader/{action_result.action_name}",
+                result=result_dict,
+                error=action_result.error,
+            )
+
+        except Exception as e:
+            logger.error(f"❌ [HYBRID] ActionLoader failed: {e}")
+            # Don't crash - fall back to legacy
+            return None
+
     def route(self, intent: Intent) -> RouteResult:
         """
         Route an intent to the appropriate cortex module.
+
+        OPUS-101: HYBRID ROUTER STRATEGY
+        1. First try ActionLoader (VEDA-4 auto-discovered actions)
+        2. Fall back to legacy handlers if not found
+        3. Final fallback to prefix matching
 
         Args:
             intent: The intent to route
@@ -510,7 +573,12 @@ class IntentRouter:
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
 
-        # Find handler
+        # OPUS-101: Try ActionLoader FIRST (VEDA-4 auto-discovery)
+        action_result = self._try_action_loader(intent)
+        if action_result is not None:
+            return action_result
+
+        # Fall back to legacy handlers
         handler = self._handlers.get(intent_type)
 
         if handler is None:
