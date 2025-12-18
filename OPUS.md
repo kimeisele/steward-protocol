@@ -729,7 +729,15 @@ flowchart LR
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+**OPUS-106: Bidirectional UI-Mind Bridge**
+
+Implementing the WRITE path for AI sections in OPUS.md:
+- ✅ Config-driven markers from interface.yaml
+- ✅ update_ai_section() / get_ai_section() methods
+- 🔄 CognitiveWeaver reads session context at boot
+- 🔄 AI writes status back to OPUS.md
+
+*The markdown IS the system - like Unix where everything is a file.*
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
