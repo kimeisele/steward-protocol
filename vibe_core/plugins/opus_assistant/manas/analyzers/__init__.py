@@ -24,6 +24,7 @@ The 50%/51%/52% distinction:
 from .base import AnalyzerConfig, BaseAnalyzer
 from .ci_monitor_analyzer import CIMonitorAnalyzer
 from .contract_analyzer import ContractAnalyzer
+from .doc_harness_analyzer import DocHarnessAnalyzer
 from .pratyaya_analyzer import PratyayaAnalyzer
 from .semantic_analyzer import SemanticAnalyzer
 
@@ -34,4 +35,5 @@ __all__ = [
     "SemanticAnalyzer",
     "CIMonitorAnalyzer",
     "PratyayaAnalyzer",
+    "DocHarnessAnalyzer",
 ]

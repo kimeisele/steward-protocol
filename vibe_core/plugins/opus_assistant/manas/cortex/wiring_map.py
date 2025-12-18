@@ -75,6 +75,8 @@ class WiringMap:
         "ContractAnalyzer",
         "SemanticAnalyzer",
         "CIMonitorAnalyzer",
+        "PratyayaAnalyzer",
+        "DocHarnessAnalyzer",
     ]
 
     EXPECTED_HANDLERS = [
