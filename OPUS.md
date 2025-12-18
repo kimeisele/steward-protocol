@@ -729,7 +729,16 @@ flowchart LR
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+**OPUS-106: SANKALPA Strategic Layer Wired to UI**
+
+Completed:
+- ✅ _gather_sankalpa() in renderer
+- ✅ Template SANKALPA section (current_goal, phase_status, next_actions)
+- ✅ Preserved sections extraction updated
+- ✅ Config sections restored (were NOT dead code!)
+
+The strategic brain (SANKALPA 32k LOC) now has a face in OPUS.md!
+System shows: 3 active missions, 3 strategies enabled.
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
