@@ -488,6 +488,51 @@ Await further instructions.
 """
 
     @classmethod
+    def load_from_yaml(cls, yaml_path: Path | str) -> int:
+        """
+        OPUS-105: Load prompts from a YAML configuration file.
+
+        This enables config-driven prompts (VAK principle):
+        - Prompts live in config/, not in Python code
+        - Can be tuned without kernel restart
+        - Can be self-optimized by MANAS
+
+        Args:
+            yaml_path: Path to YAML file with prompts
+
+        Returns:
+            Number of prompts loaded
+
+        Example YAML structure:
+            prompts:
+              genesis.action: |
+                Generate a Python BaseAction...
+              genesis.module: |
+                Generate a Python module...
+        """
+        yaml_path = Path(yaml_path)
+        if not yaml_path.exists():
+            logger.warning(f"Prompt YAML not found: {yaml_path}")
+            return 0
+
+        try:
+            with open(yaml_path) as f:
+                data = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            logger.error(f"Invalid YAML in {yaml_path}: {e}")
+            return 0
+
+        prompts = data.get("prompts", {})
+        count = 0
+        for key, prompt in prompts.items():
+            if isinstance(prompt, str):
+                cls.register(key, prompt)
+                count += 1
+
+        logger.info(f"Loaded {count} prompts from {yaml_path.name}")
+        return count
+
+    @classmethod
     def initialize_defaults(cls) -> None:
         """
         Initialize registry with default prompts.
@@ -495,6 +540,11 @@ Await further instructions.
         This is called automatically on first use, but can be called
         manually to reset prompts or during testing.
         """
+        # OPUS-105: Load genesis prompts from config
+        genesis_yaml = _REPO_ROOT / "config" / "prompts" / "genesis.yaml"
+        if genesis_yaml.exists():
+            cls.load_from_yaml(genesis_yaml)
+
         # Research prompts
         cls.register(
             "research.analyze_topic",

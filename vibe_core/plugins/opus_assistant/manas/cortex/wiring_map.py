@@ -102,6 +102,22 @@ class WiringMap:
         "knowledge_query",  # UnifiedKnowledgeGraph → IntentRouter
         "search_knowledge",  # UnifiedKnowledgeGraph → IntentRouter
         "get_context",  # UnifiedKnowledgeGraph → IntentRouter
+        # OPUS-105: Genesis Protocol - ActionLoader auto-discovery
+        "genesis_action",  # SilpaAction → Create new Action via LLM
+        "genesis_code",  # SilpaAction → Generate code via LLM
+        "create_action",  # SilpaAction → Alias for genesis_action
+        "create_module",  # SilpaAction → Create new Python module
+        # OPUS-102: Sankalpa Strategic Will
+        "create_mission",  # SankalpaAction → Mission management
+        "list_missions",  # SankalpaAction → View missions
+        "evaluate_strategies",  # SankalpaAction → Proactive thinking
+        "think_proactive",  # SankalpaAction → Generate proactive intents
+        # OPUS-101: Shell & Test Actions via ActionLoader
+        "execute_shell",  # ShellAction → Shell commands
+        "shell_command",  # ShellAction → Shell commands (alias)
+        "run_lint",  # TestAction → Run linter
+        "run_format",  # TestAction → Run formatter
+        "run_quick_tests",  # TestAction → Quick test suite
     ]
 
     EXPECTED_CORTEX_MODULES = [
@@ -118,6 +134,16 @@ class WiringMap:
         "TestCortex",
         "JnanaHandler",
         "SamvadaClient",
+        # OPUS-105: VEDA-4 Actions (auto-discovered via ActionLoader)
+        "SilpaAction",  # PANI - Code modification/genesis
+        "ShellAction",  # VAK - Shell commands
+        "TestAction",  # PAYU - Test execution
+        "SankalpaAction",  # UPASTHA - Strategic will
+        "EchoAction",  # Proof-of-life for auto-discovery
+        # OPUS-105: Senses (auto-discovered via SenseLoader)
+        "DharmaSense",  # Dharmic conscience
+        "PrakritiSense",  # State perception
+        "SutraSense",  # Documentation curation
         # Note: MutationHandlers and KnowledgeGraph are tracked as capabilities
         # (they live outside cortex/ but are wired via IntentRouter)
     ]
