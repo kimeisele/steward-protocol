@@ -269,27 +269,102 @@ class RuntimeStateDefinition:
 
 ---
 
-## Open Questions (For Discussion)
+## Design Decisions (RESOLVED)
 
-1. **Where does the Weaver live?**
-   - Option A: `vibe_core/state/weaver.py` (Mutterschiff layer)
-   - Option B: Extend `sync_holon.py` into the Weaver
-   - Option C: New module `vibe_core/weaving/` for all weavers
+### 1. Where does the Weaver live?
+**DECISION:** `vibe_core/state/weaver.py` - Core Infrastructure
 
-2. **How does MANAS weave its own state?**
-   - MANAS is a plugin that produces state (.opus_state/)
-   - MANAS is also consulted by the Weaver
-   - Circular dependency? Or fractal elegance?
+The Weaver is Mutterschiff-level. `SyncHolon` becomes a tool the Weaver uses.
 
-3. **Heartbeat vs Weaver relationship?**
-   - Option A: Heartbeat calls Weaver.pulse()
-   - Option B: Weaver has its own tick mechanism
-   - Option C: Heartbeat IS a specialized Weaver
+### 2. Heartbeat vs Weaver relationship?
+**DECISION:** Heartbeat = Taktgeber (Clock), Weaver = Muskel (Muscle)
 
-4. **Multiple session handling?**
-   - Ghost Lock Protocol (OPUS-027)
-   - Split-brain prevention
-   - Crash recovery with Weaver
+```python
+# heartbeat.py (AFTER)
+def _on_tick(self):
+    weaver = get_state_sync_weaver()
+    weaver.pulse()  # Heartbeat has NO commit logic
+```
+
+Heartbeat NEVER commits directly. It only triggers the Weaver.
+
+### 3. MANAS Integration (CRITICAL!)
+**DECISION:** Two-Mode Operation to prevent blocking
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  REFLEX MODE (Default - Fast, Rule-Based)                               │
+│  ══════════════════════════════════════════                             │
+│  • Heartbeat ticks → Weaver.pulse()                                     │
+│  • Log files, session state, observations                               │
+│  • NO MANAS consultation (< 10ms)                                       │
+│  • Rules defined by MANAS policy (set async)                            │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ORACLE MODE (Higher-Order State - Slow, Cognitive)                     │
+│  ══════════════════════════════════════════════════                     │
+│  • Architecture changes, new plugins, conflicts                         │
+│  • Weaver.consult_manas() → ManasOracle.consult()                      │
+│  • Full cognitive analysis (100-500ms acceptable)                       │
+│  • MANAS can veto or suggest healing strategies                         │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 4. MANAS Has Its OWN Sub-System (Important Separation!)
+
+MANAS (cognitive_kernel.py) manages its OWN internal state:
+- Intent buffer & history
+- Memory store (karma, bhakti, observations)
+- Sankalpa missions
+- Learning patterns
+
+The Prakriti Weaver orchestrates WHEN this state is committed to git.
+MANAS doesn't call git directly - it declares state via PluginStateContract.
+
+```
+MANAS Internal:     cognitive_kernel.py manages .opus_state/* in-memory
+                              ↓ implements PluginStateContract
+Prakriti Weaver:    weaver.py discovers → classifies → commits to git
+```
+
+### 5. Race Condition Prevention (The Horror Scenario)
+
+**Problem:** Multiple writers → `index.lock` crash → Data loss
+
+**Solution:** Single Commit Authority
+
+```python
+class StateSyncWeaver:
+    _commit_lock: threading.Lock  # SINGLE LOCK for all commits
+
+    def pulse(self) -> CommitResult:
+        with self._commit_lock:
+            # Only ONE commit can happen at a time
+            # Heartbeat, Prakriti, SyncHolon - all go through here
+```
+
+### 6. Split-Brain Prevention
+
+**Problem:** MANAS thinks state is X, disk has Y → Hallucination
+
+**Solution:** State Fence Protocol
+
+```python
+def commit_with_fence(self, state: ClassifiedState) -> CommitResult:
+    # 1. Snapshot current in-memory state
+    snapshot = self._snapshot_all_plugins()
+
+    # 2. Commit to git
+    result = self._execute_commit(state)
+
+    # 3. Verify disk matches memory
+    disk_state = self._read_committed_state()
+    if disk_state != snapshot:
+        raise SplitBrainDetected("State divergence!")
+
+    return result
+```
 
 ---
 
