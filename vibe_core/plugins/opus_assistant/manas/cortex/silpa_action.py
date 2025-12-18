@@ -421,14 +421,15 @@ class SilpaAction(BaseAction):
 
     def _handle_genesis(self, intent: "Intent", params: Dict) -> ActionResult:
         """
-        OPUS-103/OPUS-105: Handle code generation via LLM with DHARMA enforcement.
+        OPUS-103/OPUS-105: Handle code generation via LLM with DHARMA + BHUMANDALA enforcement.
 
         This is the GENESIS capability - MANAS can now CREATE new code.
 
-        OPUS-105 DHARMA GATING:
-        1. DharmaSense.check_dharmic_alignment() - Permission check
-        2. Path restriction - Only cortex/, tests/
-        3. Karma tracking - Success/failure affects Bhakti
+        OPUS-105 FORTRESS GATES (in order):
+        1. BHUMANDALA - Topology authority check (Ring 0-2 required)
+        2. DharmaSense - Permission check (genesis + code_modify)
+        3. Path restriction - Only cortex/, tests/
+        4. Karma tracking - Success/failure affects Bhakti
 
         Args:
             intent: The genesis intent
@@ -442,7 +443,47 @@ class SilpaAction(BaseAction):
             ActionResult with generated code or error
         """
         # =====================================================================
-        # OPUS-105: DHARMA CHECK FIRST (Real tiger, not paper tiger)
+        # OPUS-105 SÄULE 2: BHUMANDALA - Topology Authority Check
+        # Genesis requires Ring 0-2 authority (ILAVRTA, BHADRASHVA, KIMPURASHA)
+        # =====================================================================
+        try:
+            from vibe_core.topology import get_agent_placement
+
+            placement = get_agent_placement("manas")
+            if placement:
+                # Genesis requires authority level >= 8 (Ring 0-2)
+                MIN_GENESIS_AUTHORITY = 8
+                if placement.authority_level < MIN_GENESIS_AUTHORITY:
+                    logger.warning(
+                        f"[GENESIS] ❌ BHUMANDALA BLOCKED: MANAS authority {placement.authority_level} "
+                        f"< {MIN_GENESIS_AUTHORITY} required for genesis"
+                    )
+                    self._track_karma_penalty(reason="Insufficient topology authority for genesis")
+                    return ActionResult(
+                        success=False,
+                        action_name=self.name,
+                        intent_type=intent.type,
+                        error=f"BHUMANDALA VIOLATION: Authority level {placement.authority_level} insufficient for genesis (need {MIN_GENESIS_AUTHORITY}+)",
+                        metadata={
+                            "genesis_blocked": True,
+                            "reason": "topology_authority",
+                            "agent_authority": placement.authority_level,
+                            "required_authority": MIN_GENESIS_AUTHORITY,
+                            "agent_layer": placement.layer,
+                            "agent_varna": placement.varna,
+                        },
+                    )
+                logger.info(
+                    f"[GENESIS] ✅ BHUMANDALA: Authority {placement.authority_level} "
+                    f"(Layer: {placement.layer}, Varna: {placement.varna})"
+                )
+        except ImportError:
+            logger.debug("[GENESIS] Topology not available - skipping authority check")
+        except Exception as e:
+            logger.debug(f"[GENESIS] Topology check failed: {e}")
+
+        # =====================================================================
+        # OPUS-105: DHARMA CHECK (Real tiger, not paper tiger)
         # =====================================================================
         try:
             from .dharma_sense import DharmaSense, DharmaStatus
@@ -606,103 +647,87 @@ class SilpaAction(BaseAction):
             )
 
     def _build_genesis_prompt(self, name: str, description: str, code_type: str) -> str:
-        """Build prompt for LLM code generation."""
-        if code_type == "action":
-            return f'''Generate a Python BaseAction class for MANAS (the cognitive kernel).
+        """
+        OPUS-105 VAK: Build prompt for LLM code generation using PromptRegistry.
 
-Name: {name}Action
-Description: {description}
+        Prompts are loaded from config/prompts/genesis.yaml, NOT hardcoded.
+        This enables:
+        - Tuning without kernel restart
+        - Self-optimization by MANAS
+        - Clean separation of concerns
+        """
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
 
-Requirements:
-1. Inherit from BaseAction (from .base_action import ActionResult, BaseAction)
-2. Set `name = "{name}_action"`
-3. Define `handled_intent_types: Set[str]` with relevant intent types
-4. Implement `act(self, intent: "Intent") -> ActionResult` method
-5. Use proper logging via `logger = logging.getLogger("MANAS.Action.{name.title()}")`
-6. Include docstring with OPUS reference
+            # Map code_type to prompt key
+            prompt_key = f"genesis.{code_type}"
 
-Template structure:
-```python
-"""
-OPUS-103: {name.title()} Action - Auto-generated by MANAS Genesis.
-"""
+            # Prepare context for interpolation
+            context = {
+                "name": name,
+                "name_title": name.title(),
+                "name_upper": name.upper(),
+                "description": description,
+                "code_type": code_type,
+            }
 
-import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+            # Get prompt from registry
+            prompt = PromptRegistry.get(prompt_key, context)
+            logger.debug(f"[GENESIS] Using prompt from registry: {prompt_key}")
+            return prompt
 
-from .base_action import ActionResult, BaseAction
-
-if TYPE_CHECKING:
-    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
-
-logger = logging.getLogger("MANAS.Action.{name.title()}")
-
-
-class {name.title()}Action(BaseAction):
-    name = "{name}_action"
-    handled_intent_types: Set[str] = {{...}}
-
-    def __init__(self, workspace: Optional[Path] = None, config: Optional[Dict[str, Any]] = None):
-        super().__init__(workspace, config)
-        logger.info("[{name.upper()}_ACTION] Initialized")
-
-    def act(self, intent: "Intent") -> ActionResult:
-        # Implementation here
-        pass
-```
-
-Generate complete, working code. Only output Python code, no explanations.
-'''
-        else:
-            return f"""Generate a Python module for MANAS.
-
+        except Exception as e:
+            # Fallback to minimal prompt if registry fails
+            logger.warning(f"[GENESIS] PromptRegistry failed ({e}), using fallback")
+            return f"""Generate a Python {code_type} for MANAS.
 Name: {name}
-Type: {code_type}
 Description: {description}
-
-Generate complete, working Python code with proper imports, logging, and docstrings.
-Only output Python code, no explanations.
-"""
+Generate complete, working Python code. Only output code, no explanations."""
 
     # =========================================================================
-    # OPUS-105: KARMA TRACKING - Actions have consequences
+    # OPUS-105: KARMA TRACKING - Actions have consequences (REAL, NOT PAPER)
     # =========================================================================
+
+    def _get_state_manager(self):
+        """
+        Lazy-load VedicStateManager singleton.
+
+        Uses the same pattern as DharmaSense for consistency.
+        """
+        if not hasattr(self, "_state_manager"):
+            self._state_manager = None
+
+        if self._state_manager is None:
+            try:
+                from vibe_core.plugins.vedic_governance.state_manager import get_state_manager
+
+                self._state_manager = get_state_manager()
+            except ImportError:
+                logger.debug("[KARMA] VedicStateManager not available")
+        return self._state_manager
 
     def _track_karma_penalty(self, reason: str, amount: int = 10) -> None:
         """
         OPUS-105: Track karma penalty for blocked/failed actions.
 
-        This wires into VedicGovernance.consume_bhakti() to actually
-        reduce the agent's Bhakti score when they violate Dharma.
+        REAL WIRING: Uses VedicStateManager.update_bhakti() directly.
+        This ACTUALLY reduces the agent's Bhakti score.
 
         Args:
             reason: Why karma is being docked
             amount: How much Bhakti to consume (default 10)
         """
         try:
-            # Try to get VedicGovernance plugin
-            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
-
-            # Get the singleton instance if available
-            governance = getattr(self, "_governance", None)
-            if governance is None:
-                # Try to get from kernel if available
-                kernel = getattr(self, "_kernel", None)
-                if kernel and hasattr(kernel, "plugins"):
-                    governance = kernel.plugins.get("vedic_governance")
-
-            if governance:
-                governance.consume_bhakti(
+            state_mgr = self._get_state_manager()
+            if state_mgr:
+                new_bhakti = state_mgr.update_bhakti(
                     agent_id="manas",
-                    amount=amount,
+                    delta=-amount,  # NEGATIVE = penalty
                     reason=f"KARMA PENALTY: {reason}",
                 )
-                logger.warning(f"[KARMA] 📉 Bhakti -{amount} for MANAS: {reason}")
+                logger.warning(f"[KARMA] 📉 Bhakti -{amount} for MANAS → now {new_bhakti}: {reason}")
             else:
-                # Log even if no governance wired
                 logger.warning(f"[KARMA] 📉 (unwired) Penalty recorded: {reason}")
-
         except Exception as e:
             logger.debug(f"[KARMA] Could not track penalty: {e}")
 
@@ -710,31 +735,23 @@ Only output Python code, no explanations.
         """
         OPUS-105: Track karma reward for successful dharmic actions.
 
-        This wires into VedicGovernance.add_bhakti() to reward
-        the agent's Bhakti score for good behavior.
+        REAL WIRING: Uses VedicStateManager.update_bhakti() directly.
+        This ACTUALLY increases the agent's Bhakti score.
 
         Args:
             reason: Why karma is being rewarded
             amount: How much Bhakti to add (default 5)
         """
         try:
-            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
-
-            governance = getattr(self, "_governance", None)
-            if governance is None:
-                kernel = getattr(self, "_kernel", None)
-                if kernel and hasattr(kernel, "plugins"):
-                    governance = kernel.plugins.get("vedic_governance")
-
-            if governance:
-                governance.add_bhakti(
+            state_mgr = self._get_state_manager()
+            if state_mgr:
+                new_bhakti = state_mgr.update_bhakti(
                     agent_id="manas",
-                    amount=amount,
+                    delta=+amount,  # POSITIVE = reward
                     reason=f"KARMA SUCCESS: {reason}",
                 )
-                logger.info(f"[KARMA] 📈 Bhakti +{amount} for MANAS: {reason}")
+                logger.info(f"[KARMA] 📈 Bhakti +{amount} for MANAS → now {new_bhakti}: {reason}")
             else:
                 logger.info(f"[KARMA] 📈 (unwired) Success recorded: {reason}")
-
         except Exception as e:
             logger.debug(f"[KARMA] Could not track success: {e}")
