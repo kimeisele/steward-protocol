@@ -105,7 +105,18 @@
       "created_at": "2025-12-14T14:22:07.211639+00:00",
       "completed_at": null,
       "owner": "MANAS"
+    },
+    {
+      "id": "mission_1a8e3c93",
+      "name": "Self-Extension Test",
+      "description": "Create EchoAction to prove MANAS can extend itself",
+      "priority": "critical",
+      "status": "active",
+      "strategies": [],
+      "created_at": "2025-12-18T12:37:16.247876+00:00",
+      "completed_at": null,
+      "owner": "MANAS"
     }
   ],
-  "updated_at": "2025-12-14T14:22:07.211853+00:00"
+  "updated_at": "2025-12-18T12:37:16.248063+00:00"
 }
