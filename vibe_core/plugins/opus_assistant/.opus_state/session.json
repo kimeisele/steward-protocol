@@ -1,13 +1,16 @@
 {
-  "session_id": "e327c639",
-  "started_at": "2025-12-18T21:04:00.335469",
+  "session_id": "37f05366",
+  "started_at": "2025-12-18T21:10:14.012662",
   "last_karma_score": 100,
   "observation_count": 0,
   "boot_mode": "full_power",
   "view_preferences": {
     "show_tests": true,
     "show_debug": false,
-    "show_code_health": true
+    "show_code_health": true,
+    "auto_heal": false,
+    "aggressive_refactoring": false,
+    "budget_limit": 5.0
   },
   "pending_intent": null
 }
