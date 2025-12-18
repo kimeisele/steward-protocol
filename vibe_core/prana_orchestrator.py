@@ -235,9 +235,35 @@ class PranaOrchestrator(CognitiveCycle):
         self._rate_limit = 60  # Default 1 minute (can be overridden)
         self._parent_cycle_id: Optional[str] = None
 
+        # OPUS-091: Registered plugins for headless mode
+        self._registered_plugins: List[Any] = []
+
         # Phase A Integration
         if trace and event_bus:
             self.setup(trace, event_bus, steward_context=None)
+
+    # ========================================================================
+    # OPUS-091: HEADLESS MODE PLUGIN REGISTRATION
+    # ========================================================================
+
+    def register_plugin(self, plugin: Any) -> None:
+        """
+        Register a plugin for pulse orchestration (headless mode).
+
+        OPUS-091: In headless mode (heartbeat.py), we don't have a kernel
+        with a plugin_loader. Instead, plugins are registered directly.
+
+        Args:
+            plugin: Plugin instance implementing on_pulse() or pulse()
+        """
+        if plugin not in self._registered_plugins:
+            self._registered_plugins.append(plugin)
+            plugin_name = getattr(plugin, "name", getattr(plugin, "plugin_id", str(type(plugin).__name__)))
+            self.logger.debug(f"🔌 Registered plugin: {plugin_name}")
+
+    def get_registered_plugins(self) -> List[Any]:
+        """Get all registered plugins (for headless mode)."""
+        return self._registered_plugins.copy()
 
     # ========================================================================
     # BACKWARD COMPATIBILITY: DEFAULT HANDLERS
@@ -320,10 +346,17 @@ class PranaOrchestrator(CognitiveCycle):
         metadata = {}
 
         try:
-            # Load active plugins
-            plugins = (
-                self.plugin_loader.get_active_plugins() if hasattr(self.plugin_loader, "get_active_plugins") else []
-            )
+            # Load active plugins - prefer plugin_loader, fallback to registered plugins (OPUS-091)
+            plugins = []
+            if hasattr(self.plugin_loader, "get_active_plugins"):
+                plugins = self.plugin_loader.get_active_plugins()
+
+            # OPUS-091: Merge with registered plugins (headless mode)
+            if self._registered_plugins:
+                for rp in self._registered_plugins:
+                    if rp not in plugins:
+                        plugins.append(rp)
+
             observations.append({"type": "active_plugins", "count": len(plugins), "data": plugins})
 
             # System health check (simplified)

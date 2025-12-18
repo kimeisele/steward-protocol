@@ -63,15 +63,19 @@ class TestManasRequirements:
 
         assert has_boot_emission, "KERNEL_BOOT should be emitted during boot"
 
-    @pytest.mark.xfail(reason="OPUS-073: HOURLY_PULSE should come from heartbeat, not kernel")
     def test_hourly_pulse_source(self):
-        """Verify HOURLY_PULSE comes from the right place (heartbeat, not kernel)."""
+        """
+        Verify HOURLY_PULSE comes from heartbeat.py.
+
+        OPUS-091: FIXED! Heartbeat now emits HOURLY_PULSE instead of direct manas.think() call.
+        """
         heartbeat_path = Path(__file__).parent.parent.parent / "scripts" / "heartbeat.py"
         content = heartbeat_path.read_text()
 
-        has_hourly_pulse = "HOURLY_PULSE" in content or "hourly" in content.lower()
+        # OPUS-091: heartbeat.py now emits HOURLY_PULSE event
+        has_hourly_pulse = "HOURLY_PULSE" in content and "EventType.HOURLY_PULSE" in content
 
-        assert has_hourly_pulse, "HOURLY_PULSE should be emitted by heartbeat.py"
+        assert has_hourly_pulse, "HOURLY_PULSE should be emitted by heartbeat.py (OPUS-091)"
 
 
 class TestHeartbeatManasConnection:
