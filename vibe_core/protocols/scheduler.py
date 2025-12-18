@@ -1,29 +1,11 @@
 """
-Task Scheduler Protocol - Interface Definition
+Task Scheduler Protocol - Backwards Compatibility Re-export
 
-BLOCKER #2: Layer 1 Protocol (no implementations)
+GAP-018 FIX: Canonical source is now protocols/ledger.py
+This file exists for backwards compatibility only.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+# Re-export from canonical source
+from .ledger import VibeScheduler
 
-from ..scheduling import Task
-
-
-class VibeScheduler(ABC):
-    """Task scheduler interface"""
-
-    @abstractmethod
-    def submit_task(self, task: Task) -> str:
-        """Submit a task to the queue, return task_id"""
-        pass
-
-    @abstractmethod
-    def next_task(self) -> Optional[Task]:
-        """Pop next task from queue"""
-        pass
-
-    @abstractmethod
-    def get_queue_status(self) -> Dict[str, Any]:
-        """Get queue statistics"""
-        pass
+__all__ = ["VibeScheduler"]
