@@ -173,7 +173,35 @@
         "handler": "SUTRA",
         "error": "No target file specified"
       }
+    },
+    {
+      "intent": {
+        "id": "opus109_meru_test",
+        "intent_type": "persistence_test",
+        "title": "\ud83d\udd31 OPUS-109 MERU: Persistence Test Intent",
+        "description": "This intent tests if MANAS survives kernel restart. If you see this after restart, persistence works.",
+        "reasoning": "Critical test for AGI persistence - proving the mind survives death.",
+        "priority": "critical",
+        "risk": "safe",
+        "created_at": "2025-12-18T19:39:39.118601",
+        "circuit_to_execute": null,
+        "params": {
+          "test_type": "persistence",
+          "created_by": "OPUS-109",
+          "purpose": "meru_immortality_test"
+        },
+        "auto_executable": false,
+        "expires_at": null,
+        "related_files": [],
+        "related_docs": [
+          "docs/architecture/OPUS/108-AUTONOMY-LOOP.md"
+        ]
+      },
+      "status": "pending",
+      "added_at": "2025-12-18T19:39:39.118617",
+      "executed_at": null,
+      "execution_result": null
     }
   ],
-  "updated_at": "2025-12-18T18:21:27.542936"
+  "updated_at": "2025-12-18T19:39:39.118619"
 }
