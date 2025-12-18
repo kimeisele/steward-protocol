@@ -868,6 +868,7 @@ class CognitiveKernel(CognitiveCycle):
         This provides unified access to:
         - State Layer (Prakriti, StateSyncHolon) - What MANAS REMEMBERS
         - Knowledge Layer (UnifiedKnowledgeGraph) - What MANAS KNOWS
+        - Session Context (OPUS.md preserved sections) - What MANAS was DOING
 
         The Cognitive Weaver enables MANAS to make intelligent decisions
         that combine historical state with conceptual knowledge.
@@ -876,15 +877,58 @@ class CognitiveKernel(CognitiveCycle):
             from vibe_core.state.cognitive_weaver import CognitiveWeaver
 
             self._cognitive_weaver = CognitiveWeaver(workspace=self._workspace)
+
+            # OPUS-106: Inject session context from OPUS.md (UI → Mind Bridge)
+            self._inject_session_context_from_opus()
+
             # Boot diagnosis
             diagnosis = self._cognitive_weaver.diagnose()
             health = diagnosis.get("unified", {}).get("overall_health", 0)
+            session_ctx = (
+                "with session context" if self._cognitive_weaver.has_session_context() else "no session context"
+            )
             logger.info(
-                f"🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge initialized - Health: {health:.0%}, Weaver Active: True"
+                f"🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge initialized - Health: {health:.0%}, {session_ctx}"
             )
         except Exception as e:
             logger.warning(f"🧵 COGNITIVE WEAVER: Could not initialize: {e}")
             self._cognitive_weaver = None
+
+    def _inject_session_context_from_opus(self) -> None:
+        """
+        OPUS-106: Extract preserved sections from OPUS.md and inject into CognitiveWeaver.
+
+        This bridges the UI-Layer (OPUS.md) with the Mind-Layer (MANAS).
+        The preserved sections contain what the previous AI/Human wrote,
+        enabling continuity across sessions.
+        """
+        if not self._cognitive_weaver:
+            return
+
+        try:
+            opus_path = self._workspace / "OPUS.md"
+            if not opus_path.exists():
+                return
+
+            # Try to get preserved sections from opus_assistant
+            try:
+                from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                    OpusDashboardRenderer,
+                )
+
+                renderer = OpusDashboardRenderer(self._workspace)
+                preserved = renderer._extract_preserved_sections()
+
+                if preserved:
+                    self._cognitive_weaver.inject_session_context(preserved)
+                    logger.debug("🧵 COGNITIVE WEAVER: Session context loaded from OPUS.md")
+            except ImportError:
+                logger.debug("🧵 COGNITIVE WEAVER: OpusDashboardRenderer not available")
+            except Exception as e:
+                logger.debug(f"🧵 COGNITIVE WEAVER: Could not extract preserved sections: {e}")
+
+        except Exception as e:
+            logger.warning(f"🧵 COGNITIVE WEAVER: Failed to inject session context: {e}")
 
     def inject_cognitive_weaver(self, weaver: "CognitiveWeaver") -> None:
         """
