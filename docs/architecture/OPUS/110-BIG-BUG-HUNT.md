@@ -58,13 +58,19 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 
 | ID | Area | Issue | Severity | Status |
 |----|------|-------|----------|--------|
-| GAP-004 | Docs | 13 OPUS files without @HARNESS | LOW | DEFERRED (Concept docs - see below) |
+| GAP-004 | Docs | 13 OPUS files without @HARNESS | LOW | PARTIALLY FIXED (6 semantic harnesses) |
 | GAP-008 | Circuits | Circuits already exist in vibe_core/playbook/circuits/ | N/A | FALSE POSITIVE |
 | GAP-010 | Async | 190 async functions without await | LOW | ANALYZED (interface compliance, not bugs) |
 
-**Note on GAP-004:** The ONE-WORD VEDIC docs (SHUDDHI, VAJRA, etc.) are PRINCIPLES, not code wrappers.
-The harness generator assumes every doc has a code module. This is a design issue requiring
-semantic harnesses (OPUS-200 territory), not a quick fix.
+**Note on GAP-004:** Created semantic harness pattern for VEDIC concept docs:
+- SHUDDHI (056): Purification - applies to boot/state patterns
+- VAJRA (057): Immutability - applies to ledger/record patterns
+- PRATYAHARA (058): Withdrawal - applies to sandbox/shell patterns
+- PRAMANA (059): Valid Proof - applies to test patterns
+- SATYA (060): Truth - applies to pytest config
+- AMRITA (061): Immortality - applies to state persistence patterns
+
+Semantic harnesses use `type: principle` and `applies_to` patterns instead of file paths.
 
 ### TECHNICAL DEBT (Not Blocking)
 
