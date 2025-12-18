@@ -421,12 +421,14 @@ class SilpaAction(BaseAction):
 
     def _handle_genesis(self, intent: "Intent", params: Dict) -> ActionResult:
         """
-        OPUS-103: Handle code generation via LLM.
+        OPUS-103/OPUS-105: Handle code generation via LLM with DHARMA enforcement.
 
         This is the GENESIS capability - MANAS can now CREATE new code.
 
-        DHARMA GATING: Only allows writing to safe directories (cortex/, tests/).
-        Uses DharmaSense to verify the target is allowed.
+        OPUS-105 DHARMA GATING:
+        1. DharmaSense.check_dharmic_alignment() - Permission check
+        2. Path restriction - Only cortex/, tests/
+        3. Karma tracking - Success/failure affects Bhakti
 
         Args:
             intent: The genesis intent
@@ -439,7 +441,46 @@ class SilpaAction(BaseAction):
         Returns:
             ActionResult with generated code or error
         """
-        # Check LLM availability
+        # =====================================================================
+        # OPUS-105: DHARMA CHECK FIRST (Real tiger, not paper tiger)
+        # =====================================================================
+        try:
+            from .dharma_sense import DharmaSense, DharmaStatus
+
+            dharma = DharmaSense(workspace=self._workspace, agent_id="manas")
+            verdict = dharma.check_dharmic_alignment(intent, agent_id="manas")
+
+            if not verdict.is_permitted:
+                logger.warning(f"[GENESIS] ❌ DHARMA BLOCKED: {verdict.reason}")
+                # Track karma penalty
+                self._track_karma_penalty(reason=f"Genesis blocked: {verdict.reason}")
+                return ActionResult(
+                    success=False,
+                    action_name=self.name,
+                    intent_type=intent.type,
+                    error=f"DHARMA VIOLATION: {verdict.reason}",
+                    metadata={
+                        "genesis_blocked": True,
+                        "reason": "dharma_violation",
+                        "dharma_status": verdict.status.value,
+                        "missing_permissions": verdict.missing_permissions,
+                        "agent_bhakti": verdict.agent_bhakti,
+                    },
+                )
+
+            if verdict.status == DharmaStatus.RAJASIC:
+                logger.info(f"[GENESIS] ⚠️ DHARMA RAJASIC: Proceeding with caution - {verdict.reason}")
+
+            logger.info(f"[GENESIS] ✅ DHARMA SATTVIC: Permission granted (bhakti: {verdict.agent_bhakti})")
+
+        except ImportError:
+            logger.warning("[GENESIS] DharmaSense not available - using fallback path check")
+        except Exception as e:
+            logger.warning(f"[GENESIS] DharmaSense check failed: {e} - using fallback")
+
+        # =====================================================================
+        # LLM availability check
+        # =====================================================================
         if not self._llm_provider:
             return ActionResult(
                 success=False,
@@ -462,7 +503,9 @@ class SilpaAction(BaseAction):
                 error="Missing 'name' parameter for genesis",
             )
 
-        # DHARMA GATING: Only allow writing to safe directories
+        # =====================================================================
+        # PATH RESTRICTION (Belt + Suspenders with Dharma)
+        # =====================================================================
         allowed_dirs = [
             "vibe_core/plugins/opus_assistant/manas/cortex",
             "tests/unit",
@@ -522,6 +565,8 @@ class SilpaAction(BaseAction):
                     action_name = f"{name}_action"
                     if action_name in actions:
                         logger.info(f"[GENESIS] ✅ ActionLoader discovered: {action_name}")
+                        # OPUS-105: Track karma success for dharmic genesis
+                        self._track_karma_success(reason=f"Created action: {action_name}")
                         return ActionResult(
                             success=True,
                             action_name=self.name,
@@ -537,6 +582,8 @@ class SilpaAction(BaseAction):
                 except Exception as e:
                     logger.warning(f"[GENESIS] ActionLoader verification failed: {e}")
 
+            # OPUS-105: Track karma success for dharmic genesis
+            self._track_karma_success(reason=f"Created {code_type}: {name}")
             return ActionResult(
                 success=True,
                 action_name=self.name,
@@ -617,3 +664,77 @@ Description: {description}
 Generate complete, working Python code with proper imports, logging, and docstrings.
 Only output Python code, no explanations.
 """
+
+    # =========================================================================
+    # OPUS-105: KARMA TRACKING - Actions have consequences
+    # =========================================================================
+
+    def _track_karma_penalty(self, reason: str, amount: int = 10) -> None:
+        """
+        OPUS-105: Track karma penalty for blocked/failed actions.
+
+        This wires into VedicGovernance.consume_bhakti() to actually
+        reduce the agent's Bhakti score when they violate Dharma.
+
+        Args:
+            reason: Why karma is being docked
+            amount: How much Bhakti to consume (default 10)
+        """
+        try:
+            # Try to get VedicGovernance plugin
+            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
+
+            # Get the singleton instance if available
+            governance = getattr(self, "_governance", None)
+            if governance is None:
+                # Try to get from kernel if available
+                kernel = getattr(self, "_kernel", None)
+                if kernel and hasattr(kernel, "plugins"):
+                    governance = kernel.plugins.get("vedic_governance")
+
+            if governance:
+                governance.consume_bhakti(
+                    agent_id="manas",
+                    amount=amount,
+                    reason=f"KARMA PENALTY: {reason}",
+                )
+                logger.warning(f"[KARMA] 📉 Bhakti -{amount} for MANAS: {reason}")
+            else:
+                # Log even if no governance wired
+                logger.warning(f"[KARMA] 📉 (unwired) Penalty recorded: {reason}")
+
+        except Exception as e:
+            logger.debug(f"[KARMA] Could not track penalty: {e}")
+
+    def _track_karma_success(self, reason: str, amount: int = 5) -> None:
+        """
+        OPUS-105: Track karma reward for successful dharmic actions.
+
+        This wires into VedicGovernance.add_bhakti() to reward
+        the agent's Bhakti score for good behavior.
+
+        Args:
+            reason: Why karma is being rewarded
+            amount: How much Bhakti to add (default 5)
+        """
+        try:
+            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
+
+            governance = getattr(self, "_governance", None)
+            if governance is None:
+                kernel = getattr(self, "_kernel", None)
+                if kernel and hasattr(kernel, "plugins"):
+                    governance = kernel.plugins.get("vedic_governance")
+
+            if governance:
+                governance.add_bhakti(
+                    agent_id="manas",
+                    amount=amount,
+                    reason=f"KARMA SUCCESS: {reason}",
+                )
+                logger.info(f"[KARMA] 📈 Bhakti +{amount} for MANAS: {reason}")
+            else:
+                logger.info(f"[KARMA] 📈 (unwired) Success recorded: {reason}")
+
+        except Exception as e:
+            logger.debug(f"[KARMA] Could not track success: {e}")

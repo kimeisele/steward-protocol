@@ -134,6 +134,11 @@ INTENT_PERMISSION_MAP: Dict[str, List[str]] = {
     "refactor_major": ["refactor", "code_modify"],
     "shutdown": ["system_control", "admin"],
     "ledger_modify": ["ledger_admin"],
+    # OPUS-105: Genesis intents require genesis permission
+    "genesis_action": ["genesis", "code_modify"],
+    "genesis_code": ["genesis", "code_modify"],
+    "create_action": ["genesis", "code_modify"],
+    "create_module": ["genesis", "code_modify"],
     # Medium-risk intents
     "contract_import_fix": ["code_modify"],
     "update_documentation": ["doc_modify"],
@@ -153,7 +158,7 @@ INTENT_PERMISSION_MAP: Dict[str, List[str]] = {
 
 # Default permissions by Ashrama (lifecycle stage)
 ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
-    "brahmachari": ["test_create", "doc_modify", "review"],  # Student: limited
+    "brahmachari": ["test_create", "doc_modify", "review"],  # Student: limited - NO GENESIS
     "grihastha": [
         "code_modify",
         "git_commit",
@@ -165,9 +170,23 @@ ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
         "doc_modify",
         "review",
         "state_heal",
+        "genesis",  # OPUS-105: Productive stage can CREATE new code
     ],  # Householder: productive - NO PUSSY SHIT!
-    "vanaprastha": ["code_modify", "doc_modify", "review", "mentor", "pr_create"],  # Elder: mentoring
-    "sannyasi": ["review", "mentor", "admin", "system_control", "pr_merge"],  # Renunciate: governance + merge power
+    "vanaprastha": [
+        "code_modify",
+        "doc_modify",
+        "review",
+        "mentor",
+        "pr_create",
+    ],  # Elder: mentoring - no genesis (wisdom, not creation)
+    "sannyasi": [
+        "review",
+        "mentor",
+        "admin",
+        "system_control",
+        "pr_merge",
+        "genesis",
+    ],  # Renunciate: governance + merge + genesis (full control)
 }
 
 
