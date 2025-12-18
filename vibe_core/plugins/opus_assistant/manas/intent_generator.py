@@ -93,6 +93,11 @@ class Intent:
             return False
         return datetime.utcnow().isoformat() > self.expires_at
 
+    @property
+    def type(self) -> str:
+        """Alias for intent_type (OPUS-101 compatibility with BaseAction)."""
+        return self.intent_type
+
 
 class IntentGenerator:
     """

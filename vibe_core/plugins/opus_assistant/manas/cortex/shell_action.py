@@ -51,6 +51,7 @@ class ShellAction(BaseAction):
     name = "shell_action"
 
     # Intent types this action handles
+    # NOTE: run_tests moved to TestAction (PAYU) - use TestAction for test operations
     handled_intent_types: Set[str] = {
         "shell_execute",
         "shell_safe",
@@ -58,7 +59,6 @@ class ShellAction(BaseAction):
         "git_diff",
         "git_commit",
         "git_push",
-        "run_tests",
         "run_command",
     }
 
@@ -104,7 +104,7 @@ class ShellAction(BaseAction):
                 return self._handle_git_commit(intent, params)
             elif intent_type == "git_push":
                 return self._handle_git_push(intent, params)
-            elif intent_type in ("run_tests", "run_command"):
+            elif intent_type == "run_command":
                 return self._handle_run_command(intent, params)
             else:
                 return ActionResult(

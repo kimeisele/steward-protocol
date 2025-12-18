@@ -139,8 +139,9 @@ class ActionLoader:
 
             # Scan *_action.py files
             for py_file in sorted(base_path.glob(cls.file_pattern)):
-                # Skip test files
-                if py_file.name.startswith("test_"):
+                # Skip unit test files (test_*_action.py) but NOT action files (test_action.py)
+                # e.g., skip "test_shell_action.py" but load "test_action.py"
+                if py_file.name.startswith("test_") and py_file.name != "test_action.py":
                     continue
 
                 try:
