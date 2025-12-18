@@ -52,23 +52,11 @@ files:
     required: true
 
 tests:
-  # === PRAKRITI TEST SUITE ===
-  - tests/state/test_prakriti.py
-  - tests/state/test_git_state.py
-  - tests/state/test_ledger_state.py
-  - tests/state/test_kernel_state.py
-  - tests/state/test_file_state.py
-  - tests/state/test_ephemeral_state.py
-  - tests/state/test_persona.py
-  # === UNIFIED WEAVER TESTS (NEW) ===
-  - tests/state/test_sync_holon.py
-  - tests/state/test_merge_engine.py
-  - tests/state/test_guna_classifier.py
-  # === INTEGRATION ===
-  - tests/integration/test_prakriti_kernel.py
-  - tests/integration/test_state_sync.py
-  - tests/integration/test_plugin_state_discovery.py
-  - tests/integration/test_untotbar_merge.py
+  # === PRAKRITI INTEGRATION TESTS ===
+  # Note: Unit tests in tests/state/ are PLANNED, integration tests exist
+  - tests/integration/test_persistence_prakriti.py
+  - tests/integration/test_kernel_boot.py
+  - tests/integration/test_system_boot.py
 
 wiring:
   # === CORE CLASS STRUCTURE ===
