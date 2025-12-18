@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
-    from vibe_core.loaders import ActionLoader
+    from vibe_core.loaders import ActionLoader, ToolLoader
 
 from .intent_generator import Intent
 from .validator import SrutiValidator
@@ -83,13 +83,16 @@ class IntentRouter:
         self,
         workspace: Optional[Path] = None,
         action_loader: Optional["ActionLoader"] = None,
+        tool_loader: Optional["ToolLoader"] = None,
     ):
         """
-        Initialize the router with optional workspace path and scoped loader.
+        Initialize the router with optional workspace path and scoped loaders.
 
-        FRACTAL PATTERN:
+        FRACTAL PATTERN (OPUS-106):
             action_loader: Scoped ActionLoader instance for isolated action discovery.
                            If None, falls back to global ActionLoader.
+            tool_loader: Scoped ToolLoader instance for dynamic tool access.
+                         If None, falls back to hardcoded imports (legacy).
         """
         self._workspace = workspace or Path.cwd()
         self._kernel: Optional["RealVibeKernel"] = None
@@ -97,8 +100,9 @@ class IntentRouter:
         self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
         self._register_handlers()
 
-        # OPUS-106: Scoped loader for fractal pattern
+        # OPUS-106: Scoped loaders for fractal pattern
         self._action_loader = action_loader
+        self._tool_loader = tool_loader
 
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
@@ -747,6 +751,35 @@ class IntentRouter:
             logger.error(f"SUTRA error: {e}")
             return {"success": False, "handler": "SUTRA", "error": str(e)}
 
+    # =========================================================================
+    # OPUS-106: VEDA-4 TOOL ACCESS (Fractal Pattern)
+    # =========================================================================
+
+    def _get_git_tools(self):
+        """
+        Get GitTools via VEDA-4 ToolLoader (Fractal Pattern).
+
+        OPUS-106: Instead of hardcoded imports, we use the injected ToolLoader
+        to dynamically retrieve tools. This enables:
+        - Scoped tool access (opus_private vs global)
+        - Testability (mock loaders)
+        - Clean dependency injection
+
+        Falls back to legacy import if no ToolLoader available.
+        """
+        if self._tool_loader:
+            # Try to get via loader - registered as "chronicle.git"
+            tool = self._tool_loader.get("chronicle.git")
+            if tool:
+                logger.debug("🔧 VEDA-4: GitTools loaded via ToolLoader[fractal]")
+                return tool
+
+        # Fallback to legacy import (logged for audit)
+        logger.debug("⚠️ VEDA-4: Falling back to legacy GitTools import")
+        from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
+
+        return GitTools()
+
     def _handle_shell(self, intent: Intent) -> Dict[str, Any]:
         """Route to ShellCortex for shell commands."""
         from .cortex.shell import ShellCortex
@@ -762,9 +795,7 @@ class IntentRouter:
                 intent.params["auto_push"] = True
                 return self._execute_git_commit(intent)
             elif intent.intent_type == "git_push":
-                from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
-
-                git = GitTools()
+                git = self._get_git_tools()
                 branch = intent.params.get("branch")
                 return self._execute_git_push(git, branch)
             elif intent.intent_type == "create_pr":
@@ -888,12 +919,10 @@ class IntentRouter:
             - auto_push: If True, push to remote after commit (default: False)
             - branch: Branch to push to (default: current branch)
         """
-        from vibe_core.cartridges.system.chronicle.tools.git_tools import GitTools
-
         logger.info(f"🔐 SILPA executing git commit: {intent.title}")
 
         try:
-            git = GitTools()
+            git = self._get_git_tools()
 
             # First check status
             status = git.get_status()
@@ -1768,16 +1797,29 @@ tests:
 
 
 def create_execution_callback(
-    workspace: Optional[Path] = None, kernel: Optional["RealVibeKernel"] = None
+    workspace: Optional[Path] = None,
+    kernel: Optional["RealVibeKernel"] = None,
+    action_loader: Optional["ActionLoader"] = None,
+    tool_loader: Optional["ToolLoader"] = None,
 ) -> Callable[[Intent], Dict[str, Any]]:
     """
     Factory function to create an execution callback for CognitiveKernel.
 
+    OPUS-106: Now accepts optional loaders for fractal pattern.
+
     Usage:
-        callback = create_execution_callback(workspace, kernel)
+        callback = create_execution_callback(
+            workspace, kernel,
+            action_loader=kernel.action_loader,
+            tool_loader=kernel.tool_loader
+        )
         cognitive_kernel.set_execution_callback(callback)
     """
-    router = IntentRouter(workspace=workspace)
+    router = IntentRouter(
+        workspace=workspace,
+        action_loader=action_loader,
+        tool_loader=tool_loader,
+    )
     if kernel:
         router.inject_kernel(kernel)
 
