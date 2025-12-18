@@ -223,10 +223,10 @@ class WiringMap:
         return nodes
 
     def _check_handlers(self) -> Dict[str, WiringNode]:
-        """Check which handlers are wired to IntentRouter."""
+        """Check which handlers are wired to IntentRouter OR ActionLoader."""
         nodes = {}
 
-        # Read intent_router.py to check which handlers are registered
+        # Method 1: Check intent_router.py for legacy handlers
         router_path = self._workspace / "vibe_core/plugins/opus_assistant/manas/intent_router.py"
 
         wired_handlers: Set[str] = set()
@@ -236,16 +236,63 @@ class WiringMap:
                 if f'"{handler}"' in content or f"'{handler}'" in content:
                     wired_handlers.add(handler)
 
+        # Method 2: OPUS-105 FIX - Check ActionLoader discovered handlers
+        # ActionLoader auto-discovers Actions via handled_intent_types
+        action_handlers = self._check_action_loader_handlers()
+        wired_handlers.update(action_handlers)
+
         for handler in self.EXPECTED_HANDLERS:
+            # Determine where it's wired
+            if handler in action_handlers:
+                file_path = "ActionLoader (auto-discovered)"
+                connected_to = ["ActionLoader"]
+            else:
+                file_path = "manas/intent_router.py"
+                connected_to = ["IntentRouter"] if handler in wired_handlers else []
+
             nodes[f"handler:{handler}"] = WiringNode(
                 name=handler,
                 node_type="handler",
-                file_path="manas/intent_router.py",
+                file_path=file_path,
                 is_connected=handler in wired_handlers,
-                connected_to=["IntentRouter"] if handler in wired_handlers else [],
+                connected_to=connected_to,
             )
 
         return nodes
+
+    def _check_action_loader_handlers(self) -> Set[str]:
+        """
+        OPUS-105: Check which handlers are wired via ActionLoader.
+
+        ActionLoader auto-discovers Actions in cortex/ that inherit from BaseAction
+        and declare handled_intent_types. We scan for these.
+        """
+        discovered: Set[str] = set()
+
+        # Scan cortex/*.py files for handled_intent_types
+        cortex_path = self._workspace / "vibe_core/plugins/opus_assistant/manas/cortex"
+
+        if not cortex_path.exists():
+            return discovered
+
+        for py_file in cortex_path.glob("*_action.py"):
+            try:
+                content = py_file.read_text()
+                # Look for handled_intent_types = {...} or Set[str] = {...}
+                if "handled_intent_types" in content:
+                    # Extract intent types from the set
+                    import re
+
+                    # Match patterns like: "genesis_action", 'create_module', etc.
+                    matches = re.findall(r'["\'](\w+)["\']', content)
+                    for match in matches:
+                        # Only add if it looks like an intent type (lowercase, underscore)
+                        if "_" in match or match in self.EXPECTED_HANDLERS:
+                            discovered.add(match)
+            except Exception:
+                pass
+
+        return discovered
 
     def _check_cortex(self) -> Dict[str, WiringNode]:
         """Check which cortex modules are exported and used."""
