@@ -253,10 +253,16 @@ class KernelTickHandler:
                 logger.info("⚡ PRAMANA: TestCortex initialized for self-testing")
 
             # 🔀 OPUS-065: DHARMA-JNANA - Wire IntentRouter as execution callback
+            # OPUS-106: Pass fractal loaders for VEDA-4 compliant tool access
             if INTENT_ROUTER_AVAILABLE:
-                execution_callback = create_execution_callback(workspace=workspace, kernel=kernel)
+                execution_callback = create_execution_callback(
+                    workspace=workspace,
+                    kernel=kernel,
+                    action_loader=self._manas.action_loader,
+                    tool_loader=self._manas.tool_loader,
+                )
                 self._manas.set_execution_callback(execution_callback)
-                logger.info("🔀 DHARMA-JNANA: IntentRouter connected to MANAS")
+                logger.info("🔀 DHARMA-JNANA: IntentRouter connected to MANAS (with fractal loaders)")
 
             self._manas_ready = True
             logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
