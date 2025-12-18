@@ -588,7 +588,50 @@ _No technical debt markers found_
 {% endif %}
 
 {# ============================================================================
-   PRESERVED SECTIONS - Human/AI Editable
+   SANKALPA - Strategic Will (OPUS-055)
+   ============================================================================ #}
+
+## 🎯 SANKALPA (Strategic Will)
+
+{% if sankalpa %}
+<!-- @AI:current_goal -->
+### Current Goal
+
+<!-- AI: Strategic goal from SANKALPA mission -->
+{{ sankalpa.current_goal }}
+<!-- /@AI -->
+
+<!-- @AI:phase_status -->
+### Phase Status
+
+<!-- AI: Mission execution phase -->
+**Status:** {{ sankalpa.phase_status }} | **Missions:** {{ sankalpa.active_missions }}/{{ sankalpa.total_missions }} | **Strategies:** {{ sankalpa.enabled_strategies }}/{{ sankalpa.total_strategies }}
+
+{% if sankalpa.missions %}
+| Mission | Priority | Status |
+|---------|----------|--------|
+{% for m in sankalpa.missions[:3] %}
+| {{ m.name[:30] }} | {{ m.priority }} | {{ m.status }} |
+{% endfor %}
+{% endif %}
+<!-- /@AI -->
+
+{% if sankalpa.next_actions %}
+<!-- @AI:extraction_log -->
+### Next Actions (Planned)
+
+<!-- AI: Actions from SANKALPA planner -->
+{% for action in sankalpa.next_actions %}
+- {{ action.action }} ({{ action.priority }})
+{% endfor %}
+<!-- /@AI -->
+{% endif %}
+{% else %}
+*SANKALPA not loaded*
+{% endif %}
+
+{# ============================================================================
+   PRESERVED SECTIONS - Human/AI Editable (Tactical Layer)
    ============================================================================ #}
 
 ---
@@ -612,6 +655,13 @@ _No technical debt markers found_
 
 <!-- Human can write here -->
 {{ preserved.notes|default('_Add notes here_') }}
+<!-- /@HUMAN -->
+
+<!-- @HUMAN:next_actions -->
+## Approved Actions
+
+<!-- Human approves/rejects planned actions here -->
+{{ preserved.next_actions|default('_Review and approve actions above_') }}
 <!-- /@HUMAN -->
 
 ---
