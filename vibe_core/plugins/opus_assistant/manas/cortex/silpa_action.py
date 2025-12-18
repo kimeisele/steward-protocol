@@ -1,5 +1,6 @@
 """
 OPUS-101: Silpa Action - VEDA-4 Compliant Code Refactoring.
+OPUS-103: Genesis Protocol - LLM-powered code generation.
 
 This wraps SilpaArchitect in a BaseAction interface for auto-discovery.
 
@@ -12,6 +13,7 @@ Handled Intent Types:
 - refactor_file: Refactor a specific file
 - update_docstring: Update docstrings
 - analyze_refactor: Analyze potential refactorings
+- genesis_action: [NEW] Generate new Action modules via LLM
 
 CRITICAL: This is how MANAS modifies its own code.
 If this doesn't work, MANAS cannot self-improve.
@@ -26,6 +28,8 @@ wiring:
   - pattern: "class SilpaAction\\(BaseAction\\)"
     in: vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py
   - pattern: "handled_intent_types.*genesis_tests"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py
+  - pattern: "genesis_action"
     in: vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py
 -->
 """
@@ -59,7 +63,10 @@ class SilpaAction(BaseAction):
 
     "PANI (Hands) - The sculptor's hands that shape code."
 
-    CRITICAL: This enables MANAS to modify code.
+    OPUS-103: Now includes GENESIS capability via LLM integration.
+    MANAS can now CREATE new code, not just refactor existing code.
+
+    CRITICAL: This enables MANAS to modify AND CREATE code.
     Without this working, MANAS cannot self-improve.
     """
 
@@ -84,6 +91,11 @@ class SilpaAction(BaseAction):
         "rename_function",
         "extract_method",
         "update_imports",
+        # OPUS-103: Genesis Protocol - LLM-powered code generation
+        "genesis_action",
+        "genesis_code",
+        "create_action",
+        "create_module",
     }
 
     def __init__(
@@ -101,6 +113,17 @@ class SilpaAction(BaseAction):
         super().__init__(workspace, config)
         self._architect = SilpaArchitect(workspace=self._workspace)
         self._auditor = SilpaAuditor(self._workspace)
+
+        # OPUS-103: LLM provider for genesis capability
+        self._llm_provider = None
+        try:
+            from vibe_core.runtime.providers.factory import get_default_provider
+
+            self._llm_provider = get_default_provider()
+            logger.info(f"[SILPA_ACTION] LLM Genesis enabled ({type(self._llm_provider).__name__})")
+        except Exception as e:
+            logger.warning(f"[SILPA_ACTION] LLM not available ({e}), genesis disabled")
+
         logger.info("[SILPA_ACTION] Initialized - PANI (The Hands)")
 
     def act(self, intent: "Intent") -> ActionResult:
@@ -140,6 +163,10 @@ class SilpaAction(BaseAction):
                 "update_imports",
             ):
                 return self._handle_refactor(intent, params)
+
+            # OPUS-103: Genesis Protocol - LLM-powered code generation
+            elif intent_type in ("genesis_action", "genesis_code", "create_action", "create_module"):
+                return self._handle_genesis(intent, params)
 
             else:
                 return ActionResult(
@@ -387,3 +414,206 @@ class SilpaAction(BaseAction):
                 "tests_after": silpa_result.tests_after.to_dict() if silpa_result.tests_after else None,
             },
         )
+
+    # =========================================================================
+    # OPUS-103: GENESIS PROTOCOL - LLM-powered code generation
+    # =========================================================================
+
+    def _handle_genesis(self, intent: "Intent", params: Dict) -> ActionResult:
+        """
+        OPUS-103: Handle code generation via LLM.
+
+        This is the GENESIS capability - MANAS can now CREATE new code.
+
+        DHARMA GATING: Only allows writing to safe directories (cortex/, tests/).
+        Uses DharmaSense to verify the target is allowed.
+
+        Args:
+            intent: The genesis intent
+            params: Parameters including:
+                - name: Name of the module/action to create
+                - description: What the code should do
+                - target_path: Where to write (must be in allowed directories)
+                - code_type: "action", "sense", "test", "module"
+
+        Returns:
+            ActionResult with generated code or error
+        """
+        # Check LLM availability
+        if not self._llm_provider:
+            return ActionResult(
+                success=False,
+                action_name=self.name,
+                intent_type=intent.type,
+                error="Genesis requires LLM provider - not available",
+                metadata={"genesis_blocked": True, "reason": "no_llm"},
+            )
+
+        name = params.get("name") or params.get("action_name") or params.get("module_name")
+        description = params.get("description", "")
+        target_path = params.get("target_path") or params.get("path")
+        code_type = params.get("code_type", "action")
+
+        if not name:
+            return ActionResult(
+                success=False,
+                action_name=self.name,
+                intent_type=intent.type,
+                error="Missing 'name' parameter for genesis",
+            )
+
+        # DHARMA GATING: Only allow writing to safe directories
+        allowed_dirs = [
+            "vibe_core/plugins/opus_assistant/manas/cortex",
+            "tests/unit",
+            "tests/manas",
+        ]
+
+        if target_path:
+            target = Path(target_path)
+        else:
+            # Default to cortex for actions
+            if code_type == "action":
+                target = self._workspace / "vibe_core/plugins/opus_assistant/manas/cortex" / f"{name}_action.py"
+            elif code_type == "test":
+                target = self._workspace / "tests/unit" / f"test_{name}.py"
+            else:
+                target = self._workspace / "vibe_core/plugins/opus_assistant/manas/cortex" / f"{name}.py"
+
+        # Verify target is in allowed directory
+        target_str = str(target)
+        if not any(allowed in target_str for allowed in allowed_dirs):
+            return ActionResult(
+                success=False,
+                action_name=self.name,
+                intent_type=intent.type,
+                error=f"DHARMA VIOLATION: Cannot write to {target_path}. Genesis only allowed in: {allowed_dirs}",
+                metadata={"genesis_blocked": True, "reason": "dharma_violation"},
+            )
+
+        # Generate code via LLM
+        try:
+            prompt = self._build_genesis_prompt(name, description, code_type)
+            logger.info(f"[GENESIS] Invoking LLM for: {name} ({code_type})")
+
+            # Call LLM
+            response = self._llm_provider.invoke(messages=[{"role": "user", "content": prompt}])
+            generated_code = response.content if hasattr(response, "content") else str(response)
+
+            # Extract code block if wrapped in markdown
+            if "```python" in generated_code:
+                start = generated_code.find("```python") + 9
+                end = generated_code.find("```", start)
+                if end > start:
+                    generated_code = generated_code[start:end].strip()
+
+            # Write the file
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(generated_code)
+            logger.info(f"[GENESIS] Created: {target}")
+
+            # Verify with ActionLoader if it's an action
+            if code_type == "action":
+                try:
+                    from vibe_core.loaders import ActionLoader
+
+                    ActionLoader.clear_cache()
+                    actions, _ = ActionLoader.discover_and_load(workspace=self._workspace, force_refresh=True)
+                    action_name = f"{name}_action"
+                    if action_name in actions:
+                        logger.info(f"[GENESIS] ✅ ActionLoader discovered: {action_name}")
+                        return ActionResult(
+                            success=True,
+                            action_name=self.name,
+                            intent_type=intent.type,
+                            result={
+                                "status": "genesis_complete",
+                                "created_file": str(target),
+                                "action_discovered": True,
+                                "action_name": action_name,
+                            },
+                            metadata={"genesis_success": True},
+                        )
+                except Exception as e:
+                    logger.warning(f"[GENESIS] ActionLoader verification failed: {e}")
+
+            return ActionResult(
+                success=True,
+                action_name=self.name,
+                intent_type=intent.type,
+                result={
+                    "status": "genesis_complete",
+                    "created_file": str(target),
+                    "code_length": len(generated_code),
+                },
+                metadata={"genesis_success": True},
+            )
+
+        except Exception as e:
+            logger.error(f"[GENESIS] Failed: {e}")
+            return ActionResult(
+                success=False,
+                action_name=self.name,
+                intent_type=intent.type,
+                error=f"Genesis failed: {e}",
+            )
+
+    def _build_genesis_prompt(self, name: str, description: str, code_type: str) -> str:
+        """Build prompt for LLM code generation."""
+        if code_type == "action":
+            return f'''Generate a Python BaseAction class for MANAS (the cognitive kernel).
+
+Name: {name}Action
+Description: {description}
+
+Requirements:
+1. Inherit from BaseAction (from .base_action import ActionResult, BaseAction)
+2. Set `name = "{name}_action"`
+3. Define `handled_intent_types: Set[str]` with relevant intent types
+4. Implement `act(self, intent: "Intent") -> ActionResult` method
+5. Use proper logging via `logger = logging.getLogger("MANAS.Action.{name.title()}")`
+6. Include docstring with OPUS reference
+
+Template structure:
+```python
+"""
+OPUS-103: {name.title()} Action - Auto-generated by MANAS Genesis.
+"""
+
+import logging
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+
+from .base_action import ActionResult, BaseAction
+
+if TYPE_CHECKING:
+    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+logger = logging.getLogger("MANAS.Action.{name.title()}")
+
+
+class {name.title()}Action(BaseAction):
+    name = "{name}_action"
+    handled_intent_types: Set[str] = {{...}}
+
+    def __init__(self, workspace: Optional[Path] = None, config: Optional[Dict[str, Any]] = None):
+        super().__init__(workspace, config)
+        logger.info("[{name.upper()}_ACTION] Initialized")
+
+    def act(self, intent: "Intent") -> ActionResult:
+        # Implementation here
+        pass
+```
+
+Generate complete, working code. Only output Python code, no explanations.
+'''
+        else:
+            return f"""Generate a Python module for MANAS.
+
+Name: {name}
+Type: {code_type}
+Description: {description}
+
+Generate complete, working Python code with proper imports, logging, and docstrings.
+Only output Python code, no explanations.
+"""
