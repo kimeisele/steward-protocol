@@ -216,6 +216,10 @@ class CognitiveWeaver:
         self._knowledge_graph = knowledge_graph
         self._knowledge_resolver = knowledge_resolver
 
+        # OPUS-106: Session Context from OPUS.md (UI → Mind bridge)
+        # This contains preserved sections from the previous session's OPUS.md
+        self._session_context: Dict[str, Any] = {}
+
         logger.info("[COGNITIVE_WEAVER] Initialized - State ↔ Knowledge Bridge Active")
 
     # =========================================================================
@@ -283,6 +287,61 @@ class CognitiveWeaver:
         return self._knowledge_resolver
 
     # =========================================================================
+    # Session Context API (OPUS-106: UI → Mind Bridge)
+    # =========================================================================
+
+    def inject_session_context(self, preserved_sections: Dict[str, str]) -> None:
+        """
+        OPUS-106: Inject preserved sections from OPUS.md into cognitive context.
+
+        This bridges the UI-Layer (MD files) with the Mind-Layer (MANAS).
+        The preserved sections contain what the previous AI/Human wrote,
+        enabling continuity across sessions.
+
+        Args:
+            preserved_sections: Dict from OpusDashboardRenderer.extract_preserved()
+                - "current_work": What the AI was working on
+                - "blockers": What was blocking progress
+                - "notes": What the human noted
+
+        Example:
+            preserved = renderer.extract_preserved_sections()
+            cognitive_weaver.inject_session_context(preserved)
+        """
+        self._session_context = {
+            "current_work": preserved_sections.get("current_work", "").strip(),
+            "blockers": preserved_sections.get("blockers", "").strip(),
+            "human_notes": preserved_sections.get("notes", "").strip(),
+            "injected_at": time.time(),
+        }
+
+        # Filter out placeholder values
+        placeholders = ["_Define current task_", "_None_", "_Add notes here_"]
+        for key in ["current_work", "blockers", "human_notes"]:
+            if self._session_context[key] in placeholders:
+                self._session_context[key] = ""
+
+        if any(self._session_context.get(k) for k in ["current_work", "blockers", "human_notes"]):
+            logger.info(
+                f"[COGNITIVE_WEAVER] Session context injected: "
+                f"work={bool(self._session_context['current_work'])}, "
+                f"blockers={bool(self._session_context['blockers'])}, "
+                f"notes={bool(self._session_context['human_notes'])}"
+            )
+
+    def get_session_context(self) -> Dict[str, Any]:
+        """Get the current session context (for debugging/inspection)."""
+        return self._session_context.copy()
+
+    def has_session_context(self) -> bool:
+        """Check if meaningful session context is available."""
+        return bool(
+            self._session_context.get("current_work")
+            or self._session_context.get("blockers")
+            or self._session_context.get("human_notes")
+        )
+
+    # =========================================================================
     # Core API: Weave
     # =========================================================================
 
@@ -293,6 +352,9 @@ class CognitiveWeaver:
         This is the main "perception" method - it creates a unified view
         of what the system remembers (state) and knows (knowledge).
 
+        OPUS-106: Now also includes session context from OPUS.md,
+        enabling continuity with what the previous session was working on.
+
         Args:
             focus: Optional focus area for filtering (e.g., "governance", "state")
 
@@ -301,11 +363,21 @@ class CognitiveWeaver:
         """
         context = CognitiveContext()
 
+        # OPUS-106: Use session context's current_work as default focus
+        # This enables continuity with what was being worked on
+        effective_focus = focus
+        if not effective_focus and self._session_context.get("current_work"):
+            effective_focus = self._session_context["current_work"]
+            logger.debug(f"[COGNITIVE_WEAVER] Using session context focus: {effective_focus[:50]}...")
+
         # === WEAVE STATE LAYER ===
-        self._weave_state(context, focus)
+        self._weave_state(context, effective_focus)
 
         # === WEAVE KNOWLEDGE LAYER ===
-        self._weave_knowledge(context, focus)
+        self._weave_knowledge(context, effective_focus)
+
+        # === WEAVE SESSION CONTEXT (OPUS-106) ===
+        self._weave_session_context(context)
 
         # === GENERATE UNIFIED INSIGHTS ===
         self._generate_insights(context)
@@ -357,6 +429,34 @@ class CognitiveWeaver:
             for agent_id in ["civic", "herald", "watchman", "manas"]:
                 auth = self.knowledge_resolver.get_agent_authority(agent_id)
                 context.authority_context[agent_id] = auth
+
+    def _weave_session_context(self, context: CognitiveContext) -> None:
+        """
+        OPUS-106: Weave session context from OPUS.md into cognitive context.
+
+        This injects what the previous session was working on:
+        - current_work → becomes priority wisdom note
+        - blockers → becomes warning in wisdom notes
+        - human_notes → becomes guidance in wisdom notes
+        """
+        if not self._session_context:
+            return
+
+        # Add current work as priority context
+        if self._session_context.get("current_work"):
+            context.wisdom_notes.insert(
+                0, f"CONTINUITY: Previous session was working on: {self._session_context['current_work'][:100]}"
+            )
+
+        # Add blockers as warnings (HIGH priority)
+        if self._session_context.get("blockers"):
+            context.wisdom_notes.insert(
+                0, f"⚠️ BLOCKER from previous session: {self._session_context['blockers'][:100]}"
+            )
+
+        # Add human notes as guidance
+        if self._session_context.get("human_notes"):
+            context.wisdom_notes.append(f"📝 HUMAN NOTE: {self._session_context['human_notes'][:100]}")
 
     def _generate_insights(self, context: CognitiveContext) -> None:
         """Generate unified insights from state + knowledge."""
