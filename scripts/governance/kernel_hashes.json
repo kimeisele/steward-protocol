@@ -8,7 +8,6 @@
   "vibe_core/bridge.py": "a79b06711964e1a5ef932e18280076e69e6922eaf3ddeae3a59b7a20847843a5",
   "scripts/governance/restore_kernel.sh": "3da7548f8b17024df0f06af3464765d3b567563863a3911e5b0eb83c00c2fbb6",
   "scripts/governance/verify_kernel.py": "d1ed75caebdcb52999a9206ce18e6902f1c786b03aa93476ed69b073322ec298",
-  "scripts/governance/kernel_hashes.json": "2ef1c64d178f5b6cad080d92afb701d1f54edfbfff513b8738a586490a4ef554",
   ".github/workflows/attest.yml": "a546c5cf343917b31ede30c68ffe7cf2ea97fae41b0ea9ffcbf20f719f9b668c",
   ".github/workflows/container-build.yml": "d303af901e0d3d9031436c40cbda9b5b7d8b5f8e125ab1c81762ffa9d9103805",
   ".github/workflows/deploy.yml": "5b86104b01fe4fc2f6371b1ad56dce89795c161ef868dc88e081581beab34ed1",
@@ -19,6 +18,6 @@
   ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
   ".github/workflows/steward-ci.yml": "b85dd1c000aca2e7c9c480d2fc4d0eccab9a864f233f3dcaf4a64333163d0377",
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
-  ".pre-commit-config.yaml": "dc6a8ef57778e75a7d35f331e35ae19a2cba159191216382fb4d34ab3150a771",
+  ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
   ".gitignore": "d8a9f20b2ec4568a3541480533d8d01f9f97ec043e8673a52ba061cb00d6e23f"
 }
