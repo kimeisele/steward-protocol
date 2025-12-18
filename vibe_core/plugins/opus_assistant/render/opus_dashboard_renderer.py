@@ -1234,6 +1234,145 @@ class OpusDashboardRenderer:
             "leaf_modules": leaf_modules[:5],
         }
 
+    def update_ai_section(self, section: str, content: str) -> bool:
+        """
+        OPUS-106: Update @AI sections in OPUS.md directly.
+
+        Uses config-driven markers from config/interface.yaml ownership_types.ai
+
+        Args:
+            section: Section ID (e.g., "current_work", "blockers")
+            content: New content for the section
+
+        Returns:
+            True if updated successfully
+        """
+        if not self._opus_path.exists():
+            logger.warning("OPUS.md does not exist - cannot update AI section")
+            return False
+
+        try:
+            # Load ownership markers from config (OPUS-106: Config-driven, not hardcoded)
+            interface_config = self._load_interface_config()
+            ai_ownership = interface_config.get("ownership_types", {}).get("ai", {})
+            marker_start_tpl = ai_ownership.get("marker_start", "<!-- @AI:{id} -->")
+            marker_end = ai_ownership.get("marker_end", "<!-- /@AI -->")
+
+            # Build markers for this section
+            marker_start = marker_start_tpl.replace("{id}", section)
+
+            opus_content = self._opus_path.read_text()
+
+            # Find section by markers
+            start_idx = opus_content.find(marker_start)
+            if start_idx == -1:
+                logger.warning(f"Could not find @AI:{section} section in OPUS.md")
+                return False
+
+            end_idx = opus_content.find(marker_end, start_idx)
+            if end_idx == -1:
+                logger.warning(f"Could not find end marker for @AI:{section}")
+                return False
+
+            # Find the content area (after header line and comment)
+            section_start = start_idx + len(marker_start)
+            section_text = opus_content[section_start:end_idx]
+
+            # Replace everything between start marker and end marker
+            # Preserve the header line if present
+            lines = section_text.split("\n")
+            header_line = ""
+            comment_line = ""
+            for i, line in enumerate(lines):
+                if line.startswith("## "):
+                    header_line = line
+                elif line.startswith("<!-- ") and not line.startswith("<!-- @"):
+                    comment_line = line
+                    break
+
+            # Build new section content
+            new_section = f"\n{header_line}\n\n{comment_line}\n{content}\n"
+
+            # Replace
+            updated_opus = opus_content[:section_start] + new_section + opus_content[end_idx:]
+
+            # Write back
+            self._opus_path.write_text(updated_opus)
+            logger.info(f"✍️ OPUS.md @AI:{section} updated")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to update @AI:{section}: {e}")
+            return False
+
+    def _load_interface_config(self) -> Dict[str, Any]:
+        """Load interface config from config/interface.yaml."""
+        config_path = self._root / "config" / "interface.yaml"
+        try:
+            if config_path.exists():
+                return yaml.safe_load(config_path.read_text()) or {}
+        except Exception:
+            pass
+        return {}
+
+    def get_ai_section(self, section: str) -> Optional[str]:
+        """
+        OPUS-106: Read current value of an @AI section.
+
+        Uses config-driven markers from config/interface.yaml
+
+        Args:
+            section: Section ID (e.g., "current_work", "blockers")
+
+        Returns:
+            Current content or None (filters out placeholder values)
+        """
+        if not self._opus_path.exists():
+            return None
+
+        try:
+            # Load ownership markers from config
+            interface_config = self._load_interface_config()
+            ai_ownership = interface_config.get("ownership_types", {}).get("ai", {})
+            marker_start_tpl = ai_ownership.get("marker_start", "<!-- @AI:{id} -->")
+            marker_end = ai_ownership.get("marker_end", "<!-- /@AI -->")
+
+            marker_start = marker_start_tpl.replace("{id}", section)
+
+            opus_content = self._opus_path.read_text()
+
+            start_idx = opus_content.find(marker_start)
+            if start_idx == -1:
+                return None
+
+            end_idx = opus_content.find(marker_end, start_idx)
+            if end_idx == -1:
+                return None
+
+            section_text = opus_content[start_idx + len(marker_start) : end_idx]
+
+            # Extract actual content (skip header and comment lines)
+            lines = section_text.strip().split("\n")
+            content_lines = []
+            skip_header = True
+            for line in lines:
+                if skip_header:
+                    if line.startswith("## ") or line.startswith("<!-- ") or not line.strip():
+                        continue
+                    skip_header = False
+                content_lines.append(line)
+
+            content = "\n".join(content_lines).strip()
+
+            # Filter out placeholders (italic markdown)
+            if content.startswith("_") and content.endswith("_"):
+                return None
+
+            return content if content else None
+
+        except Exception:
+            return None
+
     def _extract_preserved_sections(self) -> Dict[str, str]:
         """Extract @AI and @HUMAN sections from existing OPUS.md."""
         preserved = {}
