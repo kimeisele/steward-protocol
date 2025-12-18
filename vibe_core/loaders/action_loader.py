@@ -10,83 +10,77 @@ The 5 Karmendriyas (Action Organs) in Samkhya:
 - PAYU (Eliminate)  → TestAction       (Run tests)
 - UPASTHA (Create)  → SankalpaAction   (Orchestrate missions)
 
-STRICT MODE ENABLED:
-    - Any load failure CRASHES with full traceback
-    - No silent skipping of broken actions
-    - If MANAS loses the ability to act, it KNOWS immediately
-
-WHY THIS EXISTS:
-    IntentRouter currently has hardcoded intent_type -> handler mappings.
-    When someone adds a new action, they must update the router manually.
-    ActionLoader auto-discovers actions and their handled intent types.
+INHERITS: CodeModuleLoader (VEDA-4 compliant)
 
 KEY FEATURE:
     Each action declares its `handled_intent_types`.
     ActionLoader builds the global intent_type -> action mapping.
-    IntentRouter can query: ActionLoader.get_handler("commit_changes")
+    IntentRouter can query: ActionLoader.get_handler_for_intent("commit_changes")
 """
 
-import inspect
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.loaders.base_loader import LoaderRegistry
+from vibe_core.loaders.code_module_loader import (
+    CodeMetadata,
+    CodeModuleLoader,
+    CodeModuleLoadError,
+    CodeModuleMeta,
+    CodeRegistry,
+)
 
 logger = logging.getLogger("ACTION.LOADER")
 
 
-# Type aliases
-ActionRegistry = Dict[str, Any]  # action_name -> instance
-ActionMetadata = Dict[str, Dict[str, Any]]  # action_name -> metadata
+# Type aliases (backward compat)
+ActionRegistry = CodeRegistry
+ActionMetadata = CodeMetadata
 IntentHandlerMap = Dict[str, str]  # intent_type -> action_name
 
 
-class ActionLoadError(Exception):
+class ActionLoadError(CodeModuleLoadError):
     """Raised when action loading fails in STRICT MODE."""
 
     pass
 
 
-class ActionLoader:
+class ActionLoader(CodeModuleLoader):
     """
     Auto-discovery loader for MANAS Action modules (Karmendriyas).
 
-    STRICT MODE: Crashes on any error. No silent failures.
-
-    Unlike SenseLoader (which scans *_sense.py), ActionLoader scans
-    *_action.py files for BaseAction subclasses.
+    INHERITS: CodeModuleLoader for VEDA-4 compliance.
 
     KEY FEATURE: Builds intent_type -> action mapping automatically.
 
-    Usage:
+    Usage (Global - class methods):
         # Discover and instantiate all actions
         actions, meta = ActionLoader.discover_and_load(workspace=Path.cwd())
 
         # Get handler for an intent type
         handler_name = ActionLoader.get_handler_for_intent("commit_changes")
-        if handler_name:
-            action = actions[handler_name]
-            result = action.act(intent)
 
-        # Or directly
-        action = ActionLoader.get_action_for_intent("commit_changes")
-        if action:
-            result = action.act(intent)
+    Usage (Fractal - instance methods):
+        # Create scoped loader for OPUS internal use
+        opus_actions = ActionLoader(
+            scope="opus_private",
+            scan_paths=[Path("vibe_core/plugins/opus_assistant/manas/cortex")]
+        )
+        actions, _ = opus_actions.load()
+        action = opus_actions.get_for_intent("commit_changes")
     """
 
     # === LOADER CONFIG ===
     item_type = "action"
     scan_paths = [Path("vibe_core/plugins/opus_assistant/manas/cortex")]
-    file_pattern = "*_action.py"  # Only scan files ending in _action.py
-    base_class_name = "BaseAction"  # String match for loose coupling
+    file_pattern = "*_action.py"
+    base_class_name = "BaseAction"
 
     # === STRICT MODE ===
-    strict_mode = True  # CRASH on errors, no silent skip
+    strict_mode = True
 
-    # === CLASS-LEVEL CACHE ===
-    _action_cache: Optional[ActionRegistry] = None
-    _metadata_cache: Optional[ActionMetadata] = None
+    # === INTENT HANDLER MAP ===
     _intent_handler_map: Optional[IntentHandlerMap] = None
 
     @classmethod
@@ -96,181 +90,71 @@ class ActionLoader:
         workspace: Optional[Path] = None,
         force_refresh: bool = False,
         strict: Optional[bool] = None,
+        config: Optional[Dict[str, Any]] = None,
     ) -> Tuple[ActionRegistry, ActionMetadata]:
         """
-        Discover and load all actions. CACHED after first call.
-
-        Also builds the intent_type -> action_name mapping.
-
-        STRICT MODE: Any failure raises ActionLoadError.
-
-        Args:
-            scan_paths: Override default paths
-            workspace: Workspace to pass to action constructors
-            force_refresh: If True, bypass cache
-            strict: Override class-level strict_mode
-
-        Returns:
-            Tuple of (action_instances, metadata)
-
-        Raises:
-            ActionLoadError: If any action fails to load (in strict mode)
+        Discover and load all actions. Also builds intent_type -> action mapping.
         """
-        # Return cached if available
-        if not force_refresh and cls._action_cache is not None:
-            return cls._action_cache, cls._metadata_cache or {}
+        # Use parent's discovery
+        instances, metadata = super().discover_and_load(
+            scan_paths=scan_paths,
+            workspace=workspace,
+            force_refresh=force_refresh,
+            strict=strict,
+            config=config,
+        )
 
-        paths = scan_paths or cls.scan_paths
-        workspace = workspace or Path.cwd()
-        is_strict = strict if strict is not None else cls.strict_mode
+        # Build intent handler map (ACTION-SPECIFIC)
+        if force_refresh or cls._intent_handler_map is None:
+            cls._intent_handler_map = {}
+            for name, instance in instances.items():
+                handled_types = getattr(instance, "handled_intent_types", set())
+                for intent_type in handled_types:
+                    if intent_type in cls._intent_handler_map:
+                        logger.warning(
+                            f"⚠️ Intent conflict: {intent_type} "
+                            f"claimed by both {cls._intent_handler_map[intent_type]} and {name}"
+                        )
+                    cls._intent_handler_map[intent_type] = name
 
-        actions: ActionRegistry = {}
-        metadata: ActionMetadata = {}
-        intent_map: IntentHandlerMap = {}
-        errors: List[str] = []
-
-        for base_path in paths:
-            base_path = Path(base_path)
-            if not base_path.exists():
-                logger.debug(f"[action] Scan path does not exist: {base_path}")
-                continue
-
-            logger.info(f"[action] Scanning {base_path}...")
-
-            # Scan *_action.py files
-            for py_file in sorted(base_path.glob(cls.file_pattern)):
-                # Skip unit test files (test_*_action.py) but NOT action files (test_action.py)
-                # e.g., skip "test_shell_action.py" but load "test_action.py"
-                if py_file.name.startswith("test_") and py_file.name != "test_action.py":
-                    continue
-
-                try:
-                    action_classes = cls._load_action_classes(py_file)
-
-                    for action_class in action_classes:
-                        try:
-                            # Instantiate with workspace
-                            instance = action_class(workspace=workspace)
-                            name = instance.name
-
-                            actions[name] = instance
-
-                            # Get handled intent types
-                            handled_types = getattr(instance, "handled_intent_types", set())
-
-                            # Build intent -> action mapping
-                            for intent_type in handled_types:
-                                if intent_type in intent_map:
-                                    # Conflict! Two actions claim same intent
-                                    logger.warning(
-                                        f"  ⚠️ Intent conflict: {intent_type} "
-                                        f"claimed by both {intent_map[intent_type]} and {name}"
-                                    )
-                                intent_map[intent_type] = name
-
-                            metadata[name] = {
-                                "class": action_class.__name__,
-                                "file": str(py_file),
-                                "enabled": instance.is_enabled,
-                                "handled_intent_types": list(handled_types),
-                            }
-                            logger.info(
-                                f"  ✅ Loaded: {name} ({action_class.__name__}) "
-                                f"handles {len(handled_types)} intent types"
-                            )
-
-                        except Exception as e:
-                            error_msg = f"Failed to instantiate {action_class.__name__} from {py_file.name}: {e}"
-                            logger.error(f"  ❌ {error_msg}")
-                            errors.append(error_msg)
-
-                except Exception as e:
-                    error_msg = f"Failed to load action module {py_file.name}: {e}"
-                    logger.error(f"  ❌ {error_msg}")
-                    errors.append(error_msg)
-
-        # STRICT MODE: Crash on ANY error
-        if is_strict and errors:
-            error_summary = "\n".join(f"  - {e}" for e in errors)
-            raise ActionLoadError(
-                f"STRICT MODE: {len(errors)} action(s) failed to load:\n{error_summary}\n\n"
-                f"Fix these errors before continuing. MANAS cannot act without its hands."
-            )
-
-        # Cache results
-        cls._action_cache = actions
-        cls._metadata_cache = metadata
-        cls._intent_handler_map = intent_map
-
-        logger.info(f"[action] Loaded {len(actions)} actions, {len(intent_map)} intent mappings (cached)")
-        return actions, metadata
+        return instances, metadata
 
     @classmethod
-    def _load_action_classes(cls, py_file: Path) -> List[Type]:
-        """
-        Load action classes from a Python file.
-
-        Finds all classes that inherit from BaseAction.
-        Uses proper module import to preserve package context for relative imports.
-        """
-        import importlib
-
-        try:
-            parts = py_file.parts
-            vibe_idx = None
-            for i, part in enumerate(parts):
-                if part == "vibe_core":
-                    vibe_idx = i
-                    break
-
-            if vibe_idx is None:
-                raise ImportError(f"Cannot determine module path for {py_file}")
-
-            module_path = ".".join(parts[vibe_idx:]).replace(".py", "")
-            module = importlib.import_module(module_path)
-            module_name = module.__name__
-
-        except Exception as e:
-            raise ImportError(f"Failed to import {py_file}: {e}")
-
-        # Find BaseAction subclasses
-        action_classes = []
-        for name, obj in inspect.getmembers(module, inspect.isclass):
-            if obj.__module__ != module_name:
-                continue
-            if cls._is_action_subclass(obj):
-                action_classes.append(obj)
-
-        return action_classes
+    def _post_process_instance(cls, instance: Any, meta: CodeModuleMeta) -> None:
+        """Add handled_intent_types to metadata."""
+        handled_types = getattr(instance, "handled_intent_types", set())
+        meta.extra["handled_intent_types"] = list(handled_types)
 
     @classmethod
-    def _is_action_subclass(cls, candidate: Type) -> bool:
-        """Check if candidate inherits from BaseAction."""
-        if candidate.__name__ == cls.base_class_name:
-            return False
-        for base in inspect.getmro(candidate):
-            if base.__name__ == cls.base_class_name:
-                return True
+    def _should_skip_file(cls, py_file: Path) -> bool:
+        """Skip test files but allow test_action.py."""
+        name = py_file.name
+        if name.startswith("_"):
+            return True
+        # Skip unit test files but NOT actual action files named test_action.py
+        if name.startswith("test_") and name != "test_action.py":
+            return True
+        if name == "base.py":
+            return True
         return False
 
     @classmethod
     def clear_cache(cls) -> None:
-        """Clear cached action data."""
-        cls._action_cache = None
-        cls._metadata_cache = None
+        """Clear cached data including intent map."""
+        super().clear_cache()
         cls._intent_handler_map = None
+
+    # === ACTION-SPECIFIC METHODS ===
 
     @classmethod
     def get_action(cls, name: str, workspace: Optional[Path] = None) -> Optional[Any]:
         """Get a specific action by name."""
-        actions, _ = cls.discover_and_load(workspace=workspace)
-        return actions.get(name)
+        return cls.get_item(name, workspace)
 
     @classmethod
     def list_actions(cls, workspace: Optional[Path] = None) -> List[str]:
         """List all discovered action names."""
-        actions, _ = cls.discover_and_load(workspace=workspace)
-        return list(actions.keys())
+        return cls.list_items(workspace)
 
     @classmethod
     def get_handler_for_intent(cls, intent_type: str, workspace: Optional[Path] = None) -> Optional[str]:
@@ -292,12 +176,6 @@ class ActionLoader:
     def get_action_for_intent(cls, intent_type: str, workspace: Optional[Path] = None) -> Optional[Any]:
         """
         Get the action instance that handles a given intent type.
-
-        Args:
-            intent_type: The intent type to look up
-
-        Returns:
-            Action instance or None if no handler registered
         """
         handler_name = cls.get_handler_for_intent(intent_type, workspace)
         if handler_name is None:
@@ -309,6 +187,75 @@ class ActionLoader:
         """Get the full intent_type -> action_name mapping."""
         cls.discover_and_load(workspace=workspace)
         return cls._intent_handler_map or {}
+
+    # =========================================================================
+    # INSTANCE METHODS (FRACTAL PATTERN)
+    # =========================================================================
+
+    def __init__(
+        self,
+        scope: str = "global",
+        scan_paths: Optional[List[Path]] = None,
+    ):
+        """
+        Create a scoped ActionLoader instance.
+
+        FRACTAL PRINCIPLE:
+            - scope="global" → Uses class-level scan_paths
+            - scope="opus_private" → Uses custom paths, isolated cache
+
+        Args:
+            scope: Loader scope identifier
+            scan_paths: Override scan paths for this instance
+        """
+        super().__init__(scope=scope, scan_paths=scan_paths)
+        # Instance-level intent handler map (not shared with class)
+        self._inst_intent_map: Optional[IntentHandlerMap] = None
+
+    def load(
+        self,
+        force_refresh: bool = False,
+    ) -> Tuple[ActionRegistry, ActionMetadata]:
+        """
+        Instance method for scoped loading.
+
+        Also builds instance-level intent handler map.
+        """
+        instances, metadata = super().load(force_refresh=force_refresh)
+
+        # Build intent handler map for this instance
+        if force_refresh or self._inst_intent_map is None:
+            self._inst_intent_map = {}
+            for name, instance in instances.items():
+                handled_types = getattr(instance, "handled_intent_types", set())
+                for intent_type in handled_types:
+                    if intent_type in self._inst_intent_map:
+                        logger.warning(
+                            f"⚠️ [{self._scope}] Intent conflict: {intent_type} "
+                            f"claimed by both {self._inst_intent_map[intent_type]} and {name}"
+                        )
+                    self._inst_intent_map[intent_type] = name
+
+        return instances, metadata
+
+    def get_for_intent(self, intent_type: str) -> Optional[Any]:
+        """
+        Get the action instance that handles a given intent type.
+
+        Instance method for fractal/scoped usage.
+        """
+        self.load()  # Ensure loaded
+        if self._inst_intent_map is None:
+            return None
+        handler_name = self._inst_intent_map.get(intent_type)
+        if handler_name is None:
+            return None
+        return self.get(handler_name)
+
+    def get_intent_map(self) -> IntentHandlerMap:
+        """Get the intent_type -> action_name mapping (instance-level)."""
+        self.load()  # Ensure loaded
+        return self._inst_intent_map or {}
 
 
 # Register with LoaderRegistry - VEDA-4 COMPLIANT
