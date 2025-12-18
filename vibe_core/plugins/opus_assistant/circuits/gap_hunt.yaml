@@ -266,6 +266,52 @@ gap_categories:
       - "AMRITA: Brain state not persisted"
     priority: high
 
+  duplicate_gaps:
+    description: "Code duplication violations (DRY principle)"
+    patterns:
+      - "Same class defined in multiple files"
+      - "Same function signature in multiple modules"
+      - "Identical ABC interfaces duplicated"
+    priority: critical
+    detection_script: |
+      # Detect duplicate class definitions
+      import ast
+      from pathlib import Path
+      from collections import defaultdict
+
+      class_definitions = defaultdict(list)
+
+      for py_file in Path('vibe_core').rglob('*.py'):
+          if '__pycache__' in str(py_file):
+              continue
+          try:
+              with open(py_file) as f:
+                  tree = ast.parse(f.read())
+              for node in ast.walk(tree):
+                  if isinstance(node, ast.ClassDef):
+                      class_definitions[node.name].append({
+                          'file': str(py_file),
+                          'line': node.lineno,
+                          'bases': [b.id for b in node.bases if isinstance(b, ast.Name)]
+                      })
+          except:
+              pass
+
+      # Find duplicates (same class name, same base classes)
+      duplicates = []
+      for name, locations in class_definitions.items():
+          if len(locations) > 1:
+              # Check if they have same base classes (likely true duplicates)
+              base_sets = [frozenset(loc['bases']) for loc in locations]
+              if len(set(base_sets)) == 1:  # All have same bases
+                  duplicates.append({
+                      'class': name,
+                      'locations': locations,
+                      'severity': 'critical' if 'ABC' in locations[0]['bases'] else 'high'
+                  })
+
+      return {'duplicates': duplicates, 'count': len(duplicates)}
+
 # ============================================================
 # INVOCATION EXAMPLES
 # ============================================================

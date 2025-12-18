@@ -61,6 +61,16 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 | GAP-004 | Docs | 13 OPUS files without @HARNESS | LOW | PARTIALLY FIXED (6 semantic harnesses) |
 | GAP-008 | Circuits | Circuits already exist in vibe_core/playbook/circuits/ | N/A | FALSE POSITIVE |
 | GAP-010 | Async | 190 async functions without await | LOW | ANALYZED (interface compliance, not bugs) |
+| GAP-017 | DRY | 44 duplicate class definitions | CRITICAL | DETECTED (MANAS can hunt) |
+
+**GAP-017 Details:** MANAS detection script found 44 duplicate classes including:
+- `ManifestRegistry` (ABC) - kernel.py, protocols/registry.py, protocols/ledger.py
+- `VibeScheduler` (ABC) - kernel.py, protocols/ledger.py, protocols/scheduler.py
+- `VibeLedger` (ABC) - kernel.py, protocols/ledger.py
+- `LLMProvider` (ABC) - llm/provider.py, runtime/providers/base.py
+- Plus 40 more HIGH severity duplicates
+
+**Root cause:** Protocols duplicated in kernel.py AND protocols/*.py. Should consolidate to single source.
 
 **Note on GAP-004:** Created semantic harness pattern for VEDIC concept docs:
 - SHUDDHI (056): Purification - applies to boot/state patterns
