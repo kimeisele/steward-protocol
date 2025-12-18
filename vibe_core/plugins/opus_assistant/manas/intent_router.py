@@ -147,6 +147,11 @@ class IntentRouter:
         self._handlers["sutra_missing_code"] = self._handle_roadmap_fix
         self._handlers["sutra_missing_harness"] = self._handle_roadmap_harness
 
+        # DocHarnessAnalyzer intents → Harness handlers (OPUS-083)
+        self._handlers["harness_auto_generate"] = self._handle_roadmap_harness
+        self._handlers["harness_broken"] = self._handle_roadmap_harness
+        self._handlers["harness_missing"] = self._handle_roadmap_harness
+
         # Doc Creation/Consolidation → SUTRA (OPUS-054 Phase 2)
         self._handlers["create_opus_doc"] = self._handle_create_doc
         self._handlers["roadmap_create_doc"] = self._handle_create_doc

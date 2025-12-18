@@ -393,10 +393,12 @@ class HeartbeatEngine:
                     gpg_sign = False
 
             # OPUS-081: Commit ONLY runtime files (not source code)
+            # OPUS-093: Skip pre-commit hooks for runtime state (no_verify=True)
             commit_result = tools.seal_history(
                 message=f"{commit_prefix} System auto-save",
                 files=runtime_files,  # Only runtime files, not all!
                 sign=gpg_sign,  # Configurable GPG signing (with CI fallback)
+                no_verify=True,  # Runtime state commits skip hooks
             )
 
             if commit_result.get("success"):
