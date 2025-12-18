@@ -151,9 +151,12 @@ class BootOrchestrator(CognitiveCycle):
         self._running = False
         self._parent_cycle_id: Optional[str] = None
 
-        # Phase A Integration
-        if trace and event_bus:
-            self.setup(trace, event_bus, steward_context=None)
+        # Phase A Integration: ALWAYS initialize orchestration dependencies
+        if not trace:
+            trace = UnifiedTrace()
+        if not event_bus:
+            event_bus = EventBus()
+        self.setup(trace, event_bus, steward_context=None)
 
     # ========================================================================
     # COGNITIVECYCLE CONFIGURATION
