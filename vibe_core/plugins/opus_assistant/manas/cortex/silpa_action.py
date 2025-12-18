@@ -421,14 +421,15 @@ class SilpaAction(BaseAction):
 
     def _handle_genesis(self, intent: "Intent", params: Dict) -> ActionResult:
         """
-        OPUS-103/OPUS-105: Handle code generation via LLM with DHARMA enforcement.
+        OPUS-103/OPUS-105: Handle code generation via LLM with DHARMA + BHUMANDALA enforcement.
 
         This is the GENESIS capability - MANAS can now CREATE new code.
 
-        OPUS-105 DHARMA GATING:
-        1. DharmaSense.check_dharmic_alignment() - Permission check
-        2. Path restriction - Only cortex/, tests/
-        3. Karma tracking - Success/failure affects Bhakti
+        OPUS-105 FORTRESS GATES (in order):
+        1. BHUMANDALA - Topology authority check (Ring 0-2 required)
+        2. DharmaSense - Permission check (genesis + code_modify)
+        3. Path restriction - Only cortex/, tests/
+        4. Karma tracking - Success/failure affects Bhakti
 
         Args:
             intent: The genesis intent
@@ -442,7 +443,47 @@ class SilpaAction(BaseAction):
             ActionResult with generated code or error
         """
         # =====================================================================
-        # OPUS-105: DHARMA CHECK FIRST (Real tiger, not paper tiger)
+        # OPUS-105 SÄULE 2: BHUMANDALA - Topology Authority Check
+        # Genesis requires Ring 0-2 authority (ILAVRTA, BHADRASHVA, KIMPURASHA)
+        # =====================================================================
+        try:
+            from vibe_core.topology import get_agent_placement
+
+            placement = get_agent_placement("manas")
+            if placement:
+                # Genesis requires authority level >= 8 (Ring 0-2)
+                MIN_GENESIS_AUTHORITY = 8
+                if placement.authority_level < MIN_GENESIS_AUTHORITY:
+                    logger.warning(
+                        f"[GENESIS] ❌ BHUMANDALA BLOCKED: MANAS authority {placement.authority_level} "
+                        f"< {MIN_GENESIS_AUTHORITY} required for genesis"
+                    )
+                    self._track_karma_penalty(reason="Insufficient topology authority for genesis")
+                    return ActionResult(
+                        success=False,
+                        action_name=self.name,
+                        intent_type=intent.type,
+                        error=f"BHUMANDALA VIOLATION: Authority level {placement.authority_level} insufficient for genesis (need {MIN_GENESIS_AUTHORITY}+)",
+                        metadata={
+                            "genesis_blocked": True,
+                            "reason": "topology_authority",
+                            "agent_authority": placement.authority_level,
+                            "required_authority": MIN_GENESIS_AUTHORITY,
+                            "agent_layer": placement.layer,
+                            "agent_varna": placement.varna,
+                        },
+                    )
+                logger.info(
+                    f"[GENESIS] ✅ BHUMANDALA: Authority {placement.authority_level} "
+                    f"(Layer: {placement.layer}, Varna: {placement.varna})"
+                )
+        except ImportError:
+            logger.debug("[GENESIS] Topology not available - skipping authority check")
+        except Exception as e:
+            logger.debug(f"[GENESIS] Topology check failed: {e}")
+
+        # =====================================================================
+        # OPUS-105: DHARMA CHECK (Real tiger, not paper tiger)
         # =====================================================================
         try:
             from .dharma_sense import DharmaSense, DharmaStatus
@@ -606,64 +647,42 @@ class SilpaAction(BaseAction):
             )
 
     def _build_genesis_prompt(self, name: str, description: str, code_type: str) -> str:
-        """Build prompt for LLM code generation."""
-        if code_type == "action":
-            return f'''Generate a Python BaseAction class for MANAS (the cognitive kernel).
+        """
+        OPUS-105 VAK: Build prompt for LLM code generation using PromptRegistry.
 
-Name: {name}Action
-Description: {description}
+        Prompts are loaded from config/prompts/genesis.yaml, NOT hardcoded.
+        This enables:
+        - Tuning without kernel restart
+        - Self-optimization by MANAS
+        - Clean separation of concerns
+        """
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
 
-Requirements:
-1. Inherit from BaseAction (from .base_action import ActionResult, BaseAction)
-2. Set `name = "{name}_action"`
-3. Define `handled_intent_types: Set[str]` with relevant intent types
-4. Implement `act(self, intent: "Intent") -> ActionResult` method
-5. Use proper logging via `logger = logging.getLogger("MANAS.Action.{name.title()}")`
-6. Include docstring with OPUS reference
+            # Map code_type to prompt key
+            prompt_key = f"genesis.{code_type}"
 
-Template structure:
-```python
-"""
-OPUS-103: {name.title()} Action - Auto-generated by MANAS Genesis.
-"""
+            # Prepare context for interpolation
+            context = {
+                "name": name,
+                "name_title": name.title(),
+                "name_upper": name.upper(),
+                "description": description,
+                "code_type": code_type,
+            }
 
-import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+            # Get prompt from registry
+            prompt = PromptRegistry.get(prompt_key, context)
+            logger.debug(f"[GENESIS] Using prompt from registry: {prompt_key}")
+            return prompt
 
-from .base_action import ActionResult, BaseAction
-
-if TYPE_CHECKING:
-    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
-
-logger = logging.getLogger("MANAS.Action.{name.title()}")
-
-
-class {name.title()}Action(BaseAction):
-    name = "{name}_action"
-    handled_intent_types: Set[str] = {{...}}
-
-    def __init__(self, workspace: Optional[Path] = None, config: Optional[Dict[str, Any]] = None):
-        super().__init__(workspace, config)
-        logger.info("[{name.upper()}_ACTION] Initialized")
-
-    def act(self, intent: "Intent") -> ActionResult:
-        # Implementation here
-        pass
-```
-
-Generate complete, working code. Only output Python code, no explanations.
-'''
-        else:
-            return f"""Generate a Python module for MANAS.
-
+        except Exception as e:
+            # Fallback to minimal prompt if registry fails
+            logger.warning(f"[GENESIS] PromptRegistry failed ({e}), using fallback")
+            return f"""Generate a Python {code_type} for MANAS.
 Name: {name}
-Type: {code_type}
 Description: {description}
-
-Generate complete, working Python code with proper imports, logging, and docstrings.
-Only output Python code, no explanations.
-"""
+Generate complete, working Python code. Only output code, no explanations."""
 
     # =========================================================================
     # OPUS-105: KARMA TRACKING - Actions have consequences
