@@ -49,6 +49,18 @@
           "delta": 5,
           "reason": "Successful intent: maintenance",
           "timestamp": "2025-12-17T12:55:52.656573"
+        },
+        {
+          "type": "bhakti",
+          "delta": -5,
+          "reason": "TEST PENALTY",
+          "timestamp": "2025-12-18T14:03:19.899284"
+        },
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "TEST REWARD",
+          "timestamp": "2025-12-18T14:03:19.900333"
         }
       ],
       "registered_at": "2025-12-17T00:42:12.022365"

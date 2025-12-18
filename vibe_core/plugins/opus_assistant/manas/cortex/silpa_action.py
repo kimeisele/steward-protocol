@@ -685,43 +685,49 @@ Description: {description}
 Generate complete, working Python code. Only output code, no explanations."""
 
     # =========================================================================
-    # OPUS-105: KARMA TRACKING - Actions have consequences
+    # OPUS-105: KARMA TRACKING - Actions have consequences (REAL, NOT PAPER)
     # =========================================================================
+
+    def _get_state_manager(self):
+        """
+        Lazy-load VedicStateManager singleton.
+
+        Uses the same pattern as DharmaSense for consistency.
+        """
+        if not hasattr(self, "_state_manager"):
+            self._state_manager = None
+
+        if self._state_manager is None:
+            try:
+                from vibe_core.plugins.vedic_governance.state_manager import get_state_manager
+
+                self._state_manager = get_state_manager()
+            except ImportError:
+                logger.debug("[KARMA] VedicStateManager not available")
+        return self._state_manager
 
     def _track_karma_penalty(self, reason: str, amount: int = 10) -> None:
         """
         OPUS-105: Track karma penalty for blocked/failed actions.
 
-        This wires into VedicGovernance.consume_bhakti() to actually
-        reduce the agent's Bhakti score when they violate Dharma.
+        REAL WIRING: Uses VedicStateManager.update_bhakti() directly.
+        This ACTUALLY reduces the agent's Bhakti score.
 
         Args:
             reason: Why karma is being docked
             amount: How much Bhakti to consume (default 10)
         """
         try:
-            # Try to get VedicGovernance plugin
-            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
-
-            # Get the singleton instance if available
-            governance = getattr(self, "_governance", None)
-            if governance is None:
-                # Try to get from kernel if available
-                kernel = getattr(self, "_kernel", None)
-                if kernel and hasattr(kernel, "plugins"):
-                    governance = kernel.plugins.get("vedic_governance")
-
-            if governance:
-                governance.consume_bhakti(
+            state_mgr = self._get_state_manager()
+            if state_mgr:
+                new_bhakti = state_mgr.update_bhakti(
                     agent_id="manas",
-                    amount=amount,
+                    delta=-amount,  # NEGATIVE = penalty
                     reason=f"KARMA PENALTY: {reason}",
                 )
-                logger.warning(f"[KARMA] 📉 Bhakti -{amount} for MANAS: {reason}")
+                logger.warning(f"[KARMA] 📉 Bhakti -{amount} for MANAS → now {new_bhakti}: {reason}")
             else:
-                # Log even if no governance wired
                 logger.warning(f"[KARMA] 📉 (unwired) Penalty recorded: {reason}")
-
         except Exception as e:
             logger.debug(f"[KARMA] Could not track penalty: {e}")
 
@@ -729,31 +735,23 @@ Generate complete, working Python code. Only output code, no explanations."""
         """
         OPUS-105: Track karma reward for successful dharmic actions.
 
-        This wires into VedicGovernance.add_bhakti() to reward
-        the agent's Bhakti score for good behavior.
+        REAL WIRING: Uses VedicStateManager.update_bhakti() directly.
+        This ACTUALLY increases the agent's Bhakti score.
 
         Args:
             reason: Why karma is being rewarded
             amount: How much Bhakti to add (default 5)
         """
         try:
-            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
-
-            governance = getattr(self, "_governance", None)
-            if governance is None:
-                kernel = getattr(self, "_kernel", None)
-                if kernel and hasattr(kernel, "plugins"):
-                    governance = kernel.plugins.get("vedic_governance")
-
-            if governance:
-                governance.add_bhakti(
+            state_mgr = self._get_state_manager()
+            if state_mgr:
+                new_bhakti = state_mgr.update_bhakti(
                     agent_id="manas",
-                    amount=amount,
+                    delta=+amount,  # POSITIVE = reward
                     reason=f"KARMA SUCCESS: {reason}",
                 )
-                logger.info(f"[KARMA] 📈 Bhakti +{amount} for MANAS: {reason}")
+                logger.info(f"[KARMA] 📈 Bhakti +{amount} for MANAS → now {new_bhakti}: {reason}")
             else:
                 logger.info(f"[KARMA] 📈 (unwired) Success recorded: {reason}")
-
         except Exception as e:
             logger.debug(f"[KARMA] Could not track success: {e}")
