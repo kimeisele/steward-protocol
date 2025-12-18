@@ -401,22 +401,14 @@ renderers:
       - id: p0_plans
         owner: live
         source: opus.p0_plans
-      # AI: I maintain these
-      - id: current_goal
+      # AI: Maintained by AI assistant (OPUS-106: synced with template)
+      - id: current_work
         owner: ai
-      - id: phase_status
-        owner: ai
-        element_type: list
-      - id: extraction_log
-        owner: ai
-        element_type: table
       - id: blockers
         owner: ai
-        element_type: list
-      # HUMAN: User approves
-      - id: next_actions
+      # HUMAN: User notes
+      - id: notes
         owner: human
-        element_type: list
 
 
   # ARCHITECTURE - Dynamic code analysis
