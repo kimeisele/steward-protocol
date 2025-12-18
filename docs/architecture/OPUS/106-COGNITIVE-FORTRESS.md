@@ -368,6 +368,9 @@ one attains supreme cognitive action (CognitiveWeaver)."
 | No stub implementations (pass statements) | ✅ |
 | OPUS-009 @HARNESS gaps filled | ✅ |
 | State ↔ Knowledge bridge functional | ✅ |
+| **CognitiveWeaver wired into MANAS** | ✅ |
+| **MANAS can query unified context** | ✅ |
+| **Knowledge Graph loads 19 nodes, 38 edges** | ✅ |
 
 ---
 
