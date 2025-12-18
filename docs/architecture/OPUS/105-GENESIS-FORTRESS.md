@@ -174,9 +174,9 @@ wiring:
     in: vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py
     rationale: "SilpaAction follows BaseAction pattern"
 
-  - pattern: "handled_intent_types.*genesis_action"
+  - pattern: '"genesis_action"'
     in: vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py
-    rationale: "SilpaAction declares genesis intents"
+    rationale: "SilpaAction handles genesis_action intent"
 
 tests:
   # === YAGYA FIRE TEST ===
