@@ -487,3 +487,50 @@ class GitState:
             return []
 
         return [f.strip() for f in result.strip().split("\n") if f.strip()]
+
+    def get_dirty_runtime_files(self) -> List[str]:
+        """
+        OPUS-081: Get list of dirty RUNTIME STATE files (excludes source code).
+
+        This is the INVERSE of get_dirty_source_files().
+        Used by Heartbeat to commit ONLY runtime files.
+
+        Returns:
+            List of runtime files that have uncommitted changes
+        """
+        if not self.is_git_repo():
+            return []
+
+        import fnmatch
+
+        # Get all dirty files (both staged and unstaged)
+        all_dirty = self._run_git(["diff", "--name-only", "HEAD"])
+        if not all_dirty:
+            all_dirty = ""
+
+        # Also check untracked files
+        untracked = self._run_git(["ls-files", "--others", "--exclude-standard"])
+        if not untracked:
+            untracked = ""
+
+        all_files = set()
+        for f in all_dirty.strip().split("\n"):
+            if f.strip():
+                all_files.add(f.strip())
+        for f in untracked.strip().split("\n"):
+            if f.strip():
+                all_files.add(f.strip())
+
+        # Get runtime patterns from plugin manifests
+        runtime_patterns = self._get_runtime_state_patterns()
+
+        # Filter to only runtime files
+        runtime_files = []
+        for file_path in all_files:
+            for pattern in runtime_patterns:
+                # Support glob patterns like "*.md" or ".opus_state/*"
+                if fnmatch.fnmatch(file_path, pattern) or file_path == pattern:
+                    runtime_files.append(file_path)
+                    break
+
+        return runtime_files
