@@ -37,14 +37,84 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 - [ ] `approve_intent()` executes correctly
 - [ ] `reject_intent()` records karma
 
-## Known Gaps (To Hunt)
+## Known Gaps (Hunted 2024-12-18)
+
+### FIXED ISSUES
 
 | ID | Area | Issue | Severity | Status |
 |----|------|-------|----------|--------|
 | GAP-001 | Events | KernelTickHandler not wired in headless | CRITICAL | FIXED (OPUS-091) |
 | GAP-002 | Provider | OpenRouter key misdetected | CRITICAL | FIXED (86d971d) |
 | GAP-003 | Manifest | Ghost files in state_files | HIGH | FIXED (OPUS-096) |
-| GAP-004 | ? | ? | ? | HUNTING |
+
+### OPEN ISSUES
+
+| ID | Area | Issue | Severity | Status |
+|----|------|-------|----------|--------|
+| GAP-004 | Docs | 13 OPUS files without @HARNESS | MEDIUM | OPEN |
+| GAP-005 | Config | Missing config/roadmap.yaml | LOW | OPEN |
+| GAP-006 | Config | Missing config/section_id.yaml | LOW | OPEN |
+| GAP-007 | Config | Missing config/system.yaml | LOW | OPEN |
+| GAP-008 | Circuits | Missing circuits/doc_index_render.yaml | MEDIUM | OPEN |
+| GAP-009 | Circuits | Missing circuits/wiring_audit.yaml | MEDIUM | OPEN |
+| GAP-010 | Async | 157 async functions without await | MEDIUM | NEEDS REVIEW |
+
+### TECHNICAL DEBT (Not Blocking)
+
+| ID | Area | Issue | Count | Priority |
+|----|------|-------|-------|----------|
+| DEBT-001 | Dependencies | TYPE_CHECKING circular dep workarounds | 97 files | LOW |
+| DEBT-002 | Code | TODO/FIXME/HACK comments | 60 | LOW |
+
+## Full Hunt Results
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                    BIG BUG HUNT RESULTS                      ║
+╠══════════════════════════════════════════════════════════════╣
+
+✅ PASSING
+───────────────────────────────────────────────────────────────
+  • Syntax errors:         0
+  • Core module imports:   ALL PASS
+  • Critical wiring:       ALL CONNECTED
+  • Manifest integrity:    18/18 valid
+  • Hardcoded paths:       0 found
+  • Bare except clauses:   0 in main code
+  • Dead classes:          0 unused
+
+⚠️ WARNINGS (Technical Debt)
+───────────────────────────────────────────────────────────────
+  • TYPE_CHECKING usage:   97 files (circular dep workaround)
+  • TODO/FIXME comments:   60 instances
+  • Async without await:   157 functions (NEEDS REVIEW)
+
+❌ ISSUES TO FIX
+───────────────────────────────────────────────────────────────
+  • OPUS docs without @HARNESS:  13 files
+  • Missing config files:        3 referenced but not exist
+  • Missing circuit files:       2 referenced but not exist
+
+╚══════════════════════════════════════════════════════════════╝
+```
+
+## OPUS Docs Without @HARNESS
+
+These need harness blocks for proper doc/code binding:
+
+1. `000-INDEX.md`
+2. `030-GENESIS-PLUGIN.md`
+3. `038-SANCTUARY-MUTATION.md`
+4. `039-ECDSA-REGRESSION-REPORT.md`
+5. `056-SHUDDHI.md`
+6. `057-VAJRA.md`
+7. `058-PRATYAHARA.md`
+8. `059-PRAMANA.md`
+9. `060-SATYA.md`
+10. `061-AMRITA.md`
+11. `069-SRUTI-SMRITI-PATTERN.md`
+12. `074-JNANA-COGNITIVE-ARCHITECTURE.md`
+13. `091-HEARTBEAT-REFACTOR.md`
 
 ## The Hunt Protocol
 
