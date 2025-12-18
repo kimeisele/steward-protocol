@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from vibe_core.event_bus import EventBus
-from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader
+from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
@@ -254,11 +254,13 @@ class CognitiveKernel(CognitiveCycle):
         self._action_loader = ActionLoader(scope="opus_private")
         self._sense_loader = SenseLoader(scope="opus_private")
         self._analyzer_loader = AnalyzerLoader(scope="opus_private")
+        self._tool_loader = ToolLoader(scope="opus_private", root_path=self._workspace)
 
         # Pre-load cortex modules (warm the cache)
         self._action_loader.load()
         self._sense_loader.load()
         self._analyzer_loader.load()
+        self._tool_loader.load()
         logger.info("🎯 OPUS-106: Fractal Loaders initialized (scope=opus_private)")
 
         # 🧠 SEMANTIC ENGINE: The "Brain" (Lazy Loaded)
@@ -401,6 +403,16 @@ class CognitiveKernel(CognitiveCycle):
         Use this for fractal analysis - OPUS's isolated view of analyzers.
         """
         return self._analyzer_loader
+
+    @property
+    def tool_loader(self) -> ToolLoader:
+        """
+        OPUS's private ToolLoader (scope=opus_private).
+
+        Use this for fractal tooling - OPUS's isolated view of cartridge tools.
+        Actions can access tools dynamically via this loader.
+        """
+        return self._tool_loader
 
     # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
