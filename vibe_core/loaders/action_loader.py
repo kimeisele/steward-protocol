@@ -54,15 +54,21 @@ class ActionLoader(CodeModuleLoader):
 
     KEY FEATURE: Builds intent_type -> action mapping automatically.
 
-    Usage:
+    Usage (Global - class methods):
         # Discover and instantiate all actions
         actions, meta = ActionLoader.discover_and_load(workspace=Path.cwd())
 
         # Get handler for an intent type
         handler_name = ActionLoader.get_handler_for_intent("commit_changes")
-        if handler_name:
-            action = actions[handler_name]
-            result = action.act(intent)
+
+    Usage (Fractal - instance methods):
+        # Create scoped loader for OPUS internal use
+        opus_actions = ActionLoader(
+            scope="opus_private",
+            scan_paths=[Path("vibe_core/plugins/opus_assistant/manas/cortex")]
+        )
+        actions, _ = opus_actions.load()
+        action = opus_actions.get_for_intent("commit_changes")
     """
 
     # === LOADER CONFIG ===
@@ -181,6 +187,75 @@ class ActionLoader(CodeModuleLoader):
         """Get the full intent_type -> action_name mapping."""
         cls.discover_and_load(workspace=workspace)
         return cls._intent_handler_map or {}
+
+    # =========================================================================
+    # INSTANCE METHODS (FRACTAL PATTERN)
+    # =========================================================================
+
+    def __init__(
+        self,
+        scope: str = "global",
+        scan_paths: Optional[List[Path]] = None,
+    ):
+        """
+        Create a scoped ActionLoader instance.
+
+        FRACTAL PRINCIPLE:
+            - scope="global" → Uses class-level scan_paths
+            - scope="opus_private" → Uses custom paths, isolated cache
+
+        Args:
+            scope: Loader scope identifier
+            scan_paths: Override scan paths for this instance
+        """
+        super().__init__(scope=scope, scan_paths=scan_paths)
+        # Instance-level intent handler map (not shared with class)
+        self._inst_intent_map: Optional[IntentHandlerMap] = None
+
+    def load(
+        self,
+        force_refresh: bool = False,
+    ) -> Tuple[ActionRegistry, ActionMetadata]:
+        """
+        Instance method for scoped loading.
+
+        Also builds instance-level intent handler map.
+        """
+        instances, metadata = super().load(force_refresh=force_refresh)
+
+        # Build intent handler map for this instance
+        if force_refresh or self._inst_intent_map is None:
+            self._inst_intent_map = {}
+            for name, instance in instances.items():
+                handled_types = getattr(instance, "handled_intent_types", set())
+                for intent_type in handled_types:
+                    if intent_type in self._inst_intent_map:
+                        logger.warning(
+                            f"⚠️ [{self._scope}] Intent conflict: {intent_type} "
+                            f"claimed by both {self._inst_intent_map[intent_type]} and {name}"
+                        )
+                    self._inst_intent_map[intent_type] = name
+
+        return instances, metadata
+
+    def get_for_intent(self, intent_type: str) -> Optional[Any]:
+        """
+        Get the action instance that handles a given intent type.
+
+        Instance method for fractal/scoped usage.
+        """
+        self.load()  # Ensure loaded
+        if self._inst_intent_map is None:
+            return None
+        handler_name = self._inst_intent_map.get(intent_type)
+        if handler_name is None:
+            return None
+        return self.get(handler_name)
+
+    def get_intent_map(self) -> IntentHandlerMap:
+        """Get the intent_type -> action_name mapping (instance-level)."""
+        self.load()  # Ensure loaded
+        return self._inst_intent_map or {}
 
 
 # Register with LoaderRegistry - VEDA-4 COMPLIANT

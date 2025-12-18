@@ -116,6 +116,11 @@ class CodeModuleLoader(ABC):
     _scope: str = "global"
     _custom_scan_paths: Optional[List[Path]] = None
 
+    @property
+    def scope(self) -> str:
+        """Get the scope of this loader instance."""
+        return self._scope
+
     # =========================================================================
     # CONSTRUCTOR (for scoped instances)
     # =========================================================================
@@ -284,6 +289,16 @@ class CodeModuleLoader(ABC):
         self._inst_cache = instances
         self._inst_meta = metadata
         return instances, metadata
+
+    def get(self, name: str) -> Optional[Any]:
+        """Get a specific item by name (instance method)."""
+        items, _ = self.load()
+        return items.get(name)
+
+    def list(self) -> List[str]:
+        """List all discovered item names (instance method)."""
+        items, _ = self.load()
+        return list(items.keys())
 
     # =========================================================================
     # INTERNAL METHODS
