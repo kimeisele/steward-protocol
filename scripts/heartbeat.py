@@ -212,11 +212,20 @@ class HeartbeatEngine:
                     plugins_map, _ = PluginLoader.discover_and_load(scan_paths=scan_paths)
 
                     count = 0
+                    booted = 0
                     for plugin in plugins_map.values():
                         self.prana_orchestrator.register_plugin(plugin)
                         count += 1
 
-                    logger.info(f"   + Registered {count} plugins for pulse (Headless)")
+                        # OPUS-091: Boot plugins to wire EventBus + KernelTickHandler
+                        if hasattr(plugin, "on_boot"):
+                            try:
+                                plugin.on_boot(kernel=None)  # Headless boot
+                                booted += 1
+                            except Exception as boot_err:
+                                logger.debug(f"   - Plugin boot skipped: {boot_err}")
+
+                    logger.info(f"   + Registered {count} plugins, booted {booted} (Headless)")
 
                 except Exception as e:
                     logger.warning(f"   - Failed to load plugins: {e}")
@@ -282,29 +291,67 @@ class HeartbeatEngine:
             # Continue with legacy heartbeat phases
 
     def _manas_think(self):
-        """OPUS-073: Invoke MANAS cognitive cycle."""
-        if not self.manas:
-            logger.info("🧠 MANAS not available - skipping cognitive cycle")
-            return
+        """
+        OPUS-091: Trigger MANAS via HOURLY_PULSE event (GAD-000 compliant).
 
-        logger.info("🧠 MANAS: Starting cognitive cycle...")
+        Instead of calling manas.think() directly, we emit HOURLY_PULSE
+        which triggers the manas_awakening.yaml circuit via KernelTickHandler.
+
+        This is the LASAGNE architecture:
+        - heartbeat.py emits event
+        - KernelTickHandler catches event
+        - manas_awakening circuit executes
+        - MANAS thinks via circuit actions
+        """
+        import asyncio
+
+        logger.info("🧠 MANAS: Emitting HOURLY_PULSE (event-based trigger)...")
 
         try:
-            # Force=True because heartbeat runs on schedule (not rate-limited)
-            intents = self.manas.think(force=True)
+            from vibe_core.event_bus import Event, EventType, get_event_bus
 
-            if intents:
-                logger.info(f"🧠 MANAS generated {len(intents)} intent(s):")
-                for intent in intents:
-                    logger.info(f"   • [{intent.risk.value}] {intent.title}")
-                    if intent.auto_executable:
-                        logger.info(f"     → Auto-executable: {intent.action}")
-            else:
-                logger.info("🧠 MANAS: No new intents generated")
+            bus = get_event_bus()
+
+            # Create HOURLY_PULSE event
+            pulse_event = Event(
+                event_type=EventType.HOURLY_PULSE,
+                agent_id="heartbeat",
+                message="Heartbeat pulse - MANAS awakening",
+                details={
+                    "source": "heartbeat.py",
+                    "trigger": "scheduled_pulse",
+                    "mode": "headless",
+                },
+            )
+
+            # Emit the pulse - KernelTickHandler will catch it and run manas_awakening circuit
+            async def emit_pulse():
+                await bus.emit(pulse_event)
+
+            # Run in event loop
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(emit_pulse())
+                else:
+                    loop.run_until_complete(emit_pulse())
+            except RuntimeError:
+                asyncio.run(emit_pulse())
+
+            logger.info("🧠 MANAS: HOURLY_PULSE emitted → manas_awakening circuit triggered")
 
         except Exception as e:
-            logger.warning(f"⚠️ MANAS cognitive cycle failed: {e}")
-            # Don't raise - MANAS failure shouldn't stop heartbeat
+            logger.warning(f"⚠️ MANAS HOURLY_PULSE failed: {e}")
+
+            # FALLBACK: Direct call if event system unavailable (backward compat)
+            if self.manas:
+                logger.info("🧠 MANAS: Falling back to direct think() call...")
+                try:
+                    intents = self.manas.think(force=True)
+                    if intents:
+                        logger.info(f"🧠 MANAS generated {len(intents)} intent(s)")
+                except Exception as fallback_err:
+                    logger.warning(f"⚠️ MANAS fallback also failed: {fallback_err}")
 
     def _chronicle_commit(self):
         """
