@@ -205,6 +205,35 @@ envoy run-circuit GAP_HUNT --mode deep --limit 10
 
 ---
 
+## Graph-Based Gap Detection (The Weaver's Eye)
+
+**NEW:** Code scanner uses knowledge graph instead of regex.
+
+```python
+# vibe_core/knowledge/code_scanner.py
+from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+from vibe_core.knowledge.code_scanner import CodeScanner
+
+graph = UnifiedKnowledgeGraph()
+scanner = CodeScanner(graph)
+stats = scanner.scan_directory(Path('vibe_core'))
+
+# Query: Find all duplicated classes
+duplicates = scanner.query_classes_with_duplicates()
+```
+
+**Schema Extensions (schema.py):**
+- NodeTypes: MODULE, CLASS, FUNCTION, INTERFACE, DOC, HARNESS, PRINCIPLE, TEST
+- RelationTypes: DEFINES, INHERITS, DUPLICATES, DOCUMENTS, HAS_HARNESS, TESTED_BY
+
+**Test Results:**
+- 603 files scanned
+- 1079 classes, 30 interfaces
+- 46 duplicate groups detected
+- ManifestRegistry x3 FOUND!
+
+---
+
 ## Next Action
 
 **RUN THE HUNT:** Execute heartbeat in debug mode and trace the full path:
