@@ -346,7 +346,27 @@ You are not a task-runner. You are a bio-engineer.
 
 ---
 
+## 5. PROVEN PATTERNS (aus echten Sessions)
+
+**99% ist schon da. Dein Job: Finde die fehlenden Kabel.**
+
+Wenn OPUS.md ein Problem zeigt (z.B. `0/145 successful`):
+```
+1. grep -rn "def function_name" vibe_core/     → Wo definiert?
+2. grep -rn "function_name(" vibe_core/        → Wo aufgerufen?
+3. Wenn callers = 0 → MISSING CABLE
+4. Wire es an der richtigen Stelle
+5. Test: ruff + test_kernel_boot.py
+```
+
+**STUB erkennen:** Suche nach "Would execute", "For now", "TBD", "TODO" im Code. Das sind tote Kabel.
+
+**Stale Data:** Wenn OPUS.md Müll zeigt, check ob die Quelldaten (z.B. syscalls.jsonl) alte Test-Artefakte enthalten.
+
+---
+
 ## LAST EDITS
 | Date       | Author   | Change                                      |
 |------------|----------|---------------------------------------------|
+| 2025-12-18 | OPUS     | Added "Proven Patterns" from cable-hunting session |
 | 2025-12-17 | Gemini   | Defined "Slim Build / Smart Integration"    |
