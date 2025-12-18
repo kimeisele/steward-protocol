@@ -1446,6 +1446,9 @@ class CognitiveKernel(CognitiveCycle):
 
         entry.status = "approved"
 
+        # 🔌 CABLE: Reset idle timer on user interaction
+        self.record_activity()
+
         # ⚡ VAJRA: Record approval to ledger
         self._record_to_ledger(
             event_type="MANAS_INTENT_APPROVED",
@@ -1483,6 +1486,9 @@ class CognitiveKernel(CognitiveCycle):
             return False
 
         entry.status = "rejected"
+
+        # 🔌 CABLE: Reset idle timer on user interaction
+        self.record_activity()
 
         # ⚡ VAJRA: Record rejection to ledger
         self._record_to_ledger(
@@ -1668,6 +1674,9 @@ class CognitiveKernel(CognitiveCycle):
         success = False
         result = {}
 
+        # 🔌 CABLE: Reset idle timer on execution
+        self.record_activity()
+
         # ⚡ VAJRA: Record INTENT_EXECUTING to ledger BEFORE execution
         self._record_to_ledger(
             event_type="MANAS_INTENT_EXECUTING",
@@ -1702,11 +1711,22 @@ class CognitiveKernel(CognitiveCycle):
                 result = self._execution_callback(intent)
                 success = result.get("success", False)
             elif intent.circuit_to_execute:
-                # Execute via circuit (would integrate with kernel_tick)
-                logger.info(f"MANAS: Would execute circuit: {intent.circuit_to_execute}")
-                # For now, mark as success (actual execution TBD)
-                success = True
-                result = {"status": "circuit_queued", "circuit": intent.circuit_to_execute}
+                # 🔌 CABLE: Execute via CognitiveCircuitExecutor (OPUS-083)
+                logger.info(f"MANAS: Executing circuit: {intent.circuit_to_execute}")
+                try:
+                    from .circuit_executor import CognitiveCircuitExecutor
+
+                    executor = CognitiveCircuitExecutor(workspace=self._workspace)
+                    result = executor.execute_circuit(intent.circuit_to_execute)
+                    success = result.get("success", False)
+                except ImportError:
+                    logger.warning("CognitiveCircuitExecutor not available")
+                    result = {"error": "CircuitExecutor not available"}
+                    success = False
+                except Exception as exec_err:
+                    logger.error(f"Circuit execution failed: {exec_err}")
+                    result = {"error": str(exec_err)}
+                    success = False
             else:
                 logger.warning(f"No execution method for intent: {intent.id}")
                 result = {"error": "No execution method available"}
