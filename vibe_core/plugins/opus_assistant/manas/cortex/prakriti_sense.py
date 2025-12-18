@@ -91,6 +91,8 @@ from vibe_core.state.sync_holon import (
     WatcherConfig,
 )
 
+from .base import BaseSense
+
 if TYPE_CHECKING:
     from vibe_core.state.prakriti import Prakriti
 
@@ -149,7 +151,7 @@ class LobotomyReport:
         }
 
 
-class PrakritiSense:
+class PrakritiSense(BaseSense):
     """
     Das sechste Jnanendriya - MANAS unified state perception.
 
@@ -167,6 +169,9 @@ class PrakritiSense:
                 sense.heal(path.path)
     """
 
+    # OPUS-099: VEDA-4 auto-discovery
+    name = "prakriti_sense"
+
     def __init__(
         self,
         workspace: Optional[Path] = None,
@@ -183,8 +188,7 @@ class PrakritiSense:
             enable_watcher: Enable realtime file watching
             config: Configuration dict from manas.yaml
         """
-        self._workspace = workspace or Path.cwd()
-        self._config: Dict[str, Any] = config or {}  # OPUS-092: Config wiring
+        super().__init__(workspace, config)
         self._prakriti = prakriti
         self._sync_holon: Optional[StateSyncHolon] = None
         self._enable_watcher = enable_watcher
@@ -249,6 +253,15 @@ class PrakritiSense:
             total_plugins=len(discovered),
             total_paths=sum(len(infos) for infos in discovered.values()),
         )
+
+    def perceive(self, context: Optional[Dict[str, Any]] = None) -> GunaSummary:
+        """
+        OPUS-099: BaseSense interface implementation.
+
+        Wraps perceive_state() for SenseLoader compatibility.
+        """
+        refresh = context.get("refresh", False) if context else False
+        return self.perceive_state(refresh=refresh)
 
     def sense_lobotomy(self) -> LobotomyReport:
         """

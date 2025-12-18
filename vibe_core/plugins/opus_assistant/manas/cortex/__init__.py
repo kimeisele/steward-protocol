@@ -25,6 +25,7 @@ The cortex modules provide MANAS with interfaces to the external world:
 "The brain alone is not enough - it needs hands to act and ears to hear."
 """
 
+# OPUS-099: BaseSense (VEDA-4 auto-discovery)
 # OPUS-041: VAK (The Voice)
 # OPUS-052: AKASHA (The Cosmic Ether)
 from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
@@ -34,6 +35,7 @@ from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
     AkashaQuery,
     AkashaSync,
 )
+from vibe_core.plugins.opus_assistant.manas.cortex.base import BaseSense
 
 # DHARMA (Architecture Audit)
 from vibe_core.plugins.opus_assistant.manas.cortex.dharma import (
@@ -137,6 +139,8 @@ from vibe_core.plugins.opus_assistant.manas.cortex.veda import (
 )
 
 __all__ = [
+    # OPUS-099: BaseSense (VEDA-4 auto-discovery)
+    "BaseSense",
     # OPUS-041: VAK (The Voice)
     "ShellCortex",
     "ShellResult",

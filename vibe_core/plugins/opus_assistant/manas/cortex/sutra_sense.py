@@ -54,6 +54,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
+from .base import BaseSense
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
@@ -267,7 +269,7 @@ CODE_DIRECTORIES = [
 ]
 
 
-class SutraSense:
+class SutraSense(BaseSense):
     """
     The Thread Sense - Doc/Code Gap Detection for MANAS.
 
@@ -286,6 +288,9 @@ class SutraSense:
                 print(f"GAP: {gap.gap_type} - {gap.description}")
     """
 
+    # OPUS-099: VEDA-4 auto-discovery
+    name = "sutra_sense"
+
     def __init__(
         self,
         workspace: Optional[Path] = None,
@@ -298,8 +303,7 @@ class SutraSense:
             workspace: Workspace root (default: cwd)
             config: Optional config dict from config/manas.yaml (sutra_sense section)
         """
-        self._workspace = workspace or Path.cwd()
-        self._config = config or {}
+        super().__init__(workspace, config)
         self._gaps: List[DocCodeGap] = []
         self._harness_checks: Dict[str, HarnessCheck] = {}
 
@@ -374,6 +378,15 @@ class SutraSense:
             gaps_by_severity=gaps_by_severity,
             health_ratio=health,
         )
+
+    def perceive(self, context: Optional[Dict[str, Any]] = None) -> SutraSummary:
+        """
+        OPUS-099: BaseSense interface implementation.
+
+        Wraps perceive_gaps() for SenseLoader compatibility.
+        """
+        refresh = context.get("refresh", True) if context else True
+        return self.perceive_gaps(refresh=refresh)
 
     def get_gaps(self, severity: Optional[str] = None) -> List[DocCodeGap]:
         """Get all detected gaps, optionally filtered by severity."""
