@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from vibe_core.event_bus import EventBus
+from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
@@ -247,6 +248,21 @@ class CognitiveKernel(CognitiveCycle):
         # Core components
         self._memory = MemoryStore(workspace=self._workspace)
 
+        # 🎯 OPUS-106: VEDA-4 Fractal Loaders (Private Scope)
+        # OPUS has its own isolated view of capabilities - "As Above, So Below"
+        # These loaders are OPUS's private brain, not shared with the system
+        self._action_loader = ActionLoader(scope="opus_private")
+        self._sense_loader = SenseLoader(scope="opus_private")
+        self._analyzer_loader = AnalyzerLoader(scope="opus_private")
+        self._tool_loader = ToolLoader(scope="opus_private", root_path=self._workspace)
+
+        # Pre-load cortex modules (warm the cache)
+        self._action_loader.load()
+        self._sense_loader.load()
+        self._analyzer_loader.load()
+        self._tool_loader.load()
+        logger.info("🎯 OPUS-106: Fractal Loaders initialized (scope=opus_private)")
+
         # 🧠 SEMANTIC ENGINE: The "Brain" (Lazy Loaded)
         self._semantic_engine: Any = None
         self._init_semantic_engine()
@@ -356,6 +372,47 @@ class CognitiveKernel(CognitiveCycle):
     def has_intelligence(self) -> bool:
         """Check if MANAS has active semantic intelligence."""
         return self._semantic_engine is not None
+
+    # =========================================================================
+    # OPUS-106: VEDA-4 FRACTAL LOADER PROPERTIES
+    # =========================================================================
+
+    @property
+    def action_loader(self) -> ActionLoader:
+        """
+        OPUS's private ActionLoader (scope=opus_private).
+
+        Use this for fractal routing - OPUS's isolated view of actions.
+        """
+        return self._action_loader
+
+    @property
+    def sense_loader(self) -> SenseLoader:
+        """
+        OPUS's private SenseLoader (scope=opus_private).
+
+        Use this for fractal perception - OPUS's isolated view of senses.
+        """
+        return self._sense_loader
+
+    @property
+    def analyzer_loader(self) -> AnalyzerLoader:
+        """
+        OPUS's private AnalyzerLoader (scope=opus_private).
+
+        Use this for fractal analysis - OPUS's isolated view of analyzers.
+        """
+        return self._analyzer_loader
+
+    @property
+    def tool_loader(self) -> ToolLoader:
+        """
+        OPUS's private ToolLoader (scope=opus_private).
+
+        Use this for fractal tooling - OPUS's isolated view of cartridge tools.
+        Actions can access tools dynamically via this loader.
+        """
+        return self._tool_loader
 
     # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
