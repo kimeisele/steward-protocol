@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from .agent_protocol import AgentManifest, VibeAgent
+from .protocols.registry import ManifestRegistry
 from .scheduling import Task
 
 
@@ -82,28 +83,7 @@ class VibeLedger(ABC):
         pass
 
 
-class ManifestRegistry(ABC):
-    """Agent manifest registry interface"""
-
-    @abstractmethod
-    def register(self, manifest: AgentManifest) -> None:
-        """Register an agent manifest"""
-        pass
-
-    @abstractmethod
-    def lookup(self, agent_id: str) -> Optional[AgentManifest]:
-        """Look up manifest by agent_id"""
-        pass
-
-    @abstractmethod
-    def find_by_capability(self, capability: str) -> List[AgentManifest]:
-        """Find agents with a specific capability"""
-        pass
-
-    @abstractmethod
-    def list_all(self) -> List[AgentManifest]:
-        """List all registered manifests"""
-        pass
+# ManifestRegistry imported from .protocols.registry (canonical source - GAP-017 fix)
 
 
 class VibeKernel(ABC):

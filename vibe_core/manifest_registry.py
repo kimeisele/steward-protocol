@@ -7,8 +7,7 @@ Extracted from kernel_impl.py to reduce kernel size.
 import logging
 from typing import Dict, List, Optional
 
-from .kernel import ManifestRegistry
-from .protocols import AgentManifest
+from .protocols import AgentManifest, ManifestRegistry
 
 logger = logging.getLogger("MANIFEST_REGISTRY")
 
