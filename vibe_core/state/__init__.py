@@ -2,6 +2,7 @@
 vibe_core/state - Unified State Management (PRAKRITI)
 
 OPUS-009: The Repository IS the Mind
+OPUS-106: FORTRESS x2 - State + Knowledge Unification
 
 This module provides the unified state engine for the Steward Protocol,
 treating every Agent as a Commit, every Decision as a Branch, and
@@ -11,13 +12,34 @@ Three Layers:
 - STHULA (Physical): Git + Ledger + Files
 - PRANA (Runtime): Kernel state + Ephemeral
 - PURUSHA (Identity): Agent personas
+
+OPUS-106 Additions:
+- CognitiveWeaver: State ↔ Knowledge Bridge
+- UntotbarMergeEngine: Conflict healing
+- GunaClassifier: State Tri-Guna diagnosis
 """
 
+from .cognitive_weaver import (
+    CognitiveContext,
+    CognitiveWeaver,
+    WisdomConsultation,
+    get_cognitive_weaver,
+)
 from .ephemeral_state import EphemeralState, SessionContext, ThoughtEntry
 from .file_state import FileState
 from .git_state import GitState
+from .guna_classifier import (
+    GunaClassification,
+    GunaClassifier,
+    GunaThresholds,
+    SystemGunaReport,
+    TamasReason,
+)
 from .kernel_state import AgentSnapshot, KernelSnapshot, KernelState, QueueSnapshot
 from .ledger_state import LedgerHead, LedgerState, SyncEvent
+
+# OPUS-106: New components
+from .merge_engine import HealedConflict, MergeStrategy, UntotbarMergeEngine
 from .persona import AgentPersona, PersonaManager
 from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
 from .sync_holon import (
@@ -59,4 +81,19 @@ __all__ = [
     "PluginStateContract",
     "WatcherConfig",
     "GovernanceViolation",
+    # OPUS-106: UntotbarMergeEngine
+    "UntotbarMergeEngine",
+    "MergeStrategy",
+    "HealedConflict",
+    # OPUS-106: GunaClassifier
+    "GunaClassifier",
+    "GunaClassification",
+    "GunaThresholds",
+    "SystemGunaReport",
+    "TamasReason",
+    # OPUS-106: CognitiveWeaver (State ↔ Knowledge Bridge)
+    "CognitiveWeaver",
+    "CognitiveContext",
+    "WisdomConsultation",
+    "get_cognitive_weaver",
 ]
