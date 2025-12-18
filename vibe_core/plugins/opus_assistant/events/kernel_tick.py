@@ -1718,22 +1718,26 @@ class KernelTickHandler:
         - Recent observations for surrender language
         - File changes for TDD patterns
         """
-        import subprocess
+        import asyncio
 
         result = {"bhakti_type": "none", "karma_bonus": 0, "details": {}}
 
         try:
-            # Check recent commit messages for bhakti indicators
-            git_log = subprocess.run(
-                ["git", "log", "--oneline", "-10", "--format=%s"],
-                capture_output=True,
-                text=True,
-                timeout=5,
+            # Check recent commit messages for bhakti indicators (async, non-blocking)
+            process = await asyncio.create_subprocess_exec(
+                "git",
+                "log",
+                "--oneline",
+                "-10",
+                "--format=%s",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
                 cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
             )
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5.0)
 
-            if git_log.returncode == 0:
-                messages = git_log.stdout.strip().split("\n")
+            if process.returncode == 0:
+                messages = stdout.decode().strip().split("\n")
                 for msg in messages:
                     msg_lower = msg.lower()
                     # Refactoring = potential tapas

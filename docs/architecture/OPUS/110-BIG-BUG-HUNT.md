@@ -51,6 +51,8 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 | GAP-012 | Config | Missing config/roadmap.yaml | MEDIUM | FIXED (e78a4a1) |
 | GAP-013 | Config | Missing config/section_id.yaml | LOW | FIXED (e78a4a1) |
 | GAP-014 | MANAS | _persist() signature mismatch | CRITICAL | FIXED (9016a05) |
+| GAP-015 | Async | Blocking subprocess.run in async funcs | HIGH | FIXED (this session) |
+| GAP-016 | Async | Blocking file I/O in async funcs | HIGH | FIXED (this session) |
 
 ### OPEN ISSUES
 
@@ -58,7 +60,7 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 |----|------|-------|----------|--------|
 | GAP-004 | Docs | 13 OPUS files without @HARNESS | LOW | DEFERRED (Concept docs - see below) |
 | GAP-008 | Circuits | Circuits already exist in vibe_core/playbook/circuits/ | N/A | FALSE POSITIVE |
-| GAP-010 | Async | 157 async functions without await | MEDIUM | NEEDS REVIEW |
+| GAP-010 | Async | 190 async functions without await | LOW | ANALYZED (interface compliance, not bugs) |
 
 **Note on GAP-004:** The ONE-WORD VEDIC docs (SHUDDHI, VAJRA, etc.) are PRINCIPLES, not code wrappers.
 The harness generator assumes every doc has a code module. This is a design issue requiring
