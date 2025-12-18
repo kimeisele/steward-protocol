@@ -165,7 +165,7 @@ class TestIntentGenerator:
         assert gen._workspace == tmp_path
         assert len(gen._analyzers) > 0
 
-    def test_intent_generation_empty_context(self, tmp_path: Path):
+    async def test_intent_generation_empty_context(self, tmp_path: Path):
         """Intent generator should handle empty context."""
         from vibe_core.plugins.opus_assistant.manas.intent_generator import (
             IntentGenerator,
@@ -174,7 +174,7 @@ class TestIntentGenerator:
         gen = IntentGenerator(workspace=tmp_path)
 
         # With empty context and no git repo, should return empty or minimal intents
-        intents = gen.generate_intents({})
+        intents = await gen.generate_intents({})
 
         # Should not crash
         assert isinstance(intents, list)
