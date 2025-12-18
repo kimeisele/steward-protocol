@@ -1,8 +1,9 @@
 # OPUS-110: BIG BUG HUNT
 
-> **Status:** ACTIVE INVESTIGATION
+> **Status:** VERIFIED ALIVE
 > **Created:** 2024-12-18
 > **Mission:** Verify MANAS is truly alive, not a zombie
+> **Result:** MANAS THINKS! 3 intents generated.
 
 ## The Question
 
@@ -46,18 +47,22 @@ After OPUS-091 (LASAGNE) and Provider Fix - is the system actually working?
 | GAP-001 | Events | KernelTickHandler not wired in headless | CRITICAL | FIXED (OPUS-091) |
 | GAP-002 | Provider | OpenRouter key misdetected | CRITICAL | FIXED (86d971d) |
 | GAP-003 | Manifest | Ghost files in state_files | HIGH | FIXED (OPUS-096) |
+| GAP-011 | Config | Missing config/system.yaml | MEDIUM | FIXED (e78a4a1) |
+| GAP-012 | Config | Missing config/roadmap.yaml | MEDIUM | FIXED (e78a4a1) |
+| GAP-013 | Config | Missing config/section_id.yaml | LOW | FIXED (e78a4a1) |
+| GAP-014 | MANAS | _persist() signature mismatch | CRITICAL | FIXED (9016a05) |
 
 ### OPEN ISSUES
 
 | ID | Area | Issue | Severity | Status |
 |----|------|-------|----------|--------|
-| GAP-004 | Docs | 13 OPUS files without @HARNESS | MEDIUM | OPEN |
-| GAP-005 | Config | Missing config/roadmap.yaml | LOW | OPEN |
-| GAP-006 | Config | Missing config/section_id.yaml | LOW | OPEN |
-| GAP-007 | Config | Missing config/system.yaml | LOW | OPEN |
-| GAP-008 | Circuits | Missing circuits/doc_index_render.yaml | MEDIUM | OPEN |
-| GAP-009 | Circuits | Missing circuits/wiring_audit.yaml | MEDIUM | OPEN |
+| GAP-004 | Docs | 13 OPUS files without @HARNESS | LOW | DEFERRED (Concept docs - see below) |
+| GAP-008 | Circuits | Circuits already exist in vibe_core/playbook/circuits/ | N/A | FALSE POSITIVE |
 | GAP-010 | Async | 157 async functions without await | MEDIUM | NEEDS REVIEW |
+
+**Note on GAP-004:** The ONE-WORD VEDIC docs (SHUDDHI, VAJRA, etc.) are PRINCIPLES, not code wrappers.
+The harness generator assumes every doc has a code module. This is a design issue requiring
+semantic harnesses (OPUS-200 territory), not a quick fix.
 
 ### TECHNICAL DEBT (Not Blocking)
 
