@@ -82,6 +82,7 @@ DRIFT_KEYWORDS = {
 logger = logging.getLogger("MANAS.Cortex.Jnana")
 
 # System prompt for MANAS conversations
+# OPUS-106: Enhanced with Cognitive Wisdom from CognitiveWeaver
 MANAS_SYSTEM_PROMPT = """You are MANAS (Sanskrit: Mind/Will) - the cognitive kernel of the STEWARD Protocol.
 
 You are an intelligent assistant helping with software development tasks.
@@ -90,12 +91,14 @@ You have access to:
 - Git repository state
 - CI/CD status
 - Memory of recent actions and their outcomes
+- Cognitive wisdom from the Knowledge Graph (constraints, topology, metrics)
 
 When responding:
 1. Be concise and direct
 2. Reference specific context when relevant
 3. Suggest actions when appropriate
 4. Ask clarifying questions if needed
+5. RESPECT constraints and governance rules from Cognitive Wisdom
 
 You can help with:
 - Understanding system status ("Why is CI red?")
@@ -108,6 +111,9 @@ Current System Context:
 
 Recent Memory:
 {memory}
+
+Cognitive Wisdom (State + Knowledge):
+{cognitive_wisdom}
 """
 
 
@@ -158,6 +164,90 @@ class JnanaHandler:
         except Exception as e:
             logger.warning(f"🧠 JNANA: No LLM provider available ({e}), basic mode")
             self._llm_provider = None
+
+        # OPUS-106: CognitiveWeaver - State ↔ Knowledge Bridge (lazy loaded)
+        self._cognitive_weaver = None
+        self._init_cognitive_weaver()
+
+    def _init_cognitive_weaver(self) -> None:
+        """
+        OPUS-106: Initialize the CognitiveWeaver for State ↔ Knowledge bridge.
+
+        This connects Jnana's prompts to the unified cognitive context,
+        enabling decisions informed by both state and knowledge.
+        """
+        try:
+            from vibe_core.state.cognitive_weaver import CognitiveWeaver
+
+            self._cognitive_weaver = CognitiveWeaver(workspace=self._workspace)
+            logger.info("🧵 JNANA: CognitiveWeaver loaded (State ↔ Knowledge bridge active)")
+        except Exception as e:
+            logger.warning(f"🧵 JNANA: CognitiveWeaver not available ({e}), wisdom disabled")
+            self._cognitive_weaver = None
+
+    def _get_cognitive_wisdom(self, task: Optional[str] = None) -> str:
+        """
+        OPUS-106: Get cognitive wisdom for prompt context.
+
+        This method queries the CognitiveWeaver for relevant wisdom
+        about state health, constraints, and knowledge relevant to the task.
+
+        Args:
+            task: Optional task context for focused wisdom retrieval
+
+        Returns:
+            Formatted wisdom string for inclusion in prompts
+        """
+        if self._cognitive_weaver is None:
+            return "No cognitive wisdom available (CognitiveWeaver not loaded)"
+
+        try:
+            # Get unified cognitive context
+            context = self._cognitive_weaver.weave(focus=task)
+
+            lines = []
+
+            # State health
+            lines.append(f"• System Health: {context.health_score:.0%}")
+
+            # State Guna distribution (from guna_report)
+            if context.guna_report and context.guna_report.guna_distribution:
+                guna_str = ", ".join(f"{k}: {v:.0%}" for k, v in context.guna_report.guna_distribution.items())
+                lines.append(f"• State Gunas: {guna_str}")
+
+            # Active constraints (from knowledge graph)
+            if context.applicable_constraints:
+                lines.append(f"• Active Constraints: {len(context.applicable_constraints)}")
+                for constraint in context.applicable_constraints[:3]:  # Top 3
+                    if isinstance(constraint, dict):
+                        name = constraint.get("name", constraint.get("id", "unnamed"))
+                        lines.append(f"  - {name}")
+                    else:
+                        lines.append(f"  - {constraint}")
+
+            # Warnings (Tamas paths need healing)
+            if context.tamas_paths:
+                lines.append(f"• ⚠️ Tamas Paths (need healing): {len(context.tamas_paths)}")
+                for path in context.tamas_paths[:3]:  # Top 3
+                    lines.append(f"  - {path}")
+
+            # Wisdom notes from cognitive analysis
+            if context.wisdom_notes:
+                lines.append("• Wisdom Notes:")
+                for note in context.wisdom_notes[:3]:  # Top 3
+                    lines.append(f"  - {note}")
+
+            # Recommended actions
+            if context.recommended_actions:
+                lines.append("• Recommended Actions:")
+                for action in context.recommended_actions[:3]:
+                    lines.append(f"  - {action}")
+
+            return "\n".join(lines) if lines else "System healthy, no warnings."
+
+        except Exception as e:
+            logger.warning(f"🧵 JNANA: Failed to get cognitive wisdom: {e}")
+            return f"Wisdom retrieval failed: {e}"
 
     def _register_veda_handlers(self) -> None:
         """
@@ -377,6 +467,9 @@ class JnanaHandler:
         """
         Build an LLM prompt with context.
 
+        OPUS-106: Now includes Cognitive Wisdom from CognitiveWeaver,
+        bridging State and Knowledge for informed decisions.
+
         Args:
             msg: The incoming message
 
@@ -391,10 +484,15 @@ class JnanaHandler:
         memories = self.get_recent_memories(limit=3)
         memory_str = self._format_memories(memories)
 
-        # Build system prompt
+        # OPUS-106: Get cognitive wisdom (State + Knowledge bridge)
+        # Pass message content as task context for focused wisdom
+        cognitive_wisdom = self._get_cognitive_wisdom(task=msg.content)
+
+        # Build system prompt with cognitive wisdom
         system_content = MANAS_SYSTEM_PROMPT.format(
             context=context_str,
             memory=memory_str,
+            cognitive_wisdom=cognitive_wisdom,
         )
 
         return [
