@@ -154,6 +154,36 @@ class PulseTransaction:
         """Legacy method: add mutation (deprecated, use add_mutation)."""
         return self.add_mutation(mutation)
 
+    def commit(self) -> Tuple[int, int]:
+        """
+        Execute all mutations and return (success_count, failure_count).
+
+        Backward compatibility for tests. Uses handlers registered via
+        _register_default_handlers() or falls back to built-in handlers.
+        """
+        success = 0
+        failure = 0
+
+        for mutation in self.mutations:
+            handler = self._handlers.get(mutation.action)
+            if handler:
+                try:
+                    handler(mutation)
+                    success += 1
+                except Exception as e:
+                    logger.error(f"Handler failed for {mutation.action}: {e}")
+                    self.execution_errors.append(str(e))
+                    failure += 1
+            else:
+                logger.warning(f"No handler for action: {mutation.action}")
+                failure += 1
+
+        self.status = "committed" if failure == 0 else "partial"
+        return success, failure
+
+    # Handler registry for backward compatibility
+    _handlers: Dict[str, Any] = field(default_factory=dict)
+
 
 # =============================================================================
 # ORCHESTRATOR
@@ -173,10 +203,12 @@ class PranaOrchestrator(CognitiveCycle):
 
     def __init__(
         self,
-        plugin_loader: Any,
-        ledger: Any,
+        plugin_loader: Any = None,
+        ledger: Any = None,
         trace: Optional[UnifiedTrace] = None,
         event_bus: Optional[EventBus] = None,
+        *,
+        kernel: Any = None,  # Backward compatibility for tests
     ):
         """
         Initialize Prana Orchestrator.
@@ -186,10 +218,17 @@ class PranaOrchestrator(CognitiveCycle):
             ledger: Persistence layer for state commit
             trace: Observability (UnifiedTrace)
             event_bus: System events (EventBus)
+            kernel: (DEPRECATED) Backward compatibility - extracts plugin_loader/ledger from kernel
         """
         super().__init__()
-        self.plugin_loader = plugin_loader
-        self.ledger = ledger
+
+        # Backward compatibility: extract from kernel if provided
+        if kernel is not None:
+            self.plugin_loader = getattr(kernel, "plugin_loader", None)
+            self.ledger = getattr(kernel, "ledger", None) or getattr(kernel, "_ledger", None)
+        else:
+            self.plugin_loader = plugin_loader
+            self.ledger = ledger
         self.logger = logging.getLogger("PRANA_ORCHESTRATOR")
 
         # Configuration
@@ -199,6 +238,43 @@ class PranaOrchestrator(CognitiveCycle):
         # Phase A Integration
         if trace and event_bus:
             self.setup(trace, event_bus, steward_context=None)
+
+    # ========================================================================
+    # BACKWARD COMPATIBILITY: DEFAULT HANDLERS
+    # ========================================================================
+
+    def _register_default_handlers(self, transaction: PulseTransaction) -> None:
+        """
+        Register default mutation handlers for backward compatibility.
+
+        Args:
+            transaction: PulseTransaction to register handlers on
+        """
+        from pathlib import Path
+
+        def update_doc_handler(mutation: StateMutation) -> None:
+            """Handle update_doc mutations by writing to filesystem."""
+            content = mutation.payload.get("content", "")
+            target_path = Path(mutation.target)
+            target_path.write_text(content)
+            logger.info(f"Updated {mutation.target} ({len(content)} chars)")
+
+        def decay_karma_handler(mutation: StateMutation) -> None:
+            """Handle decay_karma mutations."""
+            logger.info(f"Karma decay for {mutation.target}: {mutation.payload}")
+
+        def log_observation_handler(mutation: StateMutation) -> None:
+            """Handle log_observation mutations."""
+            logger.info(f"Observation: {mutation.payload}")
+
+        # Register handlers on the transaction
+        transaction._handlers = {
+            "update_doc": update_doc_handler,
+            "decay_karma": decay_karma_handler,
+            "log_observation": log_observation_handler,
+            "refresh_state": lambda m: logger.info(f"Refresh state: {m.target}"),
+            "quarantine_plugin": lambda m: logger.warning(f"Quarantine: {m.target}"),
+        }
 
     # ========================================================================
     # COGNITIVECYCLE CONFIGURATION

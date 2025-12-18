@@ -1,7 +1,7 @@
 # OPUS-081: RUNTIME STATE MANIFEST
 
 **Scope:** GitState unterscheidet SOURCE CODE von RUNTIME STATE
-**Status:** ✅ IMPLEMENTED
+**Status:** ✅ IMPLEMENTED (Enhanced 2025-12-18)
 
 ---
 
@@ -9,33 +9,49 @@
 
 ```
 KERNEL TICK → renders OPUS.md
+HEARTBEAT → commits ALL files (including source!)
 STOP HOOK → is_dirty() = true → blocks exit
-INFINITE LOOP
+INFINITE LOOP + SOURCE CODE POLLUTION
 ```
 
-**Root Cause:** `GitState.is_dirty()` unterscheidet nicht zwischen:
-- **SOURCE CODE** (menschlich geschrieben, muss committed werden)
-- **RUNTIME STATE** (kernel-generiert, ändert sich ständig)
+**Root Cause:** System unterschied nicht zwischen:
+- **SOURCE CODE** (menschlich geschrieben, muss manuell committed werden)
+- **RUNTIME STATE** (kernel-generiert, auto-commit erlaubt)
 
 ---
 
-## Die Lösung
+## Die Lösung: Single Source of Truth
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  scripts/git_gatekeeper.py                          │
-│  → Exit 0 if clean, Exit 1 if source dirty          │
-├─────────────────────────────────────────────────────┤
-│  GitState.is_source_dirty()                         │
-│  → Excludes runtime state from dirty check          │
-├─────────────────────────────────────────────────────┤
-│  GitState._get_runtime_state_patterns()             │
-│  → Scans plugin manifests for generated_outputs     │
-├─────────────────────────────────────────────────────┤
-│  Plugin Manifests                                   │
-│  → "generated_outputs": { "files": [...] }          │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│               SINGLE SOURCE OF TRUTH                        │
+├─────────────────────────────────────────────────────────────┤
+│  Plugin Manifests (Deklaration)                             │
+│  └─> vibe_core/plugins/*/manifest.json                      │
+│      └─> "generated_outputs": { "files": [...] }            │
+│                                                             │
+│  GitState (Aggregator)                                      │
+│  └─> _get_runtime_state_patterns()  ← reads all manifests   │
+│  └─> get_dirty_runtime_files()      ← for Heartbeat         │
+│  └─> get_dirty_source_files()       ← for debugging         │
+│  └─> is_source_dirty()              ← for Stop Hook         │
+│                                                             │
+│  Heartbeat (Consumer)                                       │
+│  └─> _chronicle_commit()                                    │
+│      └─> GitState.get_dirty_runtime_files()                 │
+│      └─> Commits ONLY: OPUS.md, session.json, etc.          │
+│      └─> NEVER: *.py, *.yaml, etc.                          │
+│                                                             │
+│  Stop Hook (Consumer)                                       │
+│  └─> .claude/hooks/stop.sh → scripts/git_gatekeeper.py      │
+│      └─> GitState.is_source_dirty()                         │
+│      └─> Blocks only if source code uncommitted             │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+**SKALIERBAR:** Neues Plugin? Nur `generated_outputs` zum manifest.json hinzufügen.
+
+**KEINE PARALLELSTRUKTUREN:** Alles fließt aus Plugin Manifests.
 
 ---
 
@@ -43,13 +59,24 @@ INFINITE LOOP
 
 <!-- @HARNESS
 files:
+  # === PLUGIN MANIFESTS (Single Source of Truth) ===
   - path: vibe_core/plugins/interface/manifest.json
     required: true
   - path: vibe_core/plugins/opus_assistant/manifest.json
     required: true
+  - path: vibe_core/plugins/lifecycle/manifest.json
+    required: true
+
+  # === GITSTATE (Aggregator) ===
   - path: vibe_core/state/git_state.py
     required: true
+
+  # === CONSUMERS ===
   - path: scripts/git_gatekeeper.py
+    required: true
+  - path: scripts/heartbeat.py
+    required: true
+  - path: .claude/hooks/stop.sh
     required: true
 
 wiring:
@@ -58,26 +85,34 @@ wiring:
     in: vibe_core/plugins/interface/manifest.json
   - pattern: "generated_outputs"
     in: vibe_core/plugins/opus_assistant/manifest.json
+  - pattern: "generated_outputs"
+    in: vibe_core/plugins/lifecycle/manifest.json
 
   # === PHASE 2: GitState Aggregation ===
   - pattern: "_get_runtime_state_patterns"
     in: vibe_core/state/git_state.py
   - pattern: "def is_source_dirty"
     in: vibe_core/state/git_state.py
-  - pattern: "get_dirty_source_files"
+  - pattern: "def get_dirty_source_files"
+    in: vibe_core/state/git_state.py
+  - pattern: "def get_dirty_runtime_files"
     in: vibe_core/state/git_state.py
 
-  # === PHASE 3: Gatekeeper ===
+  # === PHASE 3: Gatekeeper (Stop Hook) ===
   - pattern: "is_source_dirty"
     in: scripts/git_gatekeeper.py
   - pattern: "get_dirty_source_files"
     in: scripts/git_gatekeeper.py
 
-  # === FOUNDATIONS ===
-  - pattern: "VISNU_PROTECTED"
-    in: vibe_core/state/git_state.py
-  - pattern: "cognitive logging"
-    in: vibe_core/state/git_state.py
+  # === PHASE 4: Heartbeat (Auto-Commit) ===
+  - pattern: "get_dirty_runtime_files"
+    in: scripts/heartbeat.py
+  - pattern: "OPUS-081"
+    in: scripts/heartbeat.py
+
+  # === PHASE 5: Stop Hook Delegation ===
+  - pattern: "git_gatekeeper.py"
+    in: .claude/hooks/stop.sh
 
 tests:
   - tests/state/test_git_state.py
@@ -88,16 +123,57 @@ tests:
 
 ## Usage
 
+### Adding Runtime Files to a New Plugin
+
+```json
+// vibe_core/plugins/my_plugin/manifest.json
+{
+  "name": "my_plugin",
+  "generated_outputs": {
+    "_comment": "OPUS-081: Files generated by this plugin (RUNTIME STATE)",
+    "state_files": [
+      "my_plugin_state.json",
+      ".my_plugin_cache/*.json"
+    ]
+  }
+}
+```
+
+### Testing the System
+
 ```bash
+# Check which files are runtime vs source
+python3 << 'EOF'
+from vibe_core.state.git_state import GitState
+from pathlib import Path
+
+git = GitState(Path('.'))
+print('Runtime files:', git.get_dirty_runtime_files())
+print('Source files:', git.get_dirty_source_files())
+print('Source dirty:', git.is_source_dirty())
+EOF
+
 # Test gatekeeper directly
 python scripts/git_gatekeeper.py
+echo "Exit code: $?"
+```
 
-# Stop hook delegation (in ~/.claude/stop-hook-git-check.sh)
-GATEKEEPER="$REPO_ROOT/scripts/git_gatekeeper.py"
-if [[ -f "$GATEKEEPER" ]]; then
-    python3 "$GATEKEEPER"
-    exit $?
-fi
+---
+
+## Evidence
+
+```
+# 2025-12-18 Test Results:
+
+Dirty runtime files:
+  vibe_core/plugins/opus_assistant/.opus_state/session.json
+  vibe_core/plugins/opus_assistant/.opus_state/syscalls.jsonl
+
+Dirty source files:
+  scripts/heartbeat.py
+  vibe_core/state/git_state.py
+
+is_source_dirty: True
 ```
 
 ---
