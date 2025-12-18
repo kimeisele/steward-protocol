@@ -37,6 +37,7 @@ from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.state.cognitive_weaver import CognitiveWeaver
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
@@ -288,6 +289,10 @@ class CognitiveKernel(CognitiveCycle):
         # Inject engine if available
         if self._sutra_sense and self._semantic_engine:
             self._sutra_sense.inject_semantic_engine(self._semantic_engine)
+
+        # 🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge (OPUS-106)
+        self._cognitive_weaver: Optional["CognitiveWeaver"] = None
+        self._init_cognitive_weaver()
 
         # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
         shiva_config = self._full_config.get("shiva", {})
@@ -848,6 +853,126 @@ class CognitiveKernel(CognitiveCycle):
             }
         except Exception as e:
             logger.debug(f"📜 SUTRA SENSE: Could not get summary: {e}")
+            return None
+
+    # =========================================================================
+    # 🧵 COGNITIVE WEAVER: STATE ↔ KNOWLEDGE BRIDGE (OPUS-106)
+    # =========================================================================
+
+    def _init_cognitive_weaver(self) -> None:
+        """
+        Initialize Cognitive Weaver - the State ↔ Knowledge Bridge.
+
+        OPUS-106: "Gedächtnis ohne Wissen ist blind. Wissen ohne Gedächtnis ist vergesslich."
+
+        This provides unified access to:
+        - State Layer (Prakriti, StateSyncHolon) - What MANAS REMEMBERS
+        - Knowledge Layer (UnifiedKnowledgeGraph) - What MANAS KNOWS
+
+        The Cognitive Weaver enables MANAS to make intelligent decisions
+        that combine historical state with conceptual knowledge.
+        """
+        try:
+            from vibe_core.state.cognitive_weaver import CognitiveWeaver
+
+            self._cognitive_weaver = CognitiveWeaver(workspace=self._workspace)
+            # Boot diagnosis
+            diagnosis = self._cognitive_weaver.diagnose()
+            health = diagnosis.get("unified", {}).get("overall_health", 0)
+            logger.info(
+                f"🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge initialized - Health: {health:.0%}, Weaver Active: True"
+            )
+        except Exception as e:
+            logger.warning(f"🧵 COGNITIVE WEAVER: Could not initialize: {e}")
+            self._cognitive_weaver = None
+
+    def inject_cognitive_weaver(self, weaver: "CognitiveWeaver") -> None:
+        """
+        Inject the Cognitive Weaver for unified state + knowledge access.
+
+        OPUS-106: This enables MANAS to perceive BOTH state and knowledge
+        as ONE unified consciousness.
+
+        Args:
+            weaver: CognitiveWeaver instance
+        """
+        self._cognitive_weaver = weaver
+        logger.info("🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge injected")
+
+    def get_cognitive_context(self, focus: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Get unified cognitive context combining state + knowledge.
+
+        OPUS-106: This is the "perception" method - what MANAS sees when
+        it looks at the unified state of consciousness.
+
+        Args:
+            focus: Optional focus area (e.g., "governance", "state")
+
+        Returns:
+            Dict with unified context or None if weaver unavailable
+        """
+        if not self._cognitive_weaver:
+            return None
+
+        try:
+            context = self._cognitive_weaver.weave(focus=focus)
+            return {
+                "health_score": context.health_score,
+                "tamas_count": len(context.tamas_paths),
+                "dirty_count": len(context.dirty_paths),
+                "wisdom_notes": context.wisdom_notes,
+                "recommended_actions": context.recommended_actions,
+                "prompt_context": context.to_prompt_context(),
+            }
+        except Exception as e:
+            logger.debug(f"🧵 COGNITIVE WEAVER: Could not weave context: {e}")
+            return None
+
+    def consult_knowledge(self, action: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Consult knowledge before taking an action.
+
+        OPUS-106: Before MANAS acts, it can ask the knowledge graph:
+        - Is this action allowed?
+        - What constraints apply?
+        - What authority is required?
+
+        Args:
+            action: The action being considered
+            context: Context about the action
+
+        Returns:
+            Consultation result or None if unavailable
+        """
+        if not self._cognitive_weaver:
+            return None
+
+        try:
+            consultation = self._cognitive_weaver.consult(action, context)
+            return {
+                "allowed": consultation.allowed,
+                "constraints_violated": consultation.constraints_violated,
+                "authority_required": consultation.authority_required,
+                "recommendation": consultation.recommendation,
+            }
+        except Exception as e:
+            logger.debug(f"🧵 COGNITIVE WEAVER: Could not consult knowledge: {e}")
+            return None
+
+    def get_cognitive_diagnosis(self) -> Optional[Dict[str, Any]]:
+        """
+        Get full system diagnosis from Cognitive Weaver.
+
+        Returns combined state + knowledge health check.
+        """
+        if not self._cognitive_weaver:
+            return None
+
+        try:
+            return self._cognitive_weaver.diagnose()
+        except Exception as e:
+            logger.debug(f"🧵 COGNITIVE WEAVER: Could not diagnose: {e}")
             return None
 
     # =========================================================================
