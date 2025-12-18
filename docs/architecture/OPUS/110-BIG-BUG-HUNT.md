@@ -167,6 +167,34 @@ tests:
 
 ---
 
+## Continuous Gap Hunting (OPUS-110)
+
+**NEW:** GAP_HUNT circuit created for continuous architecture gap detection.
+
+```yaml
+# vibe_core/plugins/opus_assistant/circuits/gap_hunt.yaml
+triggers:
+  - HOURLY_PULSE      # Every heartbeat
+  - GIT_COMMIT_COMPLETE  # After code changes
+  - OPUS.GAP_HUNT_REQUESTED  # Manual trigger
+
+flow:
+  perceive_gaps → check_severity → generate_intents → log_findings → persist
+```
+
+**Gap Categories:**
+- **doc_gaps**: Missing @HARNESS, stale docs
+- **test_gaps**: Code without tests
+- **wiring_gaps**: Broken cables, stubs
+- **principle_gaps**: Semantic harness violations
+
+**Manual trigger:**
+```bash
+envoy run-circuit GAP_HUNT --mode deep --limit 10
+```
+
+---
+
 ## Next Action
 
 **RUN THE HUNT:** Execute heartbeat in debug mode and trace the full path:

@@ -1,0 +1,283 @@
+# 🔍 GAP HUNT CIRCUIT - Continuous Architecture Gap Detection
+# OPUS-110: BIG BUG HUNT - Automated gap detection via SutraSense
+#
+# Triggered by: HOURLY_PULSE events (from heartbeat.py)
+# Flow: Perceive gaps → Prioritize → Generate intents → Log findings
+#
+# This circuit makes MANAS continuously hunt for:
+# - Documentation gaps (docs without harnesses)
+# - Code gaps (code without tests)
+# - Wiring gaps (broken cables)
+# - Semantic harness violations (principles not upheld)
+
+circuit:
+  id: GAP_HUNT
+  name: Gap Hunt (OPUS-110)
+  description: Continuous architecture gap detection via SutraSense
+  domain: OPUS
+  version: "1.0.0"
+  author: "MANAS (BIG BUG HUNT)"
+  entry_state: "perceive_gaps"
+
+  # Event triggers
+  triggers:
+    - event: HOURLY_PULSE
+      description: Run on every heartbeat pulse
+    - event: OPUS.GAP_HUNT_REQUESTED
+      description: Manual trigger for immediate hunt
+    - event: GIT_COMMIT_COMPLETE
+      description: Hunt after code changes
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+    - "sutra_sense is initialized"
+
+  # Input Schema
+  input:
+    mode:
+      type: string
+      enum: ["quick", "deep", "semantic"]
+      default: "quick"
+    limit:
+      type: integer
+      default: 5
+      description: Max intents to generate per hunt
+    focus_area:
+      type: string
+      enum: ["all", "docs", "tests", "wiring", "principles"]
+      default: "all"
+
+  states:
+    # ============================================================
+    # PHASE 1: PERCEIVE GAPS via SutraSense
+    # ============================================================
+    perceive_gaps:
+      name: "Perceive Gaps"
+      description: "Use SutraSense third eye to detect doc/code gaps"
+      state_var: "gap_summary"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.perceive_sutra_gaps"
+          params:
+            refresh: true
+            include_semantic: "{{ mode == 'semantic' }}"
+        - action_type: EMIT_EVENT
+          target: "opus.gap_hunt_started"
+          params:
+            circuit: "GAP_HUNT"
+            mode: "{{ mode }}"
+            timestamp: "{{ now }}"
+      on_success: check_gap_severity
+      on_failure: log_perceive_error
+
+    # ============================================================
+    # PHASE 2: CHECK GAP SEVERITY
+    # ============================================================
+    check_gap_severity:
+      name: "Check Gap Severity"
+      description: "Determine if gaps need immediate attention"
+      state_var: "severity_check"
+      actions:
+        - action_type: CHECK_STATE
+          target: "gap_summary.health_ratio"
+          params:
+            expected_above: 0.8  # If health < 80%, prioritize
+      on_success: log_healthy_status
+      on_failure: generate_gap_intents
+
+    log_healthy_status:
+      name: "Log Healthy Status"
+      description: "System is healthy, just log summary"
+      state_var: "logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "Gap Hunt: System healthy ({{ gap_summary.health_ratio | percent }})"
+            source: "gap_hunt"
+            context:
+              total_docs: "{{ gap_summary.total_docs }}"
+              gaps_found: "{{ gap_summary.gaps_found }}"
+      on_success: COMPLETE
+      on_failure: COMPLETE
+
+    # ============================================================
+    # PHASE 3: GENERATE GAP INTENTS
+    # ============================================================
+    generate_gap_intents:
+      name: "Generate Gap Intents"
+      description: "Create intents for highest-priority gaps"
+      state_var: "generated_intents"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.generate_sutra_intents"
+          params:
+            limit: "{{ limit }}"
+            focus_area: "{{ focus_area }}"
+            severity_filter: ["critical", "high"]
+        - action_type: EMIT_EVENT
+          target: "opus.gap_intents_generated"
+          params:
+            count: "{{ generated_intents | length }}"
+            circuit: "GAP_HUNT"
+      on_success: log_hunt_findings
+      on_failure: log_generate_error
+
+    # ============================================================
+    # PHASE 4: LOG FINDINGS TO OPUS.md
+    # ============================================================
+    log_hunt_findings:
+      name: "Log Hunt Findings"
+      description: "Record gap hunt findings to OPUS.md observations"
+      state_var: "findings_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Gap Hunt: {{ gap_summary.gaps_found }} gaps found, {{ generated_intents | length }} intents generated"
+            source: "gap_hunt"
+            context:
+              health_ratio: "{{ gap_summary.health_ratio }}"
+              top_gaps: "{{ gap_summary.top_gaps | slice(0, 3) }}"
+              intents_generated: "{{ generated_intents | map('title') | list }}"
+        - action_type: STORE_EPHEMERAL
+          target: "opus.last_gap_hunt"
+          params:
+            value:
+              timestamp: "{{ now }}"
+              gaps_found: "{{ gap_summary.gaps_found }}"
+              intents_generated: "{{ generated_intents | length }}"
+              health_ratio: "{{ gap_summary.health_ratio }}"
+            ttl_seconds: 7200  # Keep for 2 hours
+            tags: ["opus", "gap_hunt", "sutra"]
+      on_success: persist_intents
+      on_failure: log_log_error
+
+    # ============================================================
+    # PHASE 5: PERSIST INTENTS TO BUFFER
+    # ============================================================
+    persist_intents:
+      name: "Persist Intents"
+      description: "Add generated intents to MANAS intent buffer"
+      state_var: "persisted"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "manas.add_intents_to_buffer"
+          params:
+            intents: "{{ generated_intents }}"
+            source: "gap_hunt"
+      on_success: COMPLETE
+      on_failure: COMPLETE  # Don't fail circuit if persistence fails
+
+    # ============================================================
+    # TERMINAL STATES
+    # ============================================================
+    COMPLETE:
+      name: "Gap Hunt Complete"
+      description: "Hunt completed successfully"
+      terminal: true
+      result:
+        status: "success"
+        gaps_found: "{{ gap_summary.gaps_found | default(0) }}"
+        intents_generated: "{{ generated_intents | length | default(0) }}"
+        health_ratio: "{{ gap_summary.health_ratio | default(1.0) }}"
+
+    # ============================================================
+    # ERROR STATES
+    # ============================================================
+    log_perceive_error:
+      name: "Perceive Error"
+      description: "Failed to perceive gaps"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Gap Hunt: Failed to perceive - {{ error | default('Unknown') }}"
+            source: "gap_hunt"
+      result:
+        status: "failed"
+        phase: "perceive"
+        error: "{{ error }}"
+
+    log_generate_error:
+      name: "Generate Error"
+      description: "Failed to generate intents"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Gap Hunt: Intent generation failed - {{ error | default('Unknown') }}"
+            source: "gap_hunt"
+      result:
+        status: "partial"
+        phase: "generate"
+        gaps_found: "{{ gap_summary.gaps_found | default(0) }}"
+
+    log_log_error:
+      name: "Logging Error"
+      description: "Failed to log findings"
+      terminal: true
+      result:
+        status: "partial"
+        phase: "log"
+        gaps_found: "{{ gap_summary.gaps_found | default(0) }}"
+        intents_generated: "{{ generated_intents | length | default(0) }}"
+
+# ============================================================
+# GAP CATEGORIES (for semantic hunting)
+# ============================================================
+gap_categories:
+  doc_gaps:
+    description: "Documentation missing or stale"
+    patterns:
+      - "OPUS docs without @HARNESS"
+      - "New modules without docstrings"
+      - "Changed functions with stale docs"
+    priority: high
+
+  test_gaps:
+    description: "Code without test coverage"
+    patterns:
+      - "New classes without test files"
+      - "Modified functions without updated tests"
+    priority: high
+
+  wiring_gaps:
+    description: "Broken connections or stubs"
+    patterns:
+      - "NotImplementedError in production code"
+      - "Missing kernel injection"
+      - "Unhandled event types"
+    priority: critical
+
+  principle_gaps:
+    description: "Semantic harness violations"
+    patterns:
+      - "SHUDDHI: Boot without verification"
+      - "VAJRA: Operations not logged"
+      - "SATYA: Silent test failures"
+      - "AMRITA: Brain state not persisted"
+    priority: high
+
+# ============================================================
+# INVOCATION EXAMPLES
+# ============================================================
+#
+# Quick hunt (default):
+#   triggered by HOURLY_PULSE automatically
+#
+# Deep hunt:
+#   envoy run-circuit GAP_HUNT --mode deep --limit 10
+#
+# Semantic principle check:
+#   envoy run-circuit GAP_HUNT --mode semantic --focus_area principles
+#
+# Focus on docs only:
+#   envoy run-circuit GAP_HUNT --focus_area docs
