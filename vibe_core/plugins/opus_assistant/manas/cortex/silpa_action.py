@@ -177,8 +177,8 @@ class SilpaAction(BaseAction):
         # Analyze what tests could be generated
         analysis = {
             "target_file": str(target_file),
-            "existing_tests": test_result.passed + test_result.failed,
-            "test_coverage_exists": test_result.passed > 0,
+            "existing_tests": test_result.tests_passed + test_result.tests_failed,
+            "test_coverage_exists": test_result.tests_passed > 0,
             "suggestion": "Use SILPA refactoring to generate missing tests",
         }
 
