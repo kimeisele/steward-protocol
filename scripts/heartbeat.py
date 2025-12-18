@@ -310,7 +310,10 @@ class HeartbeatEngine:
         """
         OPUS-091: Seal changes in git history using Chronicle Cartridge.
 
-        Replaces the old system_chronicle Plugin with direct GitTools call.
+        OPUS-081 ENHANCED: Only commits RUNTIME STATE files, not source code.
+        Uses GitState.get_dirty_runtime_files() which reads plugin manifests
+        to determine which files are runtime state.
+
         GPG signing is configurable via config/prana.yaml.
 
         RESILIENCE: Gracefully degrades GPG signing in CI environments where keys
@@ -341,22 +344,36 @@ class HeartbeatEngine:
 
             logger.info("📜 Chronicle: Checking repository status...")
 
+            # OPUS-081: Use GitState to get ONLY runtime files
+            # This prevents Heartbeat from committing source code changes
+            runtime_files = []
+            try:
+                from vibe_core.state.git_state import GitState
+
+                git_state = GitState(self.project_root)
+                runtime_files = git_state.get_dirty_runtime_files()
+
+                if not runtime_files:
+                    logger.debug("📝 Chronicle: No runtime state changes to commit")
+                    return
+
+                logger.info(f"📜 Chronicle: Found {len(runtime_files)} runtime files to commit")
+                for f in runtime_files[:5]:
+                    logger.debug(f"   • {f}")
+                if len(runtime_files) > 5:
+                    logger.debug(f"   ... and {len(runtime_files) - 5} more")
+
+            except ImportError as git_err:
+                # Fallback to old behavior if GitState not available
+                logger.warning(f"⚠️  Chronicle: GitState not available ({git_err}), using legacy behavior")
+                tools = GitTools()
+                status = tools.get_status()
+                if not status.get("dirty"):
+                    logger.debug("📝 Chronicle: No changes to commit")
+                    return
+                runtime_files = None  # Will commit all (legacy)
+
             tools = GitTools()
-            status = tools.get_status()
-
-            if not status.get("success"):
-                logger.warning("⚠️  Chronicle: Could not get git status")
-                return
-
-            # Only commit if dirty (configurable)
-            commit_only_if_dirty = chronicle_config.get("commit_only_if_dirty", True)
-            if commit_only_if_dirty and not status.get("dirty"):
-                logger.debug("📝 Chronicle: No changes to commit")
-                return
-
-            # Git is dirty - create commit
-            files_changed = status.get("files_changed", [])
-            logger.info(f"📜 Chronicle: Found {len(files_changed)} changed files. Sealing history...")
 
             # Get config values
             gpg_sign = chronicle_config.get("gpg_sign_commits", True)
@@ -375,9 +392,10 @@ class HeartbeatEngine:
                     )
                     gpg_sign = False
 
+            # OPUS-081: Commit ONLY runtime files (not source code)
             commit_result = tools.seal_history(
                 message=f"{commit_prefix} System auto-save",
-                files=None,  # Commit all staged (or all modified if nothing staged)
+                files=runtime_files,  # Only runtime files, not all!
                 sign=gpg_sign,  # Configurable GPG signing (with CI fallback)
             )
 
