@@ -900,7 +900,145 @@
       "context": {},
       "feedback": null,
       "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+      "timestamp": "2025-12-18T21:56:58.892744",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "docs/architecture/OPUS/096-STATE-SYNC-HOLON-WEAVER.md",
+        "code_path": "vibe_core/state/weaver.py",
+        "description": "Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe_core/state/weaver.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_harness",
+      "intent_description": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+      "timestamp": "2025-12-18T21:56:58.900475",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_harness",
+        "severity": "medium",
+        "doc_path": "docs/architecture/OPUS/056-SHUDDHI.md",
+        "code_path": null,
+        "description": "Doc 056-SHUDDHI.md has no @HARNESS block",
+        "suggested_action": "Add @HARNESS block with file references and wiring patterns"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "harness_broken",
+      "intent_description": "Fix broken @HARNESS in 008-PRAKRITI-PROTOTYPE",
+      "timestamp": "2025-12-18T21:56:58.906851",
+      "outcome": "failed",
+      "context": {
+        "opus_file": "/home/user/steward-protocol/docs/architecture/OPUS/008-PRAKRITI-PROTOTYPE.md",
+        "files_missing": [
+          "vibe_core/plugins/interface/renderers/opus/opus_renderer.py"
+        ],
+        "tests_missing": [],
+        "wiring_broken": [
+          "vibe_core/state/git_state.py"
+        ],
+        "quality_score": 0.8333333333333334,
+        "action": "fix_harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+      "timestamp": "2025-12-18T21:58:07.355080",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "docs/architecture/OPUS/096-STATE-SYNC-HOLON-WEAVER.md",
+        "code_path": "vibe_core/state/weaver.py",
+        "description": "Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe_core/state/weaver.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_harness",
+      "intent_description": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+      "timestamp": "2025-12-18T21:58:07.361924",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_harness",
+        "severity": "medium",
+        "doc_path": "docs/architecture/OPUS/056-SHUDDHI.md",
+        "code_path": null,
+        "description": "Doc 056-SHUDDHI.md has no @HARNESS block",
+        "suggested_action": "Add @HARNESS block with file references and wiring patterns"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "semantic_gap_test",
+      "intent_description": "Create tests for MANAS cognitive kernel",
+      "timestamp": "2025-12-18T21:58:07.369489",
+      "outcome": "failed",
+      "context": {
+        "plugin": "opus_assistant",
+        "untested_files": [
+          "cognitive_kernel.py",
+          "intent_generator.py",
+          "memory_store.py",
+          "analyzers/ci_monitor_analyzer.py",
+          "analyzers/contract_analyzer.py",
+          "analyzers/doc_harness_analyzer.py",
+          "analyzers/pratyaya_analyzer.py",
+          "analyzers/semantic_analyzer.py"
+        ],
+        "type": "manas"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+      "timestamp": "2025-12-18T21:58:33.101125",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "docs/architecture/OPUS/096-STATE-SYNC-HOLON-WEAVER.md",
+        "code_path": "vibe_core/state/weaver.py",
+        "description": "Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe_core/state/weaver.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_harness",
+      "intent_description": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+      "timestamp": "2025-12-18T21:58:33.108190",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_harness",
+        "severity": "medium",
+        "doc_path": "docs/architecture/OPUS/056-SHUDDHI.md",
+        "code_path": null,
+        "description": "Doc 056-SHUDDHI.md has no @HARNESS block",
+        "suggested_action": "Add @HARNESS block with file references and wiring patterns"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
     }
   ],
-  "updated_at": "2025-12-18T09:05:09.378467"
+  "updated_at": "2025-12-18T21:58:33.109257"
 }

@@ -142,5 +142,59 @@
     "topic": "documentation",
     "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
     "timestamp": "2025-12-17T11:19:04.628249"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:56:58.885874"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:56:58.896069"
+  },
+  {
+    "intent_type": "harness_broken",
+    "topic": "harness",
+    "title": "Fix broken @HARNESS in 008-PRAKRITI-PROTOTYPE",
+    "timestamp": "2025-12-18T21:56:58.903478"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:58:07.348468"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:58:07.358481"
+  },
+  {
+    "intent_type": "semantic_gap_test",
+    "topic": "semantic",
+    "title": "Create tests for MANAS cognitive kernel",
+    "timestamp": "2025-12-18T21:58:07.365795"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:58:33.094622"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:58:33.104898"
+  },
+  {
+    "intent_type": "commit_pending_changes",
+    "topic": "commit",
+    "title": "Commit 20 pending changes",
+    "timestamp": "2025-12-18T21:58:33.111405"
   }
 ]
