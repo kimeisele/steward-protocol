@@ -200,6 +200,26 @@ class ManasOracle:
             success_rate = self.kernel._memory.get_success_rate(task_type)
             confidence = 0.5 + (success_rate * 0.5)  # Confidence based on history
 
+            # OPUS-106: Query CognitiveWeaver for unified State + Knowledge wisdom
+            cognitive_wisdom = self._get_cognitive_wisdom(task_title, context)
+            if cognitive_wisdom:
+                # Adjust safety based on system health
+                if cognitive_wisdom.get("health_score", 1.0) < 0.5:
+                    base_safety_score = max(0.10, base_safety_score - 0.10)
+                    risks.append(f"System health low ({cognitive_wisdom.get('health_score', 0):.0%})")
+
+                # Add constraint violations as risks
+                for violation in cognitive_wisdom.get("constraints_violated", []):
+                    risks.append(f"Constraint: {violation}")
+
+                # Add wisdom notes to precautions
+                for note in cognitive_wisdom.get("wisdom_notes", []):
+                    precautions.append(note)
+
+                # Boost confidence if knowledge graph consulted
+                if cognitive_wisdom.get("knowledge_consulted"):
+                    confidence = min(0.95, confidence + 0.1)
+
             # Build advice
             advice = self._generate_advice(
                 task_title=task_title,
@@ -232,6 +252,8 @@ class ManasOracle:
                     "is_automated": is_automated,
                     "success_rate": round(success_rate, 2),
                     "base_safety_score": round(base_safety_score, 2),
+                    # OPUS-106: Cognitive Wisdom context
+                    "cognitive_wisdom": cognitive_wisdom if cognitive_wisdom else None,
                 },
             )
 
@@ -336,6 +358,54 @@ class ManasOracle:
     # =========================================================================
     # HELPER METHODS
     # =========================================================================
+
+    def _get_cognitive_wisdom(self, task_title: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        OPUS-106: Get unified cognitive wisdom from CognitiveWeaver.
+
+        This bridges the Oracle API to the unified State + Knowledge context,
+        enabling decisions informed by both system state and knowledge graph.
+
+        Args:
+            task_title: The task being consulted about (used as focus)
+            context: Full context dict for constraint checking
+
+        Returns:
+            Dict with cognitive wisdom or None if unavailable
+        """
+        try:
+            # Try to get cognitive context from kernel
+            cognitive_context = self.kernel.get_cognitive_context(focus=task_title)
+
+            if cognitive_context is None:
+                return None
+
+            wisdom = {
+                "health_score": cognitive_context.get("health_score", 1.0),
+                "guna_distribution": cognitive_context.get("guna_distribution"),
+                "wisdom_notes": cognitive_context.get("wisdom_notes", []),
+                "recommended_actions": cognitive_context.get("recommended_actions", []),
+                "knowledge_consulted": True,
+                "constraints_violated": [],
+            }
+
+            # Also consult knowledge for specific action constraints
+            consultation = self.kernel.consult_knowledge(
+                action=task_title,
+                context=context,
+            )
+
+            if consultation:
+                wisdom["constraints_violated"] = consultation.get("constraints_violated", [])
+                wisdom["action_allowed"] = consultation.get("allowed", True)
+                wisdom["recommendation"] = consultation.get("recommendation", "")
+
+            logger.debug(f"🧵 Oracle cognitive wisdom: health={wisdom['health_score']:.0%}")
+            return wisdom
+
+        except Exception as e:
+            logger.warning(f"🧵 Oracle cognitive wisdom unavailable: {e}")
+            return None
 
     def _identify_risks(self, context: Dict[str, Any]) -> List[str]:
         """Identify risks in a context."""
