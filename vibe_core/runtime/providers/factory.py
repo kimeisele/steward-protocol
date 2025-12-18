@@ -147,10 +147,11 @@ def _detect_provider() -> str:
 
     Priority order (NO VENDOR LOCK-IN!):
     1. OPENROUTER_API_KEY → openrouter (FIRST! Routes to any model)
-    2. OPENAI_API_KEY → openai (Industry standard fallback)
-    3. GOOGLE_API_KEY → google
-    4. ANTHROPIC_API_KEY → anthropic
-    5. None available → noop (will use NoOpProvider)
+    2. OPENAI_API_KEY with "sk-or-" prefix → openrouter (MISPLACED KEY FIX!)
+    3. OPENAI_API_KEY → openai (Industry standard fallback)
+    4. GOOGLE_API_KEY → google
+    5. ANTHROPIC_API_KEY → anthropic
+    6. None available → noop (will use NoOpProvider)
 
     Returns:
         Provider name string
@@ -164,6 +165,10 @@ def _detect_provider() -> str:
         placeholders = ["your-", "xxx", "placeholder", "example", "test-key"]
         return not any(placeholder in key.lower() for placeholder in placeholders)
 
+    def is_openrouter_key(key: str | None) -> bool:
+        """Check if a key is an OpenRouter key (starts with sk-or-)"""
+        return bool(key and key.startswith("sk-or-"))
+
     openrouter_key = os.environ.get("OPENROUTER_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
     google_key = os.environ.get("GOOGLE_API_KEY")
@@ -172,8 +177,17 @@ def _detect_provider() -> str:
     # OpenRouter FIRST - no vendor lock-in, routes to any model!
     if is_valid_key(openrouter_key):
         return "openrouter"
+
+    # OPUS-091 FIX: Check if OPENAI_API_KEY is actually an OpenRouter key (misplaced)
+    # OpenRouter keys start with "sk-or-" prefix
+    if is_openrouter_key(openai_key):
+        logger.info("🔧 Detected OpenRouter key in OPENAI_API_KEY (sk-or- prefix) - using OpenRouter provider")
+        # Inject it into the correct env var for downstream use
+        os.environ["OPENROUTER_API_KEY"] = openai_key
+        return "openrouter"
+
     # OpenAI SECOND - industry standard
-    elif is_valid_key(openai_key):
+    if is_valid_key(openai_key):
         return "openai"
     elif is_valid_key(google_key):
         return "google"
