@@ -14,6 +14,7 @@ Sections are config-driven from interface.yaml.
 """
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from vibe_core.io_service import DocumentType
@@ -144,6 +145,9 @@ class CognitionRenderer(BaseRenderer):
             - Actions (Karmendriyas - execution handlers)
             - Senses (Jnanendriyas - perception modules)
             - Analyzers (Buddhi - analysis modules)
+
+        OPUS-108 FIX: Lazy-load loaders at render time if not injected.
+        This fixes boot order issue (InterfacePlugin priority=100 > OpusAssistant=50).
         """
         lines = [
             "## 🔱 Arsenal",
@@ -151,6 +155,30 @@ class CognitionRenderer(BaseRenderer):
             "_VEDA-4 Capabilities (As Above, So Below)_",
             "",
         ]
+
+        # OPUS-108 FIX: Lazy-load loaders if not injected
+        # InterfacePlugin boots AFTER OpusAssistant, so injection happens too early
+        tool_loader = self._tool_loader
+        action_loader = self._action_loader
+        sense_loader = self._sense_loader
+        analyzer_loader = self._analyzer_loader
+
+        if not tool_loader or not action_loader or not sense_loader or not analyzer_loader:
+            try:
+                from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
+
+                workspace = getattr(self.kernel, "_workspace", None) or Path.cwd()
+                if not tool_loader:
+                    tool_loader = ToolLoader(scope="opus_private", root_path=workspace)
+                if not action_loader:
+                    action_loader = ActionLoader(scope="opus_private")
+                if not sense_loader:
+                    sense_loader = SenseLoader(scope="opus_private")
+                if not analyzer_loader:
+                    analyzer_loader = AnalyzerLoader(scope="opus_private")
+                logger.debug("🔱 OPUS-108: Lazy-loaded Arsenal loaders (fallback)")
+            except Exception as e:
+                logger.warning(f"Could not lazy-load loaders: {e}")
 
         # Count totals
         tool_count = 0
@@ -163,36 +191,36 @@ class CognitionRenderer(BaseRenderer):
         analyzer_list = []
 
         # === TOOLS (Cartridges) ===
-        if self._tool_loader:
+        if tool_loader:
             try:
-                tools, meta = self._tool_loader.load()
+                tools, meta = tool_loader.load()
                 tool_count = len(tools)
                 tool_list = sorted(tools.keys())
             except Exception as e:
                 logger.warning(f"Error loading tools for Arsenal: {e}")
 
         # === ACTIONS (Karmendriyas) ===
-        if self._action_loader:
+        if action_loader:
             try:
-                actions, meta = self._action_loader.load()
+                actions, meta = action_loader.load()
                 action_count = len(actions)
                 action_list = sorted(actions.keys())
             except Exception as e:
                 logger.warning(f"Error loading actions for Arsenal: {e}")
 
         # === SENSES (Jnanendriyas) ===
-        if self._sense_loader:
+        if sense_loader:
             try:
-                senses, meta = self._sense_loader.load()
+                senses, meta = sense_loader.load()
                 sense_count = len(senses)
                 sense_list = sorted(senses.keys())
             except Exception as e:
                 logger.warning(f"Error loading senses for Arsenal: {e}")
 
         # === ANALYZERS (Buddhi) ===
-        if self._analyzer_loader:
+        if analyzer_loader:
             try:
-                analyzers, meta = self._analyzer_loader.load()
+                analyzers, meta = analyzer_loader.load()
                 analyzer_count = len(analyzers)
                 analyzer_list = sorted(analyzers.keys())
             except Exception as e:
