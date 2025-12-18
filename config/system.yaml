@@ -1,0 +1,33 @@
+# System Configuration
+# Referenced by: Herald Cartridge (broadcast, creative, research capabilities)
+# Created: 2024-12-18 (OPUS-110 BIG BUG HUNT)
+
+herald:
+  broadcast:
+    enabled: true
+    channels:
+      - system
+      - agents
+      - events
+
+  creative:
+    enabled: true
+    model: "anthropic/claude-3.5-sonnet"
+    temperature: 0.7
+    max_tokens: 4096
+
+  research:
+    enabled: true
+    max_results: 10
+    cache_ttl_minutes: 60
+
+# Knowledge base URLs for creative capability
+knowledge_base:
+  - https://docs.anthropic.com
+  - https://python.org/doc
+
+# System-wide defaults
+defaults:
+  timeout_seconds: 30
+  retry_count: 3
+  log_level: INFO

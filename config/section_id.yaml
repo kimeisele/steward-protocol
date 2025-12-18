@@ -1,0 +1,36 @@
+# Phoenix Section ID Configuration
+# Referenced by: Phoenix Config (vibe_core/phoenix/config.py)
+# Created: 2024-12-18 (OPUS-110 BIG BUG HUNT)
+#
+# This file is auto-populated by Phoenix section discovery.
+# Add section IDs here for explicit configuration.
+
+# Discovered sections (auto-populated)
+sections:
+  kernel:
+    enabled: true
+    priority: 0  # Core - loads first
+
+  paths:
+    enabled: true
+    priority: 1
+
+  prompts:
+    enabled: true
+    priority: 2
+
+  city:
+    enabled: true
+    priority: 3
+
+  manas:
+    enabled: true
+    priority: 4
+
+# Section loading order (if not specified, uses priority)
+load_order:
+  - kernel
+  - paths
+  - prompts
+  - city
+  - manas
