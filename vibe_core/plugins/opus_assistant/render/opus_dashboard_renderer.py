@@ -298,6 +298,7 @@ class OpusDashboardRenderer:
             "tri_guna": self._gather_tri_guna(),  # 🔮 OPUS-009: State Health
             "dharma": self._gather_dharma(),  # 🙏 OPUS-009: Vedic Conscience
             "sutra": self._gather_sutra(),  # 📜 OPUS-054: Doc/Code Gap Detection
+            "sankalpa": self._gather_sankalpa(),  # 🎯 OPUS-055: Strategic Will
             "preserved": {},  # Will be injected separately
         }
 
@@ -956,6 +957,85 @@ class OpusDashboardRenderer:
             logger.debug(f"Failed to gather sutra: {e}")
             return None
 
+    def _gather_sankalpa(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather SANKALPA status (OPUS-055: Strategic Will).
+
+        🎯 SANKALPA: The Will of MANAS
+        Mission tracking, goal formation, and strategic planning.
+
+        Bhagavad Gita 6.24:
+        "sankalpa-prabhavān kāmāṁs tyaktvā sarvān aśeṣataḥ"
+        Abandoning all desires born of sankalpa (determination)...
+
+        Maps to config/interface.yaml sections:
+        - current_goal → Active mission goal
+        - phase_status → Mission execution phase
+        - extraction_log → Learning/observations (future)
+        - next_actions → Planned actions from planner
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+                MissionStatus,
+                SankalpaOrchestrator,
+            )
+
+            # Get SANKALPA orchestrator
+            sankalpa_config = self._manas_config.get("sankalpa", {})
+            orchestrator = SankalpaOrchestrator(workspace=self._root, config=sankalpa_config)
+            status = orchestrator.get_status()
+
+            # Extract current goal from active mission
+            current_goal = "No active mission"
+            phase_status = "IDLE"
+            active_missions = []
+
+            missions = status.get("missions", [])
+            for m in missions:
+                if m.get("status") == "active":
+                    active_missions.append(m)
+                    if current_goal == "No active mission":
+                        current_goal = m.get("name", "Unnamed mission")
+                        phase_status = "ACTIVE"
+
+            # Get next actions from planner
+            next_actions = []
+            try:
+                intents = orchestrator.think(context={}, idle_minutes=0, pending_intents=0)
+                for intent in intents[:3]:
+                    next_actions.append(
+                        {
+                            "action": intent.action if hasattr(intent, "action") else str(intent),
+                            "priority": intent.priority if hasattr(intent, "priority") else "medium",
+                        }
+                    )
+            except Exception:
+                pass
+
+            return {
+                "current_goal": current_goal,
+                "phase_status": phase_status,
+                "total_missions": status.get("total_missions", 0),
+                "active_missions": status.get("active_missions", 0),
+                "total_strategies": status.get("total_strategies", 0),
+                "enabled_strategies": status.get("enabled_strategies", 0),
+                "missions": missions[:5],  # Top 5 missions for display
+                "next_actions": next_actions,
+            }
+
+        except Exception as e:
+            logger.debug(f"Failed to gather sankalpa: {e}")
+            return {
+                "current_goal": "SANKALPA unavailable",
+                "phase_status": "ERROR",
+                "total_missions": 0,
+                "active_missions": 0,
+                "total_strategies": 0,
+                "enabled_strategies": 0,
+                "missions": [],
+                "next_actions": [],
+            }
+
     def _gather_code_health(self) -> Dict[str, List[Dict[str, Any]]]:
         """Gather code health markers (TODO/HACK/FIXME)."""
 
@@ -1383,18 +1463,28 @@ class OpusDashboardRenderer:
         try:
             content = self._opus_path.read_text()
 
-            # Extract AI sections
-            for section_name in ["current_work", "blockers"]:
-                pattern = rf"<!-- @AI:{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@AI -->"
+            # Extract AI sections (tactical + strategic SANKALPA)
+            ai_sections = [
+                "current_work",
+                "blockers",  # Tactical (CognitiveWeaver)
+                "current_goal",
+                "phase_status",
+                "extraction_log",  # Strategic (SANKALPA)
+            ]
+            for section_name in ai_sections:
+                # Try both ## and ### headers
+                pattern = rf"<!-- @AI:{section_name} -->\s*\n###? [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@AI -->"
                 match = re.search(pattern, content, re.DOTALL)
                 if match:
                     preserved[section_name] = match.group(1).strip()
 
             # Extract HUMAN sections
-            pattern = r"<!-- @HUMAN:notes -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@HUMAN -->"
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                preserved["notes"] = match.group(1).strip()
+            human_sections = ["notes", "next_actions"]
+            for section_name in human_sections:
+                pattern = rf"<!-- @HUMAN:{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@HUMAN -->"
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    preserved[section_name] = match.group(1).strip()
 
         except Exception:
             pass
