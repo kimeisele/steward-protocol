@@ -211,15 +211,20 @@ class FileState:
 
         return files
 
-    def status(self) -> Dict[str, Any]:
-        """GAD-000: Get comprehensive file status as dict."""
-        dirty = self.dirty_files()
+    def status(self, include_dirty: bool = False) -> Dict[str, Any]:
+        """GAD-000: Get comprehensive file status as dict.
+
+        Args:
+            include_dirty: If True, scan for dirty files (EXPENSIVE!)
+                          Default False to avoid rglob() timeout on large workspace
+
+        Returns:
+            Dict with file state metadata
+        """
         snapshot = self._last_snapshot
 
-        return {
+        result = {
             "workspace": str(self._workspace),
-            "dirty_count": len(dirty),
-            "dirty_files": dirty[:10],  # First 10 for brevity
             "last_snapshot": {
                 "timestamp": snapshot.timestamp if snapshot else None,
                 "total_files": snapshot.total_files if snapshot else 0,
@@ -228,6 +233,18 @@ class FileState:
             if snapshot
             else None,
         }
+
+        # OPUS-095 Fix: Only scan dirty files if explicitly requested
+        # (avoids timeout on large workspaces)
+        if include_dirty:
+            dirty = self.dirty_files()
+            result["dirty_count"] = len(dirty)
+            result["dirty_files"] = dirty[:10]  # First 10 for brevity
+        else:
+            result["dirty_count"] = None  # Not computed
+            result["dirty_files"] = []
+
+        return result
 
     # =========================================================================
     # Private Helpers
