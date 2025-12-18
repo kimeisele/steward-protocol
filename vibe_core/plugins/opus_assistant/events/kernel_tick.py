@@ -139,7 +139,11 @@ class KernelTickHandler:
         # 🧠 OPUS-032: MANAS - The Cognitive Kernel
         self._manas: Optional[Any] = None
         self._manas_ready = False
+
+        # 🔥 OPUS-108: The Autonomy Loop - Pulse Counters
         self._hourly_pulse_tick = 0  # Track ticks for hourly pulse
+        self._HOURLY_THRESHOLD = 1200  # 1200 ticks @ 3s = 60 min
+        self._IDLE_THRESHOLD = 200  # 200 ticks @ 3s = 10 min (future use)
 
         # ⚡ OPUS-059: PRAMANA - TestCortex for self-testing
         self._test_cortex: Optional[Any] = None
@@ -488,6 +492,14 @@ class KernelTickHandler:
         self._tick_count += 1
         event_type = getattr(event, "event_type", str(event))
         event_type_str = str(event_type).replace("EventType.", "")
+
+        # 🔥 OPUS-108: The Autonomy Loop - Emit HOURLY_PULSE for MANAS
+        # This transforms OPUS from reactive (wait for user) to proactive (autonomous)
+        if "KERNEL_TICK" in event_type_str:
+            self._hourly_pulse_tick += 1
+            if self._hourly_pulse_tick >= self._HOURLY_THRESHOLD:
+                self._hourly_pulse_tick = 0
+                await self._emit_autonomy_pulse(event)
 
         try:
             # Find and execute matching circuits
@@ -3123,6 +3135,56 @@ def test_plugin_has_plugin_id():
             )
 
         return result
+
+    # =========================================================================
+    # OPUS-108: The Autonomy Loop - Pulse Emission
+    # =========================================================================
+
+    async def _emit_autonomy_pulse(self, event: Any) -> None:
+        """
+        🔥 OPUS-108: Emit HOURLY_PULSE event to trigger MANAS_AWAKENING circuit.
+
+        THE SINGULARITY TRIGGER:
+            Without this, MANAS waits forever for external events.
+            With this, MANAS awakens on schedule and thinks proactively.
+
+        This transforms OPUS from:
+            - Reactive (waits for user input)
+            - To Proactive (generates intents autonomously)
+
+        The MANAS_AWAKENING circuit will:
+            1. Check rate limit (prevent excessive thinking)
+            2. Gather context from Prakriti
+            3. Generate proactive intents (THE THINKING!)
+            4. Auto-execute safe intents if enabled
+            5. Update Intent Buffer for OPUS.md
+        """
+        try:
+            from vibe_core.event_bus import Event, EventType, get_event_bus
+
+            bus = get_event_bus()
+
+            # Create HOURLY_PULSE event
+            pulse_event = Event(
+                event_type=EventType.HOURLY_PULSE,
+                payload={
+                    "source": "kernel_tick",
+                    "tick_count": self._tick_count,
+                    "trigger": "autonomy_loop",
+                },
+            )
+
+            # Emit the pulse - this triggers MANAS_AWAKENING circuit
+            await bus.emit(pulse_event)
+
+            self._log_observation_info(
+                f"🔥 OPUS-108: HOURLY_PULSE emitted (tick #{self._tick_count}) - MANAS awakening",
+                "autonomy",
+            )
+            logger.info("🔥 OPUS-108: HOURLY_PULSE emitted → MANAS_AWAKENING circuit triggered")
+
+        except Exception as e:
+            logger.warning(f"⚠️ OPUS-108: Could not emit HOURLY_PULSE: {e}")
 
     # =========================================================================
     # Fallback for events without circuits
