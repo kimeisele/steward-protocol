@@ -122,8 +122,9 @@ class IntentGenerator:
         self._intent_counter = 0
         self._analyzers = self._register_analyzers()
 
-        # OPUS-032: Modular class-based analyzers (the new way)
-        self._modular_analyzers = self._register_modular_analyzers()
+        # OPUS-098: Auto-discovered analyzers (VEDA-4 pattern)
+        # HARD-CUT: No more manual lists. AnalyzerLoader discovers all.
+        self._modular_analyzers = self._load_analyzers_veda4()
 
         # 🧠 SEMANTIC ENGINE (Lazy Injection)
         self._semantic_engine = None
@@ -149,28 +150,26 @@ class IntentGenerator:
             self._analyze_capability_gaps,
         ]
 
-    def _register_modular_analyzers(self) -> List[Any]:
+    def _load_analyzers_veda4(self) -> List[Any]:
         """
-        Register modular class-based analyzers (OPUS-032, OPUS-077).
+        OPUS-098: Load analyzers via AnalyzerLoader (VEDA-4 pattern).
 
-        These are the new-style analyzers that inherit from BaseAnalyzer.
-        They provide better separation of concerns and are easier to test.
+        HARD-CUT: No manual lists. Auto-discovery only.
+        STRICT MODE: Loader crashes on any error. No silent failures.
+
+        This replaces the old _register_modular_analyzers() spaghetti.
+        Add new analyzers by creating a file in analyzers/ - that's it.
         """
-        from .analyzers import (
-            CIMonitorAnalyzer,
-            ContractAnalyzer,
-            DocHarnessAnalyzer,
-            PratyayaAnalyzer,
-            SemanticAnalyzer,
+        from vibe_core.loaders import AnalyzerLoader
+
+        # STRICT MODE: Will raise AnalyzerLoadError if ANY analyzer fails
+        analyzers, metadata = AnalyzerLoader.discover_and_load(
+            workspace=self._workspace,
+            strict=True,  # Crash on errors, no silent skip
         )
 
-        return [
-            ContractAnalyzer(workspace=self._workspace),
-            SemanticAnalyzer(workspace=self._workspace),  # 51% - The Genesis Impulse
-            CIMonitorAnalyzer(workspace=self._workspace),  # OPUS-041 - VAK (The Voice)
-            PratyayaAnalyzer(workspace=self._workspace),  # OPUS-077 - Self-Falsification
-            DocHarnessAnalyzer(workspace=self._workspace),  # OPUS-083 - Self-Healing Docs
-        ]
+        logger.info(f"OPUS-098: Auto-discovered {len(analyzers)} analyzers: {list(analyzers.keys())}")
+        return list(analyzers.values())
 
     async def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
         """
