@@ -16,22 +16,57 @@ from typing import Any, Dict, List
 class NodeType(Enum):
     """Types of nodes in the knowledge graph."""
 
+    # Original types
     AGENT = "agent"
     FEATURE = "feature"
     CONCEPT = "concept"
     RULE = "rule"
     DOMAIN = "domain"
 
+    # Code structure types (OPUS-110: Graph-based Gap Detection)
+    MODULE = "module"  # Python module/file
+    CLASS = "class"  # Python class definition
+    FUNCTION = "function"  # Python function/method
+    INTERFACE = "interface"  # ABC/Protocol definition
+
+    # Documentation types
+    DOC = "doc"  # Markdown documentation
+    HARNESS = "harness"  # @HARNESS metadata block
+    PRINCIPLE = "principle"  # Semantic principle (SHUDDHI, VAJRA, etc.)
+
+    # Test types
+    TEST = "test"  # Test file/class
+    TESTCASE = "testcase"  # Individual test method
+
 
 class RelationType(Enum):
     """Types of relations between nodes."""
 
+    # Original types
     DEPENDS_ON = "depends_on"  # A requires B
     OVERRIDES = "overrides"  # A can override B
     IMPLIES = "implies"  # A implies B
     BLOCKS = "blocks"  # A blocks B
     HANDLES = "handles"  # Agent handles Concept
     BELONGS_TO = "belongs_to"  # Node belongs to Domain
+
+    # Code structure relations (OPUS-110: Graph-based Gap Detection)
+    DEFINES = "defines"  # Module -> Class/Function
+    INHERITS = "inherits"  # Class -> Parent Class
+    IMPLEMENTS = "implements"  # Class -> Interface/ABC
+    CALLS = "calls"  # Function -> Function
+    IMPORTS = "imports"  # Module -> Module
+
+    # Documentation relations
+    DOCUMENTS = "documents"  # Doc -> Code (what it describes)
+    HAS_HARNESS = "has_harness"  # Doc -> Harness (verification)
+    APPLIES_PRINCIPLE = "applies_principle"  # Code -> Principle
+
+    # Gap detection relations
+    DUPLICATES = "duplicates"  # Class -> Class (DRY violation!)
+    TESTED_BY = "tested_by"  # Code -> Test
+    MISSING_DOC = "missing_doc"  # Code with no documentation edge
+    MISSING_TEST = "missing_test"  # Code with no test edge
 
 
 class ConstraintType(Enum):
