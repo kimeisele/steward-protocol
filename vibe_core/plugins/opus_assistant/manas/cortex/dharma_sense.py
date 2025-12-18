@@ -54,6 +54,8 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from .base import BaseSense
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
@@ -169,7 +171,7 @@ ASHRAMA_PERMISSIONS: Dict[str, List[str]] = {
 }
 
 
-class DharmaSense:
+class DharmaSense(BaseSense):
     """
     The Vedic Conscience for MANAS.
 
@@ -186,6 +188,9 @@ class DharmaSense:
             logger.critical(f"ADHARMIC: {verdict.reason}")
     """
 
+    # OPUS-099: VEDA-4 auto-discovery
+    name = "dharma_sense"
+
     def __init__(
         self,
         workspace: Optional[Path] = None,
@@ -200,8 +205,7 @@ class DharmaSense:
             agent_id: The agent ID to check permissions for
             config: Configuration dict from manas.yaml
         """
-        self._workspace = workspace or Path.cwd()
-        self._config: Dict[str, Any] = config or {}  # OPUS-092: Config wiring
+        super().__init__(workspace, config)
         self._agent_id = agent_id
         self._governance = None  # Lazy-loaded
         self._state_manager = None  # Lazy-loaded
@@ -350,6 +354,15 @@ class DharmaSense:
             is_registered=is_registered,
             permissions_granted=granted_perms,
         )
+
+    def perceive(self, context: Optional[Dict[str, Any]] = None) -> DharmaSummary:
+        """
+        OPUS-099: BaseSense interface implementation.
+
+        Wraps get_dharma_summary() for SenseLoader compatibility.
+        """
+        agent_id = context.get("agent_id") if context else None
+        return self.get_dharma_summary(agent_id=agent_id)
 
     def _get_agent_state(self, agent_id: str) -> Dict[str, Any]:
         """Get agent state from Vedic Governance/State Manager."""

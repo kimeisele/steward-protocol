@@ -25,6 +25,7 @@ from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
+from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
 from .template_loader import TemplateLoader
 
 __all__ = [
@@ -36,6 +37,11 @@ __all__ = [
     "AnalyzerLoadError",
     "AnalyzerRegistry",
     "AnalyzerMetadata",
+    # Sense Loader (OPUS-099)
+    "SenseLoader",
+    "SenseLoadError",
+    "SenseRegistry",
+    "SenseMetadata",
     # Circuit Loader
     "CircuitLoader",
     "CircuitMeta",
