@@ -264,6 +264,24 @@ class KernelTickHandler:
                 self._manas.set_execution_callback(execution_callback)
                 logger.info("🔀 DHARMA-JNANA: IntentRouter connected to MANAS (with fractal loaders)")
 
+            # 🔱 OPUS-107: The Cognitive Mirror - Wire loaders into CognitionRenderer
+            # COGNITION.md shows Arsenal (tools, actions, senses, analyzers)
+            if kernel:
+                try:
+                    interface_plugin = kernel.get_plugin("interface")
+                    if interface_plugin and hasattr(interface_plugin, "_renderers"):
+                        cognition_renderer = interface_plugin._renderers.get("cognition")
+                        if cognition_renderer and hasattr(cognition_renderer, "set_loaders"):
+                            cognition_renderer.set_loaders(
+                                tool_loader=self._manas.tool_loader,
+                                action_loader=self._manas.action_loader,
+                                sense_loader=self._manas.sense_loader,
+                                analyzer_loader=self._manas.analyzer_loader,
+                            )
+                            logger.info("🔱 OPUS-107: CognitionRenderer wired to MANAS loaders")
+                except Exception as e:
+                    logger.debug(f"Could not wire CognitionRenderer: {e}")
+
             self._manas_ready = True
             logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
         except Exception as e:

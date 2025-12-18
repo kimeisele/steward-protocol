@@ -23,16 +23,56 @@ from .base import BaseRenderer
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
 
 logger = logging.getLogger("RENDERER_COGNITION")
 
 
 class CognitionRenderer(BaseRenderer):
-    """Renders COGNITION.md with live cycle data from CycleRegistry."""
+    """Renders COGNITION.md with live cycle data from CycleRegistry.
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    OPUS-107: The Cognitive Mirror
+        - Shows live orchestration cycles (CycleRegistry)
+        - Shows Arsenal (VEDA-4 loaders): Tools, Actions, Senses, Analyzers
+    """
+
+    def __init__(
+        self,
+        kernel: "RealVibeKernel",
+        tool_loader: Optional["ToolLoader"] = None,
+        action_loader: Optional["ActionLoader"] = None,
+        sense_loader: Optional["SenseLoader"] = None,
+        analyzer_loader: Optional["AnalyzerLoader"] = None,
+    ):
         super().__init__(kernel)
         self._registry = None
+        # OPUS-107: VEDA-4 loaders for Arsenal section
+        self._tool_loader = tool_loader
+        self._action_loader = action_loader
+        self._sense_loader = sense_loader
+        self._analyzer_loader = analyzer_loader
+
+    def set_loaders(
+        self,
+        tool_loader: Optional["ToolLoader"] = None,
+        action_loader: Optional["ActionLoader"] = None,
+        sense_loader: Optional["SenseLoader"] = None,
+        analyzer_loader: Optional["AnalyzerLoader"] = None,
+    ) -> None:
+        """Inject VEDA-4 loaders for Arsenal section (OPUS-107).
+
+        Called by kernel_tick.py after MANAS initialization to wire
+        the Cognitive Mirror.
+        """
+        if tool_loader:
+            self._tool_loader = tool_loader
+        if action_loader:
+            self._action_loader = action_loader
+        if sense_loader:
+            self._sense_loader = sense_loader
+        if analyzer_loader:
+            self._analyzer_loader = analyzer_loader
+        logger.info("🔱 OPUS-107: Arsenal loaders injected into CognitionRenderer")
 
     @property
     def name(self) -> str:
@@ -65,31 +105,148 @@ class CognitionRenderer(BaseRenderer):
         ]
 
         # ====================================================================
-        # SECTION 1: HOLON HIERARCHY (Active Cycles)
+        # SECTION 1: ARSENAL (OPUS-107 - The Cognitive Mirror)
+        # ====================================================================
+        lines.extend(self._render_arsenal())
+
+        # ====================================================================
+        # SECTION 2: HOLON HIERARCHY (Active Cycles)
         # ====================================================================
         lines.extend(self._render_holon_hierarchy())
 
         # ====================================================================
-        # SECTION 2: PHASE METRICS
+        # SECTION 3: PHASE METRICS
         # ====================================================================
         lines.extend(self._render_phase_metrics())
 
         # ====================================================================
-        # SECTION 3: MEMORY SAFETY
+        # SECTION 4: MEMORY SAFETY
         # ====================================================================
         lines.extend(self._render_memory_safety())
 
         # ====================================================================
-        # SECTION 4: RECENT COMPLETED CYCLES
+        # SECTION 5: RECENT COMPLETED CYCLES
         # ====================================================================
         lines.extend(self._render_completed_cycles())
 
         # ====================================================================
-        # SECTION 5: ERROR TRACKING
+        # SECTION 6: ERROR TRACKING
         # ====================================================================
         lines.extend(self._render_error_cycles())
 
         return "\n".join(lines)
+
+    def _render_arsenal(self) -> list:
+        """Render Arsenal section showing VEDA-4 capabilities (OPUS-107).
+
+        THE COGNITIVE MIRROR:
+            - Tools (Cartridge tools - external capabilities)
+            - Actions (Karmendriyas - execution handlers)
+            - Senses (Jnanendriyas - perception modules)
+            - Analyzers (Buddhi - analysis modules)
+        """
+        lines = [
+            "## 🔱 Arsenal",
+            "",
+            "_VEDA-4 Capabilities (As Above, So Below)_",
+            "",
+        ]
+
+        # Count totals
+        tool_count = 0
+        action_count = 0
+        sense_count = 0
+        analyzer_count = 0
+        tool_list = []
+        action_list = []
+        sense_list = []
+        analyzer_list = []
+
+        # === TOOLS (Cartridges) ===
+        if self._tool_loader:
+            try:
+                tools, meta = self._tool_loader.load()
+                tool_count = len(tools)
+                tool_list = sorted(tools.keys())
+            except Exception as e:
+                logger.warning(f"Error loading tools for Arsenal: {e}")
+
+        # === ACTIONS (Karmendriyas) ===
+        if self._action_loader:
+            try:
+                actions, meta = self._action_loader.load()
+                action_count = len(actions)
+                action_list = sorted(actions.keys())
+            except Exception as e:
+                logger.warning(f"Error loading actions for Arsenal: {e}")
+
+        # === SENSES (Jnanendriyas) ===
+        if self._sense_loader:
+            try:
+                senses, meta = self._sense_loader.load()
+                sense_count = len(senses)
+                sense_list = sorted(senses.keys())
+            except Exception as e:
+                logger.warning(f"Error loading senses for Arsenal: {e}")
+
+        # === ANALYZERS (Buddhi) ===
+        if self._analyzer_loader:
+            try:
+                analyzers, meta = self._analyzer_loader.load()
+                analyzer_count = len(analyzers)
+                analyzer_list = sorted(analyzers.keys())
+            except Exception as e:
+                logger.warning(f"Error loading analyzers for Arsenal: {e}")
+
+        # Total capabilities
+        total = tool_count + action_count + sense_count + analyzer_count
+
+        # Summary line
+        lines.append(f"**Total Capabilities:** {total}")
+        lines.append("")
+
+        # Table
+        lines.append("| Category | Count | Modules |")
+        lines.append("| :--- | :---: | :--- |")
+
+        # Tools row
+        tool_names = ", ".join(tool_list[:10])
+        if tool_count > 10:
+            tool_names += f" (+{tool_count - 10} more)"
+        lines.append(f"| 🔧 **Tools** | {tool_count} | {tool_names or '_None loaded_'} |")
+
+        # Actions row
+        action_names = ", ".join(action_list[:5])
+        if action_count > 5:
+            action_names += f" (+{action_count - 5} more)"
+        lines.append(f"| ⚡ **Actions** | {action_count} | {action_names or '_None loaded_'} |")
+
+        # Senses row
+        sense_names = ", ".join(sense_list[:5])
+        if sense_count > 5:
+            sense_names += f" (+{sense_count - 5} more)"
+        lines.append(f"| 👁️ **Senses** | {sense_count} | {sense_names or '_None loaded_'} |")
+
+        # Analyzers row
+        analyzer_names = ", ".join(analyzer_list[:5])
+        if analyzer_count > 5:
+            analyzer_names += f" (+{analyzer_count - 5} more)"
+        lines.append(f"| 🧠 **Analyzers** | {analyzer_count} | {analyzer_names or '_None loaded_'} |")
+
+        lines.extend(["", ""])
+
+        # Detailed Tools list (collapsed if many)
+        if tool_count > 0:
+            lines.append("<details>")
+            lines.append("<summary>📋 Full Tool List</summary>")
+            lines.append("")
+            for name in tool_list:
+                lines.append(f"- `{name}`")
+            lines.append("")
+            lines.append("</details>")
+            lines.append("")
+
+        return lines
 
     def _render_holon_hierarchy(self) -> list:
         """Render live Holon hierarchy (parent → child cycles)."""
