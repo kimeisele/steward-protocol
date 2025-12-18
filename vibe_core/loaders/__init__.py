@@ -21,6 +21,7 @@ Usage:
     test_circuits = CircuitLoader.get_circuits_for_trigger("file_modified")
 """
 
+from .action_loader import ActionLoader, ActionLoadError, ActionMetadata, ActionRegistry, IntentHandlerMap
 from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata, AnalyzerRegistry
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
@@ -32,6 +33,12 @@ __all__ = [
     "UnifiedLoader",
     "ItemMeta",
     "LoaderRegistry",
+    # Action Loader (OPUS-100)
+    "ActionLoader",
+    "ActionLoadError",
+    "ActionRegistry",
+    "ActionMetadata",
+    "IntentHandlerMap",
     # Analyzer Loader (OPUS-098)
     "AnalyzerLoader",
     "AnalyzerLoadError",
