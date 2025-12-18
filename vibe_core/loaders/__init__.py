@@ -25,14 +25,22 @@ from .action_loader import ActionLoader, ActionLoadError, ActionMetadata, Action
 from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata, AnalyzerRegistry
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
+from .code_module_loader import CodeMetadata, CodeModuleLoader, CodeModuleLoadError, CodeModuleMeta, CodeRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
 from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
 from .template_loader import TemplateLoader
+from .tool_loader import ToolLoader, ToolLoadError, ToolMetadata, ToolRegistry
 
 __all__ = [
     "UnifiedLoader",
     "ItemMeta",
     "LoaderRegistry",
+    # Code Module Loader (VEDA-4 code-only pattern)
+    "CodeModuleLoader",
+    "CodeModuleMeta",
+    "CodeModuleLoadError",
+    "CodeRegistry",
+    "CodeMetadata",
     # Action Loader (OPUS-100)
     "ActionLoader",
     "ActionLoadError",
@@ -62,4 +70,9 @@ __all__ = [
     "PlaybookStage",
     # Template Loader
     "TemplateLoader",
+    # Tool Loader (VEDA-4 wrapper around ToolDiscovery)
+    "ToolLoader",
+    "ToolLoadError",
+    "ToolRegistry",
+    "ToolMetadata",
 ]
