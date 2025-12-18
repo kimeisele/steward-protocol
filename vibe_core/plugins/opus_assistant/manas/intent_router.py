@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.loaders import ActionLoader
 
 from .intent_generator import Intent
 from .validator import SrutiValidator
@@ -72,15 +73,32 @@ class IntentRouter:
         - Calls cortex module with intent params
         - Returns structured result
         - Never crashes, always returns RouteResult
+
+    FRACTAL PATTERN (OPUS-106):
+        - Accepts scoped ActionLoader for isolated action discovery
+        - Falls back to global ActionLoader if not provided
     """
 
-    def __init__(self, workspace: Optional[Path] = None):
-        """Initialize the router with optional workspace path."""
+    def __init__(
+        self,
+        workspace: Optional[Path] = None,
+        action_loader: Optional["ActionLoader"] = None,
+    ):
+        """
+        Initialize the router with optional workspace path and scoped loader.
+
+        FRACTAL PATTERN:
+            action_loader: Scoped ActionLoader instance for isolated action discovery.
+                           If None, falls back to global ActionLoader.
+        """
         self._workspace = workspace or Path.cwd()
         self._kernel: Optional["RealVibeKernel"] = None
         self._handlers: Dict[str, Callable[[Intent], Dict[str, Any]]] = {}
         self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
         self._register_handlers()
+
+        # OPUS-106: Scoped loader for fractal pattern
+        self._action_loader = action_loader
 
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
@@ -505,23 +523,30 @@ class IntentRouter:
         """
         OPUS-101: Try to route via ActionLoader (VEDA-4 auto-discovery).
 
-        This enables the new BaseAction-based actions to be discovered
-        automatically without manual registration in _register_handlers().
+        OPUS-106: FRACTAL PATTERN
+        - Uses scoped loader if injected (private brain)
+        - Falls back to global ActionLoader (shared brain)
 
         Returns:
             RouteResult if action found and executed, None to fall back to legacy
         """
         try:
-            from vibe_core.loaders import ActionLoader
+            # OPUS-106: Fractal Pattern - Use scoped loader if available
+            if self._action_loader is not None:
+                action = self._action_loader.get_for_intent(intent.intent_type)
+                loader_name = f"ActionLoader[{self._action_loader.scope}]"
+            else:
+                # Fall back to global/static loader
+                from vibe_core.loaders import ActionLoader
 
-            # Check if ActionLoader has a handler for this intent type
-            action = ActionLoader.get_action_for_intent(intent.intent_type, workspace=self._workspace)
+                action = ActionLoader.get_action_for_intent(intent.intent_type, workspace=self._workspace)
+                loader_name = "ActionLoader[global]"
 
             if action is None:
-                logger.debug(f"[HYBRID] ActionLoader: no handler for {intent.intent_type}")
+                logger.debug(f"[HYBRID] {loader_name}: no handler for {intent.intent_type}")
                 return None
 
-            logger.info(f"⚡ [HYBRID] ActionLoader routing {intent.intent_type} -> {action.name}")
+            logger.info(f"⚡ [HYBRID] {loader_name} routing {intent.intent_type} -> {action.name}")
 
             # Execute via the action's act() method
             action_result = action.act(intent)
@@ -545,7 +570,7 @@ class IntentRouter:
 
             return RouteResult(
                 success=action_result.success,
-                handler=f"ActionLoader/{action_result.action_name}",
+                handler=f"{loader_name}/{action_result.action_name}",
                 result=result_dict,
                 error=action_result.error,
             )
