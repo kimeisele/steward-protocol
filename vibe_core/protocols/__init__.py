@@ -19,7 +19,6 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 from .ledger import (
     KernelStatus,
-    ManifestRegistry,
     VibeKernel,
     VibeLedger,
     VibeScheduler,
@@ -39,6 +38,7 @@ from .operator_protocol import (
     create_response,
     create_system_context,
 )
+from .registry import ManifestRegistry  # Canonical source for ManifestRegistry
 
 # Universal Testable Protocol
 from .testable import (

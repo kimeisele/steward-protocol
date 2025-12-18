@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from .agent import AgentManifest, VibeAgent
+from .registry import ManifestRegistry
 
 
 class KernelStatus(str, Enum):
@@ -81,28 +82,8 @@ class VibeLedger(ABC):
         pass
 
 
-class ManifestRegistry(ABC):
-    """Agent manifest registry interface"""
-
-    @abstractmethod
-    def register(self, manifest: AgentManifest) -> None:
-        """Register an agent manifest"""
-        pass
-
-    @abstractmethod
-    def lookup(self, agent_id: str) -> Optional[AgentManifest]:
-        """Look up manifest by agent_id"""
-        pass
-
-    @abstractmethod
-    def find_by_capability(self, capability: str) -> List[AgentManifest]:
-        """Find agents with a specific capability"""
-        pass
-
-    @abstractmethod
-    def list_all(self) -> List[AgentManifest]:
-        """List all registered manifests"""
-        pass
+# ManifestRegistry moved to protocols/registry.py (canonical source)
+# Import via: from vibe_core.protocols import ManifestRegistry
 
 
 class VibeKernel(ABC):
