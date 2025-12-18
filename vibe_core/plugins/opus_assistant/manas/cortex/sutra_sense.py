@@ -54,6 +54,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
+# OPUS-110: Graph-based duplicate detection via CodeScanner
+from vibe_core.knowledge.code_scanner import CodeScanner
+from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
 from .base import BaseSense
 
 if TYPE_CHECKING:
@@ -319,6 +323,10 @@ class SutraSense(BaseSense):
         # 🧠 SEMANTIC ENGINE (Lazy Injection)
         self._semantic_engine: Any = None
 
+        # 📊 OPUS-110: Graph-based Code Scanner (Lazy Init)
+        self._knowledge_graph: Optional[UnifiedKnowledgeGraph] = None
+        self._code_scanner: Optional[CodeScanner] = None
+
     def inject_semantic_engine(self, engine: Any) -> None:
         """Inject the Semantic Engine for Level 2 intelligence."""
         self._semantic_engine = engine
@@ -353,6 +361,9 @@ class SutraSense(BaseSense):
 
             # 3. Cross-reference harnesses with code
             self._verify_harness_wiring()
+
+            # 4. OPUS-110: Graph-based duplicate detection
+            self._detect_code_duplicates()
 
         # Build summary
         gaps_by_type: Dict[str, int] = {}
@@ -630,6 +641,60 @@ class SutraSense(BaseSense):
 
             check.wiring_found = wiring_found
             check.wiring_missing = wiring_missing
+
+    def _detect_code_duplicates(self) -> None:
+        """
+        OPUS-110: Graph-based duplicate detection via CodeScanner.
+
+        Uses the Knowledge Graph to find duplicate class definitions
+        that violate DRY principle. This is the "Weaver's Eye" seeing
+        the fabric of code and detecting tears.
+        """
+        try:
+            # Lazy init graph and scanner
+            if self._knowledge_graph is None:
+                self._knowledge_graph = UnifiedKnowledgeGraph()
+            if self._code_scanner is None:
+                self._code_scanner = CodeScanner(self._knowledge_graph)
+
+            # Scan vibe_core directory for duplicates
+            vibe_core_path = self._workspace / "vibe_core"
+            if not vibe_core_path.exists():
+                return
+
+            # Clear previous scan data
+            self._knowledge_graph.nodes.clear()
+            self._knowledge_graph.edges.clear()
+            self._code_scanner._class_registry.clear()
+            self._code_scanner._scanned_files.clear()
+
+            # Run the scan
+            stats = self._code_scanner.scan_directory(vibe_core_path)
+
+            # Get duplicates and convert to gaps
+            duplicates = self._code_scanner.get_duplicates()
+
+            for dup in duplicates:
+                # Create a gap for each duplicate group
+                locations = [f"{loc['path']}:{loc['line']}" for loc in dup["locations"]]
+                self._gaps.append(
+                    DocCodeGap(
+                        gap_type="duplicate_code",
+                        severity=dup["severity"],  # "critical" for ABCs, "high" for classes
+                        doc_path=None,
+                        code_path=Path(dup["locations"][0]["path"]),
+                        description=(
+                            f"DRY violation: {dup['class_name']} defined {dup['count']}x in: {', '.join(locations)}"
+                        ),
+                        suggested_action=(f"Consolidate {dup['class_name']} to single canonical source"),
+                    )
+                )
+
+            if duplicates:
+                logger.warning(f"[OPUS-110] CodeScanner found {len(duplicates)} duplicate class groups")
+
+        except Exception as e:
+            logger.debug(f"[OPUS-110] CodeScanner error (non-fatal): {e}")
 
     # =========================================================================
     # Intent Generation (YOGA - Filling Gaps)
