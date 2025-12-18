@@ -135,6 +135,16 @@ class CognitionRenderer(BaseRenderer):
         # ====================================================================
         lines.extend(self._render_error_cycles())
 
+        # ====================================================================
+        # SECTION 7: MANAS INTENT STREAM (OPUS-108 - Debug Intelligence)
+        # ====================================================================
+        lines.extend(self._render_intent_stream())
+
+        # ====================================================================
+        # SECTION 8: SANKALPA STATUS (Strategic Will)
+        # ====================================================================
+        lines.extend(self._render_sankalpa_status())
+
         return "\n".join(lines)
 
     def _render_arsenal(self) -> list:
@@ -462,5 +472,134 @@ class CognitionRenderer(BaseRenderer):
                 lines.append("  - _(No detailed errors recorded)_")
 
             lines.append("")
+
+        return lines
+
+    def _render_intent_stream(self) -> list:
+        """Render MANAS intent stream (OPUS-108 Debug Intelligence).
+
+        Shows pending intents from .opus_state/manas_intents.json
+        This is the "thought stream" - what MANAS is thinking about doing.
+        """
+        lines = [
+            "## 🎯 Intent Stream",
+            "",
+            "_MANAS thoughts and pending intents (debug view)_",
+            "",
+        ]
+
+        try:
+            import json
+
+            workspace = getattr(self.kernel, "_workspace", None) or Path.cwd()
+            intents_file = workspace / ".opus_state" / "manas_intents.json"
+
+            if not intents_file.exists():
+                lines.extend(["_No intents file found_", ""])
+                return lines
+
+            with open(intents_file) as f:
+                data = json.load(f)
+
+            intents = data.get("pending", [])
+            if not intents:
+                lines.extend(["_Intent buffer empty (MANAS is idle)_", ""])
+                return lines
+
+            lines.append(f"**{len(intents)} pending intent(s)**")
+            lines.append("")
+            lines.append("| # | Intent | Type | Priority | Risk |")
+            lines.append("| :---: | :--- | :--- | :---: | :---: |")
+
+            for idx, intent in enumerate(intents[:10], 1):
+                title = intent.get("title", intent.get("id", "Unknown"))[:40]
+                intent_type = intent.get("intent_type", "unknown")
+                priority = intent.get("priority", "medium")
+                risk = intent.get("risk", "unknown")
+
+                # Priority emoji
+                priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(
+                    priority.lower(), "⚪"
+                )
+
+                # Risk emoji
+                risk_emoji = {"safe": "✅", "low": "🟢", "medium": "🟡", "high": "🟠", "critical": "🔴"}.get(
+                    risk.lower(), "⚪"
+                )
+
+                lines.append(f"| {idx} | {title} | `{intent_type}` | {priority_emoji} | {risk_emoji} |")
+
+            if len(intents) > 10:
+                lines.append(f"| ... | _+{len(intents) - 10} more_ | | | |")
+
+            lines.extend(["", ""])
+
+        except Exception as e:
+            logger.warning(f"Could not render intent stream: {e}")
+            lines.extend([f"_Error loading intents: {e}_", ""])
+
+        return lines
+
+    def _render_sankalpa_status(self) -> list:
+        """Render SANKALPA strategic will status.
+
+        Shows active missions and strategies from .opus_state/sankalpa.json
+        This is the "strategic layer" - MANAS's long-term goals.
+        """
+        lines = [
+            "## 🎯 Strategic Will (Sankalpa)",
+            "",
+            "_Active missions and strategies_",
+            "",
+        ]
+
+        try:
+            import json
+
+            workspace = getattr(self.kernel, "_workspace", None) or Path.cwd()
+            sankalpa_file = workspace / ".opus_state" / "sankalpa.json"
+
+            if not sankalpa_file.exists():
+                lines.extend(["_No sankalpa file found_", ""])
+                return lines
+
+            with open(sankalpa_file) as f:
+                data = json.load(f)
+
+            missions = data.get("missions", [])
+            strategies = data.get("strategies", [])
+
+            # Active missions
+            active_missions = [m for m in missions if m.get("status") == "active"]
+            if active_missions:
+                lines.append(f"**Active Missions:** {len(active_missions)}")
+                for m in active_missions[:5]:
+                    name = m.get("name", "Unknown")
+                    priority = m.get("priority", "medium")
+                    lines.append(f"- **{name}** ({priority})")
+                lines.append("")
+
+            # Active strategies
+            active_strategies = [s for s in strategies if s.get("status") == "active"]
+            if active_strategies:
+                lines.append(f"**Active Strategies:** {len(active_strategies)}")
+                for s in active_strategies[:5]:
+                    name = s.get("name", "Unknown")
+                    lines.append(f"- {name}")
+                lines.append("")
+
+            if not active_missions and not active_strategies:
+                lines.append("_No active missions or strategies_")
+                lines.append("")
+
+            # Last thinking timestamp
+            last_think = data.get("last_think_timestamp")
+            if last_think:
+                lines.append(f"**Last Thought:** `{last_think}`")
+                lines.append("")
+
+        except Exception as e:
+            logger.warning(f"Could not render sankalpa status: {e}")
+            lines.extend([f"_Error loading sankalpa: {e}_", ""])
 
         return lines
