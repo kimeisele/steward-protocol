@@ -21,21 +21,34 @@ Usage:
     test_circuits = CircuitLoader.get_circuits_for_trigger("file_modified")
 """
 
+from .action_loader import ActionLoader, ActionLoadError, ActionMetadata, ActionRegistry, IntentHandlerMap
 from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata, AnalyzerRegistry
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
+from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
 from .template_loader import TemplateLoader
 
 __all__ = [
     "UnifiedLoader",
     "ItemMeta",
     "LoaderRegistry",
+    # Action Loader (OPUS-100)
+    "ActionLoader",
+    "ActionLoadError",
+    "ActionRegistry",
+    "ActionMetadata",
+    "IntentHandlerMap",
     # Analyzer Loader (OPUS-098)
     "AnalyzerLoader",
     "AnalyzerLoadError",
     "AnalyzerRegistry",
     "AnalyzerMetadata",
+    # Sense Loader (OPUS-099)
+    "SenseLoader",
+    "SenseLoadError",
+    "SenseRegistry",
+    "SenseMetadata",
     # Circuit Loader
     "CircuitLoader",
     "CircuitMeta",
