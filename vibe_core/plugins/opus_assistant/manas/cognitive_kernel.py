@@ -1562,11 +1562,17 @@ class CognitiveKernel(CognitiveCycle):
 
         return results, metadata
 
-    async def _persist(self) -> None:
+    async def _persist(self, context: "CycleContext") -> Dict[str, str]:
         """
         PERSIST Phase: Save state to disk.
 
         Called after all phases complete to ensure durability.
+
+        Args:
+            context: CycleContext from orchestration cycle
+
+        Returns:
+            Dict of persist errors (empty if success)
         """
         # Trim buffer to max size
         while len(self._intent_buffer) > self._config.max_intent_buffer_size:
@@ -1582,6 +1588,9 @@ class CognitiveKernel(CognitiveCycle):
         # Save intent buffer to disk
         self._save_intent_buffer()
         logger.debug("💾 MANAS: Persisted intent buffer")
+
+        # Return empty dict (no errors)
+        return {}
 
     # =========================================================================
     # RE-ENTRANCY GUARD (OPUS-088: Mirror Test)

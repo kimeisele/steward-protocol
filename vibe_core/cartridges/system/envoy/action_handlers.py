@@ -337,8 +337,8 @@ class ExecuteScriptHandler(ActionHandler):
         return ActionResult.ok({"created_folders": created, "base_path": base_path})
 
     async def _init_git(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
-        """Initialize git repository"""
-        import subprocess
+        """Initialize git repository (async, non-blocking)"""
+        import asyncio
         from pathlib import Path
 
         repo_path = params.get("repo_path", ".")
@@ -346,7 +346,18 @@ class ExecuteScriptHandler(ActionHandler):
 
         repo = Path(repo_path)
         if not (repo / ".git").exists():
-            subprocess.run(["git", "init", "-b", initial_branch], cwd=repo, check=True)
+            process = await asyncio.create_subprocess_exec(
+                "git",
+                "init",
+                "-b",
+                initial_branch,
+                cwd=str(repo),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await process.communicate()
+            if process.returncode != 0:
+                return ActionResult.fail(f"Git init failed: {stderr.decode()}")
             logger.info(f"    🔧 Initialized git at: {repo_path}")
         else:
             logger.info(f"    🔧 Git already exists at: {repo_path}")
@@ -354,7 +365,8 @@ class ExecuteScriptHandler(ActionHandler):
         return ActionResult.ok({"repo_path": repo_path, "branch": initial_branch, "status": "initialized"})
 
     async def _write_file(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
-        """Write content to a file"""
+        """Write content to a file (async, non-blocking)"""
+        import asyncio
         from pathlib import Path
 
         file_path = params.get("path")
@@ -365,13 +377,15 @@ class ExecuteScriptHandler(ActionHandler):
 
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        # Use asyncio.to_thread to avoid blocking the event loop
+        await asyncio.to_thread(path.write_text, content)
         logger.info(f"    📝 Wrote to: {file_path} ({len(content)} chars)")
 
         return ActionResult.ok({"path": file_path, "bytes_written": len(content)})
 
     async def _read_file(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
-        """Read content from a file"""
+        """Read content from a file (async, non-blocking)"""
+        import asyncio
         from pathlib import Path
 
         file_path = params.get("path")
@@ -382,7 +396,8 @@ class ExecuteScriptHandler(ActionHandler):
         path = Path(file_path)
         if not path.exists():
             return ActionResult.fail(f"File not found: {file_path}")
-        content = path.read_text()
+        # Use asyncio.to_thread to avoid blocking the event loop
+        content = await asyncio.to_thread(path.read_text)
         return ActionResult.ok({"path": file_path, "content": content})
 
 
@@ -958,8 +973,8 @@ class GitCommitHandler(ActionHandler):
         params: Dict[str, Any],
         context: ActionContext,
     ) -> ActionResult:
-        """Commit files to git repository."""
-        import subprocess
+        """Commit files to git repository (async, non-blocking)."""
+        import asyncio
 
         files = params.get("files", [])
         message = params.get("message", target) or "chore(manas): Automated circuit execution"
@@ -997,48 +1012,49 @@ class GitCommitHandler(ActionHandler):
                     return ActionResult.ok({"committed": False, "reason": "no_matching_files"})
                 return ActionResult.fail("No files matched the specified patterns")
 
-            # Git add
+            # Git add (async, non-blocking)
             add_cmd = ["git", "add"] + staged_files
-            add_result = subprocess.run(
-                add_cmd,
-                capture_output=True,
-                text=True,
+            add_process = await asyncio.create_subprocess_exec(
+                *add_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
                 cwd=workspace,
             )
+            _, add_stderr = await add_process.communicate()
 
-            if add_result.returncode != 0:
-                logger.error(f"    ❌ git add failed: {add_result.stderr}")
-                return ActionResult.fail(f"git add failed: {add_result.stderr}")
+            if add_process.returncode != 0:
+                logger.error(f"    ❌ git add failed: {add_stderr.decode()}")
+                return ActionResult.fail(f"git add failed: {add_stderr.decode()}")
 
             logger.info(f"    📦 Staged {len(staged_files)} files")
 
-            # Git commit
+            # Git commit (async, non-blocking)
             commit_cmd = ["git", "commit", "-m", message]
             if allow_empty:
                 commit_cmd.append("--allow-empty")
 
-            commit_result = subprocess.run(
-                commit_cmd,
-                capture_output=True,
-                text=True,
+            commit_process = await asyncio.create_subprocess_exec(
+                *commit_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
                 cwd=workspace,
             )
+            commit_stdout, commit_stderr = await commit_process.communicate()
+            commit_stdout_str = commit_stdout.decode()
+            commit_stderr_str = commit_stderr.decode()
 
             # Return code 1 means "nothing to commit" which is OK
-            if commit_result.returncode == 0:
+            if commit_process.returncode == 0:
                 logger.info(f"    ✓ Committed: {message[:40]}...")
                 return ActionResult.ok(
                     {
                         "committed": True,
                         "message": message,
                         "files": staged_files,
-                        "stdout": commit_result.stdout,
+                        "stdout": commit_stdout_str,
                     }
                 )
-            elif (
-                "nothing to commit" in commit_result.stdout.lower()
-                or "nothing to commit" in commit_result.stderr.lower()
-            ):
+            elif "nothing to commit" in commit_stdout_str.lower() or "nothing to commit" in commit_stderr_str.lower():
                 logger.info("    ○ Nothing to commit (already up to date)")
                 return ActionResult.ok(
                     {
@@ -1048,8 +1064,8 @@ class GitCommitHandler(ActionHandler):
                     }
                 )
             else:
-                logger.error(f"    ❌ git commit failed: {commit_result.stderr}")
-                return ActionResult.fail(f"git commit failed: {commit_result.stderr}")
+                logger.error(f"    ❌ git commit failed: {commit_stderr_str}")
+                return ActionResult.fail(f"git commit failed: {commit_stderr_str}")
 
         except Exception as e:
             logger.error(f"    ❌ Git operation failed: {e}")
