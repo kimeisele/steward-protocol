@@ -673,22 +673,32 @@ class StateSyncHolon:
 
         Called by Prakriti during git merge.
         Returns healed content that is ALWAYS valid.
+
+        OPUS-106: Now uses UntotbarMergeEngine for intelligent conflict healing.
         """
         # Import merge engine if available
         try:
             from .merge_engine import UntotbarMergeEngine
 
             engine = UntotbarMergeEngine()
-            healed = engine.heal_conflict(path, ours, theirs)
+            healed_result = engine.heal_conflict(path, ours, theirs)
 
             if hasattr(self.prakriti, "ledger") and hasattr(self.prakriti.ledger, "record_event"):
                 self.prakriti.ledger.record_event(
                     "CONFLICT_HEALED",
                     "StateSyncHolon",
-                    {"path": str(path), "strategy": engine.get_strategy(path)},
+                    {
+                        "path": str(path),
+                        "strategy": healed_result.strategy.value,
+                        "conflicts_found": healed_result.conflicts_found,
+                    },
                 )
 
-            return healed
+            logger.info(
+                f"[SYNC_HOLON] Healed conflict: {path} "
+                f"(strategy={healed_result.strategy.value}, conflicts={healed_result.conflicts_found})"
+            )
+            return healed_result.healed_content
         except ImportError:
             # Fallback: ours wins
             logger.warning(f"[SYNC_HOLON] MergeEngine not available, using ours for {path}")
