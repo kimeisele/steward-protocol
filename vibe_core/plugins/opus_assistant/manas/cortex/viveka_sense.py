@@ -214,14 +214,15 @@ class VivekaSense(BaseSense):
             sutra = SutraSense(workspace=self._workspace)
             hidden = sutra.discover_hidden_code()
 
+            # HiddenCode is a dataclass, not a dict - use attribute access
             return [
                 {
-                    "file_path": item.get("file", ""),
-                    "element_name": item.get("name", ""),
-                    "element_type": item.get("type", "function"),
-                    "line_number": item.get("line", 0),
-                    "complexity": item.get("complexity", "moderate"),
-                    "importance": item.get("importance", "medium"),
+                    "file_path": str(item.file_path),
+                    "element_name": item.name,
+                    "element_type": item.element_type,
+                    "line_number": item.line_number,
+                    "complexity": item.complexity,
+                    "importance": item.importance,
                 }
                 for item in hidden
             ]

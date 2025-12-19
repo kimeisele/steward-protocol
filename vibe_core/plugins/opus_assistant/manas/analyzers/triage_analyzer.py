@@ -97,9 +97,10 @@ class TriageAnalyzer(BaseAnalyzer):
         intents: List[Intent] = []
 
         # Generate P1 CRITICAL intents
-        for gap in report.p1_critical[: self._config.max_intents_per_run]:
+        for idx, gap in enumerate(report.p1_critical[: self._config.max_intents_per_run]):
             intent = Intent(
-                type="triage_p1_critical",
+                id=f"triage_p1_{idx}",
+                intent_type="triage_p1_critical",
                 title=f"[P1 CRITICAL] Document {gap.element_name}",
                 description=(
                     f"Undocumented {gap.element_type} with high complexity "
@@ -107,9 +108,9 @@ class TriageAnalyzer(BaseAnalyzer):
                     f"Reason: {gap.reason}\n"
                     f"Priority Score: {gap.priority_score:.1f}"
                 ),
+                reasoning=f"VivekaSense discrimination: {gap.reason}",
                 priority=IntentPriority.CRITICAL,
                 risk=IntentRisk.MEDIUM,
-                source=self.name,
                 params={
                     "file_path": gap.file_path,
                     "element_name": gap.element_name,
@@ -119,24 +120,26 @@ class TriageAnalyzer(BaseAnalyzer):
                     "churn_score": gap.churn_score,
                     "priority_score": gap.priority_score,
                     "action": "document",
+                    "source": self.name,
                 },
             )
             intents.append(intent)
 
         # Generate P2 HIGH intents (if room and no P1s)
         p2_limit = max(0, self._config.max_intents_per_run - len(intents))
-        for gap in report.p2_high[:p2_limit]:
+        for idx, gap in enumerate(report.p2_high[:p2_limit]):
             intent = Intent(
-                type="triage_p2_high",
+                id=f"triage_p2_{idx}",
+                intent_type="triage_p2_high",
                 title=f"[P2 HIGH] Document {gap.element_name}",
                 description=(
                     f"Important {gap.element_type} needs documentation. "
                     f"File: {gap.file_path}:{gap.line_number}\n"
                     f"Reason: {gap.reason}"
                 ),
+                reasoning=f"VivekaSense discrimination: {gap.reason}",
                 priority=IntentPriority.HIGH,
                 risk=IntentRisk.LOW,
-                source=self.name,
                 params={
                     "file_path": gap.file_path,
                     "element_name": gap.element_name,
@@ -145,6 +148,7 @@ class TriageAnalyzer(BaseAnalyzer):
                     "complexity": gap.complexity,
                     "priority_score": gap.priority_score,
                     "action": "document",
+                    "source": self.name,
                 },
             )
             intents.append(intent)
@@ -152,16 +156,17 @@ class TriageAnalyzer(BaseAnalyzer):
         # Generate summary intent if any gaps found
         if report.action_required > 0 and not intents:
             summary_intent = Intent(
-                type="triage_summary",
+                id="triage_summary_0",
+                intent_type="triage_summary",
                 title=f"Coverage Triage: {report.action_required} items need attention",
                 description=(
                     f"VivekaSense found {report.action_required} P1/P2 gaps.\n"
                     f"Health Grade: {report.health_grade}\n"
                     f"Recommendation: {report.recommendation}"
                 ),
+                reasoning="VivekaSense triage summary - actionable gaps identified",
                 priority=IntentPriority.MEDIUM,
                 risk=IntentRisk.LOW,
-                source=self.name,
                 params={
                     "p1_count": len(report.p1_critical),
                     "p2_count": len(report.p2_high),
@@ -174,6 +179,7 @@ class TriageAnalyzer(BaseAnalyzer):
                         + len(report.p5_trivial)
                     ),
                     "health_grade": report.health_grade,
+                    "source": self.name,
                 },
             )
             intents.append(summary_intent)
