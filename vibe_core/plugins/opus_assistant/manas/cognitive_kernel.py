@@ -39,6 +39,7 @@ from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
+    from vibe_core.tools.tool_registry import ToolRegistry
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
@@ -286,6 +287,9 @@ class CognitiveKernel(CognitiveCycle):
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel: Optional["RealVibeKernel"] = None
 
+        # OPUS-112: Global tool registry for direct dispatch (SYSTEM ACT mode)
+        self._global_tool_registry: Optional["ToolRegistry"] = None
+
         # 🦁 NARASIMHA: The Cognitive Guardian (Conscience)
         from ..narasimha.guardian import CortexNarasimha
 
@@ -475,16 +479,26 @@ class CognitiveKernel(CognitiveCycle):
 
     def inject_kernel(self, kernel: "RealVibeKernel") -> None:
         """
-        Inject the core VibeKernel for ledger access.
+        Inject the core VibeKernel for ledger access and tool registry.
 
         OPUS-057 VAJRA: Every intent MUST be recorded in the ledger.
         Without kernel injection, MANAS operates in "shadow mode" (no ledger).
+
+        OPUS-112 SYNAPTIC BRIDGE: Also stores reference to kernel.tool_registry
+        for direct tool dispatch (SYSTEM ACT mode).
 
         Args:
             kernel: The RealVibeKernel instance
         """
         self._vibe_kernel = kernel
-        logger.info("⚡ VAJRA: Kernel injected - ledger binding ACTIVE")
+
+        # OPUS-112: Store tool_registry reference for direct dispatch
+        if hasattr(kernel, "tool_registry"):
+            self._global_tool_registry = kernel.tool_registry
+            logger.info("⚡ VAJRA: Kernel injected - ledger + tool_registry ACTIVE")
+        else:
+            self._global_tool_registry = None
+            logger.info("⚡ VAJRA: Kernel injected - ledger ACTIVE (no tool_registry)")
 
     def inject_ledger(self, ledger: Any) -> None:
         """
