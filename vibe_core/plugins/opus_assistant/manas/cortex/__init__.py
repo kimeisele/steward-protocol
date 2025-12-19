@@ -141,6 +141,11 @@ from vibe_core.plugins.opus_assistant.manas.cortex.veda import (
     VedaPipeline,
 )
 
+# OPUS-133: VIVEKA ACTION (The Hands of Discrimination)
+from vibe_core.plugins.opus_assistant.manas.cortex.viveka_action import (
+    VivekaAction,
+)
+
 # OPUS-132: VIVEKA SENSE (The 5th Sense - Discrimination)
 from vibe_core.plugins.opus_assistant.manas.cortex.viveka_sense import (
     CoverageGap,
@@ -230,4 +235,6 @@ __all__ = [
     "VivekaReport",
     "CoverageGap",
     "TriagePriority",
+    # OPUS-133: VIVEKA ACTION (The Hands of Discrimination)
+    "VivekaAction",
 ]

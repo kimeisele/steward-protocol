@@ -1881,6 +1881,11 @@ class CognitiveKernel(CognitiveCycle):
 
         # Sort by: priority, repair status, synaptic confidence (inverted), created_at
         def sort_key(intent: Intent) -> tuple:
+            """sort_key - TODO: Add description.
+
+            Args:
+                intent: Description needed
+            """
             pri = priority_order.get(intent.priority, 99)
             # Contract intents (repairs) come before semantic (genesis)
             is_repair = 0 if intent.intent_type.startswith("contract_") else 1
