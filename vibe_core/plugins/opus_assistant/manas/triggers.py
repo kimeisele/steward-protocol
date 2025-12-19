@@ -1,41 +1,56 @@
 """
-OPUS-111: Signal Alignment - The Synaptic Vocabulary.
+OPUS-111 + OPUS-112: Signal Alignment & Synaptic Inference.
 
 "Ein Gehirn, das seine eigene Sprache nicht versteht, ist lobotomiert."
+"Ein Gehirn, das sein Tagebuch nicht liest, lernt nie."
 
-This module defines the canonical vocabulary for synaptic triggers and actions.
-All components that emit or consume synaptic signals MUST use these constants.
+This module defines:
+1. The canonical vocabulary for synaptic triggers and actions (OPUS-111)
+2. The inference engine for reading synaptic memory (OPUS-112)
 
-The Problem (before OPUS-111):
-- _extract_trigger() generated dynamic strings like "trigger:file_changed:vibe_core/loaders/**"
-- synapses.json had hardcoded patterns like "trigger:file_changed:vibe_core/**/*.py"
-- These didn't match → synapses were dead (lobotomized)
+OPUS-111 (Signal Alignment):
+- TriggerPatterns: Canonical trigger constants
+- ActionPatterns: Canonical action constants
+- normalize_trigger(): Maps raw events to canonical patterns
 
-The Solution:
-1. TriggerPatterns: Canonical trigger constants
-2. ActionPatterns: Canonical action constants
-3. normalize_trigger(): Maps raw events to canonical patterns
-4. SynapseVocabulary: The complete signal dictionary
+OPUS-112 (Synaptic Inference):
+- SynapticMemory: Read/write access to synapses.json
+- consult(): Query learned associations for decision making
+- get_confidence(): Get learned weight for an intent
+
+The Loop:
+    Event → normalize_trigger() → SynapticMemory.consult() → Decision
+                                         ↓
+    Outcome → _update_synapses() ← SynapticMemory.update()
 
 Usage:
     from vibe_core.plugins.opus_assistant.manas.triggers import (
         TriggerPatterns,
         ActionPatterns,
         normalize_trigger,
+        SynapticMemory,
     )
 
-    # In _extract_trigger():
+    # OPUS-111: Normalize trigger
     trigger = normalize_trigger(intent)
 
-    # In synapses.json seed:
-    # Use TriggerPatterns.TEST_FAILURE instead of hardcoded strings
+    # OPUS-112: Consult memory for recommendations
+    memory = SynapticMemory.get(workspace)
+    recommendations = memory.consult(trigger)
+    # Returns: [("action:run_tests", 0.9), ("action:check_lint", 0.7)]
 """
 
 import fnmatch
+import json
+import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger("MANAS.Synapses")
 
 
 class TriggerPatterns(str, Enum):
@@ -361,3 +376,262 @@ class SynapseVocabulary:
     def get_all_actions(self) -> List[str]:
         """Get all canonical action strings."""
         return [a.value for a in ActionPatterns]
+
+
+# =============================================================================
+# OPUS-112: SYNAPTIC INFERENCE - THE READING BRAIN
+# =============================================================================
+
+
+@dataclass
+class SynapticRecommendation:
+    """A recommended action from synaptic memory."""
+
+    action: str  # e.g., "action:run_tests"
+    weight: float  # 0.0 - 1.0
+    trigger: str  # The trigger that led to this recommendation
+
+    @property
+    def confidence_level(self) -> str:
+        """Human-readable confidence level."""
+        if self.weight >= 0.9:
+            return "very_high"
+        elif self.weight >= 0.7:
+            return "high"
+        elif self.weight >= 0.5:
+            return "medium"
+        elif self.weight >= 0.3:
+            return "low"
+        else:
+            return "very_low"
+
+
+class SynapticMemory:
+    """
+    OPUS-112: The Reading Brain - Synaptic Memory with Inference.
+
+    "A brain that writes but never reads is just a diary."
+
+    This class provides:
+    1. consult(trigger) - Get recommended actions for a trigger
+    2. get_confidence(intent) - Get learned confidence for an intent
+    3. load/save - Persistence to synapses.json
+
+    The key insight: Learning without inference is just data collection.
+    MANAS must READ the synapses to make experience-based decisions.
+
+    Usage:
+        memory = SynapticMemory.get(workspace)
+
+        # When a trigger fires, consult memory:
+        trigger = normalize_trigger(intent)
+        recommendations = memory.consult(trigger)
+
+        # Use recommendations for decision making:
+        for rec in recommendations:
+            if rec.weight >= 0.7:
+                # High confidence - consider auto-executing
+                ...
+    """
+
+    _instances: Dict[str, "SynapticMemory"] = {}
+
+    def __init__(self, workspace: Path):
+        """Initialize synaptic memory for a workspace."""
+        self._workspace = workspace
+        self._synapse_file = workspace / ".opus_state" / "synapses.json"
+        self._cache: Optional[Dict[str, Any]] = None
+        self._cache_time: Optional[datetime] = None
+        self._cache_ttl_seconds = 60  # Reload cache every 60 seconds
+
+    @classmethod
+    def get(cls, workspace: Path) -> "SynapticMemory":
+        """Get or create SynapticMemory instance for workspace."""
+        key = str(workspace)
+        if key not in cls._instances:
+            cls._instances[key] = cls(workspace)
+        return cls._instances[key]
+
+    def _load_synapses(self, force: bool = False) -> Dict[str, Any]:
+        """Load synapses from disk with caching."""
+        now = datetime.utcnow()
+
+        # Return cache if valid
+        if not force and self._cache is not None and self._cache_time is not None:
+            age = (now - self._cache_time).total_seconds()
+            if age < self._cache_ttl_seconds:
+                return self._cache
+
+        # Load from disk
+        if not self._synapse_file.exists():
+            # Initialize with seeds
+            self._cache = {
+                "schema": "v2",
+                "weights": get_seed_synapses(),
+                "meta": {"created": now.isoformat()},
+            }
+        else:
+            try:
+                self._cache = json.loads(self._synapse_file.read_text())
+            except Exception as e:
+                logger.warning(f"Failed to load synapses: {e}")
+                self._cache = {"schema": "v2", "weights": {}, "meta": {}}
+
+        self._cache_time = now
+        return self._cache
+
+    def consult(
+        self,
+        trigger: str,
+        min_weight: float = 0.0,
+        limit: int = 5,
+    ) -> List[SynapticRecommendation]:
+        """
+        Consult synaptic memory for a trigger.
+
+        This is the INFERENCE method - reading learned associations.
+
+        Args:
+            trigger: Canonical trigger string (e.g., "trigger:test_failure")
+            min_weight: Minimum weight threshold (default 0.0 = return all)
+            limit: Maximum recommendations to return
+
+        Returns:
+            List of SynapticRecommendation, sorted by weight descending
+        """
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+
+        # Look up trigger
+        if trigger not in weights:
+            logger.debug(f"🧠 INFERENCE: No learned actions for {trigger}")
+            return []
+
+        actions = weights[trigger]
+        recommendations = []
+
+        for action, weight in actions.items():
+            if weight >= min_weight:
+                recommendations.append(
+                    SynapticRecommendation(
+                        action=action,
+                        weight=weight,
+                        trigger=trigger,
+                    )
+                )
+
+        # Sort by weight descending
+        recommendations.sort(key=lambda r: r.weight, reverse=True)
+
+        # Limit
+        recommendations = recommendations[:limit]
+
+        if recommendations:
+            logger.debug(
+                f"🧠 INFERENCE: {trigger} → {len(recommendations)} recommendations "
+                f"(top: {recommendations[0].action} @ {recommendations[0].weight:.2f})"
+            )
+
+        return recommendations
+
+    def consult_for_intent(self, intent: Any) -> List[SynapticRecommendation]:
+        """
+        Consult synaptic memory for an intent.
+
+        Convenience method that normalizes the intent first.
+
+        Args:
+            intent: An Intent object
+
+        Returns:
+            List of SynapticRecommendation
+        """
+        trigger_pattern = normalize_trigger(intent)
+        if not trigger_pattern:
+            return []
+        return self.consult(trigger_pattern.value)
+
+    def get_confidence(self, intent: Any) -> float:
+        """
+        Get the learned confidence for an intent.
+
+        This looks up the intent's action in the synaptic memory
+        and returns the weight (0.0 - 1.0).
+
+        Args:
+            intent: An Intent object
+
+        Returns:
+            Confidence score (0.0 - 1.0), or 0.5 if not learned
+        """
+        trigger_pattern = normalize_trigger(intent)
+        if not trigger_pattern:
+            return 0.5  # Neutral - no experience
+
+        trigger = trigger_pattern.value
+        action = f"action:{getattr(intent, 'intent_type', 'unknown')}"
+
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+
+        if trigger not in weights:
+            return 0.5  # Neutral - no experience with this trigger
+
+        actions = weights[trigger]
+        if action not in actions:
+            return 0.5  # Neutral - no experience with this action
+
+        return actions[action]
+
+    def get_best_action(self, trigger: str) -> Optional[Tuple[str, float]]:
+        """
+        Get the single best action for a trigger.
+
+        Args:
+            trigger: Canonical trigger string
+
+        Returns:
+            Tuple of (action, weight) or None if no actions learned
+        """
+        recommendations = self.consult(trigger, limit=1)
+        if not recommendations:
+            return None
+        return (recommendations[0].action, recommendations[0].weight)
+
+    def has_experience(self, trigger: str) -> bool:
+        """Check if we have any learned experience for this trigger."""
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+        return trigger in weights and len(weights[trigger]) > 0
+
+    def get_all_triggers_with_experience(self) -> List[str]:
+        """Get all triggers that have learned associations."""
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+        return list(weights.keys())
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get statistics about synaptic memory."""
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+        meta = synapses.get("meta", {})
+
+        total_triggers = len(weights)
+        total_actions = sum(len(v) for v in weights.values())
+
+        # Find highest and lowest weights
+        all_weights = [w for actions in weights.values() for w in actions.values()]
+        avg_weight = sum(all_weights) / len(all_weights) if all_weights else 0.0
+
+        return {
+            "total_triggers": total_triggers,
+            "total_connections": total_actions,
+            "average_weight": round(avg_weight, 3),
+            "schema_version": synapses.get("schema", "unknown"),
+            "last_updated": meta.get("last_updated", "unknown"),
+        }
+
+    def invalidate_cache(self) -> None:
+        """Invalidate the cache (force reload on next access)."""
+        self._cache = None
+        self._cache_time = None
