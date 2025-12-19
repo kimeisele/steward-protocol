@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class ExecutionResult:
-    """Result of executing a command."""
+class CommandResult:
+    """Result of executing a shell command (OPUS-111: renamed from CommandResult)."""
 
     success: bool
     output: str
@@ -168,7 +168,7 @@ class BaseAgent:
     # CONNECTION TO BODY (GAD-5: Runtime)
     # ========================================================================
 
-    def execute_command(self, command: str, timeout: int = 30, prompt: str | None = None, **kwargs) -> ExecutionResult:
+    def execute_command(self, command: str, timeout: int = 30, prompt: str | None = None, **kwargs) -> CommandResult:
         """
         Execute a command via the Runtime (GAD-5).
 
@@ -185,7 +185,7 @@ class BaseAgent:
             **kwargs: Additional parameters (e.g., timeout_seconds)
 
         Returns:
-            ExecutionResult with stdout, stderr, exit code
+            CommandResult with stdout, stderr, exit code
         """
         import time
 
@@ -212,7 +212,7 @@ class BaseAgent:
             duration_ms = (time.time() - start_time) * 1000
             self.execution_count += 1
 
-            return ExecutionResult(
+            return CommandResult(
                 success=result.returncode == 0,
                 output=result.stdout,
                 error=result.stderr,
@@ -222,7 +222,7 @@ class BaseAgent:
 
         except subprocess.TimeoutExpired:
             duration_ms = (time.time() - start_time) * 1000
-            return ExecutionResult(
+            return CommandResult(
                 success=False,
                 output="",
                 error=f"Command timed out after {timeout}s",
@@ -231,7 +231,7 @@ class BaseAgent:
             )
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
-            return ExecutionResult(
+            return CommandResult(
                 success=False,
                 output="",
                 error=str(e),
@@ -637,4 +637,4 @@ class BaseAgent:
         return f"{self.name} ({self.role})"
 
 
-__all__ = ["BaseAgent", "ExecutionResult", "KnowledgeResult"]
+__all__ = ["BaseAgent", "CommandResult", "KnowledgeResult"]
