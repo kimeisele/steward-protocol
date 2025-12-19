@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "saved_at": "2025-12-19T22:05:44.544578",
+  "total_cycles": 5,
+  "completed": [
+    {
+      "cycle_id": "test1234",
+      "parent_cycle_id": null,
+      "trace_id": "trace_abc",
+      "cycle_name": "test_cycle",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 0,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544584"
+    },
+    {
+      "cycle_id": "pran_4498",
+      "parent_cycle_id": null,
+      "trace_id": "trace_prana_pulse",
+      "cycle_name": "prana_pulse",
+      "phase": "persist",
+      "observations_count": 3,
+      "orientations_count": 0,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544586"
+    },
+    {
+      "cycle_id": "boot_4509",
+      "parent_cycle_id": null,
+      "trace_id": "trace_boot_orchestrator",
+      "cycle_name": "boot_orchestrator",
+      "phase": "persist",
+      "observations_count": 5,
+      "orientations_count": 0,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544588"
+    },
+    {
+      "cycle_id": "cogn_4521",
+      "parent_cycle_id": null,
+      "trace_id": "trace_cognitive_kernel",
+      "cycle_name": "cognitive_kernel",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 0,
+      "decisions_count": 3,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544590"
+    },
+    {
+      "cycle_id": "plug_4533",
+      "parent_cycle_id": null,
+      "trace_id": "trace_plugin_pulse",
+      "cycle_name": "plugin_pulse",
+      "phase": "persist",
+      "observations_count": 4,
+      "orientations_count": 0,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544592"
+    },
+    {
+      "cycle_id": "pran_4544",
+      "parent_cycle_id": null,
+      "trace_id": "trace_prana_pulse",
+      "cycle_name": "prana_pulse",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 0,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-19T22:05:44.544594"
+    }
+  ],
+  "errors": []
+}
