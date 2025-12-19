@@ -379,13 +379,18 @@ def commit_with_fence(self, state: ClassifiedState) -> CommitResult:
 # =============================================================================
 # OPUS-096 STATE SYNC HOLON WEAVER - VERIFICATION HARNESS
 # =============================================================================
-# Status: DRAFT - Patterns defined but not yet implemented
+# Status: IMPLEMENTING - Phase 1-2 Complete, Phase 3 In Progress
 
 files:
-  # === CORE WEAVER (NEW) ===
+  # === CORE WEAVER (IMPLEMENTED) ===
   - path: vibe_core/state/weaver.py
-    required: false
+    required: true
     rationale: "StateSyncWeaver - Meta-orchestration of all state sync"
+
+  # === RUNTIME STATE DEFINITION (IMPLEMENTED) ===
+  - path: vibe_core/state/runtime_state.py
+    required: true
+    rationale: "RuntimeStateDefinition - Single source of truth for runtime state"
 
   # === EXISTING STATE ENGINE ===
   - path: vibe_core/state/prakriti.py
@@ -403,32 +408,45 @@ files:
   # === HEARTBEAT (scheduled trigger) ===
   - path: scripts/heartbeat.py
     required: true
-    rationale: "Must integrate with Weaver for unified commits"
+    rationale: "Uses Weaver.pulse() for unified commits"
 
   # === CHRONICLE (commit execution) ===
   - path: vibe_core/cartridges/system/chronicle/tools/git_tools.py
     required: true
-    rationale: "seal_history must support Weaver decisions"
+    rationale: "seal_history - legacy fallback, should migrate to Weaver"
 
 wiring:
-  # === EXISTING PATTERNS (verify these work) ===
+  # === IMPLEMENTED PATTERNS ===
+  - pattern: "class StateSyncWeaver"
+    in: vibe_core/state/weaver.py
+    status: "IMPLEMENTED"
+  - pattern: "class RuntimeStateDefinition"
+    in: vibe_core/state/runtime_state.py
+    status: "IMPLEMENTED"
+  - pattern: "weaver\\.pulse\\(\\)|StateSyncWeaver"
+    in: scripts/heartbeat.py
+    status: "IMPLEMENTED"
+    context: "Heartbeat now uses Weaver.pulse() with legacy fallback"
+  - pattern: "get_runtime_state_definition"
+    in: vibe_core/state/git_state.py
+    status: "IMPLEMENTED"
+    context: "git_state uses RuntimeStateDefinition for pattern discovery"
+  - pattern: "use_weaver.*=.*True"
+    in: vibe_core/state/sync_holon.py
+    status: "IMPLEMENTED"
+    context: "sync_holon.on_shutdown() delegates to Weaver"
+
+  # === EXISTING PATTERNS ===
   - pattern: "class StateSyncHolon"
     in: vibe_core/state/sync_holon.py
   - pattern: "class ManasOracle"
     in: vibe_core/plugins/opus_assistant/manas/api.py
   - pattern: "def seal_history"
     in: vibe_core/cartridges/system/chronicle/tools/git_tools.py
-  - pattern: "no_verify.*=.*True"
-    in: scripts/heartbeat.py
-    context: "Runtime state commits must skip hooks"
 
-  # === FUTURE PATTERNS (weaver implementation) ===
-  # - pattern: "class StateSyncWeaver"
-  #   in: vibe_core/state/weaver.py
-  # - pattern: "def consult_manas"
-  #   in: vibe_core/state/weaver.py
-  # - pattern: "weaver\\.pulse"
-  #   in: scripts/heartbeat.py
+  # === PENDING PATTERNS (GAPs to fix) ===
+  # GAP-020: Chronicle should delegate to Weaver
+  # GAP-021: MANAS Oracle consultation needs wiring
 
 semantic:
   # === CRITICAL SEPARATION ===
@@ -444,24 +462,28 @@ semantic:
     name: commit_orchestration
     description: "All state commits should go through Weaver"
     constraint: |
-      After implementation, direct calls to:
-      - GitTools.seal_history() from Heartbeat
-      - prakriti.commit_if_dirty() from plugins
-      Should be replaced with Weaver.pulse() or Weaver.commit()
+      ✅ Heartbeat uses Weaver.pulse()
+      ✅ sync_holon.on_shutdown() uses Weaver
+      ❌ Chronicle GitTools still has direct commits (GAP-020)
 
 tests:
   # === FUTURE TESTS ===
   - tests/state/test_weaver.py
+  - tests/state/test_runtime_state.py
   - tests/integration/test_weaver_manas.py
   - tests/integration/test_weaver_heartbeat.py
 
 fire_commands:
-  - name: "Verify sync_holon exists"
-    command: "test -f vibe_core/state/sync_holon.py && echo OK"
-  - name: "Verify ManasOracle exists"
-    command: "test -f vibe_core/plugins/opus_assistant/manas/api.py && echo OK"
-  - name: "Verify no_verify in heartbeat"
-    command: "grep -q 'no_verify=True' scripts/heartbeat.py && echo OK"
+  - name: "Verify Weaver exists"
+    command: "test -f vibe_core/state/weaver.py && echo OK"
+  - name: "Verify RuntimeStateDefinition exists"
+    command: "test -f vibe_core/state/runtime_state.py && echo OK"
+  - name: "Verify Heartbeat uses Weaver"
+    command: "grep -q 'StateSyncWeaver' scripts/heartbeat.py && echo OK"
+  - name: "Verify git_state uses RuntimeStateDefinition"
+    command: "grep -q 'get_runtime_state_definition' vibe_core/state/git_state.py && echo OK"
+  - name: "Verify sync_holon uses Weaver"
+    command: "grep -q 'use_weaver' vibe_core/state/sync_holon.py && echo OK"
 -->
 
 ---
