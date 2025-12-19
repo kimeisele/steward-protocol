@@ -47,8 +47,18 @@ from vibe_core.plugins.opus_assistant.manas.cortex.dharma import (
     DriftReport,
 )
 
+# OPUS-130: DHARMA SENSE (The 2nd Sense - Ethics)
+from vibe_core.plugins.opus_assistant.manas.cortex.dharma_sense import (
+    DharmaSense,
+)
+
 # OPUS-043: JNANA (The Conversation)
 from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
+
+# OPUS-131: KARMA SENSE (The 4th Sense - Memory)
+from vibe_core.plugins.opus_assistant.manas.cortex.karma_sense import (
+    KarmaSense,
+)
 
 # KRIYA (Intent Extraction)
 from vibe_core.plugins.opus_assistant.manas.cortex.kriya import (
@@ -121,6 +131,11 @@ from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
     WikiPage,
     WikiPageType,
     WikiSync,
+)
+
+# OPUS-131: SUTRA SENSE (The 3rd Sense - Knowledge Threads)
+from vibe_core.plugins.opus_assistant.manas.cortex.sutra_sense import (
+    SutraSense,
 )
 
 # OPUS-059: PRAMANA (The Valid Proof)
@@ -225,11 +240,17 @@ __all__ = [
     "MukhaGenerator",
     "IdentityScanner",
     "AgentIdentity",
-    # OPUS-009: PRAKRITI SENSE (Das sechste Jnanendriya)
+    # OPUS-009: PRAKRITI SENSE (The 1st Sense - State)
     "PrakritiSense",
     "GunaSummary",
     "LobotomyReport",
     "handle_prakriti_query",
+    # OPUS-130: DHARMA SENSE (The 2nd Sense - Ethics)
+    "DharmaSense",
+    # OPUS-131: SUTRA SENSE (The 3rd Sense - Knowledge)
+    "SutraSense",
+    # OPUS-131: KARMA SENSE (The 4th Sense - Memory)
+    "KarmaSense",
     # OPUS-132: VIVEKA SENSE (The 5th Sense - Discrimination)
     "VivekaSense",
     "VivekaReport",
