@@ -6,12 +6,12 @@ Each section is a self-contained plugin.
 """
 
 from .loader import SettingsSectionLoader, get_section_loader, reset_loader
-from .protocol import ExecutionResult, SectionContext, SettingsSection
+from .protocol import SectionContext, SettingsResult, SettingsSection
 
 __all__ = [
     "SettingsSection",
     "SectionContext",
-    "ExecutionResult",
+    "SettingsResult",
     "SettingsSectionLoader",
     "get_section_loader",
     "reset_loader",

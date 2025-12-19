@@ -8,7 +8,7 @@ Classes:
   - BaseAgent: Agent with persona, command execution, and knowledge access
   - BaseSpecialist: Abstract base class for all specialists
   - AgentRegistry: Global registry for specialist instances
-  - ExecutionResult: Result of command execution
+  - CommandResult: Result of command execution
   - KnowledgeResult: Result of knowledge base queries
 
 STATUS: Phase-specific specialists are NOT IMPLEMENTED.
@@ -16,7 +16,7 @@ The base classes (BaseAgent, BaseSpecialist) work, but the specific
 implementations (Planning, Coding, Testing) are stubs.
 """
 
-from .base_agent import BaseAgent, ExecutionResult, KnowledgeResult
+from .base_agent import BaseAgent, CommandResult, KnowledgeResult
 from .base_specialist import BaseSpecialist, MissionContext, SpecialistResult
 from .registry import AgentRegistry
 
@@ -68,7 +68,7 @@ __all__ = [
     "BaseAgent",
     "BaseSpecialist",
     "CodingSpecialist",
-    "ExecutionResult",
+    "CommandResult",
     "KnowledgeResult",
     "MissionContext",
     "PlanningSpecialist",

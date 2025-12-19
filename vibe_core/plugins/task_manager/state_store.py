@@ -25,8 +25,14 @@ class TaskStatus(Enum):
 
 
 @dataclass
-class Task:
-    """Immutable task representation."""
+class StoredTask:
+    """
+    Immutable task representation for JSON storage.
+
+    Note: This is a simplified task model for plugin-local persistence.
+    For the full Task model with topology routing, see task_management.models.Task.
+    For kernel scheduler tasks, see scheduling.task.Task.
+    """
 
     id: str
     title: str
@@ -58,7 +64,7 @@ class JsonTaskManager:
         self.data_dir = Path(data_dir)
         self.file_path = self.data_dir / "tasks.json"
         self._ensure_dir()
-        self.tasks: Dict[str, Task] = self._load()
+        self.tasks: Dict[str, StoredTask] = self._load()
         logger.info(f"🔓 JsonTaskManager initialized at {self.file_path}")
 
     def _ensure_dir(self):
@@ -67,7 +73,7 @@ class JsonTaskManager:
             self.data_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"📁 Created state directory: {self.data_dir}")
 
-    def _load(self) -> Dict[str, Task]:
+    def _load(self) -> Dict[str, StoredTask]:
         """Load tasks from JSON file."""
         if not self.file_path.exists():
             logger.info("📄 No existing state file, starting fresh")
@@ -78,7 +84,7 @@ class JsonTaskManager:
                 data = json.load(f)
                 tasks = {}
                 for task_id, task_data in data.items():
-                    tasks[task_id] = Task(**task_data)
+                    tasks[task_id] = StoredTask(**task_data)
                 logger.info(f"✅ Loaded {len(tasks)} tasks from state")
                 return tasks
         except Exception as e:
@@ -95,12 +101,12 @@ class JsonTaskManager:
         except Exception as e:
             logger.error(f"❌ Failed to save state: {e}")
 
-    def add_task(self, title: str, description: str, type: str = "general", metadata: Dict = None) -> Task:
+    def add_task(self, title: str, description: str, type: str = "general", metadata: Dict = None) -> StoredTask:
         """Add a new task to the queue."""
         import uuid
 
         task_id = str(uuid.uuid4())[:8]
-        task = Task(
+        task = StoredTask(
             id=task_id,
             title=title,
             description=description,
@@ -113,11 +119,11 @@ class JsonTaskManager:
         logger.info(f"➕ Task added: {title} ({task_id})")
         return task
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str) -> Optional[StoredTask]:
         """Retrieve a specific task."""
         return self.tasks.get(task_id)
 
-    def get_next_pending(self) -> Optional[Task]:
+    def get_next_pending(self) -> Optional[StoredTask]:
         """Get the next pending task (FIFO order)."""
         for task in self.tasks.values():
             if task.status == TaskStatus.PENDING.value:
@@ -134,11 +140,11 @@ class JsonTaskManager:
         else:
             logger.warning(f"⚠️  Task {task_id} not found")
 
-    def get_all_tasks(self) -> List[Task]:
+    def get_all_tasks(self) -> List[StoredTask]:
         """Get all tasks (for rendering)."""
         return sorted(self.tasks.values(), key=lambda t: t.created_at, reverse=True)
 
-    def get_tasks_by_status(self, status: TaskStatus) -> List[Task]:
+    def get_tasks_by_status(self, status: TaskStatus) -> List[StoredTask]:
         """Filter tasks by status."""
         status_val = status.value if isinstance(status, TaskStatus) else status
         return [t for t in self.tasks.values() if t.status == status_val]

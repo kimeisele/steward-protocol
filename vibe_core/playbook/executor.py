@@ -93,8 +93,8 @@ class ExecutionPlan:
 
 
 @dataclass
-class ExecutionResult:
-    """Result of executing a workflow or step"""
+class WorkflowResult:
+    """Result of executing a workflow or step (OPUS-111: renamed from WorkflowResult)"""
 
     workflow_id: str
     node_id: str
@@ -117,7 +117,7 @@ class AgentInterface:
         """Check if this agent has required skills"""
         raise NotImplementedError
 
-    def execute_action(self, action: str, prompt: str, timeout_seconds: int) -> ExecutionResult:
+    def execute_action(self, action: str, prompt: str, timeout_seconds: int) -> WorkflowResult:
         """Execute an action (mocked for testing)"""
         raise NotImplementedError
 
@@ -133,14 +133,14 @@ class MockAgent(AgentInterface):
         """Check if mock agent has all required skills"""
         return all(skill in self.skills for skill in required_skills)
 
-    def execute_action(self, action: str, prompt: str, timeout_seconds: int = 300) -> ExecutionResult:
+    def execute_action(self, action: str, prompt: str, timeout_seconds: int = 300) -> WorkflowResult:
         """
         Return mock result (for dry-run/testing).
 
         WARNING: This is a SIMULATION - no real work is performed.
         Enable VIBE_LIVE_FIRE=true for real execution.
         """
-        return ExecutionResult(
+        return WorkflowResult(
             workflow_id="SIMULATION",
             node_id=action,
             status=ExecutionStatus.SUCCESS,
@@ -169,7 +169,7 @@ class GraphExecutor:
         self.router = None  # AgentRouter (GAD-904) when connected
         self.quota = None  # OperationalQuota instance when safety layer active
         self.lens_prompt = None  # GAD-906/907: Semantic lens injection
-        self.execution_history: list[ExecutionResult] = []
+        self.execution_history: list[WorkflowResult] = []
 
     def set_agent(self, agent: AgentInterface) -> None:
         """Set the agent to use for execution"""
@@ -347,7 +347,7 @@ class GraphExecutor:
 
         return result
 
-    def execute_step(self, graph: WorkflowGraph, node_id: str, context: str | None = None) -> ExecutionResult:
+    def execute_step(self, graph: WorkflowGraph, node_id: str, context: str | None = None) -> WorkflowResult:
         """Execute a single workflow node using routed agent.
 
         Execution mode is determined by Phoenix safety configuration:
@@ -495,7 +495,7 @@ class GraphExecutor:
             try:
                 self.quota.check_before_request(estimated_tokens=50, operation=node.action)
             except Exception as e:  # QuotaExceededError
-                return ExecutionResult(
+                return WorkflowResult(
                     workflow_id=graph.id,
                     node_id=node_id,
                     status=ExecutionStatus.FAILED,
@@ -530,7 +530,7 @@ class GraphExecutor:
                     )
                 else:
                     # Fallback if agent doesn't have execution methods
-                    result = ExecutionResult(
+                    result = WorkflowResult(
                         workflow_id=graph.id,
                         node_id=node_id,
                         status=ExecutionStatus.FAILED,
@@ -541,7 +541,7 @@ class GraphExecutor:
                 cost_usd = result.cost_usd if hasattr(result, "cost_usd") else 0.0
             except Exception as e:
                 logger.error(f"🔥 LIVE FIRE execution failed for {node_id}: {e}")
-                result = ExecutionResult(
+                result = WorkflowResult(
                     workflow_id=graph.id,
                     node_id=node_id,
                     status=ExecutionStatus.FAILED,
@@ -552,7 +552,7 @@ class GraphExecutor:
         else:
             # SIMULATION MODE: No real execution, zero cost
             logger.warning(f"⚠️  SIMULATION: {node_id} not executed (VIBE_LIVE_FIRE not enabled)")
-            result = ExecutionResult(
+            result = WorkflowResult(
                 workflow_id=graph.id,
                 node_id=node_id,
                 status=ExecutionStatus.SUCCESS,
@@ -623,7 +623,7 @@ class GraphExecutor:
 
             except Exception as e:
                 # Execution failed - create error result
-                error_result = ExecutionResult(
+                error_result = WorkflowResult(
                     workflow_id=graph.id,
                     node_id=node_id,
                     status=ExecutionStatus.FAILED,
@@ -651,7 +651,7 @@ class GraphExecutor:
             ],
         }
 
-    def get_execution_history(self) -> list[ExecutionResult]:
+    def get_execution_history(self) -> list[WorkflowResult]:
         """Get execution history"""
         return self.execution_history
 

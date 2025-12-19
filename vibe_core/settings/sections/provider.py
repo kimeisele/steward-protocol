@@ -8,7 +8,7 @@ Self-contained section for LLM provider configuration.
 import logging
 from typing import List, Optional
 
-from ..protocol import ExecutionResult, SectionContext, SettingsSection
+from ..protocol import SectionContext, SettingsResult, SettingsSection
 
 logger = logging.getLogger(__name__)
 
@@ -153,14 +153,14 @@ class ProviderSection(SettingsSection):
             return f"Invalid provider '{value}'. Valid providers: {valid}"
         return None
 
-    def execute(self, key: str, value: str, context: SectionContext) -> ExecutionResult:
+    def execute(self, key: str, value: str, context: SectionContext) -> SettingsResult:
         """Execute provider change."""
         provider = value.lower().strip()
 
         # Validate
         error = self.validate(key, provider)
         if error:
-            return ExecutionResult(success=False, message=error)
+            return SettingsResult(success=False, message=error)
 
         # Get provider config
         provider_config = PROVIDER_REGISTRY[provider]
@@ -175,7 +175,7 @@ class ProviderSection(SettingsSection):
 
             logger.info(f"🔌 Provider changed to '{provider}'")
 
-            return ExecutionResult(
+            return SettingsResult(
                 success=True,
                 message=f"Provider changed to '{provider}' (requires kernel restart)",
                 requires_restart=True,
@@ -184,4 +184,4 @@ class ProviderSection(SettingsSection):
 
         except Exception as e:
             logger.error(f"Failed to change provider: {e}")
-            return ExecutionResult(success=False, message=str(e))
+            return SettingsResult(success=False, message=str(e))

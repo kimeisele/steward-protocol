@@ -42,6 +42,13 @@ from .ledger_state import LedgerHead, LedgerState, SyncEvent
 from .merge_engine import HealedConflict, MergeStrategy, UntotbarMergeEngine
 from .persona import AgentPersona, PersonaManager
 from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
+
+# OPUS-096: RuntimeStateDefinition - Single source of truth for runtime state
+from .runtime_state import (
+    RuntimeStateDefinition,
+    get_runtime_state_definition,
+    reset_runtime_state_definition,
+)
 from .sync_holon import (
     GovernanceViolation,
     PluginStateContract,
@@ -49,6 +56,22 @@ from .sync_holon import (
     StatePathInfo,
     StateSyncHolon,
     WatcherConfig,
+)
+
+# OPUS-096: StateSyncWeaver - Unified state orchestration
+from .weaver import (
+    ClassifiedState,
+    CommitPlan,
+    CommitStrategy,
+    StateSyncWeaver,
+    WeaverMode,
+    WeaverStateMap,
+    WeavingAdvice,
+    get_state_sync_weaver,
+    reset_state_sync_weaver,
+)
+from .weaver import (
+    CommitResult as WeaverCommitResult,
 )
 
 __all__ = [
@@ -96,4 +119,19 @@ __all__ = [
     "CognitiveContext",
     "WisdomConsultation",
     "get_cognitive_weaver",
+    # OPUS-096: RuntimeStateDefinition (Single Source of Truth)
+    "RuntimeStateDefinition",
+    "get_runtime_state_definition",
+    "reset_runtime_state_definition",
+    # OPUS-096: StateSyncWeaver (Unified State Orchestration)
+    "StateSyncWeaver",
+    "WeaverMode",
+    "CommitStrategy",
+    "WeaverStateMap",
+    "ClassifiedState",
+    "WeavingAdvice",
+    "CommitPlan",
+    "WeaverCommitResult",
+    "get_state_sync_weaver",
+    "reset_state_sync_weaver",
 ]

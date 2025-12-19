@@ -16,7 +16,12 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from .runtime_state import get_runtime_state_definition
+
+if TYPE_CHECKING:
+    from .runtime_state import RuntimeStateDefinition
 
 logger = logging.getLogger("GIT_STATE")
 
@@ -403,40 +408,17 @@ class GitState:
 
     def _get_runtime_state_patterns(self) -> List[str]:
         """
-        Scans all plugin manifests to discover declared generated_outputs.
-        Returns a list of file patterns that are RUNTIME STATE (not source code).
+        OPUS-096: Get runtime state patterns from RuntimeStateDefinition.
+
+        This is now delegated to the canonical RuntimeStateDefinition which:
+        - Provides CORE patterns (always runtime state)
+        - Discovers plugin-declared patterns from manifests
+
+        Returns:
+            List of file patterns that are RUNTIME STATE (not source code).
         """
-        import glob
-        import json
-
-        patterns: List[str] = []
-
-        # Scan Plugin Manifests: vibe_core/plugins/*/manifest.json
-        manifest_glob = self._workspace / "vibe_core" / "plugins" / "*" / "manifest.json"
-
-        for manifest_path in glob.glob(str(manifest_glob)):
-            try:
-                with open(manifest_path) as f:
-                    data = json.load(f)
-
-                outputs = data.get("generated_outputs", {})
-
-                # Support dict format: {"dashboard_files": [...], "state_files": [...]}
-                if isinstance(outputs, dict):
-                    for key, val in outputs.items():
-                        if key.startswith("_"):  # Skip _comment etc
-                            continue
-                        if isinstance(val, list):
-                            patterns.extend(val)
-                # Support list format: [...]
-                elif isinstance(outputs, list):
-                    patterns.extend(outputs)
-
-            except Exception as e:
-                logger.debug(f"Failed to read manifest {manifest_path}: {e}")
-                continue
-
-        return list(set(patterns))  # Unique patterns
+        definition = get_runtime_state_definition(self._workspace)
+        return definition.get_all_patterns()
 
     def is_source_dirty(self) -> bool:
         """
@@ -490,7 +472,7 @@ class GitState:
 
     def get_dirty_runtime_files(self) -> List[str]:
         """
-        OPUS-081: Get list of dirty RUNTIME STATE files (excludes source code).
+        OPUS-081/096: Get list of dirty RUNTIME STATE files (excludes source code).
 
         This is the INVERSE of get_dirty_source_files().
         Used by Heartbeat to commit ONLY runtime files.
@@ -500,8 +482,6 @@ class GitState:
         """
         if not self.is_git_repo():
             return []
-
-        import fnmatch
 
         # Get all dirty files (both staged and unstaged)
         all_dirty = self._run_git(["diff", "--name-only", "HEAD"])
@@ -521,16 +501,6 @@ class GitState:
             if f.strip():
                 all_files.add(f.strip())
 
-        # Get runtime patterns from plugin manifests
-        runtime_patterns = self._get_runtime_state_patterns()
-
-        # Filter to only runtime files
-        runtime_files = []
-        for file_path in all_files:
-            for pattern in runtime_patterns:
-                # Support glob patterns like "*.md" or ".opus_state/*"
-                if fnmatch.fnmatch(file_path, pattern) or file_path == pattern:
-                    runtime_files.append(file_path)
-                    break
-
-        return runtime_files
+        # OPUS-096: Use RuntimeStateDefinition for filtering
+        definition = get_runtime_state_definition(self._workspace)
+        return definition.filter_runtime_files(list(all_files))
