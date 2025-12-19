@@ -71,6 +71,18 @@ except ImportError:
     PRAKRITI_SENSE_AVAILABLE = False
     logger.debug("PrakritiSense not available - no Tamas gate check")
 
+# OPUS-125: Reflex Arc - DisharmonyDetector integration
+try:
+    from vibe_core.plugins.opus_assistant.manas.disharmony_detector import (
+        DisharmonyDetector,
+        DisharmonyFinding,
+    )
+
+    DISHARMONY_DETECTOR_AVAILABLE = True
+except ImportError:
+    DISHARMONY_DETECTOR_AVAILABLE = False
+    logger.debug("DisharmonyDetector not available - no reflex arc")
+
 
 class TaskManagerPlugin(KernelPlugin):
     """
@@ -151,12 +163,21 @@ class TaskManagerPlugin(KernelPlugin):
         # Phase 2: Parse TASKS.md for new tasks
         markdown_count = self._read_tasks_md(project_root)
 
-        total = inbox_count + markdown_count
+        # OPUS-125: Phase 3: Reflex Arc - Check for disharmony (pain sensors)
+        reflex_count = self._check_disharmony(project_root)
+
+        total = inbox_count + markdown_count + reflex_count
         if total > 0:
-            msg = f"Ingested {total} tasks ({inbox_count} from inbox, {markdown_count} from TASKS.md)"
+            msg = f"Ingested {total} tasks ({inbox_count} inbox, {markdown_count} markdown, {reflex_count} reflex)"
             logger.info(f"⚙️ SENSORS: {msg}")
             return HookResult.ok(
-                data={"ingested": total, "inbox": inbox_count, "markdown": markdown_count, "phase": "sensors"}
+                data={
+                    "ingested": total,
+                    "inbox": inbox_count,
+                    "markdown": markdown_count,
+                    "reflex": reflex_count,
+                    "phase": "sensors",
+                }
             )
         else:
             logger.debug("⚙️ SENSORS: No new tasks to ingest")
@@ -439,3 +460,107 @@ class TaskManagerPlugin(KernelPlugin):
                 logger.warning(f"   ⚠️  Failed to create task '{description}': {e}")
 
         return new_tasks
+
+    # =========================================================================
+    # OPUS-125: REFLEX ARC - Autonomous Self-Healing
+    # =========================================================================
+    # "Schmerz → Aufgabe → Aktion" (Pain → Task → Action)
+    #
+    # The Reflex Arc connects pain sensors (DisharmonyDetector) to effectors
+    # (TaskManager) WITHOUT requiring conscious thought (human intervention).
+    # This is the autonomic nervous system of the codebase.
+    # =========================================================================
+
+    def _check_disharmony(self, project_root: Path) -> int:
+        """
+        OPUS-125: Reflex Arc - Scan for disharmony and create repair tasks.
+
+        This is the spinal cord - it receives pain signals (disharmony findings)
+        and automatically creates tasks to address them. No brain (human) needed.
+
+        Args:
+            project_root: Workspace path
+
+        Returns:
+            Number of repair tasks created
+        """
+        if not DISHARMONY_DETECTOR_AVAILABLE:
+            return 0
+
+        try:
+            detector = DisharmonyDetector(project_root)
+
+            # Only react to HIGH and CRITICAL disharmony (real pain, not minor discomfort)
+            report = detector.scan_all(min_severity="high")
+
+            if report.is_harmonious:
+                logger.debug("🧘 REFLEX ARC: System is harmonious")
+                return 0
+
+            logger.info(f"⚡ REFLEX ARC: Detected {report.total_findings} disharmony findings")
+
+            created = 0
+            for finding in report.findings:
+                # Check for existing task (avoid duplicate reflex responses)
+                task_title = self._finding_to_title(finding)
+                existing = [t for t in self.manager.get_all_tasks() if t.title == task_title]
+                if existing:
+                    logger.debug(f"   ↩️ Skipping (already exists): {task_title}")
+                    continue
+
+                # Create repair task
+                try:
+                    task = self.manager.add_task(
+                        title=task_title,
+                        description=self._finding_to_description(finding),
+                        type="disharmony_repair",
+                        metadata={
+                            "source": "reflex_arc",
+                            "severity": finding.severity,
+                            "path": finding.path,
+                            "location_varga": finding.location_varga.name,
+                            "content_varga": finding.content_varga.name,
+                            "varga_distance": finding.varga_distance,
+                            "evidence": finding.evidence,
+                        },
+                    )
+                    logger.info(f"   🩹 REFLEX: {task.title} (ID: {task.id})")
+                    created += 1
+                except Exception as e:
+                    logger.warning(f"   ⚠️ Failed to create repair task: {e}")
+
+            if created > 0:
+                logger.info(f"🔥 REFLEX ARC: Created {created} repair tasks")
+
+            return created
+
+        except Exception as e:
+            logger.warning(f"⚠️ REFLEX ARC scan failed: {e}")
+            return 0
+
+    def _finding_to_title(self, finding: "DisharmonyFinding") -> str:
+        """Convert a DisharmonyFinding to a task title."""
+        # Extract filename from path
+        filename = Path(finding.path).name
+        return f"[{finding.severity.upper()}] Repair disharmony: {filename}"
+
+    def _finding_to_description(self, finding: "DisharmonyFinding") -> str:
+        """Convert a DisharmonyFinding to a task description."""
+        return f"""DISHARMONY DETECTED (Auto-generated by Reflex Arc)
+
+Path: {finding.path}
+Severity: {finding.severity.upper()}
+Varga Distance: {finding.varga_distance}
+
+Location: {finding.location_layer} (where file is)
+Content: {finding.content_layer} (what file does)
+
+Description:
+{finding.description}
+
+Recommendation:
+{finding.recommendation}
+
+Evidence:
+{chr(10).join(f"  - {e}" for e in finding.evidence)}
+"""
