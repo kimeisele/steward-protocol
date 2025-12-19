@@ -127,7 +127,7 @@ class TestProvidersSection:
         sections, _ = section_discovery
         providers = sections["providers"]
         assert providers.features.oauth_enforcement is True
-        assert providers.features.live_fire_enabled is False
+        assert providers.features.live_fire_enabled is True  # OPUS-076: Live Fire is ON
         assert providers.features.debug_mode is False
 
     def test_playbook_loaded(self, section_discovery):
