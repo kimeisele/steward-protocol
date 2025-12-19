@@ -321,17 +321,39 @@ class StateSyncWeaver:
         """
         Phase 3: CONSULT - What does MANAS think?
 
-        Ask MANAS Oracle for cognitive weaving (or fall back to rules).
+        OPUS-096: Ask MANAS for cognitive weaving.
+
+        Heuristic:
+        - If MANAS has pending intents (busy/deep think) → DEFERRED
+        - If MANAS is idle → IMMEDIATE
+        - If MANAS unavailable → REFLEX mode (rules-based)
         """
         advice = WeavingAdvice()
 
-        # Only use ORACLE mode if MANAS is available and there's complexity
-        if self.manas_oracle and len(classified.rajas) > 5:
+        # Try to consult MANAS if available
+        if self.manas_oracle:
+            try:
+                # Check if MANAS has pending intents (is busy)
+                kernel = getattr(self.manas_oracle, "kernel", None)
+                if kernel and hasattr(kernel, "get_pending_intents"):
+                    pending = kernel.get_pending_intents()
+                    if len(pending) > 0:
+                        # MANAS is busy - defer commit to avoid disruption
+                        advice.mode = WeaverMode.ORACLE
+                        advice.patterns.append(f"MANAS busy: {len(pending)} pending intents")
+                        advice.healing_suggestions.append("Consider deferring commit until MANAS completes")
+                    else:
+                        # MANAS is idle - immediate commit OK
+                        advice.mode = WeaverMode.REFLEX
+                        advice.patterns.append("MANAS idle: immediate commit safe")
+            except Exception as e:
+                # MANAS consultation failed - use reflex mode
+                advice.patterns.append(f"MANAS consultation failed: {e}")
+
+        # For complex state (>5 dirty files), switch to ORACLE mode
+        if len(classified.rajas) > 5:
             advice.mode = WeaverMode.ORACLE
-            # TODO: Actual MANAS consultation
-            # result = self.manas_oracle.consult(classified)
-            # advice.priority_paths = result.priorities
-            # advice.healing_suggestions = result.suggestions
+            advice.patterns.append(f"Complex state: {len(classified.rajas)} dirty files")
 
         # Default: prioritize by path (alphabetical for determinism)
         advice.priority_paths = sorted([info.path for info in classified.rajas])
