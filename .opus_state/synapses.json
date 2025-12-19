@@ -1,0 +1,10 @@
+{
+  "schema": "v1",
+  "description": "OPUS-108: Synaptic Weight Matrix - Learned associations between triggers and actions",
+  "weights": {},
+  "meta": {
+    "created": "2025-12-19",
+    "last_updated": null,
+    "total_connections": 0
+  }
+}
