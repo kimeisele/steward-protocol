@@ -1300,8 +1300,8 @@ class IntentRouter:
         logger.info(f"📜 SUTRA handling harness generation: {intent.title}")
 
         try:
-            # Support both 'target' and 'doc_path' (gap intents use doc_path)
-            target = intent.params.get("target") or intent.params.get("doc_path", "")
+            # Support 'target', 'doc_path', and 'opus_file' (DocHarnessAnalyzer uses opus_file)
+            target = intent.params.get("target") or intent.params.get("doc_path") or intent.params.get("opus_file", "")
             if not target:
                 return {"success": False, "handler": "SUTRA", "error": "No target file specified"}
 
