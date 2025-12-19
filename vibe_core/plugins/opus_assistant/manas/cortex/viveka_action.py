@@ -134,12 +134,35 @@ SHIVA_LAYER_ALLOWANCES = {
 # Protected paths that should NEVER be modified (Shiva cannot touch these)
 # These are the SACRED grounds - even Shiva's destruction cannot reach them
 PROTECTED_PATHS = {
+    # Directories (anything inside these)
     "vibe_core/kernel/",
     "vibe_core/runtime/",  # Runtime kernel - sacred core
     "vibe_core/state/",
     "vibe_core/governance/",
     "vibe_core/protocols/",  # Core protocols - foundational
     ".github/workflows/",
+    # Critical individual files (kernel core)
+    "vibe_core/kernel.py",
+    "vibe_core/kernel_impl.py",
+    "vibe_core/kernel_ops.py",
+    "vibe_core/boot_orchestrator.py",
+    "vibe_core/prana_orchestrator.py",
+    "vibe_core/orchestration_cycle.py",
+}
+
+# Dangerous intent patterns that should be BLOCKED immediately
+# These are adharmic by nature - no Shiva context can save them
+DANGEROUS_INTENT_PATTERNS = {
+    "delete_kernel",
+    "destroy",
+    "nuke",
+    "wipe",
+    "rm_rf",
+    "drop_database",
+    "delete_all",
+    "purge_all",
+    "corrupt",
+    "sabotage",
 }
 
 
@@ -521,6 +544,67 @@ class VivekaAction(BaseAction):
         else:
             return "very_low"
 
+    def evaluate(self, intent: "Intent") -> Dict[str, Any]:
+        """
+        EVALUATE ONLY: Dharmic gate check without execution.
+
+        This is called by IntentRouter BEFORE routing to any handler.
+        It only evaluates the intent's dharmic score and returns a decision.
+
+        Returns:
+            Dict with keys:
+            - decision: "EXECUTE", "WARN_EXECUTE", "BLOCK", or "SHIVA_OVERRIDE"
+            - dharmic_score: float (0.0 - 1.0)
+            - harmony: str ("perfect", "harmonic", "moderate", "weak", "distant")
+            - reasoning: str (explanation)
+            - shiva_context_applied: bool
+        """
+        # FIRST: Check for dangerous intent patterns (immediate BLOCK)
+        intent_type_lower = intent.intent_type.lower()
+        for dangerous in DANGEROUS_INTENT_PATTERNS:
+            if dangerous in intent_type_lower:
+                logger.warning(f"🚫 DANGEROUS INTENT BLOCKED: {intent.intent_type} matches '{dangerous}'")
+                return {
+                    "decision": "BLOCK",
+                    "dharmic_score": 0.0,
+                    "harmony": "forbidden",
+                    "reasoning": f"Dangerous intent pattern '{dangerous}' detected - adharmic by nature",
+                    "shiva_context_applied": False,
+                    "shiva_reason": None,
+                    "resonance": 0.0,
+                    "confidence_level": "blocked",
+                }
+
+        # SECOND: Check file path protection
+        file_path = intent.params.get("file_path", "")
+        if file_path and self._is_protected_path(file_path):
+            logger.warning(f"🚫 PROTECTED PATH: {file_path}")
+            return {
+                "decision": "BLOCK",
+                "dharmic_score": 0.0,
+                "harmony": "forbidden",
+                "reasoning": f"Protected path '{file_path}' - Shiva cannot touch sacred ground",
+                "shiva_context_applied": False,
+                "shiva_reason": None,
+                "resonance": 0.0,
+                "confidence_level": "blocked",
+            }
+
+        # Standard dharmic evaluation
+        action_pattern = self._intent_to_action_pattern(intent.intent_type)
+        decision, decision_log = self._evaluate_dharmic(intent, action_pattern)
+
+        return {
+            "decision": decision,
+            "dharmic_score": decision_log.dharmic_score,
+            "harmony": decision_log.harmony,
+            "reasoning": decision_log.reasoning,
+            "shiva_context_applied": decision_log.shiva_context_applied,
+            "shiva_reason": decision_log.shiva_reason,
+            "resonance": decision_log.resonance,
+            "confidence_level": decision_log.confidence_level,
+        }
+
     def act(self, intent: "Intent") -> ActionResult:
         """
         Execute a triage intent with Dharmic evaluation (BaseAction interface).
@@ -865,10 +949,21 @@ class VivekaAction(BaseAction):
         return f"{element_name} - TODO: Add description."
 
     def _is_protected_path(self, rel_path: str) -> bool:
-        """Check if a path is protected from automatic modification."""
+        """Check if a path is protected from automatic modification.
+
+        Protected paths can be:
+        - Directories (ending with /) - checks if file is inside
+        - Individual files - checks for exact match
+        """
         for protected in PROTECTED_PATHS:
-            if rel_path.startswith(protected):
-                return True
+            if protected.endswith("/"):
+                # Directory protection - file is inside this directory
+                if rel_path.startswith(protected):
+                    return True
+            else:
+                # Individual file protection - exact match
+                if rel_path == protected:
+                    return True
         return False
 
     def _add_docstring_ast(
@@ -937,3 +1032,113 @@ class VivekaAction(BaseAction):
         lines.insert(insert_after + 1, formatted_docstring)
 
         return "\n".join(lines)
+
+    # =========================================================================
+    # OPUS-133: SYNAPTIC LEARNING - Reinforce Successful Patterns
+    # =========================================================================
+
+    def reinforce(self, intent: "Intent", success: bool = True) -> None:
+        """
+        Reinforce synaptic connections based on execution outcome.
+
+        Called by IntentRouter after successful intent execution.
+        This strengthens the trigger→action pathways that led to success.
+
+        Args:
+            intent: The intent that was executed
+            success: Whether the execution was successful
+
+        Neural Learning:
+        - Success (+): Increase weight by 0.05 (max 1.0)
+        - Failure (-): Decrease weight by 0.1 (min 0.1)
+        """
+        if not success:
+            logger.debug(f"⚠️ Synapse feedback: failure for {intent.intent_type}")
+            return  # Don't reinforce failures (yet - could do negative learning)
+
+        # Determine trigger and action patterns
+        trigger = f"trigger:{intent.intent_type}"
+        action = self._intent_to_action_pattern(intent.intent_type)
+
+        if not action:
+            logger.debug(f"No action pattern for {intent.intent_type}, skipping reinforcement")
+            return
+
+        # Load current synapses
+        synapses = self._load_synapses()
+        synapse_key = f"{trigger}→{action}"
+
+        # Find or create the synapse
+        current_weight = 0.5  # Default starting weight
+
+        for trigger_entry in synapses.get("triggers", []):
+            if trigger_entry.get("trigger") == trigger:
+                for conn in trigger_entry.get("connections", []):
+                    if conn.get("target") == action:
+                        current_weight = conn.get("weight", 0.5)
+                        break
+                break
+
+        # Apply learning rate
+        learning_rate = 0.05
+        new_weight = min(1.0, current_weight + learning_rate)
+
+        # Update the synapse
+        self._update_synapse_weight(trigger, action, new_weight)
+
+        logger.info(f"🧠 SYNAPSE REINFORCED: {synapse_key} ({current_weight:.2f} → {new_weight:.2f})")
+
+    def _update_synapse_weight(self, trigger: str, action: str, weight: float) -> None:
+        """Update a synapse weight in the synapses.json file."""
+        synapses = self._load_synapses()
+
+        # Find or create trigger entry
+        trigger_found = False
+        for trigger_entry in synapses.get("triggers", []):
+            if trigger_entry.get("trigger") == trigger:
+                trigger_found = True
+                # Find or create connection
+                conn_found = False
+                for conn in trigger_entry.get("connections", []):
+                    if conn.get("target") == action:
+                        conn["weight"] = weight
+                        conn_found = True
+                        break
+                if not conn_found:
+                    trigger_entry["connections"].append(
+                        {
+                            "target": action,
+                            "weight": weight,
+                            "learned_at": datetime.now().isoformat(),
+                        }
+                    )
+                break
+
+        if not trigger_found:
+            # Create new trigger entry
+            if "triggers" not in synapses:
+                synapses["triggers"] = []
+            synapses["triggers"].append(
+                {
+                    "trigger": trigger,
+                    "connections": [
+                        {
+                            "target": action,
+                            "weight": weight,
+                            "learned_at": datetime.now().isoformat(),
+                        }
+                    ],
+                }
+            )
+
+        # Save updated synapses
+        self._save_synapses(synapses)
+
+    def _save_synapses(self, synapses: Dict[str, Any]) -> None:
+        """Save synapses to disk."""
+        import json
+
+        synapses_path = self._workspace / ".opus_state" / "synapses.json"
+        synapses_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(synapses_path, "w") as f:
+            json.dump(synapses, f, indent=2)

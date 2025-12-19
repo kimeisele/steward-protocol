@@ -48,6 +48,15 @@ try:
 except ImportError:
     ToolCall = None  # type: ignore
 
+# OPUS-133: VivekaAction - Dharmic Gate (Synaptic Learning)
+try:
+    from .cortex.viveka_action import VivekaAction
+
+    VIVEKA_AVAILABLE = True
+except ImportError:
+    VIVEKA_AVAILABLE = False
+    VivekaAction = None  # type: ignore
+
 logger = logging.getLogger("MANAS.IntentRouter")
 
 # OPUS-075: HIL Bridge state directory
@@ -109,6 +118,12 @@ class IntentRouter:
         # OPUS-106: Scoped loaders for fractal pattern
         self._action_loader = action_loader
         self._tool_loader = tool_loader
+
+        # OPUS-133: VivekaAction - Dharmic Gate (Synaptic Learning)
+        self._viveka: Optional[VivekaAction] = None
+        if VIVEKA_AVAILABLE:
+            self._viveka = VivekaAction(workspace=self._workspace)
+            logger.info("🧠 OPUS-133: VivekaAction gate initialized (Dharmic Discrimination)")
 
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
@@ -733,6 +748,36 @@ class IntentRouter:
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
 
+        # =====================================================================
+        # OPUS-133: VIVEKA GATE - Dharmic Discrimination (BEFORE any dispatch)
+        # =====================================================================
+        if self._viveka:
+            viveka_result = self._viveka.evaluate(intent)
+            decision = viveka_result.get("decision", "EXECUTE")
+
+            if decision == "BLOCK":
+                # Sacred ground or low dharmic score - reject immediately
+                logger.warning(
+                    f"🚫 VIVEKA BLOCKED: {intent.title} "
+                    f"(score={viveka_result.get('dharmic_score', 0):.2f}, "
+                    f"harmony={viveka_result.get('harmony', 'unknown')})"
+                )
+                return RouteResult(
+                    success=False,
+                    handler="VIVEKA",
+                    result=viveka_result,
+                    error=f"Dharmic gate blocked: {viveka_result.get('reasoning', 'Low dharmic score')}",
+                )
+            elif decision == "WARN_EXECUTE":
+                # Proceed with caution - log but continue
+                logger.info(
+                    f"⚠️ VIVEKA WARN: {intent.title} - proceeding with caution "
+                    f"(score={viveka_result.get('dharmic_score', 0):.2f})"
+                )
+            elif decision in ("EXECUTE", "SHIVA_OVERRIDE"):
+                # Good dharmic score or Shiva context - proceed
+                logger.debug(f"✅ VIVEKA: {decision} for {intent.title}")
+
         # OPUS-112: Try kernel.tool_registry FIRST (SYNAPTIC BRIDGE)
         # Only for SAFE/LOW risk intents (SYSTEM ACT mode)
         tool_result = self._try_tool_dispatch(intent)
@@ -783,8 +828,14 @@ class IntentRouter:
                 logger.info(f"📝 SRUTI: {validation.warnings}")
                 result["sruti_validation"] = validation.to_dict()
 
+            # OPUS-133: Synaptic feedback - reinforce successful patterns
+            success = result.get("success", True)
+            if self._viveka and success:
+                self._viveka.reinforce(intent, success=True)
+                logger.debug(f"🧠 Synapse reinforced: {intent.intent_type}")
+
             return RouteResult(
-                success=result.get("success", True),
+                success=success,
                 handler=result.get("handler", "unknown"),
                 result=result,
             )
