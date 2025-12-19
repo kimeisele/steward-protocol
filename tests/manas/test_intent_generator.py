@@ -603,9 +603,10 @@ class TestIntentGeneratorIntegration:
         assert intents[2].priority == IntentPriority.MEDIUM
         assert intents[3].priority == IntentPriority.LOW
 
-    def test_generate_intents_returns_list(self, generator):
+    @pytest.mark.asyncio
+    async def test_generate_intents_returns_list(self, generator):
         """Mutation killer: generate_intents must return a list."""
-        result = generator.generate_intents({})
+        result = await generator.generate_intents({})
         assert isinstance(result, list)
 
     def test_modular_analyzers_are_registered(self, generator):
