@@ -424,6 +424,11 @@ class GitState:
         """
         OPUS-081: Check if SOURCE CODE changed (excludes runtime state).
         This is what Stop Hooks should call.
+
+        Checks:
+        1. Modified tracked files
+        2. Staged changes
+        3. NEW (untracked) source files
         """
         if not self.is_git_repo():
             return False
@@ -449,11 +454,20 @@ class GitState:
         has_unstaged = bool(unstaged and unstaged.strip())
         has_staged = bool(staged and staged.strip())
 
-        return has_unstaged or has_staged
+        # Also check untracked source files
+        untracked_source = self._get_untracked_source_files()
+        has_untracked_source = bool(untracked_source)
+
+        return has_unstaged or has_staged or has_untracked_source
 
     def get_dirty_source_files(self) -> List[str]:
         """
         OPUS-081: Get list of dirty SOURCE CODE files (excludes runtime state).
+
+        Includes:
+        - Modified tracked files
+        - Staged changes
+        - NEW (untracked) source files
         """
         if not self.is_git_repo():
             return []
@@ -465,10 +479,32 @@ class GitState:
             args.append(f":!{pattern}")
 
         result = self._run_git(args)
-        if not result:
+        modified = []
+        if result:
+            modified = [f.strip() for f in result.strip().split("\n") if f.strip()]
+
+        # Also include untracked source files
+        untracked = self._get_untracked_source_files()
+
+        # Combine and deduplicate
+        all_files = list(set(modified + untracked))
+        return sorted(all_files)
+
+    def _get_untracked_source_files(self) -> List[str]:
+        """
+        Get untracked files that are SOURCE CODE (not runtime state).
+
+        Uses RuntimeStateDefinition to filter out runtime files.
+        """
+        untracked = self._run_git(["ls-files", "--others", "--exclude-standard"])
+        if not untracked:
             return []
 
-        return [f.strip() for f in result.strip().split("\n") if f.strip()]
+        all_untracked = [f.strip() for f in untracked.strip().split("\n") if f.strip()]
+
+        # Filter out runtime state files
+        definition = get_runtime_state_definition(self._workspace)
+        return definition.filter_source_files(all_untracked)
 
     def get_dirty_runtime_files(self) -> List[str]:
         """
