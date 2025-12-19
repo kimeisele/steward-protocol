@@ -132,10 +132,13 @@ SHIVA_LAYER_ALLOWANCES = {
 }
 
 # Protected paths that should NEVER be modified (Shiva cannot touch these)
+# These are the SACRED grounds - even Shiva's destruction cannot reach them
 PROTECTED_PATHS = {
     "vibe_core/kernel/",
+    "vibe_core/runtime/",  # Runtime kernel - sacred core
     "vibe_core/state/",
     "vibe_core/governance/",
+    "vibe_core/protocols/",  # Core protocols - foundational
     ".github/workflows/",
 }
 
@@ -316,6 +319,8 @@ class VivekaAction(BaseAction):
         1. Synaptic weight (learned experience)
         2. Akshara resonance (phonetic harmony)
         3. Shiva context (necessary evil patterns)
+        4. Protected path blocking (kernel protection)
+        5. Unknown trigger penalty (chaos rejection)
 
         Returns:
             Tuple of (decision, decision_log) where decision is one of:
@@ -337,6 +342,45 @@ class VivekaAction(BaseAction):
 
         # Get file path for logging
         file_path = intent.params.get("file_path")
+
+        # =====================================================================
+        # OPUS-133 FIX: PROTECTED PATH CHECK (Kernel Protection)
+        # =====================================================================
+        # If file is in a protected path, BLOCK immediately - no exceptions
+        if file_path:
+            for protected in PROTECTED_PATHS:
+                if file_path.startswith(protected) or protected in file_path:
+                    # Create immediate BLOCK decision
+                    trigger_varga = get_trigger_varga(trigger)
+                    action_varga = get_action_varga(action_pattern)
+                    log_entry = VivekaDecisionLog(
+                        timestamp=datetime.utcnow().isoformat(),
+                        intent_type=intent.intent_type,
+                        intent_title=intent.title,
+                        trigger=trigger,
+                        file_path=file_path,
+                        dharmic_score=0.0,  # Absolute zero - forbidden
+                        resonance=0.0,
+                        harmony="forbidden",
+                        varga_trigger=trigger_varga.name,
+                        varga_action=action_varga.name,
+                        confidence_level="forbidden",
+                        decision="BLOCK",
+                        reasoning=f"PROTECTED PATH: {protected} - Shiva cannot touch sacred ground",
+                        shiva_context_applied=False,
+                        shiva_reason=None,
+                    )
+                    self._decision_logger.log(log_entry)
+                    return "BLOCK", log_entry
+
+        # =====================================================================
+        # OPUS-133 FIX: UNKNOWN TRIGGER PENALTY (Chaos Rejection)
+        # =====================================================================
+        # If trigger is unknown, apply a severe penalty - chaos is not dharmic
+        unknown_trigger_penalty = 0.0
+        if trigger == "trigger:unknown":
+            unknown_trigger_penalty = 0.3  # 30% penalty for chaotic requests
+            logger.warning(f"⚠️ Unknown trigger detected - applying {unknown_trigger_penalty:.0%} chaos penalty")
 
         # Get dharmic recommendations
         memory = self._get_synaptic_memory()
@@ -366,6 +410,14 @@ class VivekaAction(BaseAction):
             varga_trigger = trigger_varga.name
             varga_action = action_varga.name
             harmony = self._get_harmony_description(resonance)
+            confidence = self._get_confidence_level(dharmic_score)
+
+        # Apply unknown trigger penalty
+        if unknown_trigger_penalty > 0:
+            original_score = dharmic_score
+            dharmic_score = max(0.0, dharmic_score - unknown_trigger_penalty)
+            logger.info(f"🚫 Chaos penalty applied: {original_score:.2f} → {dharmic_score:.2f}")
+            # Recalculate confidence
             confidence = self._get_confidence_level(dharmic_score)
 
         # Make decision based on thresholds
