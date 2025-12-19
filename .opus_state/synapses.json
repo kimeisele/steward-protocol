@@ -1,13 +1,13 @@
 {
-  "schema": "v1",
-  "description": "OPUS-108: Synaptic Weight Matrix - Learned associations between triggers and actions",
+  "schema": "v2",
+  "description": "OPUS-111: Synaptic Weight Matrix - Canonical triggers from TriggerRegistry",
   "weights": {
     "trigger:test_failure": {
       "action:notify_operator": 1.0,
       "action:analyze_error": 0.8,
       "action:auto_retry": 0.3
     },
-    "trigger:file_changed:vibe_core/**/*.py": {
+    "trigger:file_changed:vibe_core/**": {
       "action:run_tests": 0.9,
       "action:check_lint": 0.7
     },
@@ -19,14 +19,16 @@
       "action:consolidate": 0.7,
       "action:report_to_operator": 0.9
     },
-    "trigger:gap_detected:test_gap": {
-      "action:test_action": 0.55
+    "trigger:error_detected": {
+      "action:analyze_error": 0.405,
+      "action:notify_operator": 0.7
     }
   },
   "meta": {
     "created": "2025-12-19",
-    "last_updated": "2025-12-19T12:29:26.352359",
-    "total_connections": 10,
-    "note": "Initial synapses seeded by Senior Partner directive"
+    "last_updated": "2025-12-19T14:05:00.000000",
+    "total_connections": 11,
+    "note": "OPUS-113: Stress tested - error_detected learned from simulated failures",
+    "vocabulary_version": "triggers.py:TriggerPatterns"
   }
 }
