@@ -30,7 +30,10 @@ from typing import TYPE_CHECKING, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 
-from .state_store import JsonTaskManager, TaskStatus
+# OPUS-122: Import TaskStatus from SSOT
+from vibe_core.task_types import TaskStatus
+
+from .state_store import JsonTaskManager
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -39,12 +42,17 @@ logger = logging.getLogger("TASK_MANAGER_PLUGIN")
 
 # Import execution dependencies (graceful degradation if unavailable)
 try:
-    from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate
+    from vibe_core.runtime.unified_execution import (
+        ExecutionRequest,
+        MilkOceanGate,
+        UnifiedExecutor,
+        UnifiedRouter,
+    )
 
-    UNIFIED_ROUTER_AVAILABLE = True
+    UNIFIED_EXECUTION_AVAILABLE = True
 except ImportError:
-    UNIFIED_ROUTER_AVAILABLE = False
-    logger.debug("UnifiedRouter not available - execution will be queued only")
+    UNIFIED_EXECUTION_AVAILABLE = False
+    logger.debug("UnifiedExecution not available - execution will be queued only")
 
 try:
     from vibe_core.plugins.opus_assistant.manas.api import ManasOracle
@@ -194,15 +202,21 @@ class TaskManagerPlugin(KernelPlugin):
             self.manager.update_status(next_task.id, TaskStatus.IN_PROGRESS)
 
             try:
-                # Get router from kernel context
+                # OPUS-124: Get router AND executor from kernel context
                 router = getattr(kernel, "router", None) if kernel else None
-                if not router and UNIFIED_ROUTER_AVAILABLE:
-                    try:
-                        from vibe_core.runtime.unified_execution import UnifiedRouter
+                executor = getattr(kernel, "executor", None) if kernel else None
 
+                if not router and UNIFIED_EXECUTION_AVAILABLE:
+                    try:
                         router = UnifiedRouter(kernel=kernel)
                     except Exception:
                         router = None
+
+                if not executor and UNIFIED_EXECUTION_AVAILABLE and kernel:
+                    try:
+                        executor = UnifiedExecutor(kernel=kernel)
+                    except Exception:
+                        executor = None
 
                 if not router:
                     logger.warning("⚠️ No Unified Router available - task queued but not executed")
@@ -235,7 +249,7 @@ class TaskManagerPlugin(KernelPlugin):
                     except Exception as e:
                         logger.warning(f"⚠️ MANAS Oracle consultation failed: {e}")
 
-                # Route and execute
+                # OPUS-124: Route first, then ACTUALLY execute
                 req = ExecutionRequest(user_input=prompt, source="TASK_MANAGER_PLUGIN")
                 gate = router.check_gate(req)
 
@@ -244,24 +258,65 @@ class TaskManagerPlugin(KernelPlugin):
                 if gate == MilkOceanGate.BLOCK:
                     result["status"] = "blocked"
                     result["reason"] = "Blocked by MilkOcean Gate"
+                    self.manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                    logger.info("   🚫 Task blocked by MilkOcean Gate")
+                    return HookResult.ok(data={"executed": 0, "blocked": 1, "phase": "actuators"})
+
                 elif gate == MilkOceanGate.QUEUE:
                     result["status"] = "queued"
+                    logger.info("   📋 Task queued for later execution")
+                    return HookResult.ok(data={"executed": 0, "queued": 1, "phase": "actuators"})
+
                 elif gate == MilkOceanGate.CRITICAL:
                     result["status"] = "critical"
+                    logger.warning("   ⚠️ CRITICAL gate - escalating")
+                    # Critical tasks still proceed but with elevated priority
+
+                # Route to determine execution path
+                route_res = router.route(prompt, source="TASK_MANAGER_PLUGIN")
+                result["route_info"] = {
+                    "execution_path": route_res.execution_path.value,
+                    "target_id": route_res.target_id,
+                    "confidence": route_res.confidence,
+                }
+
+                logger.info(
+                    f"   📍 Routed to: {route_res.target_id or route_res.execution_path.value} "
+                    f"(confidence={route_res.confidence:.2f})"
+                )
+
+                # OPUS-124: ACTUALLY EXECUTE (this was missing!)
+                if executor:
+                    import asyncio
+
+                    logger.info("   ⚡ Executing task...")
+
+                    # Run async executor in sync context
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+
+                    exec_result = loop.run_until_complete(executor.execute(route_res))
+
+                    if exec_result.status == "completed":
+                        result["status"] = "completed"
+                        result["response"] = exec_result.response
+                        result["duration"] = exec_result.duration_seconds
+                        self.manager.update_status(next_task.id, TaskStatus.COMPLETED)
+                        logger.info(f"   ✅ Task completed ({exec_result.duration_seconds:.2f}s)")
+                    else:
+                        result["status"] = "failed"
+                        result["error"] = exec_result.error
+                        self.manager.update_status(next_task.id, TaskStatus.FAILED)
+                        logger.error(f"   ❌ Task failed: {exec_result.error}")
                 else:
-                    route_res = router.route(prompt, source="TASK_MANAGER_PLUGIN")
-                    result["status"] = "routing"
-                    result["path"] = route_res.target_id or route_res.execution_path.value
-                    result["route_info"] = {
-                        "execution_path": route_res.execution_path.value,
-                        "target_id": route_res.target_id,
-                        "confidence": route_res.confidence,
-                    }
-
-                logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
-
-                # Update task with result
-                self.manager.update_status(next_task.id, TaskStatus.COMPLETED)
+                    # No executor available - mark as routed but not executed
+                    logger.warning("   ⚠️ No executor available - task routed but not executed")
+                    result["status"] = "routed_only"
+                    # Don't mark as COMPLETED - it wasn't actually executed
+                    return HookResult.ok(data={"executed": 0, "routed": 1, "phase": "actuators"})
 
                 return HookResult.ok(data={"executed": 1, "status": result.get("status"), "phase": "actuators"})
 

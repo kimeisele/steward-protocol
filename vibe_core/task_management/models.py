@@ -1,17 +1,24 @@
 """
 Task management data models.
 
-IMPORTANT: There are TWO Task types in the codebase (by design):
+OPUS-122: Task Alignment
+========================
+TaskStatus moved to vibe_core/task_types.py (SSOT).
+Task class now has alias ManagedTask for semantic clarity.
 
-1. scheduling.task.Task (SchedulerTask)
+TWO Task types exist in the codebase (by design - OPUS-122 validated):
+
+1. scheduling.task.DispatchTask (was Task)
    - Purpose: Kernel task dispatch to agents
    - Fields: agent_id, payload, task_id, priority
    - Used by: Kernel, Agents, Cartridges
+   - Semantic: "Message envelope" - lightweight dispatch unit
 
-2. task_management.models.Task (ManagedTask) - THIS FILE
+2. task_management.models.Task (alias: ManagedTask) - THIS FILE
    - Purpose: User-facing task management with rich metadata
    - Fields: title, description, subtasks, assignee, topology routing
    - Used by: UI, Task Manager, Roadmaps
+   - Semantic: "Project card" - rich management model
 
 These are semantically different and intentionally parallel.
 Do NOT merge them - they serve different layers of the system.
@@ -19,19 +26,10 @@ Do NOT merge them - they serve different layers of the system.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import Any, Dict, List, Optional
 
-
-class TaskStatus(str, Enum):
-    """Task status states."""
-
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    BLOCKED = "BLOCKED"
-    ARCHIVED = "ARCHIVED"
+# OPUS-122: Import canonical TaskStatus from SSOT
+from vibe_core.task_types import TaskStatus
 
 
 @dataclass
@@ -130,3 +128,25 @@ class Roadmap:
             "updated_at": self.updated_at.isoformat(),
             "metadata": self.metadata,
         }
+
+
+# =============================================================================
+# OPUS-122: SEMANTIC ALIAS
+# =============================================================================
+# ManagedTask is an alias for Task to clarify its purpose when imported
+# alongside scheduling.task.DispatchTask.
+#
+# Usage:
+#   from vibe_core.task_management.models import ManagedTask
+#   from vibe_core.scheduling.task import DispatchTask
+# =============================================================================
+
+ManagedTask = Task
+
+__all__ = [
+    "Task",
+    "ManagedTask",  # Semantic alias (OPUS-122)
+    "TaskStatus",  # Re-exported from SSOT
+    "ActiveMission",
+    "Roadmap",
+]
