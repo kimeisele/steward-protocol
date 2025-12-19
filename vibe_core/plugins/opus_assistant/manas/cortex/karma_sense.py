@@ -391,6 +391,15 @@ class KarmaSense(BaseSense):
 
         return "\n".join(lines)
 
+    def analyze_chronic_pain(self) -> ChronicPainReport:
+        """
+        Alias for find_hotspots() - used by VivekaSense.
+
+        Returns:
+            ChronicPainReport with historical pain points.
+        """
+        return self.find_hotspots()
+
 
 # =============================================================================
 # Singleton for Global Access
