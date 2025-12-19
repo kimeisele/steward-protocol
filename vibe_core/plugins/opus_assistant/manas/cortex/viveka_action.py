@@ -1,21 +1,33 @@
 """
 OPUS-133: Viveka Action - The Hands of Discrimination.
 
-This action executes triage intents from VivekaSense.
-It uses SILPA (The Self-Architect) to safely add documentation.
+This action executes triage intents from VivekaSense with Dharmic Scoring.
+It uses SILPA (The Self-Architect) to safely add documentation, and
+consults the Akshara Kernel (OPUS-114) for resonance-based decision making.
 
 Handled Intent Types:
 - triage_p1_critical: Auto-fix critical documentation gaps
 - triage_p2_high: Auto-fix high priority gaps
 - triage_execute: Execute a specific triage fix
+- viveka_auto_doc: Automatic documentation generation
 
-The Platinum Protocol applies:
-1. PRE-GATE: Verify code parses correctly
-2. TRANSFORM: Add docstring via AST
-3. POST-GATE: Verify code still parses
-4. COMMIT: Stage changes (optional)
+The Dharmic Protocol applies:
+1. CONSULT: Query consult_dharmic() for resonance scoring
+2. EVALUATE: Check Shiva context for "necessary evil" actions
+3. DECIDE: Execute, warn, or block based on dharmic_score
+4. LOG: Full audit trail of all decisions
 
-"Viveka sees, Viveka discriminates, Viveka ACTS."
+Decision Thresholds:
+- dharmic_score >= 0.6: EXECUTE (high confidence)
+- 0.4 <= dharmic_score < 0.6: WARN + EXECUTE (neutral - proceed with caution)
+- dharmic_score < 0.4: BLOCK unless Shiva context applies
+
+Shiva Context (Necessary Evil):
+- Some destruction is necessary for healing (cache clearing, log rotation)
+- When trigger and action are both in REPAIR (MURDHANYA) layer, destruction is expected
+- Context determines whether destruction is dharmic or adharmic
+
+"Viveka sees, Viveka discriminates, Viveka ACTS - with full awareness."
 
 <!-- @HARNESS
 files:
@@ -25,33 +37,217 @@ files:
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/cortex/viveka_sense.py
     required: true
+  - path: vibe_core/plugins/opus_assistant/manas/triggers.py
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/akshara.py
+    required: true
 wiring:
   - pattern: "class VivekaAction"
     in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
   - pattern: "handled_intent_types.*triage_p1_critical"
     in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
+  - pattern: "class VivekaDecisionLog"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
+  - pattern: "SHIVA_CONTEXT_PATTERNS"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
 -->
 """
 
 import ast
+import json
 import logging
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from .base_action import ActionResult, BaseAction
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+    from vibe_core.plugins.opus_assistant.manas.triggers import DharmicRecommendation
 
 logger = logging.getLogger("MANAS.Action.Viveka")
 
-# Protected paths that should never be modified automatically
+
+# =============================================================================
+# OPUS-133: DECISION THRESHOLDS
+# =============================================================================
+
+# Dharmic score thresholds for decision making
+DHARMIC_THRESHOLD_EXECUTE = 0.6  # >= this: confident execution
+DHARMIC_THRESHOLD_WARN = 0.4  # >= this but < EXECUTE: warn but proceed
+# Below WARN: block unless Shiva context
+
+
+# =============================================================================
+# OPUS-133: SHIVA CONTEXT - "Necessary Evil" Patterns
+# =============================================================================
+# "Sometimes you must destroy to create" - Shiva's role in the Trimurti
+#
+# These patterns define when destruction is DHARMIC (righteous):
+# - Cleaning caches, logs, temp files (hygiene)
+# - Removing deprecated code (evolution)
+# - Consolidating duplicates (unity)
+# - Fixing critical bugs by rewriting (healing)
+#
+# The Shiva Principle: Destruction in service of creation is not evil.
+
+SHIVA_CONTEXT_PATTERNS: Dict[str, Dict[str, Any]] = {
+    # Pattern: trigger context -> allowed "destructive" actions
+    "trigger:error_detected": {
+        "allowed_actions": ["action:auto_fix", "action:consolidate"],
+        "reason": "Fixing errors may require removing bad code",
+        "layer": "REPAIR",
+    },
+    "trigger:lint_failure": {
+        "allowed_actions": ["action:auto_fix", "action:consolidate"],
+        "reason": "Lint fixes may remove/rewrite code",
+        "layer": "REPAIR",
+    },
+    "trigger:duplicate_class_detected": {
+        "allowed_actions": ["action:consolidate", "action:auto_fix"],
+        "reason": "Consolidation requires removing duplicates",
+        "layer": "REPAIR",
+    },
+    "trigger:gap_detected:stale_doc": {
+        "allowed_actions": ["action:update_docs", "action:create_doc"],
+        "reason": "Stale docs may need replacement",
+        "layer": "INTERFACE",
+    },
+}
+
+# Layer-based Shiva context: when BOTH trigger and action are in REPAIR layer,
+# destruction is expected and allowed
+SHIVA_LAYER_ALLOWANCES = {
+    "REPAIR": {  # MURDHANYA - the fire of transformation
+        "allowed_actions": [
+            "action:auto_fix",
+            "action:consolidate",
+            "action:refactor_code",
+            "action:move_code",
+        ],
+        "reason": "Repair layer actions inherently involve transformation",
+    }
+}
+
+# Protected paths that should NEVER be modified (Shiva cannot touch these)
 PROTECTED_PATHS = {
     "vibe_core/kernel/",
     "vibe_core/state/",
     "vibe_core/governance/",
     ".github/workflows/",
 }
+
+
+# =============================================================================
+# OPUS-133: VIVEKA DECISION LOG - Full Audit Trail
+# =============================================================================
+
+
+@dataclass
+class VivekaDecisionLog:
+    """
+    A complete audit log entry for a Viveka decision.
+
+    Every decision Viveka makes is logged with full context:
+    - What was the intent?
+    - What did the dharmic consultation say?
+    - What decision was made and why?
+    - Did Shiva context apply?
+
+    This ensures the system is never a "black box" - every
+    decision can be traced and explained.
+    """
+
+    timestamp: str
+    intent_type: str
+    intent_title: str
+    trigger: str
+    file_path: Optional[str]
+
+    # Dharmic consultation results
+    dharmic_score: float
+    resonance: float
+    harmony: str  # "perfect", "harmonic", "moderate", "weak", "distant"
+    varga_trigger: str
+    varga_action: str
+    confidence_level: str  # "very_high", "high", "medium", "low", "very_low"
+
+    # Decision
+    decision: str  # "EXECUTE", "WARN_EXECUTE", "BLOCK", "SHIVA_OVERRIDE"
+    reasoning: str
+
+    # Shiva context
+    shiva_context_applied: bool = False
+    shiva_reason: Optional[str] = None
+
+    # Outcome
+    action_taken: Optional[str] = None
+    result: Optional[str] = None
+
+    def to_log_line(self) -> str:
+        """Format as a human-readable log line."""
+        shiva_note = f" [SHIVA: {self.shiva_reason}]" if self.shiva_context_applied else ""
+        return (
+            f"[{self.timestamp}] {self.decision}: {self.intent_title} "
+            f"(dharmic={self.dharmic_score:.2f}, harmony={self.harmony}{shiva_note}) "
+            f"→ {self.reasoning}"
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
+
+
+class VivekaDecisionLogger:
+    """
+    Persistent logger for Viveka decisions.
+
+    Maintains a rolling log of decisions for debugging and auditing.
+    """
+
+    def __init__(self, workspace: Path, max_entries: int = 1000):
+        self._workspace = workspace
+        self._log_file = workspace / ".opus_state" / "viveka_decisions.json"
+        self._max_entries = max_entries
+
+    def log(self, decision: VivekaDecisionLog) -> None:
+        """Log a decision to the persistent store."""
+        # Load existing
+        entries = self._load_entries()
+
+        # Append new
+        entries.append(decision.to_dict())
+
+        # Trim if needed
+        if len(entries) > self._max_entries:
+            entries = entries[-self._max_entries :]
+
+        # Save
+        self._save_entries(entries)
+
+        # Also log to console
+        logger.info(f"🔱 VIVEKA: {decision.to_log_line()}")
+
+    def _load_entries(self) -> List[Dict[str, Any]]:
+        """Load existing entries."""
+        if not self._log_file.exists():
+            return []
+        try:
+            return json.loads(self._log_file.read_text())
+        except Exception:
+            return []
+
+    def _save_entries(self, entries: List[Dict[str, Any]]) -> None:
+        """Save entries to disk."""
+        self._log_file.parent.mkdir(parents=True, exist_ok=True)
+        self._log_file.write_text(json.dumps(entries, indent=2))
+
+    def get_recent(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get recent decisions."""
+        entries = self._load_entries()
+        return entries[-limit:]
 
 
 # Template for auto-generated docstrings
@@ -64,7 +260,13 @@ DOCSTRING_TEMPLATE = '''"""
 
 class VivekaAction(BaseAction):
     """
-    Viveka Action - Executes triage intents by adding missing documentation.
+    OPUS-133: Viveka Action - Dharmic Discrimination Engine.
+
+    Executes triage intents with Akshara-based decision making:
+    1. CONSULT: Query consult_dharmic() for resonance scoring
+    2. EVALUATE: Check Shiva context for "necessary evil" patterns
+    3. DECIDE: Execute, warn, or block based on dharmic_score
+    4. LOG: Full audit trail of all decisions
 
     Uses SILPA's Platinum Protocol for safe code modification:
     - Only modifies docstrings (SAFE risk level)
@@ -74,6 +276,11 @@ class VivekaAction(BaseAction):
     Modes:
     - dry_run=True: Shows what would be done, no changes
     - dry_run=False: Actually modifies files
+
+    Decision Thresholds:
+    - dharmic_score >= 0.6: EXECUTE (high confidence)
+    - 0.4 <= dharmic_score < 0.6: WARN_EXECUTE (proceed with caution)
+    - dharmic_score < 0.4: BLOCK (unless Shiva context applies)
     """
 
     # VEDA-4 auto-discovery
@@ -87,37 +294,277 @@ class VivekaAction(BaseAction):
     }
 
     def __init__(self, workspace: Optional[Path] = None):
-        """Initialize Viveka Action."""
+        """Initialize Viveka Action with Dharmic decision engine."""
         super().__init__(workspace)
-        logger.info("👁️ VivekaAction initialized (The Hands of Discrimination)")
+        self._decision_logger = VivekaDecisionLogger(self._workspace)
+        self._synaptic_memory = None  # Lazy-loaded
+        logger.info("👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)")
+
+    def _get_synaptic_memory(self):
+        """Lazy-load SynapticMemory to avoid circular imports."""
+        if self._synaptic_memory is None:
+            from vibe_core.plugins.opus_assistant.manas.triggers import SynapticMemory
+
+            self._synaptic_memory = SynapticMemory.get(self._workspace)
+        return self._synaptic_memory
+
+    def _evaluate_dharmic(self, intent: "Intent", action_pattern: str) -> tuple[str, VivekaDecisionLog]:
+        """
+        OPUS-133: Evaluate an intent using Dharmic scoring.
+
+        This is the core decision engine that combines:
+        1. Synaptic weight (learned experience)
+        2. Akshara resonance (phonetic harmony)
+        3. Shiva context (necessary evil patterns)
+
+        Returns:
+            Tuple of (decision, decision_log) where decision is one of:
+            - "EXECUTE": Proceed with confidence
+            - "WARN_EXECUTE": Proceed with caution (log warning)
+            - "BLOCK": Do not proceed
+            - "SHIVA_OVERRIDE": Low score but Shiva context allows
+        """
+        from vibe_core.plugins.opus_assistant.manas.akshara import (
+            VARGA_LAYERS,
+            get_action_varga,
+            get_trigger_varga,
+        )
+        from vibe_core.plugins.opus_assistant.manas.triggers import normalize_trigger
+
+        # Get trigger pattern from intent
+        trigger_pattern = normalize_trigger(intent)
+        trigger = trigger_pattern.value if trigger_pattern else "trigger:unknown"
+
+        # Get file path for logging
+        file_path = intent.params.get("file_path")
+
+        # Get dharmic recommendations
+        memory = self._get_synaptic_memory()
+        recommendations = memory.consult_dharmic(trigger, limit=1)
+
+        # Default values if no recommendation found
+        if recommendations:
+            rec = recommendations[0]
+            dharmic_score = rec.dharmic_score
+            resonance = rec.resonance
+            harmony = rec.harmony_description
+            varga_trigger = rec.varga_trigger
+            varga_action = rec.varga_action
+            confidence = rec.confidence_level
+        else:
+            # No learned experience - use direct calculation
+            from vibe_core.plugins.opus_assistant.manas.akshara import (
+                calculate_dharmic_score,
+                calculate_resonance,
+            )
+
+            trigger_varga = get_trigger_varga(trigger)
+            action_varga = get_action_varga(action_pattern)
+            resonance = calculate_resonance(trigger, action_pattern)
+            # Default weight of 0.5 for unlearned actions
+            dharmic_score = calculate_dharmic_score(trigger, action_pattern, 0.5)
+            varga_trigger = trigger_varga.name
+            varga_action = action_varga.name
+            harmony = self._get_harmony_description(resonance)
+            confidence = self._get_confidence_level(dharmic_score)
+
+        # Make decision based on thresholds
+        decision = "BLOCK"
+        reasoning = ""
+        shiva_applied = False
+        shiva_reason = None
+
+        if dharmic_score >= DHARMIC_THRESHOLD_EXECUTE:
+            decision = "EXECUTE"
+            reasoning = f"High dharmic score ({dharmic_score:.2f} >= {DHARMIC_THRESHOLD_EXECUTE})"
+
+        elif dharmic_score >= DHARMIC_THRESHOLD_WARN:
+            decision = "WARN_EXECUTE"
+            reasoning = f"Neutral dharmic score ({dharmic_score:.2f}) - proceeding with caution"
+
+        else:
+            # Low score - check for Shiva context
+            shiva_result = self._check_shiva_context(trigger, action_pattern, varga_trigger, varga_action)
+            if shiva_result:
+                decision = "SHIVA_OVERRIDE"
+                shiva_applied = True
+                shiva_reason = shiva_result
+                reasoning = f"Low dharmic score ({dharmic_score:.2f}) but Shiva context applies"
+            else:
+                decision = "BLOCK"
+                reasoning = f"Low dharmic score ({dharmic_score:.2f} < {DHARMIC_THRESHOLD_WARN}) with no Shiva context"
+
+        # Create decision log
+        log_entry = VivekaDecisionLog(
+            timestamp=datetime.utcnow().isoformat(),
+            intent_type=intent.intent_type,
+            intent_title=intent.title,
+            trigger=trigger,
+            file_path=file_path,
+            dharmic_score=dharmic_score,
+            resonance=resonance,
+            harmony=harmony,
+            varga_trigger=varga_trigger,
+            varga_action=varga_action,
+            confidence_level=confidence,
+            decision=decision,
+            reasoning=reasoning,
+            shiva_context_applied=shiva_applied,
+            shiva_reason=shiva_reason,
+        )
+
+        # Log the decision
+        self._decision_logger.log(log_entry)
+
+        return decision, log_entry
+
+    def _check_shiva_context(self, trigger: str, action: str, varga_trigger: str, varga_action: str) -> Optional[str]:
+        """
+        Check if Shiva context allows a low-scoring action.
+
+        Shiva context applies when:
+        1. The trigger has specific allowed actions (pattern-based)
+        2. Both trigger and action are in the REPAIR layer (layer-based)
+
+        Returns:
+            Reason string if Shiva context applies, None otherwise
+        """
+        # Pattern-based check
+        if trigger in SHIVA_CONTEXT_PATTERNS:
+            pattern = SHIVA_CONTEXT_PATTERNS[trigger]
+            if action in pattern["allowed_actions"]:
+                return pattern["reason"]
+
+        # Layer-based check: if both are in REPAIR layer
+        if varga_trigger == "MURDHANYA" and varga_action == "MURDHANYA":
+            layer_info = SHIVA_LAYER_ALLOWANCES.get("REPAIR", {})
+            if action in layer_info.get("allowed_actions", []):
+                return layer_info["reason"]
+
+        return None
+
+    def _get_harmony_description(self, resonance: float) -> str:
+        """Get human-readable harmony description from resonance value."""
+        if resonance >= 1.0:
+            return "perfect"
+        elif resonance >= 0.8:
+            return "harmonic"
+        elif resonance >= 0.6:
+            return "moderate"
+        elif resonance >= 0.4:
+            return "weak"
+        else:
+            return "distant"
+
+    def _get_confidence_level(self, dharmic_score: float) -> str:
+        """Get human-readable confidence level from dharmic score."""
+        if dharmic_score >= 0.8:
+            return "very_high"
+        elif dharmic_score >= 0.6:
+            return "high"
+        elif dharmic_score >= 0.4:
+            return "medium"
+        elif dharmic_score >= 0.2:
+            return "low"
+        else:
+            return "very_low"
 
     def act(self, intent: "Intent") -> ActionResult:
         """
-        Execute a triage intent (BaseAction interface).
+        Execute a triage intent with Dharmic evaluation (BaseAction interface).
+
+        OPUS-133 Dharmic Protocol:
+        1. CONSULT: Evaluate intent using consult_dharmic()
+        2. DECIDE: EXECUTE, WARN_EXECUTE, BLOCK, or SHIVA_OVERRIDE
+        3. ACT: Execute if decision allows
+        4. LOG: Full audit trail maintained
 
         For P1/P2 intents, this adds missing docstrings to the identified element.
         """
         intent_type = intent.intent_type
         params = intent.params
 
-        logger.info(f"👁️ VivekaAction executing: {intent.title}")
+        logger.info(f"👁️ VivekaAction evaluating: {intent.title}")
 
         # Check for dry_run mode
         dry_run = params.get("dry_run", True)  # Default to dry_run for safety
 
-        if intent_type in ("triage_p1_critical", "triage_p2_high"):
-            return self._handle_triage_gap(intent, dry_run)
-        elif intent_type == "triage_execute":
-            return self._handle_explicit_execute(intent, dry_run)
-        elif intent_type == "viveka_auto_doc":
-            return self._handle_auto_doc(intent, dry_run)
-        else:
+        # OPUS-133: Dharmic Evaluation
+        # Determine the action pattern based on intent type
+        action_pattern = self._intent_to_action_pattern(intent_type)
+
+        # Evaluate using Dharmic scoring
+        decision, decision_log = self._evaluate_dharmic(intent, action_pattern)
+
+        # Handle BLOCK decision
+        if decision == "BLOCK":
+            logger.warning(
+                f"🚫 VIVEKA BLOCKED: {intent.title} "
+                f"(dharmic={decision_log.dharmic_score:.2f}, harmony={decision_log.harmony})"
+            )
             return ActionResult(
+                success=False,
+                action_name=self.name,
+                intent_type=intent_type,
+                error=f"Dharmic evaluation blocked action: {decision_log.reasoning}",
+                result={
+                    "decision": "BLOCK",
+                    "dharmic_score": decision_log.dharmic_score,
+                    "harmony": decision_log.harmony,
+                    "reasoning": decision_log.reasoning,
+                },
+            )
+
+        # Handle WARN_EXECUTE - log warning but proceed
+        if decision == "WARN_EXECUTE":
+            logger.warning(
+                f"⚠️ VIVEKA CAUTION: {intent.title} "
+                f"(dharmic={decision_log.dharmic_score:.2f}, harmony={decision_log.harmony}) "
+                f"- proceeding with caution"
+            )
+
+        # Handle SHIVA_OVERRIDE - log the override
+        if decision == "SHIVA_OVERRIDE":
+            logger.info(
+                f"🔥 SHIVA OVERRIDE: {intent.title} "
+                f"(dharmic={decision_log.dharmic_score:.2f}) "
+                f"- {decision_log.shiva_reason}"
+            )
+
+        # Proceed with execution (EXECUTE, WARN_EXECUTE, or SHIVA_OVERRIDE)
+        logger.info(f"👁️ VivekaAction executing: {intent.title} [{decision}]")
+
+        if intent_type in ("triage_p1_critical", "triage_p2_high"):
+            result = self._handle_triage_gap(intent, dry_run)
+        elif intent_type == "triage_execute":
+            result = self._handle_explicit_execute(intent, dry_run)
+        elif intent_type == "viveka_auto_doc":
+            result = self._handle_auto_doc(intent, dry_run)
+        else:
+            result = ActionResult(
                 success=False,
                 action_name=self.name,
                 intent_type=intent_type,
                 error=f"Unknown intent type: {intent_type}",
             )
+
+        # Enrich result with Dharmic context
+        if result.result and isinstance(result.result, dict):
+            result.result["dharmic_decision"] = decision
+            result.result["dharmic_score"] = decision_log.dharmic_score
+            result.result["harmony"] = decision_log.harmony
+
+        return result
+
+    def _intent_to_action_pattern(self, intent_type: str) -> str:
+        """Map intent type to action pattern for Dharmic evaluation."""
+        mapping = {
+            "triage_p1_critical": "action:create_doc",
+            "triage_p2_high": "action:create_doc",
+            "triage_execute": "action:auto_fix",
+            "viveka_auto_doc": "action:create_doc",
+        }
+        return mapping.get(intent_type, f"action:{intent_type}")
 
     def _handle_triage_gap(self, intent: "Intent", dry_run: bool) -> ActionResult:
         """
