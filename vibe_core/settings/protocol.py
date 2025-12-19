@@ -25,9 +25,9 @@ Usage:
         def handles_command(self, key: str) -> bool:
             return key == "provider"
 
-        def execute(self, key: str, value: str, context: SectionContext) -> ExecutionResult:
+        def execute(self, key: str, value: str, context: SectionContext) -> SettingsResult:
             # Do the work
-            return ExecutionResult(success=True, message="Provider changed")
+            return SettingsResult(success=True, message="Provider changed")
 """
 
 from abc import ABC, abstractmethod
@@ -62,8 +62,8 @@ class SectionContext:
 
 
 @dataclass
-class ExecutionResult:
-    """Result of executing a settings command."""
+class SettingsResult:
+    """Result of executing a settings command (OPUS-111: renamed from SettingsResult)."""
 
     success: bool
     message: str
@@ -130,7 +130,7 @@ class SettingsSection(ABC):
         pass
 
     @abstractmethod
-    def execute(self, key: str, value: str, context: SectionContext) -> ExecutionResult:
+    def execute(self, key: str, value: str, context: SectionContext) -> SettingsResult:
         """
         Execute a SET command.
 
@@ -140,7 +140,7 @@ class SettingsSection(ABC):
             context: Current settings context
 
         Returns:
-            ExecutionResult with success/failure and message
+            SettingsResult with success/failure and message
         """
         pass
 

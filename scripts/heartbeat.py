@@ -356,16 +356,38 @@ class HeartbeatEngine:
     def _chronicle_commit(self):
         """
         OPUS-091: Seal changes in git history using Chronicle Cartridge.
+        OPUS-096: Now delegates to StateSyncWeaver.pulse() for unified commit orchestration.
 
         OPUS-081 ENHANCED: Only commits RUNTIME STATE files, not source code.
-        Uses GitState.get_dirty_runtime_files() which reads plugin manifests
-        to determine which files are runtime state.
+        Uses RuntimeStateDefinition as the single source of truth.
 
         GPG signing is configurable via config/prana.yaml.
 
-        RESILIENCE: Gracefully degrades GPG signing in CI environments where keys
-        are not available, preventing silent commit failures.
+        RESILIENCE: Falls back to direct GitTools if Weaver unavailable.
         """
+        # OPUS-096: Try to use StateSyncWeaver for unified commit orchestration
+        try:
+            from vibe_core.state.prakriti import Prakriti
+            from vibe_core.state.weaver import StateSyncWeaver
+
+            prakriti = Prakriti(workspace_path=self.project_root)
+            weaver = StateSyncWeaver(prakriti)
+            result = weaver.pulse()
+
+            if result.success:
+                if result.sha:
+                    logger.info(f"✅ Chronicle: History sealed via Weaver ({result.sha[:8]})")
+                else:
+                    logger.debug(f"📝 Chronicle: {result.message}")
+            else:
+                logger.warning(f"⚠️  Chronicle: Weaver commit failed - {result.error}")
+
+            return  # Weaver handled it
+
+        except Exception as weaver_err:
+            logger.debug(f"📜 Chronicle: Weaver not available ({weaver_err}), using legacy path")
+
+        # LEGACY FALLBACK: Direct GitTools commit
         # Load chronicle config from YAML directly
         chronicle_config = {}
         if PRANA_AVAILABLE:

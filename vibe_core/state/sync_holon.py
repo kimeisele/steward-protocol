@@ -642,17 +642,38 @@ class StateSyncHolon:
         logger.info(f"[SYNC_HOLON] Boot complete: {len(discovered)} plugins with state")
         return discovered
 
-    def on_shutdown(self) -> None:
+    def on_shutdown(self, use_weaver: bool = True) -> None:
         """
         Shutdown-time state commit.
 
+        OPUS-096: Now delegates to StateSyncWeaver for unified orchestration.
+        Falls back to direct commit if Weaver is not available.
+
         Called by Prakriti during kernel shutdown.
         Implements: Stage all -> Commit -> Verify
+
+        Args:
+            use_weaver: If True (default), delegate to StateSyncWeaver
         """
         # Stop watcher if running
         self.stop_watcher()
 
-        # Commit any dirty state
+        # OPUS-096: Try to use StateSyncWeaver for unified commit orchestration
+        if use_weaver:
+            try:
+                from .weaver import StateSyncWeaver
+
+                weaver = StateSyncWeaver(self.prakriti, sync_holon=self)
+                result = weaver.on_session_end()
+                if result.success:
+                    logger.info(f"[SYNC_HOLON] Shutdown complete via Weaver: {result.message}")
+                    return
+                else:
+                    logger.warning(f"[SYNC_HOLON] Weaver failed: {result.error}, falling back")
+            except Exception as e:
+                logger.warning(f"[SYNC_HOLON] Weaver not available: {e}, using direct commit")
+
+        # Fallback: Direct commit for each dirty path
         for plugin, infos in self._discovered.items():
             for info in infos:
                 if self.diagnose_guna(info.path) == StateGuna.RAJAS:
@@ -665,7 +686,7 @@ class StateSyncHolon:
                 {"plugins": list(self._discovered.keys())},
             )
 
-        logger.info("[SYNC_HOLON] Shutdown complete")
+        logger.info("[SYNC_HOLON] Shutdown complete (direct)")
 
     def on_conflict(self, path: Path, ours: bytes, theirs: bytes) -> bytes:
         """

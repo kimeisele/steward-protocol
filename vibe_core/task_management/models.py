@@ -1,4 +1,21 @@
-"""Task management data models."""
+"""
+Task management data models.
+
+IMPORTANT: There are TWO Task types in the codebase (by design):
+
+1. scheduling.task.Task (SchedulerTask)
+   - Purpose: Kernel task dispatch to agents
+   - Fields: agent_id, payload, task_id, priority
+   - Used by: Kernel, Agents, Cartridges
+
+2. task_management.models.Task (ManagedTask) - THIS FILE
+   - Purpose: User-facing task management with rich metadata
+   - Fields: title, description, subtasks, assignee, topology routing
+   - Used by: UI, Task Manager, Roadmaps
+
+These are semantically different and intentionally parallel.
+Do NOT merge them - they serve different layers of the system.
+"""
 
 from dataclasses import dataclass, field
 from datetime import datetime
