@@ -56,19 +56,19 @@ flowchart LR
         TR[Task Rate]
         ID[Idle Time]
     end
-    
+
     subgraph Guna["🔮 Guna Classifier"]
         TAM[Tamas Check]
         RAJ[Rajas Check]
         SAT[Sattva Default]
     end
-    
+
     subgraph Output["🚦 Constraints"]
         REST[Restricted]
         COOL[Cooldown]
         FULL[Full Access]
     end
-    
+
     ER --> TAM
     TR --> RAJ
     ID --> TAM

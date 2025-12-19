@@ -23,24 +23,24 @@ flowchart TD
         CRON[Heartbeat Cron]
         CMD[steward pratyaya]
     end
-    
+
     subgraph Swapna["💭 Swapna (Dream State)"]
         TK[TestKernel.minimal]
         RT[run_red_team]
         AR[AttackResult]
     end
-    
+
     subgraph Reflex["⚡ The Reflex (NEW)"]
         PA[PratyayaAnalyzer]
         INT[Intent CRITICAL]
         BUF[OPUS.md Buffer]
     end
-    
+
     subgraph Action["🔧 Action"]
         HIL[Human Approves]
         ENG[Engineer Acts]
     end
-    
+
     Trigger --> TK
     TK --> RT
     RT --> AR
@@ -49,9 +49,9 @@ flowchart TD
     INT --> BUF
     BUF --> HIL
     HIL --> ENG
-    
+
     AR -->|exploited=False| KARMA[Karma Boost]
-    
+
     style Swapna fill:#e3f2fd
     style Reflex fill:#fff3e0
     style Action fill:#e8f5e9
@@ -70,16 +70,16 @@ flowchart TD
 | 5. **Reflex** | PratyayaAnalyzer | ❌ NEW | `manas/analyzers/pratyaya_analyzer.py` |
 
 ## Status
- 
+
  | Aspect | Status | Evidence |
  |--------|--------|----------|
  | PratyayaAnalyzer | ✅ | [pratyaya_analyzer.py](vibe_core/plugins/opus_assistant/manas/analyzers/pratyaya_analyzer.py) |
  | Red Team Tests | ✅ | [test_red_team_attacks.py](tests/hardening/test_red_team_attacks.py) |
  | Reflex Tests | ✅ | [test_pratyaya_analyzer.py](vibe_core/plugins/opus_assistant/manas/tests/test_pratyaya_analyzer.py) |
  | CLI Command | ❌ | Phase 2 |
- 
+
  ---
- 
+
  ## Implementation (The Reflex)
 
 ```python
@@ -95,18 +95,18 @@ from tests.hardening.test_red_team_attacks import run_red_team, AttackResult
 
 class PratyayaAnalyzer(BaseAnalyzer):
     """Periodic self-falsification via Red Team orchestration."""
-    
+
     name = "pratyaya"
     description = "Self-test via cognitive mutation (OPUS-077)"
-    
+
     def analyze(self, context: dict) -> list:
         # Only run if explicitly triggered or on schedule
         if not context.get("pratyaya_trigger"):
             return []
-        
+
         # Run Red Team in Swapna (isolated TestKernel)
         results = run_red_team()  # Uses TestKernel.minimal() internally
-        
+
         intents = []
         for attack_name, result in results["results"].items():
             if result.exploited:
@@ -125,10 +125,10 @@ class PratyayaAnalyzer(BaseAnalyzer):
                         "fix": result.details.get("recommendation")
                     }
                 ))
-        
+
         # Log dream result to ledger
         self._log_dream_result(results)
-        
+
         return intents
 ```
 
@@ -164,17 +164,17 @@ files:
     required: true
   - path: vibe_core/plugins/test_orchestration/fixtures.py
     required: true
-  
+
   # === EXISTING INTENT INFRASTRUCTURE ===
   - path: vibe_core/plugins/opus_assistant/manas/intent_generator.py
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/analyzers/base.py
     required: true
-  
+
   # === NEW: PRATYAYA ANALYZER (WILL BE RED UNTIL IMPLEMENTED) ===
   - path: vibe_core/plugins/opus_assistant/manas/analyzers/pratyaya_analyzer.py
     required: true
-  
+
   # === OPTIONAL: CLI COMMAND ===
     required: false
     absent_note: "Phase 2 - CLI convenience wrapper"
@@ -183,19 +183,19 @@ wiring:
   # Red Team uses TestKernel isolation
   - pattern: "TestKernel.minimal()"
     in: tests/hardening/test_red_team_attacks.py
-  
+
   # AttackResult has recommendation field
   - pattern: "recommendation="
     in: tests/hardening/test_red_team_attacks.py
-  
+
   # Standalone runner exists
   - pattern: "def run_red_team"
     in: tests/hardening/test_red_team_attacks.py
-  
+
   # IntentGenerator has modular analyzers
   - pattern: "_register_modular_analyzers"
     in: vibe_core/plugins/opus_assistant/manas/intent_generator.py
-  
+
   # NEW: PratyayaAnalyzer is registered (WILL FAIL UNTIL WIRED)
   - pattern: "PratyayaAnalyzer"
     in: vibe_core/plugins/opus_assistant/manas/intent_generator.py
@@ -203,7 +203,7 @@ wiring:
 tests:
   # Red Team tests (run these to verify attacks are blocked)
   - tests/hardening/test_red_team_attacks.py
-  
+
   # NEW: Pratyaya integration test (WILL BE RED)
   - vibe_core/plugins/opus_assistant/manas/tests/test_pratyaya_analyzer.py
 
@@ -263,7 +263,7 @@ python -m pytest tests/hardening/ -v -m hardening
 ## Implementation Checklist
 
 - [ ] Create `manas/analyzers/pratyaya_analyzer.py` (~50 LOC)
-- [ ] Register `PratyayaAnalyzer` in `intent_generator.py` 
+- [ ] Register `PratyayaAnalyzer` in `intent_generator.py`
 - [ ] Create `tests/pratyaya/test_pratyaya_analyzer.py`
 - [ ] Add `pratyaya_trigger` to heartbeat context
 - [ ] (Optional) CLI `steward pratyaya --dream`

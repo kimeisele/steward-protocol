@@ -14,25 +14,25 @@ files:
   - path: vibe_core/plugins/opus_assistant/manas/api.py
     required: true
     description: "ManasOracle class, AnalysisResult dataclass, wisdom interface"
-  
+
   # === INTEGRATION ===
   - path: scripts/heartbeat.py
     required: true
     description: "Heartbeat engine with pre_analysis + post_analysis gates"
-  
+
   - path: vibe_core/plugins/opus_assistant/manas/__init__.py
     required: true
     description: "Module exports for ManasOracle, AnalysisResult"
-  
+
   # === TESTS ===
   - path: tests/unit/test_manas_oracle_api.py
     required: true
     description: "15 unit tests covering all API methods"
-  
+
   - path: tests/integration/test_manas_oracle_heartbeat.py
     required: true
     description: "13 integration tests for heartbeat flow"
-  
+
   # === DOCUMENTATION ===
   - path: docs/MANAS_ORACLE_API.md
     required: true
@@ -43,11 +43,11 @@ wiring:
   # Heartbeat imports ManasOracle
   - pattern: "from vibe_core.plugins.opus_assistant.manas.api import ManasOracle"
     in: scripts/heartbeat.py
-  
+
   # MANAS_ORACLE_AVAILABLE flag set
   - pattern: "MANAS_ORACLE_AVAILABLE = True"
     in: scripts/heartbeat.py
-  
+
   # ManasOracle instantiated in __init__
   - pattern: "self.manas_oracle = ManasOracle"
     in: scripts/heartbeat.py
@@ -56,11 +56,11 @@ wiring:
   # Pre-analysis called before UnifiedRouter
   - pattern: "self.manas_oracle.pre_analysis"
     in: scripts/heartbeat.py
-  
+
   # Gate decision checked
   - pattern: "if not gate_decision\\[\"proceed\"\\]"
     in: scripts/heartbeat.py
-  
+
   # Blocked tasks marked as BLOCKED
   - pattern: "status=TaskStatus.BLOCKED"
     in: scripts/heartbeat.py
@@ -69,7 +69,7 @@ wiring:
   # Post-analysis called after success
   - pattern: "self.manas_oracle.post_analysis"
     in: scripts/heartbeat.py
-  
+
   # Learning recorded
   - pattern: "task_type.*success.*error"
     in: scripts/heartbeat.py
@@ -78,7 +78,7 @@ wiring:
   # ManasOracle exported from manas module
   - pattern: "ManasOracle"
     in: vibe_core/plugins/opus_assistant/manas/__init__.py
-  
+
   # AnalysisResult exported
   - pattern: "AnalysisResult"
     in: vibe_core/plugins/opus_assistant/manas/__init__.py
@@ -87,11 +87,11 @@ wiring:
   # consult() method exists
   - pattern: "def consult"
     in: vibe_core/plugins/opus_assistant/manas/api.py
-  
+
   # pre_analysis() method exists
   - pattern: "def pre_analysis"
     in: vibe_core/plugins/opus_assistant/manas/api.py
-  
+
   # post_analysis() method exists
   - pattern: "def post_analysis"
     in: vibe_core/plugins/opus_assistant/manas/api.py
@@ -106,7 +106,7 @@ tests:
       - test_consult_high_risk_task
       - test_analysis_result_to_dict
       - test_analysis_result_str
-  
+
   - path: tests/unit/test_manas_oracle_api.py
     suite: TestManasOracleAPIs
     tests:
@@ -114,19 +114,19 @@ tests:
       - test_pre_analysis_blocks_dangerous_task
       - test_post_analysis_records_success
       - test_post_analysis_records_failure
-  
+
   - path: tests/unit/test_manas_oracle_api.py
     suite: TestManasOracleRiskIdentification
     tests:
       - test_identifies_production_risk
       - test_identifies_large_changeset_risk
       - test_suggests_production_precautions
-  
+
   - path: tests/unit/test_manas_oracle_api.py
     suite: TestManasOracleMemoryIntegration
     tests:
       - test_confidence_based_on_history
-  
+
   - path: tests/unit/test_manas_oracle_api.py
     suite: TestManasOracleErrorHandling
     tests:
@@ -144,14 +144,14 @@ tests:
       - test_oracle_post_analysis_learning
       - test_oracle_analysis_result_serialization
       - test_oracle_available_flag_in_heartbeat
-  
+
   - path: tests/integration/test_manas_oracle_heartbeat.py
     suite: TestManasOracleHeartbeatFlow
     tests:
       - test_heartbeat_with_oracle_flow
       - test_oracle_risk_identification_in_flow
       - test_oracle_confidence_evolution
-  
+
   - path: tests/integration/test_manas_oracle_heartbeat.py
     suite: TestManasOracleErrorRecovery
     tests:

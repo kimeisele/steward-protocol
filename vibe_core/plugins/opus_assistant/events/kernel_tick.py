@@ -2358,7 +2358,7 @@ class {name.title().replace("_", "")}Plugin(KernelPlugin):
             return {{"success": False, "error": str(e)}}
 '''
 
-        manifest = f'''{{
+        manifest = f"""{{
     "id": "{name}",
     "name": "{name.title().replace("_", " ")}",
     "type": "plugin",
@@ -2370,7 +2370,7 @@ class {name.title().replace("_", "")}Plugin(KernelPlugin):
     "generated": true,
     "syscalls": ["{syscall_name}"]
 }}
-'''
+"""
 
         return {"plugin_main.py": plugin_code, "manifest.json": manifest}
 
