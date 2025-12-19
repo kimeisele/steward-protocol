@@ -1,6 +1,6 @@
 # OPUS-112: Synaptic Bridge Architecture
 
-**Status**: DRAFT - ARCHITECTURE REVIEW
+**Status**: IMPLEMENTED - Phase 1 Complete
 **Author**: Claude/Gemini Synthesis
 **Date**: 2025-12-19
 **Depends On**: OPUS-089, OPUS-101, OPUS-106
@@ -355,12 +355,14 @@ Should other components use `ManasOracle.consult()` or dispatch directly?
 
 ## 10. Implementation Checklist
 
-- [ ] Update `cognitive_kernel.py`: Store `kernel.tool_registry` reference
-- [ ] Add `_try_tool_dispatch()` to `intent_router.py`
-- [ ] Update `route()` to try tool dispatch before action loader
-- [ ] Test: MANAS can dispatch to envoy.city_control
-- [ ] Test: MANAS can dispatch to chronicle.git_tools
-- [ ] Test: New agent tools automatically available
+- [x] Update `cognitive_kernel.py`: Store `kernel.tool_registry` reference
+- [x] Add `_try_tool_dispatch()` to `intent_router.py`
+- [x] Update `route()` to try tool dispatch before action loader
+- [x] Add DHARMA policy: Only SAFE/LOW risk intents use direct dispatch
+- [x] Add SYSTEM ACT logging to `system_journal.jsonl`
+- [ ] Test: MANAS can dispatch to envoy.city_control (needs kernel boot)
+- [ ] Test: MANAS can dispatch to chronicle.git_tools (needs kernel boot)
+- [ ] Test: New agent tools automatically available (needs kernel boot)
 
 ---
 
