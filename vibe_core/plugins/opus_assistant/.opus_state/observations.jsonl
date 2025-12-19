@@ -17,3 +17,9 @@
 {"timestamp": "2025-12-13T02:46:28.963975", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T02:46:28.967857", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T09:50:00", "severity": "WARN", "message": "This observation should survive OPUS.md deletion!", "source": "battle_test", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:53.807745", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:54.383225", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:55.482833", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:56.224067", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:56.952095", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-19T10:57:57.654995", "severity": "WARN", "message": "Drift detected: 21 missing files (tick #1)", "source": "drift_detector", "context_hash": null}

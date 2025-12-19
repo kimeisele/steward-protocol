@@ -66,12 +66,12 @@ class AnalysisResult:
     priority: IntentPriority      # CRITICAL, HIGH, MEDIUM, LOW
     safety_score: float           # 0.0-1.0: Wie sicher ist das?
     confidence: float             # 0.0-1.0: Wie sicher ist MANAS?
-    
+
     advice: str                   # Menschenlesbarer Rat
     suggested_action: str         # "EXECUTE_NOW", "REQUEST_APPROVAL", "BLOCK_AND_REVIEW"
     risks: List[str]              # Identifizierte Risiken
     precautions: List[str]        # Vorgeschlagene Vorsichtsmaßnahmen
-    
+
     manas_reasoning: Dict         # Debug: Warum hat MANAS so entschieden?
 ```
 
@@ -184,19 +184,19 @@ from vibe_core.plugins.opus_assistant.manas.api import ManasOracle, ManasConfig
 class HeartbeatEngine:
     def __init__(self, project_root: Path):
         # ... existing init ...
-        
+
         # OPUS-089: Initialize MANAS Oracle
         self.manas_oracle = ManasOracle(
             config=ManasConfig(thinking_interval_minutes=15)
         )
-    
+
     def _execute_tasks(self):
         """Execute pending tasks with MANAS Oracle gating."""
         next_task = self.task_manager.get_next_task()
-        
+
         if not next_task:
             return
-        
+
         # ===== PRE-ANALYSIS GATE =====
         if self.manas_oracle:
             gate = self.manas_oracle.pre_analysis({
@@ -206,7 +206,7 @@ class HeartbeatEngine:
                 "is_automated": True,
                 "user_approval": False,
             })
-            
+
             if not gate["proceed"]:
                 logger.warning(f"Task blocked: {gate['reason']}")
                 self.task_manager.update_task(
@@ -215,9 +215,9 @@ class HeartbeatEngine:
                     metadata={"blocked_by": "manas_oracle"}
                 )
                 return
-        
+
         # ... execute task ...
-        
+
         # ===== POST-ANALYSIS LEARNING =====
         if self.manas_oracle:
             self.manas_oracle.post_analysis({
@@ -318,7 +318,7 @@ gate = oracle.pre_analysis(context)
 if gate["proceed"] and gate["safety_score"] >= 0.70:
     print("🟢 Deploying...")
     deploy_result = execute_deploy()
-    
+
     # Learn from outcome
     oracle.post_analysis({
         "task_type": "deploy",

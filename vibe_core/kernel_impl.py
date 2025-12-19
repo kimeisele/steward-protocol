@@ -321,6 +321,14 @@ class RealVibeKernel(VibeKernel):
             self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
             self._plugins = list(self._plugins_map.values())
 
+            # OPUS-112: Auto-register plugin capabilities from manifest (VEDA-4)
+            for plugin_id, meta in self._plugin_metadata.items():
+                if meta.manifest:
+                    caps = meta.manifest.get("capabilities", [])
+                    if caps:
+                        self._capability_registry.register_agent(plugin_id, caps)
+                        logger.debug(f"🔐 Plugin '{plugin_id}' capabilities registered: {caps}")
+
             # Check for Genesis Cognitive Pack
             genesis_meta = self._plugin_metadata.get("genesis_knowledge")
             if genesis_meta and genesis_meta.loaded_successfully:
