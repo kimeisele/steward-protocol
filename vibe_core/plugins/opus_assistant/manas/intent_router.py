@@ -180,6 +180,21 @@ class IntentRouter:
         self._handlers["harness_broken"] = self._handle_roadmap_harness
         self._handlers["harness_missing"] = self._handle_roadmap_harness
 
+        # OPUS-128: New harness intent types for edge cases
+        self._handlers["harness_tdd_contract"] = self._handle_tdd_contract
+        self._handlers["harness_stale_reference"] = self._handle_stale_reference
+        self._handlers["harness_optional_missing"] = self._handle_optional_missing
+
+        # OPUS-129: Inverse Scan - Coverage gap intents
+        self._handlers["coverage_gap_critical"] = self._handle_coverage_gap
+        self._handlers["coverage_gap_module"] = self._handle_coverage_gap
+        self._handlers["coverage_gap_overall"] = self._handle_coverage_gap
+
+        # OPUS-132: VivekaSense Triage - Prioritized coverage gap intents
+        self._handlers["triage_p1_critical"] = self._handle_triage
+        self._handlers["triage_p2_high"] = self._handle_triage
+        self._handlers["triage_summary"] = self._handle_triage
+
         # Doc Creation/Consolidation → SUTRA (OPUS-054 Phase 2)
         self._handlers["create_opus_doc"] = self._handle_create_doc
         self._handlers["roadmap_create_doc"] = self._handle_create_doc
@@ -1300,8 +1315,8 @@ class IntentRouter:
         logger.info(f"📜 SUTRA handling harness generation: {intent.title}")
 
         try:
-            # Support both 'target' and 'doc_path' (gap intents use doc_path)
-            target = intent.params.get("target") or intent.params.get("doc_path", "")
+            # Support 'target', 'doc_path', and 'opus_file' (DocHarnessAnalyzer uses opus_file)
+            target = intent.params.get("target") or intent.params.get("doc_path") or intent.params.get("opus_file", "")
             if not target:
                 return {"success": False, "handler": "SUTRA", "error": "No target file specified"}
 
@@ -1916,6 +1931,311 @@ tests:
                 }
         except Exception as e:
             return {"success": False, "handler": "KnowledgeGraph", "error": str(e)}
+
+    # ==========================================================================
+    # OPUS-128: New Harness Edge Case Handlers
+    # ==========================================================================
+
+    def _handle_tdd_contract(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-128: Handle TDD contract intents (harness for PLANNED/IN_PROGRESS docs).
+
+        These are NOT errors - the red harness is the SPEC for what needs to be built.
+        This handler acknowledges the contract and returns implementation guidance.
+        """
+        logger.info(f"📋 TDD Contract: {intent.title}")
+
+        opus_file = intent.params.get("opus_file", "")
+        doc_status = intent.params.get("doc_status", "unknown")
+        files_to_create = intent.params.get("files_to_create", [])
+        wiring_to_implement = intent.params.get("wiring_to_implement", [])
+
+        return {
+            "success": True,
+            "handler": "DocHarnessAnalyzer/TDD",
+            "action": "tdd_contract_acknowledged",
+            "status": "RED_IS_CORRECT",
+            "message": (
+                f"TDD Contract for {Path(opus_file).stem}: "
+                f"{len(files_to_create)} files to create, "
+                f"{len(wiring_to_implement)} patterns to implement. "
+                f"Doc status: {doc_status}. Red harness = correct behavior."
+            ),
+            "files_to_create": files_to_create,
+            "wiring_to_implement": wiring_to_implement,
+            "guidance": "Implement the files/patterns specified in the harness to make it green.",
+        }
+
+    def _handle_stale_reference(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-128: Handle stale reference intents (files/patterns that moved).
+
+        Auto-executable: Updates harness paths to point to new locations.
+        """
+        logger.info(f"🔄 Stale Reference: {intent.title}")
+
+        opus_file = intent.params.get("opus_file", "")
+        files_moved = intent.params.get("files_moved", {})
+        wiring_moved = intent.params.get("wiring_moved", {})
+
+        if not opus_file:
+            return {"success": False, "handler": "DocHarnessAnalyzer/Stale", "error": "No opus_file specified"}
+
+        opus_path = Path(opus_file)
+        if not opus_path.exists():
+            return {"success": False, "handler": "DocHarnessAnalyzer/Stale", "error": f"File not found: {opus_file}"}
+
+        try:
+            content = opus_path.read_text()
+            updated = False
+
+            # Update file paths in harness
+            for old_path, new_path in files_moved.items():
+                if old_path in content:
+                    content = content.replace(old_path, new_path)
+                    updated = True
+                    logger.info(f"  Updated: {old_path} → {new_path}")
+
+            # Update wiring paths (pattern locations)
+            for pattern, new_file in wiring_moved.items():
+                # Find and update the 'in:' line for this pattern
+                # Pattern: - pattern: "xyz"\n    in: old_file.py
+                import re
+
+                wiring_pattern = re.compile(
+                    rf"(-\s*pattern:\s*[\"']?{re.escape(pattern)}[\"']?\s*\n\s*in:\s*)([^\s\n]+)",
+                    re.MULTILINE,
+                )
+                if wiring_pattern.search(content):
+                    content = wiring_pattern.sub(rf"\g<1>{new_file}", content)
+                    updated = True
+                    logger.info(f"  Updated wiring: '{pattern}' → {new_file}")
+
+            if updated:
+                opus_path.write_text(content)
+                return {
+                    "success": True,
+                    "handler": "DocHarnessAnalyzer/Stale",
+                    "action": "references_updated",
+                    "message": f"Updated {len(files_moved) + len(wiring_moved)} stale references in {opus_path.name}",
+                    "files_updated": list(files_moved.keys()),
+                    "wiring_updated": list(wiring_moved.keys()),
+                }
+            else:
+                return {
+                    "success": True,
+                    "handler": "DocHarnessAnalyzer/Stale",
+                    "action": "no_changes_needed",
+                    "message": f"No stale references found in {opus_path.name} (already updated?)",
+                }
+
+        except Exception as e:
+            logger.error(f"❌ Stale reference update failed: {e}")
+            return {"success": False, "handler": "DocHarnessAnalyzer/Stale", "error": str(e)}
+
+    def _handle_optional_missing(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-128: Handle optional missing files (required=false in harness).
+
+        These are INFO only - no action required unless the user wants them.
+        """
+        logger.info(f"ℹ️ Optional Missing: {intent.title}")
+
+        opus_file = intent.params.get("opus_file", "")
+        files_missing = intent.params.get("files_missing", [])
+
+        return {
+            "success": True,
+            "handler": "DocHarnessAnalyzer/Optional",
+            "action": "info_only",
+            "message": (
+                f"Optional files missing in {Path(opus_file).stem}: {files_missing}. "
+                "These are marked required=false. No action needed unless desired."
+            ),
+            "files_missing": files_missing,
+            "priority": "trivial",
+        }
+
+    def _handle_coverage_gap(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-129: Handle code coverage gap intents.
+
+        These are from the Inverse Scan - code that exists but isn't documented.
+        The handler acknowledges the gap and provides guidance.
+        """
+        intent_type = intent.intent_type
+        logger.info(f"📊 Coverage Gap: {intent.title}")
+
+        action = intent.params.get("action", "unknown")
+
+        if intent_type == "coverage_gap_critical":
+            # Critical undocumented element
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Critical",
+                "action": "gap_identified",
+                "element_type": intent.params.get("element_type"),
+                "name": intent.params.get("name"),
+                "file_path": intent.params.get("file_path"),
+                "complexity": intent.params.get("complexity"),
+                "importance": intent.params.get("importance"),
+                "message": (
+                    f"Critical documentation gap: {intent.params.get('name')} "
+                    f"({intent.params.get('complexity')} {intent.params.get('element_type')}). "
+                    "Consider adding documentation to prevent tech debt."
+                ),
+                "guidance": (
+                    "1. Open the file and read the code\n"
+                    "2. Add a docstring explaining what it does and why\n"
+                    "3. If it's a class, document the public methods\n"
+                    "4. Consider adding to an OPUS doc if it's architecturally significant"
+                ),
+            }
+
+        elif intent_type == "coverage_gap_module":
+            # Module with poor coverage
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Module",
+                "action": "module_gap_identified",
+                "module": intent.params.get("module"),
+                "coverage": intent.params.get("coverage"),
+                "undocumented_elements": intent.params.get("undocumented_elements", []),
+                "message": (
+                    f"Module {intent.params.get('module')} has "
+                    f"{intent.params.get('coverage', 0):.0%} documentation coverage. "
+                    "This creates knowledge silos."
+                ),
+                "guidance": (
+                    "1. Create or update the module-level README/docstring\n"
+                    "2. Document the most complex elements first\n"
+                    "3. Add usage examples where helpful"
+                ),
+            }
+
+        elif intent_type == "coverage_gap_overall":
+            # Overall coverage is failing
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Overall",
+                "action": "coverage_alert",
+                "grade": intent.params.get("grade"),
+                "coverage_ratio": intent.params.get("coverage_ratio"),
+                "undocumented_count": intent.params.get("undocumented_count"),
+                "message": (
+                    f"Overall documentation grade: {intent.params.get('grade')}. "
+                    f"{intent.params.get('undocumented_count')} elements undocumented."
+                ),
+                "guidance": (
+                    "Consider scheduling a documentation sprint:\n"
+                    "1. Identify the top 10 most critical undocumented elements\n"
+                    "2. Assign documentation tasks to team members\n"
+                    "3. Set a coverage target (e.g., 80%)\n"
+                    "4. Track progress weekly"
+                ),
+            }
+
+        else:
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer",
+                "action": "acknowledged",
+                "message": f"Coverage gap acknowledged: {intent.title}",
+            }
+
+    def _handle_triage(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-132: Handle VivekaSense triage intents.
+
+        These are prioritized coverage gaps from VivekaSense (P1→P5).
+        Unlike raw coverage_gap intents, these have been discriminated
+        to separate critical from trivial.
+        """
+        intent_type = intent.intent_type
+        logger.info(f"🎯 Triage: {intent.title}")
+
+        if intent_type == "triage_p1_critical":
+            # P1 CRITICAL - needs immediate attention
+            return {
+                "success": True,
+                "handler": "VivekaSense/P1",
+                "action": "triage_critical",
+                "priority": "P1",
+                "element_name": intent.params.get("element_name"),
+                "element_type": intent.params.get("element_type"),
+                "file_path": intent.params.get("file_path"),
+                "line_number": intent.params.get("line_number"),
+                "complexity": intent.params.get("complexity"),
+                "churn_score": intent.params.get("churn_score"),
+                "priority_score": intent.params.get("priority_score"),
+                "message": (
+                    f"🔥 P1 CRITICAL: {intent.params.get('element_name')} "
+                    f"(complexity={intent.params.get('complexity')}, "
+                    f"churn={intent.params.get('churn_score', 0):.2f})"
+                ),
+                "guidance": (
+                    "This is a high-priority documentation gap:\n"
+                    "1. The code is complex AND actively changing\n"
+                    "2. Document IMMEDIATELY to prevent knowledge loss\n"
+                    "3. Focus on the 'why', not just the 'what'\n"
+                    "4. Consider adding to an OPUS doc if architecturally significant"
+                ),
+            }
+
+        elif intent_type == "triage_p2_high":
+            # P2 HIGH - should be addressed soon
+            return {
+                "success": True,
+                "handler": "VivekaSense/P2",
+                "action": "triage_high",
+                "priority": "P2",
+                "element_name": intent.params.get("element_name"),
+                "element_type": intent.params.get("element_type"),
+                "file_path": intent.params.get("file_path"),
+                "complexity": intent.params.get("complexity"),
+                "priority_score": intent.params.get("priority_score"),
+                "message": (f"⚠️ P2 HIGH: {intent.params.get('element_name')} needs documentation this sprint"),
+                "guidance": (
+                    "High-priority but not urgent:\n"
+                    "1. Schedule for documentation in current sprint\n"
+                    "2. Add at minimum a docstring with purpose\n"
+                    "3. If it's a public API, add usage examples"
+                ),
+            }
+
+        elif intent_type == "triage_summary":
+            # Summary of triage findings
+            return {
+                "success": True,
+                "handler": "VivekaSense/Summary",
+                "action": "triage_summary",
+                "p1_count": intent.params.get("p1_count", 0),
+                "p2_count": intent.params.get("p2_count", 0),
+                "p3_count": intent.params.get("p3_count", 0),
+                "total_gaps": intent.params.get("total_gaps", 0),
+                "health_grade": intent.params.get("health_grade", "?"),
+                "message": (
+                    f"📊 Triage Summary: {intent.params.get('p1_count', 0)} P1 + "
+                    f"{intent.params.get('p2_count', 0)} P2 = "
+                    f"{intent.params.get('p1_count', 0) + intent.params.get('p2_count', 0)} "
+                    f"action items (Grade: {intent.params.get('health_grade', '?')})"
+                ),
+                "guidance": (
+                    "VivekaSense discriminated coverage gaps:\n"
+                    "• P1 (Critical): Complex + churning + core\n"
+                    "• P2 (High): Important but less urgent\n"
+                    "• P3-P5: Can wait for normal maintenance\n"
+                    "Focus on P1/P2 first. The rest is noise."
+                ),
+            }
+
+        else:
+            return {
+                "success": True,
+                "handler": "VivekaSense",
+                "action": "acknowledged",
+                "message": f"Triage intent acknowledged: {intent.title}",
+            }
 
 
 def create_execution_callback(

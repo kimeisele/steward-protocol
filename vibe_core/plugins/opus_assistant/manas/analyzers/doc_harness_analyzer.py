@@ -2,11 +2,13 @@
 Doc Harness Analyzer - The Self-Healing Documentation System.
 
 OPUS-083: MANAS learns to maintain its own architecture docs.
+OPUS-128: Edge Case Hardening - Watertight harness verification.
 
 This analyzer scans docs/architecture/OPUS/*.md files and:
 1. Detects missing @HARNESS sections
 2. Validates existing harnesses (are referenced files/tests real?)
 3. Auto-generates harness suggestions for Sanskrit module docs (050-060)
+4. Handles edge cases: SUPERSEDED docs, TDD contracts, moved files
 
 This is "soft brain training" - low-risk intents that help MANAS
 learn the karma loop: generate → execute → success/fail → learn.
@@ -15,17 +17,38 @@ Sanskrit Module Mapping (050-060 series):
     OPUS-050-VEDA.md     → vibe_core/.../manas/cortex/veda.py
     OPUS-051-MANDALA.md  → vibe_core/.../manas/cortex/mandala.py
     etc.
+
+Edge Case Handling (OPUS-128):
+    - SUPERSEDED docs: Skip validation, no intents generated
+    - TDD contracts (PLANNED status): Red harness is CORRECT
+    - Moved files: Search repo-wide before flagging as missing
+    - Required flag: Only required=true triggers broken status
 """
 
+import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..intent_generator import Intent, IntentPriority, IntentRisk
 from .base import AnalyzerConfig, BaseAnalyzer
 
 logger = logging.getLogger("MANAS.DocHarnessAnalyzer")
+
+# Document status constants (OPUS-128)
+STATUS_SUPERSEDED = "superseded"
+STATUS_DEPRECATED = "deprecated"
+STATUS_PLANNED = "planned"
+STATUS_IN_PROGRESS = "in_progress"
+STATUS_ACTIVE = "active"
+STATUS_IMPLEMENTED = "implemented"
+
+# Statuses where harness is a TDD contract (red = correct)
+TDD_CONTRACT_STATUSES = {STATUS_PLANNED, STATUS_IN_PROGRESS}
+
+# Statuses where harness should be skipped
+SKIP_VALIDATION_STATUSES = {STATUS_SUPERSEDED, STATUS_DEPRECATED}
 
 # Sanskrit module files that should have auto-generated harnesses
 SANSKRIT_MODULE_MAP = {
@@ -51,11 +74,20 @@ class HarnessAnalysisResult:
         self.has_harness = False
         self.harness_content: Optional[str] = None
 
+        # OPUS-128: Document status tracking
+        self.doc_status: Optional[str] = None  # From header: SUPERSEDED, PLANNED, etc.
+        self.superseded_by: Optional[str] = None  # What supersedes this doc
+        self.is_tdd_contract = False  # True if harness is a TDD contract (PLANNED/IN_PROGRESS)
+        self.skip_validation = False  # True if doc is SUPERSEDED/DEPRECATED
+
         # Validation results
         self.files_section: List[str] = []
         self.files_missing: List[str] = []
+        self.files_required: Dict[str, bool] = {}  # path -> required flag
+        self.files_found_elsewhere: Dict[str, str] = {}  # missing_path -> found_at_path
         self.wiring_section: List[Dict] = []
         self.wiring_broken: List[Dict] = []
+        self.wiring_found_elsewhere: Dict[str, str] = {}  # pattern -> found_at_file
         self.tests_section: List[str] = []
         self.tests_missing: List[str] = []
 
@@ -69,7 +101,9 @@ class HarnessAnalysisResult:
         """Is the harness valid (all references exist)?"""
         if not self.has_harness:
             return False
-        return len(self.files_missing) == 0 and len(self.wiring_broken) == 0 and len(self.tests_missing) == 0
+        # OPUS-128: Only count REQUIRED missing files
+        required_missing = [f for f in self.files_missing if self.files_required.get(f, True)]
+        return len(required_missing) == 0 and len(self.wiring_broken) == 0 and len(self.tests_missing) == 0
 
     @property
     def quality_score(self) -> float:
@@ -81,7 +115,9 @@ class HarnessAnalysisResult:
         if total == 0:
             return 0.5  # Empty harness
 
-        broken = len(self.files_missing) + len(self.wiring_broken) + len(self.tests_missing)
+        # OPUS-128: Count only required missing files
+        required_missing = [f for f in self.files_missing if self.files_required.get(f, True)]
+        broken = len(required_missing) + len(self.wiring_broken) + len(self.tests_missing)
         return max(0.0, 1.0 - (broken / total))
 
 
@@ -107,9 +143,134 @@ class DocHarnessAnalyzer(BaseAnalyzer):
         self._opus_dir = self._workspace / "docs" / "architecture" / "OPUS"
         self._cortex_dir = self._workspace / "vibe_core" / "plugins" / "opus_assistant" / "manas" / "cortex"
 
+        # OPUS-128: Load manifest.json for authoritative status
+        self._manifest: Dict[str, Any] = {}
+        self._manifest_status: Dict[str, str] = {}  # file_name -> status
+        self._load_manifest()
+
     @property
     def name(self) -> str:
         return "doc_harness_analyzer"
+
+    def _load_manifest(self) -> None:
+        """OPUS-128: Load manifest.json for authoritative document status."""
+        manifest_path = self._opus_dir / "manifest.json"
+        if not manifest_path.exists():
+            logger.debug("No manifest.json found - status detection from headers only")
+            return
+
+        try:
+            with open(manifest_path) as f:
+                self._manifest = json.load(f)
+
+            # Build file -> status lookup
+            for doc in self._manifest.get("documents", []):
+                file_name = doc.get("file", "")
+                status = doc.get("status", "")
+                if file_name and status:
+                    self._manifest_status[file_name] = status.lower()
+                    logger.debug(f"Manifest: {file_name} -> {status}")
+
+            logger.info(f"DocHarnessAnalyzer: Loaded manifest with {len(self._manifest_status)} docs")
+        except Exception as e:
+            logger.warning(f"Failed to load manifest.json: {e}")
+
+    def _get_doc_status(self, opus_file: Path, content: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        OPUS-128: Get document status from header or manifest.
+
+        Returns: (status, superseded_by)
+        """
+        file_name = opus_file.name
+
+        # Priority 1: Check manifest.json (authoritative)
+        if file_name in self._manifest_status:
+            manifest_status = self._manifest_status[file_name]
+            logger.debug(f"Status from manifest: {file_name} = {manifest_status}")
+            return manifest_status, None
+
+        # Priority 2: Parse from document header
+        # Look for: > **Status**: SUPERSEDED
+        status_match = re.search(
+            r">\s*\*\*Status\*\*\s*:\s*(\w+)",
+            content,
+            re.IGNORECASE,
+        )
+        if status_match:
+            status = status_match.group(1).lower()
+            logger.debug(f"Status from header: {file_name} = {status}")
+
+            # Also look for: > **Superseded By**: OPUS-XXX
+            superseded_match = re.search(
+                r">\s*\*\*Superseded By\*\*\s*:\s*(.+?)(?:\n|$)",
+                content,
+                re.IGNORECASE,
+            )
+            superseded_by = superseded_match.group(1).strip() if superseded_match else None
+
+            return status, superseded_by
+
+        return None, None
+
+    def _search_file_elsewhere(self, missing_path: str) -> Optional[str]:
+        """
+        OPUS-128: Search for a missing file elsewhere in the repo.
+
+        If harness says 'vibe_core/old/foo.py' but file moved to 'vibe_core/new/foo.py',
+        this will find it and return the new path.
+        """
+        filename = Path(missing_path).name
+
+        # Search in common locations
+        search_dirs = [
+            self._workspace / "vibe_core",
+            self._workspace / "tests",
+        ]
+
+        for search_dir in search_dirs:
+            if not search_dir.exists():
+                continue
+            for found_path in search_dir.rglob(filename):
+                # Return relative path
+                rel_path = found_path.relative_to(self._workspace)
+                if str(rel_path) != missing_path:  # Actually moved
+                    logger.debug(f"File '{filename}' found at: {rel_path} (harness says: {missing_path})")
+                    return str(rel_path)
+
+        return None
+
+    def _search_pattern_elsewhere(self, pattern: str, exclude_file: str) -> Optional[str]:
+        """
+        OPUS-128: Search for a wiring pattern elsewhere in the repo.
+
+        If harness says pattern 'class Foo' should be in 'old.py' but class moved to 'new.py',
+        this will find it.
+        """
+        try:
+            # Compile pattern for efficiency
+            regex = re.compile(pattern)
+        except re.error:
+            return None
+
+        # Search Python files in vibe_core
+        search_dir = self._workspace / "vibe_core"
+        if not search_dir.exists():
+            return None
+
+        for py_file in search_dir.rglob("*.py"):
+            rel_path = str(py_file.relative_to(self._workspace))
+            if rel_path == exclude_file:
+                continue
+
+            try:
+                content = py_file.read_text()
+                if regex.search(content):
+                    logger.debug(f"Pattern '{pattern}' found in: {rel_path} (harness says: {exclude_file})")
+                    return rel_path
+            except Exception:
+                continue
+
+        return None
 
     def _next_id(self) -> str:
         self._intent_counter += 1
@@ -157,6 +318,22 @@ class DocHarnessAnalyzer(BaseAnalyzer):
 
         content = opus_file.read_text()
 
+        # OPUS-128: Detect document status
+        status, superseded_by = self._get_doc_status(opus_file, content)
+        result.doc_status = status
+        result.superseded_by = superseded_by
+
+        if status:
+            # Check if doc is superseded/deprecated (skip validation)
+            if status in SKIP_VALIDATION_STATUSES:
+                result.skip_validation = True
+                logger.debug(f"Skipping validation for {opus_file.name}: status={status}")
+
+            # Check if doc is a TDD contract (red harness = correct)
+            elif status in TDD_CONTRACT_STATUSES:
+                result.is_tdd_contract = True
+                logger.debug(f"TDD contract detected for {opus_file.name}: status={status}")
+
         # Check if it's a Sanskrit module file
         for prefix, module_name in SANSKRIT_MODULE_MAP.items():
             if opus_file.name.upper().startswith(prefix):
@@ -179,6 +356,11 @@ class DocHarnessAnalyzer(BaseAnalyzer):
         result.has_harness = True
         result.harness_content = harness_match.group(1)
 
+        # OPUS-128: Skip validation for superseded docs
+        if result.skip_validation:
+            logger.debug(f"Harness validation skipped for superseded doc: {opus_file.name}")
+            return result
+
         # Parse and validate harness
         self._validate_harness(result)
 
@@ -192,25 +374,41 @@ class DocHarnessAnalyzer(BaseAnalyzer):
         content = result.harness_content
 
         # Extract files: section
-        # FIXED: Match ALL indented lines (not just lines starting with -)
+        # OPUS-128: Also parse required flag
         # This handles multi-line YAML items like:
         #   - path: foo.py
         #     required: true
-        # Note: Last line may not have trailing newline (before -->)
         files_match = re.search(r"files:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if files_match:
             files_block = files_match.group(1)
-            paths = re.findall(r"path:\s*([^\s\n]+)", files_block)
-            result.files_section = paths
 
-            for path in paths:
+            # Parse each file entry to get path and required flag
+            # Match entries like:
+            #   - path: vibe_core/foo.py
+            #     required: true
+            file_entries = re.findall(
+                r"-\s*path:\s*([^\s\n]+)(?:\s*\n\s*required:\s*(true|false))?",
+                files_block,
+                re.IGNORECASE,
+            )
+
+            for entry in file_entries:
+                path = entry[0]
+                # Default to required=True if not specified
+                required = entry[1].lower() != "false" if entry[1] else True
+                result.files_section.append(path)
+                result.files_required[path] = required
+
                 full_path = self._workspace / path
                 if not full_path.exists():
                     result.files_missing.append(path)
 
+                    # OPUS-128: Search for file elsewhere
+                    found_at = self._search_file_elsewhere(path)
+                    if found_at:
+                        result.files_found_elsewhere[path] = found_at
+
         # Extract tests: section
-        # FIXED: Match ALL indented lines until next section or end
-        # Note: Last line before --> may not have trailing newline
         tests_match = re.search(r"tests:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if tests_match:
             tests_block = tests_match.group(1)
@@ -223,8 +421,6 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                     result.tests_missing.append(test_path)
 
         # Extract wiring: section and validate patterns
-        # FIXED: Match ALL indented lines (including comments and multi-line items)
-        # Note: Last line may not have trailing newline
         wiring_match = re.search(r"wiring:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if wiring_match:
             wiring_block = wiring_match.group(1)
@@ -241,19 +437,42 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                 full_path = self._workspace / in_file
                 if not full_path.exists():
                     result.wiring_broken.append(wiring_entry)
+
+                    # OPUS-128: Search for pattern elsewhere
+                    found_at = self._search_pattern_elsewhere(pattern, in_file)
+                    if found_at:
+                        result.wiring_found_elsewhere[pattern] = found_at
                 else:
                     # Check if pattern is found
                     try:
                         file_content = full_path.read_text()
                         if not re.search(pattern, file_content):
                             result.wiring_broken.append(wiring_entry)
+
+                            # OPUS-128: Search for pattern elsewhere
+                            found_at = self._search_pattern_elsewhere(pattern, in_file)
+                            if found_at:
+                                result.wiring_found_elsewhere[pattern] = found_at
                     except Exception:
                         result.wiring_broken.append(wiring_entry)
 
     def _result_to_intents(self, result: HarnessAnalysisResult) -> List[Intent]:
-        """Convert analysis result to intents."""
+        """
+        Convert analysis result to intents.
+
+        OPUS-128 Edge Cases:
+        1. SUPERSEDED docs: Skip entirely (no intents)
+        2. TDD contracts: Red harness = correct, generate info intent
+        3. Moved files: Generate stale_reference intent with found_at hint
+        4. Optional missing: Lower priority than required missing
+        """
         intents = []
         opus_name = result.opus_file.stem
+
+        # OPUS-128: Skip superseded/deprecated docs entirely
+        if result.skip_validation:
+            logger.info(f"Skipping intents for superseded doc: {opus_name}")
+            return []
 
         # Case 1: No harness at all
         if not result.has_harness:
@@ -307,41 +526,144 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                     )
                 )
 
-        # Case 2: Broken harness (references don't exist)
+        # Case 2: Has harness but not valid
         elif not result.is_valid:
-            broken_refs = []
-            if result.files_missing:
-                broken_refs.append(f"files: {result.files_missing}")
-            if result.tests_missing:
-                broken_refs.append(f"tests: {result.tests_missing}")
-            if result.wiring_broken:
-                broken_refs.append(f"wiring: {len(result.wiring_broken)} broken patterns")
-
-            # WEAVING: Collect all broken files for semantic links
-            weave_files = result.files_missing + [w["in"] for w in result.wiring_broken]
-            intents.append(
-                Intent(
-                    id=self._next_id(),
-                    intent_type="harness_broken",
-                    title=f"Fix broken @HARNESS in {opus_name}",
-                    description=f"Harness references non-existent files/tests: {', '.join(broken_refs)}",
-                    reasoning=f"Quality score: {result.quality_score:.0%}. Broken harness is worse than no harness.",
-                    priority=IntentPriority.MEDIUM,
-                    risk=IntentRisk.LOW,
-                    auto_executable=False,
-                    params={
-                        "opus_file": str(result.opus_file),
-                        "files_missing": result.files_missing,
-                        "tests_missing": result.tests_missing,
-                        "wiring_broken": [w["in"] for w in result.wiring_broken],
-                        "quality_score": result.quality_score,
-                        "action": "fix_harness",
-                    },
-                    # WEAVING: Link broken files + doc
-                    related_files=weave_files[:5],  # Cap at 5 to avoid clutter
-                    related_docs=[result.opus_file.name],
+            # OPUS-128: Check if this is a TDD contract (red = correct)
+            if result.is_tdd_contract:
+                # TDD contract: The harness is INTENTIONALLY red
+                # This is NOT an error - it's a spec for what needs to be built
+                required_missing = [f for f in result.files_missing if result.files_required.get(f, True)]
+                intents.append(
+                    Intent(
+                        id=self._next_id(),
+                        intent_type="harness_tdd_contract",
+                        title=f"TDD Contract: {opus_name} ({len(required_missing)} files to implement)",
+                        description=(
+                            f"Status: {result.doc_status.upper()}. "
+                            f"Harness defines TDD contract - red status is CORRECT. "
+                            f"Files to create: {required_missing}"
+                        ),
+                        reasoning=(
+                            "Red harness is intentional for PLANNED/IN_PROGRESS docs. "
+                            "The harness specifies WHAT needs to be built, not WHAT is broken."
+                        ),
+                        priority=IntentPriority.HIGH,  # High priority to implement
+                        risk=IntentRisk.MEDIUM,  # Creating new files
+                        auto_executable=False,  # Human needs to implement
+                        params={
+                            "opus_file": str(result.opus_file),
+                            "doc_status": result.doc_status,
+                            "files_to_create": required_missing,
+                            "wiring_to_implement": [w["pattern"] for w in result.wiring_broken],
+                            "action": "implement_tdd_contract",
+                        },
+                        related_files=required_missing[:5],
+                        related_docs=[result.opus_file.name],
+                    )
                 )
-            )
+            else:
+                # OPUS-128: Check if files/patterns were found elsewhere (stale reference)
+                has_stale_refs = bool(result.files_found_elsewhere or result.wiring_found_elsewhere)
+
+                if has_stale_refs:
+                    # Files/patterns moved - generate update-reference intent
+                    stale_files = [f"{old} → {new}" for old, new in result.files_found_elsewhere.items()]
+                    stale_wiring = [f"'{pattern}' → {new}" for pattern, new in result.wiring_found_elsewhere.items()]
+                    all_stale = stale_files + stale_wiring
+
+                    intents.append(
+                        Intent(
+                            id=self._next_id(),
+                            intent_type="harness_stale_reference",
+                            title=f"Update stale references in {opus_name}",
+                            description=(
+                                f"Files/patterns moved to new locations. "
+                                f"Moves detected: {', '.join(all_stale[:3])}" + ("..." if len(all_stale) > 3 else "")
+                            ),
+                            reasoning=(
+                                "Code was refactored but harness not updated. "
+                                "The references are stale, not broken. Update the harness paths."
+                            ),
+                            priority=IntentPriority.MEDIUM,
+                            risk=IntentRisk.SAFE,  # Just updating doc
+                            auto_executable=True,  # Can auto-fix paths
+                            params={
+                                "opus_file": str(result.opus_file),
+                                "files_moved": result.files_found_elsewhere,
+                                "wiring_moved": result.wiring_found_elsewhere,
+                                "action": "update_stale_references",
+                            },
+                            related_docs=[result.opus_file.name],
+                        )
+                    )
+
+                # OPUS-128: Separate required vs optional missing
+                required_missing = [f for f in result.files_missing if result.files_required.get(f, True)]
+                optional_missing = [f for f in result.files_missing if not result.files_required.get(f, True)]
+
+                # Only generate broken intent if there are REQUIRED missing files
+                # that weren't found elsewhere
+                truly_missing_required = [f for f in required_missing if f not in result.files_found_elsewhere]
+                truly_broken_wiring = [
+                    w for w in result.wiring_broken if w["pattern"] not in result.wiring_found_elsewhere
+                ]
+
+                if truly_missing_required or truly_broken_wiring or result.tests_missing:
+                    broken_refs = []
+                    if truly_missing_required:
+                        broken_refs.append(f"files: {truly_missing_required}")
+                    if result.tests_missing:
+                        broken_refs.append(f"tests: {result.tests_missing}")
+                    if truly_broken_wiring:
+                        broken_refs.append(f"wiring: {len(truly_broken_wiring)} broken patterns")
+
+                    # WEAVING: Collect all broken files for semantic links
+                    weave_files = truly_missing_required + [w["in"] for w in truly_broken_wiring]
+                    intents.append(
+                        Intent(
+                            id=self._next_id(),
+                            intent_type="harness_broken",
+                            title=f"Fix broken @HARNESS in {opus_name}",
+                            description=f"Harness references non-existent files/tests: {', '.join(broken_refs)}",
+                            reasoning=f"Quality score: {result.quality_score:.0%}. Broken harness is worse than no harness.",
+                            priority=IntentPriority.MEDIUM,
+                            risk=IntentRisk.LOW,
+                            auto_executable=False,
+                            params={
+                                "opus_file": str(result.opus_file),
+                                "files_missing": truly_missing_required,
+                                "files_optional_missing": optional_missing,
+                                "tests_missing": result.tests_missing,
+                                "wiring_broken": [w["in"] for w in truly_broken_wiring],
+                                "quality_score": result.quality_score,
+                                "action": "fix_harness",
+                            },
+                            # WEAVING: Link broken files + doc
+                            related_files=weave_files[:5],  # Cap at 5 to avoid clutter
+                            related_docs=[result.opus_file.name],
+                        )
+                    )
+
+                # Low priority intent for optional missing files
+                if optional_missing:
+                    intents.append(
+                        Intent(
+                            id=self._next_id(),
+                            intent_type="harness_optional_missing",
+                            title=f"Optional files missing in {opus_name}",
+                            description=f"Optional (required=false) files not found: {optional_missing}",
+                            reasoning="These files are marked as optional. No action required unless desired.",
+                            priority=IntentPriority.LOW,  # Low priority (optional files)
+                            risk=IntentRisk.SAFE,
+                            auto_executable=False,
+                            params={
+                                "opus_file": str(result.opus_file),
+                                "files_missing": optional_missing,
+                                "action": "info_only",
+                            },
+                            related_docs=[result.opus_file.name],
+                        )
+                    )
 
         return intents
 

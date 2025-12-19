@@ -6,6 +6,17 @@
 **Scope:** Autonomous Agent Factory & Holon Construction System  
 **Architecture:** Circuit-Driven Hybrid Intelligence (Deterministic + LLM)
 
+
+<!-- @HARNESS
+files:
+  - path: scripts/research/genesis_economy.py
+    required: true
+
+wiring:
+  - pattern: "def main"
+    in: scripts/research/genesis_economy.py
+-->
+
 ---
 
 ## Executive Summary

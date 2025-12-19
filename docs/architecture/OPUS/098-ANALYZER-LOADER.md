@@ -30,8 +30,7 @@ absent:
     in: vibe_core/plugins/opus_assistant/manas/intent_generator.py
   - pattern: "SemanticAnalyzer\\(workspace"
     in: vibe_core/plugins/opus_assistant/manas/intent_generator.py
-config:
-  - section: opus.analyzers
+# Note: opus.analyzers config is optional (auto-discovery works without config)
 -->
 
 ---

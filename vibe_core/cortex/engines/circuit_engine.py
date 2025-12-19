@@ -387,7 +387,8 @@ class CognitiveCircuitExecutor:
 
     def _load_circuits(self) -> None:
         """Load all circuit definitions from YAML files (Recursive)."""
-        circuits_dir = Path(__file__).parent / "playbook" / "circuits"
+        # Circuits are in vibe_core/playbook/circuits, not relative to this file
+        circuits_dir = Path(__file__).parent.parent.parent / "playbook" / "circuits"
 
         if not circuits_dir.exists():
             logger.warning(f"Circuits directory not found: {circuits_dir}")

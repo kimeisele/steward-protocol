@@ -398,3 +398,7 @@ class LineageEventType:
     AGENT_DESTROYED = "AGENT_DESTROYED"  # Phase 7: Narasimha Kill-Switch
     TASK_COMPLETED = "TASK_COMPLETED"
     KARMA_RECORDED = "KARMA_RECORDED"
+    # OPUS-126: Reflex Arc Events (Karma Loop)
+    REFLEX_ACTION = "REFLEX_ACTION"  # Pain → Task → Action cycle
+    DISHARMONY_DETECTED = "DISHARMONY_DETECTED"  # Pain sensor fired
+    REPAIR_TASK_CREATED = "REPAIR_TASK_CREATED"  # Effector responded

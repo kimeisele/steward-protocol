@@ -1881,6 +1881,11 @@ class CognitiveKernel(CognitiveCycle):
 
         # Sort by: priority, repair status, synaptic confidence (inverted), created_at
         def sort_key(intent: Intent) -> tuple:
+            """sort_key - TODO: Add description.
+
+            Args:
+                intent: Description needed
+            """
             pri = priority_order.get(intent.priority, 99)
             # Contract intents (repairs) come before semantic (genesis)
             is_repair = 0 if intent.intent_type.startswith("contract_") else 1
@@ -1956,10 +1961,17 @@ class CognitiveKernel(CognitiveCycle):
         return False
 
     def _is_intent_duplicate(self, intent: Intent) -> bool:
-        """Check if similar intent already exists in buffer."""
+        """
+        Check if similar intent already exists in buffer.
+
+        OPUS-127: Allow multiple intents of same type if title differs.
+        This enables detecting multiple harness_broken issues simultaneously.
+        """
         for entry in self._intent_buffer:
-            if entry.status == "pending" and entry.intent.intent_type == intent.intent_type:
-                return True
+            if entry.status == "pending":
+                # Same type AND same title = duplicate
+                if entry.intent.intent_type == intent.intent_type and entry.intent.title == intent.title:
+                    return True
         return False
 
     def _find_intent_entry(self, intent_id: str) -> Optional[IntentBufferEntry]:
@@ -2042,8 +2054,25 @@ class CognitiveKernel(CognitiveCycle):
                     result = {"error": str(exec_err)}
                     success = False
             else:
-                logger.warning(f"No execution method for intent: {intent.id}")
-                result = {"error": "No execution method available"}
+                # OPUS-127: Route via IntentRouter as fallback
+                try:
+                    from .intent_router import IntentRouter
+
+                    router = IntentRouter(workspace=self._workspace)
+                    if intent.intent_type in router._handlers:
+                        logger.info(f"🔀 MANAS: Routing via IntentRouter: {intent.intent_type}")
+                        result = router.route(intent)
+                        success = result.get("success", False)
+                    else:
+                        logger.warning(f"No execution method for intent: {intent.id}")
+                        result = {"error": "No execution method available"}
+                except ImportError:
+                    logger.warning(f"IntentRouter not available for: {intent.id}")
+                    result = {"error": "No execution method available"}
+                except Exception as router_err:
+                    logger.error(f"IntentRouter failed: {router_err}")
+                    result = {"error": str(router_err)}
+                    success = False
 
         except Exception as e:
             logger.error(f"Intent execution failed: {e}")

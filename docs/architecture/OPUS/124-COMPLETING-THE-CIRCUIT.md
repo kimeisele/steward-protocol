@@ -189,3 +189,43 @@ The fix ensures:
 
 - OPUS-122: Task Alignment (TaskStatus SSOT, used here)
 - OPUS-118: Split-Brain Surgery (similar pattern)
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/task_manager/plugin_main.py`
+  - `TaskManagerPlugin` class - main plugin orchestrator
+  - `_handle_actuators()` - processes pending tasks (FIXED in OPUS-124)
+  - Now includes executor.execute() call (was missing)
+  - Proper status handling based on ExecutionResult
+  - Uses TaskStatus from task_types.py (OPUS-122)
+
+**Wiring Pattern**:
+```python
+# BEFORE (BROKEN):
+route_res = router.route(prompt)
+self.manager.update_status(task.id, TaskStatus.COMPLETED)  # Premature!
+
+# AFTER (FIXED - OPUS-124):
+route_res = router.route(prompt)
+exec_result = await executor.execute(route_res)  # Actually execute!
+if exec_result.status == "completed":
+    self.manager.update_status(task.id, TaskStatus.COMPLETED)
+else:
+    self.manager.update_status(task.id, TaskStatus.FAILED)
+```
+
+**Flow**:
+```
+StoredTask (PENDING)
+    ↓ _handle_actuators()
+UnifiedRouter.route() → ExecutionRequest
+    ↓ (OPUS-124: complete the circuit)
+UnifiedExecutor.execute() → ExecutionResult
+    ↓ based on actual result
+TaskStatus.COMPLETED or TaskStatus.FAILED
+```
+
+**Key Fix**: Tasks are only marked COMPLETED after successful execution, not after routing

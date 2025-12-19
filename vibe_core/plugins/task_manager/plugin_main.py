@@ -83,6 +83,15 @@ except ImportError:
     DISHARMONY_DETECTOR_AVAILABLE = False
     logger.debug("DisharmonyDetector not available - no reflex arc")
 
+# OPUS-126: Karma Loop - Lineage integration for reflex events
+try:
+    from vibe_core.lineage import LineageChain, LineageEventType
+
+    LINEAGE_AVAILABLE = True
+except ImportError:
+    LINEAGE_AVAILABLE = False
+    logger.debug("LineageChain not available - reflex events won't be recorded")
+
 
 class TaskManagerPlugin(KernelPlugin):
     """
@@ -474,9 +483,13 @@ class TaskManagerPlugin(KernelPlugin):
     def _check_disharmony(self, project_root: Path) -> int:
         """
         OPUS-125: Reflex Arc - Scan for disharmony and create repair tasks.
+        OPUS-126: Karma Loop - Record reflex events in lineage chain.
 
         This is the spinal cord - it receives pain signals (disharmony findings)
         and automatically creates tasks to address them. No brain (human) needed.
+
+        The Karma Loop (Samskara) records each reflex action in the lineage chain,
+        enabling chronic pain detection and historical analysis.
 
         Args:
             project_root: Workspace path
@@ -498,6 +511,14 @@ class TaskManagerPlugin(KernelPlugin):
                 return 0
 
             logger.info(f"⚡ REFLEX ARC: Detected {report.total_findings} disharmony findings")
+
+            # OPUS-126: Initialize lineage chain for event recording
+            lineage = None
+            if LINEAGE_AVAILABLE:
+                try:
+                    lineage = LineageChain()
+                except Exception as e:
+                    logger.warning(f"⚠️ KARMA LOOP: Could not initialize lineage: {e}")
 
             created = 0
             for finding in report.findings:
@@ -526,11 +547,50 @@ class TaskManagerPlugin(KernelPlugin):
                     )
                     logger.info(f"   🩹 REFLEX: {task.title} (ID: {task.id})")
                     created += 1
+
+                    # OPUS-126: Record reflex action in lineage chain (Karma Loop)
+                    if lineage:
+                        try:
+                            lineage.add_block(
+                                event_type=LineageEventType.REPAIR_TASK_CREATED,
+                                agent_id="plugin.task_manager.reflex_arc",
+                                data={
+                                    "task_id": task.id,
+                                    "task_title": task_title,
+                                    "severity": finding.severity,
+                                    "path": finding.path,
+                                    "location_varga": finding.location_varga.name,
+                                    "content_varga": finding.content_varga.name,
+                                    "varga_distance": finding.varga_distance,
+                                    "samskara": "reflex_arc",  # Karmic imprint type
+                                },
+                            )
+                            logger.debug(f"   📜 KARMA: Recorded reflex action for {task.id}")
+                        except Exception as e:
+                            logger.warning(f"   ⚠️ KARMA: Failed to record event: {e}")
+
                 except Exception as e:
                     logger.warning(f"   ⚠️ Failed to create repair task: {e}")
 
             if created > 0:
                 logger.info(f"🔥 REFLEX ARC: Created {created} repair tasks")
+
+                # OPUS-126: Record summary REFLEX_ACTION event
+                if lineage:
+                    try:
+                        lineage.add_block(
+                            event_type=LineageEventType.REFLEX_ACTION,
+                            agent_id="plugin.task_manager.reflex_arc",
+                            data={
+                                "total_findings": report.total_findings,
+                                "tasks_created": created,
+                                "min_severity": "high",
+                                "workspace": str(project_root),
+                            },
+                        )
+                        logger.info(f"📜 KARMA LOOP: Recorded {created} reflex actions in lineage")
+                    except Exception as e:
+                        logger.warning(f"⚠️ KARMA: Failed to record summary: {e}")
 
             return created
 

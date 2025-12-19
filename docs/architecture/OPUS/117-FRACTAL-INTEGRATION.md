@@ -243,11 +243,38 @@ The fractal principle from VEDA-4:
 - OPUS-115: Dynamic Varga Mapping (path → Varga)
 - OPUS-116: Silent Observer (code disharmony)
 - OPUS-117: Fractal Integration (doc disharmony, unified scanning)
+- OPUS-129: Inverse Scan (Code → Doc coverage)
+- OPUS-130: The Triage (Gap prioritization)
 
-## Future: OPUS-118+
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+    required: true
+    rationale: "Extended with scan_opus_docs, scan_all, generate_disharmony_triggers"
+  - path: vibe_core/plugins/opus_assistant/manas/akshara.py
+    required: true
+    rationale: "OPUS_DOC_VARGA_RANGES and doc content indicators"
 
-Possible next steps:
-- **Auto-Renumber**: Suggest doc renumbering based on content analysis
-- **Pre-commit Doc Check**: Block commits that introduce doc disharmony
-- **108 Limit Enforcement**: Track progress toward the 108 OPUS doc limit
-- **Chakra Dashboard**: Visualize harmony across all layers
+wiring:
+  - pattern: "def scan_opus_docs"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def scan_all"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def scan_all_for_disharmony"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def get_total_harmony_score"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def generate_disharmony_triggers"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def analyze_opus_doc"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "OPUS_DOC_CONTENT_INDICATORS"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "OPUS_DOC_VARGA_RANGES"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "map_opus_doc_to_varga"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+-->
+
+---
+*OPUS-117: The Fractal Holographic Lasagne - The watchers watch themselves*

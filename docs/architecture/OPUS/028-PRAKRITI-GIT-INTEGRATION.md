@@ -28,9 +28,9 @@ tests:
   - python scripts/governance/verify_kernel.py --verify
 wiring:
   # GitState write operations
-  - pattern: "def commit\\("
+  - pattern: "def commit"
     in: vibe_core/state/git_state.py
-  - pattern: "def stage\\("
+  - pattern: "def stage"
     in: vibe_core/state/git_state.py
   - pattern: "VISNU_PROTECTED"
     in: vibe_core/state/git_state.py

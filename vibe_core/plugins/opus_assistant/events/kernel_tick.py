@@ -250,6 +250,12 @@ class KernelTickHandler:
                 self._manas.inject_kernel(kernel)
                 logger.info("⚡ VAJRA: MANAS bound to core ledger")
 
+                # OPUS-095 FIX: Wire trace and event_bus for CognitiveCycle integration
+                # Without this, orchestrate() silently fails because setup() was never called.
+                # This is why COGNITION.md showed "No completed cycles" since day 1.
+                self._manas.setup(kernel.trace, kernel._event_bus, steward_context=None)
+                logger.info("🔄 OPUS-095: MANAS wired to CycleRegistry (trace + event_bus)")
+
             # ⚡ PRAMANA: Initialize TestCortex for self-testing
             if TEST_CORTEX_AVAILABLE and kernel:
                 self._test_cortex = TestCortex(workspace=workspace)
