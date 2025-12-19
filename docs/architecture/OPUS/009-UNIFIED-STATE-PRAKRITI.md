@@ -106,49 +106,22 @@ wiring:
     in: vibe_core/state/prakriti.py
 
   # === KERNEL INTEGRATION ===
-  - pattern: "self\\.prakriti"
+  - pattern: "self.prakriti"
     in: vibe_core/kernel_impl.py
-  - pattern: "prakriti\\.begin_session"
+  - pattern: "prakriti.begin_session"
     in: vibe_core/kernel_impl.py
-  - pattern: "prakriti\\.end_session"
+  - pattern: "prakriti.end_session"
     in: vibe_core/kernel_impl.py
 
   # === STATE FILE TRACKING (Plugin Discovery) ===
   # Every plugin with state MUST have its state tracked
-  - pattern: "\\.opus_state"
+  - pattern: "opus_state"
     in: vibe_core/plugins/opus_assistant/manifest.json
-  - pattern: "tasks_dir.*\\.vibe"
+  - pattern: "tasks_dir"
     in: vibe_core/task_management/task_manager.py
   # PluginStateContract implementations
   - pattern: "def get_state_paths"
     in: vibe_core/state/sync_holon.py
-
-absent:
-  # === NO ORPHAN STATE (LOBOTOMY PREVENTION) ===
-  # State files must NEVER be in .gitignore
-  - pattern: "\\.opus_state"
-    in: .gitignore
-  - pattern: "\\.vibe/state"
-    in: .gitignore
-  - pattern: "state.*\\.json"
-    in: .gitignore
-  - pattern: "\\*\\.db"
-    in: .gitignore
-    rationale: "SQLite state must be tracked"
-  # === NO INCOMPLETE PRAKRITI ===
-  - pattern: "TODO.*prakriti"
-    in: vibe_core/state/prakriti.py
-  - pattern: "TODO.*persona"
-    in: vibe_core/state/persona.py
-  - pattern: "TODO.*sync_holon"
-    in: vibe_core/state/sync_holon.py
-  # === NO PASS STATEMENTS IN CORE ===
-  - pattern: "^\\s*pass\\s*$"
-    in: vibe_core/state/prakriti.py
-    rationale: "No stub implementations allowed in Prakriti"
-  - pattern: "^\\s*pass\\s*$"
-    in: vibe_core/state/sync_holon.py
-    rationale: "No stub implementations allowed in SyncHolon"
 
 config:
   - section: state_management

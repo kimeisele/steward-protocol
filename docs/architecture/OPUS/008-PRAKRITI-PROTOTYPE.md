@@ -32,7 +32,7 @@ wiring:
   - pattern: "class KernelSessionContext"
     in: vibe_core/state/prakriti.py
   # GitState write operations
-  - pattern: "def commit\\("
+  - pattern: "def commit"
     in: vibe_core/state/git_state.py
   - pattern: "VISNU_PROTECTED"
     in: vibe_core/state/git_state.py
