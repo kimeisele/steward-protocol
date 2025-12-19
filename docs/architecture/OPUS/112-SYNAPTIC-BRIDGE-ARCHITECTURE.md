@@ -376,3 +376,35 @@ Should other components use `ManasOracle.consult()` or dispatch directly?
 ---
 
 *"The mind commands the hand, and the hand moves. But both obey the same laws."*
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py`
+  - `inject_kernel()` - stores kernel.tool_registry reference
+  - `_vibe_kernel` - kernel instance reference
+  - `_global_tool_registry` - reference to kernel's tool registry
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/intent_router.py`
+  - `_try_tool_dispatch()` - dispatches intents via kernel.tool_registry
+  - `route()` - routing logic that tries tool dispatch first
+  - `IntentRouter` class - main routing orchestrator
+
+**Wiring Pattern**:
+```python
+# Kernel injection (boot time)
+kernel.inject_kernel(vibe_kernel)  # Stores tool_registry reference
+
+# Intent execution (runtime)
+intent = Intent(action_id="envoy.city_control", params={...})
+route_result = router.route(intent)
+# → _try_tool_dispatch() checks kernel.tool_registry
+# → Executes via kernel.tool_registry.execute(ToolCall(...))
+# → Returns RouteResult with success/failure
+```
+
+**Integration Points**:
+- MANAS generates intents → IntentRouter routes → kernel.tool_registry executes
+- No direct MANAS ↔ ENVOY coupling
+- kernel.tool_registry is the synaptic bridge

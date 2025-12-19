@@ -196,3 +196,42 @@ Possible next steps:
 - **Duplicate Detection CI**: Pre-commit hook to detect new duplicates
 - **Type Unification Audit**: Scan for other split-brain cases
 - **Module Dependency Graph**: Visualize import structure
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/circuit_types.py`
+  - `CircuitState` dataclass - canonical circuit execution state
+  - `CircuitExecutionResult` dataclass - canonical completion result
+  - `InvariantViolation` dataclass - canonical circuit invariant violation
+  - `TaskLedgerEntry` dataclass - canonical TASK_LEDGER tracking entry
+  - `ErrorRecoveryAttempt` dataclass - canonical ERROR_RECOVERY tracking
+- `/home/user/steward-protocol/vibe_core/circuit_executor.py`
+  - Imports all types from `circuit_types` (no local definitions)
+- `/home/user/steward-protocol/vibe_core/cortex/engines/circuit_engine.py`
+  - Imports all types from `circuit_types` (no local definitions)
+
+**Wiring Pattern**:
+```python
+# Single source of truth - always import from circuit_types
+from vibe_core.circuit_types import (
+    CircuitState,
+    CircuitExecutionResult,
+    InvariantViolation,
+    TaskLedgerEntry,
+    ErrorRecoveryAttempt,
+)
+
+# Both circuit_executor and circuit_engine use same canonical types
+obj = CircuitState(...)  # Created anywhere
+isinstance(obj, CircuitState)  # Always True - same class object
+```
+
+**Validation**:
+```python
+from vibe_core.circuit_executor import CircuitState as CS1
+from vibe_core.cortex.engines.circuit_engine import CircuitState as CS2
+assert CS1 is CS2  # True - same class object
+```

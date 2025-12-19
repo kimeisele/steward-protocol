@@ -205,3 +205,45 @@ Possible next steps:
 - **Synaptic Decay**: Unused connections weaken over time
 - **Reinforcement Scheduling**: Variable learning rates
 - **Multi-hop Inference**: trigger → action → trigger chains
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/triggers.py`
+  - `SynapticMemory` class - manages synapses.json reading/inference
+  - `SynapticRecommendation` dataclass - recommendation with weight
+  - `consult()` - returns recommended actions for trigger
+  - `get_confidence()` - returns confidence for intent (0.0-1.0)
+  - `get_best_action()` - returns single highest-weight action
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py`
+  - `_synaptic_memory` - SynapticMemory instance
+  - `consult_synapses()` - public API for querying memory
+  - `get_synaptic_confidence()` - wrapper for memory.get_confidence()
+  - `_prioritize_survival()` - uses synaptic confidence in sort key
+
+**Wiring Pattern**:
+```python
+# Initialization
+memory = SynapticMemory.get(workspace)
+
+# Inference (consult synapses for recommendations)
+trigger = "trigger:test_failure"
+recommendations = memory.consult(trigger)
+# → [SynapticRecommendation(action="action:notify_operator", weight=1.0), ...]
+
+# Confidence lookup
+intent = Intent(action_id="action:run_tests", ...)
+confidence = memory.get_confidence(intent)  # 0.0 - 1.0
+
+# Prioritization integration
+def _prioritize_survival(self, intents):
+    synaptic_boost = 1.0 - self._synaptic_memory.get_confidence(intent)
+    return sorted(intents, key=lambda i: (..., synaptic_boost, ...))
+```
+
+**Loop Closure**:
+```
+Event → normalize_trigger() → consult() → Decision → Execute → _update_synapses() → Loop
+```
