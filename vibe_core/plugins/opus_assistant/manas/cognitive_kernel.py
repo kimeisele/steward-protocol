@@ -2111,35 +2111,21 @@ class CognitiveKernel(CognitiveCycle):
 
     def _extract_trigger(self, intent: Intent) -> Optional[str]:
         """
-        Extract the trigger pattern from an intent's context.
+        Extract the canonical trigger pattern from an intent's context.
 
-        Returns a trigger string like:
-        - "trigger:file_changed:vibe_core/**/*.py"
-        - "trigger:test_failure"
-        - "trigger:gap_detected:missing_code"
+        OPUS-111: Signal Alignment - Uses TriggerRegistry for normalization.
+        No more dynamic string generation that could cause vocabulary mismatch.
+
+        Returns a canonical trigger string from TriggerPatterns, or None if
+        the intent doesn't map to a learnable trigger.
         """
-        params = intent.params or {}
+        from .triggers import normalize_trigger
 
-        # Common trigger patterns
-        if "gap_type" in params:
-            return f"trigger:gap_detected:{params['gap_type']}"
-        if "file_path" in params:
-            # Generalize path to pattern
-            path = params["file_path"]
-            if "/" in path:
-                parts = path.split("/")
-                if len(parts) >= 2:
-                    return f"trigger:file_changed:{parts[0]}/{parts[1]}/**"
-            return f"trigger:file_changed:{path}"
-        if "error" in params or intent.intent_type.startswith("fix_"):
-            return "trigger:error_detected"
-        if intent.intent_type == "persistence_test":
-            return "trigger:meru_test"
-        if intent.intent_type.startswith("sutra_"):
-            return f"trigger:sutra:{intent.intent_type.replace('sutra_', '')}"
-
-        # Fallback: use intent type as trigger
-        return f"trigger:intent:{intent.intent_type}"
+        # OPUS-111: Use centralized normalization
+        # Returns None for intents that don't have canonical triggers
+        # This prevents memory pollution with non-canonical patterns
+        pattern = normalize_trigger(intent)
+        return pattern.value if pattern else None
 
     def _cleanup_expired_intents(self) -> None:
         """Remove expired intents from buffer."""
