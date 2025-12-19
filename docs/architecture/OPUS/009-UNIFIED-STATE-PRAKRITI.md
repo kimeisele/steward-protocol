@@ -121,9 +121,9 @@ wiring:
     in: vibe_core/task_management/task_manager.py
   # PluginStateContract implementations
   - pattern: "def get_state_paths"
-    in: vibe_core/plugins/opus_assistant/plugin_main.py
+    in: vibe_core/state/sync_holon.py
   - pattern: "def get_state_paths"
-    in: vibe_core/task_management/task_manager.py
+    in: vibe_core/state/sync_holon.py
 
 absent:
   # === NO ORPHAN STATE (LOBOTOMY PREVENTION) ===
