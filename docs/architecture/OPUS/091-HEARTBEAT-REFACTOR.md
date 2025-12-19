@@ -82,7 +82,7 @@ class TaskIngestPlugin(VibePlugin):
         """Ingest JSON files from data/inbox/ into TaskManager"""
         if phase != PulsePhase.SENSORS:
             return
-        
+
         inbox_dir = self.workspace / "data" / "inbox"
         for json_file in inbox_dir.glob("*.json"):
             task_data = json.load(open(json_file))
@@ -122,12 +122,12 @@ class TaskExecutorPlugin(VibePlugin):
     def on_pulse(self, phase: PulsePhase):
         if phase != PulsePhase.ACTUATORS:
             return
-        
+
         # Get next pending task
         task = self.task_manager.get_next_task()
         if not task:
             return
-        
+
         # All routing/execution logic from _execute_tasks()
         self._execute_task(task)
 ```
@@ -146,7 +146,7 @@ class ChroniclePlugin(VibePlugin):
     def on_pulse(self, phase: PulsePhase):
         if phase != PulsePhase.CLEANUP:
             return
-        
+
         # Git commit logic from _commit_progress()
         self._commit_changes()
 ```
@@ -185,22 +185,22 @@ logger = logging.getLogger("HEARTBEAT")
 def main():
     """Main entry point - PRANA-driven scheduler"""
     config = load_config()
-    
+
     if not config.heartbeat.enabled:
         logger.info("💓 Heartbeat disabled in config")
         return
-    
+
     # Boot kernel if configured
     if config.heartbeat.boot_kernel_first:
         ensure_kernel_running(config)
-    
+
     # Record heartbeat timing
     record_heartbeat()
-    
+
     # RUN THE PULSE (all magic happens here)
     kernel = VibeKernel(project_root)
     kernel.pulse()
-    
+
     logger.info("✅ Heartbeat pulse complete")
 
 if __name__ == "__main__":
@@ -208,13 +208,13 @@ if __name__ == "__main__":
 ```
 
 **Changes:**
-- **Remove:** 
+- **Remove:**
   - HeartbeatEngine class (299 lines)
   - All business logic methods
   - MANAS initialization
   - Ledger initialization
   - Plugin orchestration code
-  
+
 - **Keep:**
   - PRANA config loading
   - Kernel initialization
@@ -232,21 +232,21 @@ Move orchestration to `vibe_core/kernel_impl.py`:
 def pulse(self):
     """Main heartbeat cycle - delegates to PulseManager"""
     logger.info("💓 HEARTBEAT PULSE STARTED")
-    
+
     try:
         # Initialize components (lazy-load)
         self._ensure_components()
-        
+
         # Run PRANA pulse cycle (orchestrates all plugins)
         result = self.pulse_manager.run_pulse_cycle()
-        
+
         # Log results
         plugins_run = result.get("plugins_executed", 0)
         mutations = result.get("mutations_committed", 0)
         failures = result.get("failures", 0)
-        
+
         logger.info(f"✅ Pulse cycle: {plugins_run} plugins, {mutations} mutations")
-        
+
     except Exception as e:
         logger.error(f"❌ Heartbeat failed: {e}")
         raise

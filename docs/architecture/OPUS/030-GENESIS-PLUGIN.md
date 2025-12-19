@@ -54,7 +54,7 @@ The system is composed of three distinct functional units (The Triad):
 ```python
 class GenesisArchitect:
     """Hybrid Intelligence Engine."""
-    
+
     def design_blueprint(self, prompt: str) -> AgentBlueprint:
         # 1. Try Local/Cloud LLM
         try:
@@ -111,7 +111,7 @@ circuit:
   id: GENESIS_PRIME
   name: "Genesis Prime Creation Flow"
   domain: INFRASTRUCTURE
-  
+
   entry_state: INTENT_ANALYSIS
 
   states:

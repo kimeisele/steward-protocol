@@ -43,7 +43,7 @@ files:
     required: true
   - path: vibe_core/plugins/opus_assistant/narasimha/definitions.py
     required: true
-  
+
   # === INTEGRATION POINT ===
   - path: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
     required: true
@@ -53,11 +53,11 @@ wiring:
   # Narasimha initialized in CognitiveKernel
   - pattern: "self._narasimha = CortexNarasimha"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-  
+
   # Judgment before buffering
   - pattern: "NARASIMHA JUDGMENT: Judge before buffering"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-    
+
   # Judgment before execution (double check)
   - pattern: "NARASIMHA JUDGMENT: Final check"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
@@ -73,7 +73,7 @@ semantic:
     module: vibe_core.plugins.opus_assistant.narasimha.guardian
     exports:
       - CortexNarasimha
-      
+
   - type: module_exports
     name: definitions_api
     module: vibe_core.plugins.opus_assistant.narasimha.definitions
