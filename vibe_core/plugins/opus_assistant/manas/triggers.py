@@ -1,12 +1,14 @@
 """
-OPUS-111 + OPUS-112: Signal Alignment & Synaptic Inference.
+OPUS-111 + OPUS-112 + OPUS-114: Signal Alignment, Synaptic Inference & Akshara Kernel.
 
 "Ein Gehirn, das seine eigene Sprache nicht versteht, ist lobotomiert."
 "Ein Gehirn, das sein Tagebuch nicht liest, lernt nie."
+"अक्षराणां अकारोऽस्मि" - "Of letters, I am 'A'" (Bhagavad Gita 10.33)
 
 This module defines:
 1. The canonical vocabulary for synaptic triggers and actions (OPUS-111)
 2. The inference engine for reading synaptic memory (OPUS-112)
+3. Akshara-based resonance for Dharmic scoring (OPUS-114)
 
 OPUS-111 (Signal Alignment):
 - TriggerPatterns: Canonical trigger constants
@@ -18,8 +20,13 @@ OPUS-112 (Synaptic Inference):
 - consult(): Query learned associations for decision making
 - get_confidence(): Get learned weight for an intent
 
+OPUS-114 (Akshara Kernel):
+- DharmicRecommendation: Weight × Resonance scoring
+- Varnamala-based resonance calculation
+- consult_dharmic(): Returns recommendations sorted by Dharmic score
+
 The Loop:
-    Event → normalize_trigger() → SynapticMemory.consult() → Decision
+    Event → normalize_trigger() → SynapticMemory.consult_dharmic() → Decision
                                          ↓
     Outcome → _update_synapses() ← SynapticMemory.update()
 
@@ -34,10 +41,10 @@ Usage:
     # OPUS-111: Normalize trigger
     trigger = normalize_trigger(intent)
 
-    # OPUS-112: Consult memory for recommendations
+    # OPUS-114: Consult memory with Dharmic scoring
     memory = SynapticMemory.get(workspace)
-    recommendations = memory.consult(trigger)
-    # Returns: [("action:run_tests", 0.9), ("action:check_lint", 0.7)]
+    recommendations = memory.consult_dharmic(trigger)
+    # Returns: [DharmicRecommendation(action="action:run_tests", weight=0.9, resonance=0.8, dharmic_score=0.72)]
 """
 
 import fnmatch
@@ -406,6 +413,60 @@ class SynapticRecommendation:
             return "very_low"
 
 
+@dataclass
+class DharmicRecommendation:
+    """
+    OPUS-114: A recommended action with Akshara resonance scoring.
+
+    This extends SynapticRecommendation with:
+    - resonance: Phonetic harmony based on Varga distance (0.2 - 1.0)
+    - dharmic_score: weight × resonance (the true decision metric)
+    - varga_trigger: The Varga of the trigger
+    - varga_action: The Varga of the action
+    """
+
+    action: str  # e.g., "action:run_tests"
+    weight: float  # Synaptic weight (0.0 - 1.0)
+    resonance: float  # Akshara resonance (0.2 - 1.0)
+    dharmic_score: float  # weight × resonance
+    trigger: str  # The trigger pattern
+    varga_trigger: str  # e.g., "KANTHYA"
+    varga_action: str  # e.g., "KANTHYA"
+
+    @property
+    def confidence_level(self) -> str:
+        """Human-readable confidence level based on dharmic_score."""
+        if self.dharmic_score >= 0.8:
+            return "very_high"
+        elif self.dharmic_score >= 0.6:
+            return "high"
+        elif self.dharmic_score >= 0.4:
+            return "medium"
+        elif self.dharmic_score >= 0.2:
+            return "low"
+        else:
+            return "very_low"
+
+    @property
+    def is_resonant(self) -> bool:
+        """Check if trigger and action are in same or adjacent Vargas."""
+        return self.resonance >= 0.8
+
+    @property
+    def harmony_description(self) -> str:
+        """Human-readable description of the harmonic relationship."""
+        if self.resonance >= 1.0:
+            return "perfect"  # Same Varga
+        elif self.resonance >= 0.8:
+            return "harmonic"  # Adjacent Varga
+        elif self.resonance >= 0.6:
+            return "moderate"  # 2 Vargas apart
+        elif self.resonance >= 0.4:
+            return "weak"  # 3 Vargas apart
+        else:
+            return "distant"  # 4 Vargas apart
+
+
 class SynapticMemory:
     """
     OPUS-112: The Reading Brain - Synaptic Memory with Inference.
@@ -550,6 +611,130 @@ class SynapticMemory:
         if not trigger_pattern:
             return []
         return self.consult(trigger_pattern.value)
+
+    def consult_dharmic(
+        self,
+        trigger: str,
+        min_dharmic_score: float = 0.0,
+        limit: int = 5,
+    ) -> List[DharmicRecommendation]:
+        """
+        OPUS-114: Consult synaptic memory with Akshara resonance scoring.
+
+        This is the DHARMIC inference method - reading learned associations
+        and scoring them by phonetic harmony (Varga resonance).
+
+        Dharmic Score = Synaptic Weight × Akshara Resonance
+
+        Args:
+            trigger: Canonical trigger string (e.g., "trigger:test_failure")
+            min_dharmic_score: Minimum dharmic score threshold (default 0.0)
+            limit: Maximum recommendations to return
+
+        Returns:
+            List of DharmicRecommendation, sorted by dharmic_score descending
+        """
+        # Lazy import to avoid circular dependency
+        from vibe_core.plugins.opus_assistant.manas.akshara import (
+            calculate_dharmic_score,
+            calculate_resonance,
+            get_action_varga,
+            get_trigger_varga,
+        )
+
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+
+        # Look up trigger
+        if trigger not in weights:
+            logger.debug(f"🕉️ DHARMIC: No learned actions for {trigger}")
+            return []
+
+        actions = weights[trigger]
+        trigger_varga = get_trigger_varga(trigger)
+        recommendations = []
+
+        for action, weight in actions.items():
+            action_varga = get_action_varga(action)
+            resonance = calculate_resonance(trigger, action)
+            dharmic_score = calculate_dharmic_score(trigger, action, weight)
+
+            if dharmic_score >= min_dharmic_score:
+                recommendations.append(
+                    DharmicRecommendation(
+                        action=action,
+                        weight=weight,
+                        resonance=resonance,
+                        dharmic_score=dharmic_score,
+                        trigger=trigger,
+                        varga_trigger=trigger_varga.name,
+                        varga_action=action_varga.name,
+                    )
+                )
+
+        # Sort by dharmic_score descending (not just weight!)
+        recommendations.sort(key=lambda r: r.dharmic_score, reverse=True)
+
+        # Limit
+        recommendations = recommendations[:limit]
+
+        if recommendations:
+            top = recommendations[0]
+            logger.debug(
+                f"🕉️ DHARMIC: {trigger} → {len(recommendations)} recommendations "
+                f"(top: {top.action} @ {top.dharmic_score:.2f} dharmic, {top.harmony_description})"
+            )
+
+        return recommendations
+
+    def consult_dharmic_for_intent(self, intent: Any) -> List[DharmicRecommendation]:
+        """
+        OPUS-114: Consult synaptic memory with dharmic scoring for an intent.
+
+        Args:
+            intent: An Intent object
+
+        Returns:
+            List of DharmicRecommendation
+        """
+        trigger_pattern = normalize_trigger(intent)
+        if not trigger_pattern:
+            return []
+        return self.consult_dharmic(trigger_pattern.value)
+
+    def get_dharmic_confidence(self, intent: Any) -> float:
+        """
+        OPUS-114: Get the dharmic confidence for an intent.
+
+        This returns weight × resonance, not just weight.
+
+        Args:
+            intent: An Intent object
+
+        Returns:
+            Dharmic score (0.0 - 1.0), or 0.3 if not learned
+        """
+        from vibe_core.plugins.opus_assistant.manas.akshara import calculate_dharmic_score
+
+        trigger_pattern = normalize_trigger(intent)
+        if not trigger_pattern:
+            return 0.3  # Low - no canonical trigger
+
+        trigger = trigger_pattern.value
+        action = f"action:{getattr(intent, 'intent_type', 'unknown')}"
+
+        synapses = self._load_synapses()
+        weights = synapses.get("weights", {})
+
+        if trigger not in weights:
+            return 0.3  # Low - no experience
+
+        actions = weights[trigger]
+        if action not in actions:
+            return 0.3  # Low - no experience with this action
+
+        weight = actions[action]
+        return calculate_dharmic_score(trigger, action, weight)
 
     def get_confidence(self, intent: Any) -> float:
         """
