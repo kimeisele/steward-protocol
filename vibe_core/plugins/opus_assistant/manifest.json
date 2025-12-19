@@ -23,6 +23,23 @@
     "opus.state",
     "opus.bhakti"
   ],
+  "manas_capabilities": {
+    "_comment": "OPUS-112: Synaptic Bridge - Capabilities for MANAS SYSTEM ACT mode (DHARMA: SAFE/LOW risk only)",
+    "chronicle": [
+      "chronicle.git",
+      "chronicle.seal",
+      "chronicle.history"
+    ],
+    "envoy": [
+      "envoy.city_control",
+      "envoy.curator",
+      "envoy.diplomacy"
+    ],
+    "analyst": [
+      "analyst.code_review",
+      "analyst.refactor"
+    ]
+  },
   "state": {
     "dir": ".opus_state",
     "files": {
