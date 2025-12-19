@@ -8,7 +8,7 @@ Self-contained section for simulation/live_fire mode toggle.
 import logging
 from typing import List, Optional
 
-from ..protocol import ExecutionResult, SectionContext, SettingsSection
+from ..protocol import SectionContext, SettingsResult, SettingsSection
 
 logger = logging.getLogger(__name__)
 
@@ -86,14 +86,14 @@ class ExecutionModeSection(SettingsSection):
             return f"Invalid mode '{value}'. Use: simulation or live_fire"
         return None
 
-    def execute(self, key: str, value: str, context: SectionContext) -> ExecutionResult:
+    def execute(self, key: str, value: str, context: SectionContext) -> SettingsResult:
         """Execute mode change."""
         mode = value.lower().strip()
 
         # Validate
         error = self.validate(key, mode)
         if error:
-            return ExecutionResult(success=False, message=error)
+            return SettingsResult(success=False, message=error)
 
         is_live = mode == "live_fire"
 
@@ -112,7 +112,7 @@ class ExecutionModeSection(SettingsSection):
                 logger.info("🔒 Simulation mode enabled")
                 message = "Simulation mode enabled - API calls and writes are simulated"
 
-            return ExecutionResult(
+            return SettingsResult(
                 success=True,
                 message=message,
                 side_effects={"live_fire_enabled": is_live},
@@ -120,4 +120,4 @@ class ExecutionModeSection(SettingsSection):
 
         except Exception as e:
             logger.error(f"Failed to change execution mode: {e}")
-            return ExecutionResult(success=False, message=str(e))
+            return SettingsResult(success=False, message=str(e))
