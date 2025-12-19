@@ -294,11 +294,159 @@ class Varnamala:
 
 
 # =============================================================================
+# OPUS-115: DYNAMIC PATH-TO-VARGA MAPPING - The Body IS the Code
+# =============================================================================
+
+# Path patterns for each Varga layer
+# The folder structure encodes the layer - no manual mapping needed!
+PATH_VARGA_PATTERNS: Dict[Varga, List[str]] = {
+    # KANTHYA (KERNEL) - Deep Core, Foundation
+    # Throat: where sound originates, where the system originates
+    Varga.KANTHYA: [
+        "vibe_core/runtime/",  # Runtime kernel
+        "vibe_core/governance/",  # Core governance
+        "vibe_core/protocols/",  # Core protocols
+        "vibe_core/store/",  # Data store (foundation)
+        "vibe_core/state/",  # State management
+        "vibe_core/scheduling/",  # Core scheduling
+        "vibe_core/vajra/",  # Vajra (thunderbolt - core power)
+        "vibe_core/steward/",  # Steward (core manager)
+        "vibe_core/config/",  # Core configuration
+        ".opus_state/",  # OPUS kernel state
+        ".prakriti/",  # Prakriti (nature - core)
+    ],
+    # TALAVYA (COGNITION) - Decision/Flow, Intelligence
+    # Palate: where sound is shaped, where decisions are shaped
+    Varga.TALAVYA: [
+        "vibe_core/llm/",  # LLM reasoning
+        "vibe_core/cortex/",  # Cortex (brain)
+        "vibe_core/plugins/opus_assistant/manas/",  # MANAS cognition
+        "vibe_core/plugins/opus_assistant/vidya/",  # Vidya (knowledge)
+        "vibe_core/knowledge/",  # Knowledge base
+        "vibe_core/agents/",  # Agent reasoning
+        "vibe_core/playbook/",  # Playbook (decision trees)
+        "vibe_core/shadow_labs/",  # Shadow Labs (research)
+    ],
+    # MURDHANYA (REPAIR) - Hard Work, Fixing, Testing
+    # Retroflex: tongue curls back (effort), fixing requires effort
+    Varga.MURDHANYA: [
+        "vibe_core/plugins/doctor/",  # Doctor (fixing)
+        "vibe_core/plugins/test_mode/",  # Test mode
+        "vibe_core/plugins/test_orchestration/",  # Test orchestration
+        "vibe_core/specialists/",  # Specialists (experts at fixing)
+        "vibe_core/plugins/opus_assistant/narasimha/",  # Narasimha (destroyer of bugs)
+        "tests/",  # Test suite
+        "**/tests/",  # Any test folder
+        "*_test.py",  # Test files
+        "test_*.py",  # Test files
+    ],
+    # DANTYA (INTERFACE) - Links, Connections, Documentation
+    # Dental: tongue touches teeth (connection point)
+    Varga.DANTYA: [
+        "vibe_core/gateway/",  # API gateway
+        "vibe_core/loaders/",  # Data loaders
+        "vibe_core/plugins/interface/",  # Interface plugin
+        "vibe_core/plugins/envoy/",  # Envoy (connections)
+        "vibe_core/plugins/nexus_holon/",  # Nexus (connections)
+        "vibe_core/cartridges/",  # Cartridges (connectors)
+        "vibe_core/tools/",  # Tools (interfaces)
+        "docs/",  # Documentation (human interface)
+        "*.md",  # Markdown files (human interface)
+    ],
+    # OSHTHYA (OUTPUT) - Surface, User-facing, Manifestation
+    # Labial: lips produce output, user sees output
+    Varga.OSHTHYA: [
+        "vibe_core/cli/",  # CLI (user output)
+        "vibe_core/phoenix/",  # Phoenix (regeneration output)
+        "vibe_core/plugins/opus_assistant/render/",  # Rendering
+        "vibe_core/plugins/opus_assistant/cli/",  # OPUS CLI
+        "vibe_core/plugins/opus_assistant/templates/",  # Output templates
+        "vibe_core/settings/",  # User settings
+        "*.json",  # JSON output files
+        "*.yaml",  # YAML output files
+        "*.yml",  # YAML output files
+    ],
+}
+
+
+def map_path_to_varga(path: str) -> Varga:
+    """
+    OPUS-115: Dynamically derive Varga from file path.
+
+    The folder structure IS the body - each path belongs to a layer.
+    No manual mapping needed - the code's location determines its nature.
+
+    Mapping hierarchy:
+    1. Exact prefix match (most specific)
+    2. Glob pattern match
+    3. Default to TALAVYA (cognition - the middle ground)
+
+    Args:
+        path: File path (relative to workspace root)
+
+    Returns:
+        The Varga that this path belongs to
+    """
+    import fnmatch
+
+    # Normalize path (remove leading ./ prefix, not individual chars)
+    if path.startswith("./"):
+        path = path[2:]
+    if path.startswith("/"):
+        path = path[1:]
+
+    # PHASE 1: Check folder prefix patterns first (most specific)
+    for varga in [Varga.KANTHYA, Varga.TALAVYA, Varga.MURDHANYA, Varga.DANTYA, Varga.OSHTHYA]:
+        patterns = PATH_VARGA_PATTERNS.get(varga, [])
+        for pattern in patterns:
+            # Prefix match (folder paths ending with /)
+            if pattern.endswith("/"):
+                if path.startswith(pattern) or path.startswith(pattern.rstrip("/")):
+                    return varga
+
+    # PHASE 2: Check glob patterns (file extensions, etc.)
+    for varga in [Varga.KANTHYA, Varga.TALAVYA, Varga.MURDHANYA, Varga.DANTYA, Varga.OSHTHYA]:
+        patterns = PATH_VARGA_PATTERNS.get(varga, [])
+        for pattern in patterns:
+            if "*" in pattern:
+                if fnmatch.fnmatch(path, pattern):
+                    return varga
+                # Also check just the filename
+                if "/" in path:
+                    filename = path.split("/")[-1]
+                    if fnmatch.fnmatch(filename, pattern):
+                        return varga
+
+    # Default: TALAVYA (cognition) - the middle ground
+    # Unknown code is cognitive until proven otherwise
+    return Varga.TALAVYA
+
+
+def get_path_layer(path: str) -> str:
+    """Get the layer name for a path."""
+    return VARGA_LAYERS[map_path_to_varga(path)]
+
+
+def get_path_element(path: str) -> str:
+    """Get the element (Bhuta) for a path."""
+    return VARGA_ELEMENTS[map_path_to_varga(path)][1]
+
+
+def get_path_akshara(path: str) -> Akshara:
+    """Get the representative Akshara for a path."""
+    varga = map_path_to_varga(path)
+    varnamala = Varnamala.get()
+    nasal = varnamala.get_nasal(varga)
+    return nasal if nasal else varnamala.get_varga(varga)[0]
+
+
+# =============================================================================
 # TRIGGER/ACTION MAPPING - Connecting Code to Varnamala
 # =============================================================================
 
 
-# Map trigger categories to Vargas
+# Semantic trigger types mapped to Vargas (non-path-based triggers)
+# OPUS-115: file_changed triggers are now handled dynamically by map_path_to_varga()
 TRIGGER_VARGA_MAP: Dict[str, Varga] = {
     # KERNEL (Kanthya) - Core system triggers
     "trigger:test_failure": Varga.KANTHYA,
@@ -322,12 +470,7 @@ TRIGGER_VARGA_MAP: Dict[str, Varga] = {
     "trigger:sutra:missing_doc": Varga.DANTYA,
     "trigger:sutra:stale": Varga.DANTYA,
     "trigger:sutra:missing_harness": Varga.DANTYA,
-    # OUTPUT (Oshthya) - File/surface triggers
-    "trigger:file_changed:vibe_core/**": Varga.OSHTHYA,
-    "trigger:file_changed:tests/**": Varga.OSHTHYA,
-    "trigger:file_changed:docs/**": Varga.OSHTHYA,
-    "trigger:file_changed:config/**": Varga.OSHTHYA,
-    "trigger:file_changed:other": Varga.OSHTHYA,
+    # OUTPUT (Oshthya) - Misc triggers (file_changed now uses dynamic mapping!)
     "trigger:karma_low": Varga.OSHTHYA,
 }
 
@@ -357,14 +500,25 @@ ACTION_VARGA_MAP: Dict[str, Varga] = {
 
 
 def get_trigger_varga(trigger: str) -> Varga:
-    """Get the Varga for a trigger pattern."""
-    # Exact match first
+    """
+    Get the Varga for a trigger pattern.
+
+    OPUS-115: For file_changed triggers, dynamically derive Varga from path.
+    The file's location determines its nature, not a static map.
+    """
+    # Exact match first (semantic triggers)
     if trigger in TRIGGER_VARGA_MAP:
         return TRIGGER_VARGA_MAP[trigger]
 
-    # Pattern matching for file_changed triggers
+    # OPUS-115: Dynamic path-based Varga for file_changed triggers
     if trigger.startswith("trigger:file_changed:"):
-        return Varga.OSHTHYA  # OUTPUT layer
+        # Extract path from trigger: "trigger:file_changed:vibe_core/cli/main.py"
+        path = trigger[len("trigger:file_changed:") :]
+        # Remove glob patterns for mapping
+        path = path.replace("**", "").replace("*", "")
+        if path:
+            return map_path_to_varga(path)
+        return Varga.OSHTHYA  # Fallback if path is empty
 
     # Pattern matching for gap triggers
     if trigger.startswith("trigger:gap_detected:"):
