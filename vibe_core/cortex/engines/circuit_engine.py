@@ -44,6 +44,14 @@ except ImportError:
     BlueprintGenerator = None
     CompilationResult = None
 
+# OPUS-118: Import canonical types from shared module
+from vibe_core.circuit_types import (
+    CircuitExecutionResult,
+    CircuitState,
+    ErrorRecoveryAttempt,
+    InvariantViolation,
+    TaskLedgerEntry,
+)
 from vibe_core.semantic_syscalls import (
     SemanticSyscallExecutor,
     SyscallRequest,
@@ -71,14 +79,7 @@ def _get_runtime_config():
 # ============================================================================
 
 
-@dataclass
-class InvariantViolation:
-    """Record of an invariant violation."""
-
-    invariant: str
-    state: str
-    variables: Dict[str, Any]
-    reason: str
+# OPUS-118: InvariantViolation moved to vibe_core/circuit_types.py
 
 
 class InvariantChecker:
@@ -320,28 +321,7 @@ class InvariantChecker:
         self.violations.clear()
 
 
-@dataclass
-class CircuitState:
-    """Current state of circuit execution."""
-
-    current_state: str
-    variables: Dict[str, Any] = field(default_factory=dict)
-    history: List[str] = field(default_factory=list)
-    syscall_results: Dict[str, SyscallResult] = field(default_factory=dict)
-    is_terminal: bool = False
-    output: Optional[Dict[str, Any]] = None
-
-
-@dataclass
-class CircuitExecutionResult:
-    """Result of executing a cognitive circuit."""
-
-    success: bool
-    final_state: str
-    output: Dict[str, Any]
-    state_history: List[str]
-    syscall_count: int
-    error: Optional[str] = None
+# OPUS-118: CircuitState and CircuitExecutionResult moved to vibe_core/circuit_types.py
 
 
 class CognitiveCircuitExecutor:
@@ -1096,33 +1076,7 @@ class CognitiveCircuitExecutor:
 # ============================================================================
 
 
-@dataclass
-class TaskLedgerEntry:
-    """Entry in the task ledger for tracking progress."""
-
-    circuit_id: str
-    execution_id: str
-    started_at: float
-    states_visited: List[str] = field(default_factory=list)
-    transitions: List[Dict[str, Any]] = field(default_factory=list)
-    reflections: List[Dict[str, Any]] = field(default_factory=list)
-    stuck_count: int = 0
-    last_state: str = ""
-    completed_at: Optional[float] = None
-    success: Optional[bool] = None
-
-
-@dataclass
-class ErrorRecoveryAttempt:
-    """Record of an error recovery attempt."""
-
-    error_type: str
-    error_message: str
-    state: str
-    timestamp: float
-    strategy: str
-    success: bool
-    retry_count: int = 0
+# OPUS-118: TaskLedgerEntry and ErrorRecoveryAttempt moved to vibe_core/circuit_types.py
 
 
 class MetaCircuitManager:
