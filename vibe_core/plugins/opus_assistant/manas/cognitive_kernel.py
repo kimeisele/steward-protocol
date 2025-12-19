@@ -2021,6 +2021,9 @@ class CognitiveKernel(CognitiveCycle):
             execution_time_ms=execution_time,
         )
 
+        # 🧠 OPUS-110: Synaptic Learning - Update weights based on outcome
+        self._update_synapses(intent, success)
+
         self._save_intent_buffer()
 
         if success:
@@ -2031,6 +2034,112 @@ class CognitiveKernel(CognitiveCycle):
             logger.warning(f"MANAS: Intent {intent.id} execution failed: {result.get('error')}")
 
         return success
+
+    # =========================================================================
+    # OPUS-110: SYNAPTIC LEARNING
+    # =========================================================================
+
+    def _update_synapses(self, intent: Intent, success: bool) -> None:
+        """
+        Update synaptic weights based on intent execution outcome.
+
+        OPUS-110: The Learning Loop - MANAS strengthens connections that work,
+        weakens connections that fail.
+
+        Weight adjustment:
+        - Success: weight += 0.1 * (1 - weight)  [asymptotic to 1.0]
+        - Failure: weight -= 0.1 * weight        [asymptotic to 0.0]
+
+        Args:
+            intent: The executed intent
+            success: Whether execution succeeded
+        """
+        synapse_file = self._workspace / ".opus_state" / "synapses.json"
+
+        try:
+            # Load current synapses
+            if synapse_file.exists():
+                synapses = json.loads(synapse_file.read_text())
+            else:
+                synapses = {"schema": "v1", "weights": {}, "meta": {}}
+
+            weights = synapses.get("weights", {})
+
+            # Determine trigger from intent context
+            trigger = self._extract_trigger(intent)
+            if not trigger:
+                return  # No learnable trigger
+
+            # Determine action from intent type
+            action = f"action:{intent.intent_type}"
+
+            # Get or create trigger entry
+            if trigger not in weights:
+                weights[trigger] = {}
+
+            # Get current weight (default 0.5 for new connections)
+            current_weight = weights[trigger].get(action, 0.5)
+
+            # Hebbian-style learning: "neurons that fire together wire together"
+            if success:
+                # Strengthen: move toward 1.0
+                new_weight = current_weight + 0.1 * (1.0 - current_weight)
+            else:
+                # Weaken: move toward 0.0
+                new_weight = current_weight - 0.1 * current_weight
+
+            # Clamp to [0.0, 1.0]
+            new_weight = max(0.0, min(1.0, new_weight))
+
+            # Update weight
+            weights[trigger][action] = round(new_weight, 3)
+
+            # Update meta
+            synapses["weights"] = weights
+            synapses["meta"]["last_updated"] = datetime.utcnow().isoformat()
+            synapses["meta"]["total_connections"] = sum(len(v) for v in weights.values())
+
+            # Save
+            synapse_file.write_text(json.dumps(synapses, indent=2))
+
+            logger.debug(
+                f"🧠 SYNAPSE: {trigger} → {action}: {current_weight:.2f} → {new_weight:.2f} ({'↑' if success else '↓'})"
+            )
+
+        except Exception as e:
+            logger.warning(f"🧠 SYNAPSE UPDATE FAILED: {e}")
+
+    def _extract_trigger(self, intent: Intent) -> Optional[str]:
+        """
+        Extract the trigger pattern from an intent's context.
+
+        Returns a trigger string like:
+        - "trigger:file_changed:vibe_core/**/*.py"
+        - "trigger:test_failure"
+        - "trigger:gap_detected:missing_code"
+        """
+        params = intent.params or {}
+
+        # Common trigger patterns
+        if "gap_type" in params:
+            return f"trigger:gap_detected:{params['gap_type']}"
+        if "file_path" in params:
+            # Generalize path to pattern
+            path = params["file_path"]
+            if "/" in path:
+                parts = path.split("/")
+                if len(parts) >= 2:
+                    return f"trigger:file_changed:{parts[0]}/{parts[1]}/**"
+            return f"trigger:file_changed:{path}"
+        if "error" in params or intent.intent_type.startswith("fix_"):
+            return "trigger:error_detected"
+        if intent.intent_type == "persistence_test":
+            return "trigger:meru_test"
+        if intent.intent_type.startswith("sutra_"):
+            return f"trigger:sutra:{intent.intent_type.replace('sutra_', '')}"
+
+        # Fallback: use intent type as trigger
+        return f"trigger:intent:{intent.intent_type}"
 
     def _cleanup_expired_intents(self) -> None:
         """Remove expired intents from buffer."""

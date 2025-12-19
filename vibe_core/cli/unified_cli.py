@@ -73,6 +73,7 @@ class UnifiedCLI:
             "install": self.cmd_install,  # Alias for update (semantic clarity)
             "chat": self.cmd_chat,  # OPUS-042: SAMVADA - Human-MANAS dialogue
             "observe": self.cmd_observe,  # OPUS-108: Observer Loop - MANAS cognition monitor
+            "poke": self.cmd_poke,  # OPUS-109: Intent Defibrillator - force-execute stuck intents
         }
 
         # OPUS-075: MANAS HIL Bridge commands
@@ -674,6 +675,134 @@ class UnifiedCLI:
         except Exception as e:
             print(f"❌ OBSERVER ERROR: {e}")
             return 1
+
+    # =========================================================================
+    # OPUS-109: INTENT DEFIBRILLATOR - Force-Execute Stuck Intents
+    # =========================================================================
+
+    def cmd_poke(self, args: List[str]) -> int:
+        """
+        OPUS-109: Intent Defibrillator - Force-execute stuck intents.
+
+        When intents are stuck in 'pending', this command shocks them back to life.
+        The Operator's manual override for the cognitive system.
+
+        Usage:
+            steward poke                    # List all pending intents
+            steward poke <intent_id>        # Execute specific intent
+            steward poke --first            # Execute first pending intent
+            steward poke --all              # Execute ALL pending intents (dangerous)
+            steward poke --dry-run <id>     # Show what would happen without executing
+        """
+        from rich.console import Console
+        from rich.table import Table
+
+        parser = argparse.ArgumentParser(prog="steward poke")
+        parser.add_argument("intent_id", nargs="?", help="Intent ID to execute")
+        parser.add_argument("--first", action="store_true", help="Execute first pending intent")
+        parser.add_argument("--all", action="store_true", help="Execute ALL pending intents")
+        parser.add_argument("--dry-run", action="store_true", help="Show what would happen")
+        parsed_args, _ = parser.parse_known_args(args)
+
+        console = Console()
+
+        # Load intents
+        intent_path = Path(".opus_state/manas_intents.json")
+        if not intent_path.exists():
+            console.print("[red]❌ No intent file found. MANAS has no pending thoughts.[/red]")
+            return 1
+
+        try:
+            data = json.loads(intent_path.read_text())
+            entries = data.get("intents", [])
+        except Exception as e:
+            console.print(f"[red]❌ Failed to load intents: {e}[/red]")
+            return 1
+
+        # Filter pending
+        pending = [e for e in entries if e.get("status") == "pending"]
+
+        if not pending:
+            console.print("[green]✅ No pending intents. MANAS mind is clear.[/green]")
+            return 0
+
+        # No args = list pending
+        if not parsed_args.intent_id and not parsed_args.first and not parsed_args.all:
+            console.print(f"\n[bold]⚡ DEFIBRILLATOR: {len(pending)} pending intents[/bold]\n")
+            table = Table(show_header=True, header_style="bold yellow")
+            table.add_column("ID", width=25)
+            table.add_column("Type", width=20)
+            table.add_column("Title", width=40)
+            table.add_column("Age")
+
+            from datetime import datetime
+
+            for entry in pending[:20]:
+                intent = entry.get("intent", {})
+                i_id = intent.get("id", "???")
+                i_type = intent.get("intent_type", "unknown")
+                i_title = intent.get("title", "")[:40]
+                created = intent.get("created_at", "")
+                age = "?"
+                if created:
+                    try:
+                        dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        delta = datetime.now() - dt.replace(tzinfo=None)
+                        if delta.days > 0:
+                            age = f"{delta.days}d"
+                        elif delta.seconds > 3600:
+                            age = f"{delta.seconds // 3600}h"
+                        else:
+                            age = f"{delta.seconds // 60}m"
+                    except Exception:
+                        pass
+                table.add_row(i_id, i_type, i_title, age)
+
+            console.print(table)
+            console.print("\n[dim]Use: steward poke <intent_id> to execute[/dim]")
+            return 0
+
+        # Load MANAS kernel for execution
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel
+
+            kernel = CognitiveKernel(workspace=Path("."))
+        except Exception as e:
+            console.print(f"[red]❌ Failed to initialize MANAS kernel: {e}[/red]")
+            return 1
+
+        # Determine which intents to execute
+        targets = []
+        if parsed_args.all:
+            targets = [e.get("intent", {}).get("id") for e in pending]
+            console.print(f"[yellow]⚠️  EXECUTING ALL {len(targets)} PENDING INTENTS[/yellow]")
+        elif parsed_args.first:
+            targets = [pending[0].get("intent", {}).get("id")]
+        elif parsed_args.intent_id:
+            targets = [parsed_args.intent_id]
+
+        # Execute
+        success_count = 0
+        for intent_id in targets:
+            if parsed_args.dry_run:
+                console.print(f"[dim]DRY-RUN: Would execute {intent_id}[/dim]")
+                continue
+
+            console.print(f"⚡ Shocking intent: [bold]{intent_id}[/bold]...")
+            try:
+                result = kernel.approve_intent(intent_id)
+                if result:
+                    console.print("   [green]✅ EXECUTED[/green]")
+                    success_count += 1
+                else:
+                    console.print("   [red]❌ FAILED (check logs)[/red]")
+            except Exception as e:
+                console.print(f"   [red]❌ ERROR: {e}[/red]")
+
+        if not parsed_args.dry_run:
+            console.print(f"\n[bold]Defibrillator complete: {success_count}/{len(targets)} intents executed[/bold]")
+
+        return 0 if success_count == len(targets) else 1
 
     # =========================================================================
     # OPUS-042: SAMVADA - Human-MANAS Real-Time Dialogue

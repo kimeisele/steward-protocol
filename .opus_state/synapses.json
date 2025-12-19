@@ -18,12 +18,15 @@
     "trigger:duplicate_class_detected": {
       "action:consolidate": 0.7,
       "action:report_to_operator": 0.9
+    },
+    "trigger:gap_detected:test_gap": {
+      "action:test_action": 0.55
     }
   },
   "meta": {
     "created": "2025-12-19",
-    "last_updated": "2025-12-19T12:30:00",
-    "total_connections": 4,
+    "last_updated": "2025-12-19T12:29:26.352359",
+    "total_connections": 10,
     "note": "Initial synapses seeded by Senior Partner directive"
   }
 }
