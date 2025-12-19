@@ -37,14 +37,78 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .akshara import (
+    OPUS_DOC_VARGA_RANGES,
     PATH_VARGA_PATTERNS,
     VARGA_LAYERS,
     Varga,
+    extract_opus_doc_number,
     get_path_layer,
+    map_opus_doc_to_varga,
     map_path_to_varga,
 )
 
 logger = logging.getLogger("MANAS.Disharmony")
+
+
+# =============================================================================
+# OPUS-117: DOC CONTENT → VARGA PATTERNS (What the doc is ABOUT)
+# =============================================================================
+
+# Keywords in OPUS docs that indicate the Varga they SHOULD belong to
+OPUS_DOC_CONTENT_INDICATORS: Dict[str, Varga] = {
+    # KERNEL indicators - core system design
+    "kernel": Varga.KANTHYA,
+    "boot": Varga.KANTHYA,
+    "runtime": Varga.KANTHYA,
+    "foundation": Varga.KANTHYA,
+    "protocol": Varga.KANTHYA,
+    "governance": Varga.KANTHYA,
+    "extraction": Varga.KANTHYA,
+    "state management": Varga.KANTHYA,
+    "prakriti": Varga.KANTHYA,
+    # COGNITION indicators - MANAS/reasoning
+    "manas": Varga.TALAVYA,
+    "cogniti": Varga.TALAVYA,  # cognitive, cognition
+    "veda": Varga.TALAVYA,
+    "sense": Varga.TALAVYA,
+    "sutra": Varga.TALAVYA,
+    "cortex": Varga.TALAVYA,
+    "intent": Varga.TALAVYA,
+    "decision": Varga.TALAVYA,
+    "inference": Varga.TALAVYA,
+    "synaptic": Varga.TALAVYA,
+    "akshara": Varga.TALAVYA,
+    # REPAIR indicators - testing/hardening
+    "security": Varga.MURDHANYA,
+    "test": Varga.MURDHANYA,
+    "audit": Varga.MURDHANYA,
+    "hardening": Varga.MURDHANYA,
+    "migration": Varga.MURDHANYA,
+    "fix": Varga.MURDHANYA,
+    "repair": Varga.MURDHANYA,
+    "validation": Varga.MURDHANYA,
+    "doctor": Varga.MURDHANYA,
+    "narasimha": Varga.MURDHANYA,
+    # INTERFACE indicators - connections/flow
+    "interface": Varga.DANTYA,
+    "gateway": Varga.DANTYA,
+    "flow": Varga.DANTYA,
+    "router": Varga.DANTYA,
+    "loader": Varga.DANTYA,
+    "drishti": Varga.DANTYA,
+    "vajra": Varga.DANTYA,
+    "wiring": Varga.DANTYA,
+    "connection": Varga.DANTYA,
+    # OUTPUT indicators - user-facing/runtime
+    "cli": Varga.OSHTHYA,
+    "ui": Varga.OSHTHYA,
+    "render": Varga.OSHTHYA,
+    "runtime state": Varga.OSHTHYA,
+    "autonomy": Varga.OSHTHYA,
+    "executor": Varga.OSHTHYA,
+    "phoenix": Varga.OSHTHYA,
+    "samsara": Varga.OSHTHYA,
+}
 
 
 # =============================================================================
@@ -332,6 +396,69 @@ class ContentAnalyzer:
             functions.append(match.group(1))
         return functions
 
+    def analyze_opus_doc(self, path: Path) -> Tuple[Optional[Varga], List[str]]:
+        """
+        OPUS-117: Analyze an OPUS doc to determine its content Varga.
+
+        Looks at the document title, headers, and content to infer what
+        layer the document is ABOUT (not what number it has).
+
+        Returns:
+            Tuple of (inferred Varga, evidence list)
+            Returns None if content is ambiguous
+        """
+        try:
+            content = path.read_text(encoding="utf-8", errors="ignore").lower()
+        except Exception:
+            return None, []
+
+        evidence = []
+        varga_votes: Dict[Varga, int] = {v: 0 for v in Varga}
+
+        # Analyze title (first # line)
+        title_match = re.search(r"^#\s*(.+)$", content, re.MULTILINE)
+        title = title_match.group(1) if title_match else ""
+
+        # Weight title matches more heavily
+        for pattern, varga in OPUS_DOC_CONTENT_INDICATORS.items():
+            if pattern in title:
+                varga_votes[varga] += 3  # Title is weighted 3x
+                evidence.append(f"title: {pattern}")
+
+        # Analyze all headers
+        header_pattern = re.compile(r"^#{1,3}\s*(.+)$", re.MULTILINE)
+        for match in header_pattern.finditer(content):
+            header = match.group(1)
+            for pattern, varga in OPUS_DOC_CONTENT_INDICATORS.items():
+                if pattern in header:
+                    varga_votes[varga] += 2  # Headers weighted 2x
+                    if f"header: {pattern}" not in evidence:
+                        evidence.append(f"header: {pattern}")
+                    break
+
+        # Analyze full content (lower weight)
+        for pattern, varga in OPUS_DOC_CONTENT_INDICATORS.items():
+            count = content.count(pattern)
+            if count > 3:  # Need multiple mentions
+                varga_votes[varga] += min(count // 3, 3)  # Cap at 3
+                if f"content: {pattern}" not in evidence:
+                    evidence.append(f"content: {pattern} ({count}x)")
+
+        # Determine dominant Varga
+        if not any(varga_votes.values()):
+            return None, evidence
+
+        max_votes = max(varga_votes.values())
+        if max_votes < 3:  # Need at least 3 points
+            return None, evidence
+
+        # Get the Varga with max votes
+        for varga, votes in varga_votes.items():
+            if votes == max_votes:
+                return varga, evidence
+
+        return None, evidence
+
 
 # =============================================================================
 # DISHARMONY DETECTOR
@@ -340,15 +467,23 @@ class ContentAnalyzer:
 
 class DisharmonyDetector:
     """
-    OPUS-116: The Silent Observer.
+    OPUS-116/117: The Silent Observer - Extended.
 
     Scans the codebase for disharmony - files whose content doesn't match
     their location. This is the proactive self-healing component of VEDA-4.
+
+    OPUS-117 Extension: Also scans OPUS docs for number/content disharmony.
+    "Who watches the watchers? The watchers watch themselves."
+
+    The fractal principle: What applies to code applies to documentation.
+    - Code in wrong layer → Disharmony
+    - Doc with wrong number → Disharmony (e.g., KERNEL topic in OPUS-085)
     """
 
     def __init__(self, workspace: Path):
         self._workspace = workspace
         self._analyzer = ContentAnalyzer()
+        self._opus_doc_path = workspace / "docs" / "architecture" / "OPUS"
 
     def scan(
         self,
@@ -507,6 +642,181 @@ class DisharmonyDetector:
         levels = {"low": 0, "medium": 1, "high": 2, "critical": 3}
         return levels.get(severity, 0) >= levels.get(min_severity, 0)
 
+    # =========================================================================
+    # OPUS-117: OPUS DOCUMENT SCANNING
+    # =========================================================================
+
+    def scan_opus_docs(
+        self,
+        min_severity: str = "low",
+    ) -> DisharmonyReport:
+        """
+        OPUS-117: Scan OPUS docs for number/content disharmony.
+
+        Detects docs whose NUMBER doesn't match their CONTENT.
+        For example: OPUS-085 (should be OUTPUT range) discussing KERNEL topics.
+
+        Args:
+            min_severity: Minimum severity to report
+
+        Returns:
+            DisharmonyReport with findings
+        """
+        import time
+
+        start = time.time()
+
+        if not self._opus_doc_path.exists():
+            return DisharmonyReport(
+                workspace=str(self._workspace),
+                scanned_files=0,
+                findings=[],
+                scan_duration_ms=0.0,
+            )
+
+        findings = []
+        scanned = 0
+
+        for doc_file in sorted(self._opus_doc_path.glob("*.md")):
+            # Extract doc number
+            doc_number = extract_opus_doc_number(str(doc_file))
+            if doc_number is None:
+                continue  # Skip non-numbered docs (README, INDEX, etc.)
+
+            scanned += 1
+            finding = self._analyze_opus_doc(doc_file, doc_number)
+            if finding and self._meets_severity(finding.severity, min_severity):
+                findings.append(finding)
+
+        duration = (time.time() - start) * 1000
+
+        report = DisharmonyReport(
+            workspace=str(self._workspace),
+            scanned_files=scanned,
+            findings=findings,
+            scan_duration_ms=duration,
+        )
+
+        logger.info(f"📜 OPUS DOC OBSERVER: {report.summary()}")
+        return report
+
+    def _analyze_opus_doc(self, path: Path, doc_number: int) -> Optional[DisharmonyFinding]:
+        """
+        OPUS-117: Analyze a single OPUS doc for number/content disharmony.
+
+        Args:
+            path: Path to the OPUS doc
+            doc_number: The doc's number (0-108+)
+
+        Returns:
+            DisharmonyFinding if disharmony found, None if harmonious
+        """
+        rel_path = str(path.relative_to(self._workspace))
+
+        # Get number Varga (what the number SAYS)
+        number_varga = map_opus_doc_to_varga(doc_number)
+
+        # Get content Varga (what the doc is ABOUT)
+        content_varga, evidence = self._analyzer.analyze_opus_doc(path)
+
+        if content_varga is None:
+            return None  # No clear content Varga
+
+        # Calculate distance
+        distance = abs(number_varga - content_varga)
+
+        if distance == 0:
+            return None  # Perfect harmony
+
+        # Determine severity based on distance
+        if distance >= 4:
+            severity = "critical"
+        elif distance >= 3:
+            severity = "high"
+        elif distance >= 2:
+            severity = "medium"
+        else:
+            severity = "low"
+
+        # Generate description and recommendation
+        number_layer = VARGA_LAYERS[number_varga]
+        content_layer = VARGA_LAYERS[content_varga]
+
+        description = (
+            f"Doc number {doc_number:03d} ({number_layer} range) discusses {content_layer} topics. "
+            f"Varga distance: {distance}."
+        )
+
+        # Find the correct number range for the content
+        target_range = None
+        for (min_num, max_num), varga in OPUS_DOC_VARGA_RANGES.items():
+            if varga == content_varga:
+                target_range = (min_num, max_num)
+                break
+
+        if target_range:
+            recommendation = (
+                f"Consider renumbering to {target_range[0]:03d}-{target_range[1]:03d} range "
+                f"({content_layer}), or refocus content to match the {number_layer} layer."
+            )
+        else:
+            recommendation = f"Refocus content to match the {number_layer} layer for this number range."
+
+        return DisharmonyFinding(
+            path=rel_path,
+            location_varga=number_varga,  # Number = "location" for docs
+            content_varga=content_varga,
+            varga_distance=distance,
+            severity=severity,
+            description=description,
+            evidence=evidence[:5],
+            recommendation=recommendation,
+        )
+
+    def scan_all(
+        self,
+        include_code: bool = True,
+        include_docs: bool = True,
+        min_severity: str = "medium",
+    ) -> DisharmonyReport:
+        """
+        OPUS-117: Unified scan of both code and OPUS docs.
+
+        The fractal holographic lasagne: same patterns at all levels.
+
+        Args:
+            include_code: Scan Python code
+            include_docs: Scan OPUS docs
+            min_severity: Minimum severity to report
+
+        Returns:
+            Combined DisharmonyReport
+        """
+        import time
+
+        start = time.time()
+        all_findings: List[DisharmonyFinding] = []
+        total_scanned = 0
+
+        if include_code:
+            code_report = self.scan(min_severity=min_severity)
+            all_findings.extend(code_report.findings)
+            total_scanned += code_report.scanned_files
+
+        if include_docs:
+            doc_report = self.scan_opus_docs(min_severity=min_severity)
+            all_findings.extend(doc_report.findings)
+            total_scanned += doc_report.scanned_files
+
+        duration = (time.time() - start) * 1000
+
+        return DisharmonyReport(
+            workspace=str(self._workspace),
+            scanned_files=total_scanned,
+            findings=all_findings,
+            scan_duration_ms=duration,
+        )
+
 
 # =============================================================================
 # CONVENIENCE FUNCTIONS
@@ -566,3 +876,125 @@ def get_harmony_score(workspace: Path) -> float:
     harmony = 1.0 - (total_penalty / max_penalty) if max_penalty > 0 else 1.0
 
     return max(0.0, min(1.0, harmony))
+
+
+def scan_opus_docs_for_disharmony(
+    workspace: Path,
+    min_severity: str = "low",
+) -> DisharmonyReport:
+    """
+    OPUS-117: Scan OPUS docs for number/content disharmony.
+
+    Args:
+        workspace: Workspace path
+        min_severity: Minimum severity to report
+
+    Returns:
+        DisharmonyReport with doc findings
+    """
+    detector = DisharmonyDetector(workspace)
+    return detector.scan_opus_docs(min_severity=min_severity)
+
+
+def scan_all_for_disharmony(
+    workspace: Path,
+    min_severity: str = "medium",
+) -> DisharmonyReport:
+    """
+    OPUS-117: Unified scan of both code and OPUS docs.
+
+    The fractal holographic lasagne: same patterns at all levels.
+
+    Args:
+        workspace: Workspace path
+        min_severity: Minimum severity to report
+
+    Returns:
+        Combined DisharmonyReport
+    """
+    detector = DisharmonyDetector(workspace)
+    return detector.scan_all(min_severity=min_severity)
+
+
+def get_total_harmony_score(workspace: Path) -> float:
+    """
+    OPUS-117: Get unified harmony score for code AND docs.
+
+    Returns a score from 0.0 (total disharmony) to 1.0 (perfect harmony).
+    """
+    detector = DisharmonyDetector(workspace)
+    report = detector.scan_all(min_severity="low")
+
+    if report.scanned_files == 0:
+        return 1.0
+
+    # Calculate weighted score
+    weights = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+    total_penalty = sum(weights[f.severity] * f.varga_distance for f in report.findings)
+
+    max_penalty = report.scanned_files * 4 * 4
+    harmony = 1.0 - (total_penalty / max_penalty) if max_penalty > 0 else 1.0
+
+    return max(0.0, min(1.0, harmony))
+
+
+# =============================================================================
+# OPUS-117: SUTRA SENSE INTEGRATION
+# =============================================================================
+
+
+def generate_disharmony_triggers(
+    workspace: Path,
+    min_severity: str = "high",
+) -> List[Dict[str, Any]]:
+    """
+    OPUS-117: Generate synaptic triggers from disharmony findings.
+
+    Connects DisharmonyDetector to the synaptic learning system.
+    Critical/high disharmonies become triggers that MANAS can learn from.
+
+    Args:
+        workspace: Workspace path
+        min_severity: Minimum severity to generate triggers
+
+    Returns:
+        List of trigger dictionaries for synaptic processing
+    """
+    detector = DisharmonyDetector(workspace)
+    report = detector.scan_all(min_severity=min_severity)
+
+    triggers = []
+    for finding in report.findings:
+        # Determine if this is a code or doc finding
+        is_doc = finding.path.startswith("docs/architecture/OPUS/")
+
+        trigger_type = "disharmony_doc" if is_doc else "disharmony_code"
+
+        triggers.append(
+            {
+                "trigger": f"trigger:{trigger_type}:{finding.severity}",
+                "canonical": f"trigger:disharmony:{finding.severity}",
+                "path": finding.path,
+                "location_varga": finding.location_varga.name,
+                "content_varga": finding.content_varga.name,
+                "distance": finding.varga_distance,
+                "description": finding.description,
+                "recommendation": finding.recommendation,
+                "evidence": finding.evidence,
+                "suggested_actions": _get_suggested_actions(finding, is_doc),
+            }
+        )
+
+    return triggers
+
+
+def _get_suggested_actions(finding: DisharmonyFinding, is_doc: bool) -> List[str]:
+    """Get suggested actions based on finding type and severity."""
+    if is_doc:
+        if finding.severity in ("critical", "high"):
+            return ["action:renumber_doc", "action:refocus_doc", "action:notify_operator"]
+        return ["action:update_doc", "action:log_diagnostic"]
+    else:
+        if finding.severity in ("critical", "high"):
+            return ["action:refactor_code", "action:move_code", "action:notify_operator"]
+        return ["action:log_diagnostic", "action:create_doc"]
