@@ -52,16 +52,18 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 # OPUS-110: Graph-based duplicate detection via CodeScanner
 from vibe_core.knowledge.code_scanner import CodeScanner
 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
 
-from .base import BaseSense
+# OPUS-117: Fractal Integration - DisharmonyDetector
+from vibe_core.plugins.opus_assistant.manas.disharmony_detector import (
+    DisharmonyDetector,
+)
 
-if TYPE_CHECKING:
-    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+from .base import BaseSense
 
 logger = logging.getLogger("MANAS.Cortex.SutraSense")
 
@@ -364,6 +366,9 @@ class SutraSense(BaseSense):
 
             # 4. OPUS-110: Graph-based duplicate detection
             self._detect_code_duplicates()
+
+            # 5. OPUS-117: Fractal Integration - Disharmony detection
+            self._detect_disharmony()
 
         # Build summary
         gaps_by_type: Dict[str, int] = {}
@@ -695,6 +700,55 @@ class SutraSense(BaseSense):
 
         except Exception as e:
             logger.debug(f"[OPUS-110] CodeScanner error (non-fatal): {e}")
+
+    def _detect_disharmony(self) -> None:
+        """
+        OPUS-117: Fractal Integration - Disharmony detection.
+
+        Uses DisharmonyDetector to find code/docs that are "out of place":
+        - Code in wrong layer (OUTPUT doing KERNEL work)
+        - Docs with wrong number (KERNEL topic in OPUS-085)
+
+        Converts DisharmonyFindings to DocCodeGaps for unified handling.
+        """
+        try:
+            detector = DisharmonyDetector(self._workspace)
+
+            # Scan both code and docs for disharmony
+            report = detector.scan_all(
+                include_code=True,
+                include_docs=True,
+                min_severity="medium",  # Only medium+ to avoid noise
+            )
+
+            # Convert DisharmonyFindings to DocCodeGaps
+            for finding in report.findings:
+                is_doc = finding.path.startswith("docs/architecture/OPUS/")
+                gap_type = "disharmony_doc" if is_doc else "disharmony_code"
+
+                self._gaps.append(
+                    DocCodeGap(
+                        gap_type=gap_type,
+                        severity=finding.severity,
+                        doc_path=Path(finding.path) if is_doc else None,
+                        code_path=Path(finding.path) if not is_doc else None,
+                        description=(
+                            f"Varga Disharmony: {finding.description} "
+                            f"[{finding.location_varga.name}→{finding.content_varga.name}]"
+                        ),
+                        suggested_action=finding.recommendation,
+                    )
+                )
+
+            if report.findings:
+                logger.info(
+                    f"[OPUS-117] DisharmonyDetector found {len(report.findings)} "
+                    f"disharmony issues (code: {sum(1 for f in report.findings if not f.path.startswith('docs/'))} "
+                    f"docs: {sum(1 for f in report.findings if f.path.startswith('docs/'))})"
+                )
+
+        except Exception as e:
+            logger.debug(f"[OPUS-117] DisharmonyDetector error (non-fatal): {e}")
 
     # =========================================================================
     # Intent Generation (YOGA - Filling Gaps)
