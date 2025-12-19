@@ -185,6 +185,11 @@ class IntentRouter:
         self._handlers["harness_stale_reference"] = self._handle_stale_reference
         self._handlers["harness_optional_missing"] = self._handle_optional_missing
 
+        # OPUS-129: Inverse Scan - Coverage gap intents
+        self._handlers["coverage_gap_critical"] = self._handle_coverage_gap
+        self._handlers["coverage_gap_module"] = self._handle_coverage_gap
+        self._handlers["coverage_gap_overall"] = self._handle_coverage_gap
+
         # Doc Creation/Consolidation → SUTRA (OPUS-054 Phase 2)
         self._handlers["create_opus_doc"] = self._handle_create_doc
         self._handlers["roadmap_create_doc"] = self._handle_create_doc
@@ -2045,6 +2050,93 @@ tests:
             "files_missing": files_missing,
             "priority": "trivial",
         }
+
+    def _handle_coverage_gap(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-129: Handle code coverage gap intents.
+
+        These are from the Inverse Scan - code that exists but isn't documented.
+        The handler acknowledges the gap and provides guidance.
+        """
+        intent_type = intent.intent_type
+        logger.info(f"📊 Coverage Gap: {intent.title}")
+
+        action = intent.params.get("action", "unknown")
+
+        if intent_type == "coverage_gap_critical":
+            # Critical undocumented element
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Critical",
+                "action": "gap_identified",
+                "element_type": intent.params.get("element_type"),
+                "name": intent.params.get("name"),
+                "file_path": intent.params.get("file_path"),
+                "complexity": intent.params.get("complexity"),
+                "importance": intent.params.get("importance"),
+                "message": (
+                    f"Critical documentation gap: {intent.params.get('name')} "
+                    f"({intent.params.get('complexity')} {intent.params.get('element_type')}). "
+                    "Consider adding documentation to prevent tech debt."
+                ),
+                "guidance": (
+                    "1. Open the file and read the code\n"
+                    "2. Add a docstring explaining what it does and why\n"
+                    "3. If it's a class, document the public methods\n"
+                    "4. Consider adding to an OPUS doc if it's architecturally significant"
+                ),
+            }
+
+        elif intent_type == "coverage_gap_module":
+            # Module with poor coverage
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Module",
+                "action": "module_gap_identified",
+                "module": intent.params.get("module"),
+                "coverage": intent.params.get("coverage"),
+                "undocumented_elements": intent.params.get("undocumented_elements", []),
+                "message": (
+                    f"Module {intent.params.get('module')} has "
+                    f"{intent.params.get('coverage', 0):.0%} documentation coverage. "
+                    "This creates knowledge silos."
+                ),
+                "guidance": (
+                    "1. Create or update the module-level README/docstring\n"
+                    "2. Document the most complex elements first\n"
+                    "3. Add usage examples where helpful"
+                ),
+            }
+
+        elif intent_type == "coverage_gap_overall":
+            # Overall coverage is failing
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer/Overall",
+                "action": "coverage_alert",
+                "grade": intent.params.get("grade"),
+                "coverage_ratio": intent.params.get("coverage_ratio"),
+                "undocumented_count": intent.params.get("undocumented_count"),
+                "message": (
+                    f"Overall documentation grade: {intent.params.get('grade')}. "
+                    f"{intent.params.get('undocumented_count')} elements undocumented."
+                ),
+                "guidance": (
+                    "Consider scheduling a documentation sprint:\n"
+                    "1. Identify the top 10 most critical undocumented elements\n"
+                    "2. Assign documentation tasks to team members\n"
+                    "3. Set a coverage target (e.g., 80%)\n"
+                    "4. Track progress weekly"
+                ),
+            }
+
+        else:
+            return {
+                "success": True,
+                "handler": "InverseScanAnalyzer",
+                "action": "acknowledged",
+                "message": f"Coverage gap acknowledged: {intent.title}",
+            }
 
 
 def create_execution_callback(
