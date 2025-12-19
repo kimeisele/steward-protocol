@@ -52,7 +52,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 # OPUS-110: Graph-based duplicate detection via CodeScanner
 from vibe_core.knowledge.code_scanner import CodeScanner
@@ -61,13 +61,9 @@ from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
 # OPUS-117: Fractal Integration - DisharmonyDetector
 from vibe_core.plugins.opus_assistant.manas.disharmony_detector import (
     DisharmonyDetector,
-    DisharmonyFinding,
 )
 
 from .base import BaseSense
-
-if TYPE_CHECKING:
-    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
 logger = logging.getLogger("MANAS.Cortex.SutraSense")
 
