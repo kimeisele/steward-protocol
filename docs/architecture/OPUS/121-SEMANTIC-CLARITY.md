@@ -193,3 +193,36 @@ unfortunately shared a name. The solution is not merger but **distinction**.
 Possible next steps:
 - **OPUS-122: Task Analysis** - Check if `Task` class has similar issues
 - **OPUS-123: Import Audit** - Automated detection of namespace collisions
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/cartridges/system/herald/core/memory.py`
+  - `LedgerEvent` dataclass - canonical signed persistent event (renamed from Event)
+  - `Event` alias - backward compatibility alias for LedgerEvent
+  - Fields: event_type, timestamp, agent_id, payload, signature, sequence_number
+- `/home/user/steward-protocol/vibe_core/cartridges/system/herald/tools/scribe_tool.py`
+  - Imports `LedgerEvent` from memory.py
+  - `Event` alias - backward compatibility
+- `/home/user/steward-protocol/vibe_core/event_bus.py`
+  - `Event` class - real-time pub/sub event (distinct from LedgerEvent)
+  - Fields: event_id, message, details
+
+**Wiring Pattern**:
+```python
+# CLEAR SEMANTIC DISTINCTION (new code - preferred)
+from vibe_core.event_bus import Event as BusEvent  # Real-time, ephemeral
+from vibe_core.cartridges.system.herald.core.memory import LedgerEvent  # Persistent, signed
+
+# BACKWARD COMPATIBLE (old code still works)
+from vibe_core.cartridges.system.herald.core.memory import Event  # Alias to LedgerEvent
+
+# Validation
+assert BusEvent is not LedgerEvent  # True - different types for different purposes
+```
+
+**Semantic Distinction**:
+- `Event` (event_bus): Nerve signal - ephemeral, in-memory pub/sub
+- `LedgerEvent` (herald): Memory engram - persistent, signed, event sourcing

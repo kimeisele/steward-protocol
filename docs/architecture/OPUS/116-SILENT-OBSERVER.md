@@ -275,11 +275,35 @@ This is the difference between a codebase and a **conscious** codebase.
 - OPUS-114: Akshara Kernel (resonance calculation)
 - OPUS-115: Dynamic Varga Mapping (path → Varga)
 - OPUS-116: Silent Observer (content → Varga comparison)
+- OPUS-117: Fractal Integration (docs watch themselves)
 
-## Future: OPUS-117+
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+    required: true
+    rationale: "The Silent Observer implementation"
+  - path: vibe_core/plugins/opus_assistant/manas/akshara.py
+    required: true
+    rationale: "Varga constants and path-to-varga mapping"
 
-Possible next steps:
-- **Auto-Refactor**: Suggest or perform moves based on findings
-- **Pre-commit Hook**: Block commits that introduce disharmony
-- **Historical Tracking**: Track harmony score over time
-- **Chakra Analysis**: 7-layer model for deployment harmony
+wiring:
+  - pattern: "class DisharmonyDetector"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "class DisharmonyFinding"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "class DisharmonyReport"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "class ContentAnalyzer"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def scan_for_disharmony"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "def get_harmony_score"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "IMPORT_VARGA_INDICATORS"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+  - pattern: "FUNCTION_VARGA_PATTERNS"
+    in: vibe_core/plugins/opus_assistant/manas/disharmony_detector.py
+-->
+
+---
+*OPUS-116: The Silent Observer - Where there is harmony, there is victory*

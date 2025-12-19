@@ -233,3 +233,51 @@ The system heals itself.
 - OPUS-117: Fractal Integration (pain sensors)
 - OPUS-124: Completing the Circuit (actual execution)
 - OPUS-125: Reflex Arc (connecting sensors to effectors)
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/task_manager/plugin_main.py`
+  - `TaskManagerPlugin._check_disharmony()` - Phase 3 of SENSORS (OPUS-125)
+  - `_finding_to_title()` - converts DisharmonyFinding to task title
+  - `_finding_to_description()` - converts finding to task description
+  - `_task_exists()` - deduplication check
+  - `_handle_sensors()` - includes Phase 3: reflex arc
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/disharmony_detector.py`
+  - `DisharmonyDetector` class - pain sensors
+  - `scan_all()` - scans for disharmony (min_severity filter)
+  - `DisharmonyReport` - collection of findings
+  - `DisharmonyFinding` - individual pain signal
+
+**Wiring Pattern**:
+```python
+# REFLEX ARC (autonomic response - no human in loop)
+detector = DisharmonyDetector(project_root)
+report = detector.scan_all(min_severity="high")  # Only HIGH/CRITICAL pain
+
+for finding in report.findings:
+    # Deduplication
+    if self._task_exists(self._finding_to_title(finding)):
+        continue
+
+    # Create repair task (effector response)
+    task = self.manager.add_task(
+        title=self._finding_to_title(finding),
+        description=self._finding_to_description(finding),
+        type="disharmony_repair",
+        metadata={
+            "source": "reflex_arc",
+            "severity": finding.severity,
+            "path": finding.path,
+            "varga_distance": finding.varga_distance,
+        }
+    )
+```
+
+**Autonomic Loop**:
+```
+DisharmonyDetector (pain) → _check_disharmony() (spinal cord)
+    → add_task() (motor neuron) → execute() (muscle) - NO BRAIN REQUIRED
+```

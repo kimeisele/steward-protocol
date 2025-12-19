@@ -6,11 +6,21 @@ from vibe_core.plugins.opus_assistant.narasimha.definitions import CognitiveThre
 
 @pytest.fixture
 def workspace(tmp_path):
+    """workspace - TODO: Add description.
+
+    Args:
+        tmp_path: Description needed
+    """
     return tmp_path
 
 
 @pytest.fixture
 def manas(workspace):
+    """manas - TODO: Add description.
+
+    Args:
+        workspace: Description needed
+    """
     # Initialize Manas with mock workspace
     kernel = CognitiveKernel(workspace=workspace)
     # Inject mock vibe kernel to avoid complex dependencies if needed,
@@ -19,6 +29,8 @@ def manas(workspace):
 
 
 class MockIntent:
+    """MockIntent - TODO: Add description."""
+
     def __init__(self, title, params):
         self.title = title
         self.params = params

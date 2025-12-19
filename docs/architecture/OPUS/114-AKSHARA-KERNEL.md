@@ -354,3 +354,30 @@ Possible next steps:
 - **Multi-hop Inference**: trigger → action → trigger chains via Akshara
 - **Mantra Sequences**: Common trigger-action patterns as "mantras"
 - **Chakra Integration**: 7-layer model mapping to deployment stages
+
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/opus_assistant/manas/akshara.py
+    required: true
+    rationale: "Complete Akshara Kernel implementation"
+  - path: vibe_core/plugins/opus_assistant/manas/triggers.py
+    required: true
+    rationale: "DharmicRecommendation integration"
+
+wiring:
+  - pattern: "class Varga"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "class Akshara"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "class Varnamala"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "class AksharaGraph"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "def calculate_resonance"
+    in: vibe_core/plugins/opus_assistant/manas/akshara.py
+  - pattern: "DharmicRecommendation"
+    in: vibe_core/plugins/opus_assistant/manas/triggers.py
+-->
+
+---
+*OPUS-114: Of letters, I am 'A' - The Akshara Kernel*

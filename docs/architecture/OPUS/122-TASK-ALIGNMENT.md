@@ -245,3 +245,51 @@ Now each speaks its own truth.
 
 - **OPUS-123**: Import Audit - Automated detection of namespace collisions
 - Consider adding deprecation warnings to aliases in future versions
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/task_types.py`
+  - `TaskStatus` enum - SSOT for all task status values
+  - States: PENDING, IN_PROGRESS, COMPLETED, FAILED, BLOCKED, TIMEOUT, ARCHIVED
+  - `from_string()` - alias support (RUNNING → IN_PROGRESS)
+  - `normalize_status()` - handles legacy formats (lowercase, aliases)
+- `/home/user/steward-protocol/vibe_core/scheduling/task.py`
+  - `DispatchTask` class - message envelope for agent dispatch (renamed from Task)
+  - `Task` alias - backward compatibility
+  - Imports TaskStatus from task_types.py (SSOT)
+- `/home/user/steward-protocol/vibe_core/task_management/models.py`
+  - `Task` class - project tracking card (unchanged name)
+  - `ManagedTask` alias - semantic clarity when used alongside DispatchTask
+  - Imports TaskStatus from task_types.py (SSOT)
+- `/home/user/steward-protocol/vibe_core/plugins/task_manager/state_store.py`
+  - Imports TaskStatus from task_types.py
+  - Lowercase compatibility for JSON storage
+
+**Wiring Pattern**:
+```python
+# SSOT for TaskStatus (all systems import from here)
+from vibe_core.task_types import TaskStatus
+
+# Semantic distinction for Task types
+from vibe_core.scheduling.task import DispatchTask  # Message envelope
+from vibe_core.task_management.models import ManagedTask  # Project card
+
+# Backward compatibility
+from vibe_core.scheduling.task import Task  # Alias to DispatchTask
+assert Task is DispatchTask  # True
+
+# Status normalization
+TaskStatus.from_string("RUNNING")  # → TaskStatus.IN_PROGRESS
+TaskStatus.from_string("pending")  # → TaskStatus.PENDING (uppercase)
+```
+
+**Validation**:
+```python
+from vibe_core.task_types import TaskStatus as TS1
+from vibe_core.scheduling.task import TaskStatus as TS2
+from vibe_core.task_management.models import TaskStatus as TS3
+assert TS1 is TS2 is TS3  # True - all import same SSOT
+```
