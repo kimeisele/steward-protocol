@@ -27,9 +27,15 @@ logger = logging.getLogger("HERALD_MEMORY")
 
 
 @dataclass
-class Event:
+class LedgerEvent:
     """
-    Immutable event representing an action taken by HERALD.
+    OPUS-121: Renamed from Event to LedgerEvent for semantic clarity.
+
+    Immutable, signed event representing an action taken by HERALD.
+    This is the PERSISTENT event type for event sourcing (stored in JSONL ledger).
+
+    NOT to be confused with vibe_core.event_bus.Event which is for
+    real-time, in-memory pub/sub communication.
 
     Attributes:
         event_type: Type of event (content_generated, published, rejected, etc.)
@@ -54,6 +60,11 @@ class Event:
     def to_json(self) -> str:
         """Serialize event to JSON."""
         return json.dumps(self.to_dict(), default=str)
+
+
+# OPUS-121: Backward compatibility alias
+# TODO: Add deprecation warning in future version
+Event = LedgerEvent
 
 
 class EventLog:
@@ -117,7 +128,7 @@ class EventLog:
         self,
         event_type: str,
         payload: Dict[str, Any],
-    ) -> Event:
+    ) -> LedgerEvent:
         """
         Create a new event (not yet committed to ledger).
 
@@ -140,7 +151,7 @@ class EventLog:
 
         return event
 
-    def sign_event(self, event: Event) -> Event:
+    def sign_event(self, event: LedgerEvent) -> LedgerEvent:
         """
         Sign an event with HERALD's cryptographic identity.
 
@@ -176,7 +187,7 @@ class EventLog:
             logger.warning(f"⚠️  Failed to sign event: {e}")
             return event
 
-    def commit(self, event: Event) -> bool:
+    def commit(self, event: LedgerEvent) -> bool:
         """
         Commit an event to the ledger (append-only).
 
@@ -208,7 +219,7 @@ class EventLog:
             logger.error(f"❌ Failed to commit event: {e}")
             return False
 
-    def get_event_by_sequence(self, sequence_number: int) -> Optional[Event]:
+    def get_event_by_sequence(self, sequence_number: int) -> Optional[LedgerEvent]:
         """
         Retrieve a specific event by sequence number.
 
@@ -232,7 +243,7 @@ class EventLog:
             logger.error(f"❌ Failed to retrieve event {sequence_number}: {e}")
             return None
 
-    def get_all_events(self) -> List[Event]:
+    def get_all_events(self) -> List[LedgerEvent]:
         """
         Retrieve all events from the ledger.
 
@@ -254,7 +265,7 @@ class EventLog:
             logger.error(f"❌ Failed to retrieve all events: {e}")
             return events
 
-    def get_events_by_type(self, event_type: str) -> List[Event]:
+    def get_events_by_type(self, event_type: str) -> List[LedgerEvent]:
         """
         Retrieve all events of a specific type.
 
@@ -267,7 +278,7 @@ class EventLog:
         all_events = self.get_all_events()
         return [e for e in all_events if e.event_type == event_type]
 
-    def get_recent_events(self, limit: int = 10) -> List[Event]:
+    def get_recent_events(self, limit: int = 10) -> List[LedgerEvent]:
         """
         Retrieve the most recent events.
 
@@ -337,7 +348,7 @@ class EventLog:
         content: str,
         platform: str,
         context: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Event]:
+    ) -> Optional[LedgerEvent]:
         """
         Record that HERALD generated content.
 
@@ -368,7 +379,7 @@ class EventLog:
         platform: str,
         post_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Event]:
+    ) -> Optional[LedgerEvent]:
         """
         Record that HERALD published content.
 
@@ -399,7 +410,7 @@ class EventLog:
         content: str,
         reason: str,
         violations: Optional[List[str]] = None,
-    ) -> Optional[Event]:
+    ) -> Optional[LedgerEvent]:
         """
         Record that HERALD rejected content due to governance violations.
 
@@ -428,7 +439,7 @@ class EventLog:
         error_type: str,
         error_message: str,
         traceback: Optional[str] = None,
-    ) -> Optional[Event]:
+    ) -> Optional[LedgerEvent]:
         """
         Record a system error.
 
