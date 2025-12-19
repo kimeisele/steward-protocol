@@ -12,7 +12,7 @@ find_plugin_dirs() {
     for dir in vibe_core/plugins/*/; do
         [ -d "$dir" ] || continue
         dirname=$(basename "$dir")
-        
+
         # Skip exclusion list
         if [ "$dirname" == "__pycache__" ] || [ "$dirname" == "_crypto_BACKUP" ] || [ "$dirname" == "plugin_template" ]; then
             continue

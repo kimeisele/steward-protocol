@@ -54,7 +54,7 @@ Environmental Issues (NOT KERNEL)  18 FAILED  ⚠️
   - AF_UNIX socket path length (macOS limit)
   - Missing CLI tool binaries (not core)
   - Missing optional Shiva component (not critical)
-  
+
 OVERALL: 613/631 PASS (97%)
 ```
 

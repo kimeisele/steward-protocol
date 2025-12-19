@@ -78,4 +78,3 @@ Quick Start: python -m vibe_core.cli boot
 - [docs/reports/CLEANUP_PROOF.md](docs/reports/CLEANUP_PROOF.md) — CLEANUP PROOF
 - [docs/reports/GAP_ANALYSIS_REPORT.md](docs/reports/GAP_ANALYSIS_REPORT.md) — GAP ANALYSIS REPORT
 - [docs/reports/GAP_ANALYSIS_V1.md](docs/reports/GAP_ANALYSIS_V1.md) — GAP ANALYSIS V1
-
