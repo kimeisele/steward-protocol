@@ -37,9 +37,11 @@ import logging
 import threading
 import time
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
+
+# OPUS-098: Import StateGuna from canonical location
+from vibe_core.state.guna_classifier import StateGuna
 
 if TYPE_CHECKING:
     from vibe_core.state.prakriti import Prakriti
@@ -48,25 +50,8 @@ logger = logging.getLogger("SYNC_HOLON")
 
 
 # =============================================================================
-# Enums and Data Classes
+# Data Classes
 # =============================================================================
-
-
-class StateGuna(Enum):
-    """
-    The three modes of state (Tri-Guna for State).
-
-    See OPUS-009 TRI-GUNA section. This is about STATE oscillation,
-    not about agents (see OPUS-086 for agent-level Guna classification).
-
-    SATTVA (Balance): State is synced, clean, at rest
-    RAJAS (Activity): State is dirty, changing, active
-    TAMAS (Inertia): State is stale, broken, ignored, dead
-    """
-
-    SATTVA = "sattva"  # Balance - synced, clean
-    RAJAS = "rajas"  # Activity - dirty, changing
-    TAMAS = "tamas"  # Inertia - stale, broken, ignored
 
 
 @dataclass

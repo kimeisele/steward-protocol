@@ -24,6 +24,8 @@ InvalidToken = None
 _cryptography_checked = False
 _cryptography_works = False
 
+from .exceptions import InsufficientFundsError, SecretNotFoundError
+
 logger = logging.getLogger("CIVIC_VAULT")
 
 
@@ -71,18 +73,6 @@ def _check_cryptography_available() -> bool:
 
 class VaultError(Exception):
     """Raised when vault operations fail."""
-
-    pass
-
-
-class InsufficientFundsError(Exception):
-    """Raised when Agent lacks credits to lease a secret."""
-
-    pass
-
-
-class SecretNotFoundError(Exception):
-    """Raised when a secret doesn't exist in the vault."""
 
     pass
 
