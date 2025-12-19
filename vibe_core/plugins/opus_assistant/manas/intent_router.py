@@ -190,6 +190,11 @@ class IntentRouter:
         self._handlers["coverage_gap_module"] = self._handle_coverage_gap
         self._handlers["coverage_gap_overall"] = self._handle_coverage_gap
 
+        # OPUS-132: VivekaSense Triage - Prioritized coverage gap intents
+        self._handlers["triage_p1_critical"] = self._handle_triage
+        self._handlers["triage_p2_high"] = self._handle_triage
+        self._handlers["triage_summary"] = self._handle_triage
+
         # Doc Creation/Consolidation → SUTRA (OPUS-054 Phase 2)
         self._handlers["create_opus_doc"] = self._handle_create_doc
         self._handlers["roadmap_create_doc"] = self._handle_create_doc
@@ -2136,6 +2141,100 @@ tests:
                 "handler": "InverseScanAnalyzer",
                 "action": "acknowledged",
                 "message": f"Coverage gap acknowledged: {intent.title}",
+            }
+
+    def _handle_triage(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-132: Handle VivekaSense triage intents.
+
+        These are prioritized coverage gaps from VivekaSense (P1→P5).
+        Unlike raw coverage_gap intents, these have been discriminated
+        to separate critical from trivial.
+        """
+        intent_type = intent.intent_type
+        logger.info(f"🎯 Triage: {intent.title}")
+
+        if intent_type == "triage_p1_critical":
+            # P1 CRITICAL - needs immediate attention
+            return {
+                "success": True,
+                "handler": "VivekaSense/P1",
+                "action": "triage_critical",
+                "priority": "P1",
+                "element_name": intent.params.get("element_name"),
+                "element_type": intent.params.get("element_type"),
+                "file_path": intent.params.get("file_path"),
+                "line_number": intent.params.get("line_number"),
+                "complexity": intent.params.get("complexity"),
+                "churn_score": intent.params.get("churn_score"),
+                "priority_score": intent.params.get("priority_score"),
+                "message": (
+                    f"🔥 P1 CRITICAL: {intent.params.get('element_name')} "
+                    f"(complexity={intent.params.get('complexity')}, "
+                    f"churn={intent.params.get('churn_score', 0):.2f})"
+                ),
+                "guidance": (
+                    "This is a high-priority documentation gap:\n"
+                    "1. The code is complex AND actively changing\n"
+                    "2. Document IMMEDIATELY to prevent knowledge loss\n"
+                    "3. Focus on the 'why', not just the 'what'\n"
+                    "4. Consider adding to an OPUS doc if architecturally significant"
+                ),
+            }
+
+        elif intent_type == "triage_p2_high":
+            # P2 HIGH - should be addressed soon
+            return {
+                "success": True,
+                "handler": "VivekaSense/P2",
+                "action": "triage_high",
+                "priority": "P2",
+                "element_name": intent.params.get("element_name"),
+                "element_type": intent.params.get("element_type"),
+                "file_path": intent.params.get("file_path"),
+                "complexity": intent.params.get("complexity"),
+                "priority_score": intent.params.get("priority_score"),
+                "message": (f"⚠️ P2 HIGH: {intent.params.get('element_name')} needs documentation this sprint"),
+                "guidance": (
+                    "High-priority but not urgent:\n"
+                    "1. Schedule for documentation in current sprint\n"
+                    "2. Add at minimum a docstring with purpose\n"
+                    "3. If it's a public API, add usage examples"
+                ),
+            }
+
+        elif intent_type == "triage_summary":
+            # Summary of triage findings
+            return {
+                "success": True,
+                "handler": "VivekaSense/Summary",
+                "action": "triage_summary",
+                "p1_count": intent.params.get("p1_count", 0),
+                "p2_count": intent.params.get("p2_count", 0),
+                "p3_count": intent.params.get("p3_count", 0),
+                "total_gaps": intent.params.get("total_gaps", 0),
+                "health_grade": intent.params.get("health_grade", "?"),
+                "message": (
+                    f"📊 Triage Summary: {intent.params.get('p1_count', 0)} P1 + "
+                    f"{intent.params.get('p2_count', 0)} P2 = "
+                    f"{intent.params.get('p1_count', 0) + intent.params.get('p2_count', 0)} "
+                    f"action items (Grade: {intent.params.get('health_grade', '?')})"
+                ),
+                "guidance": (
+                    "VivekaSense discriminated coverage gaps:\n"
+                    "• P1 (Critical): Complex + churning + core\n"
+                    "• P2 (High): Important but less urgent\n"
+                    "• P3-P5: Can wait for normal maintenance\n"
+                    "Focus on P1/P2 first. The rest is noise."
+                ),
+            }
+
+        else:
+            return {
+                "success": True,
+                "handler": "VivekaSense",
+                "action": "acknowledged",
+                "message": f"Triage intent acknowledged: {intent.title}",
             }
 
 

@@ -141,6 +141,14 @@ from vibe_core.plugins.opus_assistant.manas.cortex.veda import (
     VedaPipeline,
 )
 
+# OPUS-132: VIVEKA SENSE (The 5th Sense - Discrimination)
+from vibe_core.plugins.opus_assistant.manas.cortex.viveka_sense import (
+    CoverageGap,
+    TriagePriority,
+    VivekaReport,
+    VivekaSense,
+)
+
 __all__ = [
     # OPUS-099: BaseSense (VEDA-4 auto-discovery)
     "BaseSense",
@@ -217,4 +225,9 @@ __all__ = [
     "GunaSummary",
     "LobotomyReport",
     "handle_prakriti_query",
+    # OPUS-132: VIVEKA SENSE (The 5th Sense - Discrimination)
+    "VivekaSense",
+    "VivekaReport",
+    "CoverageGap",
+    "TriagePriority",
 ]

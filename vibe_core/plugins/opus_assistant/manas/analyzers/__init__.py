@@ -27,6 +27,7 @@ from .contract_analyzer import ContractAnalyzer
 from .doc_harness_analyzer import DocHarnessAnalyzer
 from .pratyaya_analyzer import PratyayaAnalyzer
 from .semantic_analyzer import SemanticAnalyzer
+from .triage_analyzer import TriageAnalyzer
 
 __all__ = [
     "BaseAnalyzer",
@@ -36,4 +37,5 @@ __all__ = [
     "CIMonitorAnalyzer",
     "PratyayaAnalyzer",
     "DocHarnessAnalyzer",
+    "TriageAnalyzer",
 ]
