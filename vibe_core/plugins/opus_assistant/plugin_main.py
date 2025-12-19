@@ -174,48 +174,8 @@ class OpusAssistantPlugin(KernelPlugin):
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
 
     # =========================================================================
-    # OPUS-112: MANAS CAPABILITY GRANT (VEDA-4 Pattern Matching)
+    # OPUS-112: MANAS CAPABILITY REGISTRATION (VEDA-4)
     # =========================================================================
-
-    def on_capability_check(self, kernel: "RealVibeKernel", agent_id: str, capability: str) -> Optional[bool]:
-        """
-        OPUS-112: Grant MANAS system-level capabilities for SYSTEM ACT mode.
-
-        VEDA-4 Compliant: Uses pattern matching instead of manual wiring.
-        When MANAS dispatches to kernel.tool_registry, it needs access to
-        system tools like chronicle.*, envoy.*, etc.
-
-        Args:
-            kernel: The kernel (unused but required by protocol)
-            agent_id: The agent requesting capability
-            capability: The capability being checked
-
-        Returns:
-            True: Explicit allow (MANAS + system pattern)
-            None: No opinion (let other checks decide)
-        """
-        import fnmatch
-
-        # Only grant to MANAS
-        if agent_id != "manas":
-            return None
-
-        # OPUS-112: System tool patterns MANAS needs for SYSTEM ACT
-        # These are auto-discovered tools that MANAS should access
-        MANAS_SYSTEM_PATTERNS = [
-            "chronicle.*",  # Git operations
-            "envoy.*",  # City control, curator, etc.
-            "analyst.*",  # Code/architecture analysis
-            "watchman.*",  # System health
-            "auditor.*",  # Compliance, invariants
-        ]
-
-        for pattern in MANAS_SYSTEM_PATTERNS:
-            if fnmatch.fnmatch(capability, pattern):
-                logger.debug(f"⚡ OPUS-112: MANAS granted '{capability}' (pattern: {pattern})")
-                return True
-
-        return None  # No opinion - let other checks decide
 
     def _register_manas_capabilities(self, kernel: "RealVibeKernel") -> None:
         """
@@ -224,8 +184,8 @@ class OpusAssistantPlugin(KernelPlugin):
         VEDA-4 Compliant: Reads capabilities from manifest.json, not hardcoded.
         This enables MANAS to dispatch to kernel.tool_registry for SYSTEM ACT.
 
-        Note: This is a workaround until kernel_impl.py auto-registers plugin
-        capabilities. The proper fix is in the kernel boot sequence.
+        Note: Kernel auto-registers PLUGIN capabilities. This method registers
+        MANAS specifically because it has its own agent_id distinct from the plugin.
         """
         import json
 
