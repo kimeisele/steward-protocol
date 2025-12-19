@@ -1,27 +1,47 @@
 """
 JsonTaskManager - Plugin-local JSON state store.
 Implements Plugin Sovereignty: Each plugin owns its own state.
+
+OPUS-122: Task Alignment
+========================
+TaskStatus moved to vibe_core/task_types.py (SSOT).
+This file now imports from the canonical location.
+
+BACKWARD COMPATIBILITY:
+This file previously used lowercase status values in JSON storage.
+We maintain lowercase in the JSON files for existing data compatibility,
+but use the canonical UPPERCASE TaskStatus enum internally.
 """
 
 import json
 import logging
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional
+
+# OPUS-122: Import canonical TaskStatus from SSOT
+from vibe_core.task_types import TaskStatus
 
 logger = logging.getLogger("PRANA.TaskManager.State")
 
 
-class TaskStatus(Enum):
-    """Task lifecycle states."""
+# =============================================================================
+# OPUS-122: JSON Storage Value Mapping
+# =============================================================================
+# JSON files use lowercase values for backward compatibility.
+# These mappings convert between canonical TaskStatus and storage format.
+# =============================================================================
 
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    BLOCKED = "blocked"
+
+def _status_to_storage(status: TaskStatus) -> str:
+    """Convert TaskStatus enum to lowercase storage value."""
+    return status.value.lower()
+
+
+def _storage_to_status(value: str) -> TaskStatus:
+    """Convert lowercase storage value to TaskStatus enum."""
+    return TaskStatus(value.upper())
 
 
 @dataclass
@@ -29,16 +49,19 @@ class StoredTask:
     """
     Immutable task representation for JSON storage.
 
-    Note: This is a simplified task model for plugin-local persistence.
-    For the full Task model with topology routing, see task_management.models.Task.
-    For kernel scheduler tasks, see scheduling.task.Task.
+    OPUS-122: Updated references:
+    - For the full Task model with topology routing, see task_management.models.ManagedTask
+    - For kernel scheduler tasks, see scheduling.task.DispatchTask
+    - TaskStatus imported from vibe_core.task_types (SSOT)
+
+    Note: status field stores lowercase values for JSON backward compatibility.
     """
 
     id: str
     title: str
     description: str
     type: str = "general"
-    status: str = TaskStatus.PENDING.value
+    status: str = "pending"  # OPUS-122: lowercase for JSON compat
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: Dict = field(default_factory=dict)
@@ -111,7 +134,7 @@ class JsonTaskManager:
             title=title,
             description=description,
             type=type,
-            status=TaskStatus.PENDING.value,
+            status=_status_to_storage(TaskStatus.PENDING),  # OPUS-122: use mapping
             metadata=metadata or {},
         )
         self.tasks[task_id] = task
@@ -125,15 +148,21 @@ class JsonTaskManager:
 
     def get_next_pending(self) -> Optional[StoredTask]:
         """Get the next pending task (FIFO order)."""
+        pending_value = _status_to_storage(TaskStatus.PENDING)  # OPUS-122
         for task in self.tasks.values():
-            if task.status == TaskStatus.PENDING.value:
+            if task.status == pending_value:
                 return task
         return None
 
     def update_status(self, task_id: str, status: TaskStatus):
         """Update task status and timestamp."""
         if task_id in self.tasks:
-            self.tasks[task_id].status = status.value if isinstance(status, TaskStatus) else status
+            # OPUS-122: Convert to lowercase storage format
+            if isinstance(status, TaskStatus):
+                self.tasks[task_id].status = _status_to_storage(status)
+            else:
+                # Handle string input - normalize and convert
+                self.tasks[task_id].status = status.lower()
             self.tasks[task_id].updated_at = datetime.utcnow().isoformat()
             self._save()
             logger.info(f"🔄 Task {task_id} → {self.tasks[task_id].status}")
@@ -146,7 +175,11 @@ class JsonTaskManager:
 
     def get_tasks_by_status(self, status: TaskStatus) -> List[StoredTask]:
         """Filter tasks by status."""
-        status_val = status.value if isinstance(status, TaskStatus) else status
+        # OPUS-122: Convert to lowercase storage format for comparison
+        if isinstance(status, TaskStatus):
+            status_val = _status_to_storage(status)
+        else:
+            status_val = status.lower()
         return [t for t in self.tasks.values() if t.status == status_val]
 
     def delete_task(self, task_id: str):
