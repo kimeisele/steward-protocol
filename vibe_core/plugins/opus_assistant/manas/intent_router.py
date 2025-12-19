@@ -39,8 +39,14 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.loaders import ActionLoader, ToolLoader
 
-from .intent_generator import Intent
+from .intent_generator import Intent, IntentRisk
 from .validator import SrutiValidator
+
+# OPUS-112: Tool dispatch imports
+try:
+    from vibe_core.tools.tool_protocol import ToolCall
+except ImportError:
+    ToolCall = None  # type: ignore
 
 logger = logging.getLogger("MANAS.IntentRouter")
 
@@ -584,14 +590,124 @@ class IntentRouter:
             # Don't crash - fall back to legacy
             return None
 
+    # =========================================================================
+    # OPUS-112: SYNAPTIC BRIDGE - Direct Tool Dispatch
+    # =========================================================================
+
+    def _try_tool_dispatch(self, intent: Intent) -> Optional[RouteResult]:
+        """
+        OPUS-112: Try to dispatch via kernel.tool_registry (SYSTEM ACT mode).
+
+        This is the SYNAPTIC BRIDGE - MANAS can directly execute tools
+        registered in the kernel's tool registry (envoy.*, chronicle.*, etc.)
+
+        POLICY (Dharma Decision):
+        - IntentRisk.SAFE → Direct dispatch allowed (SYSTEM ACT)
+        - IntentRisk.LOW → Direct dispatch allowed (SYSTEM ACT)
+        - IntentRisk.MEDIUM/HIGH → Should go through ENVOY (USER ACT)
+
+        Returns:
+            RouteResult if tool found and executed, None to fall back
+        """
+        # 1. Check if kernel is available
+        if self._kernel is None:
+            return None
+
+        # 2. Check if tool_registry is available
+        tool_registry = getattr(self._kernel, "tool_registry", None)
+        if tool_registry is None:
+            return None
+
+        # 3. DHARMA POLICY: Only allow direct dispatch for SAFE/LOW risk intents
+        if intent.risk not in (IntentRisk.SAFE, IntentRisk.LOW):
+            logger.info(
+                f"🛡️ [DHARMA] Intent {intent.intent_type} is {intent.risk.value} risk - "
+                f"skipping direct dispatch (should use ENVOY)"
+            )
+            return None
+
+        # 4. Check if intent has an action_id that matches a tool
+        action_id = intent.params.get("action_id") or intent.intent_type
+        tool = tool_registry.get(action_id)
+
+        if tool is None:
+            # No matching tool in registry
+            return None
+
+        # 5. Execute via tool registry (SYSTEM ACT mode)
+        logger.info(f"⚡ [SYNAPTIC] Direct dispatch: {action_id} (SYSTEM ACT)")
+
+        try:
+            if ToolCall is None:
+                logger.warning("⚠️ ToolCall not available - cannot dispatch")
+                return None
+
+            call = ToolCall(
+                tool_name=action_id,
+                parameters=intent.params,
+                caller_agent_id="manas",  # MANAS as system actor
+            )
+
+            result = tool_registry.execute(call)
+
+            # 6. Log SYSTEM ACT to journal
+            self._log_system_act(intent, action_id, result)
+
+            return RouteResult(
+                success=result.success,
+                handler=f"tool_registry/{action_id}",
+                result={
+                    "success": result.success,
+                    "output": result.output,
+                    "error": result.error,
+                    "mode": "SYSTEM_ACT",
+                },
+                error=result.error,
+            )
+
+        except Exception as e:
+            logger.error(f"❌ [SYNAPTIC] Tool dispatch failed: {e}")
+            return None
+
+    def _log_system_act(self, intent: Intent, tool_name: str, result: Any) -> None:
+        """
+        Log SYSTEM ACT to journal (system_journal.jsonl).
+
+        OPUS-112: When MANAS executes a tool directly, it must be logged
+        as SYSTEM ACT (not User Command) for audit trail.
+        """
+        try:
+            journal_path = self._workspace / ".opus_state" / "system_journal.jsonl"
+            journal_path.parent.mkdir(parents=True, exist_ok=True)
+
+            entry = {
+                "timestamp": datetime.now().isoformat(),
+                "type": "SYSTEM_ACT",
+                "actor": "manas",
+                "intent_id": intent.id,
+                "intent_type": intent.intent_type,
+                "tool": tool_name,
+                "success": getattr(result, "success", False),
+                "risk": intent.risk.value if hasattr(intent.risk, "value") else str(intent.risk),
+            }
+
+            with open(journal_path, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+
+            logger.debug(f"📜 SYSTEM ACT logged: {tool_name}")
+
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to log SYSTEM ACT: {e}")
+
     def route(self, intent: Intent) -> RouteResult:
         """
         Route an intent to the appropriate cortex module.
 
-        OPUS-101: HYBRID ROUTER STRATEGY
-        1. First try ActionLoader (VEDA-4 auto-discovered actions)
-        2. Fall back to legacy handlers if not found
-        3. Final fallback to prefix matching
+        OPUS-112 HYBRID ROUTER STRATEGY:
+        1. Try kernel.tool_registry (SYSTEM ACT - SAFE/LOW risk only)
+        2. Try ActionLoader (VEDA-4 auto-discovered actions)
+        3. Fall back to legacy handlers if not found
+        4. Final fallback to prefix matching
 
         Args:
             intent: The intent to route
@@ -602,7 +718,13 @@ class IntentRouter:
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
 
-        # OPUS-101: Try ActionLoader FIRST (VEDA-4 auto-discovery)
+        # OPUS-112: Try kernel.tool_registry FIRST (SYNAPTIC BRIDGE)
+        # Only for SAFE/LOW risk intents (SYSTEM ACT mode)
+        tool_result = self._try_tool_dispatch(intent)
+        if tool_result is not None:
+            return tool_result
+
+        # OPUS-101: Try ActionLoader (VEDA-4 auto-discovery)
         action_result = self._try_action_loader(intent)
         if action_result is not None:
             return action_result
