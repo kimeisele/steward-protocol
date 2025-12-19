@@ -20,13 +20,9 @@ from typing import Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
+from .exceptions import InsufficientFundsError
+
 logger = logging.getLogger("CIVIC_LEDGER")
-
-
-class InsufficientFundsError(Exception):
-    """Raised when an agent lacks sufficient credits."""
-
-    pass
 
 
 @dataclass
