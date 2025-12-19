@@ -369,6 +369,91 @@ PATH_VARGA_PATTERNS: Dict[Varga, List[str]] = {
 }
 
 
+# =============================================================================
+# OPUS-117: OPUS DOCUMENT NUMBER → VARGA MAPPING - Fractal Integration
+# =============================================================================
+
+# OPUS doc number ranges mapped to Vargas
+# This enables DisharmonyDetector to watch the watchers
+OPUS_DOC_VARGA_RANGES: Dict[Tuple[int, int], Varga] = {
+    # 000-019: KANTHYA (Kernel/Foundation)
+    # Core system design, extraction, boot sequence, unification
+    (0, 19): Varga.KANTHYA,
+    # 020-039: MURDHANYA (Hardening/Repair)
+    # Security audits, container migration, test architecture
+    (20, 39): Varga.MURDHANYA,
+    # 040-059: TALAVYA (Cognition/MANAS)
+    # VEDA framework, MANAS cognitive architecture, SUTRA
+    (40, 59): Varga.TALAVYA,
+    # 060-079: DANTYA (Interface/Flow)
+    # DRISHTI, VAJRA wiring, JNANA, interface patterns
+    (60, 79): Varga.DANTYA,
+    # 080-108: OSHTHYA (Output/Future)
+    # Runtime state, cognitive circuits, autonomy loop
+    (80, 108): Varga.OSHTHYA,
+}
+
+
+def map_opus_doc_to_varga(doc_number: int) -> Varga:
+    """
+    OPUS-117: Map an OPUS document number to its Varga.
+
+    The OPUS doc numbering scheme encodes the layer:
+    - 000-019: KANTHYA (Kernel/Foundation)
+    - 020-039: MURDHANYA (Hardening/Repair)
+    - 040-059: TALAVYA (Cognition/MANAS)
+    - 060-079: DANTYA (Interface/Flow)
+    - 080-108: OSHTHYA (Output/Future)
+
+    Args:
+        doc_number: OPUS document number (0-108)
+
+    Returns:
+        The Varga for this document range
+    """
+    for (min_num, max_num), varga in OPUS_DOC_VARGA_RANGES.items():
+        if min_num <= doc_number <= max_num:
+            return varga
+    # Default: OSHTHYA for numbers > 108
+    return Varga.OSHTHYA
+
+
+def get_opus_doc_layer(doc_number: int) -> str:
+    """Get the layer name for an OPUS document."""
+    return VARGA_LAYERS[map_opus_doc_to_varga(doc_number)]
+
+
+def get_opus_doc_akshara(doc_number: int) -> Akshara:
+    """Get the representative Akshara for an OPUS document."""
+    varga = map_opus_doc_to_varga(doc_number)
+    varnamala = Varnamala.get()
+    nasal = varnamala.get_nasal(varga)
+    return nasal if nasal else varnamala.get_varga(varga)[0]
+
+
+def extract_opus_doc_number(path: str) -> Optional[int]:
+    """
+    Extract OPUS document number from a path.
+
+    Matches patterns like:
+    - docs/architecture/OPUS/054-SUTRA.md → 54
+    - 116-SILENT-OBSERVER.md → 116
+
+    Args:
+        path: File path
+
+    Returns:
+        Document number or None if not an OPUS doc
+    """
+    import re
+
+    # Look for NNN- pattern in the filename
+    match = re.search(r"(\d{3})-.*\.md$", path)
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def map_path_to_varga(path: str) -> Varga:
     """
     OPUS-115: Dynamically derive Varga from file path.
@@ -472,6 +557,16 @@ TRIGGER_VARGA_MAP: Dict[str, Varga] = {
     "trigger:sutra:missing_harness": Varga.DANTYA,
     # OUTPUT (Oshthya) - Misc triggers (file_changed now uses dynamic mapping!)
     "trigger:karma_low": Varga.OSHTHYA,
+    # OPUS-117: DISHARMONY TRIGGERS (Silent Observer)
+    # Disharmony triggers are REPAIR layer - they need fixing
+    "trigger:disharmony:critical": Varga.MURDHANYA,
+    "trigger:disharmony:high": Varga.MURDHANYA,
+    "trigger:disharmony:medium": Varga.MURDHANYA,
+    "trigger:disharmony:low": Varga.MURDHANYA,
+    "trigger:disharmony_code:critical": Varga.MURDHANYA,
+    "trigger:disharmony_code:high": Varga.MURDHANYA,
+    "trigger:disharmony_doc:critical": Varga.MURDHANYA,
+    "trigger:disharmony_doc:high": Varga.MURDHANYA,
 }
 
 # Map action categories to Vargas
@@ -496,6 +591,14 @@ ACTION_VARGA_MAP: Dict[str, Varga] = {
     "action:notify_operator": Varga.OSHTHYA,
     "action:escalate_to_operator": Varga.OSHTHYA,
     "action:report_to_operator": Varga.OSHTHYA,
+    # OPUS-117: DISHARMONY ACTIONS (Silent Observer)
+    # Refactoring and moving are REPAIR operations
+    "action:refactor_code": Varga.MURDHANYA,
+    "action:move_code": Varga.MURDHANYA,
+    # Doc operations are INTERFACE layer
+    "action:renumber_doc": Varga.DANTYA,
+    "action:refocus_doc": Varga.DANTYA,
+    "action:update_doc": Varga.DANTYA,
 }
 
 
