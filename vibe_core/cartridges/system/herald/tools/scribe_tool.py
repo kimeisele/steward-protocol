@@ -23,21 +23,25 @@ from vibe_core.tools.tool_protocol import Tool, ToolResult
 if TYPE_CHECKING:
     from vibe_core.io_service import KernelIOService
 
-# Import Event with absolute path
+# OPUS-121: Import LedgerEvent (renamed from Event for semantic clarity)
 try:
-    from vibe_core.cartridges.system.herald.core.memory import Event
+    from vibe_core.cartridges.system.herald.core.memory import LedgerEvent
 except ImportError:
-    # Fallback: define minimal Event dataclass for testing
+    # Fallback: define minimal LedgerEvent dataclass for testing
     from dataclasses import dataclass
 
     @dataclass
-    class Event:
+    class LedgerEvent:
         event_type: str
         timestamp: str
         agent_id: str
         payload: Dict[str, Any]
         signature: Optional[str] = None
         sequence_number: Optional[int] = None
+
+
+# Backward compatibility alias
+Event = LedgerEvent
 
 
 logger = logging.getLogger("HERALD_SCRIBE")

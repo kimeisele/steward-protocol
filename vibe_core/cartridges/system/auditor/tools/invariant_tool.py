@@ -66,8 +66,22 @@ class InvariantRule:
 
 
 @dataclass
-class InvariantViolation:
-    """Record of a single invariant violation"""
+class AuditViolation:
+    """
+    Record of a single audit violation (from event stream analysis).
+
+    OPUS-118: Renamed from InvariantViolation to avoid confusion with
+    vibe_core.circuit_types.InvariantViolation which is for circuit
+    state invariants. This class is for EVENT STREAM auditing.
+
+    Fields:
+        invariant_name: Name of the audit rule that was violated
+        severity: Severity level (CRITICAL, HIGH, MEDIUM, LOW)
+        timestamp: When the violation was detected
+        message: Human-readable violation message
+        violated_events: Indices of events that caused the violation
+        context: Additional context for debugging
+    """
 
     invariant_name: str
     severity: str
@@ -80,16 +94,20 @@ class InvariantViolation:
         return asdict(self)
 
 
+# Backward compatibility alias
+InvariantViolation = AuditViolation
+
+
 class VerificationReport:
     """Report from invariant verification"""
 
     def __init__(self):
         self.passed = True
-        self.violations: List[InvariantViolation] = []
+        self.violations: List[AuditViolation] = []
         self.checked_events = 0
         self.timestamp = datetime.now(timezone.utc).isoformat()
 
-    def add_violation(self, violation: InvariantViolation):
+    def add_violation(self, violation: AuditViolation):
         """Record a violation"""
         self.violations.append(violation)
         # Any CRITICAL or HIGH violation fails the check
@@ -628,7 +646,7 @@ class InvariantEngine(Tool):
             passed, message = rule.check(events)
 
             if not passed:
-                violation = InvariantViolation(
+                violation = AuditViolation(
                     invariant_name=rule_name,
                     severity=rule.severity.value,
                     timestamp=datetime.now(timezone.utc).isoformat(),
@@ -670,7 +688,8 @@ def get_judge() -> InvariantEngine:
 __all__ = [
     "InvariantEngine",
     "InvariantRule",
-    "InvariantViolation",
+    "AuditViolation",
+    "InvariantViolation",  # Backward compatibility alias for AuditViolation
     "VerificationReport",
     "InvariantSeverity",
     "get_judge",
