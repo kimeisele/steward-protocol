@@ -49,6 +49,7 @@ wiring:
 
 from __future__ import annotations
 
+import ast
 import logging
 from dataclasses import dataclass, field
 from enum import IntEnum
@@ -205,7 +206,11 @@ class VivekaSense(BaseSense):
         """
         Detect undocumented code elements (raw, no prioritization).
 
-        Uses InverseScanAnalyzer or SutraSense's discover_hidden_code().
+        Uses SutraSense's discover_hidden_code() but FILTERS to only
+        include elements that actually lack Python docstrings.
+
+        This is the key calibration: "undocumented" = no docstring in code,
+        NOT "not mentioned in markdown docs".
         """
         try:
             # Try to use SutraSense's discover_hidden_code() first
@@ -214,21 +219,69 @@ class VivekaSense(BaseSense):
             sutra = SutraSense(workspace=self._workspace)
             hidden = sutra.discover_hidden_code()
 
-            # HiddenCode is a dataclass, not a dict - use attribute access
-            return [
-                {
-                    "file_path": str(item.file_path),
-                    "element_name": item.name,
-                    "element_type": item.element_type,
-                    "line_number": item.line_number,
-                    "complexity": item.complexity,
-                    "importance": item.importance,
-                }
-                for item in hidden
-            ]
+            # CRITICAL: Filter to only elements that ACTUALLY lack docstrings
+            # This is the sensor calibration fix - we only report real gaps
+            result = []
+            for item in hidden:
+                if not self._has_docstring(
+                    str(item.file_path),
+                    item.name,
+                    item.element_type,
+                ):
+                    result.append(
+                        {
+                            "file_path": str(item.file_path),
+                            "element_name": item.name,
+                            "element_type": item.element_type,
+                            "line_number": item.line_number,
+                            "complexity": item.complexity,
+                            "importance": item.importance,
+                        }
+                    )
+
+            logger.info(f"VivekaSense: {len(hidden)} candidates → {len(result)} actual gaps (filtered by docstring)")
+            return result
         except Exception as e:
             logger.warning(f"SutraSense fallback: {e}")
             return []
+
+    def _has_docstring(self, file_path: str, element_name: str, element_type: str) -> bool:
+        """
+        Check if an element has a Python docstring using AST.
+
+        This is the ground truth check - does the code ACTUALLY have documentation?
+        """
+        try:
+            path = Path(file_path)
+            if not path.exists():
+                return False
+
+            code = path.read_text()
+            tree = ast.parse(code)
+
+            for node in ast.walk(tree):
+                is_match = False
+
+                if element_type in ("function", "method"):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        if node.name == element_name:
+                            is_match = True
+                elif element_type == "class":
+                    if isinstance(node, ast.ClassDef):
+                        if node.name == element_name:
+                            is_match = True
+
+                if is_match:
+                    # Check for docstring (first statement is Expr with string Constant)
+                    if node.body and isinstance(node.body[0], ast.Expr):
+                        if isinstance(node.body[0].value, ast.Constant):
+                            if isinstance(node.body[0].value.value, str):
+                                return True
+                    return False
+
+            return False  # Element not found
+        except Exception:
+            return False  # Assume no docstring on parse error
 
     def _get_churn_data(self) -> Dict[str, float]:
         """Get file churn scores from KarmaSense."""
