@@ -72,6 +72,7 @@ class UnifiedCLI:
             "update": self.cmd_update,
             "install": self.cmd_install,  # Alias for update (semantic clarity)
             "chat": self.cmd_chat,  # OPUS-042: SAMVADA - Human-MANAS dialogue
+            "observe": self.cmd_observe,  # OPUS-108: Observer Loop - MANAS cognition monitor
         }
 
         # OPUS-075: MANAS HIL Bridge commands
@@ -521,6 +522,158 @@ class UnifiedCLI:
     def cmd_install(self, args: List[str]) -> int:
         """Alias for cmd_update - semantic clarity for new installations."""
         return self.cmd_update(args)
+
+    # =========================================================================
+    # OPUS-108: OBSERVER LOOP - Real-Time MANAS Cognition Monitor
+    # =========================================================================
+
+    def cmd_observe(self, args: List[str]) -> int:
+        """
+        OPUS-108: Observer Loop - Live Monitoring of MANAS Cognition.
+
+        Directly taps into cognitive state files to show what MANAS is thinking.
+        NO FAKE DASHBOARDS. Raw intents and state.
+
+        This is the OPERATOR CONTROL PANEL - not for humans, for the CLI Operator
+        (Claude Code, automated systems) to observe MANAS before approving actions.
+
+        Usage:
+            steward observe              # Single snapshot
+            steward observe --live       # Continuous monitoring (tail -f mode)
+            steward observe --interval 5 # Custom refresh interval
+            steward observe --raw        # Raw JSON output
+        """
+        import time
+        from datetime import datetime
+
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+
+        parser = argparse.ArgumentParser(prog="steward observe")
+        parser.add_argument("--live", action="store_true", help="Continuous monitoring mode")
+        parser.add_argument("--interval", type=int, default=2, help="Refresh interval in seconds")
+        parser.add_argument("--raw", action="store_true", help="Raw JSON output (machine-readable)")
+        parsed_args, _ = parser.parse_known_args(args)
+
+        console = Console()
+
+        def render_frame() -> None:
+            """Render a single observation frame."""
+            # 1. Load Intent Queue (Sankalpa - The Will)
+            intent_path = Path(".opus_state/manas_intents.json")
+            if intent_path.exists():
+                try:
+                    intents = json.loads(intent_path.read_text())
+                except Exception as e:
+                    intents = {"error": str(e)}
+            else:
+                intents = []
+
+            # 2. Load Memory State (Smriti - The Memory)
+            memory_path = Path(".opus_state/manas_memory.json")
+            if memory_path.exists():
+                try:
+                    memory = json.loads(memory_path.read_text())
+                except Exception:
+                    memory = {}
+            else:
+                memory = {}
+
+            # 3. Load Synaptic Weights (if exists)
+            synapse_path = Path(".opus_state/synapses.json")
+            if synapse_path.exists():
+                try:
+                    synapses = json.loads(synapse_path.read_text())
+                except Exception:
+                    synapses = {"schema": "v1", "weights": {}}
+            else:
+                synapses = {"schema": "v1", "weights": {}}
+
+            # 4. Load Session State
+            session_path = Path(".opus_state/session.json")
+            session = {}
+            if session_path.exists():
+                try:
+                    session = json.loads(session_path.read_text())
+                except Exception:
+                    pass
+
+            # RAW MODE: Just dump JSON
+            if parsed_args.raw:
+                output = {
+                    "timestamp": datetime.now().isoformat(),
+                    "intents": intents,
+                    "memory": memory,
+                    "synapses": synapses,
+                    "session": session,
+                }
+                print(json.dumps(output, indent=2, default=str))
+                return
+
+            # FORMATTED MODE: Rich console output
+            console.clear()
+            console.rule(f"[bold red]MANAS OBSERVER CONTROL :: {datetime.now().strftime('%H:%M:%S')}")
+
+            # Session Status Panel
+            session_status = session.get("status", "UNKNOWN")
+            focus = session.get("current_focus", "None")
+            console.print(
+                Panel(
+                    f"Status: {session_status}\nFocus: {focus}", title="[bold blue]Session State", border_style="blue"
+                )
+            )
+
+            # Intent Queue Table
+            table = Table(title="Intent Queue (Sankalpa)", show_header=True, header_style="bold magenta")
+            table.add_column("ID", style="dim", width=10)
+            table.add_column("Type", width=15)
+            table.add_column("Description", width=40)
+            table.add_column("Status", justify="center", width=12)
+
+            if isinstance(intents, list):
+                for intent in intents[:10]:  # Limit display
+                    i_id = str(intent.get("id", "???"))[:10]
+                    i_type = intent.get("type", intent.get("intent_type", "unknown"))
+                    i_desc = intent.get("description", intent.get("title", str(intent)))[:40]
+                    i_status = intent.get("status", "PENDING")
+
+                    status_color = (
+                        "green"
+                        if i_status in ("COMPLETED", "completed")
+                        else "yellow"
+                        if i_status in ("PENDING", "pending")
+                        else "red"
+                    )
+                    table.add_row(i_id, i_type, i_desc, f"[{status_color}]{i_status}[/{status_color}]")
+
+                if len(intents) > 10:
+                    table.add_row("...", f"+{len(intents) - 10} more", "", "")
+            else:
+                table.add_row("-", "Error/Empty", str(intents)[:40], "[dim]N/A[/dim]")
+
+            console.print(table)
+
+            # Synapse Count
+            weight_count = len(synapses.get("weights", {}))
+            console.print(
+                f"\n[dim]Synaptic Connections: {weight_count} | Interval: {parsed_args.interval}s | Ctrl+C to exit[/dim]"
+            )
+
+        try:
+            if parsed_args.live:
+                while True:
+                    render_frame()
+                    time.sleep(parsed_args.interval)
+            else:
+                render_frame()
+                return 0
+        except KeyboardInterrupt:
+            console.print("\n[bold red]Observer disconnected.[/bold red]")
+            return 0
+        except Exception as e:
+            print(f"❌ OBSERVER ERROR: {e}")
+            return 1
 
     # =========================================================================
     # OPUS-042: SAMVADA - Human-MANAS Real-Time Dialogue
