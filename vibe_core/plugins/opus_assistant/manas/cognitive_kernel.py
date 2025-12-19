@@ -327,7 +327,17 @@ class CognitiveKernel(CognitiveCycle):
         self._observation_logger = None
         self._init_observation_logger()
 
-        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
+        # 🧠 OPUS-112: SYNAPTIC MEMORY - The Reading Brain
+        # Inference engine for experience-based decision making
+        from .triggers import SynapticMemory
+
+        self._synaptic_memory = SynapticMemory.get(self._workspace)
+        logger.info(
+            f"🧠 OPUS-112: Synaptic Memory initialized "
+            f"({self._synaptic_memory.get_stats()['total_connections']} connections)"
+        )
+
+        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference)")
 
     # =========================================================================
     # 🧠 SEMANTIC ENGINE: INTELLIGENCE UPGRADE (OPUS-096)
@@ -1838,18 +1848,20 @@ class CognitiveKernel(CognitiveCycle):
 
     def _prioritize_survival(self, intents: List[Intent]) -> List[Intent]:
         """
-        OPUS-035: Prioritize survival over growth.
+        OPUS-035 + OPUS-112: Prioritize by survival, then by experience.
 
-        Sort intents so that CRITICAL/HIGH priority (50% - repairs)
-        come before LOW priority (51% - genesis).
+        Sort intents by:
+        1. Priority (CRITICAL > HIGH > MEDIUM > LOW)
+        2. Repair vs Genesis (repairs first)
+        3. OPUS-112: Synaptic confidence (learned experience)
 
-        Philosophy: First survive, then thrive.
+        Philosophy: First survive, then thrive, then trust experience.
 
         Args:
             intents: List of intents to prioritize
 
         Returns:
-            Sorted list with survival intents first
+            Sorted list with survival intents first, boosted by learned weights
         """
         # Define priority order: CRITICAL > HIGH > MEDIUM > LOW
         priority_order = {
@@ -1859,14 +1871,60 @@ class CognitiveKernel(CognitiveCycle):
             IntentPriority.LOW: 3,
         }
 
-        # Also prioritize contract violations (50%) over semantic gaps (51%)
+        # OPUS-112: Get synaptic confidence for each intent
+        def get_synaptic_boost(intent: Intent) -> float:
+            """Get confidence boost from learned experience (0.0 - 1.0)."""
+            try:
+                return self._synaptic_memory.get_confidence(intent)
+            except Exception:
+                return 0.5  # Neutral if memory unavailable
+
+        # Sort by: priority, repair status, synaptic confidence (inverted), created_at
         def sort_key(intent: Intent) -> tuple:
             pri = priority_order.get(intent.priority, 99)
             # Contract intents (repairs) come before semantic (genesis)
             is_repair = 0 if intent.intent_type.startswith("contract_") else 1
-            return (pri, is_repair, intent.created_at)
+            # OPUS-112: Higher synaptic confidence = lower sort value (comes first)
+            # We invert because lower values sort first
+            synaptic_boost = 1.0 - get_synaptic_boost(intent)
+            return (pri, is_repair, synaptic_boost, intent.created_at)
 
         return sorted(intents, key=sort_key)
+
+    def consult_synapses(self, trigger: str) -> List[Dict[str, Any]]:
+        """
+        OPUS-112: Consult synaptic memory for recommended actions.
+
+        Public API for querying learned experience.
+
+        Args:
+            trigger: Canonical trigger string (e.g., "trigger:test_failure")
+
+        Returns:
+            List of dicts with action recommendations, sorted by weight
+        """
+        recommendations = self._synaptic_memory.consult(trigger)
+        return [
+            {
+                "action": rec.action,
+                "weight": rec.weight,
+                "confidence": rec.confidence_level,
+                "trigger": rec.trigger,
+            }
+            for rec in recommendations
+        ]
+
+    def get_synaptic_confidence(self, intent: Intent) -> float:
+        """
+        OPUS-112: Get learned confidence for an intent.
+
+        Args:
+            intent: The intent to check
+
+        Returns:
+            Confidence score (0.0 - 1.0), 0.5 if no experience
+        """
+        return self._synaptic_memory.get_confidence(intent)
 
     def _karma_allows_auto_execute(self, intent: Intent) -> bool:
         """
