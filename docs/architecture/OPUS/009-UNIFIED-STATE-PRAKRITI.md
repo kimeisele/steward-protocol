@@ -108,20 +108,18 @@ wiring:
   # === KERNEL INTEGRATION ===
   - pattern: "self\\.prakriti"
     in: vibe_core/kernel_impl.py
-  - pattern: "prakriti\\.commit_if_dirty"
+  - pattern: "prakriti\\.begin_session"
     in: vibe_core/kernel_impl.py
-  - pattern: "self\\.sync_holon"
+  - pattern: "prakriti\\.end_session"
     in: vibe_core/kernel_impl.py
 
   # === STATE FILE TRACKING (Plugin Discovery) ===
   # Every plugin with state MUST have its state tracked
   - pattern: "\\.opus_state"
-    in: vibe_core/plugins/opus_assistant/plugin_main.py
-  - pattern: "\\.vibe/state"
+    in: vibe_core/plugins/opus_assistant/manifest.json
+  - pattern: "tasks_dir.*\\.vibe"
     in: vibe_core/task_management/task_manager.py
   # PluginStateContract implementations
-  - pattern: "def get_state_paths"
-    in: vibe_core/state/sync_holon.py
   - pattern: "def get_state_paths"
     in: vibe_core/state/sync_holon.py
 
@@ -156,8 +154,7 @@ config:
   - section: state_management
   - section: persona_storage
   - section: guardrails.ui_files
-  - section: prakriti.guna_thresholds
-    rationale: "Configurable thresholds for Sattva/Rajas/Tamas detection"
+  # Note: prakriti.guna_thresholds planned but not yet implemented
 
 semantic:
   # === API COMPLETENESS ===

@@ -18,11 +18,11 @@ files:
     required: true
   - path: vibe_core/state/__init__.py
     required: true
-  # OpusRenderer (will be modified)
-  - path: vibe_core/plugins/interface/renderers/opus/opus_renderer.py
+  # OpusDashboardRenderer (will be modified)
+  - path: vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py
     required: true
 tests:
-  - python scripts/ci/test_kernel_boot.py
+  - scripts/ci/test_kernel_boot.py
 wiring:
   # Prakriti session management
   - pattern: "def begin_session"
