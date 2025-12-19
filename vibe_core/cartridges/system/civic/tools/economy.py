@@ -24,16 +24,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from .exceptions import InsufficientFundsError
+
 logger = logging.getLogger("CIVIC_BANK")
 
 # Vault will be imported lazily to avoid circular imports
 vault = None
-
-
-class InsufficientFundsError(Exception):
-    """Raised when an agent lacks sufficient credits for a transaction."""
-
-    pass
 
 
 class CivicBank:
