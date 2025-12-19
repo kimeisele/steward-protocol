@@ -200,3 +200,32 @@ This is the difference between:
 - OPUS-108: Initial Synapses (created synapses.json)
 - OPUS-110: Synaptic Learning Loop (Hebbian learning)
 - OPUS-112: Future - Synaptic Routing (use learned weights for intent selection)
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/triggers.py`
+  - `TriggerPatterns` enum - canonical trigger vocabulary
+  - `ActionPatterns` enum - canonical action vocabulary
+  - `normalize_trigger()` - normalizes intents to canonical patterns
+  - `normalize_file_path()` - maps file paths to trigger buckets
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py`
+  - `_extract_trigger()` - uses TriggerRegistry for normalization
+  - `_update_synapses()` - updates synaptic weights (returns None for non-canonical)
+
+**Wiring Pattern**:
+```python
+# Intent arrives → normalize → extract trigger → update synapses
+intent = Intent(intent_type='file_changed', params={'path': 'vibe_core/foo.py'})
+trigger = normalize_trigger(intent)  # → TriggerPatterns.FILE_CHANGED_CORE
+if trigger:
+    self._update_synapses(intent, success=True)  # Only canonical triggers are learned
+```
+
+**Validation**:
+```bash
+python -c "from vibe_core.plugins.opus_assistant.manas.triggers import normalize_file_path; print(normalize_file_path('vibe_core/foo.py').value)"
+# Expected: trigger:file_changed:vibe_core/**
+```

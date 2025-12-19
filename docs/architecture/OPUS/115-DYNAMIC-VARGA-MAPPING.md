@@ -245,3 +245,42 @@ Possible next steps:
 - **Dynamic Action Mapping**: Derive action Vargas from function signatures
 - **Chakra Integration**: 7-layer model for deployment stages
 - **Auto-Documentation**: Generate layer diagrams from path analysis
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/akshara.py`
+  - `PATH_VARGA_PATTERNS` dict - folder prefix to Varga mappings
+  - `map_path_to_varga()` - derives Varga from file path
+  - `get_path_layer()` - returns layer name (KERNEL, COGNITION, etc.)
+  - `get_path_element()` - returns element (Vayu, Agni, etc.)
+  - `get_path_akshara()` - returns representative Akshara
+  - `get_trigger_varga()` - dynamically derives Varga for triggers
+- `/home/user/steward-protocol/vibe_core/plugins/opus_assistant/manas/triggers.py`
+  - `normalize_trigger()` - uses normalized paths (called by get_trigger_varga)
+
+**Wiring Pattern**:
+```python
+# Dynamic path-to-Varga derivation
+trigger = "trigger:file_changed:vibe_core/runtime/kernel.py"
+varga = get_trigger_varga(trigger)
+# → Extracts path: "vibe_core/runtime/kernel.py"
+# → map_path_to_varga() checks PATH_VARGA_PATTERNS
+# → Matches "vibe_core/runtime/" → Varga.KANTHYA
+
+# Resonance calculation (OPUS-114)
+trigger_varga = get_trigger_varga("trigger:file_changed:vibe_core/runtime/kernel.py")  # KANTHYA
+action_varga = get_action_varga("action:run_tests")  # KANTHYA
+resonance = calculate_resonance(trigger_varga, action_varga)  # 1.0 (perfect)
+```
+
+**Path-to-Varga Map**:
+```
+vibe_core/runtime/     → KANTHYA  (KERNEL)
+vibe_core/llm/         → TALAVYA  (COGNITION)
+tests/                 → MURDHANYA (REPAIR)
+docs/                  → DANTYA   (INTERFACE)
+vibe_core/cli/         → OSHTHYA  (OUTPUT)
+```

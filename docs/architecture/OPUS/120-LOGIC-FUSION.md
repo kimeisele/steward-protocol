@@ -209,3 +209,37 @@ Possible next steps:
 - **OPUS-121: Event Horizon** - Apply same pattern to Event class duplication
 - **OPUS-122: Import Audit** - Scan for other redundant files
 - **Deprecation Warning** - Add warning when importing from legacy path
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/cortex/engines/circuit_engine.py`
+  - `CognitiveCircuitExecutor` class - THE canonical implementation
+  - `InvariantChecker` class - THE canonical checker
+  - `MetaCircuitManager` class - THE canonical manager
+  - `create_circuit_executor()` - THE canonical factory
+  - `create_circuit_executor_with_meta()` - THE canonical meta factory
+- `/home/user/steward-protocol/vibe_core/circuit_executor.py`
+  - PROXY ONLY - re-exports everything from circuit_engine.py
+  - 75 lines (was 1416) - 94.7% reduction
+
+**Wiring Pattern**:
+```python
+# CANONICAL PATH (preferred for new code)
+from vibe_core.cortex.engines import CognitiveCircuitExecutor
+
+# LEGACY PATH (still works, backward compatible)
+from vibe_core.circuit_executor import CognitiveCircuitExecutor
+
+# Both import the SAME class object
+from vibe_core.circuit_executor import CognitiveCircuitExecutor as CE1
+from vibe_core.cortex.engines.circuit_engine import CognitiveCircuitExecutor as CE2
+assert CE1 is CE2  # True - thin proxy pattern
+```
+
+**Migration Strategy**:
+- Old code using `circuit_executor.py` continues to work (re-export proxy)
+- New code should import from `cortex/engines/circuit_engine.py`
+- No API changes, no breaking changes

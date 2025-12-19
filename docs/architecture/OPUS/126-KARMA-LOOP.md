@@ -247,3 +247,55 @@ STEWARD MEMORY FORMATION:
 - Future: KarmaSense (pattern analysis on Samskaras)
 
 **"What is recorded, can be learned from. What is learned from, can be improved."**
+
+---
+
+## @HARNESS
+
+**Files**:
+- `/home/user/steward-protocol/vibe_core/lineage.py`
+  - `LineageEventType.REFLEX_ACTION` - summary of reflex arc cycle
+  - `LineageEventType.DISHARMONY_DETECTED` - pain sensor fired event
+  - `LineageEventType.REPAIR_TASK_CREATED` - effector response event
+  - `LineageChain` class - Parampara blockchain for karmic imprints
+- `/home/user/steward-protocol/vibe_core/plugins/task_manager/plugin_main.py`
+  - `_check_disharmony()` - integrates LineageChain recording
+  - Records REPAIR_TASK_CREATED for each task
+  - Records REFLEX_ACTION summary
+
+**Wiring Pattern**:
+```python
+# Initialize lineage chain (Samskara recorder)
+lineage = LineageChain() if LINEAGE_AVAILABLE else None
+
+# For each disharmony finding → repair task
+for finding in report.findings:
+    task = self.manager.add_task(...)
+
+    # OPUS-126: Record karmic imprint (Samskara)
+    if lineage:
+        lineage.add_block(
+            event_type=LineageEventType.REPAIR_TASK_CREATED,
+            agent_id="plugin.task_manager.reflex_arc",
+            data={
+                "task_id": task.id,
+                "severity": finding.severity,
+                "path": finding.path,
+                "varga_distance": finding.varga_distance,
+                "samskara": "reflex_arc",  # Karmic imprint type
+            }
+        )
+
+# Summary event
+if created > 0 and lineage:
+    lineage.add_block(
+        event_type=LineageEventType.REFLEX_ACTION,
+        agent_id="plugin.task_manager.reflex_arc",
+        data={"total_findings": N, "tasks_created": created}
+    )
+```
+
+**Karma Loop**:
+```
+Action (create task) → Samskara (lineage block) → Memory (query history) → Wisdom (patterns)
+```
