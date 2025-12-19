@@ -284,17 +284,9 @@ class VivekaAction(BaseAction):
         return self._handle_triage_gap(intent, dry_run=False)
 
     def _handle_auto_doc(self, intent: "Intent", dry_run: bool) -> ActionResult:
-        """Handle viveka_auto_doc intent - batch documentation."""
-        # Future: batch process multiple gaps
-        return ActionResult(
-            success=True,
-            action_name=self.name,
-            intent_type=intent.intent_type,
-            result={
-                "action": "not_implemented",
-                "message": "Batch auto-doc not yet implemented",
-            },
-        )
+        """Handle viveka_auto_doc intent - delegates to triage gap handler."""
+        # Delegate to the main handler - same logic applies
+        return self._handle_triage_gap(intent, dry_run)
 
     def _find_element(self, tree: ast.AST, element_name: str, element_type: str) -> Optional[Dict[str, Any]]:
         """Find an element (function/class) in the AST."""
