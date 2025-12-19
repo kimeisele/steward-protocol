@@ -1662,7 +1662,14 @@ class CognitiveKernel(CognitiveCycle):
             return []
         self._last_thought_time = datetime.utcnow()
         try:
-            ctx = asyncio.run(self.orchestrate(force=True))
+            # OPUS-097: Use get_event_loop() pattern instead of asyncio.run()
+            # asyncio.run() fails when called from already running event loop
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            ctx = loop.run_until_complete(self.orchestrate(force=True))
             if ctx and ctx.results:
                 added = ctx.results.get("added_intents", [])
                 if added:
