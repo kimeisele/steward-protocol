@@ -31,12 +31,15 @@ Architecture:
 """
 
 import asyncio
+import json
 import logging
 import time
 import uuid
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.event_bus import EventBus, EventType, emit_event
@@ -663,29 +666,49 @@ class CycleRegistry:
     - Tracks cycles in UnifiedTrace (not a separate system)
     - Emits to EventBus (not a separate log)
 
+    OPUS-133 FIX: Persistent Memory
+    - Cycle history is now persisted to .opus_state/cycle_history.json
+    - Survives across sessions (unlike in-memory only)
+    - COGNITION.md now shows real historical data
+
     Provides:
     - Rate limit enforcement (per cycle, global throttle)
     - Cycle monitoring (current phase, runtime, errors)
     - Mirror test (detect self-triggered infinite loops)
     - Observability (which cycles are running, which are blocked)
     - Memory safety (retention policy enforcement)
+    - Persistent memory (survives session restarts)
     """
 
-    def __init__(self, retention_policy: Optional[RetentionPolicy] = None):
+    # Default history file path (relative to workspace)
+    HISTORY_FILE = ".opus_state/cycle_history.json"
+
+    def __init__(
+        self,
+        retention_policy: Optional[RetentionPolicy] = None,
+        workspace: Optional[Path] = None,
+    ):
         """
-        Initialize registry.
+        Initialize registry with optional persistent storage.
 
         Args:
             retention_policy: How long to keep cycle history (prevents memory leaks)
+            workspace: Root path for .opus_state storage (defaults to cwd)
         """
         self._cycles: Dict[str, CycleContext] = {}  # cycle_id → CycleContext
         self._retention_policy = retention_policy or RetentionPolicy()
         self._completed_cycles: List[CycleContext] = []  # For retention
         self._error_cycles: List[CycleContext] = []  # For retention
         self._cycle_count = 0
+        self._workspace = workspace or Path.cwd()
+        self._history_path = self._workspace / self.HISTORY_FILE
+
+        # OPUS-133: Load persistent history on startup
+        self._load_from_disk()
+
         logger.info(
             f"📊 CycleRegistry initialized (retention: {self._retention_policy.max_completed_cycles} completed, "
-            f"{self._retention_policy.max_error_cycles} errors)"
+            f"{self._retention_policy.max_error_cycles} errors, history: {len(self._completed_cycles)} loaded)"
         )
 
     def register_cycle(self, context: CycleContext) -> None:
@@ -697,7 +720,7 @@ class CycleRegistry:
         )
 
     def complete_cycle(self, context: CycleContext) -> None:
-        """Mark cycle as complete. Applies retention policy."""
+        """Mark cycle as complete. Applies retention policy and persists."""
         if context.cycle_id in self._cycles:
             del self._cycles[context.cycle_id]
 
@@ -709,6 +732,9 @@ class CycleRegistry:
             while len(self._completed_cycles) > self._retention_policy.max_completed_cycles:
                 removed = self._completed_cycles.pop(0)
                 logger.debug(f"🗑️  Pruned old completed cycle: {removed.cycle_name} (retention limit)")
+
+        # OPUS-133: Persist to disk after each completion
+        self._save_to_disk()
 
     def error_cycle(self, context: CycleContext) -> None:
         """Track cycle that failed. Keep more error cycles for debugging."""
@@ -723,6 +749,9 @@ class CycleRegistry:
             while len(self._error_cycles) > self._retention_policy.max_error_cycles:
                 removed = self._error_cycles.pop(0)
                 logger.debug(f"🗑️  Pruned old error cycle: {removed.cycle_name} (retention limit)")
+
+        # OPUS-133: Persist to disk after each error
+        self._save_to_disk()
 
     def get_active_cycles(self) -> List[CycleContext]:
         """Get currently running cycles."""
@@ -758,3 +787,100 @@ class CycleRegistry:
                 for c in self._cycles.values()
             ],
         }
+
+    # =========================================================================
+    # OPUS-133: PERSISTENT MEMORY (Cycle History Survives Sessions)
+    # =========================================================================
+
+    def _cycle_to_dict(self, ctx: CycleContext) -> Dict[str, Any]:
+        """Serialize CycleContext for JSON storage."""
+        return {
+            "cycle_id": ctx.cycle_id,
+            "parent_cycle_id": ctx.parent_cycle_id,
+            "trace_id": ctx.trace_id,
+            "cycle_name": ctx.cycle_name,
+            "phase": ctx.phase.value,
+            "observations_count": len(ctx.observations),
+            "orientations_count": len(ctx.orientations),
+            "decisions_count": len(ctx.decisions),
+            "actions_count": len(ctx.actions),
+            "errors": ctx.errors,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    def _dict_to_cycle(self, data: Dict[str, Any]) -> CycleContext:
+        """Deserialize CycleContext from JSON storage."""
+        return CycleContext(
+            cycle_id=data.get("cycle_id", str(uuid.uuid4())[:8]),
+            parent_cycle_id=data.get("parent_cycle_id"),
+            trace_id=data.get("trace_id", ""),
+            cycle_name=data.get("cycle_name", "unknown"),
+            phase=CyclePhase(data.get("phase", "persist")),
+            phase_start_time=0.0,  # Historical - no timing data
+            observations=[None] * data.get("observations_count", 0),
+            orientations=[None] * data.get("orientations_count", 0),
+            decisions=[None] * data.get("decisions_count", 0),
+            actions=[None] * data.get("actions_count", 0),
+            errors=data.get("errors", {}),
+        )
+
+    def _save_to_disk(self) -> None:
+        """Persist cycle history to disk for session continuity."""
+        try:
+            # Ensure directory exists
+            self._history_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Serialize cycle history
+            data = {
+                "version": "1.0",
+                "saved_at": datetime.now().isoformat(),
+                "total_cycles": self._cycle_count,
+                "completed": [self._cycle_to_dict(c) for c in self._completed_cycles],
+                "errors": [self._cycle_to_dict(c) for c in self._error_cycles],
+            }
+
+            # Atomic write (write to temp, then rename)
+            temp_path = self._history_path.with_suffix(".tmp")
+            with open(temp_path, "w") as f:
+                json.dump(data, f, indent=2)
+            temp_path.rename(self._history_path)
+
+            logger.debug(
+                f"💾 Cycle history saved: {len(self._completed_cycles)} completed, {len(self._error_cycles)} errors"
+            )
+
+        except Exception as e:
+            logger.warning(f"Could not persist cycle history: {e}")
+
+    def _load_from_disk(self) -> None:
+        """Load cycle history from disk on startup."""
+        try:
+            if not self._history_path.exists():
+                logger.debug("No cycle history file found (fresh start)")
+                return
+
+            with open(self._history_path) as f:
+                data = json.load(f)
+
+            # Restore completed cycles
+            for item in data.get("completed", []):
+                ctx = self._dict_to_cycle(item)
+                self._completed_cycles.append(ctx)
+
+            # Restore error cycles
+            for item in data.get("errors", []):
+                ctx = self._dict_to_cycle(item)
+                self._error_cycles.append(ctx)
+
+            # Restore total count
+            self._cycle_count = data.get("total_cycles", len(self._completed_cycles))
+
+            logger.info(
+                f"📂 Cycle history loaded: {len(self._completed_cycles)} completed, "
+                f"{len(self._error_cycles)} errors (total: {self._cycle_count})"
+            )
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"Corrupt cycle history file, starting fresh: {e}")
+        except Exception as e:
+            logger.warning(f"Could not load cycle history: {e}")
