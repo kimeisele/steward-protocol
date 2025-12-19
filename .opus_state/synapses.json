@@ -22,11 +22,14 @@
     "trigger:error_detected": {
       "action:analyze_error": 0.405,
       "action:notify_operator": 0.7
+    },
+    "trigger:gap_detected:missing_doc": {
+      "action:create_doc": 0.7
     }
   },
   "meta": {
     "created": "2025-12-19",
-    "last_updated": "2025-12-19T14:05:00.000000",
+    "last_updated": "trust_training",
     "total_connections": 11,
     "note": "OPUS-113: Stress tested - error_detected learned from simulated failures",
     "vocabulary_version": "triggers.py:TriggerPatterns"
