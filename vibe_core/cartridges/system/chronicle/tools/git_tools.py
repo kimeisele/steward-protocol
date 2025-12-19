@@ -4,11 +4,14 @@
 Provides safe, subprocess-based Git operations.
 All commits are cryptographically signed using the bridge's key management.
 
+OPUS-096: Runtime state commits now delegate to StateSyncWeaver for unified orchestration.
+
 Architecture:
 - Operates on subprocess calls (maximum control, no external libs)
 - Signing uses configured git user.signingKey (from vibe_core.bridge)
 - All operations logged for audit trail
 - Failures are explicit and non-destructive
+- Runtime state commits (no_verify=True) → StateSyncWeaver
 
 Tool Protocol Compliant (Kernel-Managed).
 """
@@ -246,6 +249,48 @@ class GitTools(Tool):
             self.logger.error(f"❌ {msg}")
             return (1, "", msg)
 
+    def _try_weaver_commit(self, message: str) -> Optional[Dict[str, any]]:
+        """
+        OPUS-096: Try to commit via StateSyncWeaver.
+
+        This delegates runtime state commits to the unified Weaver,
+        preventing spaghetti-state from multiple independent commit paths.
+
+        Args:
+            message: Commit message
+
+        Returns:
+            Dict result if Weaver handled the commit, None if fallback needed
+        """
+        try:
+            from vibe_core.state.prakriti import Prakriti
+            from vibe_core.state.weaver import StateSyncWeaver
+
+            prakriti = Prakriti(workspace_path=self.repo_path)
+            weaver = StateSyncWeaver(prakriti)
+            weaver_result = weaver.pulse()
+
+            if weaver_result.success:
+                self.logger.info(f"✅ Sealed via Weaver: {weaver_result.message}")
+                return {
+                    "success": True,
+                    "commit_hash": weaver_result.sha,
+                    "commit_hash_short": weaver_result.sha[:7] if weaver_result.sha else None,
+                    "message": message,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "via": "StateSyncWeaver",
+                }
+            else:
+                self.logger.warning(f"⚠️  Weaver failed: {weaver_result.error}, using fallback")
+                return None
+
+        except ImportError as e:
+            self.logger.debug(f"📜 Weaver not available: {e}, using direct commit")
+            return None
+        except Exception as e:
+            self.logger.warning(f"⚠️  Weaver error: {e}, using fallback")
+            return None
+
     def seal_history(
         self,
         message: str,
@@ -258,6 +303,9 @@ class GitTools(Tool):
 
         This is the "Genesis Ceremony" for code changes.
         The commit is cryptographically signed (if sign=True).
+
+        OPUS-096: Runtime state commits (no_verify=True) delegate to StateSyncWeaver
+        for unified state orchestration. This prevents spaghetti-state.
 
         Args:
             message: Commit message
@@ -280,6 +328,13 @@ class GitTools(Tool):
             "message": message,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
+
+        # OPUS-096: Runtime state commits delegate to StateSyncWeaver
+        if no_verify:
+            weaver_result = self._try_weaver_commit(message)
+            if weaver_result is not None:
+                return weaver_result
+            # Fallback to direct commit if Weaver unavailable
 
         try:
             # 1. Stage files
