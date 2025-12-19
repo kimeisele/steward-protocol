@@ -1,0 +1,779 @@
+"""
+OPUS-114: Akshara Kernel - Sanskrit Phonemic Computation Matrix.
+
+"अक्षराणां अकारोऽस्मि" - "Of letters, I am 'A'" (Bhagavad Gita 10.33)
+
+This module implements the Akshara Kernel - a deterministic computation layer
+based on the Sanskrit Varnamala (alphabet) matrix. Each letter (Akshara) is
+positioned by its articulation point (Varga), creating a natural resonance
+system for synaptic wiring.
+
+The Varnamala Matrix:
+┌──────────────────────────────────────────────────────────────────┐
+│  Varga        │ Element │ Code Layer       │ Aksharas (क-म)     │
+├──────────────────────────────────────────────────────────────────┤
+│  Kanthya      │ Äther   │ KERNEL/DEEP      │ क ख ग घ ङ          │
+│  (Guttural)   │         │                  │ ka kha ga gha ṅa   │
+├──────────────────────────────────────────────────────────────────┤
+│  Talavya      │ Luft    │ COGNITION/FLOW   │ च छ ज झ ञ          │
+│  (Palatal)    │         │                  │ ca cha ja jha ña   │
+├──────────────────────────────────────────────────────────────────┤
+│  Murdhanya    │ Feuer   │ REPAIR/HARD      │ ट ठ ड ढ ण          │
+│  (Retroflex)  │         │                  │ ṭa ṭha ḍa ḍha ṇa   │
+├──────────────────────────────────────────────────────────────────┤
+│  Dantya       │ Wasser  │ INTERFACE/LINK   │ त थ द ध न          │
+│  (Dental)     │         │                  │ ta tha da dha na   │
+├──────────────────────────────────────────────────────────────────┤
+│  Oshthya      │ Erde    │ OUTPUT/SURFACE   │ प फ ब भ म          │
+│  (Labial)     │         │                  │ pa pha ba bha ma   │
+└──────────────────────────────────────────────────────────────────┘
+
+The Resonance Principle:
+- Same Varga: Resonance = 1.0 (perfect harmony)
+- Adjacent Varga: Resonance = 0.8 (natural flow)
+- 2 Vargas apart: Resonance = 0.6 (moderate connection)
+- 3 Vargas apart: Resonance = 0.4 (weak connection)
+- 4 Vargas apart: Resonance = 0.2 (minimal connection)
+
+Dharmic Score = Synaptic Weight × Resonance
+
+This creates a phonetically-grounded computation where:
+- KERNEL triggers (ङ/ṅa) resonate best with KERNEL actions
+- OUTPUT actions (म/ma) flow naturally from INTERFACE triggers
+- Cross-layer connections are weighted by articulatory distance
+"""
+
+import json
+import logging
+from dataclasses import dataclass, field
+from enum import Enum, IntEnum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger("MANAS.Akshara")
+
+
+# =============================================================================
+# VARGA (ARTICULATION CLASSES) - The 5 Layers
+# =============================================================================
+
+
+class Varga(IntEnum):
+    """
+    The 5 Vargas (articulation classes) of Sanskrit consonants.
+
+    Ordered by articulation position from throat (0) to lips (4).
+    This ordering is used for resonance calculation.
+    """
+
+    KANTHYA = 0  # Guttural (Throat) - KERNEL/DEEP
+    TALAVYA = 1  # Palatal (Palate) - COGNITION/FLOW
+    MURDHANYA = 2  # Retroflex (Cerebral) - REPAIR/HARD
+    DANTYA = 3  # Dental (Teeth) - INTERFACE/LINK
+    OSHTHYA = 4  # Labial (Lips) - OUTPUT/SURFACE
+
+
+# Sanskrit-to-English mapping for Vargas
+VARGA_NAMES = {
+    Varga.KANTHYA: ("कण्ठ्य", "Kanthya", "Guttural", "Throat"),
+    Varga.TALAVYA: ("तालव्य", "Talavya", "Palatal", "Palate"),
+    Varga.MURDHANYA: ("मूर्धन्य", "Murdhanya", "Retroflex", "Cerebral"),
+    Varga.DANTYA: ("दन्त्य", "Dantya", "Dental", "Teeth"),
+    Varga.OSHTHYA: ("ओष्ठ्य", "Oshthya", "Labial", "Lips"),
+}
+
+# Code layer mapping
+VARGA_LAYERS = {
+    Varga.KANTHYA: "KERNEL",  # Deep system, core processing
+    Varga.TALAVYA: "COGNITION",  # Flow, decision making
+    Varga.MURDHANYA: "REPAIR",  # Hard work, fixing issues
+    Varga.DANTYA: "INTERFACE",  # Links, connections
+    Varga.OSHTHYA: "OUTPUT",  # Surface, user-facing
+}
+
+# Element mapping (Pancha Bhuta - Five Elements)
+VARGA_ELEMENTS = {
+    Varga.KANTHYA: ("आकाश", "Akasha", "Ether"),
+    Varga.TALAVYA: ("वायु", "Vayu", "Air"),
+    Varga.MURDHANYA: ("अग्नि", "Agni", "Fire"),
+    Varga.DANTYA: ("जल", "Jala", "Water"),
+    Varga.OSHTHYA: ("पृथ्वी", "Prithvi", "Earth"),
+}
+
+
+# =============================================================================
+# AKSHARA (PHONEME/LETTER) - The Atomic Unit
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class Akshara:
+    """
+    An Akshara (अक्षर) - imperishable letter/phoneme.
+
+    Each Akshara is an atomic unit with:
+    - Devanagari representation (देवनागरी)
+    - IAST transliteration
+    - Varga (articulation class)
+    - Position within Varga (0-4)
+    - Voicing and aspiration properties
+    """
+
+    devanagari: str  # e.g., "क"
+    iast: str  # e.g., "ka"
+    varga: Varga  # e.g., KANTHYA
+    position: int  # 0-4 within Varga
+    voiced: bool = False  # Whether voiced (ग, घ, ङ)
+    aspirated: bool = False  # Whether aspirated (ख, घ)
+
+    @property
+    def layer(self) -> str:
+        """Get the code layer this Akshara belongs to."""
+        return VARGA_LAYERS[self.varga]
+
+    @property
+    def element(self) -> str:
+        """Get the element (Bhuta) for this Akshara."""
+        return VARGA_ELEMENTS[self.varga][1]
+
+    @property
+    def is_nasal(self) -> bool:
+        """Check if this is a nasal (anunasika) consonant (ङ, ञ, ण, न, म)."""
+        return self.position == 4
+
+    def resonance_with(self, other: "Akshara") -> float:
+        """
+        Calculate resonance with another Akshara.
+
+        Based on articulatory distance (Varga difference).
+        Same Varga = 1.0, Adjacent = 0.8, etc.
+        """
+        distance = abs(self.varga - other.varga)
+        # Resonance decreases with distance
+        resonance_map = {
+            0: 1.0,  # Same Varga - perfect resonance
+            1: 0.8,  # Adjacent - strong resonance
+            2: 0.6,  # Two apart - moderate
+            3: 0.4,  # Three apart - weak
+            4: 0.2,  # Maximum distance - minimal
+        }
+        return resonance_map.get(distance, 0.1)
+
+    def __repr__(self) -> str:
+        return f"Akshara({self.devanagari}/{self.iast})"
+
+
+# =============================================================================
+# VARNAMALA (ALPHABET MATRIX) - The Complete Grid
+# =============================================================================
+
+
+class Varnamala:
+    """
+    The Varnamala (वर्णमाला) - Sanskrit Alphabet Matrix.
+
+    This is the 5×5 consonant matrix (25 Vyanjanas) plus special characters.
+    Each position has phonetic significance based on articulation.
+
+    Matrix Layout (Ka-varga to Pa-varga):
+
+         Sparsha (Stops)                    Nasal
+         Unvoiced  Voiced
+         [-asp] [+asp] [-asp] [+asp]
+    कण्ठ्य  क      ख      ग      घ      ङ    (Throat)
+    तालव्य  च      छ      ज      झ      ञ    (Palate)
+    मूर्धन्य ट      ठ      ड      ढ      ण    (Cerebrum)
+    दन्त्य   त      थ      द      ध      न    (Teeth)
+    ओष्ठ्य   प      फ      ब      भ      म    (Lips)
+    """
+
+    _instance: Optional["Varnamala"] = None
+
+    def __init__(self):
+        """Initialize the Varnamala matrix."""
+        self._matrix: Dict[Varga, List[Akshara]] = {}
+        self._by_devanagari: Dict[str, Akshara] = {}
+        self._by_iast: Dict[str, Akshara] = {}
+        self._build_matrix()
+
+    @classmethod
+    def get(cls) -> "Varnamala":
+        """Get singleton instance."""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def _build_matrix(self) -> None:
+        """Build the complete Varnamala matrix."""
+        # Ka-varga (Gutturals) - KERNEL layer
+        self._matrix[Varga.KANTHYA] = [
+            Akshara("क", "ka", Varga.KANTHYA, 0, voiced=False, aspirated=False),
+            Akshara("ख", "kha", Varga.KANTHYA, 1, voiced=False, aspirated=True),
+            Akshara("ग", "ga", Varga.KANTHYA, 2, voiced=True, aspirated=False),
+            Akshara("घ", "gha", Varga.KANTHYA, 3, voiced=True, aspirated=True),
+            Akshara("ङ", "ṅa", Varga.KANTHYA, 4, voiced=True, aspirated=False),  # Nasal
+        ]
+
+        # Ca-varga (Palatals) - COGNITION layer
+        self._matrix[Varga.TALAVYA] = [
+            Akshara("च", "ca", Varga.TALAVYA, 0, voiced=False, aspirated=False),
+            Akshara("छ", "cha", Varga.TALAVYA, 1, voiced=False, aspirated=True),
+            Akshara("ज", "ja", Varga.TALAVYA, 2, voiced=True, aspirated=False),
+            Akshara("झ", "jha", Varga.TALAVYA, 3, voiced=True, aspirated=True),
+            Akshara("ञ", "ña", Varga.TALAVYA, 4, voiced=True, aspirated=False),  # Nasal
+        ]
+
+        # Ta-varga (Retroflexes) - REPAIR layer
+        self._matrix[Varga.MURDHANYA] = [
+            Akshara("ट", "ṭa", Varga.MURDHANYA, 0, voiced=False, aspirated=False),
+            Akshara("ठ", "ṭha", Varga.MURDHANYA, 1, voiced=False, aspirated=True),
+            Akshara("ड", "ḍa", Varga.MURDHANYA, 2, voiced=True, aspirated=False),
+            Akshara("ढ", "ḍha", Varga.MURDHANYA, 3, voiced=True, aspirated=True),
+            Akshara("ण", "ṇa", Varga.MURDHANYA, 4, voiced=True, aspirated=False),  # Nasal
+        ]
+
+        # Ta-varga (Dentals) - INTERFACE layer
+        self._matrix[Varga.DANTYA] = [
+            Akshara("त", "ta", Varga.DANTYA, 0, voiced=False, aspirated=False),
+            Akshara("थ", "tha", Varga.DANTYA, 1, voiced=False, aspirated=True),
+            Akshara("द", "da", Varga.DANTYA, 2, voiced=True, aspirated=False),
+            Akshara("ध", "dha", Varga.DANTYA, 3, voiced=True, aspirated=True),
+            Akshara("न", "na", Varga.DANTYA, 4, voiced=True, aspirated=False),  # Nasal
+        ]
+
+        # Pa-varga (Labials) - OUTPUT layer
+        self._matrix[Varga.OSHTHYA] = [
+            Akshara("प", "pa", Varga.OSHTHYA, 0, voiced=False, aspirated=False),
+            Akshara("फ", "pha", Varga.OSHTHYA, 1, voiced=False, aspirated=True),
+            Akshara("ब", "ba", Varga.OSHTHYA, 2, voiced=True, aspirated=False),
+            Akshara("भ", "bha", Varga.OSHTHYA, 3, voiced=True, aspirated=True),
+            Akshara("म", "ma", Varga.OSHTHYA, 4, voiced=True, aspirated=False),  # Nasal
+        ]
+
+        # Build lookup indices
+        for varga_letters in self._matrix.values():
+            for akshara in varga_letters:
+                self._by_devanagari[akshara.devanagari] = akshara
+                self._by_iast[akshara.iast] = akshara
+
+    def get_by_devanagari(self, char: str) -> Optional[Akshara]:
+        """Get Akshara by Devanagari character."""
+        return self._by_devanagari.get(char)
+
+    def get_by_iast(self, iast: str) -> Optional[Akshara]:
+        """Get Akshara by IAST transliteration."""
+        return self._by_iast.get(iast)
+
+    def get_varga(self, varga: Varga) -> List[Akshara]:
+        """Get all Aksharas in a Varga."""
+        return self._matrix.get(varga, [])
+
+    def get_nasal(self, varga: Varga) -> Optional[Akshara]:
+        """Get the nasal (anunasika) of a Varga."""
+        varga_letters = self._matrix.get(varga, [])
+        if varga_letters:
+            return varga_letters[4]  # Nasal is always position 4
+        return None
+
+    def get_all_aksharas(self) -> List[Akshara]:
+        """Get all 25 Aksharas in matrix order."""
+        result = []
+        for varga in Varga:
+            result.extend(self._matrix[varga])
+        return result
+
+    def resonance(self, akshara1: Akshara, akshara2: Akshara) -> float:
+        """Calculate resonance between two Aksharas."""
+        return akshara1.resonance_with(akshara2)
+
+    def varga_resonance(self, varga1: Varga, varga2: Varga) -> float:
+        """Calculate resonance between two Vargas."""
+        distance = abs(varga1 - varga2)
+        resonance_map = {0: 1.0, 1: 0.8, 2: 0.6, 3: 0.4, 4: 0.2}
+        return resonance_map.get(distance, 0.1)
+
+
+# =============================================================================
+# TRIGGER/ACTION MAPPING - Connecting Code to Varnamala
+# =============================================================================
+
+
+# Map trigger categories to Vargas
+TRIGGER_VARGA_MAP: Dict[str, Varga] = {
+    # KERNEL (Kanthya) - Core system triggers
+    "trigger:test_failure": Varga.KANTHYA,
+    "trigger:build_failure": Varga.KANTHYA,
+    "trigger:meru_test": Varga.KANTHYA,
+    # COGNITION (Talavya) - Decision/analysis triggers
+    "trigger:intent_stuck": Varga.TALAVYA,
+    "trigger:intent_expired": Varga.TALAVYA,
+    "trigger:idle_detected": Varga.TALAVYA,
+    # REPAIR (Murdhanya) - Error/fix triggers
+    "trigger:error_detected": Varga.MURDHANYA,
+    "trigger:lint_failure": Varga.MURDHANYA,
+    "trigger:duplicate_class_detected": Varga.MURDHANYA,
+    # INTERFACE (Dantya) - Gap/link triggers
+    "trigger:gap_detected:missing_code": Varga.DANTYA,
+    "trigger:gap_detected:missing_doc": Varga.DANTYA,
+    "trigger:gap_detected:missing_test": Varga.DANTYA,
+    "trigger:gap_detected:stale_doc": Varga.DANTYA,
+    "trigger:gap_detected:missing_harness": Varga.DANTYA,
+    "trigger:sutra:missing_code": Varga.DANTYA,
+    "trigger:sutra:missing_doc": Varga.DANTYA,
+    "trigger:sutra:stale": Varga.DANTYA,
+    "trigger:sutra:missing_harness": Varga.DANTYA,
+    # OUTPUT (Oshthya) - File/surface triggers
+    "trigger:file_changed:vibe_core/**": Varga.OSHTHYA,
+    "trigger:file_changed:tests/**": Varga.OSHTHYA,
+    "trigger:file_changed:docs/**": Varga.OSHTHYA,
+    "trigger:file_changed:config/**": Varga.OSHTHYA,
+    "trigger:file_changed:other": Varga.OSHTHYA,
+    "trigger:karma_low": Varga.OSHTHYA,
+}
+
+# Map action categories to Vargas
+ACTION_VARGA_MAP: Dict[str, Varga] = {
+    # KERNEL (Kanthya) - Core actions
+    "action:run_tests": Varga.KANTHYA,
+    "action:check_lint": Varga.KANTHYA,
+    "action:auto_retry": Varga.KANTHYA,
+    # COGNITION (Talavya) - Analysis actions
+    "action:analyze_error": Varga.TALAVYA,
+    "action:log_diagnostic": Varga.TALAVYA,
+    # REPAIR (Murdhanya) - Fix actions
+    "action:auto_fix": Varga.MURDHANYA,
+    "action:consolidate": Varga.MURDHANYA,
+    # INTERFACE (Dantya) - Creation actions
+    "action:create_code": Varga.DANTYA,
+    "action:create_doc": Varga.DANTYA,
+    "action:create_test": Varga.DANTYA,
+    "action:create_harness": Varga.DANTYA,
+    "action:update_docs": Varga.DANTYA,
+    # OUTPUT (Oshthya) - Notification actions
+    "action:notify_operator": Varga.OSHTHYA,
+    "action:escalate_to_operator": Varga.OSHTHYA,
+    "action:report_to_operator": Varga.OSHTHYA,
+}
+
+
+def get_trigger_varga(trigger: str) -> Varga:
+    """Get the Varga for a trigger pattern."""
+    # Exact match first
+    if trigger in TRIGGER_VARGA_MAP:
+        return TRIGGER_VARGA_MAP[trigger]
+
+    # Pattern matching for file_changed triggers
+    if trigger.startswith("trigger:file_changed:"):
+        return Varga.OSHTHYA  # OUTPUT layer
+
+    # Pattern matching for gap triggers
+    if trigger.startswith("trigger:gap_detected:"):
+        return Varga.DANTYA  # INTERFACE layer
+
+    # Pattern matching for sutra triggers
+    if trigger.startswith("trigger:sutra:"):
+        return Varga.DANTYA  # INTERFACE layer
+
+    # Default: COGNITION layer (middle ground)
+    return Varga.TALAVYA
+
+
+def get_action_varga(action: str) -> Varga:
+    """Get the Varga for an action pattern."""
+    if action in ACTION_VARGA_MAP:
+        return ACTION_VARGA_MAP[action]
+
+    # Default: COGNITION layer
+    return Varga.TALAVYA
+
+
+def get_trigger_akshara(trigger: str) -> Akshara:
+    """
+    Get the representative Akshara for a trigger.
+
+    Returns the nasal (anunasika) of the trigger's Varga,
+    as nasals are the "binding" consonants that connect sounds.
+    """
+    varga = get_trigger_varga(trigger)
+    varnamala = Varnamala.get()
+    nasal = varnamala.get_nasal(varga)
+    return nasal if nasal else varnamala.get_varga(varga)[0]
+
+
+def get_action_akshara(action: str) -> Akshara:
+    """Get the representative Akshara for an action."""
+    varga = get_action_varga(action)
+    varnamala = Varnamala.get()
+    nasal = varnamala.get_nasal(varga)
+    return nasal if nasal else varnamala.get_varga(varga)[0]
+
+
+# =============================================================================
+# RESONANCE CALCULATION - The Dharmic Score
+# =============================================================================
+
+
+def calculate_resonance(trigger: str, action: str) -> float:
+    """
+    Calculate the resonance between a trigger and action.
+
+    Based on the articulatory distance between their Vargas.
+
+    Args:
+        trigger: Canonical trigger string
+        action: Canonical action string
+
+    Returns:
+        Resonance value (0.2 - 1.0)
+    """
+    trigger_varga = get_trigger_varga(trigger)
+    action_varga = get_action_varga(action)
+    return Varnamala.get().varga_resonance(trigger_varga, action_varga)
+
+
+def calculate_dharmic_score(
+    trigger: str,
+    action: str,
+    synaptic_weight: float,
+) -> float:
+    """
+    Calculate the Dharmic Score for a trigger-action pair.
+
+    Dharmic Score = Synaptic Weight × Resonance
+
+    This combines learned experience (weight) with phonetic harmony (resonance).
+
+    Args:
+        trigger: Canonical trigger string
+        action: Canonical action string
+        synaptic_weight: The learned synaptic weight (0.0 - 1.0)
+
+    Returns:
+        Dharmic score (0.0 - 1.0)
+    """
+    resonance = calculate_resonance(trigger, action)
+    return synaptic_weight * resonance
+
+
+# =============================================================================
+# AKSHARA GRAPH - JSON-Persistent Relationship Structure
+# =============================================================================
+
+
+@dataclass
+class AksharaNode:
+    """A node in the Akshara graph representing a trigger or action."""
+
+    pattern: str  # e.g., "trigger:test_failure"
+    akshara: str  # e.g., "ङ"
+    varga: str  # e.g., "KANTHYA"
+    layer: str  # e.g., "KERNEL"
+    element: str  # e.g., "Akasha"
+    node_type: str  # "trigger" or "action"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "pattern": self.pattern,
+            "akshara": self.akshara,
+            "varga": self.varga,
+            "layer": self.layer,
+            "element": self.element,
+            "node_type": self.node_type,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AksharaNode":
+        """Create from dictionary."""
+        return cls(
+            pattern=data["pattern"],
+            akshara=data["akshara"],
+            varga=data["varga"],
+            layer=data["layer"],
+            element=data["element"],
+            node_type=data["node_type"],
+        )
+
+
+@dataclass
+class AksharaEdge:
+    """An edge in the Akshara graph representing a connection."""
+
+    source: str  # Source pattern
+    target: str  # Target pattern
+    weight: float  # Synaptic weight
+    resonance: float  # Akshara resonance
+    dharmic_score: float  # weight × resonance
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "source": self.source,
+            "target": self.target,
+            "weight": self.weight,
+            "resonance": self.resonance,
+            "dharmic_score": self.dharmic_score,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AksharaEdge":
+        """Create from dictionary."""
+        return cls(
+            source=data["source"],
+            target=data["target"],
+            weight=data["weight"],
+            resonance=data["resonance"],
+            dharmic_score=data["dharmic_score"],
+        )
+
+
+class AksharaGraph:
+    """
+    The Akshara Graph - A JSON-persistent graph structure for Akshara relationships.
+
+    This provides a graph view of the synaptic connections, with nodes representing
+    triggers and actions, and edges representing learned associations with resonance.
+
+    The graph can be:
+    1. Exported to JSON for visualization or analysis
+    2. Queried for paths between triggers and actions
+    3. Analyzed for resonance patterns
+    """
+
+    def __init__(self, workspace: Path):
+        """Initialize the Akshara graph."""
+        self._workspace = workspace
+        self._graph_file = workspace / ".opus_state" / "akshara_graph.json"
+        self._nodes: Dict[str, AksharaNode] = {}
+        self._edges: List[AksharaEdge] = []
+
+    def build_from_synapses(self, synapses: Dict[str, Any]) -> None:
+        """
+        Build the graph from synapses.json data.
+
+        Args:
+            synapses: The loaded synapses.json content
+        """
+        weights = synapses.get("weights", {})
+        varnamala = Varnamala.get()
+
+        self._nodes.clear()
+        self._edges.clear()
+
+        # Build nodes and edges
+        for trigger, actions in weights.items():
+            # Create trigger node if not exists
+            if trigger not in self._nodes:
+                trigger_akshara = get_trigger_akshara(trigger)
+                trigger_varga = get_trigger_varga(trigger)
+                self._nodes[trigger] = AksharaNode(
+                    pattern=trigger,
+                    akshara=trigger_akshara.devanagari,
+                    varga=trigger_varga.name,
+                    layer=VARGA_LAYERS[trigger_varga],
+                    element=VARGA_ELEMENTS[trigger_varga][1],
+                    node_type="trigger",
+                )
+
+            # Create action nodes and edges
+            for action, weight in actions.items():
+                if action not in self._nodes:
+                    action_akshara = get_action_akshara(action)
+                    action_varga = get_action_varga(action)
+                    self._nodes[action] = AksharaNode(
+                        pattern=action,
+                        akshara=action_akshara.devanagari,
+                        varga=action_varga.name,
+                        layer=VARGA_LAYERS[action_varga],
+                        element=VARGA_ELEMENTS[action_varga][1],
+                        node_type="action",
+                    )
+
+                # Create edge
+                resonance = calculate_resonance(trigger, action)
+                dharmic = calculate_dharmic_score(trigger, action, weight)
+                self._edges.append(
+                    AksharaEdge(
+                        source=trigger,
+                        target=action,
+                        weight=weight,
+                        resonance=resonance,
+                        dharmic_score=dharmic,
+                    )
+                )
+
+    def save(self) -> None:
+        """Save the graph to JSON."""
+        self._graph_file.parent.mkdir(parents=True, exist_ok=True)
+
+        data = {
+            "schema": "akshara-graph-v1",
+            "description": "OPUS-114: Akshara Graph - Sanskrit Phonemic Computation Matrix",
+            "nodes": {k: v.to_dict() for k, v in self._nodes.items()},
+            "edges": [e.to_dict() for e in self._edges],
+            "meta": {
+                "vargas": {v.name: VARGA_NAMES[v] for v in Varga},
+                "elements": {v.name: VARGA_ELEMENTS[v] for v in Varga},
+                "layers": VARGA_LAYERS,
+                "total_nodes": len(self._nodes),
+                "total_edges": len(self._edges),
+            },
+        }
+
+        self._graph_file.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        logger.info(f"📊 Akshara Graph saved: {len(self._nodes)} nodes, {len(self._edges)} edges")
+
+    def load(self) -> bool:
+        """Load the graph from JSON."""
+        if not self._graph_file.exists():
+            return False
+
+        try:
+            data = json.loads(self._graph_file.read_text())
+            self._nodes = {k: AksharaNode.from_dict(v) for k, v in data.get("nodes", {}).items()}
+            self._edges = [AksharaEdge.from_dict(e) for e in data.get("edges", [])]
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to load Akshara graph: {e}")
+            return False
+
+    def get_edges_for_trigger(self, trigger: str) -> List[AksharaEdge]:
+        """Get all edges originating from a trigger."""
+        return [e for e in self._edges if e.source == trigger]
+
+    def get_edges_by_dharmic_score(self, min_score: float = 0.0) -> List[AksharaEdge]:
+        """Get edges sorted by Dharmic score."""
+        filtered = [e for e in self._edges if e.dharmic_score >= min_score]
+        return sorted(filtered, key=lambda e: e.dharmic_score, reverse=True)
+
+    def get_varga_connections(self) -> Dict[str, Dict[str, int]]:
+        """Get connection counts between Vargas."""
+        connections: Dict[str, Dict[str, int]] = {}
+
+        for edge in self._edges:
+            source_node = self._nodes.get(edge.source)
+            target_node = self._nodes.get(edge.target)
+
+            if source_node and target_node:
+                s_varga = source_node.varga
+                t_varga = target_node.varga
+
+                if s_varga not in connections:
+                    connections[s_varga] = {}
+                if t_varga not in connections[s_varga]:
+                    connections[s_varga][t_varga] = 0
+                connections[s_varga][t_varga] += 1
+
+        return connections
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Export the graph as a dictionary."""
+        return {
+            "nodes": {k: v.to_dict() for k, v in self._nodes.items()},
+            "edges": [e.to_dict() for e in self._edges],
+        }
+
+
+# =============================================================================
+# INTEGRATION HELPERS - For use in SynapticMemory
+# =============================================================================
+
+
+def enhance_recommendations_with_resonance(
+    trigger: str,
+    recommendations: List[Tuple[str, float]],
+) -> List[Tuple[str, float, float, float]]:
+    """
+    Enhance synaptic recommendations with resonance data.
+
+    Args:
+        trigger: The trigger pattern
+        recommendations: List of (action, weight) tuples
+
+    Returns:
+        List of (action, weight, resonance, dharmic_score) tuples,
+        sorted by dharmic_score descending
+    """
+    enhanced = []
+    for action, weight in recommendations:
+        resonance = calculate_resonance(trigger, action)
+        dharmic = calculate_dharmic_score(trigger, action, weight)
+        enhanced.append((action, weight, resonance, dharmic))
+
+    # Sort by dharmic score (not just weight!)
+    enhanced.sort(key=lambda x: x[3], reverse=True)
+    return enhanced
+
+
+def get_resonant_actions(trigger: str, min_resonance: float = 0.6) -> List[str]:
+    """
+    Get actions that resonate well with a trigger.
+
+    Args:
+        trigger: The trigger pattern
+        min_resonance: Minimum resonance threshold
+
+    Returns:
+        List of action patterns with good resonance
+    """
+    trigger_varga = get_trigger_varga(trigger)
+    resonant = []
+
+    for action, action_varga in ACTION_VARGA_MAP.items():
+        if Varnamala.get().varga_resonance(trigger_varga, action_varga) >= min_resonance:
+            resonant.append(action)
+
+    return resonant
+
+
+# =============================================================================
+# DIAGNOSTIC/DEBUG HELPERS
+# =============================================================================
+
+
+def print_varnamala_matrix() -> str:
+    """Print the complete Varnamala matrix for debugging."""
+    lines = ["", "═══════════════════════════════════════════════════════"]
+    lines.append("       VARNAMALA - The Sanskrit Consonant Matrix        ")
+    lines.append("═══════════════════════════════════════════════════════")
+
+    varnamala = Varnamala.get()
+
+    for varga in Varga:
+        varga_info = VARGA_NAMES[varga]
+        layer = VARGA_LAYERS[varga]
+        element = VARGA_ELEMENTS[varga]
+
+        letters = varnamala.get_varga(varga)
+        dev = " ".join(a.devanagari for a in letters)
+        iast = " ".join(f"{a.iast:4}" for a in letters)
+
+        lines.append("")
+        lines.append(f"  {varga_info[0]} ({varga_info[1]}) - {layer}")
+        lines.append(f"  Element: {element[0]} ({element[1]})")
+        lines.append(f"  Letters: {dev}")
+        lines.append(f"           {iast}")
+
+    lines.append("")
+    lines.append("═══════════════════════════════════════════════════════")
+
+    return "\n".join(lines)
+
+
+def print_resonance_matrix() -> str:
+    """Print the Varga resonance matrix."""
+    lines = ["", "  Varga Resonance Matrix (Dharmic Harmony)"]
+    lines.append("  ─────────────────────────────────────────")
+
+    header = "          " + " ".join(f"{v.name[:4]:>6}" for v in Varga)
+    lines.append(header)
+
+    varnamala = Varnamala.get()
+    for v1 in Varga:
+        row = f"  {v1.name[:6]:>6} │"
+        for v2 in Varga:
+            res = varnamala.varga_resonance(v1, v2)
+            row += f" {res:5.2f}"
+        lines.append(row)
+
+    return "\n".join(lines)
