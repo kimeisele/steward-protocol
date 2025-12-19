@@ -117,11 +117,15 @@ class OpusAssistantPlugin(KernelPlugin):
         4. Quick health check
         5. 🔌 WIRING: Save session state (Fractal Holon - "untötbar")
         6. 🔌 WIRING: Trigger genesis check for karma-aware boot
+        7. OPUS-112: Register MANAS for system tool access
         """
         self._kernel = kernel
 
         # Get workspace path
         self._workspace = getattr(kernel, "workspace_path", None) or Path.cwd()
+
+        # OPUS-112: Register MANAS as system-level agent for tool access
+        self._register_manas_capabilities(kernel)
 
         # Load fraktale config
         self._load_fraktale_config()
@@ -168,6 +172,51 @@ class OpusAssistantPlugin(KernelPlugin):
             self._syscall_listener.unsubscribe()
 
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
+
+    # =========================================================================
+    # OPUS-112: MANAS CAPABILITY REGISTRATION (VEDA-4)
+    # =========================================================================
+
+    def _register_manas_capabilities(self, kernel: "RealVibeKernel") -> None:
+        """
+        OPUS-112: Register MANAS as agent with capabilities from manifest.
+
+        VEDA-4 Compliant: Reads capabilities from manifest.json, not hardcoded.
+        This enables MANAS to dispatch to kernel.tool_registry for SYSTEM ACT.
+
+        Note: Kernel auto-registers PLUGIN capabilities. This method registers
+        MANAS specifically because it has its own agent_id distinct from the plugin.
+        """
+        import json
+
+        # Read capabilities from manifest (VEDA-4: config-driven, not hardcoded)
+        manifest_path = Path(__file__).parent / "manifest.json"
+        if not manifest_path.exists():
+            logger.warning("⚠️ OPUS-112: manifest.json not found, MANAS capabilities not registered")
+            return
+
+        try:
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+
+            manas_caps_config = manifest.get("manas_capabilities", {})
+
+            # Flatten capability lists from the config
+            all_caps = []
+            for key, value in manas_caps_config.items():
+                if key.startswith("_"):  # Skip comments
+                    continue
+                if isinstance(value, list):
+                    all_caps.extend(value)
+
+            if all_caps and hasattr(kernel, "_capability_registry"):
+                kernel._capability_registry.register_agent("manas", all_caps)
+                logger.info(f"⚡ OPUS-112: MANAS registered with {len(all_caps)} capabilities")
+            else:
+                logger.debug("⚡ OPUS-112: No MANAS capabilities to register or no registry")
+
+        except Exception as e:
+            logger.warning(f"⚠️ OPUS-112: Failed to register MANAS capabilities: {e}")
 
     # =========================================================================
     # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)
