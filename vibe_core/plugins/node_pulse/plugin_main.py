@@ -1,15 +1,23 @@
 """
 NodePulse Plugin - OPUS-166
 
-Manages node.json lifecycle for Agent City.
+Manages node.json lifecycle for registered agents.
+
+ARCHITECTURE (Lasagne Layers):
+1. AgentLoader - discovers agents (Layer 1)
+2. Discoverer - registers with kernel (Layer 2)
+3. CIVIC/Registry - legitimizes (Layer 3)
+4. NodePulse - manages presence (Layer 4) ← THIS PLUGIN
 
 This plugin:
-1. On boot: Creates node.json for all discovered cartridges
-2. On pulse: Updates node.json with current KALA time state
-3. On shutdown: Deletes all node.json files (agents go offline)
+1. On boot: Agents already call ensure_presence() via set_kernel()
+2. On pulse: Updates all registered agents with KALA state
+3. On shutdown: Calls release_presence() on all registered agents
 
 The node.json file represents presence (agent is alive).
 When kernel stops, files are deleted = agents are offline.
+
+SELF-HEALING: If node.json is deleted, next pulse recreates it.
 
 Priority: 4 (after KALA which is 3)
 PulsePhase: ACTUATORS (writes state after sensors collect)
@@ -31,18 +39,23 @@ logger = logging.getLogger("NODE_PULSE")
 
 class NodePulsePlugin(KernelPlugin):
     """
-    NodePulse - Manages cartridge node.json lifecycle.
+    NodePulse - Manages agent node.json lifecycle via kernel registry.
 
-    Creates node.json on boot, updates with KALA on pulse, deletes on shutdown.
-    This enables the PULS layer for inter-agent communication.
+    Uses kernel.agent_registry (proper registration) instead of
+    scanning directories (spaghetti).
+
+    Each pulse:
+    1. Gets KALA state
+    2. Iterates registered agents
+    3. Calls agent.ensure_presence() with KALA state
+    4. If node.json was deleted, it gets recreated (self-healing)
     """
 
     def __init__(self):
         """Initialize NodePulse plugin."""
         self._kernel: Optional["RealVibeKernel"] = None
-        self._cartridge_paths: List[Path] = []
         self._pulse_count = 0
-        self._project_root: Optional[Path] = None
+        self._agents_updated = 0
 
     @property
     def plugin_id(self) -> str:
@@ -58,38 +71,23 @@ class NodePulsePlugin(KernelPlugin):
 
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """
-        Initialize node.json for all discovered cartridges.
+        Initialize on kernel boot.
 
-        Called during boot after KALA is initialized.
+        Note: Agents already call ensure_presence() in set_kernel().
+        This plugin just tracks state and provides pulse updates.
         """
         self._kernel = kernel
-        self._project_root = Path.cwd()
 
-        # Discover all cartridges
-        self._discover_cartridges()
-
-        # Create node.json for each
-        created = 0
-        for path in self._cartridge_paths:
-            try:
-                NodeState.create(path, status="booting")
-                created += 1
-            except Exception as e:
-                logger.warning(f"Failed to create node.json for {path.name}: {e}")
+        # Count registered agents
+        agent_count = len(self._get_registered_agents())
 
         logger.info("=" * 60)
         logger.info("📡 NODE PULSE PLUGIN BOOTED - PULS Layer Active")
         logger.info("=" * 60)
-        logger.info(f"   Cartridges discovered: {len(self._cartridge_paths)}")
-        logger.info(f"   node.json files created: {created}")
+        logger.info(f"   Registered agents: {agent_count}")
+        logger.info("   Agents manage their own presence via ensure_presence()")
+        logger.info("   This plugin provides KALA state on each pulse")
         logger.info("=" * 60)
-
-        # Set all to online now that boot is complete
-        for path in self._cartridge_paths:
-            try:
-                NodeState.pulse(path, status="online")
-            except Exception:
-                pass
 
     def on_pulse(
         self,
@@ -97,9 +95,12 @@ class NodePulsePlugin(KernelPlugin):
         transaction: "PulseTransaction",
     ) -> HookResult:
         """
-        Update all node.json files with current KALA state.
+        Update all registered agents with current KALA state.
 
-        This runs every 15 minutes via PRANA.
+        This runs every pulse (15 minutes).
+        Each agent's ensure_presence() is called, which:
+        - Updates node.json with KALA state
+        - Recreates node.json if deleted (self-healing)
         """
         self._pulse_count += 1
 
@@ -109,24 +110,28 @@ class NodePulsePlugin(KernelPlugin):
         updated = 0
         errors = 0
 
-        for path in self._cartridge_paths:
+        for agent in self._get_registered_agents():
             try:
-                NodeState.pulse(
-                    path,
-                    status="online",
-                    kala_state=kala_state,
-                )
-                updated += 1
+                # Call agent's ensure_presence with KALA state
+                if hasattr(agent, "ensure_presence"):
+                    if agent.ensure_presence(status="online", kala_state=kala_state):
+                        updated += 1
+                    else:
+                        # Agent couldn't determine its path (e.g., dynamic agent)
+                        pass
             except Exception as e:
-                logger.warning(f"Failed to pulse {path.name}: {e}")
+                agent_id = getattr(agent, "agent_id", "unknown")
+                logger.warning(f"Failed to pulse {agent_id}: {e}")
                 errors += 1
+
+        self._agents_updated = updated
 
         logger.debug(f"📡 NodePulse #{self._pulse_count}: {updated} updated, {errors} errors")
 
         return HookResult.ok(
             data={
                 "pulse_count": self._pulse_count,
-                "nodes_updated": updated,
+                "agents_updated": updated,
                 "errors": errors,
                 "kala_state": kala_state,
             }
@@ -134,51 +139,40 @@ class NodePulsePlugin(KernelPlugin):
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """
-        Delete all node.json files - agents go offline.
+        Release presence for all registered agents.
 
         This is the key insight: file existence = agent alive.
         When kernel stops, agents are truly offline.
         """
-        deleted = 0
+        released = 0
 
-        for path in self._cartridge_paths:
+        for agent in self._get_registered_agents():
             try:
-                if NodeState.die(path):
-                    deleted += 1
+                if hasattr(agent, "release_presence"):
+                    if agent.release_presence():
+                        released += 1
             except Exception as e:
-                logger.warning(f"Failed to delete node.json for {path.name}: {e}")
+                agent_id = getattr(agent, "agent_id", "unknown")
+                logger.warning(f"Failed to release presence for {agent_id}: {e}")
 
-        logger.info(f"📡 NodePulse shutdown: {deleted} node.json files deleted")
+        logger.info(f"📡 NodePulse shutdown: {released} agents released")
 
-    def _discover_cartridges(self) -> None:
+    def _get_registered_agents(self) -> List[Any]:
         """
-        Discover all cartridge directories.
+        Get all registered agents from kernel.
 
-        Looks in:
-        - vibe_core/cartridges/agent_city/
-        - vibe_core/cartridges/system/
+        Uses kernel.agent_registry (proper registration mechanism).
         """
-        self._cartridge_paths = []
+        if not self._kernel:
+            return []
 
-        if not self._project_root:
-            return
+        try:
+            if hasattr(self._kernel, "agent_registry"):
+                return list(self._kernel.agent_registry.values())
+        except Exception as e:
+            logger.debug(f"Could not get agents from registry: {e}")
 
-        cartridge_roots = [
-            self._project_root / "vibe_core" / "cartridges" / "agent_city",
-            self._project_root / "vibe_core" / "cartridges" / "system",
-        ]
-
-        for root in cartridge_roots:
-            if not root.exists():
-                continue
-
-            for item in root.iterdir():
-                if item.is_dir() and not item.name.startswith("_"):
-                    # Check if it has a steward.json (valid cartridge)
-                    if (item / "steward.json").exists():
-                        self._cartridge_paths.append(item)
-
-        logger.debug(f"Discovered {len(self._cartridge_paths)} cartridges")
+        return []
 
     def _get_kala_state(self) -> Dict[str, Any]:
         """
@@ -209,12 +203,19 @@ class NodePulsePlugin(KernelPlugin):
 
     def get_status(self) -> Dict[str, Any]:
         """Get plugin status for observability."""
-        alive_count = sum(1 for p in self._cartridge_paths if NodeState.is_alive(p))
+        agents = self._get_registered_agents()
+        alive_count = 0
+
+        for agent in agents:
+            if hasattr(agent, "get_cartridge_path"):
+                path = agent.get_cartridge_path()
+                if path and NodeState.is_alive(path):
+                    alive_count += 1
 
         return {
             "plugin_id": self.plugin_id,
             "pulse_count": self._pulse_count,
-            "cartridges_total": len(self._cartridge_paths),
-            "cartridges_alive": alive_count,
-            "cartridge_names": [p.name for p in self._cartridge_paths],
+            "agents_registered": len(agents),
+            "agents_alive": alive_count,
+            "last_update_count": self._agents_updated,
         }
