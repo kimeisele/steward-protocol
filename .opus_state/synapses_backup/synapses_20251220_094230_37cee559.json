@@ -33,7 +33,7 @@
     "total_connections": 11,
     "note": "OPUS-113: Stress tested - error_detected learned from simulated failures",
     "vocabulary_version": "triggers.py:TriggerPatterns",
-    "last_synapse_update": "2025-12-20T09:42:30.898009",
+    "last_synapse_update": "2025-12-20T09:42:30.892908",
     "last_vairagya_prune": "2025-12-20T09:42:19.451998",
     "last_vairagya_count": 1
   },
@@ -237,16 +237,6 @@
           "target": "action:",
           "weight": 0.55,
           "learned_at": "2025-12-20T09:42:30.892896"
-        }
-      ]
-    },
-    {
-      "trigger": "trigger:chaos_long_input",
-      "connections": [
-        {
-          "target": "action:chaos_long_input",
-          "weight": 0.55,
-          "learned_at": "2025-12-20T09:42:30.897996"
         }
       ]
     }
