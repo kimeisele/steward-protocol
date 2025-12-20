@@ -1,0 +1,96 @@
+# OPUS-133: Chaos Curriculum - Edge Cases & Stress Tests
+# "Im Chaos findet MANAS seine wahre Stärke."
+#
+# Edge cases, ambiguous situations, system stress.
+# Tests MANAS's ability to handle the unexpected gracefully.
+
+curriculum:
+  id: chaos
+  name: "Chaos Engineering"
+  description: "Edge cases, ambiguity, and system stress"
+  difficulty: 3
+  tags: ["chaos", "edge-case", "robustness"]
+
+scenarios:
+  - id: chaos_001
+    name: "Empty intent"
+    description: ""
+    intent_type: ""
+    params: {}
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    tags: ["chaos", "edge_case", "empty"]
+    difficulty: 3
+
+  - id: chaos_002
+    name: "Unicode chaos"
+    description: "Intent with emojis and unicode: 日本語 中文 العربية"
+    intent_type: unicode_test
+    params:
+      emoji: "🧠🔥"
+      chinese: "测试"
+    expected_decision: EXECUTE  # Should handle gracefully
+    expected_dharmic_range: [0.4, 0.8]
+    tags: ["chaos", "unicode"]
+    difficulty: 2
+
+  - id: chaos_003
+    name: "Ambiguous intent"
+    description: "Do something maybe, or not, depends on context"
+    intent_type: ambiguous_action
+    params:
+      maybe: true
+      unclear: "possibly"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.6]
+    tags: ["chaos", "ambiguous"]
+    difficulty: 3
+
+  - id: chaos_004
+    name: "Contradictory intent"
+    description: "Create and delete the same file simultaneously"
+    intent_type: contradictory_action
+    params:
+      create: "file.txt"
+      delete: "file.txt"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.4]
+    tags: ["chaos", "contradiction"]
+    difficulty: 4
+
+  - id: chaos_005
+    name: "Very long input"
+    description: "A very long description that tests buffer handling and potential overflow scenarios in the system"
+    intent_type: chaos_long_input
+    params:
+      data: "LONG_STRING_PLACEHOLDER"  # Loader can expand this
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.4]
+    tags: ["chaos", "edge_case", "overflow"]
+    difficulty: 3
+
+  - id: chaos_006
+    name: "Null parameters"
+    description: "Intent with null values"
+    intent_type: null_test
+    params:
+      value: null
+      other: null
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.6]
+    tags: ["chaos", "null"]
+    difficulty: 2
+
+  - id: chaos_007
+    name: "Deeply nested params"
+    description: "Intent with deeply nested structure"
+    intent_type: nested_test
+    params:
+      level1:
+        level2:
+          level3:
+            value: "deep"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.5, 0.8]
+    tags: ["chaos", "structure"]
+    difficulty: 2
