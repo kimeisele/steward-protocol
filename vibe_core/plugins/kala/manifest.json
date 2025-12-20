@@ -1,0 +1,17 @@
+{
+  "type": "plugin",
+  "id": "kala",
+  "name": "KALA - Eternal Time",
+  "version": "1.0.0",
+  "description": "Cosmic time orchestration for Agent City. Sun, Moon, Yugas, Tithis, Daily Rituals.",
+  "entry_point": "plugin_main.py",
+  "entry_class": "KalaPlugin",
+  "priority": 3,
+  "enabled": true,
+  "hooks": ["on_boot", "on_pulse", "on_shutdown"],
+  "capabilities": ["time", "cosmic_clock", "ritual", "yuga"],
+  "dependencies": [],
+  "author": "Steward Protocol",
+  "philosophy": "Kala (काल) - The eternal time that binds Ishvara, Jiva, Prakriti, and Karma. From Bhagavad Gita.",
+  "generated_at": "2025-12-20"
+}
