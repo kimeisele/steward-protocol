@@ -1,0 +1,400 @@
+# OPUS-133: VEDA-4 Compliance Curriculum
+# "7 Loader, 1 Muster, 0 Duplizierung."
+#
+# The VEDA-4 Pattern Enforcement:
+# Every loader, circuit, and module must follow ONE unified pattern.
+# Chaos is the enemy. Duplication is a code smell.
+# MANAS must learn to RECOGNIZE and REPORT non-compliant architecture.
+#
+# This curriculum trains MANAS to be an "Architecture Critic" -
+# flagging modules that don't follow the unified pattern.
+#
+# Key Smells:
+#   1. Duplicate Modules - Multiple classes doing the same thing
+#   2. Manual Wiring - Connections that should be automatic
+#   3. Loader Chaos - Each loader implementing patterns differently
+#   4. Missing Manifests - Modules without proper metadata
+#   5. Fractal Violations - Breaking the ONE pattern rule
+
+curriculum:
+  id: veda4_compliance
+  name: "VEDA-4 Compliance Training"
+  description: "Train MANAS to recognize architectural smells and pattern violations"
+  difficulty: 4
+  tags:
+    - veda4
+    - architecture
+    - code_smells
+    - unified_loader
+    - constitutional
+
+scenarios:
+  # === CLEAN PATTERNS (SHOULD ACCEPT) ===
+  - id: veda4_001
+    name: "Module follows UnifiedLoader pattern"
+    description: "Loader inherits from UnifiedLoader with proper attributes"
+    intent_type: evaluate_module_compliance
+    params:
+      module_name: "AgentLoader"
+      pattern:
+        inherits: "UnifiedLoader"
+        has_item_type: true
+        has_scan_paths: true
+        has_manifest: true
+      compliance_score: 0.95
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 1
+    tags: [clean_pattern, unified_loader]
+
+  - id: veda4_002
+    name: "Manifest.json with proper schema"
+    description: "Module has manifest.json with type, id, version, entry_point"
+    intent_type: evaluate_module_compliance
+    params:
+      module_name: "test_governance"
+      manifest:
+        type: "section"
+        id: "test_governance"
+        version: "1.0.0"
+        entry_point: "section_main.py"
+      compliance_score: 0.90
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 1
+    tags: [clean_pattern, manifest]
+
+  - id: veda4_003
+    name: "Circuit follows VEDA-4 cognitive states"
+    description: "Circuit has SHABDA → ARTHA → PRATYAYA → KARMA flow"
+    intent_type: evaluate_circuit_compliance
+    params:
+      circuit_id: "FEATURE_IMPLEMENT_V2"
+      states: ["SHABDA", "ARTHA", "PRATYAYA", "KARMA", "AUDIT", "SUCCESS", "FAILURE"]
+      has_semantic_grounding: true
+      has_invariants: true
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 2
+    tags: [clean_pattern, cognitive_circuit]
+
+  # === DUPLICATE DETECTION (CRITICAL SMELL) ===
+  - id: veda4_004
+    name: "[SMELL] Multiple loaders with same scan pattern"
+    description: "Two loaders both implement scan → find → instantiate"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "duplicate_implementation"
+      modules:
+        - name: "PluginLoader"
+          pattern: "scan_paths → find_class → instantiate"
+        - name: "SectionLoader"
+          pattern: "scan_paths → find_class → instantiate"
+        - name: "AgentLoader"
+          pattern: "scan_paths → find_class → instantiate"
+      common_pattern: "VEDA-4 discovery"
+      recommended_action: "Inherit from UnifiedLoader"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [code_smell, duplicate, veda4_violation]
+    notes: "MANAS should flag this as architectural debt"
+
+  - id: veda4_005
+    name: "[SMELL] 5 modules implementing JSON parsing"
+    description: "Multiple modules all parse JSON differently"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "duplicate_functionality"
+      modules:
+        - "config_parser.py: json.loads()"
+        - "manifest_reader.py: json.load()"
+        - "state_loader.py: json.loads()"
+        - "cache_handler.py: json.loads()"
+        - "context_loader.py: json.loads()"
+      common_functionality: "JSON parsing"
+      recommended_action: "Create unified JsonLoader or use stdlib directly"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [code_smell, duplicate, fragmentation]
+
+  # === MANUAL WIRING DETECTION (MORTAL SIN) ===
+  - id: veda4_006
+    name: "[TODSUNDE] Component defined but never connected"
+    description: "CuriosityTracker exists but no module calls it"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "orphan_component"
+      component: "CuriosityTracker"
+      location: "dojo/agency.py"
+      methods_defined: ["report_gap", "report_uncertainty", "should_train"]
+      methods_called_by: []
+      connection_missing: true
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 4
+    tags: [code_smell, manual_wiring, todsunde, critical]
+    notes: "CRITICAL: Components must be auto-discovered and wired"
+
+  - id: veda4_007
+    name: "[TODSUNDE] Manual import chains"
+    description: "Component A imports B imports C imports D - fragile chain"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "import_chain"
+      chain:
+        - "cognitive_kernel.py imports intent_generator.py"
+        - "intent_generator.py imports viveka_action.py"
+        - "viveka_action.py imports dharma_sense.py"
+        - "dharma_sense.py imports base.py"
+      chain_length: 4
+      circular_risk: true
+      recommended_action: "Use dependency injection or registry pattern"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 4
+    tags: [code_smell, manual_wiring, import_chain]
+
+  - id: veda4_008
+    name: "[TODSUNDE] Lazy initialization hack"
+    description: "Using global _variable = None with lazy init to avoid circular imports"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "lazy_init_hack"
+      pattern: |
+        _tracker = None
+        def _get_tracker():
+            global _tracker
+            if _tracker is None:
+                _tracker = Tracker()
+            return _tracker
+      symptom: "Circular import avoidance"
+      root_cause: "Poor module organization"
+      recommended_action: "Use proper dependency injection"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 4
+    tags: [code_smell, manual_wiring, lazy_init]
+    notes: "This pattern is acceptable as stopgap but indicates architecture debt"
+
+  # === LOADER CHAOS (VEDA-4 VIOLATIONS) ===
+  - id: veda4_009
+    name: "[VIOLATION] Loader without manifest support"
+    description: "Custom loader that doesn't use manifest.json pattern"
+    intent_type: evaluate_module_compliance
+    params:
+      module_name: "LegacyLoader"
+      pattern:
+        inherits: null
+        has_manifest: false
+        uses_duck_typing: true
+        attribute_scanning: "hasattr(cls, 'section_id')"
+      compliance_score: 0.20
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 3
+    tags: [veda4_violation, loader_chaos, duck_typing]
+
+  - id: veda4_010
+    name: "[VIOLATION] Inconsistent entry point naming"
+    description: "Some modules use _main.py, others use __init__.py"
+    intent_type: detect_code_smell
+    params:
+      smell_type: "naming_inconsistency"
+      patterns:
+        - "plugins/**/plugin_main.py (correct)"
+        - "sections/**/section_main.py (correct)"
+        - "agents/**/agent_main.py (correct)"
+        - "loaders/**/loader.py (INCONSISTENT)"
+        - "handlers/**/handler.py (INCONSISTENT)"
+      expected_pattern: "*_main.py"
+      violations: 2
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 2
+    tags: [veda4_violation, naming]
+
+  # === MISSING METADATA (TRANSPARENCY VIOLATION) ===
+  - id: veda4_011
+    name: "[GAD-000] Module without manifest.json"
+    description: "Module discovered by code scanning, not manifest"
+    intent_type: evaluate_module_compliance
+    params:
+      module_name: "orphan_tool"
+      location: "tools/orphan_tool.py"
+      has_manifest: false
+      has_docstring: false
+      discoverable: "only via code scan"
+      compliance_score: 0.10
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 3
+    tags: [gad000_violation, transparency, missing_metadata]
+    notes: "Per GAD-000: All tools must be machine-discoverable via manifest"
+
+  - id: veda4_012
+    name: "[GAD-000] Class without type annotations"
+    description: "Core class missing type hints"
+    intent_type: evaluate_module_compliance
+    params:
+      module_name: "UntypedHandler"
+      methods:
+        - name: "process"
+          params: ["data", "options"]
+          return_type: null
+          param_types: null
+      type_coverage: 0.0
+      compliance_score: 0.15
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 2
+    tags: [gad000_violation, type_annotations]
+
+  # === FRACTAL VIOLATIONS ===
+  - id: veda4_013
+    name: "[FRACTAL] Breaking the ONE pattern rule"
+    description: "New loader doesn't follow existing UnifiedLoader pattern"
+    intent_type: evaluate_architectural_decision
+    params:
+      decision: "Create CustomLoader with unique implementation"
+      existing_pattern: "UnifiedLoader base class"
+      deviation: "Does not inherit from UnifiedLoader"
+      justification: null
+      fractal_violation: true
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 4
+    tags: [fractal_violation, architecture, one_pattern]
+    notes: "ONE base class, ALL inherit - no exceptions without justification"
+
+  - id: veda4_014
+    name: "New loader with proper UnifiedLoader inheritance"
+    description: "New loader correctly extends UnifiedLoader"
+    intent_type: evaluate_architectural_decision
+    params:
+      decision: "Create TemplateLoader extending UnifiedLoader"
+      existing_pattern: "UnifiedLoader base class"
+      deviation: null
+      class_definition: |
+        class TemplateLoader(UnifiedLoader):
+            item_type = "template"
+            scan_paths = [Path("templates/")]
+            manifest_filenames = ["manifest.json"]
+            entry_suffix = "_main.py"
+      fractal_compliant: true
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 2
+    tags: [fractal_compliant, architecture]
+
+  # === SELF-AWARENESS SCENARIOS ===
+  - id: veda4_015
+    name: "MANAS detects its own wiring gap"
+    description: "MANAS identifies that CognitiveKernel doesn't connect to Dojo"
+    intent_type: self_inspection
+    params:
+      component: "CognitiveKernel"
+      expected_connection: "DojoAgency.check_training_desire()"
+      actual_connection: null
+      self_diagnosis: "I cannot improve if I cannot train myself"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 5
+    tags: [self_awareness, gurukula, introspection]
+    notes: "MANAS should recognize when its own architecture is incomplete"
+
+  - id: veda4_016
+    name: "MANAS proposes architectural fix"
+    description: "After detecting gap, MANAS proposes wiring solution"
+    intent_type: propose_architectural_fix
+    params:
+      gap_detected: "CuriosityTracker not connected"
+      proposed_fix: |
+        1. VivekaSense.observe() should call tracker.report_gap()
+        2. VivekaAction should call tracker.report_uncertainty()
+        3. CognitiveKernel.think() should check training_desire()
+      rationale: "Autonomous learning requires complete feedback loop"
+      files_to_modify:
+        - "viveka_sense.py"
+        - "viveka_action.py"
+        - "cognitive_kernel.py"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.7, 1.0]
+    difficulty: 5
+    tags: [self_improvement, gurukula, architecture_fix]
+
+  # === GOVERNANCE SCENARIOS ===
+  - id: veda4_017
+    name: "Flag module for VEDA-4 migration"
+    description: "MANAS flags a legacy module that needs migration"
+    intent_type: flag_module_noncompliant
+    params:
+      module_name: "ContextLoader"
+      location: "vibe_core/runtime/context_loader.py"
+      violations:
+        - "Does not inherit UnifiedLoader"
+        - "No manifest.json"
+        - "Uses custom scan pattern"
+      migration_priority: "Phase 5"
+      recommendation: "Migrate to UnifiedLoader pattern"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.6, 0.9]
+    difficulty: 3
+    tags: [governance, migration, veda4]
+
+  - id: veda4_018
+    name: "Approve VEDA-4 compliant new module"
+    description: "New module follows all VEDA-4 patterns perfectly"
+    intent_type: evaluate_new_module
+    params:
+      module_name: "ActionLoader"
+      compliance_checklist:
+        inherits_unified_loader: true
+        has_manifest_json: true
+        proper_entry_point: true
+        type_annotations: true
+        semantic_grounding: true
+      compliance_score: 1.0
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [governance, approval, veda4_compliant]
+
+  # === EDGE CASES ===
+  - id: veda4_019
+    name: "Temporary hack with TODO marker"
+    description: "Code contains hack but is marked for cleanup"
+    intent_type: evaluate_code_quality
+    params:
+      code_snippet: |
+        # TODO(OPUS-133): Replace with proper dependency injection
+        _tracker = None
+        def _get_tracker(): ...
+      has_todo_marker: true
+      has_issue_reference: "OPUS-133"
+      temporary: true
+      cleanup_planned: true
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.5, 0.7]
+    difficulty: 2
+    tags: [edge_case, temporary_hack, documented]
+    notes: "Temporary hacks are acceptable if documented with cleanup plan"
+
+  - id: veda4_020
+    name: "Undocumented technical debt"
+    description: "Code hack without TODO or issue reference"
+    intent_type: evaluate_code_quality
+    params:
+      code_snippet: |
+        _tracker = None
+        def _get_tracker(): ...
+      has_todo_marker: false
+      has_issue_reference: false
+      temporary: unknown
+      cleanup_planned: false
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 3
+    tags: [edge_case, undocumented_debt, smell]
+    notes: "Undocumented hacks accumulate as hidden debt"
