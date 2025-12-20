@@ -1,6 +1,6 @@
 # OPUS-155: Akasha Nervous System - Pre-Cognitive Wiring Awareness
 
-> **Status**: IMPLEMENTING
+> **Status**: IMPLEMENTED ✅
 > **Created**: 2025-12-20
 > **Prereqs**: OPUS-052 (Akasha), OPUS-114 (Akshara Resonance), OPUS-110 (CodeScanner)
 > **Philosophy**: Akasha must FEEL before Manas THINKS.
@@ -348,14 +348,14 @@ def test_same_layer_import_harmonic():
 
 ---
 
-## Next Steps
+## Implementation Status
 
 1. ✅ OPUS-155 Spec (this document)
-2. 🔄 Extend `code_scanner.py` with `_scan_imports()`
-3. ⏳ Extend `code_scanner.py` with `_scan_calls()`
-4. ⏳ Add resonance calculation to Akasha
-5. ⏳ Create friction heatmap
-6. ⏳ Test with real codebase
+2. ✅ Extend `code_scanner.py` with `_scan_imports()`
+3. ✅ Extend `code_scanner.py` with `_scan_calls()`
+4. ✅ Add resonance calculation (Varga-based)
+5. ✅ Create friction heatmap
+6. ✅ Integrated with ShrutaSense (OPUS-156)
 
 ---
 
