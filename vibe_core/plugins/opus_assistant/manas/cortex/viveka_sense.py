@@ -200,7 +200,38 @@ class VivekaSense(BaseSense):
 
         logger.info(f"VivekaSense: {report.action_required} critical gaps, Grade {report.health_grade}")
 
+        # GURUKULA: Report P1/P2 gaps to CuriosityTracker for self-directed training
+        self._report_gaps_to_curiosity(report)
+
         return report
+
+    def _report_gaps_to_curiosity(self, report: VivekaReport) -> None:
+        """Report critical gaps to CuriosityTracker for self-directed training."""
+        if report.action_required == 0:
+            return  # No critical gaps
+
+        try:
+            from vibe_core.plugins.opus_assistant.manas.dojo.agency import CuriosityTracker
+
+            tracker = CuriosityTracker(self._workspace or Path("."))
+
+            # Report P1 critical gaps with high weight
+            for gap in report.p1_critical[:3]:  # Top 3 P1s
+                tracker.report_gap(
+                    description=f"P1 CRITICAL: {gap.element_name} in {gap.file_path}",
+                    weight=0.2,  # High weight for P1
+                )
+
+            # Report P2 high gaps with moderate weight
+            for gap in report.p2_high[:2]:  # Top 2 P2s
+                tracker.report_gap(
+                    description=f"P2 HIGH: {gap.element_name} in {gap.file_path}",
+                    weight=0.1,
+                )
+
+            logger.info(f"🔍 GURUKULA: Reported {min(5, report.action_required)} gaps to CuriosityTracker")
+        except ImportError:
+            pass  # Dojo not available
 
     def perceive_dark_matter(self) -> List[Dict[str, Any]]:
         """

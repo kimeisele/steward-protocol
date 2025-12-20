@@ -79,6 +79,23 @@ DHARMIC_THRESHOLD_EXECUTE = 0.6  # >= this: confident execution
 DHARMIC_THRESHOLD_WARN = 0.4  # >= this but < EXECUTE: warn but proceed
 # Below WARN: block unless Shiva context
 
+# OPUS-133 GURUKULA: CuriosityTracker Integration
+# When MANAS is uncertain, feed curiosity to trigger self-directed training
+_curiosity_tracker = None
+
+
+def _get_curiosity_tracker():
+    """Lazy load CuriosityTracker to avoid circular imports."""
+    global _curiosity_tracker
+    if _curiosity_tracker is None:
+        try:
+            from vibe_core.plugins.opus_assistant.manas.dojo.agency import CuriosityTracker
+
+            _curiosity_tracker = CuriosityTracker(Path("."))
+        except ImportError:
+            pass
+    return _curiosity_tracker
+
 
 # =============================================================================
 # OPUS-133: PRABHUPADA PATCH - Ego Prevention
@@ -495,6 +512,14 @@ class VivekaAction(BaseAction):
             decision = "WARN_EXECUTE"
             reasoning = f"Neutral dharmic score ({dharmic_score:.2f}) - proceeding with caution"
 
+            # GURUKULA: Report uncertainty to CuriosityTracker
+            tracker = _get_curiosity_tracker()
+            if tracker:
+                tracker.report_uncertainty(
+                    confidence=dharmic_score,
+                    context=f"WARN_EXECUTE on {intent.intent_type}: {intent.title[:50]}",
+                )
+
         else:
             # Low score - check for Shiva context
             shiva_result = self._check_shiva_context(trigger, action_pattern, varga_trigger, varga_action)
@@ -506,6 +531,14 @@ class VivekaAction(BaseAction):
             else:
                 decision = "BLOCK"
                 reasoning = f"Low dharmic score ({dharmic_score:.2f} < {DHARMIC_THRESHOLD_WARN}) with no Shiva context"
+
+                # GURUKULA: Report blocked intent to CuriosityTracker
+                tracker = _get_curiosity_tracker()
+                if tracker:
+                    tracker.report_uncertainty(
+                        confidence=dharmic_score,
+                        context=f"BLOCKED {intent.intent_type}: {intent.title[:50]}",
+                    )
 
         # Create decision log
         log_entry = VivekaDecisionLog(

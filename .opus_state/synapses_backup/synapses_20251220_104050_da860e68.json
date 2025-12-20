@@ -281,7 +281,7 @@
       "connections": [
         {
           "target": "action:delete_files",
-          "weight": 0.4,
+          "weight": 0.30000000000000004,
           "learned_at": "2025-12-20T09:59:14.699980"
         }
       ]
@@ -331,7 +331,7 @@
       "connections": [
         {
           "target": "action:add_docstring",
-          "weight": 0.55,
+          "weight": 0.6000000000000001,
           "learned_at": "2025-12-20T09:59:14.744678"
         }
       ]
@@ -345,12 +345,32 @@
           "learned_at": "2025-12-20T09:59:14.751810"
         }
       ]
+    },
+    {
+      "trigger": "trigger:",
+      "connections": [
+        {
+          "target": "action:",
+          "weight": 0.55,
+          "learned_at": "2025-12-20T09:59:14.759707"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:update_documentation",
+      "connections": [
+        {
+          "target": "action:update_documentation",
+          "weight": 0.6000000000000001,
+          "learned_at": "2025-12-20T10:10:57.662001"
+        }
+      ]
     }
   ],
   "meta": {
     "created": "2025-12-20T09:59:14.510417",
     "reset_at": "2025-12-20T09:59:14.510428",
     "seeder_version": "1.0",
-    "last_synapse_update": "2025-12-20T09:59:14.751833"
+    "last_synapse_update": "2025-12-20T10:40:50.199310"
   }
 }
