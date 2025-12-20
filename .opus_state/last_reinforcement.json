@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-20T09:26:27.416109",
-  "intent_type": "update_readme",
-  "intent_title": "Normal intent to trigger save",
+  "timestamp": "2025-12-20T09:42:30.901126",
+  "intent_type": "chaos_long_input",
+  "intent_title": "Very long description xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "success": true,
-  "old_weight": 0.5500000000000004,
-  "new_weight": 0.6000000000000004,
+  "old_weight": 0.5,
+  "new_weight": 0.55,
   "delta": 0.05
 }
