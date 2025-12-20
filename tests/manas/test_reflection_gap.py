@@ -22,8 +22,9 @@ tests:
 """
 
 import inspect
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 class TestReflectionGap:
@@ -42,19 +43,19 @@ class TestReflectionGap:
         If not, the "dream layer" is not wired.
         """
         from vibe_core.plugins.opus_assistant.manas import intent_router
-        
+
         source_code = inspect.getsource(intent_router)
-        
+
         # Check for Dojo references
         has_dojo_import = "DojoRunner" in source_code
         has_simulate_call = "simulate" in source_code.lower()
         has_ephemeral_ref = "ephemeral" in source_code.lower()
-        
+
         print("\n🔍 STATIC ANALYSIS: IntentRouter")
         print(f"   DojoRunner import: {has_dojo_import}")
         print(f"   'simulate' call: {has_simulate_call}")
         print(f"   'ephemeral' reference: {has_ephemeral_ref}")
-        
+
         if not has_dojo_import and not has_simulate_call:
             print("\n💀 REFLECTION GAP CONFIRMED:")
             print("   IntentRouter has NO knowledge of Dojo simulation.")
@@ -74,27 +75,27 @@ class TestReflectionGap:
         Does CognitiveKernel.think() simulate before acting?
         """
         from vibe_core.plugins.opus_assistant.manas import cognitive_kernel
-        
+
         source_code = inspect.getsource(cognitive_kernel)
-        
+
         # Check for simulation patterns
         has_dojo = "DojoRunner" in source_code or "dojo" in source_code.lower()
         has_simulate = "simulate" in source_code.lower()
         has_dry_run = "dry_run" in source_code.lower()
         has_ephemeral = "ephemeral" in source_code.lower()
-        
+
         print("\n🔍 STATIC ANALYSIS: CognitiveKernel")
         print(f"   Dojo reference: {has_dojo}")
         print(f"   'simulate' call: {has_simulate}")
         print(f"   'dry_run' flag: {has_dry_run}")
         print(f"   'ephemeral' reference: {has_ephemeral}")
-        
+
         # Check the think() method specifically
         if hasattr(cognitive_kernel.CognitiveKernel, 'think'):
             think_source = inspect.getsource(cognitive_kernel.CognitiveKernel.think)
             think_has_simulate = "simulate" in think_source.lower() or "dojo" in think_source.lower()
             print(f"\n   think() method has simulation: {think_has_simulate}")
-            
+
             if not think_has_simulate:
                 print("\n⚠️ CognitiveKernel.think() does NOT simulate intents!")
                 print("   This is the Think-Act Short-Circuit.")
@@ -108,22 +109,22 @@ class TestReflectionGap:
         """
         try:
             from vibe_core.plugins.opus_assistant.events import kernel_tick
-            
+
             source_code = inspect.getsource(kernel_tick)
-            
+
             has_dojo = "dojo" in source_code.lower()
             has_simulate = "simulate" in source_code.lower()
             has_dry_run = "dry_run" in source_code.lower()
-            
+
             print("\n🔍 STATIC ANALYSIS: kernel_tick.py")
             print(f"   Dojo reference: {has_dojo}")
             print(f"   'simulate' call: {has_simulate}")
             print(f"   'dry_run' flag: {has_dry_run}")
-            
+
             if not has_dojo and not has_simulate:
                 print("\n💀 REFLECTION GAP IN TICK LOOP:")
                 print("   kernel_tick.py executes without simulation.")
-                
+
         except ImportError as e:
             print(f"\n⚠️ Could not import kernel_tick: {e}")
 
@@ -135,25 +136,25 @@ class TestReflectionGap:
         (intent_router, cognitive_kernel) vs only from training scripts.
         """
         import os
-        
+
         # Files that SHOULD use Dojo (training)
         training_files = [
             "dojo/runner.py",
             "dojo/rooms/",
             "tests/manas/",
         ]
-        
+
         # Files that SHOULD ALSO use Dojo (production) but probably don't
         production_files = [
             "intent_router.py",
-            "cognitive_kernel.py", 
+            "cognitive_kernel.py",
             "kernel_tick.py",
         ]
-        
+
         print("\n🔍 DOJO USAGE ANALYSIS:")
         print("\n   Expected in training code: ✅")
         print("   Expected in production code: ❓")
-        
+
         # This is a conceptual test - the real proof is in test 1-3
         print("\n📊 SUMMARY:")
         print("   If tests 1-3 show no Dojo references in production code,")
@@ -167,5 +168,5 @@ if __name__ == "__main__":
     test.test_static_analysis_cognitive_kernel_dream_layer()
     test.test_static_analysis_kernel_tick_flow()
     test.test_dojo_only_for_training()
-    
+
     print("\n🔱 REFLECTION GAP ANALYSIS COMPLETE.")

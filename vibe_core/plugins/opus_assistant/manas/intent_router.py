@@ -774,9 +774,9 @@ class IntentRouter:
                 "risk": intent.risk.value if hasattr(intent.risk, "value") else str(intent.risk),
                 "params": intent.params,
             }
-            
+
             simulation = self._maya.simulate(intent_dict)
-            
+
             if not simulation.safe:
                 # Maya blocked - the dream showed harm
                 logger.warning(
