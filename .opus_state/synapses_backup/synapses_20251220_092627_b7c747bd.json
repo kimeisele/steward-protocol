@@ -3,7 +3,7 @@
   "description": "OPUS-111: Synaptic Weight Matrix - Canonical triggers from TriggerRegistry",
   "weights": {
     "trigger:test_failure": {
-      "action:notify_operator": 0.96059601,
+      "action:notify_operator": 0.9702989999999999,
       "action:analyze_error": 0.8,
       "action:auto_retry": 0.3
     },
@@ -33,8 +33,8 @@
     "total_connections": 11,
     "note": "OPUS-113: Stress tested - error_detected learned from simulated failures",
     "vocabulary_version": "triggers.py:TriggerPatterns",
-    "last_synapse_update": "2025-12-20T09:26:27.412015",
-    "last_vairagya_prune": "2025-12-20T09:26:27.412015",
+    "last_synapse_update": "2025-12-20T09:26:27.402335",
+    "last_vairagya_prune": "2025-12-20T09:26:27.402335",
     "last_vairagya_count": 2
   },
   "triggers": [
@@ -43,7 +43,7 @@
       "connections": [
         {
           "target": "action:update_readme",
-          "weight": 0.6000000000000004,
+          "weight": 0.5500000000000004,
           "learned_at": "2025-12-20T08:01:50.431942"
         }
       ]
@@ -94,9 +94,8 @@
       "connections": [
         {
           "target": "action:ego_boost_test",
-          "weight": 0.9702,
-          "learned_at": "2025-01-01T00:00:00",
-          "vairagya_applied": "2025-12-20T09:26:27.411926"
+          "weight": 0.98,
+          "learned_at": "2025-01-01T00:00:00"
         }
       ]
     }
