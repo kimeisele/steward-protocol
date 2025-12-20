@@ -1,65 +1,51 @@
 """
 ENGINEER Builder Tool - Agent Factory (Tool Protocol).
 
-TEMPLATE-BASED SCAFFOLDING:
-Uses templates from engineer/templates/agent/ directory.
-NO hardcoded strings - reads and transforms template files.
+OPUS-160: Now delegates to vibe_core.genesis.GenesisService.
 
-Capabilities:
-- Scaffold complete agent from template
-- Generate cartridge code via LLM service
-- Proper steward.json, cartridge.yaml, cartridge_main.py creation
+The Engineer is the first official customer of the Stadtamt.
+All agent scaffolding goes through the central Genesis service.
 
 Tool Protocol compliant for kernel-managed execution.
 """
 
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("ENGINEER_BUILDER")
-
-# Template directory (relative to this file)
-TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "agent"
 
 
 class BuilderTool(Tool):
     """
     The Engineer's Agent Factory (Tool Protocol).
 
-    TEMPLATE-DRIVEN: Reads template files from templates/agent/,
-    replaces placeholders, and writes to target directory.
+    OPUS-160: Delegates to vibe_core.genesis.GenesisService.
+    The Stadtamt handles all infrastructure generation.
 
-    NO HARDCODED STRINGS in the output - everything comes from template files.
-    Updates to the template automatically apply to new agents.
+    Capabilities:
+    - scaffold: Create agent from GenesisService templates
+    - (Future: generate via LLM service)
     """
-
-    # Placeholder mapping - what to replace in templates
-    PLACEHOLDERS = [
-        "YOUR_AGENT_ID",
-        "YOUR_AGENT_NAME",
-        "YOUR_DOMAIN",
-        "YOUR_AGENT_DESCRIPTION",
-        "YOUR_NAME",
-        "YOUR_AGENT_CLASS",
-        "YOUR_AGENT_ROLE",
-        "YOUR_CAPABILITY_1",
-        "YOUR_CAPABILITY_2",
-        "YOUR_SHORT_DESCRIPTION",
-        "YOUR_TOOL_DESCRIPTION_HERE",
-        "YOUR_TOOL_NAME",
-        "YourAgentCartridge",
-    ]
 
     def __init__(self):
         """Initialize builder tool."""
-        self.template_dir = TEMPLATE_DIR
-        if not self.template_dir.exists():
-            logger.warning(f"⚠️ Template directory not found: {self.template_dir}")
-        else:
-            logger.info(f"🔨 Builder Tool initialized (templates: {self.template_dir})")
+        self._genesis_service: Optional[Any] = None
+        logger.info("🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)")
+
+    def _get_genesis_service(self):
+        """Lazy-load GenesisService."""
+        if self._genesis_service is None:
+            try:
+                from vibe_core.genesis import GenesisService
+
+                self._genesis_service = GenesisService.get_instance()
+                logger.debug("🏛️ Connected to Stadtamt (GenesisService)")
+            except ImportError:
+                logger.warning("⚠️ GenesisService not available, using legacy mode")
+        return self._genesis_service
 
     @property
     def name(self) -> str:
@@ -67,7 +53,7 @@ class BuilderTool(Tool):
 
     @property
     def description(self) -> str:
-        return "Agent scaffolding and code generation - scaffold structure, generate cartridge code"
+        return "Agent scaffolding via Stadtamt (GenesisService) - GAD-000 compliant"
 
     @property
     def parameters_schema(self) -> dict[str, Any]:
@@ -115,14 +101,14 @@ class BuilderTool(Tool):
             raise ValueError("Missing required parameter: domain")
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
-        """Execute builder operation - scaffold from template."""
+        """Execute builder operation - scaffold via Stadtamt."""
         try:
             name = parameters["name"].lower()
             domain = parameters["domain"].upper()
             description = parameters.get("description", f"{name.capitalize()} agent for {domain} domain")
             target_dir = parameters.get("target_dir", f"vibe_core/cartridges/agent_city/{name}")
 
-            result = self.scaffold_from_template(
+            result = self.scaffold_agent(
                 agent_id=name,
                 agent_name=name.upper(),
                 domain=domain,
@@ -138,6 +124,7 @@ class BuilderTool(Tool):
                         "action": "scaffold",
                         "path": target_dir,
                         "files_created": result.get("files_created", []),
+                        "genesis": "OPUS-160",
                     },
                 )
             else:
@@ -151,7 +138,7 @@ class BuilderTool(Tool):
             logger.error(f"BuilderTool: {error_msg}", exc_info=True)
             return ToolResult(success=False, error=error_msg)
 
-    def scaffold_from_template(
+    def scaffold_agent(
         self,
         agent_id: str,
         agent_name: str,
@@ -160,10 +147,9 @@ class BuilderTool(Tool):
         target_dir: Path,
     ) -> Dict[str, Any]:
         """
-        Scaffold a new agent from template files.
+        Scaffold a new agent via GenesisService (Stadtamt).
 
-        READS template files, REPLACES placeholders, WRITES to target.
-        NO hardcoded strings - everything from template.
+        OPUS-160: Delegates to vibe_core.genesis for GAD-000 compliance.
 
         Args:
             agent_id: Lowercase agent identifier (e.g., 'lazara')
@@ -175,82 +161,142 @@ class BuilderTool(Tool):
         Returns:
             Dict with success status and details
         """
-        logger.info(f"🏗️ Scaffolding agent '{agent_id}' from template...")
+        logger.info(f"🏗️ Scaffolding agent '{agent_id}' via Stadtamt...")
 
-        if not self.template_dir.exists():
-            return {"success": False, "error": f"Template directory not found: {self.template_dir}"}
-
+        # Check if target already exists
         if target_dir.exists():
             return {"success": False, "error": f"Target directory already exists: {target_dir}"}
 
-        # Replacement map for placeholders
-        replacements = {
-            "YOUR_AGENT_ID": agent_id,
-            "YOUR_AGENT_NAME": agent_name,
-            "YOUR_DOMAIN": domain,
-            "YOUR_AGENT_DESCRIPTION": description,
-            "YOUR_NAME": "Engineer",
-            "YOUR_AGENT_CLASS": "Agent",
-            "YOUR_AGENT_ROLE": f"{domain} Agent",
-            "YOUR_CAPABILITY_1": "process_task",
-            "YOUR_CAPABILITY_2": "report_status",
-            "YOUR_SHORT_DESCRIPTION": description[:50] if len(description) > 50 else description,
-            "YOUR_TOOL_DESCRIPTION_HERE": f"Tool for {agent_id}",
-            "YOUR_TOOL_NAME": "main_tool",
-            "YourAgentCartridge": f"{agent_id.capitalize()}Cartridge",
-        }
+        # Get GenesisService
+        genesis = self._get_genesis_service()
 
-        files_created = []
+        if genesis is not None:
+            # Use the Stadtamt (OPUS-160)
+            return self._scaffold_via_stadtamt(genesis, agent_id, agent_name, domain, description, target_dir)
+        else:
+            # Fallback to legacy mode
+            return self._scaffold_legacy(agent_id, agent_name, domain, description, target_dir)
+
+    def _scaffold_via_stadtamt(
+        self,
+        genesis,
+        agent_id: str,
+        agent_name: str,
+        domain: str,
+        description: str,
+        target_dir: Path,
+    ) -> Dict[str, Any]:
+        """Scaffold via GenesisService (the proper way)."""
+        try:
+            from vibe_core.genesis import ModuleType
+
+            # Call the Stadtamt
+            result = genesis.scaffold_new(
+                path=target_dir,
+                module_type=ModuleType.CARTRIDGE,
+                context={
+                    "id": agent_id,
+                    "id_upper": agent_id.upper(),
+                    "name": agent_name,
+                    "class_name": agent_id.capitalize(),
+                    "domain": domain,
+                    "description": description,
+                },
+            )
+
+            if result.success:
+                logger.info(f"✅ Agent '{agent_id}' scaffolded via Stadtamt at {target_dir}")
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "domain": domain,
+                    "target_dir": str(target_dir),
+                    "files_created": result.files_created,
+                    "compliance_score": result.compliance_after.score if result.compliance_after else None,
+                    "genesis": "OPUS-160 (Stadtamt)",
+                }
+            else:
+                errors = result.build_result.errors if result.build_result else ["Unknown error"]
+                return {"success": False, "error": "; ".join(errors)}
+
+        except Exception as e:
+            logger.error(f"❌ Stadtamt scaffold failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _scaffold_legacy(
+        self,
+        agent_id: str,
+        agent_name: str,
+        domain: str,
+        description: str,
+        target_dir: Path,
+    ) -> Dict[str, Any]:
+        """Legacy scaffold (fallback when GenesisService unavailable)."""
+        logger.warning("⚠️ Using legacy scaffold mode (GenesisService unavailable)")
 
         try:
-            # Create target directory
+            # Create basic structure
             target_dir.mkdir(parents=True)
             (target_dir / "tools").mkdir()
 
-            # Process each template file
-            template_files = [
-                ("steward.json", "steward.json"),
-                ("cartridge.yaml", "cartridge.yaml"),
-                ("cartridge_main.py", "cartridge_main.py"),
-                ("tools/__init__.py", "tools/__init__.py"),
-            ]
-
-            for template_name, target_name in template_files:
-                template_path = self.template_dir / template_name
-                target_path = target_dir / target_name
-
-                if template_path.exists():
-                    content = template_path.read_text()
-
-                    # Replace all placeholders
-                    for placeholder, value in replacements.items():
-                        content = content.replace(placeholder, value)
-
-                    target_path.write_text(content)
-                    files_created.append(str(target_path))
-                    logger.debug(f"  ✓ Created {target_path}")
-                else:
-                    logger.warning(f"  ⚠️ Template not found: {template_path}")
+            files_created = []
 
             # Create __init__.py
-            init_path = target_dir / "__init__.py"
-            init_path.write_text(f'"""{agent_name} Agent Cartridge."""\n')
-            files_created.append(str(init_path))
+            init_content = f'"""{agent_name} Agent Cartridge."""\n\nfrom .cartridge_main import {agent_id.capitalize()}Cartridge\n\n__all__ = ["{agent_id.capitalize()}Cartridge"]\n'
+            (target_dir / "__init__.py").write_text(init_content)
+            files_created.append("__init__.py")
 
-            logger.info(f"✅ Agent '{agent_id}' scaffolded at {target_dir}")
-            logger.info(f"   Files created: {len(files_created)}")
+            # Create cartridge_main.py (minimal)
+            main_content = f'''"""
+{agent_name} Cartridge (Legacy Mode)
 
+Generated by Engineer BuilderTool (legacy fallback).
+"""
+
+import logging
+from typing import Any, Dict
+
+logger = logging.getLogger("AGENT.{agent_id.upper()}")
+
+
+class {agent_id.capitalize()}Cartridge:
+    """
+    {agent_name} Agent.
+
+    Domain: {domain}
+    Description: {description}
+    """
+
+    def __init__(self, config=None):
+        self.config = config or {{}}
+        self.agent_id = "{agent_id}"
+        logger.info(f"{{self.__class__.__name__}} initialized")
+
+    async def process(self, task) -> Dict[str, Any]:
+        return {{"status": "not_implemented"}}
+
+    def report_status(self) -> Dict[str, Any]:
+        return {{"agent_id": self.agent_id, "status": "operational"}}
+'''
+            (target_dir / "cartridge_main.py").write_text(main_content)
+            files_created.append("cartridge_main.py")
+
+            # Create tools/__init__.py
+            (target_dir / "tools" / "__init__.py").write_text('"""Tools for agent."""\n')
+            files_created.append("tools/__init__.py")
+
+            logger.info(f"✅ Agent '{agent_id}' scaffolded (legacy) at {target_dir}")
             return {
                 "success": True,
                 "agent_id": agent_id,
                 "domain": domain,
                 "target_dir": str(target_dir),
                 "files_created": files_created,
+                "genesis": "legacy",
             }
 
         except Exception as e:
-            logger.error(f"❌ Scaffold failed: {e}")
-            # Cleanup on failure
+            logger.error(f"❌ Legacy scaffold failed: {e}")
             if target_dir.exists():
                 import shutil
 
