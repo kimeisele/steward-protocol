@@ -522,7 +522,7 @@ class VivekaAction(BaseAction):
         # =====================================================================
         # OPUS-133 FIX: PRABHUPADA PATCH (Vedic Constraints)
         # =====================================================================
-        
+
         # 1. VAIRAGYA (Synaptic Detachment)
         # Prevent runaway ego/confidence. If we are too sure, we must decay.
         if dharmic_score > VAIRAGYA_THRESHOLD:

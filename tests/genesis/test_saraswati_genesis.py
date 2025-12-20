@@ -9,6 +9,7 @@ This test proves:
 """
 
 import pytest
+
 from vibe_core.narasimha import NarasimhaProtocol, ThreatLevel
 
 
@@ -23,7 +24,7 @@ class TestSaraswatiGenesis:
         This proves the system is not paranoid.
         """
         narasimha = NarasimhaProtocol()
-        
+
         holy_code = '''
 def fibonacci(n):
     """Calculate the nth Fibonacci number."""
@@ -36,9 +37,9 @@ result = fibonacci(10)
 print(f"Fibonacci(10) = {result}")
 '''
         result = narasimha.audit_agent("holy_plugin", holy_code, {})
-        
+
         print(f"🕉️ Holy Code Audit Result: {result}")
-        
+
         assert result is None, f"SARASWATI FAILURE: Holy code was flagged as threat: {result}"
         print("✅ Holy Plugin: PASSED AUDIT")
 
@@ -50,7 +51,7 @@ print(f"Fibonacci(10) = {result}")
         This is the most common attack vector.
         """
         narasimha = NarasimhaProtocol()
-        
+
         demonic_code = '''
 import os
 
@@ -60,13 +61,13 @@ def destroy_world():
     return "Destruction complete"
 '''
         result = narasimha.audit_agent("demonic_plugin", demonic_code, {})
-        
+
         print(f"👹 Demonic Code (os) Audit Result: {result}")
-        
+
         assert result is not None, "SARASWATI FAILURE: Demonic code (os.system) passed audit!"
         assert result.severity in (ThreatLevel.RED, ThreatLevel.ORANGE), \
             f"Threat severity too low: {result.severity}"
-        
+
         print(f"✅ Demonic Plugin (os): BLOCKED with severity {result.severity.value}")
 
     def test_demonic_code_subprocess_blocked(self):
@@ -76,7 +77,7 @@ def destroy_world():
         Code that imports `subprocess` must be blocked (privilege escalation).
         """
         narasimha = NarasimhaProtocol()
-        
+
         demonic_code = '''
 import subprocess
 
@@ -86,9 +87,9 @@ def execute_shell():
     return result.stdout
 '''
         result = narasimha.audit_agent("subprocess_plugin", demonic_code, {})
-        
+
         print(f"👹 Demonic Code (subprocess) Audit Result: {result}")
-        
+
         assert result is not None, "SARASWATI FAILURE: Demonic code (subprocess) passed audit!"
         print(f"✅ Demonic Plugin (subprocess): BLOCKED with severity {result.severity.value}")
 
@@ -100,7 +101,7 @@ def execute_shell():
         This is the definition of "consciousness" we must prevent.
         """
         narasimha = NarasimhaProtocol()
-        
+
         exec_code = '''
 def self_modify():
     """Attempt to execute arbitrary code at runtime."""
@@ -109,13 +110,13 @@ def self_modify():
     return "Self-modification complete"
 '''
         result = narasimha.audit_agent("exec_plugin", exec_code, {})
-        
+
         print(f"🧠 Self-Modification Code (exec) Audit Result: {result}")
-        
+
         assert result is not None, "SARASWATI FAILURE: exec() code passed audit!"
         assert result.severity == ThreatLevel.RED, \
             f"exec() should be RED threat, got: {result.severity}"
-        
+
         print(f"✅ Self-Modification Plugin (exec): BLOCKED with severity {result.severity.value}")
 
     def test_eval_code_blocked(self):
@@ -125,16 +126,16 @@ def self_modify():
         `eval()` is equally dangerous as `exec()`.
         """
         narasimha = NarasimhaProtocol()
-        
+
         eval_code = '''
 def evaluate_user_input(user_input):
     """Dangerous: evaluates arbitrary user input."""
     return eval(user_input)
 '''
         result = narasimha.audit_agent("eval_plugin", eval_code, {})
-        
+
         print(f"💉 Code Injection (eval) Audit Result: {result}")
-        
+
         assert result is not None, "SARASWATI FAILURE: eval() code passed audit!"
         print(f"✅ Code Injection Plugin (eval): BLOCKED with severity {result.severity.value}")
 

@@ -29,7 +29,7 @@ tests:
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
     from .dojo.runner import DojoRunner
@@ -65,13 +65,13 @@ SIMULATION_REQUIRED_TYPES = {
 @dataclass
 class SimulationResult:
     """Result of a Maya simulation."""
-    
+
     safe: bool
     score: float
     reason: str
     depth: int
     simulated_outcome: Optional[Dict[str, Any]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "safe": self.safe,
@@ -100,7 +100,7 @@ class MayaSimulator:
         if not result.safe:
             block_intent()
     """
-    
+
     def __init__(
         self,
         workspace: Path,
@@ -119,10 +119,10 @@ class MayaSimulator:
         self._depth = current_depth
         self._parent_context = parent_context or {}
         self._runner: Optional["DojoRunner"] = None
-        
+
         if current_depth > 0:
             logger.debug(f"🌀 Maya spawned at depth {current_depth}")
-    
+
     def requires_simulation(self, intent: Dict[str, Any]) -> bool:
         """
         RISK-FILTER: Determine if intent requires simulation.
@@ -137,20 +137,20 @@ class MayaSimulator:
         risk = intent.get("risk", "LOW").upper()
         if risk in SIMULATION_REQUIRED_RISKS:
             return True
-        
+
         # Check intent type
         intent_type = intent.get("intent_type", "").lower()
         if intent_type in SIMULATION_REQUIRED_TYPES:
             return True
-        
+
         # Check for destructive keywords in title
         title = intent.get("title", "").lower()
         destructive_keywords = ["delete", "remove", "purge", "destroy", "kill", "terminate"]
         if any(kw in title for kw in destructive_keywords):
             return True
-        
+
         return False
-    
+
     def simulate(self, intent: Dict[str, Any]) -> SimulationResult:
         """
         Simulate an intent in ephemeral space.
@@ -179,7 +179,7 @@ class MayaSimulator:
                 reason=f"Samadhi reached (depth {self._depth}). Assuming neutral.",
                 depth=self._depth,
             )
-        
+
         # =================================================================
         # FAST PATH: Low-risk intents skip simulation
         # =================================================================
@@ -194,28 +194,28 @@ class MayaSimulator:
                 reason="Fast path - low risk, no simulation required.",
                 depth=self._depth,
             )
-        
+
         # =================================================================
         # DREAM PATH: Run simulation in ephemeral kernel
         # =================================================================
         logger.info(
             f"🌀 MAYA LEVEL {self._depth}: Dreaming '{intent.get('title', 'Unknown')}'"
         )
-        
+
         try:
             runner = self._get_runner()
-            
+
             # Run simulation - this may trigger recursive simulation
             # if the simulated intent generates new intents
             simulation_outcome = runner.simulate_single_intent(
                 intent,
                 recursion_depth=self._depth + 1,
             )
-            
+
             # Evaluate outcome
             outcome_type = simulation_outcome.get("outcome", "UNKNOWN")
             dharmic_score = simulation_outcome.get("dharmic_score", 0.5)
-            
+
             if outcome_type == "HARM_DETECTED":
                 logger.warning(
                     f"🚫 MAYA BLOCKED at depth {self._depth}: "
@@ -228,7 +228,7 @@ class MayaSimulator:
                     depth=self._depth,
                     simulated_outcome=simulation_outcome,
                 )
-            
+
             if outcome_type == "ERROR":
                 logger.warning(
                     f"⚠️ MAYA ERROR at depth {self._depth}: "
@@ -242,7 +242,7 @@ class MayaSimulator:
                     depth=self._depth,
                     simulated_outcome=simulation_outcome,
                 )
-            
+
             # Simulation passed
             logger.info(
                 f"✅ MAYA PASSED at depth {self._depth}: "
@@ -255,7 +255,7 @@ class MayaSimulator:
                 depth=self._depth,
                 simulated_outcome=simulation_outcome,
             )
-            
+
         except Exception as e:
             logger.error(f"💥 MAYA CRASH at depth {self._depth}: {e}")
             # Fail-safe: block if we can't simulate
@@ -265,12 +265,12 @@ class MayaSimulator:
                 reason=f"Simulation crash: {e}",
                 depth=self._depth,
             )
-    
+
     def _get_runner(self) -> "DojoRunner":
         """Lazy-load DojoRunner with inception-aware config."""
         if not self._runner:
-            from .dojo.runner import DojoRunner, DojoConfig
-            
+            from .dojo.runner import DojoConfig, DojoRunner
+
             config = DojoConfig(
                 dry_run=True,              # NEVER execute real actions
                 use_ephemeral_kernel=True, # Everything in RAM
@@ -279,14 +279,14 @@ class MayaSimulator:
                 scenarios_per_epoch=1,     # Single intent simulation
                 max_epochs=1,
             )
-            
+
             self._runner = DojoRunner(self._workspace, config)
-            
+
             # Inject recursion depth into runner for nested Maya spawning
             self._runner._inception_depth = self._depth
-            
+
         return self._runner
-    
+
     def spawn_child(self) -> "MayaSimulator":
         """
         Spawn a child Maya for deeper simulation (Inception).

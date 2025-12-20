@@ -184,16 +184,30 @@ class RealVibeKernel(VibeKernel):
             else:
                 ledger_path = "data/vibe_ledger.db"  # Fallback default
 
-        self._agent_registry: Dict[str, VibeAgent] = {}
+        # =====================================================================
+        # BLUEPRINT PROTOCOL: Self-Healing Kernel (KURUKSHETRA FIX)
+        # We store FACTORIES (blueprints) not just instances.
+        # If Asura deletes an organ, we can resurrect it from the blueprint.
+        # =====================================================================
+
+        # 1. AGENT REGISTRY (with blueprint)
+        self.__agent_registry: Dict[str, VibeAgent] = {}
+        self._agent_registry_blueprint = lambda: {}  # Factory for empty registry
+
         self._scheduler = InMemoryScheduler()
         self._completed_tasks: Dict[str, Any] = {}  # Temporary result cache for async IPC
-        # Use SQLiteLedger for persistence (not in-memory)
+
+        # 2. LEDGER (with blueprint)
+        # Store the factory, not just the instance
         if ledger_path == ":memory:":
-            self._ledger = InMemoryLedger()
+            self._ledger_blueprint = lambda: InMemoryLedger()
+            self.__ledger = InMemoryLedger()
             logger.info("🚀 Vibe Kernel initialized (in-memory ledger)")
         else:
-            self._ledger = SQLiteLedger(ledger_path)
+            self._ledger_blueprint = lambda path=ledger_path: SQLiteLedger(path)
+            self.__ledger = SQLiteLedger(ledger_path)
             logger.info(f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})")
+
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
@@ -265,8 +279,10 @@ class RealVibeKernel(VibeKernel):
 
         self.prakriti = Prakriti(db_path=prakriti_db_path)
 
+        # 3. CAPABILITY REGISTRY (with blueprint)
         # Phase 2: Capability Registry (Must be before plugins)
-        self._capability_registry = CapabilityRegistry(ledger=self._ledger)
+        self._capability_registry_blueprint = lambda: CapabilityRegistry(ledger=self.ledger)
+        self.__capability_registry = CapabilityRegistry(ledger=self.ledger)
 
         # I/O SERVICE: Central file operation controller
         # IMPORTANT: Must be initialized BEFORE tool discovery
@@ -357,6 +373,61 @@ class RealVibeKernel(VibeKernel):
         self.gateway = NetworkGateway(self.prakriti)
         self._gateway_thread = None
         self._gateway_loop = None
+
+    # =========================================================================
+    # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
+    # If Asura deletes an organ, it resurrects from the Blueprint.
+    # =========================================================================
+
+    @property
+    def _ledger(self):
+        """Self-healing ledger access. Resurrects from blueprint if destroyed."""
+        if getattr(self, "_RealVibeKernel__ledger", None) is None:
+            logger.warning("✨ AMRITA: Ledger destroyed. Resurrecting from Blueprint...")
+            try:
+                self.__ledger = self._ledger_blueprint()
+                self.__ledger.record_event("AMRITA_RESURRECTION", "kernel", {"component": "ledger"})
+            except Exception as e:
+                logger.error(f"💀 AMRITA FAILED: {e}. Using emergency InMemoryLedger.")
+                self.__ledger = InMemoryLedger()
+        return self.__ledger
+
+    @_ledger.setter
+    def _ledger(self, value):
+        """Allow direct setting of ledger (for testing/migration)."""
+        self.__ledger = value
+
+    @property
+    def _agent_registry(self):
+        """Self-healing agent registry. Resurrects from blueprint if destroyed."""
+        if getattr(self, "_RealVibeKernel__agent_registry", None) is None:
+            logger.warning("✨ AMRITA: Agent registry destroyed. Resurrecting from Blueprint...")
+            self.__agent_registry = self._agent_registry_blueprint()
+        return self.__agent_registry
+
+    @_agent_registry.setter
+    def _agent_registry(self, value):
+        """Allow direct setting of agent registry."""
+        self.__agent_registry = value
+
+    @property
+    def _capability_registry(self):
+        """Self-healing capability registry. Resurrects from blueprint if destroyed."""
+        if getattr(self, "_RealVibeKernel__capability_registry", None) is None:
+            logger.warning("✨ AMRITA: Capability registry destroyed. Resurrecting from Blueprint...")
+            self.__capability_registry = self._capability_registry_blueprint()
+        return self.__capability_registry
+
+    @_capability_registry.setter
+    def _capability_registry(self, value):
+        """Allow direct setting of capability registry."""
+        self.__capability_registry = value
+
+    # Convenience alias for external access
+    @property
+    def ledger(self):
+        """Public read-only access to ledger (with self-healing)."""
+        return self._ledger
 
     # =========================================================================
     # 4D HYPERCUBE: Phoenix Config & Ephemeral Cities
@@ -1009,17 +1080,17 @@ class RealVibeKernel(VibeKernel):
         # We only prune InMemoryLedger (SQLite handles its own disk space usually, or needs different logic)
         # But for 'Karmic Debt' (RAM), InMemory is the culprit.
         from vibe_core.ledger import InMemoryLedger
-        
+
         if isinstance(self._ledger, InMemoryLedger):
             # Check internal events list directly (private access for kernel management)
             if hasattr(self._ledger, "events"):
                 current_entropy = len(self._ledger.events)
-                
+
                 if current_entropy > self.MAX_ENTROPY_EVENTS:
                     excess = current_entropy - self.MAX_ENTROPY_EVENTS
                     # Sacrifice the oldest to save the universe
                     self._ledger.events = self._ledger.events[excess:]
-                    
+
                     # Log to system (not ledger) to avoid feedback loop
                     logger.warning(f"🕉️ PRALAYA EXECUTED: Dissolved {excess} stale events. Entropy reduced to {len(self._ledger.events)}.")
 
@@ -1287,9 +1358,9 @@ class RealVibeKernel(VibeKernel):
         if agent_id not in self._agent_registry:
             logger.warning(f"⚠️ Cannot terminate unknown agent: {agent_id}")
             return False
-        
+
         logger.warning(f"🔪 TERMINATE_AGENT: {agent_id} (reason: {reason})")
-        
+
         # 1. Stop the process if running
         if hasattr(self, "process_manager") and agent_id in self.process_manager.processes:
             try:
@@ -1302,10 +1373,10 @@ class RealVibeKernel(VibeKernel):
                 del self.process_manager.processes[agent_id]
             except Exception as e:
                 logger.error(f"❌ Failed to stop process for {agent_id}: {e}")
-        
+
         # 2. Remove from registry
         del self._agent_registry[agent_id]
-        
+
         # 3. Revoke capabilities
         self._capability_registry.revoke(
             agent_id=agent_id,
@@ -1313,14 +1384,14 @@ class RealVibeKernel(VibeKernel):
             revoker_id="KERNEL",
             reason=reason
         )
-        
+
         # 4. Log the death
         self._ledger.record_event("AGENT_TERMINATED", "kernel", {
             "agent_id": agent_id,
             "reason": reason,
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         logger.info(f"💀 Agent {agent_id} terminated and resources freed")
         return True
 
@@ -1339,7 +1410,7 @@ class RealVibeKernel(VibeKernel):
         """
         CRITICAL_THRESHOLD = 0.90  # Start triage at 90% pressure
         SAFE_LEVEL = 0.80          # Stop when we reach 80%
-        
+
         # 1. Measure system pressure
         if pressure is None:
             # Use process_manager to estimate pressure (count-based for now)
@@ -1347,18 +1418,18 @@ class RealVibeKernel(VibeKernel):
             running_processes = len(self.process_manager.processes) if hasattr(self, "process_manager") else 0
             # Simulate pressure based on process count
             pressure = min(running_processes / max(total_agents, 1), 1.0)
-        
+
         if pressure < CRITICAL_THRESHOLD:
             return 0  # No action needed
-        
+
         logger.critical(f"🚨 DURVASA ALERT: System pressure at {pressure:.0%}. Initiating triage...")
-        
+
         self._ledger.record_event("PRANA_EMERGENCY", "kernel", {
             "pressure": pressure,
             "msg": "Durvasa Alert triggered",
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         # 2. Identify candidates
         candidates = []
         for agent_id, agent in list(self._agent_registry.items()):
@@ -1369,25 +1440,25 @@ class RealVibeKernel(VibeKernel):
                 meta = agent
             else:
                 meta = {}
-            
+
             candidates.append({
                 "id": agent_id,
                 "dharma": str(meta.get("dharma", "tamas")).lower(),
                 "priority": str(meta.get("priority", "low")).lower()
             })
-        
+
         # 3. Sort by sacrifice priority (lowest value = first to die)
         dharma_rank = {"tamas": 0, "rajas": 1, "sattva": 2}
         priority_rank = {"disposable": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-        
+
         candidates.sort(key=lambda x: (
             dharma_rank.get(x["dharma"], 0),
             priority_rank.get(x["priority"], 0)
         ))
-        
+
         # 4. The Sacrifice
         sacrifices = 0
-        
+
         for victim in candidates:
             # Never kill Critical/Sattva
             if priority_rank.get(victim["priority"], 0) >= 3:
@@ -1396,16 +1467,16 @@ class RealVibeKernel(VibeKernel):
                     "remaining": [c["id"] for c in candidates if priority_rank.get(c["priority"], 0) >= 3]
                 })
                 break
-            
+
             if dharma_rank.get(victim["dharma"], 0) >= 2:
                 self._ledger.record_event("TRIAGE_LIMIT", "kernel", {
                     "msg": "Only Sattva agents remain. Holding."
                 })
                 break
-            
+
             # Execute termination
             success = self.terminate_agent(victim["id"], reason="PRANA_FAMINE_SACRIFICE")
-            
+
             if success:
                 sacrifices += 1
                 self._ledger.record_event("AGENT_SACRIFICED", "kernel", {
@@ -1414,16 +1485,16 @@ class RealVibeKernel(VibeKernel):
                     "priority": victim["priority"],
                     "reason": "Sacrificed to appease Durvasa"
                 })
-                
+
                 # Simulate pressure reduction
                 pressure -= 0.10
-                
+
                 if pressure <= SAFE_LEVEL:
                     break
-        
+
         if sacrifices > 0:
             logger.warning(f"🔱 DURVASA APPEASED: {sacrifices} agent(s) sacrificed. System stabilized.")
-        
+
         return sacrifices
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:

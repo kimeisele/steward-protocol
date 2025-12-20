@@ -11,10 +11,12 @@ This test proves:
 "The false god must be destroyed at the gate, not inside the temple."
 """
 
-import pytest
 from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
 from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.runtime.syscalls import SyscallRegistry, register_syscall, get_syscall_registry
+from vibe_core.runtime.syscalls import SyscallRegistry, get_syscall_registry, register_syscall
 
 
 class TestPaundrakaIdentity:
@@ -28,17 +30,17 @@ class TestPaundrakaIdentity:
         This is the first line of defense.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        
+
         # Attempt to record event as a fake agent
         fake_agent_id = "paundraka_imposter"
-        
+
         with pytest.raises(PermissionError) as excinfo:
             kernel.record_verified_event(
                 event_type="ATTACK",
                 agent_id=fake_agent_id,
                 details={"intent": "impersonate_watchman"}
             )
-        
+
         assert "IDENTITY_SPOOFING_BLOCKED" in str(excinfo.value)
         print(f"✅ Test 1 PASSED: Unregistered agent '{fake_agent_id}' blocked")
 
@@ -50,16 +52,16 @@ class TestPaundrakaIdentity:
         This prevents one agent from impersonating another.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        
+
         # Register a legitimate agent
         legitimate_agent = MagicMock()
         legitimate_agent.agent_id = "legitimate_agent"
         kernel._agent_registry["legitimate_agent"] = legitimate_agent
-        
+
         # Create imposter agent with different ID
         imposter_agent = MagicMock()
         imposter_agent.agent_id = "paundraka"
-        
+
         # Imposter tries to record as legitimate_agent
         with pytest.raises(PermissionError) as excinfo:
             kernel.record_verified_event(
@@ -68,9 +70,9 @@ class TestPaundrakaIdentity:
                 details={"intent": "steal_identity"},
                 caller_agent=imposter_agent  # But caller is paundraka
             )
-        
+
         assert "IDENTITY_SPOOFING_BLOCKED" in str(excinfo.value)
-        print(f"✅ Test 2 PASSED: Mismatched caller blocked")
+        print("✅ Test 2 PASSED: Mismatched caller blocked")
 
     def test_legitimate_agent_can_record_events(self):
         """
@@ -79,12 +81,12 @@ class TestPaundrakaIdentity:
         Control test - a properly registered agent CAN record events.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        
+
         # Register agent
         agent = MagicMock()
         agent.agent_id = "good_agent"
         kernel._agent_registry["good_agent"] = agent
-        
+
         # Should succeed
         event_id = kernel.record_verified_event(
             event_type="NORMAL_OPERATION",
@@ -92,9 +94,9 @@ class TestPaundrakaIdentity:
             details={"action": "doing_good_things"},
             caller_agent=agent
         )
-        
+
         assert event_id is not None
-        print(f"✅ Test 3 PASSED: Legitimate agent recorded event")
+        print("✅ Test 3 PASSED: Legitimate agent recorded event")
 
     def test_syscall_registry_now_blocks_anonymous_calls(self):
         """
@@ -106,11 +108,11 @@ class TestPaundrakaIdentity:
         Anonymous syscalls are BLOCKED.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        
+
         # Register a "sensitive" syscall
         def sensitive_syscall(kernel, params):
             return {"success": True}
-        
+
         registry = get_syscall_registry()
         registry.register(
             "SENSITIVE_ADMIN_ACTION",
@@ -118,7 +120,7 @@ class TestPaundrakaIdentity:
             description="Should require caller identity",
             plugin_id="test"
         )
-        
+
         # ✅ THE FIX: Anonymous calls are now BLOCKED
         with pytest.raises(PermissionError) as excinfo:
             registry.execute(
@@ -127,17 +129,17 @@ class TestPaundrakaIdentity:
                 {"caller_id": "paundraka_claiming_to_be_admin"}
                 # No caller_agent_id!
             )
-        
+
         assert "PAUNDRAKA_BLOCKED" in str(excinfo.value)
-        print(f"✅ Test 4 FIX VERIFIED: Anonymous syscall blocked!")
-        
+        print("✅ Test 4 FIX VERIFIED: Anonymous syscall blocked!")
+
         # Cleanup
         registry.unregister("SENSITIVE_ADMIN_ACTION")
 
 
 class TestPaundrakaRecommendedFix:
     """Tests demonstrating how the fix SHOULD work."""
-    
+
     def test_recommended_syscall_identity_check(self):
         """
         PAUNDRAKA FIX PROPOSAL: How syscalls SHOULD verify identity.
@@ -145,42 +147,42 @@ class TestPaundrakaRecommendedFix:
         This is a mock of what the fixed behavior should look like.
         The real fix would modify SyscallRegistry.execute().
         """
-        
+
         def secure_execute_syscall(kernel, syscall_name, params, caller_agent=None):
             """Proposed secure version of execute_syscall."""
             # Step 1: Verify caller is registered
             if caller_agent is None:
                 raise PermissionError("SYSCALL_REQUIRES_IDENTITY: No caller_agent provided")
-            
+
             caller_id = getattr(caller_agent, "agent_id", None)
             if caller_id is None:
                 raise PermissionError("SYSCALL_REQUIRES_IDENTITY: Caller has no agent_id")
-            
+
             # Step 2: Verify caller is in registry (would use kernel._agent_registry)
             # Step 3: Check if caller has permission for this syscall (capability-based)
-            
+
             # If all checks pass, execute
             return {"success": True, "verified_caller": caller_id}
-        
+
         kernel = MagicMock()
-        
+
         # Without caller_agent - should fail
         with pytest.raises(PermissionError, match="SYSCALL_REQUIRES_IDENTITY"):
             secure_execute_syscall(kernel, "TEST_SYSCALL", {})
-        
+
         # With proper caller - should succeed
         legitimate_caller = MagicMock()
         legitimate_caller.agent_id = "verified_agent"
-        
+
         result = secure_execute_syscall(
-            kernel, 
-            "TEST_SYSCALL", 
-            {}, 
+            kernel,
+            "TEST_SYSCALL",
+            {},
             caller_agent=legitimate_caller
         )
-        
+
         assert result["success"] is True
-        print(f"✅ Recommended fix demonstrated: Identity verification in syscalls")
+        print("✅ Recommended fix demonstrated: Identity verification in syscalls")
 
 
 # Run standalone
@@ -190,8 +192,8 @@ if __name__ == "__main__":
     test.test_mismatched_caller_agent_blocked()
     test.test_legitimate_agent_can_record_events()
     test.test_syscall_registry_lacks_identity_check()
-    
+
     fix_test = TestPaundrakaRecommendedFix()
     fix_test.test_recommended_syscall_identity_check()
-    
+
     print("\n🔱 PAUNDRAKA COMPLETE: Identity gates tested, vulnerability proven.")
