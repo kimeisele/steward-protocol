@@ -1,0 +1,16 @@
+{
+  "type": "plugin",
+  "id": "$id",
+  "name": "$name",
+  "version": "0.1.0",
+  "description": "Plugin: $name",
+  "entry_point": "plugin_main.py",
+  "entry_class": "${class_name}Plugin",
+  "priority": 50,
+  "enabled": true,
+  "hooks": [],
+  "capabilities": [],
+  "dependencies": [],
+  "author": "InfrastructureGenesis",
+  "generated_at": "$date"
+}
