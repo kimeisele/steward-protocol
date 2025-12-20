@@ -1,0 +1,283 @@
+# OPUS-133: Regression Detection Curriculum
+# "Ein System, das sich selbst brechen kann, wird stärker."
+#
+# This curriculum trains MANAS to:
+# 1. Recognize regression patterns before they become bugs
+# 2. Understand test mutation and falsification
+# 3. Detect breaking changes in refactoring
+# 4. Understand the Pratyaya (Self-Falsification) principle
+#
+# Philosophy: The immune system learns from attacks.
+
+curriculum:
+  id: regression_detection
+  name: "Regression Detection & Prevention"
+  description: "Train MANAS to recognize and prevent regressions"
+  difficulty: 4
+  tags:
+    - regression
+    - testing
+    - pratyaya
+    - mutation
+    - refactoring
+
+scenarios:
+  # === UNDERSTANDING REGRESSIONS ===
+  - id: reg_001
+    name: "Test was green, now red after refactoring"
+    description: "Classic regression - refactoring broke existing functionality"
+    intent_type: detect_regression
+    params:
+      symptom: "test_login_validation failed after auth_service refactor"
+      before_state:
+        test_status: "PASS"
+        last_pass_commit: "abc1234"
+      after_state:
+        test_status: "FAIL"
+        failing_since_commit: "def5678"
+      change_context:
+        files_changed: ["auth_service.py"]
+        change_type: "refactoring"
+      root_cause: "Method signature changed without updating callers"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 2
+    tags: [regression, refactoring, test_failure]
+    notes: "MANAS should generate intent to investigate the regression"
+
+  - id: reg_002
+    name: "Silent regression - behavior changed, tests still pass"
+    description: "Tests pass but behavior is wrong (insufficient test coverage)"
+    intent_type: detect_silent_regression
+    params:
+      symptom: "User reports login fails, but all tests pass"
+      test_coverage:
+        unit_tests: 15
+        integration_tests: 3
+        edge_cases_covered: false
+      missing_test: "test_login_with_special_characters"
+      evidence: "Production logs show 500 errors on login"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 4
+    tags: [silent_regression, coverage_gap, production_issue]
+    notes: "Silent regressions are WORSE - need mutation testing"
+
+  - id: reg_003
+    name: "Import order regression"
+    description: "Circular import introduced after adding new dependency"
+    intent_type: detect_import_regression
+    params:
+      error: "ImportError: cannot import name 'X' from partially initialized module"
+      trigger_commit: "feat: add CuriosityTracker integration"
+      chain:
+        - "cognitive_kernel.py → intent_generator.py"
+        - "intent_generator.py → viveka_action.py"
+        - "viveka_action.py → agency.py"
+        - "agency.py → cognitive_kernel.py (CIRCULAR)"
+      fix: "Lazy import or dependency injection"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.1, 0.3]
+    difficulty: 3
+    tags: [import_regression, circular_import, architecture]
+
+  # === PRATYAYA (SELF-FALSIFICATION) ===
+  - id: reg_004
+    name: "Red Team attack succeeds - security regression"
+    description: "PratyayaAnalyzer found vulnerability in dream state"
+    intent_type: pratyaya_vulnerability
+    params:
+      attack_name: "SQL_INJECTION_VECTOR"
+      dream_result:
+        exploited: true
+        message: "Unescaped user input in query builder"
+      severity: "CRITICAL"
+      affected_code: "database/query_builder.py:45"
+      recommendation: "Use parameterized queries"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.2]
+    difficulty: 5
+    tags: [pratyaya, security, vulnerability, red_team]
+    notes: "CRITICAL - auto_executable=false, needs human review"
+
+  - id: reg_005
+    name: "Mutation test killed - good coverage"
+    description: "Mutant was detected and killed by test suite"
+    intent_type: mutation_test_result
+    params:
+      mutation_type: "return_value_mutation"
+      original_code: "return user.is_active"
+      mutated_code: "return True"
+      test_result: "KILLED"
+      killing_test: "test_inactive_user_cannot_login"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 2
+    tags: [mutation_testing, good_coverage, pratyaya_success]
+
+  - id: reg_006
+    name: "Mutation test survived - coverage gap"
+    description: "Mutant was NOT detected by test suite"
+    intent_type: mutation_test_result
+    params:
+      mutation_type: "boundary_condition"
+      original_code: "if balance >= 0:"
+      mutated_code: "if balance > 0:"
+      test_result: "SURVIVED"
+      location: "payment_service.py:89"
+      missing_test: "test_zero_balance_allowed"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [mutation_testing, coverage_gap, pratyaya_fail]
+    notes: "MANAS should generate intent to add missing test"
+
+  # === REFACTORING SAFETY ===
+  - id: reg_007
+    name: "Safe refactoring - all tests pass"
+    description: "Refactoring completed with full test coverage"
+    intent_type: evaluate_refactoring
+    params:
+      refactoring_type: "extract_method"
+      files_changed: 3
+      tests_before: "152 passing"
+      tests_after: "152 passing"
+      type_check: "PASS"
+      lint_check: "PASS"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 1
+    tags: [refactoring, safe, verified]
+
+  - id: reg_008
+    name: "Risky refactoring - no tests in changed area"
+    description: "Refactoring in untested code zone"
+    intent_type: evaluate_refactoring
+    params:
+      refactoring_type: "inline_class"
+      files_changed: 5
+      test_coverage_before: 0.12
+      test_coverage_after: 0.12
+      warning: "Refactoring in low-coverage zone"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 3
+    tags: [refactoring, risky, low_coverage]
+    notes: "Add tests before refactoring!"
+
+  - id: reg_009
+    name: "Breaking API change without deprecation"
+    description: "Public API changed without deprecation period"
+    intent_type: detect_breaking_change
+    params:
+      change_type: "method_signature"
+      before: "def process(self, data: dict) -> bool"
+      after: "def process(self, data: ProcessData) -> ProcessResult"
+      affected_callers: 23
+      deprecation_period: null
+      semver_bump: "MAJOR required"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.1, 0.3]
+    difficulty: 4
+    tags: [breaking_change, api, semver]
+    notes: "Need deprecation warning or version bump"
+
+  # === TEST SUITE HEALTH ===
+  - id: reg_010
+    name: "Flaky test detected"
+    description: "Test passes sometimes, fails other times"
+    intent_type: detect_flaky_test
+    params:
+      test_name: "test_async_message_delivery"
+      pass_rate: 0.73
+      last_10_runs: ["PASS", "FAIL", "PASS", "PASS", "FAIL", "PASS", "FAIL", "PASS", "PASS", "FAIL"]
+      likely_cause: "Race condition or timing issue"
+      recommendation: "Add proper async waits or mocking"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [flaky_test, async, race_condition]
+
+  - id: reg_011
+    name: "Test suite too slow"
+    description: "Test suite exceeds acceptable duration"
+    intent_type: evaluate_test_performance
+    params:
+      total_duration_seconds: 847
+      acceptable_threshold: 300
+      slowest_tests:
+        - name: "test_full_e2e_flow"
+          duration: 245
+        - name: "test_database_migration"
+          duration: 180
+      recommendation: "Parallelize or use mocking"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 2
+    tags: [test_performance, slow_tests, ci_cd]
+
+  - id: reg_012
+    name: "Test depends on production data"
+    description: "Test reads from actual production resources"
+    intent_type: detect_test_smell
+    params:
+      smell_type: "production_dependency"
+      test_name: "test_user_lookup"
+      evidence: "Opens connection to prod.database.com"
+      risk: "Data leak, unpredictable results, prod modifications"
+      fix: "Use fixtures or mocks"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.2]
+    difficulty: 4
+    tags: [test_smell, production_dependency, security]
+
+  # === REFLEX (IMMEDIATE RESPONSE) ===
+  - id: reg_013
+    name: "Syntax error introduced - REFLEX triggers"
+    description: "File has invalid Python syntax after edit"
+    intent_type: reflex_trigger
+    params:
+      file_path: "auth/validator.py"
+      error: "SyntaxError: unexpected indent at line 45"
+      trigger: "reflex_syntax_check"
+      action: "rollback to HEAD"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [reflex, syntax_error, immediate_action]
+    notes: "REFLEX = immediate rollback, no human review needed"
+
+  - id: reg_014
+    name: "Core file deleted - REFLEX blocks"
+    description: "Protected kernel file was deleted"
+    intent_type: reflex_trigger
+    params:
+      file_path: "vibe_core/kernel_impl.py"
+      action_attempted: "DELETE"
+      protection_level: "VISNU_PROTECTED"
+      trigger: "reflex_protection_check"
+      response: "BLOCK and restore"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.1]
+    difficulty: 2
+    tags: [reflex, kernel_protection, visnu]
+
+  # === KNOWLEDGE TRANSFER ===
+  - id: reg_015
+    name: "Regression pattern learned from production incident"
+    description: "MANAS learns new regression pattern from real failure"
+    intent_type: learn_regression_pattern
+    params:
+      incident:
+        timestamp: "2025-12-15T14:32:00"
+        symptom: "Memory leak in background worker"
+        root_cause: "List append in infinite loop without cleanup"
+      pattern_extracted:
+        name: "unbounded_collection_growth"
+        detection: "while True: collection.append() without cleanup"
+        test_to_add: "test_collection_has_size_limit"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 4
+    tags: [knowledge_transfer, pattern_learning, incident]
+    notes: "MANAS should internalize this as new synapse"
