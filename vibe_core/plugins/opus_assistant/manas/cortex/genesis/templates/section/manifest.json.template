@@ -1,0 +1,10 @@
+{
+  "type": "phoenix_section",
+  "id": "$id",
+  "name": "$name",
+  "version": "0.1.0",
+  "description": "Phoenix config section: $name",
+  "schema_file": "schema.json",
+  "default_file": "defaults.yaml",
+  "generated_at": "$date"
+}

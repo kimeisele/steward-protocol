@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from vibe_core.tools.tool_registry import ToolRegistry
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
+    from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
     from .cortex.sutra_sense import SutraSense, SutraSummary
@@ -316,6 +317,13 @@ class CognitiveKernel(CognitiveCycle):
         # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
         self._shruta_sense: Optional["ShrutaSense"] = None
         self._init_shruta_sense()
+
+        # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
+        # Auto-generates GAD-000 compliant infrastructure for new modules
+        # "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
+        self._infrastructure_classifier: Optional["InfrastructureClassifier"] = None
+        self._infrastructure_generator: Optional["InfrastructureGenerator"] = None
+        self._init_infrastructure_genesis()
 
         # 🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge (OPUS-106)
         self._cognitive_weaver: Optional["CognitiveWeaver"] = None
@@ -954,6 +962,39 @@ class CognitiveKernel(CognitiveCycle):
             logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
             self._shruta_sense = None
 
+    def _init_infrastructure_genesis(self) -> None:
+        """
+        Initialize the Infrastructure Genesis service (OPUS-158).
+
+        The Stadtamt - creates GAD-000 compliant infrastructure:
+        - __init__.py for discoverability
+        - manifest.json for capabilities
+        - Base class stubs for composability
+
+        "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
+        """
+        try:
+            from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator
+
+            genesis_config = self._full_config.get("genesis", {})
+            enabled = genesis_config.get("enabled", True)
+
+            if not enabled:
+                logger.info("🏛️ GENESIS: Disabled by configuration")
+                return
+
+            self._infrastructure_classifier = InfrastructureClassifier(workspace=self._workspace)
+            self._infrastructure_generator = InfrastructureGenerator(workspace=self._workspace)
+
+            logger.info(
+                "🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service activated - Auto-generating GAD-000 infrastructure"
+            )
+
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS: Could not initialize: {e}")
+            self._infrastructure_classifier = None
+            self._infrastructure_generator = None
+
     def inject_shruta_sense(self, sense: "ShrutaSense") -> None:
         """
         Inject the Shruta Sense for filesystem vibration detection.
@@ -978,6 +1019,8 @@ class CognitiveKernel(CognitiveCycle):
 
         Returns vibrations grouped by type and layer.
         This is called during the think cycle.
+
+        OPUS-158: Also triggers InfrastructureGenesis for new directories.
         """
         if not self._shruta_sense:
             return None
@@ -997,10 +1040,52 @@ class CognitiveKernel(CognitiveCycle):
                     top_hot = perception.hot_paths[:3]
                     logger.debug(f"👂 SHRUTA: Hot paths: {top_hot}")
 
+                # 🏛️ OPUS-158: Trigger Infrastructure Genesis for new directories
+                # The Agent Virus: Auto-generate GAD-000 infrastructure
+                self._process_genesis_vibrations(perception)
+
             return perception
         except Exception as e:
             logger.warning(f"👂 SHRUTA: Error during perception: {e}")
             return None
+
+    def _process_genesis_vibrations(self, perception: "ShrutaPerception") -> None:
+        """
+        Process vibrations for Infrastructure Genesis.
+
+        OPUS-158: The Agent Virus pattern - auto-generate infrastructure
+        for new directories matching known module patterns.
+        """
+        if not self._infrastructure_classifier or not self._infrastructure_generator:
+            return
+
+        try:
+            from .cortex.genesis import ModuleType
+
+            for vibration in perception.vibrations:
+                # Only process directory creation events
+                if vibration.event_type != "created" or not vibration.is_directory:
+                    continue
+
+                # Classify the new directory
+                module_type = self._infrastructure_classifier.classify(vibration.path, is_directory=True)
+
+                if module_type == ModuleType.UNKNOWN:
+                    continue
+
+                # Generate infrastructure
+                result = self._infrastructure_generator.generate(vibration.path, module_type)
+
+                if result.files_created_count > 0:
+                    logger.info(
+                        f"🏛️ GENESIS: Auto-generated {result.files_created_count} files "
+                        f"for {module_type.name}: {vibration.path.name}"
+                    )
+                    for file_name in result.created_files.keys():
+                        logger.debug(f"🏛️ GENESIS: Created {file_name}")
+
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
 
     def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
         """Get Sutra summary for OPUS.md display."""
