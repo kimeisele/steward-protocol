@@ -309,11 +309,23 @@ class VivekaDecisionLogger:
         logger.info(f"🔱 VIVEKA: {decision.to_log_line()}")
 
     def _load_entries(self) -> List[Dict[str, Any]]:
-        """Load existing entries."""
+        """Load existing entries.
+
+        Handles both formats:
+        - Old format: List of decision dicts
+        - New format (after consolidation): Dict with 'samskaras' key
+        """
         if not self._log_file.exists():
             return []
         try:
-            return json.loads(self._log_file.read_text())
+            data = json.loads(self._log_file.read_text())
+            # Handle consolidated format (dict with samskaras)
+            if isinstance(data, dict):
+                # After consolidation, raw entries are stored in raw_sample
+                # But for new logging, we start fresh (samskaras are the memory)
+                return data.get("raw_sample", [])
+            # Old format: list of entries
+            return data if isinstance(data, list) else []
         except Exception:
             return []
 
