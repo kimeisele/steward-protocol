@@ -144,6 +144,28 @@ files:
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/triggers.py
     required: true
+  # OPUS-140: Sanskrit Matrix (2nd Akshara System - Memory Compression)
+  - path: vibe_core/state/sanskrit_matrix.py
+    required: true
+  # Akshara Graph (Live Neural Network State)
+  - path: .opus_state/akshara_graph.json
+    required: false
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # SECTION 6b: WEAVER SYSTEMS (Transcendental Integration)
+  # ═══════════════════════════════════════════════════════════════════════
+  # OPUS-096: StateSyncWeaver (Meta-Orchestration)
+  - path: vibe_core/state/weaver.py
+    required: true
+  # StateSyncHolon (State Discovery & Healing)
+  - path: vibe_core/state/sync_holon.py
+    required: true
+  # WiringMap (Neural Topology Observer)
+  - path: vibe_core/plugins/opus_assistant/manas/cortex/wiring_map.py
+    required: true
+  # LayeredRouter (3-Layer Cascade Routing)
+  - path: vibe_core/runtime/layered_router.py
+    required: true
 
   # ═══════════════════════════════════════════════════════════════════════
   # SECTION 7: MEMORY SYSTEMS (3 Layers)
@@ -299,6 +321,28 @@ wiring:
     in: vibe_core/plugins/opus_assistant/manas/triggers.py
   - pattern: "consult_dharmic"
     in: vibe_core/plugins/opus_assistant/manas/triggers.py
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # OPUS-140: SANSKRIT MATRIX (2nd Akshara System)
+  # ═══════════════════════════════════════════════════════════════════════
+  - pattern: "LAYER_TO_AKSHARA"
+    in: vibe_core/state/sanskrit_matrix.py
+  - pattern: "DECISION_MODIFIERS"
+    in: vibe_core/state/sanskrit_matrix.py
+  - pattern: "encode_samskara_as_akshara"
+    in: vibe_core/state/sanskrit_matrix.py
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # WEAVER SYSTEMS (Transcendental Integration)
+  # ═══════════════════════════════════════════════════════════════════════
+  - pattern: "class StateSyncWeaver"
+    in: vibe_core/state/weaver.py
+  - pattern: "class StateSyncHolon"
+    in: vibe_core/state/sync_holon.py
+  - pattern: "class WiringMap"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/wiring_map.py
+  - pattern: "class LayeredRouter"
+    in: vibe_core/runtime/layered_router.py
 
   # ═══════════════════════════════════════════════════════════════════════
   # ANALYZERS (VEDA-4 AUTO-DISCOVERY)
