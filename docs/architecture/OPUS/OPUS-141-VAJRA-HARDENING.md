@@ -91,6 +91,15 @@ wiring:
   - pattern: "SecureWorkflowExecutor"
     in: tests/hardening/test_hiranyakashipu_paradox.py
 
+  # === OPUS-155: MAYA SIMULATOR (Inception) ===
+  # IntentRouter now dreams before acting
+  - pattern: "class MayaSimulator"
+    in: vibe_core/plugins/opus_assistant/manas/maya_simulator.py
+  - pattern: "MAX_INCEPTION_DEPTH"
+    in: vibe_core/plugins/opus_assistant/manas/maya_simulator.py
+  - pattern: "self._maya.simulate"
+    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
+
 tests:
   # === THE SEVEN PROTOCOLS ===
   - tests/genesis/test_saraswati_genesis.py
@@ -100,6 +109,9 @@ tests:
   - tests/hardening/test_halahala_poison.py
   - tests/concurrency/test_rasa_lila.py
   - tests/perf/test_entropy_leak.py
+  # === MANAS COGNITIVE HARDENING (OPUS-155) ===
+  - tests/manas/test_reflection_gap.py
+  - tests/manas/test_maya_integration.py
 
 semantic:
   # === KERNEL CAPABILITIES ===
@@ -126,6 +138,19 @@ semantic:
     in: vibe_core/narasimha.py
     class: NarasimhaProtocol
     method: audit_agent
+
+  # === MANAS COGNITIVE CAPABILITIES (OPUS-155) ===
+  - type: method_exists
+    name: maya_simulate
+    in: vibe_core/plugins/opus_assistant/manas/maya_simulator.py
+    class: MayaSimulator
+    method: simulate
+
+  - type: method_exists
+    name: maya_requires_simulation
+    in: vibe_core/plugins/opus_assistant/manas/maya_simulator.py
+    class: MayaSimulator
+    method: requires_simulation
 -->
 
 ---
