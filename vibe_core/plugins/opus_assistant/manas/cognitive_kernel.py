@@ -43,7 +43,9 @@ if TYPE_CHECKING:
     from vibe_core.tools.tool_registry import ToolRegistry
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
+    from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+    from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
     from .cortex.sutra_sense import SutraSense, SutraSummary
 
 logger = logging.getLogger("MANAS.Kernel")
@@ -310,6 +312,18 @@ class CognitiveKernel(CognitiveCycle):
         # Inject engine if available
         if self._sutra_sense and self._semantic_engine:
             self._sutra_sense.inject_semantic_engine(self._semantic_engine)
+
+        # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
+        # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
+        self._shruta_sense: Optional["ShrutaSense"] = None
+        self._init_shruta_sense()
+
+        # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
+        # Auto-generates GAD-000 compliant infrastructure for new modules
+        # "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
+        self._infrastructure_classifier: Optional["InfrastructureClassifier"] = None
+        self._infrastructure_generator: Optional["InfrastructureGenerator"] = None
+        self._init_infrastructure_genesis()
 
         # 🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge (OPUS-106)
         self._cognitive_weaver: Optional["CognitiveWeaver"] = None
@@ -906,6 +920,206 @@ class CognitiveKernel(CognitiveCycle):
         self._sutra_sense = sense
         logger.info("📜 SUTRA SENSE: Third Eye injected - MANAS can now perceive documentation gaps")
 
+    # =========================================================================
+    # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
+    # =========================================================================
+
+    def _init_shruta_sense(self) -> None:
+        """
+        Initialize Shruta Sense - the Hearing System.
+
+        OPUS-156: This provides filesystem vibration detection for MANAS.
+        MANAS can now HEAR before it SEES.
+
+        Sanskrit: श्रुत (Shruta) = "That which is heard"
+
+        "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
+        "At the beginning was darkness. Brahma HEARD before he SAW."
+        """
+        try:
+            from .cortex.shruta_sense import ShrutaSense
+
+            shruta_config = self._full_config.get("shruta_sense", {})
+            self._shruta_sense = ShrutaSense(
+                workspace=self._workspace,
+                config=shruta_config,
+            )
+
+            # Start listening to filesystem vibrations
+            watch_paths = [
+                self._workspace / "vibe_core",
+                self._workspace / "tests",
+                self._workspace / "docs",
+            ]
+            self._shruta_sense.start_listening(paths=watch_paths)
+
+            # Register auto-discovery handler
+            self._shruta_sense.register_auto_discovery()
+
+            logger.info("👂 SHRUTA SENSE: The 6th Jnanendriya activated - MANAS can now HEAR filesystem vibrations")
+
+        except Exception as e:
+            logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
+            self._shruta_sense = None
+
+    def _init_infrastructure_genesis(self) -> None:
+        """
+        Initialize the Infrastructure Genesis service (OPUS-158).
+
+        The Stadtamt - creates GAD-000 compliant infrastructure:
+        - __init__.py for discoverability
+        - manifest.json for capabilities
+        - Base class stubs for composability
+
+        "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
+        """
+        try:
+            from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator
+
+            genesis_config = self._full_config.get("genesis", {})
+            enabled = genesis_config.get("enabled", True)
+
+            if not enabled:
+                logger.info("🏛️ GENESIS: Disabled by configuration")
+                return
+
+            self._infrastructure_classifier = InfrastructureClassifier(workspace=self._workspace)
+            self._infrastructure_generator = InfrastructureGenerator(workspace=self._workspace)
+
+            logger.info(
+                "🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service activated - Auto-generating GAD-000 infrastructure"
+            )
+
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS: Could not initialize: {e}")
+            self._infrastructure_classifier = None
+            self._infrastructure_generator = None
+
+    def inject_shruta_sense(self, sense: "ShrutaSense") -> None:
+        """
+        Inject the Shruta Sense for filesystem vibration detection.
+
+        OPUS-156: The 6 Jnanendriyas (Perception Organs):
+        1. PRAKRITI SENSE: "What is the state of the world?"
+        2. DHARMA SENSE: "Is this action righteous?"
+        3. SUTRA SENSE: "What knowledge is missing?"
+        4. KARMA SENSE: "What has happened before?"
+        5. VIVEKA SENSE: "Which action is best?"
+        6. SHRUTA SENSE: "What changes are happening?" (NEW!)
+
+        Args:
+            sense: ShrutaSense instance
+        """
+        self._shruta_sense = sense
+        logger.info("👂 SHRUTA SENSE: The Hearing System injected - MANAS can now perceive filesystem vibrations")
+
+    def _perceive_filesystem_vibrations(self) -> Optional["ShrutaPerception"]:
+        """
+        Perceive filesystem vibrations since last check.
+
+        Returns vibrations grouped by type and layer.
+        This is called during the think cycle.
+
+        OPUS-158: Also triggers InfrastructureGenesis for new directories.
+        """
+        if not self._shruta_sense:
+            return None
+
+        try:
+            perception = self._shruta_sense.perceive()
+            if perception.total_count > 0:
+                logger.info(
+                    f"👂 SHRUTA: Heard {perception.total_count} vibrations - "
+                    f"created: {perception.by_type.get('created', 0)}, "
+                    f"modified: {perception.by_type.get('modified', 0)}, "
+                    f"deleted: {perception.by_type.get('deleted', 0)}"
+                )
+
+                # Log hot paths (files changing frequently)
+                if perception.hot_paths:
+                    top_hot = perception.hot_paths[:3]
+                    logger.debug(f"👂 SHRUTA: Hot paths: {top_hot}")
+
+                # 🏛️ OPUS-158: Trigger Infrastructure Genesis for new directories
+                # The Agent Virus: Auto-generate GAD-000 infrastructure
+                self._process_genesis_vibrations(perception)
+
+            return perception
+        except Exception as e:
+            logger.warning(f"👂 SHRUTA: Error during perception: {e}")
+            return None
+
+    def _process_genesis_vibrations(self, perception: "ShrutaPerception") -> None:
+        """
+        Process vibrations for Infrastructure Genesis.
+
+        OPUS-160: Delegates to vibe_core.genesis.GenesisService (Stadtamt).
+        MANAS detects gaps, Stadtamt builds infrastructure.
+        """
+        try:
+            # Try to use vibe_core GenesisService (OPUS-160)
+            from vibe_core.genesis import GenesisService, ModuleType
+
+            genesis = GenesisService.get_instance(workspace=self._workspace)
+
+            for vibration in perception.vibrations:
+                # Only process directory creation events
+                if vibration.event_type != "created" or not vibration.is_directory:
+                    continue
+
+                # Classify and ensure compliance via Stadtamt
+                module_type = genesis.classify_path(vibration.path)
+
+                if module_type == ModuleType.UNKNOWN:
+                    continue
+
+                # Call the Stadtamt for compliance
+                result = genesis.ensure_compliance(vibration.path, module_type)
+
+                if result.build_result and result.build_result.files_created_count > 0:
+                    logger.info(
+                        f"🏛️ STADTAMT: Created {result.build_result.files_created_count} files "
+                        f"for {module_type.name}: {vibration.path.name}"
+                    )
+
+        except ImportError:
+            # Fallback to OPUS-158 local genesis (legacy)
+            self._process_genesis_vibrations_legacy(perception)
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
+
+    def _process_genesis_vibrations_legacy(self, perception: "ShrutaPerception") -> None:
+        """
+        Legacy genesis processing (OPUS-158 fallback).
+
+        Used when vibe_core.genesis is not available.
+        """
+        if not self._infrastructure_classifier or not self._infrastructure_generator:
+            return
+
+        try:
+            from .cortex.genesis import ModuleType
+
+            for vibration in perception.vibrations:
+                if vibration.event_type != "created" or not vibration.is_directory:
+                    continue
+
+                module_type = self._infrastructure_classifier.classify(vibration.path, is_directory=True)
+
+                if module_type == ModuleType.UNKNOWN:
+                    continue
+
+                result = self._infrastructure_generator.generate(vibration.path, module_type)
+
+                if result.files_created_count > 0:
+                    logger.info(
+                        f"🏛️ GENESIS (legacy): Auto-generated {result.files_created_count} files "
+                        f"for {module_type.name}: {vibration.path.name}"
+                    )
+
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS (legacy): Error: {e}")
+
     def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
         """Get Sutra summary for OPUS.md display."""
         if not self._sutra_sense:
@@ -1433,10 +1647,23 @@ class CognitiveKernel(CognitiveCycle):
         """
         PERCEIVE Phase: Collect system state observations.
 
+        The 6 Jnanendriyas (Perception Organs):
+        1. PRAKRITI SENSE → System state
+        2. DHARMA SENSE → Ethical alignment (used in decide phase)
+        3. SUTRA SENSE → Documentation gaps
+        4. KARMA SENSE → Memory traces
+        5. VIVEKA SENSE → Discriminative ranking
+        6. SHRUTA SENSE → Filesystem vibrations (OPUS-156)
+
         Returns:
             (observations, metadata) where observations is list of intents discovered
         """
         observations = []
+
+        # 👂 SHRUTA SENSE: Perceive filesystem vibrations FIRST
+        # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
+        shruta_perception = self._perceive_filesystem_vibrations()
+        vibration_count = shruta_perception.total_count if shruta_perception else 0
 
         # 👁️ PRAKRITI SENSE: Perceive state and generate healing intents
         healing_intents = self._perceive_and_generate_healing_intents()
@@ -1454,6 +1681,7 @@ class CognitiveKernel(CognitiveCycle):
         self._cleanup_expired_intents()
 
         metadata = {
+            "vibration_count": vibration_count,  # OPUS-156: ShrutaSense
             "healing_count": len(healing_intents),
             "gap_count": len(gap_intents),
             "sankalpa_count": len(sankalpa_intents),

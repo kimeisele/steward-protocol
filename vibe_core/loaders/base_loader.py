@@ -425,6 +425,23 @@ class UnifiedLoader(ABC):
                 error=f"Validation failed: {validation_errors}",
             )
 
+        # === ZOLLAMT: GAD-000 Compliance Gate (OPUS-161) ===
+        compliance_result = cls._check_gad000_compliance(item_dir, manifest, config)
+        if not compliance_result["passed"]:
+            if compliance_result["mode"] == "block":
+                return ItemMeta(
+                    item_id=item_id,
+                    item_type=cls.item_type,
+                    manifest=manifest,
+                    manifest_path=manifest_path,
+                    entry_path=None,
+                    entry_class=None,
+                    loaded_successfully=False,
+                    error=f"GAD-000 compliance failed: {compliance_result['reason']}",
+                )
+            elif compliance_result["mode"] == "warn":
+                logger.warning(f"[ZOLLAMT] {item_id}: {compliance_result['reason']}")
+
         # === PRATYAYA: Load config, check enabled ===
         item_config = cls._load_config(item_dir, manifest, config)
 
@@ -518,6 +535,70 @@ class UnifiedLoader(ABC):
             errors.append("Manifest must have 'id' or 'name'")
 
         return errors
+
+    # =========================================================================
+    # ZOLLAMT: GAD-000 Compliance Gate (OPUS-161)
+    # =========================================================================
+
+    @classmethod
+    def _check_gad000_compliance(
+        cls,
+        item_dir: Path,
+        manifest: Dict[str, Any],
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        ZOLLAMT: GAD-000 Compliance Gate.
+
+        Checks if a module meets minimum GAD-000 compliance requirements
+        before allowing it to be loaded.
+
+        Args:
+            item_dir: Path to the module directory
+            manifest: Loaded manifest data
+            config: Global configuration
+
+        Returns:
+            Dict with:
+                - passed: bool - Whether compliance check passed
+                - mode: str - "block" | "warn" | "silent"
+                - reason: str - Why it failed (if failed)
+        """
+        # Get compliance mode from config
+        loader_config = {}
+        if config:
+            if hasattr(config, "model_dump"):
+                loader_config = config.model_dump().get("loader", {})
+            elif isinstance(config, dict):
+                loader_config = config.get("loader", {})
+
+        # Check if compliance checking is enabled
+        compliance_enabled = loader_config.get("compliance_check", True)
+        compliance_mode = loader_config.get("compliance_mode", "warn")
+
+        if not compliance_enabled or compliance_mode == "silent":
+            return {"passed": True, "mode": "silent", "reason": ""}
+
+        # Try to use GenesisService for compliance check
+        try:
+            from vibe_core.genesis import GenesisService
+
+            genesis = GenesisService.get_instance()
+            is_compliant = genesis.quick_check(item_dir)
+
+            if is_compliant:
+                return {"passed": True, "mode": compliance_mode, "reason": ""}
+            else:
+                return {
+                    "passed": False,
+                    "mode": compliance_mode,
+                    "reason": "Missing required GAD-000 infrastructure files",
+                }
+
+        except ImportError:
+            # Genesis service not available - graceful degradation
+            logger.debug(f"[ZOLLAMT] Genesis service unavailable, skipping compliance check for {item_dir.name}")
+            return {"passed": True, "mode": "silent", "reason": ""}
 
     # =========================================================================
     # PRATYAYA: Config Loading
