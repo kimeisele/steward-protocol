@@ -564,8 +564,8 @@ class StateService:
     def _commit_via_weaver(self) -> bool:
         """Try to commit via StateSyncWeaver."""
         try:
-            from .weaver import get_state_sync_weaver
             from .prakriti import Prakriti
+            from .weaver import get_state_sync_weaver
 
             prakriti = Prakriti(self.workspace)
             weaver = get_state_sync_weaver(prakriti)
