@@ -54,6 +54,43 @@ DECISION_MODIFIERS = {
     "ASK_USER": "घ",  # Position 3: Voiced, aspirated (questioning)
 }
 
+# =============================================================================
+# IAST TRANSLITERATION BRIDGE (Devanagari → Latin with Diacritics)
+# =============================================================================
+# This is the bridge layer for humans who can't read Devanagari
+# but want to understand the phonemic structure.
+
+DEVANAGARI_TO_IAST = {
+    # Layer consonants (Nasals - anunāsika)
+    "ङ": "ṅ",  # KERNEL - velar nasal
+    "ञ": "ñ",  # COGNITION - palatal nasal
+    "ण": "ṇ",  # REPAIR - retroflex nasal
+    "न": "n",  # INTERFACE - dental nasal
+    "म": "m",  # OUTPUT - labial nasal
+    # Decision modifiers (Stops - sparśa)
+    "क": "k",  # EXECUTE - voiceless velar
+    "ख": "kh",  # WARN_EXECUTE - aspirated voiceless velar
+    "ग": "g",  # BLOCK - voiced velar
+    "घ": "gh",  # ASK_USER - aspirated voiced velar
+    # Common vowel (for syllable completion)
+    "अ": "a",  # inherent vowel
+}
+
+IAST_TO_DEVANAGARI = {v: k for k, v in DEVANAGARI_TO_IAST.items()}
+
+# Full phonetic names for human reference
+AKSHARA_NAMES = {
+    "ङ": {"iast": "ṅa", "english": "nga", "position": "velar", "meaning": "deep/kernel"},
+    "ञ": {"iast": "ña", "english": "nya", "position": "palatal", "meaning": "flow/cognition"},
+    "ण": {"iast": "ṇa", "english": "na (retroflex)", "position": "retroflex", "meaning": "repair"},
+    "न": {"iast": "na", "english": "na (dental)", "position": "dental", "meaning": "interface"},
+    "म": {"iast": "ma", "english": "ma", "position": "labial", "meaning": "output/surface"},
+    "क": {"iast": "ka", "english": "ka", "position": "0", "meaning": "pure action"},
+    "ख": {"iast": "kha", "english": "kha", "position": "1", "meaning": "cautious action"},
+    "ग": {"iast": "ga", "english": "ga", "position": "2", "meaning": "stopping/blocking"},
+    "घ": {"iast": "gha", "english": "gha", "position": "3", "meaning": "questioning"},
+}
+
 # Intent type to layer mapping (heuristic)
 INTENT_TO_LAYER = {
     # KERNEL layer intents
@@ -446,3 +483,66 @@ def get_western_translation(mantra: Mantra) -> str:
 
     key = (mantra.layer, mantra.decision)
     return translations.get(key, f"{mantra.layer} actions: {mantra.decision}")
+
+
+def signature_to_iast(signature: str) -> str:
+    """
+    Convert a Devanagari signature to IAST (diacritics).
+
+    Example: ञख → ñakha
+
+    Args:
+        signature: Devanagari signature (e.g., "ञख")
+
+    Returns:
+        IAST transliteration (e.g., "ñakha")
+    """
+    result = []
+    for char in signature:
+        if char in DEVANAGARI_TO_IAST:
+            result.append(DEVANAGARI_TO_IAST[char])
+        else:
+            result.append(char)  # Keep unknown chars
+
+    # Add inherent 'a' vowel after consonants (Sanskrit rule)
+    iast = "".join(result)
+    # Simple heuristic: add 'a' between consonant clusters
+    return iast + "a" if iast else iast
+
+
+def get_full_translation(signature: str, layer: str, decision: str) -> Dict[str, Any]:
+    """
+    Get the complete multi-layer translation for a mantra.
+
+    This is the BRIDGE that connects all layers:
+    Layer 0 (Sanskrit): ञख
+    Layer 1 (IAST):     ñakha
+    Layer 2 (Technical): COGNITION/WARN_EXECUTE
+    Layer 3 (Semantic):  "Complex decisions need confirmation"
+
+    Args:
+        signature: Devanagari signature
+        layer: Technical layer name
+        decision: Decision type
+
+    Returns:
+        Dict with all translation layers
+    """
+    # Create a minimal Mantra for translation
+    mantra = Mantra(
+        signature=signature,
+        layer=layer,
+        decision=decision,
+        meaning=f"{layer}/{decision}",
+        total_count=0,
+        avg_score=0.5,
+    )
+
+    return {
+        "devanagari": signature,
+        "iast": signature_to_iast(signature),
+        "technical": f"{layer}/{decision}",
+        "semantic": get_western_translation(mantra),
+        "layer_info": AKSHARA_NAMES.get(signature[0], {}) if signature else {},
+        "decision_info": AKSHARA_NAMES.get(signature[1], {}) if len(signature) > 1 else {},
+    }

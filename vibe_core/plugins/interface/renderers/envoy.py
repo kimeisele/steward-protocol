@@ -1,12 +1,19 @@
 """
 Envoy Renderer (Terminal Interface).
 
+OPUS-152: Refactored to use render_sections() pattern.
+
 Renders ENVOY.md and handles bidirectional terminal commands.
 Uses EnvoyPlugin (kernel.envoy) for routing when available.
+
+Architecture:
+- INPUT: EnvoySync parses user commands from "## Request" section
+- OUTPUT: render_sections() uses config-driven sections from interface.yaml
+- BIDIRECTIONAL: Preserves user sections on each render
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.envoy_sync import EnvoySync, EnvoySyncState
 from vibe_core.io_service import DocumentType
@@ -20,12 +27,25 @@ logger = logging.getLogger("RENDERER_ENVOY")
 
 
 class EnvoyRenderer(BaseRenderer):
-    """Renders ENVOY.md and handles terminal commands."""
+    """Renders ENVOY.md and handles terminal commands.
+
+    OPUS-152: Uses render_sections() for config-driven output.
+    """
 
     def __init__(self, kernel):
         super().__init__(kernel)
         self.sync = EnvoySync()
         self.state = EnvoySyncState()
+        self._register_data_sources()
+
+    def _register_data_sources(self) -> None:
+        """Register data sources for config-driven sections.
+
+        Maps interface.yaml section sources to actual data.
+        """
+        self.register_data_source("envoy.pending_tasks", self._get_pending_tasks)
+        self.register_data_source("envoy.history", self._get_history)
+        self.register_data_source("envoy.routes", self._get_routes)
 
     @property
     def name(self) -> str:
@@ -58,13 +78,106 @@ class EnvoyRenderer(BaseRenderer):
             source=result.get("source", "envoy_plugin"),
         )
 
+    # =========================================================================
+    # DATA SOURCES (for render_sections)
+    # =========================================================================
+
+    def _get_pending_tasks(self) -> List[Dict[str, Any]]:
+        """Get pending tasks for status section."""
+        if not self.state.pending_tasks:
+            return []
+        return [
+            {
+                "Task ID": f"`{task_id}`",
+                "Status": f"**{meta.get('status', 'UNKNOWN')}**",
+                "Request": meta.get("request", ""),
+            }
+            for task_id, meta in self.state.pending_tasks.items()
+        ]
+
+    def _get_history(self) -> List[Dict[str, Any]]:
+        """Get request history for history section."""
+        history = []
+        for entry in reversed(self.state.request_history[-5:]):
+            response = entry.get("response", "") or entry.get("error", "")
+            if len(response) > 50:
+                response = response[:47] + "..."
+            history.append(
+                {
+                    "Time": entry.get("timestamp", ""),
+                    "Request": entry.get("request", ""),
+                    "Status": entry.get("status", ""),
+                    "Response": response,
+                }
+            )
+        return history
+
+    def _get_routes(self) -> List[Dict[str, Any]]:
+        """Get available routes for routes section."""
+        routes = []
+        if hasattr(self.kernel, "envoy"):
+            try:
+                kernel_routes = self.kernel.envoy.get_routes()
+                for route in kernel_routes[:20]:
+                    routes.append(
+                        {
+                            "Route": f"`{route.get('name', '')}`",
+                            "Description": route.get("description", "")[:50],
+                        }
+                    )
+            except Exception as e:
+                logger.debug(f"Could not get routes: {e}")
+        if not routes:
+            routes = [
+                {"Route": "`bootstrap`", "Description": "System Bootstrap"},
+                {"Route": "`status`", "Description": "System Status"},
+            ]
+        return routes
+
+    # =========================================================================
+    # RENDER (OPUS-152: Config-driven with bidirectional support)
+    # =========================================================================
+
+    def render(self) -> None:
+        """Render ENVOY.md with bidirectional support.
+
+        OPUS-152: Uses render_sections() for output when config available.
+
+        Flow:
+        1. Process INPUT (user commands from file)
+        2. Process completed tasks
+        3. Generate OUTPUT (config-driven or fallback)
+        """
+        # DEFENSIVE CHECK: Verify EnvoyPlugin loaded
+        if not hasattr(self.kernel, "envoy") or self.kernel.envoy is None:
+            logger.warning("EnvoyPlugin not available - returning offline message")
+            content = self._generate_offline_content()
+            self.merge_and_write(content)
+            return
+
+        # INPUT: Process user commands FIRST
+        self._sync_from_file()
+
+        # Process completed tasks
+        self._process_completed_tasks()
+
+        # OUTPUT: Use config-driven sections if available
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            # Fallback to hardcoded content
+            content = self._generate_content()
+            if content:
+                self.merge_and_write(content)
+
     def generate_content(self) -> Optional[str]:
         """
-        Generate ENVOY.md content (UNIFIED UI pattern).
+        Legacy generate_content for compatibility.
 
-        Note: This renderer is BIDIRECTIONAL. Input processing
-        happens in on_tick_pre via render(). This method only
-        generates the output content for the KING to write.
+        DEPRECATED: Use render() instead which calls render_sections().
+        This method is kept for backwards compatibility only.
         """
         # DEFENSIVE CHECK: Verify EnvoyPlugin loaded (Fix 2 from OPUS-004)
         # If EnvoyPlugin failed to boot, show offline message instead of crashing
