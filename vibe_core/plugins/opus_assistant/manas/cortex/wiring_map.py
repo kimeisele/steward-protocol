@@ -144,6 +144,7 @@ class WiringMap:
         "DharmaSense",  # Dharmic conscience
         "PrakritiSense",  # State perception
         "SutraSense",  # Documentation curation
+        "PranaSense",  # OPUS-166: Agent presence awareness
         # Note: MutationHandlers and KnowledgeGraph are tracked as capabilities
         # (they live outside cortex/ but are wired via IntentRouter)
     ]
