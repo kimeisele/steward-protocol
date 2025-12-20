@@ -1134,6 +1134,19 @@ class VivekaAction(BaseAction):
         # Save updated synapses
         self._save_synapses(synapses)
 
+    def _load_synapses(self) -> Dict[str, Any]:
+        """Load synapses from disk."""
+        import json
+
+        synapses_path = self._workspace / ".opus_state" / "synapses.json"
+        if synapses_path.exists():
+            try:
+                with open(synapses_path) as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+        return {"triggers": [], "version": "1.0"}
+
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
         """Save synapses to disk."""
         import json
