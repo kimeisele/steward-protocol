@@ -115,12 +115,47 @@ _No pending intents. MANAS is idle._
 
 *"MANAS lernt nicht um zu gewinnen, sondern um zu dienen."*
 
+{% if manas_status.neural_learning.ops %}
+#### ⏱️ Operational Status
+
+| Event | Timestamp | Status |
+|-------|-----------|--------|
+{% if manas_status.neural_learning.ops.last_synapse_update %}| **Last Synapse Update** | `{{ manas_status.neural_learning.ops.last_synapse_update[:19] }}` | 🟢 Active |
+{% else %}| **Last Synapse Update** | `never` | ⚪ No activity |
+{% endif %}
+{% if manas_status.neural_learning.ops.last_vairagya_prune %}| **Last Vairagya Prune** | `{{ manas_status.neural_learning.ops.last_vairagya_prune[:19] }}` | 🍂 {{ manas_status.neural_learning.ops.last_vairagya_count }} pruned |
+{% endif %}
+{% if manas_status.neural_learning.ops.last_decision %}| **Last Viveka Decision** | `{{ manas_status.neural_learning.ops.last_decision[:19] }}` | 🔱 Active |
+{% endif %}
+{% if manas_status.neural_learning.ops.last_reinforcement %}| **Last Reinforcement** | `{{ manas_status.neural_learning.ops.last_reinforcement.timestamp[:19] }}` | {% if manas_status.neural_learning.ops.last_reinforcement.success %}✅ +{{ "%.2f"|format(manas_status.neural_learning.ops.last_reinforcement.delta) }}{% else %}🔴 {{ "%.2f"|format(manas_status.neural_learning.ops.last_reinforcement.delta) }}{% endif %} |
+{% endif %}
+{% if manas_status.neural_learning.ops.synapses_file_mtime %}| **Synapses File** | `{{ manas_status.neural_learning.ops.synapses_file_mtime[:19] }}` | 📄 .opus_state/synapses.json |
+{% endif %}
+
+{% if manas_status.neural_learning.ops.last_reinforcement %}
+<details>
+<summary>Last Reinforcement Details</summary>
+
+- **Intent:** `{{ manas_status.neural_learning.ops.last_reinforcement.intent_type }}`
+- **Title:** {{ manas_status.neural_learning.ops.last_reinforcement.intent_title }}
+- **Result:** {% if manas_status.neural_learning.ops.last_reinforcement.success %}✅ Success{% else %}❌ Failure{% endif %}
+- **Weight:** {{ "%.3f"|format(manas_status.neural_learning.ops.last_reinforcement.old_weight) }} → {{ "%.3f"|format(manas_status.neural_learning.ops.last_reinforcement.new_weight) }}
+- **Delta:** {{ "%.3f"|format(manas_status.neural_learning.ops.last_reinforcement.delta) }}
+
+</details>
+{% endif %}
+{% endif %}
+
+#### 📊 Synaptic Metrics
+
 | Metric | Value | Description |
 |--------|-------|-------------|
 | **Synapses** | {{ manas_status.neural_learning.synapses.total_triggers }} triggers / {{ manas_status.neural_learning.synapses.total_connections }} connections | Learned patterns |
 | **Avg Weight** | {% if manas_status.neural_learning.synapses.avg_weight >= 0.7 %}🟢{% elif manas_status.neural_learning.synapses.avg_weight >= 0.5 %}🟡{% else %}🟠{% endif %} **{{ "%.2f"|format(manas_status.neural_learning.synapses.avg_weight) }}** | Pattern confidence |
 | **High Confidence** | {{ manas_status.neural_learning.synapses.high_confidence }} | Weights > 0.8 |
 | **Low Confidence** | {{ manas_status.neural_learning.synapses.low_confidence }} | Weights < 0.3 |
+{% if manas_status.neural_learning.synapses.latest_learned_at %}| **Latest Learning** | `{{ manas_status.neural_learning.synapses.latest_learned_at[:19] }}` | Most recent synapse |
+{% endif %}
 
 #### Prabhupada Patch (Anti-Ego)
 
@@ -133,10 +168,10 @@ _No pending intents. MANAS is idle._
 {% if manas_status.neural_learning.recent_decisions %}
 #### Recent Viveka Decisions
 
-| Intent | Decision | Dharmic Score |
-|--------|----------|---------------|
+| Intent | Decision | Dharmic Score | Timestamp |
+|--------|----------|---------------|-----------|
 {% for d in manas_status.neural_learning.recent_decisions[:5] %}
-| `{{ d.intent }}` | {% if d.decision == 'EXECUTE' %}✅{% elif d.decision == 'BLOCK' %}🚫{% elif d.decision == 'WARN_EXECUTE' %}⚠️{% else %}❓{% endif %} {{ d.decision }} | {{ "%.2f"|format(d.dharmic_score) }} |
+| `{{ d.intent[:25] }}` | {% if d.decision == 'EXECUTE' %}✅{% elif d.decision == 'BLOCK' %}🚫{% elif d.decision == 'WARN_EXECUTE' %}⚠️{% else %}❓{% endif %} {{ d.decision }} | {{ "%.2f"|format(d.dharmic_score) }} | `{{ d.timestamp[:16] if d.timestamp else '?' }}` |
 {% endfor %}
 {% endif %}
 
