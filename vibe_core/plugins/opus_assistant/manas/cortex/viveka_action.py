@@ -61,6 +61,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
+# P0: Import StateService for centralized state management
+from vibe_core.state import get_state_service
+
 from .base_action import ActionResult, BaseAction
 
 if TYPE_CHECKING:
@@ -315,9 +318,9 @@ class VivekaDecisionLogger:
             return []
 
     def _save_entries(self, entries: List[Dict[str, Any]]) -> None:
-        """Save entries to disk."""
-        self._log_file.parent.mkdir(parents=True, exist_ok=True)
-        self._log_file.write_text(json.dumps(entries, indent=2))
+        """Save entries to disk via StateService (P0)."""
+        state = get_state_service(self._workspace)
+        state.save("viveka_decisions.json", entries)
 
     def get_recent(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent decisions."""
@@ -1205,12 +1208,8 @@ class VivekaAction(BaseAction):
         Track last reinforcement event for operational transparency.
 
         Writes to .opus_state/last_reinforcement.json for dashboard visibility.
+        Uses StateService (P0) for centralized state management.
         """
-        import json
-
-        tracking_path = self._workspace / ".opus_state" / "last_reinforcement.json"
-        tracking_path.parent.mkdir(parents=True, exist_ok=True)
-
         tracking_data = {
             "timestamp": datetime.now().isoformat(),
             "intent_type": intent.intent_type,
@@ -1222,7 +1221,8 @@ class VivekaAction(BaseAction):
         }
 
         try:
-            tracking_path.write_text(json.dumps(tracking_data, indent=2))
+            state = get_state_service(self._workspace)
+            state.save("last_reinforcement.json", tracking_data, create_backup=False)
         except Exception as e:
             logger.debug(f"Failed to track reinforcement: {e}")
 
@@ -1338,11 +1338,7 @@ class VivekaAction(BaseAction):
         return pruned_count
 
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk with automatic backup and ego pruning."""
-        import hashlib
-        import json
-        import shutil
-
+        """Save synapses to disk via StateService (P0) with ego pruning."""
         # Apply VAIRAGYA before saving - ego pruning
         vairagya_count = self._apply_vairagya(synapses)
 
@@ -1361,31 +1357,9 @@ class VivekaAction(BaseAction):
             synapses["meta"]["last_vairagya_prune"] = now
             synapses["meta"]["last_vairagya_count"] = vairagya_count
 
-        synapses_path = self._workspace / ".opus_state" / "synapses.json"
-        synapses_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Create backup before saving (in case of corruption)
-        if synapses_path.exists():
-            backup_dir = self._workspace / ".opus_state" / "synapses_backup"
-            backup_dir.mkdir(parents=True, exist_ok=True)
-
-            # Use timestamp + content hash for backup name
-            content_hash = hashlib.sha256(json.dumps(synapses, sort_keys=True).encode()).hexdigest()[:8]
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = backup_dir / f"synapses_{timestamp}_{content_hash}.json"
-
-            # Only backup if content changed
-            if not backup_path.exists():
-                shutil.copy2(synapses_path, backup_path)
-                logger.debug(f"💾 SYNAPSE BACKUP: {backup_path.name}")
-
-            # Keep only last 10 backups
-            backups = sorted(backup_dir.glob("synapses_*.json"))
-            for old_backup in backups[:-10]:
-                old_backup.unlink()
-
-        with open(synapses_path, "w") as f:
-            json.dump(synapses, f, indent=2)
+        # P0: Use StateService for centralized writes with automatic backup rotation
+        state = get_state_service(self._workspace)
+        state.save("synapses.json", synapses)
 
     # =========================================================================
     # OPUS-133: SATYAGRAHA - Delayed Karma Validation
@@ -1548,10 +1522,6 @@ class VivekaAction(BaseAction):
         return {"pending": [], "history": [], "version": "1.0"}
 
     def _save_karma_log(self, karma_log: Dict[str, Any]) -> None:
-        """Save karma log to disk."""
-        import json
-
-        karma_path = self._workspace / ".opus_state" / "karma_log.json"
-        karma_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(karma_path, "w") as f:
-            json.dump(karma_log, f, indent=2)
+        """Save karma log to disk via StateService (P0)."""
+        state = get_state_service(self._workspace)
+        state.save("karma_log.json", karma_log)

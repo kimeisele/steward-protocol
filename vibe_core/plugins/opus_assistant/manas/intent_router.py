@@ -48,6 +48,9 @@ try:
 except ImportError:
     ToolCall = None  # type: ignore
 
+# P0: StateService for centralized state management
+from vibe_core.state import get_state_service
+
 # OPUS-133: VivekaAction - Dharmic Gate (Synaptic Learning)
 try:
     from .cortex.viveka_action import VivekaAction
@@ -321,10 +324,10 @@ class IntentRouter:
         return {}
 
     def _save_pending_intents(self, pending: Dict[str, Dict[str, Any]]) -> None:
-        """Save pending intents to JSON file."""
-        pending_file = self._get_state_dir() / PENDING_INTENTS_FILE
+        """Save pending intents to JSON file via StateService (P0)."""
         try:
-            pending_file.write_text(json.dumps(pending, indent=2, default=str))
+            state = get_state_service(self._workspace)
+            state.save(PENDING_INTENTS_FILE, pending, create_backup=False)
         except Exception as e:
             logger.error(f"Failed to save pending intents: {e}")
 
@@ -486,7 +489,7 @@ class IntentRouter:
 
     def _record_karma(self, intent: Intent, success: bool, rejected: bool = False) -> None:
         """
-        OPUS-075: Record karma feedback for learning.
+        OPUS-075: Record karma feedback for learning via StateService (P0).
 
         Karma is used to adjust future confidence thresholds and improve
         MANAS's judgment over time.
@@ -495,13 +498,9 @@ class IntentRouter:
         if not karma_config.get("enabled", True):
             return
 
-        karma_file = self._get_state_dir() / KARMA_LOG_FILE
-        karma_log = []
-        if karma_file.exists():
-            try:
-                karma_log = json.loads(karma_file.read_text())
-            except Exception:
-                karma_log = []
+        # P0: Use StateService for centralized state
+        state = get_state_service(self._workspace)
+        karma_log = state.load(KARMA_LOG_FILE, default=[])
 
         # Calculate karma score
         if rejected:
@@ -525,7 +524,7 @@ class IntentRouter:
         karma_log = karma_log[-100:]
 
         try:
-            karma_file.write_text(json.dumps(karma_log, indent=2))
+            state.save(KARMA_LOG_FILE, karma_log, create_backup=False)
         except Exception as e:
             logger.warning(f"Failed to save karma log: {e}")
 
@@ -705,11 +704,9 @@ class IntentRouter:
 
         OPUS-112: When MANAS executes a tool directly, it must be logged
         as SYSTEM ACT (not User Command) for audit trail.
+        Uses StateService (P0) for centralized JSONL append.
         """
         try:
-            journal_path = self._workspace / ".opus_state" / "system_journal.jsonl"
-            journal_path.parent.mkdir(parents=True, exist_ok=True)
-
             entry = {
                 "timestamp": datetime.now().isoformat(),
                 "type": "SYSTEM_ACT",
@@ -721,8 +718,9 @@ class IntentRouter:
                 "risk": intent.risk.value if hasattr(intent.risk, "value") else str(intent.risk),
             }
 
-            with open(journal_path, "a") as f:
-                f.write(json.dumps(entry) + "\n")
+            # P0: Use StateService for JSONL append
+            state = get_state_service(self._workspace)
+            state.append("system_journal.jsonl", entry)
 
             logger.debug(f"📜 SYSTEM ACT logged: {tool_name}")
 

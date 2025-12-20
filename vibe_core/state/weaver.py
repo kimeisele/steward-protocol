@@ -24,6 +24,7 @@ from threading import Lock
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
 from .runtime_state import RuntimeStateDefinition, get_runtime_state_definition
+from .state_service import get_state_service
 
 if TYPE_CHECKING:
     from .guna_classifier import StateGuna
@@ -274,6 +275,18 @@ class StateSyncWeaver:
                 "start_time": str(self.prakriti.session.start_time),
             }
 
+        # 4. P0: StateService dirty files (MANAS state writes)
+        try:
+            state_service = get_state_service(self.workspace)
+            dirty_files = state_service.get_dirty_files()
+            for path in dirty_files:
+                # Add to runtime_files if not already tracked
+                rel_path = str(path.relative_to(self.workspace))
+                if rel_path not in state_map.runtime_files:
+                    state_map.runtime_files.append(rel_path)
+        except Exception:
+            pass  # StateService not initialized yet
+
         return state_map
 
     def _classify_state(self, state_map: WeaverStateMap) -> ClassifiedState:
@@ -403,6 +416,13 @@ class StateSyncWeaver:
                 )
 
                 if result:
+                    # P0: Clear StateService dirty flags after successful commit
+                    try:
+                        state_service = get_state_service(self.workspace)
+                        state_service.clear_dirty_flags()
+                    except Exception:
+                        pass  # Non-critical
+
                     return CommitResult(
                         success=True,
                         sha=result.sha if hasattr(result, "sha") else None,
