@@ -943,12 +943,22 @@ OPUS-ASSISTANT IST EIN PLUGIN...
 
 ### Lösung (TODO)
 
-1. [ ] **ENTSCHEIDUNG:** Weaver als einzige Commit-Authority
-2. [ ] `heartbeat.py` → Weaver integrieren (statt direkt Prakriti)
-3. [ ] `kernel_impl.py` → `begin_session()` / `end_session()` aufrufen
-4. [ ] Plugin `.opus_state/` → nach Root migrieren oder eliminieren
-5. [ ] Cleanup-Policy für synapses_backup/, viveka_decisions.json
-6. [ ] MANAS von Plugin zu First-Class Kernel-Subsystem erheben
+**FINDING:** Weaver funktioniert bereits! Heartbeat nutzt ihn. Das Problem: Andere Pfade bypassen ihn.
+
+| Was | Status | Aktion |
+|-----|--------|--------|
+| `heartbeat.py` | ✅ Nutzt Weaver | Legacy-Fallback entfernen |
+| `opus_assistant` | ❌ Schreibt direkt | Via Weaver routen |
+| `interface` | ❌ Schreibt direkt | Via Weaver routen |
+| `chronicle` | ⚠️ Fallback | Auf Weaver-only umstellen |
+
+**Priorisierte Schritte:**
+1. [ ] **AUDIT:** Alle direkten State-Schreiber identifizieren
+2. [ ] **CONSOLIDATE:** Plugin `.opus_state/` → Root migrieren
+3. [ ] **ROUTE:** Alle Schreiber durch Weaver routen
+4. [ ] **ELIMINATE:** Legacy-Fallbacks entfernen
+5. [ ] **CLEANUP:** Policy für wachsende Files (viveka_decisions, synapses_backup)
+6. [ ] **ELEVATE:** MANAS zu First-Class Kernel-Subsystem
 
 <!-- /@AI -->
 
