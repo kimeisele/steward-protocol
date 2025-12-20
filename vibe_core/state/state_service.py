@@ -42,15 +42,37 @@ class StatePolicy:
     consolidation_fn: Optional[Callable[[List[Dict]], List[Dict]]] = None
 
 
+# Lazy import for Samskara consolidation (avoid circular imports)
+def _get_viveka_consolidation_fn():
+    """Get consolidation function for viveka_decisions.json."""
+    try:
+        from .samskara import consolidate_viveka_decisions
+
+        return consolidate_viveka_decisions
+    except ImportError:
+        return None
+
+
 # Default policies by file pattern
 DEFAULT_POLICIES: Dict[str, StatePolicy] = {
-    "viveka_decisions.json": StatePolicy(max_backups=3, max_size_kb=100),
+    "viveka_decisions.json": StatePolicy(
+        max_backups=3,
+        max_size_kb=100,
+        consolidation_fn=None,  # Set at runtime via _init_consolidation
+    ),
     "synapses.json": StatePolicy(max_backups=5, max_size_kb=50),
     "session.json": StatePolicy(max_backups=2, max_size_kb=1000),
     "karma_history.jsonl": StatePolicy(append_mode=True, max_size_kb=100),
     "observations.jsonl": StatePolicy(append_mode=True, max_size_kb=100),
     "syscalls.jsonl": StatePolicy(append_mode=True, max_size_kb=500),
 }
+
+
+def _init_consolidation_policies():
+    """Initialize consolidation functions (called once at startup)."""
+    fn = _get_viveka_consolidation_fn()
+    if fn:
+        DEFAULT_POLICIES["viveka_decisions.json"].consolidation_fn = fn
 
 
 @dataclass
@@ -91,6 +113,9 @@ class StateService:
         self.workspace = Path(workspace).resolve()
         self.state_root = self.workspace / ".opus_state"
         self.state_root.mkdir(parents=True, exist_ok=True)
+
+        # Initialize consolidation functions (Phase 2: Samskara)
+        _init_consolidation_policies()
 
         # Policies (can be extended at runtime)
         self.policies: Dict[str, StatePolicy] = DEFAULT_POLICIES.copy()
