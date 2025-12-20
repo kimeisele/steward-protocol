@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+    from .cortex.prana_sense import PranaPerception, PranaSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
     from .cortex.sutra_sense import SutraSense, SutraSummary
 
@@ -317,6 +318,11 @@ class CognitiveKernel(CognitiveCycle):
         # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
         self._shruta_sense: Optional["ShrutaSense"] = None
         self._init_shruta_sense()
+
+        # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence Awareness (OPUS-166)
+        # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
+        self._prana_sense: Optional["PranaSense"] = None
+        self._init_prana_sense()
 
         # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
         # Auto-generates GAD-000 compliant infrastructure for new modules
@@ -961,6 +967,47 @@ class CognitiveKernel(CognitiveCycle):
         except Exception as e:
             logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
             self._shruta_sense = None
+
+    # =========================================================================
+    # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence (OPUS-166)
+    # =========================================================================
+
+    def _init_prana_sense(self) -> None:
+        """
+        Initialize Prana Sense - Agent Presence Awareness.
+
+        OPUS-166: This provides awareness of which agents are alive/dead.
+        Integrates with ShrutaSense for real-time presence detection.
+
+        Sanskrit: प्राण (Prana) = Life force, breath, vital energy
+
+        "Prana is the breath of the universe. When an agent breathes (pulses),
+         it leaves a trace. When it stops breathing, the trace vanishes."
+        """
+        try:
+            from .cortex.prana_sense import PranaSense
+
+            prana_config = self._full_config.get("prana_sense", {})
+            self._prana_sense = PranaSense(
+                workspace=self._workspace,
+                config=prana_config,
+            )
+
+            # Register with ShrutaSense for real-time presence updates
+            if self._shruta_sense:
+                self._prana_sense.register_with_shruta(self._shruta_sense)
+                logger.info("🫀 PRANA SENSE: Connected to ShrutaSense for real-time presence detection")
+
+            # Initial perception to set baseline
+            perception = self._prana_sense.perceive()
+            logger.info(
+                f"🫀 PRANA SENSE: 7th Jnanendriya activated - "
+                f"{perception.total_alive}/{perception.total_registered} agents alive"
+            )
+
+        except Exception as e:
+            logger.warning(f"🫀 PRANA SENSE: Could not initialize: {e}")
+            self._prana_sense = None
 
     def _init_infrastructure_genesis(self) -> None:
         """
