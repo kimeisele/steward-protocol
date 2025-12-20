@@ -5,7 +5,7 @@
     "manas": {
       "ashrama": "grihastha",
       "varna": "manusha",
-      "bhakti": 65,
+      "bhakti": 70,
       "task_completions": 0,
       "history": [
         {
@@ -109,6 +109,12 @@
           "delta": 5,
           "reason": "Successful intent: maintenance",
           "timestamp": "2025-12-20T08:52:02.501009"
+        },
+        {
+          "type": "bhakti",
+          "delta": 5,
+          "reason": "Successful intent: maintenance",
+          "timestamp": "2025-12-20T09:05:46.951282"
         }
       ],
       "registered_at": "2025-12-17T00:42:12.022365"

@@ -751,6 +751,7 @@ class IntentRouter:
         # =====================================================================
         # OPUS-133: VIVEKA GATE - Dharmic Discrimination (BEFORE any dispatch)
         # =====================================================================
+        viveka_result: Optional[Dict[str, Any]] = None  # For PRASADAM dharmic_score
         if self._viveka:
             viveka_result = self._viveka.evaluate(intent)
             decision = viveka_result.get("decision", "EXECUTE")
@@ -828,11 +829,13 @@ class IntentRouter:
                 logger.info(f"📝 SRUTI: {validation.warnings}")
                 result["sruti_validation"] = validation.to_dict()
 
-            # OPUS-133: Synaptic feedback - reinforce successful patterns
+            # OPUS-133: Synaptic feedback - reinforce patterns with PRASADAM
             success = result.get("success", True)
-            if self._viveka and success:
-                self._viveka.reinforce(intent, success=True)
-                logger.debug(f"🧠 Synapse reinforced: {intent.intent_type}")
+            if self._viveka:
+                # Get dharmic score for PRASADAM (grace for pure intent failures)
+                dharmic_score = viveka_result.get("dharmic_score", 0.5) if viveka_result else 0.5
+                self._viveka.reinforce(intent, success=success, dharmic_score=dharmic_score)
+                logger.debug(f"🧠 Synapse feedback: {intent.intent_type} (success={success})")
 
             return RouteResult(
                 success=success,

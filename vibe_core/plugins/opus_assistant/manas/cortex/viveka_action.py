@@ -105,6 +105,12 @@ DHARMIC_DUTIES = {
     "validate_schema",  # Validation is hygiene
 }
 
+# PRASADAM: Grace for Pure Intent
+# When intent was pure (high dharmic score) but execution failed
+# due to technical reasons, the system shows grace - no punishment.
+# A servant who runs to serve and stumbles should not be punished.
+PRASADAM_THRESHOLD = 0.8  # Intent score above this gets grace on failure
+
 
 # =============================================================================
 # OPUS-133: SHIVA CONTEXT - "Necessary Evil" Patterns
@@ -1063,7 +1069,7 @@ class VivekaAction(BaseAction):
     # OPUS-133: SYNAPTIC LEARNING - Reinforce Successful Patterns
     # =========================================================================
 
-    def reinforce(self, intent: "Intent", success: bool = True) -> None:
+    def reinforce(self, intent: "Intent", success: bool = True, dharmic_score: Optional[float] = None) -> None:
         """
         Reinforce synaptic connections based on execution outcome.
 
@@ -1074,6 +1080,7 @@ class VivekaAction(BaseAction):
         Args:
             intent: The intent that was executed
             success: Whether the execution was successful
+            dharmic_score: Optional original dharmic score (for PRASADAM)
 
         Neural Learning (OPUS-133 P2: Negative Learning):
         - Success (+): Increase weight by 0.05 (max 1.0)
@@ -1082,6 +1089,7 @@ class VivekaAction(BaseAction):
         OPUS-133 Prabhupada Patch:
         - NISHKAMA KARMA: Dharmic duties get no reinforcement
         - VAIRAGYA: Applied after weight updates (ego pruning)
+        - PRASADAM: Grace for pure intent failures
 
         The asymmetric learning rate (2x penalty for failure) ensures
         MANAS learns faster from mistakes than from successes.
@@ -1095,6 +1103,15 @@ class VivekaAction(BaseAction):
         if intent.intent_type in DHARMIC_DUTIES:
             logger.info(f"🕉️ NISHKAMA KARMA: {intent.intent_type} is dharmic duty - no reinforcement")
             return  # Duty without reward
+
+        # =====================================================================
+        # PRASADAM: Grace for Pure Intent
+        # =====================================================================
+        # A servant who runs to serve and stumbles should not be punished.
+        # If the INTENTION was pure but execution failed technically, show grace.
+        if not success and dharmic_score is not None and dharmic_score >= PRASADAM_THRESHOLD:
+            logger.info(f"🛡️ PRASADAM: Pure intent ({dharmic_score:.2f}) protected from technical failure")
+            return  # Grace - no punishment for pure intent
 
         # Determine trigger and action patterns
         trigger = f"trigger:{intent.intent_type}"
@@ -1125,6 +1142,8 @@ class VivekaAction(BaseAction):
             negative_learning_rate = 0.10
             new_weight = max(0.1, current_weight - negative_learning_rate)
             self._update_synapse_weight(trigger, action, new_weight)
+            # Track failure for operational transparency
+            self._track_last_reinforcement(intent, success=False, old_weight=current_weight, new_weight=new_weight)
             logger.warning(
                 f"🔴 SYNAPSE WEAKENED: {synapse_key} ({current_weight:.2f} → {new_weight:.2f}) [failure penalty]"
             )
@@ -1137,7 +1156,36 @@ class VivekaAction(BaseAction):
         # Update the synapse
         self._update_synapse_weight(trigger, action, new_weight)
 
+        # Track last reinforcement for operational transparency
+        self._track_last_reinforcement(intent, success, current_weight, new_weight)
+
         logger.info(f"🧠 SYNAPSE REINFORCED: {synapse_key} ({current_weight:.2f} → {new_weight:.2f})")
+
+    def _track_last_reinforcement(self, intent: "Intent", success: bool, old_weight: float, new_weight: float) -> None:
+        """
+        Track last reinforcement event for operational transparency.
+
+        Writes to .opus_state/last_reinforcement.json for dashboard visibility.
+        """
+        import json
+
+        tracking_path = self._workspace / ".opus_state" / "last_reinforcement.json"
+        tracking_path.parent.mkdir(parents=True, exist_ok=True)
+
+        tracking_data = {
+            "timestamp": datetime.now().isoformat(),
+            "intent_type": intent.intent_type,
+            "intent_title": intent.title[:50],
+            "success": success,
+            "old_weight": old_weight,
+            "new_weight": new_weight,
+            "delta": round(new_weight - old_weight, 3),
+        }
+
+        try:
+            tracking_path.write_text(json.dumps(tracking_data, indent=2))
+        except Exception as e:
+            logger.debug(f"Failed to track reinforcement: {e}")
 
     def _update_synapse_weight(self, trigger: str, action: str, weight: float) -> None:
         """Update a synapse weight in the synapses.json file."""
@@ -1257,7 +1305,22 @@ class VivekaAction(BaseAction):
         import shutil
 
         # Apply VAIRAGYA before saving - ego pruning
-        self._apply_vairagya(synapses)
+        vairagya_count = self._apply_vairagya(synapses)
+
+        # =================================================================
+        # OPERATIONAL TIMESTAMPS (for sysadmin transparency)
+        # =================================================================
+        now = datetime.now().isoformat()
+
+        # Update metadata with operational timestamps
+        if "meta" not in synapses:
+            synapses["meta"] = {}
+
+        synapses["meta"]["last_synapse_update"] = now
+
+        if vairagya_count > 0:
+            synapses["meta"]["last_vairagya_prune"] = now
+            synapses["meta"]["last_vairagya_count"] = vairagya_count
 
         synapses_path = self._workspace / ".opus_state" / "synapses.json"
         synapses_path.parent.mkdir(parents=True, exist_ok=True)
