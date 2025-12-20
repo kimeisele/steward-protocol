@@ -1009,6 +1009,102 @@ class CognitiveKernel(CognitiveCycle):
             logger.warning(f"🫀 PRANA SENSE: Could not initialize: {e}")
             self._prana_sense = None
 
+    def _perceive_and_generate_presence_intents(self) -> List[Intent]:
+        """
+        Use PranaSense to perceive agent presence and generate intents.
+
+        OPUS-166: Reacts to agent lifecycle events:
+        - Deaths: Generate investigation intent (why did agent die?)
+        - Births: Log acknowledgement (new agent registered)
+
+        Returns:
+            List of presence-related intents
+        """
+        if not self._prana_sense:
+            return []
+
+        presence_intents = []
+
+        try:
+            # Perceive current presence state
+            perception = self._prana_sense.perceive()
+
+            # React to deaths - generate investigation intents
+            for death in perception.deaths:
+                agent_id = death.agent_id
+                presence = self._prana_sense.get_agent_presence(agent_id)
+
+                intent = Intent(
+                    id=f"prana_death_{agent_id}_{datetime.utcnow().strftime('%H%M%S')}",
+                    intent_type="investigate_agent_death",
+                    title=f"Agent {agent_id} died",
+                    description=f"Agent '{agent_id}' is no longer responding. "
+                    f"Last seen: {presence.last_seen if presence else 'unknown'}. "
+                    f"Investigate cause and consider restart.",
+                    reasoning="PranaSense detected missing heartbeat (node.json deleted/stale). "
+                    "Dead agents may indicate crashes, resource issues, or intentional shutdown.",
+                    priority=IntentPriority.HIGH,
+                    risk=IntentRisk.MEDIUM,
+                    params={
+                        "agent_id": agent_id,
+                        "last_seen": presence.last_seen if presence else None,
+                        "cartridge_path": str(presence.cartridge_path) if presence else None,
+                    },
+                    auto_executable=False,  # Human should review before restart
+                    related_files=[f"agents/{agent_id}/node.json"],
+                )
+                presence_intents.append(intent)
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' died - investigation intent generated")
+
+            # React to births - log and optionally generate welcome intent
+            for birth in perception.births:
+                agent_id = birth.agent_id
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' born - now alive")
+
+                # For now, just log. Could generate "integrate_new_agent" intent later
+                # if we want MANAS to proactively help new agents
+
+            # Log summary
+            if perception.deaths or perception.births:
+                logger.info(
+                    f"🫀 PRANA SENSE: {len(perception.deaths)} deaths, {len(perception.births)} births detected"
+                )
+
+        except Exception as e:
+            logger.warning(f"🫀 PRANA SENSE: Perception failed: {e}")
+
+        return presence_intents
+
+    def inject_prana_sense(self, sense: "PranaSense") -> None:
+        """
+        Inject the Prana Sense for agent presence awareness.
+
+        OPUS-166: PranaSense is the 7th Jnanendriya.
+
+        "Prana is the breath of the universe. When an agent breathes,
+         MANAS feels the vibration."
+
+        Args:
+            sense: PranaSense instance
+        """
+        self._prana_sense = sense
+        logger.info("🫀 PRANA SENSE: Seventh Jnanendriya injected - MANAS can now perceive agent presence")
+
+    def get_prana_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Prana summary for OPUS.md display."""
+        if not self._prana_sense:
+            return None
+        try:
+            perception = self._prana_sense.perceive()
+            return {
+                "total_registered": perception.total_registered,
+                "total_alive": perception.total_alive,
+                "alive_agents": perception.alive_agents,
+                "dead_agents": [a.agent_id for a in perception.agents if not a.is_alive],
+            }
+        except Exception:
+            return None
+
     def _init_infrastructure_genesis(self) -> None:
         """
         Initialize the Infrastructure Genesis service (OPUS-158).
@@ -1716,6 +1812,10 @@ class CognitiveKernel(CognitiveCycle):
         healing_intents = self._perceive_and_generate_healing_intents()
         observations.extend(healing_intents)
 
+        # 🫀 PRANA SENSE: Perceive agent presence and generate lifecycle intents
+        presence_intents = self._perceive_and_generate_presence_intents()
+        observations.extend(presence_intents)
+
         # 📜 SUTRA SENSE: Perceive documentation gaps
         gap_intents = self._perceive_and_generate_gap_intents()
         observations.extend(gap_intents)
@@ -1730,6 +1830,7 @@ class CognitiveKernel(CognitiveCycle):
         metadata = {
             "vibration_count": vibration_count,  # OPUS-156: ShrutaSense
             "healing_count": len(healing_intents),
+            "presence_count": len(presence_intents),  # OPUS-166: PranaSense
             "gap_count": len(gap_intents),
             "sankalpa_count": len(sankalpa_intents),
         }
