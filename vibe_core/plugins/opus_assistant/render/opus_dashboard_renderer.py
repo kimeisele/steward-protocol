@@ -1141,13 +1141,15 @@ class OpusDashboardRenderer:
         """
         OPUS-133: Gather neural learning status from VivekaAction.
 
-        Returns synaptic weights, learning rates, and Prabhupada Patch metrics.
+        Returns synaptic weights, learning rates, Prabhupada Patch metrics,
+        and OPERATIONAL TIMESTAMPS for sysadmin reliability.
         """
         try:
             import json
+            import os
             from datetime import datetime
 
-            neural = {
+            neural: Dict[str, Any] = {
                 "synapses": {
                     "total_triggers": 0,
                     "total_connections": 0,
@@ -1166,31 +1168,71 @@ class OpusDashboardRenderer:
                     "prasadam_threshold": 0.8,
                 },
                 "recent_decisions": [],
-                "last_reinforcement": None,
+                # ====================================================
+                # OPERATIONAL TIMESTAMPS (Sysadmin transparency)
+                # ====================================================
+                "ops": {
+                    "last_synapse_update": None,
+                    "last_vairagya_prune": None,
+                    "last_vairagya_count": 0,
+                    "last_reinforcement": None,
+                    "last_decision": None,
+                    "synapses_file_mtime": None,
+                    "decisions_file_mtime": None,
+                },
+                "last_reinforcement": None,  # Legacy compat
             }
 
             # Read synapses from .opus_state/synapses.json
             synapses_path = self._root / ".opus_state" / "synapses.json"
             if synapses_path.exists():
                 try:
+                    # Get file modification time for ops transparency
+                    mtime = os.path.getmtime(synapses_path)
+                    neural["ops"]["synapses_file_mtime"] = datetime.fromtimestamp(mtime).isoformat()
+
                     data = json.loads(synapses_path.read_text())
                     triggers = data.get("triggers", [])
                     neural["synapses"]["total_triggers"] = len(triggers)
 
+                    # Read operational metadata
+                    meta = data.get("meta", {})
+                    neural["ops"]["last_synapse_update"] = meta.get("last_synapse_update")
+                    neural["ops"]["last_vairagya_prune"] = meta.get("last_vairagya_prune")
+                    neural["ops"]["last_vairagya_count"] = meta.get("last_vairagya_count", 0)
+
                     all_weights = []
                     total_connections = 0
+                    latest_learned_at = None
+
                     for trigger in triggers:
                         connections = trigger.get("connections", [])
                         total_connections += len(connections)
                         for conn in connections:
                             weight = conn.get("weight", 0.5)
                             all_weights.append(weight)
+                            # Track latest learned_at timestamp
+                            learned_at = conn.get("learned_at")
+                            if learned_at and (not latest_learned_at or learned_at > latest_learned_at):
+                                latest_learned_at = learned_at
 
                     neural["synapses"]["total_connections"] = total_connections
+                    neural["synapses"]["latest_learned_at"] = latest_learned_at
+
                     if all_weights:
                         neural["synapses"]["avg_weight"] = sum(all_weights) / len(all_weights)
                         neural["synapses"]["high_confidence"] = len([w for w in all_weights if w > 0.8])
                         neural["synapses"]["low_confidence"] = len([w for w in all_weights if w < 0.3])
+                except Exception as e:
+                    logger.debug(f"Failed to read synapses: {e}")
+
+            # Read last reinforcement tracking
+            reinforce_path = self._root / ".opus_state" / "last_reinforcement.json"
+            if reinforce_path.exists():
+                try:
+                    data = json.loads(reinforce_path.read_text())
+                    neural["ops"]["last_reinforcement"] = data
+                    neural["last_reinforcement"] = data  # Legacy compat
                 except Exception:
                     pass
 
@@ -1198,19 +1240,29 @@ class OpusDashboardRenderer:
             decisions_path = self._root / ".opus_state" / "viveka_decisions.json"
             if decisions_path.exists():
                 try:
+                    # Get file modification time
+                    mtime = os.path.getmtime(decisions_path)
+                    neural["ops"]["decisions_file_mtime"] = datetime.fromtimestamp(mtime).isoformat()
+
                     data = json.loads(decisions_path.read_text())
-                    decisions = data.get("decisions", [])[-10:]  # Last 10
+                    # viveka_decisions.json is a LIST, not {"decisions": [...]}
+                    decisions = data if isinstance(data, list) else data.get("decisions", [])
+                    decisions = decisions[-10:]  # Last 10
+
+                    if decisions:
+                        neural["ops"]["last_decision"] = decisions[-1].get("timestamp")
+
                     neural["recent_decisions"] = [
                         {
                             "intent": d.get("intent_type", "?"),
                             "decision": d.get("decision", "?"),
                             "dharmic_score": d.get("dharmic_score", 0),
-                            "timestamp": d.get("timestamp", "?")[-19:],
+                            "timestamp": d.get("timestamp", ""),  # Full timestamp, template handles truncation
                         }
                         for d in decisions
                     ]
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to read decisions: {e}")
 
             # Get Prabhupada Patch constants from viveka_action.py
             try:
