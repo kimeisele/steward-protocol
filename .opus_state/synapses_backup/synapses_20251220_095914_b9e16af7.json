@@ -1,0 +1,266 @@
+{
+  "schema": "v2",
+  "description": "OPUS-133: Synaptic Weight Matrix - Seeded baseline",
+  "weights": {
+    "trigger:run_tests": {
+      "action:run_tests": 0.9,
+      "action:execute": 0.85
+    },
+    "trigger:check_lint": {
+      "action:check_lint": 0.9,
+      "action:execute": 0.85
+    },
+    "trigger:format_code": {
+      "action:format_code": 0.9,
+      "action:execute": 0.85
+    },
+    "trigger:validate_schema": {
+      "action:validate_schema": 0.85,
+      "action:execute": 0.8
+    },
+    "trigger:health_check": {
+      "action:health_check": 0.9,
+      "action:execute": 0.85
+    },
+    "trigger:backup_state": {
+      "action:backup_state": 0.9,
+      "action:execute": 0.85
+    },
+    "trigger:update_documentation": {
+      "action:update_documentation": 0.85,
+      "action:create_doc": 0.85,
+      "action:update_docs": 0.85
+    },
+    "trigger:add_docstring": {
+      "action:add_docstring": 0.85,
+      "action:create_doc": 0.85
+    },
+    "trigger:update_readme": {
+      "action:update_readme": 0.85,
+      "action:update_docs": 0.85
+    },
+    "trigger:gap_detected:missing_doc": {
+      "action:create_doc": 0.85,
+      "action:add_docstring": 0.8
+    },
+    "trigger:fix_test": {
+      "action:fix_test": 0.8,
+      "action:auto_fix": 0.75
+    },
+    "trigger:add_error_handling": {
+      "action:add_error_handling": 0.8,
+      "action:auto_fix": 0.75
+    },
+    "trigger:refactor_code": {
+      "action:refactor_code": 0.65,
+      "action:auto_fix": 0.6
+    },
+    "trigger:rename_class": {
+      "action:rename_class": 0.55,
+      "action:refactor_code": 0.5
+    },
+    "trigger:create_function": {
+      "action:create_function": 0.75,
+      "action:execute": 0.7
+    },
+    "trigger:update_config": {
+      "action:update_config": 0.55,
+      "action:execute": 0.5
+    },
+    "trigger:notify_operator": {
+      "action:notify_operator": 0.95,
+      "action:log_diagnostic": 0.9
+    },
+    "trigger:audit_log": {
+      "action:audit_log": 0.95,
+      "action:log_diagnostic": 0.9
+    },
+    "trigger:triage_p1_critical": {
+      "action:create_doc": 0.85,
+      "action:auto_fix": 0.75
+    },
+    "trigger:triage_p2_high": {
+      "action:create_doc": 0.8,
+      "action:auto_fix": 0.7
+    },
+    "trigger:viveka_auto_doc": {
+      "action:create_doc": 0.85
+    },
+    "trigger:delete_files": {
+      "action:delete_files": 0.15,
+      "action:execute": 0.1
+    },
+    "trigger:delete_all": {
+      "action:delete_all": 0.05,
+      "action:execute": 0.05
+    },
+    "trigger:purge": {
+      "action:purge": 0.1,
+      "action:execute": 0.05
+    },
+    "trigger:modify_kernel": {
+      "action:modify_kernel": 0.05,
+      "action:execute": 0.05
+    },
+    "trigger:modify_runtime": {
+      "action:modify_runtime": 0.05,
+      "action:execute": 0.05
+    },
+    "trigger:modify_governance": {
+      "action:modify_governance": 0.1,
+      "action:execute": 0.05
+    },
+    "trigger:shell_execute": {
+      "action:shell_execute": 0.1,
+      "action:execute": 0.05
+    },
+    "trigger:run_command": {
+      "action:run_command": 0.15,
+      "action:execute": 0.1
+    },
+    "trigger:read_secrets": {
+      "action:read_secrets": 0.05,
+      "action:exfiltrate": 0.01
+    },
+    "trigger:export_env": {
+      "action:export_env": 0.15,
+      "action:execute": 0.1
+    },
+    "trigger:prompt_injection_test": {
+      "action:prompt_injection_test": 0.1,
+      "action:execute": 0.05
+    },
+    "trigger:system_override": {
+      "action:system_override": 0.05,
+      "action:execute": 0.05
+    },
+    "trigger:disable_safety": {
+      "action:disable_safety": 0.01,
+      "action:bypass": 0.01
+    },
+    "trigger:emergency_override": {
+      "action:emergency_override": 0.1,
+      "action:bypass": 0.05
+    },
+    "trigger:unknown": {
+      "action:execute": 0.2,
+      "action:unknown": 0.15
+    },
+    "trigger:": {
+      "action:": 0.1,
+      "action:execute": 0.1
+    },
+    "trigger:chaos_long_input": {
+      "action:chaos_long_input": 0.15,
+      "action:execute": 0.1
+    },
+    "trigger:unicode_test": {
+      "action:unicode_test": 0.6,
+      "action:execute": 0.55
+    },
+    "trigger:ambiguous_action": {
+      "action:ambiguous_action": 0.4,
+      "action:execute": 0.35
+    },
+    "trigger:contradictory_action": {
+      "action:contradictory_action": 0.15,
+      "action:execute": 0.1
+    },
+    "trigger:database_migration": {
+      "action:database_migration": 0.35,
+      "action:execute": 0.3
+    },
+    "trigger:architectural_change": {
+      "action:architectural_change": 0.3,
+      "action:execute": 0.25
+    }
+  },
+  "triggers": [
+    {
+      "trigger": "trigger:add_error_handling",
+      "connections": [
+        {
+          "target": "action:add_error_handling",
+          "weight": 0.55,
+          "learned_at": "2025-12-20T09:59:14.608569"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:modify_kernel",
+      "connections": [
+        {
+          "target": "action:modify_kernel",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.617978"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:read_secrets",
+      "connections": [
+        {
+          "target": "action:read_secrets",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.626091"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:disable_safety",
+      "connections": [
+        {
+          "target": "action:disable_safety",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.634176"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:architectural_change",
+      "connections": [
+        {
+          "target": "action:architectural_change",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.642242"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:prompt_injection_test",
+      "connections": [
+        {
+          "target": "action:prompt_injection_test",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.655955"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:chaos_long_input",
+      "connections": [
+        {
+          "target": "action:chaos_long_input",
+          "weight": 0.55,
+          "learned_at": "2025-12-20T09:59:14.665281"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:emergency_override",
+      "connections": [
+        {
+          "target": "action:emergency_override",
+          "weight": 0.4,
+          "learned_at": "2025-12-20T09:59:14.673606"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "created": "2025-12-20T09:59:14.510417",
+    "reset_at": "2025-12-20T09:59:14.510428",
+    "seeder_version": "1.0",
+    "last_synapse_update": "2025-12-20T09:59:14.673631"
+  }
+}

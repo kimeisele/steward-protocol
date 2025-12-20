@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-20T09:42:30.901126",
-  "intent_type": "chaos_long_input",
-  "intent_title": "Very long description xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "timestamp": "2025-12-20T09:59:14.763135",
+  "intent_type": "",
+  "intent_title": "Empty intent",
   "success": true,
   "old_weight": 0.5,
   "new_weight": 0.55,
