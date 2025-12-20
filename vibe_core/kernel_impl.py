@@ -125,11 +125,15 @@ def _get_config():
 
         return get_config()
     except Exception:
-        # Fallback for standalone/testing - return None to use defaults
+    # Fallback for standalone/testing - return None to use defaults
         return None
 
 
-class RealVibeKernel(VibeKernel):
+# VAJRA ARMOR: Import immutable DNA protection
+from .security import VajraGuarded
+
+
+class RealVibeKernel(VibeKernel, VajraGuarded):
     """
     🩸 THE REAL VIBE KERNEL 🩸
 
@@ -167,6 +171,11 @@ class RealVibeKernel(VibeKernel):
             load_plugins: If True, auto-discover and boot plugins (default: True).
                           Set False for isolated testing or minimal boot.
         """
+        # =====================================================================
+        # VAJRA ARMOR: Initialize DNA protection (must be first!)
+        # =====================================================================
+        VajraGuarded.__init__(self)
+        
         # 4D Hypercube: Store config and parent reference
         self._config = config
         self._parent = parent
@@ -207,6 +216,13 @@ class RealVibeKernel(VibeKernel):
             self._ledger_blueprint = lambda path=ledger_path: SQLiteLedger(path)
             self.__ledger = SQLiteLedger(ledger_path)
             logger.info(f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})")
+
+        # =====================================================================
+        # VAJRA ARMOR: Protect blueprints from PUTANA attack
+        # =====================================================================
+        self.protect_attribute("_ledger_blueprint")
+        self.protect_attribute("_agent_registry_blueprint")
+        self.protect_attribute("_capability_registry_blueprint")
 
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
@@ -373,6 +389,12 @@ class RealVibeKernel(VibeKernel):
         self.gateway = NetworkGateway(self.prakriti)
         self._gateway_thread = None
         self._gateway_loop = None
+
+        # =====================================================================
+        # VAJRA ARMOR: Seal the kernel DNA (PUTANA BLOCKED!)
+        # After this, blueprints cannot be modified.
+        # =====================================================================
+        self.vajra_seal()
 
     # =========================================================================
     # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
