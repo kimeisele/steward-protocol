@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-20T10:10:57.667357",
-  "intent_type": "update_documentation",
-  "intent_title": "Update README documentation",
+  "timestamp": "2025-12-20T10:40:50.277740",
+  "intent_type": "evaluate_tool_output",
+  "intent_title": "[GAD-VIOLATION] Tool prints instead of returning",
   "success": true,
-  "old_weight": 0.5,
-  "new_weight": 0.55,
+  "old_weight": 0.25000000000000006,
+  "new_weight": 0.30000000000000004,
   "delta": 0.05
 }
