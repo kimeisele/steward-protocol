@@ -392,8 +392,13 @@ class VivekaAction(BaseAction):
         from vibe_core.plugins.opus_assistant.manas.triggers import normalize_trigger
 
         # Get trigger pattern from intent
+        # OPUS-133 FIX: Fallback to intent-based trigger if no canonical pattern
         trigger_pattern = normalize_trigger(intent)
-        trigger = trigger_pattern.value if trigger_pattern else "trigger:unknown"
+        if trigger_pattern:
+            trigger = trigger_pattern.value
+        else:
+            # Fallback: use intent_type as trigger (allows Dojo training patterns)
+            trigger = f"trigger:{intent.intent_type}" if intent.intent_type else "trigger:unknown"
 
         # Get file path for logging
         file_path = intent.params.get("file_path")
@@ -431,9 +436,10 @@ class VivekaAction(BaseAction):
         # =====================================================================
         # OPUS-133 FIX: UNKNOWN TRIGGER PENALTY (Chaos Rejection)
         # =====================================================================
-        # If trigger is unknown, apply a severe penalty - chaos is not dharmic
+        # If trigger is truly unknown (empty intent_type), apply a penalty
+        # Intent-based triggers (trigger:{intent_type}) are allowed
         unknown_trigger_penalty = 0.0
-        if trigger == "trigger:unknown":
+        if trigger == "trigger:unknown" or trigger == "trigger:":
             unknown_trigger_penalty = 0.3  # 30% penalty for chaotic requests
             logger.warning(f"⚠️ Unknown trigger detected - applying {unknown_trigger_penalty:.0%} chaos penalty")
 

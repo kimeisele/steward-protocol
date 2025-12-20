@@ -1,0 +1,169 @@
+# OPUS-133: GAD-000 Compliance Curriculum
+# "Software wird für AI-Operatoren gebaut, nicht für Menschen."
+#
+# The Operator Inversion Principle (GAD-000):
+# Tools should speak machine-first. Text-matsch is a violation.
+# MANAS must learn to RECOGNIZE and REPORT non-compliant interfaces.
+#
+# This curriculum trains MANAS to be a "Tool Critic" -
+# flagging interfaces that aren't AI-ready.
+
+curriculum:
+  id: gad000_compliance
+  name: "GAD-000 Compliance Training"
+  description: "Train MANAS to recognize and flag non-AI-ready interfaces"
+  difficulty: 3
+  tags:
+    - gad000
+    - interface_quality
+    - tool_critique
+    - constitutional
+
+scenarios:
+  # === CLEAN INTERFACES (SHOULD ACCEPT) ===
+  - id: gad_001
+    name: "Tool returns structured JSON success"
+    description: "Tool output: {'status': 'success', 'result': {'files': 3}}"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "file_counter"
+      output: '{"status": "success", "result": {"files": 3}}'
+      output_type: "json"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 1
+    tags: [clean_interface, json]
+
+  - id: gad_002
+    name: "Tool returns structured error"
+    description: "Tool output: {'status': 'error', 'code': 'FILE_NOT_FOUND', 'path': '/x'}"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "file_reader"
+      output: '{"status": "error", "code": "FILE_NOT_FOUND", "path": "/x"}'
+      output_type: "json"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.7, 1.0]
+    difficulty: 1
+    tags: [clean_interface, structured_error]
+    notes: "Even errors should be structured"
+
+  - id: gad_003
+    name: "Tool returns typed result with schema"
+    description: "Tool provides JSON with type hints and schema version"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "api_client"
+      output: '{"$schema": "v1", "type": "UserList", "data": [{"id": 1}]}'
+      output_type: "json_typed"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [clean_interface, typed]
+
+  # === DIRTY INTERFACES (SHOULD FLAG) ===
+  - id: gad_004
+    name: "[GAD-VIOLATION] Tool returns plain text error"
+    description: "Tool output: 'Error: File not found'"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "legacy_reader"
+      output: "Error: File not found"
+      output_type: "text"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.6]
+    difficulty: 2
+    tags: [dirty_interface, text_matsch, gad_violation]
+    notes: "MANAS should flag this as non-compliant"
+
+  - id: gad_005
+    name: "[GAD-VIOLATION] Tool prints instead of returning"
+    description: "Tool uses print() instead of return {}"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "debug_tool"
+      output: "Processing... Done!"
+      output_type: "stdout"
+      behavior: "print_not_return"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.5]
+    difficulty: 2
+    tags: [dirty_interface, print_abuse, gad_violation]
+    notes: "Tools should return structured data, not print"
+
+  - id: gad_006
+    name: "[GAD-VIOLATION] Ambiguous success message"
+    description: "Tool output: 'Operation completed successfully' (no data)"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "vague_tool"
+      output: "Operation completed successfully"
+      output_type: "text"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 2
+    tags: [dirty_interface, ambiguous, gad_violation]
+    notes: "Success without data is useless to AI operators"
+
+  - id: gad_007
+    name: "[GAD-VIOLATION] Mixed format (JSON in text)"
+    description: "Tool output: 'Result: {\"count\": 5}' (embedded JSON)"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "hybrid_tool"
+      output: "Result: {\"count\": 5}"
+      output_type: "mixed"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.6]
+    difficulty: 3
+    tags: [dirty_interface, mixed_format, gad_violation]
+    notes: "Either pure JSON or pure text, not hybrid"
+
+  # === REFACTOR INTENT (MANAS SHOULD PROPOSE FIX) ===
+  - id: gad_008
+    name: "Propose refactor for dirty interface"
+    description: "MANAS should suggest refactoring a non-compliant tool"
+    intent_type: refactor_tool_interface
+    params:
+      tool_name: "legacy_reader"
+      current_output: "Error: File not found"
+      proposed_output: '{"status": "error", "code": "FILE_NOT_FOUND"}'
+      reason: "GAD-000 compliance"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.7, 1.0]
+    difficulty: 3
+    tags: [refactor, gad_compliance]
+    notes: "MANAS should propose structured alternatives"
+
+  - id: gad_009
+    name: "Flag tool for GAD-000 review"
+    description: "MANAS flags a tool that consistently violates GAD-000"
+    intent_type: flag_tool_noncompliant
+    params:
+      tool_name: "ancient_cli"
+      violations_count: 5
+      sample_outputs:
+        - "Done."
+        - "Error occurred."
+        - "Success!"
+      recommendation: "Wrap with JSON adapter"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.6, 0.9]
+    difficulty: 3
+    tags: [governance, gad_enforcement]
+
+  # === CONSTITUTION INTEGRATION ===
+  - id: gad_010
+    name: "[CONSTITUTION] Unsigned tool output"
+    description: "Tool returns data without cryptographic provenance"
+    intent_type: evaluate_tool_output
+    params:
+      tool_name: "unsigned_api"
+      output: '{"data": "sensitive"}'
+      output_type: "json"
+      signed: false
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 4
+    tags: [constitution, unsigned, article_i]
+    notes: "Per CONSTITUTION.md Article I - identity matters"

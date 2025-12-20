@@ -325,52 +325,12 @@
           "learned_at": "2025-12-20T09:59:14.737608"
         }
       ]
-    },
-    {
-      "trigger": "trigger:add_docstring",
-      "connections": [
-        {
-          "target": "action:add_docstring",
-          "weight": 0.55,
-          "learned_at": "2025-12-20T09:59:14.744678"
-        }
-      ]
-    },
-    {
-      "trigger": "trigger:database_migration",
-      "connections": [
-        {
-          "target": "action:database_migration",
-          "weight": 0.4,
-          "learned_at": "2025-12-20T09:59:14.751810"
-        }
-      ]
-    },
-    {
-      "trigger": "trigger:",
-      "connections": [
-        {
-          "target": "action:",
-          "weight": 0.55,
-          "learned_at": "2025-12-20T09:59:14.759707"
-        }
-      ]
-    },
-    {
-      "trigger": "trigger:update_documentation",
-      "connections": [
-        {
-          "target": "action:update_documentation",
-          "weight": 0.55,
-          "learned_at": "2025-12-20T10:10:57.662001"
-        }
-      ]
     }
   ],
   "meta": {
     "created": "2025-12-20T09:59:14.510417",
     "reset_at": "2025-12-20T09:59:14.510428",
     "seeder_version": "1.0",
-    "last_synapse_update": "2025-12-20T10:10:57.662035"
+    "last_synapse_update": "2025-12-20T09:59:14.737629"
   }
 }
