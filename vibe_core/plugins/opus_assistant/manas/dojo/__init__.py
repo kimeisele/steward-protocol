@@ -18,6 +18,12 @@ Architecture:
 
 from .runner import DojoConfig, DojoRunner, TrainingSession
 from .scenarios import Scenario, ScenarioBank, ScenarioType
+from .synaptic_seeder import (
+    BASELINE_BAD_PATTERNS,
+    BASELINE_GOOD_PATTERNS,
+    SynapticSeeder,
+    seed_baseline,
+)
 
 __all__ = [
     "DojoRunner",
@@ -26,4 +32,9 @@ __all__ = [
     "ScenarioBank",
     "Scenario",
     "ScenarioType",
+    # Synaptic Seeder
+    "SynapticSeeder",
+    "seed_baseline",
+    "BASELINE_GOOD_PATTERNS",
+    "BASELINE_BAD_PATTERNS",
 ]
