@@ -58,6 +58,18 @@ from .samskara import (
     get_samskara_insights,
 )
 
+# OPUS-140: Sanskrit Matrix - Phonemic Memory Compression
+from .sanskrit_matrix import (
+    AksharaSignature,
+    Mantra,
+    SanskritMatrixReport,
+    encode_samskara,
+    find_mantras,
+    generate_sanskrit_matrix,
+    get_western_translation,
+    record_japa,
+)
+
 # P0: StateService - Single Point of Truth for ALL state writes
 from .state_service import (
     StatePolicy,
@@ -162,4 +174,13 @@ __all__ = [
     "SamskaraReport",
     "consolidate_viveka_decisions",
     "get_samskara_insights",
+    # OPUS-140: Sanskrit Matrix (Phonemic Compression)
+    "AksharaSignature",
+    "Mantra",
+    "SanskritMatrixReport",
+    "encode_samskara",
+    "find_mantras",
+    "generate_sanskrit_matrix",
+    "get_western_translation",
+    "record_japa",
 ]
