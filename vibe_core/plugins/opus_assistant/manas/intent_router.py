@@ -60,6 +60,16 @@ except ImportError:
     VIVEKA_AVAILABLE = False
     VivekaAction = None  # type: ignore
 
+# OPUS-155: MayaSimulator - The Dream Layer (Inception)
+try:
+    from .maya_simulator import MayaSimulator, SimulationResult
+
+    MAYA_AVAILABLE = True
+except ImportError:
+    MAYA_AVAILABLE = False
+    MayaSimulator = None  # type: ignore
+    SimulationResult = None  # type: ignore
+
 logger = logging.getLogger("MANAS.IntentRouter")
 
 # OPUS-075: HIL Bridge state directory
@@ -127,6 +137,12 @@ class IntentRouter:
         if VIVEKA_AVAILABLE:
             self._viveka = VivekaAction(workspace=self._workspace)
             logger.info("🧠 OPUS-133: VivekaAction gate initialized (Dharmic Discrimination)")
+
+        # OPUS-155: MayaSimulator - The Dream Layer (Inception)
+        self._maya: Optional[MayaSimulator] = None
+        if MAYA_AVAILABLE:
+            self._maya = MayaSimulator(workspace=self._workspace, current_depth=0)
+            logger.info("🌙 OPUS-155: MayaSimulator initialized (Inception Depth 0)")
 
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
@@ -745,6 +761,40 @@ class IntentRouter:
         """
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
+
+        # =====================================================================
+        # OPUS-155: MAYA SIMULATION - Dream before acting (BEFORE Viveka)
+        # =====================================================================
+        if self._maya:
+            # Convert Intent to dict for Maya (it expects dict, not Intent object)
+            intent_dict = {
+                "id": intent.id,
+                "intent_type": intent.intent_type,
+                "title": intent.title,
+                "risk": intent.risk.value if hasattr(intent.risk, "value") else str(intent.risk),
+                "params": intent.params,
+            }
+            
+            simulation = self._maya.simulate(intent_dict)
+            
+            if not simulation.safe:
+                # Maya blocked - the dream showed harm
+                logger.warning(
+                    f"🌙 MAYA BLOCKED: {intent.title} "
+                    f"(depth={simulation.depth}, score={simulation.score:.2f}, "
+                    f"reason={simulation.reason})"
+                )
+                return RouteResult(
+                    success=False,
+                    handler="MAYA",
+                    result=simulation.to_dict(),
+                    error=f"Simulation blocked: {simulation.reason}",
+                )
+            else:
+                logger.debug(
+                    f"✅ MAYA PASSED: {intent.title} "
+                    f"(depth={simulation.depth}, score={simulation.score:.2f})"
+                )
 
         # =====================================================================
         # OPUS-133: VIVEKA GATE - Dharmic Discrimination (BEFORE any dispatch)
