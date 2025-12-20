@@ -49,6 +49,35 @@ from .runtime_state import (
     get_runtime_state_definition,
     reset_runtime_state_definition,
 )
+
+# Phase 2: Samskara - Memory Consolidation
+from .samskara import (
+    Samskara,
+    SamskaraReport,
+    consolidate_viveka_decisions,
+    get_samskara_insights,
+)
+
+# OPUS-140: Sanskrit Matrix - Phonemic Memory Compression
+from .sanskrit_matrix import (
+    AksharaSignature,
+    Mantra,
+    SanskritMatrixReport,
+    encode_samskara,
+    find_mantras,
+    generate_sanskrit_matrix,
+    get_western_translation,
+    record_japa,
+)
+
+# P0: StateService - Single Point of Truth for ALL state writes
+from .state_service import (
+    StatePolicy,
+    StateService,
+    WriteResult,
+    get_state_service,
+    reset_state_service,
+)
 from .sync_holon import (
     GovernanceViolation,
     PluginStateContract,
@@ -134,4 +163,24 @@ __all__ = [
     "WeaverCommitResult",
     "get_state_sync_weaver",
     "reset_state_sync_weaver",
+    # P0: StateService (Single Point of Truth)
+    "StateService",
+    "StatePolicy",
+    "WriteResult",
+    "get_state_service",
+    "reset_state_service",
+    # Phase 2: Samskara (Memory Consolidation)
+    "Samskara",
+    "SamskaraReport",
+    "consolidate_viveka_decisions",
+    "get_samskara_insights",
+    # OPUS-140: Sanskrit Matrix (Phonemic Compression)
+    "AksharaSignature",
+    "Mantra",
+    "SanskritMatrixReport",
+    "encode_samskara",
+    "find_mantras",
+    "generate_sanskrit_matrix",
+    "get_western_translation",
+    "record_japa",
 ]
