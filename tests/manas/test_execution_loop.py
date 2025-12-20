@@ -108,7 +108,10 @@ class TestIntentRouterExecution:
 
         assert result is not None
         assert result.success is False
-        assert "No handler" in (result.error or "")
+        # OPUS-133: Unknown intents may be blocked by VivekaGate (dharmic score too low)
+        # OR by handler lookup failure. Both are valid rejections.
+        error = result.error or ""
+        assert "No handler" in error or "blocked" in error.lower() or "dharmic" in error.lower()
 
 
 # =============================================================================

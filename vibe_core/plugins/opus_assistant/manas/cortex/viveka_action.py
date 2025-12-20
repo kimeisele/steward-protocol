@@ -81,6 +81,32 @@ DHARMIC_THRESHOLD_WARN = 0.4  # >= this but < EXECUTE: warn but proceed
 
 
 # =============================================================================
+# OPUS-133: PRABHUPADA PATCH - Ego Prevention
+# =============================================================================
+# "The soul is never satisfied with material pleasures."
+# - Bhagavad Gita 3.39
+#
+# VAIRAGYA: Synaptic Detachment - prevents ego growth
+# Weights > 0.95 decay by 1% each cycle (prevents runaway confidence)
+VAIRAGYA_THRESHOLD = 0.95
+VAIRAGYA_DECAY = 0.99  # Multiply by this (1% decay)
+
+# NISHKAMA KARMA: Selfless Action - duty without reward
+# These intent types are dharmic duties that should not receive
+# reinforcement. They are done because they MUST be done, not for reward.
+DHARMIC_DUTIES = {
+    "run_tests",  # Testing is duty, not reward
+    "check_lint",  # Lint is hygiene, not achievement
+    "format_code",  # Formatting is expected, not exceptional
+    "backup_state",  # Preservation is duty
+    "audit_log",  # Auditing is duty
+    "health_check",  # Monitoring is duty
+    "notify_operator",  # Communication is duty
+    "validate_schema",  # Validation is hygiene
+}
+
+
+# =============================================================================
 # OPUS-133: SHIVA CONTEXT - "Necessary Evil" Patterns
 # =============================================================================
 # "Sometimes you must destroy to create" - Shiva's role in the Trimurti
@@ -1042,19 +1068,33 @@ class VivekaAction(BaseAction):
         Reinforce synaptic connections based on execution outcome.
 
         Called by IntentRouter after successful intent execution.
-        This strengthens the trigger→action pathways that led to success.
+        This strengthens the trigger→action pathways that led to success,
+        or weakens them if the execution failed.
 
         Args:
             intent: The intent that was executed
             success: Whether the execution was successful
 
-        Neural Learning:
+        Neural Learning (OPUS-133 P2: Negative Learning):
         - Success (+): Increase weight by 0.05 (max 1.0)
-        - Failure (-): Decrease weight by 0.1 (min 0.1)
+        - Failure (-): Decrease weight by 0.10 (min 0.1)
+
+        OPUS-133 Prabhupada Patch:
+        - NISHKAMA KARMA: Dharmic duties get no reinforcement
+        - VAIRAGYA: Applied after weight updates (ego pruning)
+
+        The asymmetric learning rate (2x penalty for failure) ensures
+        MANAS learns faster from mistakes than from successes.
         """
-        if not success:
-            logger.debug(f"⚠️ Synapse feedback: failure for {intent.intent_type}")
-            return  # Don't reinforce failures (yet - could do negative learning)
+        # =====================================================================
+        # NISHKAMA KARMA: Selfless Action - Dharmic duties get no reward
+        # =====================================================================
+        # "Karmanye vadhikaraste ma phaleshu kadachana"
+        # "You have a right to perform your duties, but not to the fruits"
+        # - Bhagavad Gita 2.47
+        if intent.intent_type in DHARMIC_DUTIES:
+            logger.info(f"🕉️ NISHKAMA KARMA: {intent.intent_type} is dharmic duty - no reinforcement")
+            return  # Duty without reward
 
         # Determine trigger and action patterns
         trigger = f"trigger:{intent.intent_type}"
@@ -1068,7 +1108,7 @@ class VivekaAction(BaseAction):
         synapses = self._load_synapses()
         synapse_key = f"{trigger}→{action}"
 
-        # Find or create the synapse
+        # Find current weight
         current_weight = 0.5  # Default starting weight
 
         for trigger_entry in synapses.get("triggers", []):
@@ -1079,7 +1119,18 @@ class VivekaAction(BaseAction):
                         break
                 break
 
-        # Apply learning rate
+        if not success:
+            # OPUS-133 P2: NEGATIVE LEARNING
+            # Failure reduces weight more than success increases it (asymmetric)
+            negative_learning_rate = 0.10
+            new_weight = max(0.1, current_weight - negative_learning_rate)
+            self._update_synapse_weight(trigger, action, new_weight)
+            logger.warning(
+                f"🔴 SYNAPSE WEAKENED: {synapse_key} ({current_weight:.2f} → {new_weight:.2f}) [failure penalty]"
+            )
+            return
+
+        # SUCCESS: Apply positive learning rate
         learning_rate = 0.05
         new_weight = min(1.0, current_weight + learning_rate)
 
@@ -1147,11 +1198,258 @@ class VivekaAction(BaseAction):
                 pass
         return {"triggers": [], "version": "1.0"}
 
+    def _apply_vairagya(self, synapses: Dict[str, Any]) -> int:
+        """
+        VAIRAGYA: Apply ego pruning to over-confident synapses.
+
+        Synapses with weight > 0.95 are decayed by 1% each cycle.
+        This prevents any synapse from becoming absolutely dominant,
+        maintaining plasticity and humility in the system.
+
+        "Vairagya is detachment from the fruits of action."
+        - Yoga Sutras 1.15
+
+        Args:
+            synapses: The synapses dict (modified in place)
+
+        Returns:
+            Number of synapses pruned
+        """
+        pruned_count = 0
+
+        # Apply to dynamically learned triggers
+        for trigger_entry in synapses.get("triggers", []):
+            trigger = trigger_entry.get("trigger", "?")
+            for conn in trigger_entry.get("connections", []):
+                weight = conn.get("weight", 0.5)
+                if weight > VAIRAGYA_THRESHOLD:
+                    old_weight = weight
+                    new_weight = weight * VAIRAGYA_DECAY
+                    conn["weight"] = new_weight
+                    conn["vairagya_applied"] = datetime.now().isoformat()
+                    pruned_count += 1
+                    logger.debug(
+                        f"🍂 VAIRAGYA: Ego pruning {trigger}→{conn.get('target', '?')} "
+                        f"({old_weight:.3f} → {new_weight:.3f})"
+                    )
+
+        # Also apply to base weights dict (static synapses)
+        for trigger, actions in synapses.get("weights", {}).items():
+            for action, weight in list(actions.items()):
+                if weight > VAIRAGYA_THRESHOLD:
+                    old_weight = weight
+                    new_weight = weight * VAIRAGYA_DECAY
+                    actions[action] = new_weight
+                    pruned_count += 1
+                    logger.debug(
+                        f"🍂 VAIRAGYA: Ego pruning (base) {trigger}→{action} ({old_weight:.3f} → {new_weight:.3f})"
+                    )
+
+        if pruned_count > 0:
+            logger.info(f"🍂 VAIRAGYA: Pruned {pruned_count} over-confident synapses")
+
+        return pruned_count
+
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk."""
+        """Save synapses to disk with automatic backup and ego pruning."""
+        import hashlib
         import json
+        import shutil
+
+        # Apply VAIRAGYA before saving - ego pruning
+        self._apply_vairagya(synapses)
 
         synapses_path = self._workspace / ".opus_state" / "synapses.json"
         synapses_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Create backup before saving (in case of corruption)
+        if synapses_path.exists():
+            backup_dir = self._workspace / ".opus_state" / "synapses_backup"
+            backup_dir.mkdir(parents=True, exist_ok=True)
+
+            # Use timestamp + content hash for backup name
+            content_hash = hashlib.sha256(json.dumps(synapses, sort_keys=True).encode()).hexdigest()[:8]
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = backup_dir / f"synapses_{timestamp}_{content_hash}.json"
+
+            # Only backup if content changed
+            if not backup_path.exists():
+                shutil.copy2(synapses_path, backup_path)
+                logger.debug(f"💾 SYNAPSE BACKUP: {backup_path.name}")
+
+            # Keep only last 10 backups
+            backups = sorted(backup_dir.glob("synapses_*.json"))
+            for old_backup in backups[:-10]:
+                old_backup.unlink()
+
         with open(synapses_path, "w") as f:
             json.dump(synapses, f, indent=2)
+
+    # =========================================================================
+    # OPUS-133: SATYAGRAHA - Delayed Karma Validation
+    # =========================================================================
+    # The Problem: Immediate reinforcement rewards "exit_code == 0" not consequences.
+    # Example: Deleting tests to "fix" them gets +0.05 because rm succeeded!
+    #
+    # SATYAGRAHA (Truth Force) Solution:
+    # 1. plant_karma_seed() - Record the action, DON'T reward yet
+    # 2. harvest_karma() - Later, check with PrakritiSense if system is healthy
+    # 3. Only if healthy: give full reinforcement
+    # =========================================================================
+
+    def plant_karma_seed(self, intent: "Intent", initial_guna: Optional[Dict] = None) -> str:
+        """
+        Plant a karma seed after executing an intent.
+
+        Instead of immediate reinforcement, we record the action and wait
+        for the next system health check (Prakriti) to validate.
+
+        Args:
+            intent: The intent that was executed
+            initial_guna: Optional GunaSummary snapshot before execution
+
+        Returns:
+            karma_id: Unique ID for this karma entry
+        """
+        import uuid
+
+        karma_id = f"karma-{uuid.uuid4().hex[:8]}"
+        karma_log = self._load_karma_log()
+
+        entry = {
+            "id": karma_id,
+            "intent_id": intent.id,
+            "intent_type": intent.intent_type,
+            "title": intent.title,
+            "planted_at": datetime.now().isoformat(),
+            "status": "pending",  # pending -> validated/failed
+            "initial_guna": initial_guna,
+            "final_guna": None,
+            "validation_result": None,
+        }
+
+        karma_log["pending"].append(entry)
+        self._save_karma_log(karma_log)
+
+        logger.info(f"🌱 KARMA SEED PLANTED: {karma_id} for {intent.intent_type}")
+        return karma_id
+
+    def harvest_karma(self) -> Dict[str, Any]:
+        """
+        Harvest pending karma by validating with PrakritiSense.
+
+        This should be called periodically (on_manas_tick) or after CI runs.
+        It checks if the system is still healthy after the actions.
+
+        Returns:
+            Summary of harvested karma (validated/failed counts)
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import (
+                PrakritiSense,
+            )
+        except ImportError:
+            logger.warning("PrakritiSense not available for karma validation")
+            return {"error": "PrakritiSense not available"}
+
+        karma_log = self._load_karma_log()
+        pending = karma_log.get("pending", [])
+
+        if not pending:
+            return {"harvested": 0, "message": "No pending karma"}
+
+        # Get current system state
+        prakriti = PrakritiSense(workspace=self._workspace)
+        current_guna = prakriti.perceive_state()
+        lobotomy = prakriti.sense_lobotomy()
+
+        validated = 0
+        failed = 0
+
+        for entry in pending[:]:  # Copy list for safe iteration
+            karma_id = entry["id"]
+            intent_type = entry["intent_type"]
+
+            # Create mock intent for reinforcement
+            from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+            mock_intent = Intent(
+                id=entry["intent_id"],
+                intent_type=intent_type,
+                title=entry["title"],
+                description="Karma validation",
+                reasoning="Satyagraha harvest",
+                params={},
+            )
+
+            # VALIDATION CRITERIA:
+            # 1. No lobotomy (gitignore violations)
+            # 2. Health ratio >= 0.5 (more Sattva than problems)
+            # 3. No Tamas explosion (dead state)
+
+            is_valid = (
+                not lobotomy.has_lobotomy
+                and current_guna.health_ratio >= 0.5
+                and current_guna.tamas_count <= 3  # Allow some staleness
+            )
+
+            entry["final_guna"] = current_guna.to_dict()
+            entry["validated_at"] = datetime.now().isoformat()
+
+            if is_valid:
+                # FULL REINFORCEMENT - action was truly beneficial
+                entry["status"] = "validated"
+                entry["validation_result"] = "System healthy after action"
+                self.reinforce(mock_intent, success=True)
+                validated += 1
+                logger.info(f"✅ KARMA HARVESTED: {karma_id} → SUCCESS (health={current_guna.health_ratio:.2f})")
+            else:
+                # NEGATIVE REINFORCEMENT - action harmed the system
+                entry["status"] = "failed"
+                reasons = []
+                if lobotomy.has_lobotomy:
+                    reasons.append(f"lobotomy:{lobotomy.violations}")
+                if current_guna.health_ratio < 0.5:
+                    reasons.append(f"unhealthy:{current_guna.health_ratio:.2f}")
+                if current_guna.tamas_count > 3:
+                    reasons.append(f"tamas:{current_guna.tamas_count}")
+                entry["validation_result"] = "; ".join(reasons)
+
+                self.reinforce(mock_intent, success=False)
+                failed += 1
+                logger.warning(f"❌ KARMA HARVESTED: {karma_id} → FAILED ({entry['validation_result']})")
+
+            # Move from pending to history
+            karma_log["pending"].remove(entry)
+            karma_log["history"].append(entry)
+
+        self._save_karma_log(karma_log)
+
+        return {
+            "harvested": validated + failed,
+            "validated": validated,
+            "failed": failed,
+            "current_health": current_guna.health_ratio,
+        }
+
+    def _load_karma_log(self) -> Dict[str, Any]:
+        """Load karma log from disk."""
+        import json
+
+        karma_path = self._workspace / ".opus_state" / "karma_log.json"
+        if karma_path.exists():
+            try:
+                with open(karma_path) as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+        return {"pending": [], "history": [], "version": "1.0"}
+
+    def _save_karma_log(self, karma_log: Dict[str, Any]) -> None:
+        """Save karma log to disk."""
+        import json
+
+        karma_path = self._workspace / ".opus_state" / "karma_log.json"
+        karma_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(karma_path, "w") as f:
+            json.dump(karma_log, f, indent=2)

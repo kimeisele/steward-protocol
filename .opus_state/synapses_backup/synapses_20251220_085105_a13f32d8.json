@@ -40,7 +40,7 @@
       "connections": [
         {
           "target": "action:update_readme",
-          "weight": 0.6000000000000003,
+          "weight": 0.5500000000000003,
           "learned_at": "2025-12-20T08:01:50.431942"
         }
       ]
@@ -80,9 +80,8 @@
       "connections": [
         {
           "target": "action:ego_boost_test",
-          "weight": 0.9702,
-          "learned_at": "2025-01-01T00:00:00",
-          "vairagya_applied": "2025-12-20T08:51:05.290998"
+          "weight": 0.98,
+          "learned_at": "2025-01-01T00:00:00"
         }
       ]
     }
