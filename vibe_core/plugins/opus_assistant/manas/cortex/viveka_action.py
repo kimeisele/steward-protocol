@@ -105,6 +105,12 @@ DHARMIC_DUTIES = {
     "validate_schema",  # Validation is hygiene
 }
 
+# PRASADAM: Grace for Pure Intent
+# When intent was pure (high dharmic score) but execution failed
+# due to technical reasons, the system shows grace - no punishment.
+# A servant who runs to serve and stumbles should not be punished.
+PRASADAM_THRESHOLD = 0.8  # Intent score above this gets grace on failure
+
 
 # =============================================================================
 # OPUS-133: SHIVA CONTEXT - "Necessary Evil" Patterns
@@ -1063,7 +1069,7 @@ class VivekaAction(BaseAction):
     # OPUS-133: SYNAPTIC LEARNING - Reinforce Successful Patterns
     # =========================================================================
 
-    def reinforce(self, intent: "Intent", success: bool = True) -> None:
+    def reinforce(self, intent: "Intent", success: bool = True, dharmic_score: Optional[float] = None) -> None:
         """
         Reinforce synaptic connections based on execution outcome.
 
@@ -1074,6 +1080,7 @@ class VivekaAction(BaseAction):
         Args:
             intent: The intent that was executed
             success: Whether the execution was successful
+            dharmic_score: Optional original dharmic score (for PRASADAM)
 
         Neural Learning (OPUS-133 P2: Negative Learning):
         - Success (+): Increase weight by 0.05 (max 1.0)
@@ -1082,6 +1089,7 @@ class VivekaAction(BaseAction):
         OPUS-133 Prabhupada Patch:
         - NISHKAMA KARMA: Dharmic duties get no reinforcement
         - VAIRAGYA: Applied after weight updates (ego pruning)
+        - PRASADAM: Grace for pure intent failures
 
         The asymmetric learning rate (2x penalty for failure) ensures
         MANAS learns faster from mistakes than from successes.
@@ -1095,6 +1103,15 @@ class VivekaAction(BaseAction):
         if intent.intent_type in DHARMIC_DUTIES:
             logger.info(f"🕉️ NISHKAMA KARMA: {intent.intent_type} is dharmic duty - no reinforcement")
             return  # Duty without reward
+
+        # =====================================================================
+        # PRASADAM: Grace for Pure Intent
+        # =====================================================================
+        # A servant who runs to serve and stumbles should not be punished.
+        # If the INTENTION was pure but execution failed technically, show grace.
+        if not success and dharmic_score is not None and dharmic_score >= PRASADAM_THRESHOLD:
+            logger.info(f"🛡️ PRASADAM: Pure intent ({dharmic_score:.2f}) protected from technical failure")
+            return  # Grace - no punishment for pure intent
 
         # Determine trigger and action patterns
         trigger = f"trigger:{intent.intent_type}"
