@@ -320,3 +320,9 @@ __pycache__/
 # The brain must persist. Git is consciousness.
 # Removed: .opus_state/
 .state/
+
+# OPUS-166: NodeState - PULS Layer (Ephemeral runtime presence)
+# node.json files are purely ephemeral - they exist only while agent is alive.
+# File exists = agent is alive. Deleted on shutdown = agent is offline.
+# NOT tracked in git - this is presence, not memory.
+**/node.json
