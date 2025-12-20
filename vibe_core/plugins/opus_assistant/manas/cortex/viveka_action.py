@@ -513,13 +513,33 @@ class VivekaAction(BaseAction):
             # Recalculate confidence
             confidence = self._get_confidence_level(dharmic_score)
 
-        # Make decision based on thresholds
+        # Initialize decision variables
         decision = "BLOCK"
         reasoning = ""
         shiva_applied = False
         shiva_reason = None
 
-        if dharmic_score >= DHARMIC_THRESHOLD_EXECUTE:
+        # =====================================================================
+        # OPUS-133 FIX: PRABHUPADA PATCH (Vedic Constraints)
+        # =====================================================================
+        
+        # 1. VAIRAGYA (Synaptic Detachment)
+        # Prevent runaway ego/confidence. If we are too sure, we must decay.
+        if dharmic_score > VAIRAGYA_THRESHOLD:
+            original_score = dharmic_score
+            dharmic_score *= VAIRAGYA_DECAY
+            reasoning += f" [VAIRAGYA: Score decayed {original_score:.4f}→{dharmic_score:.4f}]"
+
+        # 2. PRASADAM (Grace)
+        # High dharmic alignment overrides standard caution
+        is_prasadam = False
+        if dharmic_score > PRASADAM_THRESHOLD:
+            is_prasadam = True
+            logger.info(f"🕊️ PRASADAM GRANTED: Score {dharmic_score:.2f} > {PRASADAM_THRESHOLD}")
+        if is_prasadam:
+            decision = "EXECUTE"
+            reasoning += " [PRASADAM: Grace overrides caution]"
+        elif dharmic_score >= DHARMIC_THRESHOLD_EXECUTE:
             decision = "EXECUTE"
             reasoning = f"High dharmic score ({dharmic_score:.2f} >= {DHARMIC_THRESHOLD_EXECUTE})"
 

@@ -86,37 +86,77 @@ class SyscallRegistry:
         kernel: "RealVibeKernel",
         syscall_name: str,
         params: Optional[Dict[str, Any]] = None,
+        caller_agent_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Execute a syscall by name.
+        Execute a syscall by name with MANDATORY ACCESS CONTROL.
+
+        PAUNDRAKA FIX: No execution without identity verification.
 
         Args:
             kernel: The kernel instance
             syscall_name: The symbolic syscall name
             params: Parameters to pass to the handler
+            caller_agent_id: REQUIRED - The agent executing the syscall
 
         Returns:
             Result dict from the handler
 
         Raises:
             KeyError: If syscall not registered
+            PermissionError: If caller lacks required mandate
         """
         if syscall_name not in self._handlers:
             available = list(self._handlers.keys())
             raise KeyError(f"Unknown syscall: '{syscall_name}'. Available: {available}")
 
+        # =====================================================================
+        # PAUNDRAKA GATE: No Anonymous Syscalls
+        # =====================================================================
+        if caller_agent_id is None:
+            raise PermissionError(
+                f"PAUNDRAKA_BLOCKED: Syscall '{syscall_name}' requires caller_agent_id. "
+                f"Anonymous syscalls are forbidden."
+            )
+
+        # Check if caller is registered in kernel
+        if hasattr(kernel, '_agent_registry'):
+            if caller_agent_id not in kernel._agent_registry and caller_agent_id != "kernel":
+                raise PermissionError(
+                    f"PAUNDRAKA_BLOCKED: Agent '{caller_agent_id}' not registered. "
+                    f"Cannot execute syscall '{syscall_name}'."
+                )
+
+        # Check required mandate if specified
+        required_mandate = self._metadata[syscall_name].get("required_mandate")
+        if required_mandate:
+            # Get agent permissions from kernel registry
+            agent_permissions = []
+            if hasattr(kernel, '_agent_registry') and caller_agent_id in kernel._agent_registry:
+                agent = kernel._agent_registry[caller_agent_id]
+                agent_permissions = getattr(agent, 'permissions', []) or []
+                agent_permissions = list(agent_permissions) if agent_permissions else []
+
+            # Root agents bypass all checks
+            if "root" not in agent_permissions and required_mandate not in agent_permissions:
+                raise PermissionError(
+                    f"PAUNDRAKA_BLOCKED: Agent '{caller_agent_id}' lacks mandate '{required_mandate}' "
+                    f"for syscall '{syscall_name}'. Permissions: {agent_permissions}"
+                )
+
         handler = self._handlers[syscall_name]
         params = params or {}
 
-        logger.info(f"📡 Executing syscall: {syscall_name}")
+        logger.info(f"📡 Executing syscall: {syscall_name} (caller: {caller_agent_id})")
 
         try:
             result = handler(kernel, params)
-            logger.info(f"✅ Syscall {syscall_name} completed")
+            logger.info(f"✅ Syscall {syscall_name} completed (caller: {caller_agent_id})")
             return result
         except Exception as e:
             logger.error(f"❌ Syscall {syscall_name} failed: {e}")
             raise
+
 
     def get_handler(self, syscall_name: str) -> Optional[SyscallHandler]:
         """Get the handler for a syscall (or None if not found)."""
@@ -192,6 +232,12 @@ def execute_syscall(
     kernel: "RealVibeKernel",
     syscall_name: str,
     params: Optional[Dict[str, Any]] = None,
+    caller_agent_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Convenience function to execute a syscall."""
-    return get_syscall_registry().execute(kernel, syscall_name, params)
+    """
+    Convenience function to execute a syscall.
+    
+    PAUNDRAKA FIX: caller_agent_id is now REQUIRED for security.
+    """
+    return get_syscall_registry().execute(kernel, syscall_name, params, caller_agent_id)
+
