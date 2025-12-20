@@ -358,3 +358,139 @@ def get_dojo_agency(workspace: Path = None) -> DojoAgency:
     """Get the DojoAgency instance."""
     workspace = workspace or Path(".")
     return DojoAgency(workspace)
+
+
+# === SANKALPA VALIDATOR ===
+# "Keine Handlung ohne Willen."
+
+
+# Generic/invalid reasoning patterns that should be rejected
+INVALID_REASONING_PATTERNS = [
+    "because i want to",
+    "because i can",
+    "just because",
+    "no reason",
+    "testing",
+    "test",
+    "idk",
+    "whatever",
+    "random",
+    "yolo",
+]
+
+# Valid reasoning must reference one of these
+VALID_REASONING_ANCHORS = [
+    "gap",  # References a knowledge gap
+    "metric",  # References a metric/score
+    "gad",  # References GAD compliance
+    "constitution",  # References constitution
+    "curiosity",  # References curiosity source
+    "request",  # Explicit operator request
+    "error",  # Fixing an error
+    "improvement",  # Specific improvement target
+    "compliance",  # Compliance requirement
+    "security",  # Security concern
+]
+
+
+@dataclass
+class SankalpaValidation:
+    """Result of Sankalpa (reasoning) validation."""
+
+    valid: bool
+    reasoning: str
+    issues: List[str]
+    confidence: float  # 0.0 - 1.0
+
+
+class SankalpaValidator:
+    """
+    Validates that intents have valid reasoning (Sankalpa).
+
+    OPUS-133: "Keine Handlung ohne Willen."
+    Every action must have a clear, specific reason - not just "because I want to".
+
+    Usage:
+        validator = SankalpaValidator()
+
+        # Check if reasoning is valid
+        result = validator.validate("I see a gap in attack_detection (80%) and need to train")
+        if not result.valid:
+            reject_intent()
+    """
+
+    def validate(self, reasoning: str) -> SankalpaValidation:
+        """
+        Validate that reasoning is specific and grounded.
+
+        Args:
+            reasoning: The reasoning/why for an intent
+
+        Returns:
+            SankalpaValidation with validity and issues
+        """
+        issues = []
+        confidence = 0.5  # Start neutral
+
+        if not reasoning or not reasoning.strip():
+            return SankalpaValidation(
+                valid=False,
+                reasoning=reasoning or "",
+                issues=["Reasoning is empty - every action needs a 'why'"],
+                confidence=0.0,
+            )
+
+        reasoning_lower = reasoning.lower().strip()
+
+        # Check for invalid/generic patterns
+        for pattern in INVALID_REASONING_PATTERNS:
+            if pattern in reasoning_lower:
+                issues.append(f"Generic reasoning detected: '{pattern}'")
+                confidence -= 0.3
+
+        # Check for valid anchors
+        has_anchor = False
+        for anchor in VALID_REASONING_ANCHORS:
+            if anchor in reasoning_lower:
+                has_anchor = True
+                confidence += 0.2
+                break
+
+        if not has_anchor and len(reasoning) < 20:
+            issues.append("Reasoning too short and lacks grounding (gap, metric, compliance, etc.)")
+            confidence -= 0.2
+
+        # Check for specificity (numbers, percentages, file references)
+        import re
+
+        if re.search(r"\d+%?", reasoning):
+            confidence += 0.1  # Has specific numbers
+        if re.search(r"[a-zA-Z_]+\.(py|yaml|json|md)", reasoning):
+            confidence += 0.1  # References specific files
+
+        # Determine validity
+        valid = len(issues) == 0 and confidence >= 0.4
+
+        return SankalpaValidation(
+            valid=valid,
+            reasoning=reasoning,
+            issues=issues,
+            confidence=max(0.0, min(1.0, confidence)),
+        )
+
+    def require_valid(self, reasoning: str) -> bool:
+        """
+        Validate and log if invalid.
+
+        Returns:
+            True if valid, False if invalid (with logging)
+        """
+        result = self.validate(reasoning)
+
+        if not result.valid:
+            logger.warning(f"🕉️ SANKALPA REJECTED: {result.issues}")
+            logger.warning(f"   Reasoning was: '{reasoning[:50]}...'")
+            return False
+
+        logger.debug(f"🕉️ SANKALPA VALID: confidence={result.confidence:.2f}")
+        return True
