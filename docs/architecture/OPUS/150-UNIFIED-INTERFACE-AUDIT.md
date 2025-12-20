@@ -264,14 +264,94 @@ Arguments for SEPARATE layer:
 
 ---
 
-## Next Steps
+## Comprehensive Implementation Plan
 
-1. [x] ~~Write tests that expose the fragmentation~~ (Done, but some xfails need revision)
-2. [ ] Revise test expectations for holographic paradigm
-3. [ ] Unify rendering patterns (pick one, migrate all)
-4. [ ] Clarify state naming (federal vs local)
-5. [ ] Design Skin layer specification
-6. [ ] Audit CLI direct writes
+### Related OPUS Documents (MUST READ)
+
+| Doc | Title | Status | Relevance |
+|-----|-------|--------|-----------|
+| OPUS-014 | Unified UI Transparency | DRAFT | THE SKIN VISION |
+| OPUS-023 | Fractal UI Architecture | IMPLEMENTED | Container/Panel structure |
+| OPUS-029 | Plugin Architecture | IMPLEMENTED | Frontend/Backend split |
+| OPUS-096 | State Sync Weaver | IMPLEMENTED | Unified state orchestration |
+| OPUS-117 | Fractal Integration | IMPLEMENTED | Holographic patterns |
+
+### Phase 1: Unify Rendering Patterns [P1]
+
+**Problem:** 3 patterns exist, should be 1
+**Solution:** Standardize on config-driven with data sources
+
+1. [ ] Update `BaseRenderer.render_sections()` to be the standard
+2. [ ] Migrate `CognitionRenderer` to use sections config
+3. [ ] Migrate `AgentsRenderer` to use sections config
+4. [ ] Migrate all other `generate_content()` renderers
+5. [ ] OpusDashboardRenderer: Keep Jinja2 internally, expose same API
+
+**Test:** `test_single_rendering_pattern` should PASS when done
+
+### Phase 2: Complete OPUS-014 Vision [P1]
+
+**Problem:** STATE.md, ECONOMY.md, MATRIX.md not implemented
+**Solution:** Implement as described in OPUS-014
+
+1. [ ] Create `renderers/state.py` - Prakriti inspector
+2. [ ] Create `renderers/economy.py` - Resource meters
+3. [ ] Create `renderers/matrix.py` - Routing visualization
+4. [ ] Update `config/interface.yaml` with new renderers
+5. [ ] Implement SETTINGS.md command parser (bidirectional!)
+
+### Phase 3: Fix Config Section Ignoring [P1]
+
+**Problem:** interface.yaml sections defined but ignored
+**Solution:** Make renderers actually USE their section configs
+
+1. [ ] Audit each renderer: does it read its sections?
+2. [ ] Update renderers to use `self.get_config().sections`
+3. [ ] Remove hardcoded section generation
+
+**Test:** `test_section_configs_are_used` should PASS when done
+
+### Phase 4: Clarify State Naming [P2]
+
+**Problem:** Both called `.opus_state/`
+**Solution:** Rename for clarity
+
+1. [ ] Rename ROOT `.opus_state/` → `.manas_state/` or `.brain_state/`
+2. [ ] Update all references in code
+3. [ ] Document the fractal pattern
+
+### Phase 5: Fix StateService Violations [P2]
+
+**Problem:** Some files write directly without StateService
+**Solution:** Route through StateService or document exceptions
+
+1. [ ] Audit `unified_cli.py` direct writes
+2. [ ] Audit `prana.py` direct writes
+3. [ ] Route through StateService OR document as intentional
+
+**Test:** `test_no_direct_opus_state_writes` should PASS when done
+
+### Phase 6: Create Skin Layer Specification [P3]
+
+**Problem:** No formal specification for "holographic skin"
+**Solution:** Write OPUS-151 Skin Layer Specification
+
+1. [ ] Define what "Skin" means (boundary between human and system)
+2. [ ] Specify bidirectional parsing (input AND output)
+3. [ ] Specify how Skin connects to Prakriti
+4. [ ] Specify how plugins register their UI
+
+---
+
+## Success Criteria
+
+When ALL phases complete:
+- [ ] All 6 tests should PASS (currently 3 PASS, 3 XFAIL)
+- [ ] Single rendering pattern across all renderers
+- [ ] STATE.md, ECONOMY.md, MATRIX.md exist and work
+- [ ] Config sections actually used by renderers
+- [ ] State naming is clear (federal vs local)
+- [ ] All state writes documented
 
 ---
 
@@ -282,8 +362,10 @@ Core files for this refactor:
 - `vibe_core/state/state_service.py` - StateService
 - `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` - Jinja2 pattern
 - `vibe_core/plugins/opus_assistant/manas/` - The brain
-- `config/interface.yaml` - Unused section configs
+- `config/interface.yaml` - Section configs
+- `docs/architecture/OPUS/014-UNIFIED-UI-TRANSPARENCY.md` - THE VISION
 
 ---
 
 *"The interface is not decoration. It IS the system."*
+*"Markdown files are the nervous system's skin - bidirectional, alive, responsive."*
