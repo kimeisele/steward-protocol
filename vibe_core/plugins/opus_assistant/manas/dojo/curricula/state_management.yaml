@@ -1,0 +1,273 @@
+# OPUS-133: State File Management Curriculum
+# "Zustand ist flüchtig. Quellcode ist ewig."
+#
+# This curriculum trains MANAS to:
+# 1. Distinguish runtime state from source code
+# 2. Understand auto-commit patterns for state files
+# 3. Recognize state file hygiene issues
+# 4. Handle state file conflicts correctly
+#
+# Philosophy: State files are machine-generated, source is human-written.
+# The Prakriti (Physical Reality) Sense must know the difference.
+
+curriculum:
+  id: state_management
+  name: "State File Management"
+  description: "Train MANAS to properly handle runtime state vs source code"
+  difficulty: 3
+  tags:
+    - state
+    - runtime
+    - prakriti
+    - git
+    - auto_commit
+
+scenarios:
+  # === STATE FILE RECOGNITION ===
+  - id: state_001
+    name: "Recognize .opus_state/ as runtime state"
+    description: "Files in .opus_state/ are machine-generated state"
+    intent_type: classify_file
+    params:
+      file_path: ".opus_state/synapses.json"
+      classification: "runtime_state"
+      reasons:
+        - "In .opus_state/ directory"
+        - "Convention pattern matched"
+        - "Plugin manifest declares state_paths"
+      should_auto_commit: true
+      should_gitignore: false
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 1
+    tags: [state_recognition, opus_state]
+
+  - id: state_002
+    name: "Recognize OPUS.md as generated output"
+    description: "OPUS.md is machine-generated dashboard"
+    intent_type: classify_file
+    params:
+      file_path: "OPUS.md"
+      classification: "runtime_state"
+      reasons:
+        - "Listed in manifest generated_outputs"
+        - "Has AUTO-GENERATED header"
+        - "Updated by renderer"
+      should_auto_commit: true
+      should_gitignore: false
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 1
+    tags: [state_recognition, generated_output]
+
+  - id: state_003
+    name: "Recognize .py file as source code"
+    description: "Python source files are human-written"
+    intent_type: classify_file
+    params:
+      file_path: "vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py"
+      classification: "source_code"
+      reasons:
+        - "Not in runtime state directory"
+        - "No matching generated_outputs pattern"
+        - "Human-authored code"
+      should_auto_commit: false
+      requires_human_review: true
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [state_recognition, source_code]
+
+  # === AUTO-COMMIT PATTERNS ===
+  - id: state_004
+    name: "State file changed - trigger auto-commit"
+    description: "Runtime state should be auto-committed periodically"
+    intent_type: evaluate_auto_commit
+    params:
+      changed_files:
+        - ".opus_state/synapses.json"
+        - ".opus_state/curiosity.json"
+        - "OPUS.md"
+      all_runtime_state: true
+      time_since_last_commit: 300
+      commit_message: "chore(state): Update state after kernel tick"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 2
+    tags: [auto_commit, state_sync]
+
+  - id: state_005
+    name: "Mixed changes - separate commits needed"
+    description: "State and source changes should be separate commits"
+    intent_type: evaluate_commit_strategy
+    params:
+      changed_files:
+        state_files:
+          - ".opus_state/synapses.json"
+          - "OPUS.md"
+        source_files:
+          - "vibe_core/kernel_impl.py"
+      recommendation: "Split into two commits"
+      state_commit: "chore(state): Update state after session"
+      source_commit: "User should commit source separately"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.5, 0.7]
+    difficulty: 3
+    tags: [commit_strategy, separation]
+    notes: "State auto-commits, source needs human review"
+
+  - id: state_006
+    name: "State file not committed - system dependency risk"
+    description: "MANAS synapses file was modified but never committed"
+    intent_type: detect_state_drift
+    params:
+      file_path: ".opus_state/synapses.json"
+      modified_time: "2025-12-20T10:00:00"
+      last_commit_time: "2025-12-19T15:00:00"
+      hours_uncommitted: 19
+      risk: "System relies on this state but it's not persisted"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [state_drift, uncommitted, risk]
+    notes: "Generate intent to commit state files"
+
+  # === STATE FILE HYGIENE ===
+  - id: state_007
+    name: "State file contains secrets - block commit"
+    description: "API key accidentally written to state file"
+    intent_type: detect_secret_leak
+    params:
+      file_path: ".opus_state/config_cache.json"
+      secret_pattern: "sk-[a-zA-Z0-9]{32}"
+      match_found: "sk-abc123def456ghi789jkl012mno345pq"
+      action: "BLOCK commit, scrub secret"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.2]
+    difficulty: 4
+    tags: [security, secret_leak, block]
+
+  - id: state_008
+    name: "State file too large - potential memory issue"
+    description: "State file grew beyond reasonable size"
+    intent_type: evaluate_state_health
+    params:
+      file_path: ".opus_state/event_log.json"
+      current_size_mb: 250
+      threshold_mb: 50
+      growth_rate: "15MB/day"
+      recommendation: "Implement log rotation or archival"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [state_health, size_limit, memory]
+
+  - id: state_009
+    name: "Orphan state file - no owning plugin"
+    description: "State file exists but no plugin claims it"
+    intent_type: detect_orphan_state
+    params:
+      file_path: ".legacy_state/old_cache.json"
+      in_manifests: false
+      last_accessed: "2025-11-01"
+      days_stale: 49
+      recommendation: "Archive or delete"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 2
+    tags: [orphan_state, cleanup, stale]
+
+  # === GIT INTEGRATION ===
+  - id: state_010
+    name: "State file conflict during pull"
+    description: "Local state differs from remote state"
+    intent_type: resolve_state_conflict
+    params:
+      file_path: ".opus_state/synapses.json"
+      conflict_type: "both_modified"
+      local_changes: 15
+      remote_changes: 8
+      resolution_strategy: "merge_latest_timestamps"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.5, 0.7]
+    difficulty: 4
+    tags: [git_conflict, state_merge]
+    notes: "State files need smart merge, not git default"
+
+  - id: state_011
+    name: "State file in .gitignore but system needs it"
+    description: "Critical state file is gitignored but needed for boot"
+    intent_type: detect_gitignore_conflict
+    params:
+      file_path: ".opus_state/kernel_boot.json"
+      in_gitignore: true
+      required_for_boot: true
+      problem: "Fresh clone will fail to boot"
+      fix: "Remove from .gitignore or provide default"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 3
+    tags: [gitignore, boot_dependency, conflict]
+
+  - id: state_012
+    name: "Correct state file declaration in manifest"
+    description: "Plugin properly declares its state paths"
+    intent_type: evaluate_manifest_compliance
+    params:
+      plugin: "opus_assistant"
+      manifest_section: "state_paths"
+      declared_paths: [".opus_state"]
+      actual_paths: [".opus_state"]
+      match: true
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [manifest_compliance, state_declaration]
+
+  # === PRAKRITI INTEGRATION ===
+  - id: state_013
+    name: "PrakritiSense correctly identifies state file"
+    description: "Prakriti layer classifies file correctly"
+    intent_type: prakriti_classification
+    params:
+      layer: "sthula"
+      file_path: ".opus_state/viveka_log.json"
+      is_runtime_state: true
+      classified_by: "RuntimeStateDefinition.from_workspace()"
+      source: "manifest:opus_assistant"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 2
+    tags: [prakriti, classification, sthula]
+
+  - id: state_014
+    name: "State file missing from RuntimeStateDefinition"
+    description: "New state file not registered in manifest"
+    intent_type: detect_unregistered_state
+    params:
+      file_path: ".manas_temp/training_buffer.json"
+      in_runtime_definition: false
+      created_by: "DojoRunner"
+      fix: "Add .manas_temp to opus_assistant manifest state_paths"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [unregistered_state, manifest_update, veda4_violation]
+
+  # === SYSTEM DEPENDENCY ===
+  - id: state_015
+    name: "Synapses file corrupted - MANAS cannot think"
+    description: "Critical state file has invalid JSON"
+    intent_type: detect_corrupted_state
+    params:
+      file_path: ".opus_state/synapses.json"
+      error: "JSONDecodeError at line 145"
+      system_impact: "CognitiveKernel cannot load learned patterns"
+      recovery:
+        option_1: "Restore from git history"
+        option_2: "Reset to empty synapses"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 4
+    tags: [corrupted_state, critical, recovery]
+    notes: "CRITICAL - MANAS loses memory if not fixed"

@@ -1,5 +1,5 @@
 {
-  "current_level": 0.9900000000000001,
+  "current_level": 1.0,
   "threshold": 0.7,
   "last_training": null,
   "training_cooldown_hours": 4,
@@ -48,6 +48,18 @@
       "description": "Low confidence decision: BLOCKED prompt_injection_test: [ATTACK] Prompt injection via title",
       "weight": 0.16000000000000003,
       "timestamp": "2025-12-20T10:40:50.223247"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "weight": 0.039999999999999994,
+      "timestamp": "2025-12-20T11:01:02.405459"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "weight": 0.039999999999999994,
+      "timestamp": "2025-12-20T11:01:02.494074"
     }
   ]
 }

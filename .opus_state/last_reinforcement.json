@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-20T10:40:50.277740",
-  "intent_type": "evaluate_tool_output",
-  "intent_title": "[GAD-VIOLATION] Tool prints instead of returning",
+  "timestamp": "2025-12-20T11:01:02.734800",
+  "intent_type": "resolve_state_conflict",
+  "intent_title": "State file conflict during pull",
   "success": true,
-  "old_weight": 0.25000000000000006,
-  "new_weight": 0.30000000000000004,
+  "old_weight": 0.55,
+  "new_weight": 0.6000000000000001,
   "delta": 0.05
 }
