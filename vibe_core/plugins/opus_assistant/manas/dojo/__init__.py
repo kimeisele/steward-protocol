@@ -35,7 +35,13 @@ files:
 
 # v2: YAML Curricula
 # v2: MANAS Agency
-from .agency import CuriosityTracker, DojoAgency, get_dojo_agency
+from .agency import (
+    CuriosityTracker,
+    DojoAgency,
+    SankalpaValidation,
+    SankalpaValidator,
+    get_dojo_agency,
+)
 from .curriculum_loader import CurriculumLoader, CurriculumMeta, LoadedCurriculum
 
 # Core
@@ -58,6 +64,8 @@ __all__ = [
     # v2: MANAS Agency
     "DojoAgency",
     "CuriosityTracker",
+    "SankalpaValidator",
+    "SankalpaValidation",
     "get_dojo_agency",
     # Core
     "DojoRunner",
