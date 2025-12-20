@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2025-12-20T10:15:41.978140",
+    "total_synapses": 43,
+    "total_triggers": 19,
+    "gaps_found": 0,
+    "health_score": 1.0,
+    "summary": "Excellent synaptic health. 86 synapse weights, 19 learned triggers. 0 gaps found (0 critical).",
+    "gaps": []
+  }
+]

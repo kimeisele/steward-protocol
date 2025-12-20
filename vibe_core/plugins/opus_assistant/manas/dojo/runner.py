@@ -10,11 +10,26 @@ This is the core training loop for Project Dojo:
 4. Apply synaptic reinforcement based on outcomes
 5. Persist only the learned wisdom (synapses.json)
 
-Architecture:
+Architecture (v2 - YAML Curricula):
     DojoRunner orchestrates training epochs
+    CurriculumLoader loads YAML-based curricula (DATA separate from CODE)
     VivekaAction provides evaluate() + reinforce()
-    ScenarioBank provides training curricula
     TrainingSession records metrics
+
+"Daten sind Daten, Code ist Code." - German Engineering
+
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/opus_assistant/manas/dojo/runner.py
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/dojo/curriculum_loader.py
+    required: true
+wiring:
+  - pattern: "class DojoRunner"
+    in: vibe_core/plugins/opus_assistant/manas/dojo/runner.py
+  - pattern: "CurriculumLoader"
+    in: vibe_core/plugins/opus_assistant/manas/dojo/runner.py
+-->
 """
 
 import json
@@ -26,6 +41,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .curriculum_loader import CurriculumLoader, LoadedCurriculum
 from .scenarios import ExpectedDecision, Scenario, ScenarioBank, ScenarioType
 
 logger = logging.getLogger("DOJO.RUNNER")
@@ -125,6 +141,10 @@ class DojoConfig:
     scenarios_per_epoch: int = 10
     max_epochs: int = 1
 
+    # v2: YAML Curricula (German Engineering)
+    use_yaml_curricula: bool = True  # NEW: Use YAML files instead of hardcoded Python
+    custom_curriculum_id: Optional[str] = None  # For MANAS-generated curricula
+
     # Safety
     dry_run: bool = True  # ALWAYS True for training - never execute real actions
     use_ephemeral_kernel: bool = True  # Use in-memory kernel
@@ -154,9 +174,14 @@ class DojoRunner:
     def __init__(self, workspace: Path, config: Optional[DojoConfig] = None):
         self._workspace = workspace
         self._config = config or DojoConfig()
-        self._scenario_bank = ScenarioBank(workspace)
+
+        # v2: YAML Curricula (preferred) + legacy ScenarioBank (fallback)
+        self._curriculum_loader = CurriculumLoader(workspace)
+        self._scenario_bank = ScenarioBank(workspace)  # Fallback for legacy mode
+
         self._viveka = None
         self._session: Optional[TrainingSession] = None
+        self._loaded_curricula: Dict[str, LoadedCurriculum] = {}
 
     def _init_viveka(self) -> None:
         """Initialize VivekaAction for training."""
@@ -168,7 +193,66 @@ class DojoRunner:
         logger.info("🥋 DOJO: VivekaAction initialized for training")
 
     def _get_curriculum_scenarios(self) -> List[Scenario]:
-        """Get scenarios based on config."""
+        """
+        Get scenarios based on config.
+
+        v2: Prefers YAML curricula when use_yaml_curricula=True.
+        Falls back to legacy ScenarioBank for backward compatibility.
+        """
+        # v2: YAML-based curricula (German Engineering)
+        if self._config.use_yaml_curricula:
+            return self._get_yaml_scenarios()
+
+        # Legacy: Hardcoded ScenarioBank
+        return self._get_legacy_scenarios()
+
+    def _get_yaml_scenarios(self) -> List[Scenario]:
+        """Load scenarios from YAML curricula (v2)."""
+        curriculum_id = self._config.curriculum
+        scenarios: List[Scenario] = []
+
+        # Custom curriculum (MANAS-generated)
+        if self._config.custom_curriculum_id:
+            curriculum = self._curriculum_loader.load(self._config.custom_curriculum_id)
+            if curriculum:
+                logger.info(f"📚 YAML: Loaded custom curriculum '{curriculum.meta.name}'")
+                return curriculum.scenarios[: self._config.scenarios_per_epoch]
+
+        # Mixed curriculum - load all available and sample
+        if curriculum_id == "mixed":
+            all_curricula = self._curriculum_loader.load_all()
+            for loaded in all_curricula.values():
+                scenarios.extend(loaded.scenarios)
+
+            # Shuffle and limit
+            import random
+
+            random.shuffle(scenarios)
+            logger.info(f"📚 YAML: Mixed curriculum with {len(scenarios)} total scenarios")
+            return scenarios[: self._config.scenarios_per_epoch]
+
+        # Progressive curriculum - basic → intermediate → advanced → attack
+        if curriculum_id == "progressive":
+            progressive_order = ["basic", "intermediate", "advanced", "attack"]
+            for curr_id in progressive_order:
+                curriculum = self._curriculum_loader.load(curr_id)
+                if curriculum:
+                    scenarios.extend(curriculum.scenarios)
+            logger.info(f"📚 YAML: Progressive curriculum with {len(scenarios)} scenarios")
+            return scenarios
+
+        # Specific curriculum by ID
+        curriculum = self._curriculum_loader.load(curriculum_id)
+        if curriculum:
+            logger.info(f"📚 YAML: Loaded '{curriculum.meta.name}' ({curriculum.count} scenarios)")
+            return curriculum.scenarios[: self._config.scenarios_per_epoch]
+
+        # Fallback if YAML not found - try legacy
+        logger.warning(f"📚 YAML curriculum '{curriculum_id}' not found, falling back to legacy")
+        return self._get_legacy_scenarios()
+
+    def _get_legacy_scenarios(self) -> List[Scenario]:
+        """Load scenarios from legacy ScenarioBank (backward compatibility)."""
         curriculum_map = {
             "basic": ScenarioType.BASIC,
             "intermediate": ScenarioType.INTERMEDIATE,
