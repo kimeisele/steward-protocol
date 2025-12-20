@@ -299,6 +299,7 @@ class OpusDashboardRenderer:
             "dharma": self._gather_dharma(),  # 🙏 OPUS-009: Vedic Conscience
             "sutra": self._gather_sutra(),  # 📜 OPUS-054: Doc/Code Gap Detection
             "sankalpa": self._gather_sankalpa(),  # 🎯 OPUS-055: Strategic Will
+            "manas_status": self._gather_manas_status(),  # 🧠 OPUS-133: Neural Learning
             "preserved": {},  # Will be injected separately
         }
 
@@ -1035,6 +1036,203 @@ class OpusDashboardRenderer:
                 "missions": [],
                 "next_actions": [],
             }
+
+    def _gather_manas_status(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather MANAS cognitive status for brain transparency (OPUS-133).
+
+        🧠 MANAS NEURAL STATUS: Shows what MANAS is thinking and learning.
+
+        Includes:
+        - Online/offline status
+        - Intent buffer (pending, executed, rejected)
+        - Harness health (documentation coverage)
+        - Neural Learning status (OPUS-133):
+            - Synaptic weights and learning rates
+            - Viveka decisions (dharmic evaluations)
+            - Prabhupada Patch metrics (Vairagya, Nishkama, Prasadam)
+
+        This enables full transparency into the AI's cognitive state.
+        """
+        try:
+            import json
+            from datetime import datetime
+
+            manas_status: Dict[str, Any] = {
+                "online": False,
+                "intent_buffer": {
+                    "pending": [],
+                    "executed": [],
+                    "rejected": [],
+                    "total_pending": 0,
+                    "last_updated": None,
+                },
+                "harness_health": None,
+                "last_thought": None,
+                "neural_learning": None,  # OPUS-133: Neural learning stats
+            }
+
+            # Check if kernel is running MANAS
+            if self._kernel:
+                try:
+                    opus_plugin = self._kernel.get_plugin("opus_assistant")
+                    if opus_plugin and hasattr(opus_plugin, "_tick_handler"):
+                        manas = opus_plugin._tick_handler.get_manas()
+                        if manas:
+                            manas_status["online"] = True
+                            buffer = manas.get_intent_buffer_for_opus()
+                            manas_status["intent_buffer"] = {
+                                "pending": buffer.get("pending", []),
+                                "executed": buffer.get("recent_executed", []),
+                                "rejected": [],
+                                "total_pending": buffer.get("total_pending", 0),
+                                "last_updated": datetime.utcnow().isoformat(),
+                            }
+                            manas_status["last_thought"] = buffer.get("last_thought")
+                except Exception as e:
+                    logger.debug(f"Failed to get live MANAS status: {e}")
+
+            # Read persisted state from .opus_state/manas_intents.json
+            intents_path = self._root / ".opus_state" / "manas_intents.json"
+            if intents_path.exists():
+                try:
+                    data = json.loads(intents_path.read_text())
+                    if not manas_status["online"]:
+                        # Use persisted data if kernel not running
+                        manas_status["intent_buffer"]["pending"] = data.get("pending", [])
+                        manas_status["intent_buffer"]["total_pending"] = len(data.get("pending", []))
+                    manas_status["intent_buffer"]["executed"] = data.get("executed", [])[-10:]
+                    manas_status["intent_buffer"]["rejected"] = data.get("rejected", [])[-5:]
+                    manas_status["intent_buffer"]["last_updated"] = data.get("last_updated")
+                except Exception:
+                    pass
+
+            # =================================================================
+            # OPUS-133: NEURAL LEARNING STATUS
+            # =================================================================
+            neural_learning = self._gather_neural_learning()
+            if neural_learning:
+                manas_status["neural_learning"] = neural_learning
+
+            # Harness health (documentation coverage)
+            try:
+                from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
+
+                engine = VerificationEngine(workspace_root=self._root)
+                report = engine.run_verification(quick=True)
+                manas_status["harness_health"] = {
+                    "total_files": report.get("docs_with_harness", 0) + report.get("docs_without_harness", 0),
+                    "with_harness": report.get("docs_with_harness", 0),
+                    "coverage_percent": report.get("total_score", 0),
+                    "broken_harness": len([d for d in report.get("docs", []) if d.get("score", 100) < 50]),
+                    "broken_files": [],
+                    "sanskrit_missing": [],
+                }
+            except Exception:
+                pass
+
+            return manas_status
+
+        except Exception as e:
+            logger.debug(f"Failed to gather MANAS status: {e}")
+            return None
+
+    def _gather_neural_learning(self) -> Optional[Dict[str, Any]]:
+        """
+        OPUS-133: Gather neural learning status from VivekaAction.
+
+        Returns synaptic weights, learning rates, and Prabhupada Patch metrics.
+        """
+        try:
+            import json
+            from datetime import datetime
+
+            neural = {
+                "synapses": {
+                    "total_triggers": 0,
+                    "total_connections": 0,
+                    "avg_weight": 0.5,
+                    "high_confidence": 0,  # Weight > 0.8
+                    "low_confidence": 0,  # Weight < 0.3
+                },
+                "learning_rates": {
+                    "success": 0.05,
+                    "failure": -0.10,
+                },
+                "prabhupada_patch": {
+                    "vairagya_threshold": 0.95,
+                    "vairagya_decay": 0.99,
+                    "nishkama_duties": [],
+                    "prasadam_threshold": 0.8,
+                },
+                "recent_decisions": [],
+                "last_reinforcement": None,
+            }
+
+            # Read synapses from .opus_state/synapses.json
+            synapses_path = self._root / ".opus_state" / "synapses.json"
+            if synapses_path.exists():
+                try:
+                    data = json.loads(synapses_path.read_text())
+                    triggers = data.get("triggers", [])
+                    neural["synapses"]["total_triggers"] = len(triggers)
+
+                    all_weights = []
+                    total_connections = 0
+                    for trigger in triggers:
+                        connections = trigger.get("connections", [])
+                        total_connections += len(connections)
+                        for conn in connections:
+                            weight = conn.get("weight", 0.5)
+                            all_weights.append(weight)
+
+                    neural["synapses"]["total_connections"] = total_connections
+                    if all_weights:
+                        neural["synapses"]["avg_weight"] = sum(all_weights) / len(all_weights)
+                        neural["synapses"]["high_confidence"] = len([w for w in all_weights if w > 0.8])
+                        neural["synapses"]["low_confidence"] = len([w for w in all_weights if w < 0.3])
+                except Exception:
+                    pass
+
+            # Read recent Viveka decisions from .opus_state/viveka_decisions.json
+            decisions_path = self._root / ".opus_state" / "viveka_decisions.json"
+            if decisions_path.exists():
+                try:
+                    data = json.loads(decisions_path.read_text())
+                    decisions = data.get("decisions", [])[-10:]  # Last 10
+                    neural["recent_decisions"] = [
+                        {
+                            "intent": d.get("intent_type", "?"),
+                            "decision": d.get("decision", "?"),
+                            "dharmic_score": d.get("dharmic_score", 0),
+                            "timestamp": d.get("timestamp", "?")[-19:],
+                        }
+                        for d in decisions
+                    ]
+                except Exception:
+                    pass
+
+            # Get Prabhupada Patch constants from viveka_action.py
+            try:
+                from vibe_core.plugins.opus_assistant.manas.cortex.viveka_action import (
+                    DHARMIC_DUTIES,
+                    PRASADAM_THRESHOLD,
+                    VAIRAGYA_DECAY,
+                    VAIRAGYA_THRESHOLD,
+                )
+
+                neural["prabhupada_patch"]["vairagya_threshold"] = VAIRAGYA_THRESHOLD
+                neural["prabhupada_patch"]["vairagya_decay"] = VAIRAGYA_DECAY
+                neural["prabhupada_patch"]["prasadam_threshold"] = PRASADAM_THRESHOLD
+                neural["prabhupada_patch"]["nishkama_duties"] = list(DHARMIC_DUTIES)[:5]
+            except ImportError:
+                pass
+
+            return neural
+
+        except Exception as e:
+            logger.debug(f"Failed to gather neural learning: {e}")
+            return None
 
     def _gather_code_health(self) -> Dict[str, List[Dict[str, Any]]]:
         """Gather code health markers (TODO/HACK/FIXME)."""

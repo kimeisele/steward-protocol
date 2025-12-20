@@ -110,6 +110,38 @@ _No pending intents. MANAS is idle._
 {% endif %}
 {% endif %}
 
+{% if manas_status.neural_learning %}
+### 🧠 Neural Learning (OPUS-133)
+
+*"MANAS lernt nicht um zu gewinnen, sondern um zu dienen."*
+
+| Metric | Value | Description |
+|--------|-------|-------------|
+| **Synapses** | {{ manas_status.neural_learning.synapses.total_triggers }} triggers / {{ manas_status.neural_learning.synapses.total_connections }} connections | Learned patterns |
+| **Avg Weight** | {% if manas_status.neural_learning.synapses.avg_weight >= 0.7 %}🟢{% elif manas_status.neural_learning.synapses.avg_weight >= 0.5 %}🟡{% else %}🟠{% endif %} **{{ "%.2f"|format(manas_status.neural_learning.synapses.avg_weight) }}** | Pattern confidence |
+| **High Confidence** | {{ manas_status.neural_learning.synapses.high_confidence }} | Weights > 0.8 |
+| **Low Confidence** | {{ manas_status.neural_learning.synapses.low_confidence }} | Weights < 0.3 |
+
+#### Prabhupada Patch (Anti-Ego)
+
+| Feature | Config | Purpose |
+|---------|--------|---------|
+| 🍂 **Vairagya** | >{{ manas_status.neural_learning.prabhupada_patch.vairagya_threshold }} → ×{{ manas_status.neural_learning.prabhupada_patch.vairagya_decay }} | Ego pruning |
+| 🕉️ **Nishkama** | {{ manas_status.neural_learning.prabhupada_patch.nishkama_duties|length }} duties | No reward for duties |
+| 🛡️ **Prasadam** | >{{ manas_status.neural_learning.prabhupada_patch.prasadam_threshold }} | Grace for pure intent |
+
+{% if manas_status.neural_learning.recent_decisions %}
+#### Recent Viveka Decisions
+
+| Intent | Decision | Dharmic Score |
+|--------|----------|---------------|
+{% for d in manas_status.neural_learning.recent_decisions[:5] %}
+| `{{ d.intent }}` | {% if d.decision == 'EXECUTE' %}✅{% elif d.decision == 'BLOCK' %}🚫{% elif d.decision == 'WARN_EXECUTE' %}⚠️{% else %}❓{% endif %} {{ d.decision }} | {{ "%.2f"|format(d.dharmic_score) }} |
+{% endfor %}
+{% endif %}
+
+{% endif %}
+
 {% else %}
 _MANAS status unavailable. Run `steward boot` to start the cognitive kernel._
 {% endif %}
