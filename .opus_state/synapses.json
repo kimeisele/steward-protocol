@@ -33,5 +33,27 @@
     "total_connections": 11,
     "note": "OPUS-113: Stress tested - error_detected learned from simulated failures",
     "vocabulary_version": "triggers.py:TriggerPatterns"
-  }
+  },
+  "triggers": [
+    {
+      "trigger": "trigger:update_readme",
+      "connections": [
+        {
+          "target": "action:update_readme",
+          "weight": 0.55,
+          "learned_at": "2025-12-20T08:01:50.431942"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:fix_test",
+      "connections": [
+        {
+          "target": "action:fix_test",
+          "weight": 0.55,
+          "learned_at": "2025-12-20T08:01:50.434788"
+        }
+      ]
+    }
+  ]
 }
