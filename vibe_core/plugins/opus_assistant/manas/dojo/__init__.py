@@ -44,6 +44,15 @@ from .agency import (
 )
 from .curriculum_loader import CurriculumLoader, CurriculumMeta, LoadedCurriculum
 
+# OPUS-140: Meditation Room
+from .rooms.meditation import (
+    JapaResult,
+    MantraState,
+    MeditationRoom,
+    MeditationSession,
+    get_meditation_room,
+)
+
 # Core
 from .runner import DojoConfig, DojoRunner, TrainingSession
 
@@ -80,4 +89,10 @@ __all__ = [
     "seed_baseline",
     "BASELINE_GOOD_PATTERNS",
     "BASELINE_BAD_PATTERNS",
+    # OPUS-140: Meditation Room
+    "MeditationRoom",
+    "MeditationSession",
+    "MantraState",
+    "JapaResult",
+    "get_meditation_room",
 ]
