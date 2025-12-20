@@ -120,7 +120,7 @@ class SyscallRegistry:
             )
 
         # Check if caller is registered in kernel
-        if hasattr(kernel, '_agent_registry'):
+        if hasattr(kernel, "_agent_registry"):
             if caller_agent_id not in kernel._agent_registry and caller_agent_id != "kernel":
                 raise PermissionError(
                     f"PAUNDRAKA_BLOCKED: Agent '{caller_agent_id}' not registered. "
@@ -132,9 +132,9 @@ class SyscallRegistry:
         if required_mandate:
             # Get agent permissions from kernel registry
             agent_permissions = []
-            if hasattr(kernel, '_agent_registry') and caller_agent_id in kernel._agent_registry:
+            if hasattr(kernel, "_agent_registry") and caller_agent_id in kernel._agent_registry:
                 agent = kernel._agent_registry[caller_agent_id]
-                agent_permissions = getattr(agent, 'permissions', []) or []
+                agent_permissions = getattr(agent, "permissions", []) or []
                 agent_permissions = list(agent_permissions) if agent_permissions else []
 
             # Root agents bypass all checks
@@ -156,7 +156,6 @@ class SyscallRegistry:
         except Exception as e:
             logger.error(f"❌ Syscall {syscall_name} failed: {e}")
             raise
-
 
     def get_handler(self, syscall_name: str) -> Optional[SyscallHandler]:
         """Get the handler for a syscall (or None if not found)."""
@@ -236,8 +235,7 @@ def execute_syscall(
 ) -> Dict[str, Any]:
     """
     Convenience function to execute a syscall.
-    
+
     PAUNDRAKA FIX: caller_agent_id is now REQUIRED for security.
     """
     return get_syscall_registry().execute(kernel, syscall_name, params, caller_agent_id)
-
