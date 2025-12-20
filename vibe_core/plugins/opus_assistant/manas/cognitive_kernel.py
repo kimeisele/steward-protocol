@@ -1684,10 +1684,48 @@ class CognitiveKernel(CognitiveCycle):
                 added = ctx.results.get("added_intents", [])
                 if added:
                     logger.info(f"MANAS: Generated {len(added)} new intents")
+
+                # GURUKULA: Check if MANAS wants to train
+                dojo_intent = self._check_training_desire()
+                if dojo_intent:
+                    added.append(dojo_intent)
+                    logger.info("🥋 MANAS: Curiosity triggered - adding enter_dojo intent")
+
                 return added
         except Exception as e:
             logger.error(f"MANAS: Error in orchestrate(): {e}")
         return []
+
+    def _check_training_desire(self) -> Optional["Intent"]:
+        """
+        GURUKULA: Check if MANAS is curious enough to self-train.
+
+        Returns enter_dojo Intent if curiosity threshold is met.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.dojo.agency import DojoAgency
+
+            agency = DojoAgency(self._workspace)
+            intent_dict = agency.check_training_desire()
+
+            if intent_dict:
+                from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+                return Intent(
+                    intent_type="enter_dojo",
+                    title="🥋 Self-directed Dojo training",
+                    description="MANAS curiosity threshold reached - initiating training",
+                    priority="low",  # Training is background activity
+                    risk="safe",
+                    reasoning=f"Curiosity sources: {intent_dict['params'].get('top_sources', [])}",
+                    params=intent_dict["params"],
+                )
+        except ImportError:
+            pass  # Dojo not available
+        except Exception as e:
+            logger.debug(f"MANAS: Training desire check failed: {e}")
+
+        return None
 
     def approve_intent(self, intent_id: str) -> bool:
         """
