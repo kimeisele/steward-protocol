@@ -868,23 +868,89 @@ flowchart LR
 ### Current Goal
 
 <!-- AI: Strategic goal from SANKALPA mission -->
-Maintain Code Health
+🚨 **P0: STATE ARCHITECTURE UNIFICATION** - Beende das unvollständige Refactoring
 <!-- /@AI -->
 
 <!-- @AI:phase_status -->
 ### Phase Status
 
 <!-- AI: Mission execution phase -->
-**Status:** ACTIVE | **Missions:** 3/3 | **Strategies:** 3/3
+**Status:** 🔴 CRITICAL | **Crisis:** Architectural Schizophrenia
 
 | Mission | Priority | Status |
 |---------|----------|--------|
-| Maintain Code Health | high | active |
-| Continuous Self-Improvement | medium | active |
-| Self-Extension Test | critical | active |
+| **State Unification (P0)** | 🔴 CRITICAL | BLOCKING |
+| MANAS Dojo Training | high | BLOCKED by P0 |
+| Knowledge Transfer | medium | paused |
 <!-- /@AI -->
 
+---
 
+<!-- @AI:architecture_crisis -->
+## 🚨 P0: STATE ARCHITECTURE CRISIS
+
+**Diagnose:** System ist MID-REFACTOR stecken geblieben.
+
+### Das Problem
+
+```
+OPUS-ASSISTANT IST EIN PLUGIN...
+...DAS DAS GEHIRN DES SYSTEMS (MANAS) VERWALTET
+
+3 Architekturen halb-implementiert, alle kämpfen gegeneinander.
+```
+
+### 3 Architekturen, Keine Vollständig
+
+| Architektur | Datei | Status |
+|-------------|-------|--------|
+| **OPUS-096** StateSyncWeaver | `vibe_core/state/weaver.py` | ✅ Code existiert, ❌ NICHT INTEGRIERT |
+| **OPUS-081** RuntimeStateDefinition | `vibe_core/state/runtime_state.py` | ✅ Foundation da, ❌ Heartbeat nutzt es nicht |
+| **OPUS-027** Prakriti | `vibe_core/state/prakriti.py` | ⚠️ Existiert, Session unvollständig |
+
+### 5 Commit-Pfade (CHAOS)
+
+1. `opus_assistant` → schreibt `.opus_state/` direkt
+2. `Heartbeat` → ruft `Prakriti.commit_if_dirty()`
+3. `Interface` → rendert `.md` Dateien
+4. `Chronicle` → GitTools mit Weaver-Fallback
+5. `StateSyncWeaver` → **EXISTIERT ABER UNPLUGGED**
+
+### Symptome
+
+| Symptom | Wert | Problem |
+|---------|------|---------|
+| `viveka_decisions.json` | 156KB | Wächst unbegrenzt |
+| `session.json` (Plugin) | 7MB | Enorm |
+| `synapses_backup/` | 40+/24h | Kein Cleanup |
+| Git Commits | 14/48h | Nur State-Sync |
+
+### Doppelte State-Verzeichnisse
+
+```
+/.opus_state/                    ← ROOT (System?)
+/vibe_core/plugins/opus_assistant/.opus_state/  ← PLUGIN
+```
+
+**Welches ist authoritative? BEIDE werden committet. BEIDE erzeugen Konflikte.**
+
+### Root Cause
+
+**UNVOLLSTÄNDIGES REFACTORING:**
+- ALT: Plugins verwalten eigenen State
+- NEU: Prakriti orchestriert via Weaver
+- JETZT: BEIDES läuft gleichzeitig
+
+### Lösung (TODO)
+
+1. [ ] **ENTSCHEIDUNG:** Weaver als einzige Commit-Authority
+2. [ ] `heartbeat.py` → Weaver integrieren (statt direkt Prakriti)
+3. [ ] `kernel_impl.py` → `begin_session()` / `end_session()` aufrufen
+4. [ ] Plugin `.opus_state/` → nach Root migrieren oder eliminieren
+5. [ ] Cleanup-Policy für synapses_backup/, viveka_decisions.json
+6. [ ] MANAS von Plugin zu First-Class Kernel-Subsystem erheben
+
+<!-- /@AI -->
 
 ---
 
@@ -892,14 +958,19 @@ Maintain Code Health
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+**Phase 0: Analyse abgeschlossen** ✅
+
+Nächster Schritt: Weaver-Integration in Heartbeat als erster Schritt zur Unifikation.
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-_None_
+🚨 **P0 BLOCKER: State Architecture Schizophrenia**
+
+Solange 5 verschiedene Commit-Pfade existieren, ist jede weitere Entwicklung instabil.
+Das System committet sich selbst in Git-Chaos.
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
