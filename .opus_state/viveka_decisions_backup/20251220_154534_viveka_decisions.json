@@ -226,24 +226,5 @@
     "shiva_reason": null,
     "action_taken": null,
     "result": null
-  },
-  {
-    "timestamp": "2025-12-20T15:45:34.635551",
-    "intent_type": "evaluate_renderer_pattern",
-    "intent_title": "[DEPRECATED] Hardcoded generate_content() pattern",
-    "trigger": "trigger:evaluate_renderer_pattern",
-    "file_path": null,
-    "dharmic_score": 0.5,
-    "resonance": 1.0,
-    "harmony": "perfect",
-    "varga_trigger": "TALAVYA",
-    "varga_action": "TALAVYA",
-    "confidence_level": "medium",
-    "decision": "WARN_EXECUTE",
-    "reasoning": "Neutral dharmic score (0.50) - proceeding with caution",
-    "shiva_context_applied": false,
-    "shiva_reason": null,
-    "action_taken": null,
-    "result": null
   }
 ]
