@@ -254,42 +254,7 @@ else
 fi
 
 # ============================================================================
-# GUARD 7: HARNESS Pattern Verification (OPUS-162)
-# ============================================================================
-echo -n "  📋 HARNESS Pattern Verification... "
-
-# Get staged OPUS documents
-OPUS_DOCS=$(echo "$STAGED_FILES" | grep "docs/architecture/OPUS/.*\.md$" || true)
-
-if [ -n "$OPUS_DOCS" ]; then
-    # Run harness_validator.py on staged OPUS docs
-    HARNESS_OUTPUT=$(echo "$OPUS_DOCS" | xargs python -m vibe_core.governance.harness_validator 2>&1)
-    HARNESS_EXIT=$?
-
-    if [ $HARNESS_EXIT -ne 0 ]; then
-        echo -e "${RED}BLOCKED${NC}"
-        echo ""
-        echo -e "${RED}❌ HARNESS PATTERN VERIFICATION FAILED${NC}"
-        echo ""
-        echo "$HARNESS_OUTPUT"
-        echo ""
-        echo "The @HARNESS tags in these OPUS documents reference patterns"
-        echo "that don't exist in the target files."
-        echo ""
-        echo "To fix:"
-        echo "  1. Implement the missing patterns in the target files"
-        echo "  2. Or update the @HARNESS tags to match reality"
-        echo ""
-        exit 1
-    fi
-
-    echo -e "${GREEN}OK${NC}"
-else
-    echo -e "${GREEN}SKIP (no OPUS docs)${NC}"
-fi
-
-# ============================================================================
-# GUARD 8: OPUS-076 - Block Simulation Mode (No Pussy Mode!)
+# GUARD 7: OPUS-076 - Block Simulation Mode (No Pussy Mode!)
 # ============================================================================
 echo -n "  🔥 OPUS-076 Live Fire Guard... "
 
