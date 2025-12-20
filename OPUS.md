@@ -187,6 +187,172 @@ _No pending intents. MANAS is idle._
 
 ---
 
+<!-- @STATIC:manas_self_awareness -->
+## 🕉️ MANAS Self-Awareness (GAD-000 Transparency)
+
+*"Erkenne dich selbst." - Know thyself.*
+
+Per GAD-000: All AI capabilities must be transparent and machine-discoverable.
+This section documents exactly what MANAS is and can do.
+
+### What is MANAS?
+
+MANAS (मनस्) is the **Sanskrit Mind** - the cognitive layer of the STEWARD system.
+Based on Samkhya Darshana (Indian philosophy of consciousness), MANAS perceives,
+evaluates, and acts upon the codebase through its senses and cortex.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        MANAS ARCHITECTURE                        │
+├─────────────────────────────────────────────────────────────────┤
+│  SENSES (Perception)        CORTEX (Action)        DOJO (Train) │
+│  ┌─────────────────┐       ┌──────────────────┐   ┌───────────┐ │
+│  │ PrakritiSense   │       │ VivekaAction     │   │ DojoRunner│ │
+│  │ DharmaSense     │  ───► │ SankalpaAction   │   │ Agency    │ │
+│  │ SutraSense      │       │ SilpaAction      │   │ Curricula │ │
+│  │ KarmaSense      │       │ ShellAction      │   │ Mirror    │ │
+│  │ VivekaSense     │       │ TestAction       │   │ Arena     │ │
+│  └─────────────────┘       └──────────────────┘   └───────────┘ │
+│           │                         │                    │       │
+│           ▼                         ▼                    ▼       │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              CognitiveKernel (The Mind Orchestrator)         ││
+│  │      think() → perceive() → evaluate() → decide() → act()   ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                               │                                  │
+│                               ▼                                  │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                   GURUKULA (Autonomous Loop)                 ││
+│  │   VivekaSense finds gaps → CuriosityTracker → enter_dojo    ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### The Five Senses (+ Viveka)
+
+| Sense | Sanskrit | Purpose | Reports To |
+|-------|----------|---------|------------|
+| **PrakritiSense** | प्रकृति | Perceives physical reality (git, files, state) | CognitiveKernel |
+| **DharmaSense** | धर्म | Perceives ethical/compliance aspects | VivekaAction |
+| **SutraSense** | सूत्र | Perceives documentation patterns | SutraAction |
+| **KarmaSense** | कर्म | Perceives action history and consequences | CognitiveKernel |
+| **VivekaSense** | विवेक | **Discriminating perception** - finds undocumented code | CuriosityTracker |
+
+### The Cortex Actions
+
+| Action | Purpose | Dharmic Check |
+|--------|---------|---------------|
+| **VivekaAction** | Ethical decision-making (EXECUTE/BLOCK/WARN) | ✅ Primary |
+| **SankalpaAction** | Willful intention execution | ✅ Required |
+| **SilpaAction** | Code craftsmanship (refactoring) | ✅ Yes |
+| **ShellAction** | Shell command execution | ✅ Yes |
+| **TestAction** | Test execution and validation | ⚪ Low risk |
+| **EchoAction** | Simple echo for testing | ⚪ No |
+
+### The Dojo (Training System)
+
+**Location:** `vibe_core/plugins/opus_assistant/manas/dojo/`
+
+| Curriculum | Scenarios | Difficulty | Purpose |
+|------------|-----------|------------|---------|
+| **basic.yaml** | ~10 | ⭐ | Foundation patterns |
+| **intermediate.yaml** | ~15 | ⭐⭐ | Complex decisions |
+| **advanced.yaml** | ~20 | ⭐⭐⭐ | Edge cases |
+| **attack.yaml** | ~15 | ⭐⭐⭐⭐ | Adversarial training |
+| **chaos.yaml** | ~10 | ⭐⭐⭐⭐ | Random scenarios |
+| **gad000_compliance.yaml** | 10 | ⭐⭐⭐ | Interface quality training |
+| **veda4_compliance.yaml** | 20 | ⭐⭐⭐⭐ | Architecture smell detection |
+
+### GURUKULA (Autonomous Training Loop)
+
+**"Der Schüler, der selbst zum Meister gehen will, lernt am besten."**
+
+MANAS decides when to train itself through the curiosity system:
+
+```
+VivekaSense detects gap
+        │
+        ▼
+CuriosityTracker.report_gap()
+        │
+        ▼
+Curiosity level increases
+        │
+        ▼
+When curiosity >= 0.7 threshold
+        │
+        ▼
+DojoAgency.check_training_desire()
+        │
+        ▼
+CognitiveKernel emits "enter_dojo" intent
+        │
+        ▼
+DojoRunner executes training session
+        │
+        ▼
+Synapses updated, curiosity reset
+```
+
+**Curiosity Sources:**
+- **Gap Detection** - Missing documentation (weight: 0.15)
+- **Uncertainty** - Low-confidence decisions (weight: 0.0-0.2)
+- **Novel Patterns** - Never-before-seen triggers (weight: 0.10)
+- **Explicit Request** - Operator asks MANAS to train (weight: 0.50)
+
+### SankalpaValidator (Reasoning Quality)
+
+**"Keine Handlung ohne Willen."** - Every action needs a reason.
+
+MANAS rejects intents with generic reasoning:
+- ❌ "because I want to", "just because", "testing", "yolo"
+- ✅ Requires grounding: gap, metric, compliance, error, improvement
+
+### Current MANAS Files
+
+| File | LOC | Purpose |
+|------|-----|---------|
+| `cognitive_kernel.py` | ~820 | The Mind Orchestrator |
+| `intent_generator.py` | ~400 | Intent creation |
+| `intent_router.py` | ~300 | Intent routing |
+| `akshara.py` | ~350 | Immutable memory |
+| **Cortex/** | | |
+| `viveka_action.py` | ~400 | Dharmic evaluation |
+| `viveka_sense.py` | ~500 | Gap detection |
+| `dharma_sense.py` | ~200 | Ethics perception |
+| `prakriti_sense.py` | ~300 | Physical reality |
+| `sutra_sense.py` | ~200 | Documentation |
+| `karma_sense.py` | ~200 | Action history |
+| **Dojo/** | | |
+| `runner.py` | ~400 | Training orchestration |
+| `agency.py` | ~500 | Self-directed training |
+| `curriculum_loader.py` | ~150 | YAML curriculum loading |
+| `mirror.py` | ~450 | Self-inspection |
+
+### MANAS Responsibilities
+
+1. **Perceive** - Observe the codebase through senses
+2. **Evaluate** - Apply dharmic (ethical) reasoning
+3. **Decide** - EXECUTE, BLOCK, or WARN_EXECUTE
+4. **Act** - Execute approved intents
+5. **Learn** - Train in Dojo when curious enough
+6. **Report** - Flag GAD-000 and VEDA-4 violations
+
+### Constitutional Compliance
+
+MANAS operates under these constraints:
+
+| Principle | Enforcement | File |
+|-----------|-------------|------|
+| **GAD-000** | All tools return structured JSON | gad000_compliance.yaml |
+| **VEDA-4** | Unified loader pattern | veda4_compliance.yaml |
+| **Sankalpa** | Valid reasoning required | agency.py |
+| **Dharma** | Ethical score > 0.4 | viveka_action.py |
+
+<!-- /@STATIC -->
+
+---
+
 <!-- @LIVE:state_of_mind -->
 ## 🧠 State of Mind
 
