@@ -1053,8 +1053,46 @@ class CognitiveKernel(CognitiveCycle):
         """
         Process vibrations for Infrastructure Genesis.
 
-        OPUS-158: The Agent Virus pattern - auto-generate infrastructure
-        for new directories matching known module patterns.
+        OPUS-160: Delegates to vibe_core.genesis.GenesisService (Stadtamt).
+        MANAS detects gaps, Stadtamt builds infrastructure.
+        """
+        try:
+            # Try to use vibe_core GenesisService (OPUS-160)
+            from vibe_core.genesis import GenesisService, ModuleType
+
+            genesis = GenesisService.get_instance(workspace=self._workspace)
+
+            for vibration in perception.vibrations:
+                # Only process directory creation events
+                if vibration.event_type != "created" or not vibration.is_directory:
+                    continue
+
+                # Classify and ensure compliance via Stadtamt
+                module_type = genesis.classify_path(vibration.path)
+
+                if module_type == ModuleType.UNKNOWN:
+                    continue
+
+                # Call the Stadtamt for compliance
+                result = genesis.ensure_compliance(vibration.path, module_type)
+
+                if result.build_result and result.build_result.files_created_count > 0:
+                    logger.info(
+                        f"🏛️ STADTAMT: Created {result.build_result.files_created_count} files "
+                        f"for {module_type.name}: {vibration.path.name}"
+                    )
+
+        except ImportError:
+            # Fallback to OPUS-158 local genesis (legacy)
+            self._process_genesis_vibrations_legacy(perception)
+        except Exception as e:
+            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
+
+    def _process_genesis_vibrations_legacy(self, perception: "ShrutaPerception") -> None:
+        """
+        Legacy genesis processing (OPUS-158 fallback).
+
+        Used when vibe_core.genesis is not available.
         """
         if not self._infrastructure_classifier or not self._infrastructure_generator:
             return
@@ -1063,29 +1101,24 @@ class CognitiveKernel(CognitiveCycle):
             from .cortex.genesis import ModuleType
 
             for vibration in perception.vibrations:
-                # Only process directory creation events
                 if vibration.event_type != "created" or not vibration.is_directory:
                     continue
 
-                # Classify the new directory
                 module_type = self._infrastructure_classifier.classify(vibration.path, is_directory=True)
 
                 if module_type == ModuleType.UNKNOWN:
                     continue
 
-                # Generate infrastructure
                 result = self._infrastructure_generator.generate(vibration.path, module_type)
 
                 if result.files_created_count > 0:
                     logger.info(
-                        f"🏛️ GENESIS: Auto-generated {result.files_created_count} files "
+                        f"🏛️ GENESIS (legacy): Auto-generated {result.files_created_count} files "
                         f"for {module_type.name}: {vibration.path.name}"
                     )
-                    for file_name in result.created_files.keys():
-                        logger.debug(f"🏛️ GENESIS: Created {file_name}")
 
         except Exception as e:
-            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
+            logger.warning(f"🏛️ GENESIS (legacy): Error: {e}")
 
     def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
         """Get Sutra summary for OPUS.md display."""
