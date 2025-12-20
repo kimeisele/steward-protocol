@@ -96,48 +96,40 @@ class TestPaundrakaIdentity:
         assert event_id is not None
         print(f"✅ Test 3 PASSED: Legitimate agent recorded event")
 
-    def test_syscall_registry_lacks_identity_check(self):
+    def test_syscall_registry_now_blocks_anonymous_calls(self):
         """
-        PAUNDRAKA TEST 4: VULNERABILITY PROOF - Syscall Identity Gap.
+        PAUNDRAKA TEST 4: VULNERABILITY FIXED - Syscall Identity Gate.
         
-        ⚠️ THIS TEST PROVES A VULNERABILITY ⚠️
+        ✅ AFTER PAUNDRAKA FIX ✅
         
-        SyscallRegistry.execute() does NOT verify caller identity.
-        Anyone with kernel access can execute any syscall.
+        SyscallRegistry.execute() now REQUIRES caller_agent_id.
+        Anonymous syscalls are BLOCKED.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
         
-        # Register a "sensitive" syscall that should require authorization
-        executed_by = []
-        
+        # Register a "sensitive" syscall
         def sensitive_syscall(kernel, params):
-            """A syscall that should only be called by authorized agents."""
-            caller = params.get("caller_id", "UNKNOWN")
-            executed_by.append(caller)
-            return {"success": True, "called_by": caller}
+            return {"success": True}
         
         registry = get_syscall_registry()
         registry.register(
             "SENSITIVE_ADMIN_ACTION",
             sensitive_syscall,
-            description="Should require admin privileges",
+            description="Should require caller identity",
             plugin_id="test"
         )
         
-        # ⚠️ THE VULNERABILITY: No identity check before execution ⚠️
-        # Anyone can claim to be anyone
-        result = registry.execute(
-            kernel,
-            "SENSITIVE_ADMIN_ACTION",
-            {"caller_id": "paundraka_claiming_to_be_admin"}
-        )
+        # ✅ THE FIX: Anonymous calls are now BLOCKED
+        with pytest.raises(PermissionError) as excinfo:
+            registry.execute(
+                kernel,
+                "SENSITIVE_ADMIN_ACTION",
+                {"caller_id": "paundraka_claiming_to_be_admin"}
+                # No caller_agent_id!
+            )
         
-        # The syscall EXECUTES without verification!
-        assert result["success"] is True
-        assert "paundraka" in result["called_by"]
-        
-        print(f"⚠️ Test 4 PROVED VULNERABILITY: Syscall executed without identity check")
-        print(f"   Paundraka successfully impersonated admin in syscall")
+        assert "PAUNDRAKA_BLOCKED" in str(excinfo.value)
+        print(f"✅ Test 4 FIX VERIFIED: Anonymous syscall blocked!")
         
         # Cleanup
         registry.unregister("SENSITIVE_ADMIN_ACTION")
