@@ -31,6 +31,7 @@ from vibe_core.event_bus import EventBus
 from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
+from vibe_core.state import get_state_service  # P0: StateService
 
 from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
 from .memory_store import MemoryStore
@@ -2179,14 +2180,12 @@ class CognitiveKernel(CognitiveCycle):
             intent: The executed intent
             success: Whether execution succeeded
         """
-        synapse_file = self._workspace / ".opus_state" / "synapses.json"
+        # P0: Use StateService for centralized state management
+        state = get_state_service(self._workspace)
 
         try:
-            # Load current synapses
-            if synapse_file.exists():
-                synapses = json.loads(synapse_file.read_text())
-            else:
-                synapses = {"schema": "v1", "weights": {}, "meta": {}}
+            # Load current synapses via StateService
+            synapses = state.load("synapses.json", default={"schema": "v1", "weights": {}, "meta": {}})
 
             weights = synapses.get("weights", {})
 
@@ -2224,8 +2223,8 @@ class CognitiveKernel(CognitiveCycle):
             synapses["meta"]["last_updated"] = datetime.utcnow().isoformat()
             synapses["meta"]["total_connections"] = sum(len(v) for v in weights.values())
 
-            # Save
-            synapse_file.write_text(json.dumps(synapses, indent=2))
+            # P0: Save via StateService (with automatic backup rotation)
+            state.save("synapses.json", synapses)
 
             logger.debug(
                 f"🧠 SYNAPSE: {trigger} → {action}: {current_weight:.2f} → {new_weight:.2f} ({'↑' if success else '↓'})"
@@ -2318,11 +2317,8 @@ class CognitiveKernel(CognitiveCycle):
             self._intent_buffer = []
 
     def _save_intent_buffer(self) -> None:
-        """Save intent buffer to disk."""
+        """Save intent buffer to disk via StateService (P0)."""
         try:
-            buffer_file = self._get_buffer_file()
-            buffer_file.parent.mkdir(parents=True, exist_ok=True)
-
             data = {
                 "intents": [
                     {
@@ -2337,10 +2333,9 @@ class CognitiveKernel(CognitiveCycle):
                 "updated_at": datetime.utcnow().isoformat(),
             }
 
-            # Atomic write
-            temp_file = buffer_file.with_suffix(".tmp")
-            temp_file.write_text(json.dumps(data, indent=2))
-            temp_file.replace(buffer_file)
+            # P0: Save via StateService (atomic write built-in)
+            state = get_state_service(self._workspace)
+            state.save("manas_intents.json", data, create_backup=False)
 
         except Exception as e:
             logger.warning(f"Could not save intent buffer: {e}")

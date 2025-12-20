@@ -49,6 +49,15 @@ from .runtime_state import (
     get_runtime_state_definition,
     reset_runtime_state_definition,
 )
+
+# P0: StateService - Single Point of Truth for ALL state writes
+from .state_service import (
+    StatePolicy,
+    StateService,
+    WriteResult,
+    get_state_service,
+    reset_state_service,
+)
 from .sync_holon import (
     GovernanceViolation,
     PluginStateContract,
@@ -134,4 +143,10 @@ __all__ = [
     "WeaverCommitResult",
     "get_state_sync_weaver",
     "reset_state_sync_weaver",
+    # P0: StateService (Single Point of Truth)
+    "StateService",
+    "StatePolicy",
+    "WriteResult",
+    "get_state_service",
+    "reset_state_service",
 ]
