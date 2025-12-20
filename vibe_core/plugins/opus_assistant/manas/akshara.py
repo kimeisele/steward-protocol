@@ -696,9 +696,20 @@ def calculate_dharmic_score(
     """
     Calculate the Dharmic Score for a trigger-action pair.
 
-    Dharmic Score = Synaptic Weight × Resonance
+    OPUS-133 SIDDHI Enhancement:
+    Base formula: Dharmic Score = Synaptic Weight × Resonance
 
-    This combines learned experience (weight) with phonetic harmony (resonance).
+    But when weight > SIDDHI_THRESHOLD (0.85), experience begins to
+    override resonance. A pattern proven 10+ times has earned trust.
+
+    Siddhi Formula:
+    - siddhi_factor = (weight - 0.85) / 0.15  (0.0 at 0.85, 1.0 at 1.0)
+    - effective_resonance = resonance + siddhi_factor * (1 - resonance)
+    - This lifts low resonance toward 1.0 for mastered patterns
+
+    Example: weight=0.95, resonance=0.2
+    - Without Siddhi: 0.95 × 0.2 = 0.19 (BLOCK)
+    - With Siddhi: siddhi=0.67, eff_res=0.2+0.67×0.8=0.74 → 0.95×0.74=0.70 (EXECUTE)
 
     Args:
         trigger: Canonical trigger string
@@ -709,6 +720,20 @@ def calculate_dharmic_score(
         Dharmic score (0.0 - 1.0)
     """
     resonance = calculate_resonance(trigger, action)
+
+    # OPUS-133: SIDDHI - Mastery overrides dogma
+    SIDDHI_THRESHOLD = 0.85  # Weight at which mastery kicks in
+
+    if synaptic_weight > SIDDHI_THRESHOLD:
+        # Calculate siddhi factor (0.0 at threshold, 1.0 at max weight)
+        siddhi_factor = (synaptic_weight - SIDDHI_THRESHOLD) / (1.0 - SIDDHI_THRESHOLD)
+
+        # Lift resonance toward 1.0 based on mastery
+        # This allows proven patterns to override phonetic dissonance
+        effective_resonance = resonance + siddhi_factor * (1.0 - resonance)
+
+        return synaptic_weight * effective_resonance
+
     return synaptic_weight * resonance
 
 
