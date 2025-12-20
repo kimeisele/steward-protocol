@@ -466,6 +466,10 @@ class EnvoyPlugin(KernelPlugin):
 
         NO PUSSY MODE (OPUS-076): Real execution via ToolRegistry.
 
+        OPUS-133 P3: VivekaAction Dharmic Gate
+        Before execution, consult VivekaAction to ensure dharmic approval.
+        This prevents bypassing the conscience layer.
+
         Args:
             intent: The intent dictionary (from Manas)
 
@@ -485,6 +489,61 @@ class EnvoyPlugin(KernelPlugin):
         params = intent.get("params", {}) or intent.get("args", {})
 
         logger.info(f"🔫 ENVOY [LIVE FIRE]: Processing mission {mission_id} -> {action}")
+
+        # =====================================================================
+        # OPUS-133 P3: VIVEKA GATE - Dharmic Discrimination before execution
+        # =====================================================================
+        # Convert dict to Intent object for VivekaAction evaluation
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.viveka_action import VivekaAction
+            from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+            # Create Intent from dict
+            intent_obj = Intent(
+                id=mission_id,
+                intent_type=intent.get("intent_type", action),
+                title=intent.get("title", f"Envoy mission: {action}"),
+                description=intent.get("description", ""),
+                reasoning=intent.get("reasoning", "Envoy execution"),
+                params=params,
+            )
+
+            # Evaluate through VivekaAction
+            viveka = VivekaAction(workspace=Path.cwd())
+            eval_result = viveka.evaluate(intent_obj)
+            decision = eval_result.get("decision", "EXECUTE")
+
+            if decision == "BLOCK":
+                logger.warning(
+                    f"🚫 ENVOY BLOCKED by VIVEKA: {mission_id} "
+                    f"(dharmic_score={eval_result.get('dharmic_score', 0):.2f})"
+                )
+                return {
+                    "status": "blocked",
+                    "blocked_by": "VIVEKA",
+                    "dharmic_score": eval_result.get("dharmic_score", 0),
+                    "harmony": eval_result.get("harmony", "unknown"),
+                    "reasoning": eval_result.get("reasoning", "Dharmic gate blocked execution"),
+                    "signed_by": "Envoy",
+                }
+
+            # Log decision for audit trail
+            if decision == "WARN_EXECUTE":
+                logger.warning(
+                    f"⚠️ ENVOY proceeding with CAUTION: {mission_id} "
+                    f"(dharmic_score={eval_result.get('dharmic_score', 0):.2f})"
+                )
+            elif decision == "SHIVA_OVERRIDE":
+                logger.info(f"🔥 ENVOY SHIVA OVERRIDE: {mission_id} - necessary destruction allowed")
+            else:
+                logger.debug(f"✅ ENVOY VIVEKA approved: {mission_id}")
+
+        except ImportError:
+            # VivekaAction not available - proceed without gate (legacy mode)
+            logger.warning("⚠️ VivekaAction not available - proceeding without dharmic gate")
+        except Exception as e:
+            # Don't block on evaluation errors - log and proceed
+            logger.warning(f"⚠️ VivekaAction evaluation failed: {e} - proceeding with caution")
 
         # 1. Get Tool Registry from Kernel
         try:
@@ -541,6 +600,8 @@ class EnvoyPlugin(KernelPlugin):
 
             if tool_result.success:
                 logger.info(f"✅ ENVOY: Mission Accomplished. Output len: {len(str(tool_result.output))}")
+                # OPUS-133 P3: Reinforce successful pattern
+                self._reinforce_synapse(mission_id, action, params, success=True)
                 return {
                     "status": "success",
                     "executed_by": "Envoy",
@@ -551,13 +612,50 @@ class EnvoyPlugin(KernelPlugin):
                 }
             else:
                 logger.error(f"💥 ENVOY: Tool Execution Failed: {tool_result.error}")
+                # OPUS-133 P3: Weaken failed pattern
+                self._reinforce_synapse(mission_id, action, params, success=False)
                 return {"status": "error", "error": tool_result.error, "signed_by": "Envoy"}
 
         except Exception as e:
             logger.error(f"💥 ENVOY: Execution FAILED (Exception): {e}")
+            # OPUS-133 P3: Weaken failed pattern
+            self._reinforce_synapse(mission_id, action, params, success=False)
             import traceback
 
             return {"status": "error", "error": str(e), "traceback": traceback.format_exc(), "signed_by": "Envoy"}
+
+    def _reinforce_synapse(self, mission_id: str, action: str, params: Dict, success: bool) -> None:
+        """
+        OPUS-133 P3: Reinforce or weaken synaptic connections based on execution outcome.
+
+        Called after Envoy executes a mission to provide feedback to VivekaAction.
+        This enables synaptic learning even for missions that bypass IntentRouter.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.viveka_action import VivekaAction
+            from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+            intent_obj = Intent(
+                id=mission_id,
+                intent_type=action,
+                title=f"Envoy mission: {action}",
+                description="",
+                reasoning="Envoy execution feedback",
+                params=params,
+            )
+
+            viveka = VivekaAction(workspace=Path.cwd())
+            viveka.reinforce(intent_obj, success=success)
+
+            if success:
+                logger.debug(f"🧠 ENVOY synapse reinforced: {action}")
+            else:
+                logger.debug(f"🔴 ENVOY synapse weakened: {action}")
+
+        except ImportError:
+            pass  # VivekaAction not available
+        except Exception as e:
+            logger.debug(f"Synapse reinforcement skipped: {e}")
 
     # =========================================================================
     # PUBLIC ROUTER ACCESS
