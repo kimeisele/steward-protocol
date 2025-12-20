@@ -1042,20 +1042,20 @@ class VivekaAction(BaseAction):
         Reinforce synaptic connections based on execution outcome.
 
         Called by IntentRouter after successful intent execution.
-        This strengthens the trigger→action pathways that led to success.
+        This strengthens the trigger→action pathways that led to success,
+        or weakens them if the execution failed.
 
         Args:
             intent: The intent that was executed
             success: Whether the execution was successful
 
-        Neural Learning:
+        Neural Learning (OPUS-133 P2: Negative Learning):
         - Success (+): Increase weight by 0.05 (max 1.0)
-        - Failure (-): Decrease weight by 0.1 (min 0.1)
-        """
-        if not success:
-            logger.debug(f"⚠️ Synapse feedback: failure for {intent.intent_type}")
-            return  # Don't reinforce failures (yet - could do negative learning)
+        - Failure (-): Decrease weight by 0.10 (min 0.1)
 
+        The asymmetric learning rate (2x penalty for failure) ensures
+        MANAS learns faster from mistakes than from successes.
+        """
         # Determine trigger and action patterns
         trigger = f"trigger:{intent.intent_type}"
         action = self._intent_to_action_pattern(intent.intent_type)
@@ -1068,7 +1068,7 @@ class VivekaAction(BaseAction):
         synapses = self._load_synapses()
         synapse_key = f"{trigger}→{action}"
 
-        # Find or create the synapse
+        # Find current weight
         current_weight = 0.5  # Default starting weight
 
         for trigger_entry in synapses.get("triggers", []):
@@ -1079,7 +1079,18 @@ class VivekaAction(BaseAction):
                         break
                 break
 
-        # Apply learning rate
+        if not success:
+            # OPUS-133 P2: NEGATIVE LEARNING
+            # Failure reduces weight more than success increases it (asymmetric)
+            negative_learning_rate = 0.10
+            new_weight = max(0.1, current_weight - negative_learning_rate)
+            self._update_synapse_weight(trigger, action, new_weight)
+            logger.warning(
+                f"🔴 SYNAPSE WEAKENED: {synapse_key} ({current_weight:.2f} → {new_weight:.2f}) [failure penalty]"
+            )
+            return
+
+        # SUCCESS: Apply positive learning rate
         learning_rate = 0.05
         new_weight = min(1.0, current_weight + learning_rate)
 
