@@ -56,7 +56,7 @@ files:
     required: true
 
   # ═══════════════════════════════════════════════════════════════════════
-  # SECTION 2: CORTEX - SENSES (5 Jnanendriyas)
+  # SECTION 2: CORTEX - SENSES (6 Jnanendriyas) - OPUS-156 added ShrutaSense!
   # ═══════════════════════════════════════════════════════════════════════
   - path: vibe_core/plugins/opus_assistant/manas/cortex/base.py
     required: true
@@ -69,6 +69,9 @@ files:
   - path: vibe_core/plugins/opus_assistant/manas/cortex/karma_sense.py
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/cortex/viveka_sense.py
+    required: true
+  # OPUS-156: The 6th Jnanendriya - Hearing filesystem vibrations
+  - path: vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py
     required: true
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -267,7 +270,7 @@ wiring:
     in: vibe_core/plugins/opus_assistant/manas/intent_router.py
 
   # ═══════════════════════════════════════════════════════════════════════
-  # SENSES (5 PERCEPTION ORGANS)
+  # SENSES (6 PERCEPTION ORGANS) - OPUS-156 adds 6th sense
   # ═══════════════════════════════════════════════════════════════════════
   - pattern: "class PrakritiSense"
     in: vibe_core/plugins/opus_assistant/manas/cortex/prakriti_sense.py
@@ -277,6 +280,15 @@ wiring:
     in: vibe_core/plugins/opus_assistant/manas/cortex/sutra_sense.py
   - pattern: "class VivekaSense"
     in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_sense.py
+  # OPUS-156: ShrutaSense - The Hearing System
+  - pattern: "class ShrutaSense"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py
+  - pattern: "class Vibration"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py
+  - pattern: "def start_listening"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py
+  - pattern: "def perceive"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py
 
   # ═══════════════════════════════════════════════════════════════════════
   # ACTIONS (6 EXECUTION ORGANS)
@@ -457,9 +469,17 @@ tests:
   # ═══════════════════════════════════════════════════════════════════════
   - tests/manas/test_live_fire.py
   - tests/manas/test_chat_command.py
-  - tests/manas/test_manas_integration.py
-  - tests/manas/test_narasimha_cortex.py
-  - tests/manas/test_divine_separation.py
+  # These tests live in the manas module itself (co-located)
+  - vibe_core/plugins/opus_assistant/manas/tests/test_manas_integration.py
+  - vibe_core/plugins/opus_assistant/manas/tests/test_narasimha_cortex.py
+  - vibe_core/plugins/opus_assistant/manas/tests/test_divine_separation.py
+  - vibe_core/plugins/opus_assistant/manas/tests/test_pratyaya_analyzer.py
+  - vibe_core/plugins/opus_assistant/manas/tests/test_silpa_safety.py
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # OPUS-156: SHRUTA SENSE TEST
+  # ═══════════════════════════════════════════════════════════════════════
+  - tests/manas/cortex/test_shruta_sense.py
 
   # ═══════════════════════════════════════════════════════════════════════
   # KNOWLEDGE TESTS
@@ -550,7 +570,7 @@ semantic:
 | Layer | Components | Count | Purpose |
 |-------|------------|-------|---------|
 | **Core** | cognitive_kernel, intent_router, intent_generator, circuit_executor, api | 5 | Brain orchestration |
-| **Senses** | prakriti, dharma, sutra, karma, viveka | 5 | Perception (Jnanendriyas) |
+| **Senses** | prakriti, dharma, sutra, karma, viveka, **shruta** | 6 | Perception (Jnanendriyas) |
 | **Actions** | silpa, shell, test, sankalpa, viveka, echo | 6 | Execution (Karmendriyas) |
 | **Processors** | veda, mandala, silpa, sutra, sankalpa, dharma, jnana, kriya, mukha, akasha, samvada | 11 | Sanskrit modules |
 | **Analyzers** | contract, semantic, ci_monitor, pratyaya, doc_harness, inverse_scan, triage | 7 | Intent sources |
@@ -559,7 +579,7 @@ semantic:
 | **Dojo** | runner, curriculum_loader, agency, scenarios, rooms/* | 10 | Self-training |
 | **Knowledge** | graph, resolver, code_scanner, cognitive_weaver | 4 | 4D knowledge |
 | **Lifecycle** | shiva, disharmony_detector, validator | 3 | Cleanup |
-| **TOTAL** | | **57** | Complete neural architecture |
+| **TOTAL** | | **58** | Complete neural architecture (OPUS-156 added) |
 
 ---
 
@@ -591,12 +611,13 @@ steward chat "status"
 │                          DATA FLOW                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│  [PERCEPTION]                                                            │
+│  [PERCEPTION - 6 SENSES]                                                 │
 │  PrakritiSense → System state (Gunas: Sattva/Rajas/Tamas)               │
 │  DharmaSense   → Ethical violations                                      │
 │  SutraSense    → Doc/code gaps                                          │
 │  KarmaSense    → Memory traces                                          │
 │  VivekaSense   → Discriminative ranking                                 │
+│  ShrutaSense   → Filesystem vibrations (OPUS-156: The 6th Sense)        │
 │       ↓                                                                  │
 │  [ANALYSIS]                                                              │
 │  7 Analyzers → Generate Intents (contract, semantic, CI, harness, etc.) │
