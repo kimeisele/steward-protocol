@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-20T15:37:44.446234",
+  "timestamp": "2025-12-20T15:45:34.633885",
   "intent_type": "evaluate_renderer_pattern",
   "intent_title": "Recognize render_sections() as correct pattern",
   "success": false,
-  "old_weight": 0.5,
-  "new_weight": 0.4,
+  "old_weight": 0.4,
+  "new_weight": 0.30000000000000004,
   "delta": -0.1
 }
