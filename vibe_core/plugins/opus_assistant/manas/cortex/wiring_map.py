@@ -139,6 +139,7 @@ class WiringMap:
         "ShellAction",  # VAK - Shell commands
         "TestAction",  # PAYU - Test execution
         "SankalpaAction",  # UPASTHA - Strategic will
+        "PranaAction",  # OPUS-166: Agent lifecycle management
         "EchoAction",  # Proof-of-life for auto-discovery
         # OPUS-105: Senses (auto-discovered via SenseLoader)
         "DharmaSense",  # Dharmic conscience
