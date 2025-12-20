@@ -1,10 +1,18 @@
 """
 vibe_core/runtime/layered_router.py
 
-LayeredRouter - 3-layer routing cascade.
+LayeredRouter - 4-layer routing cascade.
 Replaces UnifiedRouter._match_circuit().
 
 Philosophy: Intelligence comes from architecture, not LLM dependency.
+
+Layer 1: Exact match (Instinct - static patterns)
+Layer 2: Semantic match (Knowledge - regex patterns)
+Layer 3: Context boost (Memory - ephemeral + KG)
+Layer 3.5: Akshara substrate (Experience - learned weights + PRANA)
+Layer 4: Fallback (Default)
+
+OPUS-154: Added Akshara layer for experience-based routing with PRANA.
 """
 
 import logging
@@ -16,6 +24,7 @@ if TYPE_CHECKING:
     from vibe_core.ephemeral import EphemeralStorage
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+    from vibe_core.state.unified_akshara import UnifiedAkshara
 
 logger = logging.getLogger("LAYERED_ROUTER")
 
@@ -34,13 +43,14 @@ class RouteResult:
 
 class LayeredRouter:
     """
-    3-layer routing cascade for intelligent request routing.
+    4-layer routing cascade for intelligent request routing.
 
-    Layer 1: Exact match (circuit.intent_patterns)
-    Layer 2: Semantic match (semantic_grounding.intent_patterns + param_extraction)
-    Layer 3: Context-aware (Ephemeral + Knowledge Graph)
+    Layer 1: Exact match (Instinct - circuit.intent_patterns)
+    Layer 2: Semantic match (Knowledge - semantic_grounding + param_extraction)
+    Layer 3: Context-aware (Memory - Ephemeral + Knowledge Graph)
+    Layer 3.5: Akshara substrate (Experience - OPUS-154 learned weights + PRANA)
 
-    Graceful degradation: Works without Layer 3 dependencies.
+    Graceful degradation: Works without Layer 3/3.5 dependencies.
     """
 
     def __init__(
@@ -48,10 +58,12 @@ class LayeredRouter:
         kernel: Optional["RealVibeKernel"] = None,
         ephemeral: Optional["EphemeralStorage"] = None,
         knowledge_graph: Optional["UnifiedKnowledgeGraph"] = None,
+        akshara: Optional["UnifiedAkshara"] = None,
     ):
         self._kernel = kernel
         self._ephemeral = ephemeral
         self._kg = knowledge_graph
+        self._akshara = akshara  # OPUS-154: Experience-based routing
 
         # Circuit data (loaded at boot)
         self._circuits: Dict[str, Dict[str, Any]] = {}
@@ -160,6 +172,14 @@ class LayeredRouter:
             result = self._layer3_context_only(user_input)
             if result:
                 logger.debug(f"[L3] Context route: {result.circuit_id}")
+                self._record_route(result)
+                return result
+
+        # Layer 3.5: Akshara substrate (OPUS-154 - experience-based)
+        if self._akshara:
+            result = self._layer_akshara(user_input)
+            if result:
+                logger.debug(f"[L3.5] Akshara route: {result.circuit_id}")
                 self._record_route(result)
                 return result
 
@@ -300,6 +320,83 @@ class LayeredRouter:
                 )
 
         return None
+
+    def _layer_akshara(self, user_input: str) -> Optional[RouteResult]:
+        """
+        Layer 3.5: Akshara substrate routing (OPUS-154).
+
+        Uses learned synaptic weights + PRANA (curiosity) to route.
+        This is experience-based routing - paths that worked before
+        are more likely to be chosen, but PRANA ensures exploration.
+
+        The Akshara substrate combines:
+        - Weight: Learned from past success/failure
+        - Resonance: Phonetic harmony (Varga distance)
+        - PRANA: Small random factor to prevent crystallization
+        """
+        if not self._akshara:
+            return None
+
+        # Convert user_input to trigger pattern
+        # Simple heuristic: extract key action words
+        trigger = self._input_to_trigger(user_input)
+        if not trigger:
+            return None
+
+        # Get available circuit IDs as candidates
+        candidates = list(self._circuits.keys())
+        if not candidates:
+            return None
+
+        # Consult Akshara substrate
+        recs = self._akshara.consult(
+            trigger=trigger,
+            candidates=candidates,
+            limit=3,
+        )
+
+        if recs:
+            winner = recs[0]
+            # Confidence based on unified score (dharmic + prana)
+            confidence = min(0.75, 0.5 + winner.unified_score * 0.3)
+
+            return RouteResult(
+                circuit_id=winner.action,
+                confidence=confidence,
+                layer="akshara",
+                extracted_params={"trigger": trigger},
+            )
+
+        return None
+
+    def _input_to_trigger(self, user_input: str) -> Optional[str]:
+        """
+        Convert user input to a trigger pattern for Akshara lookup.
+
+        This maps natural language to canonical trigger strings.
+        """
+        lower = user_input.lower()
+
+        # Simple keyword-to-trigger mapping
+        trigger_keywords = {
+            "test": "trigger:test_failure",
+            "fix": "trigger:fix_request",
+            "implement": "trigger:implement_feature",
+            "debug": "trigger:debug_issue",
+            "review": "trigger:code_review",
+            "deploy": "trigger:deploy_request",
+            "security": "trigger:security_concern",
+            "document": "trigger:documentation_request",
+            "refactor": "trigger:refactor_request",
+            "analyze": "trigger:analyze_request",
+        }
+
+        for keyword, trigger in trigger_keywords.items():
+            if keyword in lower:
+                return trigger
+
+        # Default trigger
+        return "trigger:general_request"
 
     def _extract_concepts(self, user_input: str) -> List[str]:
         """Simple concept extraction for Layer 3."""
