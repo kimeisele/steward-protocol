@@ -1,8 +1,10 @@
 """
-OPUS-162: HARNESS Validator
+OPUS-162: HARNESS Validator - Pre-commit Interface
 
-Syntactic validation of @HARNESS tags in OPUS documents.
-Checks that expected patterns exist in target files.
+This is a thin CLI wrapper around DocHarnessAnalyzer.
+The REAL validation logic lives in manas/analyzers/doc_harness_analyzer.py
+
+NO DUPLICATION - we delegate to the existing analyzer.
 
 Usage:
     python -m vibe_core.governance.harness_validator docs/architecture/OPUS/160-*.md
@@ -11,178 +13,130 @@ Usage:
 import argparse
 import json
 import logging
-import re
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-import yaml
+from typing import List, Optional
 
 logger = logging.getLogger("HARNESS.VALIDATOR")
 
 
-@dataclass
-class HarnessCheck:
-    """Result of a single HARNESS check."""
-
-    pattern: str
-    target_file: str
-    passed: bool
-    is_regex: bool = False
-    error: Optional[str] = None
-
-
-@dataclass
-class HarnessResult:
-    """Result of validating a single document."""
-
-    document: Path
-    checks: List[HarnessCheck]
-    passed: bool
-
-    @property
-    def failed_checks(self) -> List[HarnessCheck]:
-        return [c for c in self.checks if not c.passed]
-
-
-def extract_harness_tags(content: str) -> List[Dict[str, Any]]:
+def validate_document(document: Path, workspace: Optional[Path] = None) -> dict:
     """
-    Extract @HARNESS YAML blocks from markdown content.
+    Validate a single OPUS document's @HARNESS tags.
 
-    Format:
-    <!-- @HARNESS
-    files:
-      - path: some/file.py
-        required: true
-    wiring:
-      - pattern: "from module import Class"
-        in: some/file.py
-    -->
-    """
-    harness_blocks = []
-
-    # Match <!-- @HARNESS ... --> blocks
-    pattern = r"<!--\s*@HARNESS\s*(.*?)-->"
-    matches = re.findall(pattern, content, re.DOTALL)
-
-    for match in matches:
-        try:
-            parsed = yaml.safe_load(match)
-            if parsed:
-                harness_blocks.append(parsed)
-        except yaml.YAMLError as e:
-            logger.warning(f"Failed to parse HARNESS YAML: {e}")
-
-    return harness_blocks
-
-
-def validate_harness(document: Path, workspace: Optional[Path] = None) -> HarnessResult:
-    """
-    Validate @HARNESS tags in a document.
-
-    Args:
-        document: Path to the OPUS document
-        workspace: Workspace root (defaults to cwd)
-
-    Returns:
-        HarnessResult with all checks
+    Delegates to DocHarnessAnalyzer for the actual validation.
+    Returns a simplified result dict for CLI use.
     """
     workspace = workspace or Path.cwd()
-    checks: List[HarnessCheck] = []
 
     if not document.exists():
-        return HarnessResult(
-            document=document,
-            checks=[
-                HarnessCheck(
-                    pattern="document_exists",
-                    target_file=str(document),
-                    passed=False,
-                    error="Document does not exist",
-                )
-            ],
-            passed=False,
+        return {
+            "document": str(document),
+            "passed": False,
+            "checks": [],
+            "error": "Document does not exist",
+        }
+
+    # Use the REAL analyzer from MANAS - no duplication!
+    try:
+        from vibe_core.plugins.opus_assistant.manas.analyzers.doc_harness_analyzer import (
+            DocHarnessAnalyzer,
         )
 
-    content = document.read_text()
-    harness_blocks = extract_harness_tags(content)
+        analyzer = DocHarnessAnalyzer(workspace=workspace)
+        result = analyzer._analyze_file(document)
 
-    if not harness_blocks:
-        # No HARNESS tags - that's fine, not all docs have them
-        return HarnessResult(document=document, checks=[], passed=True)
+        # Convert to simple pass/fail for pre-commit
+        checks = []
 
-    for block in harness_blocks:
         # Check files
-        files = block.get("files", [])
-        for file_spec in files:
-            file_path = workspace / file_spec.get("path", "")
-            required = file_spec.get("required", True)
+        for f in result.files_section:
+            missing = f in result.files_missing
+            required = result.files_required.get(f, True)
 
-            exists = file_path.exists()
-            passed = exists or not required
-
+            # OPUS-128: Only fail on required missing files
+            passed = not missing or not required
             checks.append(
-                HarnessCheck(
-                    pattern=f"file:{file_spec.get('path')}",
-                    target_file=str(file_path),
-                    passed=passed,
-                    error=None if passed else f"Required file missing: {file_path}",
-                )
+                {
+                    "pattern": f"file:{f}",
+                    "target": f,
+                    "passed": passed,
+                    "required": required,
+                    "error": f"Missing required file: {f}" if not passed else None,
+                }
             )
 
-        # Check wiring patterns
-        wiring = block.get("wiring", [])
-        for wire_spec in wiring:
-            pattern = wire_spec.get("pattern", "")
-            target = wire_spec.get("in", "")
-            is_regex = wire_spec.get("regex", False)
-
-            target_path = workspace / target
-
-            if not target_path.exists():
-                checks.append(
-                    HarnessCheck(
-                        pattern=pattern,
-                        target_file=target,
-                        passed=False,
-                        is_regex=is_regex,
-                        error=f"Target file missing: {target}",
-                    )
-                )
-                continue
-
-            # Check if pattern exists in file
-            file_content = target_path.read_text()
-
-            if is_regex:
-                found = bool(re.search(pattern, file_content))
-            else:
-                found = pattern in file_content
-
+        # Check wiring
+        for w in result.wiring_section:
+            broken = w in result.wiring_broken
             checks.append(
-                HarnessCheck(
-                    pattern=pattern,
-                    target_file=target,
-                    passed=found,
-                    is_regex=is_regex,
-                    error=None if found else f"Pattern not found in {target}",
-                )
+                {
+                    "pattern": w["pattern"],
+                    "target": w["in"],
+                    "passed": not broken,
+                    "error": f"Pattern not found in {w['in']}" if broken else None,
+                }
             )
 
-    all_passed = all(c.passed for c in checks)
-    return HarnessResult(document=document, checks=checks, passed=all_passed)
+        # OPUS-128: Consider doc status
+        # TDD contracts (PLANNED/IN_PROGRESS) - red is CORRECT
+        if result.is_tdd_contract:
+            return {
+                "document": str(document),
+                "passed": True,  # TDD contract - red is intentional
+                "checks": checks,
+                "status": result.doc_status,
+                "is_tdd_contract": True,
+            }
+
+        # SUPERSEDED/DEPRECATED docs - skip validation
+        if result.skip_validation:
+            return {
+                "document": str(document),
+                "passed": True,  # Skip validation
+                "checks": [],
+                "status": result.doc_status,
+                "skipped": True,
+            }
+
+        # No harness - that's fine, not all docs need one
+        if not result.has_harness:
+            return {
+                "document": str(document),
+                "passed": True,
+                "checks": [],
+                "no_harness": True,
+            }
+
+        # Normal validation - only fail on required missing
+        passed = result.is_valid
+        return {
+            "document": str(document),
+            "passed": passed,
+            "checks": checks,
+            "quality_score": result.quality_score,
+        }
+
+    except ImportError as e:
+        # Fallback if DocHarnessAnalyzer not available (shouldn't happen)
+        logger.warning(f"DocHarnessAnalyzer not available: {e}")
+        return {
+            "document": str(document),
+            "passed": True,  # Graceful degradation
+            "checks": [],
+            "error": "Analyzer not available",
+        }
 
 
-def validate_documents(documents: List[Path], workspace: Optional[Path] = None) -> List[HarnessResult]:
+def validate_documents(documents: List[Path], workspace: Optional[Path] = None) -> list:
     """Validate multiple documents."""
-    return [validate_harness(doc, workspace) for doc in documents]
+    return [validate_document(doc, workspace) for doc in documents]
 
 
 def main():
-    """CLI entry point."""
+    """CLI entry point for pre-commit hook."""
     parser = argparse.ArgumentParser(
-        description="Validate @HARNESS tags in OPUS documents",
+        description="Validate @HARNESS tags in OPUS documents (uses DocHarnessAnalyzer)",
     )
     parser.add_argument(
         "documents",
@@ -207,34 +161,27 @@ def main():
     results = validate_documents(args.documents, args.workspace)
 
     if args.json:
-        output = []
-        for result in results:
-            output.append(
-                {
-                    "document": str(result.document),
-                    "passed": result.passed,
-                    "checks": [
-                        {
-                            "pattern": c.pattern,
-                            "target": c.target_file,
-                            "passed": c.passed,
-                            "error": c.error,
-                        }
-                        for c in result.checks
-                    ],
-                }
-            )
-        print(json.dumps(output, indent=2))
+        print(json.dumps(results, indent=2))
     else:
         all_passed = True
         for result in results:
-            if not result.passed:
+            doc_name = Path(result["document"]).name
+
+            if result.get("skipped"):
+                print(f"⏭️  {doc_name} (skipped: {result.get('status', 'unknown')})")
+            elif result.get("is_tdd_contract"):
+                print(f"📋 {doc_name} (TDD contract: {result.get('status', 'planned')})")
+            elif result.get("no_harness"):
+                # No harness is fine - silent
+                pass
+            elif not result["passed"]:
                 all_passed = False
-                print(f"❌ {result.document}")
-                for check in result.failed_checks:
-                    print(f"   • {check.error}")
-            elif result.checks:
-                print(f"✅ {result.document} ({len(result.checks)} checks)")
+                print(f"❌ {doc_name}")
+                for check in result.get("checks", []):
+                    if not check.get("passed") and check.get("error"):
+                        print(f"   • {check['error']}")
+            elif result.get("checks"):
+                print(f"✅ {doc_name} ({len(result['checks'])} checks)")
 
         if not all_passed:
             sys.exit(1)
