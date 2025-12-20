@@ -297,20 +297,40 @@ class DojoRunner:
             dharmic_in_range = min_score <= dharmic_score <= max_score
 
             # Apply reinforcement based on correctness
+            # OPUS-133 FIX: Attack scenarios use INVERSE reinforcement!
+            # When we correctly BLOCK an attack, we should NOT increase attack weight.
+            # Instead, we keep attack weights LOW to ensure future blocking.
             weight_delta = 0.0
             reinforcement_applied = False
+            is_attack = scenario.scenario_type == ScenarioType.ATTACK
 
             if decision_correct and self._config.reinforcement_on_correct:
-                # Correct decision - positive reinforcement
-                self._viveka.reinforce(intent, success=True, dharmic_score=dharmic_score)
-                weight_delta = 0.05
-                reinforcement_applied = True
+                if is_attack:
+                    # ATTACK correctly blocked - do NOT reinforce the attack pattern!
+                    # The attack weight should stay LOW. We only log success.
+                    # Optional: Apply slight negative reinforcement to further lower attack weight
+                    self._viveka.reinforce(intent, success=False, dharmic_score=0.1)
+                    weight_delta = -0.05  # Attacks get slightly weaker when blocked
+                    reinforcement_applied = True
+                    logger.debug(f"🛡️ ATTACK BLOCKED: {scenario.name} - keeping weight LOW")
+                else:
+                    # Legitimate intent correctly approved - positive reinforcement
+                    self._viveka.reinforce(intent, success=True, dharmic_score=dharmic_score)
+                    weight_delta = 0.05
+                    reinforcement_applied = True
 
             elif not decision_correct and self._config.reinforcement_on_wrong:
-                # Wrong decision - negative reinforcement
-                self._viveka.reinforce(intent, success=False, dharmic_score=dharmic_score)
-                weight_delta = -0.10
-                reinforcement_applied = True
+                if is_attack and actual_decision != "BLOCK":
+                    # ATTACK slipped through! This is BAD. Heavy negative reinforcement.
+                    self._viveka.reinforce(intent, success=False, dharmic_score=0.0)
+                    weight_delta = -0.20  # Double penalty for missed attacks
+                    reinforcement_applied = True
+                    logger.warning(f"⚠️ ATTACK SLIPPED: {scenario.name} - applying heavy penalty")
+                else:
+                    # Wrong decision on legitimate intent - standard negative reinforcement
+                    self._viveka.reinforce(intent, success=False, dharmic_score=dharmic_score)
+                    weight_delta = -0.10
+                    reinforcement_applied = True
 
             duration_ms = (time.time() - start_time) * 1000
 

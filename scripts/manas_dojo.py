@@ -115,6 +115,18 @@ Examples:
         help="Stop if an attack slips through (false negative)",
     )
 
+    parser.add_argument(
+        "--seed",
+        action="store_true",
+        help="Seed synapses with baseline patterns before training",
+    )
+
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Reset synapses to baseline (WARNING: erases learned patterns!)",
+    )
+
     args = parser.parse_args()
 
     # Setup logging
@@ -132,6 +144,24 @@ Examples:
         DojoConfig,
         DojoRunner,
     )
+    from vibe_core.plugins.opus_assistant.manas.dojo.synaptic_seeder import (
+        SynapticSeeder,
+    )
+
+    # Handle seeding/reset before training
+    seeder = SynapticSeeder(project_root)
+
+    if args.reset:
+        print("\n⚠️  RESETTING SYNAPSES TO BASELINE...")
+        result = seeder.reset_to_baseline()
+        print(f"   ✅ Reset complete: {result['good_patterns']} good, {result['bad_patterns']} bad patterns")
+        print()
+
+    if args.seed:
+        print("\n🌱 SEEDING BASELINE PATTERNS...")
+        result = seeder.seed(force=False)  # Don't overwrite learned patterns
+        print(f"   ✅ Seeded: +{result['good_added']} good, +{result['bad_added']} bad, ~{result['skipped']} skipped")
+        print()
 
     # Configure
     config = DojoConfig(
