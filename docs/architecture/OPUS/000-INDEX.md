@@ -30,6 +30,8 @@
 | 025 | [PATH Lobotomy Crisis](025-PATH-LOBOTOMY-CRISIS.md) | 🔴 CRITICAL | 75% remaining |
 | 027 | [Unified State Implementation](027-UNIFIED-STATE-IMPLEMENTATION.md) | ✅ IMPLEMENTED | Master plan for state |
 | 028 | [Prakriti Git Integration](028-PRAKRITI-GIT-INTEGRATION.md) | ✅ IMPLEMENTED | Phases 1-4 complete |
+| 150 | [Unified Interface Audit](150-UNIFIED-INTERFACE-AUDIT.md) | 🚧 IN_PROGRESS | Architecture clarification |
+| 151 | [Markdown Reality](151-MARKDOWN-REALITY.md) | ✅ PARADIGM | GAD-000 Operator Inversion |
 
 ---
 
@@ -53,6 +55,8 @@
 | `VISNU_PROTECTED` | `state/git_state.py:25` | ✅ |
 | `Prakriti.begin_session()` | `state/prakriti.py` | ✅ |
 | `Prakriti.end_session()` | `state/prakriti.py` | ✅ |
+| `StateRenderer` | `plugins/interface/renderers/state.py` | ✅ |
+| `EconomyRenderer` | `plugins/interface/renderers/economy.py` | ✅ |
 
 ---
 

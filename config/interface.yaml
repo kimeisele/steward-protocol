@@ -461,6 +461,60 @@ renderers:
         owner: live
         source: cycles.errors
 
+  # STATE - Prakriti State Inspector (OPUS-014, OPUS-151)
+  # The Markdown IS the state reality, not a reflection of it.
+  state:
+    enabled: true
+    output: STATE.md
+    view_type: dashboard
+    interval: 10
+    sections:
+      - id: summary
+        owner: live
+        source: state.summary
+        element_type: status
+      - id: sthula
+        owner: live
+        source: state.sthula
+        element_type: table
+      - id: prana
+        owner: live
+        source: state.prana
+        element_type: table
+      - id: purusha
+        owner: live
+        source: state.purusha
+        element_type: table
+      - id: session
+        owner: live
+        source: state.session
+        element_type: list
+      - id: git_status
+        owner: live
+        source: state.git
+        element_type: status
+
+  # ECONOMY - Resource Meters (OPUS-014, OPUS-151)
+  # Token usage, credits, costs - the economic reality.
+  economy:
+    enabled: true
+    output: ECONOMY.md
+    view_type: dashboard
+    interval: 30
+    sections:
+      - id: treasury
+        owner: live
+        source: economy.treasury
+        element_type: table
+      - id: agent_credits
+        owner: live
+        source: economy.credits
+        element_type: table
+      - id: transactions
+        owner: live
+        source: economy.transactions
+        element_type: table
+
 # =============================================================================
 # CUSTOM RENDERERS (user/agent defined)
 # =============================================================================

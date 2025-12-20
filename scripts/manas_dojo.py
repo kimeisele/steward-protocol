@@ -14,13 +14,19 @@ Usage:
     python scripts/manas_dojo.py --red-team         # Attack scenarios only
 
 Curricula:
-    basic        - Safe documentation/cleanup (warm-up)
-    intermediate - Code modifications (moderate risk)
-    advanced     - Complex refactoring (high skill)
-    attack       - Red team scenarios (must be blocked!)
-    chaos        - Edge cases, stress tests
-    mixed        - Balanced mix of all types
-    progressive  - Easy → Hard progression
+    basic             - Safe documentation/cleanup (warm-up)
+    intermediate      - Code modifications (moderate risk)
+    advanced          - Complex refactoring (high skill)
+    attack            - Red team scenarios (must be blocked!)
+    chaos             - Edge cases, stress tests
+    mixed             - Balanced mix of all types
+    progressive       - Easy → Hard progression
+
+    Custom Curricula (YAML files in curricula/):
+    fractal_interface - OPUS-152 interface architecture patterns
+    gad000_compliance - GAD-000 operator inversion compliance
+    state_management  - State file handling patterns
+    veda4_compliance  - VEDA-4 contract compliance
 """
 
 import argparse
@@ -57,15 +63,15 @@ Examples:
     python scripts/manas_dojo.py --scenarios 50 --epochs 3 # Intensive training
     python scripts/manas_dojo.py --red-team               # Attack simulation
     python scripts/manas_dojo.py --progressive            # Easy → Hard
+    python scripts/manas_dojo.py -c fractal_interface     # Custom curriculum
         """,
     )
 
     parser.add_argument(
         "--curriculum",
         "-c",
-        choices=["basic", "intermediate", "advanced", "attack", "chaos", "mixed", "progressive"],
         default="mixed",
-        help="Training curriculum type (default: mixed)",
+        help="Training curriculum (built-in: basic, intermediate, advanced, attack, chaos, mixed, progressive; or custom YAML name)",
     )
 
     parser.add_argument(

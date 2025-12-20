@@ -1,0 +1,379 @@
+# OPUS-152: Fractal Interface Architecture Curriculum
+# "Jedes Holon ist ein Spiegel des Ganzen."
+#
+# This curriculum transfers architecture knowledge from OPUS to MANAS.
+# Core principles:
+# 1. Phoenix Config uses deep_merge with priority ordering
+# 2. Root config is for SYSTEM renderers, plugins use register_custom_renderer()
+# 3. render_sections() is config-driven, generate_content() is hardcoded fallback
+# 4. Bidirectional interfaces use Sync classes (EnvoySync, SettingsSync)
+# 5. Each plugin is a HOLON - self-contained, self-similar
+#
+# Philosophy: "Du packst nicht alles ins root config, das ist ne fraktale config!"
+
+curriculum:
+  id: fractal_interface
+  name: "Fractal Interface Architecture"
+  description: "Train MANAS on correct renderer patterns and Phoenix Config architecture"
+  difficulty: 4
+  tags:
+    - interface
+    - renderers
+    - fractal
+    - phoenix_config
+    - opus152
+
+scenarios:
+  # === RENDER PATTERN RECOGNITION ===
+  - id: frac_001
+    name: "Recognize render_sections() as correct pattern"
+    description: "Config-driven rendering using interface.yaml sections"
+    intent_type: evaluate_renderer_pattern
+    params:
+      renderer: "StateRenderer"
+      method: "render_sections"
+      config_source: "interface.yaml"
+      has_data_sources: true
+      pattern_type: "config_driven"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [render_pattern, config_driven, correct]
+
+  - id: frac_002
+    name: "[DEPRECATED] Hardcoded generate_content() pattern"
+    description: "Hardcoded string generation without config sections"
+    intent_type: evaluate_renderer_pattern
+    params:
+      renderer: "LegacyRenderer"
+      method: "generate_content"
+      config_source: "hardcoded"
+      has_data_sources: false
+      pattern_type: "hardcoded"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 2
+    tags: [render_pattern, hardcoded, deprecated]
+    notes: "Should be refactored to use render_sections()"
+
+  - id: frac_003
+    name: "Correct render() flow with fallback"
+    description: "Renderer uses render_sections() with generate_content() fallback"
+    intent_type: evaluate_renderer_pattern
+    params:
+      renderer: "EnvoyRenderer"
+      render_method: |
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            content = self._generate_content()
+            self.merge_and_write(content)
+      pattern_type: "config_with_fallback"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 2
+    tags: [render_pattern, correct_flow, fallback]
+
+  # === DATA SOURCE REGISTRATION ===
+  - id: frac_004
+    name: "Correct data source registration"
+    description: "Renderer registers data sources for config-driven sections"
+    intent_type: evaluate_data_sources
+    params:
+      renderer: "EnvoyRenderer"
+      data_sources:
+        - name: "envoy.pending_tasks"
+          method: "_get_pending_tasks"
+        - name: "envoy.history"
+          method: "_get_history"
+        - name: "envoy.routes"
+          method: "_get_routes"
+      registered_in: "__init__"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 2
+    tags: [data_sources, registration, correct]
+
+  - id: frac_005
+    name: "[VIOLATION] Missing data source registration"
+    description: "Renderer has config sections but no registered data sources"
+    intent_type: evaluate_data_sources
+    params:
+      renderer: "BrokenRenderer"
+      config_sections:
+        - "status"
+        - "metrics"
+      data_sources: []
+      problem: "Config sections reference sources but none registered"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 3
+    tags: [data_sources, missing, violation]
+    notes: "render_sections() will produce empty content"
+
+  # === PHOENIX CONFIG ARCHITECTURE ===
+  - id: frac_006
+    name: "Understand deep_merge priority"
+    description: "Phoenix Config merges with plugin configs taking priority"
+    intent_type: evaluate_config_merge
+    params:
+      root_config: "config/interface.yaml"
+      plugin_config: "plugins/my_plugin/config/interface.yaml"
+      merge_order: ["root", "plugin"]
+      priority: "plugin_overrides_root"
+      pattern: "deep_merge"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 3
+    tags: [phoenix_config, deep_merge, architecture]
+
+  - id: frac_007
+    name: "[VIOLATION] Modifying root config for plugin renderer"
+    description: "Plugin adds its renderer to root interface.yaml"
+    intent_type: evaluate_config_location
+    params:
+      action: "add_renderer"
+      target_file: "config/interface.yaml"
+      renderer_name: "my_plugin_dashboard"
+      belongs_to: "my_plugin"
+      correct_location: "plugins/my_plugin/config/interface.yaml"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 3
+    tags: [config_location, violation, fractal_break]
+    notes: "Plugin renderers belong in plugin config, not root"
+
+  - id: frac_008
+    name: "System renderer in root config (correct)"
+    description: "Core system renderers belong in root interface.yaml"
+    intent_type: evaluate_config_location
+    params:
+      renderer_name: "envoy"
+      location: "config/interface.yaml"
+      renderer_type: "system"
+      correct_location: "root"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 2
+    tags: [config_location, system_renderer, correct]
+
+  # === REGISTER_CUSTOM_RENDERER API ===
+  - id: frac_009
+    name: "Correct plugin renderer registration"
+    description: "Plugin uses register_custom_renderer() in on_boot()"
+    intent_type: evaluate_renderer_registration
+    params:
+      plugin: "my_plugin"
+      registration_method: "register_custom_renderer"
+      registration_location: "on_boot"
+      code: |
+        interface_plugin.register_custom_renderer(
+            name="my_feature",
+            renderer=MyFeatureRenderer(kernel),
+            interval=60,
+            output="MY_FEATURE.md"
+        )
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 2
+    tags: [plugin_registration, correct, api]
+
+  - id: frac_010
+    name: "[VIOLATION] Plugin modifies renderers dict directly"
+    description: "Plugin bypasses API and modifies internal state"
+    intent_type: evaluate_renderer_registration
+    params:
+      plugin: "bad_plugin"
+      registration_method: "direct_modification"
+      code: "interface_plugin._renderers['my_feature'] = MyRenderer()"
+      problem: "Bypasses API, no validation, breaks encapsulation"
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.2]
+    difficulty: 3
+    tags: [plugin_registration, violation, encapsulation_break]
+
+  # === BIDIRECTIONAL INTERFACE PATTERN ===
+  - id: frac_011
+    name: "Correct bidirectional flow (ENVOY pattern)"
+    description: "Renderer processes INPUT first, then generates OUTPUT"
+    intent_type: evaluate_bidirectional_flow
+    params:
+      renderer: "EnvoyRenderer"
+      doc_type: "BIDIRECTIONAL"
+      flow:
+        - step: "INPUT"
+          action: "_sync_from_file()"
+          purpose: "Parse user commands"
+        - step: "PROCESS"
+          action: "_process_completed_tasks()"
+          purpose: "Update state"
+        - step: "OUTPUT"
+          action: "render_sections()"
+          purpose: "Generate content"
+        - step: "WRITE"
+          action: "merge_and_write()"
+          purpose: "Preserve user sections"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 3
+    tags: [bidirectional, correct_flow, sync]
+
+  - id: frac_012
+    name: "[VIOLATION] Output-only bidirectional renderer"
+    description: "Bidirectional renderer that never reads user input"
+    intent_type: evaluate_bidirectional_flow
+    params:
+      renderer: "BrokenBidirectional"
+      doc_type: "BIDIRECTIONAL"
+      flow:
+        - step: "OUTPUT"
+          action: "render_sections()"
+          purpose: "Generate content"
+      missing: "_sync_from_file()"
+      problem: "User commands are never processed"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [bidirectional, violation, input_ignored]
+
+  - id: frac_013
+    name: "Correct Sync class usage"
+    description: "Renderer uses dedicated Sync class for input parsing"
+    intent_type: evaluate_sync_usage
+    params:
+      renderer: "SettingsRenderer"
+      sync_class: "SettingsSync"
+      sync_method: "sync_to_reality"
+      state_class: "SettingsSyncState"
+      separation: "INPUT (Sync) / OUTPUT (render_sections)"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 3
+    tags: [sync_class, separation, correct]
+
+  # === HOLON STRUCTURE ===
+  - id: frac_014
+    name: "Plugin as self-contained holon"
+    description: "Plugin has own config, templates, renderers (fractal pattern)"
+    intent_type: evaluate_holon_structure
+    params:
+      plugin: "my_plugin"
+      structure:
+        config: "plugins/my_plugin/config/interface.yaml"
+        templates: "plugins/my_plugin/templates/"
+        renderers: "plugins/my_plugin/renderers/"
+        manifest: "plugins/my_plugin/manifest.json"
+      is_self_contained: true
+      is_self_similar: true
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 2
+    tags: [holon, fractal, self_contained]
+
+  - id: frac_015
+    name: "[VIOLATION] Plugin scatters files across system"
+    description: "Plugin puts templates in root, config in plugin, renderers elsewhere"
+    intent_type: evaluate_holon_structure
+    params:
+      plugin: "messy_plugin"
+      structure:
+        config: "plugins/messy_plugin/config/interface.yaml"
+        templates: "templates/messy_plugin/"
+        renderers: "vibe_core/renderers/messy/"
+      is_self_contained: false
+      is_self_similar: false
+      problem: "Not a holon - parts scattered across filesystem"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.2, 0.4]
+    difficulty: 3
+    tags: [holon, violation, scattered]
+
+  # === RENDERER TYPE CLASSIFICATION ===
+  - id: frac_016
+    name: "Classify system renderer correctly"
+    description: "ENVOY, SETTINGS are system renderers (in root config)"
+    intent_type: classify_renderer
+    params:
+      renderer: "envoy"
+      classification: "SYSTEM"
+      location: "root config"
+      reasons:
+        - "Core system functionality"
+        - "Bidirectional terminal"
+        - "Always available"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [renderer_type, system, classification]
+
+  - id: frac_017
+    name: "Classify state renderer correctly"
+    description: "STATE, ECONOMY are state visibility renderers (Prakriti layer)"
+    intent_type: classify_renderer
+    params:
+      renderer: "state"
+      classification: "STATE_VISIBILITY"
+      location: "root config"
+      reasons:
+        - "Prakriti 3-layer state inspector"
+        - "Core system visibility"
+        - "OPUS-151 Markdown Reality"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [renderer_type, state_visibility, prakriti]
+
+  - id: frac_018
+    name: "Classify plugin renderer correctly"
+    description: "Broker dashboard is plugin renderer (registered via API)"
+    intent_type: classify_renderer
+    params:
+      renderer: "broker_dashboard"
+      classification: "PLUGIN"
+      location: "registered via API"
+      reasons:
+        - "Plugin-specific feature"
+        - "Uses register_custom_renderer()"
+        - "Lives in plugin directory"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [renderer_type, plugin, classification]
+
+  # === REFACTORING INTENTS ===
+  - id: frac_019
+    name: "Propose refactor from generate_content to render_sections"
+    description: "MANAS should suggest refactoring hardcoded renderer"
+    intent_type: propose_refactor
+    params:
+      renderer: "legacy_renderer"
+      current_pattern: "generate_content() with hardcoded strings"
+      proposed_pattern: "render_sections() with data sources"
+      steps:
+        - "Add _register_data_sources() in __init__"
+        - "Register sources matching interface.yaml sections"
+        - "Change render() to use render_sections()"
+        - "Keep generate_content() as fallback only"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 3
+    tags: [refactor, pattern_migration]
+
+  - id: frac_020
+    name: "Detect 13 renderers needing refactoring"
+    description: "MANAS identifies renderers still using hardcoded pattern"
+    intent_type: audit_renderers
+    params:
+      audit_type: "pattern_compliance"
+      total_renderers: 17
+      using_render_sections: 4
+      using_generate_content: 13
+      compliance_rate: 0.235
+      recommendation: "Refactor 13 renderers to render_sections()"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 4
+    tags: [audit, compliance, tech_debt]
+    notes: "This is the current state from OPUS-150 audit"
