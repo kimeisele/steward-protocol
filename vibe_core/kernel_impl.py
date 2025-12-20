@@ -144,6 +144,9 @@ class RealVibeKernel(VibeKernel):
     - Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
     """
 
+    # SAMSARA CONFIG: Maximum entropy (ledger events) before Pralaya (pruning) occurs
+    MAX_ENTROPY_EVENTS = 1000
+
     def __init__(
         self,
         ledger_path: str | None = None,
@@ -998,8 +1001,33 @@ class RealVibeKernel(VibeKernel):
             self._gateway_thread.start()
             logger.info("🌐 Network Gateway sidecar thread started")
 
+    def enforce_entropy_limits(self):
+        """
+        SAMSARA ENGINE: Enforces mortality on the ledger.
+        Removes oldest events to make room for new creation.
+        """
+        # We only prune InMemoryLedger (SQLite handles its own disk space usually, or needs different logic)
+        # But for 'Karmic Debt' (RAM), InMemory is the culprit.
+        from vibe_core.ledger import InMemoryLedger
+        
+        if isinstance(self._ledger, InMemoryLedger):
+            # Check internal events list directly (private access for kernel management)
+            if hasattr(self._ledger, "events"):
+                current_entropy = len(self._ledger.events)
+                
+                if current_entropy > self.MAX_ENTROPY_EVENTS:
+                    excess = current_entropy - self.MAX_ENTROPY_EVENTS
+                    # Sacrifice the oldest to save the universe
+                    self._ledger.events = self._ledger.events[excess:]
+                    
+                    # Log to system (not ledger) to avoid feedback loop
+                    logger.warning(f"🕉️ PRALAYA EXECUTED: Dissolved {excess} stale events. Entropy reduced to {len(self._ledger.events)}.")
+
     def tick(self) -> None:
         """Tick the kernel - process one task from the scheduler"""
+        # 1. Enforce Mortality (Fixes Memory Leak)
+        self.enforce_entropy_limits()
+
         if self._status != KernelStatus.RUNNING:
             logger.warning("⚠️  Kernel not running")
             return
