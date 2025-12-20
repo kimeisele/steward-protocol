@@ -5,6 +5,30 @@
 > **Prereqs**: OPUS-133 (DOJO), OPUS-152 (Fractal Interface)
 > **HARNESS**: @SAMSKARA → @AKSHARA → @DOJO → @MANTRA → @SIDDHI
 
+<!-- @HARNESS
+intent: "Teach OPUS→MANAS knowledge transfer via DOJO curricula"
+files:
+  - path: vibe_core/plugins/opus_assistant/manas/dojo/runner.py
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/dojo/curriculum_loader.py
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/dojo/curricula/fractal_interface.yaml
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
+    required: true
+  - path: scripts/manas_dojo.py
+    required: true
+wiring:
+  - pattern: "class DojoRunner"
+    in: vibe_core/plugins/opus_assistant/manas/dojo/runner.py
+  - pattern: "class CurriculumLoader"
+    in: vibe_core/plugins/opus_assistant/manas/dojo/curriculum_loader.py
+  - pattern: "def reinforce"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py
+tests:
+  - tests/manas/test_dojo_runner.py
+-->
+
 ---
 
 ## @SAMSKARA: The Vision

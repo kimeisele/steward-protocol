@@ -1267,6 +1267,165 @@ class RealVibeKernel(VibeKernel):
             self._gateway_loop.call_soon_threadsafe(self._gateway_loop.stop)
             logger.info("🌐 Gateway loop stop signal sent")
 
+    # =========================================================================
+    # DURVASA PROTOCOL: Resource Triage (Emergency Response)
+    # =========================================================================
+
+    def terminate_agent(self, agent_id: str, reason: str = "Unknown") -> bool:
+        """
+        Terminate an agent and free its resources.
+        
+        DURVASA PROTOCOL: This is the knife. Use it wisely.
+        
+        Args:
+            agent_id: The agent to terminate
+            reason: Why we're killing it
+            
+        Returns:
+            True if terminated, False if not found
+        """
+        if agent_id not in self._agent_registry:
+            logger.warning(f"⚠️ Cannot terminate unknown agent: {agent_id}")
+            return False
+        
+        logger.warning(f"🔪 TERMINATE_AGENT: {agent_id} (reason: {reason})")
+        
+        # 1. Stop the process if running
+        if hasattr(self, "process_manager") and agent_id in self.process_manager.processes:
+            try:
+                proc_info = self.process_manager.processes[agent_id]
+                if proc_info.process.is_alive():
+                    proc_info.process.terminate()
+                    proc_info.process.join(timeout=1)
+                    if proc_info.process.is_alive():
+                        proc_info.process.kill()  # Force kill if still alive
+                del self.process_manager.processes[agent_id]
+            except Exception as e:
+                logger.error(f"❌ Failed to stop process for {agent_id}: {e}")
+        
+        # 2. Remove from registry
+        del self._agent_registry[agent_id]
+        
+        # 3. Revoke capabilities
+        self._capability_registry.revoke(
+            agent_id=agent_id,
+            capabilities=["*"],  # Revoke all
+            revoker_id="KERNEL",
+            reason=reason
+        )
+        
+        # 4. Log the death
+        self._ledger.record_event("AGENT_TERMINATED", "kernel", {
+            "agent_id": agent_id,
+            "reason": reason,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+        logger.info(f"💀 Agent {agent_id} terminated and resources freed")
+        return True
+
+    def enforce_prana_limits(self, pressure: float = None) -> int:
+        """
+        DURVASA PROTOCOL: The Prana Triage Engine.
+        
+        Sacrifices lower-dharma agents to preserve the system core during resource famine.
+        
+        Args:
+            pressure: Optional override for system pressure (0.0-1.0).
+                     If None, uses process_manager resource monitoring.
+        
+        Returns:
+            Number of agents sacrificed
+        """
+        CRITICAL_THRESHOLD = 0.90  # Start triage at 90% pressure
+        SAFE_LEVEL = 0.80          # Stop when we reach 80%
+        
+        # 1. Measure system pressure
+        if pressure is None:
+            # Use process_manager to estimate pressure (count-based for now)
+            total_agents = len(self._agent_registry)
+            running_processes = len(self.process_manager.processes) if hasattr(self, "process_manager") else 0
+            # Simulate pressure based on process count
+            pressure = min(running_processes / max(total_agents, 1), 1.0)
+        
+        if pressure < CRITICAL_THRESHOLD:
+            return 0  # No action needed
+        
+        logger.critical(f"🚨 DURVASA ALERT: System pressure at {pressure:.0%}. Initiating triage...")
+        
+        self._ledger.record_event("PRANA_EMERGENCY", "kernel", {
+            "pressure": pressure,
+            "msg": "Durvasa Alert triggered",
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+        # 2. Identify candidates
+        candidates = []
+        for agent_id, agent in list(self._agent_registry.items()):
+            # Get metadata - handle both VibeAgent objects and dict entries
+            if hasattr(agent, "__dict__"):
+                meta = agent.__dict__
+            elif isinstance(agent, dict):
+                meta = agent
+            else:
+                meta = {}
+            
+            candidates.append({
+                "id": agent_id,
+                "dharma": str(meta.get("dharma", "tamas")).lower(),
+                "priority": str(meta.get("priority", "low")).lower()
+            })
+        
+        # 3. Sort by sacrifice priority (lowest value = first to die)
+        dharma_rank = {"tamas": 0, "rajas": 1, "sattva": 2}
+        priority_rank = {"disposable": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+        
+        candidates.sort(key=lambda x: (
+            dharma_rank.get(x["dharma"], 0),
+            priority_rank.get(x["priority"], 0)
+        ))
+        
+        # 4. The Sacrifice
+        sacrifices = 0
+        
+        for victim in candidates:
+            # Never kill Critical/Sattva
+            if priority_rank.get(victim["priority"], 0) >= 3:
+                self._ledger.record_event("TRIAGE_LIMIT", "kernel", {
+                    "msg": "Only High/Critical agents remain. Holding.",
+                    "remaining": [c["id"] for c in candidates if priority_rank.get(c["priority"], 0) >= 3]
+                })
+                break
+            
+            if dharma_rank.get(victim["dharma"], 0) >= 2:
+                self._ledger.record_event("TRIAGE_LIMIT", "kernel", {
+                    "msg": "Only Sattva agents remain. Holding."
+                })
+                break
+            
+            # Execute termination
+            success = self.terminate_agent(victim["id"], reason="PRANA_FAMINE_SACRIFICE")
+            
+            if success:
+                sacrifices += 1
+                self._ledger.record_event("AGENT_SACRIFICED", "kernel", {
+                    "agent": victim["id"],
+                    "dharma": victim["dharma"],
+                    "priority": victim["priority"],
+                    "reason": "Sacrificed to appease Durvasa"
+                })
+                
+                # Simulate pressure reduction
+                pressure -= 0.10
+                
+                if pressure <= SAFE_LEVEL:
+                    break
+        
+        if sacrifices > 0:
+            logger.warning(f"🔱 DURVASA APPEASED: {sacrifices} agent(s) sacrificed. System stabilized.")
+        
+        return sacrifices
+
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         """Find agents with a specific capability"""
         manifests = self._manifest_registry.find_by_capability(capability)

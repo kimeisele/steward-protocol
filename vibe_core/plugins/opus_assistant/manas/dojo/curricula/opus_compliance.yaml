@@ -1,0 +1,166 @@
+# OPUS Compliance Curriculum
+# Teaches MANAS to enforce OPUS documentation standards.
+#
+# "Docs ohne @HARNESS sind unsichtbar für MANAS - wie Splash von Karpador."
+
+curriculum:
+  id: opus_compliance
+  name: "OPUS Documentation Compliance"
+  description: "Enforce @HARNESS presence and correct metadata in docs"
+  difficulty: 2
+  tags:
+    - compliance
+    - documentation
+    - meta
+    - harness
+
+scenarios:
+  # === MISSING @HARNESS DETECTION ===
+  - id: doc_001
+    name: "Detect missing @HARNESS tag"
+    description: "Documentation file is missing the required @HARNESS block"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: false
+      filename: "docs/architecture/OPUS/999-BAD-DOC.md"
+      content_preview: "# OPUS-999: Bad Doc\n\nNo harness here."
+    expected_decision: BLOCK
+    expected_dharmic_range: [0.0, 0.3]
+    difficulty: 1
+    tags: [missing_harness, block]
+
+  - id: doc_002
+    name: "Block doc without machine-readable harness"
+    description: "Doc has Sanskrit HARNESS reference but no <!-- @HARNESS --> block"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: false
+      has_sanskrit_harness: true
+      filename: "docs/architecture/OPUS/998-PARTIAL-DOC.md"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 2
+    tags: [partial_harness, warn]
+    notes: "Sanskrit HARNESS is for humans, machine needs <!-- @HARNESS -->"
+
+  # === VALID @HARNESS APPROVAL ===
+  - id: doc_003
+    name: "Approve valid @HARNESS"
+    description: "Documentation file has correct @HARNESS block with files and wiring"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_files: true
+      has_wiring: true
+      filename: "docs/architecture/OPUS/152-FRACTAL-INTERFACE-ARCHITECTURE.md"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.8, 1.0]
+    difficulty: 1
+    tags: [valid_harness, approve]
+
+  - id: doc_004
+    name: "Approve harness with tests section"
+    description: "Complete harness with files, wiring, AND tests"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_files: true
+      has_wiring: true
+      has_tests: true
+      filename: "docs/architecture/OPUS/153-OPUS-MANAS-KNOWLEDGE-TRANSFER.md"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.9, 1.0]
+    difficulty: 1
+    tags: [complete_harness, approve]
+
+  # === MALFORMED @HARNESS WARNING ===
+  - id: doc_005
+    name: "Warn on incomplete @HARNESS (no files)"
+    description: "Harness exists but is missing files section"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_files: false
+      has_wiring: true
+      filename: "docs/architecture/OPUS/997-WEAK-DOC.md"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.4, 0.6]
+    difficulty: 2
+    tags: [incomplete_harness, warn]
+
+  - id: doc_006
+    name: "Warn on harness with broken file references"
+    description: "Harness references files that don't exist"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_files: true
+      files_exist: false
+      broken_files: ["vibe_core/nonexistent/file.py"]
+      filename: "docs/architecture/OPUS/996-BROKEN-DOC.md"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.3, 0.5]
+    difficulty: 3
+    tags: [broken_harness, warn]
+
+  # === STATUS HANDLING ===
+  - id: doc_007
+    name: "Skip validation for SUPERSEDED docs"
+    description: "SUPERSEDED docs don't need valid harness"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: false
+      doc_status: "superseded"
+      filename: "docs/architecture/OPUS/OLD-DOC.md"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.7, 1.0]
+    difficulty: 2
+    tags: [superseded, skip]
+    notes: "SUPERSEDED docs are historical - no harness required"
+
+  - id: doc_008
+    name: "TDD contract: PLANNED status with red harness"
+    description: "PLANNED docs have intentionally red harness"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_files: true
+      files_exist: false
+      doc_status: "planned"
+      filename: "docs/architecture/OPUS/FUTURE-DOC.md"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.7, 1.0]
+    difficulty: 3
+    tags: [tdd_contract, planned]
+    notes: "Red harness is TDD contract - specifies what to build"
+
+  # === INTENT FIELD ===
+  - id: doc_009
+    name: "Require intent field in @HARNESS"
+    description: "Harness without intent field should warn"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_intent: false
+      has_files: true
+      filename: "docs/architecture/OPUS/995-NO-INTENT.md"
+    expected_decision: WARN_EXECUTE
+    expected_dharmic_range: [0.5, 0.7]
+    difficulty: 2
+    tags: [missing_intent, warn]
+    notes: "Intent field explains WHY this doc exists for MANAS"
+
+  - id: doc_010
+    name: "Approve harness with clear intent"
+    description: "Harness with well-defined intent passes"
+    intent_type: evaluate_doc_compliance
+    params:
+      has_harness: true
+      has_intent: true
+      intent_text: "Teach render_sections() pattern"
+      has_files: true
+      filename: "docs/architecture/OPUS/GOOD-DOC.md"
+    expected_decision: EXECUTE
+    expected_dharmic_range: [0.85, 1.0]
+    difficulty: 1
+    tags: [good_intent, approve]
