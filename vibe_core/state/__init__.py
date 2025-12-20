@@ -50,6 +50,14 @@ from .runtime_state import (
     reset_runtime_state_definition,
 )
 
+# Phase 2: Samskara - Memory Consolidation
+from .samskara import (
+    Samskara,
+    SamskaraReport,
+    consolidate_viveka_decisions,
+    get_samskara_insights,
+)
+
 # P0: StateService - Single Point of Truth for ALL state writes
 from .state_service import (
     StatePolicy,
@@ -149,4 +157,9 @@ __all__ = [
     "WriteResult",
     "get_state_service",
     "reset_state_service",
+    # Phase 2: Samskara (Memory Consolidation)
+    "Samskara",
+    "SamskaraReport",
+    "consolidate_viveka_decisions",
+    "get_samskara_insights",
 ]
