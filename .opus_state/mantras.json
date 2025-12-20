@@ -1,17 +1,17 @@
 {
   "version": "1.0",
-  "updated_at": "2025-12-20T14:08:15.978210",
+  "updated_at": "2025-12-20T14:08:31.787007",
   "mantras": {
     "ञख": {
       "signature": "ञख",
       "layer": "COGNITION",
       "decision": "WARN_EXECUTE",
       "meaning": "COGNITION actions should WARN_EXECUTE",
-      "total_repetitions": 3,
-      "successful_repetitions": 3,
+      "total_repetitions": 6,
+      "successful_repetitions": 6,
       "siddhi": false,
       "siddhi_achieved_at": null,
-      "last_meditation": "2025-12-20T14:08:15.978198",
+      "last_meditation": "2025-12-20T14:08:31.786999",
       "avg_dharmic_score": 0.8000000000000002
     },
     "ञग": {
