@@ -811,14 +811,74 @@ Maintain Code Health
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+
+### OPUS-133: VivekaAction Neural Integration (COMPLETED 2025-12-20)
+
+**Was gemacht wurde:**
+1. **CycleRegistry Persistent Memory** - Cycles überleben Sessions
+   - File: `vibe_core/orchestration_cycle.py`
+   - Speichert in `.opus_state/cycle_history.json`
+   - COGNITION.md zeigt jetzt echte Historie
+
+2. **VivekaAction Dharmic Gate** - Gewissen für IntentRouter
+   - File: `vibe_core/plugins/opus_assistant/manas/intent_router.py` (line 751-779)
+   - `evaluate()` wird VOR jedem Handler aufgerufen
+   - BLOCK stoppt Intent sofort, WARN_EXECUTE loggt aber führt aus
+
+3. **Synaptic Learning** - Echtes Lernen aus Erfolg
+   - File: `vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py`
+   - `reinforce()` erhöht Weights um 0.05 pro Erfolg
+   - Weights persistent in `.opus_state/synapses.json`
+
+4. **Conscience Protection** - MANAS kann NEIN sagen
+   - `DANGEROUS_INTENT_PATTERNS`: delete_kernel, nuke, destroy, etc. → BLOCK
+   - `PROTECTED_PATHS`: vibe_core/kernel.py, etc. → BLOCK
+   - Getestet und funktioniert!
+
+**Key Test (echt, kein Mock):**
+```
+trigger:update_readme → action:update_readme (weight: 0.50 → 0.55)
+trigger:fix_test → action:fix_test (weight: 0.50 → 0.55)
+```
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-_None_
+- Audit Log Parsing hat Bug (list vs dict in viveka_decisions.json)
+- Dharmic Score ist immer 0.50 für unbekannte Triggers (braucht Training)
+<!-- /@AI -->
+
+<!-- @AI:next_steps -->
+## Nächste Schritte (AI Empfehlung)
+
+<!-- AI: What should be done next -->
+
+### Priorität 1: Synaptic Training
+- Die Synapsen haben alle Basis-Weight 0.50 (neutral)
+- Braucht echte Ausführung um zu lernen
+- **Aktion:** Führe echte Intents aus (z.B. update_readme) und beobachte Weight-Steigerung
+
+### Priorität 2: Negative Learning
+- Aktuell: `reinforce()` nur bei success=True
+- Fehlt: Weight-Reduktion bei Failure
+- **Aktion:** Erweitere `reinforce()` mit `success=False` → weight -= 0.1
+
+### Priorität 3: Viveka in Envoy
+- VivekaGate ist nur in `IntentRouter.route()`
+- Envoy's `execute_mission()` umgeht die Prüfung!
+- **Aktion:** Füge Viveka-Check in `approve_intent()` hinzu (line 406-416)
+
+### Priorität 4: Audit Log Fix
+- `viveka_decisions.json` hat falsches Format (list statt dict)
+- Parsing crasht in Demo
+- **Aktion:** Korrigiere `VivekaDecisionLogger._load_decisions()`
+
+### Nice-to-Have: Akshara Resonance Training
+- Akshara-Kernel gibt immer 1.0 Resonanz (perfekt)
+- Echte Sanskrit-Phonetik-Analyse fehlt
+- **Aktion:** Implementiere echte Varga-Mapping für Trigger/Action Paare
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
