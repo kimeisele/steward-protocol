@@ -1,27 +1,37 @@
 """
-P0: StateService - Single Point of Truth for All State Operations
+P0+: StateService - Single Point of Truth for All State Operations
 
 This is the ONLY authorized interface for writing state files.
 All direct file writes MUST go through this service.
 
-Architecture:
+Architecture (P0+: Apple Magic - "It Just Works"):
     Writer → StateService.save() → File Write + mark_dirty()
                     ↓
-    Heartbeat → Weaver.pulse() → Git Commit
+                _maybe_auto_commit()  ← NEW: Invisible hand
+                    ↓
+            Auto-commits when threshold reached OR session ends
+            (Works regardless of Heartbeat presence)
 
 Features:
     - Thread-safe singleton
     - Automatic backup rotation (max 5 per file)
     - JSONL append support for logs
-    - Integration with Weaver for commits
+    - 🍎 AUTO-COMMIT: Threshold-based commits (no manual intervention)
+    - 🍎 SESSION-END: atexit handler for clean shutdown
+    - Integration with Weaver for commits (when available)
     - Cleanup policies for unbounded files
 
-OPUS Reference: P0-STATE-AUDIT.md
+The Apple Philosophy:
+    "Simple is hard. We did the hard work so you don't have to think about it."
+
+OPUS Reference: P0-STATE-AUDIT.md, OPUS-140-SANSKRIT-MATRIX.md
 """
 
+import atexit
 import json
 import logging
 import shutil
+import subprocess
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -88,20 +98,30 @@ class WriteResult:
 
 class StateService:
     """
-    👑 THE SUPREME STATE SERVICE (P0 Implementation)
+    👑 THE SUPREME STATE SERVICE (P0+ Implementation)
 
     Single Point of Truth for all state operations.
     Thread-safe singleton with automatic lifecycle management.
 
+    🍎 APPLE MAGIC: Auto-commits happen invisibly - you never think about it.
+
     Usage:
         service = get_state_service(workspace)
-        result = service.save("synapses.json", data)
+        result = service.save("synapses.json", data)  # Auto-commits when ready!
         result = service.append("karma_history.jsonl", entry)
         data = service.load("synapses.json")
     """
 
+    # =========================================================================
+    # 🍎 APPLE MAGIC CONSTANTS
+    # =========================================================================
+    AUTO_COMMIT_THRESHOLD = 5  # Auto-commit after N writes
+    AUTO_COMMIT_SECONDS = 30  # Or after N seconds since last commit
+    HEARTBEAT_PULSE_FILE = "last_pulse.json"  # Check if Heartbeat is alive
+
     _lock = threading.Lock()
     _dirty_files: Set[Path] = set()
+    _atexit_registered = False
 
     def __init__(self, workspace: Path):
         """
@@ -122,7 +142,13 @@ class StateService:
 
         # Track writes for Weaver integration
         self._write_count = 0
+        self._writes_since_commit = 0
         self._last_write = None
+        self._last_commit = None
+        self._auto_commit_enabled = True
+
+        # 🍎 Register session-end cleanup (Apple Magic: clean shutdown)
+        self._register_atexit()
 
         logger.info(f"StateService initialized: {self.state_root}")
 
@@ -176,9 +202,13 @@ class StateService:
                 # 4. Mark as dirty for Weaver
                 self._dirty_files.add(target_path)
                 self._write_count += 1
+                self._writes_since_commit += 1
                 self._last_write = datetime.now()
 
                 logger.debug(f"💾 State saved: {filename}")
+
+                # 5. 🍎 APPLE MAGIC: Check if we should auto-commit
+                self._maybe_auto_commit()
 
                 return WriteResult(
                     success=True,
@@ -229,6 +259,10 @@ class StateService:
                 # Mark dirty
                 self._dirty_files.add(target_path)
                 self._write_count += 1
+                self._writes_since_commit += 1
+
+                # 🍎 APPLE MAGIC: Check if we should auto-commit
+                self._maybe_auto_commit()
 
                 return WriteResult(
                     success=True,
@@ -417,6 +451,172 @@ class StateService:
         # Move current to archive
         shutil.move(source, self.state_root / archive_name)
         logger.info(f"📦 Archived log: {filename} → {archive_name}")
+
+    # =========================================================================
+    # 🍎 APPLE MAGIC: Auto-Commit System
+    # =========================================================================
+
+    def _register_atexit(self) -> None:
+        """Register session-end cleanup handler."""
+        if not StateService._atexit_registered:
+            atexit.register(self._on_session_end)
+            StateService._atexit_registered = True
+            logger.debug("🍎 Session-end handler registered")
+
+    def _on_session_end(self) -> None:
+        """
+        Called when Python process exits.
+
+        Commits any remaining dirty state. This is the "Apple Magic"
+        safety net - even if you forget to commit, we've got you covered.
+        """
+        if self._dirty_files:
+            logger.info("🍎 Session ending - committing dirty state...")
+            self._do_auto_commit(reason="session_end")
+
+    def _maybe_auto_commit(self) -> None:
+        """
+        Check if we should auto-commit (the invisible hand).
+
+        This is called after every write. It checks:
+        1. Is auto-commit enabled?
+        2. Have we reached the write threshold?
+        3. Is Heartbeat already handling commits?
+        4. Has enough time passed since last commit?
+
+        If conditions are met, commit happens invisibly.
+        """
+        if not self._auto_commit_enabled:
+            return
+
+        if not self._dirty_files:
+            return
+
+        # Check if Heartbeat is handling commits (don't double-commit)
+        if self._is_heartbeat_alive():
+            return
+
+        # Check write threshold
+        if self._writes_since_commit >= self.AUTO_COMMIT_THRESHOLD:
+            self._do_auto_commit(reason="threshold")
+            return
+
+        # Check time threshold
+        if self._last_commit:
+            elapsed = (datetime.now() - self._last_commit).total_seconds()
+            if elapsed >= self.AUTO_COMMIT_SECONDS and self._writes_since_commit > 0:
+                self._do_auto_commit(reason="time")
+                return
+
+    def _do_auto_commit(self, reason: str = "auto") -> bool:
+        """
+        Actually perform the auto-commit.
+
+        Tries Weaver first (integrates with existing infrastructure),
+        falls back to direct git if Weaver not available.
+
+        Returns:
+            True if commit succeeded
+        """
+        if not self._dirty_files:
+            return False
+
+        try:
+            # Try Weaver first (best integration)
+            committed = self._commit_via_weaver()
+
+            if not committed:
+                # Fallback: direct git
+                committed = self._commit_via_git(reason)
+
+            if committed:
+                self._writes_since_commit = 0
+                self._last_commit = datetime.now()
+                self.clear_dirty_flags()
+                logger.debug(f"🍎 Auto-commit complete ({reason})")
+                return True
+
+        except Exception as e:
+            logger.debug(f"🍎 Auto-commit skipped: {e}")
+
+        return False
+
+    def _is_heartbeat_alive(self) -> bool:
+        """
+        Check if Heartbeat is actively managing commits.
+
+        If Heartbeat is alive (pulsed recently), we don't need to auto-commit
+        because it will handle it on its next pulse.
+        """
+        pulse_file = self.state_root / self.HEARTBEAT_PULSE_FILE
+        if not pulse_file.exists():
+            return False
+
+        try:
+            # Check pulse age
+            mtime = pulse_file.stat().st_mtime
+            age = datetime.now().timestamp() - mtime
+            # If pulsed in last 60 seconds, Heartbeat is alive
+            return age < 60
+        except Exception:
+            return False
+
+    def _commit_via_weaver(self) -> bool:
+        """Try to commit via StateSyncWeaver."""
+        try:
+            from .weaver import get_state_sync_weaver
+            from .prakriti import Prakriti
+
+            prakriti = Prakriti(self.workspace)
+            weaver = get_state_sync_weaver(prakriti)
+            result = weaver.pulse()
+
+            return result.success if hasattr(result, "success") else bool(result)
+        except Exception:
+            return False
+
+    def _commit_via_git(self, reason: str) -> bool:
+        """
+        Fallback: commit directly via git.
+
+        This is used when Weaver is not available (e.g., early initialization).
+        """
+        try:
+            # Stage all dirty files
+            dirty_list = list(self._dirty_files)
+            if not dirty_list:
+                return False
+
+            # Relative paths for git
+            rel_paths = [str(p.relative_to(self.workspace)) for p in dirty_list]
+
+            # Git add
+            subprocess.run(
+                ["git", "add"] + rel_paths,
+                cwd=self.workspace,
+                check=True,
+                capture_output=True,
+            )
+
+            # Git commit (skip hooks for runtime state)
+            msg = f"🍎 Auto-commit ({reason}): {len(dirty_list)} state files"
+            subprocess.run(
+                ["git", "commit", "-m", msg, "--no-verify"],
+                cwd=self.workspace,
+                check=True,
+                capture_output=True,
+            )
+
+            logger.info(f"🍎 Direct git commit: {len(dirty_list)} files")
+            return True
+
+        except subprocess.CalledProcessError as e:
+            # Might fail if nothing to commit (clean)
+            if b"nothing to commit" in (e.stdout or b"") + (e.stderr or b""):
+                return True  # Actually clean
+            return False
+        except Exception:
+            return False
 
 
 # =========================================================================
