@@ -59,6 +59,8 @@ ALLOWED_ACTIONS: Set[str] = {
     "refresh_state",  # Refresh Prakriti layer
     "log_observation",  # Add to system journal
     "quarantine_plugin",  # Disable misbehaving plugin
+    "trigger_ritual",  # KALA: Trigger daily ritual phase (OPUS-165)
+    "update_cycle",  # KALA: Update Day/Night of Brahma cycle
 }
 
 
