@@ -81,6 +81,32 @@ DHARMIC_THRESHOLD_WARN = 0.4  # >= this but < EXECUTE: warn but proceed
 
 
 # =============================================================================
+# OPUS-133: PRABHUPADA PATCH - Ego Prevention
+# =============================================================================
+# "The soul is never satisfied with material pleasures."
+# - Bhagavad Gita 3.39
+#
+# VAIRAGYA: Synaptic Detachment - prevents ego growth
+# Weights > 0.95 decay by 1% each cycle (prevents runaway confidence)
+VAIRAGYA_THRESHOLD = 0.95
+VAIRAGYA_DECAY = 0.99  # Multiply by this (1% decay)
+
+# NISHKAMA KARMA: Selfless Action - duty without reward
+# These intent types are dharmic duties that should not receive
+# reinforcement. They are done because they MUST be done, not for reward.
+DHARMIC_DUTIES = {
+    "run_tests",  # Testing is duty, not reward
+    "check_lint",  # Lint is hygiene, not achievement
+    "format_code",  # Formatting is expected, not exceptional
+    "backup_state",  # Preservation is duty
+    "audit_log",  # Auditing is duty
+    "health_check",  # Monitoring is duty
+    "notify_operator",  # Communication is duty
+    "validate_schema",  # Validation is hygiene
+}
+
+
+# =============================================================================
 # OPUS-133: SHIVA CONTEXT - "Necessary Evil" Patterns
 # =============================================================================
 # "Sometimes you must destroy to create" - Shiva's role in the Trimurti
@@ -1053,9 +1079,23 @@ class VivekaAction(BaseAction):
         - Success (+): Increase weight by 0.05 (max 1.0)
         - Failure (-): Decrease weight by 0.10 (min 0.1)
 
+        OPUS-133 Prabhupada Patch:
+        - NISHKAMA KARMA: Dharmic duties get no reinforcement
+        - VAIRAGYA: Applied after weight updates (ego pruning)
+
         The asymmetric learning rate (2x penalty for failure) ensures
         MANAS learns faster from mistakes than from successes.
         """
+        # =====================================================================
+        # NISHKAMA KARMA: Selfless Action - Dharmic duties get no reward
+        # =====================================================================
+        # "Karmanye vadhikaraste ma phaleshu kadachana"
+        # "You have a right to perform your duties, but not to the fruits"
+        # - Bhagavad Gita 2.47
+        if intent.intent_type in DHARMIC_DUTIES:
+            logger.info(f"🕉️ NISHKAMA KARMA: {intent.intent_type} is dharmic duty - no reinforcement")
+            return  # Duty without reward
+
         # Determine trigger and action patterns
         trigger = f"trigger:{intent.intent_type}"
         action = self._intent_to_action_pattern(intent.intent_type)
@@ -1158,11 +1198,66 @@ class VivekaAction(BaseAction):
                 pass
         return {"triggers": [], "version": "1.0"}
 
+    def _apply_vairagya(self, synapses: Dict[str, Any]) -> int:
+        """
+        VAIRAGYA: Apply ego pruning to over-confident synapses.
+
+        Synapses with weight > 0.95 are decayed by 1% each cycle.
+        This prevents any synapse from becoming absolutely dominant,
+        maintaining plasticity and humility in the system.
+
+        "Vairagya is detachment from the fruits of action."
+        - Yoga Sutras 1.15
+
+        Args:
+            synapses: The synapses dict (modified in place)
+
+        Returns:
+            Number of synapses pruned
+        """
+        pruned_count = 0
+
+        # Apply to dynamically learned triggers
+        for trigger_entry in synapses.get("triggers", []):
+            trigger = trigger_entry.get("trigger", "?")
+            for conn in trigger_entry.get("connections", []):
+                weight = conn.get("weight", 0.5)
+                if weight > VAIRAGYA_THRESHOLD:
+                    old_weight = weight
+                    new_weight = weight * VAIRAGYA_DECAY
+                    conn["weight"] = new_weight
+                    conn["vairagya_applied"] = datetime.now().isoformat()
+                    pruned_count += 1
+                    logger.debug(
+                        f"🍂 VAIRAGYA: Ego pruning {trigger}→{conn.get('target', '?')} "
+                        f"({old_weight:.3f} → {new_weight:.3f})"
+                    )
+
+        # Also apply to base weights dict (static synapses)
+        for trigger, actions in synapses.get("weights", {}).items():
+            for action, weight in list(actions.items()):
+                if weight > VAIRAGYA_THRESHOLD:
+                    old_weight = weight
+                    new_weight = weight * VAIRAGYA_DECAY
+                    actions[action] = new_weight
+                    pruned_count += 1
+                    logger.debug(
+                        f"🍂 VAIRAGYA: Ego pruning (base) {trigger}→{action} ({old_weight:.3f} → {new_weight:.3f})"
+                    )
+
+        if pruned_count > 0:
+            logger.info(f"🍂 VAIRAGYA: Pruned {pruned_count} over-confident synapses")
+
+        return pruned_count
+
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk with automatic backup."""
+        """Save synapses to disk with automatic backup and ego pruning."""
         import hashlib
         import json
         import shutil
+
+        # Apply VAIRAGYA before saving - ego pruning
+        self._apply_vairagya(synapses)
 
         synapses_path = self._workspace / ".opus_state" / "synapses.json"
         synapses_path.parent.mkdir(parents=True, exist_ok=True)
