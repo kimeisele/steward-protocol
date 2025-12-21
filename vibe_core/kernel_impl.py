@@ -175,7 +175,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # VAJRA ARMOR: Initialize DNA protection (must be first!)
         # =====================================================================
         VajraGuarded.__init__(self)
-        
+
         # 4D Hypercube: Store config and parent reference
         self._config = config
         self._parent = parent
@@ -688,15 +688,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def scheduler(self) -> VibeScheduler:
         """Get the task scheduler"""
         return self._scheduler
-
-    @property
-    def ledger(self) -> VibeLedger:
-        """Get the immutable ledger
-
-        WARNING: Direct ledger access allows identity spoofing.
-        Prefer record_verified_event() for agent-attributed events.
-        """
-        return self._ledger
 
     def record_verified_event(
         self, event_type: str, agent_id: str, details: dict, caller_agent: "VibeAgent" = None

@@ -102,6 +102,68 @@ class KernelIOService:
                 self._locks[name] = threading.Lock()
             return self._locks[name]
 
+    # =========================================================================
+    # CART BREAKER: Sandbox Enforcement (SHAKATASURA FIX)
+    # =========================================================================
+
+    def _validate_sandbox(self, requested_path: str) -> Path:
+        """
+        THE CART BREAKER.
+        
+        Resolves paths and ensures they stay inside the workspace sandbox.
+        This prevents symlink attacks and path traversal (..) escapes.
+        
+        Args:
+            requested_path: The path requested by a plugin/agent
+            
+        Returns:
+            Path: The validated, safe path
+            
+        Raises:
+            PermissionError: If the path escapes the sandbox
+        """
+        # 1. Construct the target path
+        target_path = self._root / requested_path
+
+        # 2. RESOLVE - The Symlink Killer
+        # This follows all symlinks to their true destination
+        try:
+            resolved_target = target_path.resolve()
+            resolved_root = self._root.resolve()
+        except FileNotFoundError:
+            # File doesn't exist yet (common for writes)
+            # Resolve the parent directory instead
+            resolved_target = target_path.parent.resolve() / target_path.name
+            resolved_root = self._root.resolve()
+
+        # 3. THE CHECK - Prefix Match
+        # Ensure the resolved path starts with the resolved sandbox root
+        # We use os.path.commonpath for robust comparison
+        try:
+            common = Path(os.path.commonpath([resolved_target, resolved_root]))
+            if common != resolved_root:
+                raise PermissionError(
+                    f"🛡️ SHAKATASURA BLOCKED: Sandbox escape detected! "
+                    f"Path '{requested_path}' resolves to '{resolved_target}' "
+                    f"which is outside sandbox '{resolved_root}'"
+                )
+        except ValueError:
+            # Different drives on Windows, or other path issues
+            raise PermissionError(
+                f"🛡️ SHAKATASURA BLOCKED: Path '{requested_path}' is not "
+                f"inside sandbox '{resolved_root}'"
+            )
+
+        # 4. Additional checks
+        # Reject null bytes (injection attack)
+        if "\x00" in requested_path:
+            raise PermissionError(
+                f"🛡️ SHAKATASURA BLOCKED: Null byte detected in path '{requested_path}'"
+            )
+
+        logger.debug(f"🛡️ Sandbox validated: {requested_path} -> {resolved_target}")
+        return target_path
+
     def _record_write_audit(
         self,
         name: str,
@@ -173,8 +235,16 @@ class KernelIOService:
         Returns:
             WriteResult with success status and new mtime
         """
+        # =====================================================================
+        # CART BREAKER: Validate sandbox BEFORE any operation
+        # =====================================================================
+        try:
+            path = self._validate_sandbox(name)
+        except PermissionError as e:
+            logger.error(f"🛡️ SANDBOX ESCAPE BLOCKED: {name} by {writer_id}")
+            return WriteResult(success=False, path=self._root / name, error=str(e))
+
         lock = self._get_lock(name)
-        path = self._root / name
 
         with lock:
             try:
@@ -235,7 +305,13 @@ class KernelIOService:
         Returns:
             Document content or None if not found
         """
-        path = self._root / name
+        # CART BREAKER: Validate sandbox before read
+        try:
+            path = self._validate_sandbox(name)
+        except PermissionError as e:
+            logger.error(f"🛡️ SANDBOX ESCAPE BLOCKED (read): {name}")
+            return None
+
         try:
             if path.exists():
                 return path.read_text(encoding="utf-8")
