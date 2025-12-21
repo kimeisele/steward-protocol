@@ -682,24 +682,25 @@ class OpusDashboardRenderer:
         except Exception as e:
             logger.debug(f"Failed to get MANAS intents: {e}")
 
-        # Fallback to standalone MANAS
+        # Fallback to existing MANAS singleton (GAD-000: Don't create expensive instances for display)
         try:
             from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
 
-            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
-            manas = CognitiveKernel.get_instance(workspace=self._root)
-            buffer = manas.get_intent_buffer_for_opus()
-            if buffer.get("pending"):
-                return {
-                    "source": "manas",
-                    "intents": buffer.get("pending", []),
-                    "total_pending": buffer.get("total_pending", 0),
-                    "idle_minutes": buffer.get("idle_minutes", 0),
-                    "last_thought": buffer.get("last_thought"),
-                    "recent_executed": buffer.get("recent_executed", []),
-                }
+            # GAD-000: Only access existing instance, don't create new one for dashboard
+            if CognitiveKernel.has_instance(workspace=self._root):
+                manas = CognitiveKernel.get_instance(workspace=self._root)
+                buffer = manas.get_intent_buffer_for_opus()
+                if buffer.get("pending"):
+                    return {
+                        "source": "manas",
+                        "intents": buffer.get("pending", []),
+                        "total_pending": buffer.get("total_pending", 0),
+                        "idle_minutes": buffer.get("idle_minutes", 0),
+                        "last_thought": buffer.get("last_thought"),
+                        "recent_executed": buffer.get("recent_executed", []),
+                    }
         except Exception as e:
-            logger.debug(f"Failed to get standalone MANAS intents: {e}")
+            logger.debug(f"Failed to get existing MANAS intents: {e}")
 
         # Fallback to legacy StateManager intents
         try:
@@ -1092,6 +1093,29 @@ class OpusDashboardRenderer:
                             manas_status["last_thought"] = buffer.get("last_thought")
                 except Exception as e:
                     logger.debug(f"Failed to get live MANAS status: {e}")
+
+            # OPUS-168: Check for existing MANAS instance (GAD-000: Don't create expensive instances for status)
+            # Pattern: Check has_instance() first (cheap), only then get_instance() (reuses existing)
+            if not manas_status["online"]:
+                try:
+                    from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+                    # GAD-000: Only access existing instance, don't create new one for dashboard
+                    if CognitiveKernel.has_instance(workspace=self._root):
+                        manas = CognitiveKernel.get_instance(workspace=self._root)
+                        manas_status["online"] = True
+                        buffer = manas.get_intent_buffer_for_opus()
+                        manas_status["intent_buffer"] = {
+                            "pending": buffer.get("pending", []),
+                            "executed": buffer.get("recent_executed", []),
+                            "rejected": [],
+                            "total_pending": buffer.get("total_pending", 0),
+                            "last_updated": datetime.utcnow().isoformat(),
+                        }
+                        manas_status["last_thought"] = buffer.get("last_thought")
+                    # If no instance exists, MANAS is truly offline - rely on persisted state below
+                except Exception as e:
+                    logger.debug(f"Failed to get existing MANAS status: {e}")
 
             # Read persisted state from .opus_state/manas_intents.json
             intents_path = self._root / ".opus_state" / "manas_intents.json"
