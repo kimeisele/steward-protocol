@@ -1,0 +1,47 @@
+{
+  "timestamp": 1766274436.289138,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/state-file-architecture-PigwR",
+    "sha": "79dfa3d",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 14.165534973144531,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 13
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "94e5d42f",
+    "boot_time": 1766274422.3840983,
+    "commit_count": 0
+  }
+}

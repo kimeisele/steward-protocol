@@ -40,6 +40,17 @@ from .ledger_state import LedgerHead, LedgerState, SyncEvent
 
 # OPUS-106: New components
 from .merge_engine import HealedConflict, MergeStrategy, UntotbarMergeEngine
+
+# OPUS-166: NodeState - PULS Layer (Ephemeral file-based presence)
+from .node_state import (
+    KalaState,
+    MailboxMessage,
+    NodeSnapshot,
+    NodeState,
+    SynapseInfo,
+    broadcast_message,
+    get_all_alive_nodes,
+)
 from .persona import AgentPersona, PersonaManager
 from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
 
@@ -123,6 +134,14 @@ __all__ = [
     "EphemeralState",
     "ThoughtEntry",
     "SessionContext",
+    # OPUS-166: NodeState - PULS Layer (Ephemeral file-based presence)
+    "NodeState",
+    "NodeSnapshot",
+    "MailboxMessage",
+    "KalaState",
+    "SynapseInfo",
+    "get_all_alive_nodes",
+    "broadcast_message",
     # Layer 3: Identity (PURUSHA)
     "PersonaManager",
     "AgentPersona",

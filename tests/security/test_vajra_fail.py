@@ -1,4 +1,3 @@
-
 import os
 from unittest.mock import MagicMock, patch
 
@@ -11,10 +10,10 @@ class TestVajraFailure:
     def test_dev_mode_bypass_vulnerability(self):
         """
         PROOF OF DEFECT: The Vajra Failure.
-        
+
         Security Requirement: The Constitutional Oath must verification the hash matches reality.
         Vulnerability: If STEWARD_DEV_MODE=true, it accepts ANY hash (or specifically 'genesis_hash' check bypass).
-        
+
         We simulate an attack where:
         1. We are in Dev Mode (Env Var set).
         2. We provide a 'genesis_hash' stored value but the file is missing/different.
@@ -23,7 +22,6 @@ class TestVajraFailure:
 
         # 1. Simulate Dev Mode
         with patch.dict(os.environ, {"STEWARD_DEV_MODE": "true"}):
-
             # 2. Instantiate Oath
             oath = ConstitutionalOath()
 
@@ -37,7 +35,7 @@ class TestVajraFailure:
             # verify_oath(self, stored_hash)
             # stored_hash = "genesis_hash"
 
-            with patch.object(oath, 'compute_constitution_hash', return_value="REALITY_HASH_123"):
+            with patch.object(oath, "compute_constitution_hash", return_value="REALITY_HASH_123"):
                 # verify_oath expects an EVENT DICT, not stored_hash arg
                 fake_event = {"constitution_hash": "genesis_hash", "agent": "attacker"}
                 is_valid, reason = oath.verify_oath(fake_event)
@@ -48,4 +46,6 @@ class TestVajraFailure:
                 # A secure system should return FALSE because "genesis_hash" != "REALITY_HASH_123".
                 # The Bug: It returns TRUE.
 
-                assert is_valid is False, "SECURITY BREACH: Vajra broken. System accepted 'genesis_hash' bypass in Dev Mode."
+                assert is_valid is False, (
+                    "SECURITY BREACH: Vajra broken. System accepted 'genesis_hash' bypass in Dev Mode."
+                )

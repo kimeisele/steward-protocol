@@ -23,23 +23,26 @@ import pytest
 
 class Guna(Enum):
     """The three qualities/modes from Vedic philosophy."""
+
     SATTVA = "sattva"  # Pure, essential, life-sustaining
-    RAJAS = "rajas"    # Active, passionate, useful
-    TAMAS = "tamas"    # Inert, lazy, expendable
+    RAJAS = "rajas"  # Active, passionate, useful
+    TAMAS = "tamas"  # Inert, lazy, expendable
 
 
 class AgentPriority(Enum):
     """Agent priority levels for triage."""
+
     CRITICAL = 5  # System heartbeat, ledger, security
-    HIGH = 4      # User-facing services
-    MEDIUM = 3    # Background tasks
-    LOW = 2       # Nice-to-have
+    HIGH = 4  # User-facing services
+    MEDIUM = 3  # Background tasks
+    LOW = 2  # Nice-to-have
     DISPOSABLE = 1  # Can be killed anytime
 
 
 @dataclass
 class AgentProcess:
     """Represents a running agent process."""
+
     agent_id: str
     priority: AgentPriority
     guna: Guna
@@ -50,7 +53,7 @@ class AgentProcess:
 class VulnerableKernel:
     """
     VULNERABLE: No triage capability.
-    
+
     When resources are exhausted, this kernel either:
     - Crashes (OOM)
     - Kills randomly (like Linux OOM killer)
@@ -76,7 +79,7 @@ class VulnerableKernel:
 class DharmicKernel:
     """
     SECURE: Triage based on Dharma and Priority.
-    
+
     When resources are exhausted, this kernel:
     1. Identifies lowest priority/dharma agents
     2. Kills them to free resources
@@ -94,7 +97,7 @@ class DharmicKernel:
     def enforce_prana_limits(self) -> List[str]:
         """
         THE TRIAGE PROTOCOL.
-        
+
         Kills lowest-value agents until resources are available.
         Returns list of killed agent IDs.
         """
@@ -139,25 +142,19 @@ class TestDurvasaFamine:
     def test_vulnerable_kernel_kills_randomly(self):
         """
         DURVASA TEST 1: Vulnerable Kernel (No Triage).
-        
+
         The vulnerable kernel kills randomly when OOM occurs.
         This is dangerous - it might kill the heartbeat to save a screensaver.
         """
         kernel = VulnerableKernel()
 
         # Register agents
-        kernel.register_agent(AgentProcess(
-            agent_id="yogi_bot",
-            priority=AgentPriority.CRITICAL,
-            guna=Guna.SATTVA,
-            memory_mb=100
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="glutton_bot",
-            priority=AgentPriority.DISPOSABLE,
-            guna=Guna.TAMAS,
-            memory_mb=900
-        ))
+        kernel.register_agent(
+            AgentProcess(agent_id="yogi_bot", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=100)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="glutton_bot", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=900)
+        )
 
         # OOM occurs
         victim = kernel.handle_oom()
@@ -171,7 +168,7 @@ class TestDurvasaFamine:
     def test_dharmic_kernel_preserves_sattva(self):
         """
         DURVASA TEST 2: Dharmic Kernel (Triage).
-        
+
         The dharmic kernel kills lowest-priority/tamas agents first.
         Critical/sattva agents are preserved.
         """
@@ -179,24 +176,15 @@ class TestDurvasaFamine:
         kernel.available_memory_mb = 500  # Only 500MB available
 
         # Register agents (total 600MB needed)
-        kernel.register_agent(AgentProcess(
-            agent_id="yogi_bot",
-            priority=AgentPriority.CRITICAL,
-            guna=Guna.SATTVA,
-            memory_mb=100
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="worker_bot",
-            priority=AgentPriority.MEDIUM,
-            guna=Guna.RAJAS,
-            memory_mb=200
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="glutton_bot",
-            priority=AgentPriority.DISPOSABLE,
-            guna=Guna.TAMAS,
-            memory_mb=300
-        ))
+        kernel.register_agent(
+            AgentProcess(agent_id="yogi_bot", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=100)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="worker_bot", priority=AgentPriority.MEDIUM, guna=Guna.RAJAS, memory_mb=200)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="glutton_bot", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=300)
+        )
 
         # Enforce limits
         killed = kernel.enforce_prana_limits()
@@ -216,7 +204,7 @@ class TestDurvasaFamine:
     def test_cascading_triage_under_severe_pressure(self):
         """
         DURVASA TEST 3: Severe Famine (Cascading Kills).
-        
+
         When pressure is extreme, multiple low-priority agents are killed.
         Only the most essential survive.
         """
@@ -224,21 +212,21 @@ class TestDurvasaFamine:
         kernel.available_memory_mb = 200  # Extreme constraint
 
         # Register many agents
-        kernel.register_agent(AgentProcess(
-            agent_id="heartbeat", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=50
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="ledger", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=100
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="analytics", priority=AgentPriority.LOW, guna=Guna.RAJAS, memory_mb=200
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="screensaver", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=150
-        ))
-        kernel.register_agent(AgentProcess(
-            agent_id="pi_calculator", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=300
-        ))
+        kernel.register_agent(
+            AgentProcess(agent_id="heartbeat", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=50)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="ledger", priority=AgentPriority.CRITICAL, guna=Guna.SATTVA, memory_mb=100)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="analytics", priority=AgentPriority.LOW, guna=Guna.RAJAS, memory_mb=200)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="screensaver", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=150)
+        )
+        kernel.register_agent(
+            AgentProcess(agent_id="pi_calculator", priority=AgentPriority.DISPOSABLE, guna=Guna.TAMAS, memory_mb=300)
+        )
 
         # Enforce limits
         killed = kernel.enforce_prana_limits()
@@ -262,7 +250,7 @@ class TestRealKernelTriageCapability:
     def test_real_kernel_has_no_triage(self):
         """
         DURVASA AUDIT: Does the real kernel have triage?
-        
+
         This test documents the current state of the kernel.
         If it fails, the kernel needs an immune system.
         """
@@ -271,9 +259,9 @@ class TestRealKernelTriageCapability:
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
 
         # Check for triage capabilities
-        has_prana_limits = hasattr(kernel, 'enforce_prana_limits')
-        has_terminate_agent = hasattr(kernel, 'terminate_agent')
-        has_prana_monitor = hasattr(kernel, 'prana_monitor')
+        has_prana_limits = hasattr(kernel, "enforce_prana_limits")
+        has_terminate_agent = hasattr(kernel, "terminate_agent")
+        has_prana_monitor = hasattr(kernel, "prana_monitor")
 
         print("\n📊 DURVASA AUDIT - Kernel Triage Capabilities:")
         print(f"   enforce_prana_limits: {has_prana_limits}")

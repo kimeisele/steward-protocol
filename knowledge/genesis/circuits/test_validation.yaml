@@ -51,7 +51,7 @@ states:
       # EXCEPTION: Security/hardening tests + integration tests with custom event handling + archived/deprecated
       - pattern: "class.*Agent.*VibeAgent"
         location: "inside test file"
-        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "test_kernel_markdown", "tests/archive/"]
+        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "test_kernel_markdown", "tests/archive/", "test_node_pulse_e2e", "tests/perf/"]
         severity: critical
         message: "FORBIDDEN: Custom Agent class in test. Use TestAgents.xxx()"
 

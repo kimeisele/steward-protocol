@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+    from .cortex.prana_sense import PranaPerception, PranaSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
     from .cortex.sutra_sense import SutraSense, SutraSummary
 
@@ -317,6 +318,13 @@ class CognitiveKernel(CognitiveCycle):
         # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
         self._shruta_sense: Optional["ShrutaSense"] = None
         self._init_shruta_sense()
+
+        # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence Awareness (OPUS-166)
+        # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
+        self._prana_sense: Optional["PranaSense"] = None
+        self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
+        self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
+        self._init_prana_sense()
 
         # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
         # Auto-generates GAD-000 compliant infrastructure for new modules
@@ -961,6 +969,159 @@ class CognitiveKernel(CognitiveCycle):
         except Exception as e:
             logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
             self._shruta_sense = None
+
+    # =========================================================================
+    # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence (OPUS-166)
+    # =========================================================================
+
+    def _init_prana_sense(self) -> None:
+        """
+        Initialize Prana Sense - Agent Presence Awareness.
+
+        OPUS-166: This provides awareness of which agents are alive/dead.
+        Integrates with ShrutaSense for real-time presence detection.
+
+        Sanskrit: प्राण (Prana) = Life force, breath, vital energy
+
+        "Prana is the breath of the universe. When an agent breathes (pulses),
+         it leaves a trace. When it stops breathing, the trace vanishes."
+        """
+        try:
+            from .cortex.prana_sense import PranaSense
+
+            prana_config = self._full_config.get("prana_sense", {})
+            self._prana_sense = PranaSense(
+                workspace=self._workspace,
+                config=prana_config,
+            )
+
+            # Register with ShrutaSense for real-time presence updates
+            if self._shruta_sense:
+                self._prana_sense.register_with_shruta(self._shruta_sense)
+                logger.info("🫀 PRANA SENSE: Connected to ShrutaSense for real-time presence detection")
+
+            # Initial perception to set baseline
+            perception = self._prana_sense.perceive()
+            logger.info(
+                f"🫀 PRANA SENSE: 7th Jnanendriya activated - "
+                f"{perception.total_alive}/{perception.total_registered} agents alive"
+            )
+
+        except Exception as e:
+            logger.warning(f"🫀 PRANA SENSE: Could not initialize: {e}")
+            self._prana_sense = None
+
+    def _perceive_and_generate_presence_intents(self) -> List[Intent]:
+        """
+        Use PranaSense to perceive agent presence and generate intents.
+
+        OPUS-166: Reacts to agent lifecycle events:
+        - Deaths: Generate investigation intent (why did agent die?)
+        - Births: Log acknowledgement (new agent registered)
+
+        Returns:
+            List of presence-related intents
+        """
+        if not self._prana_sense:
+            return []
+
+        presence_intents = []
+
+        try:
+            # Perceive current presence state
+            perception = self._prana_sense.perceive()
+
+            # React to deaths - generate investigation intents (with cooldown)
+            now = datetime.utcnow()
+            for death in perception.deaths:
+                agent_id = death.agent_id
+
+                # OPUS-035 Pattern: Check cooldown to avoid intent spam from flaky agents
+                last_intent_time = self._prana_cooldowns.get(agent_id)
+                if last_intent_time:
+                    elapsed = (now - last_intent_time).total_seconds() / 60
+                    if elapsed < self._prana_cooldown_minutes:
+                        logger.debug(
+                            f"🫀 PRANA SENSE: Skipping {agent_id} death intent - "
+                            f"cooldown active ({elapsed:.1f}/{self._prana_cooldown_minutes} min)"
+                        )
+                        continue
+
+                presence = self._prana_sense.get_agent_presence(agent_id)
+
+                # Mark cooldown BEFORE generating (avoid race conditions)
+                self._prana_cooldowns[agent_id] = now
+
+                intent = Intent(
+                    id=f"prana_death_{agent_id}_{datetime.utcnow().strftime('%H%M%S')}",
+                    intent_type="investigate_agent_death",
+                    title=f"Agent {agent_id} died",
+                    description=f"Agent '{agent_id}' is no longer responding. "
+                    f"Last seen: {presence.last_seen if presence else 'unknown'}. "
+                    f"Investigate cause and consider restart.",
+                    reasoning="PranaSense detected missing heartbeat (node.json deleted/stale). "
+                    "Dead agents may indicate crashes, resource issues, or intentional shutdown.",
+                    priority=IntentPriority.HIGH,
+                    risk=IntentRisk.MEDIUM,
+                    params={
+                        "agent_id": agent_id,
+                        "last_seen": presence.last_seen if presence else None,
+                        "cartridge_path": str(presence.cartridge_path) if presence else None,
+                    },
+                    auto_executable=False,  # Human should review before restart
+                    related_files=[f"agents/{agent_id}/node.json"],
+                )
+                presence_intents.append(intent)
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' died - investigation intent generated")
+
+            # React to births - log and optionally generate welcome intent
+            for birth in perception.births:
+                agent_id = birth.agent_id
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' born - now alive")
+
+                # For now, just log. Could generate "integrate_new_agent" intent later
+                # if we want MANAS to proactively help new agents
+
+            # Log summary
+            if perception.deaths or perception.births:
+                logger.info(
+                    f"🫀 PRANA SENSE: {len(perception.deaths)} deaths, {len(perception.births)} births detected"
+                )
+
+        except Exception as e:
+            logger.warning(f"🫀 PRANA SENSE: Perception failed: {e}")
+
+        return presence_intents
+
+    def inject_prana_sense(self, sense: "PranaSense") -> None:
+        """
+        Inject the Prana Sense for agent presence awareness.
+
+        OPUS-166: PranaSense is the 7th Jnanendriya.
+
+        "Prana is the breath of the universe. When an agent breathes,
+         MANAS feels the vibration."
+
+        Args:
+            sense: PranaSense instance
+        """
+        self._prana_sense = sense
+        logger.info("🫀 PRANA SENSE: Seventh Jnanendriya injected - MANAS can now perceive agent presence")
+
+    def get_prana_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Prana summary for OPUS.md display."""
+        if not self._prana_sense:
+            return None
+        try:
+            perception = self._prana_sense.perceive()
+            return {
+                "total_registered": perception.total_registered,
+                "total_alive": perception.total_alive,
+                "alive_agents": perception.alive_agents,
+                "dead_agents": [a.agent_id for a in perception.agents if not a.is_alive],
+            }
+        except Exception:
+            return None
 
     def _init_infrastructure_genesis(self) -> None:
         """
@@ -1669,6 +1830,10 @@ class CognitiveKernel(CognitiveCycle):
         healing_intents = self._perceive_and_generate_healing_intents()
         observations.extend(healing_intents)
 
+        # 🫀 PRANA SENSE: Perceive agent presence and generate lifecycle intents
+        presence_intents = self._perceive_and_generate_presence_intents()
+        observations.extend(presence_intents)
+
         # 📜 SUTRA SENSE: Perceive documentation gaps
         gap_intents = self._perceive_and_generate_gap_intents()
         observations.extend(gap_intents)
@@ -1683,6 +1848,7 @@ class CognitiveKernel(CognitiveCycle):
         metadata = {
             "vibration_count": vibration_count,  # OPUS-156: ShrutaSense
             "healing_count": len(healing_intents),
+            "presence_count": len(presence_intents),  # OPUS-166: PranaSense
             "gap_count": len(gap_intents),
             "sankalpa_count": len(sankalpa_intents),
         }
@@ -1841,6 +2007,11 @@ class CognitiveKernel(CognitiveCycle):
         # Save intent buffer to disk
         self._save_intent_buffer()
         logger.debug("💾 MANAS: Persisted intent buffer")
+
+        # OPUS-096: Weaver integration - commit runtime state after MANAS cycle
+        # The Weaver discovers dirty files via git status (independent of StateService)
+        # This ensures files written during MANAS cycle get committed
+        self._weaver_pulse()
 
         # Return empty dict (no errors)
         return {}
@@ -2567,6 +2738,35 @@ class CognitiveKernel(CognitiveCycle):
 
         except Exception as e:
             logger.warning(f"Could not save intent buffer: {e}")
+
+    def _weaver_pulse(self) -> None:
+        """
+        OPUS-096: Trigger StateSyncWeaver to commit runtime state.
+
+        The Weaver discovers dirty runtime files via git status (independent of StateService).
+        This ensures files written during MANAS cycle get committed to git.
+
+        This is the "invisible hand" that keeps state synced to git during kernel operation.
+        The Weaver is also called from heartbeat.py for scheduled commits.
+        """
+        try:
+            from vibe_core.state.prakriti import Prakriti
+            from vibe_core.state.weaver import StateSyncWeaver
+
+            prakriti = Prakriti(workspace_path=self._workspace)
+            weaver = StateSyncWeaver(prakriti)
+            result = weaver.pulse()
+
+            if result.success and result.sha:
+                logger.debug(f"🧵 WEAVER: Committed runtime state ({result.sha[:8]})")
+            elif result.success:
+                logger.debug("🧵 WEAVER: No runtime changes to commit")
+            else:
+                logger.debug(f"🧵 WEAVER: {result.error or result.message}")
+
+        except Exception as e:
+            # Weaver failure should not break MANAS cycle
+            logger.debug(f"🧵 WEAVER: Skipped ({e})")
 
     # =========================================================================
     # INTEGRATION POINTS

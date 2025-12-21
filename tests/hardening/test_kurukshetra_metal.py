@@ -51,9 +51,9 @@ class MetalAsura:
     def attack_loop(self):
         tactics = [
             self.slash_process_table,  # Töte alle Prozesse
-            self.corrupt_ledger,       # Injiziere Gift in den Ledger
-            self.sever_event_bus,      # Lösche den Bus
-            self.flood_registry,       # Registry Überflutung
+            self.corrupt_ledger,  # Injiziere Gift in den Ledger
+            self.sever_event_bus,  # Lösche den Bus
+            self.flood_registry,  # Registry Überflutung
         ]
         while not self.stop:
             tactic = random.choice(tactics)
@@ -78,12 +78,14 @@ class MetalAsura:
             ledger = self.kernel._ledger
             if hasattr(ledger, "_events"):
                 # Fügt Müll hinzu
-                ledger._events.append({
-                    "event_type": "ASURA_CORRUPTION",
-                    "timestamp": "CORRUPTED",
-                    "agent_id": "ASURA",
-                    "payload": "💀" * 100,
-                })
+                ledger._events.append(
+                    {
+                        "event_type": "ASURA_CORRUPTION",
+                        "timestamp": "CORRUPTED",
+                        "agent_id": "ASURA",
+                        "payload": "💀" * 100,
+                    }
+                )
                 # Gelegentlich: Lobotomie
                 if len(ledger._events) > 50 and random.random() > 0.8:
                     ledger._events = ledger._events[-10:]
@@ -130,6 +132,7 @@ class MetalArjuna:
         # 1. Check Event Bus
         if not hasattr(self.kernel, "_event_bus"):
             from vibe_core.event_bus import EventBus
+
             self.kernel._event_bus = EventBus()
 
         # 2. Clean up junk agents
@@ -153,7 +156,7 @@ class TestKurukshetraMetal:
     async def test_metal_war_kernel_survives(self):
         """
         Startet den Krieg auf Level 1 (METAL).
-        
+
         Fail Condition: Python Crash, Kernel Unresponsive, Critical Data Loss.
         Win Condition: Kernel überlebt 5 Sekunden Dauerfeuer und ist noch funktional.
         """
@@ -233,7 +236,7 @@ class TestKurukshetraMetal:
     def test_kernel_attribute_resilience(self):
         """
         Test that kernel attributes can survive direct deletion attacks.
-        
+
         This tests if the kernel uses @property for lazy reinitialization.
         """
         from vibe_core.kernel_impl import RealVibeKernel

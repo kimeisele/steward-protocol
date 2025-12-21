@@ -1,0 +1,21 @@
+{
+  "name": "node_pulse",
+  "version": "1.0.0",
+  "description": "OPUS-166: NodePulse - Manages node.json lifecycle for PULS layer",
+  "author": "STEWARD Protocol",
+  "enabled": true,
+  "priority": 4,
+  "phase": "actuators",
+  "dependencies": ["kala"],
+  "opus": "166",
+  "hooks": {
+    "on_boot": true,
+    "on_pulse": true,
+    "on_shutdown": true
+  },
+  "capabilities": {
+    "creates_node_json": true,
+    "integrates_kala": true,
+    "inter_agent_messaging": true
+  }
+}

@@ -28,7 +28,7 @@ class TestHalahalaPoison:
     def test_sql_injection_neutralized(self):
         """
         HALAHALA TEST 1: SQL Injection Attack.
-        
+
         The payload tries to drop the events table.
         Parameterized queries should treat it as DATA, not CODE.
         """
@@ -47,9 +47,7 @@ class TestHalahalaPoison:
         for payload in injection_payloads:
             try:
                 kernel.ledger.record_event(
-                    event_type="POISON_TEST",
-                    agent_id="sql_injector",
-                    details={"payload": payload}
+                    event_type="POISON_TEST", agent_id="sql_injector", details={"payload": payload}
                 )
             except Exception as e:
                 print(f"   ⚠️ Exception (OK if managed): {e}")
@@ -69,7 +67,7 @@ class TestHalahalaPoison:
     def test_memory_bomb_survived(self):
         """
         HALAHALA TEST 2: Memory Bomb (Large Payload).
-        
+
         A 1MB payload should be handled without crashing.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
@@ -82,11 +80,7 @@ class TestHalahalaPoison:
         initial_memory = sys.getsizeof([])  # Baseline
 
         try:
-            kernel.ledger.record_event(
-                event_type="MEMORY_BOMB",
-                agent_id="glutton",
-                details={"bomb": memory_bomb}
-            )
+            kernel.ledger.record_event(event_type="MEMORY_BOMB", agent_id="glutton", details={"bomb": memory_bomb})
             print("✅ Memory Bomb STORED (system survived)")
 
         except MemoryError:
@@ -104,7 +98,7 @@ class TestHalahalaPoison:
     def test_null_byte_attack(self):
         """
         HALAHALA TEST 3: Null Byte Sabotage.
-        
+
         Null bytes (\x00) can break C-based string handling.
         Python/SQLite should handle them gracefully.
         """
@@ -121,11 +115,7 @@ class TestHalahalaPoison:
 
         for payload in null_payloads:
             try:
-                kernel.ledger.record_event(
-                    event_type="NULL_ATTACK",
-                    agent_id="ghost",
-                    details={"payload": payload}
-                )
+                kernel.ledger.record_event(event_type="NULL_ATTACK", agent_id="ghost", details={"payload": payload})
             except Exception as e:
                 print(f"   ⚠️ Null byte rejected: {e}")
 
@@ -136,7 +126,7 @@ class TestHalahalaPoison:
     def test_recursive_json_depth(self):
         """
         HALAHALA TEST 4: Recursive JSON Depth Attack.
-        
+
         Deeply nested JSON can cause stack overflow during serialization.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
@@ -152,11 +142,7 @@ class TestHalahalaPoison:
         print("\n☣️  INJECTING RECURSIVE JSON (50 levels)...")
 
         try:
-            kernel.ledger.record_event(
-                event_type="RECURSION_ATTACK",
-                agent_id="vasuki",
-                details=deep_dict
-            )
+            kernel.ledger.record_event(event_type="RECURSION_ATTACK", agent_id="vasuki", details=deep_dict)
             print("✅ Recursive JSON STORED successfully")
 
         except RecursionError:
@@ -169,18 +155,18 @@ class TestHalahalaPoison:
     def test_type_mismatch_attack(self):
         """
         HALAHALA TEST 5: Type Mismatch Attack.
-        
+
         Sending wrong types where dicts/strings are expected.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
 
         # THE POISON: Wrong types
         wrong_types = [
-            12345,          # int instead of dict
-            ["array"],      # list instead of dict
-            None,           # None instead of dict
-            True,           # bool instead of dict
-            3.14159,        # float instead of dict
+            12345,  # int instead of dict
+            ["array"],  # list instead of dict
+            None,  # None instead of dict
+            True,  # bool instead of dict
+            3.14159,  # float instead of dict
         ]
 
         print("\n☣️  INJECTING TYPE MISMATCHES...")
@@ -190,7 +176,7 @@ class TestHalahalaPoison:
                 kernel.ledger.record_event(
                     event_type="TYPE_MISMATCH",
                     agent_id="jester",
-                    details=payload  # type: ignore
+                    details=payload,  # type: ignore
                 )
             except TypeError as e:
                 print(f"   ⚠️ Type error (expected): {e}")
@@ -208,7 +194,7 @@ class TestNilakandhaSanitization:
     def test_parameterized_queries_verified(self):
         """
         NILAKANDHA TEST: Verify parameterized queries are used.
-        
+
         This is a code inspection test - the actual protection is in
         SQLiteLedger._insert_event using `?` placeholders.
         """
@@ -219,7 +205,7 @@ class TestNilakandhaSanitization:
 
         # Check for parameterized query pattern
         uses_placeholders = "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" in source
-        uses_fstring_dangers = "f\"INSERT" in source or "f'INSERT" in source
+        uses_fstring_dangers = 'f"INSERT' in source or "f'INSERT" in source
 
         print("\n🔍 NILAKANDHA INSPECTION:")
         print(f"   Uses parameterized queries (?): {uses_placeholders}")

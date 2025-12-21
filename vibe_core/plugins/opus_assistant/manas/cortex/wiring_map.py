@@ -139,11 +139,13 @@ class WiringMap:
         "ShellAction",  # VAK - Shell commands
         "TestAction",  # PAYU - Test execution
         "SankalpaAction",  # UPASTHA - Strategic will
+        "PranaAction",  # OPUS-166: Agent lifecycle management
         "EchoAction",  # Proof-of-life for auto-discovery
         # OPUS-105: Senses (auto-discovered via SenseLoader)
         "DharmaSense",  # Dharmic conscience
         "PrakritiSense",  # State perception
         "SutraSense",  # Documentation curation
+        "PranaSense",  # OPUS-166: Agent presence awareness
         # Note: MutationHandlers and KnowledgeGraph are tracked as capabilities
         # (they live outside cortex/ but are wired via IntentRouter)
     ]

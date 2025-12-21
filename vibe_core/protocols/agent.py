@@ -15,6 +15,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from vibe_core import Task
     from vibe_core.kernel import VibeKernel
 
@@ -212,8 +214,13 @@ class VibeAgent(ABC):
         - Query other agents via kernel.agent_registry
         - Submit tasks via kernel.scheduler.submit_task()
         - Access ledger via kernel.ledger
+
+        OPUS-166: Also ensures agent presence (creates node.json).
         """
         self.kernel = kernel
+
+        # OPUS-166: Register presence when agent boots
+        self.ensure_presence(status="booting")
 
     def set_kernel_pipe(self, pipe: Any) -> None:
         """
@@ -492,3 +499,87 @@ class VibeAgent(ABC):
         except Exception as e:
             logger = logging.getLogger("VibeAgent")
             logger.debug(f"⚠️  Sync event emission failed: {e}")
+
+    # =========================================================================
+    # OPUS-166: PULS Layer - Agent Presence (Heartbeat)
+    # =========================================================================
+
+    def get_cartridge_path(self) -> "Path | None":
+        """
+        Get this agent's cartridge directory path.
+
+        Derives the path from the module's __file__ attribute.
+        Returns None if path cannot be determined.
+
+        Returns:
+            Path to cartridge directory, or None
+        """
+        import sys
+        from pathlib import Path
+
+        try:
+            module = sys.modules.get(self.__class__.__module__)
+            if module and hasattr(module, "__file__") and module.__file__:
+                return Path(module.__file__).parent
+        except Exception:
+            pass
+
+        return None
+
+    def ensure_presence(self, status: str = "online", kala_state: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        Ensure this agent's presence is registered (PULS layer).
+
+        OPUS-166: Creates/updates node.json to signal "I am alive".
+        This is the agent's HEARTBEAT. Call on boot and every pulse.
+
+        If node.json is missing (e.g., deleted by user), it is recreated.
+        This provides self-healing behavior.
+
+        Args:
+            status: Agent status ("booting", "online", "busy", "offline")
+            kala_state: Optional KALA time state dict
+
+        Returns:
+            True if presence was ensured, False if cartridge path unknown
+        """
+        cartridge_path = self.get_cartridge_path()
+        if not cartridge_path:
+            return False
+
+        try:
+            from vibe_core.state.node_state import NodeState
+
+            # Pulse updates or creates node.json (self-healing)
+            NodeState.pulse(cartridge_path, status=status, kala_state=kala_state)
+            return True
+
+        except Exception as e:
+            logger = logging.getLogger("VibeAgent")
+            logger.debug(f"⚠️  ensure_presence failed for {self.agent_id}: {e}")
+            return False
+
+    def release_presence(self) -> bool:
+        """
+        Release this agent's presence (shutdown).
+
+        OPUS-166: Deletes node.json to signal "I am offline".
+        Called during agent shutdown.
+
+        Returns:
+            True if presence was released, False if cartridge path unknown
+        """
+        cartridge_path = self.get_cartridge_path()
+        if not cartridge_path:
+            return False
+
+        try:
+            from vibe_core.state.node_state import NodeState
+
+            NodeState.die(cartridge_path)
+            return True
+
+        except Exception as e:
+            logger = logging.getLogger("VibeAgent")
+            logger.debug(f"⚠️  release_presence failed for {self.agent_id}: {e}")
+            return False
