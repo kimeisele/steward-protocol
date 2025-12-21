@@ -403,6 +403,29 @@ class KarmaSense(BaseSense):
         """
         return self.find_hotspots()
 
+    def get_boot_summary(self) -> Dict[str, Any]:
+        """
+        OPUS-172: Polymorphic boot summary for SenseManager.
+
+        Returns standardized boot data for the SenseManager to use
+        instead of hardcoded if/elif checks.
+        """
+        try:
+            report = self.find_hotspots()
+            if report:
+                return {
+                    "message": f"Hotspots: {report.hotspot_count}",
+                    "data": {
+                        "hotspots": report.hotspot_count,
+                        "health": report.health_score,
+                        "total_repairs": report.total_repairs,
+                    },
+                    "emoji": "🔮",
+                }
+        except Exception as e:
+            logger.debug(f"[KARMA_SENSE] Boot summary failed: {e}")
+        return {"message": "Initialized", "data": {}, "emoji": "🔮"}
+
     # =========================================================================
     # OPUS-167: Intent Generation (Fractal Architecture)
     # =========================================================================

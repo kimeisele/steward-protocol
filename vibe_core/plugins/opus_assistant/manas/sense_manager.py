@@ -269,67 +269,39 @@ class SenseManager:
         Create a SenseBootResult from a loaded sense.
 
         Tries to extract boot summary data from sense-specific methods.
+
+        OPUS-172: VEDA-4 Refactor - Uses polymorphic get_boot_summary() instead
+        of hardcoded if/elif sense_name checks. Each sense provides its own
+        boot summary via the standard BaseSense.get_boot_summary() interface.
         """
         try:
-            data: Dict[str, Any] = {}
-            message = "Initialized"
+            # OPUS-172: Use polymorphic interface instead of hardcoded checks
+            if hasattr(sense, "get_boot_summary"):
+                summary = sense.get_boot_summary()
+                message = summary.get("message", "Initialized")
+                data = summary.get("data", {})
+                emoji = summary.get("emoji", "✨")
 
-            # Sense-specific boot data extraction
-            if sense_name == "prakriti_sense" and hasattr(sense, "on_manas_boot"):
-                summary = sense.on_manas_boot()
-                if summary:
-                    data["total_paths"] = getattr(summary, "total_paths", 0)
-                    data["health"] = getattr(summary, "health_ratio", 0.0)
-                    message = f"Health: {data['health']:.0%}"
-                    logger.info(f"👁️ PRAKRITI SENSE: Total: {data['total_paths']}, Health: {data['health']:.0%}")
-
-            elif sense_name == "dharma_sense" and hasattr(sense, "get_dharma_summary"):
-                summary = sense.get_dharma_summary()
-                if summary:
-                    data["bhakti"] = getattr(summary, "bhakti_score", 0)
-                    message = f"Bhakti: {data['bhakti']}"
-                    logger.info(f"🙏 DHARMA SENSE: Bhakti: {data['bhakti']}")
-
-            elif sense_name == "karma_sense" and hasattr(sense, "find_hotspots"):
-                report = sense.find_hotspots()
-                if report:
-                    data["hotspots"] = getattr(report, "hotspot_count", 0)
-                    data["health"] = getattr(report, "health_score", 0.0)
-                    message = f"Hotspots: {data['hotspots']}"
-                    logger.info(f"🔮 KARMA SENSE: Hotspots: {data['hotspots']}, Health: {data['health']:.0%}")
-
-            elif sense_name == "sutra_sense":
-                logger.info("📜 SUTRA SENSE: Initialized")
-
-            elif sense_name == "shruta_sense":
-                logger.info("👂 SHRUTA SENSE: Initialized")
-
-            elif sense_name == "prana_sense":
-                logger.info("🫀 PRANA SENSE: Initialized")
-
-            elif sense_name == "viveka_sense":
-                logger.info("🔍 VIVEKA SENSE: Initialized")
-
-            elif sense_name == "akasha_sense":
-                # OPUS-155: Knowledge graph perception
-                if hasattr(sense, "port"):
-                    data["node_count"] = sense.port.get_node_count()
-                    data["edge_count"] = sense.port.get_edge_count()
-                    data["loaded"] = sense.port.is_loaded()
-                    message = f"Knowledge: {data['node_count']} nodes"
-                    logger.info(f"🔮 AKASHA SENSE: {data['node_count']} nodes, {data['edge_count']} edges")
+                # Log with sense-provided emoji
+                if data:
+                    logger.info(f"{emoji} {sense_name.upper()}: {message}")
                 else:
-                    logger.info("🔮 AKASHA SENSE: Initialized")
+                    logger.info(f"{emoji} {sense_name.upper()}: Initialized")
 
-            else:
-                # Unknown sense - still log it
-                logger.info(f"✨ {sense_name.upper()}: Initialized")
+                return SenseBootResult(
+                    sense_name=sense_name,
+                    success=True,
+                    message=message,
+                    data=data if data else None,
+                )
 
+            # Fallback for senses that don't implement get_boot_summary yet
+            logger.info(f"✨ {sense_name.upper()}: Initialized")
             return SenseBootResult(
                 sense_name=sense_name,
                 success=True,
-                message=message,
-                data=data if data else None,
+                message="Initialized",
+                data=None,
             )
 
         except Exception as e:

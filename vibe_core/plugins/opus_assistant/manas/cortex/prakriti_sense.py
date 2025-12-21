@@ -471,6 +471,31 @@ class PrakritiSense(BaseSense):
 
         return None
 
+    def get_boot_summary(self) -> Dict[str, Any]:
+        """
+        OPUS-172: Polymorphic boot summary for SenseManager.
+
+        Returns standardized boot data for the SenseManager to use
+        instead of hardcoded if/elif checks.
+        """
+        try:
+            summary = self.on_manas_boot()
+            if summary:
+                return {
+                    "message": f"Health: {summary.health_ratio:.0%}",
+                    "data": {
+                        "total_paths": summary.total_paths,
+                        "health": summary.health_ratio,
+                        "sattva_count": summary.sattva_count,
+                        "rajas_count": summary.rajas_count,
+                        "tamas_count": summary.tamas_count,
+                    },
+                    "emoji": "👁️",
+                }
+        except Exception as e:
+            logger.debug(f"[PRAKRITI_SENSE] Boot summary failed: {e}")
+        return {"message": "Initialized", "data": {}, "emoji": "👁️"}
+
     # =========================================================================
     # OPUS-167: Intent Generation (Fractal Architecture)
     # =========================================================================
@@ -529,9 +554,7 @@ class PrakritiSense(BaseSense):
             # Check for lobotomy
             lobotomy = self.sense_lobotomy()
             if lobotomy.has_lobotomy:
-                logger.critical(
-                    f"[PRAKRITI_SENSE] LOBOTOMY DETECTED! {len(lobotomy.violations)} violations"
-                )
+                logger.critical(f"[PRAKRITI_SENSE] LOBOTOMY DETECTED! {len(lobotomy.violations)} violations")
 
                 intent = Intent(
                     id=f"fix_lobotomy_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
