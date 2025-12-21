@@ -163,8 +163,7 @@ class SenseManager:
             # Boot perception
             summary = self._prakriti.on_manas_boot()
             logger.info(
-                f"👁️ PRAKRITI SENSE: Initialized - "
-                f"Total: {summary.total_paths}, Health: {summary.health_ratio:.0%}"
+                f"👁️ PRAKRITI SENSE: Initialized - Total: {summary.total_paths}, Health: {summary.health_ratio:.0%}"
             )
             return SenseBootResult(
                 sense_name="prakriti_sense",
@@ -191,12 +190,9 @@ class SenseManager:
                 workspace=self._workspace,
                 config=sense_config,
             )
-            # Get summary
-            summary = self._dharma.get_summary()
-            logger.info(
-                f"🙏 DHARMA SENSE: Initialized - "
-                f"Bhakti: {summary.bhakti_score}"
-            )
+            # Get summary (OPUS-167 FIX: method is get_dharma_summary, not get_summary)
+            summary = self._dharma.get_dharma_summary()
+            logger.info(f"🙏 DHARMA SENSE: Initialized - Bhakti: {summary.bhakti_score}")
             return SenseBootResult(
                 sense_name="dharma_sense",
                 success=True,
@@ -344,10 +340,9 @@ class SenseManager:
             "sutra_initialized": self._sutra is not None,
             "shruta_initialized": self._shruta is not None,
             "prana_initialized": self._prana is not None,
-            "total_booted": sum(1 for s in [
-                self._prakriti, self._dharma, self._sutra,
-                self._shruta, self._prana
-            ] if s is not None),
+            "total_booted": sum(
+                1 for s in [self._prakriti, self._dharma, self._sutra, self._shruta, self._prana] if s is not None
+            ),
         }
 
 
