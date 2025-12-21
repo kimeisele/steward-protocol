@@ -2021,14 +2021,24 @@ class CognitiveKernel(CognitiveCycle):
 
         Called periodically (every ~60s) to update manas_awareness.json.
         This file is read by OPUS.md template to show "MANAS is alive".
+
+        OPUS-174: Uses kernel-level StateService (Bundesstaat), not plugin-level.
+        This is cross-cutting state that needs kernel-level persistence.
         """
         try:
-            from vibe_core.state.state_manager import StateManager
+            # Use kernel-level StateService (THE single point of truth)
+            # NOT plugin-level OpusStateManager (that's for plugin-local state)
+            from vibe_core.state.state_service import get_state_service
 
-            state = StateManager(self._workspace)
-            state.save("manas_awareness.json", self._awareness, create_backup=False)
+            state_service = get_state_service(self._workspace)
+            result = state_service.save("manas_awareness.json", self._awareness, create_backup=False)
+
+            if result.success:
+                logger.debug(f"🧠 MANAS awareness persisted: {self._awareness.get('state', 'unknown')}")
+            else:
+                logger.warning(f"Failed to persist awareness: {result.error}")
         except Exception as e:
-            logger.debug(f"Failed to persist awareness: {e}")
+            logger.warning(f"Failed to persist awareness: {e}")
 
     def get_awareness(self) -> Dict[str, Any]:
         """Get current awareness state (for dashboard/templates)."""
