@@ -27,6 +27,7 @@ from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .bridge_loader import BridgeLoader, BridgeLoadError, BridgeMetadata, BridgeRegistry
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 from .code_module_loader import CodeMetadata, CodeModuleLoader, CodeModuleLoadError, CodeModuleMeta, CodeRegistry
+from .handler_loader import HandlerLoader, HandlerLoadError, HandlerMetadata, HandlerRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
 from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
 from .template_loader import TemplateLoader
@@ -63,6 +64,11 @@ __all__ = [
     "BridgeLoadError",
     "BridgeRegistry",
     "BridgeMetadata",
+    # Handler Loader (OPUS-171 Phase 5)
+    "HandlerLoader",
+    "HandlerLoadError",
+    "HandlerRegistry",
+    "HandlerMetadata",
     # Circuit Loader
     "CircuitLoader",
     "CircuitMeta",
