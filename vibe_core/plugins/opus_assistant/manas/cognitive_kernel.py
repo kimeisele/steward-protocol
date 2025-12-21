@@ -81,10 +81,12 @@ except ImportError:
         """Configuration for MANAS Cognitive Kernel (Local Fallback)."""
 
         # Thinking rate limit (minimum time between thought cycles)
-        thinking_interval_minutes: int = 60  # Once per hour by default
+        # OPUS-174: Was 60 (lobotomy!), now 10min for responsiveness
+        thinking_interval_minutes: int = 10
 
         # Idle threshold (activate MANAS after this much idle time)
-        idle_threshold_minutes: int = 30
+        # OPUS-174: Was 30, now 5min for faster idle detection
+        idle_threshold_minutes: int = 5
 
         # Auto-execute safe intents without approval?
         auto_execute_safe: bool = False  # Conservative default

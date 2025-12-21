@@ -1824,11 +1824,19 @@ class KernelTickHandler:
         """
         🧠 MANAS: Check if rate limit allows thinking.
 
+        OPUS-174: Added 'force' parameter for event-driven thinking.
+        When force=True (from MANAS_FORCE_THINK or KERNEL_BOOT), skip rate limit.
+
         Returns:
             rate_limit_ok: bool - True if MANAS should think
         """
         if not self._manas_ready or not self._manas:
             return {"success": True, "rate_limit_ok": False, "reason": "MANAS not available"}
+
+        # OPUS-174: Force bypass for event-driven thinking
+        force = params.get("force", False)
+        if force is True or str(force).lower() == "true":
+            return {"success": True, "rate_limit_ok": True, "reason": "Force think triggered (event-driven)"}
 
         # Check idle time and last thought time
         try:
@@ -3288,11 +3296,22 @@ def test_plugin_has_plugin_id():
         for circuit in matching:
             await self._execute_circuit(circuit, event)
 
+        # OPUS-174: Trigger MANAS to think on git commits (event-driven cognition)
+        force_think_circuits = self._get_circuits_for_trigger("MANAS_FORCE_THINK")
+        for circuit in force_think_circuits:
+            await self._execute_circuit(circuit, {"trigger": "GIT_COMMIT", "original_event": event})
+
     async def _on_file_changed(self, event: Any) -> None:
         """Backward compat: Handle file change via circuits."""
         matching = self._get_circuits_for_trigger("FILE_CHANGED")
         for circuit in matching:
             await self._execute_circuit(circuit, event)
+
+        # OPUS-174: Trigger MANAS to think on file changes (event-driven cognition)
+        # Note: Debounced by rate limit check in circuit
+        force_think_circuits = self._get_circuits_for_trigger("MANAS_FORCE_THINK")
+        for circuit in force_think_circuits:
+            await self._execute_circuit(circuit, {"trigger": "FILE_CHANGED", "original_event": event})
 
     def get_context_service(self) -> Optional["OpusContextService"]:
         return self._context_service
