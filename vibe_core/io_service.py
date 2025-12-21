@@ -93,12 +93,6 @@ class KernelIOService:
         self._write_count = 0
         self._audit_enabled = True  # Can be disabled for high-frequency internal writes
 
-        # OPUS-167: Runtime UI file auto-commit tracking
-        # Tracks markdown files written so they can be auto-committed
-        self._dirty_ui_files: set[Path] = set()
-        self._ui_writes_since_commit = 0
-        self._UI_AUTO_COMMIT_THRESHOLD = 5  # Auto-commit after N UI file writes
-
         logger.info(f"📁 Kernel I/O Service initialized (root: {self._root})")
 
     def _get_lock(self, name: str) -> threading.Lock:
@@ -219,12 +213,6 @@ class KernelIOService:
                     mtime=mtime,
                     preserved_keys=list(preserved.keys()) if preserved else [],
                 )
-
-                # OPUS-167: Track UI file writes for auto-commit
-                if name.endswith(".md"):
-                    self._dirty_ui_files.add(path)
-                    self._ui_writes_since_commit += 1
-                    self._maybe_auto_commit_ui()
 
                 return WriteResult(
                     success=True,
@@ -459,96 +447,6 @@ Quick Start: {quick_start_command}
                         content = "\n".join(new_lines)
 
         return content
-
-    # =========================================================================
-    # OPUS-167: UI FILE AUTO-COMMIT SYSTEM
-    # =========================================================================
-
-    def _maybe_auto_commit_ui(self) -> None:
-        """
-        Check if we should auto-commit UI files.
-
-        Called after each markdown file write. Commits when threshold reached.
-        Uses --no-verify to skip pre-commit hooks (these are runtime state files).
-        """
-        if self._ui_writes_since_commit >= self._UI_AUTO_COMMIT_THRESHOLD:
-            self._do_ui_auto_commit(reason="threshold")
-
-    def flush_ui_commits(self) -> bool:
-        """
-        Force commit all dirty UI files.
-
-        Call this on session end or kernel shutdown to ensure no dirty state remains.
-
-        Returns:
-            True if commit succeeded or nothing to commit
-        """
-        if not self._dirty_ui_files:
-            return True
-        return self._do_ui_auto_commit(reason="flush")
-
-    def _do_ui_auto_commit(self, reason: str = "auto") -> bool:
-        """
-        Actually perform the runtime state auto-commit.
-
-        Commits ALL dirty runtime files (UI markdown + state files).
-        Uses --no-verify to skip pre-commit hooks (these are runtime state files).
-
-        Returns:
-            True if commit succeeded
-        """
-        import subprocess
-
-        try:
-            # OPUS-167: Commit ALL dirty runtime files, not just tracked ones
-            # This includes .prakriti/, .opus_state/, and all UI markdown files
-            runtime_patterns = [
-                "*.md",  # All root markdown files
-                ".prakriti/",  # Session state
-                ".opus_state/",  # OPUS state
-                "vibe_core/plugins/opus_assistant/.opus_state/",  # Plugin state
-            ]
-
-            # Stage all runtime files
-            for pattern in runtime_patterns:
-                subprocess.run(
-                    ["git", "add", pattern],
-                    cwd=self._root,
-                    capture_output=True,
-                )
-
-            # Git commit with --no-verify (skip hooks for runtime state)
-            msg = f"chore: Auto-commit runtime state ({reason})"
-            result = subprocess.run(
-                ["git", "commit", "-m", msg, "--no-verify"],
-                cwd=self._root,
-                capture_output=True,
-            )
-
-            if result.returncode == 0:
-                logger.info(f"🍎 Runtime auto-commit ({reason})")
-                self._dirty_ui_files.clear()
-                self._ui_writes_since_commit = 0
-                return True
-            elif b"nothing to commit" in result.stdout + result.stderr:
-                # Already clean
-                self._dirty_ui_files.clear()
-                self._ui_writes_since_commit = 0
-                return True
-            else:
-                logger.warning(f"⚠️ Runtime auto-commit failed: {result.stderr.decode()}")
-                return False
-
-        except subprocess.CalledProcessError as e:
-            if b"nothing to commit" in (e.stdout or b"") + (e.stderr or b""):
-                self._dirty_ui_files.clear()
-                self._ui_writes_since_commit = 0
-                return True
-            logger.warning(f"⚠️ Runtime auto-commit error: {e}")
-            return False
-        except Exception as e:
-            logger.warning(f"⚠️ Runtime auto-commit exception: {e}")
-            return False
 
     def get_audit_stats(self) -> Dict[str, Any]:
         """
