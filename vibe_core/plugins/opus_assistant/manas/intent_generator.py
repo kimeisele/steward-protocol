@@ -114,21 +114,28 @@ class IntentGenerator:
     - Contract violations (OPUS-032: The Immune System)
     """
 
-    def __init__(self, workspace: Optional[Path] = None, memory_store: Optional[Any] = None):
+    def __init__(
+        self,
+        workspace: Optional[Path] = None,
+        memory_store: Optional[Any] = None,
+        analyzer_loader: Optional[Any] = None,
+    ):
         """
         Initialize intent generator.
 
         Args:
             workspace: Workspace root
             memory_store: Optional MemoryStore for learning
+            analyzer_loader: Optional pre-loaded AnalyzerLoader (avoids duplicate loading)
         """
         self._workspace = workspace or Path.cwd()
         self._memory = memory_store
         self._intent_counter = 0
         self._analyzers = self._register_analyzers()
 
-        # OPUS-098: Auto-discovered analyzers (VEDA-4 pattern)
-        # HARD-CUT: No more manual lists. AnalyzerLoader discovers all.
+        # OPUS-098/OPUS-167: Use provided loader or create new one
+        # Prevents duplicate loading when kernel already has a loader
+        self._analyzer_loader = analyzer_loader
         self._modular_analyzers = self._load_analyzers_veda4()
 
         # 🧠 SEMANTIC ENGINE (Lazy Injection)
@@ -157,14 +164,26 @@ class IntentGenerator:
 
     def _load_analyzers_veda4(self) -> List[Any]:
         """
-        OPUS-098: Load analyzers via AnalyzerLoader (VEDA-4 pattern).
+        OPUS-098/OPUS-167: Load analyzers via AnalyzerLoader (VEDA-4 pattern).
 
         HARD-CUT: No manual lists. Auto-discovery only.
         STRICT MODE: Loader crashes on any error. No silent failures.
 
-        This replaces the old _register_modular_analyzers() spaghetti.
-        Add new analyzers by creating a file in analyzers/ - that's it.
+        If an analyzer_loader was injected (from kernel), reuse it to avoid
+        duplicate loading. Otherwise, create a new one.
         """
+        # OPUS-167: Use injected loader if available (prevents duplicate loading)
+        if self._analyzer_loader is not None:
+            # Get instances from the pre-loaded loader (uses its cache)
+            instances, _ = self._analyzer_loader.load()
+            if instances:
+                logger.info(
+                    f"OPUS-167: Reusing kernel's analyzer_loader "
+                    f"({len(instances)} analyzers: {list(instances.keys())})"
+                )
+                return list(instances.values())
+
+        # Fallback: Create new loader (standalone IntentGenerator usage)
         from vibe_core.loaders import AnalyzerLoader
 
         # STRICT MODE: Will raise AnalyzerLoadError if ANY analyzer fails
