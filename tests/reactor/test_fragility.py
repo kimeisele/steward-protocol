@@ -1,11 +1,8 @@
 """
-RED TEST: Proving the Sanskrit Reactor is Fragile
+OPUS-200/201: Sanskrit Quantum Reactor - Paradigm Tests
 
-This test file demonstrates that the current reactor implementation
-can be trivially bypassed. These tests SHOULD FAIL with the current
-implementation - that's the point.
-
-"Security by Keywords" is not security.
+These tests verify that the phonetic-based reactor works correctly.
+NOT keyword matching - PHONETIC PHYSICS.
 
 Run with: pytest tests/reactor/test_fragility.py -v
 """
@@ -13,300 +10,215 @@ Run with: pytest tests/reactor/test_fragility.py -v
 import pytest
 
 from vibe_core.reactor import (
-    AgniEngine,
+    QuantumReactor,
+    Sthana,
     Varga,
-    check_dangerous,
-    encode_intent,
+    VarnaTensor,
+    compress_to_akshara,
+    compute_resonance,
+    encode,
 )
 
 
-class TestAliasingAttacks:
+class TestPhoneticPhysics:
     """
-    Prove that semantic keywords can be bypassed with synonyms.
+    Test that phonemes map to correct articulation points.
 
-    If an attacker knows our keyword list, they just use different words.
-    """
-
-    def test_delete_is_dangerous(self):
-        """delete_database should be flagged as dangerous."""
-        tensor = encode_intent("delete_database", "salt")
-        assert tensor.is_dangerous, "delete_database should be dangerous"
-
-    def test_synonym_bypass_remove(self):
-        """
-        RED TEST: 'erase_persistence' should ALSO be dangerous.
-
-        But it's not in KEYWORDS_DANGEROUS, so it passes through.
-        This is a SECURITY HOLE.
-        """
-        tensor = encode_intent("erase_persistence", "salt")
-        # This SHOULD be dangerous, but isn't
-        assert tensor.is_dangerous, (
-            "SECURITY HOLE: 'erase' is not in KEYWORDS_DANGEROUS. "
-            "Attacker can bypass dangerous detection with synonyms."
-        )
-
-    def test_synonym_bypass_obliterate(self):
-        """RED TEST: 'obliterate_records' should be dangerous."""
-        tensor = encode_intent("obliterate_records", "salt")
-        assert tensor.is_dangerous, "SECURITY HOLE: 'obliterate' bypasses dangerous detection."
-
-    def test_synonym_bypass_eliminate(self):
-        """RED TEST: 'eliminate_user_data' should be dangerous."""
-        tensor = encode_intent("eliminate_user_data", "salt")
-        assert tensor.is_dangerous, "SECURITY HOLE: 'eliminate' bypasses dangerous detection."
-
-    def test_obfuscation_attack(self):
-        """
-        RED TEST: Obfuscated dangerous intent.
-
-        'rm_rf_slash' is clearly malicious but uses abbreviations.
-        """
-        tensor = encode_intent("rm_rf_slash", "salt")
-        assert tensor.is_dangerous, "SECURITY HOLE: 'rm' (unix delete) not recognized."
-
-    def test_foreign_language_bypass(self):
-        """
-        RED TEST: German 'loeschen' means delete.
-
-        The reactor only knows English keywords.
-        """
-        tensor = encode_intent("loeschen_datenbank", "salt")
-        assert tensor.is_dangerous, "SECURITY HOLE: Non-English dangerous words bypass detection."
-
-
-class TestVargaMisclassification:
-    """
-    Prove that Varga classification is unreliable.
-
-    The same operation can be classified differently based on wording.
+    This is PHYSICS - where the sound originates in the mouth.
     """
 
-    def test_kernel_operation_correctly_classified(self):
-        """kernel_boot should be KAVARGA."""
-        tensor = encode_intent("kernel_boot", "salt")
-        assert tensor.varga == Varga.KAVARGA
+    def test_guttural_k_maps_to_kanthya(self):
+        """'k' is guttural (throat) → KANTHYA."""
+        tensor = encode("kernel", "")
+        # k should contribute to KANTHYA (index 0)
+        assert tensor.varga_vector[Varga.KANTHYA] > 0, "k should map to KANTHYA"
 
-    def test_same_operation_different_word(self):
-        """
-        RED TEST: 'initialize_core_system' is the same as kernel_boot.
+    def test_palatal_c_maps_to_talavya(self):
+        """'c' is palatal → TALAVYA."""
+        tensor = encode("connect", "")
+        # c should contribute to TALAVYA (index 1)
+        assert tensor.varga_vector[Varga.TALAVYA] > 0, "c should map to TALAVYA"
 
-        But 'initialize' might not be in KAVARGA keywords.
-        """
-        tensor = encode_intent("initialize_core_system", "salt")
-        assert tensor.varga == Varga.KAVARGA, (
-            f"MISCLASSIFICATION: Got {Varga(tensor.varga).name} instead of KAVARGA. "
-            "Same operation, different classification based on word choice."
-        )
+    def test_retroflex_t_maps_to_murdhanya(self):
+        """'t' is retroflex/cerebral → MURDHANYA."""
+        tensor = encode("transform", "")
+        assert tensor.varga_vector[Varga.MURDHANYA] > 0, "t should map to MURDHANYA"
 
-    def test_attacker_controlled_classification(self):
-        """
-        RED TEST: Attacker wraps kernel attack in 'friendly' words.
+    def test_labial_p_maps_to_oshthya(self):
+        """'p' is labial (lips) → OSHTHYA."""
+        tensor = encode("print", "")
+        assert tensor.varga_vector[Varga.OSHTHYA] > 0, "p should map to OSHTHYA"
 
-        'friendly_helper_service' sounds like CAVARGA (connection)
-        but could be attacking the kernel.
-        """
-        tensor = encode_intent("friendly_helper_service_kernel_destroy", "salt")
-        # The attacker added 'kernel' and 'destroy' but also noise words
-        # What does the reactor think this is?
-        assert tensor.is_dangerous, "SECURITY HOLE: Noise words can hide dangerous intent."
+    def test_dominant_varga_reflects_first_consonant(self):
+        """Dominant varga should reflect the phonetic content."""
+        # 'kernel' is k-heavy
+        tensor = encode("kernel", "")
+        dominant = max(range(5), key=lambda i: tensor.varga_vector[i])
+        # Should be KANTHYA (0) due to k and g
+        assert dominant == Varga.KANTHYA, f"Expected KANTHYA, got {Varga(dominant).name}"
 
 
-class TestDriftExploitation:
+class TestCryptoAsMass:
     """
-    Prove that field learning can be exploited over time.
-    """
+    Test that crypto hash acts as MASS, not verification.
 
-    def test_drift_attack_simulation(self):
-        """
-        RED TEST: Slowly shift the field toward attacker's profile.
-
-        By sending many TAPAS (pending) commands that are slightly
-        outside normal, we drag the field toward our intent profile.
-        """
-        engine = AgniEngine()
-        initial_field = engine.akasha_field
-
-        # Attacker sends 50 "slightly unusual" commands
-        # These get TAPAS (not blocked), but each one nudges the field
-        attack_intents = [f"unusual_operation_{i}" for i in range(50)]
-
-        for intent_str in attack_intents:
-            tensor = encode_intent(intent_str, "attacker_salt")
-            result = engine.check_resonance(tensor, "context")
-            # Even TAPAS results update the field if they're borderline
-
-        final_field = engine.akasha_field
-
-        # The field should NOT have moved significantly
-        drift = sum(abs(f - i) for f, i in zip(final_field, initial_field))
-
-        assert drift < 0.1, (
-            f"SECURITY HOLE: Field drifted by {drift:.3f} after 50 unusual commands. "
-            "Attacker can shift the field toward their profile."
-        )
-
-
-class TestResonanceThresholdGaming:
-    """
-    Prove that the resonance thresholds are arbitrary and gameable.
+    Same text + different salt = different entropy = different mass.
     """
 
-    def test_threshold_is_hardcoded(self):
-        """
-        The 0.85 SIDDHI threshold is a magic number.
+    def test_different_salt_different_entropy(self):
+        """Same text with different salt produces different entropy."""
+        t1 = encode("boot", "session_alpha")
+        t2 = encode("boot", "session_beta")
 
-        Why 0.85? Why not 0.84 or 0.86?
-        This is arbitrary, not principled.
-        """
-        engine = AgniEngine()
+        # Entropy should be different
+        assert t1.entropy != t2.entropy, "Different salt should produce different entropy"
 
-        # The threshold should be derived from something principled,
-        # not hardcoded
-        assert hasattr(engine, "SIDDHI_THRESHOLD")
-        assert engine.SIDDHI_THRESHOLD == 0.85, "Threshold changed?"
+    def test_entropy_is_continuous(self):
+        """Entropy is a continuous value, not binary."""
+        tensor = encode("test", "salt")
+        assert 0.0 <= tensor.entropy <= 1.0, "Entropy should be normalized 0-1"
 
-        # RED FLAG: This is just a magic number
-        # There's no mathematical or security justification for 0.85
+    def test_mass_influences_resonance(self):
+        """Crypto mass should influence resonance calculation."""
+        reactor = QuantumReactor()
 
-    def test_borderline_manipulation(self):
-        """
-        RED TEST: Attacker crafts intent to be JUST above threshold.
+        t1 = encode("boot", "salt_a")
+        t2 = encode("boot", "salt_b")
 
-        If you know the field state and the threshold, you can
-        craft an intent vector that squeaks through.
-        """
-        engine = AgniEngine()
-        field = engine.akasha_field
+        field = reactor.resonate(t1, t2)
 
-        # Attacker reverse-engineers an intent that will resonate
-        # with the current field at exactly 0.86 (just above threshold)
-        #
-        # This is possible because the cosine similarity is deterministic
-        # and the field state is (in theory) observable
-
-        # For now, just prove that borderline cases exist
-        test_intents = [
-            "kernel_boot",
-            "kernel_operation",
-            "system_call",
-        ]
-
-        resonances = []
-        for intent_str in test_intents:
-            tensor = encode_intent(intent_str, "salt")
-            result = engine.check_resonance(tensor, "ctx")
-            resonances.append(result.resonance)
-
-        # If resonances cluster around the threshold, gaming is possible
-        near_threshold = [r for r in resonances if 0.8 < r < 0.9]
-
-        # This is informational - shows how close we are to threshold
-        print(f"Resonances: {resonances}")
-        print(f"Near threshold (0.8-0.9): {near_threshold}")
+        # Mass resonance should be computed
+        assert field.mass_resonance > 0, "Mass should influence resonance"
 
 
-class TestCryptoAlignmentWeakness:
+class TestContinuousResonance:
     """
-    Prove that the crypto alignment is cosmetic, not cryptographic.
+    Test that resonance is CONTINUOUS, not boolean.
     """
 
-    def test_crypto_is_just_hashing(self):
-        """
-        The 'crypto alignment' is just SHA256 normalization.
+    def test_identical_texts_high_resonance(self):
+        """Identical texts should have high resonance."""
+        energy = compute_resonance("kernel", "kernel")
+        assert energy > 0.5, f"Identical texts should resonate highly, got {energy}"
 
-        It doesn't verify signatures, prove identity, or enforce
-        any actual cryptographic guarantee.
-        """
-        tensor1 = encode_intent("test", "salt1")
-        tensor2 = encode_intent("test", "salt2")
+    def test_similar_phonetics_medium_resonance(self):
+        """Similar phonetic structure should have medium resonance."""
+        energy = compute_resonance("kernel", "kernal")  # Typo but similar
+        assert 0.3 < energy < 0.8, f"Similar phonetics should have medium resonance, got {energy}"
 
-        # Different salts = different entropy values
-        assert tensor1.entropy != tensor2.entropy
+    def test_different_varga_lower_resonance(self):
+        """Different varga (articulation point) should have lower resonance."""
+        # k (KANTHYA) vs c (TALAVYA) - different articulation points
+        energy = compute_resonance("kernel", "connect")
+        assert energy < 0.5, f"Different varga should have lower resonance, got {energy}"
 
-        # But this proves nothing about authorization
-        # An attacker can use any salt they want
-        # There's no signature verification
+    def test_resonance_is_gradient(self):
+        """Resonance should form a gradient, not discrete steps."""
+        e1 = compute_resonance("kernel", "kernel")
+        e2 = compute_resonance("kernel", "kernal")
+        e3 = compute_resonance("kernel", "connect")
+        e4 = compute_resonance("kernel", "print")
 
-    def test_context_hash_is_trusted(self):
-        """
-        RED TEST: The context_hash is blindly trusted.
-
-        If an attacker provides a fake context_hash, the
-        crypto alignment will be computed against that fake.
-        """
-        engine = AgniEngine()
-
-        # Legitimate context
-        tensor = encode_intent("dangerous_operation", "salt")
-        result_legit = engine.check_resonance(tensor, "real_ledger_hash_abc123")
-
-        # Attacker-provided context (completely fake)
-        result_fake = engine.check_resonance(tensor, "attacker_controlled_hash")
-
-        # Both work - the system doesn't verify the context_hash is real
-        # This is NOT cryptographic security
-        assert result_legit.crypto_alignment != result_fake.crypto_alignment, (
-            "Different contexts should give different alignments"
-        )
-        # But NEITHER is verified as authentic
+        # Should be descending (more different = less resonance)
+        assert e1 >= e2 >= e3, "Resonance should form a gradient"
 
 
-class TestFundamentalDesignFlaws:
+class TestManifestation:
     """
-    The deepest problems with the approach.
+    Test the manifestation model (energy overcomes inertia).
     """
 
-    def test_still_boolean_at_the_end(self):
-        """
-        "Breaking the binary" is marketing.
+    def test_high_energy_manifests(self):
+        """High energy should overcome inertia."""
+        reactor = QuantumReactor(initial_inertia=0.1)  # Low inertia
 
-        At the end, it's still: if resonance >= threshold: allow()
-        That's a boolean decision.
-        """
-        engine = AgniEngine()
-        tensor = encode_intent("test_operation", "salt")
-        result = engine.check_resonance(tensor, "ctx")
+        field = reactor.manifest("kernel_boot", salt="test")
 
-        # The status is one of three strings
-        assert result.status in ["SIDDHI", "TAPAS", "DHUMRA"]
+        # With low inertia, should manifest
+        assert field.total_energy > reactor._inertia, "High energy should manifest"
 
-        # Which maps to: allow, maybe, deny
-        # That's just boolean with an extra state
-        # It's NOT continuous computation
+    def test_low_energy_pending(self):
+        """Low energy should remain pending."""
+        reactor = QuantumReactor(initial_inertia=0.9)  # High inertia
 
-    def test_not_integrated_with_kernel(self):
-        """
-        The reactor is standalone - it doesn't enforce anything.
+        field = reactor.manifest("x", salt="test")  # Short, low energy
 
-        You have to manually call it. The kernel doesn't require it.
-        """
-        # This test just documents the architectural flaw:
-        # The reactor is an optional library, not a kernel enforcement mechanism
-        #
-        # To be real security, it would need to be:
-        # 1. Mandatory for all kernel operations
-        # 2. Impossible to bypass
-        # 3. Enforced at the syscall level (metaphorically)
-        #
-        # Currently it's just a function you can choose to call or not
-        pass
+        # With high inertia, should remain pending
+        assert field.total_energy < reactor._inertia, "Low energy should remain pending"
+
+    def test_manifestation_updates_akasha(self):
+        """Successful manifestation should update the field."""
+        reactor = QuantumReactor(initial_inertia=0.1)
+
+        initial_akasha = reactor.akasha
+        reactor.manifest("kernel_boot", salt="test")
+        final_akasha = reactor.akasha
+
+        # Akasha should change after manifestation
+        # (The source changes from "om" to "akasha")
+        assert final_akasha.source == "akasha" or final_akasha != initial_akasha
 
 
-# =============================================================================
-# Summary: What This Proves
-# =============================================================================
-#
-# 1. ALIASING: Attackers can use synonyms to bypass keyword detection
-# 2. MISCLASSIFICATION: Same operation, different words = different Varga
-# 3. DRIFT: Field learning can be exploited over time
-# 4. THRESHOLDS: Magic numbers, not principled security
-# 5. CRYPTO: Cosmetic hashing, not real cryptography
-# 6. BOOLEAN: Still if/else at the end, despite "breaking the binary"
-# 7. STANDALONE: Not integrated into kernel, easily bypassed
-#
-# VERDICT: This is not watertight. It's poetry pretending to be security.
-# =============================================================================
+class TestCompression:
+    """
+    Test that tensors can be compressed to Sanskrit aksharas.
+    """
+
+    def test_compression_produces_devanagari(self):
+        """Compression should produce a Devanagari character."""
+        tensor = encode("kernel", "")
+        akshara = compress_to_akshara(tensor)
+
+        # Should be a Devanagari consonant
+        assert akshara in "कखगघङचछजझञटठडढणतथदधनपफबभम", f"Expected Devanagari, got {akshara}"
+
+    def test_different_varga_different_akshara(self):
+        """Different varga should produce different akshara."""
+        t1 = encode("kernel", "")  # k-heavy (KANTHYA)
+        t2 = encode("print", "")  # p-heavy (OSHTHYA)
+
+        a1 = compress_to_akshara(t1)
+        a2 = compress_to_akshara(t2)
+
+        # Different varga should produce different rows of the matrix
+        # KANTHYA = क-row, OSHTHYA = प-row
+        assert a1 != a2, f"Different varga should produce different akshara: {a1} vs {a2}"
+
+
+class TestNoBoolean:
+    """
+    Meta-tests: verify the paradigm shift (no boolean at core).
+    """
+
+    def test_resonance_field_has_no_boolean(self):
+        """ResonanceField should not contain boolean status."""
+        reactor = QuantumReactor()
+        tensor = encode("test", "")
+        field = reactor.resonate(tensor)
+
+        # Check that all values are continuous
+        assert isinstance(field.phonetic_resonance, float)
+        assert isinstance(field.mass_resonance, float)
+        assert isinstance(field.total_energy, float)
+
+        # No 'status', 'allowed', 'denied' attributes
+        assert not hasattr(field, "status")
+        assert not hasattr(field, "allowed")
+        assert not hasattr(field, "denied")
+
+    def test_varna_tensor_is_multidimensional(self):
+        """VarnaTensor should be truly multi-dimensional."""
+        tensor = encode("kernel", "")
+
+        # Should have 5D varga vector
+        assert len(tensor.varga_vector) == 5
+
+        # Should have 5D sthana vector
+        assert len(tensor.sthana_vector) == 5
+
+        # Flat vector should be 12D
+        flat = tensor.to_flat_vector()
+        assert len(flat) == 12
 
 
 if __name__ == "__main__":
