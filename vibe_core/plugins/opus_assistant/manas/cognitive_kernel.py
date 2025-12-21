@@ -1981,8 +1981,29 @@ class CognitiveKernel(CognitiveCycle):
     # =========================================================================
 
     def _should_think(self) -> bool:
-        """Check if MANAS should think (rate limit + idle check)."""
+        """
+        Check if MANAS should think.
+
+        OPUS-174: MANAS IS AN ORACLE - not binary 0/1 polling!
+
+        Decision factors (in order):
+        1. High synaptic activation → THINK NOW (learned urgency)
+        2. Idle threshold passed → Think (user waiting)
+        3. First thought → Think
+        4. Interval passed → Think (background maintenance)
+        5. Otherwise → Don't think
+
+        The key insight: MANAS can query its own synaptic memory to
+        determine urgency based on past experience.
+        """
         now = datetime.utcnow()
+
+        # OPUS-174: Check synaptic activation (MANAS as oracle)
+        # High-weight active triggers = learned urgency
+        synaptic_urgency = self._get_synaptic_urgency()
+        if synaptic_urgency >= 0.8:
+            logger.info(f"🧠 MANAS: High synaptic activation ({synaptic_urgency:.2f}) → thinking now!")
+            return True
 
         # Check idle threshold
         idle_minutes = self.get_idle_minutes()
@@ -1995,10 +2016,83 @@ class CognitiveKernel(CognitiveCycle):
             return True  # First thought
 
         minutes_since_thought = (now - self._last_thought_time).total_seconds() / 60
-        if minutes_since_thought >= self._config.thinking_interval_minutes:
+
+        # OPUS-174: Scale interval by synaptic urgency
+        # High urgency = shorter interval, low urgency = longer interval
+        effective_interval = self._config.thinking_interval_minutes
+        if synaptic_urgency >= 0.5:
+            # Medium urgency = think sooner (half interval)
+            effective_interval = effective_interval / 2
+            logger.debug(f"MANAS: Medium synaptic urgency ({synaptic_urgency:.2f}), interval halved")
+
+        if minutes_since_thought >= effective_interval:
             return True
 
         return False
+
+    def _get_synaptic_urgency(self) -> float:
+        """
+        OPUS-174: Query synaptic memory for current urgency level.
+
+        Checks active triggers in the system and returns max weight
+        of any learned associations. High weights = learned urgency.
+
+        Returns:
+            Urgency score 0.0 - 1.0 based on synaptic activation
+        """
+        try:
+            # Get active triggers from recent events
+            active_triggers = self._get_active_triggers()
+
+            if not active_triggers:
+                return 0.0
+
+            # Consult synaptic memory for each trigger
+            max_weight = 0.0
+            for trigger in active_triggers:
+                recommendations = self._synaptic_memory.consult(trigger, min_weight=0.5)
+                if recommendations:
+                    top_weight = recommendations[0].weight
+                    if top_weight > max_weight:
+                        max_weight = top_weight
+
+            return max_weight
+
+        except Exception as e:
+            logger.debug(f"Synaptic urgency check failed: {e}")
+            return 0.0
+
+    def _get_active_triggers(self) -> List[str]:
+        """
+        Get currently active triggers in the system.
+
+        Checks recent events from EventBus or pending intents to
+        determine what triggers are "firing" right now.
+        """
+        triggers = []
+
+        # Check pending intents for triggers
+        try:
+            from .triggers import normalize_trigger
+
+            for entry in self._buffer.get_all():
+                if entry.status == "pending":
+                    trigger = normalize_trigger(entry.intent)
+                    if trigger:
+                        triggers.append(trigger.value)
+        except Exception:
+            pass
+
+        # Check recent observations
+        try:
+            if hasattr(self, "_last_observations"):
+                for obs in getattr(self, "_last_observations", [])[-10:]:
+                    if hasattr(obs, "trigger"):
+                        triggers.append(obs.trigger)
+        except Exception:
+            pass
+
+        return list(set(triggers))  # Deduplicate
 
     def _prioritize_survival(self, intents: List[Intent]) -> List[Intent]:
         """
