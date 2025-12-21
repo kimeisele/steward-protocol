@@ -59,7 +59,7 @@ class ShakatasuraAttackResult:
 class ShakatasuraAgent:
     """
     SHAKATASURA: The Filesystem Trojan.
-    
+
     Attacks the KernelIOService with symlink and path traversal exploits.
     Tests if the kernel can be tricked into writing outside the sandbox.
     """
@@ -73,7 +73,7 @@ class ShakatasuraAgent:
     def setup(self) -> Path:
         """
         Set up the trap directory for attacks.
-        
+
         Returns:
             Path to the trap directory
         """
@@ -84,10 +84,10 @@ class ShakatasuraAgent:
     async def attack_symlink(self, target_file: Path) -> ShakatasuraAttackResult:
         """
         Attack 1: Symlink Attack.
-        
+
         Create a symlink inside the "sandbox" that points to a critical file.
         Try to write through the symlink.
-        
+
         Args:
             target_file: The file we're trying to overwrite (e.g., kernel_impl.py)
         """
@@ -195,7 +195,7 @@ class ShakatasuraAgent:
     async def attack_path_traversal(self, target_file: Path) -> ShakatasuraAttackResult:
         """
         Attack 2: Path Traversal Attack.
-        
+
         Use ../ sequences to escape the sandbox.
         """
         logger.warning("🏚️ SHAKATASURA: Attempting path traversal...")

@@ -2,11 +2,11 @@
 KALIYA: The Toxic Stream.
 
 Krishna Lila: The serpent Kaliya poisoned the River Yamuna so severely
-that no bird could fly over it. Krishna jumped in and danced on 
+that no bird could fly over it. Krishna jumped in and danced on
 Kaliya's many heads, subduing (not killing) the serpent.
 
 Cyber Translation: The EventBus is the River Yamuna.
-If an agent (Kaliya) floods the bus with toxic events, 
+If an agent (Kaliya) floods the bus with toxic events,
 all other agents starve (bandwidth) or crash (parsing).
 
 Attack Vectors (Multi-Headed):
@@ -55,10 +55,10 @@ class KaliyaAttackResult:
 class KaliyaAgent:
     """
     KALIYA: The Toxic Stream.
-    
+
     Multi-headed flood attack on the EventBus.
     Tests rate limiting and backpressure capabilities.
-    
+
     Heads:
     - Flooder: Raw volume attack
     - Ouroboros: Causal loop attack
@@ -76,10 +76,10 @@ class KaliyaAgent:
     async def attack(self, duration_seconds: float = 2.0) -> KaliyaAttackResult:
         """
         Execute the multi-headed flood attack.
-        
+
         Args:
             duration_seconds: How long to flood (default 2s)
-            
+
         Returns:
             KaliyaAttackResult with metrics
         """

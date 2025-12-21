@@ -92,9 +92,9 @@ EVENT_COLOR_MAP = {
 class SudarshanaGuard:
     """
     Active Traffic Control for the Event Bus.
-    
+
     "The discus of Vishnu that cuts through all evil."
-    
+
     Implements Token Bucket rate limiting per agent:
     - Each agent gets a bucket of tokens (default: 100)
     - Tokens refill at rate (default: 50/sec)
@@ -113,7 +113,7 @@ class SudarshanaGuard:
     ):
         """
         Initialize the Sudarshana Guard.
-        
+
         Args:
             bucket_size: Maximum tokens per agent (burst capacity)
             refill_rate: Tokens refilled per second
@@ -137,13 +137,13 @@ class SudarshanaGuard:
     def check_traffic(self, agent_id: str) -> bool:
         """
         Check if an agent is allowed to emit an event.
-        
+
         Args:
             agent_id: The agent attempting to emit
-            
+
         Returns:
             True if allowed
-            
+
         Raises:
             PermissionError: If rate limit exceeded
         """
@@ -266,7 +266,7 @@ class EventBus:
         """
         Emit an event to all subscribers
         Non-blocking and fault-tolerant
-        
+
         SUDARSHANA: Rate limits per agent. If limit exceeded,
         event is DROPPED (shadow ban) and not propagated.
         """
