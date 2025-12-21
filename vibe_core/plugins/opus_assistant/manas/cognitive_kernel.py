@@ -2008,6 +2008,11 @@ class CognitiveKernel(CognitiveCycle):
         self._save_intent_buffer()
         logger.debug("💾 MANAS: Persisted intent buffer")
 
+        # OPUS-096: Weaver integration - commit runtime state after MANAS cycle
+        # The Weaver discovers dirty files via git status (independent of StateService)
+        # This ensures files written during MANAS cycle get committed
+        self._weaver_pulse()
+
         # Return empty dict (no errors)
         return {}
 
@@ -2733,6 +2738,35 @@ class CognitiveKernel(CognitiveCycle):
 
         except Exception as e:
             logger.warning(f"Could not save intent buffer: {e}")
+
+    def _weaver_pulse(self) -> None:
+        """
+        OPUS-096: Trigger StateSyncWeaver to commit runtime state.
+
+        The Weaver discovers dirty runtime files via git status (independent of StateService).
+        This ensures files written during MANAS cycle get committed to git.
+
+        This is the "invisible hand" that keeps state synced to git during kernel operation.
+        The Weaver is also called from heartbeat.py for scheduled commits.
+        """
+        try:
+            from vibe_core.state.prakriti import Prakriti
+            from vibe_core.state.weaver import StateSyncWeaver
+
+            prakriti = Prakriti(workspace_path=self._workspace)
+            weaver = StateSyncWeaver(prakriti)
+            result = weaver.pulse()
+
+            if result.success and result.sha:
+                logger.debug(f"🧵 WEAVER: Committed runtime state ({result.sha[:8]})")
+            elif result.success:
+                logger.debug("🧵 WEAVER: No runtime changes to commit")
+            else:
+                logger.debug(f"🧵 WEAVER: {result.error or result.message}")
+
+        except Exception as e:
+            # Weaver failure should not break MANAS cycle
+            logger.debug(f"🧵 WEAVER: Skipped ({e})")
 
     # =========================================================================
     # INTEGRATION POINTS
