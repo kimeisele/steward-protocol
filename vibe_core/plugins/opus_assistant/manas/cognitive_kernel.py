@@ -41,6 +41,9 @@ from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 from .chitta import Chitta, PerceptionEntry
 from .buddhi import Buddhi, BuddhiVerdict
 
+# OPUS-167: Intent Buffer Extraction
+from .intent_buffer import IntentBuffer, IntentBufferEntry
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -183,17 +186,6 @@ class IntentConfidence:
         }
 
 
-@dataclass
-class IntentBufferEntry:
-    """An entry in the intent buffer (for OPUS.md display)."""
-
-    intent: Intent
-    status: str = "pending"  # pending, approved, rejected, executed, expired
-    added_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    executed_at: Optional[str] = None
-    execution_result: Optional[Dict[str, Any]] = None
-
-
 class CognitiveKernel(CognitiveCycle):
     """
     The Mind of OPUS - Proactive Autonomous Cognition.
@@ -286,9 +278,12 @@ class CognitiveKernel(CognitiveCycle):
         if self._semantic_engine:
             self._intent_generator.inject_semantic_engine(self._semantic_engine)
 
-        # Intent buffer (persisted to .opus_state/manas_intents.json)
-        self._intent_buffer: List[IntentBufferEntry] = []
-        self._load_intent_buffer()
+        # OPUS-167: Intent buffer extracted to separate class
+        self._buffer = IntentBuffer(
+            workspace=self._workspace,
+            max_size=self._config.max_intent_buffer_size,
+            expiry_hours=self._config.intent_expiry_hours,
+        )
 
         # Rate limiting state
         self._last_thought_time: Optional[datetime] = None
@@ -1537,7 +1532,7 @@ class CognitiveKernel(CognitiveCycle):
             idle_minutes = self.idle_minutes
 
             # Get pending intent count
-            pending_count = len([e for e in self._intent_buffer if e.status == "pending"])
+            pending_count = len(self._buffer.get_pending())
 
             # Ask Sankalpa to evaluate strategies
             sankalpa_intents = self._sankalpa.think(
@@ -2007,7 +2002,7 @@ class CognitiveKernel(CognitiveCycle):
                         "verdict": str(verdict),
                     }
 
-                self._intent_buffer.append(entry)
+                self._buffer.add(entry)
                 added.append(intent)
 
                 # 📜 SUTRA SENSE: Record intent for clustering
@@ -2056,19 +2051,8 @@ class CognitiveKernel(CognitiveCycle):
         Returns:
             Dict of persist errors (empty if success)
         """
-        # Trim buffer to max size
-        while len(self._intent_buffer) > self._config.max_intent_buffer_size:
-            removed = False
-            for i, entry in enumerate(self._intent_buffer):
-                if entry.status != "pending":
-                    self._intent_buffer.pop(i)
-                    removed = True
-                    break
-            if not removed:
-                self._intent_buffer.pop(0)
-
-        # Save intent buffer to disk
-        self._save_intent_buffer()
+        # OPUS-167: IntentBuffer handles size limit and persistence automatically
+        self._buffer.save()
         logger.debug("💾 MANAS: Persisted intent buffer")
 
         # OPUS-096: Weaver integration - commit runtime state after MANAS cycle
@@ -2275,17 +2259,17 @@ class CognitiveKernel(CognitiveCycle):
             feedback=reason,
         )
 
-        self._save_intent_buffer()
+        self._buffer.save()
         logger.info(f"Intent {intent_id} rejected: {reason or 'no reason given'}")
         return True
 
     def get_pending_intents(self) -> List[Intent]:
         """Get all pending intents (for OPUS.md display)."""
-        return [entry.intent for entry in self._intent_buffer if entry.status == "pending"]
+        return self._buffer.get_pending()
 
     def get_intent_buffer(self) -> List[IntentBufferEntry]:
         """Get the full intent buffer."""
-        return list(self._intent_buffer)
+        return self._buffer.get_all()
 
     def set_execution_callback(self, callback: Callable[[Intent], Dict[str, Any]]) -> None:
         """
@@ -2466,21 +2450,13 @@ class CognitiveKernel(CognitiveCycle):
         Check if similar intent already exists in buffer.
 
         OPUS-127: Allow multiple intents of same type if title differs.
-        This enables detecting multiple harness_broken issues simultaneously.
+        OPUS-167: Delegates to IntentBuffer.is_duplicate()
         """
-        for entry in self._intent_buffer:
-            if entry.status == "pending":
-                # Same type AND same title = duplicate
-                if entry.intent.intent_type == intent.intent_type and entry.intent.title == intent.title:
-                    return True
-        return False
+        return self._buffer.is_duplicate(intent)
 
     def _find_intent_entry(self, intent_id: str) -> Optional[IntentBufferEntry]:
         """Find intent entry by ID."""
-        for entry in self._intent_buffer:
-            if entry.intent.id == intent_id:
-                return entry
-        return None
+        return self._buffer.find(intent_id)
 
     def _execute_intent(self, entry: IntentBufferEntry) -> bool:
         """
@@ -2522,7 +2498,7 @@ class CognitiveKernel(CognitiveCycle):
                 intent=intent,
                 extra_data={"reason": dharma_reason},
             )
-            self._save_intent_buffer()
+            self._buffer.save()
             return False
 
         try:
@@ -2612,7 +2588,7 @@ class CognitiveKernel(CognitiveCycle):
         # 🧠 OPUS-110: Synaptic Learning - Update weights based on outcome
         self._update_synapses(intent, success)
 
-        self._save_intent_buffer()
+        self._buffer.save()
 
         if success:
             # 🙏 DHARMA SENSE: Record success to increase Bhakti (OPUS-009)
@@ -2715,97 +2691,14 @@ class CognitiveKernel(CognitiveCycle):
 
     def _cleanup_expired_intents(self) -> None:
         """Remove expired intents from buffer."""
-        now = datetime.utcnow()
-        expiry_threshold = now - timedelta(hours=self._config.intent_expiry_hours)
-        expiry_str = expiry_threshold.isoformat()
-
-        original_count = len(self._intent_buffer)
-        self._intent_buffer = [
-            entry for entry in self._intent_buffer if entry.added_at >= expiry_str or entry.status == "pending"
-        ]
-
-        expired = original_count - len(self._intent_buffer)
+        # OPUS-167: Delegates to IntentBuffer.cleanup_expired()
+        expired = self._buffer.cleanup_expired()
         if expired > 0:
             logger.debug(f"MANAS: Cleaned up {expired} expired intents")
 
     # =========================================================================
-    # PERSISTENCE
+    # PERSISTENCE (OPUS-167: Buffer persistence moved to IntentBuffer)
     # =========================================================================
-
-    def _get_buffer_file(self) -> Path:
-        """Get path to intent buffer file."""
-        return self._workspace / ".opus_state" / "manas_intents.json"
-
-    def _load_intent_buffer(self) -> None:
-        """Load intent buffer from disk."""
-        try:
-            buffer_file = self._get_buffer_file()
-            if buffer_file.exists():
-                data = json.loads(buffer_file.read_text())
-
-                self._intent_buffer = []
-                for entry_data in data.get("intents", []):
-                    intent_data = entry_data.get("intent", {})
-
-                    # Reconstruct Intent
-                    intent = Intent(
-                        id=intent_data.get("id", "unknown"),
-                        intent_type=intent_data.get("intent_type", "unknown"),
-                        title=intent_data.get("title", "Unknown"),
-                        description=intent_data.get("description", ""),
-                        reasoning=intent_data.get("reasoning", ""),
-                        priority=IntentPriority(intent_data.get("priority", "medium")),
-                        risk=IntentRisk(intent_data.get("risk", "medium")),
-                        created_at=intent_data.get("created_at", datetime.utcnow().isoformat()),
-                        circuit_to_execute=intent_data.get("circuit_to_execute"),
-                        params=intent_data.get("params", {}),
-                        auto_executable=intent_data.get("auto_executable", False),
-                        expires_at=intent_data.get("expires_at"),
-                    )
-
-                    entry = IntentBufferEntry(
-                        intent=intent,
-                        status=entry_data.get("status", "pending"),
-                        added_at=entry_data.get("added_at", datetime.utcnow().isoformat()),
-                        executed_at=entry_data.get("executed_at"),
-                        execution_result=entry_data.get("execution_result"),
-                    )
-                    self._intent_buffer.append(entry)
-
-                logger.debug(f"Loaded {len(self._intent_buffer)} intents from disk")
-
-        except Exception as e:
-            logger.warning(f"Could not load intent buffer: {e}")
-            self._intent_buffer = []
-
-    def _save_intent_buffer(self) -> None:
-        """Save intent buffer to disk.
-
-        Uses direct file I/O to match _load_intent_buffer behavior.
-        This ensures workspace consistency in tests with isolated tmp_path.
-        """
-        try:
-            data = {
-                "intents": [
-                    {
-                        "intent": entry.intent.to_dict(),
-                        "status": entry.status,
-                        "added_at": entry.added_at,
-                        "executed_at": entry.executed_at,
-                        "execution_result": entry.execution_result,
-                    }
-                    for entry in self._intent_buffer
-                ],
-                "updated_at": datetime.utcnow().isoformat(),
-            }
-
-            # Direct file I/O - matches _load_intent_buffer behavior
-            buffer_file = self._get_buffer_file()
-            buffer_file.parent.mkdir(parents=True, exist_ok=True)
-            buffer_file.write_text(json.dumps(data, indent=2))
-
-        except Exception as e:
-            logger.warning(f"Could not save intent buffer: {e}")
 
     def _weaver_pulse(self) -> None:
         """
@@ -2846,8 +2739,9 @@ class CognitiveKernel(CognitiveCycle):
 
         Returns data ready to be rendered in the Intent Buffer section.
         """
-        pending = [entry for entry in self._intent_buffer if entry.status == "pending"]
-        executed = [entry for entry in self._intent_buffer if entry.status == "executed"][-5:]  # Last 5
+        all_entries = self._buffer.get_all()
+        pending = [entry for entry in all_entries if entry.status == "pending"]
+        executed = [entry for entry in all_entries if entry.status == "executed"][-5:]  # Last 5
 
         return {
             "pending": [
