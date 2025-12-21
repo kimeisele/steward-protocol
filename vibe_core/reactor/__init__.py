@@ -1,84 +1,81 @@
 """
 OPUS-200/201: Sanskrit Quantum Reactor
 
-The Resonance-Based Computation Engine.
+A computational paradigm based on phonetic resonance, not boolean logic.
 
-This module provides:
-- VarnaTensor: 4D encoding of intent (atom.py)
-- AgniEngine: Resonance computation with constitutional anchors (agni.py)
+Core Concepts:
+- VarnaTensor: Multi-dimensional encoding based on Sanskrit phonetics
+- QuantumReactor: Resonance-based computation engine
+- Crypto as MASS: Hash entropy influences computational weight
 
-Integration Points:
-- Binds to manas_awareness.json (Biorhythm)
-- Guard function for TaskKernel
-- Semantic keyword matching (not phonetic)
+This is NOT a security layer. This is a NEW WAY TO COMPUTE.
 
 Usage:
-    from vibe_core.reactor import encode_intent, ignite_intent, get_agni
+    from vibe_core.reactor import encode, compute_resonance, get_reactor
 
-    # Simple usage
-    status = ignite_intent("create_file", salt="session123", context_hash="ledger_v1")
+    # Encode text to tensor
+    tensor = encode("kernel_boot", salt="session123")
 
-    # Advanced usage
-    tensor = encode_intent("kernel_boot", "session123")
-    engine = get_agni()
-    result = engine.check_resonance(tensor, "ledger_v1")
+    # Compute resonance between texts
+    energy = compute_resonance("kernel", "kernal")  # High (similar)
+    energy = compute_resonance("kernel", "print")   # Low (different)
 
-    # TaskKernel integration
-    from vibe_core.reactor import create_resonance_guard
-    guard = create_resonance_guard()
-    if guard(tensor, context_hash):
-        # Proceed with execution
-        pass
+    # Use the reactor for manifestation
+    reactor = get_reactor()
+    field = reactor.manifest("kernel_init", salt="session")
+    if field.total_energy > reactor._inertia:
+        print("Intent manifested!")
 """
 
-from .agni import (
-    CONSTITUTIONAL_ANCHORS,
-    AgniEngine,
-    ConstitutionalAnchor,
-    ResonanceResult,
-    create_resonance_guard,
-    get_agni,
-    ignite_intent,
-)
-from .atom import (
-    KEYWORDS_ANTARSTHA,
-    KEYWORDS_CAVARGA,
-    KEYWORDS_DANGEROUS,
-    KEYWORDS_KAVARGA,
-    KEYWORDS_PAVARGA,
-    KEYWORDS_TAVARGA,
+from .matrix import (
+    # Data
+    PHONEME_MATRIX,
     Guna,
+    Sthana,
+    # Enums
     Varga,
+    # Core tensor
     VarnaTensor,
-    check_dangerous,
-    encode_intent,
+    # Analysis
+    analyze_phonemes,
+    compress_to_akshara,
+    compute_entropy,
+    compute_shakti,
+    compute_sthana_distribution,
+    compute_varga_distribution,
+    # Encoding
+    encode,
     infer_guna,
-    infer_varga,
+)
+from .quantum import (
+    QuantumReactor,
+    # Core types
+    ResonanceField,
+    compute_resonance,
+    # Functions
+    get_reactor,
 )
 
 __all__ = [
-    # Atom (VarnaTensor)
-    "Guna",
+    # Matrix (Phonetic Foundation)
     "Varga",
+    "Sthana",
+    "Guna",
     "VarnaTensor",
-    "encode_intent",
+    "encode",
+    "compress_to_akshara",
+    "analyze_phonemes",
+    "compute_varga_distribution",
+    "compute_sthana_distribution",
+    "compute_shakti",
     "infer_guna",
-    "infer_varga",
-    "check_dangerous",
-    "KEYWORDS_KAVARGA",
-    "KEYWORDS_CAVARGA",
-    "KEYWORDS_TAVARGA",
-    "KEYWORDS_PAVARGA",
-    "KEYWORDS_ANTARSTHA",
-    "KEYWORDS_DANGEROUS",
-    # Agni (Engine)
-    "AgniEngine",
-    "ResonanceResult",
-    "ConstitutionalAnchor",
-    "CONSTITUTIONAL_ANCHORS",
-    "get_agni",
-    "ignite_intent",
-    "create_resonance_guard",
+    "compute_entropy",
+    "PHONEME_MATRIX",
+    # Quantum (Resonance Engine)
+    "ResonanceField",
+    "QuantumReactor",
+    "get_reactor",
+    "compute_resonance",
 ]
 
-__version__ = "2.0.0"  # REFINED version
+__version__ = "3.0.0"  # QUANTUM version - phonetic, not keyword
