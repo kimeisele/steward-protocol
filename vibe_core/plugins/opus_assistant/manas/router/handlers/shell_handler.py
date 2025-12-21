@@ -112,13 +112,30 @@ class ShellHandler(BaseHandler):
         return GitTools()
 
     def _execute_shell_cleanup(self, intent: "Intent") -> Dict[str, Any]:
-        """Execute shell cleanup commands."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.shell import ShellCortex
+        """Execute shell cleanup commands via CortexLoader (VEDA-4)."""
+        from vibe_core.loaders import get_cortex
 
-        shell = ShellCortex(workspace=self._workspace)
+        # VEDA-4: Get ShellCortex via CortexLoader
+        shell = get_cortex("shell", workspace=self._workspace)
+        if shell is None:
+            # Fallback if adapter not available
+            logger.warning("⚠️ ShellCortexAdapter not available, using legacy import")
+            from vibe_core.plugins.opus_assistant.manas.cortex.shell import ShellCortex
+
+            shell = ShellCortex(workspace=self._workspace)
+            if self._kernel:
+                shell.inject_kernel(self._kernel)
+            return self._execute_cleanup_legacy(intent, shell)
+
+        # Inject kernel if available
         if self._kernel:
             shell.inject_kernel(self._kernel)
 
+        # Delegate to CortexAdapter.execute()
+        return shell.execute(intent)
+
+    def _execute_cleanup_legacy(self, intent: "Intent", shell) -> Dict[str, Any]:
+        """Legacy cleanup execution (fallback if CortexLoader unavailable)."""
         cmd = None
         if intent.intent_type == "cleanup_stale_branches":
             cmd = "git branch --merged | grep -v main | head -5"

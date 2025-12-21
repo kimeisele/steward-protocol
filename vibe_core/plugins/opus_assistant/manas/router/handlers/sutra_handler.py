@@ -50,78 +50,98 @@ class SutraHandler(BaseHandler):
 
     def handle(self, intent: "Intent") -> Dict[str, Any]:
         """
-        Route to SUTRA for documentation tasks.
+        Route to SUTRA for documentation tasks via CortexLoader (VEDA-4).
 
         OPUS-071: Now supports full wiki sync with GITHUB_TOKEN!
+        OPUS-171 Phase 5.3: Uses CortexLoader for VEDA-4 pattern.
         """
+        from vibe_core.loaders import get_cortex
+
+        logger.info(f"📜 SUTRA handling: {intent.title}")
+
+        try:
+            # VEDA-4: Get SutraCortex via CortexLoader
+            sutra = get_cortex("sutra", workspace=self._workspace)
+
+            if sutra is not None:
+                # Inject kernel if available
+                if self._kernel:
+                    sutra.inject_kernel(self._kernel)
+
+                # Delegate to CortexAdapter.execute()
+                return sutra.execute(intent)
+
+            # Fallback to legacy implementation if CortexLoader unavailable
+            logger.warning("⚠️ SutraCortexAdapter not available, using legacy import")
+            return self._handle_legacy(intent)
+
+        except Exception as e:
+            logger.error(f"SUTRA error: {e}")
+            return {"success": False, "handler": self.name, "error": str(e)}
+
+    def _handle_legacy(self, intent: "Intent") -> Dict[str, Any]:
+        """Legacy SUTRA handling (fallback if CortexLoader unavailable)."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
             SutraOrchestrator,
             SutraWeaver,
             WikiSync,
         )
 
-        logger.info(f"📜 SUTRA handling: {intent.title}")
+        # Check if this is a sync request
+        sync_keywords = {"sync", "push", "update wiki", "publish"}
+        is_sync_request = any(kw in intent.title.lower() for kw in sync_keywords)
 
-        try:
-            # Check if this is a sync request
-            sync_keywords = {"sync", "push", "update wiki", "publish"}
-            is_sync_request = any(kw in intent.title.lower() for kw in sync_keywords)
+        # Check for credentials
+        wiki_sync = WikiSync(workspace=self._workspace)
+        has_creds = wiki_sync.has_credentials()
 
-            # Check for credentials
-            wiki_sync = WikiSync(workspace=self._workspace)
-            has_creds = wiki_sync.has_credentials()
+        if is_sync_request and has_creds:
+            # OPUS-071: Full wiki sync!
+            logger.info("📜 SUTRA: Executing full wiki sync...")
+            orchestrator = SutraOrchestrator(workspace=self._workspace)
+            result = orchestrator.generate_and_sync()
 
-            if is_sync_request and has_creds:
-                # OPUS-071: Full wiki sync!
-                logger.info("📜 SUTRA: Executing full wiki sync...")
-                orchestrator = SutraOrchestrator(workspace=self._workspace)
-                result = orchestrator.generate_and_sync()
-
-                if result.success:
-                    return {
-                        "success": True,
-                        "handler": self.name,
-                        "action": "wiki_synced",
-                        "pages_synced": result.pages_synced,
-                        "wiki_url": result.wiki_url,
-                        "message": f"📜 SUTRA synced {len(result.pages_synced)} pages to GitHub Wiki!",
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "handler": self.name,
-                        "action": "sync_failed",
-                        "errors": result.errors,
-                        "message": f"SUTRA sync failed: {', '.join(result.errors)}",
-                    }
-
-            elif is_sync_request and not has_creds:
-                # Want to sync but no credentials
-                return {
-                    "success": False,
-                    "handler": self.name,
-                    "action": "no_credentials",
-                    "message": "📜 SUTRA: Set GITHUB_TOKEN environment variable to enable wiki sync",
-                }
-
-            else:
-                # Just gather context (preview mode)
-                weaver = SutraWeaver(workspace=self._workspace)
-                ctx = weaver.gather_context()
-
+            if result.success:
                 return {
                     "success": True,
                     "handler": self.name,
-                    "action": "context_gathered",
-                    "agents_found": len(ctx.agents),
-                    "modules_found": len(ctx.modules),
-                    "has_credentials": has_creds,
-                    "message": (
-                        f"📜 SUTRA gathered context: {len(ctx.agents)} agents, {len(ctx.modules)} modules. "
-                        + ("Ready to sync!" if has_creds else "Set GITHUB_TOKEN to enable sync.")
-                    ),
+                    "action": "wiki_synced",
+                    "pages_synced": result.pages_synced,
+                    "wiki_url": result.wiki_url,
+                    "message": f"📜 SUTRA synced {len(result.pages_synced)} pages to GitHub Wiki!",
+                }
+            else:
+                return {
+                    "success": False,
+                    "handler": self.name,
+                    "action": "sync_failed",
+                    "errors": result.errors,
+                    "message": f"SUTRA sync failed: {', '.join(result.errors)}",
                 }
 
-        except Exception as e:
-            logger.error(f"SUTRA error: {e}")
-            return {"success": False, "handler": self.name, "error": str(e)}
+        elif is_sync_request and not has_creds:
+            # Want to sync but no credentials
+            return {
+                "success": False,
+                "handler": self.name,
+                "action": "no_credentials",
+                "message": "📜 SUTRA: Set GITHUB_TOKEN environment variable to enable wiki sync",
+            }
+
+        else:
+            # Just gather context (preview mode)
+            weaver = SutraWeaver(workspace=self._workspace)
+            ctx = weaver.gather_context()
+
+            return {
+                "success": True,
+                "handler": self.name,
+                "action": "context_gathered",
+                "agents_found": len(ctx.agents),
+                "modules_found": len(ctx.modules),
+                "has_credentials": has_creds,
+                "message": (
+                    f"📜 SUTRA gathered context: {len(ctx.agents)} agents, {len(ctx.modules)} modules. "
+                    + ("Ready to sync!" if has_creds else "Set GITHUB_TOKEN to enable sync.")
+                ),
+            }
