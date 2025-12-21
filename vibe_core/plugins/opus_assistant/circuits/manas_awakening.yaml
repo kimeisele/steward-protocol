@@ -43,8 +43,8 @@ circuit:
 
   # Configuration
   config:
-    thinking_interval_minutes: 60
-    idle_threshold_minutes: 30
+    thinking_interval_minutes: 10  # OPUS-174: Was 60 (lobotomy!), now 10min
+    idle_threshold_minutes: 5      # OPUS-174: Was 30, now 5min
     auto_execute_safe: false  # Conservative default
     max_intent_buffer_size: 10
 
@@ -55,15 +55,18 @@ circuit:
 
   states:
     # Phase 0: Rate limit check (prevent excessive thinking)
+    # OPUS-174: MANAS_FORCE_THINK bypasses rate limit!
     check_rate_limit:
       name: "Rate Limit Check"
-      description: "Verify we haven't thought too recently"
+      description: "Verify we haven't thought too recently (bypassed for FORCE_THINK)"
       state_var: "rate_limit_ok"
       actions:
         - action_type: EXECUTE_SCRIPT
           target: "opus.manas_check_rate_limit"
           params:
             interval_minutes: "{{ config.thinking_interval_minutes }}"
+            # OPUS-174: Force bypass for event-driven thinking
+            force: "{{ trigger.event == 'MANAS_FORCE_THINK' or trigger.event == 'KERNEL_BOOT' }}"
       transitions:
         - condition: "rate_limit_ok == true"
           to: gather_context
