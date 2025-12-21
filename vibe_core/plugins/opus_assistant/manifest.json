@@ -8,6 +8,16 @@
   "entry_class": "OpusAssistantPlugin",
   "priority": 50,
   "enabled": true,
+  "governance": {
+    "_comment": "OPUS-176 BHARAT: Asymmetric Federalism - This is a Sovereign State",
+    "type": "SOVEREIGN_STATE",
+    "constitution_ref": "OPUS-176",
+    "autonomy_level": "high",
+    "can_spawn_task_kernel": true,
+    "has_sovereign_state": true,
+    "emergency_protocol": "presidents_rule",
+    "state_directory": ".opus_state"
+  },
   "hooks": [
     "on_boot",
     "on_shutdown"
