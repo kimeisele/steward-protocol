@@ -325,7 +325,8 @@ class KriyaBridge:
             try:
                 from ..cognitive_kernel import CognitiveKernel
 
-                self._cognitive_kernel = CognitiveKernel(workspace=self._workspace)
+                # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+                self._cognitive_kernel = CognitiveKernel.get_instance(workspace=self._workspace)
             except ImportError:
                 logger.warning("CognitiveKernel not available")
         return self._cognitive_kernel

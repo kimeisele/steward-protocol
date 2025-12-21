@@ -766,7 +766,8 @@ class UnifiedCLI:
         try:
             from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel
 
-            kernel = CognitiveKernel(workspace=Path("."))
+            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+            kernel = CognitiveKernel.get_instance(workspace=Path("."))
         except Exception as e:
             console.print(f"[red]❌ Failed to initialize MANAS kernel: {e}[/red]")
             return 1

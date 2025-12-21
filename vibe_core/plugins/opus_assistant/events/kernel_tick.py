@@ -242,7 +242,8 @@ class KernelTickHandler:
                     max_intent_buffer_size=10,
                 )
 
-            self._manas = CognitiveKernel(workspace=workspace, config=config)
+            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+            self._manas = CognitiveKernel.get_instance(workspace=workspace, config=config)
 
             # ⚡ VAJRA: Inject kernel for ledger binding
             kernel = getattr(self._plugin, "_kernel", None)

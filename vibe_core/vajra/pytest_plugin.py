@@ -53,7 +53,9 @@ def wired_kernel() -> Generator["RealVibeKernel", None, None]:
     try:
         from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel
 
-        ck = CognitiveKernel()
+        # OPUS-167: Use singleton pattern (reset first for test isolation)
+        CognitiveKernel.reset_instance()
+        ck = CognitiveKernel.get_instance()
         wire_all(kernel, ck)
     except ImportError:
         pass

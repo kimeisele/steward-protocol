@@ -297,7 +297,8 @@ class ControlCablesParser:
 
                 from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
 
-                manas = CognitiveKernel(workspace=Path.cwd())
+                # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+                manas = CognitiveKernel.get_instance(workspace=Path.cwd())
             except Exception as e:
                 logger.warning(f"Could not get MANAS: {e}")
                 return {"executed": [], "rejected": [], "errors": [str(e)]}
