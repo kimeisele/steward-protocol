@@ -761,33 +761,57 @@ class EnvoyPlugin(KernelPlugin):
         """Discover circuits from YAML files."""
         import yaml
 
+        # OPUS-174: Load from MULTIPLE paths (no phantom wiring!)
+        # All circuit sources are discovered and unified
+        circuit_paths = []
+
         # Phase 6: Load from Genesis Pack if available
         if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
-            circuits_path = self._kernel.genesis_path / "circuits"
-            logger.info(f"📬 Loading circuits from Genesis Pack: {circuits_path}")
-        else:
-            # Fallback to legacy path
-            circuits_path = self._project_root / "vibe_core" / "playbook" / "circuits"
-            logger.warning(f"📬 Genesis not found - using legacy circuits: {circuits_path}")
+            circuit_paths.append(self._kernel.genesis_path / "circuits")
 
-        if not circuits_path.exists():
-            logger.warning(f"📬 Circuits directory not found: {circuits_path}")
-            return
+        # Core playbook circuits
+        circuit_paths.append(self._project_root / "vibe_core" / "playbook" / "circuits")
 
-        for yaml_file in circuits_path.glob("*.yaml"):
-            if yaml_file.name.startswith("_"):
-                continue  # Skip templates/internals
+        # Plugin circuits (OPUS-174: This was the PHANTOM WIRING!)
+        # Each plugin can have its own circuits/ directory
+        plugins_dir = self._project_root / "vibe_core" / "plugins"
+        if plugins_dir.exists():
+            for plugin_dir in plugins_dir.iterdir():
+                if plugin_dir.is_dir():
+                    plugin_circuits = plugin_dir / "circuits"
+                    if plugin_circuits.exists():
+                        circuit_paths.append(plugin_circuits)
+                        logger.debug(f"📬 Found plugin circuits: {plugin_dir.name}")
 
-            try:
-                with open(yaml_file) as f:
-                    data = yaml.safe_load(f)
+        # Load from all paths
+        total_before = len(self._circuits)
+        for circuits_path in circuit_paths:
+            if not circuits_path.exists():
+                continue
 
-                if data and "circuit" in data:
-                    circuit_id = data["circuit"].get("id", yaml_file.stem)
-                    self._circuits[circuit_id] = data
-                    logger.debug(f"📬 Discovered circuit: {circuit_id}")
-            except Exception as e:
-                logger.warning(f"📬 Could not load circuit {yaml_file}: {e}")
+            count_before = len(self._circuits)
+            for yaml_file in circuits_path.glob("*.yaml"):
+                if yaml_file.name.startswith("_"):
+                    continue  # Skip templates/internals
+
+                try:
+                    with open(yaml_file) as f:
+                        data = yaml.safe_load(f)
+
+                    if data and "circuit" in data:
+                        circuit_id = data["circuit"].get("id", yaml_file.stem)
+                        self._circuits[circuit_id] = data
+                        logger.debug(f"📬 Discovered circuit: {circuit_id}")
+                except Exception as e:
+                    logger.warning(f"📬 Could not load circuit {yaml_file}: {e}")
+
+            # Log how many from this path
+            count_loaded = len(self._circuits) - count_before
+            if count_loaded > 0:
+                logger.info(f"📬 Loaded {count_loaded} circuits from {circuits_path.name}")
+
+        # OPUS-174: Log total (helps detect phantom wiring - if 0 circuits, something is wrong!)
+        logger.info(f"📬 Total circuits discovered: {len(self._circuits)} (from {len(circuit_paths)} sources)")
 
     def _discover_playbooks(self) -> None:
         """
