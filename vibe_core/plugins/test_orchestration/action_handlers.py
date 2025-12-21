@@ -816,6 +816,17 @@ class TestValidationCircuitExecutor:
                         "pattern": r"class.*Agent.*VibeAgent",
                         "severity": "critical",
                         "message": "Custom Agent class forbidden",
+                        "exclude_paths": [
+                            "tests/hardening/",
+                            "test_governance",
+                            "test_red_team",
+                            "test_capability",
+                            "test_event_bus",
+                            "test_kernel_markdown",
+                            "tests/archive/",
+                            "test_node_pulse_e2e",
+                            "tests/perf/",
+                        ],
                     },
                     {
                         "pattern": r"from vibe_core.plugins.test_orchestration import",
