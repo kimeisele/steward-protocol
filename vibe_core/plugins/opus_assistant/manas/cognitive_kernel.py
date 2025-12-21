@@ -37,6 +37,10 @@ from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRis
 from .memory_store import MemoryStore
 from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
+# OPUS-168: Antahkarana - The Inner Instrument
+from .chitta import Chitta, PerceptionEntry
+from .buddhi import Buddhi, BuddhiVerdict
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -330,6 +334,13 @@ class CognitiveKernel(CognitiveCycle):
         self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
         self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
         self._init_prana_sense()
+
+        # 🧠 OPUS-168: ANTAHKARANA - The Inner Instrument
+        # Chitta (Perception Pool) + Buddhi (Intellect) form the decision layer
+        # This fixes: DharmaSense checked at DECIDE time, not EXECUTE time
+        self._chitta = Chitta(workspace=self._workspace)
+        self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._dharma_sense)
+        logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
         # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
         # Auto-generates GAD-000 compliant infrastructure for new modules
@@ -1827,7 +1838,6 @@ class CognitiveKernel(CognitiveCycle):
         Returns:
             (observations, metadata) where observations is list of intents discovered
         """
-        observations = []
         metadata = {}
 
         # 👂 SHRUTA SENSE: Perceive filesystem vibrations FIRST
@@ -1835,35 +1845,38 @@ class CognitiveKernel(CognitiveCycle):
         shruta_perception = self._perceive_filesystem_vibrations()
         metadata["vibration_count"] = shruta_perception.total_count if shruta_perception else 0
 
-        # OPUS-167: Senses generate their own intents (fractal architecture)
-        # Each sense is autonomous and responsible for its own intent generation
+        # OPUS-168: Senses feed CHITTA (not kernel directly)
+        # This enables aggregation and deduplication before Buddhi discriminates
 
-        # 👁️ PRAKRITI SENSE: Generate healing intents
+        # 👁️ PRAKRITI SENSE: Feed healing intents to Chitta
         if self._prakriti_sense:
             try:
                 healing_intents = self._prakriti_sense.generate_intents()
-                observations.extend(healing_intents)
+                for intent in healing_intents:
+                    self._chitta.receive(intent, "prakriti_sense")
                 metadata["healing_count"] = len(healing_intents)
             except Exception as e:
                 logger.warning(f"👁️ PRAKRITI SENSE: Intent generation failed: {e}")
                 metadata["healing_count"] = 0
 
-        # 🫀 PRANA SENSE: Generate presence intents
+        # 🫀 PRANA SENSE: Feed presence intents to Chitta
         if self._prana_sense:
             try:
                 context = {"_prana_cooldowns": self._prana_cooldowns}
                 presence_intents = self._prana_sense.generate_intents(context)
-                observations.extend(presence_intents)
+                for intent in presence_intents:
+                    self._chitta.receive(intent, "prana_sense")
                 metadata["presence_count"] = len(presence_intents)
             except Exception as e:
                 logger.warning(f"🫀 PRANA SENSE: Intent generation failed: {e}")
                 metadata["presence_count"] = 0
 
-        # 📜 SUTRA SENSE: Generate documentation gap intents
+        # 📜 SUTRA SENSE: Feed documentation gap intents to Chitta
         if self._sutra_sense:
             try:
                 gap_intents = self._sutra_sense.generate_intents()
-                observations.extend(gap_intents)
+                for intent in gap_intents:
+                    self._chitta.receive(intent, "sutra_sense")
                 metadata["gap_count"] = len(gap_intents)
             except Exception as e:
                 logger.warning(f"📜 SUTRA SENSE: Intent generation failed: {e}")
@@ -1871,87 +1884,99 @@ class CognitiveKernel(CognitiveCycle):
 
         # 🌙 SANKALPA: Strategic proactive intents (still kernel-level for now)
         sankalpa_intents = self._generate_sankalpa_intents({})
-        observations.extend(sankalpa_intents)
+        for intent in sankalpa_intents:
+            self._chitta.receive(intent, "sankalpa")  # Sankalpa = subtle/strategic
         metadata["sankalpa_count"] = len(sankalpa_intents)
 
         # Clean up expired intents
         self._cleanup_expired_intents()
 
-        return observations, metadata
+        # OPUS-168: Return Chitta pool state (not intents yet - Chitta processes in _orient)
+        metadata["chitta_pool_size"] = self._chitta.pool_size
+        return [], metadata  # Empty list - Chitta holds the perceptions
 
     async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
         """
-        ORIENT Phase: Organize and prioritize observations.
+        ORIENT Phase: Process Chitta and organize perceptions.
 
-        OPUS-167: Context is now passed to IntentGenerator so analyzers can see
-        what the senses have already perceived.
+        OPUS-168: Chitta processes raw sense data (aggregation, deduplication).
+        IntentGenerator also runs analyzers that may add more intents.
 
         Args:
-            observations: List of intents from perceive phase
+            observations: (Ignored in OPUS-168 - Chitta holds perceptions)
 
         Returns:
-            (orientations, metadata) where orientations is organized/prioritized intent list
+            (perceptions, metadata) where perceptions is processed PerceptionEntry list
         """
         # 🕉️ SHIVA: Sweep stale intents (destroy illusions)
         swept = self._shiva.sweep_stale_intents()
         if swept > 0:
             logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents")
 
-        # OPUS-167: Pass perception context to IntentGenerator
-        # This allows analyzers to see what senses have already perceived
+        # OPUS-168: Process Chitta (aggregation, deduplication)
+        processed_perceptions = self._chitta.process()
+
+        # Also run IntentGenerator analyzers (TriageAnalyzer uses VivekaSense/KarmaSense)
+        # These add to the perception pool via Chitta
         context = {
-            "observations": observations,
-            "observation_count": len(observations),
-            "observation_types": list(set(
-                getattr(obs, "intent_type", "unknown") for obs in observations
-            )),
+            "observations": [p.intent for p in processed_perceptions],
+            "observation_count": len(processed_perceptions),
+            "observation_types": list(set(p.intent_type for p in processed_perceptions)),
         }
 
-        # Generate new intents with perception context
         # OPUS-096: Async generation for Semantic Engine
         new_intents = await self._intent_generator.generate_intents(context)
 
-        # Combine perceptions with generated intents
-        all_intents = observations + new_intents
+        # Feed analyzer intents to Chitta and reprocess
+        for intent in new_intents:
+            self._chitta.receive(intent, "intent_generator")
 
-        # Organize by priority: healing → gap → sankalpa → generated
-        orientations = all_intents
+        # Final processing if we added new intents
+        if new_intents:
+            processed_perceptions = self._chitta.process()
 
         metadata = {
-            "new_generated": len(new_intents),
-            "total_oriented": len(orientations),
+            "chitta_processed": len(processed_perceptions),
+            "analyzer_generated": len(new_intents),
             "swept_count": swept,
-            "context_passed": True,  # OPUS-167 marker
         }
 
-        return orientations, metadata
+        return processed_perceptions, metadata
 
     async def _decide(self, orientations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
         """
-        DECIDE Phase: Select which intents to execute.
+        DECIDE Phase: Buddhi discriminates which intents to execute.
+
+        OPUS-168: This is THE KEY FIX. Buddhi uses:
+        - VivekaSense logic for priority scoring
+        - DharmaSense for ethical filtering (BEFORE execution!)
+        - Resource and dependency checks
 
         Args:
-            orientations: Organized intent list from orient phase
+            orientations: Processed PerceptionEntry list from orient phase
 
         Returns:
-            (decisions, metadata) where decisions is throttled/prioritized intent list
+            (decisions, metadata) where decisions is approved Intent list
         """
-        new_intents = orientations
+        # OPUS-168: Buddhi does the real decision making
+        # DharmaSense is checked HERE, not at execution time!
+        verdicts = self._buddhi.discriminate(
+            perceptions=orientations,
+            max_intents=self._config.max_intents_per_tick,
+        )
 
-        # OPUS-035: Throttling - Prioritize survival over growth
-        if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
-            new_intents = self._prioritize_survival(new_intents)
+        # Extract approved intents from verdicts
+        decisions = [v.intent for v in verdicts]
 
-        # Throttle to max_intents_per_tick
-        if len(new_intents) > self._config.max_intents_per_tick:
-            logger.debug(f"⚡ MANAS: Throttling {len(new_intents)} → {self._config.max_intents_per_tick}")
-            new_intents = new_intents[: self._config.max_intents_per_tick]
-
-        decisions = new_intents
+        # OPUS-035: Prioritize survival over growth (still applies to approved intents)
+        if self._config.survival_first and len(decisions) > self._config.max_intents_per_tick:
+            decisions = self._prioritize_survival(decisions)
 
         metadata = {
-            "throttled_from": len(orientations),
-            "decided_count": len(decisions),
+            "considered": len(orientations),
+            "approved": len(verdicts),
+            "blocked": len(orientations) - len(verdicts),
+            "buddhi_stats": self._buddhi.stats,
         }
 
         return decisions, metadata
