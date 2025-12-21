@@ -1,15 +1,81 @@
 {
-  "status": "COMPLIANT",
+  "status": "WARNINGS_DETECTED",
   "should_fail_build": false,
-  "total_violations": 0,
+  "total_violations": 6,
   "critical_count": 0,
   "report": {
-    "total_violations": 0,
-    "violations": [],
-    "by_severity": {},
-    "by_agent": {},
-    "critical_count": 0,
-    "should_fail_build": false
+    "by_severity": {
+      "MEDIUM": 6
+    },
+    "by_agent": {
+      "engineer": 1,
+      "envoy": 1,
+      "forum": 1,
+      "herald": 1,
+      "supreme_court": 1,
+      "watchman": 1
+    }
   },
-  "violations": []
+  "violations": [
+    {
+      "agent_id": "engineer",
+      "file_path": "vibe_core/cartridges/system/engineer/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 523 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    },
+    {
+      "agent_id": "envoy",
+      "file_path": "vibe_core/cartridges/system/envoy/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 592 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    },
+    {
+      "agent_id": "forum",
+      "file_path": "vibe_core/cartridges/system/forum/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 679 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    },
+    {
+      "agent_id": "herald",
+      "file_path": "vibe_core/cartridges/system/herald/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 820 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    },
+    {
+      "agent_id": "supreme_court",
+      "file_path": "vibe_core/cartridges/system/supreme_court/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 666 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    },
+    {
+      "agent_id": "watchman",
+      "file_path": "vibe_core/cartridges/system/watchman/cartridge_main.py",
+      "line_number": 1,
+      "violation_type": "line_count_exceeded",
+      "severity": "MEDIUM",
+      "message": "Agent has 601 lines (GAD-000 recommends <500)",
+      "code_snippet": null,
+      "fix_suggestion": "Consider splitting into multiple tools"
+    }
+  ]
 }
