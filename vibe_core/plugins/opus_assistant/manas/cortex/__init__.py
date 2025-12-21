@@ -82,6 +82,14 @@ from vibe_core.plugins.opus_assistant.manas.cortex.mukha import (
     MukhaGenerator,
 )
 
+# OPUS-174: NADI SENSE (The 8th Sense - Wiring Health)
+from vibe_core.plugins.opus_assistant.manas.cortex.nadi_sense import (
+    NadiPerception,
+    NadiSense,
+    StaleStateFile,
+    WiringAnomaly,
+)
+
 # OPUS-009: PRAKRITI SENSE (Das sechste Jnanendriya)
 from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import (
     GunaSummary,
@@ -278,4 +286,9 @@ __all__ = [
     "PranaAction",
     # OPUS-133: VIVEKA ACTION (The Hands of Discrimination)
     "VivekaAction",
+    # OPUS-174: NADI SENSE (The 8th Sense - Wiring Health)
+    "NadiSense",
+    "NadiPerception",
+    "WiringAnomaly",
+    "StaleStateFile",
 ]
