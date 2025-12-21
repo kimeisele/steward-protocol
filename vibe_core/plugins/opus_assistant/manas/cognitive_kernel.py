@@ -47,6 +47,9 @@ from .intent_buffer import IntentBuffer, IntentBufferEntry
 # OPUS-167: Sense Manager Extraction
 from .sense_manager import SenseManager
 
+# OPUS-167: Logger Bridge Extraction
+from .logger_bridge import LoggerBridge
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -352,9 +355,11 @@ class CognitiveKernel(CognitiveCycle):
         self._sankalpa = None
         self._init_sankalpa()
 
-        # 📓 OBSERVATION LOGGER: Make MANAS thoughts visible in OPUS.md
-        self._observation_logger = None
-        self._init_observation_logger()
+        # OPUS-167: Logger Bridge (replaces _init_observation_logger)
+        self._logger_bridge = LoggerBridge(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
 
         # 🧠 OPUS-112: SYNAPTIC MEMORY - The Reading Brain
         # Inference engine for experience-based decision making
@@ -1486,58 +1491,16 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 📓 OBSERVATION LOGGER: MANAS THOUGHTS → OPUS.md (OPUS-089)
+    # OPUS-167: Implementation moved to LoggerBridge
     # =========================================================================
 
-    def _init_observation_logger(self) -> None:
-        """
-        Initialize ObservationLogger for making MANAS thoughts visible.
-
-        OPUS-089: The journal in OPUS.md should show MANAS's internal state,
-        not just events. Dreams, insights, patterns - all visible.
-        """
-        try:
-            from vibe_core.plugins.opus_assistant.core.observation_logger import (
-                ObservationLogger,
-            )
-
-            obs_config = self._full_config.get("observation_logger", {})
-            self._observation_logger = ObservationLogger(workspace_root=self._workspace, config=obs_config)
-            logger.info(f"📓 OBSERVATION LOGGER: Initialized (config: {len(obs_config)} keys)")
-        except Exception as e:
-            logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
-            self._observation_logger = None
-
     def log_insight(self, message: str) -> None:
-        """
-        Log an insight to OPUS.md journal.
-
-        Use this to make MANAS's internal thoughts visible:
-        - Dream insights from memory_review
-        - Pattern recognitions
-        - Self-debugging observations
-        """
-        if self._observation_logger:
-            self._observation_logger.log_insight(message, source="MANAS")
-        # Also log to Python logger for file logs
-        logger.info(f"💡 MANAS INSIGHT: {message}")
+        """Log an insight to OPUS.md journal (delegates to LoggerBridge)."""
+        self._logger_bridge.log_insight(message)
 
     def log_observation(self, message: str, severity: str = "info") -> None:
-        """
-        Log an observation to OPUS.md journal.
-
-        Args:
-            message: The observation message
-            severity: "info", "warn", "alert", or "insight"
-        """
-        if self._observation_logger:
-            if severity == "insight":
-                self._observation_logger.log_insight(message, source="MANAS")
-            elif severity == "warn":
-                self._observation_logger.log_warn(message, source="MANAS")
-            elif severity == "alert":
-                self._observation_logger.log_alert(message, source="MANAS")
-            else:
-                self._observation_logger.log_info(message, source="MANAS")
+        """Log an observation to OPUS.md journal (delegates to LoggerBridge)."""
+        self._logger_bridge.log_observation(message, severity=severity)
 
     def _perceive_and_generate_gap_intents(self) -> List[Intent]:
         """
