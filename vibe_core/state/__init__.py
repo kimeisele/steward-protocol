@@ -89,6 +89,23 @@ from .state_service import (
     get_state_service,
     reset_state_service,
 )
+
+# OPUS-171: SynapseStore - Unified Synapse Persistence
+from .synapse_store import (
+    SCHEMA_V1,
+    SCHEMA_V2,
+    SCHEMA_V3,
+    SynapseConnection,
+    SynapseMigrationResult,
+    SynapseSnapshot,
+    SynapseStore,
+    detect_schema,
+    ensure_v3_schema,
+    get_synapse_store,
+    migrate_v1_to_v3,
+    migrate_v2_to_v3,
+    reset_synapse_store,
+)
 from .sync_holon import (
     GovernanceViolation,
     PluginStateContract,
@@ -202,4 +219,18 @@ __all__ = [
     "generate_sanskrit_matrix",
     "get_western_translation",
     "record_japa",
+    # OPUS-171: SynapseStore (Unified Synapse Persistence)
+    "SynapseStore",
+    "SynapseConnection",
+    "SynapseSnapshot",
+    "SynapseMigrationResult",
+    "SCHEMA_V1",
+    "SCHEMA_V2",
+    "SCHEMA_V3",
+    "detect_schema",
+    "ensure_v3_schema",
+    "migrate_v1_to_v3",
+    "migrate_v2_to_v3",
+    "get_synapse_store",
+    "reset_synapse_store",
 ]

@@ -203,10 +203,13 @@ self.vajra_seal()
 
 | # | Task | Status |
 |---|------|--------|
-| 1.1 | Create `SynapseStore` in `vibe_core/state/` | TODO |
-| 1.2 | Implement v1 → v3 migration | TODO |
-| 1.3 | Implement v2 → v3 migration | TODO |
-| 1.4 | Create `SynapseLoader` in `vibe_core/loaders/` | TODO |
+| 1.1 | Create `SynapseStore` in `vibe_core/state/` | ✅ DONE |
+| 1.2 | Implement v1 → v3 migration | ✅ DONE |
+| 1.3 | Implement v2 → v3 migration | ✅ DONE |
+| 1.4 | ~~Create `SynapseLoader`~~ Not needed - SynapseStore IS the loader | ✅ N/A |
+
+**NOTE**: VEDA-4 loaders (SenseLoader, ActionLoader) are for Python module discovery.
+SynapseStore handles JSON data persistence - different pattern. Direct use via `get_synapse_store()`.
 
 ### Phase 2: MANAS Loader Cleanup
 
@@ -218,15 +221,18 @@ self.vajra_seal()
 | 2.4 | ActionManager uses ActionLoader | TODO |
 | 2.5 | Remove analyzers/__init__.py manual imports | TODO |
 
-### Phase 3: Remove Duplicates
+### Phase 3: Remove Duplicates (Synapse Loading Only!)
+
+**NOTE**: OPUS-172 analysis confirmed manas/akshara.py is the CORE phonemic library.
+unified_akshara.py USES it via triggers.py. They are COMPLEMENTARY, not duplicate!
 
 | # | Task | Status |
 |---|------|--------|
-| 3.1 | Remove manas/akshara.py (use unified_akshara) | TODO |
-| 3.2 | Remove triggers.py _load_synapses() | TODO |
-| 3.3 | Remove viveka_action.py _load_synapses() | TODO |
-| 3.4 | Remove synaptic_seeder.py _load_synapses() | TODO |
-| 3.5 | Remove mirror.py _load_synapses() | TODO |
+| 3.1 | ~~Remove manas/akshara.py~~ KEEP IT! (see OPUS-172) | ✅ N/A |
+| 3.2 | Remove triggers.py _load_synapses() (use SynapseStore) | TODO |
+| 3.3 | Remove viveka_action.py _load_synapses() (use SynapseStore) | TODO |
+| 3.4 | Remove synaptic_seeder.py _load_synapses() (use SynapseStore) | TODO |
+| 3.5 | Remove mirror.py _load_synapses() (use SynapseStore) | TODO |
 
 ### Phase 4: Wire Sanskrit Matrix to Main Loop
 
