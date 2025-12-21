@@ -1779,6 +1779,93 @@ class CognitiveKernel(CognitiveCycle):
     # CORE API
     # =========================================================================
 
+    def tick(self) -> Dict[str, Any]:
+        """
+        Lightweight awareness tick - runs every kernel tick (~3s).
+
+        OPUS-174: MANAS should tick with the kernel, not poll at intervals!
+
+        Performance target: < 5ms (no file reads, use cached state)
+
+        This is NOT the full OODA loop. It's a heartbeat that:
+        1. Updates tick counter and timestamp
+        2. Samples awareness metrics (from cache/in-memory)
+        3. Computes urgency (periodically, not every tick)
+        4. Updates awareness state (for transparency)
+        5. Returns whether full OODA is needed
+
+        Returns:
+            Dict with tick info and should_think decision
+        """
+        now = datetime.utcnow()
+
+        # Initialize tick state if not exists
+        if not hasattr(self, "_tick_count"):
+            self._tick_count = 0
+            self._ticks_since_ooda = 0
+            self._cached_urgency = 0.0
+            self._awareness = {}
+
+        self._tick_count += 1
+        self._last_tick_time = now
+
+        # Compute urgency every 10 ticks (~30s) - expensive operation
+        if self._tick_count % 10 == 0:
+            self._cached_urgency = self._get_synaptic_urgency()
+
+        urgency = getattr(self, "_cached_urgency", 0.0)
+
+        # Quick perception snapshot (from in-memory state)
+        pending_count = len(self._buffer.get_pending())
+        self._ticks_since_ooda = getattr(self, "_ticks_since_ooda", 0) + 1
+
+        # Update awareness (in-memory, for transparency)
+        self._awareness = {
+            "tick": self._tick_count,
+            "last_tick": now.isoformat(),
+            "pending_intents": pending_count,
+            "urgency": round(urgency, 3),
+            "ticks_since_ooda": self._ticks_since_ooda,
+            "seconds_since_ooda": self._ticks_since_ooda * 3,  # Approximate
+            "last_thought": self._last_thought_time.isoformat() if self._last_thought_time else None,
+        }
+
+        # Periodic persistence (every 20 ticks = ~60s)
+        if self._tick_count % 20 == 0:
+            self._persist_awareness()
+
+        # Check if full OODA needed (reusing existing logic)
+        should_think = self._should_think()
+
+        if should_think:
+            self._ticks_since_ooda = 0
+
+        return {
+            "tick": self._tick_count,
+            "urgency": urgency,
+            "pending": pending_count,
+            "should_think": should_think,
+        }
+
+    def _persist_awareness(self) -> None:
+        """
+        Persist awareness state for transparency.
+
+        Called periodically (every ~60s) to update manas_awareness.json.
+        This file is read by OPUS.md template to show "MANAS is alive".
+        """
+        try:
+            from vibe_core.state.state_manager import StateManager
+
+            state = StateManager(self._workspace)
+            state.save("manas_awareness.json", self._awareness, create_backup=False)
+        except Exception as e:
+            logger.debug(f"Failed to persist awareness: {e}")
+
+    def get_awareness(self) -> Dict[str, Any]:
+        """Get current awareness state (for dashboard/templates)."""
+        return getattr(self, "_awareness", {})
+
     def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
         """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""
         if not force and not self._should_think():
