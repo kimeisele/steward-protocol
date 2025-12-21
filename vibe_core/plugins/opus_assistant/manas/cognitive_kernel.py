@@ -28,7 +28,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from vibe_core.event_bus import EventBus
-from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
+
+# OPUS-171: BridgeLoader for auto-discovery of bridges
+# Replaces manual imports of GenesisBridge, WeaverBridge, LoggerBridge
+from vibe_core.loaders import ActionLoader, AnalyzerLoader, BridgeLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.state import get_state_service  # P0: StateService
@@ -40,23 +43,14 @@ from .buddhi import Buddhi, BuddhiVerdict
 # OPUS-168: Antahkarana - The Inner Instrument
 from .chitta import Chitta, PerceptionEntry
 
-# OPUS-167: Genesis Bridge Extraction
-from .genesis_bridge import GenesisBridge
-
 # OPUS-167: Intent Buffer Extraction
 from .intent_buffer import IntentBuffer, IntentBufferEntry
 from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
-
-# OPUS-167: Logger Bridge Extraction
-from .logger_bridge import LoggerBridge
 from .memory_store import MemoryStore
 
 # OPUS-167: Sense Manager Extraction
 from .sense_manager import SenseManager
 from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
-
-# OPUS-167: Weaver Bridge Extraction
-from .weaver_bridge import WeaverBridge
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -436,14 +430,22 @@ class CognitiveKernel(CognitiveCycle):
         self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._sense_manager.dharma_sense)
         logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
-        # OPUS-167: Genesis Bridge (replaces _init_infrastructure_genesis)
-        self._genesis_bridge = GenesisBridge(
+        # =================================================================
+        # OPUS-171: BridgeLoader - Auto-discover all bridges (VEDA-4)
+        # =================================================================
+        # Replaces manual instantiation of GenesisBridge, WeaverBridge, LoggerBridge
+        self._bridges, bridge_meta = BridgeLoader.discover_and_load(
             workspace=self._workspace,
             config=self._full_config,
         )
+        logger.info(
+            f"🌉 OPUS-171: {len(self._bridges)} bridges loaded via BridgeLoader ({', '.join(self._bridges.keys())})"
+        )
 
-        # OPUS-167: Weaver Bridge (replaces _init_cognitive_weaver)
-        self._weaver_bridge = WeaverBridge(workspace=self._workspace)
+        # Expose bridges as named attributes for backward compatibility
+        self._genesis_bridge = self._bridges.get("genesis_bridge")
+        self._weaver_bridge = self._bridges.get("weaver_bridge")
+        self._logger_bridge = self._bridges.get("logger_bridge")
 
         # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
         shiva_config = self._full_config.get("shiva", {})
@@ -453,12 +455,6 @@ class CognitiveKernel(CognitiveCycle):
         # 🌙 SANKALPA: Strategic Will - Proactive Mission Planning (OPUS-089)
         self._sankalpa = None
         self._init_sankalpa()
-
-        # OPUS-167: Logger Bridge (replaces _init_observation_logger)
-        self._logger_bridge = LoggerBridge(
-            workspace=self._workspace,
-            config=self._full_config,
-        )
 
         # 🧠 OPUS-112: SYNAPTIC MEMORY - The Reading Brain
         # Inference engine for experience-based decision making
