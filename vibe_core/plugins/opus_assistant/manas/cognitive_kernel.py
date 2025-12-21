@@ -41,6 +41,21 @@ from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 from .chitta import Chitta, PerceptionEntry
 from .buddhi import Buddhi, BuddhiVerdict
 
+# OPUS-167: Intent Buffer Extraction
+from .intent_buffer import IntentBuffer, IntentBufferEntry
+
+# OPUS-167: Sense Manager Extraction
+from .sense_manager import SenseManager
+
+# OPUS-167: Logger Bridge Extraction
+from .logger_bridge import LoggerBridge
+
+# OPUS-167: Genesis Bridge Extraction
+from .genesis_bridge import GenesisBridge
+
+# OPUS-167: Weaver Bridge Extraction
+from .weaver_bridge import WeaverBridge
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -183,17 +198,6 @@ class IntentConfidence:
         }
 
 
-@dataclass
-class IntentBufferEntry:
-    """An entry in the intent buffer (for OPUS.md display)."""
-
-    intent: Intent
-    status: str = "pending"  # pending, approved, rejected, executed, expired
-    added_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    executed_at: Optional[str] = None
-    execution_result: Optional[Dict[str, Any]] = None
-
-
 class CognitiveKernel(CognitiveCycle):
     """
     The Mind of OPUS - Proactive Autonomous Cognition.
@@ -286,9 +290,12 @@ class CognitiveKernel(CognitiveCycle):
         if self._semantic_engine:
             self._intent_generator.inject_semantic_engine(self._semantic_engine)
 
-        # Intent buffer (persisted to .opus_state/manas_intents.json)
-        self._intent_buffer: List[IntentBufferEntry] = []
-        self._load_intent_buffer()
+        # OPUS-167: Intent buffer extracted to separate class
+        self._buffer = IntentBuffer(
+            workspace=self._workspace,
+            max_size=self._config.max_intent_buffer_size,
+            expiry_hours=self._config.intent_expiry_hours,
+        )
 
         # Rate limiting state
         self._last_thought_time: Optional[datetime] = None
@@ -308,50 +315,40 @@ class CognitiveKernel(CognitiveCycle):
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
-        # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
-        self._prakriti_sense: Optional["PrakritiSense"] = None
-        self._init_prakriti_sense()
+        # OPUS-167: Unified Sense Manager (replaces individual _init_* calls)
+        self._sense_manager = SenseManager(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
+        self._sense_manager.boot_all()
 
-        # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
-        self._dharma_sense: Optional["DharmaSense"] = None
-        self._init_dharma_sense()
+        # Inject semantic engine into sutra sense if available
+        if self._sense_manager.sutra_sense and self._semantic_engine:
+            self._sense_manager.sutra_sense.inject_semantic_engine(self._semantic_engine)
 
-        # 📜 SUTRA SENSE: The Third Eye - Doc/Code Gap Detection (OPUS-054)
-        self._sutra_sense: Optional["SutraSense"] = None
-        self._init_sutra_sense()
-        # Inject engine if available
-        if self._sutra_sense and self._semantic_engine:
-            self._sutra_sense.inject_semantic_engine(self._semantic_engine)
+        # Post-boot setup for sense listeners (Shruta/Prana wiring)
+        self._setup_sense_listeners()
 
-        # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
-        # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
-        self._shruta_sense: Optional["ShrutaSense"] = None
-        self._init_shruta_sense()
-
-        # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence Awareness (OPUS-166)
+        # 🫀 PRANA SENSE: Cooldown tracking (kernel-specific, not in SenseManager)
         # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
-        self._prana_sense: Optional["PranaSense"] = None
         self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
         self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
-        self._init_prana_sense()
 
         # 🧠 OPUS-168: ANTAHKARANA - The Inner Instrument
         # Chitta (Perception Pool) + Buddhi (Intellect) form the decision layer
         # This fixes: DharmaSense checked at DECIDE time, not EXECUTE time
         self._chitta = Chitta(workspace=self._workspace)
-        self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._dharma_sense)
+        self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._sense_manager.dharma_sense)
         logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
-        # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
-        # Auto-generates GAD-000 compliant infrastructure for new modules
-        # "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
-        self._infrastructure_classifier: Optional["InfrastructureClassifier"] = None
-        self._infrastructure_generator: Optional["InfrastructureGenerator"] = None
-        self._init_infrastructure_genesis()
+        # OPUS-167: Genesis Bridge (replaces _init_infrastructure_genesis)
+        self._genesis_bridge = GenesisBridge(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
 
-        # 🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge (OPUS-106)
-        self._cognitive_weaver: Optional["CognitiveWeaver"] = None
-        self._init_cognitive_weaver()
+        # OPUS-167: Weaver Bridge (replaces _init_cognitive_weaver)
+        self._weaver_bridge = WeaverBridge(workspace=self._workspace)
 
         # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
         shiva_config = self._full_config.get("shiva", {})
@@ -362,9 +359,11 @@ class CognitiveKernel(CognitiveCycle):
         self._sankalpa = None
         self._init_sankalpa()
 
-        # 📓 OBSERVATION LOGGER: Make MANAS thoughts visible in OPUS.md
-        self._observation_logger = None
-        self._init_observation_logger()
+        # OPUS-167: Logger Bridge (replaces _init_observation_logger)
+        self._logger_bridge = LoggerBridge(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
 
         # 🧠 OPUS-112: SYNAPTIC MEMORY - The Reading Brain
         # Inference engine for experience-based decision making
@@ -468,6 +467,35 @@ class CognitiveKernel(CognitiveCycle):
         return self._tool_loader
 
     # =========================================================================
+    # OPUS-167: SENSE MANAGER PROPERTIES (Backward Compatibility)
+    # =========================================================================
+
+    @property
+    def _prakriti_sense(self) -> Optional["PrakritiSense"]:
+        """Prakriti Sense - delegates to SenseManager."""
+        return self._sense_manager.prakriti_sense
+
+    @property
+    def _dharma_sense(self) -> Optional["DharmaSense"]:
+        """Dharma Sense - delegates to SenseManager."""
+        return self._sense_manager.dharma_sense
+
+    @property
+    def _sutra_sense(self) -> Optional["SutraSense"]:
+        """Sutra Sense - delegates to SenseManager."""
+        return self._sense_manager.sutra_sense
+
+    @property
+    def _shruta_sense(self) -> Optional["ShrutaSense"]:
+        """Shruta Sense - delegates to SenseManager."""
+        return self._sense_manager.shruta_sense
+
+    @property
+    def _prana_sense(self) -> Optional["PranaSense"]:
+        """Prana Sense - delegates to SenseManager."""
+        return self._sense_manager.prana_sense
+
+    # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
     # =========================================================================
 
@@ -564,31 +592,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 👁️ PRAKRITI SENSE: THE SIXTH JNANENDRIYA (OPUS-009)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_prakriti_sense(self) -> None:
-        """
-        Initialize Prakriti Sense - the Sixth Jnanendriya.
-
-        This provides unified state perception for MANAS.
-        """
-        try:
-            from .cortex.prakriti_sense import PrakritiSense
-
-            prakriti_config = self._full_config.get("prakriti_sense", {})
-            self._prakriti_sense = PrakritiSense(
-                workspace=self._workspace,
-                config=prakriti_config,
-            )
-            # Boot perception
-            summary = self._prakriti_sense.on_manas_boot()
-            logger.info(
-                f"👁️ PRAKRITI SENSE: Sixth Jnanendriya initialized - "
-                f"Total: {summary.total_paths}, Health: {summary.health_ratio:.0%}"
-            )
-        except Exception as e:
-            logger.warning(f"👁️ PRAKRITI SENSE: Could not initialize: {e}")
-            self._prakriti_sense = None
 
     def inject_prakriti_sense(self, sense: "PrakritiSense") -> None:
         """
@@ -605,7 +610,7 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: PrakritiSense instance
         """
-        self._prakriti_sense = sense
+        self._sense_manager.inject("prakriti_sense", sense)
         logger.info("👁️ PRAKRITI SENSE: Sixth Jnanendriya injected - MANAS can now perceive state")
 
     def _perceive_and_generate_healing_intents(self) -> List[Intent]:
@@ -808,27 +813,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_dharma_sense(self) -> None:
-        """
-        Initialize Dharma Sense - the Vedic Conscience.
-
-        This provides ethical alignment checks before intent execution.
-        """
-        try:
-            from .cortex.dharma_sense import DharmaSense
-
-            dharma_config = self._full_config.get("dharma_sense", {})
-            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas", config=dharma_config)
-            # Boot registration
-            summary = self._dharma_sense.on_manas_boot()
-            logger.info(
-                f"🙏 DHARMA SENSE: Conscience initialized - Ashrama: {summary.ashrama}, Bhakti: {summary.bhakti}"
-            )
-        except Exception as e:
-            logger.warning(f"🙏 DHARMA SENSE: Could not initialize: {e}")
-            self._dharma_sense = None
 
     def inject_dharma_sense(self, sense: "DharmaSense") -> None:
         """
@@ -841,7 +827,7 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: DharmaSense instance
         """
-        self._dharma_sense = sense
+        self._sense_manager.inject("dharma_sense", sense)
         logger.info("🙏 DHARMA SENSE: Vedic Conscience injected - MANAS now has ethical awareness")
 
     def _check_dharma_gate(self, intent: Intent) -> tuple:
@@ -901,33 +887,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 📜 SUTRA SENSE: THE THIRD EYE (OPUS-054)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_sutra_sense(self) -> None:
-        """
-        Initialize Sutra Sense - the Third Eye.
-
-        This provides doc/code gap detection for MANAS.
-        MANAS becomes the curator of its own documentation.
-
-        Bhagavad Gita 9.22:
-        "ananyāś cintayanto māṁ... yoga-kṣemaṁ vahāmy aham"
-        "I bring what is lacking (Yoga) and preserve what they have (Kshema)"
-        """
-        try:
-            from .cortex.sutra_sense import SutraSense
-
-            sutra_config = self._full_config.get("sutra_sense", {})
-            self._sutra_sense = SutraSense(workspace=self._workspace, config=sutra_config)
-            # Boot perception
-            summary = self._sutra_sense.perceive_gaps(refresh=True)
-            logger.info(
-                f"📜 SUTRA SENSE: Third Eye opened - "
-                f"{summary.total_docs} docs, {summary.gaps_found} gaps, {summary.health_ratio:.0%} health"
-            )
-        except Exception as e:
-            logger.warning(f"📜 SUTRA SENSE: Could not initialize: {e}")
-            self._sutra_sense = None
 
     def inject_sutra_sense(self, sense: "SutraSense") -> None:
         """
@@ -941,91 +902,50 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: SutraSense instance
         """
-        self._sutra_sense = sense
+        self._sense_manager.inject("sutra_sense", sense)
         logger.info("📜 SUTRA SENSE: Third Eye injected - MANAS can now perceive documentation gaps")
 
     # =========================================================================
     # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_shruta_sense(self) -> None:
-        """
-        Initialize Shruta Sense - the Hearing System.
-
-        OPUS-156: This provides filesystem vibration detection for MANAS.
-        MANAS can now HEAR before it SEES.
-
-        Sanskrit: श्रुत (Shruta) = "That which is heard"
-
-        "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
-        "At the beginning was darkness. Brahma HEARD before he SAW."
-        """
-        try:
-            from .cortex.shruta_sense import ShrutaSense
-
-            shruta_config = self._full_config.get("shruta_sense", {})
-            self._shruta_sense = ShrutaSense(
-                workspace=self._workspace,
-                config=shruta_config,
-            )
-
-            # Start listening to filesystem vibrations
-            watch_paths = [
-                self._workspace / "vibe_core",
-                self._workspace / "tests",
-                self._workspace / "docs",
-            ]
-            self._shruta_sense.start_listening(paths=watch_paths)
-
-            # Register auto-discovery handler
-            self._shruta_sense.register_auto_discovery()
-
-            logger.info("👂 SHRUTA SENSE: The 6th Jnanendriya activated - MANAS can now HEAR filesystem vibrations")
-
-        except Exception as e:
-            logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
-            self._shruta_sense = None
 
     # =========================================================================
     # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence (OPUS-166)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
 
-    def _init_prana_sense(self) -> None:
+    # NOTE: These helper methods remain in kernel for post-boot setup
+    # The SenseManager handles basic initialization, but complex wiring
+    # (like Shruta listeners and Prana registration) happens here
+
+    def _setup_sense_listeners(self) -> None:
         """
-        Initialize Prana Sense - Agent Presence Awareness.
+        Post-boot setup for sense listeners and cross-sense wiring.
 
-        OPUS-166: This provides awareness of which agents are alive/dead.
-        Integrates with ShrutaSense for real-time presence detection.
-
-        Sanskrit: प्राण (Prana) = Life force, breath, vital energy
-
-        "Prana is the breath of the universe. When an agent breathes (pulses),
-         it leaves a trace. When it stops breathing, the trace vanishes."
+        Called after SenseManager.boot_all() to:
+        1. Start Shruta filesystem listeners
+        2. Register Prana with Shruta for real-time updates
         """
         try:
-            from .cortex.prana_sense import PranaSense
-
-            prana_config = self._full_config.get("prana_sense", {})
-            self._prana_sense = PranaSense(
-                workspace=self._workspace,
-                config=prana_config,
-            )
-
-            # Register with ShrutaSense for real-time presence updates
+            # Setup Shruta listeners
             if self._shruta_sense:
-                self._prana_sense.register_with_shruta(self._shruta_sense)
-                logger.info("🫀 PRANA SENSE: Connected to ShrutaSense for real-time presence detection")
+                watch_paths = [
+                    self._workspace / "vibe_core",
+                    self._workspace / "tests",
+                    self._workspace / "docs",
+                ]
+                self._shruta_sense.start_listening(paths=watch_paths)
+                self._shruta_sense.register_auto_discovery()
+                logger.debug("👂 SHRUTA SENSE: Listeners activated")
 
-            # Initial perception to set baseline
-            perception = self._prana_sense.perceive()
-            logger.info(
-                f"🫀 PRANA SENSE: 7th Jnanendriya activated - "
-                f"{perception.total_alive}/{perception.total_registered} agents alive"
-            )
+            # Wire Prana to Shruta
+            if self._prana_sense and self._shruta_sense:
+                self._prana_sense.register_with_shruta(self._shruta_sense)
+                logger.debug("🫀 PRANA SENSE: Connected to ShrutaSense")
 
         except Exception as e:
-            logger.warning(f"🫀 PRANA SENSE: Could not initialize: {e}")
-            self._prana_sense = None
+            logger.warning(f"Sense listener setup failed: {e}")
 
     def _perceive_and_generate_presence_intents(self) -> List[Intent]:
         """
@@ -1139,38 +1059,7 @@ class CognitiveKernel(CognitiveCycle):
         except Exception:
             return None
 
-    def _init_infrastructure_genesis(self) -> None:
-        """
-        Initialize the Infrastructure Genesis service (OPUS-158).
-
-        The Stadtamt - creates GAD-000 compliant infrastructure:
-        - __init__.py for discoverability
-        - manifest.json for capabilities
-        - Base class stubs for composability
-
-        "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
-        """
-        try:
-            from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator
-
-            genesis_config = self._full_config.get("genesis", {})
-            enabled = genesis_config.get("enabled", True)
-
-            if not enabled:
-                logger.info("🏛️ GENESIS: Disabled by configuration")
-                return
-
-            self._infrastructure_classifier = InfrastructureClassifier(workspace=self._workspace)
-            self._infrastructure_generator = InfrastructureGenerator(workspace=self._workspace)
-
-            logger.info(
-                "🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service activated - Auto-generating GAD-000 infrastructure"
-            )
-
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS: Could not initialize: {e}")
-            self._infrastructure_classifier = None
-            self._infrastructure_generator = None
+    # NOTE: _init_infrastructure_genesis removed (OPUS-167: moved to GenesisBridge)
 
     def inject_shruta_sense(self, sense: "ShrutaSense") -> None:
         """
@@ -1217,85 +1106,16 @@ class CognitiveKernel(CognitiveCycle):
                     top_hot = perception.hot_paths[:3]
                     logger.debug(f"👂 SHRUTA: Hot paths: {top_hot}")
 
-                # 🏛️ OPUS-158: Trigger Infrastructure Genesis for new directories
-                # The Agent Virus: Auto-generate GAD-000 infrastructure
-                self._process_genesis_vibrations(perception)
+                # OPUS-167: Genesis Bridge handles infrastructure generation
+                self._genesis_bridge.process_vibrations(perception)
 
             return perception
         except Exception as e:
             logger.warning(f"👂 SHRUTA: Error during perception: {e}")
             return None
 
-    def _process_genesis_vibrations(self, perception: "ShrutaPerception") -> None:
-        """
-        Process vibrations for Infrastructure Genesis.
-
-        OPUS-160: Delegates to vibe_core.genesis.GenesisService (Stadtamt).
-        MANAS detects gaps, Stadtamt builds infrastructure.
-        """
-        try:
-            # Try to use vibe_core GenesisService (OPUS-160)
-            from vibe_core.genesis import GenesisService, ModuleType
-
-            genesis = GenesisService.get_instance(workspace=self._workspace)
-
-            for vibration in perception.vibrations:
-                # Only process directory creation events
-                if vibration.event_type != "created" or not vibration.is_directory:
-                    continue
-
-                # Classify and ensure compliance via Stadtamt
-                module_type = genesis.classify_path(vibration.path)
-
-                if module_type == ModuleType.UNKNOWN:
-                    continue
-
-                # Call the Stadtamt for compliance
-                result = genesis.ensure_compliance(vibration.path, module_type)
-
-                if result.build_result and result.build_result.files_created_count > 0:
-                    logger.info(
-                        f"🏛️ STADTAMT: Created {result.build_result.files_created_count} files "
-                        f"for {module_type.name}: {vibration.path.name}"
-                    )
-
-        except ImportError:
-            # Fallback to OPUS-158 local genesis (legacy)
-            self._process_genesis_vibrations_legacy(perception)
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
-
-    def _process_genesis_vibrations_legacy(self, perception: "ShrutaPerception") -> None:
-        """
-        Legacy genesis processing (OPUS-158 fallback).
-
-        Used when vibe_core.genesis is not available.
-        """
-        if not self._infrastructure_classifier or not self._infrastructure_generator:
-            return
-
-        try:
-            from .cortex.genesis import ModuleType
-
-            for vibration in perception.vibrations:
-                if vibration.event_type != "created" or not vibration.is_directory:
-                    continue
-
-                module_type = self._infrastructure_classifier.classify(vibration.path, is_directory=True)
-
-                if module_type == ModuleType.UNKNOWN:
-                    continue
-
-                result = self._infrastructure_generator.generate(vibration.path, module_type)
-
-                if result.files_created_count > 0:
-                    logger.info(
-                        f"🏛️ GENESIS (legacy): Auto-generated {result.files_created_count} files "
-                        f"for {module_type.name}: {vibration.path.name}"
-                    )
-
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS (legacy): Error: {e}")
+    # NOTE: _process_genesis_vibrations and _process_genesis_vibrations_legacy removed
+    # (OPUS-167: moved to GenesisBridge)
 
     def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
         """Get Sutra summary for OPUS.md display."""
@@ -1329,168 +1149,29 @@ class CognitiveKernel(CognitiveCycle):
             return None
 
     # =========================================================================
-    # 🧵 COGNITIVE WEAVER: STATE ↔ KNOWLEDGE BRIDGE (OPUS-106)
+    # 🧵 COGNITIVE WEAVER: OPUS-167 Delegation to WeaverBridge
     # =========================================================================
 
-    def _init_cognitive_weaver(self) -> None:
-        """
-        Initialize Cognitive Weaver - the State ↔ Knowledge Bridge.
-
-        OPUS-106: "Gedächtnis ohne Wissen ist blind. Wissen ohne Gedächtnis ist vergesslich."
-
-        This provides unified access to:
-        - State Layer (Prakriti, StateSyncHolon) - What MANAS REMEMBERS
-        - Knowledge Layer (UnifiedKnowledgeGraph) - What MANAS KNOWS
-        - Session Context (OPUS.md preserved sections) - What MANAS was DOING
-
-        The Cognitive Weaver enables MANAS to make intelligent decisions
-        that combine historical state with conceptual knowledge.
-        """
-        try:
-            from vibe_core.state.cognitive_weaver import CognitiveWeaver
-
-            self._cognitive_weaver = CognitiveWeaver(workspace=self._workspace)
-
-            # OPUS-106: Inject session context from OPUS.md (UI → Mind Bridge)
-            self._inject_session_context_from_opus()
-
-            # Boot diagnosis
-            diagnosis = self._cognitive_weaver.diagnose()
-            health = diagnosis.get("unified", {}).get("overall_health", 0)
-            session_ctx = (
-                "with session context" if self._cognitive_weaver.has_session_context() else "no session context"
-            )
-            logger.info(
-                f"🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge initialized - Health: {health:.0%}, {session_ctx}"
-            )
-        except Exception as e:
-            logger.warning(f"🧵 COGNITIVE WEAVER: Could not initialize: {e}")
-            self._cognitive_weaver = None
-
-    def _inject_session_context_from_opus(self) -> None:
-        """
-        OPUS-106: Extract preserved sections from OPUS.md and inject into CognitiveWeaver.
-
-        This bridges the UI-Layer (OPUS.md) with the Mind-Layer (MANAS).
-        The preserved sections contain what the previous AI/Human wrote,
-        enabling continuity across sessions.
-        """
-        if not self._cognitive_weaver:
-            return
-
-        try:
-            opus_path = self._workspace / "OPUS.md"
-            if not opus_path.exists():
-                return
-
-            # Try to get preserved sections from opus_assistant
-            try:
-                from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
-                    OpusDashboardRenderer,
-                )
-
-                renderer = OpusDashboardRenderer(self._workspace)
-                preserved = renderer._extract_preserved_sections()
-
-                if preserved:
-                    self._cognitive_weaver.inject_session_context(preserved)
-                    logger.debug("🧵 COGNITIVE WEAVER: Session context loaded from OPUS.md")
-            except ImportError:
-                logger.debug("🧵 COGNITIVE WEAVER: OpusDashboardRenderer not available")
-            except Exception as e:
-                logger.debug(f"🧵 COGNITIVE WEAVER: Could not extract preserved sections: {e}")
-
-        except Exception as e:
-            logger.warning(f"🧵 COGNITIVE WEAVER: Failed to inject session context: {e}")
+    @property
+    def _cognitive_weaver(self) -> Optional["CognitiveWeaver"]:
+        """Backward compatibility: delegate to WeaverBridge."""
+        return self._weaver_bridge.cognitive_weaver
 
     def inject_cognitive_weaver(self, weaver: "CognitiveWeaver") -> None:
-        """
-        Inject the Cognitive Weaver for unified state + knowledge access.
-
-        OPUS-106: This enables MANAS to perceive BOTH state and knowledge
-        as ONE unified consciousness.
-
-        Args:
-            weaver: CognitiveWeaver instance
-        """
-        self._cognitive_weaver = weaver
-        logger.info("🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge injected")
+        """Inject CognitiveWeaver via bridge."""
+        self._weaver_bridge.inject_cognitive_weaver(weaver)
 
     def get_cognitive_context(self, focus: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        """
-        Get unified cognitive context combining state + knowledge.
-
-        OPUS-106: This is the "perception" method - what MANAS sees when
-        it looks at the unified state of consciousness.
-
-        Args:
-            focus: Optional focus area (e.g., "governance", "state")
-
-        Returns:
-            Dict with unified context or None if weaver unavailable
-        """
-        if not self._cognitive_weaver:
-            return None
-
-        try:
-            context = self._cognitive_weaver.weave(focus=focus)
-            return {
-                "health_score": context.health_score,
-                "tamas_count": len(context.tamas_paths),
-                "dirty_count": len(context.dirty_paths),
-                "wisdom_notes": context.wisdom_notes,
-                "recommended_actions": context.recommended_actions,
-                "prompt_context": context.to_prompt_context(),
-            }
-        except Exception as e:
-            logger.debug(f"🧵 COGNITIVE WEAVER: Could not weave context: {e}")
-            return None
+        """Get unified cognitive context via bridge."""
+        return self._weaver_bridge.get_cognitive_context(focus)
 
     def consult_knowledge(self, action: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Consult knowledge before taking an action.
-
-        OPUS-106: Before MANAS acts, it can ask the knowledge graph:
-        - Is this action allowed?
-        - What constraints apply?
-        - What authority is required?
-
-        Args:
-            action: The action being considered
-            context: Context about the action
-
-        Returns:
-            Consultation result or None if unavailable
-        """
-        if not self._cognitive_weaver:
-            return None
-
-        try:
-            consultation = self._cognitive_weaver.consult(action, context)
-            return {
-                "allowed": consultation.allowed,
-                "constraints_violated": consultation.constraints_violated,
-                "authority_required": consultation.authority_required,
-                "recommendation": consultation.recommendation,
-            }
-        except Exception as e:
-            logger.debug(f"🧵 COGNITIVE WEAVER: Could not consult knowledge: {e}")
-            return None
+        """Consult knowledge before action via bridge."""
+        return self._weaver_bridge.consult_knowledge(action, context)
 
     def get_cognitive_diagnosis(self) -> Optional[Dict[str, Any]]:
-        """
-        Get full system diagnosis from Cognitive Weaver.
-
-        Returns combined state + knowledge health check.
-        """
-        if not self._cognitive_weaver:
-            return None
-
-        try:
-            return self._cognitive_weaver.diagnose()
-        except Exception as e:
-            logger.debug(f"🧵 COGNITIVE WEAVER: Could not diagnose: {e}")
-            return None
+        """Get full system diagnosis via bridge."""
+        return self._weaver_bridge.get_cognitive_diagnosis()
 
     # =========================================================================
     # 🌙 SANKALPA: STRATEGIC WILL (OPUS-089)
@@ -1537,7 +1218,7 @@ class CognitiveKernel(CognitiveCycle):
             idle_minutes = self.idle_minutes
 
             # Get pending intent count
-            pending_count = len([e for e in self._intent_buffer if e.status == "pending"])
+            pending_count = len(self._buffer.get_pending())
 
             # Ask Sankalpa to evaluate strategies
             sankalpa_intents = self._sankalpa.think(
@@ -1575,58 +1256,16 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 📓 OBSERVATION LOGGER: MANAS THOUGHTS → OPUS.md (OPUS-089)
+    # OPUS-167: Implementation moved to LoggerBridge
     # =========================================================================
 
-    def _init_observation_logger(self) -> None:
-        """
-        Initialize ObservationLogger for making MANAS thoughts visible.
-
-        OPUS-089: The journal in OPUS.md should show MANAS's internal state,
-        not just events. Dreams, insights, patterns - all visible.
-        """
-        try:
-            from vibe_core.plugins.opus_assistant.core.observation_logger import (
-                ObservationLogger,
-            )
-
-            obs_config = self._full_config.get("observation_logger", {})
-            self._observation_logger = ObservationLogger(workspace_root=self._workspace, config=obs_config)
-            logger.info(f"📓 OBSERVATION LOGGER: Initialized (config: {len(obs_config)} keys)")
-        except Exception as e:
-            logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
-            self._observation_logger = None
-
     def log_insight(self, message: str) -> None:
-        """
-        Log an insight to OPUS.md journal.
-
-        Use this to make MANAS's internal thoughts visible:
-        - Dream insights from memory_review
-        - Pattern recognitions
-        - Self-debugging observations
-        """
-        if self._observation_logger:
-            self._observation_logger.log_insight(message, source="MANAS")
-        # Also log to Python logger for file logs
-        logger.info(f"💡 MANAS INSIGHT: {message}")
+        """Log an insight to OPUS.md journal (delegates to LoggerBridge)."""
+        self._logger_bridge.log_insight(message)
 
     def log_observation(self, message: str, severity: str = "info") -> None:
-        """
-        Log an observation to OPUS.md journal.
-
-        Args:
-            message: The observation message
-            severity: "info", "warn", "alert", or "insight"
-        """
-        if self._observation_logger:
-            if severity == "insight":
-                self._observation_logger.log_insight(message, source="MANAS")
-            elif severity == "warn":
-                self._observation_logger.log_warn(message, source="MANAS")
-            elif severity == "alert":
-                self._observation_logger.log_alert(message, source="MANAS")
-            else:
-                self._observation_logger.log_info(message, source="MANAS")
+        """Log an observation to OPUS.md journal (delegates to LoggerBridge)."""
+        self._logger_bridge.log_observation(message, severity=severity)
 
     def _perceive_and_generate_gap_intents(self) -> List[Intent]:
         """
@@ -2007,7 +1646,7 @@ class CognitiveKernel(CognitiveCycle):
                         "verdict": str(verdict),
                     }
 
-                self._intent_buffer.append(entry)
+                self._buffer.add(entry)
                 added.append(intent)
 
                 # 📜 SUTRA SENSE: Record intent for clustering
@@ -2056,19 +1695,8 @@ class CognitiveKernel(CognitiveCycle):
         Returns:
             Dict of persist errors (empty if success)
         """
-        # Trim buffer to max size
-        while len(self._intent_buffer) > self._config.max_intent_buffer_size:
-            removed = False
-            for i, entry in enumerate(self._intent_buffer):
-                if entry.status != "pending":
-                    self._intent_buffer.pop(i)
-                    removed = True
-                    break
-            if not removed:
-                self._intent_buffer.pop(0)
-
-        # Save intent buffer to disk
-        self._save_intent_buffer()
+        # OPUS-167: IntentBuffer handles size limit and persistence automatically
+        self._buffer.save()
         logger.debug("💾 MANAS: Persisted intent buffer")
 
         # OPUS-096: Weaver integration - commit runtime state after MANAS cycle
@@ -2275,17 +1903,17 @@ class CognitiveKernel(CognitiveCycle):
             feedback=reason,
         )
 
-        self._save_intent_buffer()
+        self._buffer.save()
         logger.info(f"Intent {intent_id} rejected: {reason or 'no reason given'}")
         return True
 
     def get_pending_intents(self) -> List[Intent]:
         """Get all pending intents (for OPUS.md display)."""
-        return [entry.intent for entry in self._intent_buffer if entry.status == "pending"]
+        return self._buffer.get_pending()
 
     def get_intent_buffer(self) -> List[IntentBufferEntry]:
         """Get the full intent buffer."""
-        return list(self._intent_buffer)
+        return self._buffer.get_all()
 
     def set_execution_callback(self, callback: Callable[[Intent], Dict[str, Any]]) -> None:
         """
@@ -2466,21 +2094,13 @@ class CognitiveKernel(CognitiveCycle):
         Check if similar intent already exists in buffer.
 
         OPUS-127: Allow multiple intents of same type if title differs.
-        This enables detecting multiple harness_broken issues simultaneously.
+        OPUS-167: Delegates to IntentBuffer.is_duplicate()
         """
-        for entry in self._intent_buffer:
-            if entry.status == "pending":
-                # Same type AND same title = duplicate
-                if entry.intent.intent_type == intent.intent_type and entry.intent.title == intent.title:
-                    return True
-        return False
+        return self._buffer.is_duplicate(intent)
 
     def _find_intent_entry(self, intent_id: str) -> Optional[IntentBufferEntry]:
         """Find intent entry by ID."""
-        for entry in self._intent_buffer:
-            if entry.intent.id == intent_id:
-                return entry
-        return None
+        return self._buffer.find(intent_id)
 
     def _execute_intent(self, entry: IntentBufferEntry) -> bool:
         """
@@ -2522,7 +2142,7 @@ class CognitiveKernel(CognitiveCycle):
                 intent=intent,
                 extra_data={"reason": dharma_reason},
             )
-            self._save_intent_buffer()
+            self._buffer.save()
             return False
 
         try:
@@ -2612,7 +2232,7 @@ class CognitiveKernel(CognitiveCycle):
         # 🧠 OPUS-110: Synaptic Learning - Update weights based on outcome
         self._update_synapses(intent, success)
 
-        self._save_intent_buffer()
+        self._buffer.save()
 
         if success:
             # 🙏 DHARMA SENSE: Record success to increase Bhakti (OPUS-009)
@@ -2715,126 +2335,18 @@ class CognitiveKernel(CognitiveCycle):
 
     def _cleanup_expired_intents(self) -> None:
         """Remove expired intents from buffer."""
-        now = datetime.utcnow()
-        expiry_threshold = now - timedelta(hours=self._config.intent_expiry_hours)
-        expiry_str = expiry_threshold.isoformat()
-
-        original_count = len(self._intent_buffer)
-        self._intent_buffer = [
-            entry for entry in self._intent_buffer if entry.added_at >= expiry_str or entry.status == "pending"
-        ]
-
-        expired = original_count - len(self._intent_buffer)
+        # OPUS-167: Delegates to IntentBuffer.cleanup_expired()
+        expired = self._buffer.cleanup_expired()
         if expired > 0:
             logger.debug(f"MANAS: Cleaned up {expired} expired intents")
 
     # =========================================================================
-    # PERSISTENCE
+    # PERSISTENCE (OPUS-167: Buffer persistence moved to IntentBuffer)
     # =========================================================================
 
-    def _get_buffer_file(self) -> Path:
-        """Get path to intent buffer file."""
-        return self._workspace / ".opus_state" / "manas_intents.json"
-
-    def _load_intent_buffer(self) -> None:
-        """Load intent buffer from disk."""
-        try:
-            buffer_file = self._get_buffer_file()
-            if buffer_file.exists():
-                data = json.loads(buffer_file.read_text())
-
-                self._intent_buffer = []
-                for entry_data in data.get("intents", []):
-                    intent_data = entry_data.get("intent", {})
-
-                    # Reconstruct Intent
-                    intent = Intent(
-                        id=intent_data.get("id", "unknown"),
-                        intent_type=intent_data.get("intent_type", "unknown"),
-                        title=intent_data.get("title", "Unknown"),
-                        description=intent_data.get("description", ""),
-                        reasoning=intent_data.get("reasoning", ""),
-                        priority=IntentPriority(intent_data.get("priority", "medium")),
-                        risk=IntentRisk(intent_data.get("risk", "medium")),
-                        created_at=intent_data.get("created_at", datetime.utcnow().isoformat()),
-                        circuit_to_execute=intent_data.get("circuit_to_execute"),
-                        params=intent_data.get("params", {}),
-                        auto_executable=intent_data.get("auto_executable", False),
-                        expires_at=intent_data.get("expires_at"),
-                    )
-
-                    entry = IntentBufferEntry(
-                        intent=intent,
-                        status=entry_data.get("status", "pending"),
-                        added_at=entry_data.get("added_at", datetime.utcnow().isoformat()),
-                        executed_at=entry_data.get("executed_at"),
-                        execution_result=entry_data.get("execution_result"),
-                    )
-                    self._intent_buffer.append(entry)
-
-                logger.debug(f"Loaded {len(self._intent_buffer)} intents from disk")
-
-        except Exception as e:
-            logger.warning(f"Could not load intent buffer: {e}")
-            self._intent_buffer = []
-
-    def _save_intent_buffer(self) -> None:
-        """Save intent buffer to disk.
-
-        Uses direct file I/O to match _load_intent_buffer behavior.
-        This ensures workspace consistency in tests with isolated tmp_path.
-        """
-        try:
-            data = {
-                "intents": [
-                    {
-                        "intent": entry.intent.to_dict(),
-                        "status": entry.status,
-                        "added_at": entry.added_at,
-                        "executed_at": entry.executed_at,
-                        "execution_result": entry.execution_result,
-                    }
-                    for entry in self._intent_buffer
-                ],
-                "updated_at": datetime.utcnow().isoformat(),
-            }
-
-            # Direct file I/O - matches _load_intent_buffer behavior
-            buffer_file = self._get_buffer_file()
-            buffer_file.parent.mkdir(parents=True, exist_ok=True)
-            buffer_file.write_text(json.dumps(data, indent=2))
-
-        except Exception as e:
-            logger.warning(f"Could not save intent buffer: {e}")
-
     def _weaver_pulse(self) -> None:
-        """
-        OPUS-096: Trigger StateSyncWeaver to commit runtime state.
-
-        The Weaver discovers dirty runtime files via git status (independent of StateService).
-        This ensures files written during MANAS cycle get committed to git.
-
-        This is the "invisible hand" that keeps state synced to git during kernel operation.
-        The Weaver is also called from heartbeat.py for scheduled commits.
-        """
-        try:
-            from vibe_core.state.prakriti import Prakriti
-            from vibe_core.state.weaver import StateSyncWeaver
-
-            prakriti = Prakriti(workspace_path=self._workspace)
-            weaver = StateSyncWeaver(prakriti)
-            result = weaver.pulse()
-
-            if result.success and result.sha:
-                logger.debug(f"🧵 WEAVER: Committed runtime state ({result.sha[:8]})")
-            elif result.success:
-                logger.debug("🧵 WEAVER: No runtime changes to commit")
-            else:
-                logger.debug(f"🧵 WEAVER: {result.error or result.message}")
-
-        except Exception as e:
-            # Weaver failure should not break MANAS cycle
-            logger.debug(f"🧵 WEAVER: Skipped ({e})")
+        """OPUS-167: Delegate to WeaverBridge for state sync."""
+        self._weaver_bridge.weaver_pulse()
 
     # =========================================================================
     # INTEGRATION POINTS
@@ -2846,8 +2358,9 @@ class CognitiveKernel(CognitiveCycle):
 
         Returns data ready to be rendered in the Intent Buffer section.
         """
-        pending = [entry for entry in self._intent_buffer if entry.status == "pending"]
-        executed = [entry for entry in self._intent_buffer if entry.status == "executed"][-5:]  # Last 5
+        all_entries = self._buffer.get_all()
+        pending = [entry for entry in all_entries if entry.status == "pending"]
+        executed = [entry for entry in all_entries if entry.status == "executed"][-5:]  # Last 5
 
         return {
             "pending": [
