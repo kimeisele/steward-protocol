@@ -3,6 +3,39 @@
 > "India, that is Bharat, shall be a Union of States."
 > - Article 1, Constitution of India
 
+<!-- @HARNESS
+wiring:
+  # === OPUS-176: Governance Block in Manifest ===
+  - pattern: '"type": "SOVEREIGN_STATE"'
+    file: "vibe_core/plugins/opus_assistant/manifest.json"
+    required: true
+  - pattern: '"constitution_ref": "OPUS-176"'
+    file: "vibe_core/plugins/opus_assistant/manifest.json"
+    required: true
+  - pattern: '"can_spawn_task_kernel": true'
+    file: "vibe_core/plugins/opus_assistant/manifest.json"
+    required: true
+  - pattern: '"emergency_protocol": "presidents_rule"'
+    file: "vibe_core/plugins/opus_assistant/manifest.json"
+    required: true
+
+  # === Border Control in TaskKernel ===
+  - pattern: "_verify_sovereignty"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "BORDER CONTROL"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "caller_plugin_id"
+    file: "vibe_core/task_kernel.py"
+    required: true
+
+absent:
+  # Non-sovereign plugins should NOT be able to spawn TaskKernels
+  - pattern: "UNION_TERRITORY.*can_spawn_task_kernel.*true"
+    file: "vibe_core/plugins/*/manifest.json"
+-->
+
 ## Executive Summary
 
 Not all plugins are equal. Some are **Sovereign States** with their own cognitive kernels and autonomy. Others are **Union Territories** - stateless services directly administered by the Kernel.
