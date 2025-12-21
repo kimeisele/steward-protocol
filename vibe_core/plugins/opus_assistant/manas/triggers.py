@@ -476,10 +476,12 @@ class SynapticMemory:
     This class provides:
     1. consult(trigger) - Get recommended actions for a trigger
     2. get_confidence(intent) - Get learned confidence for an intent
-    3. load/save - Persistence to synapses.json
+    3. load/save - Persistence to synapses.json (via SynapseStore)
 
     The key insight: Learning without inference is just data collection.
     MANAS must READ the synapses to make experience-based decisions.
+
+    OPUS-171: Now uses SynapseStore for unified synapse persistence.
 
     Usage:
         memory = SynapticMemory.get(workspace)
@@ -500,10 +502,8 @@ class SynapticMemory:
     def __init__(self, workspace: Path):
         """Initialize synaptic memory for a workspace."""
         self._workspace = workspace
-        self._synapse_file = workspace / ".opus_state" / "synapses.json"
-        self._cache: Optional[Dict[str, Any]] = None
-        self._cache_time: Optional[datetime] = None
-        self._cache_ttl_seconds = 60  # Reload cache every 60 seconds
+        # OPUS-171: Use SynapseStore instead of direct file access
+        self._store = None  # Lazy init to avoid circular imports
 
     @classmethod
     def get(cls, workspace: Path) -> "SynapticMemory":
@@ -513,33 +513,20 @@ class SynapticMemory:
             cls._instances[key] = cls(workspace)
         return cls._instances[key]
 
+    def _get_store(self):
+        """Get the SynapseStore instance (lazy init to avoid circular imports)."""
+        if self._store is None:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            self._store = get_synapse_store(
+                workspace=self._workspace,
+                seed_weights=get_seed_synapses(),
+            )
+        return self._store
+
     def _load_synapses(self, force: bool = False) -> Dict[str, Any]:
-        """Load synapses from disk with caching."""
-        now = datetime.utcnow()
-
-        # Return cache if valid
-        if not force and self._cache is not None and self._cache_time is not None:
-            age = (now - self._cache_time).total_seconds()
-            if age < self._cache_ttl_seconds:
-                return self._cache
-
-        # Load from disk
-        if not self._synapse_file.exists():
-            # Initialize with seeds
-            self._cache = {
-                "schema": "v2",
-                "weights": get_seed_synapses(),
-                "meta": {"created": now.isoformat()},
-            }
-        else:
-            try:
-                self._cache = json.loads(self._synapse_file.read_text())
-            except Exception as e:
-                logger.warning(f"Failed to load synapses: {e}")
-                self._cache = {"schema": "v2", "weights": {}, "meta": {}}
-
-        self._cache_time = now
-        return self._cache
+        """Load synapses via SynapseStore (OPUS-171 unified access)."""
+        return self._get_store().load(force=force)
 
     def consult(
         self,
@@ -818,5 +805,5 @@ class SynapticMemory:
 
     def invalidate_cache(self) -> None:
         """Invalidate the cache (force reload on next access)."""
-        self._cache = None
-        self._cache_time = None
+        # OPUS-171: Delegate to SynapseStore
+        self._get_store().invalidate_cache()

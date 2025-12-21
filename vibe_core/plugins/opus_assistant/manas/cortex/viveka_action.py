@@ -1305,17 +1305,10 @@ class VivekaAction(BaseAction):
         self._save_synapses(synapses)
 
     def _load_synapses(self) -> Dict[str, Any]:
-        """Load synapses from disk."""
-        import json
+        """Load synapses via SynapseStore (OPUS-171 unified access)."""
+        from vibe_core.state.synapse_store import get_synapse_store
 
-        synapses_path = self._workspace / ".opus_state" / "synapses.json"
-        if synapses_path.exists():
-            try:
-                with open(synapses_path) as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
-        return {"triggers": [], "version": "1.0"}
+        return get_synapse_store(workspace=self._workspace).load()
 
     def _apply_vairagya(self, synapses: Dict[str, Any]) -> int:
         """
@@ -1370,7 +1363,9 @@ class VivekaAction(BaseAction):
         return pruned_count
 
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk via StateService (P0) with ego pruning."""
+        """Save synapses via SynapseStore (OPUS-171) with VAIRAGYA ego pruning."""
+        from vibe_core.state.synapse_store import get_synapse_store
+
         # Apply VAIRAGYA before saving - ego pruning
         vairagya_count = self._apply_vairagya(synapses)
 
@@ -1389,9 +1384,127 @@ class VivekaAction(BaseAction):
             synapses["meta"]["last_vairagya_prune"] = now
             synapses["meta"]["last_vairagya_count"] = vairagya_count
 
-        # P0: Use StateService for centralized writes with automatic backup rotation
-        state = get_state_service(self._workspace)
-        state.save("synapses.json", synapses)
+        # OPUS-171: Use SynapseStore for unified persistence
+        store = get_synapse_store(workspace=self._workspace)
+        store.save_raw(synapses)
+
+        # =================================================================
+        # OPUS-171 Phase 4: SANSKRIT MATRIX COMPRESSION
+        # =================================================================
+        # After synapse save, compress patterns to Akshara signatures
+        # This enables mantra-based training and Siddhi auto-decisions
+        self._compress_to_sanskrit_matrix(synapses)
+
+    def _compress_to_sanskrit_matrix(self, synapses: Dict[str, Any]) -> None:
+        """
+        OPUS-171 Phase 4: Compress synapses to Sanskrit Matrix.
+
+        Transforms synapse patterns into Akshara signatures for:
+        1. Extreme compression (67 patterns → ~20 signatures → ~10 mantras)
+        2. Phonemic clustering (patterns grouped by layer + decision)
+        3. Siddhi tracking (mantras with 108+ repetitions become automatic)
+
+        The Sanskrit Matrix is saved alongside synapses for Siddhi lookup.
+        """
+        try:
+            from vibe_core.state.sanskrit_matrix import generate_sanskrit_matrix
+
+            # Convert synapses to Samskaras format for Sanskrit Matrix
+            samskaras = self._synapses_to_samskaras(synapses)
+
+            if not samskaras:
+                return  # No patterns to compress
+
+            # Generate Sanskrit Matrix
+            matrix = generate_sanskrit_matrix({"samskaras": samskaras})
+
+            if matrix.get("mantras"):
+                # Save matrix via StateService
+                state = get_state_service(self._workspace)
+                state.save("sanskrit_matrix.json", matrix)
+
+                # Log compression stats
+                report = matrix.get("report", {})
+                logger.info(
+                    f"🕉️ SANSKRIT MATRIX: {report.get('total_samskaras', 0)} patterns → "
+                    f"{report.get('total_mantras', 0)} mantras "
+                    f"(compression: {report.get('compression_ratio', 1):.1f}x)"
+                )
+
+                # Check for new Siddhi (mantras with 108+ repetitions)
+                for mantra in matrix.get("mantras", []):
+                    if mantra.get("siddhi"):
+                        logger.info(
+                            f"🕉️ SIDDHI: {mantra.get('signature')} - {mantra.get('meaning')} (auto-approve enabled)"
+                        )
+
+        except ImportError:
+            logger.debug("Sanskrit Matrix not available - skipping compression")
+        except Exception as e:
+            logger.warning(f"Sanskrit Matrix compression failed: {e}")
+
+    def _synapses_to_samskaras(self, synapses: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Convert synapses v3 format to Samskaras for Sanskrit Matrix.
+
+        Samskaras are distilled patterns with:
+        - intent_type: The trigger pattern
+        - decision: EXECUTE/WARN_EXECUTE/BLOCK
+        - count: How many times this pattern occurred
+        - avg_dharmic_score: Average confidence
+        """
+        samskaras = []
+
+        # Process triggers list (dynamic patterns)
+        for trigger_entry in synapses.get("triggers", []):
+            trigger = trigger_entry.get("trigger", "")
+            for conn in trigger_entry.get("connections", []):
+                weight = conn.get("weight", 0.5)
+
+                # Determine decision from weight
+                if weight >= DHARMIC_THRESHOLD_EXECUTE:
+                    decision = "EXECUTE"
+                elif weight >= DHARMIC_THRESHOLD_WARN:
+                    decision = "WARN_EXECUTE"
+                else:
+                    decision = "BLOCK"
+
+                # Extract intent_type from trigger pattern
+                intent_type = trigger.replace("trigger:", "")
+
+                samskaras.append(
+                    {
+                        "intent_type": intent_type,
+                        "decision": decision,
+                        "count": 1,  # Each synapse connection = 1 pattern
+                        "avg_dharmic_score": weight,
+                        "trend": "stable",
+                    }
+                )
+
+        # Process base weights (static patterns)
+        for trigger, actions in synapses.get("weights", {}).items():
+            for action, weight in actions.items():
+                if weight >= DHARMIC_THRESHOLD_EXECUTE:
+                    decision = "EXECUTE"
+                elif weight >= DHARMIC_THRESHOLD_WARN:
+                    decision = "WARN_EXECUTE"
+                else:
+                    decision = "BLOCK"
+
+                intent_type = trigger.replace("trigger:", "")
+
+                samskaras.append(
+                    {
+                        "intent_type": intent_type,
+                        "decision": decision,
+                        "count": 1,
+                        "avg_dharmic_score": weight,
+                        "trend": "stable",
+                    }
+                )
+
+        return samskaras
 
     # =========================================================================
     # OPUS-133: SATYAGRAHA - Delayed Karma Validation

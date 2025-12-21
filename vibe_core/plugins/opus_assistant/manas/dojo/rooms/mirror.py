@@ -444,13 +444,10 @@ class Mirror:
         return None
 
     def _load_synapses(self) -> Dict[str, Any]:
-        """Load synapses from disk."""
-        if self._synapses_path.exists():
-            try:
-                return json.loads(self._synapses_path.read_text())
-            except (json.JSONDecodeError, IOError):
-                pass
-        return {"weights": {}, "triggers": []}
+        """Load synapses via SynapseStore (OPUS-171 unified access)."""
+        from vibe_core.state.synapse_store import get_synapse_store
+
+        return get_synapse_store(workspace=self._workspace).load()
 
     def _save_inspection(self, inspection: SelfInspection) -> None:
         """Save inspection to history."""
