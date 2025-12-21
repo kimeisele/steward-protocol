@@ -2716,7 +2716,11 @@ class CognitiveKernel(CognitiveCycle):
             self._intent_buffer = []
 
     def _save_intent_buffer(self) -> None:
-        """Save intent buffer to disk via StateService (P0)."""
+        """Save intent buffer to disk.
+
+        Uses direct file I/O to match _load_intent_buffer behavior.
+        This ensures workspace consistency in tests with isolated tmp_path.
+        """
         try:
             data = {
                 "intents": [
@@ -2732,9 +2736,10 @@ class CognitiveKernel(CognitiveCycle):
                 "updated_at": datetime.utcnow().isoformat(),
             }
 
-            # P0: Save via StateService (atomic write built-in)
-            state = get_state_service(self._workspace)
-            state.save("manas_intents.json", data, create_backup=False)
+            # Direct file I/O - matches _load_intent_buffer behavior
+            buffer_file = self._get_buffer_file()
+            buffer_file.parent.mkdir(parents=True, exist_ok=True)
+            buffer_file.write_text(json.dumps(data, indent=2))
 
         except Exception as e:
             logger.warning(f"Could not save intent buffer: {e}")
