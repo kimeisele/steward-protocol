@@ -228,6 +228,50 @@ class AkashaSense(BaseSense):
 
         return intents
 
+    def get_boot_summary(self) -> Dict[str, Any]:
+        """
+        OPUS-172: Polymorphic boot summary for SenseManager.
+
+        Returns standardized boot data combining:
+        - UnifiedKnowledgeGraph status (ontology/topology)
+        - ManasKnowledgePort status (APCE/FAE/FDG engines)
+        """
+        try:
+            # Graph knowledge (ontology)
+            node_count = self.port.get_node_count()
+            edge_count = self.port.get_edge_count()
+            is_loaded = self.port.is_loaded()
+
+            # MANAS-specific knowledge (decision engines)
+            manas_status = {}
+            try:
+                from .manas_knowledge import get_manas_knowledge
+
+                manas_port = get_manas_knowledge(self._workspace)
+                manas_status = manas_port.get_status()
+            except Exception:
+                pass  # ManasKnowledge optional
+
+            return {
+                "message": f"Knowledge: {node_count} nodes",
+                "data": {
+                    "node_count": node_count,
+                    "edge_count": edge_count,
+                    "loaded": is_loaded,
+                    "manas_engines": {
+                        "apce": manas_status.get("complexity_rules", 0),
+                        "fae": manas_status.get("incompatibilities", 0),
+                        "fdg": manas_status.get("features", 0),
+                    }
+                    if manas_status
+                    else None,
+                },
+                "emoji": "🔮",
+            }
+        except Exception as e:
+            logger.debug(f"[AKASHA_SENSE] Boot summary failed: {e}")
+        return {"message": "Initialized", "data": {}, "emoji": "🔮"}
+
     # =========================================================================
     # Convenience Methods (Delegate to AkashaQuery)
     # =========================================================================

@@ -484,6 +484,30 @@ class DharmaSense(BaseSense):
             except Exception:
                 pass
 
+    def get_boot_summary(self) -> Dict[str, Any]:
+        """
+        OPUS-172: Polymorphic boot summary for SenseManager.
+
+        Returns standardized boot data for the SenseManager to use
+        instead of hardcoded if/elif checks.
+        """
+        try:
+            summary = self.get_dharma_summary()
+            if summary:
+                return {
+                    "message": f"Bhakti: {summary.bhakti}",
+                    "data": {
+                        "bhakti": summary.bhakti,
+                        "ashrama": summary.ashrama,
+                        "varna": summary.varna,
+                        "is_registered": summary.is_registered,
+                    },
+                    "emoji": "🙏",
+                }
+        except Exception as e:
+            logger.debug(f"[DHARMA_SENSE] Boot summary failed: {e}")
+        return {"message": "Initialized", "data": {}, "emoji": "🙏"}
+
     # =========================================================================
     # Chat Integration (for Jnana handler)
     # =========================================================================

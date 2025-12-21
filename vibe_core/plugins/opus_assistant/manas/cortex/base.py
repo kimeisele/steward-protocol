@@ -138,6 +138,30 @@ class BaseSense(ABC):
         """
         return []
 
+    def get_boot_summary(self) -> Dict[str, Any]:
+        """
+        Get standardized boot summary for SenseManager.
+
+        OPUS-172: Polymorphic Boot Summary (VEDA-4 Anti-Pattern Fix)
+
+        This replaces the hardcoded if/elif sense_name checks in SenseManager.
+        Each sense provides its own boot summary via this standard interface.
+
+        Default implementation returns minimal data. Senses should override
+        to provide meaningful boot information.
+
+        Returns:
+            Dict with standardized keys:
+                - message: Human-readable status message
+                - data: Sense-specific data dict (optional)
+                - emoji: Display emoji (optional, default from sense name)
+        """
+        return {
+            "message": "Initialized",
+            "data": {},
+            "emoji": "✨",
+        }
+
     def __repr__(self) -> str:
         status = "enabled" if self.is_enabled else "disabled"
         return f"<{self.__class__.__name__}:{self.name} status={status}>"
