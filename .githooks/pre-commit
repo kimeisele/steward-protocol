@@ -137,6 +137,60 @@ fi
 echo -e "${GREEN}OK${NC}"
 
 # ============================================================================
+# GUARD 8: OPUS-175 Iron Dome - Block Direct Kernel Imports (Runtime)
+# ============================================================================
+# Plugins must go through Envoy API, not import kernel internals directly.
+# TYPE_CHECKING imports are OK (for type hints only).
+# Runtime imports are HIGH TREASON in federal architecture.
+# ============================================================================
+echo -n "  🛡️  OPUS-175 Iron Dome (Kernel Border)... "
+
+PLUGIN_PYTHON_FILES=$(echo "$STAGED_FILES" | grep -E "^vibe_core/plugins/.*\.py$" || true)
+
+if [ -n "$PLUGIN_PYTHON_FILES" ]; then
+    IRON_DOME_VIOLATIONS=""
+
+    for file in $PLUGIN_PYTHON_FILES; do
+        if [ -f "$file" ]; then
+            # Find kernel imports NOT inside TYPE_CHECKING blocks
+            # Look for lines with kernel import and check context
+            while IFS= read -r import_line; do
+                LINE_NUM=$(echo "$import_line" | cut -d: -f1)
+                # Check previous 5 lines for TYPE_CHECKING
+                START=$((LINE_NUM - 5))
+                if [ $START -lt 1 ]; then START=1; fi
+                CONTEXT=$(sed -n "${START},${LINE_NUM}p" "$file" 2>/dev/null)
+
+                if ! echo "$CONTEXT" | grep -q "TYPE_CHECKING"; then
+                    IRON_DOME_VIOLATIONS="${IRON_DOME_VIOLATIONS}  ${file}:${import_line}\n"
+                fi
+            done < <(grep -n "from vibe_core\.kernel" "$file" 2>/dev/null || true)
+        fi
+    done
+
+    if [ -n "$IRON_DOME_VIOLATIONS" ]; then
+        echo -e "${RED}BLOCKED${NC}"
+        echo ""
+        echo -e "${RED}❌ OPUS-175 IRON DOME: Direct Kernel Import at Runtime${NC}"
+        echo ""
+        echo "Plugins must NOT import kernel internals at runtime!"
+        echo "Only TYPE_CHECKING imports are allowed (for type hints)."
+        echo ""
+        echo "Violations:"
+        echo -e "$IRON_DOME_VIOLATIONS"
+        echo ""
+        echo "To fix:"
+        echo "  1. Move import inside 'if TYPE_CHECKING:' block"
+        echo "  2. Use Envoy API for runtime kernel access"
+        echo "  3. Receive kernel via plugin init(kernel) method"
+        echo ""
+        exit 1
+    fi
+fi
+
+echo -e "${GREEN}OK${NC}"
+
+# ============================================================================
 # GUARD 4: Auto-format and auto-fix with ruff
 # ============================================================================
 echo -n "  🎨 Running ruff format + check... "
