@@ -20,6 +20,7 @@ import pytest
 
 class WorkflowStep:
     """Represents a single step in a multi-step workflow."""
+
     def __init__(self, action: str, target: str, requires_success_of: str = None):
         self.action = action
         self.target = target
@@ -31,7 +32,7 @@ class WorkflowStep:
 class VulnerableWorkflowExecutor:
     """
     VULNERABLE IMPLEMENTATION: Stateless executor.
-    
+
     Executes approved plan without checking post-conditions.
     This is how Hiranyakashipu would win.
     """
@@ -45,12 +46,7 @@ class VulnerableWorkflowExecutor:
             result = step_results.get(step.action, False)
             step.executed = True
             step.success = result
-            execution_log.append({
-                "action": step.action,
-                "executed": True,
-                "success": result,
-                "skipped": False
-            })
+            execution_log.append({"action": step.action, "executed": True, "success": result, "skipped": False})
 
         return {"log": execution_log, "all_executed": True}
 
@@ -58,7 +54,7 @@ class VulnerableWorkflowExecutor:
 class SecureWorkflowExecutor:
     """
     SECURE IMPLEMENTATION: Stateful executor with post-condition checks.
-    
+
     This is how Narasimha defeats Hiranyakashipu - by existing at the threshold.
     """
 
@@ -73,13 +69,15 @@ class SecureWorkflowExecutor:
                 dependency_success = step_success_map.get(step.requires_success_of, False)
                 if not dependency_success:
                     # HALT! Do not execute this step.
-                    execution_log.append({
-                        "action": step.action,
-                        "executed": False,
-                        "success": False,
-                        "skipped": True,
-                        "reason": f"Dependency '{step.requires_success_of}' failed."
-                    })
+                    execution_log.append(
+                        {
+                            "action": step.action,
+                            "executed": False,
+                            "success": False,
+                            "skipped": True,
+                            "reason": f"Dependency '{step.requires_success_of}' failed.",
+                        }
+                    )
                     step.executed = False
                     step.success = False
                     step_success_map[step.action] = False
@@ -91,12 +89,7 @@ class SecureWorkflowExecutor:
             step.success = result
             step_success_map[step.action] = result
 
-            execution_log.append({
-                "action": step.action,
-                "executed": True,
-                "success": result,
-                "skipped": False
-            })
+            execution_log.append({"action": step.action, "executed": True, "success": result, "skipped": False})
 
         return {"log": execution_log, "data_lost": self._check_data_loss(execution_log)}
 
@@ -120,7 +113,7 @@ class TestHiranyakashipuParadox:
     def test_vulnerable_executor_allows_data_loss(self):
         """
         HIRANYAKASHIPU TEST 1: Vulnerable Executor (Stateless).
-        
+
         The VULNERABLE executor proceeds with 'delete' even when 'backup' failed.
         This is how Hiranyakashipu wins.
         """
@@ -133,7 +126,7 @@ class TestHiranyakashipuParadox:
         # THE ATTACK: Backup fails silently
         step_results = {
             "backup": False,  # FAILURE!
-            "delete": True    # Executed anyway
+            "delete": True,  # Executed anyway
         }
 
         executor = VulnerableWorkflowExecutor()
@@ -158,7 +151,7 @@ class TestHiranyakashipuParadox:
     def test_secure_executor_prevents_data_loss(self):
         """
         HIRANYAKASHIPU TEST 2: Secure Executor (Stateful).
-        
+
         The SECURE executor checks dependencies before each step.
         Delete CANNOT run if Backup failed.
         """
@@ -171,7 +164,7 @@ class TestHiranyakashipuParadox:
         # THE ATTACK (same as before)
         step_results = {
             "backup": False,  # FAILURE!
-            "delete": True    # Would execute if allowed
+            "delete": True,  # Would execute if allowed
         }
 
         executor = SecureWorkflowExecutor()
@@ -180,7 +173,9 @@ class TestHiranyakashipuParadox:
         # Check execution log
         delete_step = next(e for e in result["log"] if e["action"] == "delete")
 
-        print(f"✅ Secure Executor: Delete executed={delete_step['executed']}, skipped={delete_step.get('skipped', False)}")
+        print(
+            f"✅ Secure Executor: Delete executed={delete_step['executed']}, skipped={delete_step.get('skipped', False)}"
+        )
 
         # Delete should be SKIPPED because backup failed
         assert delete_step["skipped"] is True, "Delete should be skipped when backup fails!"
@@ -191,7 +186,7 @@ class TestHiranyakashipuParadox:
     def test_workflow_atomicity_requirement(self):
         """
         HIRANYAKASHIPU TEST 3: Atomicity Demonstration.
-        
+
         In a truly atomic workflow, if ANY step fails, ALL steps rollback.
         This is the "Twilight Zone" - neither commit nor abort, but in-between.
         """
@@ -206,7 +201,7 @@ class TestHiranyakashipuParadox:
         step_results = {
             "read_source": True,
             "transform": False,  # FAILURE in the middle!
-            "write_dest": True
+            "write_dest": True,
         }
 
         executor = SecureWorkflowExecutor()
@@ -227,10 +222,10 @@ class TestSystemArchitectureRecommendation:
     def test_recommendation_explicit_dependencies(self):
         """
         RECOMMENDATION: All multi-step workflows MUST declare dependencies.
-        
+
         Instead of:
             steps = ["backup", "delete"]
-        
+
         Use:
             steps = [
                 {"action": "backup", "target": "file"},

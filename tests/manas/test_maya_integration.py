@@ -21,7 +21,7 @@ class TestMayaIntegration:
     def test_maya_is_wired_into_router(self):
         """
         INTEGRATION TEST 1: Maya is now wired into IntentRouter.
-        
+
         The reflection_gap should no longer exist.
         """
         from vibe_core.plugins.opus_assistant.manas import intent_router
@@ -45,7 +45,7 @@ class TestMayaIntegration:
     def test_maya_risk_filter(self):
         """
         INTEGRATION TEST 2: Risk-Filter works.
-        
+
         Low-risk intents should use Fast Path (no simulation).
         High-risk intents should be simulated.
         """

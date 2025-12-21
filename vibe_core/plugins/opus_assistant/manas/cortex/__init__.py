@@ -90,6 +90,19 @@ from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import (
     handle_prakriti_query,
 )
 
+# OPUS-166: PRANA ACTION (The Hands of Life Force)
+from vibe_core.plugins.opus_assistant.manas.cortex.prana_action import (
+    PranaAction,
+)
+
+# OPUS-166: PRANA SENSE (The 7th Sense - Agent Presence)
+from vibe_core.plugins.opus_assistant.manas.cortex.prana_sense import (
+    AgentPresence,
+    PranaPerception,
+    PranaSense,
+    PresenceChange,
+)
+
 # OPUS-042: SAMVADA (The Dialogue)
 from vibe_core.plugins.opus_assistant.manas.cortex.samvada import (
     SamvadaClient,
@@ -240,6 +253,11 @@ __all__ = [
     "MukhaGenerator",
     "IdentityScanner",
     "AgentIdentity",
+    # OPUS-166: PRANA SENSE (The 7th Sense - Agent Presence)
+    "PranaSense",
+    "PranaPerception",
+    "AgentPresence",
+    "PresenceChange",
     # OPUS-009: PRAKRITI SENSE (The 1st Sense - State)
     "PrakritiSense",
     "GunaSummary",
@@ -256,6 +274,8 @@ __all__ = [
     "VivekaReport",
     "CoverageGap",
     "TriagePriority",
+    # OPUS-166: PRANA ACTION (The Hands of Life Force)
+    "PranaAction",
     # OPUS-133: VIVEKA ACTION (The Hands of Discrimination)
     "VivekaAction",
 ]

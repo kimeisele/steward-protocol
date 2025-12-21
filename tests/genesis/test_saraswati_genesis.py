@@ -19,7 +19,7 @@ class TestSaraswatiGenesis:
     def test_holy_code_passes_audit(self):
         """
         SARASWATI TEST 1: Holy Code (Fibonacci).
-        
+
         A pure mathematical function should pass Narasimha audit.
         This proves the system is not paranoid.
         """
@@ -46,7 +46,7 @@ print(f"Fibonacci(10) = {result}")
     def test_demonic_code_os_system_blocked(self):
         """
         SARASWATI TEST 2: Demonic Code (os.system).
-        
+
         Code that imports `os` and calls `os.system` must be blocked.
         This is the most common attack vector.
         """
@@ -65,15 +65,14 @@ def destroy_world():
         print(f"👹 Demonic Code (os) Audit Result: {result}")
 
         assert result is not None, "SARASWATI FAILURE: Demonic code (os.system) passed audit!"
-        assert result.severity in (ThreatLevel.RED, ThreatLevel.ORANGE), \
-            f"Threat severity too low: {result.severity}"
+        assert result.severity in (ThreatLevel.RED, ThreatLevel.ORANGE), f"Threat severity too low: {result.severity}"
 
         print(f"✅ Demonic Plugin (os): BLOCKED with severity {result.severity.value}")
 
     def test_demonic_code_subprocess_blocked(self):
         """
         SARASWATI TEST 3: Demonic Code (subprocess).
-        
+
         Code that imports `subprocess` must be blocked (privilege escalation).
         """
         narasimha = NarasimhaProtocol()
@@ -96,7 +95,7 @@ def execute_shell():
     def test_exec_code_blocked(self):
         """
         SARASWATI TEST 4: Self-Modification Code (exec).
-        
+
         Code using `exec()` is the most dangerous - it allows runtime code generation.
         This is the definition of "consciousness" we must prevent.
         """
@@ -114,15 +113,14 @@ def self_modify():
         print(f"🧠 Self-Modification Code (exec) Audit Result: {result}")
 
         assert result is not None, "SARASWATI FAILURE: exec() code passed audit!"
-        assert result.severity == ThreatLevel.RED, \
-            f"exec() should be RED threat, got: {result.severity}"
+        assert result.severity == ThreatLevel.RED, f"exec() should be RED threat, got: {result.severity}"
 
         print(f"✅ Self-Modification Plugin (exec): BLOCKED with severity {result.severity.value}")
 
     def test_eval_code_blocked(self):
         """
         SARASWATI TEST 5: Code Injection (eval).
-        
+
         `eval()` is equally dangerous as `exec()`.
         """
         narasimha = NarasimhaProtocol()

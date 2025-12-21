@@ -85,15 +85,15 @@ class SimulationResult:
 class MayaSimulator:
     """
     OPUS-155: Maya Simulator - The Dream Layer.
-    
-    Orchestrates ephemeral simulations to validate intents before 
+
+    Orchestrates ephemeral simulations to validate intents before
     reality execution. Supports RECURSIVE simulation (Inception).
-    
+
     Architecture:
         Reality → Dream 1 → Dream 2 → Dream 3 → Samadhi
                     ↓
             Evaluate consequences across multiple reflection depths
-    
+
     Usage:
         maya = MayaSimulator(workspace, current_depth=0)
         result = maya.simulate(intent)
@@ -109,7 +109,7 @@ class MayaSimulator:
     ):
         """
         Initialize Maya Simulator.
-        
+
         Args:
             workspace: Project workspace path
             current_depth: Current recursion depth (0 = reality)
@@ -126,10 +126,10 @@ class MayaSimulator:
     def requires_simulation(self, intent: Dict[str, Any]) -> bool:
         """
         RISK-FILTER: Determine if intent requires simulation.
-        
+
         Fast Path: LOW risk, read-only → Execute directly
         Dream Path: HIGH/CRITICAL risk, destructive → Simulate first
-        
+
         Returns:
             True if intent should be simulated
         """
@@ -154,13 +154,13 @@ class MayaSimulator:
     def simulate(self, intent: Dict[str, Any]) -> SimulationResult:
         """
         Simulate an intent in ephemeral space.
-        
+
         INCEPTION: May recursively spawn deeper simulations if the
         simulated intent itself triggers new intents.
-        
+
         Args:
             intent: The intent to simulate
-            
+
         Returns:
             SimulationResult with safety assessment
         """
@@ -198,9 +198,7 @@ class MayaSimulator:
         # =================================================================
         # DREAM PATH: Run simulation in ephemeral kernel
         # =================================================================
-        logger.info(
-            f"🌀 MAYA LEVEL {self._depth}: Dreaming '{intent.get('title', 'Unknown')}'"
-        )
+        logger.info(f"🌀 MAYA LEVEL {self._depth}: Dreaming '{intent.get('title', 'Unknown')}'")
 
         try:
             runner = self._get_runner()
@@ -217,10 +215,7 @@ class MayaSimulator:
             dharmic_score = simulation_outcome.get("dharmic_score", 0.5)
 
             if outcome_type == "HARM_DETECTED":
-                logger.warning(
-                    f"🚫 MAYA BLOCKED at depth {self._depth}: "
-                    f"Harm detected in simulation"
-                )
+                logger.warning(f"🚫 MAYA BLOCKED at depth {self._depth}: Harm detected in simulation")
                 return SimulationResult(
                     safe=False,
                     score=dharmic_score,
@@ -230,10 +225,7 @@ class MayaSimulator:
                 )
 
             if outcome_type == "ERROR":
-                logger.warning(
-                    f"⚠️ MAYA ERROR at depth {self._depth}: "
-                    f"Simulation failed"
-                )
+                logger.warning(f"⚠️ MAYA ERROR at depth {self._depth}: Simulation failed")
                 # Conservative: block on simulation errors for high-risk intents
                 return SimulationResult(
                     safe=False,
@@ -244,10 +236,7 @@ class MayaSimulator:
                 )
 
             # Simulation passed
-            logger.info(
-                f"✅ MAYA PASSED at depth {self._depth}: "
-                f"Score {dharmic_score:.2f}"
-            )
+            logger.info(f"✅ MAYA PASSED at depth {self._depth}: Score {dharmic_score:.2f}")
             return SimulationResult(
                 safe=True,
                 score=dharmic_score,
@@ -272,11 +261,11 @@ class MayaSimulator:
             from .dojo.runner import DojoConfig, DojoRunner
 
             config = DojoConfig(
-                dry_run=True,              # NEVER execute real actions
-                use_ephemeral_kernel=True, # Everything in RAM
-                persist_synapses=False,    # Don't learn from dreams
-                persist_metrics=False,     # Don't log dream metrics
-                scenarios_per_epoch=1,     # Single intent simulation
+                dry_run=True,  # NEVER execute real actions
+                use_ephemeral_kernel=True,  # Everything in RAM
+                persist_synapses=False,  # Don't learn from dreams
+                persist_metrics=False,  # Don't log dream metrics
+                scenarios_per_epoch=1,  # Single intent simulation
                 max_epochs=1,
             )
 
@@ -290,7 +279,7 @@ class MayaSimulator:
     def spawn_child(self) -> "MayaSimulator":
         """
         Spawn a child Maya for deeper simulation (Inception).
-        
+
         Called by DojoRunner when simulated intent triggers new intents.
         """
         return MayaSimulator(
@@ -324,11 +313,11 @@ def simulate_intent(
 ) -> SimulationResult:
     """
     Convenience function to simulate an intent.
-    
+
     Args:
         intent: The intent to simulate
         workspace: Optional workspace path
-        
+
     Returns:
         SimulationResult with safety assessment
     """

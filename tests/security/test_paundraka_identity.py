@@ -25,7 +25,7 @@ class TestPaundrakaIdentity:
     def test_unregistered_agent_cannot_record_events(self):
         """
         PAUNDRAKA TEST 1: Unregistered Agent Event Blocking.
-        
+
         An agent that is NOT in the registry cannot record events.
         This is the first line of defense.
         """
@@ -36,9 +36,7 @@ class TestPaundrakaIdentity:
 
         with pytest.raises(PermissionError) as excinfo:
             kernel.record_verified_event(
-                event_type="ATTACK",
-                agent_id=fake_agent_id,
-                details={"intent": "impersonate_watchman"}
+                event_type="ATTACK", agent_id=fake_agent_id, details={"intent": "impersonate_watchman"}
             )
 
         assert "IDENTITY_SPOOFING_BLOCKED" in str(excinfo.value)
@@ -47,7 +45,7 @@ class TestPaundrakaIdentity:
     def test_mismatched_caller_agent_blocked(self):
         """
         PAUNDRAKA TEST 2: Caller Mismatch Detection.
-        
+
         Even if agent_id is valid, the caller_agent must match.
         This prevents one agent from impersonating another.
         """
@@ -68,7 +66,7 @@ class TestPaundrakaIdentity:
                 event_type="ATTACK",
                 agent_id="legitimate_agent",  # Claims to be legitimate
                 details={"intent": "steal_identity"},
-                caller_agent=imposter_agent  # But caller is paundraka
+                caller_agent=imposter_agent,  # But caller is paundraka
             )
 
         assert "IDENTITY_SPOOFING_BLOCKED" in str(excinfo.value)
@@ -77,7 +75,7 @@ class TestPaundrakaIdentity:
     def test_legitimate_agent_can_record_events(self):
         """
         PAUNDRAKA TEST 3: Legitimate Agent Allowed.
-        
+
         Control test - a properly registered agent CAN record events.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
@@ -92,7 +90,7 @@ class TestPaundrakaIdentity:
             event_type="NORMAL_OPERATION",
             agent_id="good_agent",
             details={"action": "doing_good_things"},
-            caller_agent=agent
+            caller_agent=agent,
         )
 
         assert event_id is not None
@@ -101,9 +99,9 @@ class TestPaundrakaIdentity:
     def test_syscall_registry_now_blocks_anonymous_calls(self):
         """
         PAUNDRAKA TEST 4: VULNERABILITY FIXED - Syscall Identity Gate.
-        
+
         ✅ AFTER PAUNDRAKA FIX ✅
-        
+
         SyscallRegistry.execute() now REQUIRES caller_agent_id.
         Anonymous syscalls are BLOCKED.
         """
@@ -115,10 +113,7 @@ class TestPaundrakaIdentity:
 
         registry = get_syscall_registry()
         registry.register(
-            "SENSITIVE_ADMIN_ACTION",
-            sensitive_syscall,
-            description="Should require caller identity",
-            plugin_id="test"
+            "SENSITIVE_ADMIN_ACTION", sensitive_syscall, description="Should require caller identity", plugin_id="test"
         )
 
         # ✅ THE FIX: Anonymous calls are now BLOCKED
@@ -126,7 +121,7 @@ class TestPaundrakaIdentity:
             registry.execute(
                 kernel,
                 "SENSITIVE_ADMIN_ACTION",
-                {"caller_id": "paundraka_claiming_to_be_admin"}
+                {"caller_id": "paundraka_claiming_to_be_admin"},
                 # No caller_agent_id!
             )
 
@@ -143,7 +138,7 @@ class TestPaundrakaRecommendedFix:
     def test_recommended_syscall_identity_check(self):
         """
         PAUNDRAKA FIX PROPOSAL: How syscalls SHOULD verify identity.
-        
+
         This is a mock of what the fixed behavior should look like.
         The real fix would modify SyscallRegistry.execute().
         """
@@ -174,12 +169,7 @@ class TestPaundrakaRecommendedFix:
         legitimate_caller = MagicMock()
         legitimate_caller.agent_id = "verified_agent"
 
-        result = secure_execute_syscall(
-            kernel,
-            "TEST_SYSCALL",
-            {},
-            caller_agent=legitimate_caller
-        )
+        result = secure_execute_syscall(kernel, "TEST_SYSCALL", {}, caller_agent=legitimate_caller)
 
         assert result["success"] is True
         print("✅ Recommended fix demonstrated: Identity verification in syscalls")

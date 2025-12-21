@@ -1,4 +1,3 @@
-
 import logging
 import os
 import sys
@@ -15,26 +14,27 @@ from vibe_core.plugins.opus_assistant.manas.cortex.viveka_action import VivekaAc
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TEST_DHARMA_LIE")
 
+
 class TestDharmaLie:
     def test_vairagya_ignored(self):
         """
         PROOF OF DEFECT: The Prabhupada Paradox.
-        
+
         Vedic Law: If Confidence > VAIRAGYA_THRESHOLD (0.95), we must decay it to prevent Ego.
         Current Reality: The code ignores this law.
-        
+
         We force the internal score to 0.99.
         We assert that the returned score is LESS than 0.99 (Decay happened).
-        
+
         This test will FAIL on the current codebase.
         """
         action = VivekaAction()
 
         # 1. Mock SynapticMemory (to force calculation path)
         mock_memory = MagicMock()
-        mock_memory.consult_dharmic.return_value = [] # No learned experience
+        mock_memory.consult_dharmic.return_value = []  # No learned experience
         mock_memory = MagicMock()
-        mock_memory.consult_dharmic.return_value = [] # No learned experience
+        mock_memory.consult_dharmic.return_value = []  # No learned experience
         action._get_synaptic_memory = MagicMock(return_value=mock_memory)
 
         # Mock Decision Logger to avoid 'dict object has no attribute append' error
@@ -60,8 +60,9 @@ class TestDharmaLie:
                 mock_varga.name = "SATTVA"
 
                 with patch("vibe_core.plugins.opus_assistant.manas.akshara.get_trigger_varga", return_value=mock_varga):
-                    with patch("vibe_core.plugins.opus_assistant.manas.akshara.get_action_varga", return_value=mock_varga):
-
+                    with patch(
+                        "vibe_core.plugins.opus_assistant.manas.akshara.get_action_varga", return_value=mock_varga
+                    ):
                         # Act
                         decision, log = action._evaluate_dharmic(mock_intent, "action:test")
 
@@ -73,4 +74,6 @@ class TestDharmaLie:
                         # So Final Score must be < 0.99.
 
                         # The Bug: It returns 0.99.
-                        assert score < 0.99, f"DHARMA VIOLATION: Ego unbounded. Score {score} did not decay despite > 0.95 threshold."
+                        assert score < 0.99, (
+                            f"DHARMA VIOLATION: Ego unbounded. Score {score} did not decay despite > 0.95 threshold."
+                        )

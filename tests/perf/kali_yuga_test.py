@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 import os
@@ -10,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 # Setup basic logging
-logging.basicConfig(level=logging.WARN, format="%(asctime)s [%(levelname)s] %(message)s") # Reduced logging
+logging.basicConfig(level=logging.WARN, format="%(asctime)s [%(levelname)s] %(message)s")  # Reduced logging
 logger = logging.getLogger("KALI_YUGA")
 logger.setLevel(logging.INFO)
 
@@ -39,7 +38,7 @@ class EphemeralAgent(VibeAgent):
             author="KALI_YUGA",
             description="Ephemeral Agent",
             source="maya",
-            domain="chaos"
+            domain="chaos",
         )
 
     def set_kernel(self, kernel: RealVibeKernel):
@@ -65,10 +64,7 @@ class EphemeralAgent(VibeAgent):
         # Direct ledger write (bypassing normal safe channels to simulate raw chaos)
         try:
             self.kernel.record_verified_event(
-                event_type="KALI_YUGA_DESIRE",
-                agent_id=self.agent_id,
-                details=event,
-                caller_agent=self
+                event_type="KALI_YUGA_DESIRE", agent_id=self.agent_id, details=event, caller_agent=self
             )
         except Exception as e:
             # Swallow errors to simulate "Ignorance" (Tamas)
@@ -87,7 +83,7 @@ def get_memory_usage_mb():
 async def run_kali_yuga():
     """
     THE KALI YUGA STRESS TEST
-    
+
     Spawns 10,000 agents.
     Each writes to the ledger.
     We measure if the Kernel collapses or Memory explodes.
@@ -113,14 +109,15 @@ async def run_kali_yuga():
     try:
         for i in range(0, NUM_AGENTS, batch_size):
             batch_num = i // batch_size + 1
-            if batch_num % 1 == 0: logger.info(f"Spawning Batch {batch_num}...")
+            if batch_num % 1 == 0:
+                logger.info(f"Spawning Batch {batch_num}...")
 
             # Create batch
             current_batch = []
             for j in range(batch_size):
-                agent_id = f"jiva_{i+j}"
+                agent_id = f"jiva_{i + j}"
                 agent = EphemeralAgent(agent_id=agent_id)
-                kernel.register_agent(agent, spawn_process=False) # No processes, pure object overhead
+                kernel.register_agent(agent, spawn_process=False)  # No processes, pure object overhead
                 current_batch.append(agent)
 
             agents.extend(current_batch)
@@ -131,13 +128,14 @@ async def run_kali_yuga():
             await asyncio.gather(*tasks)
 
             mem = get_memory_usage_mb()
-            if mem > 3000: # 3GB Safety Limit
+            if mem > 3000:  # 3GB Safety Limit
                 logger.critical("🚨 SYSTEM COLLAPSE IMMINENT: MEMORY EXCEEDED 3GB")
                 break
 
     except Exception as e:
         logger.error(f"💥 CHAOS ENSUED: {e}")
         import traceback
+
         traceback.print_exc()
 
     end_time = time.time()
@@ -151,9 +149,9 @@ async def run_kali_yuga():
     ledger_events = kernel._ledger.get_all_events() if hasattr(kernel, "_ledger") else []
     registry_size = len(kernel._agent_registry)
 
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info("📊 RESULTS OF THE YUGA")
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info(f"Total Agents Spawned: {registry_size}")
     logger.info(f"Total Ledger Events:  {len(ledger_events)}")
     logger.info(f"Final Memory Usage:   {final_mem:.2f} MB")
@@ -167,7 +165,9 @@ async def run_kali_yuga():
     # 3. VERDICT
     # Low threshold for detection
     if final_mem > 500:
-        logger.warning(f"⚠️  KARMIC DEBT DETECTED: Memory usage high ({final_mem:.2f} MB). Entropy is not being released.")
+        logger.warning(
+            f"⚠️  KARMIC DEBT DETECTED: Memory usage high ({final_mem:.2f} MB). Entropy is not being released."
+        )
     else:
         logger.info("✅ System held stable (Unlikely).")
 
@@ -177,6 +177,7 @@ async def run_kali_yuga():
     kernel = None
     agents = None
     import gc
+
     gc.collect()
     post_gc_mem = get_memory_usage_mb()
     logger.info(f"Post-GC Memory: {post_gc_mem:.2f} MB")
@@ -184,9 +185,10 @@ async def run_kali_yuga():
     # Check if memory released
     # If > 100MB persists, it's a leak (base overhead is small around 60MB)
     if post_gc_mem > 120:
-         logger.error("🛑 MEMORY LEAK CONFIRMED: Objects persisted after Pralaya.")
+        logger.error("🛑 MEMORY LEAK CONFIRMED: Objects persisted after Pralaya.")
     else:
         logger.info("✨ Clean Dissolution.")
+
 
 if __name__ == "__main__":
     asyncio.run(run_kali_yuga())

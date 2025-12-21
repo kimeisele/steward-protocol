@@ -30,7 +30,7 @@ import pytest
 class TestReflectionGap:
     """
     PROVE THE GAP: Does MANAS act without dreaming?
-    
+
     The hypothesis: IntentRouter executes intents directly
     without consulting DojoRunner for simulation first.
     """
@@ -38,7 +38,7 @@ class TestReflectionGap:
     def test_static_analysis_intent_router_has_no_dojo(self):
         """
         REFLECTION GAP TEST 1: Static Analysis.
-        
+
         Check if IntentRouter imports or references DojoRunner.
         If not, the "dream layer" is not wired.
         """
@@ -71,7 +71,7 @@ class TestReflectionGap:
     def test_static_analysis_cognitive_kernel_dream_layer(self):
         """
         REFLECTION GAP TEST 2: Check CognitiveKernel for dream layer.
-        
+
         Does CognitiveKernel.think() simulate before acting?
         """
         from vibe_core.plugins.opus_assistant.manas import cognitive_kernel
@@ -91,7 +91,7 @@ class TestReflectionGap:
         print(f"   'ephemeral' reference: {has_ephemeral}")
 
         # Check the think() method specifically
-        if hasattr(cognitive_kernel.CognitiveKernel, 'think'):
+        if hasattr(cognitive_kernel.CognitiveKernel, "think"):
             think_source = inspect.getsource(cognitive_kernel.CognitiveKernel.think)
             think_has_simulate = "simulate" in think_source.lower() or "dojo" in think_source.lower()
             print(f"\n   think() method has simulation: {think_has_simulate}")
@@ -103,7 +103,7 @@ class TestReflectionGap:
     def test_static_analysis_kernel_tick_flow(self):
         """
         REFLECTION GAP TEST 3: Analyze kernel_tick.py flow.
-        
+
         This is where MANAS gets triggered on each tick.
         Does it simulate before acting?
         """
@@ -131,7 +131,7 @@ class TestReflectionGap:
     def test_dojo_only_for_training(self):
         """
         REFLECTION GAP TEST 4: Prove Dojo is only for training.
-        
+
         Check if DojoRunner is ever called from production code paths
         (intent_router, cognitive_kernel) vs only from training scripts.
         """

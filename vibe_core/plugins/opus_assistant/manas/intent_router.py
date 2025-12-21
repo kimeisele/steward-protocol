@@ -791,10 +791,7 @@ class IntentRouter:
                     error=f"Simulation blocked: {simulation.reason}",
                 )
             else:
-                logger.debug(
-                    f"✅ MAYA PASSED: {intent.title} "
-                    f"(depth={simulation.depth}, score={simulation.score:.2f})"
-                )
+                logger.debug(f"✅ MAYA PASSED: {intent.title} (depth={simulation.depth}, score={simulation.score:.2f})")
 
         # =====================================================================
         # OPUS-133: VIVEKA GATE - Dharmic Discrimination (BEFORE any dispatch)

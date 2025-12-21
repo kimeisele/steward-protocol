@@ -1,4 +1,3 @@
-
 import asyncio
 
 import pytest
@@ -11,13 +10,13 @@ class TestEntropyLeak:
     def test_ledger_infinite_growth(self):
         """
         PROOF OF DEFECT: Karmic Debt (Infinite Memory Growth).
-        
+
         Requirement: The system must recycle entropy (Garbage Collection / Pruning).
         Reality: InMemoryLedger just appends forever.
-        
+
         We push 2000 events.
         We assert that the ledger size is capped (e.g., to 1000 or 1500).
-        
+
         This test will FAIL on the current codebase.
         """
 
@@ -26,6 +25,7 @@ class TestEntropyLeak:
 
         # ACTIVATE SAMSARA: We must be ALIVE (Running) to DIE (Prune)
         from vibe_core.kernel import KernelStatus
+
         kernel._status = KernelStatus.RUNNING
 
         # 2. Generate Karma (Events)
@@ -34,16 +34,12 @@ class TestEntropyLeak:
         # kernel.record_verified_event just calls ledger.record_event eventually.
 
         EVENTS_TO_PUSH = 2000
-        SAFE_LIMIT = 1500 # If we had a mechanism, it should kick in before this.
+        SAFE_LIMIT = 1500  # If we had a mechanism, it should kick in before this.
 
         print(f"DEBUG: Pushing {EVENTS_TO_PUSH} events...")
 
         for i in range(EVENTS_TO_PUSH):
-            kernel.ledger.record_event(
-                event_type="ENTROPY_GENERATION",
-                agent_id="me",
-                details={"entropy": i}
-            )
+            kernel.ledger.record_event(event_type="ENTROPY_GENERATION", agent_id="me", details={"entropy": i})
             # Heartbeat (Samsara Cycle) - Trigger Pruning
             if i % 50 == 0:
                 kernel.tick()
@@ -55,4 +51,6 @@ class TestEntropyLeak:
         # The Law says: Death makes room for Life.
         # The Bug: Current Size == 2000.
 
-        assert current_size <= SAFE_LIMIT, f"FRACTAL COLLAPSE: Loop detected. Ledger grew to {current_size}, exceeding safe limit {SAFE_LIMIT}. No Pruning occurred."
+        assert current_size <= SAFE_LIMIT, (
+            f"FRACTAL COLLAPSE: Loop detected. Ledger grew to {current_size}, exceeding safe limit {SAFE_LIMIT}. No Pruning occurred."
+        )
