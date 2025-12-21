@@ -224,6 +224,69 @@ class TaskKernel:
         logger.info(f"⚡ TaskKernel spawned: {self.kernel_id} (task={task.id[:8]}, tools={len(self._tools)})")
 
     # =========================================================================
+    # OPUS-176 BHARAT: BORDER CONTROL
+    # =========================================================================
+
+    @staticmethod
+    def _verify_sovereignty(
+        plugin_id: str,
+        parent_kernel: Optional["RealVibeKernel"] = None,
+    ) -> bool:
+        """
+        OPUS-176: Verify that a plugin has SOVEREIGN_STATE governance.
+
+        Border Control - Only Sovereign States can spawn TaskKernels.
+
+        Args:
+            plugin_id: ID of the plugin to verify
+            parent_kernel: Parent kernel for manifest lookup
+
+        Returns:
+            True if plugin is a SOVEREIGN_STATE, False otherwise
+        """
+        import json
+        from pathlib import Path
+
+        # Known sovereign states (hardcoded fallback)
+        KNOWN_SOVEREIGN_STATES = {"opus_assistant", "agent_city"}
+
+        # Fast path: check known sovereigns
+        if plugin_id in KNOWN_SOVEREIGN_STATES:
+            logger.debug(f"✅ BORDER CONTROL: {plugin_id} is a known SOVEREIGN_STATE")
+            return True
+
+        # Try to load manifest and check governance
+        try:
+            # Look for manifest in standard locations
+            manifest_paths = [
+                Path(f"vibe_core/plugins/{plugin_id}/manifest.json"),
+                Path(f"plugins/{plugin_id}/manifest.json"),
+            ]
+
+            for manifest_path in manifest_paths:
+                if manifest_path.exists():
+                    with open(manifest_path) as f:
+                        manifest = json.load(f)
+
+                    governance = manifest.get("governance", {})
+                    gov_type = governance.get("type", "UNKNOWN")
+
+                    if gov_type == "SOVEREIGN_STATE":
+                        logger.debug(f"✅ BORDER CONTROL: {plugin_id} verified as SOVEREIGN_STATE")
+                        return True
+                    else:
+                        logger.warning(f"🚫 BORDER CONTROL: {plugin_id} is {gov_type}, not SOVEREIGN_STATE")
+                        return False
+
+            # No manifest found - deny by default
+            logger.warning(f"🚫 BORDER CONTROL: No manifest found for {plugin_id}")
+            return False
+
+        except Exception as e:
+            logger.warning(f"🚫 BORDER CONTROL: Governance check failed for {plugin_id}: {e}")
+            return False
+
+    # =========================================================================
     # STATIC FACTORY
     # =========================================================================
 
@@ -234,6 +297,7 @@ class TaskKernel:
         parent: Optional["RealVibeKernel"] = None,
         timeout: int = 300,
         on_complete: Optional[Callable[[TaskKernelResult], None]] = None,
+        caller_plugin_id: Optional[str] = None,
     ) -> "TaskKernel":
         """
         Spawn a new TaskKernel for a task.
@@ -241,15 +305,22 @@ class TaskKernel:
         This is the preferred way to create TaskKernel instances.
         It enforces the Capability Injector pattern.
 
+        OPUS-176 BHARAT: Border Control enforced here.
+        Only SOVEREIGN_STATE plugins can spawn TaskKernels.
+
         Args:
             task: The ManagedTask to execute
             tools: List of Tool instances to inject (NOT registry)
             parent: Optional parent kernel (for workspace path)
             timeout: Execution timeout in seconds
             on_complete: Optional callback for synaptic reinforcement
+            caller_plugin_id: ID of the plugin requesting spawn (for governance check)
 
         Returns:
             TaskKernel instance ready for execute()
+
+        Raises:
+            PermissionError: If caller is not a SOVEREIGN_STATE plugin
 
         Example:
             kernel = TaskKernel.spawn(
@@ -257,9 +328,18 @@ class TaskKernel:
                 tools=[read_file_tool, write_file_tool],
                 parent=parent_kernel,
                 timeout=300,
+                caller_plugin_id="opus_assistant",
             )
             result = await kernel.execute()
         """
+        # OPUS-176: Border Control - Verify caller has sovereignty
+        if caller_plugin_id:
+            if not TaskKernel._verify_sovereignty(caller_plugin_id, parent):
+                raise PermissionError(
+                    f"🚫 BORDER CONTROL: Plugin '{caller_plugin_id}' attempted TaskKernel spawn "
+                    f"but is not a SOVEREIGN_STATE. Only Sovereign States can spawn TaskKernels."
+                )
+
         # Build capabilities from tools list
         tools_dict = {tool.name: tool for tool in tools}
 

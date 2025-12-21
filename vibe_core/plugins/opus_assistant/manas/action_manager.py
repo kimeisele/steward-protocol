@@ -710,7 +710,7 @@ class ActionManager:
                     except Exception as e:
                         logger.debug(f"🧠 SYNAPSE: Reinforcement failed: {e}")
 
-            # 4. Spawn TaskKernel
+            # 4. Spawn TaskKernel (OPUS-176: with sovereignty verification)
             from vibe_core.task_kernel import TaskKernel
 
             task_kernel = TaskKernel.spawn(
@@ -718,6 +718,7 @@ class ActionManager:
                 tools=tools,
                 timeout=300,
                 on_complete=on_task_complete,
+                caller_plugin_id="opus_assistant",  # SOVEREIGN_STATE verified
             )
 
             # 5. Execute (async)
