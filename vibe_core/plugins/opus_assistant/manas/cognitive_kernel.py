@@ -322,6 +322,8 @@ class CognitiveKernel(CognitiveCycle):
         # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence Awareness (OPUS-166)
         # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
         self._prana_sense: Optional["PranaSense"] = None
+        self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
+        self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
         self._init_prana_sense()
 
         # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
@@ -1029,10 +1031,26 @@ class CognitiveKernel(CognitiveCycle):
             # Perceive current presence state
             perception = self._prana_sense.perceive()
 
-            # React to deaths - generate investigation intents
+            # React to deaths - generate investigation intents (with cooldown)
+            now = datetime.utcnow()
             for death in perception.deaths:
                 agent_id = death.agent_id
+
+                # OPUS-035 Pattern: Check cooldown to avoid intent spam from flaky agents
+                last_intent_time = self._prana_cooldowns.get(agent_id)
+                if last_intent_time:
+                    elapsed = (now - last_intent_time).total_seconds() / 60
+                    if elapsed < self._prana_cooldown_minutes:
+                        logger.debug(
+                            f"🫀 PRANA SENSE: Skipping {agent_id} death intent - "
+                            f"cooldown active ({elapsed:.1f}/{self._prana_cooldown_minutes} min)"
+                        )
+                        continue
+
                 presence = self._prana_sense.get_agent_presence(agent_id)
+
+                # Mark cooldown BEFORE generating (avoid race conditions)
+                self._prana_cooldowns[agent_id] = now
 
                 intent = Intent(
                     id=f"prana_death_{agent_id}_{datetime.utcnow().strftime('%H%M%S')}",
