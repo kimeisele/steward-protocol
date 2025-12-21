@@ -205,7 +205,8 @@ class ShivaLifecycleManager:
 
         archived = 0
 
-        for entry in self._kernel._intent_buffer:
+        # OPUS-174: Use _buffer (IntentBuffer), not _intent_buffer
+        for entry in self._kernel._buffer:
             if entry.status != "pending":
                 continue
 
@@ -221,7 +222,8 @@ class ShivaLifecycleManager:
                 logger.info(f"🕉️ Shiva: Archived '{entry.intent.title}' - {result.reason}")
 
         if archived > 0:
-            self._kernel._save_intent_buffer()
+            # IntentBuffer.save() persists to disk
+            self._kernel._buffer.save()
             logger.info(f"🕉️ Shiva: Swept {archived} fulfilled intents")
 
         return archived

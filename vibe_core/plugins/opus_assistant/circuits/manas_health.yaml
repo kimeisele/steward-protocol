@@ -1,0 +1,486 @@
+# MANAS HEALTH CIRCUIT
+#
+# OPUS-174: Meta-Circuit for comprehensive MANAS health monitoring
+# Runs ALL senses and feeds ManasKnowledgePort for pattern detection
+#
+# Designed by Opus (War Mode Sprint)
+# Usage: Kernel tick, manual invocation, or scheduled run
+#
+# Philosophy: "Die Sinne sind nicht getrennt - sie sind ein Orchester"
+
+circuit:
+  id: MANAS_HEALTH
+  description: Comprehensive MANAS cognitive health audit using all 8 senses
+  domain: META
+  version: "1.0.0"
+  author: "Opus (War Mode)"
+
+  dharmic_intent: "prajna"  # Wisdom-seeking
+  entry_state: "perceive_prakriti"
+
+  # Event triggers - The STECKER that connects the circuit!
+  triggers:
+    - event: KERNEL_BOOT
+      description: "Full health check on boot"
+    - event: MANAS_HEALTH_CHECK
+      description: "Manual trigger for health audit"
+    - event: HOURLY_PULSE
+      description: "Periodic health monitoring"
+
+  # Input Schema
+  input:
+    mode:
+      type: string
+      enum: ["full", "quick", "critical_only"]
+      default: "full"
+    generate_intents:
+      type: boolean
+      default: true
+    use_knowledge_base:
+      type: boolean
+      default: true
+
+  # Collected state across all senses
+  context:
+    perceptions: {}
+    intents: []
+    health_scores: {}
+    anomalies: []
+    knowledge_violations: []
+
+  states:
+    # ============================================================
+    # SENSE 1: PRAKRITI (State of Being)
+    # ============================================================
+    perceive_prakriti:
+      name: "Prakriti Sense - State Perception"
+      description: "Perceive system state (Guna balance)"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.prakriti"
+          params:
+            store_key: "prakriti"
+      on_success: perceive_dharma
+      on_failure: perceive_dharma  # Continue even if one sense fails
+
+    # ============================================================
+    # SENSE 2: DHARMA (Ethics)
+    # ============================================================
+    perceive_dharma:
+      name: "Dharma Sense - Ethical Perception"
+      description: "Perceive ethical compliance (Bhakti score)"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.dharma"
+          params:
+            store_key: "dharma"
+      on_success: perceive_sutra
+      on_failure: perceive_sutra
+
+    # ============================================================
+    # SENSE 3: SUTRA (Knowledge Threads)
+    # ============================================================
+    perceive_sutra:
+      name: "Sutra Sense - Documentation Gaps"
+      description: "Perceive code/doc disharmony, duplicates, broken wiring"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.sutra"
+          params:
+            store_key: "sutra"
+            limit: 50  # Get more gaps for war mode
+      on_success: perceive_karma
+      on_failure: perceive_karma
+
+    # ============================================================
+    # SENSE 4: KARMA (Memory/Pain Patterns)
+    # ============================================================
+    perceive_karma:
+      name: "Karma Sense - Chronic Pain Detection"
+      description: "Perceive repeated failures, hot files, pain patterns"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.karma"
+          params:
+            store_key: "karma"
+      on_success: perceive_viveka
+      on_failure: perceive_viveka
+
+    # ============================================================
+    # SENSE 5: VIVEKA (Discrimination/Gaps)
+    # ============================================================
+    perceive_viveka:
+      name: "Viveka Sense - Coverage Gap Detection"
+      description: "Perceive undocumented code, missing tests"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.viveka"
+          params:
+            store_key: "viveka"
+      on_success: perceive_prana
+      on_failure: perceive_prana
+
+    # ============================================================
+    # SENSE 6: PRANA (Agent Presence)
+    # ============================================================
+    perceive_prana:
+      name: "Prana Sense - Agent Vitality"
+      description: "Perceive agent births, deaths, presence changes"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.prana"
+          params:
+            store_key: "prana"
+      on_success: perceive_nadi
+      on_failure: perceive_nadi
+
+    # ============================================================
+    # SENSE 7: NADI (Wiring Health) - NEW!
+    # ============================================================
+    perceive_nadi:
+      name: "Nadi Sense - Wiring Health"
+      description: "Perceive EventBus dead letters, stale state, broken channels"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "sense.nadi"
+          params:
+            store_key: "nadi"
+      on_success: check_knowledge_base
+      on_failure: check_knowledge_base
+
+    # ============================================================
+    # KNOWLEDGE BASE CHECK (APCE/FAE/FDG)
+    # ============================================================
+    check_knowledge_base:
+      name: "Knowledge Base Analysis"
+      description: "Cross-reference findings with MANAS knowledge engines"
+      conditions:
+        - "{{ input.use_knowledge_base }} == true"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "knowledge.check_violations"
+          params:
+            engines:
+              - "APCE"  # Complexity rules
+              - "FAE"   # Feasibility constraints
+              - "FDG"   # Dependency graph
+      on_success: aggregate_findings
+      on_failure: aggregate_findings
+
+    # ============================================================
+    # AGGREGATE & SCORE
+    # ============================================================
+    aggregate_findings:
+      name: "Aggregate All Findings"
+      description: "Combine all sense perceptions into unified health report"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "health.aggregate"
+          params:
+            include_intents: "{{ input.generate_intents }}"
+      on_success: generate_report
+      on_failure: ABORT
+
+    # ============================================================
+    # GENERATE REPORT
+    # ============================================================
+    generate_report:
+      name: "Generate Health Report"
+      description: "Render MANAS health to manas_status template"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "health.generate_report"
+          params:
+            output_format: "markdown"
+            template: "panels/manas_status.md.j2"
+        - action_type: EMIT_EVENT
+          target: "manas.health_complete"
+          params:
+            type: "MANAS_HEALTH"
+            summary: "{{ context.health_summary }}"
+            critical_count: "{{ context.critical_count }}"
+      on_success: COMPLETE
+      on_failure: ABORT
+
+    # Terminal States
+    COMPLETE:
+      name: "Health Check Complete"
+      terminal: true
+
+    ABORT:
+      name: "Health Check Aborted"
+      terminal: true
+
+# ============================================================
+# SENSE SCRIPTS
+# ============================================================
+scripts:
+  sense.prakriti: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import PrakritiSense
+
+    sense = PrakritiSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    summary = sense.get_boot_summary()
+
+    context["perceptions"]["prakriti"] = {
+        "health": getattr(perception, "health_percent", 100),
+        "message": summary.get("message", ""),
+        "emoji": summary.get("emoji", ""),
+    }
+    context["health_scores"]["prakriti"] = getattr(perception, "health_percent", 100)
+
+  sense.dharma: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import DharmaSense
+
+    sense = DharmaSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    summary = sense.get_boot_summary()
+
+    context["perceptions"]["dharma"] = {
+        "bhakti": getattr(perception, "bhakti_score", 0),
+        "message": summary.get("message", ""),
+        "emoji": summary.get("emoji", ""),
+    }
+    context["health_scores"]["dharma"] = getattr(perception, "bhakti_score", 0)
+
+  sense.sutra: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import SutraSense
+
+    sense = SutraSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    intents = sense.generate_intents()
+
+    context["perceptions"]["sutra"] = {
+        "gaps_found": perception.gaps_found,
+        "health_ratio": perception.health_ratio,
+        "gaps_by_severity": perception.gaps_by_severity,
+        "gaps_by_type": perception.gaps_by_type,
+    }
+    context["health_scores"]["sutra"] = int(perception.health_ratio * 100)
+    context["intents"].extend([i.to_dict() for i in intents])
+
+    # Add critical anomalies
+    if perception.gaps_by_severity.get("critical", 0) > 0:
+        context["anomalies"].append({
+            "source": "sutra",
+            "type": "gaps",
+            "count": perception.gaps_by_severity["critical"],
+            "severity": "critical"
+        })
+
+  sense.karma: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import KarmaSense
+
+    sense = KarmaSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    summary = sense.get_boot_summary()
+
+    context["perceptions"]["karma"] = {
+        "hotspots": len(getattr(perception, "hotspots", [])),
+        "health": getattr(perception, "health", 1.0),
+        "message": summary.get("message", ""),
+    }
+    context["health_scores"]["karma"] = int(getattr(perception, "health", 1.0) * 100)
+
+  sense.viveka: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import VivekaSense
+
+    sense = VivekaSense(workspace=Path.cwd())
+    perception = sense.perceive()
+
+    context["perceptions"]["viveka"] = {
+        "coverage_ratio": perception.coverage_ratio,
+        "action_required": perception.action_required,
+        "health_grade": perception.health_grade,
+        "p1_critical": len(perception.p1_critical),
+        "p2_high": len(perception.p2_high),
+    }
+    context["health_scores"]["viveka"] = int(perception.coverage_ratio * 100)
+
+    # Add critical gaps as anomalies
+    if perception.action_required > 0:
+        context["anomalies"].append({
+            "source": "viveka",
+            "type": "coverage_gap",
+            "count": perception.action_required,
+            "severity": "high"
+        })
+
+  sense.prana: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import PranaSense
+
+    sense = PranaSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    summary = sense.get_boot_summary()
+
+    context["perceptions"]["prana"] = {
+        "alive_count": getattr(perception, "alive_count", 0),
+        "changes": [c.__dict__ for c in getattr(perception, "changes", [])[:5]],
+        "message": summary.get("message", ""),
+    }
+    context["health_scores"]["prana"] = 100 if getattr(perception, "alive_count", 0) > 0 else 50
+
+  sense.nadi: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex import NadiSense
+
+    sense = NadiSense(workspace=Path.cwd())
+    perception = sense.perceive()
+    intents = sense.generate_intents()
+    summary = sense.get_boot_summary()
+
+    context["perceptions"]["nadi"] = {
+        "health_score": perception.health_score,
+        "critical_count": perception.critical_count,
+        "warning_count": perception.warning_count,
+        "anomalies": [a.__dict__ for a in perception.anomalies[:10]],
+        "stale_files": [s.__dict__ for s in perception.stale_files],
+        "message": summary.get("message", ""),
+    }
+    context["health_scores"]["nadi"] = perception.health_score
+    context["intents"].extend([i.to_dict() for i in intents])
+
+    # Add wiring anomalies
+    for anomaly in perception.anomalies:
+        if anomaly.severity == "critical":
+            context["anomalies"].append({
+                "source": "nadi",
+                "type": anomaly.anomaly_type,
+                "event_type": anomaly.event_type,
+                "severity": "critical",
+                "message": anomaly.message
+            })
+
+  knowledge.check_violations: |
+    from pathlib import Path
+    from vibe_core.plugins.opus_assistant.manas.cortex.manas_knowledge import ManasKnowledgePort
+
+    port = ManasKnowledgePort(workspace=Path.cwd())
+
+    violations = []
+
+    # Check if knowledge base is available
+    if port.is_available():
+        # Get all complexity rules for comparison
+        rules = port.get_all_complexity_rules()
+
+        # Check for common anti-patterns from APCE
+        for rule in rules:
+            if rule.get("v1_recommendation") == "wont_have_v1":
+                violations.append({
+                    "source": "APCE",
+                    "rule": rule.get("feature_type"),
+                    "message": f"Complex feature detected: {rule.get('description', '')}",
+                    "severity": "medium"
+                })
+
+        context["knowledge_violations"] = violations
+        context["perceptions"]["knowledge"] = {
+            "available": True,
+            "complexity_rules": len(rules),
+            "violations_found": len(violations)
+        }
+    else:
+        context["perceptions"]["knowledge"] = {"available": False}
+
+  health.aggregate: |
+    # Calculate overall health score
+    scores = context.get("health_scores", {})
+    if scores:
+        avg_score = sum(scores.values()) / len(scores)
+    else:
+        avg_score = 0
+
+    critical_count = sum(
+        1 for a in context.get("anomalies", [])
+        if a.get("severity") == "critical"
+    )
+
+    context["health_summary"] = {
+        "overall_score": round(avg_score, 1),
+        "sense_scores": scores,
+        "total_anomalies": len(context.get("anomalies", [])),
+        "critical_count": critical_count,
+        "intent_count": len(context.get("intents", [])),
+    }
+    context["critical_count"] = critical_count
+
+  health.generate_report: |
+    # The report is generated by rendering the template
+    # This script prepares the context for template rendering
+
+    from pathlib import Path
+    from datetime import datetime
+    import json
+
+    manas_status = {
+        "online": True,
+        "perceptions": context.get("perceptions", {}),
+        "health_summary": context.get("health_summary", {}),
+        "anomalies": context.get("anomalies", []),
+        "intents": context.get("intents", []),
+        "knowledge_violations": context.get("knowledge_violations", []),
+    }
+
+    # Store for template access
+    context["manas_status"] = manas_status
+
+    # =========================================================
+    # CRITICAL: PERSIST INTENTS TO IntentBuffer!
+    # This is the STECKER that connects senses to OPUS.md
+    # =========================================================
+    try:
+        from vibe_core.plugins.opus_assistant.manas.intent_buffer import IntentBuffer, IntentBufferEntry
+        from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent, IntentPriority, IntentRisk
+
+        workspace = Path.cwd()
+        buffer = IntentBuffer(workspace=workspace, max_size=50)
+
+        intents_added = 0
+        for intent_dict in context.get("intents", []):
+            try:
+                # Reconstruct Intent from dict
+                intent = Intent(
+                    id=intent_dict.get("id", f"health_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"),
+                    intent_type=intent_dict.get("intent_type", "health_check"),
+                    title=intent_dict.get("title", "Health issue detected"),
+                    description=intent_dict.get("description", ""),
+                    reasoning=intent_dict.get("reasoning", "MANAS_HEALTH circuit detected issue"),
+                    priority=IntentPriority(intent_dict.get("priority", "medium")),
+                    risk=IntentRisk(intent_dict.get("risk", "low")),
+                    params=intent_dict.get("params", {}),
+                    auto_executable=intent_dict.get("auto_executable", False),
+                )
+                entry = IntentBufferEntry(intent=intent)
+                if buffer.add(entry):
+                    intents_added += 1
+            except Exception as e:
+                print(f"Failed to add intent: {e}")
+
+        print(f"  Intents persisted to buffer: {intents_added}")
+    except Exception as e:
+        print(f"Failed to persist intents: {e}")
+
+    print(f"MANAS Health Report Generated:")
+    print(f"  Overall Score: {context['health_summary']['overall_score']}%")
+    print(f"  Critical Issues: {context['critical_count']}")
+    print(f"  Intents Generated: {len(context['intents'])}")
+
+# ============================================================
+# INVOCATION EXAMPLES
+# ============================================================
+#
+# Full health check:
+#   envoy run-circuit MANAS_HEALTH --mode full
+#
+# Quick check (no knowledge base):
+#   envoy run-circuit MANAS_HEALTH --mode quick --use_knowledge_base false
+#
+# Critical only:
+#   envoy run-circuit MANAS_HEALTH --mode critical_only

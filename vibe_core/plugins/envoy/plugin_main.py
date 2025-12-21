@@ -57,7 +57,8 @@ class EnvoyPlugin(KernelPlugin):
     def __init__(self):
         """Initialize ENVOY state."""
         self._kernel: Optional["RealVibeKernel"] = None
-        self._project_root: Path = Path.cwd()
+        # OPUS-174: NO Path.cwd()! Get from kernel after inject_kernel()
+        self._project_root: Optional[Path] = None
 
         # Config (from Phoenix envoy.yaml)
         self._config = None
@@ -107,6 +108,12 @@ class EnvoyPlugin(KernelPlugin):
         See docs/architecture/OPUS/004-BOOT-SEQUENCE-AUDIT.md for boot order documentation.
         """
         self._kernel = kernel
+
+        # OPUS-174: Get project root from kernel (not Path.cwd()!)
+        self._project_root = getattr(kernel, "workspace_path", None)
+        if not self._project_root:
+            logger.warning("📬 ENVOY: kernel.workspace_path not set, using cwd as fallback")
+            self._project_root = Path.cwd()
 
         # DEFENSIVE CHECK: Verify ToolsPlugin booted first (priority 5 < 15)
         # This is a critical dependency - EnvoyPlugin needs tool_registry for circuit execution
@@ -509,7 +516,9 @@ class EnvoyPlugin(KernelPlugin):
             )
 
             # Evaluate through VivekaAction
-            viveka = VivekaAction(workspace=Path.cwd())
+            # OPUS-174: Use kernel-provided workspace (not Path.cwd())
+            workspace = self._project_root or Path.cwd()
+            viveka = VivekaAction(workspace=workspace)
             eval_result = viveka.evaluate(intent_obj)
             decision = eval_result.get("decision", "EXECUTE")
 
@@ -644,7 +653,9 @@ class EnvoyPlugin(KernelPlugin):
                 params=params,
             )
 
-            viveka = VivekaAction(workspace=Path.cwd())
+            # OPUS-174: Use kernel-provided workspace (not Path.cwd())
+            workspace = self._project_root or Path.cwd()
+            viveka = VivekaAction(workspace=workspace)
             viveka.reinforce(intent_obj, success=success)
 
             if success:
@@ -758,36 +769,51 @@ class EnvoyPlugin(KernelPlugin):
             self._unified_executor = None
 
     def _discover_circuits(self) -> None:
-        """Discover circuits from YAML files."""
-        import yaml
+        """
+        Discover circuits using VEDA-4 compliant CircuitLoader.
 
-        # Phase 6: Load from Genesis Pack if available
-        if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
-            circuits_path = self._kernel.genesis_path / "circuits"
-            logger.info(f"📬 Loading circuits from Genesis Pack: {circuits_path}")
-        else:
-            # Fallback to legacy path
-            circuits_path = self._project_root / "vibe_core" / "playbook" / "circuits"
-            logger.warning(f"📬 Genesis not found - using legacy circuits: {circuits_path}")
+        OPUS-174: NO HARDCODED PATHS! Uses unified loader pattern.
+        """
+        try:
+            from vibe_core.loaders import CircuitLoader
 
-        if not circuits_path.exists():
-            logger.warning(f"📬 Circuits directory not found: {circuits_path}")
-            return
+            # Build scan paths dynamically (no hardcoding!)
+            scan_paths = []
 
-        for yaml_file in circuits_path.glob("*.yaml"):
-            if yaml_file.name.startswith("_"):
-                continue  # Skip templates/internals
+            # 1. Genesis Pack (if available)
+            if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
+                scan_paths.append(self._kernel.genesis_path / "circuits")
 
-            try:
-                with open(yaml_file) as f:
-                    data = yaml.safe_load(f)
+            # 2. Default CircuitLoader paths (knowledge/circuits, playbook/circuits)
+            scan_paths.extend(CircuitLoader.scan_paths)
 
-                if data and "circuit" in data:
-                    circuit_id = data["circuit"].get("id", yaml_file.stem)
-                    self._circuits[circuit_id] = data
-                    logger.debug(f"📬 Discovered circuit: {circuit_id}")
-            except Exception as e:
-                logger.warning(f"📬 Could not load circuit {yaml_file}: {e}")
+            # 3. Plugin circuits (discovered from plugin manifests!)
+            # Each plugin with a circuits/ dir gets included
+            from vibe_core.plugin_loader import PluginLoader
+
+            plugins, _ = PluginLoader.discover_and_load()
+            for plugin_id, plugin_data in plugins.items():
+                plugin_path = plugin_data.get("_source_path")
+                if plugin_path:
+                    plugin_circuits = Path(plugin_path).parent / "circuits"
+                    if plugin_circuits.exists():
+                        scan_paths.append(plugin_circuits)
+                        logger.debug(f"📬 Plugin circuits: {plugin_id}")
+
+            # Use CircuitLoader with extended paths (VEDA-4!)
+            self._circuits, metadata = CircuitLoader.discover_and_load(
+                scan_paths=scan_paths,
+                force_refresh=True,  # Fresh discovery on each boot
+            )
+
+            logger.info(f"📬 CircuitLoader discovered {len(self._circuits)} circuits from {len(scan_paths)} sources")
+
+        except ImportError as e:
+            logger.warning(f"📬 CircuitLoader not available, falling back: {e}")
+            self._circuits = {}
+        except Exception as e:
+            logger.error(f"📬 Circuit discovery failed: {e}")
+            self._circuits = {}
 
     def _discover_playbooks(self) -> None:
         """
@@ -848,8 +874,9 @@ class EnvoyPlugin(KernelPlugin):
         try:
             from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 
+            # OPUS-174: Use public API, not private _agent_registry access
             # Check if envoy agent already registered (avoid duplicate)
-            if "envoy" in kernel._agent_registry:
+            if kernel.get_agent_manifest("envoy"):
                 logger.debug("📬 EnvoyCartridge already registered, skipping")
                 return
 
