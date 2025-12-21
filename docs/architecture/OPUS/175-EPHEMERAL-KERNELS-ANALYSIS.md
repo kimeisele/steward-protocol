@@ -2,6 +2,36 @@
 
 > "The current spawn_child_kernel() creates a FULL kernel. That's not ephemeral. That's cloning." - Claude
 
+<!-- @HARNESS
+wiring:
+  # === OPUS-175: TaskKernel Implementation ===
+  - pattern: "class TaskKernel"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "class InjectedCapabilities"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "class TaskKernelResult"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "def spawn"
+    file: "vibe_core/task_kernel.py"
+    required: true
+  - pattern: "class ToolSelector"
+    file: "vibe_core/plugins/opus_assistant/manas/action_manager.py"
+    required: true
+  - pattern: "_execute_via_task_kernel"
+    file: "vibe_core/plugins/opus_assistant/manas/action_manager.py"
+    required: true
+
+absent:
+  # TaskKernel should NOT load plugins (lightweight)
+  - pattern: "PluginLoader"
+    file: "vibe_core/task_kernel.py"
+  - pattern: "load_plugins"
+    file: "vibe_core/task_kernel.py"
+-->
+
 ## Executive Summary
 
 This document provides a deep analysis of the current task execution architecture and proposes a lightweight **Ephemeral Kernel** pattern for MANAS-driven task execution. The goal: boot a minimal execution context in ~100ms instead of the current 5+ second full kernel boot.
