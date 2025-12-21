@@ -120,7 +120,8 @@ class ManasOracle:
         # Use workspace if available, otherwise current directory
 
         workspace = Path.cwd()
-        self.kernel = CognitiveKernel(workspace=workspace, config=self.config)
+        # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+        self.kernel = CognitiveKernel.get_instance(workspace=workspace, config=self.config)
         logger.info("🧠 ManasOracle initialized")
 
     # =========================================================================

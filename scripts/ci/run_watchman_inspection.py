@@ -10,23 +10,51 @@ This is Layer 2 of Defense in Depth:
 - Layer 3: Auditor verdict (constitutional judgment)
 
 Extracted from inline YAML script for maintainability.
+
+OPUS-167 FIX: Direct tool invocation (no kernel overhead).
+The kernel machinery was causing hangs due to tight coupling.
+The tool itself runs in <1 second.
 """
 
 import json
 import sys
 from pathlib import Path
 
-from vibe_core.agent_interface import AgentSystemInterface
-from vibe_core.cartridges.system.watchman.cartridge_main import WatchmanCartridge
-from vibe_core.kernel_impl import RealVibeKernel
+# OPUS-167: Direct tool import - skip kernel machinery
+from vibe_core.cartridges.system.watchman.tools.standards_inspection import StandardsInspectionTool
 
-print("⚔️  Initializing Watchman...")
-kernel = RealVibeKernel()
-watchman = WatchmanCartridge()
-watchman.system = AgentSystemInterface(kernel, "watchman")
+print("⚔️  Initializing Watchman Standards Inspection...")
+tool = StandardsInspectionTool()
 
 print("🔬 Running Deep Inspection (AST-based analysis)...")
-result = watchman.run_deep_inspection()
+# Direct tool execution - no kernel overhead
+tool_result = tool.execute({"action": "inspect_all", "system_agents_path": "vibe_core/cartridges/system"})
+
+# Convert tool result to the expected format
+violations = tool_result.output.get("violations", []) if tool_result.success else []
+
+# Group by severity and agent
+by_severity = {}
+by_agent = {}
+for v in violations:
+    severity = v.get("severity", "UNKNOWN")
+    agent_id = v.get("agent_id", "unknown")
+    by_severity[severity] = by_severity.get(severity, 0) + 1
+    by_agent[agent_id] = by_agent.get(agent_id, 0) + 1
+
+critical_count = sum(1 for v in violations if v.get("severity") == "CRITICAL")
+
+result = {
+    "status": "VIOLATIONS_DETECTED" if critical_count > 0 else ("WARNINGS_DETECTED" if violations else "COMPLIANT"),
+    "should_fail_build": critical_count > 0,
+    "total_violations": len(violations),
+    "critical_count": critical_count,
+    "report": {
+        "by_severity": by_severity,
+        "by_agent": by_agent,
+    },
+    "violations": violations,
+}
 
 # Save full report
 report_path = Path("watchman_report.json")

@@ -408,11 +408,18 @@ class StateSyncWeaver:
         try:
             # Stage and commit via Prakriti
             if hasattr(self.prakriti, "commit_if_dirty"):
+                # OPUS-167 FIX: Only stage runtime files from plan.paths, NOT "*"!
+                # The bug was staging ALL dirty files instead of just runtime state
+                runtime_patterns = [str(p) for p in plan.paths] if plan.paths else []
+
+                if not runtime_patterns:
+                    return CommitResult(success=True, message="No runtime files to commit")
+
                 result = self.prakriti.commit_if_dirty(
                     message=plan.message.split(":", 1)[-1].strip() if ":" in plan.message else plan.message,
                     commit_type="chore",
                     scope="state",
-                    stage_patterns=["*"],  # Stage all dirty runtime files
+                    stage_patterns=runtime_patterns,  # Only stage specific runtime files
                 )
 
                 if result:

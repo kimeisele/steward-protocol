@@ -138,7 +138,8 @@ class HeartbeatEngine:
                     thinking_interval_minutes=15,  # Match heartbeat interval
                     auto_execute_safe=True,  # Execute SAFE intents automatically
                 )
-                self.manas = CognitiveKernel(workspace=project_root, config=config)
+                # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+                self.manas = CognitiveKernel.get_instance(workspace=project_root, config=config)
 
                 # OPUS-074 WIRING: Inject Ledger for VAJRA binding
                 if self.ledger and hasattr(self.manas, "inject_ledger"):
