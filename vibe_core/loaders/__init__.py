@@ -27,6 +27,7 @@ from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .bridge_loader import BridgeLoader, BridgeLoadError, BridgeMetadata, BridgeRegistry
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 from .code_module_loader import CodeMetadata, CodeModuleLoader, CodeModuleLoadError, CodeModuleMeta, CodeRegistry
+from .cortex_loader import CortexLoader, CortexLoadError, CortexMetadata, CortexRegistry, get_cortex, list_cortices
 from .handler_loader import HandlerLoader, HandlerLoadError, HandlerMetadata, HandlerRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
 from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
@@ -69,6 +70,13 @@ __all__ = [
     "HandlerLoadError",
     "HandlerRegistry",
     "HandlerMetadata",
+    # Cortex Loader (OPUS-171 Phase 5.2)
+    "CortexLoader",
+    "CortexLoadError",
+    "CortexRegistry",
+    "CortexMetadata",
+    "get_cortex",
+    "list_cortices",
     # Circuit Loader
     "CircuitLoader",
     "CircuitMeta",
