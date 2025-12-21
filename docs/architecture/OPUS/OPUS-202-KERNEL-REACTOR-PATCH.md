@@ -16,15 +16,20 @@ the QuantumReactor into `kernel_impl.py` as a core kernel primitive.
 ## Test Status
 
 ```
-8/8 TESTS RED (FAILING)
-- test_kernel_has_reactor_property         FAILED
-- test_kernel_reactor_is_lazy_loaded       FAILED
-- test_kernel_has_manifest_method          FAILED
-- test_manifest_returns_resonance_field    FAILED
-- test_capability_check_uses_resonance     FAILED
-- test_capability_resonance_is_continuous  FAILED
-- test_kernel_has_akasha_state             FAILED
-- test_kernel_akasha_evolves               FAILED
+5 RED (FAILED)  - Kernel missing required methods/properties
+3 SKIPPED       - Integration tests waiting for patch
+
+FAILED:
+  - test_kernel_has_reactor_property
+  - test_kernel_has_manifest_method
+  - test_manifest_is_callable
+  - test_kernel_has_compute_capability_resonance
+  - test_kernel_has_akasha_hash_property
+
+SKIPPED (will run after patch):
+  - test_manifest_returns_resonance_data
+  - test_manifest_evolves_akasha
+  - test_capability_resonance_is_continuous
 ```
 
 ---
@@ -34,10 +39,10 @@ the QuantumReactor into `kernel_impl.py` as a core kernel primitive.
 **Location:** `vibe_core/kernel_impl.py` line ~266 (after `self._vault = None`)
 
 ```python
-# OPUS-200/201: Quantum Resonance Engine (Core Primitive)
-# The reactor is the kernel's physics engine - how actions manifest
-self._reactor = None
-self._akasha_field = ""  # Cumulative resonance field hash
+        # OPUS-200/201: Quantum Resonance Engine (Core Primitive)
+        # The reactor is the kernel's physics engine - how actions manifest
+        self._reactor = None
+        self._akasha_field = ""  # Cumulative resonance field hash
 ```
 
 ---
@@ -47,37 +52,37 @@ self._akasha_field = ""  # Cumulative resonance field hash
 **Location:** `vibe_core/kernel_impl.py` after the `vault` property (~line 622)
 
 ```python
-@property
-def reactor(self):
-    """
-    OPUS-200/201: QuantumReactor as core kernel primitive.
+    @property
+    def reactor(self):
+        """
+        OPUS-200/201: QuantumReactor as core kernel primitive.
 
-    Like the ledger, process_table, and capability_registry,
-    the reactor is a fundamental kernel component.
+        Like the ledger, process_table, and capability_registry,
+        the reactor is a fundamental kernel component.
 
-    Lazy-loaded to avoid boot-time overhead.
-    """
-    if self._reactor is None:
-        try:
-            from vibe_core.reactor import QuantumReactor
+        Lazy-loaded to avoid boot-time overhead.
+        """
+        if self._reactor is None:
+            try:
+                from vibe_core.reactor import QuantumReactor
 
-            self._reactor = QuantumReactor(initial_inertia=0.5)
-            logger.info("☢️ QuantumReactor loaded as kernel primitive")
-        except ImportError as e:
-            logger.warning(f"☢️ QuantumReactor not available: {e}")
-    return self._reactor
+                self._reactor = QuantumReactor(initial_inertia=0.5)
+                logger.info("☢️ QuantumReactor loaded as kernel primitive")
+            except ImportError as e:
+                logger.warning(f"☢️ QuantumReactor not available: {e}")
+        return self._reactor
 
-@property
-def akasha_hash(self) -> str:
-    """
-    OPUS-200/201: Current state of the kernel's akasha field.
+    @property
+    def akasha_hash(self) -> str:
+        """
+        OPUS-200/201: Current state of the kernel's akasha field.
 
-    The akasha is the cumulative resonance field that influences
-    all future manifestations. Each manifestation evolves it.
-    """
-    if self.reactor is not None:
-        return self.reactor._chain_hash()
-    return self._akasha_field
+        The akasha is the cumulative resonance field that influences
+        all future manifestations. Each manifestation evolves it.
+        """
+        if self._reactor is not None:
+            return self._reactor._chain_hash()
+        return self._akasha_field or ""
 ```
 
 ---
@@ -86,77 +91,129 @@ def akasha_hash(self) -> str:
 
 **Location:** `vibe_core/kernel_impl.py` after `_check_agent_capability` (~line 667)
 
+**CRITICAL:** This method uses the KERNEL'S OWN reactor, not a temporary one!
+
 ```python
-def manifest(self, intent: str, agent_id: str = "kernel", salt: str = "") -> "ExecutionRequest":
-    """
-    OPUS-200/201: Manifest an intent through the resonance field.
+    def manifest(self, intent: str, agent_id: str = "kernel", salt: str = "") -> "ManifestResult":
+        """
+        OPUS-200/201: Manifest an intent through the kernel's resonance field.
 
-    This is the NEW primary entry point for kernel execution.
-    Instead of boolean allow/deny, compute resonance and manifest.
+        This is the NEW primary entry point for kernel execution.
+        Instead of boolean allow/deny, compute resonance and manifest.
 
-    Args:
-        intent: The intent to manifest (user input, command, etc.)
-        agent_id: The agent requesting manifestation
-        salt: Cryptographic salt for session context
+        The kernel IS the Akasha field - actions manifest through it.
 
-    Returns:
-        ExecutionRequest with resonance data and gate decision
+        Args:
+            intent: The intent to manifest (user input, command, etc.)
+            agent_id: The agent requesting manifestation
+            salt: Cryptographic salt for session context
 
-    Philosophy:
-        Actions don't get "allowed" - they MANIFEST when
-        their energy overcomes the field's inertia.
-    """
-    from vibe_core.runtime.unified_execution import UnifiedRouter
+        Returns:
+            ManifestResult with resonance data
 
-    # Use the unified router's manifest method
-    router = UnifiedRouter(self)
-    request = router.manifest(intent, source=agent_id, salt=salt)
+        Philosophy:
+            Actions don't get "allowed" - they MANIFEST when
+            their energy overcomes the field's inertia.
+        """
+        from dataclasses import dataclass
 
-    # Log manifestation
-    status = "MANIFEST" if request.manifests else "PENDING"
-    logger.info(
-        f"☢️ KERNEL: {intent[:30]}... → "
-        f"E={request.resonance_energy:.3f} ({status})"
-    )
+        @dataclass
+        class ManifestResult:
+            """Result of a manifestation attempt."""
+            intent: str
+            resonance_energy: float
+            inertia: float
+            field_hash: str
+            agent_id: str
 
-    return request
+            @property
+            def manifests(self) -> bool:
+                """Does this intent manifest?"""
+                return self.resonance_energy > self.inertia
 
-def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
-    """
-    OPUS-200/201: Compute resonance for capability check.
+        # Get or create reactor
+        reactor = self.reactor
+        if reactor is None:
+            # Fallback: no reactor = everything manifests (permissive mode)
+            return ManifestResult(
+                intent=intent,
+                resonance_energy=1.0,
+                inertia=0.5,
+                field_hash="no_reactor",
+                agent_id=agent_id,
+            )
 
-    Instead of boolean has_capability(), compute continuous
-    resonance between agent and capability.
+        try:
+            from vibe_core.reactor import encode
 
-    Args:
-        agent_id: The agent requesting the capability
-        capability: The capability required
+            # Encode intent using kernel's akasha as salt
+            intent_tensor = encode(intent, salt or self.akasha_hash)
 
-    Returns:
-        Resonance energy (0.0 to 1.0)
-        Higher = stronger resonance = more likely to manifest
-    """
-    if self.reactor is None:
-        # Fallback to boolean converted to float
-        return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
+            # Resonate against the kernel's field
+            field = reactor.resonate(intent_tensor)
 
-    try:
-        from vibe_core.reactor import encode
+            # Log manifestation attempt
+            status = "MANIFEST" if field.total_energy > reactor._inertia else "PENDING"
+            logger.info(
+                f"☢️ KERNEL MANIFEST: {intent[:30]}... → "
+                f"E={field.total_energy:.3f} ({status})"
+            )
 
-        # Encode agent as tensor
-        agent_tensor = encode(f"agent:{agent_id}", self.akasha_hash)
+            return ManifestResult(
+                intent=intent,
+                resonance_energy=field.total_energy,
+                inertia=reactor._inertia,
+                field_hash=field.field_hash,
+                agent_id=agent_id,
+            )
 
-        # Encode capability as tensor
-        cap_tensor = encode(f"capability:{capability}", self.akasha_hash)
+        except Exception as e:
+            logger.warning(f"☢️ Manifestation failed: {e}")
+            return ManifestResult(
+                intent=intent,
+                resonance_energy=0.0,
+                inertia=0.5,
+                field_hash="error",
+                agent_id=agent_id,
+            )
 
-        # Compute resonance
-        field = self.reactor.resonate(agent_tensor, cap_tensor)
+    def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
+        """
+        OPUS-200/201: Compute resonance for capability check.
 
-        return min(1.0, field.total_energy)
+        Instead of boolean has_capability(), compute continuous
+        resonance between agent and capability.
 
-    except Exception as e:
-        logger.warning(f"☢️ Capability resonance failed: {e}")
-        return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
+        Args:
+            agent_id: The agent requesting the capability
+            capability: The capability required
+
+        Returns:
+            Resonance energy (0.0 to 1.0)
+            Higher = stronger resonance = more likely to manifest
+        """
+        reactor = self.reactor
+        if reactor is None:
+            # Fallback to boolean converted to float
+            return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
+
+        try:
+            from vibe_core.reactor import encode
+
+            # Encode agent as tensor
+            agent_tensor = encode(f"agent:{agent_id}", self.akasha_hash)
+
+            # Encode capability as tensor
+            cap_tensor = encode(f"capability:{capability}", self.akasha_hash)
+
+            # Compute resonance
+            field = reactor.resonate(agent_tensor, cap_tensor)
+
+            return min(1.0, field.total_energy)
+
+        except Exception as e:
+            logger.warning(f"☢️ Capability resonance failed: {e}")
+            return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
 ```
 
 ---
@@ -168,24 +225,25 @@ def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
 Add to the docstring:
 
 ```python
-"""
-🩸 THE REAL VIBE KERNEL 🩸
+    """
+    🩸 THE REAL VIBE KERNEL 🩸
 
-This is not a mock. This is actual execution runtime for VibeOS cartridges.
+    This is not a mock. This is actual execution runtime for VibeOS cartridges.
 
-Capabilities:
-- Process table (agent registry)
-- Real task scheduler (FIFO queue)
-- Immutable ledger (append-only)
-- Manifest registry (agent identity)
-- Kernel injection (dependency injection pattern)
-- Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
-- QuantumReactor (OPUS-200/201 - resonance-based manifestation)  # NEW
+    Capabilities:
+    - Process table (agent registry)
+    - Real task scheduler (FIFO queue)
+    - Immutable ledger (append-only)
+    - Manifest registry (agent identity)
+    - Kernel injection (dependency injection pattern)
+    - Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
+    - QuantumReactor (OPUS-200/201 - resonance-based manifestation)  # NEW
 
-Philosophy (OPUS-200/201):
-  Actions don't get "allowed" or "denied" - they MANIFEST
-  when their resonance energy overcomes the field's inertia.
-"""
+    Philosophy (OPUS-200/201):
+      Actions don't get "allowed" or "denied" - they MANIFEST
+      when their resonance energy overcomes the field's inertia.
+      The kernel IS the Akasha field.
+    """
 ```
 
 ---
@@ -198,7 +256,36 @@ After applying patches, run:
 python -m pytest tests/reactor/test_kernel_manifestation.py -v
 ```
 
-Expected: **8/8 TESTS GREEN**
+Expected: **8/8 TESTS PASS** (5 existence + 3 integration)
+
+---
+
+## KEY DESIGN PRINCIPLES
+
+### 1. Kernel OWNS the Reactor
+```python
+# WRONG (creates temporary router with separate reactor):
+def manifest(self, intent):
+    router = UnifiedRouter(self)
+    return router.manifest(intent)  # Uses router's reactor, NOT kernel's
+
+# CORRECT (uses kernel's own reactor):
+def manifest(self, intent):
+    reactor = self.reactor  # Kernel's reactor
+    field = reactor.resonate(encode(intent))  # Evolves kernel's akasha
+    return ManifestResult(...)
+```
+
+### 2. Akasha Evolves Through Kernel
+The reactor's internal `_field_hash` is the kernel's `akasha_hash`.
+Each `resonate()` call updates the chain, evolving the field.
+
+### 3. ManifestResult is Self-Contained
+Returns all resonance data so callers can make decisions:
+- `resonance_energy`: The computed energy
+- `inertia`: The threshold to overcome
+- `manifests`: Boolean property (energy > inertia)
+- `field_hash`: Audit trail
 
 ---
 
@@ -210,9 +297,9 @@ BEFORE (Boolean):
       execute()
 
 AFTER (Resonance):
-  resonance = self.compute_capability_resonance(agent, cap)
-  if resonance > self.reactor._inertia:
-      manifest()
+  result = self.manifest(intent)
+  if result.manifests:
+      # Action emerges from the field
 ```
 
 The kernel becomes the **Akasha Field** - a resonant medium where
@@ -224,11 +311,6 @@ actions either manifest or dissipate based on phonetic physics.
 
 `kernel_impl.py` is protected by VISNU (21 kernel files).
 This patch requires explicit approval to modify.
-
-**Command to apply (after approval):**
-```bash
-# The patches above must be applied manually or via approved edit
-```
 
 ---
 
