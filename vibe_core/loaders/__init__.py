@@ -24,6 +24,7 @@ Usage:
 from .action_loader import ActionLoader, ActionLoadError, ActionMetadata, ActionRegistry, IntentHandlerMap
 from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata, AnalyzerRegistry
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
+from .bridge_loader import BridgeLoader, BridgeLoadError, BridgeMetadata, BridgeRegistry
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 from .code_module_loader import CodeMetadata, CodeModuleLoader, CodeModuleLoadError, CodeModuleMeta, CodeRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
@@ -57,6 +58,11 @@ __all__ = [
     "SenseLoadError",
     "SenseRegistry",
     "SenseMetadata",
+    # Bridge Loader (OPUS-171)
+    "BridgeLoader",
+    "BridgeLoadError",
+    "BridgeRegistry",
+    "BridgeMetadata",
     # Circuit Loader
     "CircuitLoader",
     "CircuitMeta",

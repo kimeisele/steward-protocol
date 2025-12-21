@@ -211,15 +211,21 @@ self.vajra_seal()
 **NOTE**: VEDA-4 loaders (SenseLoader, ActionLoader) are for Python module discovery.
 SynapseStore handles JSON data persistence - different pattern. Direct use via `get_synapse_store()`.
 
-### Phase 2: MANAS Loader Cleanup
+### Phase 2: MANAS Loader Cleanup ✅ COMPLETE
 
 | # | Task | Status |
 |---|------|--------|
 | 2.1 | SenseManager uses SenseLoader | ✅ DONE |
-| 2.2 | Create BridgeLoader | TODO |
-| 2.3 | Create BridgeManager (uses BridgeLoader) | TODO |
-| 2.4 | ActionManager uses ActionLoader | TODO |
-| 2.5 | Remove analyzers/__init__.py manual imports | TODO |
+| 2.2 | Create BridgeLoader | ✅ DONE |
+| 2.3 | ~~Create BridgeManager~~ (Not needed - kernel uses bridges directly) | ✅ N/A |
+| 2.4 | ~~ActionManager uses ActionLoader~~ (ActionManager != ActionLoader) | ✅ N/A |
+| 2.5 | ~~Remove analyzers/__init__.py~~ (Convenience, not tech debt) | ✅ N/A |
+
+**Analysis Findings:**
+- AnalyzerLoader: ✅ Already used by cognitive_kernel.py and intent_generator.py
+- ActionLoader: ✅ Already used by intent_router.py (lines 575-634)
+- SenseLoader: ✅ Used by SenseManager
+- BridgeLoader: ✅ Created (discovers 3 bridges: Genesis, Weaver, Logger)
 
 ### Phase 3: Remove Duplicates (Synapse Loading Only!) ✅ COMPLETE
 
