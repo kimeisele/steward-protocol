@@ -50,7 +50,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -63,15 +63,14 @@ from vibe_core.plugins.opus_assistant.manas.disharmony_detector import (
     DisharmonyDetector,
 )
 
-from .base import BaseSense
-
 # OPUS-167: Intent imports for generate_intents()
 from vibe_core.plugins.opus_assistant.manas.intent_generator import (
     Intent,
     IntentPriority,
     IntentRisk,
 )
-from datetime import timedelta
+
+from .base import BaseSense
 
 logger = logging.getLogger("MANAS.Cortex.SutraSense")
 
@@ -816,7 +815,8 @@ class SutraSense(BaseSense):
 
         try:
             # Generate gap intents using existing method
-            raw_intents = self.generate_gap_intents(limit=2)
+            # OPUS-174: Increased from limit=2 to limit=20 for more aggressive gap detection
+            raw_intents = self.generate_gap_intents(limit=20)
 
             for idx, raw in enumerate(raw_intents):
                 # Extract weaving from params
