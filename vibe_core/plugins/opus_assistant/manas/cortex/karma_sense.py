@@ -50,9 +50,12 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .base import BaseSense
+
+if TYPE_CHECKING:
+    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
 logger = logging.getLogger("MANAS.Cortex.KarmaSense")
 
@@ -399,6 +402,83 @@ class KarmaSense(BaseSense):
             ChronicPainReport with historical pain points.
         """
         return self.find_hotspots()
+
+    # =========================================================================
+    # OPUS-167: Intent Generation (Fractal Architecture)
+    # =========================================================================
+
+    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List["Intent"]:
+        """
+        Generate repair intents based on chronic pain perception.
+
+        OPUS-167: Fractal Architecture Restoration
+
+        This method generates intents for files that repeatedly break (chronic pain).
+        These hotspots indicate structural weaknesses that need refactoring.
+
+        Returns:
+            List of repair/refactor intents for chronic pain hotspots
+        """
+        from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+            Intent,
+            IntentPriority,
+            IntentRisk,
+        )
+
+        intents: List[Intent] = []
+
+        try:
+            # Perceive chronic pain
+            report = self.find_hotspots(
+                threshold=context.get("threshold", 3) if context else 3,
+                days=context.get("days", 30) if context else 30,
+            )
+
+            if report.hotspots:
+                logger.info(f"[KARMA_SENSE] Found {len(report.hotspots)} chronic pain hotspots")
+
+                for pain in report.hotspots[:3]:  # Top 3 hotspots
+                    # Determine priority based on severity
+                    if pain.repair_count >= 5:
+                        priority = IntentPriority.CRITICAL
+                        risk = IntentRisk.MEDIUM
+                    elif pain.repair_count >= 3:
+                        priority = IntentPriority.HIGH
+                        risk = IntentRisk.LOW
+                    else:
+                        priority = IntentPriority.MEDIUM
+                        risk = IntentRisk.SAFE
+
+                    intent = Intent(
+                        id=f"chronic_pain_{Path(pain.path).stem}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="refactor_hotspot",
+                        title=f"Chronic Pain: {Path(pain.path).name} ({pain.repair_count}x repairs)",
+                        description=(
+                            f"File {pain.path} has been repaired {pain.repair_count} times "
+                            f"since {pain.first_repair}. "
+                            f"Varga pattern: {pain.varga_pattern or 'Unknown'}. "
+                            f"{pain.recommended_action}"
+                        ),
+                        reasoning=(
+                            "KARMA SENSE detected chronic pain - repeated repairs indicate "
+                            "structural weakness that needs architectural attention."
+                        ),
+                        priority=priority,
+                        risk=risk,
+                        params={
+                            "path": pain.path,
+                            "repair_count": pain.repair_count,
+                            "varga_pattern": pain.varga_pattern,
+                            "severity_history": pain.severity_history,
+                        },
+                        auto_executable=False,  # Refactoring needs human approval
+                    )
+                    intents.append(intent)
+
+        except Exception as e:
+            logger.warning(f"[KARMA_SENSE] Intent generation failed: {e}")
+
+        return intents
 
 
 # =============================================================================
