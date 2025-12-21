@@ -50,6 +50,9 @@ from .sense_manager import SenseManager
 # OPUS-167: Logger Bridge Extraction
 from .logger_bridge import LoggerBridge
 
+# OPUS-167: Genesis Bridge Extraction
+from .genesis_bridge import GenesisBridge
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -335,12 +338,11 @@ class CognitiveKernel(CognitiveCycle):
         self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._sense_manager.dharma_sense)
         logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
-        # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
-        # Auto-generates GAD-000 compliant infrastructure for new modules
-        # "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
-        self._infrastructure_classifier: Optional["InfrastructureClassifier"] = None
-        self._infrastructure_generator: Optional["InfrastructureGenerator"] = None
-        self._init_infrastructure_genesis()
+        # OPUS-167: Genesis Bridge (replaces _init_infrastructure_genesis)
+        self._genesis_bridge = GenesisBridge(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
 
         # 🧵 COGNITIVE WEAVER: State ↔ Knowledge Bridge (OPUS-106)
         self._cognitive_weaver: Optional["CognitiveWeaver"] = None
@@ -1055,38 +1057,7 @@ class CognitiveKernel(CognitiveCycle):
         except Exception:
             return None
 
-    def _init_infrastructure_genesis(self) -> None:
-        """
-        Initialize the Infrastructure Genesis service (OPUS-158).
-
-        The Stadtamt - creates GAD-000 compliant infrastructure:
-        - __init__.py for discoverability
-        - manifest.json for capabilities
-        - Base class stubs for composability
-
-        "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
-        """
-        try:
-            from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator
-
-            genesis_config = self._full_config.get("genesis", {})
-            enabled = genesis_config.get("enabled", True)
-
-            if not enabled:
-                logger.info("🏛️ GENESIS: Disabled by configuration")
-                return
-
-            self._infrastructure_classifier = InfrastructureClassifier(workspace=self._workspace)
-            self._infrastructure_generator = InfrastructureGenerator(workspace=self._workspace)
-
-            logger.info(
-                "🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service activated - Auto-generating GAD-000 infrastructure"
-            )
-
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS: Could not initialize: {e}")
-            self._infrastructure_classifier = None
-            self._infrastructure_generator = None
+    # NOTE: _init_infrastructure_genesis removed (OPUS-167: moved to GenesisBridge)
 
     def inject_shruta_sense(self, sense: "ShrutaSense") -> None:
         """
@@ -1133,85 +1104,16 @@ class CognitiveKernel(CognitiveCycle):
                     top_hot = perception.hot_paths[:3]
                     logger.debug(f"👂 SHRUTA: Hot paths: {top_hot}")
 
-                # 🏛️ OPUS-158: Trigger Infrastructure Genesis for new directories
-                # The Agent Virus: Auto-generate GAD-000 infrastructure
-                self._process_genesis_vibrations(perception)
+                # OPUS-167: Genesis Bridge handles infrastructure generation
+                self._genesis_bridge.process_vibrations(perception)
 
             return perception
         except Exception as e:
             logger.warning(f"👂 SHRUTA: Error during perception: {e}")
             return None
 
-    def _process_genesis_vibrations(self, perception: "ShrutaPerception") -> None:
-        """
-        Process vibrations for Infrastructure Genesis.
-
-        OPUS-160: Delegates to vibe_core.genesis.GenesisService (Stadtamt).
-        MANAS detects gaps, Stadtamt builds infrastructure.
-        """
-        try:
-            # Try to use vibe_core GenesisService (OPUS-160)
-            from vibe_core.genesis import GenesisService, ModuleType
-
-            genesis = GenesisService.get_instance(workspace=self._workspace)
-
-            for vibration in perception.vibrations:
-                # Only process directory creation events
-                if vibration.event_type != "created" or not vibration.is_directory:
-                    continue
-
-                # Classify and ensure compliance via Stadtamt
-                module_type = genesis.classify_path(vibration.path)
-
-                if module_type == ModuleType.UNKNOWN:
-                    continue
-
-                # Call the Stadtamt for compliance
-                result = genesis.ensure_compliance(vibration.path, module_type)
-
-                if result.build_result and result.build_result.files_created_count > 0:
-                    logger.info(
-                        f"🏛️ STADTAMT: Created {result.build_result.files_created_count} files "
-                        f"for {module_type.name}: {vibration.path.name}"
-                    )
-
-        except ImportError:
-            # Fallback to OPUS-158 local genesis (legacy)
-            self._process_genesis_vibrations_legacy(perception)
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS: Error processing vibrations: {e}")
-
-    def _process_genesis_vibrations_legacy(self, perception: "ShrutaPerception") -> None:
-        """
-        Legacy genesis processing (OPUS-158 fallback).
-
-        Used when vibe_core.genesis is not available.
-        """
-        if not self._infrastructure_classifier or not self._infrastructure_generator:
-            return
-
-        try:
-            from .cortex.genesis import ModuleType
-
-            for vibration in perception.vibrations:
-                if vibration.event_type != "created" or not vibration.is_directory:
-                    continue
-
-                module_type = self._infrastructure_classifier.classify(vibration.path, is_directory=True)
-
-                if module_type == ModuleType.UNKNOWN:
-                    continue
-
-                result = self._infrastructure_generator.generate(vibration.path, module_type)
-
-                if result.files_created_count > 0:
-                    logger.info(
-                        f"🏛️ GENESIS (legacy): Auto-generated {result.files_created_count} files "
-                        f"for {module_type.name}: {vibration.path.name}"
-                    )
-
-        except Exception as e:
-            logger.warning(f"🏛️ GENESIS (legacy): Error: {e}")
+    # NOTE: _process_genesis_vibrations and _process_genesis_vibrations_legacy removed
+    # (OPUS-167: moved to GenesisBridge)
 
     def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
         """Get Sutra summary for OPUS.md display."""
