@@ -1093,6 +1093,26 @@ class OpusDashboardRenderer:
                 except Exception as e:
                     logger.debug(f"Failed to get live MANAS status: {e}")
 
+            # OPUS-168: Fallback to standalone MANAS singleton (same pattern as _gather_pending_intent)
+            if not manas_status["online"]:
+                try:
+                    from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+                    manas = CognitiveKernel.get_instance(workspace=self._root)
+                    if manas:
+                        manas_status["online"] = True
+                        buffer = manas.get_intent_buffer_for_opus()
+                        manas_status["intent_buffer"] = {
+                            "pending": buffer.get("pending", []),
+                            "executed": buffer.get("recent_executed", []),
+                            "rejected": [],
+                            "total_pending": buffer.get("total_pending", 0),
+                            "last_updated": datetime.utcnow().isoformat(),
+                        }
+                        manas_status["last_thought"] = buffer.get("last_thought")
+                except Exception as e:
+                    logger.debug(f"Failed to get standalone MANAS status: {e}")
+
             # Read persisted state from .opus_state/manas_intents.json
             intents_path = self._root / ".opus_state" / "manas_intents.json"
             if intents_path.exists():
