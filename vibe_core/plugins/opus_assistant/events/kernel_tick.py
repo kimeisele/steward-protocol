@@ -503,6 +503,21 @@ class KernelTickHandler:
         # 🔥 OPUS-108: The Autonomy Loop - Emit HOURLY_PULSE for MANAS
         # This transforms OPUS from reactive (wait for user) to proactive (autonomous)
         if "KERNEL_TICK" in event_type_str:
+            # OPUS-174: MANAS tick - lightweight awareness (runs every tick!)
+            # This is NOT the full OODA loop, just a heartbeat for transparency
+            if self._manas_ready and self._manas:
+                try:
+                    tick_result = self._manas.tick()
+                    # If MANAS wants to think, trigger the awakening circuit
+                    if tick_result.get("should_think"):
+                        logger.debug(f"🧠 MANAS tick → should_think=True (urgency={tick_result.get('urgency', 0):.2f})")
+                        # Trigger full OODA via circuit
+                        force_circuits = self._get_circuits_for_trigger("MANAS_FORCE_THINK")
+                        for circuit in force_circuits:
+                            await self._execute_circuit(circuit, {"trigger": "MANAS_TICK_URGENCY"})
+                except Exception as e:
+                    logger.debug(f"MANAS tick failed: {e}")
+
             self._hourly_pulse_tick += 1
             if self._hourly_pulse_tick >= self._HOURLY_THRESHOLD:
                 self._hourly_pulse_tick = 0
