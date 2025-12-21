@@ -70,6 +70,15 @@ except ImportError:
     MayaSimulator = None  # type: ignore
     SimulationResult = None  # type: ignore
 
+# OPUS-171 Phase 4: AkashaSense - Knowledge Graph Perception
+try:
+    from .cortex.akasha_sense import AkashaSense
+
+    AKASHA_AVAILABLE = True
+except ImportError:
+    AKASHA_AVAILABLE = False
+    AkashaSense = None  # type: ignore
+
 logger = logging.getLogger("MANAS.IntentRouter")
 
 # OPUS-075: HIL Bridge state directory
@@ -144,6 +153,12 @@ class IntentRouter:
             self._maya = MayaSimulator(workspace=self._workspace, current_depth=0)
             logger.info("🌙 OPUS-155: MayaSimulator initialized (Inception Depth 0)")
 
+        # OPUS-171 Phase 4: AkashaSense - Knowledge Graph Perception
+        self._akasha: Optional[AkashaSense] = None
+        if AKASHA_AVAILABLE:
+            self._akasha = AkashaSense(workspace=self._workspace)
+            logger.info("👁️ OPUS-171: AkashaSense initialized (Knowledge Perception)")
+
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
         self._autonomous_steps = 0  # Track steps for safety limit
@@ -177,6 +192,69 @@ class IntentRouter:
         # OPUS-069: Wire validator to kernel for ledger access
         self._validator.inject_kernel(kernel)
         logger.info("⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)")
+
+    # =========================================================================
+    # OPUS-171 Phase 4: SIDDHI - Perfected Pattern Auto-Decisions
+    # =========================================================================
+
+    def _check_siddhi(self, intent: Intent) -> Optional[Dict[str, Any]]:
+        """
+        Check if intent matches a Siddhi pattern (auto-approve).
+
+        Siddhi (Sanskrit: "Perfection") is achieved when a mantra reaches
+        108 successful repetitions. Siddhi patterns bypass Viveka gate
+        for instant execution.
+
+        Args:
+            intent: The intent to check
+
+        Returns:
+            Dict with mantra info if Siddhi match, None otherwise
+        """
+        try:
+            from vibe_core.state.sanskrit_matrix import infer_layer
+
+            # Load Sanskrit Matrix from state
+            state = get_state_service(self._workspace)
+            matrix_path = self._workspace / ".opus_state" / "sanskrit_matrix.json"
+
+            if not matrix_path.exists():
+                return None
+
+            matrix = json.loads(matrix_path.read_text())
+            mantras = matrix.get("mantras", [])
+
+            if not mantras:
+                return None
+
+            # Determine intent layer
+            intent_layer = infer_layer(intent.intent_type)
+
+            # Look for Siddhi match (layer + EXECUTE decision)
+            for mantra in mantras:
+                if not mantra.get("siddhi"):
+                    continue  # Not yet perfected
+
+                # Match by layer and EXECUTE decision
+                if mantra.get("layer") == intent_layer and mantra.get("decision") == "EXECUTE":
+                    logger.info(
+                        f"🕉️ SIDDHI MATCH: {intent.intent_type} "
+                        f"(mantra={mantra.get('signature')}, meaning={mantra.get('meaning')})"
+                    )
+                    return {
+                        "signature": mantra.get("signature"),
+                        "layer": intent_layer,
+                        "decision": "EXECUTE",
+                        "meaning": mantra.get("meaning"),
+                        "repetitions": mantra.get("repetitions", 108),
+                        "siddhi": True,
+                    }
+
+            return None
+
+        except Exception as e:
+            logger.debug(f"Siddhi check failed: {e}")
+            return None
 
     def _register_handlers(self) -> None:
         """Register intent type → handler mappings."""
@@ -763,9 +841,61 @@ class IntentRouter:
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
 
         # =====================================================================
+        # OPUS-171 Phase 4: AKASHA PERCEPTION - Knowledge Context (FIRST)
+        # =====================================================================
+        # "Before Manas thinks, Akasha feels the vibrations of knowledge."
+        # Query knowledge graph for context about this intent type
+        akasha_context: Optional[Dict[str, Any]] = None
+        if self._akasha:
+            try:
+                # Perceive with focus on the intent type
+                perception = self._akasha.perceive(context={"focus": intent_type})
+                akasha_context = perception.to_context_dict()
+
+                if perception.is_loaded and perception.node_count > 0:
+                    logger.debug(
+                        f"👁️ AKASHA: {perception.summary} "
+                        f"(nodes={perception.node_count}, related={len(perception.related_nodes)})"
+                    )
+
+                    # If we have knowledge about this domain, enrich intent params
+                    if perception.related_nodes:
+                        intent.params["akasha_related"] = perception.related_nodes[:5]
+                    if perception.constraints:
+                        intent.params["akasha_constraints"] = perception.constraints[:3]
+
+            except Exception as e:
+                logger.debug(f"👁️ AKASHA perception failed: {e}")
+
+        # =====================================================================
+        # OPUS-171 Phase 4: SIDDHI CHECK - Perfected Patterns (BEFORE Maya/Viveka)
+        # =====================================================================
+        # If intent matches a Siddhi pattern (108+ repetitions), auto-approve
+        # This bypasses both Maya simulation and Viveka evaluation
+        siddhi_result = self._check_siddhi(intent)
+        if siddhi_result:
+            # Mark for SIDDHI auto-execute (skip Viveka, proceed with confidence)
+            intent.params["siddhi_approved"] = True
+            intent.params["siddhi_mantra"] = siddhi_result.get("signature")
+            logger.info(
+                f"🕉️ SIDDHI AUTO-APPROVE: {intent.title} "
+                f"(mantra={siddhi_result.get('signature')}, layer={siddhi_result.get('layer')})"
+            )
+            # Create synthetic viveka_result for reinforcement
+            viveka_result = {
+                "decision": "SIDDHI",
+                "dharmic_score": 1.0,  # Perfect score for Siddhi
+                "harmony": "siddhi",
+                "reasoning": f"Siddhi mantra: {siddhi_result.get('meaning')}",
+                "siddhi": True,
+            }
+            # Skip Maya and Viveka gates - proceed directly to dispatch
+
+        # =====================================================================
         # OPUS-155: MAYA SIMULATION - Dream before acting (BEFORE Viveka)
         # =====================================================================
-        if self._maya:
+        # Skip Maya if Siddhi approved
+        if self._maya and not siddhi_result:
             # Convert Intent to dict for Maya (it expects dict, not Intent object)
             intent_dict = {
                 "id": intent.id,
@@ -796,8 +926,8 @@ class IntentRouter:
         # =====================================================================
         # OPUS-133: VIVEKA GATE - Dharmic Discrimination (BEFORE any dispatch)
         # =====================================================================
-        viveka_result: Optional[Dict[str, Any]] = None  # For PRASADAM dharmic_score
-        if self._viveka:
+        # Skip Viveka if Siddhi approved (viveka_result already set above)
+        if self._viveka and not siddhi_result:
             viveka_result = self._viveka.evaluate(intent)
             decision = viveka_result.get("decision", "EXECUTE")
 
