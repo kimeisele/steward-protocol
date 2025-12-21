@@ -1305,17 +1305,10 @@ class VivekaAction(BaseAction):
         self._save_synapses(synapses)
 
     def _load_synapses(self) -> Dict[str, Any]:
-        """Load synapses from disk."""
-        import json
+        """Load synapses via SynapseStore (OPUS-171 unified access)."""
+        from vibe_core.state.synapse_store import get_synapse_store
 
-        synapses_path = self._workspace / ".opus_state" / "synapses.json"
-        if synapses_path.exists():
-            try:
-                with open(synapses_path) as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
-        return {"triggers": [], "version": "1.0"}
+        return get_synapse_store(workspace=self._workspace).load()
 
     def _apply_vairagya(self, synapses: Dict[str, Any]) -> int:
         """
@@ -1370,7 +1363,9 @@ class VivekaAction(BaseAction):
         return pruned_count
 
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk via StateService (P0) with ego pruning."""
+        """Save synapses via SynapseStore (OPUS-171) with VAIRAGYA ego pruning."""
+        from vibe_core.state.synapse_store import get_synapse_store
+
         # Apply VAIRAGYA before saving - ego pruning
         vairagya_count = self._apply_vairagya(synapses)
 
@@ -1389,9 +1384,9 @@ class VivekaAction(BaseAction):
             synapses["meta"]["last_vairagya_prune"] = now
             synapses["meta"]["last_vairagya_count"] = vairagya_count
 
-        # P0: Use StateService for centralized writes with automatic backup rotation
-        state = get_state_service(self._workspace)
-        state.save("synapses.json", synapses)
+        # OPUS-171: Use SynapseStore for unified persistence
+        store = get_synapse_store(workspace=self._workspace)
+        store.save_raw(synapses)
 
     # =========================================================================
     # OPUS-133: SATYAGRAHA - Delayed Karma Validation
