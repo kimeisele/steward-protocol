@@ -317,6 +317,9 @@ class CognitiveKernel(CognitiveCycle):
         if self._sense_manager.sutra_sense and self._semantic_engine:
             self._sense_manager.sutra_sense.inject_semantic_engine(self._semantic_engine)
 
+        # Post-boot setup for sense listeners (Shruta/Prana wiring)
+        self._setup_sense_listeners()
+
         # 🫀 PRANA SENSE: Cooldown tracking (kernel-specific, not in SenseManager)
         # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
         self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
@@ -580,31 +583,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 👁️ PRAKRITI SENSE: THE SIXTH JNANENDRIYA (OPUS-009)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_prakriti_sense(self) -> None:
-        """
-        Initialize Prakriti Sense - the Sixth Jnanendriya.
-
-        This provides unified state perception for MANAS.
-        """
-        try:
-            from .cortex.prakriti_sense import PrakritiSense
-
-            prakriti_config = self._full_config.get("prakriti_sense", {})
-            self._prakriti_sense = PrakritiSense(
-                workspace=self._workspace,
-                config=prakriti_config,
-            )
-            # Boot perception
-            summary = self._prakriti_sense.on_manas_boot()
-            logger.info(
-                f"👁️ PRAKRITI SENSE: Sixth Jnanendriya initialized - "
-                f"Total: {summary.total_paths}, Health: {summary.health_ratio:.0%}"
-            )
-        except Exception as e:
-            logger.warning(f"👁️ PRAKRITI SENSE: Could not initialize: {e}")
-            self._prakriti_sense = None
 
     def inject_prakriti_sense(self, sense: "PrakritiSense") -> None:
         """
@@ -621,7 +601,7 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: PrakritiSense instance
         """
-        self._prakriti_sense = sense
+        self._sense_manager.inject("prakriti_sense", sense)
         logger.info("👁️ PRAKRITI SENSE: Sixth Jnanendriya injected - MANAS can now perceive state")
 
     def _perceive_and_generate_healing_intents(self) -> List[Intent]:
@@ -824,27 +804,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_dharma_sense(self) -> None:
-        """
-        Initialize Dharma Sense - the Vedic Conscience.
-
-        This provides ethical alignment checks before intent execution.
-        """
-        try:
-            from .cortex.dharma_sense import DharmaSense
-
-            dharma_config = self._full_config.get("dharma_sense", {})
-            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas", config=dharma_config)
-            # Boot registration
-            summary = self._dharma_sense.on_manas_boot()
-            logger.info(
-                f"🙏 DHARMA SENSE: Conscience initialized - Ashrama: {summary.ashrama}, Bhakti: {summary.bhakti}"
-            )
-        except Exception as e:
-            logger.warning(f"🙏 DHARMA SENSE: Could not initialize: {e}")
-            self._dharma_sense = None
 
     def inject_dharma_sense(self, sense: "DharmaSense") -> None:
         """
@@ -857,7 +818,7 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: DharmaSense instance
         """
-        self._dharma_sense = sense
+        self._sense_manager.inject("dharma_sense", sense)
         logger.info("🙏 DHARMA SENSE: Vedic Conscience injected - MANAS now has ethical awareness")
 
     def _check_dharma_gate(self, intent: Intent) -> tuple:
@@ -917,33 +878,8 @@ class CognitiveKernel(CognitiveCycle):
 
     # =========================================================================
     # 📜 SUTRA SENSE: THE THIRD EYE (OPUS-054)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_sutra_sense(self) -> None:
-        """
-        Initialize Sutra Sense - the Third Eye.
-
-        This provides doc/code gap detection for MANAS.
-        MANAS becomes the curator of its own documentation.
-
-        Bhagavad Gita 9.22:
-        "ananyāś cintayanto māṁ... yoga-kṣemaṁ vahāmy aham"
-        "I bring what is lacking (Yoga) and preserve what they have (Kshema)"
-        """
-        try:
-            from .cortex.sutra_sense import SutraSense
-
-            sutra_config = self._full_config.get("sutra_sense", {})
-            self._sutra_sense = SutraSense(workspace=self._workspace, config=sutra_config)
-            # Boot perception
-            summary = self._sutra_sense.perceive_gaps(refresh=True)
-            logger.info(
-                f"📜 SUTRA SENSE: Third Eye opened - "
-                f"{summary.total_docs} docs, {summary.gaps_found} gaps, {summary.health_ratio:.0%} health"
-            )
-        except Exception as e:
-            logger.warning(f"📜 SUTRA SENSE: Could not initialize: {e}")
-            self._sutra_sense = None
 
     def inject_sutra_sense(self, sense: "SutraSense") -> None:
         """
@@ -957,91 +893,50 @@ class CognitiveKernel(CognitiveCycle):
         Args:
             sense: SutraSense instance
         """
-        self._sutra_sense = sense
+        self._sense_manager.inject("sutra_sense", sense)
         logger.info("📜 SUTRA SENSE: Third Eye injected - MANAS can now perceive documentation gaps")
 
     # =========================================================================
     # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
-
-    def _init_shruta_sense(self) -> None:
-        """
-        Initialize Shruta Sense - the Hearing System.
-
-        OPUS-156: This provides filesystem vibration detection for MANAS.
-        MANAS can now HEAR before it SEES.
-
-        Sanskrit: श्रुत (Shruta) = "That which is heard"
-
-        "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
-        "At the beginning was darkness. Brahma HEARD before he SAW."
-        """
-        try:
-            from .cortex.shruta_sense import ShrutaSense
-
-            shruta_config = self._full_config.get("shruta_sense", {})
-            self._shruta_sense = ShrutaSense(
-                workspace=self._workspace,
-                config=shruta_config,
-            )
-
-            # Start listening to filesystem vibrations
-            watch_paths = [
-                self._workspace / "vibe_core",
-                self._workspace / "tests",
-                self._workspace / "docs",
-            ]
-            self._shruta_sense.start_listening(paths=watch_paths)
-
-            # Register auto-discovery handler
-            self._shruta_sense.register_auto_discovery()
-
-            logger.info("👂 SHRUTA SENSE: The 6th Jnanendriya activated - MANAS can now HEAR filesystem vibrations")
-
-        except Exception as e:
-            logger.warning(f"👂 SHRUTA SENSE: Could not initialize: {e}")
-            self._shruta_sense = None
 
     # =========================================================================
     # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence (OPUS-166)
+    # OPUS-167: Initialization moved to SenseManager
     # =========================================================================
 
-    def _init_prana_sense(self) -> None:
+    # NOTE: These helper methods remain in kernel for post-boot setup
+    # The SenseManager handles basic initialization, but complex wiring
+    # (like Shruta listeners and Prana registration) happens here
+
+    def _setup_sense_listeners(self) -> None:
         """
-        Initialize Prana Sense - Agent Presence Awareness.
+        Post-boot setup for sense listeners and cross-sense wiring.
 
-        OPUS-166: This provides awareness of which agents are alive/dead.
-        Integrates with ShrutaSense for real-time presence detection.
-
-        Sanskrit: प्राण (Prana) = Life force, breath, vital energy
-
-        "Prana is the breath of the universe. When an agent breathes (pulses),
-         it leaves a trace. When it stops breathing, the trace vanishes."
+        Called after SenseManager.boot_all() to:
+        1. Start Shruta filesystem listeners
+        2. Register Prana with Shruta for real-time updates
         """
         try:
-            from .cortex.prana_sense import PranaSense
-
-            prana_config = self._full_config.get("prana_sense", {})
-            self._prana_sense = PranaSense(
-                workspace=self._workspace,
-                config=prana_config,
-            )
-
-            # Register with ShrutaSense for real-time presence updates
+            # Setup Shruta listeners
             if self._shruta_sense:
-                self._prana_sense.register_with_shruta(self._shruta_sense)
-                logger.info("🫀 PRANA SENSE: Connected to ShrutaSense for real-time presence detection")
+                watch_paths = [
+                    self._workspace / "vibe_core",
+                    self._workspace / "tests",
+                    self._workspace / "docs",
+                ]
+                self._shruta_sense.start_listening(paths=watch_paths)
+                self._shruta_sense.register_auto_discovery()
+                logger.debug("👂 SHRUTA SENSE: Listeners activated")
 
-            # Initial perception to set baseline
-            perception = self._prana_sense.perceive()
-            logger.info(
-                f"🫀 PRANA SENSE: 7th Jnanendriya activated - "
-                f"{perception.total_alive}/{perception.total_registered} agents alive"
-            )
+            # Wire Prana to Shruta
+            if self._prana_sense and self._shruta_sense:
+                self._prana_sense.register_with_shruta(self._shruta_sense)
+                logger.debug("🫀 PRANA SENSE: Connected to ShrutaSense")
 
         except Exception as e:
-            logger.warning(f"🫀 PRANA SENSE: Could not initialize: {e}")
-            self._prana_sense = None
+            logger.warning(f"Sense listener setup failed: {e}")
 
     def _perceive_and_generate_presence_intents(self) -> List[Intent]:
         """
