@@ -85,6 +85,123 @@ EVENT_COLOR_MAP = {
 }
 
 
+# =============================================================================
+# SUDARSHANA CHAKRA: Active Traffic Control (KALIYA FIX)
+# =============================================================================
+
+class SudarshanaGuard:
+    """
+    Active Traffic Control for the Event Bus.
+    
+    "The discus of Vishnu that cuts through all evil."
+    
+    Implements Token Bucket rate limiting per agent:
+    - Each agent gets a bucket of tokens (default: 100)
+    - Tokens refill at rate (default: 50/sec)
+    - If bucket is empty, agent is BLOCKED
+    - VIP agents (kernel, system) bypass all limits
+    """
+
+    # VIP agents that bypass rate limiting
+    VIP_AGENTS = {"kernel", "system", "watchman", "narasimha", "test"}
+
+    def __init__(
+        self,
+        bucket_size: float = 100.0,
+        refill_rate: float = 50.0,
+        enabled: bool = True,
+    ):
+        """
+        Initialize the Sudarshana Guard.
+        
+        Args:
+            bucket_size: Maximum tokens per agent (burst capacity)
+            refill_rate: Tokens refilled per second
+            enabled: If False, all traffic is allowed (for testing)
+        """
+        self._bucket_size = bucket_size
+        self._refill_rate = refill_rate
+        self._enabled = enabled
+
+        # {agent_id: (tokens, last_update_time)}
+        self._buckets: Dict[str, List[float]] = {}
+
+        # Stats
+        self._blocked_count = 0
+        self._allowed_count = 0
+
+        logger.info(
+            f"🛡️ SUDARSHANA initialized (bucket={bucket_size}, rate={refill_rate}/s, enabled={enabled})"
+        )
+
+    def check_traffic(self, agent_id: str) -> bool:
+        """
+        Check if an agent is allowed to emit an event.
+        
+        Args:
+            agent_id: The agent attempting to emit
+            
+        Returns:
+            True if allowed
+            
+        Raises:
+            PermissionError: If rate limit exceeded
+        """
+        if not self._enabled:
+            return True
+
+        # VIP bypass
+        if agent_id in self.VIP_AGENTS:
+            self._allowed_count += 1
+            return True
+
+        import time
+        now = time.time()
+
+        # Get or create bucket
+        if agent_id not in self._buckets:
+            self._buckets[agent_id] = [self._bucket_size, now]
+
+        tokens, last_update = self._buckets[agent_id]
+
+        # Refill tokens based on elapsed time
+        elapsed = now - last_update
+        tokens = min(self._bucket_size, tokens + elapsed * self._refill_rate)
+
+        # Check if we have tokens
+        if tokens < 1.0:
+            # Update timestamp but don't deduct
+            self._buckets[agent_id] = [tokens, now]
+            self._blocked_count += 1
+            logger.warning(
+                f"🛑 SUDARSHANA: Rate limit exceeded for '{agent_id}' "
+                f"(blocked={self._blocked_count})"
+            )
+            raise PermissionError(
+                f"SUDARSHANA: Rate limit exceeded for '{agent_id}'. "
+                f"Back off and try again."
+            )
+
+        # Deduct token and update
+        self._buckets[agent_id] = [tokens - 1.0, now]
+        self._allowed_count += 1
+        return True
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get rate limiting statistics."""
+        return {
+            "allowed": self._allowed_count,
+            "blocked": self._blocked_count,
+            "active_buckets": len(self._buckets),
+            "enabled": self._enabled,
+        }
+
+    def reset_bucket(self, agent_id: str):
+        """Reset an agent's bucket (after timeout/mercy)."""
+        if agent_id in self._buckets:
+            del self._buckets[agent_id]
+
+
 @dataclass
 class Event:
     """Immutable event record - the building block of the event stream"""
@@ -119,14 +236,29 @@ class EventBus:
     - Multiple subscriber types (filters, handlers, aggregators)
     - Fault-tolerant (error in one doesn't affect others)
     - Zero persistence (in-memory, real-time stream only)
+    - SUDARSHANA: Rate limiting per agent (KALIYA FIX)
     """
 
-    def __init__(self, max_history: int = 1000):
+    def __init__(
+        self,
+        max_history: int = 1000,
+        rate_limit_enabled: bool = True,
+        rate_limit_bucket: float = 100.0,
+        rate_limit_rate: float = 50.0,
+    ):
         self._subscribers: Dict[str, Set[Callable]] = {}  # event_type -> callbacks
         self._global_subscribers: Set[Callable] = set()  # All events
         self._event_history: List[Event] = []
         self._max_history = max_history
         self._event_count = 0
+        self._dropped_count = 0  # Events dropped due to rate limiting
+
+        # SUDARSHANA: Active Traffic Control
+        self._guard = SudarshanaGuard(
+            bucket_size=rate_limit_bucket,
+            refill_rate=rate_limit_rate,
+            enabled=rate_limit_enabled,
+        )
 
         logger.info(f"🎵 EventBus initialized (max_history={max_history})")
 
@@ -134,7 +266,20 @@ class EventBus:
         """
         Emit an event to all subscribers
         Non-blocking and fault-tolerant
+        
+        SUDARSHANA: Rate limits per agent. If limit exceeded,
+        event is DROPPED (shadow ban) and not propagated.
         """
+        # =====================================================================
+        # SUDARSHANA GATE: Check rate limit BEFORE processing
+        # =====================================================================
+        try:
+            self._guard.check_traffic(event.agent_id)
+        except PermissionError:
+            # Shadow ban - drop event silently
+            self._dropped_count += 1
+            return  # Event is NOT emitted
+
         # Store in history
         self._event_history.append(event)
         if len(self._event_history) > self._max_history:
@@ -205,14 +350,16 @@ class EventBus:
         return history[-limit:] if limit else history
 
     def get_status(self) -> Dict[str, Any]:
-        """Get event bus status"""
+        """Get event bus status including rate limiting stats."""
         return {
             "total_events": self._event_count,
+            "dropped_events": self._dropped_count,
             "history_size": len(self._event_history),
             "subscribers": {
                 "global": len(self._global_subscribers),
                 "by_type": {k: len(v) for k, v in self._subscribers.items() if v},
             },
+            "rate_limiting": self._guard.get_stats(),
         }
 
     def clear_history(self):
