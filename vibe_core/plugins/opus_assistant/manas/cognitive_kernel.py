@@ -226,7 +226,98 @@ class CognitiveKernel(CognitiveCycle):
     - Most intents go to Intent Buffer for approval
     - Only SAFE risk intents can auto-execute
     - User can approve/reject from OPUS.md
+
+    OPUS-167: SINGLETON PATTERN (Workspace-Keyed)
+    - Tool discovery is expensive (~2-3 seconds per instantiation)
+    - Multiple instantiations during boot caused 20+ second delays
+    - Use get_instance() instead of direct instantiation
+    - Same pattern as GenesisService.get_instance()
     """
+
+    # =========================================================================
+    # OPUS-167: SINGLETON PATTERN (Workspace-Keyed)
+    # =========================================================================
+    # "The mind is one. Multiple heads is madness." - Sankhya Philosophy
+    #
+    # Each workspace gets ONE CognitiveKernel instance.
+    # Tool discovery happens ONCE, not 8 times during boot.
+    # =========================================================================
+    _instances: Dict[Path, "CognitiveKernel"] = {}
+
+    @classmethod
+    def get_instance(
+        cls,
+        workspace: Optional[Path] = None,
+        config: Optional[ManasConfig] = None,
+        trace: Optional[UnifiedTrace] = None,
+        event_bus: Optional[EventBus] = None,
+    ) -> "CognitiveKernel":
+        """
+        Get singleton CognitiveKernel instance for workspace.
+
+        OPUS-167: This is the ONLY way to get a CognitiveKernel.
+        Direct instantiation should be avoided in production code.
+
+        The expensive tool discovery happens only on first call.
+        Subsequent calls return the cached instance.
+
+        Args:
+            workspace: Workspace root (defaults to cwd)
+            config: Optional ManasConfig (only used on first creation)
+            trace: Optional UnifiedTrace (only used on first creation)
+            event_bus: Optional EventBus (only used on first creation)
+
+        Returns:
+            CognitiveKernel singleton for the workspace
+        """
+        ws = workspace or Path.cwd()
+        ws = ws.resolve()  # Normalize path for consistent keying
+
+        if ws not in cls._instances:
+            logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
+            cls._instances[ws] = cls(
+                workspace=ws,
+                config=config,
+                trace=trace,
+                event_bus=event_bus,
+            )
+        else:
+            logger.debug(f"🧠 MANAS: Reusing singleton instance for {ws}")
+
+        return cls._instances[ws]
+
+    @classmethod
+    def reset_instance(cls, workspace: Optional[Path] = None) -> None:
+        """
+        Reset singleton instance (for testing).
+
+        Args:
+            workspace: Workspace to reset (None = reset all)
+        """
+        if workspace is None:
+            cls._instances.clear()
+            logger.info("🧠 MANAS: All singleton instances reset")
+        else:
+            ws = workspace.resolve()
+            if ws in cls._instances:
+                del cls._instances[ws]
+                logger.info(f"🧠 MANAS: Singleton instance reset for {ws}")
+
+    @classmethod
+    def has_instance(cls, workspace: Optional[Path] = None) -> bool:
+        """
+        Check if singleton instance exists for workspace.
+
+        Useful to avoid triggering expensive initialization when just checking.
+
+        Args:
+            workspace: Workspace to check (defaults to cwd)
+
+        Returns:
+            True if instance already exists
+        """
+        ws = (workspace or Path.cwd()).resolve()
+        return ws in cls._instances
 
     def __init__(
         self,

@@ -109,7 +109,8 @@ class SamvadaHandler:
         try:
             from ..cognitive_kernel import CognitiveKernel
 
-            kernel = CognitiveKernel(workspace=self._workspace)
+            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+            kernel = CognitiveKernel.get_instance(workspace=self._workspace)
             pending = kernel.get_pending_intents()
 
             if not pending:
