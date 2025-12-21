@@ -591,7 +591,17 @@ class UnifiedCLI:
             else:
                 synapses = {"schema": "v1", "weights": {}}
 
-            # 4. Load Session State
+            # 4. OPUS-174: Load MANAS Biorhythm Awareness (Consciousness State)
+            awareness_path = Path(".opus_state/manas_awareness.json")
+            if awareness_path.exists():
+                try:
+                    awareness = json.loads(awareness_path.read_text())
+                except Exception:
+                    awareness = {"state": "unknown", "consciousness_level": 0.0}
+            else:
+                awareness = {"state": "unknown", "consciousness_level": 0.0, "tick": 0}
+
+            # 5. Load Session State
             session_path = Path(".opus_state/session.json")
             session = {}
             if session_path.exists():
@@ -604,6 +614,7 @@ class UnifiedCLI:
             if parsed_args.raw:
                 output = {
                     "timestamp": datetime.now().isoformat(),
+                    "awareness": awareness,  # OPUS-174: Biorhythm state first!
                     "intents": intents,
                     "memory": memory,
                     "synapses": synapses,
@@ -615,6 +626,54 @@ class UnifiedCLI:
             # FORMATTED MODE: Rich console output
             console.clear()
             console.rule(f"[bold red]MANAS OBSERVER CONTROL :: {datetime.now().strftime('%H:%M:%S')}")
+
+            # OPUS-174: Consciousness State Panel (BIORHYTHM)
+            state = awareness.get("state", "unknown")
+            level = awareness.get("consciousness_level", 0.0)
+            tick = awareness.get("tick", 0)
+            inputs = awareness.get("inputs", {})
+
+            # Color-code by state
+            state_colors = {
+                "turiya": "bold magenta",
+                "sattva": "bold green",
+                "rajas": "bold yellow",
+                "tamas": "dim white",
+                "unknown": "dim red",
+            }
+            state_color = state_colors.get(state, "white")
+
+            # Build consciousness bar (visual representation)
+            bar_width = 20
+            filled = int(level * bar_width)
+            bar = "█" * filled + "░" * (bar_width - filled)
+
+            # Build panel content
+            awareness_content = (
+                f"[{state_color}]State: {state.upper()}[/{state_color}]\n"
+                f"Level: [{state_color}]{bar}[/{state_color}] {level:.2f}\n"
+                f"Tick: {tick}\n"
+            )
+
+            # Add input breakdown if available
+            if inputs:
+                urgency = inputs.get("synaptic_urgency", 0)
+                health = inputs.get("prakriti_health", 0)
+                rhythm = inputs.get("kala_rhythm", 0.5)
+                awareness_content += (
+                    f"\n[dim]Inputs:[/dim]\n"
+                    f"  Synaptic Urgency: {urgency:.2f} (×0.5)\n"
+                    f"  Prakriti Health:  {health:.2f} (×0.3)\n"
+                    f"  Kala Rhythm:      {rhythm:.2f} (×0.2)"
+                )
+
+            console.print(
+                Panel(
+                    awareness_content,
+                    title=f"[{state_color}]CONSCIOUSNESS (BIORHYTHM)[/{state_color}]",
+                    border_style=state_color.replace("bold ", ""),
+                )
+            )
 
             # Session Status Panel
             session_status = session.get("status", "UNKNOWN")
@@ -655,10 +714,11 @@ class UnifiedCLI:
 
             console.print(table)
 
-            # Synapse Count
+            # Synapse Count + Consciousness Summary
             weight_count = len(synapses.get("weights", {}))
             console.print(
-                f"\n[dim]Synaptic Connections: {weight_count} | Interval: {parsed_args.interval}s | Ctrl+C to exit[/dim]"
+                f"\n[dim]Synapses: {weight_count} | Consciousness: {state.upper()} ({level:.2f}) | "
+                f"Interval: {parsed_args.interval}s | Ctrl+C to exit[/dim]"
             )
 
         try:
