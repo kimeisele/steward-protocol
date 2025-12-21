@@ -347,6 +347,24 @@ class StateService:
         with self._lock:
             self._dirty_files.clear()
 
+    def mark_dirty(self, path: Path) -> None:
+        """
+        Mark an external file as dirty for auto-commit tracking.
+
+        This allows external writers (like IOService) to register their
+        writes with StateService's unified auto-commit system.
+
+        Args:
+            path: Absolute path to the dirty file
+        """
+        with self._lock:
+            self._dirty_files.add(path)
+            self._writes_since_commit += 1
+            self._last_write = datetime.now()
+
+            # Trigger auto-commit check (same as internal writes)
+            self._maybe_auto_commit()
+
     def get_stats(self) -> Dict[str, Any]:
         """Get service statistics."""
         return {

@@ -210,6 +210,26 @@ class KernelIOService:
             # Audit failure should not break writes
             logger.warning(f"⚠️  Audit trail recording failed: {e}")
 
+    def _notify_state_service(self, path: Path) -> None:
+        """
+        Notify StateService about a written file for unified auto-commit.
+
+        This integrates IOService with the OS-level StateService auto-commit
+        system. When StateService receives enough dirty file notifications,
+        it triggers the Weaver to commit them to git.
+
+        Args:
+            path: Path to the written file
+        """
+        try:
+            from vibe_core.state.state_service import get_state_service
+
+            state_service = get_state_service(self._root)
+            state_service.mark_dirty(path)
+        except Exception as e:
+            # StateService notification failure should not break writes
+            logger.debug(f"📝 StateService notify skipped: {e}")
+
     def write_document(
         self,
         name: str,
@@ -283,6 +303,10 @@ class KernelIOService:
                     mtime=mtime,
                     preserved_keys=list(preserved.keys()) if preserved else [],
                 )
+
+                # NOTIFY StateService for unified auto-commit tracking
+                # This integrates IOService writes with the OS-level auto-commit system
+                self._notify_state_service(path)
 
                 return WriteResult(
                     success=True,
