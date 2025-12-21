@@ -5,4 +5,4 @@ def test_herald_initialization():
     """Verify HeraldCartridge initializes correctly."""
     agent = HeraldCartridge()
     assert agent.agent_id == "herald"
-    assert "broadcast" in agent.capabilities
+    assert "broadcasting" in agent.capabilities
