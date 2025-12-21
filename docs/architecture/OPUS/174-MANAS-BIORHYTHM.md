@@ -252,6 +252,106 @@ if "KERNEL_TICK" in event_type_str:
 ### Circuit Integration
 The MANAS_AWAKENING circuit is only triggered when `tick()` returns `should_think=True` (Turiya state).
 
+## Mind-Body Alignment (VAK-Style Prompting)
+
+> "The `consciousness_level` and `state` must not just drive the *code* logic; they must be injected into the **Prompt Context**." - Gemini
+
+The MANAS cognitive state is exposed to the LLM via `OpusContext`. This creates a feedback loop where the system's consciousness modulates the LLM's behavior.
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      MANAS Biorhythm                        │
+│                    (consciousness_level)                    │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  manas_awareness.json                       │
+│           {"state": "sattva", "level": 0.67}               │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   OpusContextService                         │
+│              _get_manas_awareness() → synthesize()           │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│               to_system_prompt_fragment()                    │
+│                  VAK Cognitive Directive                     │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    LLM System Prompt                         │
+│     "You are in a state of BALANCED CLARITY (Sattva)..."   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### VAK Directives by State
+
+| State | Directive |
+|-------|-----------|
+| **Turiya** | "You are in a state of DEEP INSIGHT. Synthesize broad patterns. Consider architectural implications. Be visionary." |
+| **Sattva** | "You are in a state of BALANCED CLARITY. Organize thoughts. Reinforce good patterns. Be thorough but not rushed." |
+| **Rajas** | "You are in a state of HIGH ALERT. Be concise and focused. Address immediate issues first. Do not over-explain." |
+| **Tamas** | "You are in a state of CONSERVATION. Focus only on essentials. Minimal processing. Wait for better conditions." |
+
+### Implementation
+
+```python
+# In OpusContext.to_system_prompt_fragment()
+if self.manas_awareness:
+    manas_state = self.manas_awareness.get("state", "unknown")
+    consciousness_level = self.manas_awareness.get("consciousness_level", 0.0)
+
+    if manas_state != "unknown":
+        lines.extend([
+            "## Cognitive State (MANAS)",
+            "",
+            f"**State:** {manas_state.upper()} (level: {consciousness_level:.2f})",
+            "",
+        ])
+        lines.append(self._get_vak_directive(manas_state, consciousness_level))
+```
+
+### Example Prompt Fragment
+
+When MANAS is in Sattva state (level 0.67):
+
+```markdown
+## Current System State (OPUS Context)
+
+**Status:** HEALTHY (100%)
+**Branch:** `main` @ `abc123de`
+**Runtime:** running, 2 agents, 0 pending
+**Session:** abc123
+
+## Cognitive State (MANAS)
+
+**State:** SATTVA (level: 0.67)
+
+**Cognitive Directive:** You are in a state of BALANCED CLARITY (Sattva).
+The system is stable and reflective.
+Organize thoughts. Reinforce good patterns.
+Be thorough but not rushed - quality over speed.
+```
+
+### The Feedback Loop
+
+This completes the Mind-Body feedback loop:
+
+1. **MANAS** computes consciousness level from synapses, prakriti, kala
+2. **manas_awareness.json** persists the current state
+3. **OpusContextService** reads awareness and injects into context
+4. **LLM** receives cognitive directive in system prompt
+5. **LLM behavior** adapts to system state
+6. **Actions** taken by LLM affect synaptic patterns
+7. **MANAS** learns from outcomes → influences next consciousness level
+
 ## Philosophy
 
 This architecture embodies the Vedic understanding of consciousness:
@@ -273,6 +373,12 @@ MANAS doesn't just "run code" - it **breathes**. The biorhythm modulates based o
 
 - `vibe_core/plugins/opus_assistant/events/kernel_tick.py`
   - Wire `manas.tick()` to KERNEL_TICK
+
+- `vibe_core/plugins/opus_assistant/core/context_service.py`
+  - Added `manas_awareness` field to `OpusContext` dataclass
+  - Added `_get_manas_awareness()` method to load awareness state
+  - Added VAK-style cognitive directives to `to_system_prompt_fragment()`
+  - Added `_get_vak_directive()` method for state-based prompting
 
 ## Related Documents
 
