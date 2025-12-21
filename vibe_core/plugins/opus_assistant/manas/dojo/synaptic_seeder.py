@@ -442,18 +442,16 @@ class SynapticSeeder:
         return True
 
     def _load_synapses(self) -> Dict[str, Any]:
-        """Load synapses from disk."""
-        if self._synapses_path.exists():
-            try:
-                return json.loads(self._synapses_path.read_text())
-            except (json.JSONDecodeError, IOError):
-                pass
-        return {"weights": {}, "triggers": [], "schema": "v2"}
+        """Load synapses via SynapseStore (OPUS-171 unified access)."""
+        from vibe_core.state.synapse_store import get_synapse_store
+
+        return get_synapse_store(workspace=self._workspace).load()
 
     def _save_synapses(self, synapses: Dict[str, Any]) -> None:
-        """Save synapses to disk."""
-        self._synapses_path.parent.mkdir(parents=True, exist_ok=True)
-        self._synapses_path.write_text(json.dumps(synapses, indent=2))
+        """Save synapses via SynapseStore (OPUS-171 unified access)."""
+        from vibe_core.state.synapse_store import get_synapse_store
+
+        get_synapse_store(workspace=self._workspace).save_raw(synapses)
 
 
 def seed_baseline(workspace: Path = None, force: bool = False) -> Dict[str, Any]:

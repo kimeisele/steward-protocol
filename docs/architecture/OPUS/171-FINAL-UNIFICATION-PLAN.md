@@ -221,7 +221,7 @@ SynapseStore handles JSON data persistence - different pattern. Direct use via `
 | 2.4 | ActionManager uses ActionLoader | TODO |
 | 2.5 | Remove analyzers/__init__.py manual imports | TODO |
 
-### Phase 3: Remove Duplicates (Synapse Loading Only!)
+### Phase 3: Remove Duplicates (Synapse Loading Only!) ✅ COMPLETE
 
 **NOTE**: OPUS-172 analysis confirmed manas/akshara.py is the CORE phonemic library.
 unified_akshara.py USES it via triggers.py. They are COMPLEMENTARY, not duplicate!
@@ -229,10 +229,13 @@ unified_akshara.py USES it via triggers.py. They are COMPLEMENTARY, not duplicat
 | # | Task | Status |
 |---|------|--------|
 | 3.1 | ~~Remove manas/akshara.py~~ KEEP IT! (see OPUS-172) | ✅ N/A |
-| 3.2 | Remove triggers.py _load_synapses() (use SynapseStore) | TODO |
-| 3.3 | Remove viveka_action.py _load_synapses() (use SynapseStore) | TODO |
-| 3.4 | Remove synaptic_seeder.py _load_synapses() (use SynapseStore) | TODO |
-| 3.5 | Remove mirror.py _load_synapses() (use SynapseStore) | TODO |
+| 3.2 | triggers.py _load_synapses() → SynapseStore | ✅ DONE |
+| 3.3 | viveka_action.py _load_synapses() → SynapseStore | ✅ DONE |
+| 3.4 | synaptic_seeder.py _load_synapses() → SynapseStore | ✅ DONE |
+| 3.5 | mirror.py _load_synapses() → SynapseStore | ✅ DONE |
+
+**Verification**: `grep -r "json.loads.*synapses" manas/` returns NO MATCHES.
+All 4 files now use `get_synapse_store(workspace).load()` with unified v3 schema.
 
 ### Phase 4: Wire Sanskrit Matrix to Main Loop
 

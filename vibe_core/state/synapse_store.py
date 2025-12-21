@@ -346,13 +346,15 @@ class SynapseStore:
         store = get_synapse_store()
     """
 
-    _instance: Optional["SynapseStore"] = None
+    # Per-workspace instances (workspace path -> store)
+    _instances: Dict[str, "SynapseStore"] = {}
     _lock = threading.Lock()
 
     def __init__(
         self,
         workspace: Optional[Path] = None,
         cache_ttl: float = DEFAULT_CACHE_TTL,
+        seed_weights: Optional[Dict[str, Dict[str, float]]] = None,
     ):
         """
         Initialize SynapseStore.
@@ -360,6 +362,7 @@ class SynapseStore:
         Args:
             workspace: Workspace root (default: cwd)
             cache_ttl: Cache time-to-live in seconds
+            seed_weights: Initial weights to use if file doesn't exist
         """
         self._workspace = workspace or Path.cwd()
         self._synapse_file = self._workspace / ".opus_state" / "synapses.json"
@@ -375,6 +378,9 @@ class SynapseStore:
 
         # Dirty flag for deferred saves
         self._dirty = False
+
+        # Seed weights for new systems
+        self._seed_weights = seed_weights
 
         logger.debug(f"SynapseStore initialized: {self._synapse_file}")
 
@@ -404,8 +410,11 @@ class SynapseStore:
 
         with self._io_lock:
             if not self._synapse_file.exists():
-                # Initialize with empty v3 schema
+                # Initialize with v3 schema (using seed weights if provided)
                 self._cache = self._create_empty_v3()
+                if self._seed_weights:
+                    self._cache["weights"] = self._seed_weights
+                    logger.info(f"SynapseStore seeded with {len(self._seed_weights)} triggers")
                 self._cache_time = now
                 return self._cache
 
@@ -580,6 +589,27 @@ class SynapseStore:
             return self.save()
         return True
 
+    def save_raw(self, data: Dict[str, Any]) -> bool:
+        """
+        Save raw data directly (for legacy code that modifies dict in place).
+
+        Use this when you've modified the dict returned by load() and want
+        to persist those changes. Ensures cache is updated.
+
+        Args:
+            data: The modified synapse data dict
+
+        Returns:
+            True if saved successfully
+        """
+        with self._io_lock:
+            success = self._save_to_disk(data)
+            if success:
+                self._cache = data
+                self._cache_time = datetime.utcnow()
+                self._dirty = False
+            return success
+
     # =========================================================================
     # Migration API
     # =========================================================================
@@ -683,20 +713,33 @@ class SynapseStore:
     # =========================================================================
 
     @classmethod
-    def get_instance(cls, workspace: Optional[Path] = None) -> "SynapseStore":
-        """Get singleton instance."""
+    def get_instance(
+        cls,
+        workspace: Optional[Path] = None,
+        seed_weights: Optional[Dict[str, Dict[str, float]]] = None,
+    ) -> "SynapseStore":
+        """Get or create SynapseStore instance for workspace."""
+        workspace = workspace or Path.cwd()
+        key = str(workspace.resolve())
         with cls._lock:
-            if cls._instance is None:
-                cls._instance = cls(workspace=workspace)
-            return cls._instance
+            if key not in cls._instances:
+                cls._instances[key] = cls(workspace=workspace, seed_weights=seed_weights)
+            return cls._instances[key]
 
     @classmethod
-    def reset_instance(cls) -> None:
-        """Reset singleton instance (for testing)."""
+    def reset_instance(cls, workspace: Optional[Path] = None) -> None:
+        """Reset instance for a workspace (for testing)."""
         with cls._lock:
-            if cls._instance is not None:
-                cls._instance.flush()
-            cls._instance = None
+            if workspace is None:
+                # Reset all instances
+                for store in cls._instances.values():
+                    store.flush()
+                cls._instances.clear()
+            else:
+                key = str(workspace.resolve())
+                if key in cls._instances:
+                    cls._instances[key].flush()
+                    del cls._instances[key]
 
 
 # =============================================================================
@@ -704,22 +747,29 @@ class SynapseStore:
 # =============================================================================
 
 
-_global_store: Optional[SynapseStore] = None
+def get_synapse_store(
+    workspace: Optional[Path] = None,
+    seed_weights: Optional[Dict[str, Dict[str, float]]] = None,
+) -> SynapseStore:
+    """
+    Get or create a SynapseStore instance for the workspace.
+
+    This is the RECOMMENDED way to access synapse data. Uses per-workspace
+    singleton pattern for efficiency.
+
+    Args:
+        workspace: Workspace path (default: cwd)
+        seed_weights: Initial weights for new systems (only used on first call)
+
+    Returns:
+        SynapseStore instance for the workspace
+    """
+    return SynapseStore.get_instance(workspace=workspace, seed_weights=seed_weights)
 
 
-def get_synapse_store(workspace: Optional[Path] = None) -> SynapseStore:
-    """Get or create the global SynapseStore instance."""
-    global _global_store
-    if _global_store is None:
-        _global_store = SynapseStore.get_instance(workspace)
-    return _global_store
-
-
-def reset_synapse_store() -> None:
-    """Reset the global SynapseStore instance."""
-    global _global_store
-    SynapseStore.reset_instance()
-    _global_store = None
+def reset_synapse_store(workspace: Optional[Path] = None) -> None:
+    """Reset SynapseStore instance(s) for testing."""
+    SynapseStore.reset_instance(workspace)
 
 
 # =============================================================================
