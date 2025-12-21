@@ -345,7 +345,7 @@ class TestCognitiveKernel:
             reasoning="Test purposes",
         )
         entry = IntentBufferEntry(intent=intent)
-        kernel._intent_buffer.append(entry)
+        kernel._buffer.add(entry)
 
         # Reject it
         success = kernel.reject_intent("manual_001", "Testing rejection")
@@ -496,8 +496,8 @@ class TestManasEndToEnd:
             description="Test persistence",
             reasoning="Testing",
         )
-        kernel1._intent_buffer.append(IntentBufferEntry(intent=intent))
-        kernel1._save_intent_buffer()
+        kernel1._buffer.add(IntentBufferEntry(intent=intent))
+        # IntentBuffer auto-saves on add()
 
         # Second kernel should have it
         kernel2 = CognitiveKernel(workspace=tmp_path)
