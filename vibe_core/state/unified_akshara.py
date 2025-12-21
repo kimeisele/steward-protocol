@@ -7,23 +7,21 @@ OPUS-154: Unified Akshara (Ekākṣara) - The Indestructible Substrate
 This module UNIFIES:
 - OPUS-114: Akshara Resonance (phonetic harmony via Varga)
 - OPUS-140: Sanskrit Matrix (memory compression)
+- OPUS-200/201: Quantum Reactor (phonetic physics + crypto mass)  ← NEW
 - PRANA: The curiosity/entropy factor (prevents crystallization)
 
-The Three Aspects are One:
+The Four Aspects are One:
     VIBRATION  (Resonance)   → HOW things connect
     CRYSTALLIZE (Memory)     → WHAT patterns form
+    QUANTUM    (Reactor)     → Physics-based energy computation  ← NEW
     PRANA (Exploration)      → WHY we try new paths
 
-Dharmic Score Formula:
-    Without PRANA: score = weight × resonance          ← CRYSTALLIZES (dead)
-    With PRANA:    score = (weight × resonance) + ε    ← LIVING (explores)
+Dharmic Score Formula (upgraded):
+    Without Reactor: score = weight × resonance + prana
+    With Reactor:    score = weight × resonance × quantum_boost + prana
 
-Where ε = prana_factor × random(0, 1)
-
-The system already has VAIRAGYA (ego pruning) in viveka_action.py.
-PRANA complements VAIRAGYA:
-    - VAIRAGYA: Prevents over-confidence (caps weights at 0.95)
-    - PRANA: Enables exploration (adds small random boost to all candidates)
+Where quantum_boost = 1.0 + (reactor_energy × 0.3)
+High quantum energy amplifies good recommendations.
 """
 
 import logging
@@ -38,11 +36,13 @@ logger = logging.getLogger("EKAKSHARA")
 @dataclass
 class PranaRecommendation:
     """
-    A routing recommendation with PRANA (curiosity) factor.
+    A routing recommendation with PRANA (curiosity) and QUANTUM factors.
 
     Extends DharmicRecommendation with:
     - prana: The exploration/curiosity boost applied
-    - unified_score: dharmic_score + prana
+    - quantum_energy: Energy from QuantumReactor (if enabled)
+    - quantum_boost: Multiplier from reactor (1.0 if disabled)
+    - unified_score: dharmic_score × quantum_boost + prana
     """
 
     action: str
@@ -50,10 +50,13 @@ class PranaRecommendation:
     resonance: float
     dharmic_score: float  # weight × resonance (from OPUS-114)
     prana: float  # Random exploration factor
-    unified_score: float  # dharmic_score + prana (final decision)
+    unified_score: float  # dharmic_score × quantum_boost + prana (final decision)
     trigger: str
     varga_trigger: str
     varga_action: str
+    # OPUS-200/201: Quantum Reactor integration
+    quantum_energy: float = 0.0  # Total energy from reactor
+    quantum_boost: float = 1.0  # Multiplier applied to dharmic_score
 
 
 class UnifiedAkshara:
@@ -62,10 +65,10 @@ class UnifiedAkshara:
 
     Combines:
     1. SynapticMemory.consult_dharmic() - existing weight × resonance
-    2. PRANA factor - new exploration/curiosity
+    2. PRANA factor - exploration/curiosity
+    3. QuantumReactor - physics-based energy computation (OPUS-200/201)
 
-    This is NOT a 3rd system - it's the UNIFICATION of existing systems
-    under the true Sanskrit meaning of Akshara.
+    This is the UNIFICATION of ALL Sanskrit systems under one API.
     """
 
     # Default PRANA intensity (0.0 to 1.0)
@@ -77,10 +80,16 @@ class UnifiedAkshara:
     # Ensures completely new paths get a chance
     COLD_PATH_PRANA = 0.15
 
+    # Quantum Reactor thresholds
+    QUANTUM_HIGH_ENERGY = 0.7  # Above this, emit event
+    QUANTUM_BOOST_FACTOR = 0.3  # Max 30% boost from reactor
+
     def __init__(
         self,
         workspace: Optional[Path] = None,
         prana_factor: float = DEFAULT_PRANA,
+        enable_reactor: bool = True,
+        session_salt: str = "",
     ):
         """
         Initialize the Unified Akshara substrate.
@@ -88,14 +97,28 @@ class UnifiedAkshara:
         Args:
             workspace: Project workspace (for loading synapses)
             prana_factor: Exploration intensity (0.0-1.0)
+            enable_reactor: Whether to use QuantumReactor (OPUS-200/201)
+            session_salt: Cryptographic salt for reactor (session context)
         """
         self._workspace = workspace or Path.cwd()
         self._prana_factor = prana_factor
+        self._enable_reactor = enable_reactor
+        self._session_salt = session_salt or self._generate_session_salt()
 
-        # Lazy import to avoid circular dependencies
+        # Lazy imports to avoid circular dependencies
         self._synaptic_memory = None
+        self._reactor = None
 
-        logger.info(f"🕉️ Ekākṣara initialized (prana={prana_factor:.2f})")
+        reactor_status = "enabled" if enable_reactor else "disabled"
+        logger.info(f"🕉️ Ekākṣara initialized (prana={prana_factor:.2f}, reactor={reactor_status})")
+
+    def _generate_session_salt(self) -> str:
+        """Generate a session-unique salt."""
+        import hashlib
+        import time
+
+        data = f"{time.time()}:{id(self)}".encode()
+        return hashlib.sha256(data).hexdigest()[:16]
 
     @property
     def synaptic_memory(self):
@@ -105,6 +128,69 @@ class UnifiedAkshara:
 
             self._synaptic_memory = SynapticMemory(self._workspace)
         return self._synaptic_memory
+
+    @property
+    def reactor(self):
+        """Lazy-load QuantumReactor to avoid import cycles."""
+        if self._reactor is None and self._enable_reactor:
+            try:
+                from vibe_core.reactor import QuantumReactor
+
+                self._reactor = QuantumReactor(initial_inertia=0.3)
+                logger.debug("🔥 QuantumReactor loaded")
+            except ImportError as e:
+                logger.warning(f"QuantumReactor not available: {e}")
+                self._enable_reactor = False
+        return self._reactor
+
+    def _compute_quantum_energy(self, trigger: str, action: str) -> float:
+        """
+        Compute quantum resonance energy between trigger and action.
+
+        Returns energy value (0.0-1.0), or 0.0 if reactor disabled.
+        """
+        if not self._enable_reactor or self.reactor is None:
+            return 0.0
+
+        try:
+            from vibe_core.reactor import encode
+
+            # Encode both trigger and action as tensors
+            trigger_tensor = encode(trigger, self._session_salt)
+            action_tensor = encode(action, self._session_salt)
+
+            # Compute resonance
+            field = self.reactor.resonate(trigger_tensor, action_tensor)
+            return field.total_energy
+
+        except Exception as e:
+            logger.warning(f"Quantum computation failed: {e}")
+            return 0.0
+
+    def _emit_high_energy_event(self, trigger: str, action: str, energy: float) -> None:
+        """Emit event when quantum energy exceeds threshold."""
+        try:
+            import asyncio
+
+            from vibe_core.event_bus import EventType, emit_event
+
+            # Run async emit in sync context
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Already in async context, schedule it
+                asyncio.create_task(
+                    emit_event(
+                        EventType.BROADCAST,
+                        agent_id="ekakshara",
+                        description=f"High resonance: {trigger} → {action}",
+                        metadata={"energy": energy, "trigger": trigger, "action": action},
+                    )
+                )
+            else:
+                # Sync context, just log (don't block)
+                logger.info(f"⚡ HIGH ENERGY: {trigger} → {action} (E={energy:.3f})")
+        except Exception as e:
+            logger.debug(f"Event emit skipped: {e}")
 
     def consult(
         self,
@@ -118,8 +204,9 @@ class UnifiedAkshara:
 
         This is the CORE method that:
         1. Gets dharmic recommendations (weight × resonance)
-        2. Adds PRANA factor for exploration
-        3. Returns sorted by unified_score
+        2. Computes quantum energy via QuantumReactor (OPUS-200/201)
+        3. Adds PRANA factor for exploration
+        4. Returns sorted by unified_score
 
         Args:
             trigger: The trigger pattern (e.g., "trigger:test_failure")
@@ -146,21 +233,30 @@ class UnifiedAkshara:
             candidate_set = set(candidates)
             dharmic_recs = [r for r in dharmic_recs if r.action in candidate_set]
 
-        # Add PRANA (exploration factor) to each recommendation
+        # Add PRANA and QUANTUM factors to each recommendation
         prana_recs = []
         for rec in dharmic_recs:
-            # Calculate PRANA
-            # - Low-weight paths get slightly more prana (encourages exploration)
-            # - High-weight paths get less prana (exploitation)
-            base_prana = self._prana_factor
+            # 1. Calculate QUANTUM ENERGY (OPUS-200/201)
+            quantum_energy = self._compute_quantum_energy(trigger, rec.action)
 
-            # Inverse weight bonus: paths with lower weights get more exploration
-            # This prevents the "echo chamber" effect
+            # Quantum boost: high energy amplifies dharmic score
+            # boost = 1.0 + (energy × BOOST_FACTOR)
+            # e.g., energy=0.8 → boost=1.24 (24% amplification)
+            quantum_boost = 1.0 + (quantum_energy * self.QUANTUM_BOOST_FACTOR)
+
+            # 2. Calculate PRANA (exploration factor)
+            # Low-weight paths get slightly more prana
+            base_prana = self._prana_factor
             weight_factor = 1.0 - (rec.weight * 0.5)  # 0.5-1.0 range
             prana = random.uniform(0, base_prana * weight_factor)
 
-            # Unified score = dharmic + prana
-            unified_score = rec.dharmic_score + prana
+            # 3. Unified score = (dharmic × quantum_boost) + prana
+            boosted_dharmic = rec.dharmic_score * quantum_boost
+            unified_score = boosted_dharmic + prana
+
+            # 4. Emit event if high energy
+            if quantum_energy >= self.QUANTUM_HIGH_ENERGY:
+                self._emit_high_energy_event(trigger, rec.action, quantum_energy)
 
             if unified_score >= min_score:
                 prana_recs.append(
@@ -174,18 +270,23 @@ class UnifiedAkshara:
                         trigger=trigger,
                         varga_trigger=rec.varga_trigger,
                         varga_action=rec.varga_action,
+                        quantum_energy=quantum_energy,
+                        quantum_boost=quantum_boost,
                     )
                 )
 
-        # Sort by unified_score (dharmic + prana)
+        # Sort by unified_score (dharmic × quantum_boost + prana)
         prana_recs.sort(key=lambda r: r.unified_score, reverse=True)
 
-        # Log the decision
+        # Log the decision with quantum info
         if prana_recs:
             winner = prana_recs[0]
+            quantum_str = (
+                f" Q:{winner.quantum_energy:.2f}×{winner.quantum_boost:.2f}" if winner.quantum_energy > 0 else ""
+            )
             logger.info(
                 f"🕉️ AKSHARA: {trigger} → {winner.action} "
-                f"(D:{winner.dharmic_score:.3f} + P:{winner.prana:.3f} = {winner.unified_score:.3f})"
+                f"(D:{winner.dharmic_score:.3f}{quantum_str} + P:{winner.prana:.3f} = {winner.unified_score:.3f})"
             )
 
         return prana_recs[:limit]
@@ -269,15 +370,31 @@ class UnifiedAkshara:
 _global_akshara: Optional[UnifiedAkshara] = None
 
 
-def get_akshara(workspace: Optional[Path] = None) -> UnifiedAkshara:
+def get_akshara(
+    workspace: Optional[Path] = None,
+    enable_reactor: bool = True,
+    session_salt: str = "",
+) -> UnifiedAkshara:
     """
     Get or create the global UnifiedAkshara instance.
 
     Singleton pattern for integration with existing systems.
+
+    Args:
+        workspace: Project workspace path
+        enable_reactor: Whether to enable QuantumReactor (OPUS-200/201)
+        session_salt: Cryptographic salt for reactor computations
+
+    Returns:
+        The global UnifiedAkshara instance
     """
     global _global_akshara
     if _global_akshara is None:
-        _global_akshara = UnifiedAkshara(workspace=workspace)
+        _global_akshara = UnifiedAkshara(
+            workspace=workspace,
+            enable_reactor=enable_reactor,
+            session_salt=session_salt,
+        )
     return _global_akshara
 
 
