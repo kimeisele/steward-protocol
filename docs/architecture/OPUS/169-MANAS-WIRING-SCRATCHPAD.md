@@ -153,10 +153,61 @@ State changes don't feed into learning compression.
 └─────────────────────────────────────────────────┘
 ```
 
-## NEXT ACTIONS (REAL)
+## ROOT CAUSE FOUND
 
-1. Wire Akasha → cognitive_kernel._perceive()
-2. Wire Prakriti → Sanskrit Matrix (state feeds learning)
-3. Add compress call after synapse update in triggers.py
-4. Create PluginEventSense for external plugins
-5. Add Akshara scoring to CognitiveWeaver.consult()
+### SenseManager IGNORES SenseLoader!
+
+```python
+# SenseLoader EXISTS (vibe_core/loaders/sense_loader.py):
+# - Auto-discovers *_sense.py files
+# - VEDA-4 compliant
+# - Returns dict of senses
+
+# But SenseManager HARDCODES everything:
+def _init_prakriti(): ...  # MANUAL
+def _init_dharma(): ...    # MANUAL
+def _init_sutra(): ...     # MANUAL
+# ... 7 hardcoded methods!
+```
+
+### No BridgeLoader exists!
+
+Bridges (Akasha, WeaverBridge, GenesisBridge) have NO loader.
+They're manually imported in cognitive_kernel.py.
+
+## WHY THINGS BREAK
+
+1. Add new sense → Must edit SenseManager manually
+2. Add new bridge → Must edit cognitive_kernel manually
+3. Manual edits → Break on next refactor
+
+## REAL FIX (NOT MANUAL WIRING)
+
+1. **SenseManager should USE SenseLoader:**
+   ```python
+   # DELETE: _init_prakriti(), _init_dharma(), etc.
+   # ADD: senses, _ = SenseLoader.discover_and_load()
+   ```
+
+2. **Create BridgeLoader:**
+   - Pattern: *_bridge.py in cortex/
+   - Auto-discovers Akasha, WeaverBridge, GenesisBridge
+   - Kernel loops over discovered bridges
+
+3. **Make Akasha a sense OR bridge:**
+   - Rename to akasha_sense.py → auto-discovered
+   - OR create BridgeLoader pattern
+
+4. **Sanskrit Matrix integration:**
+   - Create SynapticHook pattern
+   - Triggers.py calls hook after update
+   - Hook discovered, not hardcoded
+
+## FILE CHANGES NEEDED
+
+| File | Change |
+|------|--------|
+| sense_manager.py | Use SenseLoader, delete _init_* |
+| cognitive_kernel.py | Use BridgeLoader when created |
+| NEW: bridge_loader.py | Create based on SenseLoader |
+| akasha.py | Rename to akasha_sense.py OR akasha_bridge.py |
