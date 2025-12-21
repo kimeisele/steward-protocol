@@ -65,6 +65,14 @@ from vibe_core.plugins.opus_assistant.manas.disharmony_detector import (
 
 from .base import BaseSense
 
+# OPUS-167: Intent imports for generate_intents()
+from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+    Intent,
+    IntentPriority,
+    IntentRisk,
+)
+from datetime import timedelta
+
 logger = logging.getLogger("MANAS.Cortex.SutraSense")
 
 
@@ -784,6 +792,67 @@ class SutraSense(BaseSense):
                 "auto_executable": gap.gap_type == "missing_harness",  # Can auto-add harness
             }
             intents.append(intent)
+
+        return intents
+
+    # =========================================================================
+    # OPUS-167: Intent Generation (Fractal Architecture)
+    # =========================================================================
+
+    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
+        """
+        Generate documentation gap intents based on code/doc analysis.
+
+        OPUS-167: Fractal Architecture Restoration
+
+        This method was migrated FROM cognitive_kernel._perceive_and_generate_gap_intents()
+        TO here, restoring the proper "As Above, So Below" pattern where each
+        sense is autonomous and generates its own intents.
+
+        Returns:
+            List of gap intents (documentation issues)
+        """
+        intents: List[Intent] = []
+
+        try:
+            # Generate gap intents using existing method
+            raw_intents = self.generate_gap_intents(limit=2)
+
+            for idx, raw in enumerate(raw_intents):
+                # Extract weaving from params
+                params = raw.get("params", {})
+                related_files = []
+                related_docs = []
+                if params.get("code_path"):
+                    related_files.append(str(params["code_path"]))
+                if params.get("doc_path"):
+                    doc_name = Path(params["doc_path"]).name
+                    related_docs.append(doc_name)
+
+                # Generate unique ID with timestamp + counter to avoid duplicates
+                intent = Intent(
+                    id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{idx:02d}"),
+                    intent_type=raw.get("intent_type", "doc_modify"),
+                    title=raw.get("title", "Documentation gap detected"),
+                    description=raw.get("description", ""),
+                    reasoning=raw.get("reasoning", "SUTRA SENSE detected documentation gap"),
+                    priority=IntentPriority(raw.get("priority", "medium")),
+                    risk=IntentRisk(raw.get("risk", "low")),
+                    params=params,
+                    auto_executable=raw.get("auto_executable", False),
+                    # Gap intents expire after 24h - if not addressed, re-perceive fresh
+                    expires_at=(datetime.utcnow() + timedelta(hours=24)).isoformat(),
+                    # WEAVING: Link code + doc from gap
+                    related_files=related_files,
+                    related_docs=related_docs,
+                )
+                intents.append(intent)
+
+            if intents:
+                logger.info(f"📜 SUTRA SENSE: Generated {len(intents)} documentation gap intents")
+
+        except Exception as e:
+            logger.warning(f"📜 SUTRA SENSE: Intent generation failed: {e}")
 
         return intents
 

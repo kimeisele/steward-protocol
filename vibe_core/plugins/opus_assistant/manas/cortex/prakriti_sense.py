@@ -80,6 +80,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
@@ -95,6 +96,13 @@ from .base import BaseSense
 
 if TYPE_CHECKING:
     from vibe_core.state.prakriti import Prakriti
+
+# OPUS-167: Intent imports for generate_intents()
+from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+    Intent,
+    IntentPriority,
+    IntentRisk,
+)
 
 logger = logging.getLogger("MANAS.Cortex.PrakritiSense")
 
@@ -462,6 +470,94 @@ class PrakritiSense(BaseSense):
             return summary
 
         return None
+
+    # =========================================================================
+    # OPUS-167: Intent Generation (Fractal Architecture)
+    # =========================================================================
+
+    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
+        """
+        Generate healing intents based on state perception.
+
+        OPUS-167: Fractal Architecture Restoration
+
+        This method was migrated FROM cognitive_kernel._perceive_and_generate_healing_intents()
+        TO here, restoring the proper "As Above, So Below" pattern where each
+        sense is autonomous and generates its own intents.
+
+        Returns:
+            List of healing intents (state healing, lobotomy fixes)
+        """
+        intents: List[Intent] = []
+
+        try:
+            # Perceive state
+            summary = self.on_manas_tick()
+
+            if summary and summary.needs_attention:
+                logger.info(
+                    f"[PRAKRITI_SENSE] State needs attention - "
+                    f"Tamas: {summary.tamas_count}, Rajas: {summary.rajas_count}"
+                )
+
+                # Generate healing intent for Tamas paths
+                if summary.tamas_count > 0:
+                    tamas_paths = self.get_tamas_paths()
+                    path_names = [str(p.path.name) for p in tamas_paths[:3]]
+
+                    intent = Intent(
+                        id=f"heal_state_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="heal_system_state",
+                        title=f"Heal {summary.tamas_count} Tamas state paths",
+                        description=(
+                            f"System state health check detected {summary.tamas_count} paths in Tamas (stale/broken). "
+                            f"Paths: {', '.join(path_names)}{'...' if len(tamas_paths) > 3 else ''}. "
+                            f"Healing will push state Tamas -> Rajas -> Sattva."
+                        ),
+                        reasoning="PRAKRITI SENSE detected unhealthy state that needs healing.",
+                        priority=IntentPriority.HIGH,
+                        risk=IntentRisk.SAFE,
+                        params={
+                            "tamas_count": summary.tamas_count,
+                            "rajas_count": summary.rajas_count,
+                            "paths": [str(p.path) for p in tamas_paths],
+                        },
+                        auto_executable=True,
+                    )
+                    intents.append(intent)
+
+            # Check for lobotomy
+            lobotomy = self.sense_lobotomy()
+            if lobotomy.has_lobotomy:
+                logger.critical(
+                    f"[PRAKRITI_SENSE] LOBOTOMY DETECTED! {len(lobotomy.violations)} violations"
+                )
+
+                intent = Intent(
+                    id=f"fix_lobotomy_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                    intent_type="fix_lobotomy",
+                    title=f"Fix LOBOTOMY: {len(lobotomy.violations)} state files in .gitignore",
+                    description=(
+                        f"CRITICAL: State files are being ignored by git! "
+                        f"This causes memory loss (lobotomy). "
+                        f"Affected plugins: {', '.join(lobotomy.affected_plugins)}. "
+                        f"Must remove these paths from .gitignore."
+                    ),
+                    reasoning="State files in .gitignore = Lobotomy. The system is losing its memory.",
+                    priority=IntentPriority.CRITICAL,
+                    risk=IntentRisk.MEDIUM,
+                    params={
+                        "violations": lobotomy.violations,
+                        "affected_plugins": lobotomy.affected_plugins,
+                    },
+                    auto_executable=False,
+                )
+                intents.append(intent)
+
+        except Exception as e:
+            logger.warning(f"[PRAKRITI_SENSE] Intent generation failed: {e}")
+
+        return intents
 
     # =========================================================================
     # Chat Integration (for Jnana handler)

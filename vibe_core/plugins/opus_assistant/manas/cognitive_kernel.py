@@ -1808,56 +1808,78 @@ class CognitiveKernel(CognitiveCycle):
         """
         PERCEIVE Phase: Collect system state observations.
 
-        The 6 Jnanendriyas (Perception Organs):
-        1. PRAKRITI SENSE → System state
+        OPUS-167: Fractal Architecture - Each sense generates its own intents.
+
+        The 7 Jnanendriyas (Perception Organs):
+        1. PRAKRITI SENSE → System state healing
         2. DHARMA SENSE → Ethical alignment (used in decide phase)
         3. SUTRA SENSE → Documentation gaps
         4. KARMA SENSE → Memory traces
         5. VIVEKA SENSE → Discriminative ranking
-        6. SHRUTA SENSE → Filesystem vibrations (OPUS-156)
+        6. SHRUTA SENSE → Filesystem vibrations
+        7. PRANA SENSE → Agent presence
 
         Returns:
             (observations, metadata) where observations is list of intents discovered
         """
         observations = []
+        metadata = {}
 
         # 👂 SHRUTA SENSE: Perceive filesystem vibrations FIRST
         # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
         shruta_perception = self._perceive_filesystem_vibrations()
-        vibration_count = shruta_perception.total_count if shruta_perception else 0
+        metadata["vibration_count"] = shruta_perception.total_count if shruta_perception else 0
 
-        # 👁️ PRAKRITI SENSE: Perceive state and generate healing intents
-        healing_intents = self._perceive_and_generate_healing_intents()
-        observations.extend(healing_intents)
+        # OPUS-167: Senses generate their own intents (fractal architecture)
+        # Each sense is autonomous and responsible for its own intent generation
 
-        # 🫀 PRANA SENSE: Perceive agent presence and generate lifecycle intents
-        presence_intents = self._perceive_and_generate_presence_intents()
-        observations.extend(presence_intents)
+        # 👁️ PRAKRITI SENSE: Generate healing intents
+        if self._prakriti_sense:
+            try:
+                healing_intents = self._prakriti_sense.generate_intents()
+                observations.extend(healing_intents)
+                metadata["healing_count"] = len(healing_intents)
+            except Exception as e:
+                logger.warning(f"👁️ PRAKRITI SENSE: Intent generation failed: {e}")
+                metadata["healing_count"] = 0
 
-        # 📜 SUTRA SENSE: Perceive documentation gaps
-        gap_intents = self._perceive_and_generate_gap_intents()
-        observations.extend(gap_intents)
+        # 🫀 PRANA SENSE: Generate presence intents
+        if self._prana_sense:
+            try:
+                context = {"_prana_cooldowns": self._prana_cooldowns}
+                presence_intents = self._prana_sense.generate_intents(context)
+                observations.extend(presence_intents)
+                metadata["presence_count"] = len(presence_intents)
+            except Exception as e:
+                logger.warning(f"🫀 PRANA SENSE: Intent generation failed: {e}")
+                metadata["presence_count"] = 0
 
-        # 🌙 SANKALPA: Strategic proactive intents
+        # 📜 SUTRA SENSE: Generate documentation gap intents
+        if self._sutra_sense:
+            try:
+                gap_intents = self._sutra_sense.generate_intents()
+                observations.extend(gap_intents)
+                metadata["gap_count"] = len(gap_intents)
+            except Exception as e:
+                logger.warning(f"📜 SUTRA SENSE: Intent generation failed: {e}")
+                metadata["gap_count"] = 0
+
+        # 🌙 SANKALPA: Strategic proactive intents (still kernel-level for now)
         sankalpa_intents = self._generate_sankalpa_intents({})
         observations.extend(sankalpa_intents)
+        metadata["sankalpa_count"] = len(sankalpa_intents)
 
         # Clean up expired intents
         self._cleanup_expired_intents()
-
-        metadata = {
-            "vibration_count": vibration_count,  # OPUS-156: ShrutaSense
-            "healing_count": len(healing_intents),
-            "presence_count": len(presence_intents),  # OPUS-166: PranaSense
-            "gap_count": len(gap_intents),
-            "sankalpa_count": len(sankalpa_intents),
-        }
 
         return observations, metadata
 
     async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
         """
         ORIENT Phase: Organize and prioritize observations.
+
+        OPUS-167: Context is now passed to IntentGenerator so analyzers can see
+        what the senses have already perceived.
 
         Args:
             observations: List of intents from perceive phase
@@ -1870,9 +1892,19 @@ class CognitiveKernel(CognitiveCycle):
         if swept > 0:
             logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents")
 
-        # Generate new intents from current context
+        # OPUS-167: Pass perception context to IntentGenerator
+        # This allows analyzers to see what senses have already perceived
+        context = {
+            "observations": observations,
+            "observation_count": len(observations),
+            "observation_types": list(set(
+                getattr(obs, "intent_type", "unknown") for obs in observations
+            )),
+        }
+
+        # Generate new intents with perception context
         # OPUS-096: Async generation for Semantic Engine
-        new_intents = await self._intent_generator.generate_intents({})
+        new_intents = await self._intent_generator.generate_intents(context)
 
         # Combine perceptions with generated intents
         all_intents = observations + new_intents
@@ -1884,6 +1916,7 @@ class CognitiveKernel(CognitiveCycle):
             "new_generated": len(new_intents),
             "total_oriented": len(orientations),
             "swept_count": swept,
+            "context_passed": True,  # OPUS-167 marker
         }
 
         return orientations, metadata
