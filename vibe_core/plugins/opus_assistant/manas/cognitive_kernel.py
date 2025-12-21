@@ -272,7 +272,12 @@ class CognitiveKernel(CognitiveCycle):
         self._semantic_engine: Any = None
         self._init_semantic_engine()
 
-        self._intent_generator = IntentGenerator(workspace=self._workspace, memory_store=self._memory)
+        # OPUS-167: Pass analyzer_loader to avoid duplicate loading
+        self._intent_generator = IntentGenerator(
+            workspace=self._workspace,
+            memory_store=self._memory,
+            analyzer_loader=self._analyzer_loader,
+        )
         # Inject engine if available
         if self._semantic_engine:
             self._intent_generator.inject_semantic_engine(self._semantic_engine)
