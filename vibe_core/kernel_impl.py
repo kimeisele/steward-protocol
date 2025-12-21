@@ -1358,13 +1358,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def terminate_agent(self, agent_id: str, reason: str = "Unknown") -> bool:
         """
         Terminate an agent and free its resources.
-        
+
         DURVASA PROTOCOL: This is the knife. Use it wisely.
-        
+
         Args:
             agent_id: The agent to terminate
             reason: Why we're killing it
-            
+
         Returns:
             True if terminated, False if not found
         """
@@ -1411,13 +1411,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def enforce_prana_limits(self, pressure: float = None) -> int:
         """
         DURVASA PROTOCOL: The Prana Triage Engine.
-        
+
         Sacrifices lower-dharma agents to preserve the system core during resource famine.
-        
+
         Args:
             pressure: Optional override for system pressure (0.0-1.0).
                      If None, uses process_manager resource monitoring.
-        
+
         Returns:
             Number of agents sacrificed
         """

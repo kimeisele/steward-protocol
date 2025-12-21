@@ -109,16 +109,16 @@ class KernelIOService:
     def _validate_sandbox(self, requested_path: str) -> Path:
         """
         THE CART BREAKER.
-        
+
         Resolves paths and ensures they stay inside the workspace sandbox.
         This prevents symlink attacks and path traversal (..) escapes.
-        
+
         Args:
             requested_path: The path requested by a plugin/agent
-            
+
         Returns:
             Path: The validated, safe path
-            
+
         Raises:
             PermissionError: If the path escapes the sandbox
         """
