@@ -49,10 +49,18 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from .base import BaseSense
+
+# OPUS-167: Intent imports for generate_intents()
+from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+    Intent,
+    IntentPriority,
+    IntentRisk,
+)
 
 logger = logging.getLogger("MANAS.Cortex.PranaSense")
 
@@ -358,6 +366,96 @@ class PranaSense(BaseSense):
         """
         shruta_sense.add_handler(self.handle_vibration)
         logger.info("🫀 PranaSense registered with ShrutaSense for real-time updates")
+
+    # =========================================================================
+    # OPUS-167: Intent Generation (Fractal Architecture)
+    # =========================================================================
+
+    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
+        """
+        Generate presence-related intents based on agent lifecycle events.
+
+        OPUS-167: Fractal Architecture Restoration
+
+        This method was migrated FROM cognitive_kernel._perceive_and_generate_presence_intents()
+        TO here, restoring the proper "As Above, So Below" pattern where each
+        sense is autonomous and generates its own intents.
+
+        Returns:
+            List of presence intents (agent death investigations)
+        """
+        intents: List[Intent] = []
+
+        # Cooldown tracking (avoid spam from flaky agents)
+        cooldown_minutes = 5
+        cooldowns: Dict[str, datetime] = context.get("_prana_cooldowns", {}) if context else {}
+
+        try:
+            # Perceive current presence state
+            perception = self.perceive()
+
+            # React to deaths - generate investigation intents (with cooldown)
+            now = datetime.utcnow()
+            for death in perception.deaths:
+                agent_id = death.agent_id
+
+                # Check cooldown to avoid intent spam from flaky agents
+                last_intent_time = cooldowns.get(agent_id)
+                if last_intent_time:
+                    elapsed = (now - last_intent_time).total_seconds() / 60
+                    if elapsed < cooldown_minutes:
+                        logger.debug(
+                            f"🫀 PRANA SENSE: Skipping {agent_id} death intent - "
+                            f"cooldown active ({elapsed:.1f}/{cooldown_minutes} min)"
+                        )
+                        continue
+
+                presence = self.get_agent_presence(agent_id)
+
+                # Mark cooldown BEFORE generating (avoid race conditions)
+                cooldowns[agent_id] = now
+
+                intent = Intent(
+                    id=f"prana_death_{agent_id}_{now.strftime('%H%M%S')}",
+                    intent_type="investigate_agent_death",
+                    title=f"Agent {agent_id} died",
+                    description=(
+                        f"Agent '{agent_id}' is no longer responding. "
+                        f"Last seen: {presence.last_seen if presence else 'unknown'}. "
+                        f"Investigate cause and consider restart."
+                    ),
+                    reasoning=(
+                        "PranaSense detected missing heartbeat (node.json deleted/stale). "
+                        "Dead agents may indicate crashes, resource issues, or intentional shutdown."
+                    ),
+                    priority=IntentPriority.HIGH,
+                    risk=IntentRisk.MEDIUM,
+                    params={
+                        "agent_id": agent_id,
+                        "last_seen": presence.last_seen if presence else None,
+                        "cartridge_path": str(presence.cartridge_path) if presence else None,
+                    },
+                    auto_executable=False,
+                    related_files=[f"agents/{agent_id}/node.json"],
+                )
+                intents.append(intent)
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' died - investigation intent generated")
+
+            # React to births - log and optionally generate welcome intent
+            for birth in perception.births:
+                agent_id = birth.agent_id
+                logger.info(f"🫀 PRANA SENSE: Agent '{agent_id}' born - now alive")
+
+            # Log summary
+            if perception.deaths or perception.births:
+                logger.info(
+                    f"🫀 PRANA SENSE: {len(perception.deaths)} deaths, {len(perception.births)} births detected"
+                )
+
+        except Exception as e:
+            logger.warning(f"🫀 PRANA SENSE: Intent generation failed: {e}")
+
+        return intents
 
     # =========================================================================
     # Internal Methods
