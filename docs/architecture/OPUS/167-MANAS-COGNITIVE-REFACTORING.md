@@ -281,9 +281,56 @@ verification:
 
 ---
 
+## Architecture Clarification: Sense Wiring
+
+### Finding: Senses Are NOT Orphaned
+
+Initial analysis found `KarmaSense` and `VivekaSense` with "0 uses" in the kernel. This was **misleading**. They are wired through the **Analyzer chain**:
+
+```
+CognitiveKernel._orient()
+    └→ IntentGenerator.generate_intents(context)
+        └→ AnalyzerLoader.discover_and_load()
+            └→ TriageAnalyzer.analyze()
+                └→ VivekaSense.perceive()
+                    └→ KarmaSense.analyze_chronic_pain()
+```
+
+### Sense Roles in OODA Cycle
+
+Not all senses generate intents. They have different roles:
+
+| Sense | OODA Phase | Role | generate_intents()? |
+|-------|------------|------|---------------------|
+| PrakritiSense | PERCEIVE | State healing | ✅ YES |
+| PranaSense | PERCEIVE | Agent presence | ✅ YES |
+| SutraSense | PERCEIVE | Doc gaps | ✅ YES |
+| ShrutaSense | PERCEIVE | Filesystem vibrations | ❌ (raw events) |
+| VivekaSense | ORIENT | Prioritization | Via TriageAnalyzer |
+| KarmaSense | DECIDE | Historical context | Via VivekaSense |
+| DharmaSense | DECIDE | Ethical filtering | ❌ (filter, not generate) |
+
+### Duplicate Loader Issue
+
+**Problem:** The kernel creates `_analyzer_loader` but NEVER uses it. `IntentGenerator` creates its own.
+
+```python
+# Kernel (line 261) - UNUSED!
+self._analyzer_loader = AnalyzerLoader(scope="opus_private")
+
+# IntentGenerator (internal) - THE REAL ONE
+self._modular_analyzers = self._load_analyzers_veda4()  # Creates its own
+```
+
+**Fix:** Remove the unused loader from the kernel. The `IntentGenerator` owns analyzer discovery.
+
+---
+
 ## References
 
 - OPUS-032: MANAS Awakening (original design)
 - OPUS-095: Orchestration Cycle (OODA pattern)
 - OPUS-105: Genesis Fortress (UnifiedLoader)
+- OPUS-127: KarmaSense - The Eye of Memory
+- OPUS-132: VivekaSense - The Discriminator
 - VEDA-4: Loader Architecture
