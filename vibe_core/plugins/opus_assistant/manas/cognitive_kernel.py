@@ -44,6 +44,9 @@ from .buddhi import Buddhi, BuddhiVerdict
 # OPUS-167: Intent Buffer Extraction
 from .intent_buffer import IntentBuffer, IntentBufferEntry
 
+# OPUS-167: Sense Manager Extraction
+from .sense_manager import SenseManager
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
@@ -303,38 +306,27 @@ class CognitiveKernel(CognitiveCycle):
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
-        # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
-        self._prakriti_sense: Optional["PrakritiSense"] = None
-        self._init_prakriti_sense()
+        # OPUS-167: Unified Sense Manager (replaces individual _init_* calls)
+        self._sense_manager = SenseManager(
+            workspace=self._workspace,
+            config=self._full_config,
+        )
+        self._sense_manager.boot_all()
 
-        # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
-        self._dharma_sense: Optional["DharmaSense"] = None
-        self._init_dharma_sense()
+        # Inject semantic engine into sutra sense if available
+        if self._sense_manager.sutra_sense and self._semantic_engine:
+            self._sense_manager.sutra_sense.inject_semantic_engine(self._semantic_engine)
 
-        # 📜 SUTRA SENSE: The Third Eye - Doc/Code Gap Detection (OPUS-054)
-        self._sutra_sense: Optional["SutraSense"] = None
-        self._init_sutra_sense()
-        # Inject engine if available
-        if self._sutra_sense and self._semantic_engine:
-            self._sutra_sense.inject_semantic_engine(self._semantic_engine)
-
-        # 👂 SHRUTA SENSE: The 6th Jnanendriya - Hearing Filesystem (OPUS-156)
-        # "Am Anfang war Dunkelheit. Brahma HÖRTE bevor er SAH."
-        self._shruta_sense: Optional["ShrutaSense"] = None
-        self._init_shruta_sense()
-
-        # 🫀 PRANA SENSE: The 7th Jnanendriya - Agent Presence Awareness (OPUS-166)
+        # 🫀 PRANA SENSE: Cooldown tracking (kernel-specific, not in SenseManager)
         # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
-        self._prana_sense: Optional["PranaSense"] = None
         self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
         self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
-        self._init_prana_sense()
 
         # 🧠 OPUS-168: ANTAHKARANA - The Inner Instrument
         # Chitta (Perception Pool) + Buddhi (Intellect) form the decision layer
         # This fixes: DharmaSense checked at DECIDE time, not EXECUTE time
         self._chitta = Chitta(workspace=self._workspace)
-        self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._dharma_sense)
+        self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._sense_manager.dharma_sense)
         logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
         # 🏛️ INFRASTRUCTURE GENESIS: The Stadtamt Service (OPUS-158)
@@ -461,6 +453,35 @@ class CognitiveKernel(CognitiveCycle):
         Actions can access tools dynamically via this loader.
         """
         return self._tool_loader
+
+    # =========================================================================
+    # OPUS-167: SENSE MANAGER PROPERTIES (Backward Compatibility)
+    # =========================================================================
+
+    @property
+    def _prakriti_sense(self) -> Optional["PrakritiSense"]:
+        """Prakriti Sense - delegates to SenseManager."""
+        return self._sense_manager.prakriti_sense
+
+    @property
+    def _dharma_sense(self) -> Optional["DharmaSense"]:
+        """Dharma Sense - delegates to SenseManager."""
+        return self._sense_manager.dharma_sense
+
+    @property
+    def _sutra_sense(self) -> Optional["SutraSense"]:
+        """Sutra Sense - delegates to SenseManager."""
+        return self._sense_manager.sutra_sense
+
+    @property
+    def _shruta_sense(self) -> Optional["ShrutaSense"]:
+        """Shruta Sense - delegates to SenseManager."""
+        return self._sense_manager.shruta_sense
+
+    @property
+    def _prana_sense(self) -> Optional["PranaSense"]:
+        """Prana Sense - delegates to SenseManager."""
+        return self._sense_manager.prana_sense
 
     # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
