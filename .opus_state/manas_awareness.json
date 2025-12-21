@@ -1,11 +1,11 @@
 {
-  "consciousness_level": 0.72,
+  "consciousness_level": 0.65,
   "state": "sattva",
-  "tick": 42,
+  "tick": 1,
   "inputs": {
-    "synaptic_urgency": 0.65,
-    "prakriti_health": 0.85,
-    "kala_rhythm": 0.55
+    "synaptic_urgency": 0.5,
+    "prakriti_health": 0.8,
+    "kala_rhythm": 0.5
   },
-  "last_tick": "2025-12-21T20:28:00"
+  "last_tick": "2025-12-21T20:45:00"
 }
