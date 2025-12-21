@@ -13,6 +13,7 @@ This is NOT a mock. This is real execution context for cartridges.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
@@ -29,7 +30,7 @@ from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revoc
 from .errors import kernel_fault  # GAD-000 Compliance
 
 # DocRenderer: Extracted markdown rendering logic
-from .event_bus import get_event_bus  # Phase 2: Event Bus
+from .event_bus import Event, EventType, get_event_bus  # Phase 2: Event Bus
 from .gateway.api import NetworkGateway  # Phase 18: The Network (Sangha)
 
 # I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
@@ -1204,6 +1205,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
             # PULSE: Update snapshot after task completion
             self._pulse()
+
+            # KERNEL_TICK: Emit after every tick to drive autonomous circuits
+            # Note: Using create_task to schedule the async emit non-blocking
+            asyncio.create_task(self._event_bus.emit(Event(
+                event_type=EventType.KERNEL_TICK,
+                agent_id="kernel",
+                message="Kernel heartbeat tick"
+            )))
 
             # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
             self._check_system_health()
