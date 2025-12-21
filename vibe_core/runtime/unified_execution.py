@@ -11,6 +11,12 @@ Components:
 3. UnifiedRouter - Single router (replaces PlaybookRouter + MilkOceanRouter)
 4. UnifiedExecutor - Single executor dispatcher
 
+OPUS-200/201 INTEGRATION:
+- QuantumReactor provides RESONANCE-BASED gating (Breaking the Binary)
+- check_gate_resonant() computes continuous energy instead of boolean
+- Actions MANIFEST when energy > inertia (not "allowed")
+- Entropy chain provides cryptographic audit trail
+
 Refs: docs/architecture/OPUS/OPUS_RUNTIME_SEPARATION.md
 """
 
@@ -90,6 +96,11 @@ class ExecutionRequest:
     # MilkOcean gate decision
     gate_decision: MilkOceanGate = MilkOceanGate.ALLOW
 
+    # OPUS-200/201: Quantum Resonance Field (alternative to boolean gate)
+    resonance_energy: float = 0.0  # Total energy from reactor
+    resonance_inertia: float = 0.5  # Threshold for manifestation
+    resonance_hash: str = ""  # Entropy chain hash for audit
+
     # Runtime state
     status: ExecutionStatus = ExecutionStatus.PENDING
     phase_results: Dict[str, Any] = field(default_factory=dict)
@@ -135,6 +146,36 @@ class ExecutionRequest:
         if self.started_at and self.completed_at:
             return self.completed_at - self.started_at
         return None
+
+    @property
+    def manifests(self) -> bool:
+        """
+        OPUS-200/201: Does this request manifest?
+
+        True if resonance_energy > resonance_inertia.
+        This replaces boolean gate checks with continuous energy.
+        """
+        return self.resonance_energy > self.resonance_inertia
+
+    def mark_resonance(self, energy: float, inertia: float, field_hash: str = ""):
+        """Mark request with quantum resonance values."""
+        self.resonance_energy = energy
+        self.resonance_inertia = inertia
+        self.resonance_hash = field_hash
+
+        # Also set legacy gate_decision based on resonance
+        if energy > inertia * 1.5:
+            # High energy = critical manifestation
+            self.gate_decision = MilkOceanGate.CRITICAL
+        elif energy > inertia:
+            # Normal manifestation
+            self.gate_decision = MilkOceanGate.ALLOW
+        elif energy > inertia * 0.5:
+            # Low energy = queue for later
+            self.gate_decision = MilkOceanGate.QUEUE
+        else:
+            # Very low energy = doesn't manifest (soft block)
+            self.gate_decision = MilkOceanGate.BLOCK
 
 
 @dataclass
@@ -196,9 +237,15 @@ class UnifiedRouter:
     Decision is made ONCE at routing time, not during execution.
     """
 
+    # OPUS-200/201: Resonance thresholds
+    RESONANCE_INERTIA = 0.5  # Default inertia for manifestation
+    RESONANCE_CRITICAL = 0.85  # Above this = critical manifestation
+    RESONANCE_QUEUE = 0.3  # Below inertia but above this = queue
+
     def __init__(self, kernel: Optional["RealVibeKernel"] = None):
         self._kernel = kernel
         self._circuits: Dict[str, Dict[str, Any]] = {}
+        self._reactor = None  # Lazy-loaded
 
         # Initialize LayeredRouter
         self._layered = LayeredRouter(kernel=kernel)
@@ -285,6 +332,94 @@ class UnifiedRouter:
         # For now, default to ALLOW (Queueing logic to be implemented in Phase 4)
         request.gate_decision = MilkOceanGate.ALLOW
         return MilkOceanGate.ALLOW
+
+    # =========================================================================
+    # OPUS-200/201: QUANTUM RESONANCE GATING (Breaking the Binary)
+    # =========================================================================
+
+    @property
+    def reactor(self):
+        """Lazy-load QuantumReactor for resonance computation."""
+        if self._reactor is None:
+            try:
+                from vibe_core.reactor import QuantumReactor
+
+                self._reactor = QuantumReactor(initial_inertia=self.RESONANCE_INERTIA)
+                logger.info("[ROUTER] 🔥 QuantumReactor loaded for resonance gating")
+            except ImportError as e:
+                logger.debug(f"[ROUTER] QuantumReactor not available: {e}")
+        return self._reactor
+
+    def check_gate_resonant(self, request: ExecutionRequest, salt: str = "") -> MilkOceanGate:
+        """
+        OPUS-200/201: Resonance-based gate check.
+
+        Instead of boolean allow/block, compute CONTINUOUS energy.
+        Actions MANIFEST when energy > inertia.
+
+        Args:
+            request: The execution request
+            salt: Cryptographic salt (session context)
+
+        Returns:
+            MilkOceanGate - but now derived from resonance, not boolean
+        """
+        if self.reactor is None:
+            # Fallback to boolean gate if reactor unavailable
+            return self.check_gate(request)
+
+        try:
+            from vibe_core.reactor import encode
+
+            # Encode user intent as tensor
+            intent_tensor = encode(request.user_input, salt)
+
+            # Encode target action as tensor
+            target_str = f"{request.execution_path.value}:{request.target_id}"
+            target_tensor = encode(target_str, salt)
+
+            # Compute resonance between intent and target
+            field = self.reactor.resonate(intent_tensor, target_tensor)
+
+            # Store resonance values in request
+            request.mark_resonance(
+                energy=field.total_energy,
+                inertia=self.RESONANCE_INERTIA,
+                field_hash=field.field_hash,
+            )
+
+            # Log the resonance computation
+            status = "MANIFEST" if request.manifests else "PENDING"
+            logger.info(f"[ROUTER] 🔮 Resonance: {request.user_input[:30]}... → E={field.total_energy:.3f} ({status})")
+
+            return request.gate_decision
+
+        except Exception as e:
+            logger.warning(f"[ROUTER] Resonance computation failed: {e}")
+            return self.check_gate(request)
+
+    def manifest(self, user_input: str, source: str = "envoy", salt: str = "") -> ExecutionRequest:
+        """
+        OPUS-200/201: Complete manifestation flow.
+
+        Routes AND computes resonance in one call.
+        The request will have both routing decision AND resonance field.
+
+        Args:
+            user_input: The user's intent
+            source: Origin of request
+            salt: Cryptographic salt
+
+        Returns:
+            ExecutionRequest with routing + resonance data
+        """
+        # First, route normally
+        request = self.route(user_input, source)
+
+        # Then, compute resonance
+        self.check_gate_resonant(request, salt)
+
+        return request
 
     @property
     def kernel(self) -> Optional["RealVibeKernel"]:

@@ -13,6 +13,12 @@ DHARMA ENFORCEMENT:
 - VajraEnforcer uses PhoenixConfig as source of truth
 - Detects and corrects drift between runtime state and config
 - Logs enforcement actions for audit trail
+
+OPUS-200/201 INTEGRATION:
+- QuantumReactor provides RESONANCE-BASED drift detection
+- Dissonance (low resonance) warns before hard failures
+- Entropy chain tracks correction sequence for auditability
+- Not boolean (wired/unwired) but continuous (resonance field)
 """
 
 import functools
@@ -296,3 +302,125 @@ class VajraEnforcer:
             Corrected state matching config
         """
         return self.gloss_over(section_id, runtime_state)
+
+    # =========================================================================
+    # OPUS-200/201: QUANTUM RESONANCE INTEGRATION
+    # =========================================================================
+
+    @property
+    def reactor(self):
+        """Lazy-load QuantumReactor for resonance computation."""
+        if not hasattr(self, "_reactor"):
+            self._reactor = None
+            try:
+                from vibe_core.reactor import QuantumReactor
+
+                self._reactor = QuantumReactor(initial_inertia=0.3)
+                logger.debug("⚡ VAJRA: QuantumReactor loaded for resonance detection")
+            except ImportError as e:
+                logger.debug(f"⚡ VAJRA: QuantumReactor not available: {e}")
+        return self._reactor
+
+    def compute_drift_resonance(self, section_id: str, runtime_state: Dict[str, Any], salt: str = "") -> Optional[Any]:
+        """
+        Compute resonance between runtime state and config.
+
+        OPUS-200/201: Instead of boolean drift detection, compute
+        CONTINUOUS resonance. High resonance = aligned. Low = drifting.
+
+        Args:
+            section_id: Section name (e.g., "manas")
+            runtime_state: Current runtime values
+            salt: Cryptographic salt for entropy dimension
+
+        Returns:
+            ResonanceField or None if reactor unavailable
+        """
+        if self.reactor is None:
+            return None
+
+        section = self.config.get_section(section_id)
+        if section is None:
+            return None
+
+        try:
+            from vibe_core.reactor import encode
+
+            # Encode runtime state as tensor
+            runtime_str = f"{section_id}:{sorted(runtime_state.items())}"
+            runtime_tensor = encode(runtime_str, salt)
+
+            # Encode config state as tensor
+            config_dict = {}
+            for key in runtime_state:
+                if hasattr(section, key):
+                    config_dict[key] = getattr(section, key)
+            config_str = f"{section_id}:{sorted(config_dict.items())}"
+            config_tensor = encode(config_str, salt)
+
+            # Compute resonance between runtime and config
+            field = self.reactor.resonate(runtime_tensor, config_tensor)
+
+            # Log resonance level
+            if field.total_energy < 0.5:
+                logger.warning(f"⚡ VAJRA: LOW RESONANCE in {section_id} (E={field.total_energy:.3f}) - drift imminent")
+            elif field.total_energy > 0.8:
+                logger.debug(f"⚡ VAJRA: High resonance in {section_id} (E={field.total_energy:.3f}) - aligned")
+
+            return field
+
+        except Exception as e:
+            logger.warning(f"⚡ VAJRA: Resonance computation failed: {e}")
+            return None
+
+    def gloss_over_quantum(self, section_id: str, runtime_state: Dict[str, Any], salt: str = "") -> Dict[str, Any]:
+        """
+        Resonance-guided config correction (OPUS-200/201).
+
+        Uses QuantumReactor to GUIDE correction, not just apply it.
+        Higher resonance path = smoother correction.
+
+        Args:
+            section_id: Section name
+            runtime_state: Current runtime values
+            salt: Cryptographic salt
+
+        Returns:
+            Corrected state, with resonance-guided smoothing
+        """
+        # First, compute resonance
+        field = self.compute_drift_resonance(section_id, runtime_state, salt)
+
+        if field is None or field.total_energy > 0.8:
+            # No reactor OR high resonance = no correction needed
+            return runtime_state.copy()
+
+        if field.total_energy > self.reactor._inertia if self.reactor else 0.5:
+            # Energy overcomes inertia - allow gentle correction
+            corrected = self.gloss_over(section_id, runtime_state)
+            logger.info(f"⚡ VAJRA QUANTUM: {section_id} corrected (E={field.total_energy:.3f} > inertia)")
+            return corrected
+        else:
+            # Energy below inertia - resist sudden correction, warn instead
+            logger.warning(
+                f"⚡ VAJRA QUANTUM: {section_id} drift detected but "
+                f"resonance too low (E={field.total_energy:.3f}) - "
+                f"correction RESISTED (may need manual intervention)"
+            )
+            return runtime_state.copy()
+
+    def get_resonance_report(self) -> Dict[str, Any]:
+        """
+        Generate a resonance report for all known sections.
+
+        Returns health status based on resonance levels.
+        """
+        if self.reactor is None:
+            return {"status": "reactor_unavailable", "sections": {}}
+
+        return {
+            "status": "operational",
+            "reactor_inertia": self.reactor._inertia,
+            "corrections_applied": self.corrections_applied,
+            "chain_hash": self.reactor._chain_hash(),
+        }
