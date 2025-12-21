@@ -686,6 +686,11 @@ class CognitiveKernel(CognitiveCycle):
         if hasattr(kernel, "tool_registry"):
             self._global_tool_registry = kernel.tool_registry
             logger.info("⚡ VAJRA: Kernel injected - ledger + tool_registry ACTIVE")
+
+            # OPUS-175: Inject ToolRegistry into ActionManager for TaskKernel
+            self._action_manager.inject_tool_registry(kernel.tool_registry)
+            self._action_manager.enable_task_kernel(enabled=True)
+            logger.info("⚡ OPUS-175: TaskKernel execution mode ENABLED")
         else:
             self._global_tool_registry = None
             logger.info("⚡ VAJRA: Kernel injected - ledger ACTIVE (no tool_registry)")

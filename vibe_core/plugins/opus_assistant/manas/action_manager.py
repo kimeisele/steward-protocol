@@ -53,6 +53,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
+    from vibe_core.task_kernel import TaskKernel, TaskKernelResult
+    from vibe_core.tools.tool_protocol import Tool
+
     from .cortex.dharma_sense import DharmaSense
     from .intent_buffer import IntentBufferEntry
     from .intent_generator import Intent
@@ -60,6 +63,113 @@ if TYPE_CHECKING:
     from .triggers import SynapticMemory
 
 logger = logging.getLogger("MANAS.ActionManager")
+
+
+# =============================================================================
+# OPUS-175: TOOL SELECTOR - Intent to Tools Mapping
+# =============================================================================
+
+
+class ToolSelector:
+    """
+    OPUS-175: Select tools for TaskKernel based on intent type.
+
+    "Need to Know" principle - TaskKernel only gets tools it needs.
+
+    This is the Perception layer for action execution:
+    - "If intent is 'file edit', inject 'FileTools'."
+    - "If intent is 'search', inject 'SearchTools'."
+
+    Usage:
+        selector = ToolSelector(tool_registry)
+        tools = selector.select_for_intent(intent)
+        kernel = TaskKernel.spawn(task, tools=tools, ...)
+    """
+
+    # Intent type → Required tool names mapping
+    INTENT_TOOL_MAP = {
+        # File operations
+        "file_create": ["write_file"],
+        "file_edit": ["read_file", "write_file"],
+        "file_read": ["read_file"],
+        "file_delete": ["write_file"],
+        # Directory operations
+        "dir_list": ["list_directory"],
+        "dir_create": ["write_file"],
+        # Search operations
+        "search_file": ["search_file", "read_file"],
+        "search_content": ["search_file"],
+        # Task operations (meta)
+        "add_task": ["add_task"],
+        "list_tasks": ["list_tasks"],
+        "complete_task": ["complete_task"],
+        # Generic code operations
+        "code_analyze": ["read_file", "search_file"],
+        "code_refactor": ["read_file", "write_file"],
+        "test_create": ["read_file", "write_file"],
+        "test_run": [],  # Uses Bash, not tools
+        # Inspection
+        "inspect_result": ["inspect_result"],
+        # Delegate to other agent
+        "delegate": ["delegate"],
+        # Default for unknown - read-only
+        "default": ["read_file", "list_directory"],
+    }
+
+    def __init__(self, tool_registry: "Any" = None):
+        """
+        Initialize ToolSelector.
+
+        Args:
+            tool_registry: Optional ToolRegistry for tool lookup.
+                          If None, returns tool names only.
+        """
+        self._registry = tool_registry
+
+    def select_for_intent(self, intent: "Intent") -> list:
+        """
+        Select tools needed for an intent.
+
+        Args:
+            intent: The intent to select tools for
+
+        Returns:
+            List of Tool instances (if registry available) or tool names
+        """
+        intent_type = intent.intent_type
+
+        # 1. Check explicit mapping
+        tool_names = self.INTENT_TOOL_MAP.get(intent_type)
+
+        # 2. Try prefix matching if not found
+        if tool_names is None:
+            for key in self.INTENT_TOOL_MAP:
+                if intent_type.startswith(key):
+                    tool_names = self.INTENT_TOOL_MAP[key]
+                    break
+
+        # 3. Fall back to default
+        if tool_names is None:
+            tool_names = self.INTENT_TOOL_MAP["default"]
+
+        # 4. If no registry, return names only
+        if not self._registry:
+            return tool_names
+
+        # 5. Resolve to actual Tool instances
+        tools = []
+        for name in tool_names:
+            tool = self._registry.get(name)
+            if tool:
+                tools.append(tool)
+            else:
+                logger.debug(f"Tool '{name}' not found in registry")
+
+        return tools
+
+    def get_required_tools(self, intent_type: str) -> list:
+        """Get tool names required for an intent type."""
+        return self.INTENT_TOOL_MAP.get(intent_type, self.INTENT_TOOL_MAP["default"])
 
 
 @dataclass
@@ -124,7 +234,14 @@ class ActionManager:
         # Narasimha guardian (injected later)
         self._narasimha: Optional[Any] = None
 
-        logger.debug("🖐️ ACTION MANAGER: Karmendriya initialized")
+        # OPUS-175: ToolSelector and registry for TaskKernel spawning
+        self._tool_registry: Optional[Any] = None
+        self._tool_selector = ToolSelector()
+
+        # OPUS-175: TaskKernel execution mode (False = legacy, True = TaskKernel)
+        self._use_task_kernel: bool = False
+
+        logger.debug("🖐️ ACTION MANAGER: Karmendriya initialized (with TaskKernel support)")
 
     def inject_dharma(self, sense: "DharmaSense") -> None:
         """Inject DharmaSense for ethical checks."""
@@ -149,6 +266,31 @@ class ActionManager:
     def set_execution_callback(self, callback: Callable) -> None:
         """Set custom execution callback."""
         self._execution_callback = callback
+
+    def inject_tool_registry(self, registry: Any) -> None:
+        """
+        OPUS-175: Inject ToolRegistry for TaskKernel spawning.
+
+        Args:
+            registry: ToolRegistry instance from kernel
+        """
+        self._tool_registry = registry
+        self._tool_selector = ToolSelector(registry)
+        logger.debug("🖐️ ACTION MANAGER: ToolRegistry injected for TaskKernel")
+
+    def enable_task_kernel(self, enabled: bool = True) -> None:
+        """
+        OPUS-175: Enable/disable TaskKernel execution mode.
+
+        When enabled, tool-based intents are executed via TaskKernel
+        instead of legacy handlers.
+
+        Args:
+            enabled: True to use TaskKernel, False for legacy mode
+        """
+        self._use_task_kernel = enabled
+        mode = "TaskKernel" if enabled else "legacy"
+        logger.info(f"🖐️ ACTION MANAGER: Execution mode set to {mode}")
 
     # =========================================================================
     # MAIN EXECUTION ENTRY POINT
@@ -343,7 +485,14 @@ class ActionManager:
             result = self._execute_memory_review(intent)
             return result, result.get("success", False)
 
-        # 3. Custom callback
+        # 3. OPUS-175: TaskKernel execution for tool-based intents
+        if self._use_task_kernel and self._tool_registry:
+            result = self._execute_via_task_kernel(intent)
+            if result.get("executed_via_task_kernel"):
+                return result, result.get("success", False)
+            # If TaskKernel couldn't handle it, fall through to other handlers
+
+        # 4. Custom callback
         if self._execution_callback:
             result = self._execution_callback(intent)
             return result, result.get("success", False)
@@ -493,6 +642,126 @@ class ActionManager:
         except Exception as e:
             logger.error(f"❌ Nightmare (Dream failed): {e}")
             return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # OPUS-175: TASKKERNEL EXECUTION
+    # =========================================================================
+
+    def _execute_via_task_kernel(self, intent: "Intent") -> Dict[str, Any]:
+        """
+        OPUS-175: Execute intent via TaskKernel (lightweight ephemeral kernel).
+
+        This is the new execution path for tool-based intents.
+        TaskKernel provides isolation and synaptic reinforcement.
+
+        Args:
+            intent: The intent to execute
+
+        Returns:
+            Execution result with 'executed_via_task_kernel' flag
+        """
+        import asyncio
+
+        # 1. Select tools for this intent
+        tools = self._tool_selector.select_for_intent(intent)
+
+        if not tools:
+            # No tools selected - fall through to other handlers
+            return {"executed_via_task_kernel": False}
+
+        logger.info(f"⚡ TaskKernel: Spawning for intent {intent.id} with {len(tools)} tools")
+
+        try:
+            # 2. Convert Intent → ManagedTask
+            from vibe_core.task_management.models import Task as ManagedTask
+
+            managed_task = ManagedTask(
+                id=intent.id,
+                title=intent.title,
+                description=intent.reasoning or "",
+                priority=intent.priority.value if hasattr(intent.priority, "value") else 0,
+                metadata={
+                    "intent_type": intent.intent_type,
+                    "action": intent.intent_type,
+                    "context": intent.params or {},
+                    "tool_call": intent.params.get("tool_call") if intent.params else None,
+                },
+            )
+
+            # 3. Create synaptic reinforcement callback
+            def on_task_complete(result: "TaskKernelResult") -> None:
+                """Callback for synaptic reinforcement."""
+                if self._synaptic:
+                    try:
+                        # Use reinforcement signal to update synapses
+                        trigger = self._extract_trigger(intent)
+                        if trigger:
+                            success = result.status.value == "completed"
+                            self._synaptic.update_weight(
+                                connection_key=f"{trigger}→{intent.intent_type}",
+                                success=success,
+                                intent_type=intent.intent_type,
+                                trigger=trigger,
+                            )
+                            signal = result.reinforcement_signal
+                            logger.debug(
+                                f"🧠 SYNAPSE: TaskKernel reinforcement ({signal:+.2f}) for {intent.intent_type}"
+                            )
+                    except Exception as e:
+                        logger.debug(f"🧠 SYNAPSE: Reinforcement failed: {e}")
+
+            # 4. Spawn TaskKernel
+            from vibe_core.task_kernel import TaskKernel
+
+            task_kernel = TaskKernel.spawn(
+                task=managed_task,
+                tools=tools,
+                timeout=300,
+                on_complete=on_task_complete,
+            )
+
+            # 5. Execute (async)
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Create a new task in the running loop
+                    import concurrent.futures
+
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(asyncio.run, task_kernel.execute())
+                        result = future.result(timeout=310)
+                else:
+                    result = loop.run_until_complete(task_kernel.execute())
+            except RuntimeError:
+                # No event loop - create one
+                result = asyncio.run(task_kernel.execute())
+
+            # 6. Return result
+            success = result.status.value == "completed"
+
+            return {
+                "executed_via_task_kernel": True,
+                "success": success,
+                "kernel_id": result.kernel_id,
+                "task_id": result.task_id,
+                "output": result.output,
+                "error": result.error,
+                "execution_time_ms": result.execution_time_ms,
+                "reinforcement_signal": result.reinforcement_signal,
+                "tool_calls_made": result.tool_calls_made,
+            }
+
+        except ImportError as e:
+            logger.warning(f"⚡ TaskKernel: Import error - {e}")
+            return {"executed_via_task_kernel": False}
+
+        except Exception as e:
+            logger.error(f"⚡ TaskKernel: Execution failed - {e}")
+            return {
+                "executed_via_task_kernel": True,
+                "success": False,
+                "error": str(e),
+            }
 
     # =========================================================================
     # LEDGER RECORDING (VAJRA)
@@ -662,4 +931,5 @@ class ActionManager:
 __all__ = [
     "ActionManager",
     "ExecutionResult",
+    "ToolSelector",  # OPUS-175
 ]
