@@ -94,6 +94,23 @@ if [ "$AUTO_BOOT" = "true" ]; then
     else
         echo "⚠️  Kernel boot initiated (check /tmp/prana_boot.log)"
     fi
+
+    # OPUS-167: Commit runtime state after boot
+    # Wait for UI files to be rendered, then commit them
+    sleep 3
+    if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+        echo "✅ No runtime state to commit"
+    else
+        # Stage runtime files (UI markdown + state directories)
+        git add *.md .prakriti/ .opus_state/ vibe_core/plugins/opus_assistant/.opus_state/ 2>/dev/null || true
+
+        # Commit with --no-verify (skip pre-commit hooks for runtime state)
+        if git commit -m "chore: Auto-commit runtime state (session start)" --no-verify >/dev/null 2>&1; then
+            echo "✅ Runtime state committed"
+        else
+            echo "⚠️  No runtime changes to commit"
+        fi
+    fi
 fi
 
 echo ""
