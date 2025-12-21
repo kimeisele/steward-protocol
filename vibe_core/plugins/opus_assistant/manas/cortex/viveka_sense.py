@@ -54,9 +54,12 @@ import logging
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .base import BaseSense
+
+if TYPE_CHECKING:
+    from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
 logger = logging.getLogger("MANAS.Cortex.VivekaSense")
 
@@ -474,3 +477,99 @@ class VivekaSense(BaseSense):
     def last_report(self) -> Optional[VivekaReport]:
         """Get the last perception report."""
         return self._last_report
+
+    # =========================================================================
+    # OPUS-167: Intent Generation (Fractal Architecture)
+    # =========================================================================
+
+    def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List["Intent"]:
+        """
+        Generate documentation intents based on coverage gap perception.
+
+        OPUS-167: Fractal Architecture Restoration
+
+        This method generates intents for undocumented code elements,
+        prioritized by their criticality (P1 = Critical, P5 = Trivial).
+
+        Returns:
+            List of documentation intents for critical coverage gaps
+        """
+        from datetime import datetime
+
+        from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+            Intent,
+            IntentPriority,
+            IntentRisk,
+        )
+
+        intents: List[Intent] = []
+
+        try:
+            # Perceive coverage gaps
+            report = self.perceive(context)
+
+            # Generate intents for P1 Critical gaps
+            if report.p1_critical:
+                logger.info(f"[VIVEKA_SENSE] Found {len(report.p1_critical)} P1 critical gaps")
+
+                for gap in report.p1_critical[:3]:  # Top 3 P1s
+                    intent = Intent(
+                        id=f"doc_p1_{gap.element_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="document_code",
+                        title=f"P1 CRITICAL: Document {gap.element_name}",
+                        description=(
+                            f"Critical undocumented {gap.element_type} '{gap.element_name}' "
+                            f"in {gap.file_path}:{gap.line_number}. "
+                            f"Complexity: {gap.complexity}, Churn: {gap.churn_score:.1%}. "
+                            f"Reason: {gap.reason}"
+                        ),
+                        reasoning=(
+                            "VIVEKA SENSE detected critical documentation gap. "
+                            "High complexity + high churn + core path = fire. "
+                            "These gaps cause confusion and onboarding friction."
+                        ),
+                        priority=IntentPriority.CRITICAL,
+                        risk=IntentRisk.SAFE,  # Documentation is safe
+                        params={
+                            "file_path": gap.file_path,
+                            "element_name": gap.element_name,
+                            "element_type": gap.element_type,
+                            "line_number": gap.line_number,
+                            "complexity": gap.complexity,
+                            "priority_score": gap.priority_score,
+                        },
+                        auto_executable=False,  # Doc writing needs review
+                    )
+                    intents.append(intent)
+
+            # Generate intents for P2 High gaps
+            if report.p2_high:
+                for gap in report.p2_high[:2]:  # Top 2 P2s
+                    intent = Intent(
+                        id=f"doc_p2_{gap.element_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="document_code",
+                        title=f"P2 HIGH: Document {gap.element_name}",
+                        description=(
+                            f"High-priority undocumented {gap.element_type} '{gap.element_name}' "
+                            f"in {gap.file_path}:{gap.line_number}. "
+                            f"Reason: {gap.reason}"
+                        ),
+                        reasoning=(
+                            "VIVEKA SENSE detected high-priority documentation gap. Should be addressed this sprint."
+                        ),
+                        priority=IntentPriority.HIGH,
+                        risk=IntentRisk.SAFE,
+                        params={
+                            "file_path": gap.file_path,
+                            "element_name": gap.element_name,
+                            "element_type": gap.element_type,
+                            "line_number": gap.line_number,
+                        },
+                        auto_executable=False,
+                    )
+                    intents.append(intent)
+
+        except Exception as e:
+            logger.warning(f"[VIVEKA_SENSE] Intent generation failed: {e}")
+
+        return intents

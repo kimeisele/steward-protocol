@@ -65,10 +65,12 @@ if TYPE_CHECKING:
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
+    from .cortex.karma_sense import KarmaSense
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
     from .cortex.prana_sense import PranaPerception, PranaSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
     from .cortex.sutra_sense import SutraSense, SutraSummary
+    from .cortex.viveka_sense import VivekaSense
 
 logger = logging.getLogger("MANAS.Kernel")
 
@@ -597,6 +599,16 @@ class CognitiveKernel(CognitiveCycle):
     def _prana_sense(self) -> Optional["PranaSense"]:
         """Prana Sense - delegates to SenseManager."""
         return self._sense_manager.prana_sense
+
+    @property
+    def _karma_sense(self) -> Optional["KarmaSense"]:
+        """Karma Sense - delegates to SenseManager."""
+        return self._sense_manager.karma_sense
+
+    @property
+    def _viveka_sense(self) -> Optional["VivekaSense"]:
+        """Viveka Sense - delegates to SenseManager."""
+        return self._sense_manager.viveka_sense
 
     # =========================================================================
     # OPUS-095: COGNITIVECYCLE PROPERTIES
@@ -1513,6 +1525,28 @@ class CognitiveKernel(CognitiveCycle):
             except Exception as e:
                 logger.warning(f"📜 SUTRA SENSE: Intent generation failed: {e}")
                 metadata["gap_count"] = 0
+
+        # 🔮 KARMA SENSE: Feed chronic pain intents to Chitta
+        if self._karma_sense:
+            try:
+                karma_intents = self._karma_sense.generate_intents()
+                for intent in karma_intents:
+                    self._chitta.receive(intent, "karma_sense")
+                metadata["karma_count"] = len(karma_intents)
+            except Exception as e:
+                logger.warning(f"🔮 KARMA SENSE: Intent generation failed: {e}")
+                metadata["karma_count"] = 0
+
+        # 🔍 VIVEKA SENSE: Feed prioritized coverage gap intents to Chitta
+        if self._viveka_sense:
+            try:
+                viveka_intents = self._viveka_sense.generate_intents()
+                for intent in viveka_intents:
+                    self._chitta.receive(intent, "viveka_sense")
+                metadata["viveka_count"] = len(viveka_intents)
+            except Exception as e:
+                logger.warning(f"🔍 VIVEKA SENSE: Intent generation failed: {e}")
+                metadata["viveka_count"] = 0
 
         # 🌙 SANKALPA: Strategic proactive intents (still kernel-level for now)
         sankalpa_intents = self._generate_sankalpa_intents({})
