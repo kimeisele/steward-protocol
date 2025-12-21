@@ -19,16 +19,16 @@ class TestSenseLoaderDiscovery:
         SenseLoader.clear_cache()
 
     def test_discover_all_senses(self):
-        """Verify all 7 Jnanendriyas (senses) are discovered."""
+        """Verify all 8 Jnanendriyas (senses) are discovered."""
         senses, metadata = SenseLoader.discover_and_load(
             workspace=Path.cwd(),
             strict=True,
         )
 
-        # Must have exactly 7 senses (OPUS-167: Complete Jnanendriya Architecture)
-        assert len(senses) == 7, f"Expected 7 senses, got {len(senses)}"
+        # Must have exactly 8 senses (OPUS-155: +AkashaSense)
+        assert len(senses) == 8, f"Expected 8 senses, got {len(senses)}"
 
-        # Verify all 7 Jnanendriyas exist
+        # Verify all 8 Jnanendriyas exist
         expected_names = {
             "prakriti_sense",  # System state perception
             "dharma_sense",  # Ethical alignment
@@ -37,6 +37,7 @@ class TestSenseLoaderDiscovery:
             "prana_sense",  # Agent lifecycle
             "karma_sense",  # Historical patterns
             "viveka_sense",  # Coverage discrimination
+            "akasha_sense",  # Knowledge graph perception (OPUS-155)
         }
         actual_names = set(senses.keys())
         assert actual_names == expected_names, f"Missing senses: {expected_names - actual_names}"
@@ -133,7 +134,7 @@ class TestSenseLoaderStrictMode:
             workspace=Path.cwd(),
             strict=False,
         )
-        assert len(senses) == 7  # OPUS-167: 7 Jnanendriyas
+        assert len(senses) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
 
 
 class TestSenseLoaderUtilities:
@@ -147,7 +148,7 @@ class TestSenseLoaderUtilities:
         """Test list_senses utility method."""
         names = SenseLoader.list_senses(workspace=Path.cwd())
         assert isinstance(names, list)
-        assert len(names) == 7  # OPUS-167: 7 Jnanendriyas
+        assert len(names) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
 
     def test_get_sense(self):
         """Test get_sense utility method."""

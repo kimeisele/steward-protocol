@@ -41,6 +41,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
+    from .cortex.akasha_sense import AkashaSense
     from .cortex.dharma_sense import DharmaSense
     from .cortex.karma_sense import KarmaSense
     from .cortex.prakriti_sense import PrakritiSense
@@ -151,6 +152,12 @@ class SenseManager:
         self._ensure_booted()
         return self._senses.get("viveka_sense")
 
+    @property
+    def akasha_sense(self) -> Optional["AkashaSense"]:
+        """Get Akasha Sense (knowledge graph perception - OPUS-155)."""
+        self._ensure_booted()
+        return self._senses.get("akasha_sense")
+
     # =========================================================================
     # PUBLIC API
     # =========================================================================
@@ -224,8 +231,9 @@ class SenseManager:
             "prana_initialized": self._senses.get("prana_sense") is not None,
             "karma_initialized": self._senses.get("karma_sense") is not None,
             "viveka_initialized": self._senses.get("viveka_sense") is not None,
+            "akasha_initialized": self._senses.get("akasha_sense") is not None,
             "total_booted": len(self._senses),
-            "total_senses": 7,
+            "total_senses": 8,
             "loader": "SenseLoader (VEDA-4)",
         }
 
@@ -301,6 +309,17 @@ class SenseManager:
 
             elif sense_name == "viveka_sense":
                 logger.info("🔍 VIVEKA SENSE: Initialized")
+
+            elif sense_name == "akasha_sense":
+                # OPUS-155: Knowledge graph perception
+                if hasattr(sense, "port"):
+                    data["node_count"] = sense.port.get_node_count()
+                    data["edge_count"] = sense.port.get_edge_count()
+                    data["loaded"] = sense.port.is_loaded()
+                    message = f"Knowledge: {data['node_count']} nodes"
+                    logger.info(f"🔮 AKASHA SENSE: {data['node_count']} nodes, {data['edge_count']} edges")
+                else:
+                    logger.info("🔮 AKASHA SENSE: Initialized")
 
             else:
                 # Unknown sense - still log it
