@@ -758,60 +758,51 @@ class EnvoyPlugin(KernelPlugin):
             self._unified_executor = None
 
     def _discover_circuits(self) -> None:
-        """Discover circuits from YAML files."""
-        import yaml
+        """
+        Discover circuits using VEDA-4 compliant CircuitLoader.
 
-        # OPUS-174: Load from MULTIPLE paths (no phantom wiring!)
-        # All circuit sources are discovered and unified
-        circuit_paths = []
+        OPUS-174: NO HARDCODED PATHS! Uses unified loader pattern.
+        """
+        try:
+            from vibe_core.loaders import CircuitLoader
 
-        # Phase 6: Load from Genesis Pack if available
-        if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
-            circuit_paths.append(self._kernel.genesis_path / "circuits")
+            # Build scan paths dynamically (no hardcoding!)
+            scan_paths = []
 
-        # Core playbook circuits
-        circuit_paths.append(self._project_root / "vibe_core" / "playbook" / "circuits")
+            # 1. Genesis Pack (if available)
+            if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
+                scan_paths.append(self._kernel.genesis_path / "circuits")
 
-        # Plugin circuits (OPUS-174: This was the PHANTOM WIRING!)
-        # Each plugin can have its own circuits/ directory
-        plugins_dir = self._project_root / "vibe_core" / "plugins"
-        if plugins_dir.exists():
-            for plugin_dir in plugins_dir.iterdir():
-                if plugin_dir.is_dir():
-                    plugin_circuits = plugin_dir / "circuits"
+            # 2. Default CircuitLoader paths (knowledge/circuits, playbook/circuits)
+            scan_paths.extend(CircuitLoader.scan_paths)
+
+            # 3. Plugin circuits (discovered from plugin manifests!)
+            # Each plugin with a circuits/ dir gets included
+            from vibe_core.plugin_loader import PluginLoader
+
+            plugins, _ = PluginLoader.discover_and_load()
+            for plugin_id, plugin_data in plugins.items():
+                plugin_path = plugin_data.get("_source_path")
+                if plugin_path:
+                    plugin_circuits = Path(plugin_path).parent / "circuits"
                     if plugin_circuits.exists():
-                        circuit_paths.append(plugin_circuits)
-                        logger.debug(f"📬 Found plugin circuits: {plugin_dir.name}")
+                        scan_paths.append(plugin_circuits)
+                        logger.debug(f"📬 Plugin circuits: {plugin_id}")
 
-        # Load from all paths
-        total_before = len(self._circuits)
-        for circuits_path in circuit_paths:
-            if not circuits_path.exists():
-                continue
+            # Use CircuitLoader with extended paths (VEDA-4!)
+            self._circuits, metadata = CircuitLoader.discover_and_load(
+                scan_paths=scan_paths,
+                force_refresh=True,  # Fresh discovery on each boot
+            )
 
-            count_before = len(self._circuits)
-            for yaml_file in circuits_path.glob("*.yaml"):
-                if yaml_file.name.startswith("_"):
-                    continue  # Skip templates/internals
+            logger.info(f"📬 CircuitLoader discovered {len(self._circuits)} circuits from {len(scan_paths)} sources")
 
-                try:
-                    with open(yaml_file) as f:
-                        data = yaml.safe_load(f)
-
-                    if data and "circuit" in data:
-                        circuit_id = data["circuit"].get("id", yaml_file.stem)
-                        self._circuits[circuit_id] = data
-                        logger.debug(f"📬 Discovered circuit: {circuit_id}")
-                except Exception as e:
-                    logger.warning(f"📬 Could not load circuit {yaml_file}: {e}")
-
-            # Log how many from this path
-            count_loaded = len(self._circuits) - count_before
-            if count_loaded > 0:
-                logger.info(f"📬 Loaded {count_loaded} circuits from {circuits_path.name}")
-
-        # OPUS-174: Log total (helps detect phantom wiring - if 0 circuits, something is wrong!)
-        logger.info(f"📬 Total circuits discovered: {len(self._circuits)} (from {len(circuit_paths)} sources)")
+        except ImportError as e:
+            logger.warning(f"📬 CircuitLoader not available, falling back: {e}")
+            self._circuits = {}
+        except Exception as e:
+            logger.error(f"📬 Circuit discovery failed: {e}")
+            self._circuits = {}
 
     def _discover_playbooks(self) -> None:
         """
