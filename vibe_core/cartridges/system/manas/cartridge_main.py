@@ -136,7 +136,8 @@ class ManasCartridge(ContextAwareAgent, OathMixin):
             from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
 
             # Get or create cognitive kernel
-            kernel = CognitiveKernel(workspace=self._workspace if hasattr(self, "_workspace") else None)
+            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+            kernel = CognitiveKernel.get_instance(workspace=self._workspace if hasattr(self, "_workspace") else None)
 
             # Inject vibe kernel if available
             if self.kernel:

@@ -686,7 +686,8 @@ class OpusDashboardRenderer:
         try:
             from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
 
-            manas = CognitiveKernel(workspace=self._root)
+            # OPUS-167: Use singleton pattern to avoid expensive re-initialization
+            manas = CognitiveKernel.get_instance(workspace=self._root)
             buffer = manas.get_intent_buffer_for_opus()
             if buffer.get("pending"):
                 return {

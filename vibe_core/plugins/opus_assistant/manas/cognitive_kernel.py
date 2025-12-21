@@ -33,25 +33,27 @@ from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.state import get_state_service  # P0: StateService
 
-from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
-from .memory_store import MemoryStore
-from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
+# OPUS-167: Action Manager Extraction (Karmendriya)
+from .action_manager import ActionManager
+from .buddhi import Buddhi, BuddhiVerdict
 
 # OPUS-168: Antahkarana - The Inner Instrument
 from .chitta import Chitta, PerceptionEntry
-from .buddhi import Buddhi, BuddhiVerdict
-
-# OPUS-167: Intent Buffer Extraction
-from .intent_buffer import IntentBuffer, IntentBufferEntry
-
-# OPUS-167: Sense Manager Extraction
-from .sense_manager import SenseManager
-
-# OPUS-167: Logger Bridge Extraction
-from .logger_bridge import LoggerBridge
 
 # OPUS-167: Genesis Bridge Extraction
 from .genesis_bridge import GenesisBridge
+
+# OPUS-167: Intent Buffer Extraction
+from .intent_buffer import IntentBuffer, IntentBufferEntry
+from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
+
+# OPUS-167: Logger Bridge Extraction
+from .logger_bridge import LoggerBridge
+from .memory_store import MemoryStore
+
+# OPUS-167: Sense Manager Extraction
+from .sense_manager import SenseManager
+from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
 # OPUS-167: Weaver Bridge Extraction
 from .weaver_bridge import WeaverBridge
@@ -224,7 +226,98 @@ class CognitiveKernel(CognitiveCycle):
     - Most intents go to Intent Buffer for approval
     - Only SAFE risk intents can auto-execute
     - User can approve/reject from OPUS.md
+
+    OPUS-167: SINGLETON PATTERN (Workspace-Keyed)
+    - Tool discovery is expensive (~2-3 seconds per instantiation)
+    - Multiple instantiations during boot caused 20+ second delays
+    - Use get_instance() instead of direct instantiation
+    - Same pattern as GenesisService.get_instance()
     """
+
+    # =========================================================================
+    # OPUS-167: SINGLETON PATTERN (Workspace-Keyed)
+    # =========================================================================
+    # "The mind is one. Multiple heads is madness." - Sankhya Philosophy
+    #
+    # Each workspace gets ONE CognitiveKernel instance.
+    # Tool discovery happens ONCE, not 8 times during boot.
+    # =========================================================================
+    _instances: Dict[Path, "CognitiveKernel"] = {}
+
+    @classmethod
+    def get_instance(
+        cls,
+        workspace: Optional[Path] = None,
+        config: Optional[ManasConfig] = None,
+        trace: Optional[UnifiedTrace] = None,
+        event_bus: Optional[EventBus] = None,
+    ) -> "CognitiveKernel":
+        """
+        Get singleton CognitiveKernel instance for workspace.
+
+        OPUS-167: This is the ONLY way to get a CognitiveKernel.
+        Direct instantiation should be avoided in production code.
+
+        The expensive tool discovery happens only on first call.
+        Subsequent calls return the cached instance.
+
+        Args:
+            workspace: Workspace root (defaults to cwd)
+            config: Optional ManasConfig (only used on first creation)
+            trace: Optional UnifiedTrace (only used on first creation)
+            event_bus: Optional EventBus (only used on first creation)
+
+        Returns:
+            CognitiveKernel singleton for the workspace
+        """
+        ws = workspace or Path.cwd()
+        ws = ws.resolve()  # Normalize path for consistent keying
+
+        if ws not in cls._instances:
+            logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
+            cls._instances[ws] = cls(
+                workspace=ws,
+                config=config,
+                trace=trace,
+                event_bus=event_bus,
+            )
+        else:
+            logger.debug(f"🧠 MANAS: Reusing singleton instance for {ws}")
+
+        return cls._instances[ws]
+
+    @classmethod
+    def reset_instance(cls, workspace: Optional[Path] = None) -> None:
+        """
+        Reset singleton instance (for testing).
+
+        Args:
+            workspace: Workspace to reset (None = reset all)
+        """
+        if workspace is None:
+            cls._instances.clear()
+            logger.info("🧠 MANAS: All singleton instances reset")
+        else:
+            ws = workspace.resolve()
+            if ws in cls._instances:
+                del cls._instances[ws]
+                logger.info(f"🧠 MANAS: Singleton instance reset for {ws}")
+
+    @classmethod
+    def has_instance(cls, workspace: Optional[Path] = None) -> bool:
+        """
+        Check if singleton instance exists for workspace.
+
+        Useful to avoid triggering expensive initialization when just checking.
+
+        Args:
+            workspace: Workspace to check (defaults to cwd)
+
+        Returns:
+            True if instance already exists
+        """
+        ws = (workspace or Path.cwd()).resolve()
+        return ws in cls._instances
 
     def __init__(
         self,
@@ -375,7 +468,17 @@ class CognitiveKernel(CognitiveCycle):
             f"({self._synaptic_memory.get_stats()['total_connections']} connections)"
         )
 
-        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference)")
+        # OPUS-167: Action Manager (Karmendriya) - The Action Organs
+        # Handles all intent execution, routing, and learning
+        self._action_manager = ActionManager(
+            workspace=self._workspace,
+            memory=self._memory,
+            synaptic=self._synaptic_memory,
+        )
+        # Inject dependencies that are initialized lazily
+        self._action_manager.inject_narasimha(self._narasimha)
+
+        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference + Karmendriya)")
 
     # =========================================================================
     # 🧠 SEMANTIC ENGINE: INTELLIGENCE UPGRADE (OPUS-096)
@@ -611,6 +714,8 @@ class CognitiveKernel(CognitiveCycle):
             sense: PrakritiSense instance
         """
         self._sense_manager.inject("prakriti_sense", sense)
+        # OPUS-167: Also inject into ActionManager for healing execution
+        self._action_manager.inject_prakriti(sense)
         logger.info("👁️ PRAKRITI SENSE: Sixth Jnanendriya injected - MANAS can now perceive state")
 
     def _perceive_and_generate_healing_intents(self) -> List[Intent]:
@@ -695,121 +800,7 @@ class CognitiveKernel(CognitiveCycle):
 
         return healing_intents
 
-    def _execute_healing(self, intent: Intent) -> Dict[str, Any]:
-        """
-        Execute a healing intent via PrakritiSense.
-
-        Args:
-            intent: The healing intent to execute
-
-        Returns:
-            Execution result
-        """
-        if not self._prakriti_sense:
-            return {"success": False, "error": "PrakritiSense not available"}
-
-        try:
-            if intent.intent_type == "heal_system_state":
-                paths = intent.params.get("paths", [])
-                healed = 0
-                for path_str in paths:
-                    path = Path(path_str)
-                    new_guna = self._prakriti_sense.heal(path)
-                    if new_guna.value in ("sattva", "rajas"):
-                        healed += 1
-
-                return {
-                    "success": True,
-                    "healed_count": healed,
-                    "total_paths": len(paths),
-                }
-
-            elif intent.intent_type == "fix_lobotomy":
-                # Lobotomy fix is more complex - for now just report
-                return {
-                    "success": False,
-                    "error": "Lobotomy fix requires manual .gitignore edit",
-                    "violations": intent.params.get("violations", []),
-                }
-
-            else:
-                return {"success": False, "error": f"Unknown healing intent type: {intent.intent_type}"}
-
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    def _execute_memory_review(self, intent: Intent) -> Dict[str, Any]:
-        """
-        🌙 Execute Dreaming: Consolidate wisdom from past actions.
-
-        OPUS-089: Shiva/Sankalpa Memory Review
-        Triggered by Sankalpa during idle times (The Void).
-        This closes the cognitive loop: Experience → Wisdom.
-
-        The digital equivalent of REM sleep - pattern consolidation.
-        """
-        logger.info("🌙 MANAS: Entering Dream State (Memory Review)...")
-
-        try:
-            # 1. Extract successful patterns (What works?)
-            successful_patterns = self._memory.get_successful_patterns(limit=5)
-
-            # 2. Extract failure patterns (What to avoid?)
-            # Group recent failures by intent_type
-            failure_counts: Dict[str, int] = {}
-            for mem in self._memory.get_all_memories():
-                if mem.outcome == "failed":
-                    failure_counts[mem.intent_type] = failure_counts.get(mem.intent_type, 0) + 1
-
-            # Sort by failure count
-            failure_patterns = sorted(failure_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-
-            # 3. Wisdom Synthesis - Log insights to OPUS.md journal
-            insights = []
-
-            if successful_patterns:
-                self.log_insight("🧠 Dream Insights - Successful Patterns:")
-                for pattern in successful_patterns:
-                    success_rate = self._memory.get_success_rate(pattern)
-                    insight_msg = f"✅ {pattern}: {success_rate:.0%} success rate"
-                    self.log_insight(insight_msg)
-                    insights.append({"type": pattern, "success_rate": success_rate, "status": "trusted"})
-
-            if failure_patterns:
-                self.log_insight("🧠 Dream Insights - Failure Patterns (to avoid):")
-                for pattern, count in failure_patterns:
-                    insight_msg = f"⚠️ {pattern}: {count} failures"
-                    self.log_insight(insight_msg)
-                    insights.append({"type": pattern, "failure_count": count, "status": "avoid"})
-
-            if not successful_patterns and not failure_patterns:
-                self.log_insight("🧠 Dream: No clear patterns formed yet. Mind is still young.")
-
-            # 4. Record dream summary to memory (meta-learning)
-            self._memory.record_intent_outcome(
-                intent_type="memory_review",
-                description="Dream cycle completed",
-                outcome="success",
-                context={
-                    "successful_patterns": successful_patterns,
-                    "failure_patterns": [p[0] for p in failure_patterns],
-                    "insights_count": len(insights),
-                },
-            )
-
-            logger.info(f"🌙 MANAS: Dream complete. {len(insights)} insights consolidated.")
-
-            return {
-                "success": True,
-                "insights": insights,
-                "successful_patterns": successful_patterns,
-                "failure_patterns": [{"type": p[0], "count": p[1]} for p in failure_patterns],
-                "wisdom": "Patterns consolidated into memory",
-            }
-
-        except Exception as e:
-            logger.error(f"❌ Nightmare (Dream failed): {e}")
-            return {"success": False, "error": str(e)}
+    # NOTE: _execute_healing and _execute_memory_review moved to ActionManager (OPUS-167)
 
     # =========================================================================
     # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
@@ -828,6 +819,8 @@ class CognitiveKernel(CognitiveCycle):
             sense: DharmaSense instance
         """
         self._sense_manager.inject("dharma_sense", sense)
+        # OPUS-167: Also inject into ActionManager for Dharma Gate
+        self._action_manager.inject_dharma(sense)
         logger.info("🙏 DHARMA SENSE: Vedic Conscience injected - MANAS now has ethical awareness")
 
     def _check_dharma_gate(self, intent: Intent) -> tuple:
@@ -2104,234 +2097,24 @@ class CognitiveKernel(CognitiveCycle):
 
     def _execute_intent(self, entry: IntentBufferEntry) -> bool:
         """
-        Execute an approved intent.
+        OPUS-167: Delegate intent execution to ActionManager (Karmendriya).
 
-        OPUS-057 VAJRA: All executions are recorded to the ledger.
-
-        Args:
-            entry: The intent buffer entry to execute
-
-        Returns:
-            True if execution succeeded
+        The kernel decides WHAT to do (Manas), the ActionManager does it (Karmendriya).
         """
-        intent = entry.intent
-        logger.info(f"MANAS: Executing intent: {intent.title}")
+        # Get ledger from vibe_kernel
+        ledger = getattr(self, "_ledger", None)
+        if not ledger and self._vibe_kernel:
+            ledger = self._vibe_kernel.ledger
 
-        start_time = datetime.utcnow()
-        success = False
-        result = {}
-
-        # 🔌 CABLE: Reset idle timer on execution
-        self.record_activity()
-
-        # ⚡ VAJRA: Record INTENT_EXECUTING to ledger BEFORE execution
-        self._record_to_ledger(
-            event_type="MANAS_INTENT_EXECUTING",
-            intent=intent,
-            extra_data={"timestamp": start_time.isoformat()},
+        return self._action_manager.execute(
+            entry=entry,
+            ledger=ledger,
+            vibe_kernel=self._vibe_kernel,
+            buffer=self._buffer,
+            activity_callback=self.record_activity,
         )
 
-        # 🙏 DHARMA GATE: Check ethical alignment before execution (OPUS-009)
-        dharma_permitted, dharma_reason = self._check_dharma_gate(intent)
-        if not dharma_permitted:
-            logger.warning(f"🙏 DHARMA GATE BLOCKED: {intent.title}")
-            entry.status = "blocked_adharmic"
-            entry.execution_result = {"error": f"BLOCKED BY DHARMA GATE: {dharma_reason}"}
-            self._record_to_ledger(
-                event_type="MANAS_INTENT_BLOCKED_ADHARMIC",
-                intent=intent,
-                extra_data={"reason": dharma_reason},
-            )
-            self._buffer.save()
-            return False
-
-        try:
-            # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
-            if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
-                result = self._execute_healing(intent)
-                success = result.get("success", False)
-            # 🌙 SHIVA/SANKALPA: Handle dreaming/wisdom consolidation
-            elif intent.intent_type == "memory_review":
-                result = self._execute_memory_review(intent)
-                success = result.get("success", False)
-            elif self._execution_callback:
-                result = self._execution_callback(intent)
-                success = result.get("success", False)
-            elif intent.circuit_to_execute:
-                # 🔌 CABLE: Execute via CognitiveCircuitExecutor (OPUS-083)
-                logger.info(f"MANAS: Executing circuit: {intent.circuit_to_execute}")
-                try:
-                    from .circuit_executor import CognitiveCircuitExecutor
-
-                    executor = CognitiveCircuitExecutor(workspace=self._workspace)
-                    result = executor.execute_circuit(intent.circuit_to_execute)
-                    success = result.get("success", False)
-                except ImportError:
-                    logger.warning("CognitiveCircuitExecutor not available")
-                    result = {"error": "CircuitExecutor not available"}
-                    success = False
-                except Exception as exec_err:
-                    logger.error(f"Circuit execution failed: {exec_err}")
-                    result = {"error": str(exec_err)}
-                    success = False
-            else:
-                # OPUS-127: Route via IntentRouter as fallback
-                try:
-                    from .intent_router import IntentRouter
-
-                    router = IntentRouter(workspace=self._workspace)
-                    if intent.intent_type in router._handlers:
-                        logger.info(f"🔀 MANAS: Routing via IntentRouter: {intent.intent_type}")
-                        result = router.route(intent)
-                        success = result.get("success", False)
-                    else:
-                        logger.warning(f"No execution method for intent: {intent.id}")
-                        result = {"error": "No execution method available"}
-                except ImportError:
-                    logger.warning(f"IntentRouter not available for: {intent.id}")
-                    result = {"error": "No execution method available"}
-                except Exception as router_err:
-                    logger.error(f"IntentRouter failed: {router_err}")
-                    result = {"error": str(router_err)}
-                    success = False
-
-        except Exception as e:
-            logger.error(f"Intent execution failed: {e}")
-            result = {"error": str(e)}
-            success = False
-
-        # Update entry
-        entry.status = "executed" if success else "failed"
-        entry.executed_at = datetime.utcnow().isoformat()
-        entry.execution_result = result
-
-        # Calculate execution time
-        execution_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
-
-        # ⚡ VAJRA: Record INTENT_EXECUTED or INTENT_FAILED to ledger AFTER execution
-        self._record_to_ledger(
-            event_type="MANAS_INTENT_EXECUTED" if success else "MANAS_INTENT_FAILED",
-            intent=intent,
-            extra_data={
-                "execution_time_ms": execution_time,
-                "result": result,
-                "outcome": "success" if success else "failed",
-            },
-        )
-
-        # Record in memory (MANAS internal)
-        self._memory.record_intent_outcome(
-            intent_type=intent.intent_type,
-            description=intent.title,
-            outcome="success" if success else "failed",
-            context=intent.params,
-            feedback=result.get("error"),
-            execution_time_ms=execution_time,
-        )
-
-        # 🧠 OPUS-110: Synaptic Learning - Update weights based on outcome
-        self._update_synapses(intent, success)
-
-        self._buffer.save()
-
-        if success:
-            # 🙏 DHARMA SENSE: Record success to increase Bhakti (OPUS-009)
-            self._on_dharma_success(intent)
-            logger.info(f"MANAS: Intent {intent.id} executed successfully")
-        else:
-            logger.warning(f"MANAS: Intent {intent.id} execution failed: {result.get('error')}")
-
-        return success
-
-    # =========================================================================
-    # OPUS-110: SYNAPTIC LEARNING
-    # =========================================================================
-
-    def _update_synapses(self, intent: Intent, success: bool) -> None:
-        """
-        Update synaptic weights based on intent execution outcome.
-
-        OPUS-110: The Learning Loop - MANAS strengthens connections that work,
-        weakens connections that fail.
-
-        Weight adjustment:
-        - Success: weight += 0.1 * (1 - weight)  [asymptotic to 1.0]
-        - Failure: weight -= 0.1 * weight        [asymptotic to 0.0]
-
-        Args:
-            intent: The executed intent
-            success: Whether execution succeeded
-        """
-        # P0: Use StateService for centralized state management
-        state = get_state_service(self._workspace)
-
-        try:
-            # Load current synapses via StateService
-            synapses = state.load("synapses.json", default={"schema": "v1", "weights": {}, "meta": {}})
-
-            weights = synapses.get("weights", {})
-
-            # Determine trigger from intent context
-            trigger = self._extract_trigger(intent)
-            if not trigger:
-                return  # No learnable trigger
-
-            # Determine action from intent type
-            action = f"action:{intent.intent_type}"
-
-            # Get or create trigger entry
-            if trigger not in weights:
-                weights[trigger] = {}
-
-            # Get current weight (default 0.5 for new connections)
-            current_weight = weights[trigger].get(action, 0.5)
-
-            # Hebbian-style learning: "neurons that fire together wire together"
-            if success:
-                # Strengthen: move toward 1.0
-                new_weight = current_weight + 0.1 * (1.0 - current_weight)
-            else:
-                # Weaken: move toward 0.0
-                new_weight = current_weight - 0.1 * current_weight
-
-            # Clamp to [0.0, 1.0]
-            new_weight = max(0.0, min(1.0, new_weight))
-
-            # Update weight
-            weights[trigger][action] = round(new_weight, 3)
-
-            # Update meta
-            synapses["weights"] = weights
-            synapses["meta"]["last_updated"] = datetime.utcnow().isoformat()
-            synapses["meta"]["total_connections"] = sum(len(v) for v in weights.values())
-
-            # P0: Save via StateService (with automatic backup rotation)
-            state.save("synapses.json", synapses)
-
-            logger.debug(
-                f"🧠 SYNAPSE: {trigger} → {action}: {current_weight:.2f} → {new_weight:.2f} ({'↑' if success else '↓'})"
-            )
-
-        except Exception as e:
-            logger.warning(f"🧠 SYNAPSE UPDATE FAILED: {e}")
-
-    def _extract_trigger(self, intent: Intent) -> Optional[str]:
-        """
-        Extract the canonical trigger pattern from an intent's context.
-
-        OPUS-111: Signal Alignment - Uses TriggerRegistry for normalization.
-        No more dynamic string generation that could cause vocabulary mismatch.
-
-        Returns a canonical trigger string from TriggerPatterns, or None if
-        the intent doesn't map to a learnable trigger.
-        """
-        from .triggers import normalize_trigger
-
-        # OPUS-111: Use centralized normalization
-        # Returns None for intents that don't have canonical triggers
-        # This prevents memory pollution with non-canonical patterns
-        pattern = normalize_trigger(intent)
-        return pattern.value if pattern else None
+    # NOTE: OPUS-110 Synaptic Learning (_update_synapses, _extract_trigger) moved to ActionManager (OPUS-167)
 
     def _cleanup_expired_intents(self) -> None:
         """Remove expired intents from buffer."""
