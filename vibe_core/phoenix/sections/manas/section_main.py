@@ -31,10 +31,12 @@ class ManasConfig:
     # Thinking Rate Limit
     # =========================================================================
     # How often MANAS performs a thought cycle
-    thinking_interval_minutes: int = 60  # Once per hour by default
+    # OPUS-174: Was 60 (lobotomy!), now 10min for responsiveness
+    thinking_interval_minutes: int = 10
 
     # Activate MANAS after this much idle time (seconds of no user input)
-    idle_threshold_minutes: int = 30
+    # OPUS-174: Was 30, now 5min for faster idle detection
+    idle_threshold_minutes: int = 5
 
     # =========================================================================
     # Execution Policy

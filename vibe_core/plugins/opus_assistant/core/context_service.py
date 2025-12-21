@@ -115,6 +115,9 @@ class OpusContext:
     # OPUS-032: Verification results for MANAS analyzers
     verification_results: Dict[str, Any] = field(default_factory=dict)
 
+    # OPUS-174: MANAS Cognitive State (Mind-Body Alignment)
+    manas_awareness: Dict[str, Any] = field(default_factory=dict)
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization."""
         return {
@@ -152,6 +155,8 @@ class OpusContext:
             "warnings": self.warnings,
             # OPUS-032: Verification results for MANAS
             "verification_results": self.verification_results,
+            # OPUS-174: MANAS Cognitive State
+            "manas_awareness": self.manas_awareness,
         }
 
     def to_system_prompt_fragment(self) -> str:
@@ -159,6 +164,9 @@ class OpusContext:
         Generate a dynamic system prompt fragment.
 
         This is the "carrot" - injected into every agent's context.
+
+        OPUS-174: Now includes VAK-style prompting based on MANAS consciousness state.
+        The LLM's behavior is modulated by the cognitive state of the system.
         """
         lines = [
             "## Current System State (OPUS Context)",
@@ -177,6 +185,25 @@ class OpusContext:
                 "",
             ]
         )
+
+        # OPUS-174: Mind-Body Alignment - MANAS Cognitive State
+        if self.manas_awareness:
+            manas_state = self.manas_awareness.get("state", "unknown")
+            consciousness_level = self.manas_awareness.get("consciousness_level", 0.0)
+
+            if manas_state != "unknown":
+                lines.extend(
+                    [
+                        "## Cognitive State (MANAS)",
+                        "",
+                        f"**State:** {manas_state.upper()} (level: {consciousness_level:.2f})",
+                        "",
+                    ]
+                )
+
+                # VAK-style dynamic prompting based on consciousness state
+                lines.append(self._get_vak_directive(manas_state, consciousness_level))
+                lines.append("")
 
         if self.focus_areas:
             lines.append("**Focus Areas:**")
@@ -198,6 +225,50 @@ class OpusContext:
         )
 
         return "\n".join(lines)
+
+    def _get_vak_directive(self, state: str, level: float) -> str:
+        """
+        OPUS-174: Get VAK-style cognitive directive based on MANAS state.
+
+        This is the Mind-Body Alignment - the LLM's prompt behavior is
+        modulated by the system's consciousness state.
+
+        Args:
+            state: MANAS state (turiya, sattva, rajas, tamas)
+            level: Consciousness level (0.0 - 1.0)
+
+        Returns:
+            Directive string for the LLM
+        """
+        # VAK directives - how the LLM should behave in each state
+        directives = {
+            "turiya": (
+                "**Cognitive Directive:** You are in a state of DEEP INSIGHT (Turiya). "
+                "The system has high synaptic urgency and good health. "
+                "Synthesize broad patterns. Consider architectural implications. "
+                "Be visionary - this is the time for significant decisions."
+            ),
+            "sattva": (
+                "**Cognitive Directive:** You are in a state of BALANCED CLARITY (Sattva). "
+                "The system is stable and reflective. "
+                "Organize thoughts. Reinforce good patterns. "
+                "Be thorough but not rushed - quality over speed."
+            ),
+            "rajas": (
+                "**Cognitive Directive:** You are in a state of HIGH ALERT (Rajas). "
+                "The system is reactive and responsive. "
+                "Be concise and focused. Address immediate issues first. "
+                "Do not over-explain - act decisively."
+            ),
+            "tamas": (
+                "**Cognitive Directive:** You are in a state of CONSERVATION (Tamas). "
+                "The system is in low-energy mode. "
+                "Focus only on essentials. Minimal processing. "
+                "Wait for better conditions before major decisions."
+            ),
+        }
+
+        return directives.get(state, "")
 
 
 class OpusContextService:
@@ -271,6 +342,9 @@ class OpusContextService:
         # OPUS-032: Load verification results for MANAS analyzers
         verification_results = self._get_verification_results()
 
+        # OPUS-174: Load MANAS cognitive state for Mind-Body Alignment
+        manas_awareness = self._get_manas_awareness()
+
         # Generate context hash
         context_data = f"{timestamp}:{git_status.get('sha', '')}:{ledger_status.get('head', '')}"
         context_hash = hashlib.sha256(context_data.encode()).hexdigest()
@@ -300,6 +374,8 @@ class OpusContextService:
             warnings=warnings,
             # OPUS-032: Verification results
             verification_results=verification_results,
+            # OPUS-174: MANAS cognitive state
+            manas_awareness=manas_awareness,
         )
 
         self._last_context = context
@@ -479,6 +555,47 @@ class OpusContextService:
         except Exception as e:
             logger.debug(f"Personas unavailable: {e}")
             return []
+
+    def _get_manas_awareness(self) -> Dict[str, Any]:
+        """
+        OPUS-174: Get MANAS cognitive state for Mind-Body Alignment.
+
+        Loads from .opus_state/manas_awareness.json which is updated
+        by CognitiveKernel.tick() every ~60 seconds.
+
+        This enables VAK-style dynamic prompting where the LLM's
+        behavior is modulated by MANAS's consciousness state.
+
+        Returns:
+            Dict with consciousness_level, state, inputs, etc.
+        """
+        import json
+
+        awareness_path = self._workspace / ".opus_state" / "manas_awareness.json"
+
+        try:
+            if awareness_path.exists():
+                with open(awareness_path) as f:
+                    awareness = json.load(f)
+
+                logger.debug(
+                    f"Loaded MANAS awareness: state={awareness.get('state', 'unknown')}, "
+                    f"level={awareness.get('consciousness_level', 0):.2f}"
+                )
+                return awareness
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"Invalid JSON in manas_awareness.json: {e}")
+        except Exception as e:
+            logger.debug(f"Could not load MANAS awareness: {e}")
+
+        # Default: unknown state (MANAS not yet ticked)
+        return {
+            "consciousness_level": 0.0,
+            "state": "unknown",
+            "inputs": {},
+            "tick": 0,
+        }
 
     def _get_verification_results(self) -> Dict[str, Any]:
         """

@@ -412,12 +412,13 @@ class KriyaBridge:
             return False
 
         try:
-            # Add directly to kernel's buffer
-            from ..cognitive_kernel import IntentBufferEntry
+            # OPUS-174: Use IntentBuffer API (not raw list access)
+            from ..intent_buffer import IntentBufferEntry
 
             entry = IntentBufferEntry(intent=intent)
-            kernel._intent_buffer.append(entry)
-            kernel._save_intent_buffer()
+            # CognitiveKernel uses self._buffer (IntentBuffer instance)
+            # IntentBuffer.add() handles persistence automatically
+            kernel._buffer.add(entry)
 
             logger.info(f"KRIYA: Intent '{intent.id}' added to buffer")
             return True
