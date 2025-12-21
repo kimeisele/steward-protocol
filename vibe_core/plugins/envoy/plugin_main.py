@@ -57,7 +57,8 @@ class EnvoyPlugin(KernelPlugin):
     def __init__(self):
         """Initialize ENVOY state."""
         self._kernel: Optional["RealVibeKernel"] = None
-        self._project_root: Path = Path.cwd()
+        # OPUS-174: NO Path.cwd()! Get from kernel after inject_kernel()
+        self._project_root: Optional[Path] = None
 
         # Config (from Phoenix envoy.yaml)
         self._config = None
@@ -107,6 +108,12 @@ class EnvoyPlugin(KernelPlugin):
         See docs/architecture/OPUS/004-BOOT-SEQUENCE-AUDIT.md for boot order documentation.
         """
         self._kernel = kernel
+
+        # OPUS-174: Get project root from kernel (not Path.cwd()!)
+        self._project_root = getattr(kernel, "workspace_path", None)
+        if not self._project_root:
+            logger.warning("📬 ENVOY: kernel.workspace_path not set, using cwd as fallback")
+            self._project_root = Path.cwd()
 
         # DEFENSIVE CHECK: Verify ToolsPlugin booted first (priority 5 < 15)
         # This is a critical dependency - EnvoyPlugin needs tool_registry for circuit execution
@@ -509,7 +516,9 @@ class EnvoyPlugin(KernelPlugin):
             )
 
             # Evaluate through VivekaAction
-            viveka = VivekaAction(workspace=Path.cwd())
+            # OPUS-174: Use kernel-provided workspace (not Path.cwd())
+            workspace = self._project_root or Path.cwd()
+            viveka = VivekaAction(workspace=workspace)
             eval_result = viveka.evaluate(intent_obj)
             decision = eval_result.get("decision", "EXECUTE")
 
@@ -644,7 +653,9 @@ class EnvoyPlugin(KernelPlugin):
                 params=params,
             )
 
-            viveka = VivekaAction(workspace=Path.cwd())
+            # OPUS-174: Use kernel-provided workspace (not Path.cwd())
+            workspace = self._project_root or Path.cwd()
+            viveka = VivekaAction(workspace=workspace)
             viveka.reinforce(intent_obj, success=success)
 
             if success:
@@ -863,8 +874,9 @@ class EnvoyPlugin(KernelPlugin):
         try:
             from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 
+            # OPUS-174: Use public API, not private _agent_registry access
             # Check if envoy agent already registered (avoid duplicate)
-            if "envoy" in kernel._agent_registry:
+            if kernel.get_agent_manifest("envoy"):
                 logger.debug("📬 EnvoyCartridge already registered, skipping")
                 return
 
