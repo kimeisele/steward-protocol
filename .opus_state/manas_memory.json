@@ -1218,7 +1218,196 @@
       "context": {},
       "feedback": null,
       "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_custom",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.607158",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_custom",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.611812",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_custom",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.615413",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_custom",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.619257",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_custom",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.623006",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "new_operation",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.635733",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 1500
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.653739",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.655947",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.658470",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.661235",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.663527",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.665842",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.668123",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.691782",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.694097",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "learn_test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:27:39.696350",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "test_create",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:29:10.996390",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 1000
+    },
+    {
+      "intent_type": "test",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:29:11.008314",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 500
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:29:11.017265",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:29:11.022622",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "unique_task",
+      "intent_description": "Task execution via MANAS Oracle",
+      "timestamp": "2025-12-22T16:29:11.027067",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": 0
     }
   ],
-  "updated_at": "2025-12-22T08:07:31.629945"
+  "updated_at": "2025-12-22T16:29:11.028516"
 }
