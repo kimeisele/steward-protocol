@@ -1,455 +1,3 @@
-{"timestamp": "2025-12-22T15:51:34.905921", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1468)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:34.914427", "severity": "ALERT", "message": "Persistent drift! 1468 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:35.287156", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1468)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:35.307237", "severity": "ALERT", "message": "Persistent drift! 1468 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:35.784884", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1469)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:35.791454", "severity": "ALERT", "message": "Persistent drift! 1469 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.155936", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1469)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.163061", "severity": "ALERT", "message": "Persistent drift! 1469 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.627175", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1470)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.634576", "severity": "ALERT", "message": "Persistent drift! 1470 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.989747", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1470)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:36.997169", "severity": "ALERT", "message": "Persistent drift! 1470 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:37.474601", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1471)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:37.482642", "severity": "ALERT", "message": "Persistent drift! 1471 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:37.870130", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1471)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:37.881243", "severity": "ALERT", "message": "Persistent drift! 1471 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:38.360736", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1472)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:38.367233", "severity": "ALERT", "message": "Persistent drift! 1472 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:38.732200", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1472)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:38.738935", "severity": "ALERT", "message": "Persistent drift! 1472 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:39.283158", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1473)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:39.290296", "severity": "ALERT", "message": "Persistent drift! 1473 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:39.651331", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1473)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:39.656628", "severity": "ALERT", "message": "Persistent drift! 1473 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:40.122278", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1474)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:40.130137", "severity": "ALERT", "message": "Persistent drift! 1474 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:40.501702", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1474)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:40.508290", "severity": "ALERT", "message": "Persistent drift! 1474 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:40.997991", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1475)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:41.005256", "severity": "ALERT", "message": "Persistent drift! 1475 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:41.364626", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1475)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:41.370989", "severity": "ALERT", "message": "Persistent drift! 1475 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:41.839970", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1476)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:41.846628", "severity": "ALERT", "message": "Persistent drift! 1476 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:42.214034", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1476)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:42.220671", "severity": "ALERT", "message": "Persistent drift! 1476 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:42.680068", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1477)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:42.686843", "severity": "ALERT", "message": "Persistent drift! 1477 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.067033", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1477)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.074346", "severity": "ALERT", "message": "Persistent drift! 1477 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.585242", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1478)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.593547", "severity": "ALERT", "message": "Persistent drift! 1478 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.965084", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1478)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:43.972322", "severity": "ALERT", "message": "Persistent drift! 1478 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:44.429086", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1479)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:44.436521", "severity": "ALERT", "message": "Persistent drift! 1479 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:44.790559", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1479)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:44.798278", "severity": "ALERT", "message": "Persistent drift! 1479 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:45.270270", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1480)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:45.277130", "severity": "ALERT", "message": "Persistent drift! 1480 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:45.645772", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1480)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:45.655450", "severity": "ALERT", "message": "Persistent drift! 1480 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:46.185955", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1481)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:46.194806", "severity": "ALERT", "message": "Persistent drift! 1481 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:46.580417", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1481)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:46.587000", "severity": "ALERT", "message": "Persistent drift! 1481 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.055172", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1482)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.061060", "severity": "ALERT", "message": "Persistent drift! 1482 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.435607", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1482)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.441949", "severity": "ALERT", "message": "Persistent drift! 1482 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.909666", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1483)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:47.915845", "severity": "ALERT", "message": "Persistent drift! 1483 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:48.295460", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1483)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:48.301801", "severity": "ALERT", "message": "Persistent drift! 1483 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:48.804568", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1484)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:48.811777", "severity": "ALERT", "message": "Persistent drift! 1484 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:49.224926", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1484)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:49.232471", "severity": "ALERT", "message": "Persistent drift! 1484 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:49.732432", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1485)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:49.740466", "severity": "ALERT", "message": "Persistent drift! 1485 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:50.100466", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1485)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:50.106168", "severity": "ALERT", "message": "Persistent drift! 1485 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:50.592070", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1486)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:50.618180", "severity": "ALERT", "message": "Persistent drift! 1486 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.009098", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1486)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.016243", "severity": "ALERT", "message": "Persistent drift! 1486 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.504289", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1487)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.513126", "severity": "ALERT", "message": "Persistent drift! 1487 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.907551", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1487)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:51.914425", "severity": "ALERT", "message": "Persistent drift! 1487 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:52.427107", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1488)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:52.431891", "severity": "ALERT", "message": "Persistent drift! 1488 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:52.802423", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1488)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:52.808652", "severity": "ALERT", "message": "Persistent drift! 1488 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:53.371618", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1489)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:53.378335", "severity": "ALERT", "message": "Persistent drift! 1489 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:53.733687", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1489)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:53.739064", "severity": "ALERT", "message": "Persistent drift! 1489 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:54.200826", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1490)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:54.207819", "severity": "ALERT", "message": "Persistent drift! 1490 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:54.572375", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1490)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:54.580247", "severity": "ALERT", "message": "Persistent drift! 1490 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.093188", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1491)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.100923", "severity": "ALERT", "message": "Persistent drift! 1491 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.489179", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1491)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.496482", "severity": "ALERT", "message": "Persistent drift! 1491 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.952218", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1492)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:55.959108", "severity": "ALERT", "message": "Persistent drift! 1492 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:56.308324", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1492)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:56.314041", "severity": "ALERT", "message": "Persistent drift! 1492 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:56.782474", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1493)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:56.791288", "severity": "ALERT", "message": "Persistent drift! 1493 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:57.134938", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1493)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:57.141670", "severity": "ALERT", "message": "Persistent drift! 1493 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:57.614883", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1494)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:57.622875", "severity": "ALERT", "message": "Persistent drift! 1494 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.012670", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1494)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.020100", "severity": "ALERT", "message": "Persistent drift! 1494 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.475895", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1495)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.482262", "severity": "ALERT", "message": "Persistent drift! 1495 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.821320", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1495)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:58.827610", "severity": "ALERT", "message": "Persistent drift! 1495 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:59.289115", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1496)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:59.295484", "severity": "ALERT", "message": "Persistent drift! 1496 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:59.650531", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1496)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:51:59.656879", "severity": "ALERT", "message": "Persistent drift! 1496 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:00.101183", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1497)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:00.108078", "severity": "ALERT", "message": "Persistent drift! 1497 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:00.486550", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1497)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:00.493942", "severity": "ALERT", "message": "Persistent drift! 1497 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.007221", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1498)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.015470", "severity": "ALERT", "message": "Persistent drift! 1498 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.371453", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1498)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.377867", "severity": "ALERT", "message": "Persistent drift! 1498 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.849993", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1499)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:01.856533", "severity": "ALERT", "message": "Persistent drift! 1499 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:02.217898", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1499)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:02.225226", "severity": "ALERT", "message": "Persistent drift! 1499 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:02.677993", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1500)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:02.724470", "severity": "ALERT", "message": "Persistent drift! 1500 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.075523", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1500)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.083064", "severity": "ALERT", "message": "Persistent drift! 1500 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.588386", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1501)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.596516", "severity": "ALERT", "message": "Persistent drift! 1501 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.960025", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1501)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:03.966291", "severity": "ALERT", "message": "Persistent drift! 1501 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:04.450794", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1502)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:04.456890", "severity": "ALERT", "message": "Persistent drift! 1502 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:04.851071", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1502)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:04.858081", "severity": "ALERT", "message": "Persistent drift! 1502 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:05.326903", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1503)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:05.333552", "severity": "ALERT", "message": "Persistent drift! 1503 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:05.691995", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1503)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:05.698831", "severity": "ALERT", "message": "Persistent drift! 1503 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:06.185259", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1504)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:06.193811", "severity": "ALERT", "message": "Persistent drift! 1504 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:06.602768", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1504)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:06.610414", "severity": "ALERT", "message": "Persistent drift! 1504 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.082724", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1505)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.090012", "severity": "ALERT", "message": "Persistent drift! 1505 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.435214", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1505)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.441428", "severity": "ALERT", "message": "Persistent drift! 1505 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.894832", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1506)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:07.902133", "severity": "ALERT", "message": "Persistent drift! 1506 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:08.345548", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1506)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:08.352161", "severity": "ALERT", "message": "Persistent drift! 1506 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:08.834318", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1507)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:08.842502", "severity": "ALERT", "message": "Persistent drift! 1507 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:09.249239", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1507)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:09.257423", "severity": "ALERT", "message": "Persistent drift! 1507 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:09.756887", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1508)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:09.764233", "severity": "ALERT", "message": "Persistent drift! 1508 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.131063", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1508)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.138999", "severity": "ALERT", "message": "Persistent drift! 1508 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.618251", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1509)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.625624", "severity": "ALERT", "message": "Persistent drift! 1509 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.989388", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1509)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:10.996432", "severity": "ALERT", "message": "Persistent drift! 1509 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:11.449098", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1510)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:11.456010", "severity": "ALERT", "message": "Persistent drift! 1510 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:11.839686", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1510)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:11.848418", "severity": "ALERT", "message": "Persistent drift! 1510 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:12.372150", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1511)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:12.380893", "severity": "ALERT", "message": "Persistent drift! 1511 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:12.737494", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1511)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:12.744078", "severity": "ALERT", "message": "Persistent drift! 1511 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:13.192412", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1512)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:13.199567", "severity": "ALERT", "message": "Persistent drift! 1512 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:13.548149", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1512)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:13.554409", "severity": "ALERT", "message": "Persistent drift! 1512 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.002710", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1513)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.009052", "severity": "ALERT", "message": "Persistent drift! 1513 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.376090", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1513)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.382669", "severity": "ALERT", "message": "Persistent drift! 1513 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.869528", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1514)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:14.876503", "severity": "ALERT", "message": "Persistent drift! 1514 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:15.256036", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1514)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:15.264122", "severity": "ALERT", "message": "Persistent drift! 1514 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:15.719109", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1515)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:15.725622", "severity": "ALERT", "message": "Persistent drift! 1515 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.060775", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1515)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.067513", "severity": "ALERT", "message": "Persistent drift! 1515 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.566998", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1516)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.574563", "severity": "ALERT", "message": "Persistent drift! 1516 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.959297", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1516)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:16.964972", "severity": "ALERT", "message": "Persistent drift! 1516 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:17.552780", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1517)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:17.561365", "severity": "ALERT", "message": "Persistent drift! 1517 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:17.957969", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1517)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:17.966370", "severity": "ALERT", "message": "Persistent drift! 1517 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:18.461293", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1518)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:18.469347", "severity": "ALERT", "message": "Persistent drift! 1518 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:18.849124", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1518)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:18.856082", "severity": "ALERT", "message": "Persistent drift! 1518 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:19.332182", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1519)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:19.339355", "severity": "ALERT", "message": "Persistent drift! 1519 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:19.725601", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1519)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:19.733027", "severity": "ALERT", "message": "Persistent drift! 1519 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:20.206312", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1520)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:20.263666", "severity": "ALERT", "message": "Persistent drift! 1520 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:20.662272", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1520)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:20.670755", "severity": "ALERT", "message": "Persistent drift! 1520 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:21.206730", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1521)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:21.214932", "severity": "ALERT", "message": "Persistent drift! 1521 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:21.588549", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1521)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:21.595409", "severity": "ALERT", "message": "Persistent drift! 1521 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:22.116689", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1522)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:22.124067", "severity": "ALERT", "message": "Persistent drift! 1522 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:22.517419", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1522)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:22.524865", "severity": "ALERT", "message": "Persistent drift! 1522 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:23.014689", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1523)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:23.022073", "severity": "ALERT", "message": "Persistent drift! 1523 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:23.424151", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1523)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:23.431536", "severity": "ALERT", "message": "Persistent drift! 1523 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.052541", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1524)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.062242", "severity": "ALERT", "message": "Persistent drift! 1524 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.441200", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1524)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.448281", "severity": "ALERT", "message": "Persistent drift! 1524 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.929687", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1525)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:24.935742", "severity": "ALERT", "message": "Persistent drift! 1525 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:25.307633", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1525)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:25.314553", "severity": "ALERT", "message": "Persistent drift! 1525 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:25.774281", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1526)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:25.781141", "severity": "ALERT", "message": "Persistent drift! 1526 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:26.122170", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1526)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:26.129257", "severity": "ALERT", "message": "Persistent drift! 1526 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:26.616890", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1527)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:26.625070", "severity": "ALERT", "message": "Persistent drift! 1527 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.011148", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1527)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.018895", "severity": "ALERT", "message": "Persistent drift! 1527 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.482983", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1528)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.489446", "severity": "ALERT", "message": "Persistent drift! 1528 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.840426", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1528)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:27.846426", "severity": "ALERT", "message": "Persistent drift! 1528 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:28.323748", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1529)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:28.330861", "severity": "ALERT", "message": "Persistent drift! 1529 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:28.681996", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1529)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:28.688743", "severity": "ALERT", "message": "Persistent drift! 1529 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:29.158323", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1530)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:29.165906", "severity": "ALERT", "message": "Persistent drift! 1530 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:29.537081", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1530)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:29.544691", "severity": "ALERT", "message": "Persistent drift! 1530 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.034279", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1531)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.041127", "severity": "ALERT", "message": "Persistent drift! 1531 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.397845", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1531)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.404042", "severity": "ALERT", "message": "Persistent drift! 1531 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.863628", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1532)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:30.870865", "severity": "ALERT", "message": "Persistent drift! 1532 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:31.226735", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1532)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:31.232589", "severity": "ALERT", "message": "Persistent drift! 1532 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:31.694424", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1533)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:31.701741", "severity": "ALERT", "message": "Persistent drift! 1533 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.065502", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1533)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.073542", "severity": "ALERT", "message": "Persistent drift! 1533 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.576699", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1534)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.585964", "severity": "ALERT", "message": "Persistent drift! 1534 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.985919", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1534)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:32.992350", "severity": "ALERT", "message": "Persistent drift! 1534 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:33.481059", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1535)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:33.488485", "severity": "ALERT", "message": "Persistent drift! 1535 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:33.847499", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1535)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:33.854478", "severity": "ALERT", "message": "Persistent drift! 1535 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:34.312532", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1536)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:34.319236", "severity": "ALERT", "message": "Persistent drift! 1536 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:34.677350", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1536)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:34.684677", "severity": "ALERT", "message": "Persistent drift! 1536 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:35.187689", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1537)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:35.197704", "severity": "ALERT", "message": "Persistent drift! 1537 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:35.591582", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1537)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:35.598225", "severity": "ALERT", "message": "Persistent drift! 1537 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.073356", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1538)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.079181", "severity": "ALERT", "message": "Persistent drift! 1538 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.449752", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1538)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.456669", "severity": "ALERT", "message": "Persistent drift! 1538 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.936772", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1539)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:36.943884", "severity": "ALERT", "message": "Persistent drift! 1539 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:37.326218", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1539)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:37.333066", "severity": "ALERT", "message": "Persistent drift! 1539 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:37.801504", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1540)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:37.809604", "severity": "ALERT", "message": "Persistent drift! 1540 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:38.200951", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1540)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:38.208737", "severity": "ALERT", "message": "Persistent drift! 1540 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:38.716259", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1541)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:38.723904", "severity": "ALERT", "message": "Persistent drift! 1541 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:39.087614", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1541)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:39.095592", "severity": "ALERT", "message": "Persistent drift! 1541 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:39.558538", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1542)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:39.565942", "severity": "ALERT", "message": "Persistent drift! 1542 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.001978", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1542)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.008749", "severity": "ALERT", "message": "Persistent drift! 1542 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.507080", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1543)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.515410", "severity": "ALERT", "message": "Persistent drift! 1543 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.886154", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1543)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:40.893752", "severity": "ALERT", "message": "Persistent drift! 1543 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:41.395766", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1544)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:41.403475", "severity": "ALERT", "message": "Persistent drift! 1544 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:41.766790", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1544)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:41.774641", "severity": "ALERT", "message": "Persistent drift! 1544 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:42.239490", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1545)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:42.246528", "severity": "ALERT", "message": "Persistent drift! 1545 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:42.599737", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1545)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:42.606072", "severity": "ALERT", "message": "Persistent drift! 1545 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.063405", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1546)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.070094", "severity": "ALERT", "message": "Persistent drift! 1546 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.431408", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1546)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.439464", "severity": "ALERT", "message": "Persistent drift! 1546 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.989081", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1547)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:43.997665", "severity": "ALERT", "message": "Persistent drift! 1547 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:44.421782", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1547)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:44.428888", "severity": "ALERT", "message": "Persistent drift! 1547 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:44.911719", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1548)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:44.918649", "severity": "ALERT", "message": "Persistent drift! 1548 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:45.297097", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1548)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:45.304963", "severity": "ALERT", "message": "Persistent drift! 1548 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:45.835104", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1549)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:45.842569", "severity": "ALERT", "message": "Persistent drift! 1549 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:46.238237", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1549)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:46.246684", "severity": "ALERT", "message": "Persistent drift! 1549 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:46.760346", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1550)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:46.767908", "severity": "ALERT", "message": "Persistent drift! 1550 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:47.153437", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1550)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:47.161512", "severity": "ALERT", "message": "Persistent drift! 1550 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:47.635795", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1551)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:47.642745", "severity": "ALERT", "message": "Persistent drift! 1551 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.014658", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1551)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.021234", "severity": "ALERT", "message": "Persistent drift! 1551 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.472572", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1552)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.478966", "severity": "ALERT", "message": "Persistent drift! 1552 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.830571", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1552)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:48.836772", "severity": "ALERT", "message": "Persistent drift! 1552 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:49.304747", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1553)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:49.313141", "severity": "ALERT", "message": "Persistent drift! 1553 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:49.695546", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1553)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:49.704638", "severity": "ALERT", "message": "Persistent drift! 1553 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:50.254803", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1554)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:50.262898", "severity": "ALERT", "message": "Persistent drift! 1554 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:50.649144", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1554)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:50.656127", "severity": "ALERT", "message": "Persistent drift! 1554 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:51.131839", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1555)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:51.140557", "severity": "ALERT", "message": "Persistent drift! 1555 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:51.535596", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1555)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:51.544267", "severity": "ALERT", "message": "Persistent drift! 1555 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:52.054191", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1556)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:52.063418", "severity": "ALERT", "message": "Persistent drift! 1556 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:52.474080", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1556)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:52.482875", "severity": "ALERT", "message": "Persistent drift! 1556 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.023442", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1557)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.031849", "severity": "ALERT", "message": "Persistent drift! 1557 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.418851", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1557)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.425690", "severity": "ALERT", "message": "Persistent drift! 1557 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.879343", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1558)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:53.886412", "severity": "ALERT", "message": "Persistent drift! 1558 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:54.250993", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1558)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:54.257716", "severity": "ALERT", "message": "Persistent drift! 1558 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:54.735263", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1559)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:54.742126", "severity": "ALERT", "message": "Persistent drift! 1559 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:55.095187", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1559)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:55.103053", "severity": "ALERT", "message": "Persistent drift! 1559 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:55.674655", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1560)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:55.682028", "severity": "ALERT", "message": "Persistent drift! 1560 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.067025", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1560)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.076002", "severity": "ALERT", "message": "Persistent drift! 1560 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.586092", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1561)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.593257", "severity": "ALERT", "message": "Persistent drift! 1561 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.974960", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1561)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:56.982193", "severity": "ALERT", "message": "Persistent drift! 1561 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:57.479911", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1562)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:57.487838", "severity": "ALERT", "message": "Persistent drift! 1562 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:57.854498", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1562)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:57.860474", "severity": "ALERT", "message": "Persistent drift! 1562 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:58.341823", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1563)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:58.348879", "severity": "ALERT", "message": "Persistent drift! 1563 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:58.732020", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1563)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:58.740324", "severity": "ALERT", "message": "Persistent drift! 1563 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:59.237907", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1564)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:59.246029", "severity": "ALERT", "message": "Persistent drift! 1564 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:59.601138", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1564)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:52:59.607706", "severity": "ALERT", "message": "Persistent drift! 1564 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.070850", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1565)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.078237", "severity": "ALERT", "message": "Persistent drift! 1565 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.417696", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1565)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.424632", "severity": "ALERT", "message": "Persistent drift! 1565 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.883339", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1566)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:00.891931", "severity": "ALERT", "message": "Persistent drift! 1566 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:01.252092", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1566)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:01.260608", "severity": "ALERT", "message": "Persistent drift! 1566 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:01.771961", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1567)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:01.779866", "severity": "ALERT", "message": "Persistent drift! 1567 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:02.169293", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1567)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:02.175936", "severity": "ALERT", "message": "Persistent drift! 1567 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:02.629971", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1568)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:02.636454", "severity": "ALERT", "message": "Persistent drift! 1568 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.012012", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1568)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.020658", "severity": "ALERT", "message": "Persistent drift! 1568 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.501846", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1569)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.509052", "severity": "ALERT", "message": "Persistent drift! 1569 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.890514", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1569)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:03.896241", "severity": "ALERT", "message": "Persistent drift! 1569 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:04.399235", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1570)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:04.408087", "severity": "ALERT", "message": "Persistent drift! 1570 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:04.823324", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1570)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:04.832015", "severity": "ALERT", "message": "Persistent drift! 1570 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:05.379499", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1571)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:05.387831", "severity": "ALERT", "message": "Persistent drift! 1571 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:05.773883", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1571)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:05.781632", "severity": "ALERT", "message": "Persistent drift! 1571 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:06.250783", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1572)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:06.258672", "severity": "ALERT", "message": "Persistent drift! 1572 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:06.634680", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1572)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:06.642088", "severity": "ALERT", "message": "Persistent drift! 1572 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:07.113434", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1573)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:07.120463", "severity": "ALERT", "message": "Persistent drift! 1573 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:07.506765", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1573)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:07.513832", "severity": "ALERT", "message": "Persistent drift! 1573 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.027750", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1574)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.036732", "severity": "ALERT", "message": "Persistent drift! 1574 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.434270", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1574)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.441736", "severity": "ALERT", "message": "Persistent drift! 1574 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.925753", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1575)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:08.935661", "severity": "ALERT", "message": "Persistent drift! 1575 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:09.295995", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1575)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:09.334759", "severity": "ALERT", "message": "Persistent drift! 1575 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:09.821688", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1576)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:09.829987", "severity": "ALERT", "message": "Persistent drift! 1576 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:10.202235", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1576)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:10.217053", "severity": "ALERT", "message": "Persistent drift! 1576 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:10.861209", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1577)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:10.869513", "severity": "ALERT", "message": "Persistent drift! 1577 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:11.268610", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1577)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:11.277169", "severity": "ALERT", "message": "Persistent drift! 1577 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:11.762778", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1578)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:11.769822", "severity": "ALERT", "message": "Persistent drift! 1578 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:12.124415", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1578)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:12.131038", "severity": "ALERT", "message": "Persistent drift! 1578 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:12.603776", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1579)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:12.610824", "severity": "ALERT", "message": "Persistent drift! 1579 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:12.999208", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1579)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:13.007460", "severity": "ALERT", "message": "Persistent drift! 1579 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:13.509719", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1580)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:13.518497", "severity": "ALERT", "message": "Persistent drift! 1580 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:13.924367", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1580)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-22T15:53:13.932563", "severity": "ALERT", "message": "Persistent drift! 1580 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-22T15:53:14.411373", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1581)", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-22T15:53:14.418398", "severity": "ALERT", "message": "Persistent drift! 1581 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-22T15:53:14.786659", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1581)", "source": "drift_detector", "context_hash": null}
@@ -998,3 +546,455 @@
 {"timestamp": "2025-12-22T15:55:15.281266", "severity": "ALERT", "message": "Persistent drift! 1717 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-22T15:55:15.687284", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #1717)", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-22T15:55:15.694382", "severity": "ALERT", "message": "Persistent drift! 1717 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:34.983584", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #38)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:34.992901", "severity": "ALERT", "message": "Persistent drift! 38 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:35.446859", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #39)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:35.452808", "severity": "ALERT", "message": "Persistent drift! 39 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:35.857311", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #39)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:35.863078", "severity": "ALERT", "message": "Persistent drift! 39 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:36.322974", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #40)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:36.329574", "severity": "ALERT", "message": "Persistent drift! 40 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:36.677083", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #40)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:36.683014", "severity": "ALERT", "message": "Persistent drift! 40 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.139764", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #41)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.147252", "severity": "ALERT", "message": "Persistent drift! 41 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.503952", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #41)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.511235", "severity": "ALERT", "message": "Persistent drift! 41 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.980209", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #42)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:37.986925", "severity": "ALERT", "message": "Persistent drift! 42 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:38.311611", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #42)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:38.317439", "severity": "ALERT", "message": "Persistent drift! 42 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:38.749972", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #43)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:38.756038", "severity": "ALERT", "message": "Persistent drift! 43 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.107785", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #43)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.113986", "severity": "ALERT", "message": "Persistent drift! 43 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.550503", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #44)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.556562", "severity": "ALERT", "message": "Persistent drift! 44 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.949585", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #44)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:39.956309", "severity": "ALERT", "message": "Persistent drift! 44 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:40.469485", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #45)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:40.474946", "severity": "ALERT", "message": "Persistent drift! 45 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:40.815891", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #45)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:40.822394", "severity": "ALERT", "message": "Persistent drift! 45 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:41.269138", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #46)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:41.274954", "severity": "ALERT", "message": "Persistent drift! 46 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:41.617799", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #46)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:41.624109", "severity": "ALERT", "message": "Persistent drift! 46 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:42.098482", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #47)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:42.104383", "severity": "ALERT", "message": "Persistent drift! 47 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:42.473270", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #47)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:42.481738", "severity": "ALERT", "message": "Persistent drift! 47 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.003184", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #48)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.011540", "severity": "ALERT", "message": "Persistent drift! 48 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.446731", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #48)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.454384", "severity": "ALERT", "message": "Persistent drift! 48 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.977658", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #49)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:43.984780", "severity": "ALERT", "message": "Persistent drift! 49 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:44.363361", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #49)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:44.371036", "severity": "ALERT", "message": "Persistent drift! 49 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:44.872609", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #50)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:44.880294", "severity": "ALERT", "message": "Persistent drift! 50 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:45.267299", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #50)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:45.275365", "severity": "ALERT", "message": "Persistent drift! 50 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:45.793422", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #51)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:45.801934", "severity": "ALERT", "message": "Persistent drift! 51 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:46.213515", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #51)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:46.220262", "severity": "ALERT", "message": "Persistent drift! 51 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:46.674752", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #52)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:46.680616", "severity": "ALERT", "message": "Persistent drift! 52 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.020607", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #52)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.026860", "severity": "ALERT", "message": "Persistent drift! 52 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.493130", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #53)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.499646", "severity": "ALERT", "message": "Persistent drift! 53 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.850590", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #53)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:47.856743", "severity": "ALERT", "message": "Persistent drift! 53 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:48.302440", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #54)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:48.308323", "severity": "ALERT", "message": "Persistent drift! 54 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:48.658075", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #54)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:48.665886", "severity": "ALERT", "message": "Persistent drift! 54 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.150393", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #55)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.156401", "severity": "ALERT", "message": "Persistent drift! 55 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.517108", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #55)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.523495", "severity": "ALERT", "message": "Persistent drift! 55 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.968094", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #56)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:49.973844", "severity": "ALERT", "message": "Persistent drift! 56 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:50.311994", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #56)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:50.318213", "severity": "ALERT", "message": "Persistent drift! 56 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:50.763961", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #57)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:50.770750", "severity": "ALERT", "message": "Persistent drift! 57 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:51.204664", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #57)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:51.212353", "severity": "ALERT", "message": "Persistent drift! 57 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:51.708894", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #58)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:51.717373", "severity": "ALERT", "message": "Persistent drift! 58 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.063327", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #58)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.069173", "severity": "ALERT", "message": "Persistent drift! 58 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.525500", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #59)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.531937", "severity": "ALERT", "message": "Persistent drift! 59 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.879710", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #59)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:52.885786", "severity": "ALERT", "message": "Persistent drift! 59 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:53.341309", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #60)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:53.347091", "severity": "ALERT", "message": "Persistent drift! 60 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:53.697339", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #60)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:53.703184", "severity": "ALERT", "message": "Persistent drift! 60 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:54.174799", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #61)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:54.182378", "severity": "ALERT", "message": "Persistent drift! 61 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:54.553603", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #61)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:54.560314", "severity": "ALERT", "message": "Persistent drift! 61 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.020742", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #62)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.027162", "severity": "ALERT", "message": "Persistent drift! 62 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.378515", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #62)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.384614", "severity": "ALERT", "message": "Persistent drift! 62 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.849873", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #63)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:55.855831", "severity": "ALERT", "message": "Persistent drift! 63 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:56.211873", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #63)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:56.217800", "severity": "ALERT", "message": "Persistent drift! 63 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:56.661710", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #64)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:56.669161", "severity": "ALERT", "message": "Persistent drift! 64 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.039025", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #64)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.045868", "severity": "ALERT", "message": "Persistent drift! 64 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.545938", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #65)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.552970", "severity": "ALERT", "message": "Persistent drift! 65 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.933831", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #65)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:57.940267", "severity": "ALERT", "message": "Persistent drift! 65 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:58.415835", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #66)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:58.423611", "severity": "ALERT", "message": "Persistent drift! 66 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:58.772303", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #66)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:58.779129", "severity": "ALERT", "message": "Persistent drift! 66 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:59.227533", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #67)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:59.233976", "severity": "ALERT", "message": "Persistent drift! 67 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:59.581301", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #67)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:06:59.588872", "severity": "ALERT", "message": "Persistent drift! 67 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.073250", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #68)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.081112", "severity": "ALERT", "message": "Persistent drift! 68 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.459244", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #68)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.465465", "severity": "ALERT", "message": "Persistent drift! 68 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.908784", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #69)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:00.914632", "severity": "ALERT", "message": "Persistent drift! 69 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:01.265047", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #69)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:01.272523", "severity": "ALERT", "message": "Persistent drift! 69 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:01.760702", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #70)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:01.767810", "severity": "ALERT", "message": "Persistent drift! 70 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:02.151512", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #70)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:02.159938", "severity": "ALERT", "message": "Persistent drift! 70 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:02.686936", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #71)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:02.697866", "severity": "ALERT", "message": "Persistent drift! 71 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:03.123401", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #71)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:03.131305", "severity": "ALERT", "message": "Persistent drift! 71 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:03.673345", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #72)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:03.681375", "severity": "ALERT", "message": "Persistent drift! 72 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.067284", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #72)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.075304", "severity": "ALERT", "message": "Persistent drift! 72 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.559922", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #73)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.566963", "severity": "ALERT", "message": "Persistent drift! 73 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.980584", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #73)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:04.986307", "severity": "ALERT", "message": "Persistent drift! 73 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:05.427175", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #74)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:05.434552", "severity": "ALERT", "message": "Persistent drift! 74 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:05.811329", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #74)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:05.818954", "severity": "ALERT", "message": "Persistent drift! 74 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:06.317632", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #75)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:06.323977", "severity": "ALERT", "message": "Persistent drift! 75 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:06.697030", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #75)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:06.704159", "severity": "ALERT", "message": "Persistent drift! 75 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:07.178002", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #76)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:07.184608", "severity": "ALERT", "message": "Persistent drift! 76 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:07.542907", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #76)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:07.549255", "severity": "ALERT", "message": "Persistent drift! 76 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.025291", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #77)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.032161", "severity": "ALERT", "message": "Persistent drift! 77 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.413127", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #77)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.419962", "severity": "ALERT", "message": "Persistent drift! 77 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.935017", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #78)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:08.943168", "severity": "ALERT", "message": "Persistent drift! 78 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:09.295214", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #78)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:09.301980", "severity": "ALERT", "message": "Persistent drift! 78 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:09.744240", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #79)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:09.750248", "severity": "ALERT", "message": "Persistent drift! 79 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.084404", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #79)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.090063", "severity": "ALERT", "message": "Persistent drift! 79 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.529881", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #80)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.535425", "severity": "ALERT", "message": "Persistent drift! 80 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.866017", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #80)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:10.871769", "severity": "ALERT", "message": "Persistent drift! 80 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:11.322146", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #81)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:11.328422", "severity": "ALERT", "message": "Persistent drift! 81 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:11.696037", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #81)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:11.703581", "severity": "ALERT", "message": "Persistent drift! 81 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.144764", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #82)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.150687", "severity": "ALERT", "message": "Persistent drift! 82 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.481765", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #82)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.487683", "severity": "ALERT", "message": "Persistent drift! 82 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.920591", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #83)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:12.926827", "severity": "ALERT", "message": "Persistent drift! 83 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:13.254189", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #83)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:13.260102", "severity": "ALERT", "message": "Persistent drift! 83 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:13.687946", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #84)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:13.694075", "severity": "ALERT", "message": "Persistent drift! 84 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.039704", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #84)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.046628", "severity": "ALERT", "message": "Persistent drift! 84 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.550051", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #85)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.556462", "severity": "ALERT", "message": "Persistent drift! 85 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.888197", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #85)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:14.895208", "severity": "ALERT", "message": "Persistent drift! 85 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:15.325310", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #86)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:15.331106", "severity": "ALERT", "message": "Persistent drift! 86 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:15.651317", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #86)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:15.657487", "severity": "ALERT", "message": "Persistent drift! 86 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.096868", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #87)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.102673", "severity": "ALERT", "message": "Persistent drift! 87 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.433824", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #87)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.439335", "severity": "ALERT", "message": "Persistent drift! 87 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.904363", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #88)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:16.911012", "severity": "ALERT", "message": "Persistent drift! 88 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:17.274028", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #88)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:17.281280", "severity": "ALERT", "message": "Persistent drift! 88 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:17.727339", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #89)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:17.733646", "severity": "ALERT", "message": "Persistent drift! 89 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.079784", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #89)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.086160", "severity": "ALERT", "message": "Persistent drift! 89 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.530194", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #90)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.536030", "severity": "ALERT", "message": "Persistent drift! 90 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.875613", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #90)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:18.882098", "severity": "ALERT", "message": "Persistent drift! 90 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:19.399111", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #91)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:19.406333", "severity": "ALERT", "message": "Persistent drift! 91 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:19.775592", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #91)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:19.783451", "severity": "ALERT", "message": "Persistent drift! 91 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:20.266851", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #92)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:20.273514", "severity": "ALERT", "message": "Persistent drift! 92 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:20.610053", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #92)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:20.616078", "severity": "ALERT", "message": "Persistent drift! 92 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.058222", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #93)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.063873", "severity": "ALERT", "message": "Persistent drift! 93 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.397319", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #93)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.402929", "severity": "ALERT", "message": "Persistent drift! 93 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.866300", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #94)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:21.872735", "severity": "ALERT", "message": "Persistent drift! 94 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:22.212421", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #94)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:22.218301", "severity": "ALERT", "message": "Persistent drift! 94 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:22.705574", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #95)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:22.712694", "severity": "ALERT", "message": "Persistent drift! 95 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.104079", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #95)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.111065", "severity": "ALERT", "message": "Persistent drift! 95 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.559846", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #96)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.566222", "severity": "ALERT", "message": "Persistent drift! 96 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.909334", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #96)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:23.915132", "severity": "ALERT", "message": "Persistent drift! 96 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:24.366837", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #97)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:24.373773", "severity": "ALERT", "message": "Persistent drift! 97 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:24.716478", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #97)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:24.722619", "severity": "ALERT", "message": "Persistent drift! 97 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:25.174003", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #98)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:25.180458", "severity": "ALERT", "message": "Persistent drift! 98 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:25.543539", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #98)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:25.550643", "severity": "ALERT", "message": "Persistent drift! 98 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.044250", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #99)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.051511", "severity": "ALERT", "message": "Persistent drift! 99 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.419598", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #99)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.426622", "severity": "ALERT", "message": "Persistent drift! 99 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.895287", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #100)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:26.902188", "severity": "ALERT", "message": "Persistent drift! 100 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:27.270721", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #100)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:27.278404", "severity": "ALERT", "message": "Persistent drift! 100 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:27.738140", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #101)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:27.745423", "severity": "ALERT", "message": "Persistent drift! 101 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.116765", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #101)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.123085", "severity": "ALERT", "message": "Persistent drift! 101 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.625730", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #102)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.632103", "severity": "ALERT", "message": "Persistent drift! 102 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.988211", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #102)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:28.994390", "severity": "ALERT", "message": "Persistent drift! 102 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:29.436374", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #103)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:29.442333", "severity": "ALERT", "message": "Persistent drift! 103 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:29.792868", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #103)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:29.799175", "severity": "ALERT", "message": "Persistent drift! 103 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:30.244697", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #104)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:30.251649", "severity": "ALERT", "message": "Persistent drift! 104 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:30.595328", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #104)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:30.601511", "severity": "ALERT", "message": "Persistent drift! 104 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.087191", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #105)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.095036", "severity": "ALERT", "message": "Persistent drift! 105 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.470152", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #105)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.478324", "severity": "ALERT", "message": "Persistent drift! 105 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.933415", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #106)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:31.939771", "severity": "ALERT", "message": "Persistent drift! 106 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:32.278032", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #106)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:32.283735", "severity": "ALERT", "message": "Persistent drift! 106 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:32.720013", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #107)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:32.725840", "severity": "ALERT", "message": "Persistent drift! 107 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.053566", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #107)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.059419", "severity": "ALERT", "message": "Persistent drift! 107 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.492549", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #108)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.499101", "severity": "ALERT", "message": "Persistent drift! 108 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.919304", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #108)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:33.926050", "severity": "ALERT", "message": "Persistent drift! 108 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:34.414692", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #109)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:34.422857", "severity": "ALERT", "message": "Persistent drift! 109 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:34.769693", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #109)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:34.775266", "severity": "ALERT", "message": "Persistent drift! 109 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:35.262525", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #110)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:35.269260", "severity": "ALERT", "message": "Persistent drift! 110 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:35.609535", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #110)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:35.615211", "severity": "ALERT", "message": "Persistent drift! 110 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.061289", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #111)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.067455", "severity": "ALERT", "message": "Persistent drift! 111 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.412299", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #111)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.418859", "severity": "ALERT", "message": "Persistent drift! 111 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.917150", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #112)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:36.924904", "severity": "ALERT", "message": "Persistent drift! 112 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:37.301113", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #112)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:37.306222", "severity": "ALERT", "message": "Persistent drift! 112 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:37.747344", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #113)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:37.753449", "severity": "ALERT", "message": "Persistent drift! 113 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.093044", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #113)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.098801", "severity": "ALERT", "message": "Persistent drift! 113 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.547115", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #114)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.553983", "severity": "ALERT", "message": "Persistent drift! 114 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.910385", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #114)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:38.916330", "severity": "ALERT", "message": "Persistent drift! 114 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:39.378628", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #115)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:39.386165", "severity": "ALERT", "message": "Persistent drift! 115 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:39.760809", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #115)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:39.768438", "severity": "ALERT", "message": "Persistent drift! 115 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:40.232662", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #116)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:40.239635", "severity": "ALERT", "message": "Persistent drift! 116 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:40.590689", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #116)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:40.596856", "severity": "ALERT", "message": "Persistent drift! 116 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.049351", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #117)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.055461", "severity": "ALERT", "message": "Persistent drift! 117 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.408560", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #117)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.414012", "severity": "ALERT", "message": "Persistent drift! 117 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.866471", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #118)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:41.872539", "severity": "ALERT", "message": "Persistent drift! 118 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:42.249217", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #118)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:42.256684", "severity": "ALERT", "message": "Persistent drift! 118 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:42.768209", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #119)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:42.774538", "severity": "ALERT", "message": "Persistent drift! 119 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.108729", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #119)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.116132", "severity": "ALERT", "message": "Persistent drift! 119 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.549218", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #120)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.555243", "severity": "ALERT", "message": "Persistent drift! 120 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.886405", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #120)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:43.892026", "severity": "ALERT", "message": "Persistent drift! 120 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:44.335135", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #121)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:44.341171", "severity": "ALERT", "message": "Persistent drift! 121 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:44.677989", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #121)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:44.683700", "severity": "ALERT", "message": "Persistent drift! 121 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.149098", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #122)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.156138", "severity": "ALERT", "message": "Persistent drift! 122 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.528742", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #122)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.536227", "severity": "ALERT", "message": "Persistent drift! 122 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.992558", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #123)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:45.998526", "severity": "ALERT", "message": "Persistent drift! 123 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:46.345125", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #123)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:46.350659", "severity": "ALERT", "message": "Persistent drift! 123 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:46.803467", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #124)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:46.809254", "severity": "ALERT", "message": "Persistent drift! 124 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:47.158382", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #124)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:47.164419", "severity": "ALERT", "message": "Persistent drift! 124 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:47.696592", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #125)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:47.704099", "severity": "ALERT", "message": "Persistent drift! 125 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.079381", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #125)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.086319", "severity": "ALERT", "message": "Persistent drift! 125 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.570555", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #126)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.577316", "severity": "ALERT", "message": "Persistent drift! 126 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.929393", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #126)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:48.935056", "severity": "ALERT", "message": "Persistent drift! 126 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:49.386037", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #127)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:49.392122", "severity": "ALERT", "message": "Persistent drift! 127 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:49.733400", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #127)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:49.739493", "severity": "ALERT", "message": "Persistent drift! 127 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:50.188503", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #128)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:50.193927", "severity": "ALERT", "message": "Persistent drift! 128 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:50.542040", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #128)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:50.549825", "severity": "ALERT", "message": "Persistent drift! 128 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.029624", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #129)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.035620", "severity": "ALERT", "message": "Persistent drift! 129 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.377840", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #129)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.384242", "severity": "ALERT", "message": "Persistent drift! 129 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.841754", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #130)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:51.848604", "severity": "ALERT", "message": "Persistent drift! 130 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:52.205004", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #130)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:52.211843", "severity": "ALERT", "message": "Persistent drift! 130 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:52.695053", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #131)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:52.701992", "severity": "ALERT", "message": "Persistent drift! 131 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.067071", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #131)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.074670", "severity": "ALERT", "message": "Persistent drift! 131 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.552096", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #132)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.560875", "severity": "ALERT", "message": "Persistent drift! 132 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.926349", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #132)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:53.933580", "severity": "ALERT", "message": "Persistent drift! 132 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:54.405880", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #133)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:54.413607", "severity": "ALERT", "message": "Persistent drift! 133 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:54.767519", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #133)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:54.774584", "severity": "ALERT", "message": "Persistent drift! 133 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:55.230238", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #134)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:55.251951", "severity": "ALERT", "message": "Persistent drift! 134 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:55.587075", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #134)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:55.593584", "severity": "ALERT", "message": "Persistent drift! 134 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.073592", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #135)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.081133", "severity": "ALERT", "message": "Persistent drift! 135 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.457367", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #135)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.464091", "severity": "ALERT", "message": "Persistent drift! 135 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.944975", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #136)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:56.952383", "severity": "ALERT", "message": "Persistent drift! 136 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:57.359148", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #136)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:57.365082", "severity": "ALERT", "message": "Persistent drift! 136 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:57.822971", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #137)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:57.829462", "severity": "ALERT", "message": "Persistent drift! 137 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:58.190073", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #137)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:58.196955", "severity": "ALERT", "message": "Persistent drift! 137 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:58.669323", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #138)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:58.675840", "severity": "ALERT", "message": "Persistent drift! 138 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.053492", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #138)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.061076", "severity": "ALERT", "message": "Persistent drift! 138 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.574052", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #139)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.581515", "severity": "ALERT", "message": "Persistent drift! 139 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.948148", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #139)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:07:59.954380", "severity": "ALERT", "message": "Persistent drift! 139 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:00.410894", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #140)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:00.416672", "severity": "ALERT", "message": "Persistent drift! 140 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:00.765440", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #140)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:00.771758", "severity": "ALERT", "message": "Persistent drift! 140 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:01.228972", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #141)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:01.235525", "severity": "ALERT", "message": "Persistent drift! 141 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:01.580478", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #141)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:01.588317", "severity": "ALERT", "message": "Persistent drift! 141 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:02.156767", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #142)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:02.164527", "severity": "ALERT", "message": "Persistent drift! 142 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:02.542724", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #142)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:02.549675", "severity": "ALERT", "message": "Persistent drift! 142 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:02.994825", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #143)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:03.001027", "severity": "ALERT", "message": "Persistent drift! 143 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:03.329187", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #143)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:03.334877", "severity": "ALERT", "message": "Persistent drift! 143 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:03.766650", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #144)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:03.772964", "severity": "ALERT", "message": "Persistent drift! 144 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:04.094187", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #144)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:04.099942", "severity": "ALERT", "message": "Persistent drift! 144 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:04.585166", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #145)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:04.592981", "severity": "ALERT", "message": "Persistent drift! 145 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.002491", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #145)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.010271", "severity": "ALERT", "message": "Persistent drift! 145 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.492635", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #146)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.499532", "severity": "ALERT", "message": "Persistent drift! 146 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.835167", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #146)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:05.840830", "severity": "ALERT", "message": "Persistent drift! 146 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:06.286891", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #147)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:06.292385", "severity": "ALERT", "message": "Persistent drift! 147 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:06.644540", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #147)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:06.650746", "severity": "ALERT", "message": "Persistent drift! 147 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:07.117948", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #148)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:07.124030", "severity": "ALERT", "message": "Persistent drift! 148 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:07.496523", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #148)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:07.510883", "severity": "ALERT", "message": "Persistent drift! 148 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.035791", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #149)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.044145", "severity": "ALERT", "message": "Persistent drift! 149 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.434366", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #149)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.441129", "severity": "ALERT", "message": "Persistent drift! 149 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.919372", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #150)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:08.926102", "severity": "ALERT", "message": "Persistent drift! 150 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:09.288727", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #150)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:09.295239", "severity": "ALERT", "message": "Persistent drift! 150 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:09.797786", "severity": "WARN", "message": "Drift detected: 34 missing files (tick #151)", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-22T19:08:09.806606", "severity": "ALERT", "message": "Persistent drift! 151 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}

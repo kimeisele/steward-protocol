@@ -32,7 +32,6 @@ from .errors import kernel_fault  # GAD-000 Compliance
 
 # DocRenderer: Extracted markdown rendering logic
 from .event_bus import Event, EventType, get_event_bus  # Phase 2: Event Bus
-from .gateway.api import NetworkGateway  # Phase 18: The Network (Sangha)
 
 # I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
 from .io_service import KernelIOService
@@ -67,26 +66,17 @@ from .manifest_registry import InMemoryManifestRegistry
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
-from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
-from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
+
+# Sync modules: Extracted bidirectional markdown interfaces
+# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
+# OPUS-209: Auditor is now accessed via ServiceRegistry
+# The auditor plugin registers itself; kernel uses NullAuditor fallback
+from .protocols.auditor import AuditorProtocol, NullAuditor
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import ExecutionRequest, create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
-
-# Sync modules: Extracted bidirectional markdown interfaces
-# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
-
-# Import Auditor for immune system (optional)
-try:
-    from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
-
-    AUDITOR_AVAILABLE = True
-except ImportError:
-    AUDITOR_AVAILABLE = False
-    logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
@@ -254,16 +244,27 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.ledger_path = ledger_path
 
         # Load immune system (Auditor)
-        self._auditor = None
-        if AUDITOR_AVAILABLE:
-            self._auditor = get_judge()
-            logger.info("🛡️  Immune system loaded (Auditor attached)")
+        # OPUS-209: Auditor is now accessed via ServiceRegistry
+        # If no auditor plugin loaded, use NullAuditor fallback
+        from vibe_core.di import ServiceRegistry
+        self._auditor = ServiceRegistry.get(AuditorProtocol) or NullAuditor()
+        auditor_type = type(self._auditor).__name__
+        if auditor_type == "NullAuditor":
+            logger.warning("⚠️  No auditor plugin loaded - using NullAuditor")
+        else:
+            logger.info(f"🛡️  Immune system loaded (Auditor: {auditor_type})")
 
         # Phase 2: Process Manager
-        self.process_manager = ProcessManager()
+        # OPUS-209: Extracted to process_isolation plugin
+        # ProcessManager is created and registered by ProcessIsolationPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded, or kernel cannot run agents
+        self.process_manager = None  # Set by ProcessIsolationPlugin
 
         # Phase 3: Resource Manager
-        self.resource_manager = ResourceManager()
+        # OPUS-209: Extracted to resource_limits plugin
+        # ResourceManager is created and registered by ResourceLimitsPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded for quota enforcement
+        self.resource_manager = None  # Set by ResourceLimitsPlugin
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
         self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
 
@@ -415,8 +416,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
         # Phase 18: Network Gateway (Sangha)
-        # Using Async Sidecar pattern (Thread + Loop) to avoid blocking sync kernel
-        self.gateway = NetworkGateway(self.prakriti)
+        # OPUS-209: Extracted to sangha_network plugin
+        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
+        # Plugin sets kernel.gateway = <instance> during boot
+        self.gateway = None  # Set by SanghaNetworkPlugin
         self._gateway_thread = None
         self._gateway_loop = None
 
@@ -1074,7 +1077,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # Phase 2: Spawn Process (deferred if spawn_process=False)
         # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
-        if spawn_process:
+        if spawn_process and self.process_manager:
             cartridge_path = getattr(agent, "_cartridge_path", None)
             cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
             if cartridge_path and cartridge_class_name:
@@ -1088,13 +1091,16 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 logger.info(f"📍 Agent '{agent.agent_id}' has no cartridge_path - running in-process (no isolation)")
 
         # Phase 3: Set initial resource quota (default: 100 credits)
-        self.resource_manager.set_quota(agent.agent_id, credits=100)
-        proc_info = self.process_manager.processes.get(agent.agent_id)
-        if proc_info and proc_info.process.is_alive():
-            import time
+        if self.resource_manager:
+            self.resource_manager.set_quota(agent.agent_id, credits=100)
+        if self.process_manager:
+            proc_info = self.process_manager.processes.get(agent.agent_id)
+            if proc_info and proc_info.process.is_alive():
+                import time
 
-            time.sleep(0.1)  # Give process time to start
-            self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
+                time.sleep(0.1)  # Give process time to start
+                if self.resource_manager:
+                    self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
 
         # Phase 4b: Grant repo access to Scribe/Archivist
         if agent.agent_id in ["scribe", "archivist"]:
@@ -1142,6 +1148,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             Number of agents spawned
         """
         spawned = 0
+        if not self.process_manager:
+            logger.warning("⚠️ ProcessManager not available - cannot spawn deferred processes")
+            return 0
+
         for agent_id, agent in self._agent_registry.items():
             # Skip if already has a running process
             if agent_id in self.process_manager.processes:
@@ -1280,6 +1290,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """
         Phase 2: Process IPC messages from agents (Task Results, Crashes, etc.)
         """
+        if not self.process_manager:
+            return
         messages = self.process_manager.get_pending_messages()
         for agent_id, msg in messages:
             msg_type = msg.get("type")
@@ -1378,7 +1390,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         logger.warning(f"🔪 TERMINATE_AGENT: {agent_id} (reason: {reason})")
 
         # 1. Stop the process if running
-        if hasattr(self, "process_manager") and agent_id in self.process_manager.processes:
+        if self.process_manager and agent_id in self.process_manager.processes:
             try:
                 proc_info = self.process_manager.processes[agent_id]
                 if proc_info.process.is_alive():
@@ -1824,6 +1836,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         Phase 18: Async Sidecar Entry Point.
         Runs the NetworkGateway in a dedicated asyncio loop/thread.
         """
+        if self.gateway is None:
+            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
+            return
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -1958,7 +1973,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
                 # Execution (Process vs In-Process)
                 has_process = (
-                    task.agent_id in self.process_manager.processes
+                    self.process_manager
+                    and task.agent_id in self.process_manager.processes
                     and self.process_manager.processes[task.agent_id].process.is_alive()
                 )
 
@@ -1980,7 +1996,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 # Maintenance
                 self._pulse()
                 self._check_system_health()
-                self.process_manager.check_health()
+                if self.process_manager:
+                    self.process_manager.check_health()
                 self._process_ipc_events()
                 self._sync_resource_quotas()
 
@@ -2003,6 +2020,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
     async def _run_gateway_async(self) -> None:
         """Runs the NetworkGateway as an asyncio task."""
+        if self.gateway is None:
+            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
+            return
         try:
             await self.gateway.start()
         except Exception as e:
@@ -2054,9 +2074,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 await self._gateway_task
             except asyncio.CancelledError:
                 pass
-
         # Cleanup processes
-        self.process_manager.shutdown()
-
+        if self.process_manager:
+            self.process_manager.shutdown()
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
