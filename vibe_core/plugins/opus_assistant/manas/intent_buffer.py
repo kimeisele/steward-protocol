@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .intent_generator import Intent, IntentPriority, IntentRisk
 
@@ -100,8 +100,7 @@ class IntentBuffer:
         self._load()
 
         logger.debug(
-            f"📋 IntentBuffer initialized (max={max_size}, expiry={expiry_hours}h, "
-            f"loaded={len(self._entries)})"
+            f"📋 IntentBuffer initialized (max={max_size}, expiry={expiry_hours}h, loaded={len(self._entries)})"
         )
 
     @property
@@ -241,11 +240,7 @@ class IntentBuffer:
         original_count = len(self._entries)
 
         # Keep: pending entries OR entries newer than cutoff
-        self._entries = [
-            entry
-            for entry in self._entries
-            if entry.status == "pending" or entry.added_at >= cutoff_str
-        ]
+        self._entries = [entry for entry in self._entries if entry.status == "pending" or entry.added_at >= cutoff_str]
 
         removed = original_count - len(self._entries)
 

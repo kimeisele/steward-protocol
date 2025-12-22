@@ -28,8 +28,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
-from vibe_core.state.node_state import NodeState
-
 from .base_action import ActionResult, BaseAction
 from .prana_sense import PranaSense
 

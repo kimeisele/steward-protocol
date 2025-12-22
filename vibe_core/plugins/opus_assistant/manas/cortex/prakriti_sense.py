@@ -85,7 +85,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from vibe_core.state.sync_holon import (
-    GovernanceViolation,
     StateGuna,
     StatePathInfo,
     StateSyncHolon,

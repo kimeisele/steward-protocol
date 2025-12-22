@@ -65,7 +65,6 @@ from .chitta import PerceptionEntry
 
 if TYPE_CHECKING:
     from .cortex.dharma_sense import DharmaSense
-    from .intent_generator import Intent
 
 logger = logging.getLogger("MANAS.Buddhi")
 
@@ -214,9 +213,7 @@ class Buddhi:
 
             # Final verdict
             approved = dharmic and resource_ok and deps_met
-            final_reason = self._build_reason(
-                dharmic, resource_ok, deps_met, dharma_reason, priority_score
-            )
+            final_reason = self._build_reason(dharmic, resource_ok, deps_met, dharma_reason, priority_score)
 
             # Track stats
             if approved:
@@ -244,10 +241,7 @@ class Buddhi:
             verdicts.append(verdict)
 
             if not approved:
-                logger.info(
-                    f"🧘 BUDDHI: BLOCKED intent '{getattr(intent, 'title', '?')}' - "
-                    f"{final_reason}"
-                )
+                logger.info(f"🧘 BUDDHI: BLOCKED intent '{getattr(intent, 'title', '?')}' - {final_reason}")
 
         # Sort by priority score (highest first)
         verdicts.sort(key=lambda v: v.priority_score, reverse=True)
@@ -258,8 +252,7 @@ class Buddhi:
         # Log summary
         blocked_count = len(verdicts) - len([v for v in verdicts if v.approved])
         logger.info(
-            f"🧘 BUDDHI: Discriminated {len(perceptions)} → "
-            f"{len(approved_verdicts)} approved, {blocked_count} blocked"
+            f"🧘 BUDDHI: Discriminated {len(perceptions)} → {len(approved_verdicts)} approved, {blocked_count} blocked"
         )
 
         return approved_verdicts
