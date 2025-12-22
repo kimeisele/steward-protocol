@@ -1,5 +1,25 @@
 # OPUS-202: Kernel Reactor Integration Patch
 
+<!-- @HARNESS
+intent: "Integrate QuantumReactor into kernel as core primitive"
+files:
+  - path: vibe_core/kernel_impl.py
+    required: true
+    rationale: "Kernel with reactor property, manifest() method, akasha_hash"
+  - path: vibe_core/reactor/__init__.py
+    required: true
+    rationale: "QuantumReactor implementation"
+tests:
+  - tests/reactor/test_kernel_manifestation.py
+wiring:
+  - pattern: "def manifest\\("
+    in: vibe_core/kernel_impl.py
+  - pattern: "_reactor"
+    in: vibe_core/kernel_impl.py
+  - pattern: "akasha_hash"
+    in: vibe_core/kernel_impl.py
+-->
+
 ## STATUS: COMPLETED (2025-12-22)
 
 This document contains the **exact surgical changes** required to integrate

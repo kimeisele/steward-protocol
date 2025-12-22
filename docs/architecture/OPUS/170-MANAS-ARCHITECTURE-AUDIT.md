@@ -227,7 +227,7 @@ LOADER COVERAGE:
 > **Last Updated:** 2025-12-22
 
 ### P0 - CRITICAL (Week 1)
-1. [ ] Create SynapseLoader (consolidate 4 duplicates) ← **STILL 4 DUPLICATES**
+1. [x] Create SynapseLoader (consolidate 4 duplicates) ← **DONE: OPUS-171 SynapseStore (vibe_core/state/synapse_store.py)**
 2. [x] Decompose intent_router.py (2376 lines → 3-4 modules) ← **DONE: 2376 → 1000 lines**
 3. [ ] Fix circular imports in cortex/*
 
