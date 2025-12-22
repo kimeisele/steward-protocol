@@ -481,14 +481,22 @@ class Prakriti:
         """Start a new session (called on kernel boot).
 
         Implements Ghost Lock Protocol for stale lock detection.
-
-        Returns:
-            KernelSessionContext for this session
+        (ADR-204: Supports bypass via VIBE_NO_LOCK for recursive test cycles)
         """
         # Ensure .prakriti directory exists
         self._prakriti_dir.mkdir(parents=True, exist_ok=True)
 
-        # Ghost Lock Protocol (OPUS-027 Implementation Guidelines)
+        # 🛡️ SOVEREIGN BYPASS: Don't lock if we are in a sub-kernel/test cycle
+        if os.environ.get("VIBE_NO_LOCK") == "1":
+            logger.info("[PRAKRITI] Test Mode: Bypassing session lock.")
+            self.session = KernelSessionContext(
+                session_id=f"test-{str(uuid.uuid4())[:4]}",
+                boot_time=time.time(),
+                boot_commit="0000000",
+            )
+            return self.session
+
+        # Ghost Lock Protocol
         lock_file = self._prakriti_dir / "session.lock"
         if lock_file.exists():
             try:

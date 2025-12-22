@@ -6,7 +6,7 @@
     "description": "Enforces the Law of the Land (integrity checks) at boot",
     "entry_point": "plugin_main.py",
     "entry_class": "IntegrityGuardPlugin",
-    "priority": -100,
+    "priority": 0,
     "enabled": true,
     "hooks": [
         "on_boot"
