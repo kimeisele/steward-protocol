@@ -1,0 +1,47 @@
+{
+  "timestamp": 1766390739.4714544,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/improve-code-quality-2ivho",
+    "sha": "298069c",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 1.468554973602295,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 13
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "36e36b93",
+    "boot_time": 1766390738.2242248,
+    "commit_count": 0
+  }
+}
