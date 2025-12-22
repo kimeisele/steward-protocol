@@ -51,9 +51,8 @@ tests:
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -209,23 +208,12 @@ class NadiSense(BaseSense):
         """Get reference to the global EventBus."""
         if self._event_bus is None:
             try:
-                # Try to get from kernel
-                from vibe_core.kernel_impl import get_kernel
+                # OPUS-175: Use get_event_bus() instead of kernel import
+                from vibe_core.event_bus import get_event_bus
 
-                kernel = get_kernel()
-                if kernel and hasattr(kernel, "_event_bus"):
-                    self._event_bus = kernel._event_bus
+                self._event_bus = get_event_bus()
             except Exception:
                 pass
-
-            if self._event_bus is None:
-                # Try to import global instance
-                try:
-                    from vibe_core.event_bus import _global_bus
-
-                    self._event_bus = _global_bus
-                except Exception:
-                    pass
 
         return self._event_bus
 
