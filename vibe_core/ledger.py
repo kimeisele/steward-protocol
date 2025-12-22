@@ -48,6 +48,28 @@ _db_locks: Dict[str, threading.Lock] = {}
 _db_locks_lock = threading.Lock()
 
 
+class ArchiveAttachment:
+    """OPUS-208 Phase 2.2: Context manager for temporary SQLite database attachment.
+    Ensures that attached databases are detached even if queries fail,
+    respecting the SQLITE_MAX_ATTACHED limit.
+    """
+
+    def __init__(self, connection: sqlite3.Connection, db_path: str, alias: str):
+        self.connection = connection
+        self.db_path = db_path
+        self.alias = alias
+
+    def __enter__(self):
+        self.connection.execute(f"ATTACH DATABASE '{self.db_path}' AS {self.alias}")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self.connection.execute(f"DETACH DATABASE {self.alias}")
+        except sqlite3.Error:
+            pass
+
+
 class InMemoryLedger(VibeLedger):
     """Immutable Event Ledger - Append-only task record"""
 
@@ -134,12 +156,12 @@ class InMemoryLedger(VibeLedger):
         return len(self.events)
 
 
-def _get_db_lock(db_path: str) -> threading.Lock:
+def _get_db_lock(db_path: str) -> threading.RLock:
     """Get or create a lock for a specific database file."""
     abs_path = os.path.abspath(db_path)
     with _db_locks_lock:
         if abs_path not in _db_locks:
-            _db_locks[abs_path] = threading.Lock()
+            _db_locks[abs_path] = threading.RLock()
         return _db_locks[abs_path]
 
 
@@ -170,6 +192,13 @@ class SQLiteLedger(VibeLedger):
         self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
 
+        # OPUS-208 Phase 1: WAL Mode (Concurrency)
+        try:
+            self.connection.execute("PRAGMA journal_mode=WAL;")
+            self.connection.execute("PRAGMA synchronous=NORMAL;")
+        except sqlite3.Error as e:
+            logger.warning(f"⚠️ Failed to set WAL mode: {e}")
+
         # Create table if not exists
         cursor = self.connection.cursor()
         cursor.execute(
@@ -192,6 +221,23 @@ class SQLiteLedger(VibeLedger):
             )
         """
         )
+
+        # OPUS-208 Phase 1: Meta table for persistent anchors
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ledger_meta (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """
+        )
+
+        # OPUS-208 Phase 1: Performance Indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ledger_event_type ON ledger_events(event_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ledger_agent_id ON ledger_events(agent_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ledger_task_id ON ledger_events(task_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ledger_timestamp ON ledger_events(timestamp)")
+
         self.connection.commit()
 
         # P1 MIGRATION: Add agent_signature column if missing (for existing DBs)
@@ -209,7 +255,7 @@ class SQLiteLedger(VibeLedger):
         else:
             logger.warning("⚠️ Ledger signing DISABLED - steward/crypto.py not available")
 
-        logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
+        logger.info(f"💾 SQLite ledger initialized at {self.db_path} (WAL Mode)")
         logger.info("⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
 
     def _migrate_add_signature_column(self) -> None:
@@ -443,24 +489,103 @@ class SQLiteLedger(VibeLedger):
 
     def get_all_events(self) -> List[Dict[str, Any]]:
         """Return all ledger events in order with parsed details"""
+        return self.get_events(limit=-1, include_archives=False)
+
+    def get_events(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        event_type: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        task_id: Optional[str] = None,
+        include_archives: bool = False
+    ) -> List[Dict[str, Any]]:
+        """OPUS-208 Phase 2.2: Unified Ledger Query.
+        Transparently queries hot DB and (optionally) archives using dynamic ATTACH.
+        """
         if not self.connection:
             return []
 
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM ledger_events ORDER BY id ASC")
-        rows = cursor.fetchall()
+        # 1. Build Query for Hot DB
+        query = "SELECT * FROM ledger_events WHERE 1=1"
+        params = []
 
-        events = []
+        if start_date:
+            query += " AND timestamp >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND timestamp <= ?"
+            params.append(end_date)
+        if event_type:
+            query += " AND event_type = ?"
+            params.append(event_type)
+        if agent_id:
+            query += " AND agent_id = ?"
+            params.append(agent_id)
+        if task_id:
+            query += " AND task_id = ?"
+            params.append(task_id)
+
+        # 2. Query Hot DB
+        final_query = f"{query} ORDER BY timestamp DESC"
+        if limit > 0:
+            final_query += f" LIMIT {limit} OFFSET {offset}"
+
+        cursor = self.connection.cursor()
+        cursor.execute(final_query, params)
+        hot_results = [dict(row) for row in cursor.fetchall()]
+
+        # 3. If we have enough results and don't need archives, stop here
+        if not include_archives or (limit > 0 and len(hot_results) >= limit):
+            return self._parse_results(hot_results)
+
+        # 4. Search Archives (sequentially to respect ATTACH limits)
+        all_results = hot_results
+        archives = self._list_archives()
+
+        for archive_path in archives:
+            if limit > 0 and len(all_results) >= limit:
+                break
+
+            archive_alias = f"archive_{int(time.time() * 1000)}"
+            try:
+                with ArchiveAttachment(self.connection, archive_path, archive_alias):
+                    archive_query = final_query.replace("ledger_events", f"{archive_alias}.ledger_events")
+                    cursor.execute(archive_query, params)
+                    archive_results = [dict(row) for row in cursor.fetchall()]
+                    all_results.extend(archive_results)
+            except sqlite3.Error as e:
+                logger.error(f"⚠️ Failed to query archive {archive_path}: {e}")
+
+        # Final sort (since we queried DBs separately)
+        all_results.sort(key=lambda x: x['timestamp'], reverse=True)
+        if limit > 0:
+            all_results = all_results[:limit]
+
+        return self._parse_results(all_results)
+
+    def _parse_results(self, rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Parse JSON details in result rows."""
         for row in rows:
-            event = dict(row)
-            # Parse payload JSON and set as details for consistency with InMemoryLedger
-            if event.get("payload") and event.get("details") is None:
+            if row.get("payload") and row.get("details") is None:
                 try:
-                    event["details"] = json.loads(event["payload"])
+                    row["details"] = json.loads(row["payload"])
                 except (json.JSONDecodeError, TypeError):
                     pass
-            events.append(event)
-        return events
+        return rows
+
+    def _list_archives(self) -> List[str]:
+        """List all archive database files sorted by newest first."""
+        archive_dir = os.path.join(os.path.dirname(self.db_path), "ledger", "archive")
+        if not os.path.exists(archive_dir):
+            return []
+
+        # Sort by filename (which contains timestamp) descending
+        files = [f for f in os.listdir(archive_dir) if f.endswith(".db")]
+        files.sort(reverse=True)
+        return [os.path.join(archive_dir, f) for f in files]
 
     def verify_chain_integrity(self) -> Dict[str, Any]:
         """Verify the hash chain is intact (tamper detection)"""
@@ -552,6 +677,54 @@ class SQLiteLedger(VibeLedger):
         cursor = self.connection.cursor()
         row = cursor.execute("SELECT COUNT(*) FROM ledger_events").fetchone()
         return row[0] if row else 0
+
+    def get_events_since(self, last_id: int) -> List[Dict[str, Any]]:
+        """OPUS-208: Efficiently fetch only new events since checkpoint."""
+        if not self.connection:
+            return []
+
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM ledger_events WHERE id > ? ORDER BY id ASC", (last_id,))
+        rows = cursor.fetchall()
+
+        events = []
+        for row in rows:
+            event = dict(row)
+            if event.get("payload") and event.get("details") is None:
+                try:
+                    event["details"] = json.loads(event["payload"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            events.append(event)
+        return events
+
+    def get_meta(self, key: str) -> Optional[Any]:
+        """OPUS-208: Retrieve persistent meta value (e.g. trust anchor)."""
+        if not self.connection:
+            return None
+        cursor = self.connection.cursor()
+        row = cursor.execute("SELECT value FROM ledger_meta WHERE key = ?", (key,)).fetchone()
+        if row:
+            try:
+                return json.loads(row[0])
+            except json.JSONDecodeError:
+                return row[0]
+        return None
+
+    def set_meta(self, key: str, value: Any) -> None:
+        """OPUS-208: Store persistent meta value."""
+        if not self.connection:
+            return
+        # Serialize complex types
+        if isinstance(value, (dict, list, tuple)):
+            value = json.dumps(value)
+
+        with self._write_lock:
+            self.connection.execute(
+                "INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)",
+                (key, str(value))
+            )
+            self.connection.commit()
 
     def close(self) -> None:
         """Close database connection"""
