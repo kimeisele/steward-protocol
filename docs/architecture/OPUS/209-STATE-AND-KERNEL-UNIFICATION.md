@@ -864,10 +864,10 @@ class ProcessIsolationPlugin(KernelPlugin):
 **Requires**: Senior review + coordinated hash update
 
 Changes to `kernel_impl.py`:
-- Remove 21 direct instantiations
+- Remove remaining direct instantiations
 - Accept dependencies via `__init__`
-- Reduce `register_agent` from 143 lines to 20 lines
-- Target: ≤1008 LOC
+- Reduce `register_agent` from 143 lines to ~30 lines
+- Target: See realistic LOC targets below
 
 ---
 
@@ -884,13 +884,19 @@ Changes to `kernel_impl.py`:
 
 ### Kernel Metrics
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Lines of Code | 2062 | ≤1008 |
-| Direct Instantiations | 21 | 0 |
-| Methods | 68 | ≤25 |
-| Concrete Imports | 15+ | 0 |
-| Cartridge Imports | 3 | 0 |
+| Metric | Start | Phase 2 Done | Realistic Target | Aspirational |
+|--------|-------|--------------|------------------|--------------|
+| Lines of Code | 2062 | 2081 | **≤1400** | ≤1200 |
+| Direct Instantiations | 21 | 17 | **0** | 0 |
+| Methods | 68 | 68 | **≤40** | ≤30 |
+| Concrete Imports | 15+ | 12 | **≤5** | 0 |
+| Cartridge Imports | 3 | 0 ✅ | **0** | 0 |
+
+> **Note on "1008 LOC"**: The original target of 1008 (Vishnu's 1008 Names) was
+> symbolic/aspirational. A realistic kernel minimum is ~800-1000 LOC for core
+> functionality (event loop, agent registry, task queue, plugin lifecycle).
+> **≤1400 LOC is the realistic target** that balances clean architecture with
+> practical constraints.
 
 ### State Metrics
 
