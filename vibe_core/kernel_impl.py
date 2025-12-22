@@ -268,6 +268,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
         self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
 
+        # Phase 18: Network Gateway (Sangha)
+        # OPUS-209: Extracted to sangha_network plugin
+        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
+        self.gateway = None  # Set by SanghaNetworkPlugin
+        self._gateway_thread = None
+        self._gateway_loop = None
+
         # Markdown UI Manager (Centralized UI Coordination)
         # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
         # logger.info("🖥️  Markdown UI Manager initialized")
@@ -415,13 +422,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             self._plugins = []
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
-        # Phase 18: Network Gateway (Sangha)
-        # OPUS-209: Extracted to sangha_network plugin
-        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
-        # Plugin sets kernel.gateway = <instance> during boot
-        self.gateway = None  # Set by SanghaNetworkPlugin
-        self._gateway_thread = None
-        self._gateway_loop = None
+        # =====================================================================
 
         # =====================================================================
         # VAJRA ARMOR: Seal the kernel DNA (PUTANA BLOCKED!)

@@ -1,0 +1,14 @@
+{
+    "id": "resource_limits",
+    "name": "Resource Limits",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "CRITICAL - Resource Quota Management as a Service",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 5
+}
