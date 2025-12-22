@@ -1850,8 +1850,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._status = KernelStatus.RUNNING
         logger.info("✅ KERNEL RUNNING (ASYNC)")
 
-        # OPUS-009: Prakriti Activation
-        self.prakriti.inject_kernel(self)
+        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
         try:
             self.prakriti.begin_session()
             self.prakriti.sync_ledger_git(strategy="git_wins")
@@ -1860,7 +1859,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         except Exception as e:
             logger.error(f"❌ Prakriti Boot Failure: {e}")
 
-        # PULSE: Write initial snapshot
+        # 🍎 ASYNC PERSISTENCE (ADR-204)
+        try:
+            from vibe_core.state.state_service import get_state_service
+            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
+            ss.start_background_worker()
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to start background persistence: {e}")
+
+        # PULSE: Write initial snapshot on boot
         self._pulse()
 
         # Phase 18: Gateway as Task (instead of Thread)
@@ -1995,6 +2002,16 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 self.prakriti.end_session()
         except Exception as e:
             logger.error(f"❌ State preservation failed: {e}")
+
+        # 🍎 ASYNC PERSISTENCE CLEANUP (ADR-204)
+        try:
+            from vibe_core.state.state_service import get_state_service
+            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
+            if ss._worker_task:
+                ss._worker_task.cancel()
+                logger.info("🛑 StateService: Background scribe stopped.")
+        except Exception:
+            pass
 
         # Plugin Hook
         for plugin in self._plugins:

@@ -78,6 +78,10 @@ class AgentSystemInterface:
 
         self.vfs = VirtualFileSystem(agent_id)
 
+        # 🍎 STATE: Namespaced state service (ADR-204)
+        from vibe_core.state.state_service import get_state_service
+        self.state = get_state_service(agent_id=agent_id)
+
         # Config: Agent-specific configuration
         # Access via kernel's CityConfig.agents.{agent_id}
         self.config = self._get_agent_config()

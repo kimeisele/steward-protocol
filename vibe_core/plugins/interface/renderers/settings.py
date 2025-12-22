@@ -61,12 +61,27 @@ class SettingsRenderer(BaseRenderer):
     # =========================================================================
 
     def _get_current_config(self) -> List[Dict[str, Any]]:
-        """Get current kernel configuration."""
+        """Get current kernel configuration dynamically."""
+        # Fetch from kernel config
+        config = self.kernel.config
+        
+        # Determine current values (with safe fallbacks)
+        log_level = logging.getLevelName(logging.getLogger("VIBE_KERNEL").getEffectiveLevel())
+        verbose = getattr(self.kernel, "_verbose", False)
+        provider = "unknown"
+        mode = "simulation"
+        
+        if config:
+            if hasattr(config, "llm"):
+                provider = getattr(config.llm, "provider", provider)
+            if hasattr(config, "runtime"):
+                mode = getattr(config.runtime, "mode", mode)
+
         return [
-            {"Setting": "`kernel.log_level`", "Value": "`INFO`", "Description": "Logging verbosity"},
-            {"Setting": "`kernel.verbose`", "Value": "`False`", "Description": "Verbose mode"},
-            {"Setting": "`provider`", "Value": "`openai`", "Description": "LLM Provider"},
-            {"Setting": "`mode`", "Value": "`simulation`", "Description": "Execution Mode"},
+            {"Setting": "`kernel.log_level`", "Value": f"`{log_level}`", "Description": "Logging verbosity"},
+            {"Setting": "`kernel.verbose`", "Value": f"`{verbose}`", "Description": "Verbose mode"},
+            {"Setting": "`provider`", "Value": f"`{provider}`", "Description": "LLM Provider"},
+            {"Setting": "`mode`", "Value": f"`{mode}`", "Description": "Execution Mode"},
         ]
 
     def _get_agent_registry(self) -> List[Dict[str, Any]]:
@@ -191,20 +206,20 @@ class SettingsRenderer(BaseRenderer):
         """Generate SETTINGS.md content (fallback if no config sections)."""
         lines = ["# SYSTEM SETTINGS", ""]
 
-        # Kernel Config
+        # Kernel Config (Dynamic)
+        current_conf = self._get_current_config()
         lines.extend(
             [
                 "## Kernel Configuration",
                 "",
                 "| Setting | Value | Description |",
                 "| :--- | :--- | :--- |",
-                "| `kernel.log_level` | `INFO` | Logging verbosity |",
-                "| `kernel.verbose` | `False` | Verbose mode |",
-                "| `provider` | `openai` | LLM Provider |",
-                "| `mode` | `simulation` | Execution Mode |",
-                "",
             ]
         )
+        for entry in current_conf:
+            lines.append(f"| {entry['Setting']} | {entry['Value']} | {entry['Description']} |")
+        
+        lines.append("")
 
         # Agent Registry
         agents = self.kernel.agent_registry if hasattr(self.kernel, "agent_registry") else {}

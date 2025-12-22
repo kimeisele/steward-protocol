@@ -330,7 +330,7 @@ class VivekaDecisionLogger:
 
     def _save_entries(self, entries: List[Dict[str, Any]]) -> None:
         """Save entries to disk via StateService (P0)."""
-        state = get_state_service(self._workspace)
+        state = get_state_service(self._workspace, plugin_id="opus_assistant")
         state.save("viveka_decisions.json", entries)
 
     def get_recent(self, limit: int = 20) -> List[Dict[str, Any]]:
@@ -1251,7 +1251,7 @@ class VivekaAction(BaseAction):
         }
 
         try:
-            state = get_state_service(self._workspace)
+            state = get_state_service(self._workspace, plugin_id="opus_assistant")
             state.save("last_reinforcement.json", tracking_data, create_backup=False)
         except Exception as e:
             logger.debug(f"Failed to track reinforcement: {e}")
@@ -1418,7 +1418,7 @@ class VivekaAction(BaseAction):
 
             if matrix.get("mantras"):
                 # Save matrix via StateService
-                state = get_state_service(self._workspace)
+                state = get_state_service(self._workspace, plugin_id="opus_assistant")
                 state.save("sanskrit_matrix.json", matrix)
 
                 # Log compression stats
@@ -1666,5 +1666,5 @@ class VivekaAction(BaseAction):
 
     def _save_karma_log(self, karma_log: Dict[str, Any]) -> None:
         """Save karma log to disk via StateService (P0)."""
-        state = get_state_service(self._workspace)
+        state = get_state_service(self._workspace, plugin_id="opus_assistant")
         state.save("karma_log.json", karma_log)

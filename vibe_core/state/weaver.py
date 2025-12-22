@@ -11,7 +11,7 @@ It unifies the previously independent commit mechanisms:
 5. ManasOracle - Cognitive layer wisdom interface
 
 The Weaver Pattern:
-    DISCOVER → CLASSIFY → CONSULT → DECIDE → EXECUTE → LEARN
+    DISCOVER → CLASSIFY → DECIDE → EXECUTE
 
 Design Philosophy:
     "The Weaver doesn't create the threads - it reveals the fabric that was always there."
@@ -116,7 +116,7 @@ class StateSyncWeaver:
     Meta-orchestration layer for unified state synchronization.
 
     Implements the Weaver Pattern:
-        DISCOVER → CLASSIFY → CONSULT → DECIDE → EXECUTE → LEARN
+        DISCOVER → CLASSIFY → DECIDE → EXECUTE
 
     Usage:
         weaver = StateSyncWeaver(prakriti)
@@ -147,7 +147,7 @@ class StateSyncWeaver:
         Args:
             prakriti: The core state engine
             sync_holon: Plugin state discovery (optional, uses prakriti's if not provided)
-            manas_oracle: MANAS cognitive interface (optional, falls back to rules)
+            manas_oracle: MANAS cognitive interface (Oracle API)
         """
         self.prakriti = prakriti
         self.sync_holon = sync_holon or getattr(prakriti, "sync_holon", None)
@@ -162,22 +162,26 @@ class StateSyncWeaver:
     def pulse(self) -> CommitResult:
         """
         Run one weave cycle.
+        (Sovereign Intelligence Mode)
         """
         import os
         if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return CommitResult(git_sha="0000000", message="Git disabled (Shunyata)", success=True)
 
-        with self._lock:
+        with self._commit_lock:
             # 1. Discover
             state_map = self._discover_all_state()
 
             # 2. Classify
             classified = self._classify_state(state_map)
 
-            # 3. Decide (reflex mode - no MANAS)
-            plan = self._decide_commit_strategy(classified, WeavingAdvice(mode=WeaverMode.REFLEX))
+            # 3. Consult Oracle (Non-blocking)
+            advice = self._consult_oracle(classified)
 
-            # 4. Execute if needed
+            # 4. Decide (incorporating Oracle advice if safe)
+            plan = self._decide_commit_strategy(classified, advice)
+
+            # 5. Execute if needed
             if plan.strategy == CommitStrategy.SKIP:
                 return CommitResult(success=True, message="Nothing to commit")
 
@@ -186,57 +190,74 @@ class StateSyncWeaver:
     def on_session_end(self) -> CommitResult:
         """
         Session boundary integration - Called when session ends.
-
-        This commits ALL dirty state before session exit.
-        May use ORACLE mode for complex decisions.
         """
         with self._commit_lock:
-            # 1. Discover
             state_map = self._discover_all_state()
-
-            # 2. Classify
             classified = self._classify_state(state_map)
 
-            # 3. Consult MANAS (if available and needed)
-            advice = self._consult_manas(classified)
-
-            # 4. Decide
+            # Session end always uses Oracle if possible
+            advice = self._consult_oracle(classified)
             plan = self._decide_commit_strategy(classified, advice)
 
             # Force IMMEDIATE for session end
             if plan.strategy != CommitStrategy.SKIP:
                 plan.strategy = CommitStrategy.IMMEDIATE
 
-            # 5. Execute
             result = self._execute_commit(plan)
-
-            # 6. Learn (feed back to MANAS)
-            self._post_commit_learning(result)
-
             return result
 
     def weave(self) -> CommitResult:
         """
-        Full weaving cycle with MANAS consultation.
-
-        Used for complex state decisions (architecture changes, conflicts).
+        Full weaving cycle with cognitive intelligence.
         """
         with self._commit_lock:
             state_map = self._discover_all_state()
             classified = self._classify_state(state_map)
-            advice = self._consult_manas(classified)
+            advice = self._consult_oracle(classified)
             plan = self._decide_commit_strategy(classified, advice)
 
             if plan.strategy == CommitStrategy.SKIP:
                 return CommitResult(success=True, message="Nothing to commit")
 
             result = self._execute_commit(plan)
-            self._post_commit_learning(result)
             return result
 
     # =========================================================================
     # INTERNAL METHODS (The Weaver Pattern)
     # =========================================================================
+
+    def _consult_oracle(self, classified: ClassifiedState) -> WeavingAdvice:
+        """
+        Phase 3: CONSULT - Non-blocking intelligence ingestion.
+        """
+        advice = WeavingAdvice(mode=WeaverMode.REFLEX)
+
+        if not self.manas_oracle:
+            return advice
+
+        try:
+            # Use non-blocking consult from MANAS Oracle API
+            oracle_context = {
+                "task_title": "State Persistence Pulse",
+                "task_type": "maintenance",
+                "risk_level": "low",
+                "changes": [str(info.path) for info in classified.rajas],
+                "is_automated": True,
+            }
+
+            # Oracle consult is fast/cached by design (see docs/MANAS_ORACLE_API.md)
+            result = self.manas_oracle.consult(oracle_context)
+
+            advice.mode = WeaverMode.ORACLE
+            advice.patterns.append(f"Oracle advice: {result.advice}")
+            if hasattr(result, "priority_paths"):
+                advice.priority_paths = result.priority_paths
+
+        except Exception as e:
+            # Oracle failure never blocks the State
+            advice.patterns.append(f"Oracle silent: {e}")
+
+        return advice
 
     def _discover_all_state(self) -> WeaverStateMap:
         """
@@ -245,7 +266,6 @@ class StateSyncWeaver:
         Unified discovery across all sources:
         - StateSyncHolon discovered plugins
         - RuntimeStateDefinition patterns
-        - Git dirty files
         """
         state_map = WeaverStateMap()
 
@@ -262,10 +282,9 @@ class StateSyncWeaver:
                     for info in infos
                 ]
 
-        # 2. Runtime files from git
-        if hasattr(self.prakriti, "git"):
-            runtime_files = self.prakriti.git.get_dirty_runtime_files()
-            state_map.runtime_files = runtime_files
+        # 2. Runtime files (REMOVED: Slow git scanning)
+        # OPUS-204: Trust StateService.mark_dirty() instead of calling git diff on every pulse
+        state_map.runtime_files = []
 
         # 3. Session state
         if hasattr(self.prakriti, "session") and self.prakriti.session:
@@ -274,15 +293,18 @@ class StateSyncWeaver:
                 "start_time": str(self.prakriti.session.start_time),
             }
 
-        # 4. P0: StateService dirty files (MANAS state writes)
+        # 4. P0: StateService dirty files (Direct Push model)
         try:
             state_service = get_state_service(self.workspace)
             dirty_files = state_service.get_dirty_files()
             for path in dirty_files:
                 # Add to runtime_files if not already tracked
-                rel_path = str(path.relative_to(self.workspace))
-                if rel_path not in state_map.runtime_files:
-                    state_map.runtime_files.append(rel_path)
+                try:
+                    rel_path = str(path.relative_to(self.workspace))
+                    if rel_path not in state_map.runtime_files:
+                        state_map.runtime_files.append(rel_path)
+                except ValueError:
+                    continue
         except Exception:
             pass  # StateService not initialized yet
 
@@ -329,49 +351,6 @@ class StateSyncWeaver:
 
         return classified
 
-    def _consult_manas(self, classified: ClassifiedState) -> WeavingAdvice:
-        """
-        Phase 3: CONSULT - What does MANAS think?
-
-        OPUS-096: Ask MANAS for cognitive weaving.
-
-        Heuristic:
-        - If MANAS has pending intents (busy/deep think) → DEFERRED
-        - If MANAS is idle → IMMEDIATE
-        - If MANAS unavailable → REFLEX mode (rules-based)
-        """
-        advice = WeavingAdvice()
-
-        # Try to consult MANAS if available
-        if self.manas_oracle:
-            try:
-                # Check if MANAS has pending intents (is busy)
-                kernel = getattr(self.manas_oracle, "kernel", None)
-                if kernel and hasattr(kernel, "get_pending_intents"):
-                    pending = kernel.get_pending_intents()
-                    if len(pending) > 0:
-                        # MANAS is busy - defer commit to avoid disruption
-                        advice.mode = WeaverMode.ORACLE
-                        advice.patterns.append(f"MANAS busy: {len(pending)} pending intents")
-                        advice.healing_suggestions.append("Consider deferring commit until MANAS completes")
-                    else:
-                        # MANAS is idle - immediate commit OK
-                        advice.mode = WeaverMode.REFLEX
-                        advice.patterns.append("MANAS idle: immediate commit safe")
-            except Exception as e:
-                # MANAS consultation failed - use reflex mode
-                advice.patterns.append(f"MANAS consultation failed: {e}")
-
-        # For complex state (>5 dirty files), switch to ORACLE mode
-        if len(classified.rajas) > 5:
-            advice.mode = WeaverMode.ORACLE
-            advice.patterns.append(f"Complex state: {len(classified.rajas)} dirty files")
-
-        # Default: prioritize by path (alphabetical for determinism)
-        advice.priority_paths = sorted([info.path for info in classified.rajas])
-
-        return advice
-
     def _decide_commit_strategy(self, classified: ClassifiedState, advice: WeavingAdvice) -> CommitPlan:
         """
         Phase 4: DECIDE - What to do?
@@ -396,10 +375,7 @@ class StateSyncWeaver:
 
     def _execute_commit(self, plan: CommitPlan) -> CommitResult:
         """
-        Phase 5: EXECUTE - Do it!
-
-        Execute via Prakriti.commit_if_dirty().
-        Uses no_verify for runtime state.
+        Phase 5: EXECUTE - Do it! (Sovereign Mode)
         """
         if plan.strategy == CommitStrategy.SKIP:
             return CommitResult(success=True, message="Skipped")
@@ -407,8 +383,6 @@ class StateSyncWeaver:
         try:
             # Stage and commit via Prakriti
             if hasattr(self.prakriti, "commit_if_dirty"):
-                # OPUS-167 FIX: Only stage runtime files from plan.paths, NOT "*"!
-                # The bug was staging ALL dirty files instead of just runtime state
                 runtime_patterns = [str(p) for p in plan.paths] if plan.paths else []
 
                 if not runtime_patterns:
@@ -427,11 +401,11 @@ class StateSyncWeaver:
                         state_service = get_state_service(self.workspace)
                         state_service.clear_dirty_flags()
                     except Exception:
-                        pass  # Non-critical
+                        pass
 
                     return CommitResult(
                         success=True,
-                        sha=result.sha if hasattr(result, "sha") else None,
+                        sha=result.git_sha if hasattr(result, "git_sha") else None,
                         message=plan.message,
                         paths_committed=plan.paths,
                     )
@@ -451,21 +425,6 @@ class StateSyncWeaver:
                 success=False,
                 error=str(e),
             )
-
-    def _post_commit_learning(self, result: CommitResult) -> None:
-        """
-        Phase 6: LEARN - Improve!
-
-        Feed back to MANAS via Oracle.post_analysis().
-        """
-        if self.manas_oracle and hasattr(self.manas_oracle, "post_analysis"):
-            # TODO: Actual MANAS learning
-            # self.manas_oracle.post_analysis({
-            #     "success": result.success,
-            #     "paths": result.paths_committed,
-            #     "error": result.error,
-            # })
-            pass
 
 
 # =========================================================================
