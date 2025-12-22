@@ -1244,7 +1244,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             "agents_registered": len(self._agent_registry),
             "scheduler": self._scheduler.get_queue_status(),
             "manifests": len(self._manifest_registry.list_all()),
-            "ledger_events": len(self._ledger.get_all_events()),
+            "ledger": {
+                "events": self._ledger.count_events(),
+                "top_hash": self._ledger.get_top_hash(),
+            },
             "total_credits": total_credits,
         }
 
