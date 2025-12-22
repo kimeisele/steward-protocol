@@ -1,0 +1,14 @@
+{
+    "id": "sangha_network",
+    "name": "Sangha Network",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "Network Gateway as a Service - HTTP REST API for VibeOS",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 5
+}

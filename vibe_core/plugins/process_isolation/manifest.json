@@ -1,0 +1,14 @@
+{
+    "id": "process_isolation",
+    "name": "Process Isolation",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "CRITICAL - Agent Process Management as a Service",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 5
+}
