@@ -215,8 +215,6 @@ class AkashaSense(BaseSense):
         # Import here to avoid circular imports
         from vibe_core.plugins.opus_assistant.manas.intent_generator import (
             Intent,
-            IntentPriority,
-            IntentRisk,
         )
 
         intents: List[Intent] = []

@@ -25,7 +25,7 @@ KEY DESIGN:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent

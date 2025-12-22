@@ -29,7 +29,6 @@ Usage:
         print(f"  Recommendation: {finding.recommendation}")
 """
 
-import ast
 import logging
 import re
 from dataclasses import dataclass, field
@@ -42,7 +41,6 @@ from .akshara import (
     VARGA_LAYERS,
     Varga,
     extract_opus_doc_number,
-    get_path_layer,
     map_opus_doc_to_varga,
     map_path_to_varga,
 )

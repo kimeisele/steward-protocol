@@ -30,16 +30,14 @@ Usage:
     print(f"Advice: {recommendation.advice}")
 """
 
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .cognitive_kernel import CognitiveKernel, IntentConfidence, ManasConfig
-from .intent_generator import Intent, IntentPriority, IntentRisk
-from .memory_store import MemoryStore
+from .cognitive_kernel import CognitiveKernel, ManasConfig
+from .intent_generator import IntentPriority
 
 logger = logging.getLogger("MANAS.Oracle")
 

@@ -44,7 +44,6 @@ from .silpa import (
     RefactorType,
     SilpaArchitect,
     SilpaAuditor,
-    SilpaPlan,
     SilpaRefactoring,
     SilpaResult,
 )

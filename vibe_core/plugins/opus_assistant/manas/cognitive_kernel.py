@@ -22,7 +22,7 @@ import hashlib
 import json
 import logging
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
@@ -34,14 +34,16 @@ from vibe_core.event_bus import EventBus
 from vibe_core.loaders import ActionLoader, AnalyzerLoader, BridgeLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
-from vibe_core.state import get_state_service  # P0: StateService
 
 # OPUS-167: Action Manager Extraction (Karmendriya)
 from .action_manager import ActionManager
-from .buddhi import Buddhi, BuddhiVerdict
+
+# OPUS-176: Biorhythm Processor - Extracted consciousness tick logic
+from .biorhythm import BiorhythmProcessor
+from .buddhi import Buddhi
 
 # OPUS-168: Antahkarana - The Inner Instrument
-from .chitta import Chitta, PerceptionEntry
+from .chitta import Chitta
 
 # OPUS-167: Intent Buffer Extraction
 from .intent_buffer import IntentBuffer, IntentBufferEntry
@@ -57,13 +59,12 @@ if TYPE_CHECKING:
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
     from vibe_core.tools.tool_registry import ToolRegistry
 
-    from .cortex.dharma_sense import DharmaSense, DharmaSummary
-    from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
+    from .cortex.dharma_sense import DharmaSense
     from .cortex.karma_sense import KarmaSense
-    from .cortex.prakriti_sense import GunaSummary, PrakritiSense
-    from .cortex.prana_sense import PranaPerception, PranaSense
+    from .cortex.prakriti_sense import PrakritiSense
+    from .cortex.prana_sense import PranaSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
-    from .cortex.sutra_sense import SutraSense, SutraSummary
+    from .cortex.sutra_sense import SutraSense
     from .cortex.viveka_sense import VivekaSense
 
 logger = logging.getLogger("MANAS.Kernel")
@@ -478,7 +479,13 @@ class CognitiveKernel(CognitiveCycle):
         # Inject dependencies that are initialized lazily
         self._action_manager.inject_narasimha(self._narasimha)
 
-        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference + Karmendriya)")
+        # OPUS-176: Biorhythm Processor - handles tick(), consciousness states
+        self._biorhythm = BiorhythmProcessor(kernel=self)
+        self._awareness: Dict[str, Any] = {}  # Shared with biorhythm
+
+        logger.info(
+            "MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference + Karmendriya + Biorhythm)"
+        )
 
     # =========================================================================
     # 🧠 SEMANTIC ENGINE: INTELLIGENCE UPGRADE (OPUS-096)
@@ -1786,268 +1793,23 @@ class CognitiveKernel(CognitiveCycle):
 
     def tick(self) -> Dict[str, Any]:
         """
-        MANAS Biorhythm tick - runs every KERNEL_TICK (~3s).
-
-        OPUS-174: NOT binary. A SPECTRUM of consciousness.
-
-        Computes consciousness_level from:
-        - Synaptic urgency (0.5 weight) - REQUIRED
-        - Prakriti health (0.3 weight) - REQUIRED
-        - Kala rhythm (0.2 weight) - OPTIONAL
-
-        Dispatches to tiered behavior:
-        - Tamas (0.0-0.2): Hibernate - heartbeat only
-        - Rajas (0.2-0.5): React - quick perception, respond to triggers
-        - Sattva (0.5-0.8): Reflect - organize buffer, reinforce synapses
-        - Turiya (0.8-1.0): Deep think - full OODA loop
+        MANAS Biorhythm tick - delegated to BiorhythmProcessor (OPUS-176).
 
         Returns:
             Dict with state, consciousness_level, and should_think
         """
-        now = datetime.utcnow()
-
-        # Initialize tick state if not exists
-        if not hasattr(self, "_tick_count"):
-            self._tick_count = 0
-            self._ticks_since_turiya = 0
-            self._consciousness_level = 0.5
-            self._consciousness_state = "rajas"
-            self._awareness = {}
-
-        self._tick_count += 1
-        self._last_tick_time = now
-
-        # Compute consciousness level (every tick for responsiveness)
-        level = self._compute_consciousness_level()
-        self._consciousness_level = level
-
-        # Dispatch to appropriate behavior based on level
-        if level >= 0.8:
-            result = self._turiya_tick()
-        elif level >= 0.5:
-            result = self._sattva_tick()
-        elif level >= 0.2:
-            result = self._rajas_tick()
-        else:
-            result = self._tamas_tick()
-
-        # Update awareness (in-memory, for transparency)
-        pending_count = len(self._buffer.get_pending())
-        self._awareness = {
-            "tick": self._tick_count,
-            "consciousness_level": round(level, 3),
-            "state": result.get("state", "unknown"),
-            "inputs": {
-                "synaptic_urgency": round(getattr(self, "_cached_urgency", 0.0), 3),
-                "prakriti_health": round(getattr(self, "_cached_health", 0.5), 3),
-                "kala_rhythm": round(getattr(self, "_cached_rhythm", 0.5), 3),
-            },
-            "last_tick": now.isoformat(),
-            "pending_intents": pending_count,
-            "ticks_since_turiya": self._ticks_since_turiya,
-            "last_thought": self._last_thought_time.isoformat() if self._last_thought_time else None,
-        }
-
-        # Periodic persistence (every 20 ticks = ~60s)
-        if self._tick_count % 20 == 0:
-            self._persist_awareness()
-
-        return result
-
-    def _compute_consciousness_level(self) -> float:
-        """
-        Compute consciousness level (0.0 - 1.0) from multiple signals.
-
-        OPUS-174: This is BIORHYTHM, not polling.
-
-        Inputs:
-        - Synaptic urgency (0.5 weight) - learned patterns firing
-        - Prakriti health (0.3 weight) - system guna state
-        - Kala rhythm (0.2 weight) - cosmic time (optional)
-
-        Returns:
-            Float 0.0-1.0 representing consciousness depth
-        """
-        # 1. Synaptic urgency (REQUIRED - 0.5 weight)
-        # Compute every 10 ticks to balance performance
-        if self._tick_count % 10 == 0 or not hasattr(self, "_cached_urgency"):
-            self._cached_urgency = self._get_synaptic_urgency()
-        urgency = getattr(self, "_cached_urgency", 0.0)
-
-        # 2. Prakriti health (REQUIRED - 0.3 weight)
-        # Compute every 10 ticks
-        if self._tick_count % 10 == 0 or not hasattr(self, "_cached_health"):
-            try:
-                guna = self._prakriti_sense.perceive_state() if self._prakriti_sense else None
-                self._cached_health = guna.health_ratio if guna else 0.5
-            except Exception:
-                self._cached_health = 0.5
-        health = getattr(self, "_cached_health", 0.5)
-
-        # 3. Kala rhythm (OPTIONAL - 0.2 weight)
-        # Compute every 20 ticks (slower change)
-        if self._tick_count % 20 == 0 or not hasattr(self, "_cached_rhythm"):
-            try:
-                kala = self._kernel.get_service("kala") if hasattr(self, "_kernel") and self._kernel else None
-                if kala and hasattr(kala, "get_rhythm_intensity"):
-                    rhythms = kala.get_rhythm_intensity()
-                    self._cached_rhythm = rhythms.get("combined", 0.5)
-                else:
-                    self._cached_rhythm = 0.5  # Neutral fallback
-            except Exception:
-                self._cached_rhythm = 0.5
-        rhythm = getattr(self, "_cached_rhythm", 0.5)
-
-        # Combine with weights (diagram shows: urgency=0.5, health=0.3, rhythm=0.2)
-        level = (urgency * 0.5) + (health * 0.3) + (rhythm * 0.2)
-
-        # Clamp to valid range
-        return min(1.0, max(0.0, level))
-
-    def _tamas_tick(self) -> Dict[str, Any]:
-        """
-        Tamas state (0.0-0.2): Hibernate.
-
-        Minimal activity. Just heartbeat. Security guards only.
-        The system is resting, conserving energy.
-        """
-        self._consciousness_state = "tamas"
-        self._ticks_since_turiya += 1
-
-        return {
-            "state": "tamas",
-            "action": "heartbeat",
-            "should_think": False,
-            "consciousness_level": self._consciousness_level,
-        }
-
-    def _rajas_tick(self) -> Dict[str, Any]:
-        """
-        Rajas state (0.2-0.5): React.
-
-        Quick perception. Respond to triggers. High alertness.
-        The system is active, ready to respond.
-        """
-        self._consciousness_state = "rajas"
-        self._ticks_since_turiya += 1
-
-        # Quick check for urgent triggers that should escalate
-        urgency = getattr(self, "_cached_urgency", 0.0)
-        pending = len(self._buffer.get_pending())
-
-        # If urgency spikes, consider escalating
-        escalate = urgency >= 0.8 or pending >= 5
-
-        return {
-            "state": "rajas",
-            "action": "escalate" if escalate else "monitor",
-            "should_think": escalate,  # Only escalate to Turiya if urgent
-            "consciousness_level": self._consciousness_level,
-            "pending": pending,
-        }
-
-    def _sattva_tick(self) -> Dict[str, Any]:
-        """
-        Sattva state (0.5-0.8): Reflect.
-
-        Organize buffer. Reinforce synapses. Balanced awareness.
-        The system is reflective, organizing its thoughts.
-        """
-        self._consciousness_state = "sattva"
-        self._ticks_since_turiya += 1
-
-        # Periodic buffer organization (every 5 ticks in Sattva)
-        if self._tick_count % 5 == 0:
-            self._organize_buffer_light()
-
-        # Periodic synapse reinforcement (every 10 ticks in Sattva)
-        if self._tick_count % 10 == 0:
-            self._reinforce_recent_patterns()
-
-        return {
-            "state": "sattva",
-            "action": "reflect",
-            "should_think": False,  # Sattva reflects, doesn't deep-think
-            "consciousness_level": self._consciousness_level,
-        }
-
-    def _turiya_tick(self) -> Dict[str, Any]:
-        """
-        Turiya state (0.8-1.0): Deep Think.
-
-        Full OODA loop. All 8 senses. Intent generation.
-        Pure consciousness - the fourth state beyond waking.
-        """
-        self._consciousness_state = "turiya"
-        self._ticks_since_turiya = 0  # Reset counter
-
-        logger.info(f"🕉️ MANAS: Entering Turiya (consciousness={self._consciousness_level:.2f})")
-
-        return {
-            "state": "turiya",
-            "action": "full_ooda",
-            "should_think": True,  # Trigger full OODA
-            "consciousness_level": self._consciousness_level,
-        }
-
-    def _organize_buffer_light(self) -> None:
-        """Light buffer organization during Sattva state."""
-        try:
-            # Remove expired intents
-            expired = [e for e in self._buffer.get_all() if e.status == "pending" and self._is_intent_expired(e.intent)]
-            for entry in expired[:3]:  # Max 3 per tick to stay light
-                entry.status = "expired"
-            if expired:
-                self._buffer.save()
-        except Exception as e:
-            logger.debug(f"Light buffer organization failed: {e}")
-
-    def _reinforce_recent_patterns(self) -> None:
-        """Reinforce recent successful patterns during Sattva state."""
-        try:
-            # Get recently executed intents that succeeded
-            recent = [
-                e
-                for e in self._buffer.get_all()
-                if e.status == "executed" and e.execution_result and e.execution_result.get("success")
-            ]
-
-            # Reinforce top 2 recent successes
-            for entry in recent[:2]:
-                if hasattr(self, "_viveka_sense") and self._viveka_sense:
-                    # Light reinforcement through VivekaAction
-                    pass  # VivekaAction.reinforce is called at execution time
-        except Exception as e:
-            logger.debug(f"Pattern reinforcement failed: {e}")
-
-    def _persist_awareness(self) -> None:
-        """
-        Persist awareness state for transparency.
-
-        Called periodically (every ~60s) to update manas_awareness.json.
-        This file is read by OPUS.md template to show "MANAS is alive".
-
-        OPUS-174: Uses kernel-level StateService (Bundesstaat), not plugin-level.
-        This is cross-cutting state that needs kernel-level persistence.
-        """
-        try:
-            # Use kernel-level StateService (THE single point of truth)
-            # NOT plugin-level OpusStateManager (that's for plugin-local state)
-            from vibe_core.state.state_service import get_state_service
-
-            state_service = get_state_service(self._workspace)
-            result = state_service.save("manas_awareness.json", self._awareness, create_backup=False)
-
-            if result.success:
-                logger.debug(f"🧠 MANAS awareness persisted: {self._awareness.get('state', 'unknown')}")
-            else:
-                logger.warning(f"Failed to persist awareness: {result.error}")
-        except Exception as e:
-            logger.warning(f"Failed to persist awareness: {e}")
+        return self._biorhythm.tick()
 
     def get_awareness(self) -> Dict[str, Any]:
         """Get current awareness state (for dashboard/templates)."""
-        return getattr(self, "_awareness", {})
+        return self._biorhythm.get_awareness()
+
+    def _is_intent_expired(self, intent: Intent) -> bool:
+        """Check if intent has expired based on config."""
+        if not intent.created_at:
+            return False
+        expiry = timedelta(hours=self._config.intent_expiry_hours)
+        return datetime.utcnow() - intent.created_at > expiry
 
     def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
         """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""

@@ -13,8 +13,7 @@ Handles:
 """
 
 import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict
 
 from .base import AgentType, BaseHandler, register_handler
 

@@ -56,7 +56,7 @@ wiring:
 import ast
 import json
 import logging
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
@@ -68,7 +68,6 @@ from .base_action import ActionResult, BaseAction
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
-    from vibe_core.plugins.opus_assistant.manas.triggers import DharmicRecommendation
 
 logger = logging.getLogger("MANAS.Action.Viveka")
 
@@ -417,7 +416,6 @@ class VivekaAction(BaseAction):
             - "SHIVA_OVERRIDE": Low score but Shiva context allows
         """
         from vibe_core.plugins.opus_assistant.manas.akshara import (
-            VARGA_LAYERS,
             get_action_varga,
             get_trigger_varga,
         )

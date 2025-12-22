@@ -89,7 +89,7 @@ class TriageAnalyzer(BaseAnalyzer):
         logger.info("TriageAnalyzer: Starting discriminated analysis...")
 
         # Get VivekaSense perception
-        from ..cortex.viveka_sense import TriagePriority, VivekaSense
+        from ..cortex.viveka_sense import VivekaSense
 
         viveka = VivekaSense(workspace=self._workspace)
         report = viveka.perceive(context)

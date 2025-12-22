@@ -50,11 +50,10 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple
 
 if TYPE_CHECKING:
-    from vibe_core.task_kernel import TaskKernel, TaskKernelResult
-    from vibe_core.tools.tool_protocol import Tool
+    from vibe_core.task_kernel import TaskKernelResult
 
     from .cortex.dharma_sense import DharmaSense
     from .intent_buffer import IntentBufferEntry
