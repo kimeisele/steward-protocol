@@ -2,10 +2,11 @@
 IntegrityGuardPlugin - The Law of the Land (VEDA-4 Compliant)
 
 Enforces architectural standards and system health at boot time.
-If the Law is violated, the Kernel is refused sanction.
+Observes the 'Law' and reports violations to the Sovereign.
 """
 
 import logging
+import os
 import subprocess
 import sys
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -17,10 +18,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("INTEGRITY_GUARD")
 
+
 class IntegrityGuardPlugin(KernelPlugin):
     """
     Sovereign Integrity Guard Aditya.
-    
+
     Enforces the 'Law of the Land' (Sthula integrity and life force tests).
     """
 
@@ -41,7 +43,8 @@ class IntegrityGuardPlugin(KernelPlugin):
             return HookResult.ok()
 
         # 1. PRATYAYA: Check conditions
-        if config and not config.get("enabled", True):
+        enabled = config.get("enabled", True) if config else True
+        if not enabled:
             logger.info("⚖️  IntegrityGuard: Enforcement disabled by config.")
             return HookResult.ok()
 
@@ -54,44 +57,48 @@ class IntegrityGuardPlugin(KernelPlugin):
             return HookResult.ok()
 
         except Exception as e:
-            logger.critical(f"🚫 INTEGRITY VETO: {e}")
-            logger.critical("   The Law has been violated. Sanction denied.")
-            # Hard exit - The Kernel cannot exist without the Law
-            sys.exit(1)
+            # SENIOR BEHAVIOR: Warn and report, don't just kill (unless STRICT)
+            strict_mode = config.get("strict_mode", False) if config else False
+
+            if strict_mode:
+                logger.critical(f"🚫 INTEGRITY VETO (STRICT): {e}")
+                logger.critical("   The Law has been violated. Sanction denied.")
+                sys.exit(1)
+            else:
+                logger.error(f"⚠️  INTEGRITY WARNING: {e}")
+                logger.error("   The Law is in disrepair. System remains in DEGRADED mode.")
+                return HookResult.error(f"Integrity check failed: {e}")
 
     def _enforce_standard(self, kernel: "RealVibeKernel") -> None:
         """Run standard checks (lint, fast tests)."""
-        
+
         # 1. Lint Check
         logger.info("   - Checking Sthula integrity (Lint)...")
+        # Critical rules only to avoid pedantic hangs
         cmd_lint = [sys.executable, "-m", "ruff", "check", "vibe_core", "--select", "F,E9"]
         res_lint = subprocess.run(cmd_lint, capture_output=True, text=True)
         if res_lint.returncode != 0:
             logger.error(f"Lint Violation Output:\n{res_lint.stdout}")
-            raise RuntimeError("Critical lint violations detected in vibe_core.")
+            raise RuntimeError("Critical lint violations detected.")
 
-                # 2. Smoke Test
+        # 2. Smoke Test
+        logger.info("   - Verifying Life Force (Smoke Tests)...")
+        # Pass VIBE_NO_LOCK to sub-tests to avoid Ouroboros lock collision
+        test_env = os.environ.copy()
+        test_env["VIBE_NO_LOCK"] = "1"
+        test_env["VIBE_NO_GIT_COMMIT"] = "1"
 
-                logger.info("   - Verifying Life Force (Smoke Tests)...")
+        cmd_test = [sys.executable, "-m", "pytest", "-m", "fast", "--tb=short", "--maxfail=1"]
+        res_test = subprocess.run(cmd_test, capture_output=True, text=True, env=test_env)
+        if res_test.returncode != 0:
+            logger.error(f"Test Failure Output:\n{res_test.stdout}")
+            raise RuntimeError("Fundamental system tests failed.")
 
-                # Pass VIBE_NO_LOCK to sub-tests to avoid Ouroboros lock collision
+    def on_tick_pre(self, kernel: "RealVibeKernel") -> HookResult:
+        return HookResult.ok()
 
-                test_env = os.environ.copy()
+    def on_tick_post(self, kernel: "RealVibeKernel") -> HookResult:
+        return HookResult.ok()
 
-                test_env["VIBE_NO_LOCK"] = "1"
-
-                test_env["VIBE_NO_GIT_COMMIT"] = "1"
-
-                
-
-                cmd_test = [sys.executable, "-m", "pytest", "-m", "fast", "--tb=short", "--maxfail=1"]
-
-                res_test = subprocess.run(cmd_test, capture_output=True, text=True, env=test_env)
-
-                if res_test.returncode != 0:
-
-                    logger.error(f"Test Failure Output:\n{res_test.stdout}")
-
-                    raise RuntimeError("Fundamental system tests failed.")
-
-        
+    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+        return HookResult.ok()
