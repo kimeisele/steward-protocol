@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from string import Template
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from .classifier import ModuleType
 

@@ -22,7 +22,7 @@ import hashlib
 import json
 import logging
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
@@ -34,17 +34,16 @@ from vibe_core.event_bus import EventBus
 from vibe_core.loaders import ActionLoader, AnalyzerLoader, BridgeLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
-from vibe_core.state import get_state_service  # P0: StateService
 
 # OPUS-167: Action Manager Extraction (Karmendriya)
 from .action_manager import ActionManager
 
 # OPUS-176: Biorhythm Processor - Extracted consciousness tick logic
 from .biorhythm import BiorhythmProcessor
-from .buddhi import Buddhi, BuddhiVerdict
+from .buddhi import Buddhi
 
 # OPUS-168: Antahkarana - The Inner Instrument
-from .chitta import Chitta, PerceptionEntry
+from .chitta import Chitta
 
 # OPUS-167: Intent Buffer Extraction
 from .intent_buffer import IntentBuffer, IntentBufferEntry
@@ -60,13 +59,12 @@ if TYPE_CHECKING:
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
     from vibe_core.tools.tool_registry import ToolRegistry
 
-    from .cortex.dharma_sense import DharmaSense, DharmaSummary
-    from .cortex.genesis import InfrastructureClassifier, InfrastructureGenerator, ModuleType
+    from .cortex.dharma_sense import DharmaSense
     from .cortex.karma_sense import KarmaSense
-    from .cortex.prakriti_sense import GunaSummary, PrakritiSense
-    from .cortex.prana_sense import PranaPerception, PranaSense
+    from .cortex.prakriti_sense import PrakritiSense
+    from .cortex.prana_sense import PranaSense
     from .cortex.shruta_sense import ShrutaPerception, ShrutaSense
-    from .cortex.sutra_sense import SutraSense, SutraSummary
+    from .cortex.sutra_sense import SutraSense
     from .cortex.viveka_sense import VivekaSense
 
 logger = logging.getLogger("MANAS.Kernel")

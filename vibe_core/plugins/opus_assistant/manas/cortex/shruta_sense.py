@@ -45,13 +45,12 @@ tests:
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import threading
 import time
 from collections import Counter, deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
