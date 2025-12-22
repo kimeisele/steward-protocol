@@ -178,6 +178,7 @@ class StateService:
         Starts the asyncio background task for non-blocking commits.
         """
         import asyncio
+
         try:
             loop = asyncio.get_running_loop()
             self._commit_event = asyncio.Event()
@@ -192,6 +193,7 @@ class StateService:
         Waits for triggers and performs commits in the background.
         """
         import asyncio
+
         logger.debug("🔄 StateService: Worker enter.")
         try:
             while True:
@@ -355,6 +357,7 @@ class StateService:
                 logger.info(f"🏛️  Migrating heritage state: {filename} → {self.state_root}")
                 try:
                     import shutil
+
                     shutil.copy2(legacy_path, target_path)
                 except Exception as e:
                     logger.warning(f"⚠️  Heritage migration failed for {filename}: {e}")
@@ -604,6 +607,7 @@ class StateService:
 
         # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
         import os
+
         if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             logger.debug(f"🍎 Auto-commit skipped (VIBE_NO_GIT_COMMIT active): {reason}")
             return False
@@ -672,69 +676,45 @@ class StateService:
 
     def _commit_via_git(self, reason: str) -> bool:
         """
-        Fallback: commit directly via git.
+        Fallback: commit directly via git using CommitAuthority.
 
-        This is used when Weaver is not available (e.g., early initialization).
-
-        WARNING (OPUS-206): This method uses --no-verify which bypasses:
-        - Pre-commit hooks (including VISNU kernel protection)
-        - GPG signing hooks
-        - Any custom validation hooks
-
-        This is intentional for auto-commit of state files but is a security
-        consideration. State files (.vibe/state/*) are NOT kernel-protected
-        so this is acceptable, but be aware of the implications.
+        OPUS-209: Uses CommitAuthority for single commit path.
+        State files (.vibe/state/*) use no_verify=True as they are not
+        kernel-protected, but this is now centralized with audit trail.
         """
-        try:
-            # Stage all dirty files
-            dirty_list = list(self._dirty_files)
-            if not dirty_list:
-                return False
+        from vibe_core.commit_authority import CommitAuthority
 
-            # Relative paths for git
-            rel_paths = [str(p.relative_to(self.workspace)) for p in dirty_list]
+        dirty_list = list(self._dirty_files)
+        if not dirty_list:
+            return False
 
-            # Git add
-            subprocess.run(
-                ["git", "add"] + rel_paths,
-                cwd=self.workspace,
-                check=True,
-                capture_output=True,
-            )
+        msg = f"🍎 Auto-commit ({reason}): {len(dirty_list)} state files"
+        result = CommitAuthority.commit(
+            files=dirty_list,
+            message=msg,
+            author="state_service",
+            no_verify=True,  # State files skip hooks (not kernel-protected)
+        )
 
-            # Git commit (skip hooks for runtime state)
-            msg = f"🍎 Auto-commit ({reason}): {len(dirty_list)} state files"
-            subprocess.run(
-                ["git", "commit", "-m", msg, "--no-verify"],
-                cwd=self.workspace,
-                check=True,
-                capture_output=True,
-            )
-
-            logger.info(f"🍎 Direct git commit: {len(dirty_list)} files")
+        if result.success:
+            logger.info(f"🍎 CommitAuthority: {len(dirty_list)} files committed")
             return True
+        elif result.skipped_reason == "nothing_to_commit":
+            return True  # Clean state is success
 
-        except subprocess.CalledProcessError as e:
-            # Might fail if nothing to commit (clean)
-            if b"nothing to commit" in (e.stdout or b"") + (e.stderr or b""):
-                return True  # Actually clean
-            return False
-        except Exception:
-            return False
+        return False
 
 
 # =========================================================================
 # SINGLETON & REGISTRY ACCESS
 # =========================================================================
 
-_instances: Dict[str, StateService] = {} # agent_id -> instance
+_instances: Dict[str, StateService] = {}  # agent_id -> instance
 _instance_lock = threading.Lock()
 
 
 def get_state_service(
-    workspace: Optional[Path] = None,
-    agent_id: Optional[str] = None,
-    plugin_id: Optional[str] = None
+    workspace: Optional[Path] = None, agent_id: Optional[str] = None, plugin_id: Optional[str] = None
 ) -> StateService:
     """
     Get a namespaced StateService instance.
