@@ -1,0 +1,24 @@
+{
+    "type": "plugin",
+    "id": "integrity_guard",
+    "name": "Integrity Guard",
+    "version": "1.0.0",
+    "description": "Enforces the Law of the Land (integrity checks) at boot",
+    "entry_point": "plugin_main.py",
+    "entry_class": "IntegrityGuardPlugin",
+    "priority": -100,
+    "enabled": true,
+    "hooks": [
+        "on_boot"
+    ],
+    "dependencies": [],
+    "defaults": {
+        "block_on_failure": true
+    },
+    "author": "Gemini (Sovereign Mode)",
+    "tags": [
+        "security",
+        "compliance",
+        "governance"
+    ]
+}

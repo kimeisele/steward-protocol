@@ -203,19 +203,26 @@ class SettingsSync:
                     in_commands_section = True
                     continue
 
-                if in_commands_section and line.startswith("##"):
-                    break
-
-                # Skip non-command lines
-                if not in_commands_section or not line.startswith("-"):
+                if not in_commands_section:
                     continue
 
-                # Skip markdown separators (---, ----) and example/help lines (- `)
-                if line.startswith("---") or line.startswith("- `") or line.startswith("_"):
+                # Skip blank lines
+                if not line:
+                    continue
+
+                # Detect non-command lines (separators, headers, help text)
+                is_separator = line.startswith("---") or line.startswith("___") or line.startswith("***")
+                is_help_text = line.startswith("- `")
+                
+                if is_separator or is_help_text:
+                    continue
+
+                # Only lines starting with "- " are valid commands
+                if not line.startswith("- "):
                     continue
 
                 # Parse command text
-                command_text = line[1:].strip()
+                command_text = line[2:].strip() # Skip "- "
 
                 if command_text.startswith("SET "):
                     rest = command_text[4:].strip()
