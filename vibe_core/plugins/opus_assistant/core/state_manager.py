@@ -190,13 +190,18 @@ class OpusStateManager:
     """
     Plugin-local state manager for OPUS Assistant.
 
+    OPUS-207 FIX: State now lives at PROJECT_ROOT/.vibe/state/plugins/opus_assistant/
+    NOT inside the plugin code directory!
+
     This is the PROPER abstraction for state management:
-    - All state lives in .opus_state/ within the plugin
+    - All state lives in .vibe/state/plugins/opus_assistant/ (Sovereign State)
     - JSON-based, git-trackable
-    - Clean separation from system-wide resources
+    - Clean separation: State in project root, Code in vibe_core/plugins/
 
     Usage:
-        state_mgr = OpusStateManager(plugin_root=Path("vibe_core/plugins/opus_assistant"))
+        state_mgr = get_state_manager()  # Auto-detects project root
+        # Or with explicit workspace:
+        state_mgr = OpusStateManager(workspace=Path("/path/to/project"))
         state_mgr.append_observation(ObservationEntry(...))
         state_mgr.record_karma(KarmaEntry(...))
         observations = state_mgr.get_recent_observations(hours=24)
@@ -210,7 +215,7 @@ class OpusStateManager:
 
     def __init__(
         self,
-        plugin_root: Path,
+        workspace: Path,
         state_dir_name: str = DEFAULT_STATE_DIR,
         max_observations: int = 1000,
         max_karma_entries: int = 100,
@@ -218,17 +223,21 @@ class OpusStateManager:
         """
         Initialize state manager.
 
+        OPUS-207 FIX: Now takes workspace (project root), not plugin_root.
+        State is stored at PROJECT_ROOT/.vibe/state/plugins/opus_assistant/
+
         Args:
-            plugin_root: Path to the plugin directory
+            workspace: Path to the project root (NOT the plugin directory!)
             state_dir_name: DEPRECATED - uses namespaced StateService
             max_observations: Max observations to keep (FIFO)
             max_karma_entries: Max karma entries to keep (FIFO)
         """
-        self._plugin_root = plugin_root
-        
+        self._workspace = workspace
+
         # 🍎 STATE: Namespaced state service (ADR-204)
+        # OPUS-207: Use workspace (project root), state goes to .vibe/state/plugins/opus_assistant/
         from vibe_core.state.state_service import get_state_service
-        self._state_service = get_state_service(self._plugin_root, plugin_id="opus_assistant")
+        self._state_service = get_state_service(self._workspace, plugin_id="opus_assistant")
         self._state_dir = self._state_service.state_root
         
         self._max_observations = max_observations
@@ -820,18 +829,36 @@ class OpusStateManager:
 
 
 # Convenience function for getting state manager
-def get_state_manager(plugin_root: Optional[Path] = None) -> OpusStateManager:
+def get_state_manager(workspace: Optional[Path] = None) -> OpusStateManager:
     """
     Get an OpusStateManager instance.
 
+    OPUS-207 FIX: Now takes workspace (project root), not plugin_root.
+
     Args:
-        plugin_root: Plugin root path (auto-detected if None)
+        workspace: Project root path (auto-detected if None via pyproject.toml search)
 
     Returns:
         OpusStateManager instance
     """
-    if plugin_root is None:
-        # Auto-detect: assume we're in vibe_core/plugins/opus_assistant/
-        plugin_root = Path(__file__).parent.parent
+    if workspace is None:
+        workspace = _find_project_root()
 
-    return OpusStateManager(plugin_root=plugin_root)
+    return OpusStateManager(workspace=workspace)
+
+
+def _find_project_root() -> Path:
+    """
+    Robustly find project root by searching upward for pyproject.toml.
+
+    OPUS-207: This is more robust than Path.cwd() which fails when
+    running scripts from subdirectories.
+    """
+    current = Path(__file__).resolve()
+    for parent in [current] + list(current.parents):
+        if (parent / "pyproject.toml").exists():
+            return parent
+        if (parent / ".git").exists():
+            return parent
+    # Fallback: cwd (last resort)
+    return Path.cwd()
