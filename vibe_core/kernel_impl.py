@@ -67,7 +67,6 @@ from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .protocols import AgentManifest, VibeAgent
-from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import ExecutionRequest, create_unified_runtime
@@ -264,7 +263,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.process_manager = None  # Set by ProcessIsolationPlugin
 
         # Phase 3: Resource Manager
-        self.resource_manager = ResourceManager()
+        # OPUS-209: Extracted to resource_limits plugin
+        # ResourceManager is created and registered by ResourceLimitsPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded for quota enforcement
+        self.resource_manager = None  # Set by ResourceLimitsPlugin
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
         self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
 
@@ -1091,14 +1093,16 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 logger.info(f"📍 Agent '{agent.agent_id}' has no cartridge_path - running in-process (no isolation)")
 
         # Phase 3: Set initial resource quota (default: 100 credits)
-        self.resource_manager.set_quota(agent.agent_id, credits=100)
+        if self.resource_manager:
+            self.resource_manager.set_quota(agent.agent_id, credits=100)
         if self.process_manager:
             proc_info = self.process_manager.processes.get(agent.agent_id)
             if proc_info and proc_info.process.is_alive():
                 import time
 
                 time.sleep(0.1)  # Give process time to start
-                self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
+                if self.resource_manager:
+                    self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
 
         # Phase 4b: Grant repo access to Scribe/Archivist
         if agent.agent_id in ["scribe", "archivist"]:
