@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.boot_mode import BootMode
-    from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
+    from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
 # Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
 # Kernel has no governance types - access via kernel.governance
@@ -616,42 +616,20 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             **merge_record,
         }
 
-    def get_bank(self) -> "CivicBank":
-        """
-        Lazy-load the CivicBank.
-
-        Phase 4c: Use VFS path for database to ensure it's in sandbox.
-        Requires: cryptography package (see pyproject.toml)
-        """
+    def get_bank(self) -> "BankProtocol":
+        """Get CivicBank via ServiceRegistry (OPUS-209)."""
         if self._bank is None:
-            from pathlib import Path
-
-            from vibe_core.cartridges.system.civic.tools.economy import CivicBank
-
-            # OPUS-025: Config-based path resolution for bank DB
-            phoenix_config = _get_config()
-            if phoenix_config and hasattr(phoenix_config, "paths"):
-                kernel_data_path = phoenix_config.paths.data.resolve("economy_db")
-            else:
-                kernel_data_path = Path("/tmp") / "vibe_os" / "kernel" / "economy.db"
-            kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
-
-            self._bank = CivicBank(db_path=str(kernel_data_path))
-            logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.economy import BankProtocol
+            self._bank = ServiceRegistry.get(BankProtocol)
         return self._bank
 
-    def get_vault(self):
-        """
-        Get the CivicVault instance (Lazy Loaded).
-
-        Requires: cryptography package (see pyproject.toml)
-        """
+    def get_vault(self) -> "VaultProtocol":
+        """Get CivicVault via ServiceRegistry (OPUS-209)."""
         if self._vault is None:
-            from vibe_core.cartridges.system.civic.tools.vault import CivicVault
-
-            bank = self.get_bank()
-            self._vault = CivicVault(bank.conn)
-            logger.info("🔐 Kernel loaded CivicVault (Lazy)")
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.economy import VaultProtocol
+            self._vault = ServiceRegistry.get(VaultProtocol)
         return self._vault
 
     @property
@@ -1076,32 +1054,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # Attach persona to agent for system prompt access
         agent.persona = persona
 
-        # Phase 2: Spawn Process (deferred if spawn_process=False)
-        # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
-        if spawn_process and self.process_manager:
-            cartridge_path = getattr(agent, "_cartridge_path", None)
-            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
-            if cartridge_path and cartridge_class_name:
-                self.process_manager.spawn_agent(
-                    agent.agent_id,
-                    cartridge_path,
-                    cartridge_class_name,
-                    config=getattr(agent, "config", None),
-                )
-            else:
-                logger.info(f"📍 Agent '{agent.agent_id}' has no cartridge_path - running in-process (no isolation)")
-
-        # Phase 3: Set initial resource quota (default: 100 credits)
-        if self.resource_manager:
-            self.resource_manager.set_quota(agent.agent_id, credits=100)
-        if self.process_manager:
-            proc_info = self.process_manager.processes.get(agent.agent_id)
-            if proc_info and proc_info.process.is_alive():
-                import time
-
-                time.sleep(0.1)  # Give process time to start
-                if self.resource_manager:
-                    self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
+        # OPUS-209: Process spawning → ProcessIsolationPlugin.on_agent_registered()
+        # OPUS-209: Resource quotas → ResourceLimitsPlugin.on_agent_registered()
 
         # Phase 4b: Grant repo access to Scribe/Archivist
         if agent.agent_id in ["scribe", "archivist"]:
