@@ -124,15 +124,30 @@ class StateService:
     _dirty_files: Set[Path] = set()
     _atexit_registered = False
 
-    def __init__(self, workspace: Path):
+    def __init__(self, workspace: Path, agent_id: Optional[str] = None, plugin_id: Optional[str] = None):
         """
         Initialize StateService.
 
         Args:
             workspace: Project root directory
+            agent_id: Optional agent ID for namespacing
+            plugin_id: Optional plugin ID for namespacing
         """
         self.workspace = Path(workspace).resolve()
-        self.state_root = self.workspace / ".opus_state"
+        self.agent_id = agent_id
+        self.plugin_id = plugin_id
+
+        # HIERARCHICAL SOVEREIGNTY (Bharat Architecture)
+        # 1. Agent Sector
+        if self.agent_id:
+            self.state_root = self.workspace / ".vibe" / "state" / "agents" / self.agent_id
+        # 2. Plugin Sector
+        elif self.plugin_id:
+            self.state_root = self.workspace / ".vibe" / "state" / "plugins" / self.plugin_id
+        # 3. Sovereign Root
+        else:
+            self.state_root = self.workspace / ".vibe" / "state"
+
         self.state_root.mkdir(parents=True, exist_ok=True)
 
         # Initialize consolidation functions (Phase 2: Samskara)
@@ -328,15 +343,21 @@ class StateService:
     def load(self, filename: str, default: Any = None) -> Any:
         """
         Load state from a JSON file.
-
-        Args:
-            filename: Relative to .opus_state/
-            default: Default value if file doesn't exist
-
-        Returns:
-            Loaded data or default
+        (Heritage Support: Migrates from .opus_state if needed)
         """
         target_path = self.state_root / filename
+
+        # 🏛️ HERITAGE MIGRATION (Restore Sovereignty)
+        if not target_path.exists():
+            legacy_root = self.workspace / ".opus_state"
+            legacy_path = legacy_root / filename
+            if legacy_path.exists():
+                logger.info(f"🏛️  Migrating heritage state: {filename} → {self.state_root}")
+                try:
+                    import shutil
+                    shutil.copy2(legacy_path, target_path)
+                except Exception as e:
+                    logger.warning(f"⚠️  Heritage migration failed for {filename}: {e}")
 
         if not target_path.exists():
             return default
@@ -686,36 +707,50 @@ class StateService:
 
 
 # =========================================================================
-# SINGLETON ACCESS
+# SINGLETON & REGISTRY ACCESS
 # =========================================================================
 
-_instance: Optional[StateService] = None
+_instances: Dict[str, StateService] = {} # agent_id -> instance
 _instance_lock = threading.Lock()
 
 
-def get_state_service(workspace: Optional[Path] = None) -> StateService:
+def get_state_service(
+    workspace: Optional[Path] = None,
+    agent_id: Optional[str] = None,
+    plugin_id: Optional[str] = None
+) -> StateService:
     """
-    Get the global StateService singleton.
+    Get a namespaced StateService instance.
 
     Args:
-        workspace: Project root (required on first call)
+        workspace: Project root
+        agent_id: Optional agent ID for namespacing
+        plugin_id: Optional plugin ID for namespacing
 
     Returns:
         StateService instance
     """
-    global _instance
+    global _instances
+
+    # Generate unique registry key
+    if agent_id:
+        key = f"agent:{agent_id}"
+    elif plugin_id:
+        key = f"plugin:{plugin_id}"
+    else:
+        key = "global"
 
     with _instance_lock:
-        if _instance is None:
+        if key not in _instances:
             if workspace is None:
                 workspace = Path.cwd()
-            _instance = StateService(workspace)
+            _instances[key] = StateService(workspace, agent_id=agent_id, plugin_id=plugin_id)
 
-        return _instance
+        return _instances[key]
 
 
 def reset_state_service() -> None:
-    """Reset the global singleton (mainly for testing)."""
-    global _instance
+    """Reset all singletons (mainly for testing)."""
+    global _instances
     with _instance_lock:
-        _instance = None
+        _instances.clear()
