@@ -20,8 +20,10 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 import sqlite3
 import threading
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -556,3 +558,80 @@ class SQLiteLedger(VibeLedger):
         if self.connection:
             self.connection.close()
             logger.info("💾 SQLite ledger closed")
+
+    def rotate(self) -> Optional[str]:
+        """OPUS-208 Phase 2: Samsara Rotation (Crash-Safe).
+
+        Rotates the current ledger to an archive and starts a new chain
+        linked to the previous one via a GENESIS event.
+
+        Protocol:
+        1. Write `rotation_state.json` (Manifest)
+        2. Move DB to archive
+        3. Re-init DB & Record Genesis
+        4. Delete Manifest
+        """
+        if not self.connection:
+            return None
+
+        with self._write_lock:
+            # 0. Prepare paths and data
+            current_top_hash = self.get_top_hash()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            archive_dir = os.path.join(os.path.dirname(self.db_path), "ledger", "archive")
+            os.makedirs(archive_dir, exist_ok=True)
+            archive_path = os.path.join(archive_dir, f"vibe_ledger_{timestamp}.db")
+            manifest_path = os.path.join(os.path.dirname(self.db_path), "rotation_state.json")
+
+            logger.info(f"🔄 Initiating Ledger Rotation (Samsara) -> {archive_path}")
+
+            # 1. Write Manifest (Crash Safety)
+            manifest = {
+                "state": "rotating",
+                "timestamp": timestamp,
+                "source_db": self.db_path,
+                "target_archive": archive_path,
+                "previous_top_hash": current_top_hash
+            }
+            with open(manifest_path, "w") as f:
+                json.dump(manifest, f)
+
+            # Close connection to allow move
+            self.connection.close()
+            self.connection = None
+
+            try:
+                # 2. Move DB to archive
+                shutil.move(self.db_path, archive_path)
+                logger.info(f"📦 Ledger moved to archive: {archive_path}")
+
+                # 3. Re-initialize DB
+                self._initialize_db()
+
+                # 4. Record Genesis Event (Linkage)
+                # We bypass normal record_event to force the genesis hash structure if needed,
+                # but standard recording is safer and maintains schema.
+                self.record_event(
+                    event_type="LEDGER_GENESIS",
+                    agent_id="SYSTEM",
+                    details={
+                        "previous_ledger_archive": archive_path,
+                        "previous_ledger_hash": current_top_hash,
+                        "rotation_reason": "Samsara Size Limit"
+                    },
+                    result="SUCCESS"
+                )
+                logger.info("🔗 New Genesis Block created (linked to previous chain)")
+
+                # 5. Finalize: Delete Manifest
+                os.remove(manifest_path)
+                return archive_path
+
+            except Exception as e:
+                logger.critical(f"🔥 ROTATION FAILED: {e}")
+                # Attempt recovery (if DB was moved but not re-inited)
+                if os.path.exists(archive_path) and not os.path.exists(self.db_path):
+                     logger.warning("⚠️ Attempting rollback...")
+                     shutil.move(archive_path, self.db_path)
+                     self._initialize_db()
+                raise e
