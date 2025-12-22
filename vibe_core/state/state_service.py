@@ -27,6 +27,7 @@ The Apple Philosophy:
 OPUS Reference: P0-STATE-AUDIT.md, OPUS-140-SANSKRIT-MATRIX.md
 """
 
+import asyncio
 import atexit
 import json
 import logging
@@ -147,10 +148,56 @@ class StateService:
         self._last_commit = None
         self._auto_commit_enabled = True
 
+        # 🍎 ASYNC PERSISTENCE (ADR-204)
+        self._commit_event: Optional[asyncio.Event] = None
+        self._worker_task: Optional[asyncio.Task] = None
+
         # 🍎 Register session-end cleanup (Apple Magic: clean shutdown)
         self._register_atexit()
 
         logger.info(f"StateService initialized: {self.state_root}")
+
+    def start_background_worker(self) -> None:
+        """
+        🚀 START THE ASYNC SCRIBE (ADR-204)
+        Starts the asyncio background task for non-blocking commits.
+        """
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            self._commit_event = asyncio.Event()
+            self._worker_task = loop.create_task(self._persistence_worker())
+            logger.info("✍️  StateService: Async background scribe started.")
+        except RuntimeError:
+            logger.warning("⚠️  StateService: No running event loop. Background worker deferred.")
+
+    async def _persistence_worker(self) -> None:
+        """
+        🔄 THE PERSISTENCE WORKER (ADR-204)
+        Waits for triggers and performs commits in the background.
+        """
+        import asyncio
+        logger.debug("🔄 StateService: Worker enter.")
+        try:
+            while True:
+                # Wait for trigger OR periodic pulse (every 60s)
+                try:
+                    await asyncio.wait_for(self._commit_event.wait(), timeout=60.0)
+                    self._commit_event.clear()
+                    reason = "threshold"
+                except asyncio.TimeoutError:
+                    reason = "periodic"
+
+                if self._dirty_files and self._auto_commit_enabled:
+                    # BLOCKING GIT CALL happens here, but in a separate task!
+                    logger.info(f"✍️  StateService: Background commit starting ({reason})...")
+                    success = await asyncio.to_thread(self._do_auto_commit, reason=reason)
+                    if success:
+                        logger.info("✅ StateService: Background commit complete.")
+        except asyncio.CancelledError:
+            logger.info("🛑 StateService: Worker stopped.")
+        except Exception as e:
+            logger.error(f"💥 StateService: Worker crashed: {e}")
 
     # =========================================================================
     # PUBLIC API: File Operations
@@ -492,35 +539,33 @@ class StateService:
             logger.info("🍎 Session ending - committing dirty state...")
             self._do_auto_commit(reason="session_end")
 
+    def trigger_commit(self) -> None:
+        """Manually trigger a background commit."""
+        if self._commit_event:
+            self._commit_event.set()
+            logger.debug("✍️  StateService: Commit triggered.")
+
     def _maybe_auto_commit(self) -> None:
         """
         Check if we should auto-commit (the invisible hand).
+        (ADR-204: Decoupled Non-Blocking Trigger)
         """
         if not self._auto_commit_enabled:
-            return
-
-        # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
-        import os
-        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return
 
         if not self._dirty_files:
             return
 
-        # Check if Heartbeat is handling commits (don't double-commit)
-        if self._is_heartbeat_alive():
-            return
-
         # Check write threshold
         if self._writes_since_commit >= self.AUTO_COMMIT_THRESHOLD:
-            self._do_auto_commit(reason="threshold")
+            self.trigger_commit()
             return
 
         # Check time threshold
         if self._last_commit:
             elapsed = (datetime.now() - self._last_commit).total_seconds()
             if elapsed >= self.AUTO_COMMIT_SECONDS and self._writes_since_commit > 0:
-                self._do_auto_commit(reason="time")
+                self.trigger_commit()
                 return
 
     def _do_auto_commit(self, reason: str = "auto") -> bool:
@@ -534,6 +579,12 @@ class StateService:
             True if commit succeeded
         """
         if not self._dirty_files:
+            return False
+
+        # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
+        import os
+        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
+            logger.debug(f"🍎 Auto-commit skipped (VIBE_NO_GIT_COMMIT active): {reason}")
             return False
 
         try:
