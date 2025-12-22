@@ -1,0 +1,14 @@
+{
+    "id": "durvasa",
+    "name": "Durvasa Protocol",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "OPUS-209: Prana Triage Engine - Emergency resource management",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 50
+}

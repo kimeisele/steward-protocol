@@ -1093,132 +1093,17 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         logger.info(f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}.")
 
     def spawn_deferred_agents(self) -> int:
-        """
-        Spawn processes for all registered agents that don't have running processes.
-
-        Called after discovery to batch-spawn all agents at once, avoiding the
-        import lock deadlock that occurs when spawning 13+ processes in a tight loop.
-
-        Returns:
-            Number of agents spawned
-        """
-        spawned = 0
-        if not self.process_manager:
-            logger.warning("⚠️ ProcessManager not available - cannot spawn deferred processes")
-            return 0
-
-        for agent_id, agent in self._agent_registry.items():
-            # Skip if already has a running process
-            if agent_id in self.process_manager.processes:
-                proc_info = self.process_manager.processes[agent_id]
-                if proc_info.process.is_alive():
-                    continue
-
-            # Spawn the process (LATE BINDING)
-            cartridge_path = getattr(agent, "_cartridge_path", None)
-            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
-            if not cartridge_path or not cartridge_class_name:
-                logger.info(f"📍 Agent '{agent_id}' has no cartridge_path - running in-process (no isolation)")
-                continue
-
-            try:
-                self.process_manager.spawn_agent(
-                    agent_id,
-                    cartridge_path,
-                    cartridge_class_name,
-                    config=getattr(agent, "config", None),
-                )
-                spawned += 1
-                logger.info(f"🌱 Spawned deferred process for {agent_id}")
-            except Exception as e:
-                logger.error(f"❌ Failed to spawn {agent_id}: {e}")
-
-        logger.info(f"✅ Spawned {spawned} deferred agent processes")
-        return spawned
-
-    def boot(self, boot_mode: BootMode | None = None) -> None:
-        """
-        DEPRECATED: Use boot_async() (OPUS-203).
-        Boot the kernel - register all manifests and start scheduler.
-        """
-        import warnings
-        warnings.warn("kernel.boot() is deprecated, use await kernel.boot_async()", DeprecationWarning, stacklevel=2)
-
-        # Fallback to sync run
-        try:
-            loop = asyncio.get_running_loop()
-            # If we are already in a loop, we can't use asyncio.run
-            # This is exactly why we are migrating to unified async
-            loop.run_until_complete(self.boot_async(boot_mode))
-        except RuntimeError:
-            asyncio.run(self.boot_async(boot_mode))
+        """OPUS-209: Delegated to ProcessIsolationPlugin."""
+        for plugin in self._plugins:
+            if hasattr(plugin, "spawn_deferred_agents"):
+                return plugin.spawn_deferred_agents(self)
+        return 0
 
     def enforce_entropy_limits(self):
-        """
-        SAMSARA ENGINE: Enforces mortality on the ledger.
-        Removes oldest events to make room for new creation.
-
-        OPUS-208: Added support for SQLite Samsara Rotation (Crash-Safe).
-        """
-        # We only prune InMemoryLedger (SQLite handles its own disk space usually, or needs different logic)
-        # But for 'Karmic Debt' (RAM), InMemory is the culprit.
-        from vibe_core.ledger import InMemoryLedger, SQLiteLedger
-
-        if isinstance(self._ledger, InMemoryLedger):
-            # Check internal events list directly (private access for kernel management)
-            if hasattr(self._ledger, "events"):
-                current_entropy = len(self._ledger.events)
-
-                if current_entropy > self.MAX_ENTROPY_EVENTS:
-                    excess = current_entropy - self.MAX_ENTROPY_EVENTS
-                    # Sacrifice the oldest to save the universe
-                    self._ledger.events = self._ledger.events[excess:]
-
-                    # Log to system (not ledger) to avoid feedback loop
-                    logger.warning(f"🕉️ PRALAYA EXECUTED: Dissolved {excess} stale events. Entropy reduced to {len(self._ledger.events)}.")
-
-        # OPUS-208 Phase 2: SQLite Samsara Rotation
-        elif isinstance(self._ledger, SQLiteLedger):
-            # Use count_events() to avoid full scan O(1)
-            current_count = self._ledger.count_events()
-
-            # Rotation threshold (Hardcoded to 10k for now, configurable later)
-            # This keeps the DB small and fast (~10MB)
-            ROTATION_THRESHOLD = 10000
-
-            if current_count > ROTATION_THRESHOLD:
-                try:
-                    logger.info(f"🕉️ SAMSARA TRIGGERED: Event count {current_count} > {ROTATION_THRESHOLD}")
-                    archive_path = self._ledger.rotate()
-                    if archive_path:
-                        logger.info(f"✅ Samsara complete. Archived to {archive_path}")
-
-                        # Reset health anchor to Genesis of the NEW chain
-                        # We must reset this so check_system_health starts verifying the new chain from 0
-                        self._ledger.set_meta('health_anchor', (0, "0"*64))
-
-                except Exception as e:
-                     logger.critical(f"🔥 SAMSARA FAILED: {e}")
-
-    def tick(self) -> None:
-        """
-        DEPRECATED: Use tick_async() (OPUS-203).
-        Tick the kernel - process one task from the scheduler.
-        """
-        import warnings
-        warnings.warn("kernel.tick() is deprecated, use await kernel.tick_async()", DeprecationWarning, stacklevel=2)
-
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running():
-                # We can't await here, so we schedule it
-                asyncio.create_task(self.tick_async())
-                return
-        except RuntimeError:
-            pass
-
-        # Sync fallback
-        asyncio.run(self.tick_async())
+        """OPUS-209: Delegated to SamsaraPlugin."""
+        for plugin in self._plugins:
+            if hasattr(plugin, "enforce_entropy_limits"):
+                return plugin.enforce_entropy_limits()
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
@@ -1242,49 +1127,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         }
 
     def _process_ipc_events(self) -> None:
-        """
-        Phase 2: Process IPC messages from agents (Task Results, Crashes, etc.)
-        """
-        if not self.process_manager:
-            return
-        messages = self.process_manager.get_pending_messages()
-        for agent_id, msg in messages:
-            msg_type = msg.get("type")
-
-            if msg_type == "TASK_RESULT":
-                task_id = msg.get("task_id")
-                status = msg.get("status")
-
-                if status == "success":
-                    result = msg.get("result")
-                    logger.info(f"✅ Task {task_id} completed (Async IPC)")
-                    # Cache result for get_task_result() polling
-                    self._completed_tasks[task_id] = result
-
-                    # ENVOY.md: Update status if this was a terminal request
-                    # self._ui_manager.update_envoy_task_status(task_id, "COMPLETED", str(result) if result else "Task completed successfully")
-                    # logger.info(f"📬 ENVOY task {task_id} marked COMPLETED")
-
-                    # Plugin Hook: Task Completed
-                    for plugin in self._plugins:
-                        plugin.on_task_completed(self, task_id, result)
-
-                else:
-                    error = msg.get("error")
-                    logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
-
-                    # ENVOY.md: Update status if this was a terminal request
-                    # self._ui_manager.update_envoy_task_status(task_id, "FAILED", str(error))
-                    # logger.info(f"📬 ENVOY task {task_id} marked FAILED")
-
-                    # Plugin Hook: Task Failed
-                    for plugin in self._plugins:
-                        plugin.on_task_failed(self, task_id, error)
-
-            elif msg_type == "CRASH":
-                error = msg.get("error")
-                logger.critical(f"💥 Agent {agent_id} CRASHED: {error}")
-                # Narasimha handles restart in check_health
+        """OPUS-209: Delegated to ProcessIsolationPlugin."""
+        for plugin in self._plugins:
+            if hasattr(plugin, "process_ipc_events"):
+                return plugin.process_ipc_events(self)
 
     def _sync_resource_quotas(self) -> None:
         """Phase 3: Sync resource quotas - Delegates to kernel_ops."""
@@ -1301,29 +1147,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
         return self._manifest_registry.lookup(agent_id)
-
-    def shutdown(self, reason: str = "User shutdown") -> None:
-        """
-        DEPRECATED: Use shutdown_async() (OPUS-203).
-        Gracefully shut down the kernel.
-        """
-        import warnings
-        warnings.warn("kernel.shutdown() is deprecated, use await kernel.shutdown_async()", DeprecationWarning, stacklevel=2)
-
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running():
-                # We can't await here, so we schedule it
-                asyncio.create_task(self.shutdown_async(reason))
-                return
-        except RuntimeError:
-            pass
-
-        asyncio.run(self.shutdown_async(reason))
-
-    # =========================================================================
-    # DURVASA PROTOCOL: Resource Triage (Emergency Response)
-    # =========================================================================
 
     def terminate_agent(self, agent_id: str, reason: str = "Unknown") -> bool:
         """
@@ -1379,106 +1202,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         return True
 
     def enforce_prana_limits(self, pressure: float = None) -> int:
-        """
-        DURVASA PROTOCOL: The Prana Triage Engine.
-
-        Sacrifices lower-dharma agents to preserve the system core during resource famine.
-
-        Args:
-            pressure: Optional override for system pressure (0.0-1.0).
-                     If None, uses process_manager resource monitoring.
-
-        Returns:
-            Number of agents sacrificed
-        """
-        CRITICAL_THRESHOLD = 0.90  # Start triage at 90% pressure
-        SAFE_LEVEL = 0.80          # Stop when we reach 80%
-
-        # 1. Measure system pressure
-        if pressure is None:
-            # Use process_manager to estimate pressure (count-based for now)
-            total_agents = len(self._agent_registry)
-            running_processes = len(self.process_manager.processes) if hasattr(self, "process_manager") else 0
-            # Simulate pressure based on process count
-            pressure = min(running_processes / max(total_agents, 1), 1.0)
-
-        if pressure < CRITICAL_THRESHOLD:
-            return 0  # No action needed
-
-        logger.critical(f"🚨 DURVASA ALERT: System pressure at {pressure:.0%}. Initiating triage...")
-
-        self._ledger.record_event("PRANA_EMERGENCY", "kernel", {
-            "pressure": pressure,
-            "msg": "Durvasa Alert triggered",
-            "timestamp": datetime.utcnow().isoformat()
-        })
-
-        # 2. Identify candidates
-        candidates = []
-        for agent_id, agent in list(self._agent_registry.items()):
-            # Get metadata - handle both VibeAgent objects and dict entries
-            if hasattr(agent, "__dict__"):
-                meta = agent.__dict__
-            elif isinstance(agent, dict):
-                meta = agent
-            else:
-                meta = {}
-
-            candidates.append({
-                "id": agent_id,
-                "dharma": str(meta.get("dharma", "tamas")).lower(),
-                "priority": str(meta.get("priority", "low")).lower()
-            })
-
-        # 3. Sort by sacrifice priority (lowest value = first to die)
-        dharma_rank = {"tamas": 0, "rajas": 1, "sattva": 2}
-        priority_rank = {"disposable": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-
-        candidates.sort(key=lambda x: (
-            dharma_rank.get(x["dharma"], 0),
-            priority_rank.get(x["priority"], 0)
-        ))
-
-        # 4. The Sacrifice
-        sacrifices = 0
-
-        for victim in candidates:
-            # Never kill Critical/Sattva
-            if priority_rank.get(victim["priority"], 0) >= 3:
-                self._ledger.record_event("TRIAGE_LIMIT", "kernel", {
-                    "msg": "Only High/Critical agents remain. Holding.",
-                    "remaining": [c["id"] for c in candidates if priority_rank.get(c["priority"], 0) >= 3]
-                })
-                break
-
-            if dharma_rank.get(victim["dharma"], 0) >= 2:
-                self._ledger.record_event("TRIAGE_LIMIT", "kernel", {
-                    "msg": "Only Sattva agents remain. Holding."
-                })
-                break
-
-            # Execute termination
-            success = self.terminate_agent(victim["id"], reason="PRANA_FAMINE_SACRIFICE")
-
-            if success:
-                sacrifices += 1
-                self._ledger.record_event("AGENT_SACRIFICED", "kernel", {
-                    "agent": victim["id"],
-                    "dharma": victim["dharma"],
-                    "priority": victim["priority"],
-                    "reason": "Sacrificed to appease Durvasa"
-                })
-
-                # Simulate pressure reduction
-                pressure -= 0.10
-
-                if pressure <= SAFE_LEVEL:
-                    break
-
-        if sacrifices > 0:
-            logger.warning(f"🔱 DURVASA APPEASED: {sacrifices} agent(s) sacrificed. System stabilized.")
-
-        return sacrifices
+        """OPUS-209: Delegated to DurvasaPlugin."""
+        for plugin in self._plugins:
+            if hasattr(plugin, "enforce_prana_limits"):
+                return plugin.enforce_prana_limits(pressure)
+        return 0
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         """Find agents with a specific capability"""
@@ -1772,19 +1500,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def _pulse(self) -> None:
         """💓 HEARTBEAT - Delegates to kernel_ops."""
         _pulse_impl(self)
-
-    # ========================================================================
-    # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
-    # ========================================================================
-    # ASYNC DISPATCH PATTERN:
-    # 1. User writes request in ENVOY.md "Request" section
-    # 2. Pulse detects change (fast mtime check)
-    # 3. PlaybookRouter.route() - pattern match only, NO LLM
-    # 4. Create Task, submit to scheduler (non-blocking)
-    # 5. Write "QUEUED" status to ENVOY.md
-    # 6. Scheduler executes task async (separate tick)
-    # 7. Update ENVOY.md with result when complete
-    # ========================================================================
 
     def _run_gateway_sidecar(self):
         """

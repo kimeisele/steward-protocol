@@ -129,6 +129,37 @@ class ProcessIsolationPlugin(KernelPlugin):
             except Exception as e:
                 logger.error(f"❌ Failed to spawn process for {agent_id}: {e}")
 
+    def spawn_deferred_agents(self, kernel: "RealVibeKernel") -> int:
+        """
+        OPUS-209: Spawn processes for all registered agents without running processes.
+
+        Called after discovery to batch-spawn agents, avoiding import lock deadlock.
+        """
+        if not self._manager:
+            logger.warning("⚠️ ProcessManager not available")
+            return 0
+
+        spawned = 0
+        for agent_id, agent in kernel._agent_registry.items():
+            if agent_id in self._manager.processes:
+                if self._manager.processes[agent_id].process.is_alive():
+                    continue
+
+            cartridge_path = getattr(agent, "_cartridge_path", None)
+            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
+            if not cartridge_path or not cartridge_class_name:
+                continue
+
+            try:
+                self._manager.spawn_agent(agent_id, cartridge_path, cartridge_class_name, config=getattr(agent, "config", None))
+                spawned += 1
+                logger.info(f"🌱 Spawned deferred process for {agent_id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to spawn {agent_id}: {e}")
+
+        logger.info(f"✅ Spawned {spawned} deferred agent processes")
+        return spawned
+
     def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
         """Shutdown all agent processes on kernel shutdown."""
         if self._manager:
@@ -139,6 +170,30 @@ class ProcessIsolationPlugin(KernelPlugin):
                 logger.warning(f"⚠️ Process manager shutdown error: {e}")
 
         return HookResult.ok()
+
+    def process_ipc_events(self, kernel: "RealVibeKernel") -> None:
+        """OPUS-209: Process IPC messages from agents."""
+        if not self._manager:
+            return
+        messages = self._manager.get_pending_messages()
+        for agent_id, msg in messages:
+            msg_type = msg.get("type")
+            if msg_type == "TASK_RESULT":
+                task_id = msg.get("task_id")
+                status = msg.get("status")
+                if status == "success":
+                    result = msg.get("result")
+                    logger.info(f"✅ Task {task_id} completed (Async IPC)")
+                    kernel._completed_tasks[task_id] = result
+                    for plugin in kernel._plugins:
+                        plugin.on_task_completed(kernel, task_id, result)
+                else:
+                    error = msg.get("error")
+                    logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
+                    for plugin in kernel._plugins:
+                        plugin.on_task_failed(kernel, task_id, error)
+            elif msg_type == "CRASH":
+                logger.critical(f"💥 Agent {agent_id} CRASHED: {msg.get('error')}")
 
     def get_api(self) -> Optional[ProcessManager]:
         """Return the process manager for direct access if needed."""
