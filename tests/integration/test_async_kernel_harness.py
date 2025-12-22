@@ -150,8 +150,8 @@ class TestMANASIntegration:
                 await kernel.tick_async()
                 await asyncio.sleep(0.01)
 
-            # Check MANAS awareness
-            awareness_file = PROJECT_ROOT / ".opus_state" / "manas_awareness.json"
+            # Check MANAS awareness in sovereign namespaced path
+            awareness_file = PROJECT_ROOT / ".vibe" / "state" / "plugins" / "opus_assistant" / "manas_awareness.json"
             if awareness_file.exists():
                 awareness = json.loads(awareness_file.read_text())
                 tick_count = awareness.get("tick", 0)

@@ -127,6 +127,10 @@ class InMemoryLedger(VibeLedger):
         """Return all ledger events"""
         return self.events.copy()
 
+    def count_events(self) -> int:
+        """Return total number of events."""
+        return len(self.events)
+
 
 def _get_db_lock(db_path: str) -> threading.Lock:
     """Get or create a lock for a specific database file."""
@@ -538,6 +542,14 @@ class SQLiteLedger(VibeLedger):
         cursor = self.connection.cursor()
         row = cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1").fetchone()
         return row[0] if row else "0" * 64
+
+    def count_events(self) -> int:
+        """Efficiently count total events without loading them into memory."""
+        if not self.connection:
+            return 0
+        cursor = self.connection.cursor()
+        row = cursor.execute("SELECT COUNT(*) FROM ledger_events").fetchone()
+        return row[0] if row else 0
 
     def close(self) -> None:
         """Close database connection"""

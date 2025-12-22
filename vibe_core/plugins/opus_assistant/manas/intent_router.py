@@ -227,7 +227,7 @@ class IntentRouter:
             from vibe_core.state.sanskrit_matrix import infer_layer
 
             # Load Sanskrit Matrix from state
-            state = get_state_service(self._workspace)
+            state = get_state_service(self._workspace, plugin_id="opus_assistant")
             matrix_path = self._workspace / ".opus_state" / "sanskrit_matrix.json"
 
             if not matrix_path.exists():
@@ -361,7 +361,7 @@ class IntentRouter:
     def _save_pending_intents(self, pending: Dict[str, Dict[str, Any]]) -> None:
         """Save pending intents to JSON file via StateService (P0)."""
         try:
-            state = get_state_service(self._workspace)
+            state = get_state_service(self._workspace, plugin_id="opus_assistant")
             state.save(PENDING_INTENTS_FILE, pending, create_backup=False)
         except Exception as e:
             logger.error(f"Failed to save pending intents: {e}")
@@ -534,7 +534,7 @@ class IntentRouter:
             return
 
         # P0: Use StateService for centralized state
-        state = get_state_service(self._workspace)
+        state = get_state_service(self._workspace, plugin_id="opus_assistant")
         karma_log = state.load(KARMA_LOG_FILE, default=[])
 
         # Calculate karma score
@@ -754,7 +754,7 @@ class IntentRouter:
             }
 
             # P0: Use StateService for JSONL append
-            state = get_state_service(self._workspace)
+            state = get_state_service(self._workspace, plugin_id="opus_assistant")
             state.append("system_journal.jsonl", entry)
 
             logger.debug(f"📜 SYSTEM ACT logged: {tool_name}")

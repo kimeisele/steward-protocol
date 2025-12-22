@@ -152,22 +152,39 @@ def pulse(kernel: "RealVibeKernel") -> None:
             "agents": {},
             "scheduler": kernel._scheduler.get_queue_status(),
             "ledger_stats": {
-                "total_events": len(kernel._ledger.get_all_events()),
+                "total_events": kernel._ledger.count_events(),
             },
         }
 
         # Collect agent status
         for agent_id, agent in kernel._agent_registry.items():
             try:
-                agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                # Mark paused agents (via governance plugin)
+                # 1. Start with base status
+                agent_status = agent.report_status() if hasattr(agent, "report_status") else {"status": "UNKNOWN"}
+                
+                # 2. Check if agent is actually running (process check)
+                is_alive = True
+                if agent_id in kernel.process_manager.processes:
+                    is_alive = kernel.process_manager.processes[agent_id].process.is_alive()
+                
+                if not is_alive:
+                    agent_status["status"] = "CRASHED"
+                    agent_status["error"] = "Process is not responding"
+
+                # 3. Mark paused agents (via governance plugin)
                 if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
                     if kernel.governance.is_agent_paused(agent_id):
                         agent_status["status"] = "PAUSED"
+                
                 snapshot["agents"][agent_id] = agent_status
+                
             except Exception as e:
                 logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
-                snapshot["agents"][agent_id] = {"error": str(e)}
+                snapshot["agents"][agent_id] = {
+                    "status": "ERROR",
+                    "error": str(e),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
 
         # Write snapshot through I/O Service (atomic + audited)
         result = kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")

@@ -279,7 +279,7 @@ class MeditationRoom:
             },
         }
 
-        state_service = get_state_service(self.workspace)
+        state_service = get_state_service(self.workspace, plugin_id="opus_assistant")
         state_service.save(self.MANTRAS_FILE, data, create_backup=False)
         logger.debug(f"💾 Saved {len(self.mantra_states)} mantra states")
 

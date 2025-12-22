@@ -273,7 +273,7 @@ class BiorhythmProcessor:
         try:
             from vibe_core.state.state_service import get_state_service
 
-            state_service = get_state_service(self._kernel._workspace)
+            state_service = get_state_service(self._kernel._workspace, plugin_id="opus_assistant")
             awareness = getattr(self._kernel, "_awareness", {})
             result = state_service.save("manas_awareness.json", awareness, create_backup=False)
 

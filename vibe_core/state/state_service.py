@@ -27,6 +27,7 @@ The Apple Philosophy:
 OPUS Reference: P0-STATE-AUDIT.md, OPUS-140-SANSKRIT-MATRIX.md
 """
 
+import asyncio
 import atexit
 import json
 import logging
@@ -123,15 +124,30 @@ class StateService:
     _dirty_files: Set[Path] = set()
     _atexit_registered = False
 
-    def __init__(self, workspace: Path):
+    def __init__(self, workspace: Path, agent_id: Optional[str] = None, plugin_id: Optional[str] = None):
         """
         Initialize StateService.
 
         Args:
             workspace: Project root directory
+            agent_id: Optional agent ID for namespacing
+            plugin_id: Optional plugin ID for namespacing
         """
         self.workspace = Path(workspace).resolve()
-        self.state_root = self.workspace / ".opus_state"
+        self.agent_id = agent_id
+        self.plugin_id = plugin_id
+
+        # HIERARCHICAL SOVEREIGNTY (Bharat Architecture)
+        # 1. Agent Sector
+        if self.agent_id:
+            self.state_root = self.workspace / ".vibe" / "state" / "agents" / self.agent_id
+        # 2. Plugin Sector
+        elif self.plugin_id:
+            self.state_root = self.workspace / ".vibe" / "state" / "plugins" / self.plugin_id
+        # 3. Sovereign Root
+        else:
+            self.state_root = self.workspace / ".vibe" / "state"
+
         self.state_root.mkdir(parents=True, exist_ok=True)
 
         # Initialize consolidation functions (Phase 2: Samskara)
@@ -147,10 +163,56 @@ class StateService:
         self._last_commit = None
         self._auto_commit_enabled = True
 
+        # 🍎 ASYNC PERSISTENCE (ADR-204)
+        self._commit_event: Optional[asyncio.Event] = None
+        self._worker_task: Optional[asyncio.Task] = None
+
         # 🍎 Register session-end cleanup (Apple Magic: clean shutdown)
         self._register_atexit()
 
         logger.info(f"StateService initialized: {self.state_root}")
+
+    def start_background_worker(self) -> None:
+        """
+        🚀 START THE ASYNC SCRIBE (ADR-204)
+        Starts the asyncio background task for non-blocking commits.
+        """
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            self._commit_event = asyncio.Event()
+            self._worker_task = loop.create_task(self._persistence_worker())
+            logger.info("✍️  StateService: Async background scribe started.")
+        except RuntimeError:
+            logger.warning("⚠️  StateService: No running event loop. Background worker deferred.")
+
+    async def _persistence_worker(self) -> None:
+        """
+        🔄 THE PERSISTENCE WORKER (ADR-204)
+        Waits for triggers and performs commits in the background.
+        """
+        import asyncio
+        logger.debug("🔄 StateService: Worker enter.")
+        try:
+            while True:
+                # Wait for trigger OR periodic pulse (every 60s)
+                try:
+                    await asyncio.wait_for(self._commit_event.wait(), timeout=60.0)
+                    self._commit_event.clear()
+                    reason = "threshold"
+                except asyncio.TimeoutError:
+                    reason = "periodic"
+
+                if self._dirty_files and self._auto_commit_enabled:
+                    # BLOCKING GIT CALL happens here, but in a separate task!
+                    logger.info(f"✍️  StateService: Background commit starting ({reason})...")
+                    success = await asyncio.to_thread(self._do_auto_commit, reason=reason)
+                    if success:
+                        logger.info("✅ StateService: Background commit complete.")
+        except asyncio.CancelledError:
+            logger.info("🛑 StateService: Worker stopped.")
+        except Exception as e:
+            logger.error(f"💥 StateService: Worker crashed: {e}")
 
     # =========================================================================
     # PUBLIC API: File Operations
@@ -281,15 +343,21 @@ class StateService:
     def load(self, filename: str, default: Any = None) -> Any:
         """
         Load state from a JSON file.
-
-        Args:
-            filename: Relative to .opus_state/
-            default: Default value if file doesn't exist
-
-        Returns:
-            Loaded data or default
+        (Heritage Support: Migrates from .opus_state if needed)
         """
         target_path = self.state_root / filename
+
+        # 🏛️ HERITAGE MIGRATION (Restore Sovereignty)
+        if not target_path.exists():
+            legacy_root = self.workspace / ".opus_state"
+            legacy_path = legacy_root / filename
+            if legacy_path.exists():
+                logger.info(f"🏛️  Migrating heritage state: {filename} → {self.state_root}")
+                try:
+                    import shutil
+                    shutil.copy2(legacy_path, target_path)
+                except Exception as e:
+                    logger.warning(f"⚠️  Heritage migration failed for {filename}: {e}")
 
         if not target_path.exists():
             return default
@@ -492,35 +560,33 @@ class StateService:
             logger.info("🍎 Session ending - committing dirty state...")
             self._do_auto_commit(reason="session_end")
 
+    def trigger_commit(self) -> None:
+        """Manually trigger a background commit."""
+        if self._commit_event:
+            self._commit_event.set()
+            logger.debug("✍️  StateService: Commit triggered.")
+
     def _maybe_auto_commit(self) -> None:
         """
         Check if we should auto-commit (the invisible hand).
+        (ADR-204: Decoupled Non-Blocking Trigger)
         """
         if not self._auto_commit_enabled:
-            return
-
-        # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
-        import os
-        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return
 
         if not self._dirty_files:
             return
 
-        # Check if Heartbeat is handling commits (don't double-commit)
-        if self._is_heartbeat_alive():
-            return
-
         # Check write threshold
         if self._writes_since_commit >= self.AUTO_COMMIT_THRESHOLD:
-            self._do_auto_commit(reason="threshold")
+            self.trigger_commit()
             return
 
         # Check time threshold
         if self._last_commit:
             elapsed = (datetime.now() - self._last_commit).total_seconds()
             if elapsed >= self.AUTO_COMMIT_SECONDS and self._writes_since_commit > 0:
-                self._do_auto_commit(reason="time")
+                self.trigger_commit()
                 return
 
     def _do_auto_commit(self, reason: str = "auto") -> bool:
@@ -534,6 +600,12 @@ class StateService:
             True if commit succeeded
         """
         if not self._dirty_files:
+            return False
+
+        # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
+        import os
+        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
+            logger.debug(f"🍎 Auto-commit skipped (VIBE_NO_GIT_COMMIT active): {reason}")
             return False
 
         try:
@@ -635,36 +707,50 @@ class StateService:
 
 
 # =========================================================================
-# SINGLETON ACCESS
+# SINGLETON & REGISTRY ACCESS
 # =========================================================================
 
-_instance: Optional[StateService] = None
+_instances: Dict[str, StateService] = {} # agent_id -> instance
 _instance_lock = threading.Lock()
 
 
-def get_state_service(workspace: Optional[Path] = None) -> StateService:
+def get_state_service(
+    workspace: Optional[Path] = None,
+    agent_id: Optional[str] = None,
+    plugin_id: Optional[str] = None
+) -> StateService:
     """
-    Get the global StateService singleton.
+    Get a namespaced StateService instance.
 
     Args:
-        workspace: Project root (required on first call)
+        workspace: Project root
+        agent_id: Optional agent ID for namespacing
+        plugin_id: Optional plugin ID for namespacing
 
     Returns:
         StateService instance
     """
-    global _instance
+    global _instances
+
+    # Generate unique registry key
+    if agent_id:
+        key = f"agent:{agent_id}"
+    elif plugin_id:
+        key = f"plugin:{plugin_id}"
+    else:
+        key = "global"
 
     with _instance_lock:
-        if _instance is None:
+        if key not in _instances:
             if workspace is None:
                 workspace = Path.cwd()
-            _instance = StateService(workspace)
+            _instances[key] = StateService(workspace, agent_id=agent_id, plugin_id=plugin_id)
 
-        return _instance
+        return _instances[key]
 
 
 def reset_state_service() -> None:
-    """Reset the global singleton (mainly for testing)."""
-    global _instance
+    """Reset all singletons (mainly for testing)."""
+    global _instances
     with _instance_lock:
-        _instance = None
+        _instances.clear()

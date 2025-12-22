@@ -365,8 +365,14 @@ class SynapseStore:
             seed_weights: Initial weights to use if file doesn't exist
         """
         self._workspace = workspace or Path.cwd()
-        self._synapse_file = self._workspace / ".opus_state" / "synapses.json"
-        self._backup_dir = self._workspace / ".opus_state" / "backups"
+        
+        # 🍎 STATE: Global Sovereign State (ADR-204)
+        # Synapses are collective memory, they belong to the State root.
+        from vibe_core.state.state_service import get_state_service
+        self._state_service = get_state_service(self._workspace) # Global/Sovereign
+        
+        self._synapse_file = self._state_service.state_root / "synapses.json"
+        self._backup_dir = self._state_service.state_root / "backups"
 
         # Cache
         self._cache: Optional[Dict[str, Any]] = None

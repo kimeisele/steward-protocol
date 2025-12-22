@@ -667,7 +667,7 @@ class CycleRegistry:
     - Emits to EventBus (not a separate log)
 
     OPUS-133 FIX: Persistent Memory
-    - Cycle history is now persisted to .opus_state/cycle_history.json
+    - Cycle history is now persisted to Sovereign State root (ADR-204)
     - Survives across sessions (unlike in-memory only)
     - COGNITION.md now shows real historical data
 
@@ -680,9 +680,6 @@ class CycleRegistry:
     - Persistent memory (survives session restarts)
     """
 
-    # Default history file path (relative to workspace)
-    HISTORY_FILE = ".opus_state/cycle_history.json"
-
     def __init__(
         self,
         retention_policy: Optional[RetentionPolicy] = None,
@@ -693,7 +690,7 @@ class CycleRegistry:
 
         Args:
             retention_policy: How long to keep cycle history (prevents memory leaks)
-            workspace: Root path for .opus_state storage (defaults to cwd)
+            workspace: Workspace root
         """
         self._cycles: Dict[str, CycleContext] = {}  # cycle_id → CycleContext
         self._retention_policy = retention_policy or RetentionPolicy()
@@ -701,7 +698,11 @@ class CycleRegistry:
         self._error_cycles: List[CycleContext] = []  # For retention
         self._cycle_count = 0
         self._workspace = workspace or Path.cwd()
-        self._history_path = self._workspace / self.HISTORY_FILE
+        
+        # 🍎 STATE: Global Sovereign State (ADR-204)
+        from vibe_core.state.state_service import get_state_service
+        self._state_service = get_state_service(self._workspace)
+        self._history_filename = "cycle_history.json"
 
         # OPUS-133: Load persistent history on startup
         self._load_from_disk()
@@ -825,11 +826,8 @@ class CycleRegistry:
         )
 
     def _save_to_disk(self) -> None:
-        """Persist cycle history to disk for session continuity."""
+        """Persist cycle history to State root (ADR-204)."""
         try:
-            # Ensure directory exists
-            self._history_path.parent.mkdir(parents=True, exist_ok=True)
-
             # Serialize cycle history
             data = {
                 "version": "1.0",
@@ -839,12 +837,7 @@ class CycleRegistry:
                 "errors": [self._cycle_to_dict(c) for c in self._error_cycles],
             }
 
-            # Atomic write (write to temp, then rename)
-            temp_path = self._history_path.with_suffix(".tmp")
-            with open(temp_path, "w") as f:
-                json.dump(data, f, indent=2)
-            temp_path.rename(self._history_path)
-
+            self._state_service.save(self._history_filename, data, create_backup=False)
             logger.debug(
                 f"💾 Cycle history saved: {len(self._completed_cycles)} completed, {len(self._error_cycles)} errors"
             )
@@ -853,14 +846,11 @@ class CycleRegistry:
             logger.warning(f"Could not persist cycle history: {e}")
 
     def _load_from_disk(self) -> None:
-        """Load cycle history from disk on startup."""
+        """Load cycle history from State root (with Heritage migration)."""
         try:
-            if not self._history_path.exists():
-                logger.debug("No cycle history file found (fresh start)")
+            data = self._state_service.load(self._history_filename)
+            if not data:
                 return
-
-            with open(self._history_path) as f:
-                data = json.load(f)
 
             # Restore completed cycles
             for item in data.get("completed", []):
@@ -880,7 +870,5 @@ class CycleRegistry:
                 f"{len(self._error_cycles)} errors (total: {self._cycle_count})"
             )
 
-        except json.JSONDecodeError as e:
-            logger.warning(f"Corrupt cycle history file, starting fresh: {e}")
         except Exception as e:
             logger.warning(f"Could not load cycle history: {e}")
