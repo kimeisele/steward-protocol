@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
@@ -1276,13 +1277,17 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # self._ui_manager.sync_all()  # DEPRECATED: Handled by Plugins
 
         task = self._scheduler.next_task()
-        if not task:
-            # No tasks - but still pulse heartbeat every 5 seconds
-            import time
 
+        if not task:
             if time.time() - self._last_pulse_time >= 5.0:
                 self._pulse()
                 self._last_pulse_time = time.time()
+                # OPUS-174: BIORHYTHM - emit KERNEL_TICK even when idle!
+                asyncio.create_task(self._event_bus.emit(Event(
+                    event_type=EventType.KERNEL_TICK,
+                    agent_id="kernel",
+                    message="Kernel idle tick (biorhythm)"
+                )))
             return
 
         # Get the target agent
@@ -1326,8 +1331,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 # Execute task directly in-process (GenericAgent or failed process spawn)
                 logger.info(f"⚡ Executing task {task.task_id} on {task.agent_id} (in-process)")
                 try:
-                    import asyncio
-
                     if asyncio.iscoroutinefunction(agent.process):
                         result = asyncio.run(agent.process(task))
                     else:
@@ -1356,14 +1359,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             # PULSE: Update snapshot after task completion
             self._pulse()
 
-            # KERNEL_TICK: Emit after every tick to drive autonomous circuits
-            # Note: Using create_task to schedule the async emit non-blocking
-            asyncio.create_task(self._event_bus.emit(Event(
-                event_type=EventType.KERNEL_TICK,
-                agent_id="kernel",
-                message="Kernel heartbeat tick"
-            )))
-
             # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
             self._check_system_health()
 
@@ -1387,6 +1382,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             # Plugin Hook: Task Failed
             for plugin in self._plugins:
                 plugin.on_task_failed(self, task.task_id, error)
+
+        # KERNEL_TICK: Emit after every tick to drive autonomous circuits
+        # Note: Using create_task to schedule the async emit non-blocking
+        asyncio.create_task(self._event_bus.emit(Event(
+            event_type=EventType.KERNEL_TICK,
+            agent_id="kernel",
+            message="Kernel heartbeat tick"
+        )))
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
