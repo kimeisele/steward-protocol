@@ -649,17 +649,25 @@ class StateService:
             return False
 
     def _commit_via_weaver(self) -> bool:
-        """Try to commit via StateSyncWeaver."""
+        """Try to commit via StateSyncWeaver.
+
+        OPUS-206 FIX: Use existing singleton instead of creating new Prakriti.
+        If Weaver is not initialized, return False and let caller fallback.
+        """
         try:
-            from .prakriti import Prakriti
             from .weaver import get_state_sync_weaver
 
-            prakriti = Prakriti(self.workspace)
-            weaver = get_state_sync_weaver(prakriti)
-            result = weaver.pulse()
+            # Get existing Weaver singleton (DO NOT create new Prakriti!)
+            weaver = get_state_sync_weaver()
+            if weaver is None:
+                # Weaver not initialized yet - let caller use fallback
+                logger.debug("StateService: Weaver not initialized, using git fallback")
+                return False
 
+            result = weaver.pulse()
             return result.success if hasattr(result, "success") else bool(result)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"StateService: Weaver commit failed: {e}")
             return False
 
     def _commit_via_git(self, reason: str) -> bool:
@@ -667,6 +675,15 @@ class StateService:
         Fallback: commit directly via git.
 
         This is used when Weaver is not available (e.g., early initialization).
+
+        WARNING (OPUS-206): This method uses --no-verify which bypasses:
+        - Pre-commit hooks (including VISNU kernel protection)
+        - GPG signing hooks
+        - Any custom validation hooks
+
+        This is intentional for auto-commit of state files but is a security
+        consideration. State files (.vibe/state/*) are NOT kernel-protected
+        so this is acceptable, but be aware of the implications.
         """
         try:
             # Stage all dirty files
