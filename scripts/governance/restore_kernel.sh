@@ -34,6 +34,7 @@ PROTECTED_FILES=(
     # Core Orchestration
     "vibe_core/kernel_impl.py"
     "vibe_core/kernel_ops.py"
+    "vibe_core/ledger.py"
     # Plugin System
     "vibe_core/plugin_protocol.py"
     "vibe_core/plugin_loader.py"
