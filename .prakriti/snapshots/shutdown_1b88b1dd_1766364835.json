@@ -1,0 +1,47 @@
+{
+  "timestamp": 1766364835.092426,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/review-opus-docs-egLsX",
+    "sha": "d6cc3e5",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 3.5850086212158203,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 13
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "1b88b1dd",
+    "boot_time": 1766364831.8119133,
+    "commit_count": 0
+  }
+}
