@@ -21,10 +21,13 @@ logger = logging.getLogger("KERNEL_OPS")
 
 def check_system_health(kernel: "RealVibeKernel") -> None:
     """
-    🛡️ IMMUNE SYSTEM WATCHDOG
+    🛡️ IMMUNE SYSTEM WATCHDOG (Incremental)
 
     Called after every task execution.
     If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
+
+    OPUS-208: Updated to be incremental (O(1)) instead of full scan (O(N)).
+    Uses persistent trust anchor to maintain hash chain integrity across checks.
     """
     # Import here to avoid circular imports
     try:
@@ -40,11 +43,27 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
         return
 
     try:
-        # Get current ledger events
-        events = kernel._ledger.get_all_events()
+        # OPUS-208: 1. Load anchor from DB meta-table (avoids full scan on restart)
+        # Tuple: (last_id, last_trusted_hash)
+        # Default to (0, "0"*64) if no anchor exists (genesis state)
+        anchor = kernel._ledger.get_meta('health_anchor') or (0, "0"*64)
+        last_id, last_hash = anchor
 
-        # Run verification (events-only for now, VOID checks need external context)
-        report = kernel._auditor.verify_ledger(events)
+        # OPUS-208: 2. Query ONLY new events
+        new_events = kernel._ledger.get_events_since(last_id)
+
+        if not new_events:
+            # No new events, nothing to verify
+            return
+
+        # OPUS-208: 3. Verify chain continuity using the anchor hash
+        # If verify_incremental exists on auditor, use it. Otherwise fall back to verify_ledger (less efficient)
+        if hasattr(kernel._auditor, 'verify_incremental'):
+            report = kernel._auditor.verify_incremental(new_events, start_hash=last_hash)
+        else:
+            # Fallback for legacy auditors (will re-verify all provided events, but at least we only pass new ones)
+            # Note: This loses chain link verification if auditor doesn't support start_hash
+            report = kernel._auditor.verify_ledger(new_events)
 
         # If there's a CRITICAL violation, halt the kernel
         if not report.passed:
@@ -61,9 +80,18 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
 
         # Log health check (non-critical)
         if report.violations:
-            logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected")
+            logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected in new batch")
         else:
-            logger.debug("✅ System health check passed")
+            # Only log success if we actually checked something significant or periodically
+            if len(new_events) > 10:
+                logger.debug(f"✅ System health check passed ({len(new_events)} new events)")
+
+        # OPUS-208: 4. Persist new anchor atomically
+        # New anchor is the ID and Hash of the LAST event in the verified batch
+        if new_events:
+            latest_event = new_events[-1]
+            new_anchor = (latest_event['id'], latest_event['current_hash'])
+            kernel._ledger.set_meta('health_anchor', new_anchor)
 
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
@@ -161,12 +189,12 @@ def pulse(kernel: "RealVibeKernel") -> None:
             try:
                 # 1. Start with base status
                 agent_status = agent.report_status() if hasattr(agent, "report_status") else {"status": "UNKNOWN"}
-                
+
                 # 2. Check if agent is actually running (process check)
                 is_alive = True
                 if agent_id in kernel.process_manager.processes:
                     is_alive = kernel.process_manager.processes[agent_id].process.is_alive()
-                
+
                 if not is_alive:
                     agent_status["status"] = "CRASHED"
                     agent_status["error"] = "Process is not responding"
@@ -175,9 +203,9 @@ def pulse(kernel: "RealVibeKernel") -> None:
                 if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
                     if kernel.governance.is_agent_paused(agent_id):
                         agent_status["status"] = "PAUSED"
-                
+
                 snapshot["agents"][agent_id] = agent_status
-                
+
             except Exception as e:
                 logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
                 snapshot["agents"][agent_id] = {
