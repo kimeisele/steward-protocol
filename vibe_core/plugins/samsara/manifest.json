@@ -1,0 +1,14 @@
+{
+    "id": "samsara",
+    "name": "Samsara Engine",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "OPUS-209: Entropy management and ledger rotation",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 50
+}
