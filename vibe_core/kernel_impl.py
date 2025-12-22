@@ -68,22 +68,15 @@ from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .protocols import AgentManifest, VibeAgent
 
+# Sync modules: Extracted bidirectional markdown interfaces
+# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
+# OPUS-209: Auditor is now accessed via ServiceRegistry
+# The auditor plugin registers itself; kernel uses NullAuditor fallback
+from .protocols.auditor import AuditorProtocol, NullAuditor
+
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import ExecutionRequest, create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
-
-# Sync modules: Extracted bidirectional markdown interfaces
-# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
-
-# Import Auditor for immune system (optional)
-try:
-    from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
-
-    AUDITOR_AVAILABLE = True
-except ImportError:
-    AUDITOR_AVAILABLE = False
-    logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
@@ -251,10 +244,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.ledger_path = ledger_path
 
         # Load immune system (Auditor)
-        self._auditor = None
-        if AUDITOR_AVAILABLE:
-            self._auditor = get_judge()
-            logger.info("🛡️  Immune system loaded (Auditor attached)")
+        # OPUS-209: Auditor is now accessed via ServiceRegistry
+        # If no auditor plugin loaded, use NullAuditor fallback
+        from vibe_core.di import ServiceRegistry
+        self._auditor = ServiceRegistry.get(AuditorProtocol) or NullAuditor()
+        auditor_type = type(self._auditor).__name__
+        if auditor_type == "NullAuditor":
+            logger.warning("⚠️  No auditor plugin loaded - using NullAuditor")
+        else:
+            logger.info(f"🛡️  Immune system loaded (Auditor: {auditor_type})")
 
         # Phase 2: Process Manager
         # OPUS-209: Extracted to process_isolation plugin
