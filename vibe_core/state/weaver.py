@@ -139,7 +139,6 @@ class StateSyncWeaver:
         self,
         prakriti: "Prakriti",
         sync_holon: Optional["StateSyncHolon"] = None,
-        manas_oracle: Optional[Any] = None,
     ):
         """
         Initialize the Weaver.
@@ -147,11 +146,9 @@ class StateSyncWeaver:
         Args:
             prakriti: The core state engine
             sync_holon: Plugin state discovery (optional, uses prakriti's if not provided)
-            manas_oracle: MANAS cognitive interface (Oracle API)
         """
         self.prakriti = prakriti
         self.sync_holon = sync_holon or getattr(prakriti, "sync_holon", None)
-        self.manas_oracle = manas_oracle
         self.workspace = prakriti._workspace if hasattr(prakriti, "_workspace") else Path(".")
         self._runtime_definition = get_runtime_state_definition(self.workspace)
 
@@ -165,6 +162,7 @@ class StateSyncWeaver:
         (Sovereign Intelligence Mode)
         """
         import os
+
         if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return CommitResult(git_sha="0000000", message="Git disabled (Shunyata)", success=True)
 
@@ -227,39 +225,8 @@ class StateSyncWeaver:
     # =========================================================================
 
     def _consult_oracle(self, classified: ClassifiedState) -> WeavingAdvice:
-        """
-        Phase 3: CONSULT - Non-blocking intelligence ingestion.
-
-        OPUS-206 NOTE: The manas_oracle is currently never wired, so this
-        method always returns REFLEX mode. The Oracle integration is a
-        future enhancement - for now we use fast rule-based decisions.
-        """
-        advice = WeavingAdvice(mode=WeaverMode.REFLEX)
-
-        # OPUS-206: Oracle integration is not wired yet.
-        # When implemented, manas_oracle should be injected via
-        # get_state_sync_weaver() or set_manas_oracle() method.
-        if not self.manas_oracle:
-            return advice
-
-        # Future Oracle integration code (currently dead code)
-        try:
-            oracle_context = {
-                "task_title": "State Persistence Pulse",
-                "task_type": "maintenance",
-                "risk_level": "low",
-                "changes": [str(info.path) for info in classified.rajas],
-                "is_automated": True,
-            }
-            result = self.manas_oracle.consult(oracle_context)
-            advice.mode = WeaverMode.ORACLE
-            advice.patterns.append(f"Oracle advice: {result.advice}")
-            if hasattr(result, "priority_paths"):
-                advice.priority_paths = result.priority_paths
-        except Exception as e:
-            advice.patterns.append(f"Oracle silent: {e}")
-
-        return advice
+        """Phase 3: CONSULT - Returns REFLEX mode (Oracle not wired)."""
+        return WeavingAdvice(mode=WeaverMode.REFLEX)
 
     def _discover_all_state(self) -> WeaverStateMap:
         """
