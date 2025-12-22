@@ -229,14 +229,21 @@ class StateSyncWeaver:
     def _consult_oracle(self, classified: ClassifiedState) -> WeavingAdvice:
         """
         Phase 3: CONSULT - Non-blocking intelligence ingestion.
+
+        OPUS-206 NOTE: The manas_oracle is currently never wired, so this
+        method always returns REFLEX mode. The Oracle integration is a
+        future enhancement - for now we use fast rule-based decisions.
         """
         advice = WeavingAdvice(mode=WeaverMode.REFLEX)
 
+        # OPUS-206: Oracle integration is not wired yet.
+        # When implemented, manas_oracle should be injected via
+        # get_state_sync_weaver() or set_manas_oracle() method.
         if not self.manas_oracle:
             return advice
 
+        # Future Oracle integration code (currently dead code)
         try:
-            # Use non-blocking consult from MANAS Oracle API
             oracle_context = {
                 "task_title": "State Persistence Pulse",
                 "task_type": "maintenance",
@@ -244,17 +251,12 @@ class StateSyncWeaver:
                 "changes": [str(info.path) for info in classified.rajas],
                 "is_automated": True,
             }
-
-            # Oracle consult is fast/cached by design (see docs/MANAS_ORACLE_API.md)
             result = self.manas_oracle.consult(oracle_context)
-
             advice.mode = WeaverMode.ORACLE
             advice.patterns.append(f"Oracle advice: {result.advice}")
             if hasattr(result, "priority_paths"):
                 advice.priority_paths = result.priority_paths
-
         except Exception as e:
-            # Oracle failure never blocks the State
             advice.patterns.append(f"Oracle silent: {e}")
 
         return advice
@@ -282,9 +284,11 @@ class StateSyncWeaver:
                     for info in infos
                 ]
 
-        # 2. Runtime files (REMOVED: Slow git scanning)
-        # OPUS-204: Trust StateService.mark_dirty() instead of calling git diff on every pulse
-        state_map.runtime_files = []
+        # 2. Runtime files - OPUS-206 FIX: Use git as source of truth!
+        # The previous "Trust StateService" approach was BROKEN because many
+        # systems write directly to disk without going through StateService.
+        # Git is the ONLY reliable way to know what's actually changed.
+        state_map.runtime_files = self._discover_dirty_from_git()
 
         # 3. Session state
         if hasattr(self.prakriti, "session") and self.prakriti.session:
@@ -425,6 +429,76 @@ class StateSyncWeaver:
                 success=False,
                 error=str(e),
             )
+
+    def _discover_dirty_from_git(self) -> List[str]:
+        """
+        OPUS-206 FIX: Discover dirty state files directly from git.
+
+        This is the ONLY reliable way to find ALL dirty files because:
+        1. StateService._dirty_files only tracks files that go through save()
+        2. Many systems write directly to disk (Prakriti.session.lock, etc.)
+        3. Git is the single source of truth for what's actually changed
+
+        Returns:
+            List of relative paths to dirty state files
+        """
+        import subprocess
+
+        try:
+            # Get all modified and untracked files from git
+            result = subprocess.run(
+                ["git", "status", "--porcelain", "-uall"],
+                cwd=self.workspace,
+                capture_output=True,
+                text=True,
+                timeout=5,  # Fast timeout - don't block
+            )
+
+            if result.returncode != 0:
+                return []
+
+            dirty_files = []
+            for line in result.stdout.splitlines():
+                if not line or len(line) < 3:
+                    continue
+
+                # Parse porcelain format: "XY filename" or "XY orig -> dest"
+                # Status is line[:2] but we only need the filepath for now
+                filepath = line[3:].split(" -> ")[-1].strip()
+
+                # Only include state-related paths
+                if self._is_state_path(filepath):
+                    dirty_files.append(filepath)
+
+            return dirty_files
+
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+            # Git failed - fall back to empty (StateService tracking only)
+            return []
+
+    def _is_state_path(self, path: str) -> bool:
+        """
+        Check if a path is a state file (not source code).
+
+        Uses RuntimeStateDefinition patterns + hardcoded state directories.
+        """
+        # Fast check: known state directories
+        state_prefixes = (
+            ".opus_state/",
+            ".vibe/state/",
+            ".vibe/config/",
+            ".prakriti/",
+            "data/vibe_",  # Ledger files
+        )
+
+        if any(path.startswith(prefix) for prefix in state_prefixes):
+            return True
+
+        # Check via RuntimeStateDefinition for plugin-specific patterns
+        if self._runtime_definition and self._runtime_definition.is_runtime_state(path):
+            return True
+
+        return False
 
 
 # =========================================================================
