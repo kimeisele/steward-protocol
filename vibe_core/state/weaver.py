@@ -229,14 +229,21 @@ class StateSyncWeaver:
     def _consult_oracle(self, classified: ClassifiedState) -> WeavingAdvice:
         """
         Phase 3: CONSULT - Non-blocking intelligence ingestion.
+
+        OPUS-206 NOTE: The manas_oracle is currently never wired, so this
+        method always returns REFLEX mode. The Oracle integration is a
+        future enhancement - for now we use fast rule-based decisions.
         """
         advice = WeavingAdvice(mode=WeaverMode.REFLEX)
 
+        # OPUS-206: Oracle integration is not wired yet.
+        # When implemented, manas_oracle should be injected via
+        # get_state_sync_weaver() or set_manas_oracle() method.
         if not self.manas_oracle:
             return advice
 
+        # Future Oracle integration code (currently dead code)
         try:
-            # Use non-blocking consult from MANAS Oracle API
             oracle_context = {
                 "task_title": "State Persistence Pulse",
                 "task_type": "maintenance",
@@ -244,17 +251,12 @@ class StateSyncWeaver:
                 "changes": [str(info.path) for info in classified.rajas],
                 "is_automated": True,
             }
-
-            # Oracle consult is fast/cached by design (see docs/MANAS_ORACLE_API.md)
             result = self.manas_oracle.consult(oracle_context)
-
             advice.mode = WeaverMode.ORACLE
             advice.patterns.append(f"Oracle advice: {result.advice}")
             if hasattr(result, "priority_paths"):
                 advice.priority_paths = result.priority_paths
-
         except Exception as e:
-            # Oracle failure never blocks the State
             advice.patterns.append(f"Oracle silent: {e}")
 
         return advice
