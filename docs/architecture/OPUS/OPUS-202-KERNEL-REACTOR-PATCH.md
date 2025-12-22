@@ -1,6 +1,26 @@
 # OPUS-202: Kernel Reactor Integration Patch
 
-## STATUS: AWAITING VISNU APPROVAL
+<!-- @HARNESS
+intent: "Integrate QuantumReactor into kernel as core primitive"
+files:
+  - path: vibe_core/kernel_impl.py
+    required: true
+    rationale: "Kernel with reactor property, manifest() method, akasha_hash"
+  - path: vibe_core/reactor/__init__.py
+    required: true
+    rationale: "QuantumReactor implementation"
+tests:
+  - tests/reactor/test_kernel_manifestation.py
+wiring:
+  - pattern: "def manifest\\("
+    in: vibe_core/kernel_impl.py
+  - pattern: "_reactor"
+    in: vibe_core/kernel_impl.py
+  - pattern: "akasha_hash"
+    in: vibe_core/kernel_impl.py
+-->
+
+## STATUS: COMPLETED (2025-12-22)
 
 This document contains the **exact surgical changes** required to integrate
 the QuantumReactor into `kernel_impl.py` as a core kernel primitive.
@@ -12,21 +32,19 @@ the QuantumReactor into `kernel_impl.py` as a core kernel primitive.
 - [x] VajraEnforcer integration (`vibe_core/vajra/enforcement.py`)
 - [x] UnifiedRouter integration (`vibe_core/runtime/unified_execution.py`)
 - [x] RED tests proving kernel needs upgrade (`tests/reactor/test_kernel_manifestation.py`)
+- [x] **Patch applied to kernel_impl.py** (2025-12-22)
 
 ## Test Status
 
 ```
-5 RED (FAILED)  - Kernel missing required methods/properties
-3 SKIPPED       - Integration tests waiting for patch
+8 GREEN (PASSED) - All reactor integration tests passing!
 
-FAILED:
+PASSED:
   - test_kernel_has_reactor_property
   - test_kernel_has_manifest_method
   - test_manifest_is_callable
   - test_kernel_has_compute_capability_resonance
   - test_kernel_has_akasha_hash_property
-
-SKIPPED (will run after patch):
   - test_manifest_returns_resonance_data
   - test_manifest_evolves_akasha
   - test_capability_resonance_is_continuous
