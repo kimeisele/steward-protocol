@@ -66,7 +66,6 @@ from .manifest_registry import InMemoryManifestRegistry
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
-from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
@@ -259,7 +258,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.info("🛡️  Immune system loaded (Auditor attached)")
 
         # Phase 2: Process Manager
-        self.process_manager = ProcessManager()
+        # OPUS-209: Extracted to process_isolation plugin
+        # ProcessManager is created and registered by ProcessIsolationPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded, or kernel cannot run agents
+        self.process_manager = None  # Set by ProcessIsolationPlugin
 
         # Phase 3: Resource Manager
         self.resource_manager = ResourceManager()
@@ -1075,7 +1077,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # Phase 2: Spawn Process (deferred if spawn_process=False)
         # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
-        if spawn_process:
+        if spawn_process and self.process_manager:
             cartridge_path = getattr(agent, "_cartridge_path", None)
             cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
             if cartridge_path and cartridge_class_name:
@@ -1090,12 +1092,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
-        proc_info = self.process_manager.processes.get(agent.agent_id)
-        if proc_info and proc_info.process.is_alive():
-            import time
+        if self.process_manager:
+            proc_info = self.process_manager.processes.get(agent.agent_id)
+            if proc_info and proc_info.process.is_alive():
+                import time
 
-            time.sleep(0.1)  # Give process time to start
-            self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
+                time.sleep(0.1)  # Give process time to start
+                self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
 
         # Phase 4b: Grant repo access to Scribe/Archivist
         if agent.agent_id in ["scribe", "archivist"]:
@@ -1143,6 +1146,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             Number of agents spawned
         """
         spawned = 0
+        if not self.process_manager:
+            logger.warning("⚠️ ProcessManager not available - cannot spawn deferred processes")
+            return 0
+
         for agent_id, agent in self._agent_registry.items():
             # Skip if already has a running process
             if agent_id in self.process_manager.processes:
@@ -1281,6 +1288,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """
         Phase 2: Process IPC messages from agents (Task Results, Crashes, etc.)
         """
+        if not self.process_manager:
+            return
         messages = self.process_manager.get_pending_messages()
         for agent_id, msg in messages:
             msg_type = msg.get("type")
@@ -1379,7 +1388,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         logger.warning(f"🔪 TERMINATE_AGENT: {agent_id} (reason: {reason})")
 
         # 1. Stop the process if running
-        if hasattr(self, "process_manager") and agent_id in self.process_manager.processes:
+        if self.process_manager and agent_id in self.process_manager.processes:
             try:
                 proc_info = self.process_manager.processes[agent_id]
                 if proc_info.process.is_alive():
@@ -1962,7 +1971,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
                 # Execution (Process vs In-Process)
                 has_process = (
-                    task.agent_id in self.process_manager.processes
+                    self.process_manager
+                    and task.agent_id in self.process_manager.processes
                     and self.process_manager.processes[task.agent_id].process.is_alive()
                 )
 
@@ -1984,7 +1994,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 # Maintenance
                 self._pulse()
                 self._check_system_health()
-                self.process_manager.check_health()
+                if self.process_manager:
+                    self.process_manager.check_health()
                 self._process_ipc_events()
                 self._sync_resource_quotas()
 
@@ -2061,9 +2072,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 await self._gateway_task
             except asyncio.CancelledError:
                 pass
-
         # Cleanup processes
-        self.process_manager.shutdown()
-
+        if self.process_manager:
+            self.process_manager.shutdown()
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
