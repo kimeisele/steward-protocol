@@ -1283,11 +1283,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 self._pulse()
                 self._last_pulse_time = time.time()
                 # OPUS-174: BIORHYTHM - emit KERNEL_TICK even when idle!
-                asyncio.create_task(self._event_bus.emit(Event(
+                self._emit_event_safe(Event(
                     event_type=EventType.KERNEL_TICK,
                     agent_id="kernel",
                     message="Kernel idle tick (biorhythm)"
-                )))
+                ))
             return
 
         # Get the target agent
@@ -1385,11 +1385,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # KERNEL_TICK: Emit after every tick to drive autonomous circuits
         # Note: Using create_task to schedule the async emit non-blocking
-        asyncio.create_task(self._event_bus.emit(Event(
+        self._emit_event_safe(Event(
             event_type=EventType.KERNEL_TICK,
             agent_id="kernel",
             message="Kernel heartbeat tick"
-        )))
+        ))
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
@@ -1964,6 +1964,31 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def _pulse(self) -> None:
         """💓 HEARTBEAT - Delegates to kernel_ops."""
         _pulse_impl(self)
+
+    def _emit_event_safe(self, event: Event) -> None:
+        """
+        OPUS-174: Emit event safely in both sync and async contexts.
+
+        Problem: boot_kernel.py runs a sync loop (time.sleep), but EventBus.emit()
+        is async. Using asyncio.create_task() without a running loop = silent failure.
+
+        Solution: Check if we're in an async context and use the right method.
+        This pattern is from protocols/agent.py and state/unified_akshara.py.
+        """
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Async context - schedule non-blocking
+                asyncio.create_task(self._event_bus.emit(event))
+            else:
+                # Sync context (boot_kernel.py) - run to completion
+                asyncio.run(self._event_bus.emit(event))
+        except RuntimeError:
+            # No event loop available at all - try fresh run
+            try:
+                asyncio.run(self._event_bus.emit(event))
+            except Exception:
+                pass  # Silent skip if truly impossible
 
     # ========================================================================
     # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
