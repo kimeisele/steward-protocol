@@ -884,13 +884,13 @@ Changes to `kernel_impl.py`:
 
 ### Kernel Metrics
 
-| Metric | Start | Phase 2 Done | Realistic Target | Aspirational |
-|--------|-------|--------------|------------------|--------------|
-| Lines of Code | 2062 | 2081 | **≤1400** | ≤1200 |
-| Direct Instantiations | 21 | 17 | **0** | 0 |
-| Methods | 68 | 68 | **≤40** | ≤30 |
-| Concrete Imports | 15+ | 12 | **≤5** | 0 |
-| Cartridge Imports | 3 | 0 ✅ | **0** | 0 |
+| Metric | Start | Phase 2 | Phase 3 (Current) | Realistic Target | Aspirational |
+|--------|-------|---------|-------------------|------------------|--------------|
+| Lines of Code | 2062 | 2081 | **2045** | **≤1400** | ≤1200 |
+| Direct Instantiations | 21 | 17 | **13** | **0** | 0 |
+| Methods | 68 | 68 | **66** | **≤40** | ≤30 |
+| Concrete Imports | 15+ | 12 | **~8** | **≤5** | 0 |
+| Cartridge Imports | 3 | 0 | **0 ✅** | **0** | 0 |
 
 > **Note on "1008 LOC"**: The original target of 1008 (Vishnu's 1008 Names) was
 > symbolic/aspirational. A realistic kernel minimum is ~800-1000 LOC for core

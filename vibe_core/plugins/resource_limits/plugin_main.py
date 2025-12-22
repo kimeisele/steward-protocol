@@ -85,6 +85,26 @@ class ResourceLimitsPlugin(KernelPlugin):
             logger.critical(f"❌ CRITICAL: Resource Limits Plugin failed to boot: {e}")
             return HookResult.fatal(str(e))
 
+    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+        """
+        Set initial resource quota for newly registered agent.
+
+        OPUS-209: This logic was extracted from kernel register_agent().
+        The kernel only registers; the plugin handles quota management.
+        """
+        if not self._manager:
+            return
+
+        # Set initial resource quota (default: 100 credits)
+        self._manager.set_quota(agent_id, credits=100)
+
+        # Enforce quota if process is running
+        if kernel.process_manager:
+            proc_info = kernel.process_manager.processes.get(agent_id)
+            if proc_info and proc_info.process.is_alive():
+                self._manager.enforce_quota(agent_id, proc_info.process)
+                logger.debug(f"📊 Quota enforced for {agent_id}")
+
     def get_api(self) -> Optional[ResourceManager]:
         """Return the resource manager for direct access if needed."""
         return self._manager
