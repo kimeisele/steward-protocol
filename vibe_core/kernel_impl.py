@@ -32,7 +32,6 @@ from .errors import kernel_fault  # GAD-000 Compliance
 
 # DocRenderer: Extracted markdown rendering logic
 from .event_bus import Event, EventType, get_event_bus  # Phase 2: Event Bus
-from .gateway.api import NetworkGateway  # Phase 18: The Network (Sangha)
 
 # I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
 from .io_service import KernelIOService
@@ -415,8 +414,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
         # Phase 18: Network Gateway (Sangha)
-        # Using Async Sidecar pattern (Thread + Loop) to avoid blocking sync kernel
-        self.gateway = NetworkGateway(self.prakriti)
+        # OPUS-209: Extracted to sangha_network plugin
+        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
+        # Plugin sets kernel.gateway = <instance> during boot
+        self.gateway = None  # Set by SanghaNetworkPlugin
         self._gateway_thread = None
         self._gateway_loop = None
 
@@ -1824,6 +1825,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         Phase 18: Async Sidecar Entry Point.
         Runs the NetworkGateway in a dedicated asyncio loop/thread.
         """
+        if self.gateway is None:
+            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
+            return
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -2003,6 +2007,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
     async def _run_gateway_async(self) -> None:
         """Runs the NetworkGateway as an asyncio task."""
+        if self.gateway is None:
+            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
+            return
         try:
             await self.gateway.start()
         except Exception as e:
