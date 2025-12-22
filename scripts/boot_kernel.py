@@ -42,12 +42,12 @@ logger = logging.getLogger("BOOT_LOADER")
 _kernel = None
 
 
-def signal_handler(sig, frame):
-    """Graceful shutdown handler."""
-    logger.info("\n🛑 Received shutdown signal. Shutting down...")
+async def async_signal_handler():
+    """Graceful shutdown for async context."""
+    logger.info("\n🛑 Received shutdown signal. Shutting down async...")
     if _kernel:
         try:
-            _kernel.shutdown()
+            await _kernel.shutdown_async()
         except Exception as e:
             logger.warning(f"Shutdown error: {e}")
     # Cleanup PID file
@@ -103,16 +103,17 @@ def write_pid_file():
     logger.info(f"📝 PID file written: {PID_FILE} (PID: {os.getpid()})")
 
 
-def main():
+async def main():
     global _kernel
 
     logger.info("=" * 70)
-    logger.info("🔌 VIBE KERNEL BOOT SEQUENCE INITIATED")
+    logger.info("🔌 VIBE KERNEL BOOT SEQUENCE INITIATED (ASYNC)")
     logger.info("=" * 70)
 
     # Register signal handlers
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(async_signal_handler()))
 
     try:
         # Phase 0: Zombie Cleanup
@@ -120,44 +121,43 @@ def main():
         cleanup_zombie_processes()
         write_pid_file()
 
-        # Phase 1: Import after cleanup (heavy imports)
+        # Phase 1: Import after cleanup
         logger.info("Phase 1: Loading Kernel...")
         from vibe_core.kernel_impl import RealVibeKernel
 
         # Phase 2: Instantiate Kernel
         logger.info("Phase 2: Instantiating Kernel...")
         kernel = RealVibeKernel(ledger_path=PROJECT_ROOT / "data" / "vibe_ledger.db")
-        _kernel = kernel  # For signal handler
+        _kernel = kernel
 
-        # Phase 3: Boot Kernel
-        logger.info("Phase 3: Booting Kernel...")
-        kernel.boot()
+        # Phase 3: Async Boot
+        logger.info("Phase 3: Booting Kernel Async...")
+        await kernel.boot_async()
 
         # Force re-generation of OPUS.md
         for plugin in kernel._plugins:
             if getattr(plugin, "plugin_id", "") == "interface":
                 plugin.render_all()
 
-        # Phase 4: ACTIVE TICK LOOP (Critical for heartbeat!)
-        # This replaces the blocking sleep loop.
-        # kernel.tick() drives pulse, scheduler, and plugin ticks.
-        logger.info("Phase 4: Entering Active Tick Loop...")
+        # Phase 4: UNIFIED ASYNC LOOP
+        logger.info("Phase 4: Entering Unified Async Loop...")
         logger.info("✅ System Online. Heartbeat active.")
 
-        while True:
-            kernel.tick()
-            time.sleep(0.1)  # 100ms tick rate, prevents CPU thrashing
+        await kernel.run_forever()
 
     except Exception as e:
         logger.critical(f"❌ FATAL BOOT ERROR: {e}")
         import traceback
 
         traceback.print_exc()
-        # Cleanup PID on crash
         if PID_FILE.exists():
             PID_FILE.unlink()
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
