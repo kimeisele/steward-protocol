@@ -53,7 +53,15 @@ class InMemoryLedger(VibeLedger):
         self.events: List[Dict[str, Any]] = []
         self._event_counter = 0
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        details: Dict[str, Any],
+        result: str = None,
+        task_id: str = None,
+        error: str = None,
+    ) -> str:
         """Record a generic event (governance action)"""
         self._event_counter += 1
         event_id = f"EVT-{self._event_counter:06d}"
@@ -63,6 +71,9 @@ class InMemoryLedger(VibeLedger):
             "event_type": event_type,
             "agent_id": agent_id,
             "details": details,
+            "result": result,
+            "task_id": task_id,
+            "error": error,
         }
         self.events.append(event)
         logger.debug(f"📝 Ledger: Event recorded {event_id} ({event_type})")

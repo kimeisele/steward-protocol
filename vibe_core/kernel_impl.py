@@ -168,6 +168,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         config: "PhoenixConfig | None" = None,
         parent: "RealVibeKernel | None" = None,
         load_plugins: bool = True,
+        test_mode: bool = False,
     ):
         """
         Initialize the kernel.
@@ -181,6 +182,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                     Child kernels can access parent for result folding.
             load_plugins: If True, auto-discover and boot plugins (default: True).
                           Set False for isolated testing or minimal boot.
+            test_mode: If True, disable heavy I/O and blocking persistence (default: False).
         """
         # =====================================================================
         # VAJRA ARMOR: Initialize DNA protection (must be first!)
@@ -193,6 +195,18 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._child_kernels: list["RealVibeKernel"] = []
         self._is_ephemeral = parent is not None
         self._load_plugins = load_plugins
+        self._test_mode = test_mode
+
+        if self._test_mode:
+            import os
+            os.environ["VIBE_NO_GIT_COMMIT"] = "1"
+            logger.info("🧪 KERNEL: Test Mode Active - Git Persistence Disabled")
+            try:
+                from vibe_core.state.state_service import get_state_service
+                ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
+                ss._auto_commit_enabled = False
+            except Exception:
+                pass
 
         # Resolve ledger path from config if not provided
         if ledger_path is None:
@@ -1159,83 +1173,20 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
     def boot(self, boot_mode: BootMode | None = None) -> None:
         """
+        DEPRECATED: Use boot_async() (OPUS-203).
         Boot the kernel - register all manifests and start scheduler.
-
-        OPUS-031 Layer 4: Supports BootMode for different execution contexts.
-
-        Args:
-            boot_mode: Optional BootMode (FULL, HEADLESS, MINIMAL).
-                       If None, defaults to FULL for backward compatibility.
         """
-        from vibe_core.boot_mode import BootMode
+        import warnings
+        warnings.warn("kernel.boot() is deprecated, use await kernel.boot_async()", DeprecationWarning, stacklevel=2)
 
-        if boot_mode is None:
-            boot_mode = BootMode.FULL
-
-        self._status = KernelStatus.BOOTING
-        logger.info(f"⚙️  KERNEL BOOTING... (mode: {boot_mode.value})")
-
-        # Phase 5: Record Kernel Boot in Parampara
-        self.lineage.add_block(
-            event_type=LineageEventType.KERNEL_BOOT,
-            agent_id=None,
-            data={
-                "version": "2.0.0",
-                "timestamp": datetime.utcnow().isoformat(),
-                "agents_registered": len(self._agent_registry),
-                "boot_mode": boot_mode.value,
-            },
-        )
-
-        # Register all agent manifests
-        for agent_id, agent in self._agent_registry.items():
-            try:
-                # Handle both VibeAgent objects and dict entries (for tests)
-                if hasattr(agent, "get_manifest"):
-                    manifest = agent.get_manifest()
-                    self._manifest_registry.register(manifest)
-                    logger.info(f"   📜 {agent_id}: {manifest.description}")
-                else:
-                    # Skip dict entries (test mocks)
-                    logger.debug(f"   ⏭️  Skipping manifest for {agent_id} (not a VibeAgent)")
-            except Exception as e:
-                logger.warning(f"   ⚠️  Failed to register manifest for {agent_id}: {e}")
-
-        self._status = KernelStatus.RUNNING
-        logger.info("✅ KERNEL RUNNING")
-
-        # OPUS-009: Inject kernel reference into Prakriti for Layer 2 access
-        self.prakriti.inject_kernel(self)
-
-        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
+        # Fallback to sync run
         try:
-            # 1. Session Start (Ghost Lock Protocol)
-            self.prakriti.begin_session()
-
-            # 2. Consistency Check (Split-Brain Prevention)
-            self.prakriti.sync_ledger_git(strategy="git_wins")
-
-            # 3. Crash Recovery
-            if self.prakriti.is_dirty:
-                recovery = self.prakriti.recover_from_crash()
-                if recovery:
-                    logger.info(f"❤️‍🩹 Recovered state from previous crash: {recovery.git_sha[:7]}")
-        except Exception as e:
-            logger.error(f"❌ Prakriti Boot Failure: {e}")
-
-        # PULSE: Write initial snapshot on boot
-        self._pulse()
-
-        # Phase 18: Start Network Gateway (Async Sidecar)
-        # OPUS-031 Layer 4: Skip gateway in headless mode for faster boot
-        if boot_mode.should_skip_gateway():
-            logger.info("🚫 Network Gateway SKIPPED (headless mode)")
-        elif not self._gateway_thread or not self._gateway_thread.is_alive():
-            import threading
-
-            self._gateway_thread = threading.Thread(target=self._run_gateway_sidecar, name="VibeGateway", daemon=True)
-            self._gateway_thread.start()
-            logger.info("🌐 Network Gateway sidecar thread started")
+            loop = asyncio.get_running_loop()
+            # If we are already in a loop, we can't use asyncio.run
+            # This is exactly why we are migrating to unified async
+            loop.run_until_complete(self.boot_async(boot_mode))
+        except RuntimeError:
+            asyncio.run(self.boot_async(boot_mode))
 
     def enforce_entropy_limits(self):
         """
@@ -1260,136 +1211,24 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                     logger.warning(f"🕉️ PRALAYA EXECUTED: Dissolved {excess} stale events. Entropy reduced to {len(self._ledger.events)}.")
 
     def tick(self) -> None:
-        """Tick the kernel - process one task from the scheduler"""
-        # 1. Enforce Mortality (Fixes Memory Leak)
-        self.enforce_entropy_limits()
-
-        if self._status != KernelStatus.RUNNING:
-            logger.warning("⚠️  Kernel not running")
-            return
-
-        # Plugin Hook: Pre-Tick (Input Processing)
-        for plugin in self._plugins:
-            plugin.on_tick_pre(self)
-
-        # Phase 2.5: UI Synchronization (Delegated to MarkdownUIManager)
-        # Handles SETTINGS.md (Command Queue) and ENVOY.md (Terminal Interface)
-        # self._ui_manager.sync_all()  # DEPRECATED: Handled by Plugins
-
-        task = self._scheduler.next_task()
-
-        if not task:
-            if time.time() - self._last_pulse_time >= 5.0:
-                self._pulse()
-                self._last_pulse_time = time.time()
-                # OPUS-174: BIORHYTHM - emit KERNEL_TICK even when idle!
-                self._emit_event_safe(Event(
-                    event_type=EventType.KERNEL_TICK,
-                    agent_id="kernel",
-                    message="Kernel idle tick (biorhythm)"
-                ))
-            return
-
-        # Get the target agent
-        agent = self._agent_registry.get(task.agent_id)
-        if not agent:
-            error = f"Agent {task.agent_id} not found in registry"
-            logger.error(f"❌ {error}")
-            self._ledger.record_failure(task, error)
-            return
-
-        # GOVERNANCE HOOK: Ask plugins if task can be assigned
-        # Any plugin returning False will VETO the task
-        for plugin in self._plugins:
-            if not plugin.on_task_pre_assign(self, task.agent_id, task):
-                logger.info(f"🚫 Task vetoed by plugin '{plugin.plugin_id}' for agent '{task.agent_id}'")
-                # Re-queue the task for later (bypasses Sarga validation)
-                self._scheduler.requeue_task(task)
-                return
+        """
+        DEPRECATED: Use tick_async() (OPUS-203).
+        Tick the kernel - process one task from the scheduler.
+        """
+        import warnings
+        warnings.warn("kernel.tick() is deprecated, use await kernel.tick_async()", DeprecationWarning, stacklevel=2)
 
         try:
-            # Record start
-            self._ledger.record_start(task)
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                # We can't await here, so we schedule it
+                asyncio.create_task(self.tick_async())
+                return
+        except RuntimeError:
+            pass
 
-            # Check if agent has a running process (Late Binding) or runs in-process
-            has_process = (
-                task.agent_id in self.process_manager.processes
-                and self.process_manager.processes[task.agent_id].process.is_alive()
-            )
-
-            if has_process:
-                # Execute task via Process Manager (IPC) - Agent runs in separate process
-                logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
-                try:
-                    self.process_manager.send_task(task.agent_id, task)
-                except ValueError as e:
-                    structured = kernel_fault("ipc_dispatch", str(e))
-                    logger.error(f"❌ IPC Dispatch failed: {structured}")
-                    self._ledger.record_failure(task, str(structured))
-                    return
-            else:
-                # Execute task directly in-process (GenericAgent or failed process spawn)
-                logger.info(f"⚡ Executing task {task.task_id} on {task.agent_id} (in-process)")
-                try:
-                    if asyncio.iscoroutinefunction(agent.process):
-                        result = asyncio.run(agent.process(task))
-                    else:
-                        result = agent.process(task)
-                    self._ledger.record_completion(task, result)
-                    logger.info(f"✅ Task {task.task_id} completed (in-process)")
-
-                    # Plugin Hook: Task Completed
-                    for plugin in self._plugins:
-                        plugin.on_task_completed(self, task.task_id, result)
-                except Exception as e:
-                    structured = kernel_fault("in_process_execution", str(e))
-                    logger.error(f"❌ In-process execution failed: {structured}")
-                    self._ledger.record_failure(task, str(structured))
-
-                    # Plugin Hook: Task Failed
-                    for plugin in self._plugins:
-                        plugin.on_task_failed(self, task.task_id, str(structured))
-                    return
-
-            # Record completion (Optimistic for now, or move to callback)
-            # In a real async kernel, we'd wait for the result event.
-            # self._ledger.record_completion(task, result)
-            # logger.info(f"✅ Task {task.task_id} completed")
-
-            # PULSE: Update snapshot after task completion
-            self._pulse()
-
-            # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
-            self._check_system_health()
-
-            # Phase 2: Monitor Health & Process Events
-            self.process_manager.check_health()
-            self._process_ipc_events()
-
-            # Phase 3: Sync resource quotas periodically
-            self._sync_resource_quotas()
-
-            # Plugin Hook: Post-Tick (Output/Status)
-            for plugin in self._plugins:
-                plugin.on_tick_post(self)
-
-        except Exception as e:
-            structured = kernel_fault("task_tick", str(e))
-            error = str(structured)
-            logger.exception(f"❌ Task {task.task_id} failed: {error}")
-            self._ledger.record_failure(task, error)
-
-            # Plugin Hook: Task Failed
-            for plugin in self._plugins:
-                plugin.on_task_failed(self, task.task_id, error)
-
-        # KERNEL_TICK: Emit after every tick to drive autonomous circuits
-        # Note: Using create_task to schedule the async emit non-blocking
-        self._emit_event_safe(Event(
-            event_type=EventType.KERNEL_TICK,
-            agent_id="kernel",
-            message="Kernel heartbeat tick"
-        ))
+        # Sync fallback
+        asyncio.run(self.tick_async())
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
@@ -1469,49 +1308,23 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         return self._manifest_registry.lookup(agent_id)
 
     def shutdown(self, reason: str = "User shutdown") -> None:
-        """Gracefully shut down the kernel"""
-        # Phase 5: Record Kernel Shutdown in Parampara (before changing status)
-        if hasattr(self, "lineage"):
-            self.lineage.add_block(
-                event_type=LineageEventType.KERNEL_SHUTDOWN,
-                agent_id=None,
-                data={
-                    "reason": reason,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "agents_active": len(self._agent_registry),
-                },
-            )
-            # Close lineage chain
-            self.lineage.close()
+        """
+        DEPRECATED: Use shutdown_async() (OPUS-203).
+        Gracefully shut down the kernel.
+        """
+        import warnings
+        warnings.warn("kernel.shutdown() is deprecated, use await kernel.shutdown_async()", DeprecationWarning, stacklevel=2)
 
-        # [OPUS-027] FINAL STATE PRESERVATION
         try:
-            if hasattr(self, "prakriti") and self.prakriti:
-                logger.info("💾 Preserving consciousness (Prakriti End Session)...")
-                result = self.prakriti.end_session()
-                if result:
-                    logger.info(f"✅ Final State Committed: {result.git_sha[:7]}")
-        except Exception as e:
-            logger.critical(f"❌ Failed to save final state: {e}")
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                # We can't await here, so we schedule it
+                asyncio.create_task(self.shutdown_async(reason))
+                return
+        except RuntimeError:
+            pass
 
-        # Plugin Hook: Shutdown
-        for plugin in self._plugins:
-            plugin.on_shutdown(self)
-
-        self._status = KernelStatus.STOPPED
-        logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
-
-        # Phase 2: Shutdown processes
-        if hasattr(self, "process_manager"):
-            self.process_manager.shutdown()
-
-        if isinstance(self._ledger, SQLiteLedger):
-            self._ledger.close()
-
-        # Phase 18: Stop Gateway
-        if self._gateway_loop:
-            self._gateway_loop.call_soon_threadsafe(self._gateway_loop.stop)
-            logger.info("🌐 Gateway loop stop signal sent")
+        asyncio.run(self.shutdown_async(reason))
 
     # =========================================================================
     # DURVASA PROTOCOL: Resource Triage (Emergency Response)
@@ -1965,31 +1778,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """💓 HEARTBEAT - Delegates to kernel_ops."""
         _pulse_impl(self)
 
-    def _emit_event_safe(self, event: Event) -> None:
-        """
-        OPUS-174: Emit event safely in both sync and async contexts.
-
-        Problem: boot_kernel.py runs a sync loop (time.sleep), but EventBus.emit()
-        is async. Using asyncio.create_task() without a running loop = silent failure.
-
-        Solution: Check if we're in an async context and use the right method.
-        This pattern is from protocols/agent.py and state/unified_akshara.py.
-        """
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Async context - schedule non-blocking
-                asyncio.create_task(self._event_bus.emit(event))
-            else:
-                # Sync context (boot_kernel.py) - run to completion
-                asyncio.run(self._event_bus.emit(event))
-        except RuntimeError:
-            # No event loop available at all - try fresh run
-            try:
-                asyncio.run(self._event_bus.emit(event))
-            except Exception:
-                pass  # Silent skip if truly impossible
-
     # ========================================================================
     # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
     # ========================================================================
@@ -2022,3 +1810,208 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             loop.run_until_complete(self.gateway.stop())
             loop.close()
             logger.info("🌐 Gateway Sidecar shutdown complete")
+
+    async def boot_async(self, boot_mode: BootMode | None = None) -> None:
+        """
+        🚀 ASYNC BOOT (OPUS-203)
+        Registers manifests, activates Prakriti, and starts Gateway task.
+        """
+        from vibe_core.boot_mode import BootMode
+
+        if boot_mode is None:
+            boot_mode = BootMode.FULL
+
+        self._status = KernelStatus.BOOTING
+        self._boot_time = time.time()
+        logger.info(f"⚙️  KERNEL BOOTING ASYNC... (mode: {boot_mode.value})")
+
+        # Phase 5: Record Kernel Boot in Parampara
+        self.lineage.add_block(
+            event_type=LineageEventType.KERNEL_BOOT,
+            agent_id=None,
+            data={
+                "version": "2.0.0",
+                "timestamp": datetime.utcnow().isoformat(),
+                "agents_registered": len(self._agent_registry),
+                "boot_mode": boot_mode.value,
+            },
+        )
+
+        # Register all agent manifests
+        for agent_id, agent in self._agent_registry.items():
+            try:
+                if hasattr(agent, "get_manifest"):
+                    manifest = agent.get_manifest()
+                    self._manifest_registry.register(manifest)
+                    logger.info(f"   📜 {agent_id}: {manifest.description}")
+            except Exception as e:
+                logger.warning(f"   ⚠️  Failed to register manifest for {agent_id}: {e}")
+
+        self._status = KernelStatus.RUNNING
+        logger.info("✅ KERNEL RUNNING (ASYNC)")
+
+        # OPUS-009: Prakriti Activation
+        self.prakriti.inject_kernel(self)
+        try:
+            self.prakriti.begin_session()
+            self.prakriti.sync_ledger_git(strategy="git_wins")
+            if self.prakriti.is_dirty:
+                self.prakriti.recover_from_crash()
+        except Exception as e:
+            logger.error(f"❌ Prakriti Boot Failure: {e}")
+
+        # PULSE: Write initial snapshot
+        self._pulse()
+
+        # Phase 18: Gateway as Task (instead of Thread)
+        if boot_mode.should_skip_gateway():
+            logger.info("🚫 Network Gateway SKIPPED (headless mode)")
+            self._gateway_task = None
+        else:
+            self._gateway_task = asyncio.create_task(self._run_gateway_async())
+            logger.info("🌐 Network Gateway task started")
+
+    async def run_forever(self) -> None:
+        """
+        🔄 MAIN KERNEL LOOP (OPUS-203)
+        Runs tick_async() at 100ms intervals until shutdown.
+        """
+        logger.info("🔄 Entering Unified Async Kernel loop...")
+        try:
+            while self._status == KernelStatus.RUNNING:
+                await self.tick_async()
+                await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            logger.info("🛑 Kernel loop cancelled")
+        finally:
+            if self._status == KernelStatus.RUNNING:
+                await self.shutdown_async("Loop terminated")
+
+    async def tick_async(self) -> None:
+        """
+        💓 ASYNC TICK (OPUS-203)
+        Drives the heartbeat, scheduler, and event emission natively.
+        """
+        self.enforce_entropy_limits()
+
+        if self._status != KernelStatus.RUNNING:
+            return
+
+        # Plugin Hook: Pre-Tick
+        for plugin in self._plugins:
+            plugin.on_tick_pre(self)
+
+        task = self._scheduler.next_task()
+
+        if not task:
+            # Idle Pulse
+            if time.time() - self._last_pulse_time >= 5.0:
+                self._pulse()
+                self._last_pulse_time = time.time()
+        else:
+            # Get target agent
+            agent = self._agent_registry.get(task.agent_id)
+            if not agent:
+                error = f"Agent {task.agent_id} not found"
+                logger.error(f"❌ {error}")
+                self._ledger.record_failure(task, error)
+                return
+
+            # Task Execution
+            try:
+                self._ledger.record_start(task)
+
+                # Execution (Process vs In-Process)
+                has_process = (
+                    task.agent_id in self.process_manager.processes
+                    and self.process_manager.processes[task.agent_id].process.is_alive()
+                )
+
+                if has_process:
+                    # Dispatch to isolated process
+                    self.process_manager.send_task(task.agent_id, task)
+                else:
+                    # Execute natively (supports async agents!)
+                    if asyncio.iscoroutinefunction(agent.process):
+                        result = await agent.process(task)
+                    else:
+                        result = agent.process(task)
+
+                    self._ledger.record_completion(task, result)
+
+                    for plugin in self._plugins:
+                        plugin.on_task_completed(self, task.task_id, result)
+
+                # Maintenance
+                self._pulse()
+                self._check_system_health()
+                self.process_manager.check_health()
+                self._process_ipc_events()
+                self._sync_resource_quotas()
+
+                for plugin in self._plugins:
+                    plugin.on_tick_post(self)
+
+            except Exception as e:
+                error = str(kernel_fault("task_tick_async", str(e)))
+                logger.exception(f"❌ Task {task.task_id} failed: {error}")
+                self._ledger.record_failure(task, error)
+                for plugin in self._plugins:
+                    plugin.on_task_failed(self, task.task_id, error)
+
+        # NATIVE HEARTBEAT (Direct await! Emitted every tick to drive circuits)
+        await self._event_bus.emit(Event(
+            event_type=EventType.KERNEL_TICK,
+            agent_id="kernel",
+            message="Kernel heartbeat tick"
+        ))
+
+    async def _run_gateway_async(self) -> None:
+        """Runs the NetworkGateway as an asyncio task."""
+        try:
+            await self.gateway.start()
+        except Exception as e:
+            logger.error(f"🌐 Gateway task crashed: {e}")
+
+    async def shutdown_async(self, reason: str = "User shutdown") -> None:
+        """
+        🛑 ASYNC SHUTDOWN (OPUS-203)
+        Gracefully stops gateway task and preserves Prakriti state.
+        """
+        logger.critical(f"🛑 KERNEL SHUTTING DOWN ASYNC: {reason}")
+
+        # Record shutdown
+        if hasattr(self, "lineage"):
+            self.lineage.add_block(
+                event_type=LineageEventType.KERNEL_SHUTDOWN,
+                agent_id=None,
+                data={"reason": reason}
+            )
+            self.lineage.close()
+
+        # Preserve state
+        try:
+            if hasattr(self, "prakriti"):
+                self.prakriti.end_session()
+        except Exception as e:
+            logger.error(f"❌ State preservation failed: {e}")
+
+        # Plugin Hook
+        for plugin in self._plugins:
+            plugin.on_shutdown(self)
+
+        self._status = KernelStatus.STOPPED
+
+        # Cancel Gateway
+        if hasattr(self, "_gateway_task") and self._gateway_task:
+            self._gateway_task.cancel()
+            try:
+                await self._gateway_task
+            except asyncio.CancelledError:
+                pass
+
+        # Cleanup processes
+        self.process_manager.shutdown()
+
+        if isinstance(self._ledger, SQLiteLedger):
+            self._ledger.close()

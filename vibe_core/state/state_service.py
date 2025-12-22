@@ -495,16 +495,13 @@ class StateService:
     def _maybe_auto_commit(self) -> None:
         """
         Check if we should auto-commit (the invisible hand).
-
-        This is called after every write. It checks:
-        1. Is auto-commit enabled?
-        2. Have we reached the write threshold?
-        3. Is Heartbeat already handling commits?
-        4. Has enough time passed since last commit?
-
-        If conditions are met, commit happens invisibly.
         """
         if not self._auto_commit_enabled:
+            return
+
+        # 🛡️ CIRCUIT BREAKER: Disable commits via environment variable
+        import os
+        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return
 
         if not self._dirty_files:

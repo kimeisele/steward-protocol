@@ -161,14 +161,13 @@ class StateSyncWeaver:
 
     def pulse(self) -> CommitResult:
         """
-        Heartbeat integration - Called on each heartbeat tick.
-
-        This is the REFLEX mode path:
-        - Fast, rule-based decisions
-        - No MANAS consultation
-        - Commits runtime state only
+        Run one weave cycle.
         """
-        with self._commit_lock:
+        import os
+        if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
+            return CommitResult(git_sha="0000000", message="Git disabled (Shunyata)", success=True)
+
+        with self._lock:
             # 1. Discover
             state_map = self._discover_all_state()
 
