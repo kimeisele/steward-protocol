@@ -59,7 +59,7 @@
           "requires_no_pending_intents": true,
           "max_executions_per_day": 1,
           "last_executed": "2025-12-22T09:07:52.856094+00:00",
-          "execution_count_today": 1,
+          "execution_count_today": 0,
           "enabled": true
         }
       ],
@@ -118,5 +118,5 @@
       "owner": "MANAS"
     }
   ],
-  "updated_at": "2025-12-22T09:07:52.856245+00:00"
+  "updated_at": "2025-12-22T13:53:51.816895+00:00"
 }
