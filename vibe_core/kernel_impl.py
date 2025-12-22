@@ -1192,10 +1192,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """
         SAMSARA ENGINE: Enforces mortality on the ledger.
         Removes oldest events to make room for new creation.
+
+        OPUS-208: Added support for SQLite Samsara Rotation (Crash-Safe).
         """
         # We only prune InMemoryLedger (SQLite handles its own disk space usually, or needs different logic)
         # But for 'Karmic Debt' (RAM), InMemory is the culprit.
-        from vibe_core.ledger import InMemoryLedger
+        from vibe_core.ledger import InMemoryLedger, SQLiteLedger
 
         if isinstance(self._ledger, InMemoryLedger):
             # Check internal events list directly (private access for kernel management)
@@ -1209,6 +1211,29 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
                     # Log to system (not ledger) to avoid feedback loop
                     logger.warning(f"🕉️ PRALAYA EXECUTED: Dissolved {excess} stale events. Entropy reduced to {len(self._ledger.events)}.")
+
+        # OPUS-208 Phase 2: SQLite Samsara Rotation
+        elif isinstance(self._ledger, SQLiteLedger):
+            # Use count_events() to avoid full scan O(1)
+            current_count = self._ledger.count_events()
+
+            # Rotation threshold (Hardcoded to 10k for now, configurable later)
+            # This keeps the DB small and fast (~10MB)
+            ROTATION_THRESHOLD = 10000
+
+            if current_count > ROTATION_THRESHOLD:
+                try:
+                    logger.info(f"🕉️ SAMSARA TRIGGERED: Event count {current_count} > {ROTATION_THRESHOLD}")
+                    archive_path = self._ledger.rotate()
+                    if archive_path:
+                        logger.info(f"✅ Samsara complete. Archived to {archive_path}")
+
+                        # Reset health anchor to Genesis of the NEW chain
+                        # We must reset this so check_system_health starts verifying the new chain from 0
+                        self._ledger.set_meta('health_anchor', (0, "0"*64))
+
+                except Exception as e:
+                     logger.critical(f"🔥 SAMSARA FAILED: {e}")
 
     def tick(self) -> None:
         """
