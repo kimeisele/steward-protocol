@@ -220,12 +220,17 @@ class OpusStateManager:
 
         Args:
             plugin_root: Path to the plugin directory
-            state_dir_name: Name of state directory (default: .opus_state)
+            state_dir_name: DEPRECATED - uses namespaced StateService
             max_observations: Max observations to keep (FIFO)
             max_karma_entries: Max karma entries to keep (FIFO)
         """
         self._plugin_root = plugin_root
-        self._state_dir = plugin_root / state_dir_name
+        
+        # 🍎 STATE: Namespaced state service (ADR-204)
+        from vibe_core.state.state_service import get_state_service
+        self._state_service = get_state_service(self._plugin_root, plugin_id="opus_assistant")
+        self._state_dir = self._state_service.state_root
+        
         self._max_observations = max_observations
         self._max_karma_entries = max_karma_entries
 
