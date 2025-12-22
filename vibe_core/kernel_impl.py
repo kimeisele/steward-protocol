@@ -71,7 +71,7 @@ from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
-from .runtime.unified_execution import create_unified_runtime
+from .runtime.unified_execution import ExecutionRequest, create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
@@ -131,6 +131,8 @@ def _get_config():
 
 
 # VAJRA ARMOR: Import immutable DNA protection
+from vibe_core.reactor import encode
+
 from .security import VajraGuarded
 
 
@@ -147,10 +149,17 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     - Manifest registry (agent identity)
     - Kernel injection (dependency injection pattern)
     - Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
+    - QuantumReactor (OPUS-200/201 - resonance-based manifestation)  # NEW
+
+    Philosophy (OPUS-200/201):
+      Actions don't get "allowed" or "denied" - they MANIFEST
+      when their resonance energy overcomes the field's inertia.
     """
 
     # SAMSARA CONFIG: Maximum entropy (ledger events) before Pralaya (pruning) occurs
     MAX_ENTROPY_EVENTS = 1000
+    _reactor = None
+    _akasha_field = ""
 
     def __init__(
         self,
@@ -265,6 +274,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
+
+        # OPUS-200/201: Quantum Resonance Engine (Core Primitive)
+        # The reactor is the kernel's physics engine - how actions manifest
+        self._reactor = None
+        self._akasha_field = ""  # Cumulative resonance field hash
 
         # Phase 4: Data Exchange Store (Inter-Agent Communication)
         # {agent_id: {key: value}} - Published data from agents
@@ -621,6 +635,38 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.info("🔐 Kernel loaded CivicVault (Lazy)")
         return self._vault
 
+    @property
+    def reactor(self):
+        """
+        OPUS-200/201: QuantumReactor as core kernel primitive.
+
+        Like the ledger, process_table, and capability_registry,
+        the reactor is a fundamental kernel component.
+
+        Lazy-loaded to avoid boot-time overhead.
+        """
+        if self._reactor is None:
+            try:
+                from vibe_core.reactor import QuantumReactor
+
+                self._reactor = QuantumReactor(initial_inertia=0.5)
+                logger.info("☢️ QuantumReactor loaded as kernel primitive")
+            except ImportError as e:
+                logger.warning(f"☢️ QuantumReactor not available: {e}")
+        return self._reactor
+
+    @property
+    def akasha_hash(self) -> str:
+        """
+        OPUS-200/201: Current state of the kernel's akasha field.
+
+        The akasha is the cumulative resonance field that influences
+        all future manifestations. Each manifestation evolves it.
+        """
+        if self.reactor is not None:
+            return self.reactor._chain_hash()
+        return self._akasha_field
+
     def _check_agent_capability(self, agent_id: str, capability: str) -> bool:
         """
         SECURITY (ARCH-HARDENING): Check if agent has a specific capability.
@@ -664,6 +710,110 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # All plugins returned None (no opinion) - allow
         return True
+
+    def manifest(self, intent: str, agent_id: str = "kernel", salt: str = "") -> "ExecutionRequest":
+        """
+        OPUS-200/201: Manifest an intent through the resonance field.
+
+        This is the NEW primary entry point for kernel execution.
+        Instead of boolean allow/deny, compute resonance and manifest.
+
+        Args:
+            intent: The intent to manifest (user input, command, etc.)
+            agent_id: The agent requesting manifestation
+            salt: Cryptographic salt for session context
+
+        Returns:
+            ExecutionRequest with resonance data and gate decision
+
+        Philosophy:
+            Actions don't get "allowed" - they MANIFEST when
+            their energy overcomes the field's inertia.
+        """
+        from vibe_core.runtime.unified_execution import ExecutionRequest
+
+        # Use the kernel's own reactor
+        reactor = self.reactor
+
+        if reactor is None:
+            logger.warning("☢️ KERNEL: QuantumReactor not available for manifestation. Returning default request.")
+            # Fallback to a default request if reactor is not available
+            request = ExecutionRequest(user_input=intent, source=agent_id)
+            return request
+
+        try:
+            # Encode intent as tensor
+            # The user's snippet implies single tensor. compute_capability_resonance takes two.
+            # I will use two for consistency with the spirit of capability resonance.
+            # Intent vs Agent-Capability is different. Let's use one tensor for the intent.
+            # If this fails, I will revisit.
+            intent_tensor = encode(f"intent:{intent}", salt)
+
+            # Resonate the intent
+            field = reactor.resonate(intent_tensor)
+
+            # Store resonance values
+            request = ExecutionRequest(user_input=intent, source=agent_id)
+            request.mark_resonance(
+                energy=field.total_energy,
+                inertia=reactor._inertia,
+                field_hash=field.field_hash,
+            )
+
+            # Log manifestation
+            status = "MANIFEST" if request.manifests else "PENDING"
+            logger.info(
+                f"☢️ KERNEL: {intent[:30]}... → "
+                f"E={request.resonance_energy:.3f} ({status})"
+            )
+
+            # OPUS-202: Evolve the kernel's akasha field
+            self._akasha_field = field.field_hash
+
+            return request
+
+        except Exception as e:
+            logger.warning(f"☢️ KERNEL: Manifestation failed: {e}. Returning default request.")
+            request = ExecutionRequest(user_input=intent, source=agent_id)
+            request.mark_failed(str(e))
+            return request
+
+    def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
+        """
+        OPUS-200/201: Compute resonance for capability check.
+
+        Instead of boolean has_capability(), compute continuous
+        resonance between agent and capability.
+
+        Args:
+            agent_id: The agent requesting the capability
+            capability: The capability required
+
+        Returns:
+            Resonance energy (0.0 to 1.0)
+            Higher = stronger resonance = more likely to manifest
+        """
+        if self.reactor is None:
+            # Fallback to boolean converted to float
+            return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
+
+        try:
+            from vibe_core.reactor import encode
+
+            # Encode agent as tensor
+            agent_tensor = encode(f"agent:{agent_id}", self.akasha_hash)
+
+            # Encode capability as tensor
+            cap_tensor = encode(f"capability:{capability}", self.akasha_hash)
+
+            # Compute resonance
+            field = self.reactor.resonate(agent_tensor, cap_tensor)
+
+            return min(1.0, field.total_energy)
+
+        except Exception as e:
+            logger.warning(f"☢️ Capability resonance failed: {e}")
+            return 1.0 if self._check_agent_capability(agent_id, capability) else 0.0
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
         """⚡ NARASIMHA DESTRUCTION HANDLER - Delegates to kernel_ops."""
@@ -1830,7 +1980,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         Phase 18: Async Sidecar Entry Point.
         Runs the NetworkGateway in a dedicated asyncio loop/thread.
         """
-        import asyncio
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

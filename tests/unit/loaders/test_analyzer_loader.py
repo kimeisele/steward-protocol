@@ -19,22 +19,24 @@ class TestAnalyzerLoaderDiscovery:
         AnalyzerLoader.clear_cache()
 
     def test_discover_all_analyzers(self):
-        """Verify all 5 core analyzers are discovered."""
+        """Verify all 7 core analyzers are discovered."""
         analyzers, metadata = AnalyzerLoader.discover_and_load(
             workspace=Path.cwd(),
             strict=True,
         )
 
-        # Must have exactly 5 analyzers
-        assert len(analyzers) == 5, f"Expected 5 analyzers, got {len(analyzers)}"
+        # Must have exactly 7 analyzers (OPUS-202: +inverse_scan, +triage)
+        assert len(analyzers) == 7, f"Expected 7 analyzers, got {len(analyzers)}"
 
         # Verify expected analyzers exist
         expected_names = {
             "ci_monitor",
             "contract_analyzer",
             "doc_harness_analyzer",
+            "inverse_scan_analyzer",
             "pratyaya",
             "semantic_analyzer",
+            "triage_analyzer",
         }
         actual_names = set(analyzers.keys())
         assert actual_names == expected_names, f"Missing analyzers: {expected_names - actual_names}"
@@ -131,7 +133,7 @@ class TestAnalyzerLoaderStrictMode:
             workspace=Path.cwd(),
             strict=False,
         )
-        assert len(analyzers) == 5
+        assert len(analyzers) == 7  # OPUS-202: 7 analyzers
 
 
 class TestAnalyzerLoaderUtilities:
@@ -145,7 +147,7 @@ class TestAnalyzerLoaderUtilities:
         """Test list_analyzers utility method."""
         names = AnalyzerLoader.list_analyzers(workspace=Path.cwd())
         assert isinstance(names, list)
-        assert len(names) == 5
+        assert len(names) == 7  # OPUS-202: 7 analyzers
 
     def test_get_analyzer(self):
         """Test get_analyzer utility method."""

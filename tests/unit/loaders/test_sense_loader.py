@@ -19,16 +19,16 @@ class TestSenseLoaderDiscovery:
         SenseLoader.clear_cache()
 
     def test_discover_all_senses(self):
-        """Verify all 8 Jnanendriyas (senses) are discovered."""
+        """Verify all 9 Jnanendriyas (senses) are discovered."""
         senses, metadata = SenseLoader.discover_and_load(
             workspace=Path.cwd(),
             strict=True,
         )
 
-        # Must have exactly 8 senses (OPUS-155: +AkashaSense)
-        assert len(senses) == 8, f"Expected 8 senses, got {len(senses)}"
+        # Must have exactly 9 senses (OPUS-202: +NadiSense)
+        assert len(senses) == 9, f"Expected 9 senses, got {len(senses)}"
 
-        # Verify all 8 Jnanendriyas exist
+        # Verify all 9 Jnanendriyas exist
         expected_names = {
             "prakriti_sense",  # System state perception
             "dharma_sense",  # Ethical alignment
@@ -38,6 +38,7 @@ class TestSenseLoaderDiscovery:
             "karma_sense",  # Historical patterns
             "viveka_sense",  # Coverage discrimination
             "akasha_sense",  # Knowledge graph perception (OPUS-155)
+            "nadi_sense",  # Channel monitoring (OPUS-202)
         }
         actual_names = set(senses.keys())
         assert actual_names == expected_names, f"Missing senses: {expected_names - actual_names}"
@@ -134,7 +135,7 @@ class TestSenseLoaderStrictMode:
             workspace=Path.cwd(),
             strict=False,
         )
-        assert len(senses) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
+        assert len(senses) == 9  # OPUS-202: 9 Jnanendriyas (+ NadiSense)
 
 
 class TestSenseLoaderUtilities:
@@ -148,7 +149,7 @@ class TestSenseLoaderUtilities:
         """Test list_senses utility method."""
         names = SenseLoader.list_senses(workspace=Path.cwd())
         assert isinstance(names, list)
-        assert len(names) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
+        assert len(names) == 9  # OPUS-202: 9 Jnanendriyas (+ NadiSense)
 
     def test_get_sense(self):
         """Test get_sense utility method."""
