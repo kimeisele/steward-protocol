@@ -756,7 +756,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             request = ExecutionRequest(user_input=intent, source=agent_id)
             request.mark_resonance(
                 energy=field.total_energy,
-                inertia=reactor.initial_inertia,
+                inertia=reactor._inertia,
                 field_hash=field.field_hash,
             )
 
