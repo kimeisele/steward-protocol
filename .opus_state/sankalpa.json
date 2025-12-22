@@ -58,8 +58,8 @@
           "requires_ci_green": true,
           "requires_no_pending_intents": true,
           "max_executions_per_day": 1,
-          "last_executed": null,
-          "execution_count_today": 0,
+          "last_executed": "2025-12-22T09:07:52.856094+00:00",
+          "execution_count_today": 1,
           "enabled": true
         }
       ],
@@ -118,5 +118,5 @@
       "owner": "MANAS"
     }
   ],
-  "updated_at": "2025-12-18T12:37:16.248063+00:00"
+  "updated_at": "2025-12-22T09:07:52.856245+00:00"
 }
