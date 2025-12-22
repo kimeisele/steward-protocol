@@ -1,0 +1,14 @@
+{
+    "id": "economy",
+    "name": "Economy",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "CivicBank and CivicVault as a Service - Economic substrate for VibeOS",
+    "author": "OPUS-209",
+    "license": "MIT",
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 20
+}
