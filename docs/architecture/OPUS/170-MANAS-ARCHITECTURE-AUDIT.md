@@ -224,20 +224,22 @@ LOADER COVERAGE:
 
 ## REMEDIATION PRIORITY
 
+> **Last Updated:** 2025-12-22
+
 ### P0 - CRITICAL (Week 1)
-1. [ ] Create SynapseLoader (consolidate 4 duplicates)
-2. [ ] Decompose intent_router.py (2376 lines → 3-4 modules)
+1. [ ] Create SynapseLoader (consolidate 4 duplicates) ← **STILL 4 DUPLICATES**
+2. [x] Decompose intent_router.py (2376 lines → 3-4 modules) ← **DONE: 2376 → 1000 lines**
 3. [ ] Fix circular imports in cortex/*
 
 ### P1 - HIGH (Week 2)
-4. [ ] Create BridgeLoader for 3 bridges
-5. [ ] Decompose cognitive_kernel.py (2208 lines → delegation)
+4. [x] Create BridgeLoader for 3 bridges ← **DONE: OPUS-171 (vibe_core/loaders/bridge_loader.py)**
+5. [ ] Decompose cognitive_kernel.py (2208 lines → delegation) ← **GREW to 2570 lines**
 6. [ ] Remove manual imports from analyzers/__init__.py
 
 ### P2 - MEDIUM (Week 3)
 7. [ ] Wire Sanskrit Matrix to main loop
 8. [ ] Connect Prakriti → Sanskrit Matrix
-9. [ ] Integrate Akasha into decision path
+9. [x] Integrate Akasha into decision path ← **DONE: OPUS-202 (reactor + akasha_hash)**
 
 ### P3 - LOW (Ongoing)
 10. [ ] Reduce singleton usage
