@@ -1,14 +1,14 @@
 {
-  "tick": 4100,
-  "consciousness_level": 0.4,
-  "state": "rajas",
+  "tick": 560,
+  "consciousness_level": 0.1,
+  "state": "tamas",
   "inputs": {
     "synaptic_urgency": 0.0,
-    "prakriti_health": 1.0,
+    "prakriti_health": 0.0,
     "kala_rhythm": 0.5
   },
-  "last_tick": "2025-12-22T16:00:03.198941",
+  "last_tick": "2025-12-22T19:01:38.138734",
   "pending_intents": 2,
-  "ticks_since_turiya": 4100,
+  "ticks_since_turiya": 560,
   "last_thought": null
 }
