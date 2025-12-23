@@ -9,7 +9,9 @@ The Agent Virus Pattern:
 "Jedes Haus bekommt einen Briefkasten. Jede Strase ein Schild."
 """
 
-from .classifier import InfrastructureClassifier, ModuleType
+from vibe_core.genesis.types import ModuleType
+
+from .classifier import InfrastructureClassifier
 from .generator import InfrastructureGenerator
 
 __all__ = [
