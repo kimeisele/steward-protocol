@@ -33,3 +33,16 @@ class CognitiveKernelProtocol(ABC):
         Generates intents based on perceived state.
         """
         pass
+
+
+class SystemHeartbeatProtocol(ABC):
+    """
+    Protocol for the System Heartbeat service.
+
+    Orchestrates the unified breathing cycle (Snapshots + Sync).
+    """
+
+    @abstractmethod
+    def pulse(self) -> Dict[str, Any]:
+        """Execute a unified system pulse."""
+        pass

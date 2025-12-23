@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols import StateServiceProtocol, StateSyncWeaverProtocol
+from vibe_core.state.schema import CommitResult
 
 from .runtime_state import RuntimeStateDefinition, get_runtime_state_definition
 
@@ -100,17 +101,6 @@ class CommitPlan:
     message: str
     no_verify: bool = True  # Runtime state skips hooks
     sign: bool = False  # GPG signing
-
-
-@dataclass
-class CommitResult:
-    """Result of commit execution."""
-
-    success: bool
-    sha: Optional[str] = None
-    message: str = ""
-    paths_committed: List[Path] = field(default_factory=list)
-    error: Optional[str] = None
 
 
 class StateSyncWeaver(StateSyncWeaverProtocol):
@@ -427,9 +417,8 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
 
                     return CommitResult(
                         success=True,
-                        sha=result.git_sha if hasattr(result, "git_sha") else None,
-                        message=plan.message,
-                        paths_committed=plan.paths,
+                        git_sha=result.git_sha if hasattr(result, "git_sha") else None,
+                        files_committed=[str(p) for p in plan.paths],
                     )
                 else:
                     return CommitResult(

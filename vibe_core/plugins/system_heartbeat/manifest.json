@@ -1,0 +1,15 @@
+{
+  "id": "system_heartbeat",
+  "name": "System Heartbeat Orchestrator",
+  "description": "Nationalized breathing mechanism for the Steward Protocol. Orchestrates state sync, snapshots, and cognitive pulses.",
+  "version": "1.0.0",
+  "priority": 90,
+  "author": "Gemini Senior",
+  "capabilities": [
+    "orchestrate_pulse",
+    "sync_state"
+  ],
+  "dependencies": [
+    "opus_assistant"
+  ]
+}

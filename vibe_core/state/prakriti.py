@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.protocols import PrakritiProtocol
+from vibe_core.state.schema import CommitResult
 
 from .ephemeral_state import EphemeralState
 from .file_state import FileState
@@ -80,16 +81,6 @@ class KernelSessionContext:
             "Crash-Recovery": str(self.crash_recovery).lower(),
             "Commits-In-Session": str(self.commit_count + 1),
         }
-
-
-@dataclass
-class CommitResult:
-    """Result of a commit operation."""
-
-    git_sha: str
-    ledger_event_id: Optional[str] = None
-    session_id: Optional[str] = None
-    files_committed: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -414,6 +405,7 @@ class Prakriti(PrakritiProtocol):
         logger.info(f"[PRAKRITI] Committed: {git_commit.short_sha} - {message}")
 
         return CommitResult(
+            success=True,
             git_sha=git_commit.sha,
             ledger_event_id=ledger_event_id,
             session_id=self.session.session_id if self.session else None,
