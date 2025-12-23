@@ -2,6 +2,7 @@
 Process Isolation Plugin - Agent Process Management as a Service
 
 OPUS-209 Phase 2.2: Extracted from kernel_impl.py
+OPUS-210: PluginStateContract compliant
 
 This is a CRITICAL PLUGIN - the kernel cannot run agents without it.
 It encapsulates the ProcessManager and provides process supervision
@@ -16,7 +17,9 @@ Philosophy:
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
@@ -45,12 +48,46 @@ class ProcessIsolationPlugin(KernelPlugin):
 
     Or via backward-compatible:
         kernel.process_manager
+
+    OPUS-210: Implements PluginStateContract for Prakriti integration.
     """
 
     plugin_id = "process_isolation"
 
+    # State paths for PluginStateContract
+    STATE_DIR = Path(".vibe/state/plugins/process_isolation")
+
     def __init__(self):
         self._manager: Optional[ProcessManager] = None
+        self._spawn_count: int = 0
+        self._crash_count: int = 0
+
+    # =========================================================================
+    # PluginStateContract Implementation (OPUS-210)
+    # =========================================================================
+
+    def get_state_paths(self) -> List[Path]:
+        """Return paths where this plugin stores state."""
+        return [self.STATE_DIR]
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for backup."""
+        active_processes = []
+        if self._manager:
+            active_processes = list(self._manager.processes.keys())
+        return {
+            "version": 1,
+            "spawn_count": self._spawn_count,
+            "crash_count": self._crash_count,
+            "active_processes": active_processes,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        if snapshot.get("version") == 1:
+            self._spawn_count = snapshot.get("spawn_count", 0)
+            self._crash_count = snapshot.get("crash_count", 0)
 
     @property
     def dependencies(self) -> Set[str]:
@@ -151,7 +188,9 @@ class ProcessIsolationPlugin(KernelPlugin):
                 continue
 
             try:
-                self._manager.spawn_agent(agent_id, cartridge_path, cartridge_class_name, config=getattr(agent, "config", None))
+                self._manager.spawn_agent(
+                    agent_id, cartridge_path, cartridge_class_name, config=getattr(agent, "config", None)
+                )
                 spawned += 1
                 logger.info(f"🌱 Spawned deferred process for {agent_id}")
             except Exception as e:

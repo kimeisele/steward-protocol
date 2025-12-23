@@ -2,6 +2,7 @@
 Durvasa Plugin - Prana Triage Engine
 
 OPUS-209: Extracted from kernel_impl.py
+OPUS-210: PluginStateContract compliant
 
 Sacrifices lower-dharma agents to preserve the system core during resource famine.
 Named after the sage Durvasa, known for his fierce temper and curses.
@@ -9,7 +10,8 @@ Named after the sage Durvasa, known for his fierce temper and curses.
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("DURVASA")
 
 CRITICAL_THRESHOLD = 0.90  # Start triage at 90% pressure
-SAFE_LEVEL = 0.80          # Stop when we reach 80%
+SAFE_LEVEL = 0.80  # Stop when we reach 80%
 
 
 class DurvasaPlugin(KernelPlugin):
@@ -28,12 +30,42 @@ class DurvasaPlugin(KernelPlugin):
 
     When system resources are critically low, sacrifices lower-priority
     agents to preserve the kernel and critical infrastructure.
+
+    OPUS-210: Implements PluginStateContract for Prakriti integration.
     """
 
     plugin_id = "durvasa"
 
+    # State paths for PluginStateContract
+    STATE_DIR = Path(".vibe/state/plugins/durvasa")
+
     def __init__(self):
         self._kernel: Optional["RealVibeKernel"] = None
+        self._triage_history: List[Dict[str, Any]] = []
+        self._total_sacrifices: int = 0
+
+    # =========================================================================
+    # PluginStateContract Implementation (OPUS-210)
+    # =========================================================================
+
+    def get_state_paths(self) -> List[Path]:
+        """Return paths where this plugin stores state."""
+        return [self.STATE_DIR]
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for backup."""
+        return {
+            "version": 1,
+            "total_sacrifices": self._total_sacrifices,
+            "triage_history": self._triage_history[-100:],  # Keep last 100
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        if snapshot.get("version") == 1:
+            self._total_sacrifices = snapshot.get("total_sacrifices", 0)
+            self._triage_history = snapshot.get("triage_history", [])
 
     def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
         """Store kernel reference for later use."""
@@ -69,11 +101,11 @@ class DurvasaPlugin(KernelPlugin):
 
         logger.critical(f"🚨 DURVASA ALERT: System pressure at {pressure:.0%}. Initiating triage...")
 
-        kernel._ledger.record_event("PRANA_EMERGENCY", "kernel", {
-            "pressure": pressure,
-            "msg": "Durvasa Alert triggered",
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        kernel._ledger.record_event(
+            "PRANA_EMERGENCY",
+            "kernel",
+            {"pressure": pressure, "msg": "Durvasa Alert triggered", "timestamp": datetime.utcnow().isoformat()},
+        )
 
         # 2. Identify candidates
         candidates = []
@@ -85,48 +117,53 @@ class DurvasaPlugin(KernelPlugin):
             else:
                 meta = {}
 
-            candidates.append({
-                "id": agent_id,
-                "dharma": str(meta.get("dharma", "tamas")).lower(),
-                "priority": str(meta.get("priority", "low")).lower()
-            })
+            candidates.append(
+                {
+                    "id": agent_id,
+                    "dharma": str(meta.get("dharma", "tamas")).lower(),
+                    "priority": str(meta.get("priority", "low")).lower(),
+                }
+            )
 
         # 3. Sort by sacrifice priority
         dharma_rank = {"tamas": 0, "rajas": 1, "sattva": 2}
         priority_rank = {"disposable": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
-        candidates.sort(key=lambda x: (
-            dharma_rank.get(x["dharma"], 0),
-            priority_rank.get(x["priority"], 0)
-        ))
+        candidates.sort(key=lambda x: (dharma_rank.get(x["dharma"], 0), priority_rank.get(x["priority"], 0)))
 
         # 4. The Sacrifice
         sacrifices = 0
 
         for victim in candidates:
             if priority_rank.get(victim["priority"], 0) >= 3:
-                kernel._ledger.record_event("TRIAGE_LIMIT", "kernel", {
-                    "msg": "Only High/Critical agents remain. Holding.",
-                    "remaining": [c["id"] for c in candidates if priority_rank.get(c["priority"], 0) >= 3]
-                })
+                kernel._ledger.record_event(
+                    "TRIAGE_LIMIT",
+                    "kernel",
+                    {
+                        "msg": "Only High/Critical agents remain. Holding.",
+                        "remaining": [c["id"] for c in candidates if priority_rank.get(c["priority"], 0) >= 3],
+                    },
+                )
                 break
 
             if dharma_rank.get(victim["dharma"], 0) >= 2:
-                kernel._ledger.record_event("TRIAGE_LIMIT", "kernel", {
-                    "msg": "Only Sattva agents remain. Holding."
-                })
+                kernel._ledger.record_event("TRIAGE_LIMIT", "kernel", {"msg": "Only Sattva agents remain. Holding."})
                 break
 
             success = kernel.terminate_agent(victim["id"], reason="PRANA_FAMINE_SACRIFICE")
 
             if success:
                 sacrifices += 1
-                kernel._ledger.record_event("AGENT_SACRIFICED", "kernel", {
-                    "agent": victim["id"],
-                    "dharma": victim["dharma"],
-                    "priority": victim["priority"],
-                    "reason": "Sacrificed to appease Durvasa"
-                })
+                kernel._ledger.record_event(
+                    "AGENT_SACRIFICED",
+                    "kernel",
+                    {
+                        "agent": victim["id"],
+                        "dharma": victim["dharma"],
+                        "priority": victim["priority"],
+                        "reason": "Sacrificed to appease Durvasa",
+                    },
+                )
                 pressure -= 0.10
                 if pressure <= SAFE_LEVEL:
                     break
