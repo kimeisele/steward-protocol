@@ -31,8 +31,8 @@ import subprocess
 import sys
 from typing import Optional
 
+from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 from vibe_core.protocols.operator_protocol import (
-    Intent,
     IntentType,
     KernelStatusType,
     OperatorResponse,

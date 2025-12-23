@@ -687,7 +687,7 @@ class StateService(StateServiceProtocol):
         State files (.vibe/state/*) use no_verify=True as they are not
         kernel-protected, but this is now centralized with audit trail.
         """
-        from vibe_core.commit_authority import CommitAuthority
+        from vibe_core.state.commit_authority import CommitAuthority
 
         dirty_list = list(self._dirty_files)
         if not dirty_list:

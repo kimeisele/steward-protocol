@@ -16,21 +16,14 @@ Architecture:
 
 import logging
 import time
-from dataclasses import dataclass
 from multiprocessing import Process
 from typing import Any, Dict
 
 import psutil
 
+from vibe_core.protocols.resource import ResourceQuota
+
 logger = logging.getLogger("RESOURCE_MANAGER")
-
-
-@dataclass
-class ResourceQuota:
-    """Resource quota for an agent"""
-
-    cpu_percent: int  # Max CPU% (0-100)
-    memory_mb: int  # Max RAM in MB
 
 
 class ResourceManager:
