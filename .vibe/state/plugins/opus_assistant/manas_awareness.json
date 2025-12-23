@@ -1,5 +1,5 @@
 {
-  "tick": 300,
+  "tick": 340,
   "consciousness_level": 0.1,
   "state": "tamas",
   "inputs": {
@@ -7,8 +7,8 @@
     "prakriti_health": 0.0,
     "kala_rhythm": 0.5
   },
-  "last_tick": "2025-12-23T07:59:32.966671",
+  "last_tick": "2025-12-23T08:00:07.479552",
   "pending_intents": 2,
-  "ticks_since_turiya": 300,
+  "ticks_since_turiya": 340,
   "last_thought": null
 }
