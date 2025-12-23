@@ -623,18 +623,34 @@ class TestKernel:
     @staticmethod
     def with_governance() -> "RealVibeKernel":
         """
-        Create kernel with full governance stack.
+        Create kernel with ONLY governance plugins.
 
-        Loads the real steward_protocol plugin.
-        Good for testing governance integration.
+        Loads ONLY steward_protocol (oath checking, capabilities).
+        Does NOT load opus_assistant (MANAS/ML - 4GB+ model).
+
+        This prevents governance tests from waiting 30s+ for ML models.
+        Architectural principle: Governance tests should be fast and isolated.
 
         Returns:
-            RealVibeKernel with full governance
+            RealVibeKernel with governance plugins only
         """
         from vibe_core.kernel_impl import RealVibeKernel
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
-        # Let normal plugin loading happen
+        # Boot minimal kernel - NO automatic plugin loading
+        kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
+
+        # Manually load ONLY governance plugins
+        try:
+            from vibe_core.plugins.steward_protocol.plugin_main import StewardProtocolPlugin
+
+            steward = StewardProtocolPlugin()
+            steward.on_boot(kernel)
+            # Kernel needs BOTH _plugins_map AND _plugins list for hooks!
+            kernel._plugins_map = {"steward_protocol": steward}
+            kernel._plugins = [steward]
+        except ImportError:
+            pass  # Steward plugin not available
+
         return kernel
 
     @staticmethod
