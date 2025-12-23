@@ -9,25 +9,12 @@ Sanskrit: वर्गीकरण (Vargeekarana) = Classification
 
 import fnmatch
 import logging
-from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from vibe_core.genesis.types import ModuleType
+
 logger = logging.getLogger("MANAS.GENESIS.CLASSIFIER")
-
-
-class ModuleType(Enum):
-    """Types of modules that can be auto-generated."""
-
-    PLUGIN = auto()  # vibe_core/plugins/*
-    ANALYZER = auto()  # */analyzers/*.py
-    SENSE = auto()  # */cortex/*_sense.py
-    ACTION = auto()  # */cortex/*_action.py
-    CIRCUIT = auto()  # */circuits/*.yaml
-    SECTION = auto()  # phoenix/sections/*
-    KNOWLEDGE = auto()  # knowledge/*
-    TEST = auto()  # tests/*
-    UNKNOWN = auto()  # Cannot classify
 
 
 class InfrastructureClassifier:

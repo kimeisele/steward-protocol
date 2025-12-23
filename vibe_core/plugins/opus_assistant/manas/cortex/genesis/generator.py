@@ -19,7 +19,7 @@ from pathlib import Path
 from string import Template
 from typing import Dict, List, Optional
 
-from .classifier import ModuleType
+from vibe_core.genesis.types import ModuleType
 
 logger = logging.getLogger("MANAS.GENESIS.GENERATOR")
 
