@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
+from .sanctify_state import sanctify_state_system
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
@@ -51,6 +53,9 @@ class IntegrityGuardPlugin(KernelPlugin):
         logger.info("⚖️  IntegrityGuard: Enforcing Law of the Land...")
 
         try:
+            # 0. Sanctify State System (DI.py Integration)
+            sanctify_state_system(kernel)
+
             # 2. KARMA: Execute enforcement
             self._enforce_standard(kernel)
             logger.info("⚖️  IntegrityGuard: Law verified. Kernel sanctioned.")
