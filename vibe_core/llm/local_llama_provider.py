@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from vibe_core.llm.provider import LLMProvider
+from vibe_core.runtime.providers.base import LLMProvider
 
 logger = logging.getLogger("LOCAL_LLAMA")
 

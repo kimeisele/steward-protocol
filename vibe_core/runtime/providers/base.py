@@ -215,3 +215,25 @@ class ProviderInvocationError(LLMProviderError):
     """Raised when provider invocation fails"""
 
     pass
+
+
+# Backward compatibility alias (deprecated, use LLMProviderError instead)
+class LLMError(Exception):
+    """
+    Base exception for LLM provider errors.
+
+    Raised when LLM API calls fail (network, auth, rate limits, etc.).
+
+    DEPRECATED: Use LLMProviderError instead. This class is maintained
+    for backward compatibility with code importing from vibe_core.llm.provider.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: str = "Unknown",
+        original_error: Exception | None = None,
+    ):
+        self.provider = provider
+        self.original_error = original_error
+        super().__init__(f"[{provider}] {message}")
