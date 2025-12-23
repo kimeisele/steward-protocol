@@ -2,6 +2,7 @@
 Resource Limits Plugin - Resource Quota Management as a Service
 
 OPUS-209 Phase 2.3: Extracted from kernel_impl.py
+OPUS-210: PluginStateContract compliant
 
 This is a CRITICAL PLUGIN - the kernel needs resource control to prevent
 runaway agents from consuming all system resources.
@@ -12,7 +13,9 @@ Philosophy:
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
@@ -40,12 +43,43 @@ class ResourceLimitsPlugin(KernelPlugin):
 
     Or via backward-compatible:
         kernel.resource_manager
+
+    OPUS-210: Implements PluginStateContract for Prakriti integration.
     """
 
     plugin_id = "resource_limits"
 
+    # State paths for PluginStateContract
+    STATE_DIR = Path(".vibe/state/plugins/resource_limits")
+
     def __init__(self):
         self._manager: Optional[ResourceManager] = None
+        self._quota_updates: int = 0
+        self._violations_detected: int = 0
+
+    # =========================================================================
+    # PluginStateContract Implementation (OPUS-210)
+    # =========================================================================
+
+    def get_state_paths(self) -> List[Path]:
+        """Return paths where this plugin stores state."""
+        return [self.STATE_DIR]
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for backup."""
+        return {
+            "version": 1,
+            "quota_updates": self._quota_updates,
+            "violations_detected": self._violations_detected,
+            "manager_active": self._manager is not None,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        if snapshot.get("version") == 1:
+            self._quota_updates = snapshot.get("quota_updates", 0)
+            self._violations_detected = snapshot.get("violations_detected", 0)
 
     @property
     def dependencies(self) -> Set[str]:

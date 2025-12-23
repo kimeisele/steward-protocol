@@ -1,30 +1,36 @@
 """
-P0+: StateService - Single Point of Truth for All State Operations
+OPUS-210: StateService - AHAMKARA Aspect of Prakriti
 
-This is the ONLY authorized interface for writing state files.
-All direct file writes MUST go through this service.
+Sanskrit: अहंकार (Ahamkara) = "I-maker" / Ego-sense / Identity Principle
 
-Architecture (P0+: Apple Magic - "It Just Works"):
+In Samkhya philosophy, Ahamkara is the principle of individuation that
+routes experience to the appropriate faculties. In Steward Protocol,
+StateService is the AHAMKARA aspect of Prakriti - it routes write intents
+to the appropriate state layers.
+
+NOT a "single source of truth" - that is Prakriti itself.
+StateService is an ASPECT that handles identity and routing of state writes.
+
+Architecture:
     Writer → StateService.save() → File Write + mark_dirty()
                     ↓
-                _maybe_auto_commit()  ← NEW: Invisible hand
+                Weaver.orchestrate() → CommitAuthority → Git
                     ↓
-            Auto-commits when threshold reached OR session ends
-            (Works regardless of Heartbeat presence)
+            All commits flow through the unified pipeline
 
 Features:
     - Thread-safe singleton
     - Automatic backup rotation (max 5 per file)
     - JSONL append support for logs
-    - 🍎 AUTO-COMMIT: Threshold-based commits (no manual intervention)
-    - 🍎 SESSION-END: atexit handler for clean shutdown
-    - Integration with Weaver for commits (when available)
+    - AUTO-COMMIT: Threshold-based commits (no manual intervention)
+    - SESSION-END: atexit handler for clean shutdown
+    - Integration with Weaver/CommitAuthority for commits
     - Cleanup policies for unbounded files
 
-The Apple Philosophy:
-    "Simple is hard. We did the hard work so you don't have to think about it."
+Tattva Mapping (OPUS-097):
+    Prakriti → StateService (Ahamkara) → Individual State Managers
 
-OPUS Reference: P0-STATE-AUDIT.md, OPUS-140-SANSKRIT-MATRIX.md
+OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-097-SAMKHYA-ARCHITECTURE-MAP
 """
 
 import asyncio

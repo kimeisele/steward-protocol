@@ -2,6 +2,7 @@
 Economy Plugin - CivicBank and CivicVault as a Service
 
 OPUS-209 Phase 3: Extracted from kernel_impl.py
+OPUS-210: PluginStateContract compliant
 
 This plugin encapsulates the economic substrate (CivicBank and CivicVault),
 removing the last direct cartridge imports from the kernel.
@@ -12,8 +13,9 @@ Philosophy:
 """
 
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
@@ -51,14 +53,48 @@ class EconomyPlugin(KernelPlugin):
     Or via backward-compatible:
         kernel.get_bank()
         kernel.get_vault()
+
+    OPUS-210: Implements PluginStateContract for Prakriti integration.
     """
 
     plugin_id = "economy"
+
+    # State paths for PluginStateContract
+    STATE_DIR = Path(".vibe/state/plugins/economy")
 
     def __init__(self):
         self._bank = None
         self._vault = None
         self._db_path: Optional[Path] = None
+        self._transaction_count: int = 0
+
+    # =========================================================================
+    # PluginStateContract Implementation (OPUS-210)
+    # =========================================================================
+
+    def get_state_paths(self) -> List[Path]:
+        """Return paths where this plugin stores state."""
+        paths = [self.STATE_DIR]
+        if self._db_path:
+            paths.append(self._db_path)
+        return paths
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for backup."""
+        return {
+            "version": 1,
+            "db_path": str(self._db_path) if self._db_path else None,
+            "bank_active": self._bank is not None,
+            "vault_active": self._vault is not None,
+            "transaction_count": self._transaction_count,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        if snapshot.get("version") == 1:
+            self._transaction_count = snapshot.get("transaction_count", 0)
+            # Note: bank/vault are lazy-loaded, db_path set on boot
 
     def on_boot(
         self,
