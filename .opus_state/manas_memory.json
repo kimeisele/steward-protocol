@@ -1481,7 +1481,18 @@
       },
       "feedback": null,
       "execution_time_ms": 9076
+    },
+    {
+      "intent_type": "echo",
+      "intent_description": "Pramana Live Fire pramana_fire_0f376fdd",
+      "timestamp": "2025-12-23T21:27:15.283072",
+      "outcome": "success",
+      "context": {
+        "message": "Pramana Alive"
+      },
+      "feedback": null,
+      "execution_time_ms": 12324
     }
   ],
-  "updated_at": "2025-12-23T21:05:52.770610"
+  "updated_at": "2025-12-23T21:27:15.289313"
 }

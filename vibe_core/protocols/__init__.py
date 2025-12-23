@@ -26,7 +26,6 @@ from .ledger import (
 )
 from .operator_protocol import (
     GitState,
-    Intent,
     IntentType,
     KernelStatusType,
     OperatorResponse,
@@ -89,7 +88,6 @@ __all__ = [
     # Operator Protocol (Phoenix Vimana - Strict Typing)
     "OperatorSocket",
     "SystemContext",
-    "Intent",
     "OperatorResponse",
     "IntentType",
     "OperatorType",

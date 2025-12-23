@@ -24,12 +24,15 @@
     },
     "read": {
       "action:read_file": 0.4
+    },
+    "trigger:echo": {
+      "action:echo": 0.55
     }
   },
   "triggers": [],
   "meta": {
     "created": "2025-12-23T15:11:57.825945Z",
-    "last_updated": "2025-12-23T20:18:35.170890Z",
-    "updates_count": 3
+    "last_updated": "2025-12-23T21:27:15.292980Z",
+    "updates_count": 4
   }
 }

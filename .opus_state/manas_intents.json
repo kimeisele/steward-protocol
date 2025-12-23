@@ -3,67 +3,6 @@
     {
       "intent": {
         "id": "pramana_live_fire_001",
-        "intent_type": "read_file",
-        "title": "Pramana Verification Read",
-        "description": "Testing the feedback loop",
-        "reasoning": "Verifying that action execution results are correctly reported back to the kernel via EventBus.",
-        "priority": "high",
-        "risk": "safe",
-        "created_at": "2025-12-23T20:18:25.277042",
-        "circuit_to_execute": null,
-        "params": {
-          "path": "README.md",
-          "lines": [
-            1,
-            5
-          ]
-        },
-        "auto_executable": true,
-        "expires_at": null,
-        "related_files": [],
-        "related_docs": []
-      },
-      "status": "failed",
-      "added_at": "2025-12-23T20:18:25.277074",
-      "executed_at": "2025-12-23T20:18:35.162723",
-      "execution_result": {
-        "success": false,
-        "handler": "none",
-        "result": {},
-        "error": "No handler registered for intent type: read_file"
-      },
-      "pramana": null,
-      "ttl_seconds": 300,
-      "stale_at": null
-    },
-    {
-      "intent": {
-        "id": "zombie_intent_001",
-        "intent_type": "sleep_forever",
-        "title": "I am stale",
-        "description": "A stale intent for testing cleanup",
-        "reasoning": "Testing the zombie purge mechanism",
-        "priority": "medium",
-        "risk": "medium",
-        "created_at": "2025-12-23T20:08:37.190604",
-        "circuit_to_execute": null,
-        "params": {},
-        "auto_executable": false,
-        "expires_at": null,
-        "related_files": [],
-        "related_docs": []
-      },
-      "status": "stale",
-      "added_at": "2025-12-23T20:13:37.190642",
-      "executed_at": null,
-      "execution_result": null,
-      "pramana": null,
-      "ttl_seconds": 300,
-      "stale_at": null
-    },
-    {
-      "intent": {
-        "id": "pramana_live_fire_001",
         "intent_type": "echo",
         "title": "Pramana Verification Echo",
         "description": "Testing the feedback loop",
@@ -283,7 +222,7 @@
       },
       "pramana": null,
       "ttl_seconds": 300,
-      "stale_at": "2025-12-23T21:10:43.688928"
+      "stale_at": null
     },
     {
       "intent": {
@@ -307,9 +246,74 @@
       "executed_at": null,
       "execution_result": null,
       "pramana": null,
+      "ttl_seconds": 300,
+      "stale_at": null
+    },
+    {
+      "intent": {
+        "id": "pramana_fire_0f376fdd",
+        "intent_type": "echo",
+        "title": "Pramana Live Fire pramana_fire_0f376fdd",
+        "description": "Testing the feedback loop with fresh ID",
+        "reasoning": "Verifying that action execution results are correctly reported back to the kernel via EventBus.",
+        "priority": "high",
+        "risk": "safe",
+        "created_at": "2025-12-23T21:27:02.956437",
+        "circuit_to_execute": null,
+        "params": {
+          "message": "Pramana Alive"
+        },
+        "auto_executable": true,
+        "expires_at": null,
+        "related_files": [],
+        "related_docs": []
+      },
+      "status": "executed",
+      "added_at": "2025-12-23T21:27:02.956468",
+      "executed_at": "2025-12-23T21:27:15.283028",
+      "execution_result": {
+        "success": true,
+        "handler": "ActionLoader[global]/echo_action",
+        "result": {
+          "success": true,
+          "handler": "echo_action",
+          "action_result": {
+            "echo": "Pramana Alive",
+            "proof": "MANAS can extend itself"
+          },
+          "error": null
+        },
+        "error": null
+      },
+      "pramana": null,
+      "ttl_seconds": 300,
+      "stale_at": "2025-12-23T21:32:02.956468"
+    },
+    {
+      "intent": {
+        "id": "zombie_93acbbc7",
+        "intent_type": "sleep_forever",
+        "title": "I am stale",
+        "description": "A stale intent for testing cleanup",
+        "reasoning": "Testing the zombie purge mechanism",
+        "priority": "low",
+        "risk": "safe",
+        "created_at": "2025-12-23T21:17:18.302698",
+        "circuit_to_execute": null,
+        "params": {},
+        "auto_executable": false,
+        "expires_at": null,
+        "related_files": [],
+        "related_docs": []
+      },
+      "status": "stale",
+      "added_at": "2025-12-23T21:22:18.302731",
+      "executed_at": null,
+      "execution_result": null,
+      "pramana": null,
       "ttl_seconds": 1,
-      "stale_at": "2025-12-23T21:01:55.790558"
+      "stale_at": "2025-12-23T21:23:18.302735"
     }
   ],
-  "updated_at": "2025-12-23T21:05:55.791770"
+  "updated_at": "2025-12-23T21:27:18.304440"
 }

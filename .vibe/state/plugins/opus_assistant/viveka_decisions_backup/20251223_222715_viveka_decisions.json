@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2025-12-23T20:18:35.152905",
-    "intent_type": "read_file",
-    "intent_title": "Pramana Verification Read",
-    "trigger": "trigger:read_file",
+    "timestamp": "2025-12-23T21:05:52.735038",
+    "intent_type": "echo",
+    "intent_title": "Pramana Live Fire pramana_fire_ceb6a31c",
+    "trigger": "trigger:echo",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,
