@@ -163,6 +163,16 @@ class IntentRouter:
             self._akasha = AkashaSense(workspace=self._workspace)
             logger.info("👁️ OPUS-171: AkashaSense initialized (Knowledge Perception)")
 
+        # OPUS-220: SynapticMemory - Samskara (Experience-Based Routing)
+        self._synaptic: Optional[Any] = None
+        try:
+            from .triggers import SynapticMemory
+
+            self._synaptic = SynapticMemory.get(workspace=self._workspace)
+            logger.info("🧠 OPUS-220: SynapticMemory initialized (Samskara Recall)")
+        except ImportError:
+            logger.debug("OPUS-220: SynapticMemory not available - using static routing only")
+
         # OPUS-075: Load MANAS fortress config
         self._manas_config = self._load_manas_config()
         self._autonomous_steps = 0  # Track steps for safety limit
@@ -258,6 +268,74 @@ class IntentRouter:
 
         except Exception as e:
             logger.debug(f"Siddhi check failed: {e}")
+            return None
+
+    def _check_samskara(self, intent: Intent) -> Optional[Dict[str, Any]]:
+        """
+        OPUS-220: Check Synaptic Memory for experienced handlers.
+
+        Samskara (Sanskrit: "Impression") means the system consults its
+        learned associations to recommend the best handler based on past success.
+
+        This is the "Fast Path" - if we've done this 80%+ successfully with
+        a specific handler, use that handler directly instead of going through
+        full routing.
+
+        Args:
+            intent: The intent to check
+
+        Returns:
+            Dict with recommended handler and confidence, or None if no strong recommendation
+        """
+        if not self._synaptic:
+            return None
+
+        try:
+            # Construct trigger for this intent type
+            # "How did we handle this intent type in the past?"
+            trigger = f"trigger:{intent.intent_type}"
+
+            # Consult synaptic memory
+            recommendations = self._synaptic.consult(trigger, min_weight=0.0, limit=5)
+
+            if not recommendations:
+                logger.debug(f"🧠 SAMSKARA: No recommendations for {trigger}")
+                return None
+
+            # Get top recommendation
+            top_rec = recommendations[0]
+            confidence = top_rec.weight
+
+            # CONFIDENCE THRESHOLD: Only use Samskara if confidence > 0.70
+            # Below 70% is "uncertain" - fall back to normal routing
+            if confidence < 0.70:
+                logger.debug(
+                    f"🧠 SAMSKARA: {trigger} has low confidence ({confidence:.2f}) - "
+                    f"using normal routing instead"
+                )
+                return None
+
+            # Extract handler name from action
+            # Actions are like "action:shell_handler" or "action:audit_handler"
+            action = top_rec.action
+            handler_name = action.replace("action:", "").replace("_handler", "")
+
+            logger.debug(
+                f"🧠 SAMSKARA: Top recommendation for {trigger}: "
+                f"{handler_name} (confidence={confidence:.2f})"
+            )
+
+            return {
+                "recommended_handler": handler_name,
+                "confidence": confidence,
+                "trigger": trigger,
+                "all_recommendations": [
+                    {"action": r.action, "weight": r.weight} for r in recommendations
+                ],
+            }
+
+        except Exception as e:
+            logger.debug(f"🧠 SAMSKARA: Recall failed: {e}")
             return None
 
     def _register_handlers(self) -> None:
@@ -886,6 +964,22 @@ class IntentRouter:
             elif decision in ("EXECUTE", "SHIVA_OVERRIDE"):
                 # Good dharmic score or Shiva context - proceed
                 logger.debug(f"✅ VIVEKA: {decision} for {intent.title}")
+
+        # =====================================================================
+        # OPUS-220: SAMSKARA RECALL - Experience-Based Routing (AFTER Viveka)
+        # =====================================================================
+        # "The Samskara is the seed that remembers the past and guides the future."
+        # Consult synaptic memory for experience with this intent type
+        samskara_result = self._check_samskara(intent)
+        if samskara_result:
+            logger.info(
+                f"🧠 SAMSKARA RECALL: {intent.intent_type} "
+                f"(recommended={samskara_result['recommended_handler']}, "
+                f"confidence={samskara_result['confidence']:.2f})"
+            )
+            # Store for use in handler selection
+            intent.params["samskara_recommended_handler"] = samskara_result["recommended_handler"]
+            intent.params["samskara_confidence"] = samskara_result["confidence"]
 
         # OPUS-112: Try kernel.tool_registry FIRST (SYNAPTIC BRIDGE)
         # Only for SAFE/LOW risk intents (SYSTEM ACT mode)
