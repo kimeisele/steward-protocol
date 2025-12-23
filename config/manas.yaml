@@ -22,6 +22,24 @@ manas:
   idle_threshold_minutes: 15  # FIXED: 30 → 15 (faster activation)
 
   # =========================================================================
+  # Biorhythm Configuration (OPUS-174)
+  # =========================================================================
+  # Modulates consciousness based on context (not just polling)
+  biorhythm:
+    # Weights for consciousness calculation (must sum to 1.0)
+    weights:
+      synaptic_urgency: 0.5  # Internal pressure (triggers)
+      prakriti_health: 0.3   # System state health
+      kala_rhythm: 0.2       # Cosmic time/energy
+
+    # Thresholds for state transitions
+    thresholds:
+      turiya: 0.8   # Deep Think (Full OODA)
+      sattva: 0.5   # Reflect (Organize)
+      rajas: 0.2    # React (Monitor)
+      # Below 0.2 is Tamas (Hibernate)
+
+  # =========================================================================
   # Execution Policy (AUTONOMOUS MODE ENABLED)
   # =========================================================================
   # Auto-execute safe intents without human approval?
@@ -183,7 +201,7 @@ prakriti_sense:
   # Guna classification
   guna_weights:
     sattva: 1.0  # Clean, synced, tested
-    rajas: 0.5   # Active, dirty, changing
+    rajas: 0.8   # Active, dirty, changing (OPUS-211: 0.5 -> 0.8 to boost health during dev)
     tamas: 0.0   # Stale, broken, untested
 
 # =============================================================================

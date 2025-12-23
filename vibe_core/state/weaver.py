@@ -23,8 +23,10 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import StateServiceProtocol, StateSyncWeaverProtocol
+
 from .runtime_state import RuntimeStateDefinition, get_runtime_state_definition
-from .state_service import get_state_service
 
 if TYPE_CHECKING:
     from .guna_classifier import StateGuna
@@ -111,7 +113,7 @@ class CommitResult:
     error: Optional[str] = None
 
 
-class StateSyncWeaver:
+class StateSyncWeaver(StateSyncWeaverProtocol):
     """
     Meta-orchestration layer for unified state synchronization.
 
@@ -225,8 +227,55 @@ class StateSyncWeaver:
     # =========================================================================
 
     def _consult_oracle(self, classified: ClassifiedState) -> WeavingAdvice:
-        """Phase 3: CONSULT - Returns REFLEX mode (Oracle not wired)."""
-        return WeavingAdvice(mode=WeaverMode.REFLEX)
+        """
+        Phase 3: CONSULT - Optionally consult MANAS for intelligent commit decisions.
+
+        The Weaver (Mahat) asks MANAS (Mind) for advice.
+        If MANAS is sleeping or unavailable, Weaver falls back to REFLEX mode.
+        """
+        try:
+            # Lazy import to avoid circular dependency
+            from vibe_core.plugins.opus_assistant.manas.api import ManasOracle
+
+            # Context for the oracle
+            context = {
+                "task_title": "State Synchronization",
+                "task_type": "state_commit",
+                "risk_level": "low",  # State sync is generally low risk
+                "changes": [str(p.path) for p in classified.rajas],
+                "is_automated": True,
+                "user_approval": False,
+                "classified_state": {
+                    "sattva": len(classified.sattva),
+                    "rajas": len(classified.rajas),
+                    "tamas": len(classified.tamas),
+                },
+            }
+
+            oracle = ManasOracle()
+            analysis = oracle.consult(context)
+
+            mode = WeaverMode.ORACLE
+            priority_paths = []
+
+            # If MANAS suggests high caution, maybe we defer?
+            # For now, we trust the Oracle's safety score.
+            # If very unsafe (< 0.4), we might want to skip/defer.
+
+            return WeavingAdvice(
+                mode=mode,
+                priority_paths=priority_paths,
+                # Simple mapping for now
+                healing_suggestions=analysis.precautions,
+            )
+
+        except ImportError:
+            # MANAS not installed - standard reflex mode
+            return WeavingAdvice(mode=WeaverMode.REFLEX)
+        except Exception as e:
+            # MANAS failed - don't block the state machine
+            # logger.warning(f"Weaver oracle consultation failed: {e}")
+            return WeavingAdvice(mode=WeaverMode.REFLEX)
 
     def _discover_all_state(self) -> WeaverStateMap:
         """
@@ -266,16 +315,17 @@ class StateSyncWeaver:
 
         # 4. P0: StateService dirty files (Direct Push model)
         try:
-            state_service = get_state_service(self.workspace)
-            dirty_files = state_service.get_dirty_files()
-            for path in dirty_files:
-                # Add to runtime_files if not already tracked
-                try:
-                    rel_path = str(path.relative_to(self.workspace))
-                    if rel_path not in state_map.runtime_files:
-                        state_map.runtime_files.append(rel_path)
-                except ValueError:
-                    continue
+            state_service = ServiceRegistry.get(StateServiceProtocol)
+            if state_service:
+                dirty_files = state_service.get_dirty_files()
+                for path in dirty_files:
+                    # Add to runtime_files if not already tracked
+                    try:
+                        rel_path = str(path.relative_to(self.workspace))
+                        if rel_path not in state_map.runtime_files:
+                            state_map.runtime_files.append(rel_path)
+                    except ValueError:
+                        continue
         except Exception:
             pass  # StateService not initialized yet
 
@@ -369,8 +419,9 @@ class StateSyncWeaver:
                 if result:
                     # P0: Clear StateService dirty flags after successful commit
                     try:
-                        state_service = get_state_service(self.workspace)
-                        state_service.clear_dirty_flags()
+                        state_service = ServiceRegistry.get(StateServiceProtocol)
+                        if state_service:
+                            state_service.clear_dirty_flags()
                     except Exception:
                         pass
 
@@ -481,6 +532,9 @@ def get_state_sync_weaver(prakriti: Optional["Prakriti"] = None) -> Optional[Sta
 
     if _global_weaver is None and prakriti is not None:
         _global_weaver = StateSyncWeaver(prakriti)
+
+        # Register in DI for protocol-based discovery
+        ServiceRegistry.register(StateSyncWeaverProtocol, _global_weaver)
 
     return _global_weaver
 

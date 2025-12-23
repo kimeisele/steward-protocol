@@ -89,6 +89,7 @@ EVENT_COLOR_MAP = {
 # SUDARSHANA CHAKRA: Active Traffic Control (KALIYA FIX)
 # =============================================================================
 
+
 class SudarshanaGuard:
     """
     Active Traffic Control for the Event Bus.
@@ -130,9 +131,7 @@ class SudarshanaGuard:
         self._blocked_count = 0
         self._allowed_count = 0
 
-        logger.info(
-            f"🛡️ SUDARSHANA initialized (bucket={bucket_size}, rate={refill_rate}/s, enabled={enabled})"
-        )
+        logger.info(f"🛡️ SUDARSHANA initialized (bucket={bucket_size}, rate={refill_rate}/s, enabled={enabled})")
 
     def check_traffic(self, agent_id: str) -> bool:
         """
@@ -156,6 +155,7 @@ class SudarshanaGuard:
             return True
 
         import time
+
         now = time.time()
 
         # Get or create bucket
@@ -173,14 +173,8 @@ class SudarshanaGuard:
             # Update timestamp but don't deduct
             self._buckets[agent_id] = [tokens, now]
             self._blocked_count += 1
-            logger.warning(
-                f"🛑 SUDARSHANA: Rate limit exceeded for '{agent_id}' "
-                f"(blocked={self._blocked_count})"
-            )
-            raise PermissionError(
-                f"SUDARSHANA: Rate limit exceeded for '{agent_id}'. "
-                f"Back off and try again."
-            )
+            logger.warning(f"🛑 SUDARSHANA: Rate limit exceeded for '{agent_id}' (blocked={self._blocked_count})")
+            raise PermissionError(f"SUDARSHANA: Rate limit exceeded for '{agent_id}'. Back off and try again.")
 
         # Deduct token and update
         self._buckets[agent_id] = [tokens - 1.0, now]
@@ -252,6 +246,7 @@ class EventBus:
         self._max_history = max_history
         self._event_count = 0
         self._dropped_count = 0  # Events dropped due to rate limiting
+        self._type_counts: Dict[str, int] = {}  # event_type -> count
 
         # SUDARSHANA: Active Traffic Control
         self._guard = SudarshanaGuard(
@@ -286,6 +281,10 @@ class EventBus:
             self._event_history.pop(0)  # FIFO removal
 
         self._event_count += 1
+
+        # Increment per-type count
+        etype = event.event_type
+        self._type_counts[etype] = self._type_counts.get(etype, 0) + 1
 
         # Emit to type-specific subscribers
         type_subs = self._subscribers.get(event.event_type, set())
@@ -354,6 +353,7 @@ class EventBus:
         return {
             "total_events": self._event_count,
             "dropped_events": self._dropped_count,
+            "type_counts": self._type_counts,
             "history_size": len(self._event_history),
             "subscribers": {
                 "global": len(self._global_subscribers),

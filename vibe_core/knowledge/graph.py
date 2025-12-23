@@ -14,7 +14,7 @@ Query Pattern:
 """
 
 import logging
-from collections import deque
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -365,6 +365,48 @@ class UnifiedKnowledgeGraph:
             return v if v is not None else 0
 
         return sorted(node_ids, key=get_value, reverse=descending)
+
+    def resolve_wildcards(self) -> int:
+        """
+        Resolve wildcard target IDs in edges.
+        Example: 'class:*:Base' -> 'class:vibe_core/base.py:Base'
+
+        Returns:
+            Number of edges updated
+        """
+        resolved_count = 0
+
+        # 1. Map simple name to full node IDs for specific types
+        # node_name -> [node_ids]
+        name_map = defaultdict(list)
+        for node_id, node in self.nodes.items():
+            name_map[node.name].append(node_id)
+
+        # 2. Iterate through all edges and look for wildcards
+        for source_id, edges in self.edges.items():
+            for edge in edges:
+                if "*" in edge.target:
+                    # Extract type and name from pattern like "class:*:MyClass"
+                    parts = edge.target.split(":")
+                    if len(parts) == 3:
+                        target_type = parts[0]
+                        target_name = parts[2]
+
+                        # Find potential matches
+                        matches = name_map.get(target_name, [])
+                        for match_id in matches:
+                            match_node = self.nodes.get(match_id)
+                            # Check if type matches (e.g. 'class')
+                            if match_node and match_node.type.value == target_type:
+                                # Update edge target to first match (best effort)
+                                edge.target = match_id
+                                resolved_count += 1
+                                break
+
+        if resolved_count > 0:
+            logger.info(f"Resolved {resolved_count} wildcard edges")
+
+        return resolved_count
 
     # ═══════════════════════════════════════════════════════════════════
     # COMBINED QUERIES (Cross-dimensional)

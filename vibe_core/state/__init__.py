@@ -52,7 +52,7 @@ from .node_state import (
     get_all_alive_nodes,
 )
 from .persona import AgentPersona, PersonaManager
-from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
+from .prakriti import KernelSessionContext, Prakriti, SyncResult
 
 # OPUS-096: RuntimeStateDefinition - Single source of truth for runtime state
 from .runtime_state import (
@@ -80,6 +80,7 @@ from .sanskrit_matrix import (
     get_western_translation,
     record_japa,
 )
+from .schema import CommitResult, CyclePhase, ExecutionResult
 
 # P0: StateService - Single Point of Truth for ALL state writes
 from .state_service import (

@@ -212,6 +212,24 @@ class AkashaPort:
                 except Exception as e:
                     logger.debug(f"AKASHA: Could not load from {kpath}: {e}")
 
+            # OPUS-155: CODEBASE SCANNING (P0 Fix)
+            if self._loaded and self._workspace:
+                try:
+                    from vibe_core.knowledge.code_scanner import CodeScanner
+
+                    scanner = CodeScanner(self._graph)
+
+                    # Scan core and plugins
+                    core_path = self._workspace / "vibe_core"
+                    if core_path.exists():
+                        logger.info("AKASHA: Scanning codebase for code knowledge...")
+                        scanner.scan_directory(core_path)
+
+                    # Scan for duplicates and resolve wildcard edges
+                    self._graph.resolve_wildcards()
+                except Exception as e:
+                    logger.warning(f"AKASHA: Code scan failed: {e}")
+
             if not self._loaded:
                 logger.warning("AKASHA: No knowledge loaded - operating in empty mode")
 
