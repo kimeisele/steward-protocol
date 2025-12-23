@@ -1900,6 +1900,15 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         if (context or {}).get("trigger") in ("git_change", "file_change") and self._is_self_triggered_change():
             logger.info("🪞 MANAS: Chill. Das warst du selbst.")
             return []
+
+        # OPUS-300: DHARMA GENERATION - Autonomous Duty-Based Intent Creation
+        # When idle, system generates maintenance intents based on system health
+        idle_minutes = self.get_idle_minutes()
+        if idle_minutes >= self._config.idle_threshold_minutes:
+            dharma_intents = self._generate_dharma_intents(idle_minutes)
+            if dharma_intents:
+                logger.info(f"🧘 DHARMA GENERATION: Created {len(dharma_intents)} auto-maintenance intents")
+
         self._last_thought_time = datetime.utcnow()
         try:
             # OPUS-097: Use get_event_loop() pattern instead of asyncio.run()
@@ -1956,6 +1965,144 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             logger.debug(f"MANAS: Training desire check failed: {e}")
 
         return None
+
+    def _generate_dharma_intents(self, idle_minutes: int) -> List[Intent]:
+        """
+        OPUS-300: DHARMA GENERATION - Autonomous Duty-Based Intent Creation.
+
+        When the system is idle, it proactively generates maintenance intents
+        based on system health and dharmic duty (Svadharma).
+
+        "Duty without demand" - The system serves because it is its nature,
+        not because it is commanded.
+
+        Args:
+            idle_minutes: How long the system has been idle
+
+        Returns:
+            List of generated Intent objects
+        """
+        intents = []
+
+        try:
+            import shutil
+            import subprocess
+
+            # =========================================================================
+            # DHARMA CHECK 1: Disk Space
+            # =========================================================================
+            try:
+                usage = shutil.disk_usage(str(self._workspace))
+                percent_used = (usage.used / usage.total) * 100
+
+                if percent_used > 85:
+                    logger.warning(f"🧘 DHARMA: Disk usage {percent_used:.1f}% - generating cleanup intent")
+                    intent = Intent(
+                        intent_type="cleanup_disk",
+                        title="🗑️ Disk space cleanup",
+                        description=f"Disk is {percent_used:.1f}% full - MANAS duty to maintain health",
+                        reasoning="Svadharma: System duty to maintain own resources",
+                        priority=IntentPriority.MEDIUM,
+                        risk=IntentRisk.SAFE,
+                        auto_executable=True,
+                        params={
+                            "threshold_percent": 85,
+                            "current_percent": percent_used,
+                            "idle_minutes": idle_minutes,
+                        },
+                    )
+                    intents.append(intent)
+                    if self._buffer:
+                        self._buffer.add(IntentBufferEntry(intent=intent))
+
+            except Exception as e:
+                logger.debug(f"🧘 DHARMA: Disk check failed: {e}")
+
+            # =========================================================================
+            # DHARMA CHECK 2: Zombie/Stale Processes (if applicable)
+            # =========================================================================
+            try:
+                result = subprocess.run(
+                    ["ps", "aux"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                # Simple heuristic: look for python processes with <1% CPU
+                zombie_count = 0
+                for line in result.stdout.split("\n"):
+                    if "python" in line and "0.0" in line.split()[2]:
+                        zombie_count += 1
+
+                if zombie_count > 3:
+                    logger.warning(f"🧘 DHARMA: {zombie_count} zombie processes - generating cleanup intent")
+                    intent = Intent(
+                        intent_type="cleanup_zombies",
+                        title="🧟 Kill zombie processes",
+                        description=f"Detected {zombie_count} stale processes - MANAS duty to clean up",
+                        reasoning="Svadharma: System hygiene",
+                        priority=IntentPriority.LOW,
+                        risk=IntentRisk.SAFE,
+                        auto_executable=True,
+                        params={
+                            "zombie_count": zombie_count,
+                            "idle_minutes": idle_minutes,
+                        },
+                    )
+                    intents.append(intent)
+                    if self._buffer:
+                        self._buffer.add(IntentBufferEntry(intent=intent))
+
+            except Exception as e:
+                logger.debug(f"🧘 DHARMA: Zombie check failed: {e}")
+
+            # =========================================================================
+            # DHARMA CHECK 3: Backup Check (if no backup in 24h)
+            # =========================================================================
+            try:
+                backup_dir = self._workspace / ".vibe" / "backups"
+                if backup_dir.exists():
+                    backup_files = list(backup_dir.glob("*"))
+                    if backup_files:
+                        latest_backup = max(backup_files, key=lambda p: p.stat().st_mtime)
+                        hours_since_backup = (datetime.utcnow() - datetime.fromtimestamp(
+                            latest_backup.stat().st_mtime
+                        )).total_seconds() / 3600
+
+                        if hours_since_backup > 24:
+                            logger.warning(f"🧘 DHARMA: Last backup {hours_since_backup:.1f}h ago - generating backup intent")
+                            intent = Intent(
+                                intent_type="create_backup",
+                                title="💾 System backup",
+                                description=f"Last backup was {hours_since_backup:.1f}h ago - MANAS duty to safeguard state",
+                                reasoning="Svadharma: Protect system continuity",
+                                priority=IntentPriority.LOW,
+                                risk=IntentRisk.SAFE,
+                                auto_executable=True,
+                                params={
+                                    "hours_since_last_backup": hours_since_backup,
+                                    "idle_minutes": idle_minutes,
+                                },
+                            )
+                            intents.append(intent)
+                            if self._buffer:
+                                self._buffer.add(IntentBufferEntry(intent=intent))
+
+            except Exception as e:
+                logger.debug(f"🧘 DHARMA: Backup check failed: {e}")
+
+            # Log summary
+            if intents:
+                logger.info(
+                    f"🧘 DHARMA GENERATION: {len(intents)} maintenance intents created during {idle_minutes}min idle"
+                )
+                for intent in intents:
+                    logger.info(f"   • {intent.title} ({intent.intent_type})")
+
+        except Exception as e:
+            logger.error(f"🧘 DHARMA GENERATION: Critical failure: {e}", exc_info=True)
+
+        return intents
 
     async def approve_intent(self, intent_id: str) -> bool:
         """
