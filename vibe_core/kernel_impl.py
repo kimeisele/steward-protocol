@@ -1558,6 +1558,49 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             loop.close()
             logger.info("🌐 Gateway Sidecar shutdown complete")
 
+    def boot(self, boot_mode: BootMode | None = None) -> None:
+        """
+        Boot the kernel synchronously (backward compatibility wrapper).
+
+        OPUS-203 introduced boot_async(), but 30+ callers still use sync boot().
+        This wrapper ensures backward compatibility while delegating to boot_async().
+
+        For new code, prefer boot_async() in async contexts.
+
+        Args:
+            boot_mode: Optional BootMode (FULL, HEADLESS, MINIMAL).
+                       If None, defaults to FULL for backward compatibility.
+        """
+        import asyncio
+
+        from vibe_core.boot_mode import BootMode
+
+        if boot_mode is None:
+            boot_mode = BootMode.FULL
+
+        # Check if we're already in an async context
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an async context - schedule and wait
+            import concurrent.futures
+
+            future = concurrent.futures.Future()
+
+            async def _boot_and_signal():
+                try:
+                    await self.boot_async(boot_mode)
+                    future.set_result(None)
+                except Exception as e:
+                    future.set_exception(e)
+
+            loop.create_task(_boot_and_signal())
+            # Note: This will block the current thread waiting for boot
+            # In pure async code, use boot_async() directly
+            future.result(timeout=60)
+        except RuntimeError:
+            # No running event loop - use asyncio.run()
+            asyncio.run(self.boot_async(boot_mode))
+
     async def boot_async(self, boot_mode: BootMode | None = None) -> None:
         """
         🚀 ASYNC BOOT (OPUS-203)
