@@ -1,32 +1,41 @@
 """
-StateSyncHolon - The Zwischeninstanz for Plugin State Discovery
+OPUS-210: StateSyncHolon - TANMATRA Bridge of Prakriti
 
-OPUS-009: "State files in .gitignore = Lobotomy"
+Sanskrit: तन्मात्र (Tanmatra) = "That-only" / Subtle Element / Essence
 
-The StateSyncHolon bridges Plugin State to Git, implementing the
-Fractal State Architecture where every plugin IS a Mini-Prakriti.
+In Samkhya philosophy, Tanmatras are the subtle essences from which
+gross elements emerge. In Steward Protocol, StateSyncHolon is the
+TANMATRA bridge - it binds Plugin state (holons) to Prakriti (substrate).
 
 Named after Arthur Koestler's "holon" concept:
-A holon is something that is simultaneously a whole and a part.
+A holon is something that is simultaneously a WHOLE and a PART.
 
 The StateSyncHolon is:
 - A PART of Prakriti (the larger state system)
 - A WHOLE that contains plugin state discovery, tracking, and sync
+- A BRIDGE that binds Plugin holons to unified Prakriti
+
+OPUS-009: "State files in .gitignore = Lobotomy"
 
 Responsibilities:
 1. DISCOVER all plugin state paths (Protocol + Convention + Manifest)
-2. DIAGNOSE the Guna of each state path
+2. DIAGNOSE the Guna of each state path (SATTVA/RAJAS/TAMAS)
 3. WATCH for changes (file system events via watchdog)
 4. STAGE on session boundaries
-5. COMMIT via Prakriti (atomic, signed)
-6. HEAL merge conflicts (untotbar)
+5. COMMIT via CommitAuthority → Weaver → Git
+6. HEAL merge conflicts (UntotbarMergeEngine)
 7. RESURRECT from Tamas (stale, broken, ignored)
 
 Lifecycle:
-- on_boot(): Discover -> Diagnose -> Heal Tamas
-- on_change(): Update Guna -> Queue for commit
-- on_shutdown(): Stage all -> Commit -> Verify
-- on_conflict(): Heal -> Auto-merge -> Log
+- on_boot(): Discover → Diagnose → Heal Tamas
+- on_change(): Update Guna → Queue for commit
+- on_shutdown(): Stage all → Commit → Verify
+- on_conflict(): Heal → Auto-merge → Log
+
+Tattva Mapping (OPUS-097):
+    Prakriti → Tanmatra (SyncHolon) → Plugin Holons (gross elements)
+
+OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-009, OPUS-097
 """
 
 from __future__ import annotations
