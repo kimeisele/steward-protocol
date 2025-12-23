@@ -1,19 +1,22 @@
 """
-OPUS-106: CognitiveWeaver - The State ↔ Knowledge Bridge
+OPUS-210: CognitiveWeaver - BUDDHI Aspect of Prakriti
+
+Sanskrit: बुद्धि (Buddhi) = Intellect / Discrimination / Higher Mind
+
+In Samkhya philosophy, Buddhi is the faculty of discrimination that
+discerns truth from illusion. In Steward Protocol, CognitiveWeaver is
+the BUDDHI aspect of Prakriti - it bridges State (memory) and Knowledge
+(wisdom) to enable discriminative cognition.
+
+NOT a separate system - an ASPECT that enables MANAS to perceive
+both state and knowledge as ONE unified consciousness.
 
 "Gedächtnis ohne Wissen ist blind. Wissen ohne Gedächtnis ist vergesslich."
 "Memory without Knowledge is blind. Knowledge without Memory is forgetful."
 
-The CognitiveWeaver bridges the gap between:
-- STATE (Prakriti, StateSyncHolon) - What the system REMEMBERS
-- KNOWLEDGE (UnifiedKnowledgeGraph) - What the system KNOWS
-
-This is the "Sixth Sense" (Das sechste Jnanendriya) that enables MANAS
-to perceive both state and knowledge as ONE unified consciousness.
-
 Architecture:
     ┌───────────────────────────────────────────────────────────────────┐
-    │                    COGNITIVE WEAVER (OPUS-106)                     │
+    │                    COGNITIVE WEAVER (BUDDHI)                       │
     │                                                                    │
     │   ┌──────────────────┐         ┌──────────────────┐              │
     │   │  STATE LAYER     │◄───────►│  KNOWLEDGE LAYER │              │
@@ -43,8 +46,11 @@ Architecture:
     │            (The Thinking Mind)                                    │
     └───────────────────────────────────────────────────────────────────┘
 
-Implements: OPUS-106 FORTRESS x2 - The State + Knowledge Unification
+Tattva Mapping (OPUS-097):
+    Prakriti → Buddhi → CognitiveWeaver (discrimination/bridge)
+
 Philosophy: "The Cognitive Weaver doesn't replace - it CONNECTS."
+OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-106, OPUS-097
 """
 
 import logging

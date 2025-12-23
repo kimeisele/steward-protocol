@@ -1,13 +1,16 @@
 """
-OPUS-171: SynapseStore - Unified Synapse Persistence with v3 Schema
+OPUS-210: SynapseStore - PRANA Aspect of Prakriti
+
+Sanskrit: प्राण (Prana) = Life Force / Vital Energy / Runtime Breath
+
+In Samkhya philosophy, Prana is the vital energy that animates the body.
+In Steward Protocol, SynapseStore is a PRANA aspect of Prakriti - it
+manages the living synaptic connections that animate MANAS cognition.
+
+NOT a "single source of truth" - that is Prakriti itself.
+SynapseStore is an ASPECT that handles synapse persistence (v3 schema).
 
 "The Synapse is the Bridge between Thought and Action."
-
-This module consolidates the 4 duplicate _load_synapses() implementations:
-1. triggers.py (SynapticMemory) - v2 schema with caching
-2. synaptic_seeder.py - v2 schema
-3. viveka_action.py - v1 schema (OLD!)
-4. mirror.py - mixed schema
 
 Unified v3 Schema:
 {
@@ -34,7 +37,11 @@ Unified v3 Schema:
     }
 }
 
+Tattva Mapping (OPUS-097):
+    Prakriti → Prana Layer → SynapseStore (synaptic vitality)
+
 Pattern: Singleton with caching (follows triggers.py pattern)
+OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-171
 """
 
 from __future__ import annotations
@@ -365,12 +372,13 @@ class SynapseStore:
             seed_weights: Initial weights to use if file doesn't exist
         """
         self._workspace = workspace or Path.cwd()
-        
+
         # 🍎 STATE: Global Sovereign State (ADR-204)
         # Synapses are collective memory, they belong to the State root.
         from vibe_core.state.state_service import get_state_service
-        self._state_service = get_state_service(self._workspace) # Global/Sovereign
-        
+
+        self._state_service = get_state_service(self._workspace)  # Global/Sovereign
+
         self._synapse_file = self._state_service.state_root / "synapses.json"
         self._backup_dir = self._state_service.state_root / "backups"
 

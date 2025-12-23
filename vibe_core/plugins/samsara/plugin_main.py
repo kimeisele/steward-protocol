@@ -2,13 +2,16 @@
 Samsara Plugin - Entropy Management Engine
 
 OPUS-209: Extracted from kernel_impl.py
+OPUS-210: PluginStateContract compliant
 
 Enforces mortality on the ledger - removes oldest events to make room for new creation.
 Named after Samsara, the cycle of death and rebirth.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
@@ -22,12 +25,47 @@ ROTATION_THRESHOLD = 10000
 
 
 class SamsaraPlugin(KernelPlugin):
-    """Entropy Management - Ledger cleanup and rotation."""
+    """
+    Entropy Management - Ledger cleanup and rotation.
+
+    OPUS-210: Implements PluginStateContract for Prakriti integration.
+    """
 
     plugin_id = "samsara"
 
+    # State paths for PluginStateContract
+    STATE_DIR = Path(".vibe/state/plugins/samsara")
+
     def __init__(self):
         self._kernel: Optional["RealVibeKernel"] = None
+        self._rotation_count: int = 0
+        self._events_dissolved: int = 0
+        self._last_rotation: Optional[str] = None
+
+    # =========================================================================
+    # PluginStateContract Implementation (OPUS-210)
+    # =========================================================================
+
+    def get_state_paths(self) -> List[Path]:
+        """Return paths where this plugin stores state."""
+        return [self.STATE_DIR]
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for backup."""
+        return {
+            "version": 1,
+            "rotation_count": self._rotation_count,
+            "events_dissolved": self._events_dissolved,
+            "last_rotation": self._last_rotation,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        if snapshot.get("version") == 1:
+            self._rotation_count = snapshot.get("rotation_count", 0)
+            self._events_dissolved = snapshot.get("events_dissolved", 0)
+            self._last_rotation = snapshot.get("last_rotation")
 
     def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
         self._kernel = kernel
@@ -62,7 +100,7 @@ class SamsaraPlugin(KernelPlugin):
                     archive_path = ledger.rotate()
                     if archive_path:
                         logger.info(f"✅ Samsara complete. Archived to {archive_path}")
-                        ledger.set_meta('health_anchor', (0, "0"*64))
+                        ledger.set_meta("health_anchor", (0, "0" * 64))
                 except Exception as e:
                     logger.critical(f"🔥 SAMSARA FAILED: {e}")
 
