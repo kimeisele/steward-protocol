@@ -69,3 +69,51 @@ class ExecutionResult:
     blocked_reason: Optional[str] = None
     error: Optional[str] = None
     trace_id: Optional[str] = None
+    executed_by: Optional[str] = None
+
+
+@dataclass
+class ActionResult:
+    """Unified result of a single action execution."""
+
+    success: bool
+    action_name: str = "unknown"
+    intent_type: str = "unknown"
+    data: Optional[Dict[str, Any]] = None
+    result: Optional[Dict[str, Any]] = None  # Alias for data (legacy compat)
+    error: Optional[str] = None
+    message: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    action_type: str = "unknown"
+
+    def __post_init__(self):
+        # Sync data and result
+        if self.data is not None and self.result is None:
+            self.result = self.data
+        elif self.result is not None and self.data is None:
+            self.data = self.result
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "success": self.success,
+            "action_name": self.action_name,
+            "intent_type": self.intent_type,
+            "result": self.result,
+            "error": self.error,
+            "message": self.message,
+            "metadata": self.metadata,
+            "action_type": self.action_type,
+        }
+
+
+@dataclass
+class RouteResult:
+    """Unified result of a routing decision."""
+
+    target_id: str
+    target_type: str  # "agent", "plugin", "playbook", "circuit"
+    confidence: float
+    reason: str
+    params: Dict[str, Any] = field(default_factory=dict)
+    is_fallback: bool = False

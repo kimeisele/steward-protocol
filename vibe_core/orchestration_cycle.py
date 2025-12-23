@@ -44,6 +44,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.event_bus import EventBus, EventType, emit_event
 from vibe_core.runtime.unified_trace import UnifiedTrace
+from vibe_core.state.schema import CyclePhase
 
 logger = logging.getLogger("ORCHESTRATION.CYCLE")
 
@@ -89,17 +90,6 @@ def reset_cycle_registry() -> None:
     global _global_cycle_registry
     _global_cycle_registry = None
     logger.debug("🔄 Global CycleRegistry reset")
-
-
-class CyclePhase(Enum):
-    """Standard orchestration phases for all cycles."""
-
-    PERCEIVE = "perceive"  # Sense state / observe reality
-    ORIENT = "orient"  # Classify / interpret observations
-    DECIDE = "decide"  # Generate / filter / prioritize actions
-    ACT = "act"  # Execute / apply actions
-    PERSIST = "persist"  # Record / commit state
-    RECOVER = "recover"  # Error handling / reset if needed
 
 
 @dataclass
@@ -698,9 +688,10 @@ class CycleRegistry:
         self._error_cycles: List[CycleContext] = []  # For retention
         self._cycle_count = 0
         self._workspace = workspace or Path.cwd()
-        
+
         # 🍎 STATE: Global Sovereign State (ADR-204)
         from vibe_core.state.state_service import get_state_service
+
         self._state_service = get_state_service(self._workspace)
         self._history_filename = "cycle_history.json"
 

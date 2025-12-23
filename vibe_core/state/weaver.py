@@ -152,6 +152,16 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         """
         Run one weave cycle.
         (Sovereign Intelligence Mode)
+
+        OPUS-211 FIX: Uses REFLEX mode only (no oracle consultation).
+        Oracle consultation was causing a feedback loop:
+        - Weaver calls ManasOracle
+        - MANAS updates manas_awareness.json
+        - StateService marks file dirty
+        - Triggers another commit
+        - Infinite loop!
+
+        State commits should be dumb batches. Oracle is for significant events only.
         """
         import os
 
@@ -165,10 +175,10 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
             # 2. Classify
             classified = self._classify_state(state_map)
 
-            # 3. Consult Oracle (Non-blocking)
-            advice = self._consult_oracle(classified)
+            # 3. REFLEX mode - no oracle consultation for routine commits
+            advice = WeavingAdvice(mode=WeaverMode.REFLEX)
 
-            # 4. Decide (incorporating Oracle advice if safe)
+            # 4. Decide
             plan = self._decide_commit_strategy(classified, advice)
 
             # 5. Execute if needed

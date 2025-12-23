@@ -522,6 +522,44 @@ class SynapticMemory:
             )
         return self._store
 
+    def update_weight(
+        self,
+        connection_key: str,
+        success: bool,
+        intent_type: str = "",
+        trigger: str = "",
+    ) -> None:
+        """
+        Update a synaptic weight based on outcome.
+
+        This is the WRITING method - reinforcing learned associations.
+        Used by ActionManager.
+        """
+        # Parse connection key (trigger→action) if trigger/intent_type not provided
+        if not trigger and "→" in connection_key:
+            trigger = connection_key.split("→")[0]
+
+        # Use ActionPatterns to get canonical action if possible
+        action = ""
+        if intent_type:
+            action = SynapseVocabulary.get().get_action_for_intent(intent_type)
+
+        if not action and "→" in connection_key:
+            action = connection_key.split("→")[1]
+
+        if not trigger or not action:
+            logger.warning(f"🧠 UPDATE: Invalid connection key {connection_key}")
+            return
+
+        store = self._get_store()
+        if success:
+            store.increment_weight(trigger, action)
+        else:
+            store.decrement_weight(trigger, action)
+
+        # SynapseStore marks dirty. We flush to ensure persistence.
+        store.flush()
+
     def _load_synapses(self, force: bool = False) -> Dict[str, Any]:
         """Load synapses via SynapseStore (OPUS-171 unified access)."""
         return self._get_store().load(force=force)

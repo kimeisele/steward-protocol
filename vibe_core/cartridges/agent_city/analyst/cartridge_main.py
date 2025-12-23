@@ -39,6 +39,7 @@ from typing import Any, Dict, Optional
 
 from vibe_core.agent_protocol import VibeAgent
 from vibe_core.scheduling.task import Task
+from vibe_core.state.schema import ExecutionResult
 
 logger = logging.getLogger("ANALYST")
 
@@ -126,7 +127,7 @@ class AnalystCartridge(VibeAgent):
     # TASK PROCESSING
     # =========================================================================
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    def process(self, task: Task) -> ExecutionResult:
         """
         Process a task from the kernel scheduler.
 
@@ -143,30 +144,32 @@ class AnalystCartridge(VibeAgent):
             params = task.payload.get("params", {})
 
             if action == "synthesize":
-                result = self._synthesize_context(params)
+                res_dict = self._synthesize_context(params)
             elif action == "git":
-                result = self._execute_git_analysis(params)
+                res_dict = self._execute_git_analysis(params)
             elif action == "code":
-                result = self._execute_code_analysis(params)
+                res_dict = self._execute_code_analysis(params)
             elif action == "structure":
-                result = self._execute_structure_analysis(params)
+                res_dict = self._execute_structure_analysis(params)
             elif action == "deps":
-                result = self._execute_deps_analysis(params)
+                res_dict = self._execute_deps_analysis(params)
             elif action == "docs":
-                result = self._execute_docs_analysis(params)
+                res_dict = self._execute_docs_analysis(params)
             else:
-                result = {"success": False, "error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
 
-            if result.get("success"):
+            # Map dict result to ExecutionResult
+            success = res_dict.get("success", False)
+            if success:
                 logger.info(f"✅ Task {task.task_id} completed")
+                return ExecutionResult(success=True, result=res_dict)
             else:
-                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error')}")
-
-            return result
+                logger.warning(f"⚠️  Task {task.task_id} failed: {res_dict.get('error')}")
+                return ExecutionResult(success=False, error=res_dict.get("error", "Unknown error"), result=res_dict)
 
         except Exception as e:
             logger.error(f"❌ Task processing failed: {e}", exc_info=True)
-            return {"success": False, "error": str(e), "task_id": task.task_id}
+            return ExecutionResult(success=False, error=str(e))
 
     # =========================================================================
     # VEDA-4 CONTEXT SYNTHESIS
