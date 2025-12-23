@@ -404,6 +404,9 @@ class ActionManager:
             logger.info(f"🖐️ ACTION: Intent {intent.id} executed successfully")
         else:
             logger.warning(f"🖐️ ACTION: Intent {intent.id} execution failed: {result.get('error')}")
+            # TITIKSHA: Resilience through self-diagnosis
+            # When an intent fails, the system auto-generates a diagnostic intent
+            self._schedule_failure_diagnosis(intent, result, buffer)
 
         return success
 
@@ -982,6 +985,68 @@ class ActionManager:
             logger.debug("EventBus not available - skipping ACTION_COMPLETED emission")
         except Exception as e:
             logger.warning(f"Failed to emit ACTION_COMPLETED event: {e}")
+
+    def _schedule_failure_diagnosis(
+        self,
+        failed_intent: "Intent",
+        result: Dict[str, Any],
+        buffer: Optional[Any] = None,
+    ) -> None:
+        """
+        OPUS-220: Auto-Diagnosis for Failed Intents (TITIKSHA - Resilience).
+
+        When an intent execution fails, the system automatically generates
+        a diagnostic intent to analyze the failure. This is self-healing:
+        the kernel doesn't wait for human intervention, it introspects.
+
+        Args:
+            failed_intent: The intent that failed
+            result: The execution result containing error info
+            buffer: IntentBuffer to add diagnostic intent to
+        """
+        if not buffer:
+            logger.debug("🔴 TITIKSHA: Buffer not available - skipping auto-diagnosis")
+            return
+
+        try:
+            from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+                Intent,
+                IntentPriority,
+                IntentRisk,
+            )
+
+            error_msg = result.get("error", "Unknown error")
+
+            # Create diagnostic intent
+            diagnostic_intent = Intent(
+                id=f"diagnosis_{failed_intent.id[:8]}",
+                intent_type="error_diagnosis",
+                title=f"Analyze failure of {failed_intent.intent_type}",
+                description=f"Automatic diagnosis: {failed_intent.title} failed with: {error_msg[:100]}",
+                reasoning=f"Intent {failed_intent.intent_type} failed. Root cause analysis needed to prevent recurrence.",
+                params={
+                    "failed_intent_id": failed_intent.id,
+                    "failed_intent_type": failed_intent.intent_type,
+                    "error_message": error_msg,
+                    "original_params": str(failed_intent.params),
+                },
+                priority=IntentPriority.MEDIUM,
+                risk=IntentRisk.SAFE,
+                auto_executable=True,  # Can auto-execute diagnosis
+            )
+
+            # Add to buffer with lower priority than original
+            from vibe_core.plugins.opus_assistant.manas.intent_buffer import (
+                IntentBufferEntry,
+            )
+
+            entry = IntentBufferEntry(intent=diagnostic_intent)
+            buffer.add(entry)
+
+            logger.info(f"🔴 TITIKSHA: Auto-diagnosis scheduled for {failed_intent.id}")
+
+        except Exception as e:
+            logger.debug(f"🔴 TITIKSHA: Failed to schedule diagnosis: {e}")
 
 
 # =============================================================================
