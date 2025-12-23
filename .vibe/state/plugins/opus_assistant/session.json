@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
   "session_id": "09d4da2f",
   "started_at": "2025-12-23T14:06:01.725911",
+=======
+  "session_id": "969887df",
+  "started_at": "2025-12-23T14:34:38.548333",
+>>>>>>> 645494a8 (arch(kernel): nationalize heartbeat and decouple MANAS cognition)
   "last_karma_score": 100,
   "observation_count": 1000,
   "boot_mode": "full_power",

@@ -127,6 +127,19 @@ class OpusAssistantPlugin(KernelPlugin):
         # OPUS-112: Register MANAS as system-level agent for tool access
         self._register_manas_capabilities(kernel)
 
+        # OPUS-167: Wake up MANAS Cognitive Kernel (The Mind)
+        # This ensures MANAS is registered in DI for heartbeat pulses
+        from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import (
+            CognitiveKernel,
+        )
+
+        manas = CognitiveKernel.get_instance(workspace=self._workspace)
+
+        # OPUS-095: Wire MANAS to orchestration cycle (fix attribute setup error)
+        if hasattr(kernel, "trace") and hasattr(kernel, "_event_bus"):
+            manas.setup(kernel.trace, kernel._event_bus, steward_context=None)
+            logger.info("🔄 MANAS wired to CycleRegistry (via plugin boot)")
+
         # Load fraktale config
         self._load_fraktale_config()
 
@@ -225,17 +238,28 @@ class OpusAssistantPlugin(KernelPlugin):
     def on_pulse(self, kernel, transaction):
         """
         OPUS-087 PRANA: Refresh OPUS.md during heartbeat pulse.
+        OPUS-212: Trigger MANAS cognitive cycle during pulse.
 
         This runs every 15 minutes via GitHub Actions (headless mode).
         Collects system state and registers mutation for OPUS.md update.
-
-        IMPORTANT: kernel may be None in headless mode - must handle gracefully.
         """
         from vibe_core.plugin_protocol import HookResult
         from vibe_core.prana_orchestrator import StateMutation
 
         try:
-            # 1. Use the proper renderer to generate full dashboard
+            # 1. Trigger COGNITION (MANAS)
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.protocols import CognitiveKernelProtocol
+
+                manas = ServiceRegistry.get(CognitiveKernelProtocol)
+                if manas:
+                    logger.info("   + MANAS: Triggering cognitive tick...")
+                    manas.tick()
+            except Exception as e:
+                logger.warning(f"   ⚠️ MANAS tick failed during pulse: {e}")
+
+            # 2. Use the proper renderer to generate full dashboard
             from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
                 OpusDashboardRenderer,
             )
@@ -246,8 +270,7 @@ class OpusAssistantPlugin(KernelPlugin):
             # Render the full markdown content
             content = renderer.render(quick=False)
 
-            # 2. Register mutation (don't write directly!)
-            # We ask PRANA to perform the write operation
+            # 3. Register mutation
             transaction.register(
                 StateMutation(
                     plugin_id=self.plugin_id,

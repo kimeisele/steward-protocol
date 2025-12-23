@@ -67,13 +67,14 @@ class BiorhythmProcessor:
         """
         self._kernel = kernel
         self._state = BiorhythmState()
+        self._in_tick = False
 
     @property
     def kernel(self) -> Optional[CognitiveKernelProtocol]:
         """Lazy-discover kernel via DI if not provided."""
-        if self.kernel is None:
-            self.kernel = ServiceRegistry.get(CognitiveKernelProtocol)
-        return self.kernel
+        if self._kernel is None:
+            self._kernel = ServiceRegistry.get(CognitiveKernelProtocol)
+        return self._kernel
 
     @property
     def consciousness_level(self) -> float:
@@ -99,47 +100,54 @@ class BiorhythmProcessor:
         Returns:
             Dict with state, consciousness_level, and should_think
         """
-        now = datetime.utcnow()
-        self._state.tick_count += 1
-        self._state.last_tick_time = now
+        if self._in_tick:
+            return {"state": "locked", "consciousness_level": 0.0, "should_think": False}
 
-        # Compute consciousness level
-        level = self._compute_consciousness_level()
-        self._state.consciousness_level = level
+        self._in_tick = True
+        try:
+            now = datetime.utcnow()
+            self._state.tick_count += 1
+            self._state.last_tick_time = now
 
-        # Dispatch to appropriate behavior based on level
-        if level >= 0.8:
-            result = self._turiya_tick()
-        elif level >= 0.5:
-            result = self._sattva_tick()
-        elif level >= 0.2:
-            result = self._rajas_tick()
-        else:
-            result = self._tamas_tick()
+            # Compute consciousness level
+            level = self._compute_consciousness_level()
+            self._state.consciousness_level = level
 
-        # Update awareness (in-memory, for transparency)
-        pending_count = len(self.kernel._buffer.get_pending())
-        awareness = {
-            "tick": self._state.tick_count,
-            "consciousness_level": round(level, 3),
-            "state": result.get("state", "unknown"),
-            "inputs": {
-                "synaptic_urgency": round(self._state.cached_urgency, 3),
-                "prakriti_health": round(self._state.cached_health, 3),
-                "kala_rhythm": round(self._state.cached_rhythm, 3),
-            },
-            "last_tick": now.isoformat(),
-            "pending_intents": pending_count,
-            "ticks_since_turiya": self._state.ticks_since_turiya,
-            "last_thought": (self.kernel._last_thought_time.isoformat() if self.kernel._last_thought_time else None),
-        }
-        self.kernel._awareness = awareness
+            # Dispatch to appropriate behavior based on level
+            if level >= 0.8:
+                result = self._turiya_tick()
+            elif level >= 0.5:
+                result = self._sattva_tick()
+            elif level >= 0.2:
+                result = self._rajas_tick()
+            else:
+                result = self._tamas_tick()
 
-        # Periodic persistence (every 20 ticks = ~60s)
-        if self._state.tick_count % 20 == 0:
-            self._persist_awareness()
+            # Update awareness (in-memory, for transparency)
+            pending_count = len(self.kernel._buffer.get_pending())
+            awareness = {
+                "tick": self._state.tick_count,
+                "consciousness_level": round(level, 3),
+                "state": result.get("state", "unknown"),
+                "inputs": {
+                    "synaptic_urgency": round(self._state.cached_urgency, 3),
+                    "prakriti_health": round(self._state.cached_health, 3),
+                    "kala_rhythm": round(self._state.cached_rhythm, 3),
+                },
+                "last_tick": now.isoformat(),
+                "pending_intents": pending_count,
+                "ticks_since_turiya": self._state.ticks_since_turiya,
+                "last_thought": (self.kernel._last_thought_time.isoformat() if self.kernel._last_thought_time else None),
+            }
+            self.kernel._awareness = awareness
 
-        return result
+            # Periodic persistence (every 20 ticks = ~60s)
+            if self._state.tick_count % 20 == 0:
+                self._persist_awareness()
+
+            return result
+        finally:
+            self._in_tick = False
 
     def _compute_consciousness_level(self) -> float:
         """

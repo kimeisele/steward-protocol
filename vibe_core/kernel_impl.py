@@ -333,6 +333,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         self.prakriti = Prakriti(db_path=prakriti_db_path)
 
+        # OPUS-096: State Sync Holon Weaver (MetaData Orchestration)
+        from vibe_core.state.weaver import get_state_sync_weaver
+
+        get_state_sync_weaver(self.prakriti)
+
         # 3. CAPABILITY REGISTRY (with blueprint)
         # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry_blueprint = lambda: CapabilityRegistry(ledger=self.ledger)
@@ -434,6 +439,35 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
     # If Asura deletes an organ, it resurrects from the Blueprint.
     # =========================================================================
+
+    def pulse(self) -> Dict[str, Any]:
+        """
+        Execute one system pulse cycle across all plugins.
+
+        This is the meta-orchestration of the macro-cycle.
+        It calls on_pulse() for every loaded plugin.
+        """
+        logger.info("💓 KERNEL: System pulse started")
+        results = {}
+
+        # Create a mock transaction if needed by plugins (legacy compatibility)
+        class MockTransaction:
+            def register(self, mutation):
+                pass
+
+        transaction = MockTransaction()
+
+        for plugin in self._plugins:
+            try:
+                if hasattr(plugin, "on_pulse"):
+                    res = plugin.on_pulse(self, transaction)
+                    results[plugin.plugin_id] = res
+            except Exception as e:
+                logger.error(f"❌ Plugin '{plugin.plugin_id}' pulse failed: {e}")
+                results[plugin.plugin_id] = {"success": False, "error": str(e)}
+
+        logger.info(f"💓 KERNEL: System pulse complete ({len(results)} plugins responded)")
+        return results
 
     @property
     def _ledger(self):
