@@ -39,9 +39,6 @@ from vibe_core.runtime.unified_trace import UnifiedTrace
 
 # OPUS-167: Action Manager Extraction (Karmendriya)
 from .action_manager import ActionManager
-
-# OPUS-176: Biorhythm Processor - Extracted consciousness tick logic
-from .biorhythm import BiorhythmProcessor
 from .buddhi import Buddhi
 
 # OPUS-168: Antahkarana - The Inner Instrument
@@ -485,7 +482,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         self._action_manager.inject_narasimha(self._narasimha)
 
         # Biorhythm
-        self._biorhythm = BiorhythmProcessor(kernel=self)
+        _ = self._biorhythm_proc  # Initialize via lazy property
 
         self._booted = True
         logger.info("🧠 MANAS: Cognitive systems online.")
@@ -1796,6 +1793,15 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # CORE API
     # =========================================================================
 
+    @property
+    def _biorhythm_proc(self):
+        """Lazy-load BiorhythmProcessor to break circular imports."""
+        if self._biorhythm is None:
+            from .biorhythm import BiorhythmProcessor
+
+            self._biorhythm = BiorhythmProcessor(kernel=self)
+        return self._biorhythm
+
     def tick(self) -> Dict[str, Any]:
         """
         MANAS Biorhythm tick - delegated to BiorhythmProcessor (OPUS-176).
@@ -1805,13 +1811,13 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         """
         if not self._booted:
             return {"state": "booting", "consciousness_level": 0.0, "should_think": False}
-        return self._biorhythm.tick()
+        return self._biorhythm_proc.tick()
 
     def get_awareness(self) -> Dict[str, Any]:
         """Get current awareness state (for dashboard/templates)."""
         if not self._booted:
             return {"state": "booting"}
-        return self._biorhythm.get_awareness()
+        return self._biorhythm_proc.get_awareness()
 
     def _is_intent_expired(self, intent: Intent) -> bool:
         """Check if intent has expired based on config."""

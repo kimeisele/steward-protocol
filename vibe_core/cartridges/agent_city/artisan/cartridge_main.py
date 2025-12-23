@@ -15,6 +15,7 @@ from typing import Any, Dict
 
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
+from vibe_core.state.schema import ExecutionResult
 
 # Constitutional Oath Mixin (Golden Template Pattern)
 from vibe_core.steward import OathMixin
@@ -90,7 +91,7 @@ class ArtisanCartridge(VibeAgent, OathMixin):
 
     # ==================== VIBEOS AGENT INTERFACE ====================
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    def process(self, task: Task) -> ExecutionResult:
         """
         Process a task from the VibeKernel scheduler.
 
@@ -105,17 +106,17 @@ class ArtisanCartridge(VibeAgent, OathMixin):
                 file_path = task.payload.get("file_path")
                 output_path = task.payload.get("output_path")
                 if not file_path:
-                    return {"status": "error", "error": "file_path required"}
+                    return ExecutionResult(success=False, error="file_path required")
                 result = self.process_media(file_path, output_path)
-                return {"status": "success", "result": result}
+                return ExecutionResult(success=True, result={"result": result})
             else:
-                return {"status": "error", "error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
         except Exception as e:
             logger.error(f"❌ ARTISAN processing error: {e}")
             import traceback
 
             logger.error(traceback.format_exc())
-            return {"status": "error", "error": str(e)}
+            return ExecutionResult(success=False, error=str(e))
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""

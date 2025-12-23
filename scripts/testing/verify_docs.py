@@ -48,7 +48,7 @@ class CodeBlock:
 
 
 @dataclass
-class ExecutionResult:
+class DocExecutionResult:
     """Result of executing a code block."""
 
     code_block: CodeBlock
@@ -111,7 +111,7 @@ class CodeExecutor:
     """Execute code blocks in a sandboxed environment."""
 
     @staticmethod
-    def execute(code_block: CodeBlock) -> ExecutionResult:
+    def execute(code_block: CodeBlock) -> DocExecutionResult:
         """
         Execute a code block.
 
@@ -167,7 +167,7 @@ class CodeExecutor:
             # Execute the code
             exec(code_block.code, namespace)
 
-            return ExecutionResult(
+            return DocExecutionResult(
                 code_block=code_block,
                 success=True,
             )
@@ -176,7 +176,7 @@ class CodeExecutor:
             error_msg = f"{type(e).__name__}: {str(e)}"
             tb = traceback.format_exc()
 
-            return ExecutionResult(
+            return DocExecutionResult(
                 code_block=code_block,
                 success=False,
                 error=error_msg,
@@ -195,7 +195,7 @@ class DocsVerifier:
             verbose: Enable verbose output
         """
         self.verbose = verbose
-        self.results: List[ExecutionResult] = []
+        self.results: List[DocExecutionResult] = []
 
     def verify_file(self, file_path: Path) -> int:
         """

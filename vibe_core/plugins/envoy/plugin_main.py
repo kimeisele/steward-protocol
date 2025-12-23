@@ -791,9 +791,15 @@ class EnvoyPlugin(KernelPlugin):
             # Each plugin with a circuits/ dir gets included
             from vibe_core.plugin_loader import PluginLoader
 
+            # OPUS-211 FIX: Handle both dict metadata and instantiated objects
             plugins, _ = PluginLoader.discover_and_load()
             for plugin_id, plugin_data in plugins.items():
-                plugin_path = plugin_data.get("_source_path")
+                plugin_path = None
+                if isinstance(plugin_data, dict):
+                    plugin_path = plugin_data.get("_source_path")
+                elif hasattr(plugin_data, "_source_path"):
+                    plugin_path = getattr(plugin_data, "_source_path")
+
                 if plugin_path:
                     plugin_circuits = Path(plugin_path).parent / "circuits"
                     if plugin_circuits.exists():

@@ -30,6 +30,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from vibe_core import Task, VibeAgent
+from vibe_core.state.schema import ExecutionResult
 
 # Constitutional Oath Mixin - makes us a true citizen
 from vibe_core.steward import OathMixin
@@ -147,7 +148,7 @@ class DharmaCartridge(VibeAgent, OathMixin):
 
         return self._opus_plugin
 
-    async def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> ExecutionResult:
         """
         Process tasks from kernel scheduler.
 
@@ -175,14 +176,25 @@ class DharmaCartridge(VibeAgent, OathMixin):
             elif action == "status":
                 result = self._status()
             else:
-                result = {"error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
 
             logger.info(f"✅ DHARMA task completed: {action}")
-            return result
+
+            # Determine success/failure
+            success = True
+            error = None
+            if "error" in result:
+                success = False
+                error = result["error"]
+            elif result.get("status") in ["insufficient_credits", "DENIED", "failed", "error"]:
+                success = False
+                error = result.get("reason") or result.get("error") or f"Action {result.get('status')}"
+
+            return ExecutionResult(success=success, result=result, error=error)
 
         except Exception as e:
             logger.error(f"❌ DHARMA task failed: {str(e)}")
-            return {"error": str(e), "status": "failed"}
+            return ExecutionResult(success=False, error=str(e))
 
     async def _seek_guidance(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """

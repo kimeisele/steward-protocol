@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 from vibe_core.runtime.layered_router import LayeredRouter
+from vibe_core.state.schema import ExecutionResult
 
 logger = logging.getLogger("UNIFIED_EXECUTION")
 
@@ -176,48 +177,6 @@ class ExecutionRequest:
         else:
             # Very low energy = doesn't manifest (soft block)
             self.gate_decision = MilkOceanGate.BLOCK
-
-
-@dataclass
-class ExecutionResult:
-    """
-    Unified result format (BREAK 5 fix).
-
-    All executors return this format - no more conversion needed.
-    """
-
-    # Status
-    status: Literal["completed", "failed"] = "completed"
-
-    # Output
-    response: str = ""  # Human-readable response
-    data: Dict[str, Any] = field(default_factory=dict)  # Structured data
-
-    # Execution info
-    execution_path: ExecutionPath = ExecutionPath.FALLBACK
-    target_id: str = ""
-    request_id: str = ""
-    trace_id: str = ""  # GAD-000 Phase 5: Telemetry
-
-    # Timing
-    duration_seconds: float = 0.0
-
-    # Error (if failed)
-    error: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for API responses"""
-        return {
-            "status": self.status,
-            "response": self.response,
-            "data": self.data,
-            "execution_path": self.execution_path.value,
-            "target_id": self.target_id,
-            "request_id": self.request_id,
-            "trace_id": self.trace_id,
-            "duration_seconds": self.duration_seconds,
-            "error": self.error,
-        }
 
 
 # =============================================================================

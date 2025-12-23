@@ -31,6 +31,7 @@ from typing import Any, Dict
 
 from vibe_core.agent_protocol import VibeAgent
 from vibe_core.scheduling.task import Task
+from vibe_core.state.schema import ExecutionResult
 
 logger = logging.getLogger("LIBRARIAN")
 
@@ -76,7 +77,7 @@ class LibrarianCartridge(VibeAgent):
 
         logger.info("📚 LIBRARIAN Cartridge ready (NO tool instances owned)")
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    def process(self, task: Task) -> ExecutionResult:
         """
         Process a task from the kernel scheduler.
 
@@ -99,24 +100,24 @@ class LibrarianCartridge(VibeAgent):
 
             # Route action to appropriate tool
             if action == "catalog":
-                result = self._catalog_book(params)
+                res_dict = self._catalog_book(params)
             elif action == "search":
-                result = self._search_books(params)
+                res_dict = self._search_books(params)
             elif action == "recommend":
-                result = self._recommend_books(params)
+                res_dict = self._recommend_books(params)
             else:
-                result = {"success": False, "error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
 
-            if result.get("success"):
+            if res_dict.get("success"):
                 logger.info(f"✅ Task {task.task_id} completed")
+                return ExecutionResult(success=True, result=res_dict)
             else:
-                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error')}")
-
-            return result
+                logger.warning(f"⚠️  Task {task.task_id} failed: {res_dict.get('error')}")
+                return ExecutionResult(success=False, error=res_dict.get("error"), result=res_dict)
 
         except Exception as e:
             logger.error(f"❌ Task processing failed: {e}", exc_info=True)
-            return {"success": False, "error": str(e), "task_id": task.task_id}
+            return ExecutionResult(success=False, error=str(e))
 
     def _catalog_book(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """

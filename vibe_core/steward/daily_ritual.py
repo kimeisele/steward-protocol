@@ -16,19 +16,11 @@ This is how Agent City LIVES - not just code, but rhythm.
 
 import logging
 from datetime import datetime
-from enum import Enum
 from typing import Any, Dict, List
 
+from vibe_core.state.schema import CyclePhase
+
 logger = logging.getLogger("DAILY_RITUAL")
-
-
-class CyclePhase(Enum):
-    """The 4 phases of a daily ritual"""
-
-    SUNRISE = "sunrise"  # Morning: Initialization & Blessing
-    MIDDAY = "midday"  # Noon: Work & Commerce
-    SUNSET = "sunset"  # Evening: Closure & Audit
-    ARCHIVE = "archive"  # Night: Settlement & Ledger Commit
 
 
 class DailyRitual:

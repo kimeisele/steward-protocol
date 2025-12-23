@@ -18,6 +18,7 @@ from enum import Enum
 from typing import Any, Dict
 
 from vibe_core import Task, VibeAgent
+from vibe_core.state.schema import ExecutionResult
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -46,7 +47,7 @@ class MarketCartridge(VibeAgent, OathMixin):
     - Services have fixed prices (posted on ledger)
     - Agents request service + pay immediately
     - Execution or refund (no partial states)
-    - All trades recorded immutably
+    - All exchanges recorded immutably
 
     Capabilities:
     - list_services: See available services
@@ -137,7 +138,7 @@ class MarketCartridge(VibeAgent, OathMixin):
 
         logger.info("✅ MARKET: Ready for commerce")
 
-    async def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> ExecutionResult:
         """
         Process tasks from kernel scheduler.
 
@@ -168,14 +169,25 @@ class MarketCartridge(VibeAgent, OathMixin):
             elif action == "status":
                 result = self._status()
             else:
-                result = {"error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
 
             logger.info(f"✅ MARKET task completed: {action}")
-            return result
+
+            # Determine success/failure
+            success = True
+            error = None
+            if "error" in result:
+                success = False
+                error = result["error"]
+            elif result.get("status") in ["failed", "error", "trade_failed"]:
+                success = False
+                error = result.get("reason") or result.get("error") or f"Action {result.get('status')}"
+
+            return ExecutionResult(success=success, result=result, error=error)
 
         except Exception as e:
             logger.error(f"❌ MARKET task failed: {str(e)}")
-            return {"error": str(e), "status": "failed"}
+            return ExecutionResult(success=False, error=str(e))
 
     async def _list_services(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """List all available services with prices."""
