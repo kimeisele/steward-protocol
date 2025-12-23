@@ -238,7 +238,7 @@ class ActionManager:
         self._tool_selector = ToolSelector()
 
         # OPUS-175: TaskKernel execution mode (False = legacy, True = TaskKernel)
-        self._use_task_kernel: bool = False
+        self._use_task_kernel: bool = True
 
         logger.debug("🖐️ ACTION MANAGER: Karmendriya initialized (with TaskKernel support)")
 

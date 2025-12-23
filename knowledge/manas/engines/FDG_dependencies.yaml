@@ -4,7 +4,6 @@
 version: "1.0"
 last_updated: "2025-01-15"
 
----
 
 # SECTION 1: Core Feature Dependencies
 
@@ -1580,7 +1579,6 @@ features:
     complexity_score: "medium"
     typical_scope: "v2.0"
 
----
 
 # SECTION 2: Feature Category Patterns
 
@@ -1732,7 +1730,6 @@ category_patterns:
       - "email_sending_transactional"
       - "cancellation_flow"
 
----
 
 # SECTION 3: Technology-Specific Dependencies
 
@@ -1986,7 +1983,6 @@ technology_dependencies:
       - "Hitting API limits for downstream services (e.g., database connections) due to high concurrency"
       - "Functions timing out (max 15 min execution)"
 
----
 
 # SECTION 4: Infrastructure Dependencies
 
@@ -2246,7 +2242,6 @@ infrastructure_requirements:
         v1_recommendation: "docker"
         reason: "The application must first be packaged as a container"
 
----
 
 # SECTION 5: Common Forgotten Dependencies
 
@@ -2374,7 +2369,6 @@ often_forgotten:
       - "in_progress_job_completion_logic"
       - "connection_draining_from_load_balancer"
 
----
 
 # SECTION 6: Dependency Chains (Cascading)
 

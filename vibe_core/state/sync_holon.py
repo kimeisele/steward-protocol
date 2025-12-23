@@ -49,6 +49,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import StateSyncHolonProtocol, StateSyncWeaverProtocol
+
 # OPUS-098: Import StateGuna from canonical location
 from vibe_core.state.guna_classifier import StateGuna
 
@@ -164,7 +167,7 @@ class GovernanceViolation(Exception):
 # =============================================================================
 
 
-class StateSyncHolon:
+class StateSyncHolon(StateSyncHolonProtocol):
     """
     The Zwischeninstanz - bridges Plugin State to Git.
 
@@ -655,17 +658,18 @@ class StateSyncHolon:
         # OPUS-096: Try to use StateSyncWeaver for unified commit orchestration
         if use_weaver:
             try:
-                from .weaver import StateSyncWeaver
-
-                weaver = StateSyncWeaver(self.prakriti, sync_holon=self)
-                result = weaver.on_session_end()
-                if result.success:
-                    logger.info(f"[SYNC_HOLON] Shutdown complete via Weaver: {result.message}")
-                    return
+                weaver = ServiceRegistry.get(StateSyncWeaverProtocol)
+                if weaver:
+                    result = weaver.on_session_end()
+                    if result.success:
+                        logger.info(f"[SYNC_HOLON] Shutdown complete via Weaver: {result.message}")
+                        return
+                    else:
+                        logger.warning(f"[SYNC_HOLON] Weaver failed: {result.error}, falling back")
                 else:
-                    logger.warning(f"[SYNC_HOLON] Weaver failed: {result.error}, falling back")
+                    logger.debug("[SYNC_HOLON] StateSyncWeaver not registered in DI, using direct commit")
             except Exception as e:
-                logger.warning(f"[SYNC_HOLON] Weaver not available: {e}, using direct commit")
+                logger.warning(f"[SYNC_HOLON] Weaver orchestration failed: {e}, using direct commit")
 
         # Fallback: Direct commit for each dirty path
         for plugin, infos in self._discovered.items():

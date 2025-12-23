@@ -45,6 +45,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import StateServiceProtocol, StateSyncWeaverProtocol
+
 logger = logging.getLogger("STATE.SERVICE")
 
 
@@ -103,7 +106,7 @@ class WriteResult:
     error: Optional[str] = None
 
 
-class StateService:
+class StateService(StateServiceProtocol):
     """
     👑 THE SUPREME STATE SERVICE (P0+ Implementation)
 
@@ -659,23 +662,19 @@ class StateService:
             return False
 
     def _commit_via_weaver(self) -> bool:
-        """Try to commit via StateSyncWeaver.
+        """
+        Commit dirty files via StateSyncWeaver (centralized orchestration).
 
-        OPUS-206 FIX: Use existing singleton instead of creating new Prakriti.
-        If Weaver is not initialized, return False and let caller fallback.
+        OPUS-211 SENIOR FIX: Uses ServiceRegistry to break circular import.
         """
         try:
-            from .weaver import get_state_sync_weaver
-
-            # Get existing Weaver singleton (DO NOT create new Prakriti!)
-            weaver = get_state_sync_weaver()
+            weaver = ServiceRegistry.get(StateSyncWeaverProtocol)
             if weaver is None:
-                # Weaver not initialized yet - let caller use fallback
-                logger.debug("StateService: Weaver not initialized, using git fallback")
+                logger.debug("StateService: StateSyncWeaver not registered in DI, skipping")
                 return False
 
             result = weaver.pulse()
-            return result.success if hasattr(result, "success") else bool(result)
+            return result.success if hasattr(result, "success") else True
         except Exception as e:
             logger.debug(f"StateService: Weaver commit failed: {e}")
             return False
@@ -747,7 +746,12 @@ def get_state_service(
         if key not in _instances:
             if workspace is None:
                 workspace = Path.cwd()
-            _instances[key] = StateService(workspace, agent_id=agent_id, plugin_id=plugin_id)
+            instance = StateService(workspace, agent_id=agent_id, plugin_id=plugin_id)
+            _instances[key] = instance
+
+            # Register global instance in DI for protocol-based discovery
+            if key == "global":
+                ServiceRegistry.register(StateServiceProtocol, instance)
 
         return _instances[key]
 
