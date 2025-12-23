@@ -50,6 +50,8 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.loaders import ActionLoader, ToolLoader
 
+from vibe_core.state.schema import ExecutionResult
+
 from .intent_generator import Intent, IntentRisk
 from .router import get_handler_for_intent, list_handlers
 from .router.handlers import BaseHandler
@@ -100,16 +102,6 @@ PENDING_INTENTS_FILE = "pending_intents.json"
 KARMA_LOG_FILE = "karma_log.json"
 
 
-@dataclass
-class RouteResult:
-    """Result of routing an intent to a cortex module."""
-
-    success: bool
-    handler: str  # Which cortex handled it
-    result: Dict[str, Any]
-    error: Optional[str] = None
-
-
 class IntentRouter:
     """
     Routes intents to appropriate cortex modules for execution.
@@ -122,7 +114,7 @@ class IntentRouter:
     KARMA (Action):
         - Calls cortex module with intent params
         - Returns structured result
-        - Never crashes, always returns RouteResult
+        - Never crashes, always returns ExecutionResult
 
     FRACTAL PATTERN (OPUS-106):
         - Accepts scoped ActionLoader for isolated action discovery
@@ -406,7 +398,7 @@ class IntentRouter:
         pending = self._load_pending_intents()
         return [v for v in pending.values() if v.get("status") == "pending"]
 
-    def approve_intent(self, intent_id: str) -> RouteResult:
+    def approve_intent(self, intent_id: str) -> ExecutionResult:
         """
         OPUS-075: Approve and execute a pending intent.
 
@@ -414,15 +406,15 @@ class IntentRouter:
             intent_id: The ID of the intent to approve
 
         Returns:
-            RouteResult from executing the intent
+            ExecutionResult from executing the intent
         """
         pending = self._load_pending_intents()
 
         if intent_id not in pending:
             logger.warning(f"Intent not found: {intent_id}")
-            return RouteResult(
+            return ExecutionResult(
                 success=False,
-                handler="HIL_BRIDGE",
+                executed_by="HIL_BRIDGE",
                 result={},
                 error=f"Intent not found: {intent_id}",
             )
@@ -430,9 +422,9 @@ class IntentRouter:
         intent_data = pending[intent_id]
 
         if intent_data.get("status") != "pending":
-            return RouteResult(
+            return ExecutionResult(
                 success=False,
-                handler="HIL_BRIDGE",
+                executed_by="HIL_BRIDGE",
                 result={},
                 error=f"Intent already processed: {intent_data.get('status')}",
             )
@@ -460,10 +452,10 @@ class IntentRouter:
             logger.info("🕵️ Delegating to Envoy for execution...")
             envoy_result = self._kernel.envoy.execute_mission(intent)
 
-            # Map Envoy result to RouteResult
-            result = RouteResult(
+            # Map Envoy result to ExecutionResult
+            result = ExecutionResult(
                 success=envoy_result.get("status") == "success",
-                handler=envoy_result.get("executed_by", "Envoy"),
+                executed_by=envoy_result.get("executed_by", "Envoy"),
                 result=envoy_result,
                 error=envoy_result.get("error"),
             )
@@ -593,7 +585,7 @@ class IntentRouter:
     # OPUS-101: HYBRID ROUTER - ActionLoader Integration
     # =========================================================================
 
-    def _try_action_loader(self, intent: Intent) -> Optional[RouteResult]:
+    def _try_action_loader(self, intent: Intent) -> Optional[ExecutionResult]:
         """
         OPUS-101: Try to route via ActionLoader (VEDA-4 auto-discovery).
 
@@ -602,7 +594,7 @@ class IntentRouter:
         - Falls back to global ActionLoader (shared brain)
 
         Returns:
-            RouteResult if action found and executed, None to fall back to legacy
+            ExecutionResult if action found and executed, None to fall back to legacy
         """
         try:
             # OPUS-106: Fractal Pattern - Use scoped loader if available
@@ -642,9 +634,9 @@ class IntentRouter:
                 logger.info(f"📝 SRUTI: {validation.warnings}")
                 result_dict["sruti_validation"] = validation.to_dict()
 
-            return RouteResult(
+            return ExecutionResult(
                 success=action_result.success,
-                handler=f"{loader_name}/{action_result.action_name}",
+                executed_by=f"{loader_name}/{action_result.action_name}",
                 result=result_dict,
                 error=action_result.error,
             )
@@ -658,7 +650,7 @@ class IntentRouter:
     # OPUS-112: SYNAPTIC BRIDGE - Direct Tool Dispatch
     # =========================================================================
 
-    def _try_tool_dispatch(self, intent: Intent) -> Optional[RouteResult]:
+    def _try_tool_dispatch(self, intent: Intent) -> Optional[ExecutionResult]:
         """
         OPUS-112: Try to dispatch via kernel.tool_registry (SYSTEM ACT mode).
 
@@ -671,7 +663,7 @@ class IntentRouter:
         - IntentRisk.MEDIUM/HIGH → Should go through ENVOY (USER ACT)
 
         Returns:
-            RouteResult if tool found and executed, None to fall back
+            ExecutionResult if tool found and executed, None to fall back
         """
         # 1. Check if kernel is available
         if self._kernel is None:
@@ -717,9 +709,9 @@ class IntentRouter:
             # 6. Log SYSTEM ACT to journal
             self._log_system_act(intent, action_id, result)
 
-            return RouteResult(
+            return ExecutionResult(
                 success=result.success,
-                handler=f"tool_registry/{action_id}",
+                executed_by=f"tool_registry/{action_id}",
                 result={
                     "success": result.success,
                     "output": result.output,
@@ -762,7 +754,7 @@ class IntentRouter:
         except Exception as e:
             logger.warning(f"⚠️ Failed to log SYSTEM ACT: {e}")
 
-    def route(self, intent: Intent) -> RouteResult:
+    def route(self, intent: Intent) -> ExecutionResult:
         """
         Route an intent to the appropriate cortex module.
 
@@ -776,7 +768,7 @@ class IntentRouter:
             intent: The intent to route
 
         Returns:
-            RouteResult with success status and execution result
+            ExecutionResult with success status and execution result
         """
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
@@ -855,9 +847,9 @@ class IntentRouter:
                     f"(depth={simulation.depth}, score={simulation.score:.2f}, "
                     f"reason={simulation.reason})"
                 )
-                return RouteResult(
+                return ExecutionResult(
                     success=False,
-                    handler="MAYA",
+                    executed_by="MAYA",
                     result=simulation.to_dict(),
                     error=f"Simulation blocked: {simulation.reason}",
                 )
@@ -879,9 +871,9 @@ class IntentRouter:
                     f"(score={viveka_result.get('dharmic_score', 0):.2f}, "
                     f"harmony={viveka_result.get('harmony', 'unknown')})"
                 )
-                return RouteResult(
+                return ExecutionResult(
                     success=False,
-                    handler="VIVEKA",
+                    executed_by="VIVEKA",
                     result=viveka_result,
                     error=f"Dharmic gate blocked: {viveka_result.get('reasoning', 'Low dharmic score')}",
                 )
@@ -915,9 +907,9 @@ class IntentRouter:
 
         if handler is None:
             logger.warning(f"⚠️ No handler for intent type: {intent_type}")
-            return RouteResult(
+            return ExecutionResult(
                 success=False,
-                handler="none",
+                executed_by="none",
                 result={},
                 error=f"No handler registered for intent type: {intent_type}",
             )
@@ -946,16 +938,16 @@ class IntentRouter:
                 self._viveka.reinforce(intent, success=success, dharmic_score=dharmic_score)
                 logger.debug(f"🧠 Synapse feedback: {intent.intent_type} (success={success})")
 
-            return RouteResult(
+            return ExecutionResult(
                 success=success,
-                handler=result.get("handler", handler.name),
+                executed_by=result.get("handler", handler.name),
                 result=result,
             )
         except Exception as e:
             logger.error(f"❌ Handler failed for {intent_type}: {e}")
-            return RouteResult(
+            return ExecutionResult(
                 success=False,
-                handler="error",
+                executed_by="error",
                 result={},
                 error=str(e),
             )
