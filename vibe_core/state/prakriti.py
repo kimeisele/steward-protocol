@@ -24,6 +24,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.protocols import PrakritiProtocol
+from vibe_core.state.schema import CommitResult
+
 from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
@@ -81,16 +84,6 @@ class KernelSessionContext:
 
 
 @dataclass
-class CommitResult:
-    """Result of a commit operation."""
-
-    git_sha: str
-    ledger_event_id: Optional[str] = None
-    session_id: Optional[str] = None
-    files_committed: List[str] = field(default_factory=list)
-
-
-@dataclass
 class SyncResult:
     """Result of a sync operation."""
 
@@ -100,7 +93,7 @@ class SyncResult:
     ledger_hash: Optional[str] = None
 
 
-class Prakriti:
+class Prakriti(PrakritiProtocol):
     """The Fractal State Engine.
 
     The unified interface for all state operations in the Steward Protocol.
@@ -412,6 +405,7 @@ class Prakriti:
         logger.info(f"[PRAKRITI] Committed: {git_commit.short_sha} - {message}")
 
         return CommitResult(
+            success=True,
             git_sha=git_commit.sha,
             ledger_event_id=ledger_event_id,
             session_id=self.session.session_id if self.session else None,

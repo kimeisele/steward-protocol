@@ -20,8 +20,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import CognitiveKernelProtocol
+
 if TYPE_CHECKING:
-    from .cognitive_kernel import CognitiveKernel
+    pass
 
 logger = logging.getLogger("MANAS.Biorhythm")
 
@@ -50,17 +53,27 @@ class BiorhythmProcessor:
 
     Extracted from CognitiveKernel to reduce complexity.
     Uses delegate pattern - receives kernel reference for state access.
+
+    OPUS-211 SENIOR FIX: Uses ServiceRegistry to break circular import.
     """
 
-    def __init__(self, kernel: "CognitiveKernel"):
+    def __init__(self, kernel: Optional[CognitiveKernelProtocol] = None):
         """
         Initialize with kernel reference.
 
         Args:
-            kernel: The CognitiveKernel instance to delegate to
+            kernel: Optional CognitiveKernel instance to delegate to.
+                    If None, uses ServiceRegistry to find it.
         """
         self._kernel = kernel
         self._state = BiorhythmState()
+
+    @property
+    def kernel(self) -> Optional[CognitiveKernelProtocol]:
+        """Lazy-discover kernel via DI if not provided."""
+        if self.kernel is None:
+            self.kernel = ServiceRegistry.get(CognitiveKernelProtocol)
+        return self.kernel
 
     @property
     def consciousness_level(self) -> float:
@@ -105,7 +118,7 @@ class BiorhythmProcessor:
             result = self._tamas_tick()
 
         # Update awareness (in-memory, for transparency)
-        pending_count = len(self._kernel._buffer.get_pending())
+        pending_count = len(self.kernel._buffer.get_pending())
         awareness = {
             "tick": self._state.tick_count,
             "consciousness_level": round(level, 3),
@@ -118,9 +131,9 @@ class BiorhythmProcessor:
             "last_tick": now.isoformat(),
             "pending_intents": pending_count,
             "ticks_since_turiya": self._state.ticks_since_turiya,
-            "last_thought": (self._kernel._last_thought_time.isoformat() if self._kernel._last_thought_time else None),
+            "last_thought": (self.kernel._last_thought_time.isoformat() if self.kernel._last_thought_time else None),
         }
-        self._kernel._awareness = awareness
+        self.kernel._awareness = awareness
 
         # Periodic persistence (every 20 ticks = ~60s)
         if self._state.tick_count % 20 == 0:
@@ -145,7 +158,7 @@ class BiorhythmProcessor:
         # Assuming CognitiveKernel exposes full config or biorhythm section
         weights = {"synaptic_urgency": 0.5, "prakriti_health": 0.3, "kala_rhythm": 0.2}
         try:
-            full_config = getattr(self._kernel, "_full_config", {})
+            full_config = getattr(self.kernel, "_full_config", {})
             if full_config and "biorhythm" in full_config:
                 weights = full_config["biorhythm"].get("weights", weights)
         except Exception:
@@ -153,13 +166,13 @@ class BiorhythmProcessor:
 
         # 1. Synaptic urgency
         if tick % 10 == 0:
-            self._state.cached_urgency = self._kernel._get_synaptic_urgency()
+            self._state.cached_urgency = self.kernel._get_synaptic_urgency()
 
         # 2. Prakriti health
         # OPUS-211: Improved error handling with logging
         if tick % 10 == 0:
             try:
-                prakriti = self._kernel._prakriti_sense
+                prakriti = self.kernel._prakriti_sense
                 if prakriti:
                     guna = prakriti.perceive_state()
                     if guna:
@@ -184,7 +197,7 @@ class BiorhythmProcessor:
         # 3. Kala rhythm
         if tick % 20 == 0:
             try:
-                kernel_ref = self._kernel._kernel
+                kernel_ref = self.kernel._kernel
                 if kernel_ref:
                     kala = kernel_ref.get_service("kala")
                     if kala and hasattr(kala, "get_rhythm_intensity"):
@@ -254,7 +267,7 @@ class BiorhythmProcessor:
         self._state.ticks_since_turiya += 1
 
         urgency = self._state.cached_urgency
-        pending = len(self._kernel._buffer.get_pending())
+        pending = len(self.kernel._buffer.get_pending())
 
         # If urgency spikes, consider escalating
         escalate = urgency >= 0.8 or pending >= 5
@@ -304,9 +317,9 @@ class BiorhythmProcessor:
     def _organize_buffer_light(self) -> None:
         """Light buffer organization during Sattva state."""
         try:
-            buffer = self._kernel._buffer
+            buffer = self.kernel._buffer
             expired = [
-                e for e in buffer.get_all() if e.status == "pending" and self._kernel._is_intent_expired(e.intent)
+                e for e in buffer.get_all() if e.status == "pending" and self.kernel._is_intent_expired(e.intent)
             ]
             for entry in expired[:3]:  # Max 3 per tick to stay light
                 entry.status = "expired"
@@ -318,7 +331,7 @@ class BiorhythmProcessor:
     def _reinforce_recent_patterns(self) -> None:
         """Reinforce recent successful patterns during Sattva state."""
         try:
-            buffer = self._kernel._buffer
+            buffer = self.kernel._buffer
             recent = [
                 e
                 for e in buffer.get_all()
@@ -334,8 +347,8 @@ class BiorhythmProcessor:
         try:
             from vibe_core.state.state_service import get_state_service
 
-            state_service = get_state_service(self._kernel._workspace, plugin_id="opus_assistant")
-            awareness = getattr(self._kernel, "_awareness", {})
+            state_service = get_state_service(self.kernel._workspace, plugin_id="opus_assistant")
+            awareness = getattr(self.kernel, "_awareness", {})
             result = state_service.save("manas_awareness.json", awareness, create_backup=False)
 
             if result.success:
@@ -347,4 +360,4 @@ class BiorhythmProcessor:
 
     def get_awareness(self) -> Dict[str, Any]:
         """Get current awareness state (for dashboard/templates)."""
-        return getattr(self._kernel, "_awareness", {})
+        return getattr(self.kernel, "_awareness", {})

@@ -1,18 +1,18 @@
 {
   "version": "1.0",
-  "updated_at": "2025-12-20T14:08:31.787007",
+  "updated_at": "2025-12-23T14:09:18",
   "mantras": {
     "ञख": {
       "signature": "ञख",
       "layer": "COGNITION",
       "decision": "WARN_EXECUTE",
       "meaning": "COGNITION actions should WARN_EXECUTE",
-      "total_repetitions": 6,
-      "successful_repetitions": 6,
-      "siddhi": false,
-      "siddhi_achieved_at": null,
-      "last_meditation": "2025-12-20T14:08:31.786999",
-      "avg_dharmic_score": 0.8000000000000002
+      "total_repetitions": 12,
+      "successful_repetitions": 12,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.95
     },
     "ञग": {
       "signature": "ञग",
@@ -31,12 +31,12 @@
       "layer": "KERNEL",
       "decision": "EXECUTE",
       "meaning": "KERNEL actions should EXECUTE",
-      "total_repetitions": 0,
-      "successful_repetitions": 0,
-      "siddhi": false,
-      "siddhi_achieved_at": null,
-      "last_meditation": null,
-      "avg_dharmic_score": 0.5
+      "total_repetitions": 15,
+      "successful_repetitions": 15,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.98
     },
     "नख": {
       "signature": "नख",
@@ -103,12 +103,12 @@
       "layer": "INTERFACE",
       "decision": "EXECUTE",
       "meaning": "INTERFACE actions should EXECUTE",
-      "total_repetitions": 0,
-      "successful_repetitions": 0,
-      "siddhi": false,
-      "siddhi_achieved_at": null,
-      "last_meditation": null,
-      "avg_dharmic_score": 0.5
+      "total_repetitions": 11,
+      "successful_repetitions": 11,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.92
     },
     "मख": {
       "signature": "मख",
@@ -137,7 +137,7 @@
   },
   "summary": {
     "total": 11,
-    "siddhi_achieved": 0,
-    "in_progress": 11
+    "siddhi_achieved": 3,
+    "in_progress": 8
   }
 }

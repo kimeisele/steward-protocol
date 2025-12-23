@@ -19,7 +19,6 @@ info:
     formula: "Final_Score = base_complexity * multiplier_1 * multiplier_2 * ..."
     description: "Complexity multipliers are compounding, not additive. This models the real-world scenario where risks amplify each other."
 
----
 
 ## SECTION 1: Base Complexity Scores
 
@@ -861,7 +860,6 @@ feature_complexity:
         score: 3
     v1_recommendation: "must_have"
 
----
 
 ## SECTION 2: Value Assessment Patterns
 
@@ -986,7 +984,6 @@ value_patterns:
       - "A custom report for one sales person"
     v1_status: "wont_have_v1"
 
----
 
 ## SECTION 3: Value vs Effort Matrix Mapping
 
@@ -1015,7 +1012,6 @@ quadrant_rules:
     v1_inclusion: "never"
     reasoning: "Time Sinks / Money Pits. These features provide little return for high effort. They are clear v2.0+ candidates and should be actively avoided for v1.0."
 
----
 
 ## SECTION 4: Complexity Multipliers Database
 
@@ -1129,7 +1125,6 @@ multipliers:
           - "Conflict_resolution_logic"
           - "Background_sync_service"
 
----
 
 ## SECTION 5: Scope Negotiation Templates
 
@@ -1243,7 +1238,6 @@ negotiation_templates:
       I've added this to our 'Could Have' list, and it's a perfect candidate to pull in if the 'Must Have' work finishes ahead of schedule.
       Otherwise, it's at the top of the list for v1.1."
 
----
 
 ## SECTION 6: Decision Rules & Heuristics
 

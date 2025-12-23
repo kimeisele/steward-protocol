@@ -37,10 +37,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import CognitiveKernelProtocol
+
 from .intent_generator import Intent
 
 if TYPE_CHECKING:
-    from .cognitive_kernel import CognitiveKernel
+    pass
 
 logger = logging.getLogger("MANAS.SHIVA")
 
@@ -71,10 +74,17 @@ class ShivaLifecycleManager:
     def __init__(self, workspace: Path, config: Optional[Dict[str, Any]] = None):
         self._workspace = workspace
         self._config = config or {}
-        self._kernel: Optional["CognitiveKernel"] = None
+        self.kernel: Optional[CognitiveKernelProtocol] = None
         logger.info(f"🕉️ Shiva: Lifecycle Manager initialized (config: {len(self._config)} keys)")
 
-    def inject_kernel(self, kernel: "CognitiveKernel") -> None:
+    @property
+    def kernel(self) -> Optional[CognitiveKernelProtocol]:
+        """Lazy-discover kernel via DI if not provided."""
+        if self._kernel is None:
+            self.kernel = ServiceRegistry.get(CognitiveKernelProtocol)
+        return self.kernel
+
+    def inject_kernel(self, kernel: CognitiveKernelProtocol) -> None:
         """Inject the CognitiveKernel for access to intent buffer."""
         self._kernel = kernel
         logger.debug("Shiva: Kernel injected")
@@ -199,14 +209,14 @@ class ShivaLifecycleManager:
         Returns:
             Number of intents archived
         """
-        if not self._kernel:
+        if not self.kernel:
             logger.warning("Shiva: No kernel injected, cannot sweep")
             return 0
 
         archived = 0
 
         # OPUS-174: Use _buffer (IntentBuffer), not _intent_buffer
-        for entry in self._kernel._buffer:
+        for entry in self.kernel._buffer:
             if entry.status != "pending":
                 continue
 
@@ -223,7 +233,7 @@ class ShivaLifecycleManager:
 
         if archived > 0:
             # IntentBuffer.save() persists to disk
-            self._kernel._buffer.save()
+            self.kernel._buffer.save()
             logger.info(f"🕉️ Shiva: Swept {archived} fulfilled intents")
 
         return archived

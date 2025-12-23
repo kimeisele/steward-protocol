@@ -17,6 +17,7 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
+from .cognition import CognitiveKernelProtocol, SystemHeartbeatProtocol
 from .ledger import (
     KernelStatus,
     VibeKernel,
@@ -39,6 +40,12 @@ from .operator_protocol import (
     create_system_context,
 )
 from .registry import ManifestRegistry  # Canonical source for ManifestRegistry
+from .state import (
+    PrakritiProtocol,
+    StateServiceProtocol,
+    StateSyncHolonProtocol,
+    StateSyncWeaverProtocol,
+)
 
 # Universal Testable Protocol
 from .testable import (
@@ -74,6 +81,11 @@ __all__ = [
     "VibeKernel",
     "ManifestRegistry",
     "KernelStatus",
+    # State Protocols
+    "PrakritiProtocol",
+    "StateServiceProtocol",
+    "StateSyncHolonProtocol",
+    "StateSyncWeaverProtocol",
     # Operator Protocol (Phoenix Vimana - Strict Typing)
     "OperatorSocket",
     "SystemContext",
