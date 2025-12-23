@@ -2,35 +2,6 @@
   "intents": [
     {
       "intent": {
-        "id": "pramana_live_fire_001",
-        "intent_type": "echo",
-        "title": "Pramana Verification Echo",
-        "description": "Testing the feedback loop",
-        "reasoning": "Verifying that action execution results are correctly reported back to the kernel via EventBus.",
-        "priority": "high",
-        "risk": "safe",
-        "created_at": "2025-12-23T21:00:52.652305",
-        "circuit_to_execute": null,
-        "params": {
-          "message": "Pramana Alive"
-        },
-        "auto_executable": true,
-        "expires_at": null,
-        "related_files": [],
-        "related_docs": []
-      },
-      "status": "failed",
-      "added_at": "2025-12-23T21:00:52.652334",
-      "executed_at": "2025-12-23T21:00:52.755206",
-      "execution_result": {
-        "error": "'coroutine' object has no attribute 'get'"
-      },
-      "pramana": null,
-      "ttl_seconds": 300,
-      "stale_at": null
-    },
-    {
-      "intent": {
         "id": "zombie_intent_001",
         "intent_type": "sleep_forever",
         "title": "I am stale",
@@ -287,7 +258,7 @@
       },
       "pramana": null,
       "ttl_seconds": 300,
-      "stale_at": "2025-12-23T21:32:02.956468"
+      "stale_at": null
     },
     {
       "intent": {
@@ -311,9 +282,38 @@
       "executed_at": null,
       "execution_result": null,
       "pramana": null,
-      "ttl_seconds": 1,
-      "stale_at": "2025-12-23T21:23:18.302735"
+      "ttl_seconds": 300,
+      "stale_at": null
+    },
+    {
+      "intent": {
+        "id": "dharma_cleanup_disk_db91e561",
+        "intent_type": "cleanup_disk",
+        "title": "\ud83d\uddd1\ufe0f Disk space cleanup",
+        "description": "Disk is 87.5% full - MANAS duty to maintain health",
+        "reasoning": "Svadharma: System duty to maintain own resources",
+        "priority": "medium",
+        "risk": "safe",
+        "created_at": "2025-12-23T21:56:55.486856",
+        "circuit_to_execute": null,
+        "params": {
+          "threshold_percent": 85,
+          "current_percent": 87.46432489240902,
+          "idle_minutes": 60
+        },
+        "auto_executable": true,
+        "expires_at": null,
+        "related_files": [],
+        "related_docs": []
+      },
+      "status": "pending",
+      "added_at": "2025-12-23T21:56:55.486882",
+      "executed_at": null,
+      "execution_result": null,
+      "pramana": null,
+      "ttl_seconds": 300,
+      "stale_at": "2025-12-23T22:01:55.486882"
     }
   ],
-  "updated_at": "2025-12-23T21:27:18.304440"
+  "updated_at": "2025-12-23T21:56:55.487005"
 }

@@ -1904,10 +1904,16 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         # OPUS-300: DHARMA GENERATION - Autonomous Duty-Based Intent Creation
         # When idle, system generates maintenance intents based on system health
         idle_minutes = self.get_idle_minutes()
+        dharma_intents = []
         if idle_minutes >= self._config.idle_threshold_minutes:
             dharma_intents = self._generate_dharma_intents(idle_minutes)
             if dharma_intents:
                 logger.info(f"🧘 DHARMA GENERATION: Created {len(dharma_intents)} auto-maintenance intents")
+                for intent in dharma_intents:
+                    logger.info(f"   • {intent.intent_type}: {intent.title}")
+                # If Dharma intents were generated, return them immediately (don't run full orchestrate)
+                self._last_thought_time = datetime.utcnow()
+                return dharma_intents
 
         self._last_thought_time = datetime.utcnow()
         try:
@@ -1982,6 +1988,8 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         Returns:
             List of generated Intent objects
         """
+        import uuid
+
         intents = []
 
         try:
@@ -1998,6 +2006,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 if percent_used > 85:
                     logger.warning(f"🧘 DHARMA: Disk usage {percent_used:.1f}% - generating cleanup intent")
                     intent = Intent(
+                        id=f"dharma_cleanup_disk_{uuid.uuid4().hex[:8]}",
                         intent_type="cleanup_disk",
                         title="🗑️ Disk space cleanup",
                         description=f"Disk is {percent_used:.1f}% full - MANAS duty to maintain health",
@@ -2037,6 +2046,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 if zombie_count > 3:
                     logger.warning(f"🧘 DHARMA: {zombie_count} zombie processes - generating cleanup intent")
                     intent = Intent(
+                        id=f"dharma_cleanup_zombies_{uuid.uuid4().hex[:8]}",
                         intent_type="cleanup_zombies",
                         title="🧟 Kill zombie processes",
                         description=f"Detected {zombie_count} stale processes - MANAS duty to clean up",
@@ -2065,13 +2075,16 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                     backup_files = list(backup_dir.glob("*"))
                     if backup_files:
                         latest_backup = max(backup_files, key=lambda p: p.stat().st_mtime)
-                        hours_since_backup = (datetime.utcnow() - datetime.fromtimestamp(
-                            latest_backup.stat().st_mtime
-                        )).total_seconds() / 3600
+                        hours_since_backup = (
+                            datetime.utcnow() - datetime.fromtimestamp(latest_backup.stat().st_mtime)
+                        ).total_seconds() / 3600
 
                         if hours_since_backup > 24:
-                            logger.warning(f"🧘 DHARMA: Last backup {hours_since_backup:.1f}h ago - generating backup intent")
+                            logger.warning(
+                                f"🧘 DHARMA: Last backup {hours_since_backup:.1f}h ago - generating backup intent"
+                            )
                             intent = Intent(
+                                id=f"dharma_create_backup_{uuid.uuid4().hex[:8]}",
                                 intent_type="create_backup",
                                 title="💾 System backup",
                                 description=f"Last backup was {hours_since_backup:.1f}h ago - MANAS duty to safeguard state",
