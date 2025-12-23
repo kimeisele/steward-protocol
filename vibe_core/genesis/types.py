@@ -29,6 +29,7 @@ class ModuleType(Enum):
     CIRCUIT = auto()  # */circuits/*.yaml
     KNOWLEDGE = auto()  # knowledge/*
     TOOL = auto()  # */tools/*
+    TEST = auto()  # tests/*
 
     # Fallback
     UNKNOWN = auto()

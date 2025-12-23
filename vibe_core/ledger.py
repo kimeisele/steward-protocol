@@ -43,8 +43,13 @@ except ImportError:
 
 logger = logging.getLogger("VIBE_LEDGER")
 
+# OPUS-026 FINAL FIX: Global shared connection pool
+_db_shared_conns: Dict[str, sqlite3.Connection] = {}
+_db_conn_init_locks: Dict[str, threading.Lock] = {}
+_db_conns_lock = threading.Lock()
+
 # Global lock for cross-connection thread safety on same DB file
-_db_locks: Dict[str, threading.Lock] = {}
+_db_locks: Dict[str, threading.RLock] = {}
 _db_locks_lock = threading.Lock()
 
 
@@ -156,6 +161,27 @@ class InMemoryLedger(VibeLedger):
         return len(self.events)
 
 
+def _get_shared_conn(db_path: str) -> sqlite3.Connection:
+    """Get or create ONE shared connection for a DB file (OPUS-026 final fix).
+
+    CRITICAL: All threads operating on the same DB use THIS connection.
+    No more snapshot mismatches between separate connections.
+    """
+    abs_path = os.path.abspath(db_path)
+    with _db_conns_lock:
+        if abs_path not in _db_shared_conns:
+            conn = sqlite3.connect(abs_path, check_same_thread=False, timeout=30.0)
+            conn.row_factory = sqlite3.Row
+            conn.isolation_level = None  # Autocommit mode: we handle transactions explicitly
+            try:
+                conn.execute("PRAGMA journal_mode=WAL;")
+                conn.execute("PRAGMA synchronous=NORMAL;")
+            except sqlite3.Error:
+                pass
+            _db_shared_conns[abs_path] = conn
+        return _db_shared_conns[abs_path]
+
+
 def _get_db_lock(db_path: str) -> threading.RLock:
     """Get or create a lock for a specific database file."""
     abs_path = os.path.abspath(db_path)
@@ -163,6 +189,8 @@ def _get_db_lock(db_path: str) -> threading.RLock:
         if abs_path not in _db_locks:
             _db_locks[abs_path] = threading.RLock()
         return _db_locks[abs_path]
+
+
 
 
 class SQLiteLedger(VibeLedger):
@@ -173,12 +201,15 @@ class SQLiteLedger(VibeLedger):
 
         OPUS-025: db_path is REQUIRED. No default - callers must use
         config.paths.data.resolve("vibe_ledger") or pass explicit path.
+
+        OPUS-026 FINAL FIX: Uses ONE shared connection per DB file.
+        All threads see the same snapshot when reading after lock acquire.
         """
         if not db_path:
             raise ValueError("db_path is required - use config.paths.data.resolve('vibe_ledger')")
         self.db_path = db_path
-        self.connection = None
         self._write_lock = _get_db_lock(db_path)
+        self.connection = _get_shared_conn(db_path)  # Shared connection
         self._initialize_db()
 
     def _initialize_db(self) -> None:
@@ -188,16 +219,7 @@ class SQLiteLedger(VibeLedger):
         if db_dir:
             os.makedirs(db_dir, exist_ok=True)
 
-        # Connect to database (check_same_thread=False for multi-threaded API access)
-        self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row
-
-        # OPUS-208 Phase 1: WAL Mode (Concurrency)
-        try:
-            self.connection.execute("PRAGMA journal_mode=WAL;")
-            self.connection.execute("PRAGMA synchronous=NORMAL;")
-        except sqlite3.Error as e:
-            logger.warning(f"⚠️ Failed to set WAL mode: {e}")
+        # OPUS-026: Connection already created and shared
 
         # Create table if not exists
         cursor = self.connection.cursor()
@@ -309,7 +331,7 @@ class SQLiteLedger(VibeLedger):
         """
         # CRITICAL: Lock entire read-compute-write cycle for hash chain integrity
         with self._write_lock:
-            # Get previous hash for the chain
+            # OPUS-026 FINAL FIX: Shared connection already used, just read latest data
             previous_hash = self._get_previous_hash()
 
             # Create deterministic event string for hashing (matches verify_chain_integrity)
@@ -421,7 +443,7 @@ class SQLiteLedger(VibeLedger):
 
         # CRITICAL: Lock entire read-compute-write cycle for hash chain integrity
         with self._write_lock:
-            # Get previous hash for the chain
+            # OPUS-026 FINAL FIX: Shared connection, just read
             previous_hash = self._get_previous_hash()
 
             # Create deterministic event string for hashing
@@ -599,6 +621,10 @@ class SQLiteLedger(VibeLedger):
                 "corrupted": False,
             }
 
+        # CRITICAL: get_all_events() returns in DESC order (latest first)
+        # Reverse to get chronological order for hash verification
+        events = list(reversed(events))
+
         corruptions = []
         previous_hash = "0" * 64
 
@@ -724,10 +750,12 @@ class SQLiteLedger(VibeLedger):
             self.connection.commit()
 
     def close(self) -> None:
-        """Close database connection"""
-        if self.connection:
-            self.connection.close()
-            logger.info("💾 SQLite ledger closed")
+        """Close database connection
+
+        OPUS-026: Do NOT close shared connection - it's managed globally.
+        """
+        # Shared connections are NOT closed - they're managed by the module
+        logger.debug("📝 SQLiteLedger instance closed (shared connection persists)")
 
     def rotate(self) -> Optional[str]:
         """OPUS-208 Phase 2: Samsara Rotation (Crash-Safe).
