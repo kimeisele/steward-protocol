@@ -20,8 +20,7 @@ import logging
 import os
 from typing import Any
 
-from vibe_core.llm.provider import LLMProvider
-from vibe_core.runtime.providers.base import ProviderNotAvailableError
+from vibe_core.runtime.providers.base import LLMProvider, ProviderNotAvailableError
 from vibe_core.runtime.providers.google import GoogleProvider as RuntimeGoogleProvider
 
 logger = logging.getLogger(__name__)

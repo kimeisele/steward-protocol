@@ -16,9 +16,9 @@ from vibe_core.llm.local_llama_provider import (
     LocalLlamaProvider,
     download_default_model,
 )
-from vibe_core.llm.provider import LLMError, LLMProvider
 from vibe_core.llm.smart_local_provider import SmartLocalProvider
 from vibe_core.llm.steward_provider import StewardProvider
+from vibe_core.runtime.providers.base import LLMError, LLMProvider
 
 __all__ = [
     "ChainProvider",

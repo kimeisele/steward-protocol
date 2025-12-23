@@ -31,7 +31,7 @@ Example:
 
 import logging
 
-from vibe_core.llm.provider import LLMError, LLMProvider
+from vibe_core.runtime.providers.base import LLMError, LLMProvider
 
 logger = logging.getLogger(__name__)
 

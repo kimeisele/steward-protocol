@@ -21,7 +21,7 @@ import json
 import logging
 from typing import Any
 
-from vibe_core.llm.provider import LLMProvider
+from vibe_core.runtime.providers.base import LLMProvider
 
 logger = logging.getLogger(__name__)
 
