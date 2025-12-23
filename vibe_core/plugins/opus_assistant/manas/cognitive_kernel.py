@@ -27,12 +27,14 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.event_bus import EventBus
 
 # OPUS-171: BridgeLoader for auto-discovery of bridges
 # Replaces manual imports of GenesisBridge, WeaverBridge, LoggerBridge
 from vibe_core.loaders import ActionLoader, AnalyzerLoader, BridgeLoader, SenseLoader, ToolLoader
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
+from vibe_core.protocols import CognitiveKernelProtocol
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
 # OPUS-167: Action Manager Extraction (Karmendriya)
@@ -199,9 +201,9 @@ class IntentConfidence:
         }
 
 
-class CognitiveKernel(CognitiveCycle):
+class CognitiveKernel(CognitiveKernelProtocol):
     """
-    The Mind of OPUS - Proactive Autonomous Cognition.
+    MANAS Cognitive Kernel - The central Mind of OPUS.
 
     OPUS-095 REFACTORING: Inherits from CognitiveCycle
     - Uses unified orchestration loop (UnifiedTrace, EventBus)
@@ -274,12 +276,16 @@ class CognitiveKernel(CognitiveCycle):
 
         if ws not in cls._instances:
             logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
-            cls._instances[ws] = cls(
+            instance = cls(
                 workspace=ws,
                 config=config,
                 trace=trace,
                 event_bus=event_bus,
             )
+            cls._instances[ws] = instance
+
+            # Register in DI for protocol-based discovery
+            ServiceRegistry.register(CognitiveKernelProtocol, instance)
         else:
             logger.debug(f"🧠 MANAS: Reusing singleton instance for {ws}")
 
@@ -2041,9 +2047,9 @@ class CognitiveKernel(CognitiveCycle):
             # In Sattva, we think more often (e.g. every 5 min vs 15 min)
             if state == "sattva":
                 minutes_since = (now - self._last_thought_time).total_seconds() / 60 if self._last_thought_time else 999
-                if minutes_since >= 5: # Faster reflection cycle
-                     logger.debug("🧠 MANAS: Sattva state (Reflect) → thinking now!")
-                     return True
+                if minutes_since >= 5:  # Faster reflection cycle
+                    logger.debug("🧠 MANAS: Sattva state (Reflect) → thinking now!")
+                    return True
 
         # OPUS-174: Check synaptic activation (MANAS as oracle)
         # High-weight active triggers = learned urgency

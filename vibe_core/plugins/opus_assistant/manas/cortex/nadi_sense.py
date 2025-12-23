@@ -242,24 +242,22 @@ class NadiSense(BaseSense):
         # 1. Check EventBus State
         # =================================================================
         if bus:
-            subscriptions = getattr(bus, "_subscribers", {})
-            history = getattr(bus, "_event_history", [])
-            total_emissions = getattr(bus, "_event_count", 0)
+            status = bus.get_status()
+            subscriptions = status["subscribers"]["by_type"]
+            type_counts = status.get("type_counts", {})
+            total_emissions = status["total_events"]
 
             total_subscribed = len(subscriptions)
 
             # Count emitted event types
-            emitted_types: Set[str] = set()
-            for event in history:
-                if hasattr(event, "event_type"):
-                    emitted_types.add(event.event_type)
+            emitted_types = set(type_counts.keys())
             total_emitted_types = len(emitted_types)
 
             # ---------------------------------------------------------
             # Check for dead letter events (subscribed but never received)
             # ---------------------------------------------------------
-            for event_type, subs in subscriptions.items():
-                if event_type not in emitted_types and len(subs) > 0:
+            for event_type, subs_count in subscriptions.items():
+                if event_type not in emitted_types and subs_count > 0:
                     # This event type has subscribers but no emissions!
                     expected = EXPECTED_EMISSIONS.get(event_type, {})
                     is_critical = expected.get("critical_if_missing", False)
@@ -269,8 +267,8 @@ class NadiSense(BaseSense):
                             anomaly_type="dead_letter",
                             event_type=event_type,
                             severity="critical" if is_critical else "warning",
-                            message=f"{event_type} has {len(subs)} subscribers but 0 emissions",
-                            subscribers=len(subs),
+                            message=f"{event_type} has {subs_count} subscribers but 0 emissions",
+                            subscribers=subs_count,
                             emissions=0,
                             details={
                                 "expected_description": expected.get("description", "Unknown"),
@@ -290,7 +288,7 @@ class NadiSense(BaseSense):
                                 event_type=event_type,
                                 severity="critical",
                                 message=f"CRITICAL: {event_type} expected but NEVER emitted!",
-                                subscribers=len(subscriptions.get(event_type, [])),
+                                subscribers=subscriptions.get(event_type, 0),
                                 emissions=0,
                                 details={
                                     "description": config.get("description", ""),
@@ -496,21 +494,26 @@ class NadiSense(BaseSense):
         if not bus:
             return {"error": "EventBus not accessible"}
 
-        subscriptions = getattr(bus, "_subscribers", {})
-        history = getattr(bus, "_event_history", [])
+        status = bus.get_status()
+        type_counts = status.get("type_counts", {})
+        subscriptions = status["subscribers"]["by_type"]
+        history = bus.get_history()
 
         # Count emissions of this type
-        emissions = [e for e in history if getattr(e, "event_type", "") == event_type]
-        subscribers = subscriptions.get(event_type, set())
+        emission_count = type_counts.get(event_type, 0)
+        subscribers_count = subscriptions.get(event_type, 0)
+
+        # Last emission from history (if still there)
+        emissions_in_history = [e for e in history if getattr(e, "event_type", "") == event_type]
 
         return {
             "event_type": event_type,
-            "subscriber_count": len(subscribers),
-            "emission_count": len(emissions),
-            "last_emission": emissions[-1].timestamp if emissions else None,
-            "is_wired": len(subscribers) > 0 and len(emissions) > 0,
+            "subscriber_count": subscribers_count,
+            "emission_count": emission_count,
+            "last_emission": emissions_in_history[-1].timestamp if emissions_in_history else None,
+            "is_wired": subscribers_count > 0 and emission_count > 0,
             "status": (
-                "healthy" if len(emissions) > 0 else "dead_letter" if len(subscribers) > 0 else "not_subscribed"
+                "healthy" if emission_count > 0 else "dead_letter" if subscribers_count > 0 else "not_subscribed"
             ),
         }
 

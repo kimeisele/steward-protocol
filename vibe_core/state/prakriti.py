@@ -24,6 +24,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.protocols import PrakritiProtocol
+
 from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
@@ -100,7 +102,7 @@ class SyncResult:
     ledger_hash: Optional[str] = None
 
 
-class Prakriti:
+class Prakriti(PrakritiProtocol):
     """The Fractal State Engine.
 
     The unified interface for all state operations in the Steward Protocol.
