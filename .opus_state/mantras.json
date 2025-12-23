@@ -127,17 +127,17 @@
       "layer": "COGNITION",
       "decision": "EXECUTE",
       "meaning": "COGNITION actions should EXECUTE",
-      "total_repetitions": 0,
-      "successful_repetitions": 0,
-      "siddhi": false,
-      "siddhi_achieved_at": null,
-      "last_meditation": null,
-      "avg_dharmic_score": 0.5
+      "total_repetitions": 108,
+      "successful_repetitions": 108,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T16:15:00",
+      "last_meditation": "2025-12-23T16:15:00",
+      "avg_dharmic_score": 0.99
     }
   },
   "summary": {
     "total": 11,
-    "siddhi_achieved": 3,
-    "in_progress": 8
+    "siddhi_achieved": 4,
+    "in_progress": 7
   }
 }
