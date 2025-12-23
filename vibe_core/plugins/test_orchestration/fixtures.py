@@ -633,9 +633,8 @@ class TestKernel:
         """
         from vibe_core.kernel_impl import RealVibeKernel
 
-        # OPUS-210 FIX: Don't load ALL plugins - just governance
-        kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        # TODO: Load only steward_protocol plugin explicitly
+        kernel = RealVibeKernel(ledger_path=":memory:")
+        # Let normal plugin loading happen
         return kernel
 
     @staticmethod
