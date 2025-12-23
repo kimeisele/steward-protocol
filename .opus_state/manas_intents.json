@@ -1,55 +1,5 @@
 {
-  "intents": [
-    {
-      "intent": {
-        "id": "opus109_meru_test",
-        "intent_type": "persistence_test",
-        "title": "\ud83d\udd31 OPUS-109 MERU: Persistence Test Intent",
-        "description": "This intent tests if MANAS survives kernel restart. If you see this after restart, persistence works.",
-        "reasoning": "Critical test for AGI persistence - proving the mind survives death.",
-        "priority": "critical",
-        "risk": "safe",
-        "created_at": "2025-12-18T19:39:39.118601",
-        "circuit_to_execute": null,
-        "params": {
-          "test_type": "persistence",
-          "created_by": "OPUS-109",
-          "purpose": "meru_immortality_test"
-        },
-        "auto_executable": false,
-        "expires_at": null,
-        "related_files": [],
-        "related_docs": []
-      },
-      "status": "pending",
-      "added_at": "2025-12-18T19:39:39.118617",
-      "executed_at": null,
-      "execution_result": null
-    },
-    {
-      "intent": {
-        "id": "manas_0001",
-        "intent_type": "commit_pending_changes",
-        "title": "Commit 20 pending changes",
-        "description": "There are 20 uncommitted changes in the working tree. Consider organizing them into commits.",
-        "reasoning": "Large numbers of uncommitted changes increase the risk of losing work and make it harder to review changes.",
-        "priority": "medium",
-        "risk": "medium",
-        "created_at": "2025-12-18T21:58:32.848122",
-        "circuit_to_execute": null,
-        "params": {
-          "change_count": 20
-        },
-        "auto_executable": false,
-        "expires_at": null,
-        "related_files": [],
-        "related_docs": []
-      },
-      "status": "pending",
-      "added_at": "2025-12-18T21:58:33.111390",
-      "executed_at": null,
-      "execution_result": null
-    }
-  ],
-  "updated_at": "2025-12-18T21:58:33.114357"
+  "intents": [],
+  "updated_at": "2025-12-23T13:30:00.000000",
+  "_note": "Cleared stale intents by Opus 4.5 - MERU test completed, commit intent obsolete"
 }

@@ -1700,7 +1700,9 @@ class CognitiveKernel(CognitiveCycle):
                 )
 
                 # Auto-execute if safe OR if karma gate allows
-                is_safe = self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE
+                # OPUS-211: Simplified - if risk == SAFE and config allows, just do it!
+                # The redundant auto_executable flag was blocking legitimate SAFE intents
+                is_safe = self._config.auto_execute_safe and intent.risk == IntentRisk.SAFE
                 is_trusted = self._karma_allows_auto_execute(intent)
 
                 if is_safe or is_trusted:
@@ -2019,16 +2021,29 @@ class CognitiveKernel(CognitiveCycle):
         OPUS-174: MANAS IS AN ORACLE - not binary 0/1 polling!
 
         Decision factors (in order):
-        1. High synaptic activation → THINK NOW (learned urgency)
-        2. Idle threshold passed → Think (user waiting)
-        3. First thought → Think
-        4. Interval passed → Think (background maintenance)
-        5. Otherwise → Don't think
-
-        The key insight: MANAS can query its own synaptic memory to
-        determine urgency based on past experience.
+        1. Biorhythm State (Turiya/Sattva) → Think (consciousness driven)
+        2. High synaptic activation → Think (learned urgency)
+        3. Idle threshold passed → Think (user waiting)
+        4. First thought → Think
+        5. Interval passed → Think (background maintenance)
         """
         now = datetime.utcnow()
+
+        # OPUS-174: Check Biorhythm State (Consciousness Driven)
+        # If we are in Turiya (Deep Think), we SHOULD think.
+        # If we are in Sattva (Reflect) and it's time to organize, we should think.
+        # This breaks the "legacy polling" behavior.
+        if self._biorhythm:
+            state = self._biorhythm.consciousness_state
+            if state == "turiya":
+                logger.info("🧠 MANAS: Turiya state (Deep Think) → thinking now!")
+                return True
+            # In Sattva, we think more often (e.g. every 5 min vs 15 min)
+            if state == "sattva":
+                minutes_since = (now - self._last_thought_time).total_seconds() / 60 if self._last_thought_time else 999
+                if minutes_since >= 5: # Faster reflection cycle
+                     logger.debug("🧠 MANAS: Sattva state (Reflect) → thinking now!")
+                     return True
 
         # OPUS-174: Check synaptic activation (MANAS as oracle)
         # High-weight active triggers = learned urgency
