@@ -1,14 +1,15 @@
 {
-  "tick": 20,
-  "consciousness_level": 0.1,
-  "state": "tamas",
+  "tick": 0,
+  "consciousness_level": 0.5,
+  "state": "sattva",
   "inputs": {
     "synaptic_urgency": 0.0,
-    "prakriti_health": 0.0,
+    "prakriti_health": 0.8,
     "kala_rhythm": 0.5
   },
-  "last_tick": "2025-12-23T10:44:30.652866",
+  "last_tick": null,
   "pending_intents": 2,
-  "ticks_since_turiya": 20,
-  "last_thought": null
+  "ticks_since_turiya": 0,
+  "last_thought": null,
+  "opus_211_fix": "Resilient consciousness by Opus 4.5 - base=0.4, MANAS cannot fall to Tamas from doc-drift"
 }
