@@ -398,7 +398,7 @@ class IntentRouter:
         pending = self._load_pending_intents()
         return [v for v in pending.values() if v.get("status") == "pending"]
 
-    def approve_intent(self, intent_id: str) -> ExecutionResult:
+    async def approve_intent(self, intent_id: str) -> ExecutionResult:
         """
         OPUS-075: Approve and execute a pending intent.
 
@@ -462,7 +462,7 @@ class IntentRouter:
         else:
             # Fallback if kernel/envoy isn't ready (shouldn't happen in full boot)
             logger.warning("⚠️ Envoy not found on kernel - falling back to direct routing")
-            result = self.route(intent)
+            result = await self.route(intent)
 
         # Update status and record karma
         intent_data["status"] = "approved"
@@ -754,7 +754,7 @@ class IntentRouter:
         except Exception as e:
             logger.warning(f"⚠️ Failed to log SYSTEM ACT: {e}")
 
-    def route(self, intent: Intent) -> ExecutionResult:
+    async def route(self, intent: Intent) -> ExecutionResult:
         """
         Route an intent to the appropriate cortex module.
 
@@ -980,11 +980,11 @@ def create_execution_callback(
     if kernel:
         router.inject_kernel(kernel)
 
-    def callback(intent: Intent) -> Dict[str, Any]:
-        result = router.route(intent)
+    async def callback(intent: Intent) -> Dict[str, Any]:
+        result = await router.route(intent)
         return {
             "success": result.success,
-            "handler": result.handler,
+            "handler": result.executed_by,
             "error": result.error,
             **result.result,
         }

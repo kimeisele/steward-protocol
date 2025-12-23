@@ -165,6 +165,7 @@ class TestMANASIntegration:
         finally:
             await kernel.shutdown_async()
 
+
 class TestGatewayArchitecture:
     """Tests for Gateway thread vs task architecture."""
 

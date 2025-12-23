@@ -174,10 +174,7 @@ class Chitta:
         self._pool.append(entry)
         self._stats["received"] += 1
 
-        logger.debug(
-            f"🧠 CHITTA: Received {sense_type} perception from {source_sense}: "
-            f"{entry.intent_type}"
-        )
+        logger.debug(f"🧠 CHITTA: Received {sense_type} perception from {source_sense}: {entry.intent_type}")
 
     def process(self) -> List[PerceptionEntry]:
         """
@@ -212,8 +209,7 @@ class Chitta:
         self._stats["processed"] += len(aggregated)
 
         logger.info(
-            f"🧠 CHITTA: Processed {pool_size} → {len(aggregated)} perceptions "
-            f"(dedup: {dedup_count}, agg: {agg_count})"
+            f"🧠 CHITTA: Processed {pool_size} → {len(aggregated)} perceptions (dedup: {dedup_count}, agg: {agg_count})"
         )
 
         return aggregated
@@ -239,9 +235,7 @@ class Chitta:
 
         return unique
 
-    def _aggregate_similar(
-        self, entries: List[PerceptionEntry]
-    ) -> List[PerceptionEntry]:
+    def _aggregate_similar(self, entries: List[PerceptionEntry]) -> List[PerceptionEntry]:
         """
         Aggregate similar intents to reduce noise.
 
@@ -281,8 +275,7 @@ class Chitta:
                 result.append(primary)
 
                 logger.debug(
-                    f"🧠 CHITTA: Aggregated {len(group)} '{intent_type}' intents "
-                    f"into 1 (primary: {primary.intent_id})"
+                    f"🧠 CHITTA: Aggregated {len(group)} '{intent_type}' intents into 1 (primary: {primary.intent_id})"
                 )
 
         return result

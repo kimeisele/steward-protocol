@@ -235,7 +235,7 @@ class OpusAssistantPlugin(KernelPlugin):
     # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)
     # =========================================================================
 
-    def on_pulse(self, kernel, transaction):
+    async def on_pulse(self, kernel, transaction):
         """
         OPUS-087 PRANA: Refresh OPUS.md during heartbeat pulse.
         OPUS-212: Trigger MANAS cognitive cycle during pulse.
@@ -268,7 +268,7 @@ class OpusAssistantPlugin(KernelPlugin):
             renderer = OpusDashboardRenderer(workspace_root=workspace, kernel=kernel)
 
             # Render the full markdown content
-            content = renderer.render(quick=False)
+            content = await renderer.render(quick=False)
 
             # 3. Register mutation
             transaction.register(

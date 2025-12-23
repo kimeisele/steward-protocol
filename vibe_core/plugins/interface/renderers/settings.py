@@ -64,13 +64,13 @@ class SettingsRenderer(BaseRenderer):
         """Get current kernel configuration dynamically."""
         # Fetch from kernel config
         config = self.kernel.config
-        
+
         # Determine current values (with safe fallbacks)
         log_level = logging.getLevelName(logging.getLogger("VIBE_KERNEL").getEffectiveLevel())
         verbose = getattr(self.kernel, "_verbose", False)
         provider = "unknown"
         mode = "simulation"
-        
+
         if config:
             if hasattr(config, "llm"):
                 provider = getattr(config.llm, "provider", provider)
@@ -218,7 +218,7 @@ class SettingsRenderer(BaseRenderer):
         )
         for entry in current_conf:
             lines.append(f"| {entry['Setting']} | {entry['Value']} | {entry['Description']} |")
-        
+
         lines.append("")
 
         # Agent Registry

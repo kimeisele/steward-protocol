@@ -46,7 +46,7 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
         # OPUS-208: 1. Load anchor from DB meta-table (avoids full scan on restart)
         # Tuple: (last_id, last_trusted_hash)
         # Default to (0, "0"*64) if no anchor exists (genesis state)
-        anchor = kernel._ledger.get_meta('health_anchor') or (0, "0"*64)
+        anchor = kernel._ledger.get_meta("health_anchor") or (0, "0" * 64)
         last_id, last_hash = anchor
 
         # OPUS-208: 2. Query ONLY new events
@@ -58,7 +58,7 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
 
         # OPUS-208: 3. Verify chain continuity using the anchor hash
         # If verify_incremental exists on auditor, use it. Otherwise fall back to verify_ledger (less efficient)
-        if hasattr(kernel._auditor, 'verify_incremental'):
+        if hasattr(kernel._auditor, "verify_incremental"):
             report = kernel._auditor.verify_incremental(new_events, start_hash=last_hash)
         else:
             # Fallback for legacy auditors (will re-verify all provided events, but at least we only pass new ones)
@@ -90,8 +90,8 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
         # New anchor is the ID and Hash of the LAST event in the verified batch
         if new_events:
             latest_event = new_events[-1]
-            new_anchor = (latest_event['id'], latest_event['current_hash'])
-            kernel._ledger.set_meta('health_anchor', new_anchor)
+            new_anchor = (latest_event["id"], latest_event["current_hash"])
+            kernel._ledger.set_meta("health_anchor", new_anchor)
 
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
@@ -211,7 +211,7 @@ def pulse(kernel: "RealVibeKernel") -> None:
                 snapshot["agents"][agent_id] = {
                     "status": "ERROR",
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
 
         # Write snapshot through I/O Service (atomic + audited)

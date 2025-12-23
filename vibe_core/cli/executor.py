@@ -33,7 +33,7 @@ class CLIExecutor:
         self.gateway_url = gateway_url
         self._plugin_instances: Dict[str, Any] = {}
 
-    def execute(
+    async def execute(
         self,
         command: CLICommand,
         args: Dict[str, Any],
@@ -54,13 +54,13 @@ class CLIExecutor:
 
         try:
             if mode == ExecutionMode.OFFLINE:
-                return self._execute_offline(command, args)
+                return await self._execute_offline(command, args)
             elif mode == ExecutionMode.RPC:
-                return self._execute_rpc(command, args)
+                return await self._execute_rpc(command, args)
             elif mode == ExecutionMode.BOOT:
-                return self._execute_boot(command, args)
+                return await self._execute_boot(command, args)
             elif mode == ExecutionMode.HYBRID:
-                return self._execute_hybrid(command, args)
+                return await self._execute_hybrid(command, args)
             else:
                 return CLIResponse(
                     success=False,
@@ -77,7 +77,7 @@ class CLIExecutor:
                 execution_mode=mode,
             )
 
-    def _execute_offline(
+    async def _execute_offline(
         self,
         command: CLICommand,
         args: Dict[str, Any],
@@ -89,6 +89,8 @@ class CLIExecutor:
             result = self._execute_streaming(handler, args)
         else:
             result = handler(**args)
+            if inspect.iscoroutine(result):
+                result = await result
 
         return CLIResponse(
             success=True,
@@ -96,7 +98,7 @@ class CLIExecutor:
             execution_mode=ExecutionMode.OFFLINE,
         )
 
-    def _execute_rpc(
+    async def _execute_rpc(
         self,
         command: CLICommand,
         args: Dict[str, Any],
@@ -124,6 +126,7 @@ class CLIExecutor:
         # Forward to gateway
         try:
             endpoint = f"{self.gateway_url}/v1/cli/{command.full_name}"
+            # RPC remains synchronous HTTP call for now, but method is async
             response = requests.post(endpoint, json=args, timeout=30)
             response.raise_for_status()
 
@@ -142,7 +145,7 @@ class CLIExecutor:
                 execution_mode=ExecutionMode.RPC,
             )
 
-    def _execute_boot(
+    async def _execute_boot(
         self,
         command: CLICommand,
         args: Dict[str, Any],
@@ -163,6 +166,8 @@ class CLIExecutor:
                 result = self._execute_streaming(handler, args)
             else:
                 result = handler(**args)
+                if inspect.iscoroutine(result):
+                    result = await result
 
             return CLIResponse(
                 success=True,
@@ -183,19 +188,19 @@ class CLIExecutor:
                 except Exception:
                     pass
 
-    def _execute_hybrid(
+    async def _execute_hybrid(
         self,
         command: CLICommand,
         args: Dict[str, Any],
     ) -> CLIResponse:
         """Try RPC first, fallback to BOOT."""
         if self._is_kernel_running():
-            result = self._execute_rpc(command, args)
+            result = await self._execute_rpc(command, args)
             if result.success:
                 return result
             logger.warning(f"RPC failed, falling back to BOOT: {result.error}")
 
-        return self._execute_boot(command, args)
+        return await self._execute_boot(command, args)
 
     def _resolve_handler(
         self,

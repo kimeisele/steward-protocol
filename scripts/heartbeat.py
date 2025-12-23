@@ -49,7 +49,7 @@ async def run_pulse():
 
             if hb_service:
                 logger.info("⚡ Triggering Nationalized Pulse via Plugin...")
-                result = hb_service.pulse()
+                result = await hb_service.pulse()
 
                 if result.get("success"):
                     logger.info("✅ UNIFIED HEARTBEAT: Cycle successful")

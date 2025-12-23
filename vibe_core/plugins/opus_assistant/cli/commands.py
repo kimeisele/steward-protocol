@@ -18,7 +18,7 @@ from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
 logger = logging.getLogger("OPUS_CLI")
 
 
-def cmd_approve(plugin: Any, intent_id: Optional[str] = None, all: bool = False, **kwargs) -> Dict[str, Any]:
+async def cmd_approve(plugin: Any, intent_id: Optional[str] = None, all: bool = False, **kwargs) -> Dict[str, Any]:
     """
     Approve and execute a pending intent.
 
@@ -40,7 +40,7 @@ def cmd_approve(plugin: Any, intent_id: Optional[str] = None, all: bool = False,
         successes = 0
         details = []
         for intent in pending:
-            result = router.approve_intent(intent["id"])
+            result = await router.approve_intent(intent["id"])
             details.append({"id": intent["id"], "success": result.success, "error": result.error})
             if result.success:
                 print(f"  ✅ {intent['id']}: {intent['title']}")
@@ -58,11 +58,11 @@ def cmd_approve(plugin: Any, intent_id: Optional[str] = None, all: bool = False,
     if not intent_id:
         return {"success": False, "error": "Usage: steward approve <intent_id>"}
 
-    result = router.approve_intent(intent_id)
+    result = await router.approve_intent(intent_id)
 
     if result.success:
         print(f"✅ Intent approved and executed: {intent_id}")
-        return {"success": True, "result": result.result, "handler": result.handler}
+        return {"success": True, "result": result.result, "handler": result.executed_by}
     else:
         print(f"❌ Failed to approve: {result.error}")
         return {"success": False, "error": result.error}

@@ -72,9 +72,7 @@ class GenesisBridge:
             self._classifier = InfrastructureClassifier(workspace=self._workspace)
             self._generator = InfrastructureGenerator(workspace=self._workspace)
 
-            logger.info(
-                "🏛️ GENESIS BRIDGE: Stadtamt Service activated (GAD-000 infrastructure)"
-            )
+            logger.info("🏛️ GENESIS BRIDGE: Stadtamt Service activated (GAD-000 infrastructure)")
 
         except Exception as e:
             logger.warning(f"🏛️ GENESIS BRIDGE: Could not initialize: {e}")

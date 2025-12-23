@@ -500,7 +500,7 @@ class SQLiteLedger(VibeLedger):
         event_type: Optional[str] = None,
         agent_id: Optional[str] = None,
         task_id: Optional[str] = None,
-        include_archives: bool = False
+        include_archives: bool = False,
     ) -> List[Dict[str, Any]]:
         """OPUS-208 Phase 2.2: Unified Ledger Query.
         Transparently queries hot DB and (optionally) archives using dynamic ATTACH.
@@ -560,7 +560,7 @@ class SQLiteLedger(VibeLedger):
                 logger.error(f"⚠️ Failed to query archive {archive_path}: {e}")
 
         # Final sort (since we queried DBs separately)
-        all_results.sort(key=lambda x: x['timestamp'], reverse=True)
+        all_results.sort(key=lambda x: x["timestamp"], reverse=True)
         if limit > 0:
             all_results = all_results[:limit]
 
@@ -720,10 +720,7 @@ class SQLiteLedger(VibeLedger):
             value = json.dumps(value)
 
         with self._write_lock:
-            self.connection.execute(
-                "INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)",
-                (key, str(value))
-            )
+            self.connection.execute("INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)", (key, str(value)))
             self.connection.commit()
 
     def close(self) -> None:
@@ -764,7 +761,7 @@ class SQLiteLedger(VibeLedger):
                 "timestamp": timestamp,
                 "source_db": self.db_path,
                 "target_archive": archive_path,
-                "previous_top_hash": current_top_hash
+                "previous_top_hash": current_top_hash,
             }
             with open(manifest_path, "w") as f:
                 json.dump(manifest, f)
@@ -790,9 +787,9 @@ class SQLiteLedger(VibeLedger):
                     details={
                         "previous_ledger_archive": archive_path,
                         "previous_ledger_hash": current_top_hash,
-                        "rotation_reason": "Samsara Size Limit"
+                        "rotation_reason": "Samsara Size Limit",
                     },
-                    result="SUCCESS"
+                    result="SUCCESS",
                 )
                 logger.info("🔗 New Genesis Block created (linked to previous chain)")
 
@@ -804,7 +801,7 @@ class SQLiteLedger(VibeLedger):
                 logger.critical(f"🔥 ROTATION FAILED: {e}")
                 # Attempt recovery (if DB was moved but not re-inited)
                 if os.path.exists(archive_path) and not os.path.exists(self.db_path):
-                     logger.warning("⚠️ Attempting rollback...")
-                     shutil.move(archive_path, self.db_path)
-                     self._initialize_db()
+                    logger.warning("⚠️ Attempting rollback...")
+                    shutil.move(archive_path, self.db_path)
+                    self._initialize_db()
                 raise e

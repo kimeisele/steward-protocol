@@ -6,6 +6,7 @@ WIRED TO PRAKRITI: Unified State Engine (OPUS-009)
 """
 
 import argparse
+import asyncio
 import json
 import logging
 import tempfile
@@ -231,7 +232,7 @@ class UnifiedCLI:
         if parsed_args is None:
             return 1
 
-        response = self._executor.execute(cmd, parsed_args)
+        response = asyncio.run(self._executor.execute(cmd, parsed_args))
 
         if response.success:
             if response.data is not None:

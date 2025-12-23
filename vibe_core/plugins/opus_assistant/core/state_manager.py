@@ -237,9 +237,10 @@ class OpusStateManager:
         # 🍎 STATE: Namespaced state service (ADR-204)
         # OPUS-207: Use workspace (project root), state goes to .vibe/state/plugins/opus_assistant/
         from vibe_core.state.state_service import get_state_service
+
         self._state_service = get_state_service(self._workspace, plugin_id="opus_assistant")
         self._state_dir = self._state_service.state_root
-        
+
         self._max_observations = max_observations
         self._max_karma_entries = max_karma_entries
 

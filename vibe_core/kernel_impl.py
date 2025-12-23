@@ -117,7 +117,7 @@ def _get_config():
 
         return get_config()
     except Exception:
-    # Fallback for standalone/testing - return None to use defaults
+        # Fallback for standalone/testing - return None to use defaults
         return None
 
 
@@ -189,10 +189,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         if self._test_mode:
             import os
+
             os.environ["VIBE_NO_GIT_COMMIT"] = "1"
             logger.info("🧪 KERNEL: Test Mode Active - Git Persistence Disabled")
             try:
                 from vibe_core.state.state_service import get_state_service
+
                 ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
                 ss._auto_commit_enabled = False
             except Exception:
@@ -247,6 +249,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # OPUS-209: Auditor is now accessed via ServiceRegistry
         # If no auditor plugin loaded, use NullAuditor fallback
         from vibe_core.di import ServiceRegistry
+
         self._auditor = ServiceRegistry.get(AuditorProtocol) or NullAuditor()
         auditor_type = type(self._auditor).__name__
         if auditor_type == "NullAuditor":
@@ -440,7 +443,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     # If Asura deletes an organ, it resurrects from the Blueprint.
     # =========================================================================
 
-    def pulse(self) -> Dict[str, Any]:
+    async def pulse(self) -> Dict[str, Any]:
         """
         Execute one system pulse cycle across all plugins.
 
@@ -460,7 +463,10 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         for plugin in self._plugins:
             try:
                 if hasattr(plugin, "on_pulse"):
+                    # Support both sync and async on_pulse
                     res = plugin.on_pulse(self, transaction)
+                    if asyncio.iscoroutine(res):
+                        res = await res
                     results[plugin.plugin_id] = res
             except Exception as e:
                 logger.error(f"❌ Plugin '{plugin.plugin_id}' pulse failed: {e}")
@@ -655,6 +661,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if self._bank is None:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.economy import BankProtocol
+
             self._bank = ServiceRegistry.get(BankProtocol)
         return self._bank
 
@@ -663,6 +670,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if self._vault is None:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.economy import VaultProtocol
+
             self._vault = ServiceRegistry.get(VaultProtocol)
         return self._vault
 
@@ -793,10 +801,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
             # Log manifestation
             status = "MANIFEST" if request.manifests else "PENDING"
-            logger.info(
-                f"☢️ KERNEL: {intent[:30]}... → "
-                f"E={request.resonance_energy:.3f} ({status})"
-            )
+            logger.info(f"☢️ KERNEL: {intent[:30]}... → E={request.resonance_energy:.3f} ({status})")
 
             # OPUS-202: Evolve the kernel's akasha field
             self._akasha_field = field.field_hash
@@ -1222,15 +1227,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             agent_id=agent_id,
             capabilities=["*"],  # Revoke all
             revoker_id="KERNEL",
-            reason=reason
+            reason=reason,
         )
 
         # 4. Log the death
-        self._ledger.record_event("AGENT_TERMINATED", "kernel", {
-            "agent_id": agent_id,
-            "reason": reason,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        self._ledger.record_event(
+            "AGENT_TERMINATED",
+            "kernel",
+            {"agent_id": agent_id, "reason": reason, "timestamp": datetime.utcnow().isoformat()},
+        )
 
         logger.info(f"💀 Agent {agent_id} terminated and resources freed")
         return True
@@ -1652,6 +1657,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # 🍎 ASYNC PERSISTENCE (ADR-204)
         try:
             from vibe_core.state.state_service import get_state_service
+
             ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
             ss.start_background_worker()
         except Exception as e:
@@ -1759,11 +1765,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                     plugin.on_task_failed(self, task.task_id, error)
 
         # NATIVE HEARTBEAT (Direct await! Emitted every tick to drive circuits)
-        await self._event_bus.emit(Event(
-            event_type=EventType.KERNEL_TICK,
-            agent_id="kernel",
-            message="Kernel heartbeat tick"
-        ))
+        await self._event_bus.emit(
+            Event(event_type=EventType.KERNEL_TICK, agent_id="kernel", message="Kernel heartbeat tick")
+        )
 
     async def _run_gateway_async(self) -> None:
         """Runs the NetworkGateway as an asyncio task."""
@@ -1784,11 +1788,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # Record shutdown
         if hasattr(self, "lineage"):
-            self.lineage.add_block(
-                event_type=LineageEventType.KERNEL_SHUTDOWN,
-                agent_id=None,
-                data={"reason": reason}
-            )
+            self.lineage.add_block(event_type=LineageEventType.KERNEL_SHUTDOWN, agent_id=None, data={"reason": reason})
             self.lineage.close()
 
         # Preserve state
@@ -1801,6 +1801,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # 🍎 ASYNC PERSISTENCE CLEANUP (ADR-204)
         try:
             from vibe_core.state.state_service import get_state_service
+
             ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
             if ss._worker_task:
                 ss._worker_task.cancel()

@@ -1407,7 +1407,81 @@
       "context": {},
       "feedback": null,
       "execution_time_ms": 0
+    },
+    {
+      "intent_type": "read_file",
+      "intent_description": "Pramana Verification Read",
+      "timestamp": "2025-12-23T20:13:49.485204",
+      "outcome": "failed",
+      "context": {
+        "path": "README.md",
+        "lines": [
+          1,
+          5
+        ]
+      },
+      "feedback": "'IntentRouter' object has no attribute '_handlers'",
+      "execution_time_ms": 92
+    },
+    {
+      "intent_type": "read_file",
+      "intent_description": "Pramana Verification Read",
+      "timestamp": "2025-12-23T20:18:35.162768",
+      "outcome": "failed",
+      "context": {
+        "path": "README.md",
+        "lines": [
+          1,
+          5
+        ]
+      },
+      "feedback": "No handler registered for intent type: read_file",
+      "execution_time_ms": 9884
+    },
+    {
+      "intent_type": "echo",
+      "intent_description": "Pramana Verification Echo",
+      "timestamp": "2025-12-23T21:00:52.755244",
+      "outcome": "failed",
+      "context": {
+        "message": "Pramana Alive"
+      },
+      "feedback": "'coroutine' object has no attribute 'get'",
+      "execution_time_ms": 100
+    },
+    {
+      "intent_type": "echo",
+      "intent_description": "Pramana Verification Echo",
+      "timestamp": "2025-12-23T21:01:56.015782",
+      "outcome": "success",
+      "context": {
+        "message": "Pramana Alive"
+      },
+      "feedback": null,
+      "execution_time_ms": 8252
+    },
+    {
+      "intent_type": "echo",
+      "intent_description": "Pramana Verification Echo",
+      "timestamp": "2025-12-23T21:04:32.176620",
+      "outcome": "success",
+      "context": {
+        "message": "Pramana Alive"
+      },
+      "feedback": null,
+      "execution_time_ms": 16377
+    },
+    {
+      "intent_type": "echo",
+      "intent_description": "Pramana Live Fire pramana_fire_ceb6a31c",
+      "timestamp": "2025-12-23T21:05:52.768157",
+      "outcome": "success",
+      "context": {
+        "message": "Pramana Alive"
+      },
+      "feedback": null,
+      "execution_time_ms": 9076
     }
   ],
-  "updated_at": "2025-12-22T16:29:11.028516"
+  "updated_at": "2025-12-23T21:05:52.770610"
 }
