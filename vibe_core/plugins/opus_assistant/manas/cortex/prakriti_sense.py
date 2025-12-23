@@ -115,13 +115,27 @@ class GunaSummary:
     tamas_count: int  # Dead, stale, ignored
     total_plugins: int
     total_paths: int
+    weights: Optional[Dict[str, float]] = None
 
     @property
     def health_ratio(self) -> float:
-        """Ratio of healthy (Sattva) state to total. 1.0 = perfect health."""
+        """
+        Ratio of healthy state to total. 1.0 = perfect health.
+
+        Uses configured weights if available.
+        Default: Sattva=1.0, Rajas=0.0, Tamas=0.0 (Legacy strict mode)
+        """
         if self.total_paths == 0:
             return 1.0
-        return self.sattva_count / self.total_paths
+
+        w = self.weights or {"sattva": 1.0, "rajas": 0.0, "tamas": 0.0}
+
+        weighted_sum = (
+            (self.sattva_count * w.get("sattva", 1.0))
+            + (self.rajas_count * w.get("rajas", 0.0))
+            + (self.tamas_count * w.get("tamas", 0.0))
+        )
+        return weighted_sum / self.total_paths
 
     @property
     def needs_attention(self) -> bool:
@@ -259,7 +273,18 @@ class PrakritiSense(BaseSense):
             tamas_count=guna_counts.get("tamas", 0),
             total_plugins=len(discovered),
             total_paths=sum(len(infos) for infos in discovered.values()),
+            weights=self._get_guna_weights(),
         )
+
+    def _get_guna_weights(self) -> Dict[str, float]:
+        """Get Guna weights from config."""
+        # Config might be the full manas.yaml or just the section
+        # Try to find the section first
+        section = self.config.get("prakriti_sense", self.config)
+        weights = section.get("guna_weights", {})
+
+        # Ensure we have floats
+        return {k: float(v) for k, v in weights.items()} if weights else None
 
     def perceive(self, context: Optional[Dict[str, Any]] = None) -> GunaSummary:
         """

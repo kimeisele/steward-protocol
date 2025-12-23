@@ -211,7 +211,7 @@ class CodeModuleLoader(ABC):
                     for item_class in item_classes:
                         try:
                             # PRATYAYA + KARMA: Instantiate
-                            instance, meta = cls._create_and_register(item_class, py_file, workspace)
+                            instance, meta = cls._create_and_register(item_class, py_file, workspace, config)
 
                             if instance is not None:
                                 instances[meta.item_id] = instance
@@ -381,15 +381,24 @@ class CodeModuleLoader(ABC):
         item_class: Type,
         py_file: Path,
         workspace: Path,
+        config: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[Any], CodeModuleMeta]:
         """
         Create instance and build metadata.
 
         Override in subclass for custom instantiation.
         """
-        # Try instantiation with workspace
+        # Try instantiation with workspace and config
         try:
-            instance = item_class(workspace=workspace)
+            # First try with config if provided
+            if config is not None:
+                try:
+                    instance = item_class(workspace=workspace, config=config)
+                except TypeError:
+                    # Fallback: maybe it doesn't accept config
+                    instance = item_class(workspace=workspace)
+            else:
+                instance = item_class(workspace=workspace)
         except TypeError:
             # Fallback: no workspace
             instance = item_class()
