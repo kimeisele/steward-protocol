@@ -32,7 +32,7 @@ Usage:
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Optional, Protocol, runtime_checkable
+from typing import Any, Literal, Optional, Protocol, runtime_checkable
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -148,37 +148,6 @@ class SystemContext(BaseModel):
     model_config = ConfigDict(frozen=False)  # Allow updates during boot
 
 
-class Intent(BaseModel):
-    """
-    The decision from an operator.
-
-    This is what the operator WANTS to happen.
-    Strictly typed - parseable, verifiable, composable.
-    """
-
-    # Core Intent
-    intent_type: IntentType
-    raw_input: str = Field(..., description="Original input from operator")
-
-    # Parsed Intent
-    target_agent: Optional[str] = Field(None, description="Agent to handle this")
-    target_tool: Optional[str] = Field(None, description="Tool to invoke")
-    parameters: dict[str, str] = Field(default_factory=dict)  # String params only
-
-    # Metadata
-    intent_id: str = Field(default_factory=lambda: str(uuid4()))
-    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
-    source_operator: OperatorType = OperatorType.HUMAN
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-    # Control Flags
-    requires_confirmation: bool = False
-    is_destructive: bool = False
-    priority: PriorityLevel = PriorityLevel.NORMAL
-
-    model_config = ConfigDict(frozen=True)  # Intents are immutable once created
-
-
 class OperatorResponse(BaseModel):
     """
     Response back to the operator after processing intent.
@@ -236,7 +205,7 @@ class OperatorSocket(Protocol):
         """
         ...
 
-    async def provide_intent(self) -> Intent:
+    async def provide_intent(self) -> Any:
         """
         Provide the next action/decision.
 
@@ -246,7 +215,7 @@ class OperatorSocket(Protocol):
         For Local: Parse output
 
         Returns:
-            Strictly typed intent
+            Intent (intent structure varies by operator type)
         """
         ...
 
@@ -295,15 +264,15 @@ def create_intent(
     target_agent: Optional[str] = None,
     target_tool: Optional[str] = None,
     source_operator: OperatorType = OperatorType.HUMAN,
-) -> Intent:
-    """Factory function to create Intent with common defaults."""
-    return Intent(
-        intent_type=intent_type,
-        raw_input=raw_input,
-        target_agent=target_agent,
-        target_tool=target_tool,
-        source_operator=source_operator,
-    )
+) -> dict:
+    """Factory function to create Intent-like dict with common defaults."""
+    return {
+        "intent_type": intent_type,
+        "raw_input": raw_input,
+        "target_agent": target_agent,
+        "target_tool": target_tool,
+        "source_operator": source_operator,
+    }
 
 
 def create_response(
@@ -333,12 +302,10 @@ __all__ = [
     "GitState",
     "TaskState",
     "SystemContext",
-    "Intent",
     "OperatorResponse",
     # Protocol
     "OperatorSocket",
     # Factories
     "create_system_context",
-    "create_intent",
     "create_response",
 ]

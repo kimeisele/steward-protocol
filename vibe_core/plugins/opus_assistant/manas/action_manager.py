@@ -907,12 +907,13 @@ class ActionManager:
             if source:
                 return str(source)
 
-        # Default to intent type prefix
+        # Default to intent type prefix (or full type if no underscore)
         parts = intent.intent_type.split("_")
         if len(parts) > 1:
             return parts[0]
 
-        return None
+        # Fallback: use intent_type as trigger (for simple types like "echo")
+        return f"trigger:{intent.intent_type}"
 
     # =========================================================================
     # OPUS-211: PRAMANA - Closed-Loop Event Emission
