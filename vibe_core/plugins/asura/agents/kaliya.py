@@ -45,6 +45,7 @@ logger = logging.getLogger("ASURA.KALIYA")
 @dataclass
 class KaliyaAttackResult:
     """Results of the Kaliya flood attack."""
+
     events_sent: int
     duration_seconds: float
     events_per_second: float
@@ -111,7 +112,7 @@ class KaliyaAgent:
             duration_seconds=duration,
             events_per_second=self.events_sent / duration if duration > 0 else 0,
             heads_active=len(self.heads),
-            target_responsive=True  # Will be tested after attack
+            target_responsive=True,  # Will be tested after attack
         )
 
         logger.warning(f"🐍 KALIYA: Attack complete. {result.events_sent} events in {duration:.2f}s")

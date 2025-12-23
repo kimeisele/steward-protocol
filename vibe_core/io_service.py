@@ -150,16 +150,13 @@ class KernelIOService:
         except ValueError:
             # Different drives on Windows, or other path issues
             raise PermissionError(
-                f"🛡️ SHAKATASURA BLOCKED: Path '{requested_path}' is not "
-                f"inside sandbox '{resolved_root}'"
+                f"🛡️ SHAKATASURA BLOCKED: Path '{requested_path}' is not inside sandbox '{resolved_root}'"
             )
 
         # 4. Additional checks
         # Reject null bytes (injection attack)
         if "\x00" in requested_path:
-            raise PermissionError(
-                f"🛡️ SHAKATASURA BLOCKED: Null byte detected in path '{requested_path}'"
-            )
+            raise PermissionError(f"🛡️ SHAKATASURA BLOCKED: Null byte detected in path '{requested_path}'")
 
         logger.debug(f"🛡️ Sandbox validated: {requested_path} -> {resolved_target}")
         return target_path

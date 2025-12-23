@@ -43,6 +43,6 @@ class SystemHeartbeatProtocol(ABC):
     """
 
     @abstractmethod
-    def pulse(self) -> Dict[str, Any]:
+    async def pulse(self) -> Dict[str, Any]:
         """Execute a unified system pulse."""
         pass

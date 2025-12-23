@@ -20,7 +20,6 @@ from vibe_core.ledger import SQLiteLedger
 @pytest.mark.unit
 @pytest.mark.fast
 class TestLedgerSamsara:
-
     @pytest.fixture
     def test_db(self, temp_dir: Path) -> str:
         """Fixture providing a temporary database path."""
@@ -39,14 +38,14 @@ class TestLedgerSamsara:
         archive_path = ledger.rotate()
         assert archive_path is not None
         assert os.path.exists(archive_path)
-        assert os.path.exists(test_db) # New DB should exist
+        assert os.path.exists(test_db)  # New DB should exist
 
         # 3. Verify Genesis in new DB
         hot_events = ledger.get_events(include_archives=False)
         assert len(hot_events) == 1
         genesis_event = hot_events[0]
-        assert genesis_event['event_type'] == "LEDGER_GENESIS"
-        assert genesis_event['details']['previous_ledger_hash'] == top_hash_old
+        assert genesis_event["event_type"] == "LEDGER_GENESIS"
+        assert genesis_event["details"]["previous_ledger_hash"] == top_hash_old
 
         ledger.close()
 
@@ -77,14 +76,14 @@ class TestLedgerSamsara:
         assert len(all_events) == 9
 
         # Verify Sorting
-        assert all_events[0]['event_type'] == "HOT_EVENT"
-        assert all_events[-1]['event_type'] == "ARCHIVE_EVENT"
+        assert all_events[0]["event_type"] == "HOT_EVENT"
+        assert all_events[-1]["event_type"] == "ARCHIVE_EVENT"
 
         # Verify Filtering
         beta_events = ledger.get_events(agent_id="BETA", include_archives=True)
         assert len(beta_events) == 3
         for e in beta_events:
-            assert e['agent_id'] == "BETA"
+            assert e["agent_id"] == "BETA"
 
         ledger.close()
 
@@ -97,20 +96,20 @@ class TestLedgerSamsara:
             ledger.record_event("T1", "A", {})
 
         # Simulate Health Check 1
-        anchor = ledger.get_meta('health_anchor') or (0, "0"*64)
+        anchor = ledger.get_meta("health_anchor") or (0, "0" * 64)
         new_events = ledger.get_events_since(anchor[0])
         assert len(new_events) == 10
 
         # Save anchor
         last = new_events[-1]
-        ledger.set_meta('health_anchor', (last['id'], last['current_hash']))
+        ledger.set_meta("health_anchor", (last["id"], last["current_hash"]))
 
         # Batch 2
         for _ in range(5):
             ledger.record_event("T2", "A", {})
 
         # Simulate Health Check 2 (Incremental)
-        anchor2 = ledger.get_meta('health_anchor')
+        anchor2 = ledger.get_meta("health_anchor")
         new_events2 = ledger.get_events_since(anchor2[0])
         assert len(new_events2) == 5
 

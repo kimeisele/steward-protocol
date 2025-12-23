@@ -288,7 +288,7 @@ class ActionManager:
     # MAIN EXECUTION ENTRY POINT
     # =========================================================================
 
-    def execute(
+    async def execute(
         self,
         entry: "IntentBufferEntry",
         ledger: Optional[Any] = None,
@@ -350,7 +350,7 @@ class ActionManager:
 
         try:
             # Route to appropriate handler
-            result, success = self._route_execution(intent)
+            result, success = await self._route_execution(intent)
 
         except Exception as e:
             logger.error(f"Intent execution failed: {e}")
@@ -393,7 +393,7 @@ class ActionManager:
         self._update_synapses(intent, success)
 
         # OPUS-211: Emit ACTION_COMPLETED event for closed-loop feedback
-        self._emit_action_completed(intent, success, result, execution_time)
+        await self._emit_action_completed(intent, success, result, execution_time)
 
         if buffer:
             buffer.save()
@@ -460,7 +460,7 @@ class ActionManager:
     # EXECUTION ROUTING
     # =========================================================================
 
-    def _route_execution(self, intent: "Intent") -> Tuple[Dict[str, Any], bool]:
+    async def _route_execution(self, intent: "Intent") -> Tuple[Dict[str, Any], bool]:
         """
         Route intent to the correct handler.
 
@@ -472,24 +472,30 @@ class ActionManager:
         """
         # 1. Healing intents
         if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
-            result = self._execute_healing(intent)
+            result = await self._execute_healing(intent)
             return result, result.get("success", False)
 
         # 2. Memory review (dreaming)
         if intent.intent_type == "memory_review":
-            result = self._execute_memory_review(intent)
+            result = await self._execute_memory_review(intent)
             return result, result.get("success", False)
 
         # 3. OPUS-175: TaskKernel execution for tool-based intents
         if self._use_task_kernel and self._tool_registry:
-            result = self._execute_via_task_kernel(intent)
+            result = await self._execute_via_task_kernel(intent)
             if result.get("executed_via_task_kernel"):
                 return result, result.get("success", False)
             # If TaskKernel couldn't handle it, fall through to other handlers
 
         # 4. Custom callback
         if self._execution_callback:
-            result = self._execution_callback(intent)
+            # Custom callbacks are assumed to be sync for now, but we can wrap them
+            import asyncio
+
+            if asyncio.iscoroutinefunction(self._execution_callback):
+                result = await self._execution_callback(intent)
+            else:
+                result = self._execution_callback(intent)
             return result, result.get("success", False)
 
         # 4. Circuit execution
@@ -513,13 +519,17 @@ class ActionManager:
             from .intent_router import IntentRouter
 
             router = IntentRouter(workspace=self._workspace)
-            if intent.intent_type in router._handlers:
-                logger.info(f"🔀 ACTION: Routing via IntentRouter: {intent.intent_type}")
-                result = router.route(intent)
-                return result, result.get("success", False)
-            else:
-                logger.warning(f"No execution method for intent: {intent.id}")
-                return {"error": "No execution method available"}, False
+            logger.info(f"🔀 ACTION: Routing via IntentRouter: {intent.intent_type}")
+            result = await router.route(intent)
+            # IntentRouter.route returns ExecutionResult, but we need (dict, bool)
+            if hasattr(result, "success"):
+                return {
+                    "success": result.success,
+                    "handler": result.executed_by,
+                    "result": result.result,
+                    "error": result.error,
+                }, result.success
+            return result, result.get("success", False)
         except ImportError:
             logger.warning(f"IntentRouter not available for: {intent.id}")
             return {"error": "No execution method available"}, False
@@ -531,7 +541,7 @@ class ActionManager:
     # SPECIALIZED HANDLERS
     # =========================================================================
 
-    def _execute_healing(self, intent: "Intent") -> Dict[str, Any]:
+    async def _execute_healing(self, intent: "Intent") -> Dict[str, Any]:
         """
         Execute a healing intent via PrakritiSense.
 
@@ -574,7 +584,7 @@ class ActionManager:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def _execute_memory_review(self, intent: "Intent") -> Dict[str, Any]:
+    async def _execute_memory_review(self, intent: "Intent") -> Dict[str, Any]:
         """
         Execute Dreaming: Consolidate wisdom from past actions.
 
@@ -642,7 +652,7 @@ class ActionManager:
     # OPUS-175: TASKKERNEL EXECUTION
     # =========================================================================
 
-    def _execute_via_task_kernel(self, intent: "Intent") -> Dict[str, Any]:
+    async def _execute_via_task_kernel(self, intent: "Intent") -> Dict[str, Any]:
         """
         OPUS-175: Execute intent via TaskKernel (lightweight ephemeral kernel).
 
@@ -655,8 +665,6 @@ class ActionManager:
         Returns:
             Execution result with 'executed_via_task_kernel' flag
         """
-        import asyncio
-
         # 1. Select tools for this intent
         tools = self._tool_selector.select_for_intent(intent)
 
@@ -717,20 +725,7 @@ class ActionManager:
             )
 
             # 5. Execute (async)
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Create a new task in the running loop
-                    import concurrent.futures
-
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future = executor.submit(asyncio.run, task_kernel.execute())
-                        result = future.result(timeout=310)
-                else:
-                    result = loop.run_until_complete(task_kernel.execute())
-            except RuntimeError:
-                # No event loop - create one
-                result = asyncio.run(task_kernel.execute())
+            result = await task_kernel.execute()
 
             # 6. Return result
             success = result.status.value == "completed"
@@ -923,7 +918,7 @@ class ActionManager:
     # OPUS-211: PRAMANA - Closed-Loop Event Emission
     # =========================================================================
 
-    def _emit_action_completed(
+    async def _emit_action_completed(
         self,
         intent: "Intent",
         success: bool,
@@ -968,9 +963,9 @@ class ActionManager:
                 pramana["commit_hash"] = result["commit_hash"]
 
             event = Event(
-                type=EventType.INTENT_EXECUTED,
-                source="action_manager",
-                data={
+                event_type=EventType.INTENT_EXECUTED,
+                agent_id="action_manager",
+                details={
                     "intent_id": intent.id,
                     "intent_type": intent.intent_type,
                     "success": success,
@@ -979,7 +974,7 @@ class ActionManager:
                 },
             )
 
-            event_bus.emit(event)
+            await event_bus.emit(event)
             logger.debug(f"📢 ACTION_COMPLETED event emitted for {intent.id}")
 
         except ImportError:

@@ -80,6 +80,7 @@ class AgentSystemInterface:
 
         # 🍎 STATE: Namespaced state service (ADR-204)
         from vibe_core.state.state_service import get_state_service
+
         self.state = get_state_service(agent_id=agent_id)
 
         # Config: Agent-specific configuration

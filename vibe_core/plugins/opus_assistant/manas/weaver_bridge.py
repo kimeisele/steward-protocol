@@ -84,14 +84,9 @@ class WeaverBridge:
             diagnosis = self._cognitive_weaver.diagnose()
             health = diagnosis.get("unified", {}).get("overall_health", 0)
             session_ctx = (
-                "with session context"
-                if self._cognitive_weaver.has_session_context()
-                else "no session context"
+                "with session context" if self._cognitive_weaver.has_session_context() else "no session context"
             )
-            logger.info(
-                f"🧵 WEAVER BRIDGE: State ↔ Knowledge Bridge initialized - "
-                f"Health: {health:.0%}, {session_ctx}"
-            )
+            logger.info(f"🧵 WEAVER BRIDGE: State ↔ Knowledge Bridge initialized - Health: {health:.0%}, {session_ctx}")
         except Exception as e:
             logger.warning(f"🧵 WEAVER BRIDGE: Could not initialize CognitiveWeaver: {e}")
             self._cognitive_weaver = None
@@ -185,9 +180,7 @@ class WeaverBridge:
             logger.debug(f"🧵 WEAVER BRIDGE: Could not weave context: {e}")
             return None
 
-    def consult_knowledge(
-        self, action: str, context: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def consult_knowledge(self, action: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Consult knowledge before taking an action.
 

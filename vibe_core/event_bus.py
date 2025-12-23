@@ -46,6 +46,9 @@ class EventType(str, Enum):
     # Syscall events (OPUS-031 Layer 2)
     SYSCALL_EXECUTED = "SYSCALL_EXECUTED"  # Syscall completed (for experience replay)
 
+    # OPUS-211: Pramana (Feedback Loop)
+    INTENT_EXECUTED = "INTENT_EXECUTED"  # Action completed with verification proof
+
     # Agent-specific events
     BROADCAST = "BROADCAST"  # Content published
     PROPOSAL_CREATED = "PROPOSAL_CREATED"  # New proposal

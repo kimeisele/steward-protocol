@@ -178,8 +178,7 @@ class IntentGenerator:
             instances, _ = self._analyzer_loader.load()
             if instances:
                 logger.info(
-                    f"OPUS-167: Reusing kernel's analyzer_loader "
-                    f"({len(instances)} analyzers: {list(instances.keys())})"
+                    f"OPUS-167: Reusing kernel's analyzer_loader ({len(instances)} analyzers: {list(instances.keys())})"
                 )
                 return list(instances.values())
 

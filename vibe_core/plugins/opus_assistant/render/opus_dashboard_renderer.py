@@ -123,7 +123,7 @@ class OpusDashboardRenderer:
             logger.debug(f"⚠️  Failed to load MANAS config: {e}")
         return {}
 
-    def render(self, quick: bool = False) -> str:
+    async def render(self, quick: bool = False) -> str:
         """
         Render OPUS.md using template.
 
@@ -144,7 +144,7 @@ class OpusDashboardRenderer:
         # LAYER 1.5: BIDIRECTIONAL CONTROL CABLES
         # Read BEFORE Write - Extract human edits
         # ========================================
-        self._apply_control_cables()
+        await self._apply_control_cables()
 
         try:
             from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -173,7 +173,7 @@ class OpusDashboardRenderer:
             logger.error(f"Template render failed: {e}")
             return self._fallback_render(quick=quick)
 
-    def _apply_control_cables(self) -> None:
+    async def _apply_control_cables(self) -> None:
         """
         LAYER 1.5: Parse existing OPUS.md and apply human edits to state.
         LAYER 1.5+: OPUS-032 Volition - Execute approved intents.
@@ -227,7 +227,7 @@ class OpusDashboardRenderer:
             # OPUS-032: VOLITION - Process Intent Approvals/Rejections
             # ================================================================
             try:
-                volition_results = parser.apply_intent_decisions(opus_content)
+                volition_results = await parser.apply_intent_decisions(opus_content)
 
                 if volition_results["executed"]:
                     logger.info(

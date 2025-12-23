@@ -83,10 +83,7 @@ class VajraGuarded:
         will raise PermissionError("VAJRA VIOLATION").
         """
         object.__setattr__(self, "_vajra_sealed", True)
-        logger.info(
-            f"💎 VAJRA SEAL: {self.__class__.__name__} DNA locked. "
-            f"Protected: {self._vajra_protected}"
-        )
+        logger.info(f"💎 VAJRA SEAL: {self.__class__.__name__} DNA locked. Protected: {self._vajra_protected}")
 
     def vajra_unseal(self) -> None:
         """
@@ -123,10 +120,7 @@ class VajraGuarded:
             # 3. Check if attribute is protected
             protected = getattr(self, "_vajra_protected", set())
             if name in protected:
-                logger.error(
-                    f"🚫 VAJRA VIOLATION: Attempt to poison '{name}' "
-                    f"on {self.__class__.__name__}!"
-                )
+                logger.error(f"🚫 VAJRA VIOLATION: Attempt to poison '{name}' on {self.__class__.__name__}!")
                 raise PermissionError(
                     f"VAJRA VIOLATION: Attempt to rewrite immutable DNA '{name}' "
                     f"on {self.__class__.__name__}. The blueprint is sealed."

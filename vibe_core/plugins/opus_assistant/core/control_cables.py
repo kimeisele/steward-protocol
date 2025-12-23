@@ -269,7 +269,7 @@ class ControlCablesParser:
 
         return result
 
-    def apply_intent_decisions(self, opus_content: str, manas: Optional[Any] = None) -> Dict[str, Any]:
+    async def apply_intent_decisions(self, opus_content: str, manas: Optional[Any] = None) -> Dict[str, Any]:
         """
         Parse and apply intent approvals/rejections to MANAS.
 
@@ -308,7 +308,7 @@ class ControlCablesParser:
         # Process approvals
         for intent_id in decisions["approved"]:
             try:
-                success = manas.approve_intent(intent_id)
+                success = await manas.approve_intent(intent_id)
                 if success:
                     results["executed"].append(intent_id)
                     logger.info(f"🧠 VOLITION: Executed intent {intent_id}")

@@ -46,7 +46,7 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
         logger.info("💓 SYSTEM_HEARTBEAT: Nationalized pulse service online")
         return HookResult.ok()
 
-    def pulse(self) -> Dict[str, Any]:
+    async def pulse(self) -> Dict[str, Any]:
         """
         Execute a unified system pulse via the Kernel.
         """
@@ -55,7 +55,7 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
             return {"success": False, "error": "No kernel"}
 
         # Delegate orchestration to the kernel
-        return self._kernel.pulse()
+        return await self._kernel.pulse()
 
     def on_pulse(self, kernel: VibeKernel, transaction: Any) -> Dict[str, Any]:
         """

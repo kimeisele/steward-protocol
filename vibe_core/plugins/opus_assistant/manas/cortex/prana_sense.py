@@ -53,14 +53,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from .base import BaseSense
-
 # OPUS-167: Intent imports for generate_intents()
 from vibe_core.plugins.opus_assistant.manas.intent_generator import (
     Intent,
     IntentPriority,
     IntentRisk,
 )
+
+from .base import BaseSense
 
 logger = logging.getLogger("MANAS.Cortex.PranaSense")
 

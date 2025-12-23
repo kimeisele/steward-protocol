@@ -213,7 +213,7 @@ class SettingsSync:
                 # Detect non-command lines (separators, headers, help text)
                 is_separator = line.startswith("---") or line.startswith("___") or line.startswith("***")
                 is_help_text = line.startswith("- `")
-                
+
                 if is_separator or is_help_text:
                     continue
 
@@ -222,7 +222,7 @@ class SettingsSync:
                     continue
 
                 # Parse command text
-                command_text = line[2:].strip() # Skip "- "
+                command_text = line[2:].strip()  # Skip "- "
 
                 if command_text.startswith("SET "):
                     rest = command_text[4:].strip()

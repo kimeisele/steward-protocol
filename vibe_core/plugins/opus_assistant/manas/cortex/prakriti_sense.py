@@ -298,9 +298,7 @@ class PrakritiSense(BaseSense):
         weights = section.get("guna_weights", {})
 
         if not weights:
-            logger.debug(
-                "[PRAKRITI_SENSE] No guna_weights in config, using defaults: sattva=1.0, rajas=0.8, tamas=0.0"
-            )
+            logger.debug("[PRAKRITI_SENSE] No guna_weights in config, using defaults: sattva=1.0, rajas=0.8, tamas=0.0")
             return DEFAULT_WEIGHTS
 
         # Ensure we have floats and merge with defaults

@@ -137,7 +137,9 @@ class BiorhythmProcessor:
                 "last_tick": now.isoformat(),
                 "pending_intents": pending_count,
                 "ticks_since_turiya": self._state.ticks_since_turiya,
-                "last_thought": (self.kernel._last_thought_time.isoformat() if self.kernel._last_thought_time else None),
+                "last_thought": (
+                    self.kernel._last_thought_time.isoformat() if self.kernel._last_thought_time else None
+                ),
             }
             self.kernel._awareness = awareness
 

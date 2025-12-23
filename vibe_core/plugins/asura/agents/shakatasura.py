@@ -48,6 +48,7 @@ logger = logging.getLogger("ASURA.SHAKATASURA")
 @dataclass
 class ShakatasuraAttackResult:
     """Results of the Shakatasura filesystem attack."""
+
     attack_type: str
     path_used: str
     target_path: str
@@ -115,7 +116,9 @@ class ShakatasuraAgent:
             logger.warning("🏚️ SHAKATASURA: Attempting write through symlink...")
 
             # Use relative path from sandbox root
-            relative_trap = trap_link.relative_to(self.sandbox_root) if self.sandbox_root in trap_link.parents else trap_link
+            relative_trap = (
+                trap_link.relative_to(self.sandbox_root) if self.sandbox_root in trap_link.parents else trap_link
+            )
 
             try:
                 result = self.io_service.write_document(
@@ -283,5 +286,6 @@ class ShakatasuraAgent:
         # Remove trap directory
         if self.trap_dir and self.trap_dir.exists():
             import shutil
+
             shutil.rmtree(self.trap_dir)
             logger.info("   Trap directory removed")

@@ -981,7 +981,8 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             def on_intent_executed(event):
                 """Pramana callback: Process action completion."""
                 try:
-                    data = event.data if hasattr(event, "data") else {}
+                    # Use details (standard Event field)
+                    data = event.details if hasattr(event, "details") else {}
                     intent_id = data.get("intent_id")
                     success = data.get("success", False)
                     pramana = data.get("pramana", {})
@@ -1768,7 +1769,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 if is_safe or is_trusted:
                     reason = "SAFE" if is_safe else "KARMA GATE"
                     logger.info(f"🙏 MANAS: Auto-executing [{reason}]: {intent.title}")
-                    self._execute_intent(entry)
+                    await self._execute_intent(entry)
 
         results = {
             "added_count": len(added),
@@ -1956,7 +1957,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         return None
 
-    def approve_intent(self, intent_id: str) -> bool:
+    async def approve_intent(self, intent_id: str) -> bool:
         """
         Approve an intent for execution.
 
@@ -1998,7 +1999,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}"}
             return False
 
-        return self._execute_intent(entry)
+        return await self._execute_intent(entry)
 
     def reject_intent(self, intent_id: str, reason: Optional[str] = None) -> bool:
         """
@@ -2351,24 +2352,37 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         """Find intent entry by ID."""
         return self._buffer.find(intent_id)
 
-    def _execute_intent(self, entry: IntentBufferEntry) -> bool:
+    async def _execute_intent(self, entry: IntentBufferEntry) -> bool:
         """
-        OPUS-167: Delegate intent execution to ActionManager (Karmendriya).
+        Internal helper to execute an intent entry via ActionManager.
 
-        The kernel decides WHAT to do (Manas), the ActionManager does it (Karmendriya).
+        This closes the loop between the Kernel (Manas) and ActionManager (Karmendriya).
         """
         # Get ledger from vibe_kernel
         ledger = getattr(self, "_ledger", None)
         if not ledger and self._vibe_kernel:
             ledger = self._vibe_kernel.ledger
 
-        return self._action_manager.execute(
+        return await self._action_manager.execute(
             entry=entry,
             ledger=ledger,
             vibe_kernel=self._vibe_kernel,
             buffer=self._buffer,
             activity_callback=self.record_activity,
         )
+
+    async def execute_intent(self, intent_id: str) -> bool:
+        """
+        OPUS-167: Delegate intent execution to ActionManager (Karmendriya).
+
+        The kernel decides WHAT to do (Manas), the ActionManager does it (Karmendriya).
+        """
+        entry = self._find_intent_entry(intent_id)
+        if not entry:
+            logger.warning(f"MANAS: Cannot execute intent {intent_id} - not found in buffer")
+            return False
+
+        return await self._execute_intent(entry)
 
     # NOTE: OPUS-110 Synaptic Learning (_update_synapses, _extract_trigger) moved to ActionManager (OPUS-167)
 
