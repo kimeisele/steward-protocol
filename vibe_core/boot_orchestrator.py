@@ -66,9 +66,9 @@ from vibe_core.operator_adapter import (
     UniversalOperatorAdapter,
 )
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
+from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 from vibe_core.protocols.operator_protocol import (
     GitState,
-    Intent,
     IntentType,
     KernelStatusType,
     OperatorType,
