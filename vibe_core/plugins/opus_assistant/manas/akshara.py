@@ -46,31 +46,12 @@ This creates a phonetically-grounded computation where:
 import json
 import logging
 from dataclasses import dataclass
-from enum import IntEnum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from vibe_core.reactor.matrix import Varga
+
 logger = logging.getLogger("MANAS.Akshara")
-
-
-# =============================================================================
-# VARGA (ARTICULATION CLASSES) - The 5 Layers
-# =============================================================================
-
-
-class Varga(IntEnum):
-    """
-    The 5 Vargas (articulation classes) of Sanskrit consonants.
-
-    Ordered by articulation position from throat (0) to lips (4).
-    This ordering is used for resonance calculation.
-    """
-
-    KANTHYA = 0  # Guttural (Throat) - KERNEL/DEEP
-    TALAVYA = 1  # Palatal (Palate) - COGNITION/FLOW
-    MURDHANYA = 2  # Retroflex (Cerebral) - REPAIR/HARD
-    DANTYA = 3  # Dental (Teeth) - INTERFACE/LINK
-    OSHTHYA = 4  # Labial (Lips) - OUTPUT/SURFACE
 
 
 # Sanskrit-to-English mapping for Vargas
