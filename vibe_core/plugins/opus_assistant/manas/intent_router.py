@@ -41,7 +41,7 @@ VAJRA Compliance:
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
@@ -51,6 +51,28 @@ if TYPE_CHECKING:
     from vibe_core.loaders import ActionLoader, ToolLoader
 
 from vibe_core.state.schema import ExecutionResult
+
+
+@dataclass
+class RouteResult:
+    """
+    Result of a routing decision in the IntentRouter.
+
+    This represents the outcome of routing an intent to a handler,
+    including success status, the handler that executed it, and the result data.
+
+    Attributes:
+        success: Whether the route/execution was successful
+        handler: Name of the handler that executed the intent
+        result: Dictionary containing the execution result data
+        error: Optional error message if execution failed
+    """
+
+    success: bool
+    handler: str
+    result: Dict[str, Any] = field(default_factory=dict)
+    error: Optional[str] = None
+
 
 from .intent_generator import Intent, IntentRisk
 from .router import get_handler_for_intent, list_handlers
@@ -310,8 +332,7 @@ class IntentRouter:
             # Below 70% is "uncertain" - fall back to normal routing
             if confidence < 0.70:
                 logger.debug(
-                    f"🧠 SAMSKARA: {trigger} has low confidence ({confidence:.2f}) - "
-                    f"using normal routing instead"
+                    f"🧠 SAMSKARA: {trigger} has low confidence ({confidence:.2f}) - using normal routing instead"
                 )
                 return None
 
@@ -320,18 +341,13 @@ class IntentRouter:
             action = top_rec.action
             handler_name = action.replace("action:", "").replace("_handler", "")
 
-            logger.debug(
-                f"🧠 SAMSKARA: Top recommendation for {trigger}: "
-                f"{handler_name} (confidence={confidence:.2f})"
-            )
+            logger.debug(f"🧠 SAMSKARA: Top recommendation for {trigger}: {handler_name} (confidence={confidence:.2f})")
 
             return {
                 "recommended_handler": handler_name,
                 "confidence": confidence,
                 "trigger": trigger,
-                "all_recommendations": [
-                    {"action": r.action, "weight": r.weight} for r in recommendations
-                ],
+                "all_recommendations": [{"action": r.action, "weight": r.weight} for r in recommendations],
             }
 
         except Exception as e:
