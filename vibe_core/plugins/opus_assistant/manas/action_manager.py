@@ -392,6 +392,9 @@ class ActionManager:
         # Synaptic Learning - Update weights based on outcome
         self._update_synapses(intent, success)
 
+        # OPUS-211: Emit ACTION_COMPLETED event for closed-loop feedback
+        self._emit_action_completed(intent, success, result, execution_time)
+
         if buffer:
             buffer.save()
 
@@ -915,6 +918,74 @@ class ActionManager:
             return parts[0]
 
         return None
+
+    # =========================================================================
+    # OPUS-211: PRAMANA - Closed-Loop Event Emission
+    # =========================================================================
+
+    def _emit_action_completed(
+        self,
+        intent: "Intent",
+        success: bool,
+        result: Dict[str, Any],
+        execution_time_ms: int,
+    ) -> None:
+        """
+        OPUS-211: Emit ACTION_COMPLETED event for closed-loop feedback.
+
+        This closes the Karma loop:
+        Manas (intention) → ActionManager (action) → EventBus (result) → Manas (learning)
+
+        The event allows CognitiveKernel to:
+        1. Update intent buffer status
+        2. Clear stale intent timers
+        3. Record pramana (verification proof)
+
+        Args:
+            intent: The executed intent
+            success: Whether execution succeeded
+            result: Execution result dict
+            execution_time_ms: Execution time in milliseconds
+        """
+        try:
+            from vibe_core.event_bus import Event, EventType, get_event_bus
+
+            event_bus = get_event_bus()
+
+            # Build pramana (proof of execution)
+            pramana = {
+                "executed_at": datetime.utcnow().isoformat(),
+                "execution_time_ms": execution_time_ms,
+                "success": success,
+                "error": result.get("error"),
+                "handler": result.get("handler"),
+            }
+
+            # Add file verification if applicable
+            if result.get("files_modified"):
+                pramana["files_modified"] = result["files_modified"]
+            if result.get("commit_hash"):
+                pramana["commit_hash"] = result["commit_hash"]
+
+            event = Event(
+                type=EventType.INTENT_EXECUTED,
+                source="action_manager",
+                data={
+                    "intent_id": intent.id,
+                    "intent_type": intent.intent_type,
+                    "success": success,
+                    "pramana": pramana,
+                    "result": result,
+                },
+            )
+
+            event_bus.emit(event)
+            logger.debug(f"📢 ACTION_COMPLETED event emitted for {intent.id}")
+
+        except ImportError:
+            logger.debug("EventBus not available - skipping ACTION_COMPLETED emission")
+        except Exception as e:
+            logger.warning(f"Failed to emit ACTION_COMPLETED event: {e}")
 
 
 # =============================================================================
