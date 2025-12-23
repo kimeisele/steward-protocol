@@ -16,7 +16,12 @@ from typing import Any, Dict, Optional, Protocol
 from vibe_core.di import ServiceRegistry
 from vibe_core.event_bus import Event, EventType
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
-from vibe_core.protocols import StateSyncWeaverProtocol, SystemHeartbeatProtocol, VibeKernel
+from vibe_core.protocols import (
+    CognitiveKernelProtocol,
+    StateSyncWeaverProtocol,
+    SystemHeartbeatProtocol,
+    VibeKernel,
+)
 
 logger = logging.getLogger("SYSTEM_HEARTBEAT")
 
@@ -43,31 +48,32 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
 
     def pulse(self) -> Dict[str, Any]:
         """
-        Execute a unified system pulse.
-        (Nationalized from legacy scripts)
+        Execute a unified system pulse via the Kernel.
         """
         if not self._kernel:
             logger.error("❌ Pulse failed: Kernel not injected")
             return {"success": False, "error": "No kernel"}
 
-        start_time = datetime.utcnow()
-        logger.info(f"💓 SYSTEM_HEARTBEAT: Pulse started at {start_time.isoformat()}")
+        # Delegate orchestration to the kernel
+        return self._kernel.pulse()
 
+    def on_pulse(self, kernel: VibeKernel, transaction: Any) -> Dict[str, Any]:
+        """
+        Implementation of the pulse for THIS plugin.
+        (Previously part of the monolithic pulse() method)
+        """
+        start_time = datetime.utcnow()
         results = {
             "success": True,
-            "timestamp": start_time.isoformat(),
             "snapshot": False,
             "state_sync": False,
-            "cognition": False,
         }
 
         # 1. PROJECTION (Snapshot)
         try:
             snapshot = self._generate_snapshot()
-            # Use kernel.io directly
-            if hasattr(self._kernel, "io"):
-                # Write snapshot through I/O service
-                self._kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="HEARTBEAT")
+            if hasattr(kernel, "io"):
+                kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="HEARTBEAT")
                 results["snapshot"] = True
                 logger.info("   + Snapshot projected: vibe_snapshot.json")
         except Exception as e:
@@ -82,7 +88,7 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
                 res = weaver.pulse()
                 results["state_sync"] = res.success
                 if res.success:
-                    logger.info(f"   ✅ State synchronized: {res.message}")
+                    logger.info(f"   ✅ State synchronized: {res.git_sha}")
                 else:
                     logger.warning(f"   ⚠️ State sync partial: {res.error}")
             else:
@@ -90,9 +96,6 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
         except Exception as e:
             logger.error(f"   ❌ Sync failed: {e}")
             results["success"] = False
-
-        duration = (datetime.utcnow() - start_time).total_seconds()
-        logger.info(f"💓 SYSTEM_HEARTBEAT: Pulse complete ({duration:.2f}s)")
 
         return results
 

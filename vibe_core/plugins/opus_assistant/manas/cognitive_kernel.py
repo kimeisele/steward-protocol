@@ -201,7 +201,7 @@ class IntentConfidence:
         }
 
 
-class CognitiveKernel(CognitiveKernelProtocol):
+class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     """
     MANAS Cognitive Kernel - The central Mind of OPUS.
 
@@ -276,16 +276,19 @@ class CognitiveKernel(CognitiveKernelProtocol):
 
         if ws not in cls._instances:
             logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
+            # Step 1: Create instance (minimal init)
             instance = cls(
                 workspace=ws,
                 config=config,
                 trace=trace,
                 event_bus=event_bus,
             )
+            # Step 2: Register IMMEDIATELY before booting to break recursion
             cls._instances[ws] = instance
-
-            # Register in DI for protocol-based discovery
             ServiceRegistry.register(CognitiveKernelProtocol, instance)
+
+            # Step 3: Boot (heavy operations)
+            instance.boot()
         else:
             logger.debug(f"🧠 MANAS: Reusing singleton instance for {ws}")
 
@@ -332,7 +335,7 @@ class CognitiveKernel(CognitiveKernelProtocol):
         event_bus: Optional[EventBus] = None,
     ):
         """
-        Initialize MANAS Cognitive Kernel.
+        Initialize MANAS Cognitive Kernel (Minimal State).
 
         OPUS-095: Integrated with CognitiveCycle for unified orchestration.
 
@@ -347,151 +350,145 @@ class CognitiveKernel(CognitiveKernelProtocol):
 
         self._workspace = workspace or Path.cwd()
         self._config = config or ManasConfig()
+        self._trace = trace
+        self._event_bus = event_bus
+        self._booted = False
+
+        # Placeholder for core components (loaded in boot())
+        self._memory = None
+        self._action_loader = None
+        self._sense_loader = None
+        self._analyzer_loader = None
+        self._tool_loader = None
+        self._semantic_engine = None
+        self._intent_generator = None
+        self._buffer = None
+        self._last_thought_time = None
+        self._last_activity_time = datetime.utcnow()
+        self._execution_callback = None
+        self._vibe_kernel = None
+        self._global_tool_registry = None
+        self._narasimha = None
+        self._sense_manager = None
+        self._prana_cooldowns = {}
+        self._prana_cooldown_minutes = 10
+        self._chitta = None
+        self._buddhi = None
+        self._bridges = {}
+        self._shiva = None
+        self._sankalpa = None
+        self._synaptic_memory = None
+        self._action_manager = None
+        self._biorhythm = None
+        self._awareness = {}
+
+    def boot(self) -> None:
+        """
+        Full boot of MANAS cognitive systems.
+
+        Separated from __init__ to allow early DI registration
+        and prevent recursion loops.
+        """
+        if self._booted:
+            return
+
+        logger.info("🧠 MANAS: Booting cognitive systems...")
 
         # Phase A System Integration: Setup trace and event bus if provided
-        if trace and event_bus:
-            self.setup(trace, event_bus, steward_context=None)
+        if self._trace and self._event_bus:
+            self.setup(self._trace, self._event_bus, steward_context=None)
 
         # 🔌 WIRE: Load full config/manas.yaml for feature configs
-        # ManasConfig only has core fields - features need their own sections
         self._full_config = self._load_full_config()
 
         # Core components
         self._memory = MemoryStore(workspace=self._workspace)
 
         # 🎯 OPUS-106: VEDA-4 Fractal Loaders (Private Scope)
-        # OPUS has its own isolated view of capabilities - "As Above, So Below"
-        # These loaders are OPUS's private brain, not shared with the system
         self._action_loader = ActionLoader(scope="opus_private")
         self._sense_loader = SenseLoader(scope="opus_private")
         self._analyzer_loader = AnalyzerLoader(scope="opus_private")
         self._tool_loader = ToolLoader(scope="opus_private", root_path=self._workspace)
 
-        # Pre-load cortex modules (warm the cache)
+        # Pre-load cortex modules
         self._action_loader.load()
         self._sense_loader.load()
         self._analyzer_loader.load()
         self._tool_loader.load()
-        logger.info("🎯 OPUS-106: Fractal Loaders initialized (scope=opus_private)")
 
         # 🧠 SEMANTIC ENGINE: The "Brain" (Lazy Loaded)
-        self._semantic_engine: Any = None
         self._init_semantic_engine()
 
-        # OPUS-167: Pass analyzer_loader to avoid duplicate loading
+        # Intent generation
         self._intent_generator = IntentGenerator(
             workspace=self._workspace,
             memory_store=self._memory,
             analyzer_loader=self._analyzer_loader,
         )
-        # Inject engine if available
         if self._semantic_engine:
             self._intent_generator.inject_semantic_engine(self._semantic_engine)
 
-        # OPUS-167: Intent buffer extracted to separate class
         self._buffer = IntentBuffer(
             workspace=self._workspace,
             max_size=self._config.max_intent_buffer_size,
             expiry_hours=self._config.intent_expiry_hours,
         )
 
-        # Rate limiting state
-        self._last_thought_time: Optional[datetime] = None
-        self._last_activity_time: datetime = datetime.utcnow()
-
-        # Callbacks for execution
-        self._execution_callback: Optional[Callable[[Intent], Dict[str, Any]]] = None
-
-        # ⚡ VAJRA: Core kernel reference for ledger binding
-        self._vibe_kernel: Optional["RealVibeKernel"] = None
-
-        # OPUS-112: Global tool registry for direct dispatch (SYSTEM ACT mode)
-        self._global_tool_registry: Optional["ToolRegistry"] = None
-
         # 🦁 NARASIMHA: The Cognitive Guardian (Conscience)
         from ..narasimha.guardian import CortexNarasimha
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
-        # OPUS-167: Unified Sense Manager (replaces individual _init_* calls)
+        # Unified Sense Manager
         self._sense_manager = SenseManager(
             workspace=self._workspace,
             config=self._full_config,
         )
         self._sense_manager.boot_all()
 
-        # Inject semantic engine into sutra sense if available
         if self._sense_manager.sutra_sense and self._semantic_engine:
             self._sense_manager.sutra_sense.inject_semantic_engine(self._semantic_engine)
 
-        # Post-boot setup for sense listeners (Shruta/Prana wiring)
         self._setup_sense_listeners()
 
-        # 🫀 PRANA SENSE: Cooldown tracking (kernel-specific, not in SenseManager)
-        # "Prana is the breath of the universe. When an agent breathes, it leaves a trace."
-        self._prana_cooldowns: Dict[str, datetime] = {}  # Cooldown per agent (avoid intent spam)
-        self._prana_cooldown_minutes: int = 10  # OPUS-035 pattern: 10 min between death intents
-
-        # 🧠 OPUS-168: ANTAHKARANA - The Inner Instrument
-        # Chitta (Perception Pool) + Buddhi (Intellect) form the decision layer
-        # This fixes: DharmaSense checked at DECIDE time, not EXECUTE time
+        # 🧠 OPUS-168: ANTAHKARANA
         self._chitta = Chitta(workspace=self._workspace)
         self._buddhi = Buddhi(workspace=self._workspace, dharma_sense=self._sense_manager.dharma_sense)
-        logger.info("🧠 OPUS-168: Antahkarana initialized (Chitta + Buddhi)")
 
-        # =================================================================
-        # OPUS-171: BridgeLoader - Auto-discover all bridges (VEDA-4)
-        # =================================================================
-        # Replaces manual instantiation of GenesisBridge, WeaverBridge, LoggerBridge
+        # Bridges
         self._bridges, bridge_meta = BridgeLoader.discover_and_load(
             workspace=self._workspace,
             config=self._full_config,
         )
-        logger.info(
-            f"🌉 OPUS-171: {len(self._bridges)} bridges loaded via BridgeLoader ({', '.join(self._bridges.keys())})"
-        )
-
-        # Expose bridges as named attributes for backward compatibility
         self._genesis_bridge = self._bridges.get("genesis_bridge")
         self._weaver_bridge = self._bridges.get("weaver_bridge")
         self._logger_bridge = self._bridges.get("logger_bridge")
 
-        # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
+        # 🕉️ SHIVA: The Destroyer of Illusions
         shiva_config = self._full_config.get("shiva", {})
         self._shiva = ShivaLifecycleManager(workspace=self._workspace, config=shiva_config)
-        self._shiva.inject_kernel(self)
 
-        # 🌙 SANKALPA: Strategic Will - Proactive Mission Planning (OPUS-089)
-        self._sankalpa = None
+        # 🌙 SANKALPA: Strategic Will
         self._init_sankalpa()
 
-        # 🧠 OPUS-112: SYNAPTIC MEMORY - The Reading Brain
-        # Inference engine for experience-based decision making
+        # 🧠 SYNAPTIC MEMORY
         from .triggers import SynapticMemory
 
         self._synaptic_memory = SynapticMemory.get(self._workspace)
-        logger.info(
-            f"🧠 OPUS-112: Synaptic Memory initialized "
-            f"({self._synaptic_memory.get_stats()['total_connections']} connections)"
-        )
 
-        # OPUS-167: Action Manager (Karmendriya) - The Action Organs
-        # Handles all intent execution, routing, and learning
+        # Action Manager
         self._action_manager = ActionManager(
             workspace=self._workspace,
             memory=self._memory,
             synaptic=self._synaptic_memory,
         )
-        # Inject dependencies that are initialized lazily
         self._action_manager.inject_narasimha(self._narasimha)
 
-        # OPUS-176: Biorhythm Processor - handles tick(), consciousness states
+        # Biorhythm
         self._biorhythm = BiorhythmProcessor(kernel=self)
-        self._awareness: Dict[str, Any] = {}  # Shared with biorhythm
 
-        logger.info(
-            "MANAS Cognitive Kernel initialized (with Shiva + Sankalpa + Synaptic Inference + Karmendriya + Biorhythm)"
-        )
+        self._booted = True
+        logger.info("🧠 MANAS: Cognitive systems online.")
 
     # =========================================================================
     # 🧠 SEMANTIC ENGINE: INTELLIGENCE UPGRADE (OPUS-096)
@@ -1591,7 +1588,7 @@ class CognitiveKernel(CognitiveKernelProtocol):
             (perceptions, metadata) where perceptions is processed PerceptionEntry list
         """
         # 🕉️ SHIVA: Sweep stale intents (destroy illusions)
-        swept = self._shiva.sweep_stale_intents()
+        swept = self._shiva.sweep_stale_intents(self)
         if swept > 0:
             logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents")
 
@@ -1806,10 +1803,14 @@ class CognitiveKernel(CognitiveKernelProtocol):
         Returns:
             Dict with state, consciousness_level, and should_think
         """
+        if not self._booted:
+            return {"state": "booting", "consciousness_level": 0.0, "should_think": False}
         return self._biorhythm.tick()
 
     def get_awareness(self) -> Dict[str, Any]:
         """Get current awareness state (for dashboard/templates)."""
+        if not self._booted:
+            return {"state": "booting"}
         return self._biorhythm.get_awareness()
 
     def _is_intent_expired(self, intent: Intent) -> bool:
@@ -1974,10 +1975,14 @@ class CognitiveKernel(CognitiveKernelProtocol):
 
     def get_pending_intents(self) -> List[Intent]:
         """Get all pending intents (for OPUS.md display)."""
+        if not self._booted:
+            return []
         return self._buffer.get_pending()
 
     def get_intent_buffer(self) -> List[IntentBufferEntry]:
         """Get the full intent buffer."""
+        if not self._booted:
+            return []
         return self._buffer.get_all()
 
     def set_execution_callback(self, callback: Callable[[Intent], Dict[str, Any]]) -> None:

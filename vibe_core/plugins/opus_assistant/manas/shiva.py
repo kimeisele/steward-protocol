@@ -74,20 +74,7 @@ class ShivaLifecycleManager:
     def __init__(self, workspace: Path, config: Optional[Dict[str, Any]] = None):
         self._workspace = workspace
         self._config = config or {}
-        self.kernel: Optional[CognitiveKernelProtocol] = None
         logger.info(f"🕉️ Shiva: Lifecycle Manager initialized (config: {len(self._config)} keys)")
-
-    @property
-    def kernel(self) -> Optional[CognitiveKernelProtocol]:
-        """Lazy-discover kernel via DI if not provided."""
-        if self._kernel is None:
-            self.kernel = ServiceRegistry.get(CognitiveKernelProtocol)
-        return self.kernel
-
-    def inject_kernel(self, kernel: CognitiveKernelProtocol) -> None:
-        """Inject the CognitiveKernel for access to intent buffer."""
-        self._kernel = kernel
-        logger.debug("Shiva: Kernel injected")
 
     def check_external_fulfillment(self, intent: Intent) -> FulfillmentResult:
         """
@@ -202,21 +189,17 @@ class ShivaLifecycleManager:
             logger.warning(f"Shiva: Git status check failed: {e}")
             return True  # Assume dirty if can't check
 
-    def sweep_stale_intents(self) -> int:
+    def sweep_stale_intents(self, kernel: CognitiveKernelProtocol) -> int:
         """
         Sweep through intent buffer and archive fulfilled/stale intents.
 
         Returns:
             Number of intents archived
         """
-        if not self.kernel:
-            logger.warning("Shiva: No kernel injected, cannot sweep")
-            return 0
-
         archived = 0
 
         # OPUS-174: Use _buffer (IntentBuffer), not _intent_buffer
-        for entry in self.kernel._buffer:
+        for entry in kernel._buffer:
             if entry.status != "pending":
                 continue
 
@@ -233,7 +216,7 @@ class ShivaLifecycleManager:
 
         if archived > 0:
             # IntentBuffer.save() persists to disk
-            self.kernel._buffer.save()
+            kernel._buffer.save()
             logger.info(f"🕉️ Shiva: Swept {archived} fulfilled intents")
 
         return archived

@@ -20,7 +20,8 @@ from vibe_core.boot_mode import BootMode  # OPUS-031 Layer 4: Autonomous Conduct
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
-from vibe_core.state.prakriti import Prakriti  # PRAKRITI WIRING
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import PrakritiProtocol
 
 # Import Legacy CLI for fallback/system commands
 # Suppress deprecation warning during import if we add it later
@@ -38,13 +39,22 @@ class UnifiedCLI:
     2. Plugin commands (verify, etc) -> Fractal CLIExecutor
     """
 
+    @property
+    def prakriti(self) -> PrakritiProtocol:
+        """Lazy access to unified state engine via DI."""
+        prakriti = ServiceRegistry.get(PrakritiProtocol)
+        if not prakriti:
+            # Fallback for CLI standalone mode
+            from vibe_core.state.prakriti import Prakriti
+
+            prakriti = Prakriti.from_workspace(".")
+            ServiceRegistry.register(PrakritiProtocol, prakriti)
+        return prakriti
+
     def __init__(self):
         self._loader = CLILoader()
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
-
-        # PRAKRITI WIRING - The Unified State Engine (OPUS-009)
-        self._prakriti = Prakriti.from_workspace(".")
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -283,7 +293,7 @@ class UnifiedCLI:
         steward state
         """
         try:
-            status = self._prakriti.get_system_status()
+            status = self.prakriti.get_system_status()
             print(json.dumps(status, indent=2, default=str))
             return 0
         except Exception as e:
@@ -297,9 +307,9 @@ class UnifiedCLI:
         """
         try:
             if "--main" in args:
-                diff = self._prakriti.diff_main()
+                diff = self.prakriti.diff_main()
             else:
-                diff = self._prakriti.diff("HEAD~1")
+                diff = self.prakriti.diff("HEAD~1")
 
             print("📊 Git Diff Stats")
             print(f"   Files changed: {diff.files_changed}")

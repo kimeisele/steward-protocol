@@ -67,6 +67,9 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import PrakritiProtocol
+
 logger = logging.getLogger("OPUS_DASHBOARD")
 
 
@@ -329,9 +332,10 @@ class OpusDashboardRenderer:
     def _gather_git_state(self) -> Dict[str, Any]:
         """Gather git state from Prakriti."""
         try:
-            from vibe_core.state.prakriti import Prakriti
+            prakriti = ServiceRegistry.get(PrakritiProtocol)
+            if not prakriti:
+                return {"branch": "unknown", "sha": "unknown", "dirty": False, "uncommitted_files": []}
 
-            prakriti = Prakriti(self._root)
             status = prakriti.git.status()
 
             uncommitted = []
@@ -381,10 +385,8 @@ class OpusDashboardRenderer:
         # Fallback/supplement with Prakriti session
         if not session_data:
             try:
-                from vibe_core.state.prakriti import Prakriti
-
-                prakriti = Prakriti(self._root)
-                session = getattr(prakriti, "session", None)
+                prakriti = ServiceRegistry.get(PrakritiProtocol)
+                session = getattr(prakriti, "session", None) if prakriti else None
                 if session:
                     session_data = {
                         "id": session.session_id,
@@ -428,9 +430,9 @@ class OpusDashboardRenderer:
         purusha = {"thought_count": 0, "persona": None}
 
         try:
-            from vibe_core.state.prakriti import Prakriti
-
-            prakriti = Prakriti(self._root)
+            prakriti = ServiceRegistry.get(PrakritiProtocol)
+            if not prakriti:
+                return {"purusha": purusha}
 
             # Ephemeral thoughts
             if hasattr(prakriti.ephemeral, "get_thoughts"):
@@ -452,10 +454,8 @@ class OpusDashboardRenderer:
 
         # Git dirty?
         try:
-            from vibe_core.state.prakriti import Prakriti
-
-            prakriti = Prakriti(self._root)
-            if prakriti.git.status().get("dirty"):
+            prakriti = ServiceRegistry.get(PrakritiProtocol)
+            if prakriti and prakriti.git.status().get("dirty"):
                 focus.append("Commit pending changes")
         except Exception:
             pass
@@ -832,9 +832,10 @@ class OpusDashboardRenderer:
     def _gather_zipper(self) -> Dict[str, Any]:
         """Gather cryptographic zipper state."""
         try:
-            from vibe_core.state.prakriti import Prakriti
+            prakriti = ServiceRegistry.get(PrakritiProtocol)
+            if not prakriti:
+                return {"git_sha": "unknown", "ledger_hash": "unknown", "synced": False}
 
-            prakriti = Prakriti(self._root)
             git_sha = prakriti.git.head_sha()
             ledger_hash = prakriti.ledger.get_current_head_hash() or "empty"
             last_sync = prakriti.ledger.get_last_sync_commit()
