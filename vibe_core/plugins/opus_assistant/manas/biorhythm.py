@@ -37,8 +37,10 @@ class BiorhythmState:
     last_tick_time: Optional[datetime] = None
 
     # Cached input values (recomputed periodically)
+    # OPUS-211: Default cached_health to 0.7 (development-friendly)
+    # MANAS should start in a healthy state, not penalized for missing data
     cached_urgency: float = 0.0
-    cached_health: float = 0.5
+    cached_health: float = 0.7  # Changed from 0.5 - assume healthy until proven otherwise
     cached_rhythm: float = 0.5
 
 
@@ -131,29 +133,55 @@ class BiorhythmProcessor:
         Compute consciousness level (0.0 - 1.0) from multiple signals.
 
         Inputs:
-        - Synaptic urgency (0.5 weight) - learned patterns firing
-        - Prakriti health (0.3 weight) - system guna state
-        - Kala rhythm (0.2 weight) - cosmic time (optional)
+        - Synaptic urgency
+        - Prakriti health
+        - Kala rhythm
+
+        Uses weights from config/manas.yaml (biorhythm.weights).
         """
         tick = self._state.tick_count
 
-        # 1. Synaptic urgency (REQUIRED - 0.5 weight)
+        # Get weights from config (or defaults)
+        # Assuming CognitiveKernel exposes full config or biorhythm section
+        weights = {"synaptic_urgency": 0.5, "prakriti_health": 0.3, "kala_rhythm": 0.2}
+        try:
+            full_config = getattr(self._kernel, "_full_config", {})
+            if full_config and "biorhythm" in full_config:
+                weights = full_config["biorhythm"].get("weights", weights)
+        except Exception:
+            pass
+
+        # 1. Synaptic urgency
         if tick % 10 == 0:
             self._state.cached_urgency = self._kernel._get_synaptic_urgency()
 
-        # 2. Prakriti health (REQUIRED - 0.3 weight)
+        # 2. Prakriti health
+        # OPUS-211: Improved error handling with logging
         if tick % 10 == 0:
             try:
                 prakriti = self._kernel._prakriti_sense
                 if prakriti:
                     guna = prakriti.perceive_state()
-                    self._state.cached_health = guna.health_ratio if guna else 0.5
+                    if guna:
+                        self._state.cached_health = guna.health_ratio
+                        logger.debug(
+                            f"🫀 Biorhythm: prakriti_health={guna.health_ratio:.2f} "
+                            f"(S:{guna.sattva_count} R:{guna.rajas_count} T:{guna.tamas_count})"
+                        )
+                    else:
+                        # No guna returned - use development-friendly default
+                        self._state.cached_health = 0.7
+                        logger.warning("🫀 Biorhythm: prakriti.perceive_state() returned None, using 0.7")
                 else:
-                    self._state.cached_health = 0.5
-            except Exception:
-                self._state.cached_health = 0.5
+                    # No prakriti sense - development mode
+                    self._state.cached_health = 0.7
+                    logger.debug("🫀 Biorhythm: No prakriti_sense, using default 0.7")
+            except Exception as e:
+                # Log the actual error so we can debug
+                self._state.cached_health = 0.7
+                logger.warning(f"🫀 Biorhythm: prakriti_health failed: {e}, using 0.7")
 
-        # 3. Kala rhythm (OPTIONAL - 0.2 weight)
+        # 3. Kala rhythm
         if tick % 20 == 0:
             try:
                 kernel_ref = self._kernel._kernel
@@ -169,10 +197,43 @@ class BiorhythmProcessor:
             except Exception:
                 self._state.cached_rhythm = 0.5
 
-        # Combine with weights
-        level = (
-            (self._state.cached_urgency * 0.5) + (self._state.cached_health * 0.3) + (self._state.cached_rhythm * 0.2)
+        # OPUS-211 ARCHITECTURE FIX by Opus 4.5:
+        #
+        # Philosophy: MANAS serves by being RESILIENT, not by collapsing under
+        # the mistakes of others. Prabhupada Patch says "serve, not suffer."
+        #
+        # OLD (fragile): level = urgency*0.5 + health*0.3 + rhythm*0.2
+        #   Problem: health=0 → MANAS dies. Too dependent on external state.
+        #
+        # NEW (resilient):
+        #   base = 0.4 (MANAS starts healthy, assumes good faith)
+        #   + urgency boost when there's work
+        #   + rhythm boost from Kala
+        #   - health penalty ONLY if truly sick (Tamas dominant)
+        #
+        # Key: Rajas (development) should BOOST, not lower consciousness.
+        # Development IS work. Work IS good. MANAS wakes up for activity.
+
+        base = 0.4  # MANAS is healthy by default ("innocent until proven guilty")
+
+        # Urgency BOOSTS consciousness (work to do = wake up)
+        urgency_boost = self._state.cached_urgency * weights.get("synaptic_urgency", 0.3)
+
+        # Rhythm from Kala (cosmic time)
+        rhythm_boost = self._state.cached_rhythm * weights.get("kala_rhythm", 0.2)
+
+        # Health penalty ONLY when truly sick (health < 0.3 = Tamas dominant)
+        health_penalty = 0.0
+        if self._state.cached_health < 0.3:
+            health_penalty = (0.3 - self._state.cached_health) * 0.5  # Max -0.15
+
+        level = base + urgency_boost + rhythm_boost - health_penalty
+
+        logger.debug(
+            f"🫀 Consciousness: base=0.4 + urgency={urgency_boost:.2f} "
+            f"+ rhythm={rhythm_boost:.2f} - health_penalty={health_penalty:.2f} = {level:.2f}"
         )
+
         return min(1.0, max(0.0, level))
 
     def _tamas_tick(self) -> Dict[str, Any]:

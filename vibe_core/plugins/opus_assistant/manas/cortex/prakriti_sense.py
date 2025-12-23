@@ -115,13 +115,30 @@ class GunaSummary:
     tamas_count: int  # Dead, stale, ignored
     total_plugins: int
     total_paths: int
+    weights: Optional[Dict[str, float]] = None
 
     @property
     def health_ratio(self) -> float:
-        """Ratio of healthy (Sattva) state to total. 1.0 = perfect health."""
+        """
+        Ratio of healthy state to total. 1.0 = perfect health.
+
+        Uses configured weights if available.
+
+        OPUS-211 FIX: Default now treats Rajas as healthy (0.8).
+        Development IS change. Only Tamas indicates actual problems.
+        """
         if self.total_paths == 0:
             return 1.0
-        return self.sattva_count / self.total_paths
+
+        # Default: Development-friendly (Rajas is healthy, not penalized)
+        w = self.weights or {"sattva": 1.0, "rajas": 0.8, "tamas": 0.0}
+
+        weighted_sum = (
+            (self.sattva_count * w.get("sattva", 1.0))
+            + (self.rajas_count * w.get("rajas", 0.8))
+            + (self.tamas_count * w.get("tamas", 0.0))
+        )
+        return weighted_sum / self.total_paths
 
     @property
     def needs_attention(self) -> bool:
@@ -259,7 +276,37 @@ class PrakritiSense(BaseSense):
             tamas_count=guna_counts.get("tamas", 0),
             total_plugins=len(discovered),
             total_paths=sum(len(infos) for infos in discovered.values()),
+            weights=self._get_guna_weights(),
         )
+
+    def _get_guna_weights(self) -> Dict[str, float]:
+        """
+        Get Guna weights from config.
+
+        OPUS-211 FIX: NEVER return None. Always return sensible defaults.
+
+        In active development, Rajas (dirty/changing files) should be
+        considered healthy - development IS change. Only Tamas (stale/broken)
+        indicates actual problems.
+        """
+        # Production defaults that treat Rajas as healthy (development is change!)
+        DEFAULT_WEIGHTS = {"sattva": 1.0, "rajas": 0.8, "tamas": 0.0}
+
+        # Config might be the full manas.yaml or just the section
+        # Try to find the section first
+        section = self.config.get("prakriti_sense", self.config)
+        weights = section.get("guna_weights", {})
+
+        if not weights:
+            logger.debug(
+                "[PRAKRITI_SENSE] No guna_weights in config, using defaults: sattva=1.0, rajas=0.8, tamas=0.0"
+            )
+            return DEFAULT_WEIGHTS
+
+        # Ensure we have floats and merge with defaults
+        result = DEFAULT_WEIGHTS.copy()
+        result.update({k: float(v) for k, v in weights.items()})
+        return result
 
     def perceive(self, context: Optional[Dict[str, Any]] = None) -> GunaSummary:
         """
