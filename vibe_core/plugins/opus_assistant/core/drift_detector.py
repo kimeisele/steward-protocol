@@ -250,18 +250,82 @@ class DriftDetector:
 
         Faster than full detect() - only checks for broken @HARNESS refs.
 
+        IMPORTANT: Only treats REAL production code as critical.
+        Tests, placeholders, and garbage refs are warnings only.
+
         Returns:
             Dict with quick check results
         """
         harness_files = self._get_harness_files()
         missing = []
+        missing_critical = []  # Only production code
 
         for f in harness_files:
             if not (self._root / f).exists():
                 missing.append(f)
+                # Only critical if it's REAL production code
+                if self._is_critical_missing(f):
+                    missing_critical.append(f)
 
         return {
             "total_tracked": len(harness_files),
             "missing_files": missing,
-            "healthy": len(missing) == 0,
+            "missing_critical": missing_critical,
+            # HEALTHY if no CRITICAL files missing (tests/garbage are warnings)
+            "healthy": len(missing_critical) == 0,
         }
+
+    def _is_critical_missing(self, path: str) -> bool:
+        """
+        Check if a missing file is CRITICAL (production code).
+
+        NOT critical (just warnings):
+        - Test files (tests/*.py)
+        - Placeholder paths (your/module/*.py)
+        - Python commands parsed as paths (python -c "...")
+        - State files (.opus_state/*)
+        - Rationale/docs without extension
+
+        CRITICAL (real production code):
+        - vibe_core/*.py (not tests)
+        - config/*.py
+
+        Args:
+            path: File path to check
+
+        Returns:
+            True if this is critical production code
+        """
+        # Obvious garbage - not a real path
+        if path.startswith("python ") or path.startswith("python3 "):
+            return False
+        if "/" not in path and not path.endswith(".py"):
+            return False  # Single word like "rationale"
+        if path.startswith("your/") or path.startswith("example/"):
+            return False  # Placeholders
+
+        # Test files - important but not critical for health
+        if path.startswith("tests/") or "/tests/" in path or "/test_" in path:
+            return False
+
+        # State files - regenerated
+        if path.startswith(".opus_state/") or path.startswith(".vibe/"):
+            return False
+
+        # Known hallucinated documentation references (never existed)
+        hallucinated = {
+            "vibe_core/plugins/opus_assistant/manas/cortex/backlog_sense.py",
+            "vibe_core/plugins/opus_assistant/manas/intent_bridge.py",
+        }
+        if path in hallucinated:
+            return False
+
+        # Only critical: production code in vibe_core or config
+        if path.startswith("vibe_core/") and path.endswith(".py"):
+            # But not test files inside vibe_core
+            if "/tests/" not in path and "/test_" not in path:
+                return True
+        if path.startswith("config/") and path.endswith(".py"):
+            return True
+
+        return False
