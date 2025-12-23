@@ -41,21 +41,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import ClassVar, List, Optional
 
+from vibe_core.state.schema import CommitResult
+
 logger = logging.getLogger("COMMIT_AUTHORITY")
-
-
-@dataclass
-class CommitResult:
-    """Result of a commit attempt."""
-
-    success: bool
-    commit_hash: Optional[str] = None
-    error: Optional[str] = None
-    skipped_reason: Optional[str] = None
-
-    def __bool__(self) -> bool:
-        """Allow using result in boolean context."""
-        return self.success
 
 
 class CommitAuthority:

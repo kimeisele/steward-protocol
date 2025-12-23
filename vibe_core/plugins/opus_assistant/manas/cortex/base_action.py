@@ -27,31 +27,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
+from vibe_core.state.schema import ActionResult
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
-
-
-@dataclass
-class ActionResult:
-    """Result of an action execution."""
-
-    success: bool
-    action_name: str
-    intent_type: str
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            "success": self.success,
-            "action_name": self.action_name,
-            "intent_type": self.intent_type,
-            "result": self.result,
-            "error": self.error,
-            "metadata": self.metadata,
-        }
 
 
 class BaseAction(ABC):

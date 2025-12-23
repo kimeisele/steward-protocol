@@ -20,6 +20,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from vibe_core import Task, VibeAgent
+from vibe_core.state.schema import ExecutionResult
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -84,7 +85,7 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
 
         logger.info("✅ AMBASSADOR: Ready for community engagement")
 
-    async def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> ExecutionResult:
         """
         Process task from kernel scheduler.
 
@@ -116,14 +117,26 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
             elif action == "status":
                 result = self._status()
             else:
-                result = {"error": f"Unknown action: {action}"}
+                return ExecutionResult(success=False, error=f"Unknown action: {action}")
 
             logger.info(f"✅ AMBASSADOR task completed: {action}")
-            return result
+
+            # Check for success/failure in the result dict
+            success = True
+            error = None
+
+            if "error" in result:
+                success = False
+                error = result["error"]
+            elif result.get("status") in ["failed", "error", "not_implemented"]:
+                success = False
+                error = result.get("error", "Task failed")
+
+            return ExecutionResult(success=success, result=result, error=error)
 
         except Exception as e:
             logger.error(f"❌ AMBASSADOR task failed: {str(e)}")
-            return {"error": str(e), "status": "failed"}
+            return ExecutionResult(success=False, error=str(e))
 
     async def _answer_question(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """

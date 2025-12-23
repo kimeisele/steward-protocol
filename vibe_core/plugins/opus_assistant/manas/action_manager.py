@@ -171,14 +171,7 @@ class ToolSelector:
         return self.INTENT_TOOL_MAP.get(intent_type, self.INTENT_TOOL_MAP["default"])
 
 
-@dataclass
-class ExecutionResult:
-    """Result of intent execution."""
-
-    success: bool
-    result: Dict[str, Any]
-    execution_time_ms: int = 0
-    blocked_reason: Optional[str] = None
+from vibe_core.state.schema import ExecutionResult
 
 
 class ActionManager:

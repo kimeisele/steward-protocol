@@ -20,6 +20,8 @@ import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.state.schema import RouteResult
+
 if TYPE_CHECKING:
     from vibe_core.ephemeral import EphemeralStorage
     from vibe_core.kernel_impl import RealVibeKernel
@@ -27,18 +29,6 @@ if TYPE_CHECKING:
     from vibe_core.state.unified_akshara import UnifiedAkshara
 
 logger = logging.getLogger("LAYERED_ROUTER")
-
-
-@dataclass
-class RouteResult:
-    """Result of routing decision."""
-
-    circuit_id: str
-    confidence: float
-    layer: str  # "exact", "exact_prefix", "semantic", "context", "fallback"
-    extracted_params: Dict[str, str] = field(default_factory=dict)
-    syscall_type: Optional[str] = None
-    target_agent: Optional[str] = None
 
 
 class LayeredRouter:
@@ -151,14 +141,14 @@ class LayeredRouter:
         # Layer 1: Exact match
         result = self._layer1_exact(normalized, user_input)
         if result:
-            logger.debug(f"[L1] Exact match: {result.circuit_id}")
+            logger.debug(f"[L1] Exact match: {result.target_id}")
             self._record_route(result)
             return result
 
         # Layer 2: Semantic match
         result = self._layer2_semantic(user_input)
         if result:
-            logger.debug(f"[L2] Semantic match: {result.circuit_id} (conf={result.confidence:.2f})")
+            logger.debug(f"[L2] Semantic match: {result.target_id} (conf={result.confidence:.2f})")
 
             # Layer 3: Context boost (if available)
             if self._ephemeral or self._kg:
@@ -171,7 +161,7 @@ class LayeredRouter:
         if self._ephemeral or self._kg:
             result = self._layer3_context_only(user_input)
             if result:
-                logger.debug(f"[L3] Context route: {result.circuit_id}")
+                logger.debug(f"[L3] Context route: {result.target_id}")
                 self._record_route(result)
                 return result
 
@@ -179,17 +169,19 @@ class LayeredRouter:
         if self._akshara:
             result = self._layer_akshara(user_input)
             if result:
-                logger.debug(f"[L3.5] Akshara route: {result.circuit_id}")
+                logger.debug(f"[L3.5] Akshara route: {result.target_id}")
                 self._record_route(result)
                 return result
 
         # Fallback
         logger.debug(f"[FALLBACK] No match, using {self._fallback_circuit}")
         return RouteResult(
-            circuit_id=self._fallback_circuit,
+            target_id=self._fallback_circuit,
+            target_type="circuit",
             confidence=0.3,
-            layer="fallback",
-            extracted_params={"user_input": user_input},
+            reason="fallback",
+            params={"user_input": user_input},
+            is_fallback=True,
         )
 
     def _layer1_exact(self, normalized: str, original: str) -> Optional[RouteResult]:
@@ -197,20 +189,22 @@ class LayeredRouter:
         # Direct match
         if normalized in self._exact_index:
             return RouteResult(
-                circuit_id=self._exact_index[normalized],
+                target_id=self._exact_index[normalized],
+                target_type="circuit",
                 confidence=1.0,
-                layer="exact",
-                extracted_params={},
+                reason="exact",
+                params={},
             )
 
         # Prefix match (command with args)
         for pattern, circuit_id in self._exact_index.items():
             if normalized.startswith(pattern + " "):
                 return RouteResult(
-                    circuit_id=circuit_id,
+                    target_id=circuit_id,
+                    target_type="circuit",
                     confidence=0.95,
-                    layer="exact_prefix",
-                    extracted_params={"args": original[len(pattern) + 1 :]},
+                    reason="exact_prefix",
+                    params={"args": original[len(pattern) + 1 :]},
                 )
 
         return None
@@ -230,13 +224,18 @@ class LayeredRouter:
                         params = self._extract_params(circuit_id, user_input)
                         metadata = self._semantic_metadata.get(circuit_id, {})
 
+                        # Add metadata to params for schema compliance
+                        if metadata.get("syscall_type"):
+                            params["syscall_type"] = metadata.get("syscall_type")
+                        if metadata.get("target_agent"):
+                            params["target_agent"] = metadata.get("target_agent")
+
                         best_match = RouteResult(
-                            circuit_id=circuit_id,
+                            target_id=circuit_id,
+                            target_type="circuit",
                             confidence=min(0.95, 0.7 + (score * 0.25)),
-                            layer="semantic",
-                            extracted_params=params,
-                            syscall_type=metadata.get("syscall_type"),
-                            target_agent=metadata.get("target_agent"),
+                            reason="semantic",
+                            params=params,
                         )
 
         return best_match
@@ -274,7 +273,7 @@ class LayeredRouter:
         # Recent circuit usage
         if self._ephemeral:
             recent = self._ephemeral.get("recent_circuits", [])
-            if result.circuit_id in recent[-5:]:
+            if result.target_id in recent[-5:]:
                 boost += 0.05
 
         # Knowledge graph concept match
@@ -282,7 +281,7 @@ class LayeredRouter:
             concepts = self._extract_concepts(user_input)
             for concept in concepts:
                 agent = self._kg.resolver.get_agent_for_concept(concept)
-                if agent and agent == result.target_agent:
+                if agent and agent == result.params.get("target_agent"):
                     boost += 0.1
                     break
 
@@ -313,10 +312,11 @@ class LayeredRouter:
             best = max(scores.items(), key=lambda x: x[1])
             if best[1] >= 0.3:
                 return RouteResult(
-                    circuit_id=best[0],
+                    target_id=best[0],
+                    target_type="circuit",
                     confidence=min(0.7, 0.5 + best[1]),
-                    layer="context",
-                    extracted_params={},
+                    reason="context",
+                    params={},
                 )
 
         return None
@@ -361,10 +361,11 @@ class LayeredRouter:
             confidence = min(0.75, 0.5 + winner.unified_score * 0.3)
 
             return RouteResult(
-                circuit_id=winner.action,
+                target_id=winner.action,
+                target_type="circuit",
                 confidence=confidence,
-                layer="akshara",
-                extracted_params={"trigger": trigger},
+                reason="akshara",
+                params={"trigger": trigger},
             )
 
         return None
@@ -426,5 +427,5 @@ class LayeredRouter:
         """Record route to ephemeral for future context."""
         if self._ephemeral:
             recent = self._ephemeral.get("recent_circuits", [])
-            recent.append(result.circuit_id)
+            recent.append(result.target_id)
             self._ephemeral.set("recent_circuits", recent[-10:])  # Keep last 10
