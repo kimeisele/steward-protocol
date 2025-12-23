@@ -941,6 +941,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         Called after SenseManager.boot_all() to:
         1. Start Shruta filesystem listeners
         2. Register Prana with Shruta for real-time updates
+        3. OPUS-211: Subscribe to INTENT_EXECUTED for Pramana feedback
         """
         try:
             # Setup Shruta listeners
@@ -959,8 +960,67 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 self._prana_sense.register_with_shruta(self._shruta_sense)
                 logger.debug("🫀 PRANA SENSE: Connected to ShrutaSense")
 
+            # OPUS-211: Subscribe to INTENT_EXECUTED for Pramana feedback loop
+            self._setup_pramana_listener()
+
         except Exception as e:
             logger.warning(f"Sense listener setup failed: {e}")
+
+    def _setup_pramana_listener(self) -> None:
+        """
+        OPUS-211: Setup listener for ACTION_COMPLETED events.
+
+        This closes the Karma loop:
+        ActionManager executes → Emits INTENT_EXECUTED → CognitiveKernel updates buffer
+        """
+        try:
+            from vibe_core.event_bus import EventType, get_event_bus
+
+            event_bus = get_event_bus()
+
+            def on_intent_executed(event):
+                """Pramana callback: Process action completion."""
+                try:
+                    data = event.data if hasattr(event, "data") else {}
+                    intent_id = data.get("intent_id")
+                    success = data.get("success", False)
+                    pramana = data.get("pramana", {})
+                    error = data.get("result", {}).get("error")
+
+                    if not intent_id or not self._buffer:
+                        return
+
+                    # Update buffer with execution result
+                    if success:
+                        self._buffer.update_status(
+                            intent_id=intent_id,
+                            status="executed",
+                            executed_at=pramana.get("executed_at"),
+                            execution_result=data.get("result"),
+                            pramana=pramana,
+                        )
+                        logger.info(f"✅ PRAMANA: Intent {intent_id} fulfilled (Karma complete)")
+                    else:
+                        self._buffer.update_status(
+                            intent_id=intent_id,
+                            status="failed",
+                            executed_at=pramana.get("executed_at"),
+                            execution_result={"error": error},
+                            pramana=pramana,
+                        )
+                        logger.warning(f"❌ PRAMANA: Intent {intent_id} failed: {error}")
+
+                except Exception as e:
+                    logger.debug(f"PRAMANA listener error: {e}")
+
+            # Subscribe to INTENT_EXECUTED events
+            event_bus.subscribe(EventType.INTENT_EXECUTED, on_intent_executed)
+            logger.debug("🔔 PRAMANA: Subscribed to INTENT_EXECUTED events")
+
+        except ImportError:
+            logger.debug("EventBus not available - Pramana listener skipped")
+        except Exception as e:
+            logger.warning(f"Pramana listener setup failed: {e}")
 
     def _perceive_and_generate_presence_intents(self) -> List[Intent]:
         """
@@ -1828,6 +1888,12 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
     def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
         """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""
+        # OPUS-211: Housekeeping - Mark stale intents before thinking
+        if self._buffer:
+            stale_count = self._buffer.cleanup_stale()
+            if stale_count > 0:
+                logger.warning(f"🧹 MANAS: Marked {stale_count} stale intents (TTL exceeded)")
+
         if not force and not self._should_think():
             return []
         if (context or {}).get("trigger") in ("git_change", "file_change") and self._is_self_triggered_change():
