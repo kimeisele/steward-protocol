@@ -30,13 +30,37 @@ logger = logging.getLogger("MANAS.IntentBuffer")
 
 @dataclass
 class IntentBufferEntry:
-    """An entry in the intent buffer."""
+    """An entry in the intent buffer.
+
+    OPUS-211: Added Pramana (verification) support:
+    - ttl_seconds: Time-to-live before intent is marked stale
+    - pramana: Proof of execution (file hash, PID, etc.)
+    - stale_at: When the intent will be considered stale if still pending
+    """
 
     intent: Intent
-    status: str = "pending"  # pending, approved, rejected, executed, expired, blocked
+    status: str = "pending"  # pending, approved, rejected, executed, expired, blocked, stale
     added_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     executed_at: Optional[str] = None
     execution_result: Optional[Dict[str, Any]] = None
+    # OPUS-211: Pramana - Verification/Proof
+    pramana: Optional[Dict[str, Any]] = None  # Proof of execution (file hash, PID, etc.)
+    ttl_seconds: int = 300  # 5 minute default TTL
+    stale_at: Optional[str] = None  # When this intent becomes stale if still pending
+
+    def __post_init__(self):
+        """Calculate stale_at based on TTL."""
+        if self.stale_at is None and self.status == "pending":
+            stale_time = datetime.fromisoformat(self.added_at) + timedelta(seconds=self.ttl_seconds)
+            self.stale_at = stale_time.isoformat()
+
+    def is_stale(self) -> bool:
+        """Check if this intent has exceeded its TTL without completion."""
+        if self.status != "pending":
+            return False
+        if not self.stale_at:
+            return False
+        return datetime.utcnow().isoformat() > self.stale_at
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -46,6 +70,9 @@ class IntentBufferEntry:
             "added_at": self.added_at,
             "executed_at": self.executed_at,
             "execution_result": self.execution_result,
+            "pramana": self.pramana,
+            "ttl_seconds": self.ttl_seconds,
+            "stale_at": self.stale_at,
         }
 
 
@@ -197,6 +224,7 @@ class IntentBuffer:
         status: str,
         executed_at: Optional[str] = None,
         execution_result: Optional[Dict[str, Any]] = None,
+        pramana: Optional[Dict[str, Any]] = None,  # OPUS-211: Verification proof
     ) -> bool:
         """
         Update an entry's status.
@@ -206,6 +234,7 @@ class IntentBuffer:
             status: New status
             executed_at: Optional execution timestamp
             execution_result: Optional execution result
+            pramana: Optional verification proof (OPUS-211)
 
         Returns:
             True if updated
@@ -219,6 +248,8 @@ class IntentBuffer:
             entry.executed_at = executed_at
         if execution_result is not None:
             entry.execution_result = execution_result
+        if pramana is not None:
+            entry.pramana = pramana
 
         self._save()
         return True
@@ -249,6 +280,34 @@ class IntentBuffer:
             logger.debug(f"📋 Cleaned up {removed} expired intents")
 
         return removed
+
+    def cleanup_stale(self) -> int:
+        """
+        OPUS-211: Mark stale intents that exceeded their TTL.
+
+        Pending intents that have exceeded their TTL without completion
+        are marked as 'stale'. This prevents the buffer from holding
+        zombie intents indefinitely.
+
+        Returns:
+            Number of intents marked stale
+        """
+        stale_count = 0
+
+        for entry in self._entries:
+            if entry.is_stale():
+                entry.status = "stale"
+                stale_count += 1
+                logger.warning(f"⏰ Intent {entry.intent.id} marked STALE (TTL exceeded)")
+
+        if stale_count > 0:
+            self._save()
+
+        return stale_count
+
+    def get_stale(self) -> List[IntentBufferEntry]:
+        """Get all stale intents for potential retry or cleanup."""
+        return [entry for entry in self._entries if entry.status == "stale" or entry.is_stale()]
 
     def _enforce_size_limit(self) -> None:
         """Remove oldest non-pending entries if buffer exceeds max size."""
