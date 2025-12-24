@@ -23,8 +23,6 @@ if TYPE_CHECKING:
     from vibe_core.boot_mode import BootMode
     from vibe_core.phoenix import PhoenixConfig
     from vibe_core.protocols.economy import BankProtocol, VaultProtocol
-    from vibe_core.protocols.shuddhi import ShuddhiProtocol
-    from vibe_core.protocols.task import TaskProtocol
 
 # Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
 # Kernel has no governance types - access via kernel.governance
@@ -519,32 +517,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def _capability_registry(self, value):
         """Allow direct setting of capability registry."""
         self.__capability_registry = value
-
-    @property
-    def shuddhi(self) -> ShuddhiProtocol:
-        """
-        The surgical self-healing service (Shuddhi).
-
-        OPUS-212: Provides CST-based structural code transformation.
-        Purifies violations (Tamas) back to structural harmony (Sattva).
-        """
-        from vibe_core.di import ServiceRegistry
-        from vibe_core.protocols.shuddhi import ShuddhiProtocol
-
-        return ServiceRegistry.require(ShuddhiProtocol)
-
-    @property
-    def tasks(self) -> TaskProtocol:
-        """
-        The central task management service.
-
-        OPUS-212: Holistic OS-level task sovereignty.
-        Allows agents and core systems to manage persistent units of work.
-        """
-        from vibe_core.di import ServiceRegistry
-        from vibe_core.protocols.task import TaskProtocol
-
-        return ServiceRegistry.require(TaskProtocol)
 
     # Convenience alias for external access
     @property
