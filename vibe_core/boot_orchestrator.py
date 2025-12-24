@@ -252,10 +252,26 @@ class BootOrchestrator(CognitiveCycle):
 
             # AGNI: Fire - Make system visible (capabilities, UI)
             logger.info("⚡ OPUS-095: Making system visible (AGNI)")
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.shuddhi import ShuddhiService
+            from vibe_core.protocols.task import TaskService
             from vibe_core.runtime.oracle import KernelOracle
+            from vibe_core.shuddhi.engine import ShuddhiEngine
+            from vibe_core.task_management.task_manager import TaskManager
 
             if self.kernel:
                 self.oracle = KernelOracle(self.kernel, self.project_root)
+
+                # OPUS-212: Register Shuddhi self-healing service
+                ServiceRegistry.register(ShuddhiService, ShuddhiEngine())
+                logger.info("      → ShuddhiService registered in ServiceRegistry")
+
+                # OPUS-212: Register Core Task Service
+                # Note: TaskManager needs project_root and io_service
+                task_manager = TaskManager(self.project_root, self.kernel.io)
+                ServiceRegistry.register(TaskService, task_manager)
+                logger.info("      → TaskService registered in ServiceRegistry (Core Stack)")
+
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
@@ -386,6 +402,15 @@ class BootOrchestrator(CognitiveCycle):
                 total_agents = status.get("agents_registered", 0)
                 logger.info(f"      → Total agents registered: {total_agents}")
 
+                # OPUS-212: Start Shuddhi Kala Bridge (The Heartbeat Guardian)
+                try:
+                    from vibe_core.shuddhi.kala_bridge import start_kala_bridge
+
+                    self._kala_bridge = start_kala_bridge(self.project_root)
+                    logger.info("      → Shuddhi Kala Bridge active (Kala loop engaged)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not start Shuddhi Kala Bridge: {e}")
+
                 results["kernel_booted"] = True
                 results["agents_registered"] = total_agents
                 metadata["agents_registered"] = total_agents
@@ -397,7 +422,7 @@ class BootOrchestrator(CognitiveCycle):
 
         return results, metadata
 
-    async def _persist(self) -> None:
+    async def _persist(self, context: CycleContext) -> None:
         """
         PERSIST: Final kernel state saved.
 

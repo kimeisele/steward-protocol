@@ -26,7 +26,7 @@ Do NOT merge them - they serve different layers of the system.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, object
+from typing import Any, Dict, List, Optional
 
 # OPUS-122: Import canonical TaskStatus from SSOT
 from vibe_core.task_types import TaskStatus
@@ -47,14 +47,14 @@ class Task:
     assignee: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     subtasks: List[str] = field(default_factory=list)
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     # Topology-aware routing fields
     topology_layer: Optional[str] = None  # Bhu Mandala layer (BRAHMALOKA|JANALOKA|...|BHURLOKA)
     varna: Optional[str] = None  # Vedic class (BRAHMANA|KSHATRIYA|VAISHYA|SHUDRA)
     routing_priority: Optional[int] = None  # MilkOcean priority (0-3)
     roadmap_id: Optional[str] = None  # Which roadmap this belongs to
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert task to dictionary."""
         return {
             "id": self.id,
@@ -88,9 +88,9 @@ class ActiveMission:
     blocked_tasks: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert mission to dictionary."""
         return {
             "id": self.id,
@@ -115,9 +115,9 @@ class Roadmap:
     missions: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert roadmap to dictionary."""
         return {
             "id": self.id,
