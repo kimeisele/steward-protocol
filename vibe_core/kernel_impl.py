@@ -67,7 +67,8 @@ from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 # OPUS-301: Lazy import - network_proxy loads 'requests' which is 180ms
 # from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
-from .protocols import AgentManifest, VibeAgent
+# OPUS-301: Direct import to avoid loading all of protocols (saves ~440ms)
+from .protocols.agent import AgentManifest, VibeAgent
 
 # Sync modules: Extracted bidirectional markdown interfaces
 # NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
