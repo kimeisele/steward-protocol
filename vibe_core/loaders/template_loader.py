@@ -22,9 +22,11 @@ Usage:
 
 import logging
 from pathlib import Path
-from typing import Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+# OPUS-301: Lazy jinja2 import (saves ~225ms on boot)
+if TYPE_CHECKING:
+    from jinja2 import Environment
 
 logger = logging.getLogger("TEMPLATE_LOADER")
 
@@ -80,9 +82,10 @@ class TemplateLoader:
         return p if p.is_absolute() else self._project_root / p
 
     @property
-    def env(self) -> Environment:
+    def env(self) -> "Environment":
         """Get or create Jinja2 environment."""
         if self._env is None:
+            from jinja2 import Environment, FileSystemLoader
             self._env = Environment(
                 loader=FileSystemLoader([str(d) for d in self._template_dirs]),
                 autoescape=False,
@@ -113,6 +116,7 @@ class TemplateLoader:
 
     def render(self, template_name: str, **context: Any) -> str:
         """Render template with context."""
+        from jinja2 import TemplateNotFound
         try:
             template = self.env.get_template(template_name)
             return template.render(**context)
