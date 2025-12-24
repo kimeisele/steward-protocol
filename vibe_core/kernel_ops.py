@@ -19,6 +19,102 @@ if TYPE_CHECKING:
 logger = logging.getLogger("KERNEL_OPS")
 
 
+def _check_eventbus_zombies(kernel: "RealVibeKernel") -> None:
+    """
+    🐍 VRITRASURA DETECTION: Check EventBus for zombie subscribers.
+
+    A zombie subscriber receives events but never processes them,
+    potentially hoarding resources and causing backpressure.
+
+    When zombies are detected, this function:
+    1. Logs the detection
+    2. Registers threat with Narasimha (escalates to kill-switch)
+
+    The EventBus tracks subscriber health via SubscriberMetrics.
+    This function bridges detection → enforcement.
+    """
+    import time
+
+    from vibe_core.narasimha import ThreatIndicator, ThreatLevel, get_narasimha
+
+    try:
+        # Get EventBus status (includes zombie detection)
+        bus_status = kernel._event_bus.get_status()
+
+        zombies = bus_status.get("zombie_subscribers", [])
+        stalled = bus_status.get("stalled_handlers", [])
+
+        if not zombies and not stalled:
+            return  # All healthy
+
+        narasimha = get_narasimha()
+
+        # Process zombie subscribers (hoarding messages without ACK)
+        for zombie in zombies:
+            callback_id = zombie.get("callback_id", "unknown")
+            ack_rate = zombie.get("ack_rate", 0)
+            events_pending = zombie.get("events_sent", 0) - zombie.get("events_completed", 0)
+
+            logger.warning(
+                f"🐍 VRITRASURA DETECTED: Zombie subscriber '{callback_id}' "
+                f"(ACK rate: {ack_rate:.1%}, pending: {events_pending})"
+            )
+
+            # Register threat with Narasimha
+            # Zombie behavior is ORANGE (serious) - escalates to RED after 3 detections
+            indicator = ThreatIndicator(
+                indicator_type="resource_hoarding",
+                agent_id=callback_id,
+                severity=ThreatLevel.ORANGE,
+                description=f"Zombie subscriber detected: {ack_rate:.1%} ACK rate, {events_pending} events pending",
+                evidence={
+                    "callback_id": callback_id,
+                    "ack_rate": ack_rate,
+                    "events_pending": events_pending,
+                    "detection_source": "eventbus_health_check",
+                },
+                timestamp=time.time(),
+            )
+            narasimha.register_threat(indicator)
+
+        # Process stalled handlers (haven't completed anything recently)
+        for handler in stalled:
+            callback_id = handler.get("callback_id", "unknown")
+            stall_seconds = handler.get("seconds_since_complete", 0)
+            events_pending = handler.get("events_pending", 0)
+
+            logger.warning(
+                f"🐍 VRITRASURA DETECTED: Stalled handler '{callback_id}' "
+                f"(stalled: {stall_seconds:.0f}s, pending: {events_pending})"
+            )
+
+            # Stalled handlers are more severe - they block throughput
+            severity = ThreatLevel.ORANGE if stall_seconds < 120 else ThreatLevel.RED
+
+            indicator = ThreatIndicator(
+                indicator_type="throughput_strangulation",
+                agent_id=callback_id,
+                severity=severity,
+                description=f"Stalled handler: {stall_seconds:.0f}s without completion, {events_pending} events pending",
+                evidence={
+                    "callback_id": callback_id,
+                    "seconds_stalled": stall_seconds,
+                    "events_pending": events_pending,
+                    "detection_source": "eventbus_health_check",
+                },
+                timestamp=time.time(),
+            )
+            narasimha.register_threat(indicator)
+
+        # Log summary
+        total_issues = len(zombies) + len(stalled)
+        if total_issues > 0:
+            logger.warning(f"🐍 VRITRASURA: {total_issues} subscriber health issue(s) reported to Narasimha")
+
+    except Exception as e:
+        logger.error(f"❌ EventBus zombie check failed: {e}")
+
+
 def check_system_health(kernel: "RealVibeKernel") -> None:
     """
     🛡️ IMMUNE SYSTEM WATCHDOG (Incremental)
@@ -28,6 +124,9 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
 
     OPUS-208: Updated to be incremental (O(1)) instead of full scan (O(N)).
     Uses persistent trust anchor to maintain hash chain integrity across checks.
+
+    VRITRASURA FIX: Also checks EventBus for zombie subscribers and wires
+    detected zombies to Narasimha kill-switch.
     """
     # Import here to avoid circular imports
     try:
@@ -38,6 +137,9 @@ def check_system_health(kernel: "RealVibeKernel") -> None:
         AUDITOR_AVAILABLE = True
     except ImportError:
         AUDITOR_AVAILABLE = False
+
+    # VRITRASURA FIX: Check EventBus for zombie subscribers
+    _check_eventbus_zombies(kernel)
 
     if not AUDITOR_AVAILABLE or not kernel._auditor:
         return
