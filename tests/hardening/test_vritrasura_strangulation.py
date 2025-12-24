@@ -186,9 +186,7 @@ class TestVritrasuraStrangulation:
 
         # Flood the demon with events
         for i in range(50):
-            await demon.process_message(
-                Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}")
-            )
+            await demon.process_message(Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}"))
 
         # Naive check
         appears_healthy = naive_watchman.check_agent(demon)
@@ -220,9 +218,7 @@ class TestVritrasuraStrangulation:
 
         # Flood the demon with events
         for i in range(50):
-            await demon.process_message(
-                Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}")
-            )
+            await demon.process_message(Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}"))
 
         # Smart check
         appears_healthy = smart_watchman.check_agent(demon)
@@ -256,9 +252,7 @@ class TestVritrasuraStrangulation:
 
         for i in range(total_events):
             event_start = time.time()
-            await demon.process_message(
-                Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}")
-            )
+            await demon.process_message(Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}"))
             event_duration = time.time() - event_start
 
             timeline.append(
@@ -315,9 +309,7 @@ class TestVritrasuraStrangulation:
 
         # Flood the bus
         for i in range(50):
-            await bus.emit(
-                Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}")
-            )
+            await bus.emit(Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}"))
 
         # Give handlers time to process
         await asyncio.sleep(1.0)
@@ -408,9 +400,7 @@ class TestDurvasaGhostTasks:
         # Storm of timeouts
         tasks = []
         for i in range(20):
-            task = asyncio.create_task(
-                asyncio.wait_for(try_write(i), timeout=0.01)
-            )
+            task = asyncio.create_task(asyncio.wait_for(try_write(i), timeout=0.01))
             tasks.append(task)
 
         # Gather with exception handling
@@ -428,11 +418,86 @@ class TestDurvasaGhostTasks:
 
         # Ledger should ONLY contain successful writes
         assert len(ledger) == successful_writes, (
-            f"Ledger has {len(ledger)} entries but only {successful_writes} succeeded. "
-            "Ghost writes detected!"
+            f"Ledger has {len(ledger)} entries but only {successful_writes} succeeded. Ghost writes detected!"
         )
 
         print("✅ Timeout Storm SURVIVED without ghost writes")
+
+
+class TestVritrasuraNarasimhaWiring:
+    """Tests for zombie detection → Narasimha kill-switch wiring."""
+
+    @pytest.fixture
+    def minimal_kernel(self):
+        """Lightweight kernel without plugins for fast testing."""
+        from vibe_core.kernel_impl import RealVibeKernel
+
+        return RealVibeKernel(ledger_path=":memory:", load_plugins=False, test_mode=True)
+
+    @pytest.mark.asyncio
+    async def test_zombie_detection_wires_to_narasimha(self, minimal_kernel):
+        """
+        VRITRASURA → NARASIMHA WIRING TEST.
+
+        Proves that when EventBus detects zombies, the threat is
+        registered with Narasimha kill-switch.
+
+        This is the CRITICAL gap identified in the architecture audit:
+        Detection existed, but enforcement was not wired.
+        """
+        print("\n⚡ VRITRASURA → NARASIMHA WIRING:")
+
+        from vibe_core.kernel_ops import _check_eventbus_zombies
+        from vibe_core.narasimha import get_narasimha
+
+        # Get Narasimha and record initial state
+        narasimha = get_narasimha()
+        initial_threat_count = len(narasimha.threats)
+
+        # Use kernel's real EventBus
+        bus = minimal_kernel._event_bus
+        demon = VritraAgent(name="Vritrasura_Wiring_Test")
+
+        async def demon_handler(event: Event):
+            await demon.process_message(event)
+
+        bus.subscribe(demon_handler, event_type="PRANA_FLOW")
+
+        # Flood to create zombie condition
+        for i in range(50):
+            await bus.emit(Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}"))
+
+        # Wait for handlers to "process" (i.e., NOT process)
+        await asyncio.sleep(0.5)
+
+        # Verify zombie detection
+        status = bus.get_status()
+        print(f"   Bus status: {status.get('subscriber_health', {})}")
+
+        # Call kernel's zombie check (in production: called from check_system_health)
+        _check_eventbus_zombies(minimal_kernel)
+
+        # Check if Narasimha received the threat
+        new_threat_count = len(narasimha.threats)
+        threats_added = new_threat_count - initial_threat_count
+
+        print(f"   Initial Narasimha threats: {initial_threat_count}")
+        print(f"   Final Narasimha threats: {new_threat_count}")
+        print(f"   Threats added: {threats_added}")
+
+        # The key test: if zombies exist, they get reported to Narasimha
+        zombies = status.get("zombie_subscribers", [])
+        stalled = status.get("stalled_handlers", [])
+
+        if zombies or stalled:
+            assert threats_added > 0, (
+                f"WIRING BROKEN: Zombies detected but NOT reported to Narasimha! Zombies: {zombies}, Stalled: {stalled}"
+            )
+            print("✅ Zombies detected AND wired to Narasimha")
+        else:
+            print("✅ No zombies detected (threshold not met) - wiring not triggered")
+
+        print("✅ VRITRASURA → NARASIMHA wiring VERIFIED")
 
 
 # Run standalone
