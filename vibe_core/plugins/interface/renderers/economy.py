@@ -117,8 +117,8 @@ class EconomyRenderer(BaseRenderer):
             config_path = Path("config/economy.yaml")
             if config_path.exists():
                 return yaml.safe_load(config_path.read_text()) or {}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not load economy config: {e}")
         return {}
 
     def _get_governance_plugin(self) -> Optional[Any]:
@@ -126,8 +126,8 @@ class EconomyRenderer(BaseRenderer):
         if hasattr(self.kernel, "get_plugin"):
             try:
                 return self.kernel.get_plugin("vedic_governance")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not get vedic_governance plugin: {e}")
         return None
 
     def _get_ledger(self) -> Optional[Any]:
@@ -194,8 +194,8 @@ class EconomyRenderer(BaseRenderer):
                             "Status": self._credit_status(credit_info),
                         }
                     )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not get agent credits from governance: {e}")
 
         if not credits:
             # Default placeholder
@@ -227,8 +227,8 @@ class EconomyRenderer(BaseRenderer):
                             "Cost": event.get("tokens", 0),
                         }
                     )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Operation failed in economy renderer: {e}")
 
         if not transactions:
             transactions.append(
@@ -262,8 +262,8 @@ class EconomyRenderer(BaseRenderer):
         if ledger and hasattr(ledger, "get_metric"):
             try:
                 return ledger.get_metric(f"{provider}_tokens_used") or 0
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Operation failed in economy renderer: {e}")
         return 0
 
     def _get_api_calls_count(self) -> int:
@@ -272,8 +272,8 @@ class EconomyRenderer(BaseRenderer):
         if ledger and hasattr(ledger, "get_metric"):
             try:
                 return ledger.get_metric("api_calls_count") or 0
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Operation failed in economy renderer: {e}")
         return 0
 
     def _get_local_llm_count(self) -> int:
@@ -282,8 +282,8 @@ class EconomyRenderer(BaseRenderer):
         if ledger and hasattr(ledger, "get_metric"):
             try:
                 return ledger.get_metric("local_llm_queries") or 0
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Operation failed in economy renderer: {e}")
         return 0
 
     def _credit_status(self, credit_info: Dict[str, Any]) -> str:

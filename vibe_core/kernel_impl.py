@@ -196,9 +196,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 from vibe_core.state.state_service import get_state_service
 
                 ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
-                ss._auto_commit_enabled = False
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"🧪 KERNEL: Could not disable state auto-commit: {e}")
 
         # Resolve ledger path from config if not provided
         if ledger_path is None:
@@ -331,8 +330,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if phoenix_config and hasattr(phoenix_config, "paths"):
             try:
                 prakriti_db_path = phoenix_config.paths.data.resolve("vibe_ledger")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"⚠️  KERNEL: Could not resolve Prakriti DB path: {e}")
 
         self.prakriti = Prakriti(db_path=prakriti_db_path)
 
