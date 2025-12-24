@@ -578,8 +578,8 @@ class DeterministicExecutor:
                                 "circuit_executor",
                                 {"syscall_type": compilation.syscall_request.syscall_type.value},
                             )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.warning(f"Event emission failed: {e}")
 
                     # Execute via circuit
                     circuit_result = self.circuit_executor.execute(user_input, "user")

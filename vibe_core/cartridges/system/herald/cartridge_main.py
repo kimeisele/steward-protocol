@@ -689,7 +689,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             try:
                 with open(state_path) as f:
                     state = json.load(f)
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to load state from {state_path}: {e}")
                 pass
 
         since_id = state.get("last_mention_id")

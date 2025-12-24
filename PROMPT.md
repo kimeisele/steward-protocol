@@ -188,3 +188,32 @@ Sei poetisch in der Architektur, pedantisch in der Implementierung.
 
 Lies jetzt das Projekt.
 Deine erste Antwort ist dein Dharma + Yantra Audit
+
+---
+
+## TEIL VIII: OPERATIONAL TRACKER (SPICKZETTEL)
+
+*Updates by Agent. Keep high-level.*
+
+### CURRENT PHASE: SATTVA TRIAGE (STABILIZATION)
+**Goal:** Stop the bleeding. Secure the Core.
+**Status:** P0 Complete. P1 In-Progress.
+
+### PRIORITIES (The "Steward Hierarchy")
+
+#### P0: EXISTENTIAL THREATS (✅ DONE)
+- **Registry:** Secured (Atomic Writes).
+- **Heartbeat:** Secured (Atomic Writes).
+- **Truth:** Guarded (VFS/KernelIO).
+- **Reporting:** Secured (VFS/KernelIO).
+
+#### P1: THE "SILENT KILLER" (⚠️ IN PROGRESS)
+- **Goal:** Fix instability and silent failures.
+- **Task 1:** Enable `TaskKernel` (Action Manager blocked) → ✅ FIXED (Plugin injection wired).
+- **Task 2:** Eliminate `try: except: pass` in Core (vibe_core) → ⚠️ STARTED (Envoy/Herald fixed).
+- **Task 3:** Secure "Active" Agents (Archivist, Executor) → ⏳ NEXT.
+
+#### P2: STRUCTURAL DEBT (⏳ QUEUED)
+- **Goal:** Clean up the mess.
+- **Scope:** ~900 unsafe `open()` calls, Missing Tests.
+
