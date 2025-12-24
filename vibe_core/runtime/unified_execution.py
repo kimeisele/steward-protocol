@@ -40,6 +40,7 @@ from vibe_core.state.schema import (
     ExecutionPath,
     ExecutionRequest,
     ExecutionResult,
+    ExecutionStatus,
     MilkOceanGate,
 )
 
@@ -51,6 +52,7 @@ __all__ = [
     "ExecutionPath",
     "ExecutionRequest",
     "ExecutionResult",
+    "ExecutionStatus",
     "MilkOceanGate",
 ]
 

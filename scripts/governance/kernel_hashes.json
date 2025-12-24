@@ -1,7 +1,7 @@
 {
   "vibe_core/kernel_impl.py": "b76448e575650c66eb909ed57a41d864c1cdef003b79e6abdf76de027489b66c",
   "vibe_core/kernel_ops.py": "f75074eadf46a5cc7bc8f90001069b9b2b92bfbc9642f6ce3979b4fe922f95f3",
-  "vibe_core/ledger.py": "bd39da19ade657e45bf16568c555dffd84d20852978d35121e1159b82f4b0a26",
+  "vibe_core/ledger.py": "db31d7a3ae1b4bcf7181a0e1de93729525bef25133b8253a3cb1a8d045348de6",
   "vibe_core/plugin_protocol.py": "2a74b50ab078b6ebd37947edb9f120956ae21f29f0b1ec7c0e433b4b0cb533c0",
   "vibe_core/plugin_loader.py": "e54629f366b9973e23b204bb1c17937ecfdc0387ac2e1c90a6ee5944714950db",
   "vibe_core/narasimha.py": "2c9ce88ba49216c97020d2741f65015ab86748d0becfa6e065261ab8adbb8fdf",
