@@ -37,11 +37,10 @@ def test_executor_returns_structured_result():
             )
             result = await executor.execute(request)
 
-            assert hasattr(result, "status")
-            assert hasattr(result, "response")
-            assert hasattr(result, "execution_path")
-            assert hasattr(result, "target_id")
-            assert hasattr(result, "request_id")
+            # ExecutionResult uses: success, result, execution_time_ms, error, trace_id
+            assert hasattr(result, "success")
+            assert hasattr(result, "result")
+            assert hasattr(result, "execution_time_ms")
 
         asyncio.run(test_async())
 
@@ -59,8 +58,8 @@ def test_executor_handles_fallback_path():
             )
             result = await executor.execute(request)
 
-            assert result.status == "completed"
-            assert "Unknown command" in result.response
+            assert result.success is True
+            assert "Unknown command" in result.result.get("response", "")
 
         asyncio.run(test_async())
 
@@ -137,7 +136,7 @@ def test_executor_tracks_duration():
                 target_id="SIMPLE_QUERY",
             )
             result = await executor.execute(request)
-            assert result.duration_seconds is not None
-            assert result.duration_seconds >= 0
+            assert result.execution_time_ms is not None
+            assert result.execution_time_ms >= 0
 
         asyncio.run(test_async())

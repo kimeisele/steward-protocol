@@ -104,14 +104,13 @@ class UnifiedExecutor:
             else:
                 result = await self._execute_fallback(request)
 
-            request.mark_completed(result.data)
-            result.duration_seconds = request.duration or 0.0
-            result.request_id = request.request_id
+            request.mark_completed(result.result)
+            result.execution_time_ms = int((request.duration or 0.0) * 1000)
             result.trace_id = trace_id
 
             # Telemetry: Complete trace
             if hasattr(self._kernel, "trace"):
-                self._kernel.trace.complete(trace_id, data={"result": result.to_dict()})
+                self._kernel.trace.complete(trace_id, data={"success": result.success})
 
             return result
 
@@ -124,22 +123,19 @@ class UnifiedExecutor:
                 self._kernel.trace.error(trace_id, error=str(e))
 
             return ExecutionResult(
-                status="failed",
+                success=False,
                 error=str(e),
-                execution_path=request.execution_path,
-                target_id=request.target_id,
-                request_id=request.request_id,
                 trace_id=trace_id,
+                result={"request_id": request.request_id, "target_id": request.target_id},
             )
 
     async def _execute_circuit(self, request: ExecutionRequest) -> ExecutionResult:
         """Execute a circuit via DeterministicExecutor"""
         if not self._circuit_executor:
             return ExecutionResult(
-                status="failed",
+                success=False,
                 error="Circuit executor not available",
-                execution_path=request.execution_path,
-                target_id=request.target_id,
+                result={"target_id": request.target_id},
             )
 
         # Execute circuit
@@ -156,11 +152,8 @@ class UnifiedExecutor:
         response = rendered.get("rendered", "") if isinstance(rendered, dict) else ""
 
         return ExecutionResult(
-            status="completed" if raw_result.get("status") == "COMPLETED" else "failed",
-            response=response,
-            data=raw_result,
-            execution_path=request.execution_path,
-            target_id=request.target_id,
+            success=raw_result.get("status") == "COMPLETED",
+            result={"response": response, "data": raw_result, "target_id": request.target_id},
         )
 
     async def _execute_playbook(self, request: ExecutionRequest) -> ExecutionResult:
@@ -171,9 +164,6 @@ class UnifiedExecutor:
     async def _execute_fallback(self, request: ExecutionRequest) -> ExecutionResult:
         """Handle unknown requests"""
         return ExecutionResult(
-            status="completed",
-            response=f"Unknown command: {request.user_input}",
-            data={"fallback": True},
-            execution_path=request.execution_path,
-            target_id=request.target_id,
+            success=True,
+            result={"response": f"Unknown command: {request.user_input}", "fallback": True, "target_id": request.target_id},
         )
