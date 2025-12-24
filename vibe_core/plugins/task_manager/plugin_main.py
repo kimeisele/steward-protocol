@@ -1,42 +1,111 @@
 """
-⚙️ TASK MANAGER PLUGIN - Sub-Operating System for Work
+⚙️ TASK MANAGER PLUGIN - Stateless Ingestor
 
-OPUS-091 Phase 3: Complete task lifecycle management with STATE SOVEREIGNTY
+OPUS-213: ADVAITA - Unified Task Sovereignty
+============================================
+This plugin is now a STATELESS ingestor that delegates to Core TaskManager.
+No local state. Single Source of Truth.
 
 Responsibilities:
-1. Initialize JsonTaskManager (plugin-local state)
-2. SENSORS phase: Ingest from data/inbox/*.json and TASKS.md
-3. ACTUATORS phase: Execute pending tasks via UnifiedRouter
-4. CLEANUP phase: Sync TaskManager state back to TASKS.md
-5. Inject manager into context (Dependency Inversion)
-
-This is the hub. All work flows through here.
-ARCHITECTURE: The plugin OWNS its state. It injects the manager into context
-so other plugins (Interface) can read it.
-
-VEDA-4 Architecture:
-- SHABDA (Sound): Task ingestion (input)
-- ARTHA (Meaning): Task interpretation
-- PRATYAYA (Perception): State tracking
-- KARMA (Action): Execution lifecycle
+1. SENSORS phase: Ingest from data/inbox/*.json and TASKS.md -> Core
+2. ACTUATORS phase: Execute pending tasks via UnifiedRouter
+3. CLEANUP phase: Request Core stats
 """
 
 import json
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
-
-# OPUS-122: Import TaskStatus from SSOT
+from vibe_core.protocols.task import TaskProtocol
 from vibe_core.task_types import TaskStatus
-
-from .state_store import JsonTaskManager
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+
+
+# =============================================================================
+# OPUS-213: CoreManagerAdapter
+# =============================================================================
+# Wraps Core TaskManager to provide the API the plugin expects.
+# This allows zero changes to plugin logic while using Core as backend.
+# =============================================================================
+
+
+class CoreManagerAdapter:
+    """
+    Adapter that wraps Core TaskManager with plugin-compatible API.
+
+    Maps:
+        get_next_pending() -> get_next_task()
+        get_stats() -> get_metrics()
+        update_status(id, status) -> update_task(id, status=status)
+        get_all_tasks() -> list_tasks()
+    """
+
+    def __init__(self, core_manager):
+        self._core = core_manager
+
+    def add_task(self, title: str, description: str = "", type: str = "general", metadata: Dict = None):
+        """Delegate to core with field mapping."""
+        task = self._core.add_task(title=title, description=description)
+        # Core Task has different structure, wrap for compatibility
+        return _TaskWrapper(task)
+
+    def get_next_pending(self):
+        """Map to get_next_task()."""
+        task = self._core.get_next_task()
+        return _TaskWrapper(task) if task else None
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Map to get_metrics()."""
+        metrics = self._core.get_metrics()
+        # Normalize to expected format
+        return {
+            "total": metrics.get("total_tasks", 0),
+            "pending": metrics.get("pending", 0),
+            "in_progress": metrics.get("in_progress", 0),
+            "completed": metrics.get("completed", 0),
+            "failed": metrics.get("failed", 0),
+            "blocked": metrics.get("blocked", 0),
+        }
+
+    def update_status(self, task_id: str, status: TaskStatus):
+        """Map to update_task()."""
+        self._core.update_task(task_id, status=status)
+
+    def get_all_tasks(self) -> List:
+        """Map to list_tasks()."""
+        tasks = self._core.list_tasks()
+        return [_TaskWrapper(t) for t in tasks]
+
+    def get_task(self, task_id: str):
+        """Direct delegation."""
+        task = self._core.get_task(task_id)
+        return _TaskWrapper(task) if task else None
+
+
+class _TaskWrapper:
+    """Wraps Core Task to provide plugin-expected attributes."""
+
+    def __init__(self, core_task):
+        self._task = core_task
+
+    def __getattr__(self, name):
+        if self._task is None:
+            return None
+        return getattr(self._task, name, None)
+
+    @property
+    def type(self):
+        """Core uses metadata, plugin expects .type"""
+        if self._task is None:
+            return "general"
+        return getattr(self._task, "type", None) or self._task.metadata.get("type", "general")
+
 
 logger = logging.getLogger("TASK_MANAGER_PLUGIN")
 
@@ -95,19 +164,33 @@ except ImportError:
 
 class TaskManagerPlugin(KernelPlugin):
     """
-    Sub-OS for task management with STATE SOVEREIGNTY.
+    OPUS-213: Stateless Task Ingestor.
 
-    The plugin OWNS its JsonTaskManager (local JSON state).
-    It injects this into context so the system can use it.
-    No legacy DB dependency.
+    Delegates all state to Core TaskManager via ServiceRegistry.
+    Uses CoreManagerAdapter to bridge API differences.
     """
 
     def __init__(self):
         super().__init__()
-        # STATE SOVEREIGNTY: Plugin owns its state directory
-        self.state_dir = Path(__file__).parent / ".state"
-        self.manager = JsonTaskManager(self.state_dir)
-        logger.info(f"✅ TaskManager initialized with local state at {self.state_dir}")
+        # OPUS-213: No local state. Manager is fetched on-demand from ServiceRegistry.
+        self._manager = None
+        logger.info("✅ TaskManagerPlugin initialized (Stateless Mode)")
+
+    @property
+    def manager(self):
+        """Lazy-load manager from ServiceRegistry with adapter."""
+        if self._manager is None:
+            core = ServiceRegistry.get(TaskProtocol)
+            if core:
+                self._manager = CoreManagerAdapter(core)
+            else:
+                logger.warning("⚠️ TaskProtocol not in ServiceRegistry - falling back to local state")
+                # Fallback: Use legacy JsonTaskManager if Core not available
+                from .state_store import JsonTaskManager
+
+                state_dir = Path(__file__).parent / ".state"
+                self._manager = JsonTaskManager(state_dir)
+        return self._manager
 
     @property
     def plugin_id(self) -> str:
@@ -137,10 +220,11 @@ class TaskManagerPlugin(KernelPlugin):
             HookResult with phase-specific summary
         """
         try:
-            # DEPENDENCY INJECTION: Ensure our manager is in context
-            if hasattr(kernel, "context"):
-                kernel.context["task_manager"] = self.manager
-                logger.debug("💉 TaskManager injected into kernel context")
+            # OPUS-213: Get manager (triggers lazy load from ServiceRegistry)
+            manager = self.manager
+            if manager is None:
+                logger.error("❌ No TaskManager available")
+                return HookResult.error("No TaskManager available")
 
             # Get project root from kernel or use cwd
             project_root = Path(kernel.workspace) if kernel and hasattr(kernel, "workspace") else Path.cwd()
