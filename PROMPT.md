@@ -59,59 +59,36 @@ FLEXIBEL (Maya):
 Diese Prinzipien gelten auf JEDER Ebene – vom Byte bis zum System:
 
 ### 1. Verifikation vor Vertrauen
-```python
-# FALSCH
-def process(data):
-    return transform(data)
-
-# RICHTIG
-def process(data):
-    verify_signature(data)  # Dharma
-    result = transform(data)
-    log_to_ledger(result)   # Karma
-    return result
-```
+- Input von außen → Signatur prüfen bevor verarbeiten.
+- Kritische Aktion → Berechtigung prüfen bevor ausführen.
+- Fremder Agent → Identität verifizieren bevor vertrauen.
 
 ### 2. Selbstheilung über Absturz (Arjuna-Pattern)
-```python
-# FALSCH
-@property
-def event_bus(self):
-    return self._event_bus  # Crash wenn None
-
-# RICHTIG
-@property
-def event_bus(self):
-    if not hasattr(self, '_event_bus') or self._event_bus is None:
-        self._event_bus = EventBus()
-    return self._event_bus
-```
+- Kritische Komponente fehlt → Neu initialisieren statt crashen.
+- Dependency None → Lazy-Init mit sinnvollem Default.
+- Korrupter State → Reset auf bekannten guten Zustand.
 
 ### 3. Graceful Degradation (Pralaya-Pattern)
-```python
-# FALSCH
-def shutdown(self):
-    self.save_state()  # Crash = Datenverlust
-
-# RICHTIG
-def shutdown(self):
-    try:
-        self.save_state()
-    except Exception as e:
-        self.emergency_ledger_flush()
-        log_critical(e)
-    finally:
-        self.release_resources()
-```
+- Shutdown → State sichern bevor Prozess stirbt.
+- Save fehlgeschlagen → Notfall-Flush, dann loggen, dann sterben.
+- Ressourcen → Immer freigeben, egal was passiert (finally).
 
 ### 4. Keine versteckten Zustände
-```python
-# FALSCH
-self._secret_counter += 1  # Unsichtbar
 
-# RICHTIG
-self.ledger.record("ACTION", {"count": self.counter + 1})
-```
+Wenn es Trust, Geld oder Permissions betrifft → Audit Trail.
+Wenn es eine Entscheidung ist, die hinterfragt werden könnte → Audit Trail.
+Interne Buchführung → egal.
+
+**BRAUCHT AUDIT:**
+- Agent stimmt ab
+- Credits werden transferiert
+- Task wird gestartet/beendet
+- Capability wird vergeben/entzogen
+
+**BRAUCHT KEIN AUDIT:**
+- Counter hochzählen
+- Cache invalidieren
+- Temporäre Files schreiben
 
 ---
 
@@ -125,73 +102,23 @@ Wir akzeptieren keine "ungefähren" Lösungen.
 - `Pydantic Models` für alles, was über eine Modul-Grenze geht.
 - `Protocol` statt konkrete Klassen (Dependency Inversion).
 
-```python
-# VERBOTEN
-def handle(event: Any) -> Any:
-
-# PFLICHT
-def handle(event: KernelEvent) -> ProcessingResult:
-```
-
 ### 2. METRIK-OBSESSION (Wer nicht misst, ist blind)
 - Eine Funktion ist erst fertig, wenn sie messbar ist.
-- `duration_ms` im Ledger ist Pflicht für jede async Operation.
+- `duration_ms` tracken für jede async Operation.
 - Queue voll → System SCHREIT (Alert), nicht weint (Silent Fail).
-
-```python
-# PFLICHT
-ledger.record("TASK_COMPLETE", {
-    "task_id": task.id,
-    "duration_ms": (end - start) * 1000,
-    "status": "success"
-})
-```
+- Langsame Operationen (>100ms) → Loggen.
 
 ### 3. DIE PHOENIX-GARANTIE
 - Code muss davon ausgehen, dass er JEDERZEIT getötet werden kann.
-- Beim Neustart: Ledger lesen → EXAKT dort weitermachen.
+- Beim Neustart: Persistierten State lesen → dort weitermachen wo aufgehört.
 - Teste nicht nur "Start", teste "Crash → Restart → Resume".
-
-```python
-# PHOENIX-PATTERN
-class RecoverableProcess:
-    def start(self):
-        last_state = self.ledger.get_last_checkpoint()
-        if last_state:
-            self.resume_from(last_state)
-        else:
-            self.fresh_start()
-```
+- Kein In-Memory-Only State für kritische Daten.
 
 ### 4. DOKUMENTATION ALS VERTRAG
 Docstrings sind keine Prosa, sie sind Spezifikationen:
-
-```python
-def transfer_capability(
-    source: AgentID,
-    target: AgentID,
-    capability: Capability
-) -> TransferReceipt:
-    """
-    Transfers a capability from source to target agent.
-
-    Args:
-        source: Agent relinquishing the capability (must own it)
-        target: Agent receiving the capability (must exist)
-        capability: The capability being transferred
-
-    Returns:
-        TransferReceipt with cryptographic proof
-
-    Raises:
-        DharmaViolation: If source doesn't own capability
-        AgentNotFound: If target doesn't exist
-
-    Side Effects (Karma):
-        - Records CAPABILITY_TRANSFER event to ledger
-        - Invalidates source's capability cache
-    """
-```
+- Args, Returns, Raises explizit definieren.
+- Side Effects (Karma) müssen dokumentiert sein (Ledger-Events, Cache-Invalidierung).
+- Verträge (Pre/Post-Conditions) klar benennen.
 
 ---
 
