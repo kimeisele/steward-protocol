@@ -48,7 +48,7 @@ class SubscriberMetrics:
         # {callback_id: {events_sent, events_completed, last_complete_time, avg_duration}}
         self._metrics: Dict[str, Dict[str, Any]] = {}
         self._zombie_threshold_events = 10  # Events sent without completion
-        self._zombie_threshold_rate = 0.5   # ACK rate below this = zombie
+        self._zombie_threshold_rate = 0.5  # ACK rate below this = zombie
         self._stall_threshold_seconds = 30  # No completion in this time = stalled
 
     def record_send(self, callback_id: str):
@@ -84,13 +84,15 @@ class SubscriberMetrics:
             ack_rate = completed / sent if sent > 0 else 1.0
 
             if sent > self._zombie_threshold_events and ack_rate < self._zombie_threshold_rate:
-                zombies.append({
-                    "callback_id": callback_id,
-                    "events_sent": sent,
-                    "events_completed": completed,
-                    "ack_rate": ack_rate,
-                    "status": "ZOMBIE",
-                })
+                zombies.append(
+                    {
+                        "callback_id": callback_id,
+                        "events_sent": sent,
+                        "events_completed": completed,
+                        "ack_rate": ack_rate,
+                        "status": "ZOMBIE",
+                    }
+                )
         return zombies
 
     def get_stalled_handlers(self) -> List[Dict[str, Any]]:
@@ -103,12 +105,14 @@ class SubscriberMetrics:
             if metrics["events_sent"] > 0:
                 time_since_complete = now - metrics["last_complete_time"]
                 if time_since_complete > self._stall_threshold_seconds:
-                    stalled.append({
-                        "callback_id": callback_id,
-                        "seconds_since_complete": time_since_complete,
-                        "events_pending": metrics["events_sent"] - metrics["events_completed"],
-                        "status": "STALLED",
-                    })
+                    stalled.append(
+                        {
+                            "callback_id": callback_id,
+                            "seconds_since_complete": time_since_complete,
+                            "events_pending": metrics["events_sent"] - metrics["events_completed"],
+                            "status": "STALLED",
+                        }
+                    )
         return stalled
 
     def get_all_metrics(self) -> Dict[str, Any]:

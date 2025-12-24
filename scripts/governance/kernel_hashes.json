@@ -1,7 +1,7 @@
 {
   "vibe_core/kernel_impl.py": "f31262a85d058d3b965a278b5364131a5bd0e4123ddb809a576aaf50cc67faa2",
-  "vibe_core/kernel_ops.py": "4dfd43f25265c438f90c0b30392749d762ae4b0e68ce587a9f0fcf72f87da20f",
-  "vibe_core/ledger.py": "a204d3110d954ab58c98a6c7001fdff491279f69019577feff192fbe439ee875",
+  "vibe_core/kernel_ops.py": "434bad3f407f7eef3dca70a7c6d9326f333f0d44ff928e13331113758d2be6f1",
+  "vibe_core/ledger.py": "e298190bda9075c5978ef41fbbe9adc23c8ebf755640284af4753967139401d9",
   "vibe_core/plugin_protocol.py": "2a74b50ab078b6ebd37947edb9f120956ae21f29f0b1ec7c0e433b4b0cb533c0",
   "vibe_core/plugin_loader.py": "e54629f366b9973e23b204bb1c17937ecfdc0387ac2e1c90a6ee5944714950db",
   "vibe_core/narasimha.py": "2c9ce88ba49216c97020d2741f65015ab86748d0becfa6e065261ab8adbb8fdf",
@@ -14,7 +14,7 @@
   ".github/workflows/deploy.yml": "5b86104b01fe4fc2f6371b1ad56dce89795c161ef868dc88e081581beab34ed1",
   ".github/workflows/factory.yml": "8a313882e7e9e969b6e8b036753a71a6a248c37f3b5cdce304172bda3967c3ae",
   ".github/workflows/heartbeat.yml": "6be13990888a0b38104a89cf4c6e985cacca08c2921833dc74502718ec154d0b",
-  ".github/workflows/integration-tests.yml": "c2e3b0be8181ecb4d3a0627caef2ae8b4645ceda9c91f4adc2f2b4d006e8ac6d",
+  ".github/workflows/integration-tests.yml": "06c4ae417af9190095fd198e812598828ca5abc28cfd33fcd5864d8355e912a6",
   ".github/workflows/scheduled-agents.yml": "a2e678ec15ba0ebd7bf7c6ed96605fbdb47a77e732d1b5af880f9616405cc082",
   ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
   ".github/workflows/steward-ci.yml": "b85dd1c000aca2e7c9c480d2fc4d0eccab9a864f233f3dcaf4a64333163d0377",

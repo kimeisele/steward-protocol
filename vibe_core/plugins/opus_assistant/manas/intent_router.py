@@ -243,9 +243,7 @@ class IntentRouter:
         self._validator.inject_kernel(kernel)
         logger.info("⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)")
 
-    def _check_dependency_cycle(
-        self, intent_id: str, visiting: set, path: list = None
-    ) -> Optional[List[str]]:
+    def _check_dependency_cycle(self, intent_id: str, visiting: set, path: list = None) -> Optional[List[str]]:
         """
         MOHINI PROTECTION: Detect circular dependencies in intent chains.
 
@@ -296,6 +294,7 @@ class IntentRouter:
             if intent_data.get("id") == intent_id:
                 # Reconstruct Intent from dict
                 from .intent_generator import IntentPriority, IntentRisk
+
                 return Intent(
                     id=intent_data["id"],
                     intent_type=intent_data.get("intent_type", ""),
@@ -951,10 +950,7 @@ class IntentRouter:
         if intent.dependencies:
             cycle = self._check_dependency_cycle(intent.id, set())
             if cycle:
-                raise CycleDetectedError(
-                    cycle_path=cycle,
-                    message=f"Intent '{intent.id}' has circular dependencies"
-                )
+                raise CycleDetectedError(cycle_path=cycle, message=f"Intent '{intent.id}' has circular dependencies")
 
         # =====================================================================
         # OPUS-171 Phase 4: AKASHA PERCEPTION - Knowledge Context (FIRST)
