@@ -1,65 +1,51 @@
 #!/usr/bin/env python3
 """
-StandardsInspectionTool - Deep AST-based Code Analysis (Phase 3.2) (Tool Protocol)
-===================================================================================
+StandardsInspectionTool - Core Code Governance Engine.
+======================================================
 
-Tool Protocol compliant for kernel-managed execution.
-
-Performance: ~500ms for 14 agents (acceptable for CI/CD, NOT for pre-commit)
+Declarative AST analysis for architectural compliance.
+Part of the VibeOS Core (System Agent: Watchman).
 """
 
 import ast
+import json
 import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import yaml
+
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-logger = logging.getLogger("WATCHMAN.STANDARDS_INSPECTION")
-
-
-class ViolationType(Enum):
-    """Types of architectural violations."""
-
-    REQUIREMENTS_TXT = "requirements_txt"
-    DIRECT_PATH_DATA = "direct_path_data"
-    MISSING_LAZY_LOADING = "missing_lazy_loading"
-    LINE_COUNT_EXCEEDED = "line_count_exceeded"
-    MISSING_SYSTEM_INTERFACE = "missing_system_interface"
-    HARDCODED_PATH_IN_INIT = "hardcoded_path_in_init"
+logger = logging.getLogger("WATCHMAN.STANDARDS")
 
 
 class ViolationSeverity(Enum):
-    """Severity levels for violations."""
-
-    CRITICAL = "CRITICAL"  # Build must fail
-    HIGH = "HIGH"  # Should fail, but can be overridden
-    MEDIUM = "MEDIUM"  # Warning, should be fixed
-    LOW = "LOW"  # Suggestion
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
 
 
 @dataclass
 class Violation:
-    """Represents a single architectural violation."""
-
     agent_id: str
     file_path: str
     line_number: int
-    violation_type: ViolationType
+    rule_id: str
     severity: ViolationSeverity
     message: str
     code_snippet: Optional[str] = None
     fix_suggestion: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dict for JSON serialization."""
         return {
             "agent_id": self.agent_id,
             "file_path": self.file_path,
             "line_number": self.line_number,
-            "violation_type": self.violation_type.value,
+            "rule_id": self.rule_id,
             "severity": self.severity.value,
             "message": self.message,
             "code_snippet": self.code_snippet,
@@ -67,414 +53,168 @@ class Violation:
         }
 
 
-class PathCallVisitor(ast.NodeVisitor):
-    """AST visitor to detect Path("data/...") calls."""
+class UniversalRuleVisitor(ast.NodeVisitor):
+    """Interpret rules from standards.yaml against an AST."""
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, rules: List[Dict[str, Any]]):
         self.file_path = file_path
+        self.rules = rules
         self.violations: List[Violation] = []
 
     def visit_Call(self, node: ast.Call) -> None:
-        """Visit function call nodes."""
-        # Check for Path("data/...") pattern
-        if isinstance(node.func, ast.Name) and node.func.id == "Path":
-            # Check if first argument is a string starting with "data/"
-            if node.args and isinstance(node.args[0], ast.Constant):
-                arg_value = node.args[0].value
-                if isinstance(arg_value, str) and arg_value.startswith("data/"):
-                    self.violations.append(
-                        Violation(
-                            agent_id=self._extract_agent_id(),
-                            file_path=self.file_path,
-                            line_number=node.lineno,
-                            violation_type=ViolationType.DIRECT_PATH_DATA,
-                            severity=ViolationSeverity.CRITICAL,
-                            message=f"Direct Path('data/...') call detected: Path('{arg_value}')",
-                            code_snippet=f"Path('{arg_value}')",
-                            fix_suggestion="Use agent.system.get_sandbox_path() / 'subdir' instead",
-                        )
-                    )
-
+        self._check_node(node, "Call")
         self.generic_visit(node)
-
-    def _extract_agent_id(self) -> str:
-        """Extract agent ID from file path."""
-        parts = Path(self.file_path).parts
-        if "system_agents" in parts:
-            idx = parts.index("system_agents")
-            if idx + 1 < len(parts):
-                return parts[idx + 1]
-        return "unknown"
-
-
-class InitMethodVisitor(ast.NodeVisitor):
-    """AST visitor to detect hardcoded paths in __init__ methods."""
-
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-        self.violations: List[Violation] = []
-        self.in_init = False
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        """Visit function definitions."""
-        if node.name == "__init__":
-            self.in_init = True
-            self.generic_visit(node)
-            self.in_init = False
-        else:
-            self.generic_visit(node)
-
-    def visit_Assign(self, node: ast.Assign) -> None:
-        """Visit assignment nodes in __init__."""
-        if self.in_init:
-            # Check for self.path = Path(...) patterns
-            if isinstance(node.value, ast.Call):
-                if isinstance(node.value.func, ast.Name) and node.value.func.id == "Path":
-                    # Check if it's a hardcoded path (not lazy-loaded)
-                    if node.value.args and isinstance(node.value.args[0], ast.Constant):
-                        arg_value = node.value.args[0].value
-                        if isinstance(arg_value, str) and not arg_value.startswith("_"):
-                            # This is a hardcoded path in __init__ (not a temp variable)
-                            self.violations.append(
-                                Violation(
-                                    agent_id=self._extract_agent_id(),
-                                    file_path=self.file_path,
-                                    line_number=node.lineno,
-                                    violation_type=ViolationType.HARDCODED_PATH_IN_INIT,
-                                    severity=ViolationSeverity.MEDIUM,
-                                    message=f"Hardcoded path in __init__: {arg_value}",
-                                    code_snippet=f"Path('{arg_value}')",
-                                    fix_suggestion="Use lazy-loading @property pattern instead",
-                                )
-                            )
-
-        self.generic_visit(node)
-
-    def _extract_agent_id(self) -> str:
-        """Extract agent ID from file path."""
-        parts = Path(self.file_path).parts
-        if "system_agents" in parts:
-            idx = parts.index("system_agents")
-            if idx + 1 < len(parts):
-                return parts[idx + 1]
-        return "unknown"
-
-
-class DirectToolCallVisitor(ast.NodeVisitor):
-    """AST visitor to detect self.*_tool.method() calls (NAKED agent pattern violation)."""
-
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-        self.violations: List[Violation] = []
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
-        """Visit attribute access - detect self.*_tool patterns."""
-        # Pattern: self.something_tool.method() or self.city_control.method()
-        if isinstance(node.value, ast.Attribute):
-            if isinstance(node.value.value, ast.Name) and node.value.value.id == "self":
-                attr_name = node.value.attr
-                # Match: *_tool suffix OR known legacy tool names
-                if attr_name.endswith("_tool") or attr_name in [
-                    "city_control",
-                    "campaign_tool",
-                    "gap_report",
-                    "hil_assistant",
-                    "curator",
-                    "diplomacy",
-                ]:
-                    self.violations.append(
-                        Violation(
-                            agent_id=self._extract_agent_id(),
-                            file_path=self.file_path,
-                            line_number=node.lineno,
-                            violation_type=ViolationType.DIRECT_TOOL_CALL,
-                            severity=ViolationSeverity.CRITICAL,
-                            message=f"Direct tool access: self.{attr_name}.{node.attr}()",
-                            code_snippet=f"self.{attr_name}.{node.attr}",
-                            fix_suggestion="Use self.system.execute_tool('namespace.tool', params)",
-                        )
-                    )
+        self._check_node(node, "Attribute")
         self.generic_visit(node)
 
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        self._check_node(node, "ExceptHandler")
+        self.generic_visit(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        self._check_node(node, "Assign")
+        self.generic_visit(node)
+
+    def _check_node(self, node: ast.AST, target_type: str) -> None:
+        for rule in self.rules:
+            if rule.get("target") != target_type:
+                continue
+
+            if self._matches_rule(node, rule):
+                try:
+                    snippet = ast.unparse(node)[:100]
+                except Exception:
+                    snippet = "N/A"
+
+                self.violations.append(
+                    Violation(
+                        agent_id=self._extract_agent_id(),
+                        file_path=self.file_path,
+                        line_number=node.lineno,
+                        rule_id=rule.get("id", "unknown"),
+                        severity=ViolationSeverity(rule.get("severity", "MEDIUM")),
+                        message=rule.get("message", "Violation"),
+                        code_snippet=snippet,
+                        fix_suggestion=rule.get("fix_suggestion"),
+                    )
+                )
+
+    def _matches_rule(self, node: ast.AST, rule: Dict[str, Any]) -> bool:
+        match = rule.get("match", {})
+
+        # 1. Match Function Name
+        if "func" in match:
+            if not isinstance(node, ast.Call):
+                return False
+            name = ""
+            if isinstance(node.func, ast.Name):
+                name = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                name = node.func.attr
+            if name != match["func"]:
+                return False
+
+        # 2. Match Object Name
+        if "object" in match:
+            obj = ""
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                obj = node.value.id
+            elif (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+            ):
+                obj = node.func.value.id
+            if obj != match["object"]:
+                return False
+
+        # 3. Match Arguments
+        if "args_contain" in match:
+            forbidden = match["args_contain"]
+            found = False
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Constant) and any(f in str(sub.value) for f in forbidden):
+                    found = True
+                    break
+            if not found:
+                return False
+
+        # 4. Custom Conditions
+        if rule.get("condition") == "is_pass_only":
+            if isinstance(node, ast.ExceptHandler):
+                return len(node.body) == 1 and isinstance(node.body[0], ast.Pass)
+
+        return True
+
     def _extract_agent_id(self) -> str:
-        """Extract agent ID from file path."""
-        parts = Path(self.file_path).parts
-        if "system_agents" in parts:
-            idx = parts.index("system_agents")
-            if idx + 1 < len(parts):
-                return parts[idx + 1]
-        elif "registry" in parts:
-            idx = parts.index("registry")
-            if idx + 1 < len(parts):
-                return parts[idx + 1]
-        return "unknown"
+        p = Path(self.file_path)
+        for i, part in enumerate(p.parts):
+            if part in ["system", "agent_city"] and i + 1 < len(p.parts):
+                return p.parts[i + 1]
+        return "core"
 
 
 class StandardsInspectionTool(Tool):
-    """
-    Deep AST-based inspection tool for architectural standards (Tool Protocol).
-
-    This is Watchman's "microscope" - it can see violations that grep cannot.
-    """
-
     def __init__(self):
-        self.violations: List[Violation] = []
+        self._rules = self._load_standards()
+
+    def _load_standards(self) -> List[Dict[str, Any]]:
+        p = Path("config/standards.yaml")
+        if p.exists():
+            try:
+                with open(p) as f:
+                    return yaml.safe_load(f).get("rules", [])
+            except Exception as e:
+                logger.error(f"Failed to load standards: {e}")
+        return []
 
     @property
     def name(self) -> str:
-        return "watchman.standards"  # Namespaced: agent_id.tool_name
+        return "watchman.standards"
 
     @property
     def description(self) -> str:
-        return "Deep AST-based code analysis - detect architectural violations"
+        return "Core Standards Engine"
 
     @property
-    def parameters_schema(self) -> dict[str, Any]:
-        return {
-            "action": {
-                "type": "string",
-                "required": True,
-                "description": "Action: 'inspect_all' | 'inspect_agent' | 'generate_report'",
-            },
-            "system_agents_path": {
-                "type": "string",
-                "required": False,
-                "description": "Path to vibe_core/cartridges/system (for inspect_all)",
-            },
-            "agent_path": {
-                "type": "string",
-                "required": False,
-                "description": "Path to single agent (for inspect_agent)",
-            },
-            "violations": {
-                "type": "list",
-                "required": False,
-                "description": "Violations list (for generate_report)",
-            },
-        }
+    def parameters_schema(self) -> dict:
+        return {"action": {"type": "string", "required": True}, "path": {"type": "string"}}
 
-    def validate(self, parameters: dict[str, Any]) -> None:
-        """Validate parameters."""
-        if "action" not in parameters:
-            raise ValueError("Missing required parameter: action")
+    def validate(self, params: dict):
+        if "action" not in params:
+            raise ValueError("Missing action")
 
-        action = parameters["action"]
-        if action not in ["inspect_all", "inspect_agent", "generate_report"]:
-            raise ValueError(f"Invalid action: {action}")
-
-        if action == "inspect_all" and "system_agents_path" not in parameters:
-            raise ValueError("inspect_all requires 'system_agents_path' parameter")
-
-        if action == "inspect_agent" and "agent_path" not in parameters:
-            raise ValueError("inspect_agent requires 'agent_path' parameter")
-
-    def execute(self, parameters: dict[str, Any]) -> ToolResult:
-        """Execute standards inspection."""
+    def execute(self, params: dict) -> ToolResult:
         try:
-            action = parameters["action"]
+            path = Path(params.get("path", "vibe_core"))
+            violations = []
+            if params["action"] == "inspect_file":
+                violations = self.inspect_file(path)
+            else:
+                for py in path.glob("**/*.py"):
+                    if "__pycache__" not in str(py):
+                        violations.extend(self.inspect_file(py))
 
-            if action == "inspect_all":
-                system_agents_path = Path(parameters["system_agents_path"])
-                violations = self.inspect_all_agents(system_agents_path)
-
-                return ToolResult(
-                    success=True,
-                    output={"violations": [v.to_dict() for v in violations]},
-                    metadata={
-                        "action": "inspect_all",
-                        "total_violations": len(violations),
-                    },
-                )
-
-            elif action == "inspect_agent":
-                agent_path = Path(parameters["agent_path"])
-                violations = self.inspect_agent(agent_path)
-
-                return ToolResult(
-                    success=True,
-                    output={"violations": [v.to_dict() for v in violations]},
-                    metadata={
-                        "action": "inspect_agent",
-                        "agent_id": agent_path.name,
-                        "total_violations": len(violations),
-                    },
-                )
-
-            elif action == "generate_report":
-                violations_data = parameters.get("violations", [])
-                # Convert dicts back to Violation objects if needed
-                if violations_data and isinstance(violations_data[0], dict):
-                    violations = []  # Would need to reconstruct from dicts
-                else:
-                    violations = violations_data
-                report = self.generate_report(violations)
-
-                return ToolResult(
-                    success=True,
-                    output=report,
-                    metadata={"action": "generate_report"},
-                )
-
+            return ToolResult(success=True, output={"violations": [v.to_dict() for v in violations]})
         except Exception as e:
-            error_msg = f"Standards inspection failed: {type(e).__name__}: {e!s}"
-            logger.error(f"StandardsInspectionTool: {error_msg}", exc_info=True)
-            return ToolResult(success=False, error=error_msg)
+            return ToolResult(success=False, error=str(e))
 
-    def inspect_agent(self, agent_path: Path) -> List[Violation]:
-        """
-        Inspect a single agent for violations.
-
-        Args:
-            agent_path: Path to agent directory (e.g., vibe_core/cartridges/system/herald)
-
-        Returns:
-            List of violations found
-        """
-        violations = []
-
-        # Check 1: requirements.txt should not exist
-        requirements_file = agent_path / "requirements.txt"
-        if requirements_file.exists():
-            violations.append(
-                Violation(
-                    agent_id=agent_path.name,
-                    file_path=str(requirements_file),
-                    line_number=1,
-                    violation_type=ViolationType.REQUIREMENTS_TXT,
-                    severity=ViolationSeverity.CRITICAL,
-                    message="requirements.txt found in agent directory",
-                    fix_suggestion="Remove requirements.txt and use pyproject.toml",
-                )
-            )
-
-        # Check 2: Inspect cartridge_main.py with AST
-        cartridge_file = agent_path / "cartridge_main.py"
-        if cartridge_file.exists():
-            violations.extend(self._inspect_python_file(cartridge_file))
-
-        # Check 3: Line count (GAD-000 compliance)
-        if cartridge_file.exists():
-            line_count = len(cartridge_file.read_text().splitlines())
-            if line_count > 500:
-                violations.append(
-                    Violation(
-                        agent_id=agent_path.name,
-                        file_path=str(cartridge_file),
-                        line_number=1,
-                        violation_type=ViolationType.LINE_COUNT_EXCEEDED,
-                        severity=ViolationSeverity.MEDIUM,
-                        message=f"Agent has {line_count} lines (GAD-000 recommends <500)",
-                        fix_suggestion="Consider splitting into multiple tools",
-                    )
-                )
-
-        return violations
-
-    def _inspect_python_file(self, file_path: Path) -> List[Violation]:
-        """
-        Inspect a Python file using AST analysis.
-
-        Args:
-            file_path: Path to Python file
-
-        Returns:
-            List of violations found
-        """
-        violations = []
-
+    def inspect_file(self, file_path: Path) -> List[Violation]:
         try:
-            content = file_path.read_text()
-            tree = ast.parse(content, filename=str(file_path))
-
-            # Visit 1: Find Path("data/...") calls
-            path_visitor = PathCallVisitor(str(file_path))
-            path_visitor.visit(tree)
-            violations.extend(path_visitor.violations)
-
-            # Visit 2: Find hardcoded paths in __init__
-            init_visitor = InitMethodVisitor(str(file_path))
-            init_visitor.visit(tree)
-            violations.extend(init_visitor.violations)
-
-            # Check 5: Direct tool calls (NAKED agent pattern)
-            tool_visitor = DirectToolCallVisitor(str(file_path))
-            tool_visitor.visit(tree)
-            violations.extend(tool_visitor.violations)
-
-        except SyntaxError as e:
-            logger.error(f"Syntax error in {file_path}: {e}")
-            violations.append(
-                Violation(
-                    agent_id=file_path.parent.name,
-                    file_path=str(file_path),
-                    line_number=e.lineno or 1,
-                    violation_type=ViolationType.MISSING_SYSTEM_INTERFACE,
-                    severity=ViolationSeverity.HIGH,
-                    message=f"Syntax error: {e.msg}",
-                )
-            )
-
-        return violations
-
-    def inspect_all_agents(self, system_agents_path: Path) -> List[Violation]:
-        """
-        Inspect all agents in the system_agents directory.
-
-        Args:
-            system_agents_path: Path to vibe_core/cartridges/system
-
-        Returns:
-            List of all violations found
-        """
-        all_violations = []
-
-        # Find all agent directories
-        for agent_dir in system_agents_path.iterdir():
-            if agent_dir.is_dir() and not agent_dir.name.startswith("."):
-                logger.info(f"🔍 Inspecting {agent_dir.name}...")
-                violations = self.inspect_agent(agent_dir)
-                all_violations.extend(violations)
-
-                if violations:
-                    logger.warning(f"   ⚠️  Found {len(violations)} violation(s) in {agent_dir.name}")
-                else:
-                    logger.info(f"   ✅ {agent_dir.name} is compliant")
-
-        return all_violations
-
-    def generate_report(self, violations: List[Violation]) -> Dict[str, Any]:
-        """
-        Generate a compliance report.
-
-        Args:
-            violations: List of violations
-
-        Returns:
-            Report dict with summary and details
-        """
-        # Group by severity
-        by_severity = {
-            "CRITICAL": [v for v in violations if v.severity == ViolationSeverity.CRITICAL],
-            "HIGH": [v for v in violations if v.severity == ViolationSeverity.HIGH],
-            "MEDIUM": [v for v in violations if v.severity == ViolationSeverity.MEDIUM],
-            "LOW": [v for v in violations if v.severity == ViolationSeverity.LOW],
-        }
-
-        # Group by agent
-        by_agent = {}
-        for v in violations:
-            if v.agent_id not in by_agent:
-                by_agent[v.agent_id] = []
-            by_agent[v.agent_id].append(v)
-
-        return {
-            "total_violations": len(violations),
-            "by_severity": {severity: len(viols) for severity, viols in by_severity.items()},
-            "by_agent": {agent_id: len(viols) for agent_id, viols in by_agent.items()},
-            "critical_count": len(by_severity["CRITICAL"]),
-            "should_fail_build": len(by_severity["CRITICAL"]) > 0,
-            "violations": [v.to_dict() for v in violations],
-        }
+            tree = ast.parse(file_path.read_text())
+            visitor = UniversalRuleVisitor(str(file_path), self._rules)
+            visitor.visit(tree)
+            return visitor.violations
+        except Exception:
+            return []
 
 
-__all__ = ["StandardsInspectionTool"]
+if __name__ == "__main__":
+    import sys
+
+    tool = StandardsInspectionTool()
+    target = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("vibe_core")
+    res = tool.execute({"action": "inspect_all", "path": str(target)})
+    print(json.dumps(res.output, indent=2))

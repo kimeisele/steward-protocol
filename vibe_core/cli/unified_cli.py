@@ -1029,6 +1029,7 @@ class UnifiedCLI:
         Usage:
             steward execute --circuit <path>              # Full boot + execute
             steward execute --circuit <path> --headless   # Fast headless boot
+            steward execute --circuit <path> --input "..." # Execute with custom input
 
         This command:
         1. Boots the kernel in the appropriate mode (FULL or HEADLESS)
@@ -1048,6 +1049,7 @@ class UnifiedCLI:
 
         # Parse arguments
         circuit_path = None
+        user_input = None
         headless = False
         non_interactive = False
 
@@ -1056,6 +1058,9 @@ class UnifiedCLI:
             arg = args[i]
             if arg == "--circuit" and i + 1 < len(args):
                 circuit_path = args[i + 1]
+                i += 2
+            elif arg == "--input" and i + 1 < len(args):
+                user_input = args[i + 1]
                 i += 2
             elif arg == "--headless":
                 headless = True
@@ -1069,8 +1074,7 @@ class UnifiedCLI:
         if not circuit_path:
             print("❌ Missing required argument: --circuit <path>")
             print("\nUsage:")
-            print("  steward execute --circuit <path>              # Full boot")
-            print("  steward execute --circuit <path> --headless   # Headless boot")
+            print("  steward execute --circuit <path> [--input <text>] [--headless]")
             return 1
 
         circuit_file = Path(circuit_path)
@@ -1083,6 +1087,9 @@ class UnifiedCLI:
                 print(f"❌ Circuit file not found: {circuit_path}")
                 return 1
 
+        # Use provided input or fallback to default
+        final_input = user_input or f"CLI execute: {circuit_file.stem}"
+
         # Determine boot mode
         boot_mode = BootMode.HEADLESS if headless else BootMode.FULL
 
@@ -1090,6 +1097,7 @@ class UnifiedCLI:
         print("=" * 50)
         print(f"   Circuit: {circuit_file}")
         print(f"   Mode:    {boot_mode.value.upper()}")
+        print(f"   Input:   {final_input}")
         if non_interactive:
             print("   Prompts: DISABLED")
         print()
@@ -1135,7 +1143,7 @@ class UnifiedCLI:
             # Execute circuit directly
             result = executor._execute_circuit(
                 circuit_def=circuit_inner,
-                raw_input=f"CLI execute: {circuit_id}",
+                raw_input=final_input,
                 compilation=compilation,
                 requester_id="cli:execute",
             )

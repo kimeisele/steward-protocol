@@ -89,10 +89,55 @@ class ComplianceBureau:
         # Check 4: Recommended files (Documentation)
         self._check_recommended_files(path, module_type, report)
 
-        # Check 5: No obvious issues (Parseability)
+        # Check 5: Architectural Standards (Dharma)
+        self._check_standards(path, module_type, report)
+
+        # Check 6: No obvious issues (Parseability)
         self._check_code_quality(path, module_type, report)
 
         return report
+
+    def _check_standards(self, path: Path, module_type: ModuleType, report: ComplianceReport) -> None:
+        """Check for violations of architectural standards (Todsünden)."""
+        if module_type not in [
+            ModuleType.PLUGIN,
+            ModuleType.CARTRIDGE,
+            ModuleType.TOOL,
+            ModuleType.ACTION,
+            ModuleType.SENSE,
+        ]:
+            return
+
+        # Find all Python files in the module
+        for py_file in path.glob("**/*.py"):
+            if "__pycache__" in str(py_file):
+                continue
+
+            try:
+                content = py_file.read_text()
+
+                # TODSÜNDE #2: Ghost State (Raw Writes)
+                # Simple check for open(..., 'w') or 'a'
+                if "open(" in content and (
+                    '"w"' in content or "'w'" in content or '"a"' in content or "'a'" in content
+                ):
+                    report.add_check(
+                        f"standards:unsafe_io:{py_file.name}",
+                        False,
+                        f"Raw write detected in {py_file.name}. Use self.system.write_file instead.",
+                        "error",
+                    )
+
+                # TODSÜNDE #1: Silent Failures
+                if "except Exception: pass" in content or "except: pass" in content:
+                    report.add_check(
+                        f"standards:silent_failure:{py_file.name}",
+                        False,
+                        f"Silent failure (except: pass) detected in {py_file.name}.",
+                        "warning",
+                    )
+            except Exception as e:
+                logger.debug(f"Could not scan standards for {py_file}: {e}")
 
     def quick_check(self, path: Path, module_type: Optional[ModuleType] = None) -> bool:
         """

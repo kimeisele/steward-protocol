@@ -90,24 +90,47 @@ class EngineerCartridge(VibeAgent, OathMixin):
 
     async def process(self, task: Task) -> Dict[str, Any]:
         """
-        Sync dispatch based on payload 'action' or 'method'.
+        Generic Task Dispatcher.
 
-        Supported actions:
-        - manifest_reality: Write code to sandbox
-        - create_agent: Scaffold new agent
+        Instead of hardcoded if/elif blocks, we look for a tool that
+        matches the requested action and delegate execution to the kernel.
         """
         action = task.payload.get("action") or task.payload.get("method")
         logger.info(f"📐 ENGINEER processing: {action}")
 
-        if action == "manifest_reality" or action == "write_code":
-            return self.manifest_reality(task)
-        elif action == "create_agent":
-            return self.create_agent_legacy(task)
-        elif action == "spawn_agent" or action == "spawn":
-            return self.spawn_agent(task)
-        else:
-            return {"status": "ignored", "reason": f"Unknown action: {action}"}
+        # 1. Try to find a tool for this specific action
+        # Convention: engineer.{action}
+        tool_name = f"engineer.{action}"
 
+        try:
+            # Check if we have a system tool for this
+            result = self.system.execute_tool(tool_name, task.payload)
+
+            if result.success:
+                # If the tool returned code that needs to be sandboxed, do it here
+                if isinstance(result.output, dict) and "code" in result.output:
+                    filename = os.path.basename(task.payload.get("path") or task.payload.get("file") or "generated.py")
+                    self.system.write_file(filename, result.output["code"])
+                    result.output["sandbox_path"] = str(self.system.get_sandbox_path() / filename)
+
+                return {"status": "success", "action": action, "result": result.output}
+
+            # 2. Fallback: If tool not found or failed, try legacy handlers
+            # (Keeping them for 1 tick to ensure backward compatibility during migration)
+            if action == "manifest_reality":
+                return self.manifest_reality(task)
+
+            return {
+                "status": "error",
+                "reason": f"No tool found for action '{action}' and legacy handler failed.",
+                "details": result.error if not result.success else None,
+            }
+
+        except Exception as e:
+            logger.error(f"❌ ENGINEER dispatch failed for {action}: {e}")
+            return {"status": "error", "reason": str(e)}
+
+    # Legacy methods remain below but are being phased out...
     def manifest_reality(self, task: Task) -> Dict[str, Any]:
         """
         Writes code to the sandbox (Safe Evolution Loop input).
