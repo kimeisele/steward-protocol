@@ -339,7 +339,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # OPUS-096: State Sync Holon Weaver (MetaData Orchestration)
         from vibe_core.state.weaver import get_state_sync_weaver
 
-        get_state_sync_weaver(self.prakriti)
+        get_state_sync_weaver()
 
         # 3. CAPABILITY REGISTRY (with blueprint)
         # Phase 2: Capability Registry (Must be before plugins)

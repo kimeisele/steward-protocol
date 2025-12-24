@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.protocols import PrakritiProtocol
 from vibe_core.state.schema import CommitResult
 
@@ -139,6 +140,9 @@ class Prakriti(PrakritiProtocol):
         # Session tracking (OPUS-027)
         self.session: Optional[KernelSessionContext] = None
         self._prakriti_dir = self._workspace / ".prakriti"
+
+        # Register in DI container
+        ServiceRegistry.register(PrakritiProtocol, self)
 
         logger.info(f"[PRAKRITI] Initialized at {self._workspace} (Ledger: {db_path})")
 

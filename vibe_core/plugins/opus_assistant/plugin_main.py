@@ -50,6 +50,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.plugin_protocol import KernelPlugin
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import OpusAssistantProtocol
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -65,7 +67,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("OPUS_ASSISTANT")
 
 
-class OpusAssistantPlugin(KernelPlugin):
+class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
     """
     OPUS Assistant - Active manager for OPUS.md ecosystem.
 
@@ -120,6 +122,9 @@ class OpusAssistantPlugin(KernelPlugin):
         7. OPUS-112: Register MANAS for system tool access
         """
         self._kernel = kernel
+
+        # Register in DI container
+        ServiceRegistry.register(OpusAssistantProtocol, self)
 
         # Get workspace path
         self._workspace = getattr(kernel, "workspace_path", None) or Path.cwd()

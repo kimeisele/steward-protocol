@@ -12,10 +12,13 @@ import logging
 import os
 from typing import Optional
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import LLMProtocol
+
 logger = logging.getLogger("LLM_ENGINE")
 
 
-class LLMEngine:
+class LLMEngine(LLMProtocol):
     """
     🧠 Neuro-Symbolic Bridge (THIN WRAPPER)
 
@@ -187,6 +190,9 @@ raise NotImplementedError(
 
 # Singleton instance for module-level access
 llm = LLMEngine()
+
+# Register in DI container
+ServiceRegistry.register(LLMProtocol, llm)
 
 logger.info(f"🧠 LLM Engine initialized (Provider: {llm.provider})")
 
