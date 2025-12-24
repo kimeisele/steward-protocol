@@ -258,11 +258,14 @@ class TestConfigSectionsIgnored:
             content = py_file.read_text()
             # Check for patterns that indicate using config sections
             if "config.sections" in content or "get_config().sections" in content:
-                users.append(py_file.stem)
+                # Handle subdirectory renderers (e.g., architecture/renderer.py -> "architecture")
+                if py_file.parent.name != "renderers":
+                    users.append(py_file.parent.name)
+                else:
+                    users.append(py_file.stem)
 
         return users
 
-    @pytest.mark.xfail(reason="OPUS-150: Known architecture debt - interface.yaml sections ignored")
     def test_section_configs_are_used(self):
         """Renderers should use their section configs from interface.yaml."""
         configured = self.get_configured_renderers_with_sections()

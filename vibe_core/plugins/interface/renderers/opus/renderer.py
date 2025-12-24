@@ -46,6 +46,20 @@ class OpusRenderer(BaseRenderer):
         super().__init__(kernel)
         self.kernel = kernel
         self._root = Path(".")
+        self._register_data_sources()
+
+    def _register_data_sources(self) -> None:
+        """Register data sources for section-based rendering."""
+        self.register_data_source("opus.status", self._get_opus_status)
+        self.register_data_source("opus.metrics", self._get_opus_metrics)
+
+    def _get_opus_status(self) -> Dict[str, Any]:
+        """Get OPUS status for section rendering."""
+        return {"status": "active", "mode": "autonomous"}
+
+    def _get_opus_metrics(self) -> Dict[str, Any]:
+        """Get OPUS metrics for section rendering."""
+        return {"tasks_completed": 0, "karma": 0}
 
     @property
     def name(self) -> str:
@@ -62,8 +76,14 @@ class OpusRenderer(BaseRenderer):
         return DocumentType.BIDIRECTIONAL
 
     def render(self) -> None:
-        """Render OPUS.md with dirty tracking (writes through kernel.io)."""
-        self.render_with_dirty_tracking()
+        """Render OPUS.md using config-driven sections."""
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            # Fallback to opus_assistant delegation
+            self.render_with_dirty_tracking()
 
     def generate_content(self) -> str:
         """

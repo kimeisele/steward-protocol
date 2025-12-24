@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2025-12-06T13:01:01.778843",
+  "updated_at": "2025-12-24T02:12:08.674606",
   "contracts": {
     "tests/test_topology_integration.py": {
       "test_path": "tests/test_topology_integration.py",
@@ -422,6 +422,1286 @@
       "test_path": "tests/hardening/test_ledger_acid.py",
       "content_hash": "a9d3751e6a01a98a",
       "created_at": "2025-12-06T13:01:01.778785",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_orchestration_unification.py": {
+      "test_path": "tests/test_orchestration_unification.py",
+      "content_hash": "753c9b191c7e8687",
+      "created_at": "2025-12-24T02:12:05.856526",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_opus209_kernel.py": {
+      "test_path": "tests/test_opus209_kernel.py",
+      "content_hash": "20ffb9ee01d56cdb",
+      "created_at": "2025-12-24T02:12:05.874440",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_opus210_commit_authority.py": {
+      "test_path": "tests/test_opus210_commit_authority.py",
+      "content_hash": "05cbd10d178a7594",
+      "created_at": "2025-12-24T02:12:05.886597",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_opus210_plugin_compliance.py": {
+      "test_path": "tests/test_opus210_plugin_compliance.py",
+      "content_hash": "d6b0f8634d08ade5",
+      "created_at": "2025-12-24T02:12:05.924247",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_intent_router.py": {
+      "test_path": "tests/manas/test_intent_router.py",
+      "content_hash": "c4fddf01e287939d",
+      "created_at": "2025-12-24T02:12:05.927590",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_sutra.py": {
+      "test_path": "tests/manas/test_sutra.py",
+      "content_hash": "7eaa615a275e502c",
+      "created_at": "2025-12-24T02:12:05.937985",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_sankalpa.py": {
+      "test_path": "tests/manas/test_sankalpa.py",
+      "content_hash": "d3b4f4c4ac72840a",
+      "created_at": "2025-12-24T02:12:05.942804",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_shiva_lifecycle.py": {
+      "test_path": "tests/manas/test_shiva_lifecycle.py",
+      "content_hash": "0313676530436004",
+      "created_at": "2025-12-24T02:12:05.953535",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_kriya.py": {
+      "test_path": "tests/manas/test_kriya.py",
+      "content_hash": "56d277686da9eccb",
+      "created_at": "2025-12-24T02:12:05.956225",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_contract_analyzer.py": {
+      "test_path": "tests/manas/test_contract_analyzer.py",
+      "content_hash": "ebc8ab8b2a79dd00",
+      "created_at": "2025-12-24T02:12:05.993130",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_shell_cortex.py": {
+      "test_path": "tests/manas/test_shell_cortex.py",
+      "content_hash": "e919c1bd6a1271d1",
+      "created_at": "2025-12-24T02:12:06.003858",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_mandala.py": {
+      "test_path": "tests/manas/test_mandala.py",
+      "content_hash": "39e54b1ca26bfde5",
+      "created_at": "2025-12-24T02:12:06.012064",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_maya_integration.py": {
+      "test_path": "tests/manas/test_maya_integration.py",
+      "content_hash": "813c78db3a93f0e3",
+      "created_at": "2025-12-24T02:12:06.020697",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_live_fire.py": {
+      "test_path": "tests/manas/test_live_fire.py",
+      "content_hash": "ee4e0e12fbf42213",
+      "created_at": "2025-12-24T02:12:06.036564",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_cognitive_kernel.py": {
+      "test_path": "tests/manas/test_cognitive_kernel.py",
+      "content_hash": "834bfb39290dedf0",
+      "created_at": "2025-12-24T02:12:06.054100",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_jnana.py": {
+      "test_path": "tests/manas/test_jnana.py",
+      "content_hash": "38982867a91bf52d",
+      "created_at": "2025-12-24T02:12:06.059042",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_reflection_gap.py": {
+      "test_path": "tests/manas/test_reflection_gap.py",
+      "content_hash": "4d7ae42f2e7a8aa4",
+      "created_at": "2025-12-24T02:12:06.068009",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_circuit_executor.py": {
+      "test_path": "tests/manas/test_circuit_executor.py",
+      "content_hash": "44a97321d41ab21f",
+      "created_at": "2025-12-24T02:12:06.076940",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_silpa.py": {
+      "test_path": "tests/manas/test_silpa.py",
+      "content_hash": "f1b9f974fc58dbf9",
+      "created_at": "2025-12-24T02:12:06.085737",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_samvada.py": {
+      "test_path": "tests/manas/test_samvada.py",
+      "content_hash": "ae11e7202f1d61f8",
+      "created_at": "2025-12-24T02:12:06.089598",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_dharma.py": {
+      "test_path": "tests/manas/test_dharma.py",
+      "content_hash": "8f5a378d3863ceb1",
+      "created_at": "2025-12-24T02:12:06.100419",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_dojo_runner.py": {
+      "test_path": "tests/manas/test_dojo_runner.py",
+      "content_hash": "876df38ba4e74f79",
+      "created_at": "2025-12-24T02:12:06.104037",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_ci_monitor_analyzer.py": {
+      "test_path": "tests/manas/test_ci_monitor_analyzer.py",
+      "content_hash": "dfbeb8806b48f9d4",
+      "created_at": "2025-12-24T02:12:06.108604",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_doc_harness_analyzer.py": {
+      "test_path": "tests/manas/test_doc_harness_analyzer.py",
+      "content_hash": "72018dbab64978c8",
+      "created_at": "2025-12-24T02:12:06.164981",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_semantic_analyzer.py": {
+      "test_path": "tests/manas/test_semantic_analyzer.py",
+      "content_hash": "b0bf0b78697b58ed",
+      "created_at": "2025-12-24T02:12:06.170296",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_execution_loop.py": {
+      "test_path": "tests/manas/test_execution_loop.py",
+      "content_hash": "5b616b5a011a9c36",
+      "created_at": "2025-12-24T02:12:06.183227",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_memory_store.py": {
+      "test_path": "tests/manas/test_memory_store.py",
+      "content_hash": "089b59d18f026ef0",
+      "created_at": "2025-12-24T02:12:06.188639",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_akasha.py": {
+      "test_path": "tests/manas/test_akasha.py",
+      "content_hash": "cb5b8787727a4166",
+      "created_at": "2025-12-24T02:12:06.194618",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_veda.py": {
+      "test_path": "tests/manas/test_veda.py",
+      "content_hash": "fd460593eae3afbd",
+      "created_at": "2025-12-24T02:12:06.202273",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_intent_generator.py": {
+      "test_path": "tests/manas/test_intent_generator.py",
+      "content_hash": "3cac39e2be8b5103",
+      "created_at": "2025-12-24T02:12:06.207023",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_chat_command.py": {
+      "test_path": "tests/manas/test_chat_command.py",
+      "content_hash": "2121165b0c2a361f",
+      "created_at": "2025-12-24T02:12:06.218537",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/test_mukha.py": {
+      "test_path": "tests/manas/test_mukha.py",
+      "content_hash": "aa4b8289bb22114c",
+      "created_at": "2025-12-24T02:12:06.222361",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/cortex/test_shruta_sense.py": {
+      "test_path": "tests/manas/cortex/test_shruta_sense.py",
+      "content_hash": "5e2a9441877c3d43",
+      "created_at": "2025-12-24T02:12:06.228326",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/cortex/test_prana_sense.py": {
+      "test_path": "tests/manas/cortex/test_prana_sense.py",
+      "content_hash": "87f7de4f082ca3e1",
+      "created_at": "2025-12-24T02:12:06.337039",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/manas/cortex/test_infrastructure_genesis.py": {
+      "test_path": "tests/manas/cortex/test_infrastructure_genesis.py",
+      "content_hash": "0b4c77db18b7ef7f",
+      "created_at": "2025-12-24T02:12:06.410805",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_ledger_samsara.py": {
+      "test_path": "tests/unit/test_ledger_samsara.py",
+      "content_hash": "5dc2530c28056b78",
+      "created_at": "2025-12-24T02:12:06.425760",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_sarga_plugin.py": {
+      "test_path": "tests/unit/test_sarga_plugin.py",
+      "content_hash": "32d606a365e7af47",
+      "created_at": "2025-12-24T02:12:06.430587",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_knowledge_loader_migration.py": {
+      "test_path": "tests/unit/test_knowledge_loader_migration.py",
+      "content_hash": "176b02f1080e5033",
+      "created_at": "2025-12-24T02:12:06.434782",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_interface_hardening.py": {
+      "test_path": "tests/unit/test_interface_hardening.py",
+      "content_hash": "1c3c8d2b78c248a6",
+      "created_at": "2025-12-24T02:12:06.438601",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_roadmap.py": {
+      "test_path": "tests/unit/test_roadmap.py",
+      "content_hash": "795c2cf71c5ae972",
+      "created_at": "2025-12-24T02:12:06.444905",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_unified_executor.py": {
+      "test_path": "tests/unit/test_unified_executor.py",
+      "content_hash": "746b684c2e4ba220",
+      "created_at": "2025-12-24T02:12:06.451154",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_prakriti_state_panel.py": {
+      "test_path": "tests/unit/test_prakriti_state_panel.py",
+      "content_hash": "8bb5195e82736578",
+      "created_at": "2025-12-24T02:12:06.453475",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_agent_city.py": {
+      "test_path": "tests/unit/test_agent_city.py",
+      "content_hash": "825ffb5b36a43c4a",
+      "created_at": "2025-12-24T02:12:06.456062",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_apis.py": {
+      "test_path": "tests/unit/test_config_apis.py",
+      "content_hash": "d68aca7d6ad0b54e",
+      "created_at": "2025-12-24T02:12:06.459890",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_knowledge_resolver.py": {
+      "test_path": "tests/unit/test_knowledge_resolver.py",
+      "content_hash": "c4e1517519f8a2ba",
+      "created_at": "2025-12-24T02:12:06.466085",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_runtime.py": {
+      "test_path": "tests/unit/test_config_runtime.py",
+      "content_hash": "1c50893e312192b1",
+      "created_at": "2025-12-24T02:12:06.469767",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_conftest_fixtures.py": {
+      "test_path": "tests/unit/test_conftest_fixtures.py",
+      "content_hash": "ab29df273db13b21",
+      "created_at": "2025-12-24T02:12:06.473319",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_cli_renderer.py": {
+      "test_path": "tests/unit/test_cli_renderer.py",
+      "content_hash": "0e087b584364b587",
+      "created_at": "2025-12-24T02:12:06.481038",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_container_loader.py": {
+      "test_path": "tests/unit/test_container_loader.py",
+      "content_hash": "8e77656ac4219ca1",
+      "created_at": "2025-12-24T02:12:06.484807",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_quotas.py": {
+      "test_path": "tests/unit/test_config_quotas.py",
+      "content_hash": "161af7ee5a63d0e9",
+      "created_at": "2025-12-24T02:12:06.590188",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_execution_mode.py": {
+      "test_path": "tests/unit/test_execution_mode.py",
+      "content_hash": "7c82455c0c8fc755",
+      "created_at": "2025-12-24T02:12:06.620457",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_monitor_loader.py": {
+      "test_path": "tests/unit/test_monitor_loader.py",
+      "content_hash": "deae93a09d198a44",
+      "created_at": "2025-12-24T02:12:06.627210",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_context_loader_migration.py": {
+      "test_path": "tests/unit/test_context_loader_migration.py",
+      "content_hash": "f659e513be785303",
+      "created_at": "2025-12-24T02:12:06.638764",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_vajra_wiring.py": {
+      "test_path": "tests/unit/test_vajra_wiring.py",
+      "content_hash": "60c30cf6dd4d36b8",
+      "created_at": "2025-12-24T02:12:06.642972",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_paths.py": {
+      "test_path": "tests/unit/test_config_paths.py",
+      "content_hash": "f3a5e4f4fca33253",
+      "created_at": "2025-12-24T02:12:06.656892",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_action_handlers.py": {
+      "test_path": "tests/unit/test_action_handlers.py",
+      "content_hash": "d6e5ec8ffefd1ad2",
+      "created_at": "2025-12-24T02:12:06.688011",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_llm.py": {
+      "test_path": "tests/unit/test_config_llm.py",
+      "content_hash": "ad89372d7c0954dd",
+      "created_at": "2025-12-24T02:12:06.692569",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_unified_trace.py": {
+      "test_path": "tests/unit/test_unified_trace.py",
+      "content_hash": "0f2f60ace3a30ed1",
+      "created_at": "2025-12-24T02:12:06.703487",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_kernel_injection.py": {
+      "test_path": "tests/unit/test_kernel_injection.py",
+      "content_hash": "8297da3310a1189c",
+      "created_at": "2025-12-24T02:12:06.709741",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_config_sections.py": {
+      "test_path": "tests/unit/test_config_sections.py",
+      "content_hash": "3bdcab3f2a3d5840",
+      "created_at": "2025-12-24T02:12:06.719698",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_dharma_lie.py": {
+      "test_path": "tests/unit/test_dharma_lie.py",
+      "content_hash": "cebb529149493c5b",
+      "created_at": "2025-12-24T02:12:06.725944",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_offline_features.py": {
+      "test_path": "tests/unit/test_offline_features.py",
+      "content_hash": "848b03b65614df4d",
+      "created_at": "2025-12-24T02:12:06.770096",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_unified_router.py": {
+      "test_path": "tests/unit/test_unified_router.py",
+      "content_hash": "1989972ee62dcd95",
+      "created_at": "2025-12-24T02:12:06.777656",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_cli_executor.py": {
+      "test_path": "tests/unit/test_cli_executor.py",
+      "content_hash": "917d80d2d854acfe",
+      "created_at": "2025-12-24T02:12:06.788677",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_keyring_trust.py": {
+      "test_path": "tests/unit/test_keyring_trust.py",
+      "content_hash": "e3d426fcce6ef94a",
+      "created_at": "2025-12-24T02:12:06.793246",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_layered_router.py": {
+      "test_path": "tests/unit/test_layered_router.py",
+      "content_hash": "e2b21563d6aff063",
+      "created_at": "2025-12-24T02:12:06.808080",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_cli.py": {
+      "test_path": "tests/unit/test_cli.py",
+      "content_hash": "4264559e001a96e3",
+      "created_at": "2025-12-24T02:12:06.815670",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_ledger.py": {
+      "test_path": "tests/unit/test_ledger.py",
+      "content_hash": "379c74a062b55641",
+      "created_at": "2025-12-24T02:12:06.819957",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_ephemeral_cities.py": {
+      "test_path": "tests/unit/test_ephemeral_cities.py",
+      "content_hash": "20a51951dfbc777f",
+      "created_at": "2025-12-24T02:12:06.848279",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_knowledge_graph.py": {
+      "test_path": "tests/unit/test_knowledge_graph.py",
+      "content_hash": "927b565c0ec87f5b",
+      "created_at": "2025-12-24T02:12:06.857833",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_manas_oracle_api.py": {
+      "test_path": "tests/unit/test_manas_oracle_api.py",
+      "content_hash": "ac9e88dfd9b5e1bf",
+      "created_at": "2025-12-24T02:12:06.868853",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_crypto_verification.py": {
+      "test_path": "tests/unit/test_crypto_verification.py",
+      "content_hash": "69978faca956dd26",
+      "created_at": "2025-12-24T02:12:06.873853",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/test_ephemeral_storage.py": {
+      "test_path": "tests/unit/test_ephemeral_storage.py",
+      "content_hash": "d3bc0bb713378cd3",
+      "created_at": "2025-12-24T02:12:06.888338",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/plugins/test_kala.py": {
+      "test_path": "tests/unit/plugins/test_kala.py",
+      "content_hash": "271ba17d3aec2447",
+      "created_at": "2025-12-24T02:12:06.892137",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/state/test_node_state.py": {
+      "test_path": "tests/unit/state/test_node_state.py",
+      "content_hash": "d717d244c1f6cdde",
+      "created_at": "2025-12-24T02:12:06.901972",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/loaders/test_analyzer_loader.py": {
+      "test_path": "tests/unit/loaders/test_analyzer_loader.py",
+      "content_hash": "00e001f4fbfba378",
+      "created_at": "2025-12-24T02:12:06.907963",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/loaders/test_zollamt.py": {
+      "test_path": "tests/unit/loaders/test_zollamt.py",
+      "content_hash": "1675939b862249ce",
+      "created_at": "2025-12-24T02:12:06.919022",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/loaders/test_action_loader.py": {
+      "test_path": "tests/unit/loaders/test_action_loader.py",
+      "content_hash": "488801a5b0877893",
+      "created_at": "2025-12-24T02:12:06.922995",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/loaders/test_sense_loader.py": {
+      "test_path": "tests/unit/loaders/test_sense_loader.py",
+      "content_hash": "80461ecd777a547b",
+      "created_at": "2025-12-24T02:12:06.927444",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/unit/genesis/test_genesis_service.py": {
+      "test_path": "tests/unit/genesis/test_genesis_service.py",
+      "content_hash": "d380587eacf5a834",
+      "created_at": "2025-12-24T02:12:06.941157",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_search_file.py": {
+      "test_path": "tests/tools/test_search_file.py",
+      "content_hash": "024db1394a4597bf",
+      "created_at": "2025-12-24T02:12:06.951180",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_list_directory.py": {
+      "test_path": "tests/tools/test_list_directory.py",
+      "content_hash": "95535a41afb71450",
+      "created_at": "2025-12-24T02:12:06.955079",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_agenda_tools.py": {
+      "test_path": "tests/tools/test_agenda_tools.py",
+      "content_hash": "6950a705a7f23a7b",
+      "created_at": "2025-12-24T02:12:06.985560",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_tool_registry.py": {
+      "test_path": "tests/tools/test_tool_registry.py",
+      "content_hash": "7f33bd17bc19de0d",
+      "created_at": "2025-12-24T02:12:07.106100",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_tool_protocol.py": {
+      "test_path": "tests/tools/test_tool_protocol.py",
+      "content_hash": "52fdeb3c87d7ad06",
+      "created_at": "2025-12-24T02:12:07.117979",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_file_tools.py": {
+      "test_path": "tests/tools/test_file_tools.py",
+      "content_hash": "26b2941ffae1ff6c",
+      "created_at": "2025-12-24T02:12:07.123587",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_delegate_tool.py": {
+      "test_path": "tests/tools/test_delegate_tool.py",
+      "content_hash": "852d823b82842c71",
+      "created_at": "2025-12-24T02:12:07.131945",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/tools/test_inspect_result.py": {
+      "test_path": "tests/tools/test_inspect_result.py",
+      "content_hash": "f6387146806b31c2",
+      "created_at": "2025-12-24T02:12:07.136028",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/archive/test_runtime_separation.py": {
+      "test_path": "tests/archive/test_runtime_separation.py",
+      "content_hash": "e2a5a1c940316b6e",
+      "created_at": "2025-12-24T02:12:07.139603",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/security/test_shakatasura_escape.py": {
+      "test_path": "tests/security/test_shakatasura_escape.py",
+      "content_hash": "5935cb413085c8dc",
+      "created_at": "2025-12-24T02:12:07.149262",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/security/test_paundraka_identity.py": {
+      "test_path": "tests/security/test_paundraka_identity.py",
+      "content_hash": "1ddba5251589686a",
+      "created_at": "2025-12-24T02:12:07.152876",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/security/test_putana_poison.py": {
+      "test_path": "tests/security/test_putana_poison.py",
+      "content_hash": "0a9bfb573450f5bb",
+      "created_at": "2025-12-24T02:12:07.156029",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/security/test_vajra_fail.py": {
+      "test_path": "tests/security/test_vajra_fail.py",
+      "content_hash": "e48e137c773e518e",
+      "created_at": "2025-12-24T02:12:07.160652",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_federation_manual.py": {
+      "test_path": "tests/integration/test_federation_manual.py",
+      "content_hash": "b454c4faf24cbcf2",
+      "created_at": "2025-12-24T02:12:07.170404",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_topology_integration.py": {
+      "test_path": "tests/integration/test_topology_integration.py",
+      "content_hash": "ad8fed867ce70b64",
+      "created_at": "2025-12-24T02:12:07.201306",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_mvp_lifecycle.py": {
+      "test_path": "tests/integration/test_mvp_lifecycle.py",
+      "content_hash": "c30f8db048bf86f5",
+      "created_at": "2025-12-24T02:12:07.208250",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_vedic_migration.py": {
+      "test_path": "tests/integration/test_vedic_migration.py",
+      "content_hash": "24463e294e2f4985",
+      "created_at": "2025-12-24T02:12:07.217636",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_wiring_health.py": {
+      "test_path": "tests/integration/test_wiring_health.py",
+      "content_hash": "d7ea911f34e2d01a",
+      "created_at": "2025-12-24T02:12:07.223930",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_triguna.py": {
+      "test_path": "tests/integration/test_triguna.py",
+      "content_hash": "98f802430a1e0bc2",
+      "created_at": "2025-12-24T02:12:07.229131",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_id_collision.py": {
+      "test_path": "tests/integration/test_id_collision.py",
+      "content_hash": "6c3b8a14b587cc90",
+      "created_at": "2025-12-24T02:12:07.235360",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_golden_holon.py": {
+      "test_path": "tests/integration/test_golden_holon.py",
+      "content_hash": "cd5b5daad5d09e83",
+      "created_at": "2025-12-24T02:12:07.238816",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_container_integrity.py": {
+      "test_path": "tests/integration/test_container_integrity.py",
+      "content_hash": "bc29e483404c2c0d",
+      "created_at": "2025-12-24T02:12:07.249101",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_agent_city_boot.py": {
+      "test_path": "tests/integration/test_agent_city_boot.py",
+      "content_hash": "d0cbedffe12f31b0",
+      "created_at": "2025-12-24T02:12:07.258373",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_lifecycle_enforcer_native.py": {
+      "test_path": "tests/integration/test_lifecycle_enforcer_native.py",
+      "content_hash": "c0778fa02d39ce2b",
+      "created_at": "2025-12-24T02:12:07.301431",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_live_fire.py": {
+      "test_path": "tests/integration/test_live_fire.py",
+      "content_hash": "5e4f6e8fa01025e4",
+      "created_at": "2025-12-24T02:12:07.305731",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_lifecycle_simple.py": {
+      "test_path": "tests/integration/test_lifecycle_simple.py",
+      "content_hash": "2489e678619d643a",
+      "created_at": "2025-12-24T02:12:07.340506",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_opus_pulse.py": {
+      "test_path": "tests/integration/test_opus_pulse.py",
+      "content_hash": "96a1dcb9287fd08c",
+      "created_at": "2025-12-24T02:12:07.345274",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_fractal_build.py": {
+      "test_path": "tests/integration/test_fractal_build.py",
+      "content_hash": "a7cda28cd2bb71ab",
+      "created_at": "2025-12-24T02:12:07.360994",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_cognitive_circuit_loading.py": {
+      "test_path": "tests/integration/test_cognitive_circuit_loading.py",
+      "content_hash": "36246e44dcb03c99",
+      "created_at": "2025-12-24T02:12:07.415729",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_kernel_scaling.py": {
+      "test_path": "tests/integration/test_kernel_scaling.py",
+      "content_hash": "8efbc0c67af2125a",
+      "created_at": "2025-12-24T02:12:07.422006",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_grand_unification.py": {
+      "test_path": "tests/integration/test_grand_unification.py",
+      "content_hash": "d377dc0310248338",
+      "created_at": "2025-12-24T02:12:07.428687",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_prana_init.py": {
+      "test_path": "tests/integration/test_prana_init.py",
+      "content_hash": "9737007eb283001e",
+      "created_at": "2025-12-24T02:12:07.438177",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_io_service_enforcement.py": {
+      "test_path": "tests/integration/test_io_service_enforcement.py",
+      "content_hash": "06eded7aaa7bba54",
+      "created_at": "2025-12-24T02:12:07.444484",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_event_emission.py": {
+      "test_path": "tests/integration/test_event_emission.py",
+      "content_hash": "005e10bee476567c",
+      "created_at": "2025-12-24T02:12:07.453378",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_manas_oracle_heartbeat.py": {
+      "test_path": "tests/integration/test_manas_oracle_heartbeat.py",
+      "content_hash": "6a72116dd13dab30",
+      "created_at": "2025-12-24T02:12:07.458674",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_persistence_prakriti.py": {
+      "test_path": "tests/integration/test_persistence_prakriti.py",
+      "content_hash": "7755accbe1845468",
+      "created_at": "2025-12-24T02:12:07.469108",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_gajendra_moksha.py": {
+      "test_path": "tests/integration/test_gajendra_moksha.py",
+      "content_hash": "3710aa03e871e3f5",
+      "created_at": "2025-12-24T02:12:07.536556",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_semantic_auditor.py": {
+      "test_path": "tests/integration/test_semantic_auditor.py",
+      "content_hash": "a21a8b716e461405",
+      "created_at": "2025-12-24T02:12:07.550893",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_node_pulse_e2e.py": {
+      "test_path": "tests/integration/test_node_pulse_e2e.py",
+      "content_hash": "83b37d659f459fa7",
+      "created_at": "2025-12-24T02:12:07.560548",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_vedic_enforcement.py": {
+      "test_path": "tests/integration/test_vedic_enforcement.py",
+      "content_hash": "86a71e4918bb8641",
+      "created_at": "2025-12-24T02:12:07.609498",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_conftest_integration.py": {
+      "test_path": "tests/integration/test_conftest_integration.py",
+      "content_hash": "af4c83e603de74e9",
+      "created_at": "2025-12-24T02:12:07.623508",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_visa_protocol.py": {
+      "test_path": "tests/integration/test_visa_protocol.py",
+      "content_hash": "1b5e578df9c95abe",
+      "created_at": "2025-12-24T02:12:07.636379",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_sangha_api.py": {
+      "test_path": "tests/integration/test_sangha_api.py",
+      "content_hash": "ded8a37d5933ff37",
+      "created_at": "2025-12-24T02:12:07.641525",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_watchman_governance.py": {
+      "test_path": "tests/integration/test_watchman_governance.py",
+      "content_hash": "9be3d77ffe3d868c",
+      "created_at": "2025-12-24T02:12:07.668942",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_cognitive_builder.py": {
+      "test_path": "tests/integration/test_cognitive_builder.py",
+      "content_hash": "63d9a5384ad1e46f",
+      "created_at": "2025-12-24T02:12:07.727131",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_prana_orchestrator.py": {
+      "test_path": "tests/integration/test_prana_orchestrator.py",
+      "content_hash": "afcb6b3cbd7d9d8d",
+      "created_at": "2025-12-24T02:12:07.754447",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_governance_pulse.py": {
+      "test_path": "tests/integration/test_governance_pulse.py",
+      "content_hash": "15e0c7d6a8a02850",
+      "created_at": "2025-12-24T02:12:07.923771",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_unified_loader.py": {
+      "test_path": "tests/integration/test_unified_loader.py",
+      "content_hash": "90c6d8f8bd7dcb8b",
+      "created_at": "2025-12-24T02:12:07.975395",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_async_kernel_harness.py": {
+      "test_path": "tests/integration/test_async_kernel_harness.py",
+      "content_hash": "5999ed18302bad96",
+      "created_at": "2025-12-24T02:12:08.009842",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_fractal_ui.py": {
+      "test_path": "tests/integration/test_fractal_ui.py",
+      "content_hash": "037ed47bdfa3e64e",
+      "created_at": "2025-12-24T02:12:08.019137",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_load_vibe_end_to_end.py": {
+      "test_path": "tests/integration/test_load_vibe_end_to_end.py",
+      "content_hash": "38e46e6304206e6d",
+      "created_at": "2025-12-24T02:12:08.042412",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_lifecycle_enforcer.py": {
+      "test_path": "tests/integration/test_lifecycle_enforcer.py",
+      "content_hash": "00ac8418ca433940",
+      "created_at": "2025-12-24T02:12:08.053971",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_genesis_boot.py": {
+      "test_path": "tests/integration/test_genesis_boot.py",
+      "content_hash": "38101d4cd1100ab4",
+      "created_at": "2025-12-24T02:12:08.069177",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_cognitive_mount.py": {
+      "test_path": "tests/integration/test_cognitive_mount.py",
+      "content_hash": "338d3f74ec745140",
+      "created_at": "2025-12-24T02:12:08.082526",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_kala_orchestration_e2e.py": {
+      "test_path": "tests/integration/test_kala_orchestration_e2e.py",
+      "content_hash": "8b3d7a4626e164c5",
+      "created_at": "2025-12-24T02:12:08.105463",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_vajra_enforcement.py": {
+      "test_path": "tests/integration/test_vajra_enforcement.py",
+      "content_hash": "c2cfe727c67c47aa",
+      "created_at": "2025-12-24T02:12:08.125164",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_opus012_spawn.py": {
+      "test_path": "tests/integration/test_opus012_spawn.py",
+      "content_hash": "a6c3f2405ecd780e",
+      "created_at": "2025-12-24T02:12:08.153683",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_telepathy.py": {
+      "test_path": "tests/integration/test_telepathy.py",
+      "content_hash": "01fd4b97c4f0f45a",
+      "created_at": "2025-12-24T02:12:08.171151",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_prana_opus_e2e.py": {
+      "test_path": "tests/integration/test_prana_opus_e2e.py",
+      "content_hash": "341778674ceb89bb",
+      "created_at": "2025-12-24T02:12:08.178229",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_bhakti_grace.py": {
+      "test_path": "tests/integration/test_bhakti_grace.py",
+      "content_hash": "bf38becbcd99bdf3",
+      "created_at": "2025-12-24T02:12:08.222207",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_holon_builder.py": {
+      "test_path": "tests/integration/test_holon_builder.py",
+      "content_hash": "e39daefc8fbc9abf",
+      "created_at": "2025-12-24T02:12:08.233068",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_genesis_flow.py": {
+      "test_path": "tests/integration/test_genesis_flow.py",
+      "content_hash": "d9adbe9f3a6d4515",
+      "created_at": "2025-12-24T02:12:08.238455",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_opus150_architecture_truth.py": {
+      "test_path": "tests/hardening/test_opus150_architecture_truth.py",
+      "content_hash": "15072481421a135a",
+      "created_at": "2025-12-24T02:12:08.443952",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_mohini_recursion.py": {
+      "test_path": "tests/hardening/test_mohini_recursion.py",
+      "content_hash": "0df5503b6a8d8f72",
+      "created_at": "2025-12-24T02:12:08.467265",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_vritrasura_vacuum.py": {
+      "test_path": "tests/hardening/test_vritrasura_vacuum.py",
+      "content_hash": "6009734189ce5717",
+      "created_at": "2025-12-24T02:12:08.517736",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_hiranyakashipu_paradox.py": {
+      "test_path": "tests/hardening/test_hiranyakashipu_paradox.py",
+      "content_hash": "8018f4f7847e32c1",
+      "created_at": "2025-12-24T02:12:08.524659",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_durvasa_latency.py": {
+      "test_path": "tests/hardening/test_durvasa_latency.py",
+      "content_hash": "5bd37e29d9ad3b29",
+      "created_at": "2025-12-24T02:12:08.536623",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_vritrasura_strangulation.py": {
+      "test_path": "tests/hardening/test_vritrasura_strangulation.py",
+      "content_hash": "e85823fa6ffcc4e7",
+      "created_at": "2025-12-24T02:12:08.542624",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_mohini_ouroboros.py": {
+      "test_path": "tests/hardening/test_mohini_ouroboros.py",
+      "content_hash": "34b96aeb9134d1d6",
+      "created_at": "2025-12-24T02:12:08.556110",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_kurukshetra_metal.py": {
+      "test_path": "tests/hardening/test_kurukshetra_metal.py",
+      "content_hash": "5bc38cd99d89ae41",
+      "created_at": "2025-12-24T02:12:08.568069",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_hiranyaksha_tiefsee.py": {
+      "test_path": "tests/hardening/test_hiranyaksha_tiefsee.py",
+      "content_hash": "b1c543ccc46437dc",
+      "created_at": "2025-12-24T02:12:08.581995",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_kaliya_stream.py": {
+      "test_path": "tests/hardening/test_kaliya_stream.py",
+      "content_hash": "85b2f3c5a84fabac",
+      "created_at": "2025-12-24T02:12:08.589358",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_halahala_poison.py": {
+      "test_path": "tests/hardening/test_halahala_poison.py",
+      "content_hash": "54eb4563c1562790",
+      "created_at": "2025-12-24T02:12:08.594635",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/wiring/test_opus_heartbeat_connection.py": {
+      "test_path": "tests/wiring/test_opus_heartbeat_connection.py",
+      "content_hash": "4dcb169ac29bd0a7",
+      "created_at": "2025-12-24T02:12:08.604226",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/concurrency/test_rasa_lila.py": {
+      "test_path": "tests/concurrency/test_rasa_lila.py",
+      "content_hash": "9ec8c8ac99db9648",
+      "created_at": "2025-12-24T02:12:08.611353",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/perf/test_durvasa_famine.py": {
+      "test_path": "tests/perf/test_durvasa_famine.py",
+      "content_hash": "53b052ee0044f08a",
+      "created_at": "2025-12-24T02:12:08.628069",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/perf/test_entropy_leak.py": {
+      "test_path": "tests/perf/test_entropy_leak.py",
+      "content_hash": "a4204aa5bf355651",
+      "created_at": "2025-12-24T02:12:08.637680",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/genesis/test_saraswati_genesis.py": {
+      "test_path": "tests/genesis/test_saraswati_genesis.py",
+      "content_hash": "e007902bb86e7db6",
+      "created_at": "2025-12-24T02:12:08.644209",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/reactor/test_kernel_manifestation.py": {
+      "test_path": "tests/reactor/test_kernel_manifestation.py",
+      "content_hash": "9ee9601093cc547f",
+      "created_at": "2025-12-24T02:12:08.658313",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/reactor/test_fragility.py": {
+      "test_path": "tests/reactor/test_fragility.py",
+      "content_hash": "dc8ec6fa67254246",
+      "created_at": "2025-12-24T02:12:08.674531",
       "created_by": "unknown",
       "frozen": false,
       "notes": ""
