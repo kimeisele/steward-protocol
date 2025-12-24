@@ -276,7 +276,13 @@ async def pulse(kernel: "RealVibeKernel") -> None:
     - Collects current state from all agents
     - Writes vibe_snapshot.json (immutable state view)
     - Renders OPERATIONS.md (human-readable dashboard)
+
+    OPUS-303 Optimizations:
+    - Phase 1: Async I/O write (queued, non-blocking)
+    - Phase 3: Health check cache with 30s TTL
     """
+    import time
+
     try:
         snapshot = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -288,13 +294,25 @@ async def pulse(kernel: "RealVibeKernel") -> None:
             },
         }
 
+        # OPUS-303 Phase 3: Health check cache with 30s TTL
+        current_time = time.time()
+        health_cache = getattr(kernel, "_agent_health_cache", {})
+        HEALTH_CACHE_TTL = 30  # seconds
+
         # Collect agent status
         for agent_id, agent in kernel._agent_registry.items():
             try:
-                # 1. Start with base status
+                # Check cache first
+                cached = health_cache.get(agent_id)
+                if cached and (current_time - cached.get("_cache_time", 0)) < HEALTH_CACHE_TTL:
+                    # Use cached status (skip expensive is_alive() syscall)
+                    snapshot["agents"][agent_id] = {k: v for k, v in cached.items() if k != "_cache_time"}
+                    continue
+
+                # Cache miss or expired: do full check
                 agent_status = agent.report_status() if hasattr(agent, "report_status") else {"status": "UNKNOWN"}
 
-                # 2. Check if agent is actually running (process check)
+                # Check if agent is actually running (process check - expensive)
                 is_alive = True
                 if agent_id in kernel.process_manager.processes:
                     is_alive = kernel.process_manager.processes[agent_id].process.is_alive()
@@ -303,11 +321,13 @@ async def pulse(kernel: "RealVibeKernel") -> None:
                     agent_status["status"] = "CRASHED"
                     agent_status["error"] = "Process is not responding"
 
-                # 3. Mark paused agents (via governance plugin)
+                # Mark paused agents (via governance plugin)
                 if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
                     if kernel.governance.is_agent_paused(agent_id):
                         agent_status["status"] = "PAUSED"
 
+                # Update cache
+                health_cache[agent_id] = {**agent_status, "_cache_time": current_time}
                 snapshot["agents"][agent_id] = agent_status
 
             except Exception as e:
@@ -318,15 +338,31 @@ async def pulse(kernel: "RealVibeKernel") -> None:
                     "timestamp": datetime.utcnow().isoformat(),
                 }
 
-        # Write snapshot through I/O Service (atomic + audited)
-        result = kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
-        if result.success:
-            logger.info("💓 Pulse written: vibe_snapshot.json (via I/O Service)")
-        else:
-            logger.error(f"❌ Pulse snapshot write failed: {result.error}")
+        # Store cache back
+        kernel._agent_health_cache = health_cache
+
+        # OPUS-303 Phase 1: Async I/O write (fire and forget)
+        asyncio.create_task(_async_write_snapshot(kernel, snapshot))
 
     except Exception as e:
         logger.error(f"❌ Pulse failed: {e}")
+
+
+async def _async_write_snapshot(kernel: "RealVibeKernel", snapshot: Dict[str, Any]) -> None:
+    """OPUS-303 Phase 1: Async snapshot write - non-blocking I/O."""
+    try:
+        # Run blocking I/O in thread pool to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None,
+            lambda: kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
+        )
+        if result.success:
+            logger.debug("💓 Pulse written: vibe_snapshot.json (async)")
+        else:
+            logger.error(f"❌ Pulse snapshot write failed: {result.error}")
+    except Exception as e:
+        logger.error(f"❌ Async pulse write failed: {e}")
 
 
 async def execute_playbook(

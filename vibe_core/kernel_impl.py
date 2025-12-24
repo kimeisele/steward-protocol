@@ -282,6 +282,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.resource_manager = None  # Set by ResourceLimitsPlugin
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
         self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
+        # OPUS-303: Agent health cache (TTL 30s) to reduce OS syscalls in pulse
+        self._agent_health_cache: Dict[str, Dict[str, Any]] = {}
 
         # Phase 18: Network Gateway (Sangha)
         # OPUS-209: Extracted to sangha_network plugin
