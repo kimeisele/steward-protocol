@@ -39,7 +39,7 @@ Usage (in agent code):
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional, object
+from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel import VibeKernel
