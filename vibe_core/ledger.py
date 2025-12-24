@@ -162,6 +162,19 @@ class InMemoryLedger(VibeLedger):
         """Return total number of events."""
         return len(self.events)
 
+    def get_top_hash(self) -> str:
+        """Get the fingerprint (top hash) of current ledger state.
+
+        For InMemoryLedger, we compute a simple hash of the last event.
+        Returns "0"*64 if no events exist (same as SQLiteLedger).
+        """
+        if not self.events:
+            return "0" * 64
+        # Hash the last event for consistency with SQLiteLedger
+        last_event = self.events[-1]
+        content = json.dumps(last_event, sort_keys=True, default=str)
+        return hashlib.sha256(content.encode()).hexdigest()
+
 
 def _get_shared_conn(db_path: str) -> sqlite3.Connection:
     """Get or create ONE shared connection for a DB file (OPUS-026 final fix).
