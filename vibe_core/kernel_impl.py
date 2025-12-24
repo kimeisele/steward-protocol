@@ -925,6 +925,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """Get kernel status"""
         return self._status
 
+    @property
+    def plugins(self) -> List[Any]:
+        """Get list of loaded plugins (for state snapshotting)"""
+        return self._plugins
+
     def get_system_status(self) -> dict:
         """
         GAD-000 Test 2: AI-readable system state.

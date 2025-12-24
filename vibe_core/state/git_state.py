@@ -30,6 +30,7 @@ logger = logging.getLogger("GIT_STATE")
 VISNU_PROTECTED = [
     "vibe_core/kernel_impl.py",
     "vibe_core/kernel_ops.py",
+    "vibe_core/ledger.py",
     "vibe_core/plugin_protocol.py",
     "vibe_core/plugin_loader.py",
     "vibe_core/narasimha.py",
