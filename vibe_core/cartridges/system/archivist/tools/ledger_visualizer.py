@@ -29,8 +29,10 @@ class LedgerVisualizer:
     reads from the ledger and generates reports without modifying it.
     """
 
-    def __init__(self, ledger_path: Path = None):
+    def __init__(self, ledger_path: Path = None, vfs: Any = None):
         """Initialize visualizer."""
+        self.vfs = vfs
+
         # OPUS-025: Resolve ledger path from config if not provided
         if ledger_path is None:
             try:
@@ -48,7 +50,15 @@ class LedgerVisualizer:
         self.attestations: List[Dict[str, Any]] = []
         self.last_loaded = None
 
-        if ledger_path.exists():
+        # Determine existence using VFS or direct IO
+        exists = False
+        if self.vfs:
+            exists = self.vfs.exists(str(self.ledger_path))
+        else:
+            exists = ledger_path.exists()
+            logger.warning("⚠️  LedgerVisualizer running without VFS (Legacy Mode)")
+
+        if exists:
             self._load_ledger()
             logger.info(f"✅ Ledger Visualizer initialized: {len(self.attestations)} attestations loaded")
         else:
@@ -59,17 +69,23 @@ class LedgerVisualizer:
         self.attestations = []
 
         try:
-            with open(self.ledger_path, "r", encoding="utf-8") as f:
-                for line_num, line in enumerate(f, 1):
-                    line = line.strip()
-                    if not line:
-                        continue
+            content = ""
+            if self.vfs:
+                content = self.vfs.read_text(str(self.ledger_path))
+            else:
+                with open(self.ledger_path, "r", encoding="utf-8") as f:
+                    content = f.read()
 
-                    try:
-                        attestation = json.loads(line)
-                        self.attestations.append(attestation)
-                    except json.JSONDecodeError as e:
-                        logger.warning(f"⚠️  Line {line_num}: Invalid JSON: {e}")
+            for line_num, line in enumerate(content.splitlines(), 1):
+                line = line.strip()
+                if not line:
+                    continue
+
+                try:
+                    attestation = json.loads(line)
+                    self.attestations.append(attestation)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"⚠️  Line {line_num}: Invalid JSON: {e}")
 
             self.last_loaded = datetime.now(timezone.utc)
             logger.info(f"✅ Ledger loaded: {len(self.attestations)} attestations")
@@ -276,10 +292,15 @@ class LedgerVisualizer:
 
         if output_path:
             try:
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, "w", encoding="utf-8") as f:
-                    json.dump(report, f, indent=2)
-                logger.info(f"✅ JSON report written to {output_path}")
+                content = json.dumps(report, indent=2)
+                if self.vfs:
+                    self.vfs.write_text(str(output_path), content)
+                    logger.info(f"✅ JSON report written to {output_path} (VFS)")
+                else:
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                    logger.info(f"✅ JSON report written to {output_path} (Direct)")
             except Exception as e:
                 logger.error(f"❌ Failed to write JSON report: {e}")
 

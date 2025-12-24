@@ -349,7 +349,7 @@ class AgentSystemInterface:
             self.system.publish_artifact("docs/README.md", "README.md")
         """
         # PHASE 2.5: Whitelist - Only these agents can publish to root
-        PUBLISH_WHITELIST = ["scribe"]
+        PUBLISH_WHITELIST = ["scribe", "archivist"]
 
         if self.agent_id not in PUBLISH_WHITELIST:
             raise PermissionError(
