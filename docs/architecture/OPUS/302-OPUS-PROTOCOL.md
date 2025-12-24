@@ -105,6 +105,65 @@ Next session, OPUS reads PREP file and jumps straight in.
 
 ---
 
+## CURRENT STATUS (2025-12-24)
+
+| OPUS | Title | Status | Results |
+|------|-------|--------|---------|
+| 301 | Boot/Runtime | ✅ COMPLETE | 3940ms → ~2500ms (38%) |
+| 302 | Protocol | ✅ ACTIVE | This doc |
+| 303 | Pulse Optimization | ✅ COMPLETE | ~50ms → ~15ms (70%) |
+| 304 | Deep Lazy Loading | 📋 PLANNED | See below |
+
+### OPUS-301/303 Commits (2025-12-24)
+```
+d17d7940 - perf(pulse): OPUS-303 Phase 1+3 Async I/O + Health cache
+32d76fdf - fix(executor): Fix ExecutionResult API mismatch
+ca9409ac - perf(ledger): OPUS-301/303 Lazy connection + count cache
+a94b4c76 - perf(boot): OPUS-301 Split unified_execution into Core + Full
+91a2841a - perf(boot): Lazy jinja2 import in template_loader
+```
+
+---
+
+## OPUS-304: DEEP LAZY LOADING
+
+> Status: READY FOR SONNET
+> Next: OPUS-305
+
+### Target
+Boot: 2500ms → <1000ms
+
+### SONNET TASKS
+
+1. [ ] **S1: Lazy Import Wrapper** - `vibe_core/utils/lazy_import.py` (NEW)
+   - Create utility for deferred imports
+   - Test with ledger import
+   - Commit
+
+2. [ ] **S2: Config Cache** - `vibe_core/phoenix/config_cache.py` (NEW)
+   - Pickle parsed config
+   - Hash-based invalidation
+   - Integrate into phoenix/config.py
+   - Commit
+
+3. [ ] **S3: Async Logging** - `vibe_core/utils/async_logging.py` (NEW)
+   - QueueHandler + QueueListener pattern
+   - Non-blocking file writes
+   - Commit
+
+4. [ ] **S4: Boot Optimizer Plugin** - `vibe_core/plugins/boot_optimizer/` (NEW)
+   - Plugin to patch heavy properties lazy
+   - Not Ring 0 (safe for Sonnet)
+   - Commit
+
+### WHEN DONE
+Spawn Haiku to pre-analyze OPUS-305:
+- Read vibe_core/cli/ for CLI optimization opportunities
+- Read vibe_core/runtime/interface.py for interface latency
+- Identify remaining boot blockers with `python3 -X importtime`
+
+---
+
 ## HANDOFF TEMPLATES
 
 ### OPUS → SONNET
@@ -138,37 +197,6 @@ Answer:
 
 Write to: docs/architecture/OPUS/YYY-PREP.md
 ```
-
----
-
-## CURRENT QUEUE
-
-| OPUS | Status | Next Agent |
-|------|--------|------------|
-| 301 | Phase 1 ✅ | SONNET for Phase 2 |
-| 302 | This doc | - |
-| 303 | Pending | HAIKU prep needed |
-
----
-
-## SONNET: OPUS-301 PHASE 2 TASKS
-
-Execute these (from OPUS-301):
-
-1. [ ] **Lazy jinja2** - `vibe_core/steward/loader.py`
-   - Defer template loading until first use
-   - Test: `python3 -X importtime` shows reduction
-   - Commit when working
-
-2. [ ] **Deferred SQLite** - `vibe_core/ledger.py` (⚠️ Ring 0)
-   - Prepare code, call Senior for commit
-   - Connection on first query, not init
-
-3. [ ] **Split unified_execution** - `vibe_core/runtime/`
-   - Core (routing) vs Full (execution)
-   - Only load Core at boot
-
-**When done**: Spawn Haiku to prep OPUS-303 (Runtime/Pulse optimization)
 
 ---
 
