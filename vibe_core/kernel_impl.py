@@ -75,7 +75,8 @@ from .protocols import AgentManifest, VibeAgent
 from .protocols.auditor import AuditorProtocol, NullAuditor
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
-from .runtime.unified_execution import ExecutionRequest, create_unified_runtime
+from .runtime.unified_execution import create_unified_runtime
+from .state.schema import ExecutionRequest
 from .scheduling import InMemoryScheduler, Task
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
