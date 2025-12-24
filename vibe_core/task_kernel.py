@@ -303,7 +303,7 @@ class TaskKernel:
         Spawn a new TaskKernel for a task.
 
         This is the preferred way to create TaskKernel instances.
-        It enforces the Capability Injector pattern.
+        It enforces the Capability Injector pattern and SANDBOXING.
 
         OPUS-176 BHARAT: Border Control enforced here.
         Only SOVEREIGN_STATE plugins can spawn TaskKernels.
@@ -321,17 +321,11 @@ class TaskKernel:
 
         Raises:
             PermissionError: If caller is not a SOVEREIGN_STATE plugin
-
-        Example:
-            kernel = TaskKernel.spawn(
-                task=my_task,
-                tools=[read_file_tool, write_file_tool],
-                parent=parent_kernel,
-                timeout=300,
-                caller_plugin_id="opus_assistant",
-            )
-            result = await kernel.execute()
         """
+        import copy
+
+        from vibe_core.vfs import VirtualFileSystem
+
         # OPUS-176: Border Control - Verify caller has sovereignty
         if caller_plugin_id:
             if not TaskKernel._verify_sovereignty(caller_plugin_id, parent):
@@ -340,8 +334,25 @@ class TaskKernel:
                     f"but is not a SOVEREIGN_STATE. Only Sovereign States can spawn TaskKernels."
                 )
 
-        # Build capabilities from tools list
-        tools_dict = {tool.name: tool for tool in tools}
+        # 🛡️ SANDBOXING (OPUS-180): Create isolated VFS for this task
+        # The sandbox ID is derived from task ID to ensure uniqueness per execution
+        sandbox_id = f"task_{task.id[:8]}_{uuid.uuid4().hex[:4]}"
+        vfs = VirtualFileSystem(agent_id=sandbox_id)
+        logger.debug(f"🛡️ SANDBOX: Created VFS at {vfs.get_sandbox_path()}")
+
+        # Build capabilities from tools list with VFS injection
+        tools_dict = {}
+        for original_tool in tools:
+            # Shallow copy to avoid modifying the shared registry instance
+            # This is critical because registry tools are singletons!
+            tool_copy = copy.copy(original_tool)
+
+            # Inject VFS if tool supports it (duck typing)
+            if hasattr(tool_copy, "vfs"):
+                setattr(tool_copy, "vfs", vfs)
+                # If tool was initialized with warning, we fixed it now
+
+            tools_dict[tool_copy.name] = tool_copy
 
         # Extract workspace from parent if available
         workspace = None
