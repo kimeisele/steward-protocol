@@ -268,7 +268,7 @@ def grant_repo_access(kernel: "RealVibeKernel", agent_id: str) -> None:
         logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
 
 
-def pulse(kernel: "RealVibeKernel") -> None:
+async def pulse(kernel: "RealVibeKernel") -> None:
     """
     💓 HEARTBEAT: Generate real-time snapshot of kernel state.
 

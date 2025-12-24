@@ -157,38 +157,44 @@ class PhoenixConfig:
         Returns:
             Fully loaded PhoenixConfig
         """
-        # === AUTO-DISCOVERY: Load ALL sections ===
-        SectionLoader.clear_cache()
-        sections, section_meta = SectionLoader.discover(config_dir=config_dir)
+        from .config_cache import get_cached_or_parse
 
-        # Log what was loaded
-        for section_id, meta in section_meta.items():
-            if meta.loaded_from_yaml:
-                logger.info(f"Loaded section '{section_id}' from {meta.source_file}")
-            else:
-                logger.debug(f"Section '{section_id}' using defaults")
+        def _parse():
+            # === AUTO-DISCOVERY: Load ALL sections ===
+            SectionLoader.clear_cache()
+            sections, section_meta = SectionLoader.discover(config_dir=config_dir)
 
-        # === COLLECTIONS: Circuits and Routing ===
-        circuits = discover_circuits(circuits_dir)
-        logger.info(f"Discovered {len(circuits)} circuits from {circuits_dir}")
+            # Log what was loaded
+            for section_id, meta in section_meta.items():
+                if meta.loaded_from_yaml:
+                    logger.info(f"Loaded section '{section_id}' from {meta.source_file}")
+                else:
+                    logger.debug(f"Section '{section_id}' using defaults")
 
-        routing = load_routing_rules(routing_path)
-        logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
+            # === COLLECTIONS: Circuits and Routing ===
+            circuits = discover_circuits(circuits_dir)
+            logger.info(f"Discovered {len(circuits)} circuits from {circuits_dir}")
 
-        # === CREATE CONFIG ===
-        config = cls(
-            _sections=sections,
-            _section_metadata=section_meta,
-            circuits=circuits,
-            routing=routing,
-        )
+            routing = load_routing_rules(routing_path)
+            logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
-        # Store paths for reload
-        config._circuits_dir = circuits_dir
-        config._routing_path = routing_path
-        config._config_dir = config_dir
+            # === CREATE CONFIG ===
+            config = cls(
+                _sections=sections,
+                _section_metadata=section_meta,
+                circuits=circuits,
+                routing=routing,
+            )
 
-        logger.info(f"PhoenixConfig loaded with {len(sections)} sections: {list(sections.keys())}")
+            # Store paths for reload
+            config._circuits_dir = circuits_dir
+            config._routing_path = routing_path
+            config._config_dir = config_dir
+            
+            return config
+
+        config = get_cached_or_parse(config_dir, _parse)
+        logger.info(f"PhoenixConfig loaded with {len(config._sections)} sections: {list(config._sections.keys())}")
 
         return config
 

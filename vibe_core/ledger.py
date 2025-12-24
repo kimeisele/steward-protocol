@@ -772,6 +772,28 @@ class SQLiteLedger(VibeLedger):
         # Shared connections are NOT closed - they're managed by the module
         logger.debug("📝 SQLiteLedger instance closed (shared connection persists)")
 
+    # =========================================================================
+    # OPUS-301: BATCHED LEDGER WRITES (K2)
+    # =========================================================================
+
+    def batch_start(self):
+        """Initialize a new batch buffer."""
+        self._batch_buffer = []
+
+    def batch_record(self, event_type, agent_id, details):
+        """Add an event to the batch buffer."""
+        self._batch_buffer.append((event_type, agent_id, details))
+
+    def batch_commit(self):
+        """Commit all buffered events in a single transaction."""
+        if not hasattr(self, "_batch_buffer") or not self._batch_buffer:
+            return
+
+        with self._write_lock:
+            for e in self._batch_buffer:
+                self.record_event(*e)
+            self._batch_buffer = []
+
     def rotate(self) -> Optional[str]:
         """OPUS-208 Phase 2: Samsara Rotation (Crash-Safe).
 
