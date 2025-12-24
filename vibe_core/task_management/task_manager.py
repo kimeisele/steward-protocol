@@ -58,13 +58,6 @@ class TaskManager:
         self.archive = TaskArchive(self.tasks_dir / "archive")
         self.lock = FileLock(self.tasks_dir / ".lock")
 
-        # VIMANA DUAL-CORE PERSISTENCE (GAD-3000)
-        # Initialize SQLiteStore for immortal persistence
-        from vibe_core.store.sqlite_store import SQLiteStore
-
-        db_path = self.project_root / "data" / "vibe_agency.db"
-        self.sqlite_store = SQLiteStore(str(db_path))
-
         # Load data
         self.tasks: Dict[str, Task] = {}
         self.active_mission: Optional[ActiveMission] = None
@@ -104,49 +97,10 @@ class TaskManager:
             except Exception as e:
                 print(f"Error loading tasks from JSON: {e}")
 
-        # VIMANA SELF-HEALING: Hydrate from SQLite if JSON missing or empty
-        if not tasks_file.exists() or len(self.tasks) == 0:
-            self._hydrate_from_sqlite()
+        # OPUS-213: JSON is now the only persistence layer (no SQLite fallback)
 
         # Update metrics
         self.metrics_collector.update_from_tasks({task_id: task.to_dict() for task_id, task in self.tasks.items()})
-
-    def _hydrate_from_sqlite(self):
-        """
-        VIMANA SELF-HEALING: Regenerate tasks from SQLite if JSON missing.
-
-        This ensures the system can never lose data, even if .vibe/ directory is deleted.
-        """
-        try:
-            print("🔄 VIMANA: Hydrating tasks from SQLite ledger...")
-            sqlite_tasks = self.sqlite_store.get_all_tasks()
-
-            for sqlite_task in sqlite_tasks:
-                # Reconstruct Task object from SQLite data
-                task = Task(
-                    id=sqlite_task["id"],
-                    title=(
-                        sqlite_task["description"].split(":")[0]
-                        if ":" in sqlite_task["description"]
-                        else sqlite_task["description"]
-                    ),
-                    description=(
-                        sqlite_task["description"].split(":", 1)[1].strip() if ":" in sqlite_task["description"] else ""
-                    ),
-                    status=TaskStatus(sqlite_task["status"].upper()),
-                    priority=0,  # SQLite doesn't store priority, default to 0
-                    assignee=None,
-                    tags=[],
-                )
-                self.tasks[task.id] = task
-
-            print(f"   ✅ Hydrated {len(sqlite_tasks)} tasks from SQLite")
-
-            # Regenerate JSON cache
-            if sqlite_tasks:
-                self._save_tasks()
-        except Exception as e:
-            print(f"   ⚠️  Failed to hydrate from SQLite: {e}")
 
     def _load_mission(self):
         """Load active mission from disk."""
@@ -248,35 +202,7 @@ class TaskManager:
             except Exception as e:
                 print(f"Error loading roadmap from YAML: {e}")
 
-        # VIMANA SELF-HEALING: Hydrate from SQLite if YAML missing
-        if not roadmap_path.exists() or not self.roadmap:
-            self._hydrate_roadmap_from_sqlite()
-
-    def _hydrate_roadmap_from_sqlite(self):
-        """
-        VIMANA SELF-HEALING: Regenerate roadmap from SQLite if YAML missing.
-
-        This ensures roadmaps persist across container restarts.
-        """
-        try:
-            roadmaps = self.sqlite_store.get_all_roadmaps()
-            if roadmaps:
-                # Load the most recent roadmap
-                latest = roadmaps[0]
-                self.roadmap = Roadmap(
-                    id=latest["id"],
-                    name=latest["name"],
-                    description=latest["description"],
-                    missions=latest.get("missions", []),
-                    created_at=datetime.fromisoformat(latest["created_at"].replace("Z", "+00:00")),
-                    updated_at=datetime.fromisoformat(latest["updated_at"].replace("Z", "+00:00")),
-                    metadata=latest.get("metadata", {}),
-                )
-                print(f"🔄 VIMANA: Hydrated roadmap '{self.roadmap.name}' from SQLite")
-                # Regenerate YAML cache
-                self._save_roadmap()
-        except Exception as e:
-            print(f"   ⚠️  Failed to hydrate roadmap from SQLite: {e}")
+        # OPUS-213: YAML is now the only persistence layer for roadmaps
 
     def _save_roadmap(self):
         """Save roadmap to disk."""
@@ -355,22 +281,9 @@ class TaskManager:
         # Validate
         self.validator_registry.validate_task(task)
 
-        # VIMANA DUAL WRITE
-        # 1. Add to in-memory dict
+        # OPUS-213: Single persistence layer
         self.tasks[task.id] = task
-
-        # 2. Write to JSON (speed/cache)
         self._save_tasks()
-
-        # 3. Write to SQLite (immortality/audit trail)
-        try:
-            self.sqlite_store.add_task(
-                task_id=task.id,
-                description=f"{task.title}: {task.description}",
-                status=task.status.value.lower(),
-            )
-        except Exception as e:
-            print(f"⚠️  SQLite write failed: {e}")
 
         # 4. Add task to roadmap if roadmap_id is set
         if task.roadmap_id and self.roadmap and task.roadmap_id == self.roadmap.id:
@@ -416,18 +329,8 @@ class TaskManager:
         # Validate
         self.validator_registry.validate_task(task)
 
-        # VIMANA DUAL WRITE
-        # 1. Write to JSON (speed/cache)
+        # OPUS-213: Single persistence layer
         self._save_tasks()
-
-        # 2. Write to SQLite (immortality/audit trail)
-        try:
-            self.sqlite_store.update_task_status(
-                task_id=task.id,
-                status=task.status.value.lower(),
-            )
-        except Exception as e:
-            print(f"⚠️  SQLite update failed: {e}")
 
         return task
 
@@ -543,23 +446,8 @@ class TaskManager:
 
         self.roadmap = roadmap
 
-        # VIMANA DUAL WRITE
-        # 1. Write to YAML (cache)
+        # OPUS-213: Single persistence layer
         self._save_roadmap()
-
-        # 2. Write to SQLite (immortality)
-        try:
-            self.sqlite_store.add_roadmap(
-                roadmap_id=roadmap.id,
-                name=roadmap.name,
-                description=roadmap.description,
-                missions=roadmap.missions,
-                created_at=roadmap.created_at.isoformat(),
-                updated_at=roadmap.updated_at.isoformat(),
-                metadata=roadmap.metadata,
-            )
-        except Exception as e:
-            print(f"⚠️  SQLite roadmap write failed: {e}")
 
         return roadmap
 
@@ -582,23 +470,8 @@ class TaskManager:
 
         self.roadmap.updated_at = datetime.now()
 
-        # VIMANA DUAL WRITE
-        # 1. Write to YAML (cache)
+        # OPUS-213: Single persistence layer
         self._save_roadmap()
-
-        # 2. Write to SQLite (immortality)
-        try:
-            self.sqlite_store.add_roadmap(
-                roadmap_id=self.roadmap.id,
-                name=self.roadmap.name,
-                description=self.roadmap.description,
-                missions=self.roadmap.missions,
-                created_at=self.roadmap.created_at.isoformat(),
-                updated_at=self.roadmap.updated_at.isoformat(),
-                metadata=self.roadmap.metadata,
-            )
-        except Exception as e:
-            print(f"⚠️  SQLite roadmap update failed: {e}")
 
         return self.roadmap
 
