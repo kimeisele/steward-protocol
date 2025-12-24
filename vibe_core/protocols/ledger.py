@@ -131,6 +131,12 @@ class VibeKernel(ABC):
         """Get kernel status"""
         pass
 
+    @property
+    @abstractmethod
+    def plugins(self) -> List[Any]:
+        """Get list of loaded plugins"""
+        pass
+
     @abstractmethod
     def register_agent(self, agent: VibeAgent) -> None:
         """Register an agent and inject kernel reference"""

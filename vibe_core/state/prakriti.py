@@ -36,7 +36,7 @@ from .machine_state import MachineState
 from .persona import PersonaManager
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols import VibeKernel
 
 logger = logging.getLogger("PRAKRITI")
 
@@ -237,11 +237,11 @@ class Prakriti(PrakritiProtocol):
             personas=self.personas.status(),
         )
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "VibeKernel") -> None:
         """Inject kernel reference for Layer 2 state access.
 
         Args:
-            kernel: The RealVibeKernel instance
+            kernel: The VibeKernel instance
         """
         self.kernel.inject_kernel(kernel)
         logger.info("[PRAKRITI] Kernel injected into Layer 2")

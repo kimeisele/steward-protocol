@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols import VibeKernel
 
 logger = logging.getLogger("KERNEL_STATE")
 
@@ -60,15 +60,15 @@ class KernelState:
     Allows snapshotting for persistence and recovery.
     """
 
-    def __init__(self, kernel: Optional["RealVibeKernel"] = None):
+    def __init__(self, kernel: Optional["VibeKernel"] = None):
         self._kernel = kernel
-        self._boot_time: Optional[float] = None
+        self._boot_time = None
 
     # =========================================================================
     # Kernel Injection
     # =========================================================================
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "VibeKernel") -> None:
         """Inject kernel reference after boot."""
         self._kernel = kernel
         self._boot_time = time.time()
@@ -108,7 +108,7 @@ class KernelState:
 
         # Snapshot agents
         agents = []
-        for agent_id, agent in kernel._agent_registry.items():
+        for agent_id, agent in kernel.agent_registry.items():
             agents.append(
                 AgentSnapshot(
                     agent_id=agent_id,
@@ -120,7 +120,7 @@ class KernelState:
             )
 
         # Snapshot queue
-        queue_status = kernel._scheduler.get_queue_status()
+        queue_status = kernel.scheduler.get_queue_status()
         queue = QueueSnapshot(
             pending=queue_status.get("queue_length", 0),
             by_priority=queue_status.get("by_priority", {}),
@@ -129,7 +129,7 @@ class KernelState:
         )
 
         # Snapshot plugins
-        plugins = [p.plugin_id for p in kernel._plugins]
+        plugins = [p.plugin_id for p in kernel.plugins]
 
         return KernelSnapshot(
             timestamp=time.time(),
