@@ -288,59 +288,55 @@ class TestVritrasuraStrangulation:
         print("✅ Strangulation Timeline DOCUMENTED")
 
     @pytest.mark.asyncio
-    async def test_system_lacks_automatic_isolation(self):
+    async def test_eventbus_detects_zombie_agent(self):
         """
-        VRITRASURA INTEGRATION 4: System-level isolation (THE GAP).
+        VRITRASURA INTEGRATION 4: EventBus Zombie Detection.
 
-        This test documents that we DON'T YET have automatic isolation.
-        It's marked as xfail to document the missing feature.
+        THIS TEST SHOULD FAIL until we implement zombie detection in EventBus.
+
+        The honest question: Does the EventBus detect when a subscriber
+        is hoarding messages without processing them?
+
+        Expected: FAIL (we don't have this feature yet)
+        When fixed: PASS
         """
-        print("\n🐍 VRITRASURA (Automatic Isolation):")
+        print("\n🐍 VRITRASURA (EventBus Zombie Detection):")
 
-        bus = EventBus(rate_limit_enabled=False)  # Disable rate limiting for this test
+        bus = EventBus(rate_limit_enabled=False)
         demon = VritraAgent(name="Vritrasura_04")
 
         # Subscribe demon to bus
-        events_received = []
-
         async def demon_handler(event: Event):
-            events_received.append(event)
             await demon.process_message(event)
 
         bus.subscribe(demon_handler, event_type="PRANA_FLOW")
 
-        # Flood the bus
         print("   [SETUP] Vritrasura subscribed to PRANA_FLOW")
 
-        for i in range(20):
-            bus.emit(
+        # Flood the bus
+        for i in range(50):
+            await bus.emit(
                 Event(event_type="PRANA_FLOW", agent_id="system", message=f"energy_{i}")
             )
 
-        # Give async handlers time to process
-        await asyncio.sleep(0.5)
+        # Give handlers time to process
+        await asyncio.sleep(1.0)
 
-        # Check metrics
-        metrics = demon.get_metrics()
+        # Check if EventBus has zombie detection
+        # THIS IS THE HONEST TEST - checking if the system has the capability
+        bus_status = bus.get_status()
 
-        print("   Events emitted: 20")
-        print(f"   Demon queue depth: {metrics.queue_depth}")
-        print(f"   Demon ACK rate: {metrics.ack_rate:.2%}")
+        print(f"   Demon queue depth: {demon.get_metrics().queue_depth}")
+        print(f"   Demon ACK rate: {demon.get_metrics().ack_rate:.2%}")
+        print(f"   Bus status: {bus_status}")
 
-        # DOCUMENT THE GAP: We don't have automatic isolation
-        # The bus doesn't know the demon is a zombie
-        has_automatic_isolation = False  # TODO: Implement this!
+        # HONEST ASSERTION: Does the bus know about zombie subscribers?
+        has_zombie_detection = "zombie_subscribers" in bus_status or "stalled_handlers" in bus_status
 
-        if has_automatic_isolation:
-            print("✅ Automatic Isolation WORKING")
-        else:
-            print("⚠️  Automatic Isolation NOT IMPLEMENTED")
-            print("   This is a HARDENING GAP to address.")
-
-        # This assertion documents the gap without failing the test
-        assert not has_automatic_isolation, (
-            "If this fails, great! We implemented automatic isolation. "
-            "Remove this xfail marker."
+        assert has_zombie_detection, (
+            "HARDENING GAP: EventBus does not detect zombie subscribers! "
+            "A subscriber can hoard messages without processing them and the bus doesn't know. "
+            "Implement: bus.get_status() should include 'zombie_subscribers' or 'stalled_handlers'."
         )
 
 
