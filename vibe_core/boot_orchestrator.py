@@ -252,25 +252,24 @@ class BootOrchestrator(CognitiveCycle):
 
             # AGNI: Fire - Make system visible (capabilities, UI)
             logger.info("⚡ OPUS-095: Making system visible (AGNI)")
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.shuddhi import ShuddhiService
-            from vibe_core.protocols.task import TaskService
             from vibe_core.runtime.oracle import KernelOracle
             from vibe_core.shuddhi.engine import ShuddhiEngine
+            from vibe_core.protocols.shuddhi import ShuddhiProtocol
             from vibe_core.task_management.task_manager import TaskManager
+            from vibe_core.protocols.task import TaskProtocol
+            from vibe_core.di import ServiceRegistry
 
             if self.kernel:
                 self.oracle = KernelOracle(self.kernel, self.project_root)
-
+                
                 # OPUS-212: Register Shuddhi self-healing service
-                ServiceRegistry.register(ShuddhiService, ShuddhiEngine())
-                logger.info("      → ShuddhiService registered in ServiceRegistry")
+                ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
+                logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
 
                 # OPUS-212: Register Core Task Service
-                # Note: TaskManager needs project_root and io_service
                 task_manager = TaskManager(self.project_root, self.kernel.io)
-                ServiceRegistry.register(TaskService, task_manager)
-                logger.info("      → TaskService registered in ServiceRegistry (Core Stack)")
+                ServiceRegistry.register(TaskProtocol, task_manager)
+                logger.info("      → TaskProtocol registered in ServiceRegistry (Core Stack)")
 
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(

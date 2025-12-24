@@ -9,15 +9,13 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-from vibe_core.protocols.task import TaskService
+from typing import List, Dict, Any, Optional
+from vibe_core.protocols.task import TaskProtocol
 
 logger = logging.getLogger("SHUDDHI.LOG")
 
-
 class LogMonitor:
-    def __init__(self, journal_path: Path, task_service: TaskService):
+    def __init__(self, journal_path: Path, task_service: TaskProtocol):
         self.journal_path = journal_path
         self.task_service = task_service
         self._error_patterns = [

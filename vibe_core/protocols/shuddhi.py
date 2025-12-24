@@ -38,7 +38,7 @@ class ShuddhiResult:
 
 
 @runtime_checkable
-class ShuddhiService(Protocol):
+class ShuddhiProtocol(Protocol):
     """
     The surgical self-healing interface of the Kernel.
 

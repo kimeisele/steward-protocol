@@ -8,13 +8,13 @@ from typing import Dict, Optional, Type
 
 import libcst as cst
 
-from vibe_core.protocols.shuddhi import ShuddhiResult, ShuddhiService, ShuddhiStatus
+from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
 from vibe_core.shuddhi.remedies.base import CSTRemedy, ShuddhiScopeError
 
 logger = logging.getLogger("SHUDDHI")
 
 
-class ShuddhiEngine(ShuddhiService):
+class ShuddhiEngine(ShuddhiProtocol):
     """
     Implementation of the Shuddhi self-healing service.
 

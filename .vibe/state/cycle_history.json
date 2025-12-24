@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2025-12-22T17:27:39.454897",
-  "total_cycles": 9,
+  "saved_at": "2025-12-24T15:14:43.711683",
+  "total_cycles": 13,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.454930"
+      "timestamp": "2025-12-24T15:14:43.711752"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.454950"
+      "timestamp": "2025-12-24T15:14:43.711762"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.454967"
+      "timestamp": "2025-12-24T15:14:43.711776"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.454974"
+      "timestamp": "2025-12-24T15:14:43.711782"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.454994"
+      "timestamp": "2025-12-24T15:14:43.711788"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,67 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-22T17:27:39.455010"
+      "timestamp": "2025-12-24T15:14:43.711803"
+    },
+    {
+      "cycle_id": "36dd6ee8",
+      "parent_cycle_id": null,
+      "trace_id": "78ef3001",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T15:14:43.711811"
+    },
+    {
+      "cycle_id": "b7a258f3",
+      "parent_cycle_id": null,
+      "trace_id": "fbaf3f2e",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T15:14:43.711819"
+    },
+    {
+      "cycle_id": "be095401",
+      "parent_cycle_id": null,
+      "trace_id": "bfb8192a",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T15:14:43.711823"
     }
   ],
   "errors": [
@@ -103,7 +163,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-22T17:27:39.455019"
+      "timestamp": "2025-12-24T15:14:43.711831"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -125,7 +185,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-22T17:27:39.455034"
+      "timestamp": "2025-12-24T15:14:43.711837"
     },
     {
       "cycle_id": "60f300f5",
@@ -147,7 +207,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-22T17:27:39.455057"
+      "timestamp": "2025-12-24T15:14:43.711841"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -169,7 +229,25 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-22T17:27:39.455062"
+      "timestamp": "2025-12-24T15:14:43.711845"
+    },
+    {
+      "cycle_id": "e9194249",
+      "parent_cycle_id": null,
+      "trace_id": "b7e745a3",
+      "cycle_name": "boot_sequence",
+      "phase": "persist",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "",
+        "discovery_skipped": true,
+        "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
+      },
+      "timestamp": "2025-12-24T15:14:43.711848"
     }
   ]
 }

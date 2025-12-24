@@ -6,13 +6,13 @@ This tool bridges the gap between the 'HEAL_CODEBASE' circuit and the Core Shudd
 """
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+from vibe_core.protocols.shuddhi import ShuddhiStatus, ShuddhiProtocol
+from vibe_core.protocols.task import TaskProtocol
 from vibe_core.di import ServiceRegistry
 from vibe_core.io_service import DocumentType, KernelIOService
-from vibe_core.protocols.shuddhi import ShuddhiService, ShuddhiStatus
-from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 
 logger = logging.getLogger("SHUDDHI_TOOL")
 
@@ -69,29 +69,29 @@ class ShuddhiHealTool(Tool):
     def execute(self, parameters: Dict[str, Any]) -> ToolResult:
         file_path_str = parameters["file_path"]
         rule_id = parameters.get("rule_id") or parameters.get("violation_type")
-
+        
         # 1. Access Shuddhi Service via DI
         try:
-            shuddhi = ServiceRegistry.require(ShuddhiService)
+            shuddhi = ServiceRegistry.require(ShuddhiProtocol)
         except RuntimeError:
-            return ToolResult(success=False, error="ShuddhiService not available in ServiceRegistry")
+             return ToolResult(success=False, error="ShuddhiProtocol not available in ServiceRegistry")
 
         # 2. Access IO Service (injected)
         if not self.io_service:
-            return ToolResult(success=False, error="KernelIOService not injected into ShuddhiHealTool")
+             return ToolResult(success=False, error="KernelIOService not injected into ShuddhiHealTool")
 
         try:
             # 3. Purify
             path = Path(file_path_str)
             if not path.exists():
-                return ToolResult(success=False, error=f"File not found: {path}")
+                 return ToolResult(success=False, error=f"File not found: {path}")
 
             result = shuddhi.purify(path, rule_id)
-
+            
             # 4. Handle Result
             if result.status == ShuddhiStatus.PURIFIED:
                 if not result.purified_code:
-                    return ToolResult(success=False, error="Shuddhi reported success but returned no code")
+                     return ToolResult(success=False, error="Shuddhi reported success but returned no code")
 
                 # 5. Write Back (Karma) via Kernel IO
                 try:
@@ -104,9 +104,9 @@ class ShuddhiHealTool(Tool):
                     content=result.purified_code,
                     doc_type=DocumentType.READONLY,
                     writer_id="ENGINEER_SHUDDHI",
-                    add_header=False,
+                    add_header=False 
                 )
-
+                
                 if write_result.success:
                     # 6. LOG AS TASK (Holistic Loop)
                     # We try to use the kernel instance if injected, or fallback to DI
@@ -115,9 +115,8 @@ class ShuddhiHealTool(Tool):
                         if self._kernel and hasattr(self._kernel, "tasks"):
                             task_service = self._kernel.tasks
                         else:
-                            from vibe_core.protocols.task import TaskService
-
-                            task_service = ServiceRegistry.get(TaskService)
+                            from vibe_core.protocols.task import TaskProtocol
+                            task_service = ServiceRegistry.get(TaskProtocol)
 
                         if task_service:
                             task_service.add_task(

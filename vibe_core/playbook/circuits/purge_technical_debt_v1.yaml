@@ -1,0 +1,94 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: PURGE_TECHNICAL_DEBT_V1
+# ============================================================================
+# High-Level Orchestrator for Mass Codebase Healing
+#
+# This circuit implements the recursive evolution pattern:
+# 1. SCAN the codebase for all standards violations (Watchman)
+# 2. GENERATE micro-tasks for each violation
+# 3. RECURSIVELY execute the HEAL_CODEBASE_V1 circuit for every task
+# 4. LOOP until the codebase is Sattva (Pure)
+# ============================================================================
+
+circuit:
+  id: "PURGE_TECHNICAL_DEBT_V1"
+  type: "organism_circuit"
+  version: "1.0"
+  domain: "maintenance"
+  security_level: "elevated"
+  entry_state: "SCAN"
+
+  description: |
+    Orchestrates the mass purging of technical debt across the entire codebase.
+    Uses Watchman for discovery and recursively dispatches healing circuits.
+
+  states:
+    # 1. Discovery: Get all sins from Watchman
+    SCAN:
+      description: "Perform global architectural scan"
+      operations:
+        - action: "execute_tool"
+          params:
+            tool: "watchman.standards"
+            action: "inspect_all"
+            path: "vibe_core"
+      state_var: "scan_report"
+      transitions:
+        - to: "MAP"
+          condition: "scan_report.violations is not empty"
+        - to: "PURE"
+          condition: "scan_report.violations is empty"
+
+    # 2. Planning: Convert violations into healing tasks
+    MAP:
+      description: "Map violations to healing circuits"
+      operations:
+        - action: "MAP_COLLECTION"
+          input: "{{ scan_report.violations }}"
+          circuit_id: "HEAL_CODEBASE_V1"
+          params_mapping:
+            violation_type: "{{ item.rule_id }}"
+            file_path: "{{ item.file_path }}"
+            line_number: "{{ item.line_number }}"
+            rule_id: "{{ item.rule_id }}"
+            message: "{{ item.message }}"
+      state_var: "healing_batch"
+      transitions:
+        - to: "PURGE"
+          condition: "healing_batch is not empty"
+
+    # 3. Action: Execute the healing circuits in parallel/sequence
+    PURGE:
+      description: "Recursively execute the healing batch"
+      operations:
+        - action: "EXECUTE_BATCH"
+          batch: "{{ healing_batch }}"
+          concurrency: 3 # Safe limit for Engineer agent
+      transitions:
+        - to: "RESCAN"
+          condition: "batch_result.completed == true"
+
+    # 4. Verification: Loop back to ensure everything is fixed
+    RESCAN:
+      description: "Verify if debt still persists"
+      transitions:
+        - to: "SCAN"
+          condition: "true" # Recursive loop back to SCAN
+
+    # 5. Nirvana: Codebase is clean
+    PURE:
+      description: "Codebase has reached Sattva state"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "technical_debt_purged"
+            message: "The codebase is now Sattva (Pure). All Cardinal Sins eliminated."
+
+  # How to trigger the mass purge
+  semantic_grounding:
+    syscall_type: "EXECUTE_CIRCUIT"
+    intent_patterns:
+      - 'purge\s+all\s+technical\s+debt'
+      - 'start\s+global\s+healing\s+cycle'
+      - 'enforce\s+standards\s+across\s+the\s+kingdom'
