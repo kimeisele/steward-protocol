@@ -77,11 +77,15 @@ class ArchitectureRenderer(BaseRenderer):
         self.register_data_source("arch.plugins", self._get_plugin_info)
 
     def render(self) -> None:
-        """Render ARCHITECTURE.md."""
+        """Render ARCHITECTURE.md using config-driven sections."""
         config = self.get_config()
         if config and config.sections:
             content = self.render_sections()
             self.merge_and_write(content)
+        else:
+            content = self.generate_content()
+            if content:
+                self.merge_and_write(content)
 
     # =========================================================================
     # LIVE DATA GENERATION

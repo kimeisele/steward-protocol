@@ -2,7 +2,10 @@
 Tasks Renderer.
 Renders TASKS.md (Mission Control).
 
-UNIFIED UI: Implements generate_content() pattern.
+Architecture Pattern:
+- Uses render_sections() from BaseRenderer (config-driven)
+- Registers data sources for active and completed tasks
+- Fallback to generate_content() if no sections defined
 """
 
 import logging
@@ -10,7 +13,7 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.io_service import DocumentType
 from vibe_core.task_management.models import TaskStatus
@@ -34,12 +37,44 @@ class TasksRenderer(BaseRenderer):
         super().__init__(kernel)
         self.update_interval = update_interval_seconds
         self.last_update = 0.0
-        # Initialize TaskManager (assumes project root is parent of vibe_core)
-        # We need to find project root. Kernel doesn't explicitly expose it,
-        # but we can guess from __file__ or use current working dir.
         self.project_root = Path.cwd()
         self.task_manager = TaskManager(self.project_root)
         self.tasks_md_path = self.project_root / "TASKS.md"
+        self._register_data_sources()
+
+    def _register_data_sources(self) -> None:
+        """Register data sources for section-based rendering."""
+        self.register_data_source("tasks.active", self._get_active_tasks)
+        self.register_data_source("tasks.completed", self._get_completed_tasks)
+
+    def _get_active_tasks(self) -> List[Dict[str, Any]]:
+        """Get active tasks for table rendering."""
+        tasks = self.task_manager.list_tasks(status=TaskStatus.PENDING)
+        tasks.extend(self.task_manager.list_tasks(status=TaskStatus.IN_PROGRESS))
+        if not tasks:
+            return [{"Task": "_No active tasks_", "Status": "-", "Agent": "-"}]
+        return [{"Task": t.title[:40], "Status": t.status.value, "Agent": t.assigned_agent or "-"} for t in tasks[:10]]
+
+    def _get_completed_tasks(self) -> List[Dict[str, Any]]:
+        """Get completed tasks for table rendering."""
+        tasks = self.task_manager.list_tasks(status=TaskStatus.COMPLETED)
+        if not tasks:
+            return [{"Task": "_No completed tasks_", "Completed": "-"}]
+        return [
+            {"Task": t.title[:40], "Completed": str(t.completed_at)[:10] if t.completed_at else "-"} for t in tasks[:10]
+        ]
+
+    def render(self) -> None:
+        """Render TASKS.md using config-driven sections."""
+        config = self.get_config()
+        if config and config.sections:
+            self._read_tasks_md()  # Sync user input first
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            content = self.generate_content()
+            if content:
+                self.merge_and_write(content)
 
     @property
     def name(self) -> str:

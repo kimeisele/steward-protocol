@@ -705,6 +705,63 @@ class GitRenderer(BaseRenderer):
             self.disabled = False
             logger.info(f"📊 GitRenderer initialized (analyzing last {self.analysis_days} days)")
 
+        self._register_data_sources()
+
+    def _register_data_sources(self) -> None:
+        """Register data sources for section-based rendering."""
+        self.register_data_source("git.status", self._get_git_status)
+        self.register_data_source("git.log", self._get_git_log)
+
+    def _get_git_status(self) -> Dict:
+        """Get git status for status section."""
+        if self.disabled:
+            return {"status": "disabled", "message": "Not a git repository"}
+        try:
+            result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5)
+            lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
+            return {
+                "clean": len(lines) == 0,
+                "modified": len([l for l in lines if l.startswith(" M") or l.startswith("M ")]),
+                "untracked": len([l for l in lines if l.startswith("??")]),
+                "staged": len([l for l in lines if l.startswith("A ") or l.startswith("M ")]),
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _get_git_log(self) -> List[Dict]:
+        """Get recent commits for log section."""
+        if self.disabled:
+            return [{"hash": "-", "message": "Git disabled", "author": "-"}]
+        try:
+            result = subprocess.run(
+                ["git", "log", "--oneline", "-10", "--format=%h|%s|%an"], capture_output=True, text=True, timeout=5
+            )
+            commits = []
+            for line in result.stdout.strip().split("\n"):
+                if "|" in line:
+                    parts = line.split("|", 2)
+                    commits.append(
+                        {
+                            "Hash": parts[0] if len(parts) > 0 else "?",
+                            "Message": parts[1][:50] if len(parts) > 1 else "?",
+                            "Author": parts[2] if len(parts) > 2 else "?",
+                        }
+                    )
+            return commits if commits else [{"Hash": "-", "Message": "No commits", "Author": "-"}]
+        except Exception as e:
+            return [{"Hash": "-", "Message": str(e), "Author": "-"}]
+
+    def render(self) -> None:
+        """Render GIT.md using config-driven sections."""
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            content = self.generate_content()
+            if content:
+                self.merge_and_write(content)
+
     @property
     def name(self) -> str:
         return "git"

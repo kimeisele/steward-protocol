@@ -52,6 +52,85 @@ class CognitionRenderer(BaseRenderer):
         self._action_loader = action_loader
         self._sense_loader = sense_loader
         self._analyzer_loader = analyzer_loader
+        self._register_data_sources()
+
+    def _register_data_sources(self) -> None:
+        """Register data sources for section-based rendering."""
+        self.register_data_source("cycles.active", self._get_active_cycles)
+        self.register_data_source("cycles.metrics", self._get_cycle_metrics)
+        self.register_data_source("cycles.status", self._get_cycle_status)
+        self.register_data_source("cycles.completed", self._get_completed_cycles)
+        self.register_data_source("cycles.errors", self._get_cycle_errors)
+
+    def _get_active_cycles(self) -> list:
+        """Get active cycles for holon_hierarchy section."""
+        try:
+            registry = get_cycle_registry()
+            active = registry.get_active_cycles()
+            return (
+                [{"Cycle": c.name, "Phase": c.current_phase, "Started": str(c.started_at)[:19]} for c in active[:10]]
+                if active
+                else [{"Cycle": "_No active cycles_", "Phase": "-", "Started": "-"}]
+            )
+        except Exception:
+            return [{"Cycle": "_Registry unavailable_", "Phase": "-", "Started": "-"}]
+
+    def _get_cycle_metrics(self) -> dict:
+        """Get cycle metrics for phase_metrics section."""
+        try:
+            registry = get_cycle_registry()
+            return {
+                "total_cycles": registry.total_cycles,
+                "active": len(registry.get_active_cycles()),
+                "completed": registry.completed_count,
+            }
+        except Exception:
+            return {"total_cycles": 0, "active": 0, "completed": 0}
+
+    def _get_cycle_status(self) -> dict:
+        """Get cycle status for memory_safety section."""
+        try:
+            registry = get_cycle_registry()
+            return {"healthy": registry.is_healthy(), "memory_pressure": registry.memory_pressure}
+        except Exception:
+            return {"healthy": False, "memory_pressure": "unknown"}
+
+    def _get_completed_cycles(self) -> list:
+        """Get completed cycles for completed_cycles section."""
+        try:
+            registry = get_cycle_registry()
+            completed = registry.get_completed_cycles(limit=10)
+            return (
+                [{"Cycle": c.name, "Duration": f"{c.duration_ms:.0f}ms", "Result": c.result} for c in completed]
+                if completed
+                else [{"Cycle": "_No completed cycles_", "Duration": "-", "Result": "-"}]
+            )
+        except Exception:
+            return [{"Cycle": "_Registry unavailable_", "Duration": "-", "Result": "-"}]
+
+    def _get_cycle_errors(self) -> list:
+        """Get cycle errors for error_tracking section."""
+        try:
+            registry = get_cycle_registry()
+            errors = registry.get_recent_errors(limit=10)
+            return (
+                [{"Cycle": e.cycle_name, "Error": e.message[:50], "Time": str(e.timestamp)[:19]} for e in errors]
+                if errors
+                else [{"Cycle": "_No errors_", "Error": "-", "Time": "-"}]
+            )
+        except Exception:
+            return [{"Cycle": "_Registry unavailable_", "Error": "-", "Time": "-"}]
+
+    def render(self) -> None:
+        """Render COGNITION.md using config-driven sections."""
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
+        else:
+            content = self.generate_content()
+            if content:
+                self.merge_and_write(content)
 
     def set_loaders(
         self,
