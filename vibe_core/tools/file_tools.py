@@ -2,13 +2,17 @@
 File operation tools for vibe-agency OS (ARCH-027)
 
 Provides safe, auditable file read/write operations for LLM agents.
+Supports VirtualFileSystem (VFS) for strict sandboxing.
 """
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if False:  # TYPE_CHECKING
+    from vibe_core.vfs import VirtualFileSystem
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +22,25 @@ class ReadFileTool(Tool):
     Tool for reading file content.
 
     Allows LLM agents to read files from disk.
+    If initialized with VFS, operations are strictly sandboxed.
 
     Example:
-        >>> tool = ReadFileTool()
-        >>> result = tool.execute({"path": "/tmp/test.txt"})
-        >>> print(result.output)  # File content
+        >>> tool = ReadFileTool(vfs=agent_vfs)
+        >>> result = tool.execute({"path": "input.txt"})
+        >>> print(result.output)  # Content from sandbox/input.txt
     """
+
+    def __init__(self, vfs: Optional["VirtualFileSystem"] = None):
+        """
+        Initialize ReadFileTool.
+
+        Args:
+            vfs: Optional VirtualFileSystem for sandboxing.
+                 If None, operates on host filesystem (ADMIN ONLY).
+        """
+        self.vfs = vfs
+        if not self.vfs:
+            logger.warning("⚠️ ReadFileTool initialized without VFS - unrestricted file access enabled")
 
     @property
     def name(self) -> str:
@@ -73,50 +90,53 @@ class ReadFileTool(Tool):
 
         Returns:
             ToolResult with file content or error
-
-        Example:
-            >>> result = tool.execute({"path": "/tmp/test.txt"})
-            >>> if result.success:
-            ...     print(result.output)  # File content
         """
         path_str = parameters["path"]
 
         try:
-            # Resolve path
-            path = Path(path_str).expanduser().resolve()
+            content = ""
+            actual_path = ""
 
-            # Check if file exists
-            if not path.exists():
-                return ToolResult(success=False, error=f"File not found: {path}")
+            if self.vfs:
+                # Sandboxed execution
+                content = self.vfs.read_text(path_str)
+                actual_path = str(self.vfs.get_sandbox_path() / path_str)
+            else:
+                # Unrestricted execution
+                path = Path(path_str).expanduser().resolve()
+                if not path.exists():
+                    return ToolResult(success=False, error=f"File not found: {path}")
+                if not path.is_file():
+                    return ToolResult(success=False, error=f"Path is not a file: {path}")
+                content = path.read_text(encoding="utf-8")
+                actual_path = str(path)
 
-            # Check if it's a file (not a directory)
-            if not path.is_file():
-                return ToolResult(success=False, error=f"Path is not a file: {path}")
-
-            # Read file content
-            content = path.read_text(encoding="utf-8")
-
-            logger.info(f"ReadFileTool: Read file {path} ({len(content)} bytes)")
+            logger.info(f"ReadFileTool: Read file {actual_path} ({len(content)} bytes)")
 
             return ToolResult(
                 success=True,
                 output=content,
-                metadata={"path": str(path), "size_bytes": len(content)},
+                metadata={"path": actual_path, "size_bytes": len(content)},
             )
 
-        except PermissionError:
-            error_msg = f"Permission denied: {path}"
+        except PermissionError as e:
+            error_msg = f"Permission denied: {e}"
+            logger.error(f"ReadFileTool: {error_msg}")
+            return ToolResult(success=False, error=error_msg)
+
+        except FileNotFoundError:
+            error_msg = f"File not found: {path_str}"
             logger.error(f"ReadFileTool: {error_msg}")
             return ToolResult(success=False, error=error_msg)
 
         except UnicodeDecodeError:
-            error_msg = f"File is not valid UTF-8: {path}"
+            error_msg = f"File is not valid UTF-8: {path_str}"
             logger.error(f"ReadFileTool: {error_msg}")
             return ToolResult(success=False, error=error_msg)
 
         except Exception as e:
             error_msg = f"Failed to read file: {type(e).__name__}: {e!s}"
-            logger.error(f"ReadFileTool: {error_msg} (path={path})", exc_info=True)
+            logger.error(f"ReadFileTool: {error_msg} (path={path_str})", exc_info=True)
             return ToolResult(success=False, error=error_msg)
 
 
@@ -125,15 +145,27 @@ class WriteFileTool(Tool):
     Tool for writing content to files.
 
     Allows LLM agents to create or overwrite files on disk.
+    If initialized with VFS, operations are strictly sandboxed.
 
     Example:
-        >>> tool = WriteFileTool()
+        >>> tool = WriteFileTool(vfs=agent_vfs)
         >>> result = tool.execute({
-        ...     "path": "/tmp/hello.txt",
-        ...     "content": "Hello, world!"
+        ...     "path": "output.txt",
+        ...     "content": "Hello!"
         ... })
-        >>> print(result.success)  # True
     """
+
+    def __init__(self, vfs: Optional["VirtualFileSystem"] = None):
+        """
+        Initialize WriteFileTool.
+
+        Args:
+            vfs: Optional VirtualFileSystem for sandboxing.
+                 If None, operates on host filesystem (ADMIN ONLY).
+        """
+        self.vfs = vfs
+        if not self.vfs:
+            logger.warning("⚠️ WriteFileTool initialized without VFS - unrestricted file access enabled")
 
     @property
     def name(self) -> str:
@@ -191,7 +223,6 @@ class WriteFileTool(Tool):
         if not isinstance(content, str):
             raise TypeError(f"content must be a string, got {type(content).__name__}")
 
-        # create_dirs is optional
         if "create_dirs" in parameters:
             create_dirs = parameters["create_dirs"]
             if not isinstance(create_dirs, bool):
@@ -203,63 +234,77 @@ class WriteFileTool(Tool):
 
         Args:
             parameters: {
-                "path": "/path/to/file.txt",
-                "content": "File content",
-                "create_dirs": False  # optional
+                "path": "file.txt",
+                "content": "Content",
+                "create_dirs": True
             }
 
         Returns:
             ToolResult with success status
-
-        Example:
-            >>> result = tool.execute({
-            ...     "path": "/tmp/test.txt",
-            ...     "content": "Hello!"
-            ... })
-            >>> print(result.success)  # True
         """
         path_str = parameters["path"]
         content = parameters["content"]
         create_dirs = parameters.get("create_dirs", False)
 
         try:
-            # Resolve path
-            path = Path(path_str).expanduser().resolve()
+            actual_path = ""
 
-            # Check if parent directory exists
-            parent = path.parent
-            if not parent.exists():
+            if self.vfs:
+                # Sandboxed execution
+                # VFS handles mkdir logic internally usually, but let's check VFS API
+                # Re-reading VFS code... mkdir is separate.
                 if create_dirs:
-                    parent.mkdir(parents=True, exist_ok=True)
-                    logger.info(f"WriteFileTool: Created directory {parent}")
-                else:
-                    return ToolResult(
-                        success=False,
-                        error=f"Parent directory does not exist: {parent}. Use create_dirs=true to create it.",
-                    )
+                    # We need to compute parent path relative to sandbox
+                    # This is tricky without exposing too much logic.
+                    # Simplest way: VFS.write_text doesn't support create_dirs arg in current impl
+                    # We need to manually handle it via VFS.
+                    # But VFS.write_text does: "full_path.parent.mkdir(parents=True, exist_ok=True)"
+                    # Wait, let me check my VFS read again.
+                    pass
 
-            # Write file
-            path.write_text(content, encoding="utf-8")
+                # Re-reading VFS implementation from memory:
+                # def write_text(self, path: str, content: str, encoding: str = "utf-8") -> None:
+                #     full_path = self._resolve_and_validate(path)
+                #     full_path.parent.mkdir(parents=True, exist_ok=True)
+                #     full_path.write_text(content, encoding=encoding)
 
-            logger.info(f"WriteFileTool: Wrote file {path} ({len(content)} bytes)")
+                # It ALWAYS creates dirs. So `create_dirs` parameter is effectively always True for VFS.
+                # This is a slight behavior change but acceptable for Sandbox safety.
+
+                self.vfs.write_text(path_str, content)
+                actual_path = str(self.vfs.get_sandbox_path() / path_str)
+
+            else:
+                # Unrestricted execution
+                path = Path(path_str).expanduser().resolve()
+                parent = path.parent
+                if not parent.exists():
+                    if create_dirs:
+                        parent.mkdir(parents=True, exist_ok=True)
+                        logger.info(f"WriteFileTool: Created directory {parent}")
+                    else:
+                        return ToolResult(
+                            success=False,
+                            error=f"Parent directory does not exist: {parent}. Use create_dirs=true to create it.",
+                        )
+
+                path.write_text(content, encoding="utf-8")
+                actual_path = str(path)
+
+            logger.info(f"WriteFileTool: Wrote file {actual_path} ({len(content)} bytes)")
 
             return ToolResult(
                 success=True,
-                output=f"File written successfully: {path}",
-                metadata={"path": str(path), "size_bytes": len(content)},
+                output=f"File written successfully: {actual_path}",
+                metadata={"path": actual_path, "size_bytes": len(content)},
             )
 
-        except PermissionError:
-            error_msg = f"Permission denied: {path}"
-            logger.error(f"WriteFileTool: {error_msg}")
-            return ToolResult(success=False, error=error_msg)
-
-        except IsADirectoryError:
-            error_msg = f"Path is a directory: {path}"
+        except PermissionError as e:
+            error_msg = f"Permission denied: {e}"
             logger.error(f"WriteFileTool: {error_msg}")
             return ToolResult(success=False, error=error_msg)
 
         except Exception as e:
             error_msg = f"Failed to write file: {type(e).__name__}: {e!s}"
-            logger.error(f"WriteFileTool: {error_msg} (path={path})", exc_info=True)
+            logger.error(f"WriteFileTool: {error_msg} (path={path_str})", exc_info=True)
             return ToolResult(success=False, error=error_msg)

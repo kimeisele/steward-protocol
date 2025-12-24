@@ -73,22 +73,33 @@ Diese Prinzipien gelten auf JEDER Ebene – vom Byte bis zum System:
 - Save fehlgeschlagen → Notfall-Flush, dann loggen, dann sterben.
 - Ressourcen → Immer freigeben, egal was passiert (finally).
 
-### 4. Keine versteckten Zustände
+### 4. Keine versteckten Zustände (The Three Bodies Doctrine)
 
-Wenn es Trust, Geld oder Permissions betrifft → Audit Trail.
-Wenn es eine Entscheidung ist, die hinterfragt werden könnte → Audit Trail.
-Interne Buchführung → egal.
+Das System existiert auf drei Ebenen. Daten müssen korrekt verortet sein:
 
-**BRAUCHT AUDIT:**
-- Agent stimmt ab
-- Credits werden transferiert
-- Task wird gestartet/beendet
-- Capability wird vergeben/entzogen
+**1. STHULA (The Physical Body - Persistence)**
+*Unveränderliche Wahrheit. Die Schwergewichte.*
+- **Dharma:** Ledger (Geschichte) + Git (Code).
+- **The Cryptographic Zipper:** Jeder Git-Commit referenziert den Ledger-Hash. Jedes Ledger-Event referenziert den Git-SHA. Code und Geschichte sind untrennbar.
+- **Regel:** Keine Entscheidung ohne Eintrag im Ledger.
 
-**BRAUCHT KEIN AUDIT:**
-- Counter hochzählen
-- Cache invalidieren
-- Temporäre Files schreiben
+**2. PRANA (The Vital Breath - Runtime)**
+*Der lebendige Prozess. Atomar aber veränderlich.*
+- **State:** Kernel-Status, Configs, Snapshots.
+- **Regel:** Muss atomar sein (Prakriti). Überlebt Neustart via Snapshot, aber ist nicht "historisch".
+- **Implementierung:** Niemals `open()`. Immer über die State-Engine.
+
+**3. PURUSHA (The Soul - Identity)**
+*Das "Ich" des Agenten.*
+- **Persona:** Identität, Ruf, Beziehungen.
+- **Regel:** Identität ist konstant, auch wenn der Körper (Container) stirbt.
+
+### 5. Die Illusion der Welt (Sandboxing)
+"Die Welt des Agenten ist seine Sandbox. Der Rest ist Illusion."
+- Agenten sehen nur ihr `/workspace`.
+- Kein Zugriff auf `/etc`, `/var` oder andere Agenten.
+- Der einzige Weg nach draußen ist der Kernel-Bus (Nachrichten), nicht das Filesystem.
+- `path traversal` (../) ist ein Angriffsversuch und führt zum sofortigen Tod des Agenten (Narasimha Protocol).
 
 ---
 
@@ -126,17 +137,18 @@ Docstrings sind keine Prosa, sie sind Spezifikationen:
 
 | Begriff | Bedeutung | Architektur-Implikation |
 |---------|-----------|------------------------|
-| Dharma | Invariante | NIEMALS brechen, lieber crashen |
-| Karma | Event/Konsequenz | Muss im Ledger landen |
-| Maya | Abstraktion | Kann sich ändern |
-| Sattva | High-Priority | Überlebt OOM-Triage |
-| Tamas | Low-Priority | Wird zuerst geopfert |
-| Pralaya | Shutdown | Graceful, Zustand bewahren |
-| Kurukshetra | Chaos-Test | Stress/Destruction Szenario |
-| Arjuna | Healer | Self-Healing Pattern |
-| Asura | Attacker | Chaos-Injection Pattern |
-| Manas | Oracle | Entscheidungs-Engine |
-| Yantra | Blueprint | Präzise Implementierung |
+| **Dharma** | Invariante | NIEMALS brechen, lieber crashen |
+| **Karma** | Konsequenz | Signifikante Taten (Entscheidungen/Werte) erzeugen Ledger-Einträge |
+| **Sthula** | Physischer Körper | Git + Ledger + Files (Persistent) |
+| **Prana** | Lebensatem | Runtime State + Kernel (Transient) |
+| **Purusha** | Seele/Identität | Persona + Reputation (Identity) |
+| **Prakriti** | Natur/Materie | Die State-Engine (Verwaltet Sthula/Prana) |
+| **Maya** | Illusion | Sandbox + Ephemeral Data |
+| **Sattva** | Reinheit/Klarheit | High-Priority, Clean Code, Valid State |
+| **Tamas** | Trägheit | Low-Priority, Cache, Garbage |
+| **Pralaya** | Auflösung | Graceful Shutdown, Snapshotting |
+| **Arjuna** | Der Krieger | Self-Healing, Retry Logic |
+| **Narasimha**| Der Beschützer | Zombie-Killer, Security Watchdog |
 
 ---
 
