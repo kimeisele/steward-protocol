@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2025-12-24T15:14:43.711683",
-  "total_cycles": 13,
+  "saved_at": "2025-12-24T18:10:21.701656",
+  "total_cycles": 17,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711752"
+      "timestamp": "2025-12-24T18:10:21.701671"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711762"
+      "timestamp": "2025-12-24T18:10:21.701678"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711776"
+      "timestamp": "2025-12-24T18:10:21.701683"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711782"
+      "timestamp": "2025-12-24T18:10:21.701687"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711788"
+      "timestamp": "2025-12-24T18:10:21.701692"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-24T15:14:43.711803"
+      "timestamp": "2025-12-24T18:10:21.701697"
     },
     {
       "cycle_id": "36dd6ee8",
@@ -99,7 +99,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-24T15:14:43.711811"
+      "timestamp": "2025-12-24T18:10:21.701701"
     },
     {
       "cycle_id": "b7a258f3",
@@ -119,7 +119,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-24T15:14:43.711819"
+      "timestamp": "2025-12-24T18:10:21.701708"
     },
     {
       "cycle_id": "be095401",
@@ -139,7 +139,90 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-24T15:14:43.711823"
+      "timestamp": "2025-12-24T18:10:21.701713"
+    },
+    {
+      "cycle_id": "6df1dba3",
+      "parent_cycle_id": null,
+      "trace_id": "22337754",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T18:10:21.701717"
+    },
+    {
+      "cycle_id": "cec6f0de",
+      "parent_cycle_id": null,
+      "trace_id": "43a70591",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 0,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T18:10:21.701721"
+    },
+    {
+      "cycle_id": "e52ff3d6",
+      "parent_cycle_id": null,
+      "trace_id": "44963d0b",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 26,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T18:10:21.701725"
+    },
+    {
+      "cycle_id": "5c718f1f",
+      "parent_cycle_id": null,
+      "trace_id": "a305363a",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 26,
+        "error": ""
+      },
+      "timestamp": "2025-12-24T18:10:21.701729"
     }
   ],
   "errors": [
@@ -163,7 +246,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-24T15:14:43.711831"
+      "timestamp": "2025-12-24T18:10:21.701734"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -185,7 +268,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-24T15:14:43.711837"
+      "timestamp": "2025-12-24T18:10:21.701737"
     },
     {
       "cycle_id": "60f300f5",
@@ -207,7 +290,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-24T15:14:43.711841"
+      "timestamp": "2025-12-24T18:10:21.701741"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -229,7 +312,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-24T15:14:43.711845"
+      "timestamp": "2025-12-24T18:10:21.701745"
     },
     {
       "cycle_id": "e9194249",
@@ -247,7 +330,7 @@
         "discovery_skipped": true,
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-24T15:14:43.711848"
+      "timestamp": "2025-12-24T18:10:21.701748"
     }
   ]
 }
