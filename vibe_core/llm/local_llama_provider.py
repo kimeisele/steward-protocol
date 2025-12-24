@@ -12,7 +12,7 @@ Models (preference order):
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from vibe_core.runtime.providers.base import LLMProvider
 
@@ -147,7 +147,7 @@ class LocalLlamaProvider(LLMProvider):
         self,
         messages: List[Dict[str, str]],
         model: str | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> str:
         """Generate response from local LLM."""
         self._ensure_loaded()
@@ -157,8 +157,14 @@ class LocalLlamaProvider(LLMProvider):
 
         prompt = self._format_chat_prompt(messages)
 
-        max_tokens = kwargs.get("max_tokens", 256)
-        temperature = kwargs.get("temperature", 0.7)
+        # Extraction from object kwargs
+        max_tokens = 256
+        if "max_tokens" in kwargs and isinstance(kwargs["max_tokens"], int):
+            max_tokens = kwargs["max_tokens"]
+
+        temperature = 0.7
+        if "temperature" in kwargs and isinstance(kwargs["temperature"], (float, int)):
+            temperature = float(kwargs["temperature"])
 
         try:
             response = self._llm(
@@ -201,7 +207,7 @@ class LocalLlamaProvider(LLMProvider):
     def is_available(self) -> bool:
         return self._initialized and self._llm is not None
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> Dict[str, object]:
         """Get provider info."""
         return {
             "provider": "LocalLlamaProvider",

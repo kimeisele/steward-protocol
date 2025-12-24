@@ -21,7 +21,6 @@ Version: 1.0 (ARCH-033B)
 
 import logging
 import sys
-from typing import Any
 
 from vibe_core.runtime.providers.base import LLMProvider
 
@@ -72,7 +71,7 @@ class HumanProvider(LLMProvider):
         self,
         messages: list[dict[str, str]],
         model: str | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> str:
         """
         Prompt the human operator for a response.

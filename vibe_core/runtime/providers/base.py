@@ -23,7 +23,7 @@ Version: 1.0 (GAD-511)
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -57,7 +57,7 @@ class LLMProvider(ABC):
     """
 
     @abstractmethod
-    def __init__(self, api_key: str | None = None, **kwargs: Any):
+    def __init__(self, api_key: str | None = None, **kwargs: object):
         """
         Initialize provider with API key and configuration.
 
@@ -74,7 +74,7 @@ class LLMProvider(ABC):
         model: str,
         max_tokens: int = 4096,
         temperature: float = 1.0,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> LLMResponse:
         """
         Invoke the LLM with a prompt.
@@ -147,7 +147,7 @@ class NoOpProvider(LLMProvider):
     to run in knowledge-only mode without crashing.
     """
 
-    def __init__(self, api_key: str | None = None, **kwargs: Any):
+    def __init__(self, api_key: str | None = None, **kwargs: object):
         """Initialize NoOp provider (no configuration needed)"""
         self.logger = None
         try:
@@ -164,7 +164,7 @@ class NoOpProvider(LLMProvider):
         model: str,
         max_tokens: int = 4096,
         temperature: float = 1.0,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> LLMResponse:
         """Return mock empty response"""
         if self.logger:

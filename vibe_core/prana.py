@@ -22,7 +22,7 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 logger = logging.getLogger("PRANA")
 
@@ -107,7 +107,7 @@ def load_config(config_path: Optional[Path] = None) -> PranaConfig:
         return PranaConfig()
 
 
-def _parse_config(data: Dict[str, Any]) -> PranaConfig:
+def _parse_config(data: Dict[str, object]) -> PranaConfig:
     """Parse YAML data into PranaConfig."""
 
     def get_section(name: str, cls):

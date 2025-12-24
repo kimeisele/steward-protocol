@@ -46,6 +46,7 @@ class KnowledgeResult:
     artifacts: list[str]
     query: str
     relevance_scores: dict[str, float]
+    duration_ms: float = 0.0
 
 
 class BaseAgent:
@@ -258,6 +259,9 @@ class BaseAgent:
         Returns:
             KnowledgeResult with found artifacts and relevance scores
         """
+        import time
+
+        start_time = time.time()
         try:
             # Call bin/vibe-knowledge search
             result = subprocess.run(  # noqa: S603
@@ -272,6 +276,7 @@ class BaseAgent:
                 timeout=10,
             )
 
+            duration_ms = (time.time() - start_time) * 1000
             self.knowledge_queries += 1
 
             if result.returncode != 0:
@@ -280,6 +285,7 @@ class BaseAgent:
                     artifacts=[],
                     query=query,
                     relevance_scores={},
+                    duration_ms=duration_ms,
                 )
 
             # Parse output (simple parsing of CLI output)
@@ -304,14 +310,17 @@ class BaseAgent:
                 artifacts=artifacts[:limit],
                 query=query,
                 relevance_scores=relevance_scores,
+                duration_ms=duration_ms,
             )
 
         except Exception:
+            duration_ms = (time.time() - start_time) * 1000
             return KnowledgeResult(
                 found=False,
                 artifacts=[],
                 query=query,
                 relevance_scores={},
+                duration_ms=duration_ms,
             )
 
     def read_knowledge_artifact(self, path: str) -> str | None:
@@ -495,9 +504,13 @@ class BaseAgent:
                 "success": bool,
                 "checks_passed": bool,
                 "tests_passed": bool,
-                "issues": list of problems found
+                "issues": list of problems found,
+                "duration_ms": float
             }
         """
+        import time
+
+        start_time = time.time()
         issues = []
         checks_passed = True
         tests_passed = True
@@ -551,11 +564,14 @@ class BaseAgent:
                 tests_passed = False
                 issues.append(f"Test error: {e!s}")
 
+        duration_ms = (time.time() - start_time) * 1000
+
         return {
             "success": checks_passed and tests_passed,
             "checks_passed": checks_passed,
             "tests_passed": tests_passed,
             "issues": issues,
+            "duration_ms": duration_ms,
         }
 
     # ========================================================================

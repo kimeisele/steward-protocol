@@ -67,12 +67,12 @@ class VibeLedger(ABC):
         pass
 
     @abstractmethod
-    def record_completion(self, task: Any, result: Any) -> None:
+    def record_completion(self, task: Any, result: Any, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         pass
 
     @abstractmethod
-    def record_failure(self, task: Any, error: str) -> None:
+    def record_failure(self, task: Any, error: str, duration_ms: Optional[float] = None) -> None:
         """Record task failure"""
         pass
 

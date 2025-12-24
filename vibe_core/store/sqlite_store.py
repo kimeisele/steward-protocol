@@ -13,12 +13,14 @@ Schema: docs/tasks/ARCH-001_schema.sql (v2)
 """
 
 import json
+import logging
 import os
 import sqlite3
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+
+logger = logging.getLogger("SQLITE_STORE")
 
 
 class SQLiteStore:
@@ -150,7 +152,7 @@ class SQLiteStore:
     # MISSION CRUD
     # ========================================================================
 
-    def _map_manifest_to_missions_row(self, manifest: dict[str, Any]) -> dict[str, Any]:
+    def _map_manifest_to_missions_row(self, manifest: dict[str, object]) -> dict[str, object]:
         """
         Adapter: Convert project_manifest.json to missions table row (v2)
 
@@ -237,11 +239,11 @@ class SQLiteStore:
         max_cost_usd: float | None = None,
         current_cost_usd: float = 0.0,
         alert_threshold: float = 0.80,
-        cost_breakdown: dict[str, Any] | None = None,
+        cost_breakdown: dict[str, object] | None = None,
         owner: str | None = None,
         description: str | None = None,
         api_version: str = "agency.os/v1alpha1",
-        metadata: dict[str, Any] | None = None,
+        metadata: dict[str, object] | None = None,
     ) -> int:
         """
         Create a new mission (Schema v2)
@@ -304,7 +306,7 @@ class SQLiteStore:
             self._commit()
             return cursor.lastrowid
 
-    def _parse_mission_row(self, row: sqlite3.Row) -> dict[str, Any]:
+    def _parse_mission_row(self, row: sqlite3.Row) -> dict[str, object]:
         """
         Parse mission row and deserialize JSON fields
 
@@ -322,7 +324,7 @@ class SQLiteStore:
             mission["cost_breakdown"] = json.loads(mission["cost_breakdown"])
         return mission
 
-    def get_mission(self, mission_id: int) -> dict[str, Any] | None:
+    def get_mission(self, mission_id: int) -> dict[str, object] | None:
         """
         Get mission by ID
 
@@ -339,7 +341,7 @@ class SQLiteStore:
 
         return self._parse_mission_row(row)
 
-    def get_mission_by_uuid(self, mission_uuid: str) -> dict[str, Any] | None:
+    def get_mission_by_uuid(self, mission_uuid: str) -> dict[str, object] | None:
         """
         Get mission by UUID
 
@@ -371,7 +373,7 @@ class SQLiteStore:
         )
         self._commit()
 
-    def get_mission_history(self) -> list[dict[str, Any]]:
+    def get_mission_history(self) -> list[dict[str, object]]:
         """
         Get all missions (history)
 
@@ -381,7 +383,7 @@ class SQLiteStore:
         cursor = self.conn.execute("SELECT * FROM missions ORDER BY created_at DESC")
         return [self._parse_mission_row(row) for row in cursor.fetchall()]
 
-    def get_all_missions(self) -> list[dict[str, Any]]:
+    def get_all_missions(self) -> list[dict[str, object]]:
         """Alias for get_mission_history()"""
         return self.get_mission_history()
 
@@ -405,7 +407,7 @@ class SQLiteStore:
         current_cost_usd: float | None = None,
         max_cost_usd: float | None = None,
         alert_threshold: float | None = None,
-        cost_breakdown: dict[str, Any] | None = None,
+        cost_breakdown: dict[str, object] | None = None,
     ):
         """
         Update mission budget fields (v2)
@@ -445,7 +447,7 @@ class SQLiteStore:
         self.conn.execute(sql, params)
         self._commit()
 
-    def get_missions_over_budget(self) -> list[dict[str, Any]]:
+    def get_missions_over_budget(self) -> list[dict[str, object]]:
         """
         Get missions that exceed their budget (v2)
 
@@ -462,7 +464,7 @@ class SQLiteStore:
         )
         return [self._parse_mission_row(row) for row in cursor.fetchall()]
 
-    def get_missions_by_owner(self, owner: str) -> list[dict[str, Any]]:
+    def get_missions_by_owner(self, owner: str) -> list[dict[str, object]]:
         """
         Get missions by owner (v2)
 
@@ -486,8 +488,8 @@ class SQLiteStore:
         self,
         mission_id: int,
         tool_name: str,
-        args: dict[str, Any],
-        result: dict[str, Any] | None,
+        args: dict[str, object],
+        result: dict[str, object] | None,
         timestamp: str,
         duration_ms: int,
         success: bool,
@@ -529,7 +531,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_tool_call(self, tool_call_id: int) -> dict[str, Any] | None:
+    def get_tool_call(self, tool_call_id: int) -> dict[str, object] | None:
         """Get tool call by ID"""
         cursor = self.conn.execute("SELECT * FROM tool_calls WHERE id = ?", (tool_call_id,))
         row = cursor.fetchone()
@@ -544,7 +546,7 @@ class SQLiteStore:
             tool_call["result"] = json.loads(tool_call["result"])
         return tool_call
 
-    def get_tool_calls_for_mission(self, mission_id: int) -> list[dict[str, Any]]:
+    def get_tool_calls_for_mission(self, mission_id: int) -> list[dict[str, object]]:
         """
         Get all tool calls for a mission
 
@@ -579,7 +581,7 @@ class SQLiteStore:
         rationale: str,
         timestamp: str,
         agent_name: str,
-        context: dict[str, Any] | None = None,
+        context: dict[str, object] | None = None,
     ) -> int:
         """
         Record agent decision
@@ -613,7 +615,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_decisions_for_mission(self, mission_id: int) -> list[dict[str, Any]]:
+    def get_decisions_for_mission(self, mission_id: int) -> list[dict[str, object]]:
         """
         Get all decisions for a mission
 
@@ -643,7 +645,7 @@ class SQLiteStore:
         self,
         mission_id: int,
         key: str,
-        value: Any,
+        value: object,
         timestamp: str,
         ttl: int | None = None,
     ):
@@ -688,7 +690,7 @@ class SQLiteStore:
             )
         self._commit()
 
-    def get_memory(self, mission_id: int, key: str) -> dict[str, Any] | None:
+    def get_memory(self, mission_id: int, key: str) -> dict[str, object] | None:
         """
         Get agent memory by key
 
@@ -750,7 +752,7 @@ class SQLiteStore:
         run_id: int,
         completed_at: str,
         success: bool,
-        metrics: dict[str, Any] | None = None,
+        metrics: dict[str, object] | None = None,
     ):
         """
         Complete playbook run with metrics
@@ -776,7 +778,7 @@ class SQLiteStore:
         )
         self._commit()
 
-    def get_playbook_run(self, run_id: int) -> dict[str, Any] | None:
+    def get_playbook_run(self, run_id: int) -> dict[str, object] | None:
         """Get playbook run by ID"""
         cursor = self.conn.execute("SELECT * FROM playbook_runs WHERE id = ?", (run_id,))
         row = cursor.fetchone()
@@ -867,7 +869,7 @@ class SQLiteStore:
         self,
         task_id: str,
         status: str,
-        result: Any = None,
+        result: object = None,
     ):
         """
         Update task status and optional result (ARCH-006).
@@ -898,7 +900,7 @@ class SQLiteStore:
             )
             self._commit()
 
-    def get_task(self, task_id: str) -> dict[str, Any] | None:
+    def get_task(self, task_id: str) -> dict[str, object] | None:
         """
         Get task by ID (ARCH-006).
 
@@ -927,7 +929,7 @@ class SQLiteStore:
                 pass  # Keep as string if not valid JSON
         return task
 
-    def get_subtasks(self, parent_id: str) -> list[dict[str, Any]]:
+    def get_subtasks(self, parent_id: str) -> list[dict[str, object]]:
         """
         Get all subtasks for a parent task (ARCH-006).
 
@@ -955,7 +957,7 @@ class SQLiteStore:
             tasks.append(task)
         return tasks
 
-    def get_all_tasks(self) -> list[dict[str, Any]]:
+    def get_all_tasks(self) -> list[dict[str, object]]:
         """
         Retrieves all tasks to reconstruct system state (ARCH-007).
 
@@ -1000,7 +1002,7 @@ class SQLiteStore:
         missions: list[str] | None = None,
         created_at: str = None,
         updated_at: str = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: dict[str, object] | None = None,
     ) -> str:
         """
         Add or update a roadmap (UPSERT operation).
@@ -1068,7 +1070,7 @@ class SQLiteStore:
 
         return roadmap_id
 
-    def get_roadmap(self, roadmap_id: str) -> dict[str, Any] | None:
+    def get_roadmap(self, roadmap_id: str) -> dict[str, object] | None:
         """
         Get roadmap by ID.
 
@@ -1094,7 +1096,7 @@ class SQLiteStore:
             roadmap["metadata"] = json.loads(roadmap["metadata"])
         return roadmap
 
-    def get_all_roadmaps(self) -> list[dict[str, Any]]:
+    def get_all_roadmaps(self) -> list[dict[str, object]]:
         """
         Get all roadmaps.
 
@@ -1116,7 +1118,7 @@ class SQLiteStore:
     # LEGACY MIGRATION (ARCH-003)
     # ========================================================================
 
-    def import_legacy_mission(self, json_data: dict[str, Any]) -> int | None:
+    def import_legacy_mission(self, json_data: dict[str, object]) -> int | None:
         """
         Import legacy mission from active_mission.json
 
@@ -1167,7 +1169,7 @@ class SQLiteStore:
 
         return mission_id
 
-    def import_project_manifest(self, manifest: dict[str, Any], project_memory: dict[str, Any] | None = None) -> int:
+    def import_project_manifest(self, manifest: dict[str, object], project_memory: dict[str, object] | None = None) -> int:
         """
         Import project manifest and optional project memory to SQLite (ARCH-003)
 
@@ -1256,7 +1258,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_session_narrative(self, mission_id: int) -> list[dict[str, Any]]:
+    def get_session_narrative(self, mission_id: int) -> list[dict[str, object]]:
         """
         Get all session narrative for a mission (v2)
 
@@ -1286,7 +1288,7 @@ class SQLiteStore:
         path: str | None = None,
         url: str | None = None,
         branch: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: dict[str, object] | None = None,
     ) -> int:
         """
         Add artifact entry (v2 - SDLC tracking)
@@ -1325,7 +1327,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_artifacts(self, mission_id: int, artifact_type: str | None = None) -> list[dict[str, Any]]:
+    def get_artifacts(self, mission_id: int, artifact_type: str | None = None) -> list[dict[str, object]]:
         """
         Get artifacts for a mission (v2)
 
@@ -1365,7 +1367,7 @@ class SQLiteStore:
         gate_name: str,
         status: str,
         timestamp: str,
-        details: dict[str, Any] | None = None,
+        details: dict[str, object] | None = None,
     ) -> int:
         """
         Record quality gate result (v2 - GAD-004)
@@ -1396,7 +1398,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_quality_gates(self, mission_id: int) -> list[dict[str, Any]]:
+    def get_quality_gates(self, mission_id: int) -> list[dict[str, object]]:
         """
         Get quality gates for a mission (v2)
 
@@ -1544,7 +1546,7 @@ class SQLiteStore:
             )
         self._commit()
 
-    def get_trajectory(self, mission_id: int) -> dict[str, Any] | None:
+    def get_trajectory(self, mission_id: int) -> dict[str, object] | None:
         """
         Get trajectory for a mission (v2)
 
@@ -1573,7 +1575,7 @@ class SQLiteStore:
     # v2: PROJECT MEMORY ADAPTER (Flattening Logic)
     # ========================================================================
 
-    def _map_project_memory_to_sql(self, memory: dict[str, Any], mission_id: int, timestamp: str):
+    def _map_project_memory_to_sql(self, memory: dict[str, object], mission_id: int, timestamp: str):
         """
         Adapter: Flatten project_memory.json into SQL tables (v2)
 
@@ -1604,9 +1606,8 @@ class SQLiteStore:
                     date=entry.get("date", timestamp),
                     phase=entry.get("phase", "UNKNOWN"),
                 )
-            except Exception:
-                # Skip duplicates (UNIQUE constraint on session_num)
-                pass
+            except Exception as e:
+                logger.debug(f"Skipping duplicate session narrative: {e}")
 
         # 2. Domain concepts (array → rows)
         domain = memory.get("domain", {})
@@ -1614,18 +1615,16 @@ class SQLiteStore:
         for concept in concepts:
             try:
                 self.add_domain_concept(mission_id, concept, timestamp)
-            except Exception:
-                # Skip duplicates (UNIQUE constraint on concept)
-                pass
+            except Exception as e:
+                logger.debug(f"Skipping duplicate domain concept: {e}")
 
         # 3. Domain concerns (array → rows)
         concerns = domain.get("concerns", [])
         for concern in concerns:
             try:
                 self.add_domain_concern(mission_id, concern, timestamp)
-            except Exception:
-                # Skip duplicates (UNIQUE constraint on concern)
-                pass
+            except Exception as e:
+                logger.debug(f"Skipping duplicate domain concern: {e}")
 
         # 4. Trajectory (object → row)
         trajectory_obj = memory.get("trajectory", {})
