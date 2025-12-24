@@ -222,18 +222,36 @@ def get_last_heartbeat() -> Optional[str]:
 
 
 def record_heartbeat() -> None:
-    """Record current heartbeat timestamp."""
+    """Record current heartbeat timestamp (Atomic)."""
+    import json
+    import os
+    import tempfile
     from datetime import datetime
 
     state_file = Path(".opus_state/prana_heartbeat.json")
     state_file.parent.mkdir(parents=True, exist_ok=True)
-
-    import json
 
     data = {
         "last_pulse": datetime.utcnow().isoformat(),
         "kernel_running": is_kernel_running(),
     }
 
-    with open(state_file, "w") as f:
-        json.dump(data, f, indent=2)
+    content = json.dumps(data, indent=2)
+
+    # Atomic write pattern to prevent corruption
+    fd, tmp_path = tempfile.mkstemp(
+        dir=state_file.parent,
+        prefix=f".{state_file.stem}_",
+        suffix=state_file.suffix,
+    )
+
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(content)
+        # Atomic rename
+        os.replace(tmp_path, state_file)
+    except Exception as e:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        logger.error(f"Failed to record heartbeat: {e}")
+        raise
