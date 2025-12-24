@@ -38,12 +38,46 @@ class GAPReportTool(Tool):
         ledger_path: str = "data/registry/ledger.jsonl",
         licenses_path: str = "data/registry/licenses.json",
         proposals_path: str = "data/governance/executed",
+        vfs: Optional[Any] = None,
+        io: Optional[Any] = None,
     ):
-        """Initialize G.A.P. Report Tool."""
-        self.ledger_path = Path(ledger_path)
-        self.licenses_path = Path(licenses_path)
-        self.proposals_path = Path(proposals_path)
-        logger.info("🔐 G.A.P. Report Tool initialized")
+        """
+        Initialize G.A.P. Report Tool.
+
+        Args:
+            ledger_path: Path to ledger file
+            licenses_path: Path to licenses file
+            proposals_path: Path to proposals directory
+            vfs: Optional VirtualFileSystem for sandboxing
+            io: Optional KernelIOService for audited atomic writes
+        """
+        self.vfs = vfs
+        self.io = io
+
+        # Resolve paths via VFS if available, else use direct Path
+        if self.vfs:
+            # We store strings for internal logic but will use VFS for access
+            self.ledger_path_str = ledger_path
+            self.licenses_path_str = licenses_path
+            self.proposals_path_str = proposals_path
+        else:
+            self.ledger_path = Path(ledger_path)
+            self.licenses_path = Path(licenses_path)
+            self.proposals_path = Path(proposals_path)
+
+        logger.info("🔐 G.A.P. Report Tool initialized (Sandboxed: %s, Audited: %s)", bool(vfs), bool(io))
+
+    def _read_text(self, path_str: str) -> str:
+        """Helper to read text via VFS or direct Path."""
+        if self.vfs:
+            return self.vfs.read_text(path_str)
+        return Path(path_str).read_text(encoding="utf-8")
+
+    def _exists(self, path_str: str) -> bool:
+        """Helper to check existence via VFS or direct Path."""
+        if self.vfs:
+            return self.vfs.exists(path_str)
+        return Path(path_str).exists()
 
     @property
     def name(self) -> str:
@@ -114,6 +148,10 @@ class GAPReportTool(Tool):
 
                 output_format = parameters.get("output_format", "markdown")
                 output_path = parameters.get("output_path")
+
+                # Ensure output format is supported for DocumentType mapping
+                if output_format not in ["json", "markdown"]:
+                    output_format = "json"
 
                 path = self.export_report(report, output_format, output_path)
                 return ToolResult(
@@ -451,11 +489,11 @@ class GAPReportTool(Tool):
         output_path: Optional[str] = None,
     ) -> str:
         """
-        Export G.A.P. Report to file.
+        Export G.A.P. Report to file (Atomic & Audited).
 
         Args:
             report: Report dictionary
-            output_format: Format ("json", "markdown", "html")
+            output_format: Format ("json", "markdown")
             output_path: Output file path
 
         Returns:
@@ -465,19 +503,59 @@ class GAPReportTool(Tool):
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"data/reports/GAP_Report_{timestamp}.{output_format}"
 
+        content = ""
+        if output_format == "markdown":
+            content = self._report_to_markdown(report)
+        else:
+            content = json.dumps(report, indent=2)
+
+        # Method 1: Use Kernel I/O Service (Preferred - Audited)
+        if self.io:
+            from vibe_core.io_service import DocumentType
+
+            doc_type = DocumentType.READONLY
+            if output_format == "json":
+                doc_type = DocumentType.SNAPSHOT
+
+            result = self.io.write_document(
+                name=output_path,
+                content=content,
+                doc_type=doc_type,
+                writer_id="GAP_REPORT_TOOL",
+                add_header=(output_format == "markdown"),
+            )
+            if result.success:
+                logger.info(f"✅ Report exported via Kernel IO: {output_path}")
+                return output_path
+
+        # Method 2: Use VFS (Sandboxed)
+        if self.vfs:
+            self.vfs.write_text(output_path, content)
+            logger.info(f"✅ Report exported via VFS: {output_path}")
+            return output_path
+
+        # Method 3: Local Atomic Write (Fallback)
+        import os
+        import tempfile
+
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        if output_format == "json":
-            output_file.write_text(json.dumps(report, indent=2))
-        elif output_format == "markdown":
-            markdown = self._report_to_markdown(report)
-            output_file.write_text(markdown)
-        else:
-            # Default to JSON
-            output_file.write_text(json.dumps(report, indent=2))
+        fd, tmp_path = tempfile.mkstemp(
+            dir=output_file.parent,
+            prefix=f".{output_file.stem}_",
+            suffix=output_file.suffix,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(content)
+            os.replace(tmp_path, output_file)
+            logger.info(f"✅ Report exported via atomic write: {output_path}")
+        except Exception:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
 
-        logger.info(f"✅ Report exported to: {output_path}")
         return output_path
 
     def _report_to_markdown(self, report: Dict[str, Any]) -> str:
