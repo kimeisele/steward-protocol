@@ -1,74 +1,58 @@
-# OPUS-212: SHUDDHI SERVICE - The Surgical Self-Healing Engine (Rev 6)
+# OPUS-212: SHUDDHI SERVICE - The Surgical Self-Healing Engine (Rev 7)
 
-**Status:** FINAL ARCHITECTURE
+**Status:** FINAL ARCHITECTURE (Sovereign Core Stack)
 **Priority:** P0 - Core Immunity System
-**Author:** Senior Architect (verified via catastrophic failure analysis)
+**Author:** Senior Architect (verified via holistic loop verification)
 **Date:** 2024-12-24
 **Protocol:** `vibe_core/protocols/shuddhi.py`
+**Core Dependency:** `libcst`, `TaskService`
 
 ---
 
 ## 1. VISION: DAS ORGANISCHE IMMUNSYSTEM
 
-Shuddhi (Sanskrit: 'Reinigung') ist nicht nur ein "Fix-Skript". Es ist die **Exekutive des Immunsystems**.
-Wenn `Watchman` (Drishti) eine Krankheit (Technical Debt, Violation) sieht, beauftragt er den `Engineer` (Karma), diese zu heilen. Der `Engineer` nutzt dafür das Skalpell: **Shuddhi**.
+Shuddhi (Sanskrit: 'Reinigung') ist die **Exekutive des Immunsystems**. Es transformiert strukturelle Sünden (Tamas) zurück in architektonische Harmonie (Sattva), ohne dabei die Identität (Kommentare/Formatierung) des Codes zu zerstören.
 
-### 1.1 Lessons Learned (aus dem Scheitern von Rev 5)
-- **Keine Admin-Skripte:** Heilung muss *innerhalb* des Agenten-Loops passieren (`Circuit` -> `Agent` -> `Tool`).
-- **Tool-Integrität:** Ein Tool, das wegen Import-Fehlern nicht lädt, macht den ganzen Circuit nutzlos.
-- **Return the Code:** Shuddhi darf nicht nur diffen, es muss den *geheilten Code* zurückgeben, damit der Agent ihn über `KernelIO` schreiben kann.
-
----
-
-## 2. ARCHITEKTUR: DER HEILUNGS-KREISLAUF
-
-### 2.1 Die 4 Phasen der Heilung
-1.  **Drishti (Erkennung):** Watchman oder CI erkennen eine Violation (z.B. `unsafe_io_write`).
-2.  **Sankalpa (Entschluss):** Der Circuit `HEAL_CODEBASE` wird ausgelöst. Er beauftragt den `Engineer`.
-3.  **Kriya (Handlung):** Der `Engineer` ruft sein Werkzeug `engineer.heal_violation` (ShuddhiTool) auf.
-4.  **Shuddhi (Chirurgie):** Die Engine (`vibe_core/shuddhi/engine.py`) lädt den Code, parst ihn (CST), transformiert ihn chirurgisch und gibt ihn zurück.
-5.  **Karma (Vollzug):** Das Tool schreibt den geheilten Code via `KernelIO` zurück ins Dateisystem.
-
-### 2.2 Optional: Manas Integration (The High-End Cognitive Boost)
-Shuddhi ist deterministisch (Reflex). Aber mit MANAS wird es intelligent:
-- **Reflex:** "Ersetze `open()` durch `write_file()`." (Standard Shuddhi).
-- **Cognitive:** "Dieser Block sieht aus wie eine Datenbank-Verbindung. Sollte ich das in ein Plugin refactorn?" (Manas + Shuddhi).
-- **Oracle:** Shuddhi kann via `Weaver` den Kontext prüfen ("Ist das eine Test-Datei? Dann sind die Regeln lockerer.").
+### 1.1 Lessons Learned (The Christmas Crisis)
+- **Tool-Integrität:** Werkzeuge müssen so robust wie der Kernel sein. Fehlende Imports (wie `Optional`) in Agent-Tools legen das gesamte System lahm.
+- **Kala-Puls:** Heilung ist kein einmaliges Ereignis (Sarga), sondern ein permanenter Prozess (Kala).
+- **Task-Souveränität:** Heilungsaktionen müssen als erstklassige Aufgaben (Tasks) im Core-System-Ledger dokumentiert werden.
 
 ---
 
-## 3. TECHNISCHE IMPLEMENTIERUNG
+## 2. ARCHITEKTUR: DER HOLISTISCHE LOOP
 
-### 3.1 Core Service (`vibe_core/shuddhi/`)
-Der Service ist rein funktional. Er hat keinen State.
-- Input: `Path`, `RuleID`
-- Output: `ShuddhiResult(status, diff, purified_code)`
+### 2.1 Die 4 Dimensionen der Heilung
+1.  **Drishti (Erkennung):** Der `LogMonitor` scannt das `system_journal.jsonl` nach Error-Mustern (z.B. `ImportError`, `NameError`).
+2.  **Sankalpa (Entschluss):** Die `ShuddhiKalaBridge` (verbunden mit dem `PulseManager`) erstellt bei Erkennung automatisch einen Task im `kernel.tasks`.
+3.  **Kriya (Handlung):** Der `Engineer`-Agent nutzt das `engineer.heal_violation` Tool.
+4.  **Karma (Vollzug):** Die `ShuddhiEngine` transformiert den Code, schreibt ihn via `KernelIO` und schließt den Task im Ledger ab.
 
-### 3.2 Das Werkzeug (`engineer.heal_violation`)
-Dies ist die Brücke zwischen Agenten-Welt und Core-Kernel.
-- Es muss **robust** sein (Fehlerbehandlung für Imports).
-- Es muss **KernelIO** nutzen (Audit Trail).
-- Es muss im `ToolsPlugin` automatisch entdeckt werden.
-
-### 3.3 Der Circuit (`HEAL_CODEBASE`)
-Der Dirigent. Er orchestriert den Engineer. Er muss sicherstellen, dass die richtigen Parameter (`file_path`, `rule_id`) fließen.
+### 2.2 Core Stack Integration (Ring 0)
+- **`TaskService` Protocol:** Definiert das OS-Level Interface für Aufgabenverwaltung.
+- **`RealVibeKernel.tasks`:** Ermöglicht jedem Agenten Zugriff auf persistente, kryptografisch gesicherte Aufgaben.
+- **`RealVibeKernel.shuddhi`:** Exponiert den CST-Chirurgen direkt im Kernel.
 
 ---
 
-## 4. FEHLER-ANALYSE & PRÄVENTION (PANOPTICON LOG)
+## 3. TECHNISCHE SPEZIFIKATION
 
-Der Log vom 24.12.2024 zeigte:
-> `TOOL_DISCOVERY - WARNING - - engineer.shuddhi_tool.py: Import failed: name 'Optional' is not defined`
-
-**Konsequenz:** Das Tool wurde nicht geladen. Der Engineer stand ohne Werkzeug da. Der Circuit lief ins Leere.
-**Lösung:** Strikte Linting-Checks *vor* dem Boot. Tools müssen so robust wie Kernel-Code sein.
+### 3.1 Komponenten
+- **`vibe_core/shuddhi/engine.py`**: Der CST-Orchestrator.
+- **`vibe_core/shuddhi/log_monitor.py`**: Der Journal-Scanner.
+- **`vibe_core/shuddhi/kala_bridge.py`**: Der Puls-Abonnent.
+- **`vibe_core/cartridges/system/engineer/tools/shuddhi_tool.py`**: Das Agenten-Werkzeug.
 
 ---
 
-## 5. FAZIT
+## 4. GAD-000 CONFORMANCE
+- **Radikale Transparenz:** Jede Heilung hinterlässt einen Task-Eintrag im Ledger.
+- **Zero-Touch:** Das System erkennt Fehler ohne menschliche Intervention.
+- **Split-Brain Heilung:** Konsolidierung aller Task-Daten in `data/vibe_agency.db`.
 
-Shuddhi ist bereit. Die Architektur steht.
-Der Fehler lag nicht im Konzept, sondern in der Flüchtigkeit der Umsetzung (fehlender Import).
-Wir korrigieren dies jetzt und lassen das System sich selbst beweisen.
+---
 
-**Satyam Eva Jayate.** (Nur die Wahrheit siegt - und kompilierender Code ist die einzige Wahrheit).
+## 5. FAZIT: DIE NEUE ORDNUNG
+Das Steward Protocol verfügt nun über ein autonomes Nervensystem. Es hört (Logs), fühlt (Puls) und handelt (Shuddhi). Der Kreis ist geschlossen.
+
+**Satyam Eva Jayate.**

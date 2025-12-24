@@ -311,8 +311,7 @@ class DashboardGenerator:
         content = self.generate_operations_md()
 
         try:
-            with open(self.output_path, "w") as f:
-                f.write(content)
+            self.system.write_file(self.output_path, content)
             logger.info(f"✅ Dashboard written to {self.output_path}")
             return self.output_path
         except Exception as e:
