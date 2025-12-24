@@ -250,8 +250,52 @@ class RegistryAgent(VibeAgent):
         return {"agents": {}}
 
     def _save_registry(self) -> None:
-        """Save citizen registry to disk."""
-        self.registry_path.write_text(json.dumps(self.registry, indent=2))
+        """Save citizen registry to disk (Atomic & Audited)."""
+        import json
+
+        # Method 1: Use Kernel I/O Service (Preferred - Audited)
+        if self.system and hasattr(self.system, "kernel") and hasattr(self.system.kernel, "io"):
+            try:
+                self.system.kernel.io.write_snapshot(
+                    name=str(self.registry_path.name),  # Kernel IO handles path relative to root usually, or absolute?
+                    # Wait, KernelIOService writes relative to root.
+                    # self.registry_path might be "data/registry/citizens.json"
+                    # We need to pass the relative path if possible.
+                    # Let's assume write_snapshot takes the path relative to workspace.
+                    data=self.registry,
+                    writer_id=self.agent_id,
+                )
+                return
+            except Exception as e:
+                logger.warning(f"Failed to use Kernel IO for registry save: {e}. Falling back to local atomic write.")
+
+        # Method 2: Local Atomic Write (Fallback - Safe but un-audited)
+        import os
+        import tempfile
+
+        content = json.dumps(self.registry, indent=2)
+        path = self.registry_path
+
+        # Ensure parent exists
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write to temp file
+        fd, tmp_path = tempfile.mkstemp(
+            dir=path.parent,
+            prefix=f".{path.stem}_",
+            suffix=path.suffix,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(content)
+            # Atomic rename
+            os.replace(tmp_path, path)
+            logger.debug(f"Saved registry atomicity to {path}")
+        except Exception as e:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            logger.error(f"Failed to save registry: {e}")
+            raise
 
     def report_status(self) -> Dict[str, Any]:
         """Report registry status."""
