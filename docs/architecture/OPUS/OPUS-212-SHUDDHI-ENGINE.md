@@ -1,80 +1,74 @@
-# OPUS-212: SHUDDHI SERVICE - Core Self-Healing Architecture (Rev 5)
+# OPUS-212: SHUDDHI SERVICE - The Surgical Self-Healing Engine (Rev 6)
 
-**Status:** FINAL SPECIFICATION
-**Priority:** P0 - Architectural Foundation
-**Author:** Senior Support Agent (108% Verified)
+**Status:** FINAL ARCHITECTURE
+**Priority:** P0 - Core Immunity System
+**Author:** Senior Architect (verified via catastrophic failure analysis)
 **Date:** 2024-12-24
 **Protocol:** `vibe_core/protocols/shuddhi.py`
-**Core Dependency:** `libcst` (Concrete Syntax Tree)
 
 ---
 
-## 1. VISION: DAS IMMUNSYSTEM DES KERNELS
+## 1. VISION: DAS ORGANISCHE IMMUNSYSTEM
 
-Ein robustes Agent-OS muss in der Lage sein, seine eigene Entropie (Tamas) zu bekämpfen, ohne dabei seine Identität (Dokumentation/Kommentare) zu verlieren. Shuddhi ist der **souveräne Core-Dienst** für strukturerhaltende Code-Transformation.
+Shuddhi (Sanskrit: 'Reinigung') ist nicht nur ein "Fix-Skript". Es ist die **Exekutive des Immunsystems**.
+Wenn `Watchman` (Drishti) eine Krankheit (Technical Debt, Violation) sieht, beauftragt er den `Engineer` (Karma), diese zu heilen. Der `Engineer` nutzt dafür das Skalpell: **Shuddhi**.
 
-### 1.1 Warum Rev 4 nicht reichte
-- **Protokoll-Ort:** Das Interface war falsch platziert (gehört in `vibe_core/protocols/`).
-- **Header-Blindheit:** Transformationen ignorierten Import-Abhängigkeiten.
-- **Speicher-Sicherheit:** Der "Dirty State" wurde auf die Platte geschrieben, bevor er validiert wurde.
-
----
-
-## 2. ARCHITEKTUR: DIE LASAGNA-SCHICHTEN
-
-### 2.1 Schichtentrennung
-1.  **Drishti (Watchman):** Erkennt Verstöße via AST (schnelle Diagnose).
-2.  **Dharma (Protocol):** `vibe_core/protocols/shuddhi.py` (Der Vertrag).
-3.  **Shuddhi (Service):** `vibe_core/shuddhi/engine.py` (Der CST-Chirurg).
-4.  **Remedies (Heiler):** Spezialisierte Klassen für jede Sünde (z. B. `UnsafeIOWriteRemedy`).
-
-### 2.2 Concrete Syntax Tree (CST)
-Wir nutzen **LibCST**. Im Gegensatz zu AST bewahrt CST jedes Detail:
-- Kommentare bleiben erhalten.
-- Formatierung (Leerzeilen, Einrückungen) wird respektiert.
-- Echte strukturelle Chirurgie statt grober Ersetzung.
+### 1.1 Lessons Learned (aus dem Scheitern von Rev 5)
+- **Keine Admin-Skripte:** Heilung muss *innerhalb* des Agenten-Loops passieren (`Circuit` -> `Agent` -> `Tool`).
+- **Tool-Integrität:** Ein Tool, das wegen Import-Fehlern nicht lädt, macht den ganzen Circuit nutzlos.
+- **Return the Code:** Shuddhi darf nicht nur diffen, es muss den *geheilten Code* zurückgeben, damit der Agent ihn über `KernelIO` schreiben kann.
 
 ---
 
-## 3. TECHNISCHE SPEZIFIKATION
+## 2. ARCHITEKTUR: DER HEILUNGS-KREISLAUF
 
-### 3.1 Das Transaktionale Protokoll (Fail-Safe)
-Jeder Heilvorgang ist eine atomare Transaktion:
-1.  **Parse:** Datei in CST-Baum laden.
-2.  **Analyze Scope:** Prüfung auf Variablen-Präsenz (z. B. `self.system`).
-3.  **Transform:** CST-Modifikation anwenden.
-4.  **Header-Check:** Automatisches Hinzufügen fehlender Imports via `ImportManager`.
-5.  **Pramana (Memory-Compile):** `compile(new_code)` im Speicher. **Wenn FAIL -> Sofortiger Abbruch.**
-6.  **Pariksha (Audit):** Test-Lauf via `TestOrchestrator` auf der transformierten Datei.
-7.  **Karma (Vollzug):** `kernel.io.write_file` + Ledger-Signierung.
+### 2.1 Die 4 Phasen der Heilung
+1.  **Drishti (Erkennung):** Watchman oder CI erkennen eine Violation (z.B. `unsafe_io_write`).
+2.  **Sankalpa (Entschluss):** Der Circuit `HEAL_CODEBASE` wird ausgelöst. Er beauftragt den `Engineer`.
+3.  **Kriya (Handlung):** Der `Engineer` ruft sein Werkzeug `engineer.heal_violation` (ShuddhiTool) auf.
+4.  **Shuddhi (Chirurgie):** Die Engine (`vibe_core/shuddhi/engine.py`) lädt den Code, parst ihn (CST), transformiert ihn chirurgisch und gibt ihn zurück.
+5.  **Karma (Vollzug):** Das Tool schreibt den geheilten Code via `KernelIO` zurück ins Dateisystem.
 
-### 3.2 Bootstrapping (VISNU-konform)
-Da `kernel_impl.py` VISNU-geschützt ist, erfolgt die Registrierung des `ShuddhiService` in der `ServiceRegistry` über die Initialisierungsphase des `KernelIOService` oder eines dedizierten Core-Boostrappers in `vibe_core/`, der nicht Ring-0-geschützt ist.
-
----
-
-## 4. DIE REMEDY-GILDE (HEILER)
-
-Heiler erben von `CSTRemedy` und implementieren:
-- `match(node)`: Erkennt die Sünde im CST.
-- `transform(node)`: Erzeugt den Sattva-Zustand.
-- `requirements()`: Listet benötigte Imports/Interfaces auf.
+### 2.2 Optional: Manas Integration (The High-End Cognitive Boost)
+Shuddhi ist deterministisch (Reflex). Aber mit MANAS wird es intelligent:
+- **Reflex:** "Ersetze `open()` durch `write_file()`." (Standard Shuddhi).
+- **Cognitive:** "Dieser Block sieht aus wie eine Datenbank-Verbindung. Sollte ich das in ein Plugin refactorn?" (Manas + Shuddhi).
+- **Oracle:** Shuddhi kann via `Weaver` den Kontext prüfen ("Ist das eine Test-Datei? Dann sind die Regeln lockerer.").
 
 ---
 
-## 5. IMPLEMENTIERUNGS-FAHRPLAN
+## 3. TECHNISCHE IMPLEMENTIERUNG
 
-1.  **Contract:** Erstelle `vibe_core/protocols/shuddhi.py`.
-2.  **Foundations:** Erstelle `vibe_core/shuddhi/engine.py` (Basis-Klasse + DI-Wiring).
-3.  **First Remedy:** Implementierung der `UnsafeIOWriteRemedy` (CST-basiert).
-4.  **Integration:** Circuit-Update für `HEAL_CODEBASE_V1`.
-5.  **Proof of Life:** Heilung von `dashboard_tool.py`.
+### 3.1 Core Service (`vibe_core/shuddhi/`)
+Der Service ist rein funktional. Er hat keinen State.
+- Input: `Path`, `RuleID`
+- Output: `ShuddhiResult(status, diff, purified_code)`
+
+### 3.2 Das Werkzeug (`engineer.heal_violation`)
+Dies ist die Brücke zwischen Agenten-Welt und Core-Kernel.
+- Es muss **robust** sein (Fehlerbehandlung für Imports).
+- Es muss **KernelIO** nutzen (Audit Trail).
+- Es muss im `ToolsPlugin` automatisch entdeckt werden.
+
+### 3.3 Der Circuit (`HEAL_CODEBASE`)
+Der Dirigent. Er orchestriert den Engineer. Er muss sicherstellen, dass die richtigen Parameter (`file_path`, `rule_id`) fließen.
 
 ---
 
-## 6. SCHLUSSFOLGERUNG
+## 4. FEHLER-ANALYSE & PRÄVENTION (PANOPTICON LOG)
 
-Shuddhi ist der Übergang von "Bot-Hacking" zu "Platform-Engineering". Es ist die Garantie, dass das OS mit zunehmender Komplexität reiner wird, nicht chaotischer.
+Der Log vom 24.12.2024 zeigte:
+> `TOOL_DISCOVERY - WARNING - - engineer.shuddhi_tool.py: Import failed: name 'Optional' is not defined`
+
+**Konsequenz:** Das Tool wurde nicht geladen. Der Engineer stand ohne Werkzeug da. Der Circuit lief ins Leere.
+**Lösung:** Strikte Linting-Checks *vor* dem Boot. Tools müssen so robust wie Kernel-Code sein.
 
 ---
-*Sign-off: Senior Architect (verified via 108% codebase audit)*
+
+## 5. FAZIT
+
+Shuddhi ist bereit. Die Architektur steht.
+Der Fehler lag nicht im Konzept, sondern in der Flüchtigkeit der Umsetzung (fehlender Import).
+Wir korrigieren dies jetzt und lassen das System sich selbst beweisen.
+
+**Satyam Eva Jayate.** (Nur die Wahrheit siegt - und kompilierender Code ist die einzige Wahrheit).
