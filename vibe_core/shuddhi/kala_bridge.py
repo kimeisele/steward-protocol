@@ -8,10 +8,10 @@ It subscribes to the system pulse and scans logs at regular intervals.
 import logging
 from pathlib import Path
 
-from vibe_core.di import ServiceRegistry
-from vibe_core.protocols.task import TaskService
-from vibe_core.pulse import PulsePacket, get_pulse_manager
+from vibe_core.pulse import get_pulse_manager, PulsePacket
 from vibe_core.shuddhi.log_monitor import LogMonitor
+from vibe_core.protocols.task import TaskProtocol
+from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("SHUDDHI.KALA")
 
@@ -52,7 +52,7 @@ class ShuddhiKalaBridge:
     def run_checks(self):
         """Execute the log scan and task creation."""
         try:
-            task_service = ServiceRegistry.get(TaskService)
+            task_service = ServiceRegistry.get(TaskProtocol)
             if not task_service:
                 return
 

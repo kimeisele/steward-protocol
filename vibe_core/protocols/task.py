@@ -9,7 +9,7 @@ from vibe_core.task_types import TaskStatus
 
 
 @runtime_checkable
-class TaskService(Protocol):
+class TaskProtocol(Protocol):
     """The central interface for system-wide task management."""
 
     def add_task(

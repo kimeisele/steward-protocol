@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from vibe_core.protocols.shuddhi import ShuddhiStatus
 from vibe_core.shuddhi.engine import ShuddhiEngine
+from vibe_core.protocols.shuddhi import ShuddhiStatus, ShuddhiProtocol
 
 
 class TestShuddhiEngine(unittest.TestCase):

@@ -10,3 +10,4 @@
 {"timestamp": "2025-12-16T13:58:10.936566", "plugin": "sensor", "target": "journal/sensor.log", "phase": "SENSORS"}
 {"timestamp": "2025-12-16T13:58:10.941133", "plugin": "cognition", "target": "journal/cognition.log", "phase": "COGNITION"}
 {"timestamp": "2025-12-16T13:58:10.941562", "plugin": "actuator", "target": "journal/actuator.log", "phase": "ACTUATORS"}
+{"timestamp": "2024-12-24T15:00:00Z", "level": "ERROR", "message": "NameError: name 'Optional' is not defined in some_module.py"}

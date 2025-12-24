@@ -6,9 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from vibe_core.di import ServiceRegistry
-from vibe_core.protocols.shuddhi import ShuddhiService, ShuddhiStatus
 from vibe_core.shuddhi.engine import ShuddhiEngine
+from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiStatus
+from vibe_core.protocols.task import TaskProtocol
+from vibe_core.di import ServiceRegistry
 
 
 class TestShuddhiDIIntegration(unittest.TestCase):
@@ -21,14 +22,23 @@ class TestShuddhiDIIntegration(unittest.TestCase):
         self.temp_dir.cleanup()
         ServiceRegistry.reset()
 
-    def test_di_registration_and_usage(self):
-        """Test that ShuddhiService can be registered and retrieved via DI."""
-        # Registration (mimics BootOrchestrator)
-        engine = ShuddhiEngine()
-        ServiceRegistry.register(ShuddhiService, engine)
+        def test_di_registration_and_usage(self):
 
-        # Retrieval (mimics kernel.shuddhi)
-        service = ServiceRegistry.require(ShuddhiService)
+            """Test that ShuddhiProtocol can be registered and retrieved via DI."""
+
+            # Registration (mimics BootOrchestrator)
+
+            engine = ShuddhiEngine()
+
+            ServiceRegistry.register(ShuddhiProtocol, engine)
+
+            
+
+            # Retrieval (mimics kernel.shuddhi)
+
+            service = ServiceRegistry.require(ShuddhiProtocol)
+
+    
         self.assertIsInstance(service, ShuddhiEngine)
 
         # Usage

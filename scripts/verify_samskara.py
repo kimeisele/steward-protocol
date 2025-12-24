@@ -63,8 +63,8 @@ async def verify_samskara():
     # =========================================================================
     logger.info("\n🔥 STEP 2: Firing test_echo intent through the Router...")
 
-    from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent, IntentPriority, IntentRisk
+    from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
 
     router = IntentRouter(workspace=project_root)
 
