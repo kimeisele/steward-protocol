@@ -61,10 +61,11 @@ from .kernel_ops import (
     sync_resource_quotas as _sync_resource_quotas_impl,
 )
 from .ledger import InMemoryLedger, SQLiteLedger
-from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
+from .lineage import LineageEventType  # Phase 5: Only EventType (LineageChain is lazy)
 from .manifest_registry import InMemoryManifestRegistry
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
-from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
+# OPUS-301: Lazy import - network_proxy loads 'requests' which is 180ms
+# from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .protocols import AgentManifest, VibeAgent
 
@@ -292,8 +293,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
         # logger.info("🖥️  Markdown UI Manager initialized")
 
-        # Phase 4: Network Proxy
-        self.network = KernelNetworkProxy(kernel=self)
+        # Phase 4: Network Proxy (OPUS-301: Lazy loaded)
+        self._network = None  # Lazy: created on first access
 
         # Phase 5: Parampara Lineage Chain
         phoenix_config = _get_config()
@@ -519,6 +520,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     def _agent_registry(self, value):
         """Allow direct setting of agent registry."""
         self.__agent_registry = value
+
+    @property
+    def network(self):
+        """OPUS-301: Lazy-loaded network proxy. Saves ~180ms on boot."""
+        if self._network is None:
+            from .network_proxy import KernelNetworkProxy
+            self._network = KernelNetworkProxy(kernel=self)
+        return self._network
 
     @property
     def _capability_registry(self):
