@@ -10,16 +10,21 @@ Architecture Pattern:
 - NO hardcoded generate_content() - sections come from interface.yaml
 """
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from .base import BaseRenderer
+import yaml
+
+from vibe_core.plugins.interface.renderer_protocol import Renderer
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+logger = logging.getLogger("RENDERER.ECONOMY")
 
-class EconomyRenderer(BaseRenderer):
+
+class EconomyRenderer(Renderer):
     """Manifests the economic reality.
 
     Components:

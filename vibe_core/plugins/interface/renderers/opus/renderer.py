@@ -88,24 +88,33 @@ class OpusRenderer(BaseRenderer):
     def generate_content(self) -> str:
         """
         Generate OPUS.md content by delegating to opus_assistant.
-
-        This is the CLEAN architecture:
-        - opus_assistant.OpusDashboardRenderer provides rich content
-        - This renderer just passes it through
-        - InterfacePlugin writes via kernel.io
         """
         try:
+            import asyncio
+            import concurrent.futures
+
             from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
                 OpusDashboardRenderer,
             )
 
             # Use the rich opus_assistant renderer for content
             renderer = OpusDashboardRenderer(self._root, kernel=self.kernel)
-            return renderer.render(quick=False)
+
+            def run_async():
+                new_loop = asyncio.new_event_loop()
+                try:
+                    asyncio.set_event_loop(new_loop)
+                    return new_loop.run_until_complete(renderer.render(quick=False))
+                finally:
+                    new_loop.close()
+
+            # Run the async code in a separate thread to avoid loop conflicts
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(run_async)
+                return future.result(timeout=30)
 
         except Exception as e:
             logger.error(f"[OPUS] Failed to get content from opus_assistant: {e}")
-            # Fallback to minimal content
             return self._fallback_content(str(e))
 
     def _fallback_content(self, error: str) -> str:

@@ -1,0 +1,64 @@
+# STEWARD PROTOCOL: STATIC CODE STANDARDS
+# =========================================
+#
+# This file defines the "Cardinal Sins" (Todsünden) of the codebase.
+# The Watchman agent reads these rules and verifies compliance via AST.
+#
+# Rule Schema:
+#   id: Unique identifier
+#   target: ast node type (Call, ExceptHandler, Assign, etc.)
+#   severity: CRITICAL | HIGH | MEDIUM | LOW
+#   match:
+#     attr: Attribute name to check (optional)
+#     func: Function name to check (optional)
+#     args_contain: List of forbidden string arguments (optional)
+#   message: Human-readable violation message
+#   fix_suggestion: Guidance for the Engineer agent
+
+rules:
+  # TODSÜNDE #2: Ghost State (Raw File Writes)
+  - id: "unsafe_io_write"
+    target: "Call"
+    match:
+      func: "open"
+      args_contain: ["w", "a", "wb", "ab"]
+    severity: "CRITICAL"
+    message: "Raw write-access detected. Bypasses VFS and KernelIO audit."
+    fix_suggestion: "Use self.system.write_file() or kernel.io.write_document()"
+
+  # TODSÜNDE #2: Unsandboxed IO
+  - id: "unsafe_shutil"
+    target: "Attribute"
+    match:
+      object: "shutil"
+    severity: "CRITICAL"
+    message: "Direct shutil usage detected. Bypasses sandbox isolation."
+    fix_suggestion: "Use self.system.publish_artifact() for repo writes."
+
+  # TODSÜNDE #1: Silent Failures
+  - id: "silent_failure"
+    target: "ExceptHandler"
+    condition: "is_pass_only"
+    severity: "HIGH"
+    message: "Silent failure (except: pass) detected. Hides bugs."
+    fix_suggestion: "Add logging (logger.error) or proper exception handling."
+
+  # NAKED AGENT PATTERN
+  - id: "direct_path_data"
+    target: "Call"
+    match:
+      func: "Path"
+      args_starts_with: "data/"
+    severity: "CRITICAL"
+    message: "Hardcoded data/ path detected. Breaks portability."
+    fix_suggestion: "Use self.system.get_sandbox_path() instead."
+
+  # HARDCODED CONFIG
+  - id: "hardcoded_path_in_init"
+    target: "Assign"
+    context: "__init__"
+    match:
+      func: "Path"
+    severity: "MEDIUM"
+    message: "Hardcoded Path in constructor."
+    fix_suggestion: "Use lazy-loading @property pattern."
