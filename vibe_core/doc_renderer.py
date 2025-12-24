@@ -31,7 +31,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.io_service import KernelIOService
@@ -44,9 +44,9 @@ class SettingsRenderState:
     """State needed for SETTINGS.md rendering."""
 
     ledger_path: str
-    varna_registry: Dict[str, Any]  # agent_id -> Varna enum
-    ashrama_registry: Dict[str, Any]  # agent_id -> AshramaTransition
-    execution_history: List[Dict[str, Any]]
+    varna_registry: Dict[str, object]  # agent_id -> Varna enum
+    ashrama_registry: Dict[str, object]  # agent_id -> AshramaTransition
+    execution_history: List[Dict[str, object]]
     # UI Enhancement: Phoenix config state
     provider_info: Optional[Dict[str, str]] = None  # Provider name, models, etc.
     live_fire_enabled: bool = False  # Execution mode
@@ -56,9 +56,9 @@ class SettingsRenderState:
 class EnvoyRenderState:
     """State needed for ENVOY.md rendering."""
 
-    pending_tasks: Dict[str, Dict[str, Any]]
-    request_history: List[Dict[str, Any]]
-    available_routes: List[Dict[str, Any]]
+    pending_tasks: Dict[str, Dict[str, object]]
+    request_history: List[Dict[str, object]]
+    available_routes: List[Dict[str, object]]
     extract_request_fn: Optional[Callable[[Path], str]] = None
 
 
@@ -140,7 +140,7 @@ class DocRenderer:
                 return None
 
     @staticmethod
-    def render_unified_header(generator: str, snapshot: Dict[str, Any]) -> List[str]:
+    def render_unified_header(generator: str, snapshot: Dict[str, object]) -> List[str]:
         """
         Generate unified header for auto-generated markdown files.
 
@@ -293,7 +293,7 @@ class DocRenderer:
 
         return lines
 
-    def render_operations(self, snapshot: Dict[str, Any], output_path: Path = Path("OPERATIONS.md")) -> None:
+    def render_operations(self, snapshot: Dict[str, object], output_path: Path = Path("OPERATIONS.md")) -> None:
         """
         Render OPERATIONS.md from snapshot data.
 
@@ -350,7 +350,7 @@ class DocRenderer:
 
     def render_settings(
         self,
-        snapshot: Dict[str, Any],
+        snapshot: Dict[str, object],
         state: SettingsRenderState,
         output_path: Path = Path("SETTINGS.md"),
     ) -> Optional[float]:
@@ -542,7 +542,7 @@ class DocRenderer:
 
     def render_envoy(
         self,
-        snapshot: Dict[str, Any],
+        snapshot: Dict[str, object],
         state: EnvoyRenderState,
         output_path: Path = Path("ENVOY.md"),
     ) -> None:
@@ -695,10 +695,10 @@ class DocRenderer:
 
     def render_all(
         self,
-        snapshot: Dict[str, Any],
+        snapshot: Dict[str, object],
         settings_state: Optional[SettingsRenderState] = None,
         envoy_state: Optional[EnvoyRenderState] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, object]:
         """
         Render all kernel-generated markdown files.
 
@@ -730,7 +730,7 @@ class DocRenderer:
 
 # Convenience function for simple usage
 def render_kernel_docs(
-    snapshot: Dict[str, Any],
+    snapshot: Dict[str, object],
     io_service: Optional["KernelIOService"] = None,
 ) -> None:
     """

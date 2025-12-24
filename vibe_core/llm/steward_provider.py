@@ -29,7 +29,6 @@ Version: 1.0 (ARCH-033C)
 
 import logging
 import sys
-from typing import Any
 
 from vibe_core.runtime.providers.base import LLMProvider
 
@@ -87,7 +86,7 @@ class StewardProvider(LLMProvider):
         self,
         messages: list[dict[str, str]],
         model: str | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> str:
         """
         Delegate cognitive work to the STEWARD (Claude Code environment).

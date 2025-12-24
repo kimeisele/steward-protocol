@@ -39,7 +39,7 @@ Usage (in agent code):
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional, object
 
 if TYPE_CHECKING:
     from vibe_core.kernel import VibeKernel
@@ -98,7 +98,7 @@ class AgentSystemInterface:
 
         logger.info(f"🔌 SystemInterface initialized for {agent_id}")
 
-    def _get_agent_config(self) -> Dict[str, Any]:
+    def _get_agent_config(self) -> Dict[str, object]:
         """Get agent-specific configuration from kernel."""
         try:
             # Access kernel's config (CityConfig)
@@ -247,7 +247,7 @@ class AgentSystemInterface:
     # CONFIGURATION
     # ============================================================================
 
-    def get_config(self, key: str, default: Any = None) -> Any:
+    def get_config(self, key: str, default: object = None) -> object:
         """
         Get agent-specific configuration value.
 
@@ -263,7 +263,7 @@ class AgentSystemInterface:
         """
         return self.config.get(key, default)
 
-    def get_all_config(self) -> Dict[str, Any]:
+    def get_all_config(self) -> Dict[str, object]:
         """Get all configuration for this agent."""
         return self.config.copy()
 
@@ -295,7 +295,7 @@ class AgentSystemInterface:
         """
         return self.kernel.find_agents_by_capability(capability)
 
-    def record_event(self, event_type: str, details: Dict[str, Any]) -> str:
+    def record_event(self, event_type: str, details: Dict[str, object]) -> str:
         """
         Record an event in the immutable ledger.
 
@@ -390,7 +390,7 @@ class AgentSystemInterface:
     # DATA EXCHANGE (PHASE 4: WIRING - INTER-AGENT COMMUNICATION)
     # ============================================================================
 
-    def publish_data(self, key: str, value: Any) -> str:
+    def publish_data(self, key: str, value: object) -> str:
         """
         Publish data for other agents to consume.
 
@@ -433,7 +433,7 @@ class AgentSystemInterface:
         logger.info(f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})")
         return event_id
 
-    def request_data(self, agent_id: str, key: str, default: Any = None) -> Any:
+    def request_data(self, agent_id: str, key: str, default: object = None) -> object:
         """
         Request data from another agent.
 
@@ -528,7 +528,7 @@ class AgentSystemInterface:
         # Return all agents and their keys
         return {aid: list(data.keys()) for aid, data in self.kernel._data_store.items()}
 
-    def call_agent(self, agent_id: str, payload: Dict[str, Any]) -> Any:
+    def call_agent(self, agent_id: str, payload: Dict[str, object]) -> object:
         """
         Call another agent synchronously (governed inter-agent communication).
 
@@ -658,7 +658,7 @@ class AgentSystemInterface:
         """
         return self.kernel.tool_registry
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+    def execute_tool(self, tool_name: str, parameters: Dict[str, object]) -> object:
         """
         Execute a tool via the kernel's tool registry.
 
@@ -770,8 +770,8 @@ class AgentSystemInterface:
         self.kernel.unsubscribe_from_events(callback, event_type)
 
     async def broadcast_event(
-        self, event_type: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, event_type: str, data: Optional[Dict[str, object]] = None, message: Optional[str] = None
+    ) -> Dict[str, object]:
         """
         Broadcast an event to all subscribers.
 
@@ -794,7 +794,7 @@ class AgentSystemInterface:
             event_type=event_type, broadcaster_id=self.agent_id, data=data, message=message
         )
 
-    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Any]:
+    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[object]:
         """
         Get recent event history.
 

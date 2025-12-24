@@ -120,7 +120,7 @@ class InMemoryLedger(VibeLedger):
         self.events.append(event)
         logger.debug(f"📝 Ledger: Task started {task.task_id}")
 
-    def record_completion(self, task, result: Any) -> None:
+    def record_completion(self, task, result: Any, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -128,11 +128,12 @@ class InMemoryLedger(VibeLedger):
             "task_id": task.task_id,
             "agent_id": task.agent_id,
             "result": result,
+            "duration_ms": duration_ms,
         }
         self.events.append(event)
-        logger.debug(f"📝 Ledger: Task completed {task.task_id}")
+        logger.debug(f"📝 Ledger: Task completed {task.task_id} ({duration_ms}ms)")
 
-    def record_failure(self, task, error: str) -> None:
+    def record_failure(self, task, error: str, duration_ms: Optional[float] = None) -> None:
         """Record task failure"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -140,9 +141,10 @@ class InMemoryLedger(VibeLedger):
             "task_id": task.task_id,
             "agent_id": task.agent_id,
             "error": error,
+            "duration_ms": duration_ms,
         }
         self.events.append(event)
-        logger.debug(f"📝 Ledger: Task failed {task.task_id}")
+        logger.debug(f"📝 Ledger: Task failed {task.task_id} ({duration_ms}ms)")
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Query task result"""
@@ -395,7 +397,7 @@ class SQLiteLedger(VibeLedger):
         self._insert_event(event)
         logger.debug(f"📝 Ledger: Task started {task.task_id}")
 
-    def record_completion(self, task, result: Any) -> None:
+    def record_completion(self, task, result: Any, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -403,11 +405,12 @@ class SQLiteLedger(VibeLedger):
             "task_id": task.task_id,
             "agent_id": task.agent_id,
             "result": json.dumps(result) if result else None,
+            "duration_ms": duration_ms,
         }
         self._insert_event(event)
-        logger.debug(f"📝 Ledger: Task completed {task.task_id}")
+        logger.debug(f"📝 Ledger: Task completed {task.task_id} ({duration_ms}ms)")
 
-    def record_failure(self, task, error: str) -> None:
+    def record_failure(self, task, error: str, duration_ms: Optional[float] = None) -> None:
         """Record task failure"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -415,9 +418,10 @@ class SQLiteLedger(VibeLedger):
             "task_id": task.task_id,
             "agent_id": task.agent_id,
             "error": error,
+            "duration_ms": duration_ms,
         }
         self._insert_event(event)
-        logger.debug(f"📝 Ledger: Task failed {task.task_id}")
+        logger.debug(f"📝 Ledger: Task failed {task.task_id} ({duration_ms}ms)")
 
     def _get_previous_hash(self) -> str:
         """Get hash of last event, or genesis hash if first event"""

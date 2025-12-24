@@ -9,9 +9,11 @@ Contains self-contained operations that don't need tight kernel coupling:
 - Pulse (heartbeat/snapshot)
 """
 
+import json
 import logging
+import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -378,6 +380,7 @@ async def execute_playbook(
 
     # Execute the playbook
     logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
+    start_time = time.time()
     result = await kernel._playbook_executor.execute(
         playbook_id=playbook_id,
         user_input=user_input or str(input_data),
@@ -385,6 +388,10 @@ async def execute_playbook(
         kernel=kernel,
         emit_event=None,
     )
+    duration_ms = (time.time() - start_time) * 1000
+
+    if isinstance(result, dict):
+        result["duration_ms"] = duration_ms
 
     return result
 

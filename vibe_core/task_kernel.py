@@ -103,7 +103,7 @@ class TaskKernelResult:
     error: Optional[str] = None
 
     # Metrics
-    execution_time_ms: float = 0.0
+    duration_ms: float = 0.0
     tool_calls_made: int = 0
     tools_succeeded: int = 0
     tools_failed: int = 0
@@ -124,7 +124,7 @@ class TaskKernelResult:
             "status": self.status.value,
             "output": str(self.output)[:500] if self.output else None,
             "error": self.error,
-            "execution_time_ms": self.execution_time_ms,
+            "duration_ms": self.duration_ms,
             "tool_calls_made": self.tool_calls_made,
             "tools_succeeded": self.tools_succeeded,
             "tools_failed": self.tools_failed,
@@ -351,8 +351,8 @@ class TaskKernel:
             if hasattr(parent, "config") and parent.config:
                 try:
                     workspace = str(parent.config.paths.workspace)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to extract workspace from parent config: {e}")
 
         capabilities = InjectedCapabilities(
             tools=tools_dict,
@@ -512,14 +512,16 @@ class TaskKernel:
         # Execute tool
         self._record_event("TOOL_CALL", {"tool": tool_name, "params": parameters})
 
+        start_time = time.time()
         result = tool.execute(parameters)
+        duration_ms = (time.time() - start_time) * 1000
 
         if result.success:
             self._tools_succeeded += 1
-            self._record_event("TOOL_SUCCESS", {"tool": tool_name})
+            self._record_event("TOOL_SUCCESS", {"tool": tool_name, "duration_ms": duration_ms})
         else:
             self._tools_failed += 1
-            self._record_event("TOOL_FAILED", {"tool": tool_name, "error": result.error})
+            self._record_event("TOOL_FAILED", {"tool": tool_name, "error": result.error, "duration_ms": duration_ms})
 
         return result
 
@@ -590,9 +592,9 @@ class TaskKernel:
         self._completed_at = datetime.utcnow().isoformat()
 
         # Calculate execution time
-        execution_time_ms = 0.0
+        duration_ms = 0.0
         if self._started_at:
-            execution_time_ms = (time.time() - self._started_at) * 1000
+            duration_ms = (time.time() - self._started_at) * 1000
 
         # Calculate reinforcement signal
         reinforcement = self._calculate_reinforcement(status)
@@ -603,7 +605,7 @@ class TaskKernel:
             status=status,
             output=output,
             error=error,
-            execution_time_ms=execution_time_ms,
+            duration_ms=duration_ms,
             tool_calls_made=self._tool_calls_made,
             tools_succeeded=self._tools_succeeded,
             tools_failed=self._tools_failed,

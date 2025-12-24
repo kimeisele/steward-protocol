@@ -16,7 +16,7 @@ Safety features based on Senior Architecture Review:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional, Set
 
 if TYPE_CHECKING:
     from vibe_core import Task
@@ -67,10 +67,10 @@ class HookResult:
 
     status: PluginResult = PluginResult.OK
     error_message: Optional[str] = None
-    data: Any = None
+    data: object = None
 
     @classmethod
-    def ok(cls, data: Any = None) -> "HookResult":
+    def ok(cls, data: object = None) -> "HookResult":
         return cls(status=PluginResult.OK, data=data)
 
     @classmethod
@@ -133,7 +133,7 @@ class KernelPlugin(ABC):
     """
 
     # Plugin-owned state (not shared with kernel)
-    _state: Dict[str, Any] = field(default_factory=dict)
+    _state: Dict[str, object] = field(default_factory=dict)
 
     @property
     @abstractmethod
@@ -177,7 +177,7 @@ class KernelPlugin(ABC):
     def on_boot(
         self,
         kernel: "RealVibeKernel",
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[Dict[str, object]] = None,
     ) -> HookResult:
         """
         Called once when the kernel initializes.
@@ -255,7 +255,7 @@ class KernelPlugin(ABC):
     def on_pulse(
         self,
         kernel: "RealVibeKernel",
-        transaction: Any,  # PulseTransaction from prana_orchestrator
+        transaction: object,  # PulseTransaction from prana_orchestrator
     ) -> HookResult:
         """
         Called during heartbeat pulse (macro-cycle).
@@ -289,7 +289,7 @@ class KernelPlugin(ABC):
         """
         return HookResult.ok()
 
-    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: Any) -> bool:
+    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: object) -> bool:
         """
         AGENT REGISTRATION GATE: Called BEFORE agent registration.
 
@@ -366,7 +366,7 @@ class KernelPlugin(ABC):
         self,
         kernel: "RealVibeKernel",
         task_id: str,
-        result: Any,
+        result: object,
     ) -> None:
         """Called when a task completes successfully."""
         pass
@@ -426,7 +426,7 @@ class KernelPlugin(ABC):
         agent_id: str,
         tool_name: str,
         parameters: dict,
-        result: Any,
+        result: object,
         success: bool,
     ) -> None:
         """
@@ -459,7 +459,7 @@ class KernelPlugin(ABC):
     # PLUGIN API REGISTRATION
     # =========================================================================
 
-    def get_api(self) -> Optional[Any]:
+    def get_api(self) -> Optional[object]:
         """
         Return an API object for other plugins to use.
 

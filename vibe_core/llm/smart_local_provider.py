@@ -19,7 +19,6 @@ Version: 1.0 (ARCH-041)
 
 import json
 import logging
-from typing import Any
 
 from vibe_core.runtime.providers.base import LLMProvider
 
@@ -43,7 +42,7 @@ class SmartLocalProvider(LLMProvider):
         self,
         messages: list[dict[str, str]],
         model: str | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> str:
         """
         Process Operator messages and return delegation instructions.
