@@ -51,7 +51,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="History keeper: seals verified code into git history",
             domain="SYSTEM",
-            capabilities=["seal_history", "ledger"],
+            capabilities=["seal_history", "ledger", "publish_root"],
         )
         logger.info("📜 ARCHIVIST is online (History Keeper Ready)")
 

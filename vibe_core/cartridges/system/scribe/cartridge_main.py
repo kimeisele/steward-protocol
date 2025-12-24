@@ -39,7 +39,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Documentation agent",
             domain="INFRASTRUCTURE",
-            capabilities=["documentation"],
+            capabilities=["documentation", "publish_root"],
         )
 
         if OathMixin:
