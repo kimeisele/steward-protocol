@@ -48,6 +48,9 @@ class TestSQLiteLedger:
         events = ledger.get_all_events()
         assert len(events) == 2
 
+        # Note: get_all_events() returns DESC order (newest first)
+        # Reverse for chronological order
+        events = list(reversed(events))
         evt1 = events[0]
         evt2 = events[1]
 
