@@ -135,6 +135,9 @@ class OpusAssistantPlugin(KernelPlugin):
 
         manas = CognitiveKernel.get_instance(workspace=self._workspace)
 
+        # OPUS-112: Inject Kernel into MANAS (VAJRA Binding + TaskKernel Enablement)
+        manas.inject_kernel(kernel)
+
         # OPUS-095: Wire MANAS to orchestration cycle (fix attribute setup error)
         if hasattr(kernel, "trace") and hasattr(kernel, "_event_bus"):
             manas.setup(kernel.trace, kernel._event_bus, steward_context=None)
