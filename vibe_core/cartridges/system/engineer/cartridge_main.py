@@ -130,11 +130,9 @@ class EngineerCartridge(VibeAgent, OathMixin):
         if not relative_path:
             return {"status": "error", "reason": "No path provided"}
 
-        # Force Sandbox (Safety First)
-        sandbox_dir = os.path.abspath("./workspaces/sandbox")
-        os.makedirs(sandbox_dir, exist_ok=True)
-
-        full_path = os.path.join(sandbox_dir, os.path.basename(relative_path))
+        # Use System-Managed Sandbox
+        sandbox_root = self.system.get_sandbox_path()
+        filename = os.path.basename(relative_path)
 
         # STEP 1: Get code content
         code_content = task.payload.get("content")
@@ -179,8 +177,11 @@ def run():
 
         # STEP 4: Write to sandbox
         try:
-            with open(full_path, "w", encoding="utf-8") as f:
-                f.write(code_content)
+            # Protocol-Compliant Write (Audited & Sandboxed)
+            self.system.write_file(filename, code_content)
+
+            # Resolve full path for return metadata (Auditor needs this)
+            full_path = str(sandbox_root / filename)
 
             logger.info(f"✅ Code manifested to: {full_path}")
 
@@ -231,13 +232,13 @@ def run():
 
             code = code_result.output.get("code")
 
-            # 3. Write Code
-            file_path = Path(name) / "cartridge_main.py"
-            with open(file_path, "w") as f:
-                f.write(code)
+            # 3. Write Code (Protocol-Compliant)
+            file_rel_path = f"{name}/cartridge_main.py"
+            self.system.write_file(file_rel_path, code)
 
-            logger.info(f"✅ Agent code written to: {file_path}")
-            return {"status": "success", "path": str(file_path)}
+            full_path = self.system.get_sandbox_path() / file_rel_path
+            logger.info(f"✅ Agent code written to: {full_path}")
+            return {"status": "success", "path": str(full_path)}
 
         except Exception as e:
             logger.error(f"❌ create_agent_legacy failed: {e}")
@@ -288,14 +289,16 @@ def run():
         logger.info(f"🧬 ENGINEER: Spawning agent '{agent_id}'")
 
         # =====================================================================
-        # STEP 1: Write cartridge code to sandbox
+        # STEP 1: Write cartridge code to sandbox (Protocol-Compliant)
         # =====================================================================
-        sandbox_dir = Path("./workspaces/sandbox") / agent_id
-        sandbox_dir.mkdir(parents=True, exist_ok=True)
+        sandbox_root = self.system.get_sandbox_path()
+        agent_sandbox_rel = f"{agent_id}"
 
         cartridge_code = self._generate_cartridge_code(agent_id, name, mission, capabilities)
-        cartridge_path = sandbox_dir / "cartridge_main.py"
-        cartridge_path.write_text(cartridge_code, encoding="utf-8")
+        cartridge_rel_path = f"{agent_sandbox_rel}/cartridge_main.py"
+        self.system.write_file(cartridge_rel_path, cartridge_code)
+
+        cartridge_path = sandbox_root / cartridge_rel_path
         logger.info(f"✅ Cartridge written to: {cartridge_path}")
 
         # =====================================================================
@@ -332,14 +335,18 @@ def run():
             },
         }
 
-        passport_path = sandbox_dir / "steward.json"
-        passport_path.write_text(json.dumps(passport, indent=2), encoding="utf-8")
+        passport_rel_path = f"{agent_sandbox_rel}/steward.json"
+        self.system.write_file(passport_rel_path, json.dumps(passport, indent=2))
+
+        passport_path = sandbox_root / passport_rel_path
         logger.info(f"✅ Passport written to: {passport_path}")
 
         # =====================================================================
         # STEP 3: Request audit from Auditor
         # =====================================================================
-        audit_result = self._request_audit(agent_id, sandbox_dir)
+        # Auditor expects absolute path to sandbox dir
+        agent_sandbox_abs = sandbox_root / agent_sandbox_rel
+        audit_result = self._request_audit(agent_id, agent_sandbox_abs)
         if not audit_result.get("success"):
             logger.warning(f"⚠️ Audit request failed: {audit_result.get('reason')}")
             # Continue anyway - LifecyclePlugin will check for certificate
@@ -369,7 +376,7 @@ def run():
                 return {
                     "status": "spawned",
                     "agent_id": agent_id,
-                    "sandbox_path": str(sandbox_dir),
+                    "sandbox_path": str(agent_sandbox_abs),
                     "spawn_result": result,
                 }
             else:
@@ -377,7 +384,7 @@ def run():
                 return {
                     "status": "pending",
                     "agent_id": agent_id,
-                    "sandbox_path": str(sandbox_dir),
+                    "sandbox_path": str(agent_sandbox_abs),
                     "reason": "No kernel access for syscall",
                 }
 
@@ -387,7 +394,7 @@ def run():
                 "status": "error",
                 "agent_id": agent_id,
                 "reason": str(e),
-                "sandbox_path": str(sandbox_dir),
+                "sandbox_path": str(agent_sandbox_abs),
             }
 
     def _generate_cartridge_code(
@@ -515,9 +522,17 @@ class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
             "content_hash": __import__("hashlib").sha256(content.encode()).hexdigest(),
         }
 
-        cert_path = sandbox_dir / "audit_certificate.json"
-        cert_path.write_text(json.dumps(audit_cert, indent=2), encoding="utf-8")
+        # Resolve relative path for system.write_file
+        # sandbox_dir passed in is absolute, we need rel to sandbox_root
+        sandbox_root = self.system.get_sandbox_path()
+        try:
+            rel_dir = os.path.relpath(sandbox_dir, sandbox_root)
+        except ValueError:
+            rel_dir = os.path.basename(sandbox_dir)
+
+        cert_rel_path = f"{rel_dir}/audit_certificate.json"
+        self.system.write_file(cert_rel_path, json.dumps(audit_cert, indent=2))
 
         logger.info(f"✅ Audit certificate created (signed: {signature is not None})")
 
-        return {"success": True, "certificate_path": str(cert_path), "signed": signature is not None}
+        return {"success": True, "certificate_path": str(sandbox_root / cert_rel_path), "signed": signature is not None}

@@ -125,36 +125,34 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             logger.error(f"❌ Source file not found: {source_path}")
             return {"status": "error", "reason": "Source file vanished."}
 
-        # ===== MOVE TO PRODUCTION =====
-        logger.info("📜 Moving from sandbox to production...")
-        real_dest_path = os.path.abspath(dest_rel_path)
+        # ===== MOVE TO PRODUCTION (Protocol Compliant) =====
+        logger.info("📜 Moving from sandbox to production via System Interface...")
 
-        # Security: Prevent path traversal
         try:
-            cwd = os.getcwd()
-            real_dest_path_normalized = os.path.normpath(os.path.abspath(real_dest_path))
-            cwd_normalized = os.path.normpath(cwd)
+            # 1. Prepare paths for publish_artifact
+            # System Interface expects path relative to sandbox root
+            sandbox_root = self.system.get_sandbox_path()
+            try:
+                # If source_path is absolute, make it relative to sandbox
+                source_rel = os.path.relpath(source_path, sandbox_root)
+            except ValueError:
+                # If they are on different drives or source is already relative
+                source_rel = source_path
 
-            if not real_dest_path_normalized.startswith(cwd_normalized):
-                logger.error(f"⛔ Path traversal detected: {real_dest_path}")
-                return {"status": "error", "reason": "Path traversal detected."}
+            # 2. Publish via authorized interface
+            success = self.system.publish_artifact(sandbox_path=source_rel, target_path=dest_rel_path)
+
+            if not success:
+                return {"status": "error", "reason": "System Interface rejected artifact publication."}
+
+            logger.info(f"✅ Artifact published: {dest_rel_path}")
+
         except Exception as e:
-            logger.error(f"❌ Path validation error: {e}")
-            return {"status": "error", "reason": f"Path validation failed: {str(e)}"}
-
-        # Create destination directory
-        os.makedirs(os.path.dirname(real_dest_path), exist_ok=True)
-
-        # Copy file from sandbox to production
-        try:
-            shutil.copy2(source_path, real_dest_path)
-            logger.info(f"✅ File copied: {real_dest_path}")
-        except Exception as e:
-            logger.error(f"❌ File copy failed: {e}")
-            return {"status": "error", "reason": f"File copy failed: {str(e)}"}
+            logger.error(f"❌ Publication failed: {e}")
+            return {"status": "error", "reason": f"System publication failed: {str(e)}"}
 
         # ===== GIT COMMIT =====
-        logger.info("📜 Creating git commit...")
+        cwd = os.getcwd()  # Project root for git operations
         try:
             # Stage the file
             subprocess.run(["git", "add", dest_rel_path], check=True, cwd=cwd)
