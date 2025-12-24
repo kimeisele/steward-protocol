@@ -19,6 +19,7 @@ This is the "Flute" that plays the Rasa Lila (Dance of Agents).
 import asyncio
 import json
 import logging
+import time as time_module
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -26,6 +27,93 @@ from typing import Any, Callable, Dict, List, Optional, Set
 from uuid import uuid4
 
 logger = logging.getLogger("EVENT_BUS")
+
+
+# =============================================================================
+# VRITRASURA DETECTION: Subscriber Health Metrics
+# =============================================================================
+
+
+class SubscriberMetrics:
+    """
+    Track subscriber health to detect "Healthy Zombies".
+
+    A zombie subscriber receives events but never processes them,
+    potentially hoarding resources and causing backpressure.
+
+    VRITRASURA TEST: This enables detection of stalled handlers.
+    """
+
+    def __init__(self):
+        # {callback_id: {events_sent, events_completed, last_complete_time, avg_duration}}
+        self._metrics: Dict[str, Dict[str, Any]] = {}
+        self._zombie_threshold_events = 10  # Events sent without completion
+        self._zombie_threshold_rate = 0.5   # ACK rate below this = zombie
+        self._stall_threshold_seconds = 30  # No completion in this time = stalled
+
+    def record_send(self, callback_id: str):
+        """Record that an event was sent to a subscriber."""
+        if callback_id not in self._metrics:
+            self._metrics[callback_id] = {
+                "events_sent": 0,
+                "events_completed": 0,
+                "last_complete_time": time_module.time(),
+                "total_duration": 0.0,
+            }
+        self._metrics[callback_id]["events_sent"] += 1
+
+    def record_complete(self, callback_id: str, duration: float):
+        """Record that a subscriber completed processing an event."""
+        if callback_id in self._metrics:
+            self._metrics[callback_id]["events_completed"] += 1
+            self._metrics[callback_id]["last_complete_time"] = time_module.time()
+            self._metrics[callback_id]["total_duration"] += duration
+
+    def get_zombie_subscribers(self) -> List[Dict[str, Any]]:
+        """
+        Identify subscribers exhibiting zombie behavior.
+
+        A zombie subscriber:
+        - Has received > threshold events
+        - Has ACK rate < threshold (events_completed / events_sent)
+        """
+        zombies = []
+        for callback_id, metrics in self._metrics.items():
+            sent = metrics["events_sent"]
+            completed = metrics["events_completed"]
+            ack_rate = completed / sent if sent > 0 else 1.0
+
+            if sent > self._zombie_threshold_events and ack_rate < self._zombie_threshold_rate:
+                zombies.append({
+                    "callback_id": callback_id,
+                    "events_sent": sent,
+                    "events_completed": completed,
+                    "ack_rate": ack_rate,
+                    "status": "ZOMBIE",
+                })
+        return zombies
+
+    def get_stalled_handlers(self) -> List[Dict[str, Any]]:
+        """
+        Identify handlers that haven't completed anything recently.
+        """
+        stalled = []
+        now = time_module.time()
+        for callback_id, metrics in self._metrics.items():
+            if metrics["events_sent"] > 0:
+                time_since_complete = now - metrics["last_complete_time"]
+                if time_since_complete > self._stall_threshold_seconds:
+                    stalled.append({
+                        "callback_id": callback_id,
+                        "seconds_since_complete": time_since_complete,
+                        "events_pending": metrics["events_sent"] - metrics["events_completed"],
+                        "status": "STALLED",
+                    })
+        return stalled
+
+    def get_all_metrics(self) -> Dict[str, Any]:
+        """Get all subscriber metrics."""
+        return dict(self._metrics)
 
 
 class EventType(str, Enum):
@@ -258,7 +346,11 @@ class EventBus:
             enabled=rate_limit_enabled,
         )
 
-        logger.info(f"🎵 EventBus initialized (max_history={max_history})")
+        # VRITRASURA DETECTION: Subscriber health tracking
+        self._subscriber_metrics = SubscriberMetrics()
+        self._callback_ids: Dict[Callable, str] = {}  # callback -> unique id
+
+        logger.info(f"🎵 EventBus initialized (max_history={max_history}, zombie_detection=enabled)")
 
     async def emit(self, event: Event):
         """
@@ -291,27 +383,42 @@ class EventBus:
 
         # Emit to type-specific subscribers
         type_subs = self._subscribers.get(event.event_type, set())
-        tasks = [self._safe_call(sub, event) for sub in type_subs]
+        tasks = [self._safe_call_with_metrics(sub, event) for sub in type_subs]
 
         # Emit to global subscribers
-        tasks.extend([self._safe_call(sub, event) for sub in self._global_subscribers])
+        tasks.extend([self._safe_call_with_metrics(sub, event) for sub in self._global_subscribers])
 
         # Execute all in parallel
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def _safe_call(self, callback: Callable, event: Event):
+    async def _safe_call_with_metrics(self, callback: Callable, event: Event):
         """
-        Safely call a subscriber (catches exceptions)
-        Supports both async and sync callbacks
+        Safely call a subscriber with metrics tracking.
+        Supports both async and sync callbacks.
+
+        VRITRASURA DETECTION: Tracks send/complete for zombie detection.
         """
+        # Get or create callback ID
+        if callback not in self._callback_ids:
+            self._callback_ids[callback] = f"sub_{len(self._callback_ids)}"
+        callback_id = self._callback_ids[callback]
+
+        # Record send
+        self._subscriber_metrics.record_send(callback_id)
+
+        start_time = time_module.time()
         try:
             if asyncio.iscoroutinefunction(callback):
                 await callback(event)
             else:
                 callback(event)
+            # Record successful completion
+            duration = time_module.time() - start_time
+            self._subscriber_metrics.record_complete(callback_id, duration)
         except Exception as e:
             logger.warning(f"⚠️  Event subscriber error: {e}")
+            # Don't record completion on error - contributes to zombie score
 
     def subscribe(self, callback: Callable, event_type: Optional[str] = None) -> str:
         """
@@ -352,7 +459,10 @@ class EventBus:
         return history[-limit:] if limit else history
 
     def get_status(self) -> Dict[str, Any]:
-        """Get event bus status including rate limiting stats."""
+        """Get event bus status including rate limiting and zombie detection stats."""
+        zombie_subscribers = self._subscriber_metrics.get_zombie_subscribers()
+        stalled_handlers = self._subscriber_metrics.get_stalled_handlers()
+
         return {
             "total_events": self._event_count,
             "dropped_events": self._dropped_count,
@@ -363,6 +473,14 @@ class EventBus:
                 "by_type": {k: len(v) for k, v in self._subscribers.items() if v},
             },
             "rate_limiting": self._guard.get_stats(),
+            # VRITRASURA DETECTION: Zombie and stalled handler tracking
+            "zombie_subscribers": zombie_subscribers,
+            "stalled_handlers": stalled_handlers,
+            "subscriber_health": {
+                "total_tracked": len(self._subscriber_metrics._metrics),
+                "zombies_detected": len(zombie_subscribers),
+                "stalled_detected": len(stalled_handlers),
+            },
         }
 
     def clear_history(self):
