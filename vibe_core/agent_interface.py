@@ -348,13 +348,12 @@ class AgentSystemInterface:
             self.system.write_file("docs/README.md", content)
             self.system.publish_artifact("docs/README.md", "README.md")
         """
-        # PHASE 2.5: Whitelist - Only these agents can publish to root
-        PUBLISH_WHITELIST = ["scribe", "archivist"]
-
-        if self.agent_id not in PUBLISH_WHITELIST:
+        # SECURITY: Capability-Based Access Control
+        # Instead of a hardcoded whitelist, we check if the agent has the 'publish_root' capability.
+        if not self.kernel._check_agent_capability(self.agent_id, "publish_root"):
             raise PermissionError(
                 f"Agent {self.agent_id} is not authorized to publish to project root. "
-                f"Only {PUBLISH_WHITELIST} can publish artifacts."
+                f"Requires 'publish_root' capability."
             )
 
         # Resolve source path (in sandbox)
