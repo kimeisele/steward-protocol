@@ -1,0 +1,1519 @@
+2025-12-24 19:27:35,023 - BOOT_LOADER - INFO - ======================================================================
+2025-12-24 19:27:35,024 - BOOT_LOADER - INFO - 🔌 VIBE KERNEL BOOT SEQUENCE INITIATED (ASYNC)
+2025-12-24 19:27:35,024 - BOOT_LOADER - INFO - ======================================================================
+2025-12-24 19:27:35,025 - BOOT_LOADER - INFO - Phase 0: Zombie Cleanup...
+2025-12-24 19:27:35,027 - BOOT_LOADER - INFO - 🧹 Cleaning stale PID file (PID 93505 not running)
+2025-12-24 19:27:35,029 - BOOT_LOADER - INFO - 📝 PID file written: /tmp/vibe_os/kernel/boot.pid (PID: 41427)
+2025-12-24 19:27:35,030 - BOOT_LOADER - INFO - Phase 1: Loading Kernel...
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: genesis.action (1403 chars)
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: genesis.module (223 chars)
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: genesis.sense (427 chars)
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: genesis.test (317 chars)
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Loaded 4 prompts from genesis.yaml
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.analyze_topic (1876 chars)
+2025-12-24 19:27:36,547 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.search_knowledge (1500 chars)
+2025-12-24 19:27:36,548 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.synthesize_report (1463 chars)
+2025-12-24 19:27:36,548 - vibe_core.runtime.prompt_registry - INFO - ✅ Initialized default prompts in registry
+2025-12-24 19:27:36,561 - BOOT_LOADER - INFO - Phase 2: Instantiating Kernel...
+2025-12-24 19:27:36,577 - VIBE_LEDGER - INFO - 🔐 Ledger signing ACTIVE - ECDSA signatures enabled
+2025-12-24 19:27:36,578 - VIBE_LEDGER - INFO - 💾 SQLite ledger initialized at data/vibe_ledger.db (WAL Mode)
+2025-12-24 19:27:36,578 - VIBE_LEDGER - INFO - ⛓️  Cryptographic sealing ACTIVE - Hash chain enabled
+2025-12-24 19:27:36,579 - VIBE_KERNEL - INFO - 🚀 Vibe Kernel initialized (persistent ledger at data/vibe_ledger.db)
+2025-12-24 19:27:36,579 - VIBE_KERNEL - WARNING - ⚠️  No auditor plugin loaded - using NullAuditor
+2025-12-24 19:27:36,580 - NETWORK_PROXY - INFO - 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-24 19:27:36,638 - SECTION.LOADER - INFO - [section] Scanning vibe_core/phoenix/sections...
+2025-12-24 19:27:36,713 - SECTION.LOADER - INFO -   ✅ Loaded: manas (new-style)
+2025-12-24 19:27:36,962 - SECTION.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:27:36,977 - SECTION.LOADER - INFO -   ✅ Loaded: apis (new-style)
+2025-12-24 19:27:36,992 - SECTION.LOADER - INFO -   ✅ Loaded: llm (new-style)
+2025-12-24 19:27:37,053 - SECTION.LOADER - INFO -   ✅ Loaded: city (new-style)
+2025-12-24 19:27:37,070 - SECTION.LOADER - INFO -   ✅ Loaded: guardrails (new-style)
+2025-12-24 19:27:37,174 - SECTION.LOADER - INFO -   ✅ Loaded: quality (new-style)
+2025-12-24 19:27:37,192 - SECTION.LOADER - INFO -   ✅ Loaded: quotas (new-style)
+2025-12-24 19:27:37,206 - SECTION.LOADER - INFO -   ✅ Loaded: providers (new-style)
+2025-12-24 19:27:37,229 - SECTION.LOADER - INFO -   ✅ Loaded: runtime (new-style)
+2025-12-24 19:27:37,276 - SECTION.LOADER - INFO -   ✅ Loaded: paths (new-style)
+2025-12-24 19:27:37,309 - SECTION.LOADER - INFO -   ✅ Loaded: agents (new-style)
+2025-12-24 19:27:37,323 - SECTION.LOADER - INFO -   ✅ Loaded: cli (new-style)
+2025-12-24 19:27:37,355 - SECTION.LOADER - INFO -   ✅ Loaded: test_governance (new-style)
+2025-12-24 19:27:37,399 - SECTION.LOADER - INFO -   ✅ Loaded: prompts (new-style)
+2025-12-24 19:27:37,435 - SECTION.LOADER - INFO -   ✅ Loaded: templates (new-style)
+2025-12-24 19:27:37,472 - SECTION.LOADER - INFO -   ✅ Loaded: steward (new-style)
+2025-12-24 19:27:37,481 - SECTION.LOADER - INFO -   ✅ Loaded: kernel (new-style)
+2025-12-24 19:27:37,482 - SECTION.LOADER - INFO - [section] Loaded 18 config sections
+2025-12-24 19:27:37,482 - vibe_core.phoenix.config - INFO - Loaded section 'manas' from config/manas.yaml
+2025-12-24 19:27:37,483 - vibe_core.phoenix.config - INFO - Loaded section 'interface' from config/interface.yaml
+2025-12-24 19:27:37,483 - vibe_core.phoenix.config - INFO - Loaded section 'apis' from config/apis.yaml
+2025-12-24 19:27:37,483 - vibe_core.phoenix.config - INFO - Loaded section 'llm' from config/llm.yaml
+2025-12-24 19:27:37,483 - vibe_core.phoenix.config - INFO - Loaded section 'city' from config/matrix.yaml
+2025-12-24 19:27:37,484 - vibe_core.phoenix.config - INFO - Loaded section 'guardrails' from config/guardrails.yaml
+2025-12-24 19:27:37,484 - vibe_core.phoenix.config - INFO - Loaded section 'quality' from config/quality.yaml
+2025-12-24 19:27:37,484 - vibe_core.phoenix.config - INFO - Loaded section 'quotas' from config/quotas.yaml
+2025-12-24 19:27:37,484 - vibe_core.phoenix.config - INFO - Loaded section 'providers' from config/providers.yaml
+2025-12-24 19:27:37,484 - vibe_core.phoenix.config - INFO - Loaded section 'runtime' from config/runtime.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'paths' from config/paths.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'agents' from config/agents.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'cli' from config/cli.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'test_governance' from config/test_governance.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'prompts' from config/prompts.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'templates' from config/templates.yaml
+2025-12-24 19:27:37,485 - vibe_core.phoenix.config - INFO - Loaded section 'steward' from config/steward.yaml
+2025-12-24 19:27:40,203 - vibe_core.phoenix.config - INFO - Discovered 20 circuits from vibe_core/playbook/circuits
+2025-12-24 19:27:40,204 - vibe_core.phoenix.config - INFO - Loaded 26 routing rules from MATRIX.md
+2025-12-24 19:27:40,204 - vibe_core.phoenix.config - INFO - PhoenixConfig loaded with 18 sections: ['kernel', 'guardrails', 'test_governance', 'steward', 'interface', 'apis', 'llm', 'city', 'quotas', 'runtime', 'paths', 'prompts', 'templates', 'providers', 'manas', 'agents', 'cli', 'quality']
+2025-12-24 19:27:40,205 - PARAMPARA - INFO - ⛓️  Parampara chain loaded (262 blocks)
+2025-12-24 19:27:40,227 - PARAMPARA - INFO - ✅ Parampara chain verified (262 blocks)
+2025-12-24 19:27:40,227 - VIBE_KERNEL - INFO - ⛓️  Parampara chain initialized
+2025-12-24 19:27:40,227 - VIBE_KERNEL - INFO - 📡 Data Exchange Store initialized (Phase 4: Wiring)
+2025-12-24 19:27:40,231 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at data/vibe_ledger.db
+2025-12-24 19:27:40,232 - PRAKRITI - INFO - [PRAKRITI] Initialized at /Users/ss/Downloads/steward-protocol (Ledger: data/vibe_ledger.db)
+2025-12-24 19:27:40,232 - CAPABILITY_REGISTRY - INFO - 🔐 CapabilityRegistry initialized
+2025-12-24 19:27:40,232 - KERNEL_IO - INFO - 📁 Kernel I/O Service initialized (root: /Users/ss/Downloads/steward-protocol)
+2025-12-24 19:27:40,232 - VIBE_KERNEL - INFO - 📁 Kernel I/O Service initialized (central file controller)
+2025-12-24 19:27:40,232 - NARASIMHA - INFO - 🕉️ Narasimha Protocol initialized (dormant)
+2025-12-24 19:27:40,233 - VIBE_KERNEL - INFO - ⚡ Narasimha Protocol wired (destruction handlers active)
+2025-12-24 19:27:40,233 - EVENT_BUS - INFO - 🛡️ SUDARSHANA initialized (bucket=100.0, rate=50.0/s, enabled=True)
+2025-12-24 19:27:40,233 - EVENT_BUS - INFO - 🎵 EventBus initialized (max_history=1000, zombie_detection=enabled)
+2025-12-24 19:27:40,233 - VIBE_KERNEL - INFO - 🎵 Event Bus initialized (pub/sub ready)
+2025-12-24 19:27:40,274 - vibe_core.runtime.providers.factory - INFO - 🔧 Detected OpenRouter key in OPENAI_API_KEY (sk-or- prefix) - using OpenRouter provider
+2025-12-24 19:27:40,275 - LLM_ENGINE - INFO - 🧠 LLM Engine initialized (Provider: openrouter)
+2025-12-24 19:27:40,275 - LLM_ENGINE - INFO - 🧠 LLM Engine initialized (Provider: openrouter)
+2025-12-24 19:27:40,275 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK', 'QUERY_GRAPH', 'RENDER_TEMPLATE', 'STORE_EPHEMERAL', 'RETRIEVE_EPHEMERAL', 'GIT_COMMIT']
+2025-12-24 19:27:40,275 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-24 19:27:40,275 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-24 19:27:40,419 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-24 19:27:40,503 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: HEAL_CODEBASE_V1 (HEAL_CODEBASE_V1)
+2025-12-24 19:27:40,609 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-24 19:27:40,769 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-24 19:27:40,882 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-24 19:27:40,968 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-24 19:27:40,985 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-24 19:27:41,089 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-24 19:27:41,216 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-24 19:27:41,256 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-24 19:27:41,289 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PURGE_TECHNICAL_DEBT_V1 (PURGE_TECHNICAL_DEBT_V1)
+2025-12-24 19:27:41,386 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-24 19:27:41,497 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-24 19:27:41,613 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-24 19:27:41,726 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-24 19:27:41,890 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-24 19:27:41,939 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_STATUS_V2 (SYSTEM_STATUS_V2)
+2025-12-24 19:27:42,039 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-24 19:27:42,128 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-24 19:27:42,153 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-24 19:27:42,192 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-24 19:27:42,230 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-24 19:27:42,286 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 106 persisted execution states
+2025-12-24 19:27:42,286 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 22 playbooks
+2025-12-24 19:27:42,286 - UNIFIED_EXECUTION - INFO - [EXECUTOR] DeterministicExecutor ready
+2025-12-24 19:27:42,287 - UNIFIED_EXECUTION - INFO - [EXECUTOR] UnifiedExecutor initialized (eager)
+2025-12-24 19:27:42,287 - PLUGIN.LOADER - INFO - [plugin] Scanning vibe_core/plugins...
+2025-12-24 19:27:42,305 - UNIFIED.LOADER - WARNING - [ZOLLAMT] system_heartbeat: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:42,307 - PLUGIN.LOADER - INFO -   ✅ Loaded: system_heartbeat (new-style)
+2025-12-24 19:27:42,342 - PLUGIN.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:27:42,345 - PLUGIN.LOADER - INFO -   ✅ Loaded: economy (new-style)
+2025-12-24 19:27:42,348 - PLUGIN.LOADER - INFO -   ✅ Loaded: tools (new-style)
+2025-12-24 19:27:42,385 - PLUGIN.LOADER - INFO -   ✅ Loaded: resource_limits (new-style)
+2025-12-24 19:27:42,386 - UNIFIED.LOADER - WARNING - [ZOLLAMT] nexus_holon: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:42,387 - PLUGIN.LOADER - INFO -   ✅ Loaded: nexus_holon (new-style)
+2025-12-24 19:27:42,389 - PLUGIN.LOADER - INFO -   ✅ Loaded: sarga_cycle (new-style)
+2025-12-24 19:27:42,768 - PLUGIN.LOADER - INFO -   ✅ Loaded: sangha_network (new-style)
+2025-12-24 19:27:42,771 - PLUGIN.LOADER - INFO -   ✅ Loaded: doctor (new-style)
+2025-12-24 19:27:42,991 - TASK_MANAGER_PLUGIN - INFO - ✅ TaskManagerPlugin initialized (Stateless Mode)
+2025-12-24 19:27:42,991 - PLUGIN.LOADER - INFO -   ✅ Loaded: task_manager (new-style)
+2025-12-24 19:27:42,993 - PLUGIN.LOADER - INFO -   ✅ Loaded: durvasa (new-style)
+2025-12-24 19:27:42,996 - PLUGIN.LOADER - INFO -   ✅ Loaded: steward_protocol (new-style)
+2025-12-24 19:27:42,999 - PLUGIN.LOADER - INFO -   ✅ Loaded: lifecycle (new-style)
+2025-12-24 19:27:43,003 - PLUGIN.LOADER - INFO -   ✅ Loaded: test_orchestration (new-style)
+2025-12-24 19:27:43,018 - EPHEMERAL_STORAGE - INFO - EphemeralStorage initialized (max=1000, default_ttl=300s)
+2025-12-24 19:27:43,018 - PLUGIN.LOADER - INFO -   ✅ Loaded: envoy (new-style)
+2025-12-24 19:27:43,020 - PLUGIN.LOADER - INFO -   ✅ Loaded: samsara (new-style)
+2025-12-24 19:27:43,023 - PLUGIN.LOADER - WARNING - Failed to load folder kala: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:43,027 - PLUGIN.LOADER - INFO -   ✅ Loaded: opus_assistant (new-style)
+2025-12-24 19:27:43,037 - PLUGIN.LOADER - INFO -   ✅ Loaded: node_pulse (new-style)
+2025-12-24 19:27:43,047 - PLUGIN.LOADER - INFO -   ✅ Loaded: agent_city (new-style)
+2025-12-24 19:27:43,048 - PLUGIN.LOADER - WARNING - Failed to load folder plugin_template: Validation failed: ['priority must be 0-100']
+2025-12-24 19:27:43,050 - UNIFIED.LOADER - WARNING - [ZOLLAMT] integrity_guard: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:43,051 - PLUGIN.LOADER - WARNING - Failed to load folder integrity_guard: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:43,053 - PLUGIN.LOADER - WARNING - Failed to load folder test_mode: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:43,064 - PLUGIN.LOADER - INFO -   ✅ Loaded: vedic_governance (new-style)
+2025-12-24 19:27:43,073 - PLUGIN.LOADER - INFO -   ✅ Loaded: process_isolation (new-style)
+2025-12-24 19:27:43,073 - PLUGIN.LOADER - INFO - [plugin] Scanning knowledge...
+2025-12-24 19:27:43,077 - PLUGIN.LOADER - INFO -   🧠 Discovered Cognitive Pack: circuits
+2025-12-24 19:27:43,078 - PLUGIN.LOADER - INFO -   🧠 Discovered Cognitive Pack: concepts
+2025-12-24 19:27:43,079 - PLUGIN.LOADER - INFO -   🧠 Discovered Cognitive Pack: intents
+2025-12-24 19:27:43,080 - PLUGIN.LOADER - INFO -   🧠 Discovered Cognitive Pack: genesis_knowledge
+2025-12-24 19:27:43,081 - PLUGIN.LOADER - INFO - [plugin] Total plugins loaded: 21
+2025-12-24 19:27:43,145 - VIBE_KERNEL - INFO - 🧠 Genesis Knowledge Pack loaded at: knowledge/genesis
+2025-12-24 19:27:43,145 - VIBE_KERNEL - INFO -    Version: 1.0.0
+2025-12-24 19:27:43,145 - NODE_PULSE - INFO - ============================================================
+2025-12-24 19:27:43,145 - NODE_PULSE - INFO - 📡 NODE PULSE PLUGIN BOOTED - PULS Layer Active
+2025-12-24 19:27:43,145 - NODE_PULSE - INFO - ============================================================
+2025-12-24 19:27:43,146 - NODE_PULSE - INFO -    Registered agents: 0
+2025-12-24 19:27:43,146 - NODE_PULSE - INFO -    Agents manage their own presence via ensure_presence()
+2025-12-24 19:27:43,146 - NODE_PULSE - INFO -    This plugin provides KALA state on each pulse
+2025-12-24 19:27:43,146 - NODE_PULSE - INFO - ============================================================
+2025-12-24 19:27:43,233 - TOOLS_PLUGIN - INFO - 🛡️ Soul Governance ACTIVE: 8 rules from config/soul.yaml
+2025-12-24 19:27:43,233 - vibe_core.tools.tool_registry - INFO - 🛡️ ToolRegistry initialized with Soul Governance (8 rules)
+2025-12-24 19:27:43,233 - vibe_core.tools.tool_registry - INFO - 🔐 ToolRegistry: Capability enforcement ENABLED
+2025-12-24 19:27:43,234 - vibe_core.tools.file_tools - WARNING - ⚠️ ReadFileTool initialized without VFS - unrestricted file access enabled
+2025-12-24 19:27:43,234 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'read_file'
+2025-12-24 19:27:43,234 - vibe_core.tools.file_tools - WARNING - ⚠️ WriteFileTool initialized without VFS - unrestricted file access enabled
+2025-12-24 19:27:43,234 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'write_file'
+2025-12-24 19:27:43,234 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'add_task'
+2025-12-24 19:27:43,234 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'list_tasks'
+2025-12-24 19:27:43,234 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'complete_task'
+2025-12-24 19:27:43,234 - vibe_core.tools.delegate_tool - INFO - DelegateTool: Initialized (kernel will be injected via set_kernel)
+2025-12-24 19:27:43,234 - vibe_core.tools.delegate_tool - INFO - DelegateTool: Kernel injected successfully
+2025-12-24 19:27:43,235 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'delegate_task'
+2025-12-24 19:27:43,235 - TOOLS_PLUGIN - INFO - Registered 6 core tools: read_file, write_file, add_task, list_tasks, complete_task, delegate_task
+2025-12-24 19:27:43,235 - TOOLS_PLUGIN - INFO - Starting auto-discovery of agent tools...
+2025-12-24 19:27:43,235 - TOOL_DISCOVERY - INFO - 🔍 Starting tool discovery...
+2025-12-24 19:27:43,235 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/system/
+2025-12-24 19:27:43,236 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: civic
+2025-12-24 19:27:43,259 - LIFECYCLE_MANAGER - INFO - 🔄 LifecycleManager initialized (Vedic Varna System)
+2025-12-24 19:27:43,259 - LIFECYCLE_ENFORCER - INFO - 🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)
+2025-12-24 19:27:43,259 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.lifecycle_enforcer (LifecycleEnforcer)
+2025-12-24 19:27:43,260 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.vault (VaultTool)
+2025-12-24 19:27:43,265 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.bank (BankTool)
+2025-12-24 19:27:43,268 - CIVIC_LICENSE - INFO - 🎫 LicenseTool initialized (lazy loading)
+2025-12-24 19:27:43,268 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.license (LicenseTool)
+2025-12-24 19:27:43,272 - CIVIC_LEDGER - INFO - 🏦 Initializing LedgerTool (self-contained)...
+2025-12-24 19:27:43,272 - CIVIC_LEDGER - INFO - 💰 Ledger Tool initialized
+2025-12-24 19:27:43,272 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.ledger (LedgerTool)
+2025-12-24 19:27:43,273 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: archivist
+2025-12-24 19:27:43,278 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: supreme_court
+2025-12-24 19:27:43,281 - TOOL_DISCOVERY - ERROR -    ❌ Failed to instantiate PrecedentTool: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:27:43,285 - APPEALS_TOOL - INFO - 📜 Appeals Tool initialized
+2025-12-24 19:27:43,285 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.appeals (AppealsTool)
+2025-12-24 19:27:43,288 - VERDICT_TOOL - INFO - ⚖️  Verdict Tool initialized
+2025-12-24 19:27:43,288 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.verdict (VerdictTool)
+2025-12-24 19:27:43,289 - JUSTICE_LEDGER - INFO - ⚖️  Justice Ledger initialized
+2025-12-24 19:27:43,289 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.justice_ledger (JusticeLedger)
+2025-12-24 19:27:43,290 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: oracle
+2025-12-24 19:27:43,293 - ORACLE_INTROSPECTION - INFO - 🔮 ORACLE INTROSPECTION ENGINE initialized
+2025-12-24 19:27:43,293 - TOOL_DISCOVERY - INFO -    ✅ Discovered: oracle.introspection (IntrospectionTool)
+2025-12-24 19:27:43,294 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: science
+2025-12-24 19:27:43,581 - TOOL_DISCOVERY - INFO -    ✅ Discovered: science.web_search (WebSearchTool)
+2025-12-24 19:27:43,581 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: envoy
+2025-12-24 19:27:43,584 - HIL_ASSISTANT - INFO - 🧠 HIL Assistant (VAD Layer) initialized
+2025-12-24 19:27:43,585 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.hil (HILAssistantTool)
+2025-12-24 19:27:43,587 - RUN_CAMPAIGN_TOOL - INFO - 🎯 RunCampaignTool initialized (awaiting kernel injection)
+2025-12-24 19:27:43,588 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.campaign (RunCampaignTool)
+2025-12-24 19:27:43,589 - GAP_REPORT_TOOL - INFO - 🔐 G.A.P. Report Tool initialized (Sandboxed: False, Audited: False)
+2025-12-24 19:27:43,590 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.gap_report (GAPReportTool)
+2025-12-24 19:27:43,593 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.diplomacy (DiplomacyTool)
+2025-12-24 19:27:43,594 - CITY_CONTROL - WARNING - ⚠️ CityControlTool initialized without kernel - limited functionality
+2025-12-24 19:27:43,594 - CITY_CONTROL - INFO - 🏙️  City Control Tool initialized
+2025-12-24 19:27:43,594 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.city_control (CityControlTool)
+2025-12-24 19:27:43,595 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.curator (CuratorTool)
+2025-12-24 19:27:43,596 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: forum
+2025-12-24 19:27:43,596 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: watchman
+2025-12-24 19:27:43,598 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.health (SystemHealthCheck)
+2025-12-24 19:27:43,627 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.standards (StandardsInspectionTool)
+2025-12-24 19:27:43,627 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: scribe
+2025-12-24 19:27:43,629 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: herald
+2025-12-24 19:27:43,895 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Twitter credentials incomplete (simulation mode)
+2025-12-24 19:27:43,895 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Reddit credentials incomplete (simulation mode)
+2025-12-24 19:27:43,895 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.broadcast (BroadcastTool)
+2025-12-24 19:27:43,949 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scribe (Scribe)
+2025-12-24 19:27:43,950 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scout (ScoutTool)
+2025-12-24 19:27:43,951 - HERALD_RESEARCH - WARNING - ⚠️  Research: Tavily unavailable (running in simulation mode)
+2025-12-24 19:27:43,951 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.research (ResearchTool)
+⚠️  [Steward] Identity file herald/STEWARD.md not found. Running in anonymous mode.
+2025-12-24 19:27:43,953 - HERALD_IDENTITY - INFO - ✅ Identity: Steward client initialized with herald/STEWARD.md
+2025-12-24 19:27:43,953 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.identity (IdentityTool)
+2025-12-24 19:27:43,953 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: chronicle
+2025-12-24 19:27:43,955 - CHRONICLE_GIT_TOOLS - INFO - ✅ Git repository detected: .
+2025-12-24 19:27:43,955 - TOOL_DISCOVERY - INFO -    ✅ Discovered: chronicle.git (GitTools)
+2025-12-24 19:27:43,955 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: auditor
+2025-12-24 19:27:43,959 - WATCHDOG - INFO - 👁️  WATCHDOG: Initialized
+2025-12-24 19:27:43,960 - WATCHDOG - INFO -    Ledger: data/ledger/kernel.jsonl
+2025-12-24 19:27:43,960 - WATCHDOG - INFO -    Check interval: 10
+2025-12-24 19:27:43,960 - WATCHDOG - INFO -    Halt on critical: True
+2025-12-24 19:27:43,960 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.watchdog (Watchdog)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: Initializing Invariant Engine
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: BROADCAST_LICENSE_REQUIREMENT (CRITICAL)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: CREDIT_TRANSFER_PROPOSAL_REQUIREMENT (CRITICAL)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_ORPHANED_EVENTS (HIGH)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: EVENT_SEQUENCE_INTEGRITY (HIGH)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_DUPLICATE_EVENTS (CRITICAL)
+2025-12-24 19:27:43,965 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: PROPOSAL_WORKFLOW_INTEGRITY (HIGH)
+2025-12-24 19:27:43,966 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_CRITICAL_VOIDS (CRITICAL)
+2025-12-24 19:27:43,966 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: SEMANTIC_COMPLIANCE_REQUIREMENT (HIGH)
+2025-12-24 19:27:43,966 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: 8 core invariant rules registered (including Curator)
+2025-12-24 19:27:43,966 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.invariant (InvariantEngine)
+2025-12-24 19:27:43,969 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.compliance (ComplianceTool)
+2025-12-24 19:27:43,973 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.verdict (ConstitutionalVerdictTool)
+2025-12-24 19:27:43,973 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: engineer
+2025-12-24 19:27:43,979 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (ShuddhiHealTool)
+2025-12-24 19:27:43,984 - ENGINEER_BUILDER - INFO - 🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)
+2025-12-24 19:27:43,984 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.builder (BuilderTool)
+2025-12-24 19:27:43,986 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (HealViolationTool)
+2025-12-24 19:27:43,986 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/agent_city/
+2025-12-24 19:27:43,986 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: librarian
+2025-12-24 19:27:43,988 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.search_books (SearchBooksTool)
+2025-12-24 19:27:43,988 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.recommend_books (RecommendBooksTool)
+2025-12-24 19:27:43,989 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.catalog_book (CatalogBookTool)
+2025-12-24 19:27:43,990 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: analyst
+2025-12-24 19:27:43,991 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.deps (DependencyAnalysisTool)
+2025-12-24 19:27:43,992 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.git (GitAnalysisTool)
+2025-12-24 19:27:43,994 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.docs (DocsAnalysisTool)
+2025-12-24 19:27:43,995 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.architecture (ArchitectureAnalysisTool)
+2025-12-24 19:27:43,997 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.code (CodeAnalysisTool)
+2025-12-24 19:27:44,002 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.structure (StructureAnalysisTool)
+2025-12-24 19:27:44,002 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: marketer
+2025-12-24 19:27:45,472 - HERALD_GOVERNANCE - INFO - ✅ CONSTITUTION.md loaded from: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:27:45,472 - HERALD_GOVERNANCE - INFO - 🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)
+2025-12-24 19:27:45,472 - HERALD_GOVERNANCE - INFO - 📜 Constitutional Authority: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:27:45,583 - MARKETER_CONTENT - INFO - ✅ Content: LLM client initialized (with HeraldConstitution governance)
+2025-12-24 19:27:45,583 - TOOL_DISCOVERY - INFO -    ✅ Discovered: marketer.content (MarketerContentTool)
+2025-12-24 19:27:45,584 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: mechanic
+2025-12-24 19:27:45,585 - TOOL_DISCOVERY - INFO -    ✅ Discovered: mechanic.tidy (TidyTool)
+2025-12-24 19:27:45,586 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: artisan
+2025-12-24 19:27:45,683 - ARTISAN_MEDIA - INFO - ✅ Artisan Media Tool initialized
+2025-12-24 19:27:45,683 - TOOL_DISCOVERY - INFO -    ✅ Discovered: artisan.media (MediaTool)
+2025-12-24 19:27:45,683 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: dhruva
+2025-12-24 19:27:45,702 - TOOL_DISCOVERY - INFO - ✅ Tool discovery complete: 43 tools found, 1 failed
+2025-12-24 19:27:45,703 - TOOL_DISCOVERY - WARNING - ⚠️  Failed to load 1 tools:
+2025-12-24 19:27:45,703 - TOOL_DISCOVERY - WARNING -    - supreme_court.precedent_tool.py: Instantiation failed: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'civic.lifecycle_enforcer'
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'civic.vault'
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'civic.bank'
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'civic.license'
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'civic.ledger'
+2025-12-24 19:27:45,703 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'supreme_court.appeals'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'supreme_court.verdict'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'supreme_court.justice_ledger'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'oracle.introspection'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'science.web_search'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.hil'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.campaign'
+2025-12-24 19:27:45,704 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.gap_report'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.diplomacy'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.city_control'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'envoy.curator'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'watchman.health'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'watchman.standards'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'herald.broadcast'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'herald.scribe'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'herald.scout'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'herald.research'
+2025-12-24 19:27:45,705 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'herald.identity'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'chronicle.git'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'auditor.watchdog'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'auditor.invariant'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'auditor.compliance'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'auditor.verdict'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'engineer.heal_violation'
+2025-12-24 19:27:45,706 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'engineer.builder'
+2025-12-24 19:27:45,707 - TOOLS_PLUGIN - WARNING - Skipped engineer.heal_violation: Tool 'engineer.heal_violation' is already registered. Cannot register duplicate tool names.
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'librarian.search_books'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'librarian.recommend_books'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'librarian.catalog_book'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.deps'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.git'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.docs'
+2025-12-24 19:27:45,707 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.architecture'
+2025-12-24 19:27:45,708 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.code'
+2025-12-24 19:27:45,708 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'analyst.structure'
+2025-12-24 19:27:45,708 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'marketer.content'
+2025-12-24 19:27:45,708 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'mechanic.tidy'
+2025-12-24 19:27:45,708 - vibe_core.tools.tool_registry - INFO - ToolRegistry: Registered tool 'artisan.media'
+2025-12-24 19:27:45,708 - TOOLS_PLUGIN - INFO - Auto-discovery complete: 42 tools, 1 failed
+2025-12-24 19:27:45,708 - TOOLS_PLUGIN - INFO - ToolsPlugin booted (48 tools)
+2025-12-24 19:27:45,712 - SARGA - INFO - 🌌 Sarga Boot Sequence initialized
+2025-12-24 19:27:45,712 - SARGA_CYCLE - INFO - 🌌 Sarga Cycle Plugin booted (current: DAY_OF_BRAHMA)
+2025-12-24 19:27:45,712 - SARGA_CYCLE - INFO -    Cosmic gate is now PLUGIN-BASED (not hardcoded in scheduler)
+2025-12-24 19:27:45,979 - SECTION.LOADER - INFO - [section] Scanning vibe_core/phoenix/sections...
+2025-12-24 19:27:46,077 - SECTION.LOADER - INFO -   ✅ Loaded: manas (new-style)
+2025-12-24 19:27:46,357 - SECTION.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:27:46,367 - SECTION.LOADER - INFO -   ✅ Loaded: apis (new-style)
+2025-12-24 19:27:46,380 - SECTION.LOADER - INFO -   ✅ Loaded: llm (new-style)
+2025-12-24 19:27:46,443 - SECTION.LOADER - INFO -   ✅ Loaded: city (new-style)
+2025-12-24 19:27:46,467 - SECTION.LOADER - INFO -   ✅ Loaded: guardrails (new-style)
+2025-12-24 19:27:46,568 - SECTION.LOADER - INFO -   ✅ Loaded: quality (new-style)
+2025-12-24 19:27:46,580 - SECTION.LOADER - INFO -   ✅ Loaded: quotas (new-style)
+2025-12-24 19:27:46,597 - SECTION.LOADER - INFO -   ✅ Loaded: providers (new-style)
+2025-12-24 19:27:46,618 - SECTION.LOADER - INFO -   ✅ Loaded: runtime (new-style)
+2025-12-24 19:27:46,665 - SECTION.LOADER - INFO -   ✅ Loaded: paths (new-style)
+2025-12-24 19:27:46,693 - SECTION.LOADER - INFO -   ✅ Loaded: agents (new-style)
+2025-12-24 19:27:46,707 - SECTION.LOADER - INFO -   ✅ Loaded: cli (new-style)
+2025-12-24 19:27:46,730 - SECTION.LOADER - INFO -   ✅ Loaded: test_governance (new-style)
+2025-12-24 19:27:46,768 - SECTION.LOADER - INFO -   ✅ Loaded: prompts (new-style)
+2025-12-24 19:27:46,801 - SECTION.LOADER - INFO -   ✅ Loaded: templates (new-style)
+2025-12-24 19:27:46,837 - SECTION.LOADER - INFO -   ✅ Loaded: steward (new-style)
+2025-12-24 19:27:46,845 - SECTION.LOADER - INFO -   ✅ Loaded: kernel (new-style)
+2025-12-24 19:27:46,845 - SECTION.LOADER - INFO - [section] Loaded 18 config sections
+2025-12-24 19:27:46,845 - vibe_core.phoenix.config - INFO - Loaded section 'manas' from config/manas.yaml
+2025-12-24 19:27:46,846 - vibe_core.phoenix.config - INFO - Loaded section 'interface' from config/interface.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'apis' from config/apis.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'llm' from config/llm.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'city' from config/matrix.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'guardrails' from config/guardrails.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'quality' from config/quality.yaml
+2025-12-24 19:27:46,847 - vibe_core.phoenix.config - INFO - Loaded section 'quotas' from config/quotas.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'providers' from config/providers.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'runtime' from config/runtime.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'paths' from config/paths.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'agents' from config/agents.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'cli' from config/cli.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'test_governance' from config/test_governance.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'prompts' from config/prompts.yaml
+2025-12-24 19:27:46,848 - vibe_core.phoenix.config - INFO - Loaded section 'templates' from config/templates.yaml
+2025-12-24 19:27:46,849 - vibe_core.phoenix.config - INFO - Loaded section 'steward' from config/steward.yaml
+2025-12-24 19:27:48,731 - vibe_core.phoenix.config - INFO - Discovered 20 circuits from vibe_core/playbook/circuits
+2025-12-24 19:27:48,732 - vibe_core.phoenix.config - INFO - Loaded 26 routing rules from MATRIX.md
+2025-12-24 19:27:48,732 - vibe_core.phoenix.config - INFO - PhoenixConfig loaded with 18 sections: ['kernel', 'guardrails', 'test_governance', 'steward', 'interface', 'apis', 'llm', 'city', 'quotas', 'runtime', 'paths', 'prompts', 'templates', 'providers', 'manas', 'agents', 'cli', 'quality']
+2025-12-24 19:27:48,733 - STEWARD_PROTOCOL - INFO - 📜 STEWARD Protocol Plugin booted
+2025-12-24 19:27:48,733 - STEWARD_PROTOCOL - INFO -    Protocol is now PLUGIN-BASED (kernel.steward)
+2025-12-24 19:27:48,733 - STEWARD_PROTOCOL - INFO -    Config loaded: Layer 1.5/1.6 active
+2025-12-24 19:27:48,735 - SYSCALLS - INFO - 📡 Syscall registry initialized (core syscalls)
+2025-12-24 19:27:48,735 - SYSCALLS - INFO - 📡 Registered syscall: SPAWN_COGNITION (from lifecycle)
+2025-12-24 19:27:48,735 - LIFECYCLE - INFO - 📡 Registered syscall: SPAWN_COGNITION
+2025-12-24 19:27:48,736 - LIFECYCLE - INFO - 🌱 LifecyclePlugin initialized (constitution: df4bf7b77c367643...)
+2025-12-24 19:27:48,737 - VEDIC_GOVERNANCE - INFO - 🕉️ VEDIC STATE: Hybrid mode active (JSON + Ledger)
+2025-12-24 19:27:48,921 - VEDIC_GOVERNANCE - INFO - 🕉️  Vedic Governance Plugin booted (Varna + Ashrama)
+2025-12-24 19:27:48,922 - VEDIC_GOVERNANCE - INFO -    Governance is now PLUGIN-BASED (not hardcoded in kernel)
+2025-12-24 19:27:48,922 - PROCESS_ISOLATION - INFO - ⚙️ Process Isolation Plugin booted - ProcessManager registered
+2025-12-24 19:27:48,922 - RESOURCE_LIMITS - INFO - 📊 Resource Limits Plugin booted - ResourceManager registered
+2025-12-24 19:27:48,922 - ENVOY_PLUGIN - WARNING - 📬 ENVOY: kernel.workspace_path not set, using cwd as fallback
+2025-12-24 19:27:48,922 - PLUGIN.LOADER - INFO - [plugin] Scanning vibe_core/plugins...
+2025-12-24 19:27:48,923 - UNIFIED.LOADER - WARNING - [ZOLLAMT] system_heartbeat: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:48,924 - PLUGIN.LOADER - INFO -   ✅ Loaded: system_heartbeat (new-style)
+2025-12-24 19:27:48,933 - PLUGIN.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:27:48,934 - PLUGIN.LOADER - INFO -   ✅ Loaded: economy (new-style)
+2025-12-24 19:27:48,937 - PLUGIN.LOADER - INFO -   ✅ Loaded: tools (new-style)
+2025-12-24 19:27:48,939 - PLUGIN.LOADER - INFO -   ✅ Loaded: resource_limits (new-style)
+2025-12-24 19:27:48,941 - UNIFIED.LOADER - WARNING - [ZOLLAMT] nexus_holon: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:48,941 - PLUGIN.LOADER - INFO -   ✅ Loaded: nexus_holon (new-style)
+2025-12-24 19:27:48,943 - PLUGIN.LOADER - INFO -   ✅ Loaded: sarga_cycle (new-style)
+2025-12-24 19:27:48,944 - PLUGIN.LOADER - INFO -   ✅ Loaded: sangha_network (new-style)
+2025-12-24 19:27:48,945 - PLUGIN.LOADER - INFO -   ✅ Loaded: doctor (new-style)
+2025-12-24 19:27:48,948 - TASK_MANAGER_PLUGIN - INFO - ✅ TaskManagerPlugin initialized (Stateless Mode)
+2025-12-24 19:27:48,948 - PLUGIN.LOADER - INFO -   ✅ Loaded: task_manager (new-style)
+2025-12-24 19:27:48,949 - PLUGIN.LOADER - INFO -   ✅ Loaded: durvasa (new-style)
+2025-12-24 19:27:48,952 - PLUGIN.LOADER - INFO -   ✅ Loaded: steward_protocol (new-style)
+2025-12-24 19:27:48,953 - PLUGIN.LOADER - INFO -   ✅ Loaded: lifecycle (new-style)
+2025-12-24 19:27:48,956 - PLUGIN.LOADER - INFO -   ✅ Loaded: test_orchestration (new-style)
+2025-12-24 19:27:48,958 - EPHEMERAL_STORAGE - INFO - EphemeralStorage initialized (max=1000, default_ttl=300s)
+2025-12-24 19:27:48,958 - PLUGIN.LOADER - INFO -   ✅ Loaded: envoy (new-style)
+2025-12-24 19:27:48,960 - PLUGIN.LOADER - INFO -   ✅ Loaded: samsara (new-style)
+2025-12-24 19:27:48,961 - PLUGIN.LOADER - WARNING - Failed to load folder kala: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:48,964 - PLUGIN.LOADER - INFO -   ✅ Loaded: opus_assistant (new-style)
+2025-12-24 19:27:48,965 - PLUGIN.LOADER - INFO -   ✅ Loaded: node_pulse (new-style)
+2025-12-24 19:27:48,974 - PLUGIN.LOADER - INFO -   ✅ Loaded: agent_city (new-style)
+2025-12-24 19:27:48,975 - PLUGIN.LOADER - WARNING - Failed to load folder plugin_template: Validation failed: ['priority must be 0-100']
+2025-12-24 19:27:48,976 - UNIFIED.LOADER - WARNING - [ZOLLAMT] integrity_guard: Missing required GAD-000 infrastructure files
+2025-12-24 19:27:48,977 - PLUGIN.LOADER - WARNING - Failed to load folder integrity_guard: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:48,978 - PLUGIN.LOADER - WARNING - Failed to load folder test_mode: Entry point load failed: attempted relative import with no known parent package
+2025-12-24 19:27:48,982 - PLUGIN.LOADER - INFO -   ✅ Loaded: vedic_governance (new-style)
+2025-12-24 19:27:48,984 - PLUGIN.LOADER - INFO -   ✅ Loaded: process_isolation (new-style)
+2025-12-24 19:27:48,985 - PLUGIN.LOADER - INFO - [plugin] Total plugins loaded: 21
+2025-12-24 19:27:52,706 - CIRCUIT.LOADER - INFO - [circuit] Loaded 23 circuits (cached)
+2025-12-24 19:27:52,706 - ENVOY_PLUGIN - INFO - 📬 CircuitLoader discovered 23 circuits from 3 sources
+2025-12-24 19:27:52,707 - LAYERED_ROUTER - INFO - [LAYERED_ROUTER] Initialized: 5 exact patterns, 0 semantic circuits
+2025-12-24 19:27:52,707 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK', 'QUERY_GRAPH', 'RENDER_TEMPLATE', 'STORE_EPHEMERAL', 'RETRIEVE_EPHEMERAL', 'GIT_COMMIT']
+2025-12-24 19:27:52,707 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-24 19:27:52,708 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-24 19:27:52,861 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-24 19:27:52,933 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: HEAL_CODEBASE_V1 (HEAL_CODEBASE_V1)
+2025-12-24 19:27:53,033 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-24 19:27:53,141 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-24 19:27:53,255 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-24 19:27:53,337 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-24 19:27:53,360 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-24 19:27:53,475 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-24 19:27:53,601 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-24 19:27:53,647 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-24 19:27:53,683 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PURGE_TECHNICAL_DEBT_V1 (PURGE_TECHNICAL_DEBT_V1)
+2025-12-24 19:27:53,770 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-24 19:27:53,866 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-24 19:27:53,969 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-24 19:27:54,077 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-24 19:27:54,237 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-24 19:27:54,291 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_STATUS_V2 (SYSTEM_STATUS_V2)
+2025-12-24 19:27:54,411 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-24 19:27:54,500 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-24 19:27:54,525 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-24 19:27:54,549 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-24 19:27:54,585 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-24 19:27:54,644 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 106 persisted execution states
+2025-12-24 19:27:54,644 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 22 playbooks
+2025-12-24 19:27:54,644 - UNIFIED_EXECUTION - INFO - [EXECUTOR] DeterministicExecutor ready
+2025-12-24 19:27:54,644 - UNIFIED_EXECUTION - INFO - [EXECUTOR] UnifiedExecutor initialized (eager)
+2025-12-24 19:27:54,644 - ENVOY_PLUGIN - INFO - 📬 OPUS Runtime initialized (UnifiedRouter + UnifiedExecutor)
+2025-12-24 19:27:54,644 - ENVOY_PLUGIN - INFO - 📬 LayeredRouter active (3-layer cascade: exact, semantic, context)
+2025-12-24 19:27:54,649 - CONTEXT_AWARE_AGENT - INFO - ContextAwareAgent initialized: envoy
+2025-12-24 19:27:54,649 - ENVOY_CARTRIDGE - INFO - ✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-24 19:27:54,649 - ENVOY_CARTRIDGE - INFO - 👁️  ENVOY (VibeAgent v3.1) is initializing...
+2025-12-24 19:27:54,650 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK', 'QUERY_GRAPH', 'RENDER_TEMPLATE', 'STORE_EPHEMERAL', 'RETRIEVE_EPHEMERAL', 'GIT_COMMIT']
+2025-12-24 19:27:54,650 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-24 19:27:54,650 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-24 19:27:54,794 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-24 19:27:54,889 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: HEAL_CODEBASE_V1 (HEAL_CODEBASE_V1)
+2025-12-24 19:27:54,999 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-24 19:27:55,101 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-24 19:27:55,225 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-24 19:27:55,306 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-24 19:27:55,320 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-24 19:27:55,427 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-24 19:27:55,542 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-24 19:27:55,594 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-24 19:27:55,627 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PURGE_TECHNICAL_DEBT_V1 (PURGE_TECHNICAL_DEBT_V1)
+2025-12-24 19:27:55,716 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-24 19:27:55,822 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-24 19:27:55,956 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-24 19:27:56,069 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-24 19:27:56,232 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-24 19:27:56,316 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_STATUS_V2 (SYSTEM_STATUS_V2)
+2025-12-24 19:27:56,457 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-24 19:27:56,592 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-24 19:27:56,644 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-24 19:27:56,690 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-24 19:27:56,739 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-24 19:27:56,753 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 106 persisted execution states
+2025-12-24 19:27:56,753 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 22 playbooks
+2025-12-24 19:27:56,754 - ENVOY_CARTRIDGE - INFO - ✋ Deterministic Executor initialized (Execution Engine)
+2025-12-24 19:27:56,754 - ENVOY_CARTRIDGE - INFO - ✅ ENVOY ready (NO tool instances owned)
+2025-12-24 19:27:56,766 - STEWARD_PROTOCOL - INFO - 📜 Agent 'envoy' manifest loaded
+2025-12-24 19:27:56,776 - VEDIC_GOVERNANCE - INFO - 🕉️  Agent 'envoy' classified: Varna=pakshi (Bird/Messenger), Ashrama=brahmachari
+2025-12-24 19:27:56,777 - RESOURCE_MANAGER - INFO - 💰 envoy: 100 credits → 10% CPU, 100 MB RAM
+2025-12-24 19:27:56,782 - VFS - INFO - 📁 VFS initialized for envoy: /private/tmp/vibe_os/agents/envoy
+2025-12-24 19:27:56,783 - STATE.SERVICE - INFO - StateService initialized: /Users/ss/Downloads/steward-protocol/.vibe/state/agents/envoy
+2025-12-24 19:27:57,145 - DEPENDENCY_MANAGER - INFO - 📦 DependencyManager initialized: pyproject.toml
+2025-12-24 19:27:57,146 - AGENT_INTERFACE - INFO - 🔌 SystemInterface initialized for envoy
+2025-12-24 19:27:57,146 - VIBE_KERNEL - INFO - 🔌 envoy received system interface (sandbox: /private/tmp/vibe_os/agents/envoy)
+2025-12-24 19:27:57,147 - VIBE_KERNEL - INFO - 🧬 Created persona for envoy
+2025-12-24 19:27:57,150 - PARAMPARA - INFO - ⛓️  Block 262: AGENT_REGISTERED (envoy) → 95f2b3df677f9642...
+2025-12-24 19:27:57,151 - VIBE_KERNEL - INFO - 🛡️  ✅ GOVERNANCE GATE PASSED: Agent 'envoy' registered (process deferred).
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO - 📬 EnvoyCartridge registered as agent (task execution enabled)
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO - 📬 ENVOY Plugin booted (OPUS Architecture)
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO -    Circuits: 23
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO -    Playbooks: 0
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO -    UnifiedRouter: OK
+2025-12-24 19:27:57,151 - ENVOY_PLUGIN - INFO -    UnifiedExecutor: OK
+2025-12-24 19:27:57,155 - OPUS_ASSISTANT - INFO - ⚡ OPUS-112: MANAS registered with 8 capabilities
+2025-12-24 19:27:57,156 - MANAS.Kernel - INFO - 🧠 MANAS: Creating singleton instance for /Users/ss/Downloads/steward-protocol
+2025-12-24 19:27:57,156 - MANAS.Kernel - INFO - 🧠 MANAS: Booting cognitive systems...
+2025-12-24 19:27:57,236 - MANAS.Kernel - INFO - 🔌 Loaded full config with 10 sections
+2025-12-24 19:27:57,376 - CODE.MODULE.LOADER - INFO - [action] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:27:57,378 - MANAS.Action.Echo - INFO - [ECHO_ACTION] Initialized - Proof of Life
+2025-12-24 19:27:57,382 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: echo_action (EchoAction)
+2025-12-24 19:27:57,387 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:27:57,387 - MANAS.Action.Prana - INFO - 🫀 [PRANA_ACTION] Initialized - Agent Lifecycle Manager
+2025-12-24 19:27:57,388 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_action (PranaAction)
+2025-12-24 19:27:57,391 - MANAS.Action.Sankalpa - INFO - [SANKALPA_ACTION] Initialized - UPASTHA (The Will)
+2025-12-24 19:27:57,391 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sankalpa_action (SankalpaAction)
+2025-12-24 19:27:57,392 - MANAS.Action.Shell - INFO - [SHELL_ACTION] Initialized - VAK (The Voice)
+2025-12-24 19:27:57,392 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shell_action (ShellAction)
+2025-12-24 19:27:57,394 - MANAS.Cortex.Silpa - INFO - 🔨 SILPA Architect initialized
+2025-12-24 19:27:57,447 - vibe_core.runtime.providers.factory - INFO - Creating OpenRouter provider (model: anthropic/claude-3.5-sonnet)
+2025-12-24 19:27:57,465 - vibe_core.runtime.providers.openrouter - INFO - OpenRouter provider initialized successfully
+2025-12-24 19:27:57,465 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] LLM Genesis enabled (OpenRouterProvider)
+2025-12-24 19:27:57,465 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] Initialized - PANI (The Hands)
+2025-12-24 19:27:57,465 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: silpa_action (SilpaAction)
+2025-12-24 19:27:57,469 - MANAS.Action.Test - INFO - [TEST_ACTION] Initialized - PAYU (The Validator)
+2025-12-24 19:27:57,469 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: test_action (TestAction)
+2025-12-24 19:27:57,469 - MANAS.Action.Viveka - INFO - 👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)
+2025-12-24 19:27:57,470 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_action (VivekaAction)
+2025-12-24 19:27:57,470 - CODE.MODULE.LOADER - INFO - [action] Loaded 7 items (cached)
+2025-12-24 19:27:57,471 - CODE.MODULE.LOADER - INFO - [sense] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:27:57,474 - MANAS.Cortex.AkashaSense - INFO - [AKASHA_SENSE] Initialized - The Eye of Knowledge
+2025-12-24 19:27:57,474 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: akasha_sense (AkashaSense)
+2025-12-24 19:27:57,477 - MANAS.Cortex.ArchitectureSense - INFO - [ARCHITECTURE_SENSE] Initialized - Watching the skeleton
+2025-12-24 19:27:57,477 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: architecture_sense (ArchitectureSense)
+2025-12-24 19:27:57,478 - MANAS.Cortex.DharmaSense - INFO - [DHARMA_SENSE] Initialized - The Vedic Conscience
+2025-12-24 19:27:57,478 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: dharma_sense (DharmaSense)
+2025-12-24 19:27:57,478 - MANAS.Cortex.KarmaSense - INFO - [KARMA_SENSE] Initialized - The Eye of Memory
+2025-12-24 19:27:57,478 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: karma_sense (KarmaSense)
+2025-12-24 19:27:57,479 - MANAS.Cortex.NadiSense - INFO - [NADI_SENSE] Initialized - Watching the channels
+2025-12-24 19:27:57,479 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: nadi_sense (NadiSense)
+2025-12-24 19:27:57,479 - MANAS.Cortex.PrakritiSense - INFO - [PRAKRITI_SENSE] Initialized - Das sechste Jnanendriya
+2025-12-24 19:27:57,479 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prakriti_sense (PrakritiSense)
+2025-12-24 19:27:57,483 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:27:57,484 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_sense (PranaSense)
+2025-12-24 19:27:57,489 - MANAS.Cortex.ShrutaSense - INFO - 👂 ShrutaSense initialized
+2025-12-24 19:27:57,489 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shruta_sense (ShrutaSense)
+2025-12-24 19:27:57,490 - MANAS.Cortex.SutraSense - INFO - [SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)
+2025-12-24 19:27:57,490 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sutra_sense (SutraSense)
+2025-12-24 19:27:57,490 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_sense (VivekaSense)
+2025-12-24 19:27:57,490 - CODE.MODULE.LOADER - INFO - [sense] Loaded 10 items (cached)
+2025-12-24 19:27:57,490 - CODE.MODULE.LOADER - INFO - [analyzer] Scanning vibe_core/plugins/opus_assistant/manas/analyzers...
+2025-12-24 19:27:57,505 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: ci_monitor (CIMonitorAnalyzer)
+2025-12-24 19:27:57,506 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: contract_analyzer (ContractAnalyzer)
+2025-12-24 19:27:57,508 - MANAS.DocHarnessAnalyzer - INFO - DocHarnessAnalyzer: Loaded manifest with 6 docs
+2025-12-24 19:27:57,509 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: doc_harness_analyzer (DocHarnessAnalyzer)
+2025-12-24 19:27:57,509 - MANAS.InverseScanAnalyzer - INFO - [INVERSE_SCAN] Initialized - The Dark Matter Detector
+2025-12-24 19:27:57,509 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: inverse_scan_analyzer (InverseScanAnalyzer)
+2025-12-24 19:27:57,510 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: pratyaya (PratyayaAnalyzer)
+2025-12-24 19:27:57,510 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: semantic_analyzer (SemanticAnalyzer)
+2025-12-24 19:27:57,510 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: triage_analyzer (TriageAnalyzer)
+2025-12-24 19:27:57,510 - CODE.MODULE.LOADER - INFO - [analyzer] Loaded 7 items (cached)
+2025-12-24 19:27:57,511 - TOOL_DISCOVERY - INFO - 🔍 Starting tool discovery...
+2025-12-24 19:27:57,511 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/system/
+2025-12-24 19:27:57,512 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: civic
+2025-12-24 19:27:57,517 - LIFECYCLE_MANAGER - INFO - 🔄 LifecycleManager initialized (Vedic Varna System)
+2025-12-24 19:27:57,517 - LIFECYCLE_ENFORCER - INFO - 🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)
+2025-12-24 19:27:57,517 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.lifecycle_enforcer (LifecycleEnforcer)
+2025-12-24 19:27:57,518 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.vault (VaultTool)
+2025-12-24 19:27:57,524 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.bank (BankTool)
+2025-12-24 19:27:57,528 - CIVIC_LICENSE - INFO - 🎫 LicenseTool initialized (lazy loading)
+2025-12-24 19:27:57,528 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.license (LicenseTool)
+2025-12-24 19:27:57,532 - CIVIC_LEDGER - INFO - 🏦 Initializing LedgerTool (self-contained)...
+2025-12-24 19:27:57,532 - CIVIC_LEDGER - INFO - 💰 Ledger Tool initialized
+2025-12-24 19:27:57,532 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.ledger (LedgerTool)
+2025-12-24 19:27:57,532 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: archivist
+2025-12-24 19:27:57,536 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: supreme_court
+2025-12-24 19:27:57,538 - TOOL_DISCOVERY - ERROR -    ❌ Failed to instantiate PrecedentTool: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:27:57,544 - APPEALS_TOOL - INFO - 📜 Appeals Tool initialized
+2025-12-24 19:27:57,545 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.appeals (AppealsTool)
+2025-12-24 19:27:57,548 - VERDICT_TOOL - INFO - ⚖️  Verdict Tool initialized
+2025-12-24 19:27:57,549 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.verdict (VerdictTool)
+2025-12-24 19:27:57,550 - JUSTICE_LEDGER - INFO - ⚖️  Justice Ledger initialized
+2025-12-24 19:27:57,550 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.justice_ledger (JusticeLedger)
+2025-12-24 19:27:57,550 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: oracle
+2025-12-24 19:27:57,551 - ORACLE_INTROSPECTION - INFO - 🔮 ORACLE INTROSPECTION ENGINE initialized
+2025-12-24 19:27:57,551 - TOOL_DISCOVERY - INFO -    ✅ Discovered: oracle.introspection (IntrospectionTool)
+2025-12-24 19:27:57,552 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: science
+2025-12-24 19:27:57,553 - TOOL_DISCOVERY - INFO -    ✅ Discovered: science.web_search (WebSearchTool)
+2025-12-24 19:27:57,553 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: envoy
+2025-12-24 19:27:57,554 - HIL_ASSISTANT - INFO - 🧠 HIL Assistant (VAD Layer) initialized
+2025-12-24 19:27:57,554 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.hil (HILAssistantTool)
+2025-12-24 19:27:57,555 - RUN_CAMPAIGN_TOOL - INFO - 🎯 RunCampaignTool initialized (awaiting kernel injection)
+2025-12-24 19:27:57,555 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.campaign (RunCampaignTool)
+2025-12-24 19:27:57,556 - GAP_REPORT_TOOL - INFO - 🔐 G.A.P. Report Tool initialized (Sandboxed: False, Audited: False)
+2025-12-24 19:27:57,557 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.gap_report (GAPReportTool)
+2025-12-24 19:27:57,559 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.diplomacy (DiplomacyTool)
+2025-12-24 19:27:57,560 - CITY_CONTROL - WARNING - ⚠️ CityControlTool initialized without kernel - limited functionality
+2025-12-24 19:27:57,560 - CITY_CONTROL - INFO - 🏙️  City Control Tool initialized
+2025-12-24 19:27:57,560 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.city_control (CityControlTool)
+2025-12-24 19:27:57,561 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.curator (CuratorTool)
+2025-12-24 19:27:57,561 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: forum
+2025-12-24 19:27:57,562 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: watchman
+2025-12-24 19:27:57,562 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.health (SystemHealthCheck)
+2025-12-24 19:27:57,596 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.standards (StandardsInspectionTool)
+2025-12-24 19:27:57,597 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: scribe
+2025-12-24 19:27:57,598 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: herald
+2025-12-24 19:27:57,602 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Twitter credentials incomplete (simulation mode)
+2025-12-24 19:27:57,602 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Reddit credentials incomplete (simulation mode)
+2025-12-24 19:27:57,602 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.broadcast (BroadcastTool)
+2025-12-24 19:27:57,603 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scribe (Scribe)
+2025-12-24 19:27:57,605 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scout (ScoutTool)
+2025-12-24 19:27:57,607 - HERALD_RESEARCH - WARNING - ⚠️  Research: Tavily unavailable (running in simulation mode)
+2025-12-24 19:27:57,607 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.research (ResearchTool)
+⚠️  [Steward] Identity file herald/STEWARD.md not found. Running in anonymous mode.
+2025-12-24 19:27:57,609 - HERALD_IDENTITY - INFO - ✅ Identity: Steward client initialized with herald/STEWARD.md
+2025-12-24 19:27:57,609 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.identity (IdentityTool)
+2025-12-24 19:27:57,609 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: chronicle
+2025-12-24 19:27:57,610 - CHRONICLE_GIT_TOOLS - INFO - ✅ Git repository detected: .
+2025-12-24 19:27:57,611 - TOOL_DISCOVERY - INFO -    ✅ Discovered: chronicle.git (GitTools)
+2025-12-24 19:27:57,611 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: auditor
+2025-12-24 19:27:57,615 - WATCHDOG - INFO - 👁️  WATCHDOG: Initialized
+2025-12-24 19:27:57,616 - WATCHDOG - INFO -    Ledger: data/ledger/kernel.jsonl
+2025-12-24 19:27:57,616 - WATCHDOG - INFO -    Check interval: 10
+2025-12-24 19:27:57,616 - WATCHDOG - INFO -    Halt on critical: True
+2025-12-24 19:27:57,616 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.watchdog (Watchdog)
+2025-12-24 19:27:57,620 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: Initializing Invariant Engine
+2025-12-24 19:27:57,620 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: BROADCAST_LICENSE_REQUIREMENT (CRITICAL)
+2025-12-24 19:27:57,620 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: CREDIT_TRANSFER_PROPOSAL_REQUIREMENT (CRITICAL)
+2025-12-24 19:27:57,620 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_ORPHANED_EVENTS (HIGH)
+2025-12-24 19:27:57,620 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: EVENT_SEQUENCE_INTEGRITY (HIGH)
+2025-12-24 19:27:57,621 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_DUPLICATE_EVENTS (CRITICAL)
+2025-12-24 19:27:57,621 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: PROPOSAL_WORKFLOW_INTEGRITY (HIGH)
+2025-12-24 19:27:57,621 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_CRITICAL_VOIDS (CRITICAL)
+2025-12-24 19:27:57,621 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: SEMANTIC_COMPLIANCE_REQUIREMENT (HIGH)
+2025-12-24 19:27:57,621 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: 8 core invariant rules registered (including Curator)
+2025-12-24 19:27:57,621 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.invariant (InvariantEngine)
+2025-12-24 19:27:57,625 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.compliance (ComplianceTool)
+2025-12-24 19:27:57,629 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.verdict (ConstitutionalVerdictTool)
+2025-12-24 19:27:57,630 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: engineer
+2025-12-24 19:27:57,632 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (ShuddhiHealTool)
+2025-12-24 19:27:57,633 - ENGINEER_BUILDER - INFO - 🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)
+2025-12-24 19:27:57,633 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.builder (BuilderTool)
+2025-12-24 19:27:57,634 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (HealViolationTool)
+2025-12-24 19:27:57,635 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/agent_city/
+2025-12-24 19:27:57,635 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: librarian
+2025-12-24 19:27:57,636 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.search_books (SearchBooksTool)
+2025-12-24 19:27:57,637 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.recommend_books (RecommendBooksTool)
+2025-12-24 19:27:57,637 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.catalog_book (CatalogBookTool)
+2025-12-24 19:27:57,638 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: analyst
+2025-12-24 19:27:57,639 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.deps (DependencyAnalysisTool)
+2025-12-24 19:27:57,640 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.git (GitAnalysisTool)
+2025-12-24 19:27:57,641 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.docs (DocsAnalysisTool)
+2025-12-24 19:27:57,641 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.architecture (ArchitectureAnalysisTool)
+2025-12-24 19:27:57,642 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.code (CodeAnalysisTool)
+2025-12-24 19:27:57,643 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.structure (StructureAnalysisTool)
+2025-12-24 19:27:57,643 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: marketer
+2025-12-24 19:27:57,645 - HERALD_GOVERNANCE - INFO - ✅ CONSTITUTION.md loaded from: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:27:57,645 - HERALD_GOVERNANCE - INFO - 🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)
+2025-12-24 19:27:57,645 - HERALD_GOVERNANCE - INFO - 📜 Constitutional Authority: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:27:57,665 - MARKETER_CONTENT - INFO - ✅ Content: LLM client initialized (with HeraldConstitution governance)
+2025-12-24 19:27:57,665 - TOOL_DISCOVERY - INFO -    ✅ Discovered: marketer.content (MarketerContentTool)
+2025-12-24 19:27:57,666 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: mechanic
+2025-12-24 19:27:57,667 - TOOL_DISCOVERY - INFO -    ✅ Discovered: mechanic.tidy (TidyTool)
+2025-12-24 19:27:57,667 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: artisan
+2025-12-24 19:27:57,669 - ARTISAN_MEDIA - INFO - ✅ Artisan Media Tool initialized
+2025-12-24 19:27:57,669 - TOOL_DISCOVERY - INFO -    ✅ Discovered: artisan.media (MediaTool)
+2025-12-24 19:27:57,670 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: dhruva
+2025-12-24 19:27:57,676 - TOOL_DISCOVERY - INFO - ✅ Tool discovery complete: 43 tools found, 1 failed
+2025-12-24 19:27:57,677 - TOOL_DISCOVERY - WARNING - ⚠️  Failed to load 1 tools:
+2025-12-24 19:27:57,677 - TOOL_DISCOVERY - WARNING -    - supreme_court.precedent_tool.py: Instantiation failed: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:27:57,677 - TOOL.LOADER - INFO - [tool:opus_private] Loaded 42 tools
+2025-12-24 19:28:17,535 - SEMANTIC_ROUTER - INFO - 🧠 Semantic Router initialized (awaiting model load)
+2025-12-24 19:28:17,535 - MANAS.Kernel - INFO - 🧠 SEMANTIC ENGINE: Connected (Intelligence Level 2)
+2025-12-24 19:28:17,536 - MANAS.Intent - INFO - OPUS-167: Reusing kernel's analyzer_loader (7 analyzers: ['ci_monitor', 'contract_analyzer', 'doc_harness_analyzer', 'inverse_scan_analyzer', 'pratyaya', 'semantic_analyzer', 'triage_analyzer'])
+2025-12-24 19:28:17,536 - MANAS.Intent - INFO - 🧠 IntentGenerator: Semantic Engine injected
+2025-12-24 19:28:17,542 - MANAS.SenseManager - INFO - 🧘 SENSE MANAGER: Booting senses via SenseLoader (VEDA-4)...
+2025-12-24 19:28:17,546 - KNOWLEDGE.LOADER - INFO - [knowledge] Scanning /Users/ss/Downloads/steward-protocol/knowledge...
+2025-12-24 19:28:22,551 - KNOWLEDGE.LOADER - INFO - [knowledge] Loaded 28 knowledge files
+2025-12-24 19:28:22,553 - KNOWLEDGE_GRAPH - INFO - Knowledge graph loaded: 79 nodes, 38 edges, 17 constraints
+2025-12-24 19:28:22,555 - MANAS.Cortex.Akasha - INFO - AKASHA: Loaded knowledge from /Users/ss/Downloads/steward-protocol/knowledge
+2025-12-24 19:28:22,555 - MANAS.Cortex.Akasha - INFO - AKASHA: Scanning codebase for code knowledge...
+2025-12-24 19:28:48,275 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: KernelConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,276 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LimitsConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,276 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ActionResult defined in 2 files (bases: none)
+2025-12-24 19:28:48,276 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookPhase defined in 2 files (bases: none)
+2025-12-24 19:28:48,276 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookDefinition defined in 2 files (bases: none)
+2025-12-24 19:28:48,276 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ViolationSeverity defined in 2 files (bases: ['Enum'])
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: Violation defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: OfflineCapableMixin defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ValidationResult defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: VerificationReport defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ComplianceReport defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: InvariantChecker defined in 2 files (bases: none)
+2025-12-24 19:28:48,277 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: GoogleProvider defined in 2 files (bases: ['LLMProvider'])
+2025-12-24 19:28:48,278 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DailyRitual defined in 2 files (bases: none)
+2025-12-24 19:28:48,278 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: RouteResult defined in 2 files (bases: none)
+2025-12-24 19:28:48,278 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ShivaLifecycleManager defined in 2 files (bases: none)
+2025-12-24 19:28:48,278 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ManasConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,278 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CoverageGap defined in 2 files (bases: none)
+2025-12-24 19:28:48,279 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DriftReport defined in 2 files (bases: none)
+2025-12-24 19:28:48,279 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FileSnapshot defined in 2 files (bases: none)
+2025-12-24 19:28:48,279 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ResearchResult defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: AgentsConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CircuitBreakerConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FeaturesConfig defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: SessionContext defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMUsage defined in 2 files (bases: none)
+2025-12-24 19:28:48,280 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMResponse defined in 2 files (bases: none)
+2025-12-24 19:28:48,281 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: StatePathInfo defined in 2 files (bases: none)
+2025-12-24 19:28:48,281 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ConstitutionalOath defined in 2 files (bases: none)
+2025-12-24 19:28:48,281 - CODE_SCANNER - INFO - Code scan complete: 739 files, 1286 classes, 30 duplicates, 4817 imports, 6169 calls
+2025-12-24 19:28:48,308 - KNOWLEDGE_GRAPH - INFO - Resolved 199 wildcard edges
+2025-12-24 19:28:48,312 - MANAS.KnowledgePort - INFO - [MANAS_KNOWLEDGE] Port initialized
+2025-12-24 19:28:48,312 - MANAS.SenseManager - INFO - 🔮 AKASHA_SENSE: Knowledge: 2561 nodes
+2025-12-24 19:29:15,367 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: KernelConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,368 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LimitsConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,368 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ActionResult defined in 2 files (bases: none)
+2025-12-24 19:29:15,368 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookPhase defined in 2 files (bases: none)
+2025-12-24 19:29:15,368 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookDefinition defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ViolationSeverity defined in 2 files (bases: ['Enum'])
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: Violation defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: OfflineCapableMixin defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ValidationResult defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: VerificationReport defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ComplianceReport defined in 2 files (bases: none)
+2025-12-24 19:29:15,369 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: InvariantChecker defined in 2 files (bases: none)
+2025-12-24 19:29:15,370 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: GoogleProvider defined in 2 files (bases: ['LLMProvider'])
+2025-12-24 19:29:15,370 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DailyRitual defined in 2 files (bases: none)
+2025-12-24 19:29:15,370 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: RouteResult defined in 2 files (bases: none)
+2025-12-24 19:29:15,370 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ShivaLifecycleManager defined in 2 files (bases: none)
+2025-12-24 19:29:15,371 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ManasConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CoverageGap defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DriftReport defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FileSnapshot defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ResearchResult defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: AgentsConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,372 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CircuitBreakerConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FeaturesConfig defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: SessionContext defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMUsage defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMResponse defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: StatePathInfo defined in 2 files (bases: none)
+2025-12-24 19:29:15,373 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ConstitutionalOath defined in 2 files (bases: none)
+2025-12-24 19:29:15,374 - CODE_SCANNER - INFO - Code scan complete: 739 files, 1286 classes, 30 duplicates, 4817 imports, 6169 calls
+2025-12-24 19:29:20,522 - MANAS.SenseManager - INFO - 🏚️ ARCHITECTURE_SENSE: Architecture Health: 0% | 30 dups, 1 cycles
+2025-12-24 19:29:20,522 - MANAS.SenseManager - INFO - 🙏 DHARMA_SENSE: Bhakti: 70
+2025-12-24 19:29:20,525 - PARAMPARA - INFO - ⛓️  Parampara chain loaded (263 blocks)
+2025-12-24 19:29:20,539 - PARAMPARA - INFO - ✅ Parampara chain verified (263 blocks)
+2025-12-24 19:29:20,544 - MANAS.Cortex.KarmaSense - INFO - [KARMA_SENSE] No chronic pain detected (health: 100%)
+2025-12-24 19:29:20,544 - MANAS.SenseManager - INFO - 🔮 KARMA_SENSE: Hotspots: 0
+2025-12-24 19:29:20,546 - MANAS.Cortex.NadiSense - WARNING - [NADI_SENSE] 🟡 WARNING: 1 wiring issues detected
+2025-12-24 19:29:20,546 - MANAS.SenseManager - INFO - 🟢 NADI_SENSE: 🟢 Wiring Health: 90% | 0 critical, 1 warnings
+2025-12-24 19:29:20,548 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db
+2025-12-24 19:29:20,549 - PRAKRITI - INFO - [PRAKRITI] Initialized at /Users/ss/Downloads/steward-protocol (Ledger: /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db)
+2025-12-24 19:29:20,549 - SYNC_HOLON - INFO - [SYNC_HOLON] Initialized
+2025-12-24 19:29:24,038 - SYNC_HOLON - INFO - [SYNC_HOLON] Boot complete: 5 plugins with state
+2025-12-24 19:29:24,039 - MANAS.SenseManager - INFO - 👁️ PRAKRITI_SENSE: Health: 80%
+2025-12-24 19:29:24,039 - MANAS.SenseManager - INFO - ✨ PRANA_SENSE: Initialized
+2025-12-24 19:29:24,039 - MANAS.SenseManager - INFO - ✨ SHRUTA_SENSE: Initialized
+2025-12-24 19:29:24,039 - MANAS.SenseManager - INFO - ✨ SUTRA_SENSE: Initialized
+2025-12-24 19:29:24,040 - MANAS.SenseManager - INFO - ✨ VIVEKA_SENSE: Initialized
+2025-12-24 19:29:24,040 - MANAS.SenseManager - INFO - 🧘 SENSE MANAGER: Booted 10/10 senses (VEDA-4)
+2025-12-24 19:29:24,040 - MANAS.Cortex.SutraSense - INFO - 📜 SUTRA SENSE: Semantic Engine injected
+2025-12-24 19:29:24,240 - MANAS.Cortex.ShrutaSense - INFO - 🕉️ ShrutaSense listening to: vibe_core, tests, docs
+2025-12-24 19:29:24,240 - MANAS.Cortex.ShrutaSense - INFO - 🔌 Auto-discovery handler registered
+2025-12-24 19:29:24,240 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense registered with ShrutaSense for real-time updates
+2025-12-24 19:29:24,241 - CODE.MODULE.LOADER - INFO - [bridge] Scanning vibe_core/plugins/opus_assistant/manas...
+2025-12-24 19:29:24,262 - MANAS.GenesisBridge - INFO - 🏛️ GENESIS BRIDGE: Stadtamt Service activated (GAD-000 infrastructure)
+2025-12-24 19:29:24,263 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: GenesisBridge (GenesisBridge)
+2025-12-24 19:29:24,285 - MANAS.LoggerBridge - INFO - 📓 LOGGER BRIDGE: Initialized (config: 7 keys)
+2025-12-24 19:29:24,285 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: LoggerBridge (LoggerBridge)
+2025-12-24 19:29:24,287 - COGNITIVE_WEAVER - INFO - [COGNITIVE_WEAVER] Initialized - State ↔ Knowledge Bridge Active
+2025-12-24 19:29:24,555 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db
+2025-12-24 19:29:24,558 - PRAKRITI - INFO - [PRAKRITI] Initialized at /Users/ss/Downloads/steward-protocol (Ledger: /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db)
+2025-12-24 19:29:24,560 - SYNC_HOLON - INFO - [SYNC_HOLON] Initialized
+2025-12-24 19:29:25,556 - GUNA_CLASSIFIER - INFO - [GUNA] Classifier initialized
+2025-12-24 19:29:26,058 - KNOWLEDGE.LOADER - INFO - [knowledge] Scanning /Users/ss/Downloads/steward-protocol/knowledge...
+2025-12-24 19:29:31,322 - KNOWLEDGE.LOADER - INFO - [knowledge] Loaded 28 knowledge files
+2025-12-24 19:29:31,324 - KNOWLEDGE_GRAPH - INFO - Knowledge graph loaded: 79 nodes, 38 edges, 17 constraints
+2025-12-24 19:29:31,326 - MANAS.WeaverBridge - INFO - 🧵 WEAVER BRIDGE: State ↔ Knowledge Bridge initialized - Health: 50%, no session context
+2025-12-24 19:29:31,327 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: WeaverBridge (WeaverBridge)
+2025-12-24 19:29:31,327 - CODE.MODULE.LOADER - INFO - [bridge] Loaded 3 items (cached)
+2025-12-24 19:29:31,327 - MANAS.SHIVA - INFO - 🕉️ Shiva: Lifecycle Manager initialized (config: 5 keys)
+2025-12-24 19:29:31,330 - MANAS.Kernel - INFO - 🌙 SANKALPA: Strategic Will initialized (config: 5 keys)
+2025-12-24 19:29:31,341 - MANAS.Kernel - INFO - 🧠 MANAS: Cognitive systems online.
+2025-12-24 19:29:31,341 - MANAS.Kernel - INFO - ⚡ VAJRA: Kernel injected - ledger + tool_registry ACTIVE
+2025-12-24 19:29:31,341 - MANAS.ActionManager - INFO - 🖐️ ACTION MANAGER: Execution mode set to TaskKernel
+2025-12-24 19:29:31,341 - MANAS.Kernel - INFO - ⚡ OPUS-175: TaskKernel execution mode ENABLED
+2025-12-24 19:29:31,341 - OPUS_ASSISTANT - INFO - 🔄 MANAS wired to CycleRegistry (via plugin boot)
+2025-12-24 19:29:31,553 - OPUS_TICK - INFO - 🔄 Loaded 23 circuits: ['ARCHITECTURE_ANALYSIS', 'DEBUG_FIX_V2', 'GOVERNANCE_VOTE_V2', 'RESEARCH_SYNTH_V2', 'test_validation', 'AGENT_BIRTH_V1', 'SIMPLE_QUERY', 'WIRING_AUDIT', 'TASK_LEDGER_V1', 'DEBATE_V1', 'CONTEXT_SYNTH', 'PROJECT_SCAFFOLD_V2', 'FEATURE_IMPLEMENT_V2', 'SYSTEM_DESIGN_V2', 'ERROR_RECOVERY_V1', 'CONTENT_GENERATION_V2', 'DOC_INDEX_RENDER', 'HEAL_CODEBASE_V1', 'PURGE_TECHNICAL_DEBT_V1', 'SYSTEM_STATUS_V2', 'PHILOSOPHICAL_DEBATE_V1', 'TEMPLATE_CIRCUIT_V1', 'ARCHITECT_V1']
+2025-12-24 19:29:31,553 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK', 'QUERY_GRAPH', 'RENDER_TEMPLATE', 'STORE_EPHEMERAL', 'RETRIEVE_EPHEMERAL', 'GIT_COMMIT']
+2025-12-24 19:29:31,553 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-24 19:29:31,554 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-24 19:29:31,704 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-24 19:29:31,779 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: HEAL_CODEBASE_V1 (HEAL_CODEBASE_V1)
+2025-12-24 19:29:31,886 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-24 19:29:31,993 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-24 19:29:32,107 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-24 19:29:32,199 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-24 19:29:32,223 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-24 19:29:32,333 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-24 19:29:32,467 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-24 19:29:32,517 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-24 19:29:32,561 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PURGE_TECHNICAL_DEBT_V1 (PURGE_TECHNICAL_DEBT_V1)
+2025-12-24 19:29:32,667 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-24 19:29:32,760 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-24 19:29:32,884 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-24 19:29:33,003 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-24 19:29:33,195 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-24 19:29:33,249 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_STATUS_V2 (SYSTEM_STATUS_V2)
+2025-12-24 19:29:33,354 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-24 19:29:33,464 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-24 19:29:33,498 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-24 19:29:33,533 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-24 19:29:33,572 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-24 19:29:33,662 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 106 persisted execution states
+2025-12-24 19:29:33,663 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 22 playbooks
+2025-12-24 19:29:33,663 - OPUS_TICK - INFO - 🧠 OPUS-030: DeterministicExecutor initialized (Envoy Pattern)
+2025-12-24 19:29:33,663 - SECTION.LOADER - INFO - [section] Scanning vibe_core/phoenix/sections...
+2025-12-24 19:29:33,772 - SECTION.LOADER - INFO -   ✅ Loaded: manas (new-style)
+2025-12-24 19:29:34,025 - SECTION.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:29:34,038 - SECTION.LOADER - INFO -   ✅ Loaded: apis (new-style)
+2025-12-24 19:29:34,051 - SECTION.LOADER - INFO -   ✅ Loaded: llm (new-style)
+2025-12-24 19:29:34,116 - SECTION.LOADER - INFO -   ✅ Loaded: city (new-style)
+2025-12-24 19:29:34,132 - SECTION.LOADER - INFO -   ✅ Loaded: guardrails (new-style)
+2025-12-24 19:29:34,231 - SECTION.LOADER - INFO -   ✅ Loaded: quality (new-style)
+2025-12-24 19:29:34,244 - SECTION.LOADER - INFO -   ✅ Loaded: quotas (new-style)
+2025-12-24 19:29:34,262 - SECTION.LOADER - INFO -   ✅ Loaded: providers (new-style)
+2025-12-24 19:29:34,282 - SECTION.LOADER - INFO -   ✅ Loaded: runtime (new-style)
+2025-12-24 19:29:34,334 - SECTION.LOADER - INFO -   ✅ Loaded: paths (new-style)
+2025-12-24 19:29:34,365 - SECTION.LOADER - INFO -   ✅ Loaded: agents (new-style)
+2025-12-24 19:29:34,376 - SECTION.LOADER - INFO -   ✅ Loaded: cli (new-style)
+2025-12-24 19:29:34,398 - SECTION.LOADER - INFO -   ✅ Loaded: test_governance (new-style)
+2025-12-24 19:29:34,434 - SECTION.LOADER - INFO -   ✅ Loaded: prompts (new-style)
+2025-12-24 19:29:34,473 - SECTION.LOADER - INFO -   ✅ Loaded: templates (new-style)
+2025-12-24 19:29:34,510 - SECTION.LOADER - INFO -   ✅ Loaded: steward (new-style)
+2025-12-24 19:29:34,519 - SECTION.LOADER - INFO -   ✅ Loaded: kernel (new-style)
+2025-12-24 19:29:34,519 - SECTION.LOADER - INFO - [section] Loaded 18 config sections
+2025-12-24 19:29:34,519 - vibe_core.phoenix.config - INFO - Loaded section 'manas' from config/manas.yaml
+2025-12-24 19:29:34,519 - vibe_core.phoenix.config - INFO - Loaded section 'interface' from config/interface.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'apis' from config/apis.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'llm' from config/llm.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'city' from config/matrix.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'guardrails' from config/guardrails.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'quality' from config/quality.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'quotas' from config/quotas.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'providers' from config/providers.yaml
+2025-12-24 19:29:34,520 - vibe_core.phoenix.config - INFO - Loaded section 'runtime' from config/runtime.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'paths' from config/paths.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'agents' from config/agents.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'cli' from config/cli.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'test_governance' from config/test_governance.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'prompts' from config/prompts.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'templates' from config/templates.yaml
+2025-12-24 19:29:34,521 - vibe_core.phoenix.config - INFO - Loaded section 'steward' from config/steward.yaml
+2025-12-24 19:29:36,710 - vibe_core.phoenix.config - INFO - Discovered 20 circuits from vibe_core/playbook/circuits
+2025-12-24 19:29:36,713 - vibe_core.phoenix.config - INFO - Loaded 26 routing rules from MATRIX.md
+2025-12-24 19:29:36,713 - vibe_core.phoenix.config - INFO - PhoenixConfig loaded with 18 sections: ['kernel', 'guardrails', 'test_governance', 'steward', 'interface', 'apis', 'llm', 'city', 'quotas', 'runtime', 'paths', 'prompts', 'templates', 'providers', 'manas', 'agents', 'cli', 'quality']
+2025-12-24 19:29:36,713 - OPUS_TICK - INFO - ⚡ PHOENIX: MANAS policy injected from config/manas.yaml (Dharma binding)
+2025-12-24 19:29:36,714 - MANAS.Kernel - INFO - ⚡ VAJRA: Kernel injected - ledger + tool_registry ACTIVE
+2025-12-24 19:29:36,714 - MANAS.ActionManager - INFO - 🖐️ ACTION MANAGER: Execution mode set to TaskKernel
+2025-12-24 19:29:36,714 - MANAS.Kernel - INFO - ⚡ OPUS-175: TaskKernel execution mode ENABLED
+2025-12-24 19:29:36,714 - OPUS_TICK - INFO - ⚡ VAJRA: MANAS bound to core ledger
+2025-12-24 19:29:36,714 - OPUS_TICK - INFO - 🔄 OPUS-095: MANAS wired to CycleRegistry (trace + event_bus)
+2025-12-24 19:29:36,714 - MANAS.Cortex.Test - INFO - ⚡ PRAMANA: TestCortex bound to core kernel
+2025-12-24 19:29:36,714 - OPUS_TICK - INFO - ⚡ PRAMANA: TestCortex initialized for self-testing
+2025-12-24 19:29:36,715 - CODE.MODULE.LOADER - INFO - [handler] Scanning vibe_core/plugins/opus_assistant/manas/router/handlers...
+2025-12-24 19:29:36,717 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: dharma (DharmaHandler)
+2025-12-24 19:29:36,717 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sankalpa (SankalpaHandler)
+2025-12-24 19:29:36,717 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: wiring (WiringHandler)
+2025-12-24 19:29:36,721 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: coverage_gap (CoverageGapHandler)
+2025-12-24 19:29:36,721 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: doc_creation (DocCreationHandler)
+2025-12-24 19:29:36,721 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: harness (HarnessHandler)
+2025-12-24 19:29:36,721 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: stale_reference (StaleReferenceHandler)
+2025-12-24 19:29:36,721 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: tdd_contract (TddContractHandler)
+2025-12-24 19:29:36,722 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: triage (TriageHandler)
+2025-12-24 19:29:36,723 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: knowledge (KnowledgeHandler)
+2025-12-24 19:29:36,723 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: mutation (MutationHandler)
+2025-12-24 19:29:36,723 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: research (ResearchHandler)
+2025-12-24 19:29:36,726 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: hygiene (HygieneHandler)
+2025-12-24 19:29:36,726 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shell (ShellHandler)
+2025-12-24 19:29:36,727 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sutra (SutraHandler)
+2025-12-24 19:29:36,729 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: contract (ContractHandler)
+2025-12-24 19:29:36,729 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: silpa (SilpaHandler)
+2025-12-24 19:29:36,729 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: test (TestHandler)
+2025-12-24 19:29:36,729 - CODE.MODULE.LOADER - INFO - [handler] Loaded 18 items (cached)
+2025-12-24 19:29:36,729 - HANDLER.LOADER - INFO - HandlerLoader: 18 handlers loaded, 52 intent types mapped
+2025-12-24 19:29:36,730 - MANAS.IntentRouter - INFO - IntentRouter: 18 handlers available via HandlerLoader: ['dharma', 'sankalpa', 'wiring', 'coverage_gap', 'doc_creation', 'harness', 'stale_reference', 'tdd_contract', 'triage', 'knowledge', 'mutation', 'research', 'hygiene', 'shell', 'sutra', 'contract', 'silpa', 'test']
+2025-12-24 19:29:36,730 - MANAS.Action.Viveka - INFO - 👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)
+2025-12-24 19:29:36,730 - MANAS.IntentRouter - INFO - 🧠 OPUS-133: VivekaAction gate initialized (Dharmic Discrimination)
+2025-12-24 19:29:36,730 - MANAS.IntentRouter - INFO - 🌙 OPUS-155: MayaSimulator initialized (Inception Depth 0)
+2025-12-24 19:29:36,730 - MANAS.Cortex.AkashaSense - INFO - [AKASHA_SENSE] Initialized - The Eye of Knowledge
+2025-12-24 19:29:36,730 - MANAS.IntentRouter - INFO - 👁️ OPUS-171: AkashaSense initialized (Knowledge Perception)
+2025-12-24 19:29:36,730 - MANAS.IntentRouter - INFO - 🧠 OPUS-220: SynapticMemory initialized (Samskara Recall)
+2025-12-24 19:29:36,864 - MANAS.SRUTI_VALIDATOR - INFO - ⚡ SRUTI: Kernel injected - ledger binding ACTIVE
+2025-12-24 19:29:36,864 - MANAS.IntentRouter - INFO - ⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)
+2025-12-24 19:29:36,864 - OPUS_TICK - INFO - 🔀 DHARMA-JNANA: IntentRouter connected to MANAS (with fractal loaders)
+2025-12-24 19:29:36,864 - OPUS_TICK - INFO - 🧠 OPUS-032: MANAS initialized (The Mind Awakens)
+2025-12-24 19:29:36,865 - OPUS_TICK - WARNING - Failed to subscribe to EventBus: 'str' object has no attribute 'get'
+2025-12-24 19:29:36,867 - SYSCALL_LISTENER - INFO - 🧠 SyscallListener subscribed to SYSCALL_EXECUTED events
+2025-12-24 19:29:36,867 - vibe_core.runtime.prompt_context - INFO - 🔌 Prompt Context Engine initialized
+2025-12-24 19:29:36,876 - STATE.SERVICE - INFO - StateService initialized: /Users/ss/Downloads/steward-protocol/.vibe/state/plugins/opus_assistant
+2025-12-24 19:29:36,881 - OPUS_ASSISTANT - INFO - 📍 Session e4b9241c started (boot_mode: full_power)
+2025-12-24 19:29:36,881 - OPUS_TICK - INFO - 🔄 Loaded 23 circuits: ['ARCHITECTURE_ANALYSIS', 'DEBUG_FIX_V2', 'GOVERNANCE_VOTE_V2', 'RESEARCH_SYNTH_V2', 'test_validation', 'AGENT_BIRTH_V1', 'SIMPLE_QUERY', 'WIRING_AUDIT', 'TASK_LEDGER_V1', 'DEBATE_V1', 'CONTEXT_SYNTH', 'PROJECT_SCAFFOLD_V2', 'FEATURE_IMPLEMENT_V2', 'SYSTEM_DESIGN_V2', 'ERROR_RECOVERY_V1', 'CONTENT_GENERATION_V2', 'DOC_INDEX_RENDER', 'HEAL_CODEBASE_V1', 'PURGE_TECHNICAL_DEBT_V1', 'SYSTEM_STATUS_V2', 'PHILOSOPHICAL_DEBATE_V1', 'TEMPLATE_CIRCUIT_V1', 'ARCHITECT_V1']
+2025-12-24 19:29:36,882 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK', 'QUERY_GRAPH', 'RENDER_TEMPLATE', 'STORE_EPHEMERAL', 'RETRIEVE_EPHEMERAL', 'GIT_COMMIT']
+2025-12-24 19:29:36,882 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-24 19:29:36,882 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-24 19:29:37,025 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-24 19:29:37,093 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: HEAL_CODEBASE_V1 (HEAL_CODEBASE_V1)
+2025-12-24 19:29:37,196 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-24 19:29:37,301 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-24 19:29:37,410 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-24 19:29:37,498 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-24 19:29:37,515 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-24 19:29:37,616 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-24 19:29:37,731 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-24 19:29:37,773 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-24 19:29:37,805 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PURGE_TECHNICAL_DEBT_V1 (PURGE_TECHNICAL_DEBT_V1)
+2025-12-24 19:29:37,896 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-24 19:29:37,986 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-24 19:29:38,224 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-24 19:29:38,469 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-24 19:29:38,689 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-24 19:29:38,760 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_STATUS_V2 (SYSTEM_STATUS_V2)
+2025-12-24 19:29:38,876 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-24 19:29:38,993 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-24 19:29:39,020 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-24 19:29:39,047 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-24 19:29:39,079 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-24 19:29:39,105 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 106 persisted execution states
+2025-12-24 19:29:39,105 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 22 playbooks
+2025-12-24 19:29:39,105 - OPUS_TICK - INFO - 🧠 OPUS-030: DeterministicExecutor initialized (Envoy Pattern)
+2025-12-24 19:29:39,106 - SECTION.LOADER - INFO - [section] Scanning vibe_core/phoenix/sections...
+2025-12-24 19:29:39,198 - SECTION.LOADER - INFO -   ✅ Loaded: manas (new-style)
+2025-12-24 19:29:39,425 - SECTION.LOADER - INFO -   ✅ Loaded: interface (new-style)
+2025-12-24 19:29:39,436 - SECTION.LOADER - INFO -   ✅ Loaded: apis (new-style)
+2025-12-24 19:29:39,460 - SECTION.LOADER - INFO -   ✅ Loaded: llm (new-style)
+2025-12-24 19:29:39,530 - SECTION.LOADER - INFO -   ✅ Loaded: city (new-style)
+2025-12-24 19:29:39,544 - SECTION.LOADER - INFO -   ✅ Loaded: guardrails (new-style)
+2025-12-24 19:29:39,634 - SECTION.LOADER - INFO -   ✅ Loaded: quality (new-style)
+2025-12-24 19:29:39,643 - SECTION.LOADER - INFO -   ✅ Loaded: quotas (new-style)
+2025-12-24 19:29:39,657 - SECTION.LOADER - INFO -   ✅ Loaded: providers (new-style)
+2025-12-24 19:29:39,682 - SECTION.LOADER - INFO -   ✅ Loaded: runtime (new-style)
+2025-12-24 19:29:39,736 - SECTION.LOADER - INFO -   ✅ Loaded: paths (new-style)
+2025-12-24 19:29:39,767 - SECTION.LOADER - INFO -   ✅ Loaded: agents (new-style)
+2025-12-24 19:29:39,779 - SECTION.LOADER - INFO -   ✅ Loaded: cli (new-style)
+2025-12-24 19:29:39,799 - SECTION.LOADER - INFO -   ✅ Loaded: test_governance (new-style)
+2025-12-24 19:29:39,843 - SECTION.LOADER - INFO -   ✅ Loaded: prompts (new-style)
+2025-12-24 19:29:39,869 - SECTION.LOADER - INFO -   ✅ Loaded: templates (new-style)
+2025-12-24 19:29:39,904 - SECTION.LOADER - INFO -   ✅ Loaded: steward (new-style)
+2025-12-24 19:29:39,910 - SECTION.LOADER - INFO -   ✅ Loaded: kernel (new-style)
+2025-12-24 19:29:39,910 - SECTION.LOADER - INFO - [section] Loaded 18 config sections
+2025-12-24 19:29:39,910 - vibe_core.phoenix.config - INFO - Loaded section 'manas' from config/manas.yaml
+2025-12-24 19:29:39,910 - vibe_core.phoenix.config - INFO - Loaded section 'interface' from config/interface.yaml
+2025-12-24 19:29:39,910 - vibe_core.phoenix.config - INFO - Loaded section 'apis' from config/apis.yaml
+2025-12-24 19:29:39,911 - vibe_core.phoenix.config - INFO - Loaded section 'llm' from config/llm.yaml
+2025-12-24 19:29:39,911 - vibe_core.phoenix.config - INFO - Loaded section 'city' from config/matrix.yaml
+2025-12-24 19:29:39,912 - vibe_core.phoenix.config - INFO - Loaded section 'guardrails' from config/guardrails.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'quality' from config/quality.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'quotas' from config/quotas.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'providers' from config/providers.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'runtime' from config/runtime.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'paths' from config/paths.yaml
+2025-12-24 19:29:39,913 - vibe_core.phoenix.config - INFO - Loaded section 'agents' from config/agents.yaml
+2025-12-24 19:29:39,914 - vibe_core.phoenix.config - INFO - Loaded section 'cli' from config/cli.yaml
+2025-12-24 19:29:39,914 - vibe_core.phoenix.config - INFO - Loaded section 'test_governance' from config/test_governance.yaml
+2025-12-24 19:29:39,914 - vibe_core.phoenix.config - INFO - Loaded section 'prompts' from config/prompts.yaml
+2025-12-24 19:29:39,914 - vibe_core.phoenix.config - INFO - Loaded section 'templates' from config/templates.yaml
+2025-12-24 19:29:39,914 - vibe_core.phoenix.config - INFO - Loaded section 'steward' from config/steward.yaml
+2025-12-24 19:29:41,843 - vibe_core.phoenix.config - INFO - Discovered 20 circuits from vibe_core/playbook/circuits
+2025-12-24 19:29:41,844 - vibe_core.phoenix.config - INFO - Loaded 26 routing rules from MATRIX.md
+2025-12-24 19:29:41,844 - vibe_core.phoenix.config - INFO - PhoenixConfig loaded with 18 sections: ['kernel', 'guardrails', 'test_governance', 'steward', 'interface', 'apis', 'llm', 'city', 'quotas', 'runtime', 'paths', 'prompts', 'templates', 'providers', 'manas', 'agents', 'cli', 'quality']
+2025-12-24 19:29:41,845 - OPUS_TICK - INFO - ⚡ PHOENIX: MANAS policy injected from config/manas.yaml (Dharma binding)
+2025-12-24 19:29:41,860 - MANAS.Kernel - INFO - ⚡ VAJRA: Kernel injected - ledger + tool_registry ACTIVE
+2025-12-24 19:29:41,861 - MANAS.ActionManager - INFO - 🖐️ ACTION MANAGER: Execution mode set to TaskKernel
+2025-12-24 19:29:41,861 - MANAS.Kernel - INFO - ⚡ OPUS-175: TaskKernel execution mode ENABLED
+2025-12-24 19:29:41,862 - OPUS_TICK - INFO - ⚡ VAJRA: MANAS bound to core ledger
+2025-12-24 19:29:41,863 - OPUS_TICK - INFO - 🔄 OPUS-095: MANAS wired to CycleRegistry (trace + event_bus)
+2025-12-24 19:29:41,863 - MANAS.Cortex.Test - INFO - ⚡ PRAMANA: TestCortex bound to core kernel
+2025-12-24 19:29:41,863 - OPUS_TICK - INFO - ⚡ PRAMANA: TestCortex initialized for self-testing
+2025-12-24 19:29:41,863 - HANDLER.LOADER - INFO - HandlerLoader: 18 handlers loaded, 52 intent types mapped
+2025-12-24 19:29:41,864 - MANAS.IntentRouter - INFO - IntentRouter: 18 handlers available via HandlerLoader: ['dharma', 'sankalpa', 'wiring', 'coverage_gap', 'doc_creation', 'harness', 'stale_reference', 'tdd_contract', 'triage', 'knowledge', 'mutation', 'research', 'hygiene', 'shell', 'sutra', 'contract', 'silpa', 'test']
+2025-12-24 19:29:41,864 - MANAS.Action.Viveka - INFO - 👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)
+2025-12-24 19:29:41,864 - MANAS.IntentRouter - INFO - 🧠 OPUS-133: VivekaAction gate initialized (Dharmic Discrimination)
+2025-12-24 19:29:41,864 - MANAS.IntentRouter - INFO - 🌙 OPUS-155: MayaSimulator initialized (Inception Depth 0)
+2025-12-24 19:29:41,864 - MANAS.Cortex.AkashaSense - INFO - [AKASHA_SENSE] Initialized - The Eye of Knowledge
+2025-12-24 19:29:41,865 - MANAS.IntentRouter - INFO - 👁️ OPUS-171: AkashaSense initialized (Knowledge Perception)
+2025-12-24 19:29:41,865 - MANAS.IntentRouter - INFO - 🧠 OPUS-220: SynapticMemory initialized (Samskara Recall)
+2025-12-24 19:29:42,003 - MANAS.SRUTI_VALIDATOR - INFO - ⚡ SRUTI: Kernel injected - ledger binding ACTIVE
+2025-12-24 19:29:42,005 - MANAS.IntentRouter - INFO - ⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)
+2025-12-24 19:29:42,008 - OPUS_TICK - INFO - 🔀 DHARMA-JNANA: IntentRouter connected to MANAS (with fractal loaders)
+2025-12-24 19:29:42,010 - OPUS_TICK - INFO - 🧠 OPUS-032: MANAS initialized (The Mind Awakens)
+2025-12-24 19:29:42,018 - OPUS_TICK - WARNING - Failed to subscribe to EventBus: 'str' object has no attribute 'get'
+2025-12-24 19:29:42,019 - SYSCALL_LISTENER - INFO - 🧠 SyscallListener subscribed to SYSCALL_EXECUTED events
+2025-12-24 19:29:42,026 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db
+2025-12-24 19:29:42,029 - PRAKRITI - INFO - [PRAKRITI] Initialized at /Users/ss/Downloads/steward-protocol (Ledger: /Users/ss/Downloads/steward-protocol/data/vibe_ledger.db)
+2025-12-24 19:29:44,752 - OPUS_CONTEXT - INFO - 🎯 Context injected: WARNING (16c99143)
+2025-12-24 19:29:44,752 - OPUS_ASSISTANT - INFO - 🎯 OPUS Assistant online (Workspace: /Users/ss/Downloads/steward-protocol)
+2025-12-24 19:29:44,753 - SYSTEM_HEARTBEAT - INFO - 💓 SYSTEM_HEARTBEAT: Nationalized pulse service online
+2025-12-24 19:29:44,960 - INTERFACE_PLUGIN - INFO - Loading renderers via RendererLoader...
+2025-12-24 19:29:44,963 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: matrix
+2025-12-24 19:29:44,992 - RENDERER_GIT - INFO - 📊 GitRenderer initialized (analyzing last 7 days)
+2025-12-24 19:29:44,993 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: git
+2025-12-24 19:29:45,023 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: tasks
+2025-12-24 19:29:45,248 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: readme
+2025-12-24 19:29:45,350 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: index
+2025-12-24 19:29:45,353 - UNIFIED.LOADER - WARNING - [ZOLLAMT] opus: Missing required GAD-000 infrastructure files
+2025-12-24 19:29:45,355 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: opus
+2025-12-24 19:29:45,356 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: ephemeral
+2025-12-24 19:29:45,358 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: cognition
+2025-12-24 19:29:45,365 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: agents
+2025-12-24 19:29:45,367 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: operations
+2025-12-24 19:29:45,371 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: architecture
+2025-12-24 19:29:45,376 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: settings
+2025-12-24 19:29:45,382 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: envoy
+2025-12-24 19:29:45,383 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: proof
+2025-12-24 19:29:45,385 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: citymap
+2025-12-24 19:29:45,386 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: help
+2025-12-24 19:29:45,387 - RENDERER.LOADER - INFO -   ✅ Loaded renderer: state
+2025-12-24 19:29:45,388 - RENDERER.LOADER - INFO - [renderer] Loaded 17 renderers
+2025-12-24 19:29:45,388 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for matrix: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/matrix.py)
+2025-12-24 19:29:45,388 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for git: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/git.py)
+2025-12-24 19:29:45,388 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for tasks: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/tasks.py)
+2025-12-24 19:29:45,388 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for readme: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/readme.py)
+2025-12-24 19:29:45,388 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for index: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/index.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for opus: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/opus (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/opus/renderer.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for ephemeral: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/ephemeral.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for cognition: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/cognition.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for agents: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/agents.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for operations: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/operations.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for architecture: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/architecture (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/architecture/renderer.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for settings: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/settings.py)
+2025-12-24 19:29:45,389 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for envoy: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/envoy.py)
+2025-12-24 19:29:45,390 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for proof: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/proof.py)
+2025-12-24 19:29:45,390 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for citymap: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/citymap.py)
+2025-12-24 19:29:45,390 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for help: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/help.py)
+2025-12-24 19:29:45,390 - INTERFACE_PLUGIN - INFO - DEBUG: Injecting root path for state: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers (derived from source: /Users/ss/Downloads/steward-protocol/vibe_core/plugins/interface/renderers/state.py)
+2025-12-24 19:29:45,530 - PLAYBOOK.LOADER - INFO - [playbook] Loaded 1 playbooks (cached)
+2025-12-24 19:29:45,747 - STATE.SERVICE - INFO - StateService initialized: /Users/ss/Downloads/steward-protocol/.vibe/state
+2025-12-24 19:29:50,373 - OPUS_DASHBOARD - INFO - 🔌 Control Cables: Detected 3 human edits: auto_heal, aggressive_refactoring, budget_limit
+2025-12-24 19:29:50,379 - CONTROL_CABLES - INFO - 🔌 Control Cables: Applied 3 setting changes
+2025-12-24 19:29:56,362 - MANAS.Cortex.PrakritiSense - INFO - [PRAKRITI_SENSE] Initialized - Das sechste Jnanendriya
+2025-12-24 19:29:56,364 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at data/vibe_ledger.db
+2025-12-24 19:29:56,365 - PRAKRITI - INFO - [PRAKRITI] Initialized at . (Ledger: data/vibe_ledger.db)
+2025-12-24 19:29:56,365 - SYNC_HOLON - INFO - [SYNC_HOLON] Initialized
+2025-12-24 19:29:57,225 - MANAS.Cortex.DharmaSense - INFO - [DHARMA_SENSE] Initialized - The Vedic Conscience
+2025-12-24 19:29:57,225 - MANAS.Cortex.SutraSense - INFO - [SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)
+2025-12-24 19:30:05,035 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: KernelConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,036 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LimitsConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ActionResult defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookPhase defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookDefinition defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ViolationSeverity defined in 2 files (bases: ['Enum'])
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: Violation defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: OfflineCapableMixin defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ValidationResult defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: VerificationReport defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ComplianceReport defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: InvariantChecker defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: GoogleProvider defined in 2 files (bases: ['LLMProvider'])
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DailyRitual defined in 2 files (bases: none)
+2025-12-24 19:30:05,037 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: RouteResult defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ShivaLifecycleManager defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ManasConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CoverageGap defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DriftReport defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FileSnapshot defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ResearchResult defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: AgentsConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CircuitBreakerConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FeaturesConfig defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: SessionContext defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMUsage defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMResponse defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: StatePathInfo defined in 2 files (bases: none)
+2025-12-24 19:30:05,038 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ConstitutionalOath defined in 2 files (bases: none)
+2025-12-24 19:30:05,039 - CODE_SCANNER - INFO - Code scan complete: 739 files, 1286 classes, 30 duplicates, 4817 imports, 6169 calls
+2025-12-24 19:30:05,039 - MANAS.Cortex.SutraSense - WARNING - [OPUS-110] CodeScanner found 30 duplicate class groups
+2025-12-24 19:30:05,566 - MANAS.Disharmony - INFO - 🔍 SILENT OBSERVER: ⚠️ Disharmony detected: 1 critical, 10 high, 4 medium (739 files)
+2025-12-24 19:30:05,724 - MANAS.Disharmony - INFO - 📜 OPUS DOC OBSERVER: ⚠️ Disharmony detected: 17 critical, 45 high, 34 medium (138 files)
+2025-12-24 19:30:05,725 - MANAS.Cortex.SutraSense - INFO - [OPUS-117] DisharmonyDetector found 111 disharmony issues (code: 15 docs: 96)
+2025-12-24 19:30:05,907 - MANAS.Cortex.SutraSense - INFO - 📜 SUTRA SENSE: Discovered 468 hidden code elements
+2025-12-24 19:30:05,908 - MANAS.Cortex.SutraSense - INFO - 📜 SUTRA SENSE: Generated roadmap with 103 items
+2025-12-24 19:30:08,241 - ORCHESTRATION.CYCLE - INFO - 📂 Cycle history loaded: 16 completed, 5 errors (total: 20)
+2025-12-24 19:30:08,241 - ORCHESTRATION.CYCLE - INFO - 📊 CycleRegistry initialized (retention: 100 completed, 500 errors, history: 16 loaded)
+2025-12-24 19:30:08,241 - ORCHESTRATION.CYCLE - INFO - 📊 Global CycleRegistry initialized (singleton pattern)
+2025-12-24 19:30:08,242 - TOOL_DISCOVERY - INFO - 🔍 Starting tool discovery...
+2025-12-24 19:30:08,242 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/system/
+2025-12-24 19:30:08,243 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: civic
+2025-12-24 19:30:08,251 - LIFECYCLE_MANAGER - INFO - 🔄 LifecycleManager initialized (Vedic Varna System)
+2025-12-24 19:30:08,251 - LIFECYCLE_ENFORCER - INFO - 🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)
+2025-12-24 19:30:08,251 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.lifecycle_enforcer (LifecycleEnforcer)
+2025-12-24 19:30:08,252 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.vault (VaultTool)
+2025-12-24 19:30:08,261 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.bank (BankTool)
+2025-12-24 19:30:08,267 - CIVIC_LICENSE - INFO - 🎫 LicenseTool initialized (lazy loading)
+2025-12-24 19:30:08,268 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.license (LicenseTool)
+2025-12-24 19:30:08,272 - CIVIC_LEDGER - INFO - 🏦 Initializing LedgerTool (self-contained)...
+2025-12-24 19:30:08,272 - CIVIC_LEDGER - INFO - 💰 Ledger Tool initialized
+2025-12-24 19:30:08,273 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.ledger (LedgerTool)
+2025-12-24 19:30:08,273 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: archivist
+2025-12-24 19:30:08,282 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: supreme_court
+2025-12-24 19:30:08,285 - TOOL_DISCOVERY - ERROR -    ❌ Failed to instantiate PrecedentTool: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:30:08,292 - APPEALS_TOOL - INFO - 📜 Appeals Tool initialized
+2025-12-24 19:30:08,293 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.appeals (AppealsTool)
+2025-12-24 19:30:08,300 - VERDICT_TOOL - INFO - ⚖️  Verdict Tool initialized
+2025-12-24 19:30:08,300 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.verdict (VerdictTool)
+2025-12-24 19:30:08,301 - JUSTICE_LEDGER - INFO - ⚖️  Justice Ledger initialized
+2025-12-24 19:30:08,302 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.justice_ledger (JusticeLedger)
+2025-12-24 19:30:08,302 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: oracle
+2025-12-24 19:30:08,303 - ORACLE_INTROSPECTION - INFO - 🔮 ORACLE INTROSPECTION ENGINE initialized
+2025-12-24 19:30:08,304 - TOOL_DISCOVERY - INFO -    ✅ Discovered: oracle.introspection (IntrospectionTool)
+2025-12-24 19:30:08,304 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: science
+2025-12-24 19:30:08,306 - TOOL_DISCOVERY - INFO -    ✅ Discovered: science.web_search (WebSearchTool)
+2025-12-24 19:30:08,306 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: envoy
+2025-12-24 19:30:08,307 - HIL_ASSISTANT - INFO - 🧠 HIL Assistant (VAD Layer) initialized
+2025-12-24 19:30:08,307 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.hil (HILAssistantTool)
+2025-12-24 19:30:08,309 - RUN_CAMPAIGN_TOOL - INFO - 🎯 RunCampaignTool initialized (awaiting kernel injection)
+2025-12-24 19:30:08,309 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.campaign (RunCampaignTool)
+2025-12-24 19:30:08,312 - GAP_REPORT_TOOL - INFO - 🔐 G.A.P. Report Tool initialized (Sandboxed: False, Audited: False)
+2025-12-24 19:30:08,312 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.gap_report (GAPReportTool)
+2025-12-24 19:30:08,314 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.diplomacy (DiplomacyTool)
+2025-12-24 19:30:08,315 - CITY_CONTROL - WARNING - ⚠️ CityControlTool initialized without kernel - limited functionality
+2025-12-24 19:30:08,316 - CITY_CONTROL - INFO - 🏙️  City Control Tool initialized
+2025-12-24 19:30:08,316 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.city_control (CityControlTool)
+2025-12-24 19:30:08,317 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.curator (CuratorTool)
+2025-12-24 19:30:08,317 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: forum
+2025-12-24 19:30:08,318 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: watchman
+2025-12-24 19:30:08,319 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.health (SystemHealthCheck)
+2025-12-24 19:30:08,349 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.standards (StandardsInspectionTool)
+2025-12-24 19:30:08,350 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: scribe
+2025-12-24 19:30:08,351 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: herald
+2025-12-24 19:30:08,359 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Twitter credentials incomplete (simulation mode)
+2025-12-24 19:30:08,359 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Reddit credentials incomplete (simulation mode)
+2025-12-24 19:30:08,360 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.broadcast (BroadcastTool)
+2025-12-24 19:30:08,363 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scribe (Scribe)
+2025-12-24 19:30:08,365 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scout (ScoutTool)
+2025-12-24 19:30:08,366 - HERALD_RESEARCH - WARNING - ⚠️  Research: Tavily unavailable (running in simulation mode)
+2025-12-24 19:30:08,366 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.research (ResearchTool)
+⚠️  [Steward] Identity file herald/STEWARD.md not found. Running in anonymous mode.
+2025-12-24 19:30:08,369 - HERALD_IDENTITY - INFO - ✅ Identity: Steward client initialized with herald/STEWARD.md
+2025-12-24 19:30:08,369 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.identity (IdentityTool)
+2025-12-24 19:30:08,370 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: chronicle
+2025-12-24 19:30:08,372 - CHRONICLE_GIT_TOOLS - INFO - ✅ Git repository detected: .
+2025-12-24 19:30:08,372 - TOOL_DISCOVERY - INFO -    ✅ Discovered: chronicle.git (GitTools)
+2025-12-24 19:30:08,373 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: auditor
+2025-12-24 19:30:08,383 - WATCHDOG - INFO - 👁️  WATCHDOG: Initialized
+2025-12-24 19:30:08,384 - WATCHDOG - INFO -    Ledger: data/ledger/kernel.jsonl
+2025-12-24 19:30:08,384 - WATCHDOG - INFO -    Check interval: 10
+2025-12-24 19:30:08,384 - WATCHDOG - INFO -    Halt on critical: True
+2025-12-24 19:30:08,384 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.watchdog (Watchdog)
+2025-12-24 19:30:08,394 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: Initializing Invariant Engine
+2025-12-24 19:30:08,394 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: BROADCAST_LICENSE_REQUIREMENT (CRITICAL)
+2025-12-24 19:30:08,394 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: CREDIT_TRANSFER_PROPOSAL_REQUIREMENT (CRITICAL)
+2025-12-24 19:30:08,396 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_ORPHANED_EVENTS (HIGH)
+2025-12-24 19:30:08,396 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: EVENT_SEQUENCE_INTEGRITY (HIGH)
+2025-12-24 19:30:08,396 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_DUPLICATE_EVENTS (CRITICAL)
+2025-12-24 19:30:08,397 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: PROPOSAL_WORKFLOW_INTEGRITY (HIGH)
+2025-12-24 19:30:08,397 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_CRITICAL_VOIDS (CRITICAL)
+2025-12-24 19:30:08,397 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: SEMANTIC_COMPLIANCE_REQUIREMENT (HIGH)
+2025-12-24 19:30:08,397 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: 8 core invariant rules registered (including Curator)
+2025-12-24 19:30:08,397 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.invariant (InvariantEngine)
+2025-12-24 19:30:08,404 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.compliance (ComplianceTool)
+2025-12-24 19:30:08,413 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.verdict (ConstitutionalVerdictTool)
+2025-12-24 19:30:08,413 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: engineer
+2025-12-24 19:30:08,415 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (ShuddhiHealTool)
+2025-12-24 19:30:08,416 - ENGINEER_BUILDER - INFO - 🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)
+2025-12-24 19:30:08,417 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.builder (BuilderTool)
+2025-12-24 19:30:08,418 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (HealViolationTool)
+2025-12-24 19:30:08,418 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/agent_city/
+2025-12-24 19:30:08,419 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: librarian
+2025-12-24 19:30:08,421 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.search_books (SearchBooksTool)
+2025-12-24 19:30:08,422 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.recommend_books (RecommendBooksTool)
+2025-12-24 19:30:08,423 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.catalog_book (CatalogBookTool)
+2025-12-24 19:30:08,424 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: analyst
+2025-12-24 19:30:08,425 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.deps (DependencyAnalysisTool)
+2025-12-24 19:30:08,426 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.git (GitAnalysisTool)
+2025-12-24 19:30:08,428 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.docs (DocsAnalysisTool)
+2025-12-24 19:30:08,435 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.architecture (ArchitectureAnalysisTool)
+2025-12-24 19:30:08,437 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.code (CodeAnalysisTool)
+2025-12-24 19:30:08,439 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.structure (StructureAnalysisTool)
+2025-12-24 19:30:08,439 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: marketer
+2025-12-24 19:30:08,448 - HERALD_GOVERNANCE - INFO - ✅ CONSTITUTION.md loaded from: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:30:08,448 - HERALD_GOVERNANCE - INFO - 🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)
+2025-12-24 19:30:08,448 - HERALD_GOVERNANCE - INFO - 📜 Constitutional Authority: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:30:08,472 - MARKETER_CONTENT - INFO - ✅ Content: LLM client initialized (with HeraldConstitution governance)
+2025-12-24 19:30:08,472 - TOOL_DISCOVERY - INFO -    ✅ Discovered: marketer.content (MarketerContentTool)
+2025-12-24 19:30:08,473 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: mechanic
+2025-12-24 19:30:08,474 - TOOL_DISCOVERY - INFO -    ✅ Discovered: mechanic.tidy (TidyTool)
+2025-12-24 19:30:08,475 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: artisan
+2025-12-24 19:30:08,477 - ARTISAN_MEDIA - INFO - ✅ Artisan Media Tool initialized
+2025-12-24 19:30:08,477 - TOOL_DISCOVERY - INFO -    ✅ Discovered: artisan.media (MediaTool)
+2025-12-24 19:30:08,479 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: dhruva
+2025-12-24 19:30:08,501 - TOOL_DISCOVERY - INFO - ✅ Tool discovery complete: 43 tools found, 1 failed
+2025-12-24 19:30:08,502 - TOOL_DISCOVERY - WARNING - ⚠️  Failed to load 1 tools:
+2025-12-24 19:30:08,502 - TOOL_DISCOVERY - WARNING -    - supreme_court.precedent_tool.py: Instantiation failed: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:30:08,502 - TOOL.LOADER - INFO - [tool:opus_private] Loaded 42 tools
+2025-12-24 19:30:08,503 - CODE.MODULE.LOADER - INFO - [action] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:30:08,504 - MANAS.Action.Echo - INFO - [ECHO_ACTION] Initialized - Proof of Life
+2025-12-24 19:30:08,504 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: echo_action (EchoAction)
+2025-12-24 19:30:08,507 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:30:08,507 - MANAS.Action.Prana - INFO - 🫀 [PRANA_ACTION] Initialized - Agent Lifecycle Manager
+2025-12-24 19:30:08,507 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_action (PranaAction)
+2025-12-24 19:30:08,508 - MANAS.Action.Sankalpa - INFO - [SANKALPA_ACTION] Initialized - UPASTHA (The Will)
+2025-12-24 19:30:08,508 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sankalpa_action (SankalpaAction)
+2025-12-24 19:30:08,509 - MANAS.Action.Shell - INFO - [SHELL_ACTION] Initialized - VAK (The Voice)
+2025-12-24 19:30:08,509 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shell_action (ShellAction)
+2025-12-24 19:30:08,509 - MANAS.Cortex.Silpa - INFO - 🔨 SILPA Architect initialized
+2025-12-24 19:30:08,560 - vibe_core.runtime.providers.factory - INFO - Creating OpenRouter provider (model: anthropic/claude-3.5-sonnet)
+2025-12-24 19:30:08,576 - vibe_core.runtime.providers.openrouter - INFO - OpenRouter provider initialized successfully
+2025-12-24 19:30:08,577 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] LLM Genesis enabled (OpenRouterProvider)
+2025-12-24 19:30:08,577 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] Initialized - PANI (The Hands)
+2025-12-24 19:30:08,577 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: silpa_action (SilpaAction)
+2025-12-24 19:30:08,577 - MANAS.Action.Test - INFO - [TEST_ACTION] Initialized - PAYU (The Validator)
+2025-12-24 19:30:08,578 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: test_action (TestAction)
+2025-12-24 19:30:08,578 - MANAS.Action.Viveka - INFO - 👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)
+2025-12-24 19:30:08,579 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_action (VivekaAction)
+2025-12-24 19:30:08,579 - CODE.MODULE.LOADER - INFO - [action] Loaded 7 items (cached)
+2025-12-24 19:30:08,579 - CODE.MODULE.LOADER - INFO - [sense] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:30:08,583 - MANAS.Cortex.AkashaSense - INFO - [AKASHA_SENSE] Initialized - The Eye of Knowledge
+2025-12-24 19:30:08,583 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: akasha_sense (AkashaSense)
+2025-12-24 19:30:08,583 - MANAS.Cortex.ArchitectureSense - INFO - [ARCHITECTURE_SENSE] Initialized - Watching the skeleton
+2025-12-24 19:30:08,584 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: architecture_sense (ArchitectureSense)
+2025-12-24 19:30:08,584 - MANAS.Cortex.DharmaSense - INFO - [DHARMA_SENSE] Initialized - The Vedic Conscience
+2025-12-24 19:30:08,584 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: dharma_sense (DharmaSense)
+2025-12-24 19:30:08,586 - MANAS.Cortex.KarmaSense - INFO - [KARMA_SENSE] Initialized - The Eye of Memory
+2025-12-24 19:30:08,587 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: karma_sense (KarmaSense)
+2025-12-24 19:30:08,587 - MANAS.Cortex.NadiSense - INFO - [NADI_SENSE] Initialized - Watching the channels
+2025-12-24 19:30:08,587 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: nadi_sense (NadiSense)
+2025-12-24 19:30:08,587 - MANAS.Cortex.PrakritiSense - INFO - [PRAKRITI_SENSE] Initialized - Das sechste Jnanendriya
+2025-12-24 19:30:08,588 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prakriti_sense (PrakritiSense)
+2025-12-24 19:30:08,590 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:30:08,590 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_sense (PranaSense)
+2025-12-24 19:30:08,591 - MANAS.Cortex.ShrutaSense - INFO - 👂 ShrutaSense initialized
+2025-12-24 19:30:08,591 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shruta_sense (ShrutaSense)
+2025-12-24 19:30:08,592 - MANAS.Cortex.SutraSense - INFO - [SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)
+2025-12-24 19:30:08,592 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sutra_sense (SutraSense)
+2025-12-24 19:30:08,593 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_sense (VivekaSense)
+2025-12-24 19:30:08,593 - CODE.MODULE.LOADER - INFO - [sense] Loaded 10 items (cached)
+2025-12-24 19:30:08,593 - CODE.MODULE.LOADER - INFO - [analyzer] Scanning vibe_core/plugins/opus_assistant/manas/analyzers...
+2025-12-24 19:30:08,594 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: ci_monitor (CIMonitorAnalyzer)
+2025-12-24 19:30:08,595 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: contract_analyzer (ContractAnalyzer)
+2025-12-24 19:30:08,598 - MANAS.DocHarnessAnalyzer - INFO - DocHarnessAnalyzer: Loaded manifest with 6 docs
+2025-12-24 19:30:08,598 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: doc_harness_analyzer (DocHarnessAnalyzer)
+2025-12-24 19:30:08,598 - MANAS.InverseScanAnalyzer - INFO - [INVERSE_SCAN] Initialized - The Dark Matter Detector
+2025-12-24 19:30:08,599 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: inverse_scan_analyzer (InverseScanAnalyzer)
+2025-12-24 19:30:08,599 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: pratyaya (PratyayaAnalyzer)
+2025-12-24 19:30:08,599 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: semantic_analyzer (SemanticAnalyzer)
+2025-12-24 19:30:08,600 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: triage_analyzer (TriageAnalyzer)
+2025-12-24 19:30:08,600 - CODE.MODULE.LOADER - INFO - [analyzer] Loaded 7 items (cached)
+2025-12-24 19:30:11,864 - INTERFACE_PLUGIN - INFO - InterfacePlugin booted (17 views active)
+2025-12-24 19:30:11,865 - ECONOMY - INFO - 🏦 Economy Plugin booted - Bank/Vault factories registered
+2025-12-24 19:30:11,870 - SANGHA_NETWORK - INFO - 🌐 Sangha Network Plugin booted - Gateway registered
+2025-12-24 19:30:11,871 - DURVASA - INFO - 🔱 Durvasa Protocol armed
+2025-12-24 19:30:11,871 - SAMSARA - INFO - 🕉️ Samsara Engine initialized
+2025-12-24 19:30:11,880 - AGENT_CITY - INFO - 🏙️  Agent City initialized
+2025-12-24 19:30:11,880 - TEST_ORCHESTRATION - INFO - UNIVERSAL TestOrchestrationPlugin booting...
+2025-12-24 19:30:11,882 - TESTABLE_REGISTRY - INFO - Discovery complete: 73 components
+2025-12-24 19:30:11,884 - TEST_ORCHESTRATION - INFO - Discovered 73 components with 384 tests
+2025-12-24 19:30:11,884 - TEST_ORCHESTRATION - INFO -   By type: {'agent': 1, 'plugin': 21, 'tool': 48, 'ledger': 1, 'scheduler': 1, 'event_bus': 1}
+2025-12-24 19:30:11,884 - VAJRA - INFO - 💎 VAJRA SEAL: RealVibeKernel DNA locked. Protected: {'_ledger_blueprint', '_capability_registry_blueprint', '_agent_registry_blueprint'}
+2025-12-24 19:30:11,884 - BOOT_LOADER - INFO - Phase 3: Booting Kernel Async...
+2025-12-24 19:30:11,886 - VIBE_KERNEL - INFO - ⚙️  KERNEL BOOTING ASYNC... (mode: full)
+2025-12-24 19:30:11,888 - PARAMPARA - INFO - ⛓️  Block 263: KERNEL_BOOT (SYSTEM) → 6e6167201115cce8...
+2025-12-24 19:30:11,888 - MANIFEST_REGISTRY - INFO - Manifest registered: envoy (ENVOY)
+2025-12-24 19:30:11,889 - VIBE_KERNEL - INFO -    📜 envoy: User interface and orchestration
+2025-12-24 19:30:11,889 - VIBE_KERNEL - INFO - ✅ KERNEL RUNNING (ASYNC)
+2025-12-24 19:30:11,889 - PRAKRITI - WARNING - [PRAKRITI] Removed stale lock from dead session (PID 41051)
+2025-12-24 19:30:11,913 - PRAKRITI - INFO - [PRAKRITI] Session started: cc54845e
+2025-12-24 19:30:12,899 - LEDGER_STATE - INFO - [LEDGER_STATE] Sync recorded: bedf0fb -> 2168267e
+2025-12-24 19:30:12,900 - PRAKRITI - INFO - [PRAKRITI] Committed: bedf0fb - Crash recovery: uncommitted state from previous session
+2025-12-24 19:30:12,900 - PRAKRITI - WARNING - [PRAKRITI] Crash recovery committed: bedf0fb
+2025-12-24 19:30:12,901 - STATE.SERVICE - INFO - ✍️  StateService: Async background scribe started.
+2025-12-24 19:30:12,918 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:30:12,918 - VIBE_KERNEL - INFO - 🌐 Network Gateway task started
+2025-12-24 19:30:13,937 - BASE_RENDERER - WARNING - Data source tasks.active failed: 'Task' object has no attribute 'assigned_agent'
+2025-12-24 19:30:13,948 - BASE_RENDERER - ERROR - Data loss detected in TASKS.md (file shrunk >50%)
+2025-12-24 19:30:13,949 - BASE_RENDERER - WARNING - Rolled back to backup: TASKS.md.bak
+2025-12-24 19:30:13,949 - BASE_RENDERER - ERROR - Failed to merge TASKS.md: [E3005] Render produced suspiciously small output
+2025-12-24 19:30:21,245 - MANAS.Cortex.PrakritiSense - INFO - [PRAKRITI_SENSE] Initialized - Das sechste Jnanendriya
+2025-12-24 19:30:21,247 - LEDGER_STATE - INFO - [LEDGER_STATE] Initialized at data/vibe_ledger.db
+2025-12-24 19:30:21,248 - PRAKRITI - INFO - [PRAKRITI] Initialized at . (Ledger: data/vibe_ledger.db)
+2025-12-24 19:30:21,248 - SYNC_HOLON - INFO - [SYNC_HOLON] Initialized
+2025-12-24 19:30:22,176 - MANAS.Cortex.DharmaSense - INFO - [DHARMA_SENSE] Initialized - The Vedic Conscience
+2025-12-24 19:30:22,177 - MANAS.Cortex.SutraSense - INFO - [SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)
+2025-12-24 19:30:29,765 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: KernelConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,765 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LimitsConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,765 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ActionResult defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookPhase defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookDefinition defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ViolationSeverity defined in 2 files (bases: ['Enum'])
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: Violation defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: OfflineCapableMixin defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ValidationResult defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: VerificationReport defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ComplianceReport defined in 2 files (bases: none)
+2025-12-24 19:30:29,766 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: InvariantChecker defined in 2 files (bases: none)
+2025-12-24 19:30:29,769 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: GoogleProvider defined in 2 files (bases: ['LLMProvider'])
+2025-12-24 19:30:29,769 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DailyRitual defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: RouteResult defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ShivaLifecycleManager defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ManasConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CoverageGap defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: DriftReport defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FileSnapshot defined in 2 files (bases: none)
+2025-12-24 19:30:29,770 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ResearchResult defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: AgentsConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: CircuitBreakerConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: PlaybookConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: FeaturesConfig defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: SessionContext defined in 2 files (bases: none)
+2025-12-24 19:30:29,771 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMUsage defined in 2 files (bases: none)
+2025-12-24 19:30:29,772 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: LLMResponse defined in 2 files (bases: none)
+2025-12-24 19:30:29,772 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: StatePathInfo defined in 2 files (bases: none)
+2025-12-24 19:30:29,772 - CODE_SCANNER - WARNING - 🔴 DUPLICATE: ConstitutionalOath defined in 2 files (bases: none)
+2025-12-24 19:30:29,772 - CODE_SCANNER - INFO - Code scan complete: 739 files, 1286 classes, 30 duplicates, 4817 imports, 6169 calls
+2025-12-24 19:30:29,773 - MANAS.Cortex.SutraSense - WARNING - [OPUS-110] CodeScanner found 30 duplicate class groups
+2025-12-24 19:30:30,371 - MANAS.Disharmony - INFO - 🔍 SILENT OBSERVER: ⚠️ Disharmony detected: 1 critical, 10 high, 4 medium (739 files)
+2025-12-24 19:30:30,553 - MANAS.Disharmony - INFO - 📜 OPUS DOC OBSERVER: ⚠️ Disharmony detected: 17 critical, 45 high, 34 medium (138 files)
+2025-12-24 19:30:30,554 - MANAS.Cortex.SutraSense - INFO - [OPUS-117] DisharmonyDetector found 111 disharmony issues (code: 15 docs: 96)
+2025-12-24 19:30:30,746 - MANAS.Cortex.SutraSense - INFO - 📜 SUTRA SENSE: Discovered 468 hidden code elements
+2025-12-24 19:30:30,746 - MANAS.Cortex.SutraSense - INFO - 📜 SUTRA SENSE: Generated roadmap with 103 items
+2025-12-24 19:30:32,717 - TOOL_DISCOVERY - INFO - 🔍 Starting tool discovery...
+2025-12-24 19:30:32,718 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/system/
+2025-12-24 19:30:32,719 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: civic
+2025-12-24 19:30:32,739 - LIFECYCLE_MANAGER - INFO - 🔄 LifecycleManager initialized (Vedic Varna System)
+2025-12-24 19:30:32,740 - LIFECYCLE_ENFORCER - INFO - 🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)
+2025-12-24 19:30:32,740 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.lifecycle_enforcer (LifecycleEnforcer)
+2025-12-24 19:30:32,742 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.vault (VaultTool)
+2025-12-24 19:30:32,753 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.bank (BankTool)
+2025-12-24 19:30:32,763 - CIVIC_LICENSE - INFO - 🎫 LicenseTool initialized (lazy loading)
+2025-12-24 19:30:32,763 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.license (LicenseTool)
+2025-12-24 19:30:32,771 - CIVIC_LEDGER - INFO - 🏦 Initializing LedgerTool (self-contained)...
+2025-12-24 19:30:32,771 - CIVIC_LEDGER - INFO - 💰 Ledger Tool initialized
+2025-12-24 19:30:32,771 - TOOL_DISCOVERY - INFO -    ✅ Discovered: civic.ledger (LedgerTool)
+2025-12-24 19:30:32,772 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: archivist
+2025-12-24 19:30:32,781 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: supreme_court
+2025-12-24 19:30:32,785 - TOOL_DISCOVERY - ERROR -    ❌ Failed to instantiate PrecedentTool: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:30:32,791 - APPEALS_TOOL - INFO - 📜 Appeals Tool initialized
+2025-12-24 19:30:32,791 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.appeals (AppealsTool)
+2025-12-24 19:30:32,796 - VERDICT_TOOL - INFO - ⚖️  Verdict Tool initialized
+2025-12-24 19:30:32,796 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.verdict (VerdictTool)
+2025-12-24 19:30:32,797 - JUSTICE_LEDGER - INFO - ⚖️  Justice Ledger initialized
+2025-12-24 19:30:32,797 - TOOL_DISCOVERY - INFO -    ✅ Discovered: supreme_court.justice_ledger (JusticeLedger)
+2025-12-24 19:30:32,797 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: oracle
+2025-12-24 19:30:32,799 - ORACLE_INTROSPECTION - INFO - 🔮 ORACLE INTROSPECTION ENGINE initialized
+2025-12-24 19:30:32,799 - TOOL_DISCOVERY - INFO -    ✅ Discovered: oracle.introspection (IntrospectionTool)
+2025-12-24 19:30:32,799 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: science
+2025-12-24 19:30:32,801 - TOOL_DISCOVERY - INFO -    ✅ Discovered: science.web_search (WebSearchTool)
+2025-12-24 19:30:32,801 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: envoy
+2025-12-24 19:30:32,805 - HIL_ASSISTANT - INFO - 🧠 HIL Assistant (VAD Layer) initialized
+2025-12-24 19:30:32,805 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.hil (HILAssistantTool)
+2025-12-24 19:30:32,807 - RUN_CAMPAIGN_TOOL - INFO - 🎯 RunCampaignTool initialized (awaiting kernel injection)
+2025-12-24 19:30:32,807 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.campaign (RunCampaignTool)
+2025-12-24 19:30:32,808 - GAP_REPORT_TOOL - INFO - 🔐 G.A.P. Report Tool initialized (Sandboxed: False, Audited: False)
+2025-12-24 19:30:32,809 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.gap_report (GAPReportTool)
+2025-12-24 19:30:32,811 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.diplomacy (DiplomacyTool)
+2025-12-24 19:30:32,813 - CITY_CONTROL - WARNING - ⚠️ CityControlTool initialized without kernel - limited functionality
+2025-12-24 19:30:32,813 - CITY_CONTROL - INFO - 🏙️  City Control Tool initialized
+2025-12-24 19:30:32,813 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.city_control (CityControlTool)
+2025-12-24 19:30:32,815 - TOOL_DISCOVERY - INFO -    ✅ Discovered: envoy.curator (CuratorTool)
+2025-12-24 19:30:32,815 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: forum
+2025-12-24 19:30:32,816 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: watchman
+2025-12-24 19:30:32,817 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.health (SystemHealthCheck)
+2025-12-24 19:30:32,862 - TOOL_DISCOVERY - INFO -    ✅ Discovered: watchman.standards (StandardsInspectionTool)
+2025-12-24 19:30:32,863 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: scribe
+2025-12-24 19:30:32,866 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: herald
+2025-12-24 19:30:32,872 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Twitter credentials incomplete (simulation mode)
+2025-12-24 19:30:32,872 - HERALD_BROADCAST - WARNING - ⚠️  Broadcast: Reddit credentials incomplete (simulation mode)
+2025-12-24 19:30:32,872 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.broadcast (BroadcastTool)
+2025-12-24 19:30:32,873 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scribe (Scribe)
+2025-12-24 19:30:32,874 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.scout (ScoutTool)
+2025-12-24 19:30:32,875 - HERALD_RESEARCH - WARNING - ⚠️  Research: Tavily unavailable (running in simulation mode)
+2025-12-24 19:30:32,876 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.research (ResearchTool)
+⚠️  [Steward] Identity file herald/STEWARD.md not found. Running in anonymous mode.
+2025-12-24 19:30:32,879 - HERALD_IDENTITY - INFO - ✅ Identity: Steward client initialized with herald/STEWARD.md
+2025-12-24 19:30:32,879 - TOOL_DISCOVERY - INFO -    ✅ Discovered: herald.identity (IdentityTool)
+2025-12-24 19:30:32,879 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: chronicle
+2025-12-24 19:30:32,883 - CHRONICLE_GIT_TOOLS - INFO - ✅ Git repository detected: .
+2025-12-24 19:30:32,883 - TOOL_DISCOVERY - INFO -    ✅ Discovered: chronicle.git (GitTools)
+2025-12-24 19:30:32,884 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: auditor
+2025-12-24 19:30:32,893 - WATCHDOG - INFO - 👁️  WATCHDOG: Initialized
+2025-12-24 19:30:32,894 - WATCHDOG - INFO -    Ledger: data/ledger/kernel.jsonl
+2025-12-24 19:30:32,894 - WATCHDOG - INFO -    Check interval: 10
+2025-12-24 19:30:32,894 - WATCHDOG - INFO -    Halt on critical: True
+2025-12-24 19:30:32,894 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.watchdog (Watchdog)
+2025-12-24 19:30:32,900 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: Initializing Invariant Engine
+2025-12-24 19:30:32,901 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: BROADCAST_LICENSE_REQUIREMENT (CRITICAL)
+2025-12-24 19:30:32,901 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: CREDIT_TRANSFER_PROPOSAL_REQUIREMENT (CRITICAL)
+2025-12-24 19:30:32,901 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_ORPHANED_EVENTS (HIGH)
+2025-12-24 19:30:32,902 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: EVENT_SEQUENCE_INTEGRITY (HIGH)
+2025-12-24 19:30:32,902 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_DUPLICATE_EVENTS (CRITICAL)
+2025-12-24 19:30:32,902 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: PROPOSAL_WORKFLOW_INTEGRITY (HIGH)
+2025-12-24 19:30:32,902 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: NO_CRITICAL_VOIDS (CRITICAL)
+2025-12-24 19:30:32,902 - JUDGE_INVARIANT - INFO - ⚖️  Rule registered: SEMANTIC_COMPLIANCE_REQUIREMENT (HIGH)
+2025-12-24 19:30:32,903 - JUDGE_INVARIANT - INFO - ⚖️  JUDGE: 8 core invariant rules registered (including Curator)
+2025-12-24 19:30:32,903 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.invariant (InvariantEngine)
+2025-12-24 19:30:32,918 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.compliance (ComplianceTool)
+2025-12-24 19:30:32,928 - TOOL_DISCOVERY - INFO -    ✅ Discovered: auditor.verdict (ConstitutionalVerdictTool)
+2025-12-24 19:30:32,929 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: engineer
+2025-12-24 19:30:32,930 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (ShuddhiHealTool)
+2025-12-24 19:30:32,932 - ENGINEER_BUILDER - INFO - 🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)
+2025-12-24 19:30:32,932 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.builder (BuilderTool)
+2025-12-24 19:30:32,934 - TOOL_DISCOVERY - INFO -    ✅ Discovered: engineer.heal_violation (HealViolationTool)
+2025-12-24 19:30:32,934 - TOOL_DISCOVERY - INFO - 📂 Scanning vibe_core/cartridges/agent_city/
+2025-12-24 19:30:32,934 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: librarian
+2025-12-24 19:30:32,936 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.search_books (SearchBooksTool)
+2025-12-24 19:30:32,937 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.recommend_books (RecommendBooksTool)
+2025-12-24 19:30:32,938 - TOOL_DISCOVERY - INFO -    ✅ Discovered: librarian.catalog_book (CatalogBookTool)
+2025-12-24 19:30:32,939 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: analyst
+2025-12-24 19:30:32,941 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.deps (DependencyAnalysisTool)
+2025-12-24 19:30:32,943 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.git (GitAnalysisTool)
+2025-12-24 19:30:32,945 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.docs (DocsAnalysisTool)
+2025-12-24 19:30:32,947 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.architecture (ArchitectureAnalysisTool)
+2025-12-24 19:30:32,951 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.code (CodeAnalysisTool)
+2025-12-24 19:30:32,953 - TOOL_DISCOVERY - INFO -    ✅ Discovered: analyst.structure (StructureAnalysisTool)
+2025-12-24 19:30:32,954 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: marketer
+2025-12-24 19:30:32,956 - HERALD_GOVERNANCE - INFO - ✅ CONSTITUTION.md loaded from: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:30:32,957 - HERALD_GOVERNANCE - INFO - 🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)
+2025-12-24 19:30:32,957 - HERALD_GOVERNANCE - INFO - 📜 Constitutional Authority: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-24 19:30:32,989 - MARKETER_CONTENT - INFO - ✅ Content: LLM client initialized (with HeraldConstitution governance)
+2025-12-24 19:30:32,989 - TOOL_DISCOVERY - INFO -    ✅ Discovered: marketer.content (MarketerContentTool)
+2025-12-24 19:30:32,990 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: mechanic
+2025-12-24 19:30:32,991 - TOOL_DISCOVERY - INFO -    ✅ Discovered: mechanic.tidy (TidyTool)
+2025-12-24 19:30:32,992 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: artisan
+2025-12-24 19:30:32,998 - ARTISAN_MEDIA - INFO - ✅ Artisan Media Tool initialized
+2025-12-24 19:30:32,998 - TOOL_DISCOVERY - INFO -    ✅ Discovered: artisan.media (MediaTool)
+2025-12-24 19:30:32,999 - TOOL_DISCOVERY - INFO - 🔧 Discovering tools for agent: dhruva
+2025-12-24 19:30:33,011 - TOOL_DISCOVERY - INFO - ✅ Tool discovery complete: 43 tools found, 1 failed
+2025-12-24 19:30:33,011 - TOOL_DISCOVERY - WARNING - ⚠️  Failed to load 1 tools:
+2025-12-24 19:30:33,011 - TOOL_DISCOVERY - WARNING -    - supreme_court.precedent_tool.py: Instantiation failed: Can't instantiate abstract class PrecedentTool with abstract methods description, execute, name, parameters_schema, validate
+2025-12-24 19:30:33,013 - TOOL.LOADER - INFO - [tool:opus_private] Loaded 42 tools
+2025-12-24 19:30:33,013 - CODE.MODULE.LOADER - INFO - [action] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:30:33,015 - MANAS.Action.Echo - INFO - [ECHO_ACTION] Initialized - Proof of Life
+2025-12-24 19:30:33,015 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: echo_action (EchoAction)
+2025-12-24 19:30:33,018 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:30:33,018 - MANAS.Action.Prana - INFO - 🫀 [PRANA_ACTION] Initialized - Agent Lifecycle Manager
+2025-12-24 19:30:33,018 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_action (PranaAction)
+2025-12-24 19:30:33,019 - MANAS.Action.Sankalpa - INFO - [SANKALPA_ACTION] Initialized - UPASTHA (The Will)
+2025-12-24 19:30:33,019 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sankalpa_action (SankalpaAction)
+2025-12-24 19:30:33,020 - MANAS.Action.Shell - INFO - [SHELL_ACTION] Initialized - VAK (The Voice)
+2025-12-24 19:30:33,023 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shell_action (ShellAction)
+2025-12-24 19:30:33,023 - MANAS.Cortex.Silpa - INFO - 🔨 SILPA Architect initialized
+2025-12-24 19:30:33,078 - vibe_core.runtime.providers.factory - INFO - Creating OpenRouter provider (model: anthropic/claude-3.5-sonnet)
+2025-12-24 19:30:33,099 - vibe_core.runtime.providers.openrouter - INFO - OpenRouter provider initialized successfully
+2025-12-24 19:30:33,099 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] LLM Genesis enabled (OpenRouterProvider)
+2025-12-24 19:30:33,099 - MANAS.Action.Silpa - INFO - [SILPA_ACTION] Initialized - PANI (The Hands)
+2025-12-24 19:30:33,099 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: silpa_action (SilpaAction)
+2025-12-24 19:30:33,100 - MANAS.Action.Test - INFO - [TEST_ACTION] Initialized - PAYU (The Validator)
+2025-12-24 19:30:33,100 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: test_action (TestAction)
+2025-12-24 19:30:33,100 - MANAS.Action.Viveka - INFO - 👁️ VivekaAction initialized (OPUS-133: Dharmic Discrimination Engine)
+2025-12-24 19:30:33,101 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_action (VivekaAction)
+2025-12-24 19:30:33,104 - CODE.MODULE.LOADER - INFO - [action] Loaded 7 items (cached)
+2025-12-24 19:30:33,105 - CODE.MODULE.LOADER - INFO - [sense] Scanning vibe_core/plugins/opus_assistant/manas/cortex...
+2025-12-24 19:30:33,106 - MANAS.Cortex.AkashaSense - INFO - [AKASHA_SENSE] Initialized - The Eye of Knowledge
+2025-12-24 19:30:33,106 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: akasha_sense (AkashaSense)
+2025-12-24 19:30:33,107 - MANAS.Cortex.ArchitectureSense - INFO - [ARCHITECTURE_SENSE] Initialized - Watching the skeleton
+2025-12-24 19:30:33,107 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: architecture_sense (ArchitectureSense)
+2025-12-24 19:30:33,107 - MANAS.Cortex.DharmaSense - INFO - [DHARMA_SENSE] Initialized - The Vedic Conscience
+2025-12-24 19:30:33,108 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: dharma_sense (DharmaSense)
+2025-12-24 19:30:33,108 - MANAS.Cortex.KarmaSense - INFO - [KARMA_SENSE] Initialized - The Eye of Memory
+2025-12-24 19:30:33,108 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: karma_sense (KarmaSense)
+2025-12-24 19:30:33,108 - MANAS.Cortex.NadiSense - INFO - [NADI_SENSE] Initialized - Watching the channels
+2025-12-24 19:30:33,108 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: nadi_sense (NadiSense)
+2025-12-24 19:30:33,109 - MANAS.Cortex.PrakritiSense - INFO - [PRAKRITI_SENSE] Initialized - Das sechste Jnanendriya
+2025-12-24 19:30:33,109 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prakriti_sense (PrakritiSense)
+2025-12-24 19:30:33,113 - MANAS.Cortex.PranaSense - INFO - 🫀 PranaSense initialized (29 cartridges)
+2025-12-24 19:30:33,113 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: prana_sense (PranaSense)
+2025-12-24 19:30:33,114 - MANAS.Cortex.ShrutaSense - INFO - 👂 ShrutaSense initialized
+2025-12-24 19:30:33,114 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: shruta_sense (ShrutaSense)
+2025-12-24 19:30:33,115 - MANAS.Cortex.SutraSense - INFO - [SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)
+2025-12-24 19:30:33,115 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: sutra_sense (SutraSense)
+2025-12-24 19:30:33,115 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: viveka_sense (VivekaSense)
+2025-12-24 19:30:33,116 - CODE.MODULE.LOADER - INFO - [sense] Loaded 10 items (cached)
+2025-12-24 19:30:33,116 - CODE.MODULE.LOADER - INFO - [analyzer] Scanning vibe_core/plugins/opus_assistant/manas/analyzers...
+2025-12-24 19:30:33,118 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: ci_monitor (CIMonitorAnalyzer)
+2025-12-24 19:30:33,118 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: contract_analyzer (ContractAnalyzer)
+2025-12-24 19:30:33,122 - MANAS.DocHarnessAnalyzer - INFO - DocHarnessAnalyzer: Loaded manifest with 6 docs
+2025-12-24 19:30:33,124 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: doc_harness_analyzer (DocHarnessAnalyzer)
+2025-12-24 19:30:33,125 - MANAS.InverseScanAnalyzer - INFO - [INVERSE_SCAN] Initialized - The Dark Matter Detector
+2025-12-24 19:30:33,128 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: inverse_scan_analyzer (InverseScanAnalyzer)
+2025-12-24 19:30:33,134 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: pratyaya (PratyayaAnalyzer)
+2025-12-24 19:30:33,134 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: semantic_analyzer (SemanticAnalyzer)
+2025-12-24 19:30:33,135 - CODE.MODULE.LOADER - INFO -   ✅ Loaded: triage_analyzer (TriageAnalyzer)
+2025-12-24 19:30:33,140 - CODE.MODULE.LOADER - INFO - [analyzer] Loaded 7 items (cached)
+2025-12-24 19:30:36,850 - BOOT_LOADER - INFO - Phase 4: Entering Unified Async Loop...
+2025-12-24 19:30:36,850 - BOOT_LOADER - INFO - ✅ System Online. Heartbeat active.
+2025-12-24 19:30:36,850 - VIBE_KERNEL - INFO - 🔄 Entering Unified Async Kernel loop...
+2025-12-24 19:30:36,859 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:30:36,861 - STATE.SERVICE - INFO - ✍️  StateService: Background commit starting (threshold)...
+2025-12-24 19:30:36,864 - NETWORK_GATEWAY - INFO - 🌐 Gateway listening at http://127.0.0.1:8000
+2025-12-24 19:30:36,879 - RUNTIME_STATE - INFO - RuntimeStateDefinition: Discovered 34 patterns from 7 sources
+2025-12-24 19:30:38,436 - LEDGER_STATE - INFO - [LEDGER_STATE] Sync recorded: b1a5149 -> 394c758a
+2025-12-24 19:30:38,436 - PRAKRITI - INFO - [PRAKRITI] Committed: b1a5149 - Auto-sync runtime state
+2025-12-24 19:30:38,438 - STATE.SERVICE - INFO - ✅ StateService: Background commit complete.
+2025-12-24 19:30:41,937 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:30:47,053 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:30:52,155 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:30:57,256 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:02,273 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:02,273 - STATE.SERVICE - INFO - ✍️  StateService: Background commit starting (threshold)...
+2025-12-24 19:31:02,417 - STATE.SERVICE - INFO - ✅ StateService: Background commit complete.
+2025-12-24 19:31:07,368 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:12,467 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:17,485 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:22,569 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:27,590 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:27,591 - STATE.SERVICE - INFO - ✍️  StateService: Background commit starting (threshold)...
+2025-12-24 19:31:27,706 - STATE.SERVICE - INFO - ✅ StateService: Background commit complete.
+2025-12-24 19:31:32,612 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:37,654 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:42,755 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:47,849 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:52,937 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:31:52,937 - STATE.SERVICE - INFO - ✍️  StateService: Background commit starting (threshold)...
+2025-12-24 19:31:53,052 - STATE.SERVICE - INFO - ✅ StateService: Background commit complete.
+2025-12-24 19:31:58,024 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:03,113 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:08,205 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:13,281 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:18,381 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:18,382 - STATE.SERVICE - INFO - ✍️  StateService: Background commit starting (threshold)...
+2025-12-24 19:32:18,495 - STATE.SERVICE - INFO - ✅ StateService: Background commit complete.
+2025-12-24 19:32:23,476 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:28,575 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)
+2025-12-24 19:32:33,670 - KERNEL_OPS - INFO - 💓 Pulse written: vibe_snapshot.json (via I/O Service)

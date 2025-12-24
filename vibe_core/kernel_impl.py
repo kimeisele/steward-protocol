@@ -104,6 +104,9 @@ except ImportError as e:
         logger_setup.warning(f"⚠️  Constitutional Oath unavailable ({e}) - running in degraded mode")
 
 
+from .utils.async_logging import setup_async_logging
+from .utils.lazy_import import lazy_class
+
 logger = logging.getLogger("VIBE_KERNEL")
 
 
@@ -187,6 +190,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._is_ephemeral = parent is not None
         self._load_plugins = load_plugins
         self._test_mode = test_mode
+
+        # OPUS-301: Initialize async logging early to prevent I/O blocking
+        if not self._test_mode:
+            try:
+                setup_async_logging()
+            except Exception:
+                pass
 
         if self._test_mode:
             import os
@@ -294,15 +304,18 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             from pathlib import Path
 
             lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
-        self.lineage = LineageChain(db_path=lineage_path)
-        logger.info("⛓️  Parampara chain initialized")
+        
+        # OPUS-301: Lazy load LineageChain
+        LazyLineageChain = lazy_class("vibe_core.lineage", "LineageChain")
+        self.lineage = LazyLineageChain(db_path=lineage_path)
+        logger.info("⛓️  Parampara chain initialized (lazy)")
 
         # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
 
         # OPUS-200/201: Quantum Resonance Engine (Core Primitive)
-        # The reactor is the kernel's physics engine - how actions manifest
+        # The reactor is the kernel's physics engine - how actions manifestation
         self._reactor = None
         self._akasha_field = ""  # Cumulative resonance field hash
 
@@ -325,7 +338,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.trace = UnifiedTrace()
 
         # OPUS-009: PRAKRITI Unified State Engine
-        from vibe_core.state import Prakriti
+        # OPUS-301: Lazy load Prakriti
+        LazyPrakriti = lazy_class("vibe_core.state", "Prakriti")
 
         prakriti_db_path = None
         if phoenix_config and hasattr(phoenix_config, "paths"):
@@ -334,7 +348,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             except Exception as e:
                 logger.warning(f"⚠️  KERNEL: Could not resolve Prakriti DB path: {e}")
 
-        self.prakriti = Prakriti(db_path=prakriti_db_path)
+        self.prakriti = LazyPrakriti(db_path=prakriti_db_path)
 
         # OPUS-096: State Sync Holon Weaver (MetaData Orchestration)
         from vibe_core.state.weaver import get_state_sync_weaver
@@ -1541,9 +1555,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """Dump full ledger for inspection"""
         return self._ledger.get_all_events()
 
-    def _pulse(self) -> None:
+    async def _pulse(self) -> None:
         """💓 HEARTBEAT - Delegates to kernel_ops."""
-        _pulse_impl(self)
+        await _pulse_impl(self)
 
     def _run_gateway_sidecar(self):
         """
@@ -1669,7 +1683,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.warning(f"⚠️  Failed to start background persistence: {e}")
 
         # PULSE: Write initial snapshot on boot
-        self._pulse()
+        await self._pulse()
 
         # Phase 18: Gateway as Task (instead of Thread)
         if boot_mode.should_skip_gateway():
@@ -1714,7 +1728,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if not task:
             # Idle Pulse
             if time.time() - self._last_pulse_time >= 5.0:
-                self._pulse()
+                await self._pulse()
                 self._last_pulse_time = time.time()
         else:
             # Get target agent
@@ -1752,7 +1766,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                         plugin.on_task_completed(self, task.task_id, result)
 
                 # Maintenance
-                self._pulse()
+                await self._pulse()
                 self._check_system_health()
                 if self.process_manager:
                     self.process_manager.check_health()

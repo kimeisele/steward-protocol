@@ -1,0 +1,9 @@
+{
+  "id": "boot_optimizer",
+  "name": "Boot Optimizer",
+  "description": "Collects and analyzes boot performance metrics",
+  "version": "1.0.0",
+  "author": "Junior Steward (Gemini)",
+  "priority": 1,
+  "capabilities": ["boot.metrics", "boot.analysis"]
+}
