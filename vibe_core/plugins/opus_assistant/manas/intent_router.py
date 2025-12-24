@@ -74,6 +74,20 @@ class RouteResult:
     error: Optional[str] = None
 
 
+class CycleDetectedError(Exception):
+    """
+    MOHINI PROTECTION: Raised when circular dependency is detected in intents.
+
+    "The enchantress traps you in endless pursuit. Break the cycle or perish."
+
+    This prevents infinite loops when Intent A depends on B, and B depends on A.
+    """
+
+    def __init__(self, cycle_path: List[str], message: str = "Circular dependency detected"):
+        self.cycle_path = cycle_path
+        super().__init__(f"{message}: {' -> '.join(cycle_path)}")
+
+
 from .intent_generator import Intent, IntentRisk
 from .router import get_handler_for_intent, list_handlers
 from .router.handlers import BaseHandler
@@ -228,6 +242,69 @@ class IntentRouter:
         # OPUS-069: Wire validator to kernel for ledger access
         self._validator.inject_kernel(kernel)
         logger.info("⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)")
+
+    def _check_dependency_cycle(
+        self, intent_id: str, visiting: set, path: list = None
+    ) -> Optional[List[str]]:
+        """
+        MOHINI PROTECTION: Detect circular dependencies in intent chains.
+
+        Uses DFS with path tracking to detect cycles:
+        - visiting: Set of intent IDs currently being processed
+        - path: Current path for cycle reconstruction
+
+        Returns:
+            List of intent IDs forming the cycle, or None if no cycle.
+        """
+        if path is None:
+            path = []
+
+        # Get the intent from pending or buffer
+        intent = self._get_intent_by_id(intent_id)
+        if not intent:
+            return None
+
+        # Cycle detected!
+        if intent_id in visiting:
+            cycle_start = path.index(intent_id) if intent_id in path else 0
+            return path[cycle_start:] + [intent_id]
+
+        # No dependencies = no cycle possible
+        if not intent.dependencies:
+            return None
+
+        # Mark as visiting
+        visiting.add(intent_id)
+        path.append(intent_id)
+
+        # Check each dependency
+        for dep_id in intent.dependencies:
+            cycle = self._check_dependency_cycle(dep_id, visiting, path)
+            if cycle:
+                return cycle
+
+        # Backtrack
+        visiting.discard(intent_id)
+        path.pop()
+
+        return None
+
+    def _get_intent_by_id(self, intent_id: str) -> Optional[Intent]:
+        """Get an intent by ID from pending intents."""
+        pending = self._load_pending_intents()
+        for intent_data in pending:
+            if intent_data.get("id") == intent_id:
+                # Reconstruct Intent from dict
+                from .intent_generator import IntentPriority, IntentRisk
+                return Intent(
+                    id=intent_data["id"],
+                    intent_type=intent_data.get("intent_type", ""),
+                    title=intent_data.get("title", ""),
+                    description=intent_data.get("description", ""),
+                    reasoning=intent_data.get("reasoning", ""),
+                    dependencies=intent_data.get("dependencies", []),
+                )
+        return None
 
     # =========================================================================
     # OPUS-171 Phase 4: SIDDHI - Perfected Pattern Auto-Decisions
@@ -866,6 +943,18 @@ class IntentRouter:
         """
         intent_type = intent.intent_type
         logger.info(f"🔀 Routing intent: {intent_type} ({intent.id})")
+
+        # =====================================================================
+        # MOHINI PROTECTION: Cycle Detection (FIRST CHECK)
+        # =====================================================================
+        # "Before you pursue, check if you're already in the dance."
+        if intent.dependencies:
+            cycle = self._check_dependency_cycle(intent.id, set())
+            if cycle:
+                raise CycleDetectedError(
+                    cycle_path=cycle,
+                    message=f"Intent '{intent.id}' has circular dependencies"
+                )
 
         # =====================================================================
         # OPUS-171 Phase 4: AKASHA PERCEPTION - Knowledge Context (FIRST)

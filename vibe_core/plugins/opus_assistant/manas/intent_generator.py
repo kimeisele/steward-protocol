@@ -67,6 +67,8 @@ class Intent:
     # WEAVING: Semantic links to related code/docs
     related_files: List[str] = field(default_factory=list)  # e.g., ["jnana.py:151"]
     related_docs: List[str] = field(default_factory=list)  # e.g., ["076-NO-PUSSY-MODE.md"]
+    # MOHINI: Intent dependency chain (for complex multi-step intents)
+    dependencies: List[str] = field(default_factory=list)  # IDs of intents that must complete first
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -85,6 +87,7 @@ class Intent:
             "expires_at": self.expires_at,
             "related_files": self.related_files,
             "related_docs": self.related_docs,
+            "dependencies": self.dependencies,
         }
 
     def is_expired(self) -> bool:
