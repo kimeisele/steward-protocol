@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .exceptions import InsufficientFundsError
+from vibe_core.cartridges.system.civic.tools.exceptions import InsufficientFundsError
 
 logger = logging.getLogger("CIVIC_BANK")
 

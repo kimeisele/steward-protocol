@@ -18,9 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from vibe_core.cartridges.system.civic.tools.exceptions import InsufficientFundsError
 from vibe_core.tools.tool_protocol import Tool, ToolResult
-
-from .exceptions import InsufficientFundsError
 
 logger = logging.getLogger("CIVIC_LEDGER")
 

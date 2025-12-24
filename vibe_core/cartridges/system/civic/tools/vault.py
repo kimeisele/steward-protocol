@@ -24,7 +24,7 @@ InvalidToken = None
 _cryptography_checked = False
 _cryptography_works = False
 
-from .exceptions import InsufficientFundsError, SecretNotFoundError
+from vibe_core.cartridges.system.civic.tools.exceptions import InsufficientFundsError, SecretNotFoundError
 
 logger = logging.getLogger("CIVIC_VAULT")
 
