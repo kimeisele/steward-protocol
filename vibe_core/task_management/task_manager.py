@@ -13,6 +13,7 @@ import yaml
 
 from vibe_core.narasimha import get_narasimha
 from vibe_core.topology import get_agent_placement
+from vibe_core.utils import atomic_write_json
 
 from .archive import TaskArchive
 from .batch_operations import BatchOperations
@@ -200,15 +201,14 @@ class TaskManager:
                 return False
 
     def _save_tasks(self):
-        """Save tasks to disk."""
+        """Save tasks to disk with atomic write (OPUS-213)."""
         tasks_file = self.tasks_dir / "tasks.json"
 
         try:
             with self.lock:
                 tasks_data = {task_id: task.to_dict() for task_id, task in self.tasks.items()}
-                content = json.dumps(tasks_data, indent=2)
-                if not self._write_json(tasks_file, content):
-                    print("Error saving tasks: Failed to write file")
+                # OPUS-213: Atomic Write for crash-safety
+                atomic_write_json(tasks_file, tasks_data)
         except Exception as e:
             print(f"Error saving tasks: {e}")
 
