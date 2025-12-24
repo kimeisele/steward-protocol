@@ -86,10 +86,12 @@ except ImportError:
     MUTATION_AVAILABLE = False
     get_mutation_handlers = None
 
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import OpusAssistantProtocol
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
     from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
-    from vibe_core.plugins.opus_assistant.plugin_main import OpusAssistantPlugin
 
 logger = logging.getLogger("OPUS_TICK")
 
@@ -108,9 +110,10 @@ class KernelTickHandler:
     The circuits DEFINE behavior - this is just the runtime.
     """
 
-    def __init__(self, plugin: "OpusAssistantPlugin"):
+    def __init__(self, plugin: Optional[OpusAssistantProtocol] = None, workspace: Optional[Path] = None):
         """Initialize tick handler with circuit loading."""
-        self._plugin = plugin
+        self._plugin_override = plugin
+        self._workspace_override = workspace
         self._subscriptions: List[Callable] = []
         self._tick_count = 0
         self._last_state: Dict[str, Any] = {}
@@ -155,12 +158,35 @@ class KernelTickHandler:
         self._init_cognitive_executor()
         self._init_manas()
 
+    @property
+    def _plugin(self) -> Optional[OpusAssistantProtocol]:
+        """Fetch plugin from registry (or override)."""
+        return self._plugin_override or ServiceRegistry.get(OpusAssistantProtocol)
+
+    @property
+    def _workspace(self) -> Path:
+        """Fetch workspace from plugin or override."""
+        if self._workspace_override:
+            return self._workspace_override
+
+        plugin = self._plugin
+        if plugin and hasattr(plugin, "_workspace") and plugin._workspace:
+            return plugin._workspace
+
+        return Path.cwd()
+
+    @property
+    def kernel(self) -> Optional[Any]:
+        """Fetch kernel from plugin."""
+        plugin = self._plugin
+        return getattr(plugin, "_kernel", None) if plugin else None
+
     def _init_circuits(self) -> None:
         """Load circuits from opus_assistant/circuits/ directory."""
         try:
             from vibe_core.loaders.circuit_loader import CircuitLoader
 
-            workspace = self._plugin._workspace or Path.cwd()
+            workspace = self._workspace
             circuits_dir = workspace / "vibe_core/plugins/opus_assistant/circuits"
 
             if circuits_dir.exists():
@@ -211,7 +237,7 @@ class KernelTickHandler:
             return
 
         try:
-            workspace = self._plugin._workspace or Path.cwd()
+            workspace = self._workspace
 
             # ⚡ PHOENIX INJECTION: Load config from Phoenix (Dharma)
             # This replaces the hardcoded ManasConfig() with config from YAML
@@ -246,7 +272,8 @@ class KernelTickHandler:
             self._manas = CognitiveKernel.get_instance(workspace=workspace, config=config)
 
             # ⚡ VAJRA: Inject kernel for ledger binding
-            kernel = getattr(self._plugin, "_kernel", None)
+            plugin = self._plugin
+            kernel = getattr(plugin, "_kernel", None) if plugin else None
             if kernel:
                 self._manas.inject_kernel(kernel)
                 logger.info("⚡ VAJRA: MANAS bound to core ledger")
@@ -312,7 +339,8 @@ class KernelTickHandler:
         if not self._deterministic_executor:
             return False
 
-        kernel = getattr(self._plugin, "_kernel", None)
+        plugin = self._plugin
+        kernel = getattr(plugin, "_kernel", None) if plugin else None
         if not kernel:
             return False
 
@@ -329,7 +357,7 @@ class KernelTickHandler:
 
                 # ⚡ PRAMANA: Late kernel injection for TestCortex
                 if TEST_CORTEX_AVAILABLE and not self._test_cortex:
-                    workspace = self._plugin._workspace or Path.cwd()
+                    workspace = self._workspace
                     self._test_cortex = TestCortex(workspace=workspace)
                     self._test_cortex.inject_kernel(kernel)
                     logger.info("⚡ PRAMANA: TestCortex late-bound to core kernel")
@@ -367,7 +395,8 @@ class KernelTickHandler:
             }
 
         try:
-            kernel = self._plugin._kernel
+            plugin = self._plugin
+            kernel = getattr(plugin, "_kernel", None) if plugin else None
 
             # Log the cognitive task
             self._log_observation_info(f"🧠 Cognitive task: {intent[:50]}...", "cognitive")
@@ -419,7 +448,7 @@ class KernelTickHandler:
         try:
             from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
 
-            workspace = self._plugin._workspace
+            workspace = self._workspace
             if workspace:
                 self._context_service = OpusContextService(workspace_root=workspace)
                 logger.debug("OpusContextService initialized")
@@ -431,7 +460,7 @@ class KernelTickHandler:
         try:
             from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
 
-            workspace = self._plugin._workspace
+            workspace = self._workspace
             if workspace:
                 self._observation_logger = ObservationLogger(workspace_root=workspace)
                 logger.debug("ObservationLogger initialized")
@@ -854,7 +883,7 @@ class KernelTickHandler:
     async def _check_opus_freshness(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Check if OPUS.md is stale."""
         try:
-            workspace = self._plugin._workspace or Path.cwd()
+            workspace = self._workspace or Path.cwd()
             opus_path = workspace / "OPUS.md"
 
             if not opus_path.exists():
@@ -1026,7 +1055,7 @@ class KernelTickHandler:
         """
         try:
             # Try to get from kernel's active agents
-            kernel = self._plugin._kernel
+            kernel = self.kernel
             if kernel and hasattr(kernel, "agents"):
                 agents = kernel.agents
                 if agents:
@@ -1053,7 +1082,7 @@ class KernelTickHandler:
 
         try:
             # Get Vedic Governance plugin from kernel
-            kernel = self._plugin._kernel
+            kernel = self.kernel
             if not kernel:
                 return {"success": False, "error": "No kernel available"}
 
@@ -1208,7 +1237,7 @@ class KernelTickHandler:
                 )
 
                 # Record in ledger if available
-                kernel = self._plugin._kernel
+                kernel = self.kernel
                 if kernel and hasattr(kernel, "ledger"):
                     kernel.ledger.record_event(
                         event_type="BHAKTI_GRACE",
@@ -1263,7 +1292,7 @@ class KernelTickHandler:
 
         # SOURCE 1: SQLite Ledger (primary)
         try:
-            kernel = self._plugin._kernel
+            kernel = self.kernel
             if kernel and hasattr(kernel, "ledger"):
                 ledger_events = kernel.ledger.get_all_events()
                 all_events.extend(ledger_events)
@@ -1553,7 +1582,7 @@ class KernelTickHandler:
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
+                cwd=str(self._workspace) if self._workspace else None,
             )
 
             # Wait for result with timeout
@@ -1754,7 +1783,7 @@ class KernelTickHandler:
                 "--format=%s",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
+                cwd=str(self._workspace) if self._workspace else None,
             )
             stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5.0)
 
@@ -1949,7 +1978,7 @@ class KernelTickHandler:
             from vibe_core.governance import ContractFailureType
             from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
 
-            workspace = self._plugin._workspace or Path.cwd()
+            workspace = self._workspace or Path.cwd()
             engine = VerificationEngine(workspace_root=workspace)
 
             # OPUS-035: Delta-Pulse - Get changed files from git
@@ -2036,7 +2065,7 @@ class KernelTickHandler:
         import subprocess
 
         try:
-            workspace = self._plugin._workspace or Path.cwd()
+            workspace = self._workspace or Path.cwd()
 
             # Get uncommitted changes (staged + unstaged)
             result = subprocess.run(
@@ -2710,7 +2739,7 @@ def format_{name}(data: Dict[str, Any]) -> str:
         tags = params.get("tags", [])
 
         try:
-            library = LibraryInterface(workspace=self._plugin._workspace)
+            library = LibraryInterface(workspace=self._workspace)
             result = library.search(capability_name, tags=tags)
 
             if result.found:
@@ -2868,7 +2897,7 @@ def test_plugin_has_plugin_id():
             return {"success": False, "error": "Missing required parameters"}
 
         try:
-            library = LibraryInterface(workspace=self._plugin._workspace)
+            library = LibraryInterface(workspace=self._workspace)
             success = library.store_blueprint(
                 name=capability_name,
                 description=description,
@@ -2903,7 +2932,7 @@ def test_plugin_has_plugin_id():
             return {"success": False, "error": "Missing capability_name"}
 
         try:
-            library = LibraryInterface(workspace=self._plugin._workspace)
+            library = LibraryInterface(workspace=self._workspace)
             success = library.record_failure(
                 name=capability_name,
                 code=code_dict,
@@ -3030,7 +3059,7 @@ def test_plugin_has_plugin_id():
             logger.warning("💎 Diamond handlers not available")
             return {"success": False, "error": "Diamond handlers not available"}
 
-        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        handlers = get_diamond_handlers(workspace=self._workspace)
         return await handlers.generate_test(params)
 
     async def _diamond_red_gate(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -3049,7 +3078,7 @@ def test_plugin_has_plugin_id():
             logger.warning("💎 Diamond handlers not available")
             return {"success": False, "error": "Diamond handlers not available"}
 
-        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        handlers = get_diamond_handlers(workspace=self._workspace)
         result = await handlers.red_gate(params)
 
         # Log the RED gate result
@@ -3082,7 +3111,7 @@ def test_plugin_has_plugin_id():
             logger.warning("💎 Diamond handlers not available")
             return {"success": False, "error": "Diamond handlers not available"}
 
-        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        handlers = get_diamond_handlers(workspace=self._workspace)
         result = await handlers.green_gate(params)
 
         # Log the GREEN gate result
@@ -3117,7 +3146,7 @@ def test_plugin_has_plugin_id():
             logger.warning("🧬 Mutation handlers not available")
             return {"success": False, "error": "Mutation handlers not available"}
 
-        handlers = get_mutation_handlers(workspace=self._plugin._workspace)
+        handlers = get_mutation_handlers(workspace=self._workspace)
         result = await handlers.green_gate_original(params)
 
         if result.get("test_passed"):
@@ -3150,7 +3179,7 @@ def test_plugin_has_plugin_id():
             logger.warning("🧬 Mutation handlers not available")
             return {"success": False, "error": "Mutation handlers not available"}
 
-        handlers = get_mutation_handlers(workspace=self._plugin._workspace)
+        handlers = get_mutation_handlers(workspace=self._workspace)
         result = await handlers.run_mutation_protocol(params)
 
         kill_rate = result.get("kill_rate", 0)

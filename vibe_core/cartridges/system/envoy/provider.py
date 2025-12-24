@@ -54,11 +54,9 @@ try:
 except ImportError:
     SemanticRouter = None
 
-# Import Legacy LLM Engine (GAD-6000) - for backward compatibility
-try:
-    from vibe_core.runtime.llm_engine import llm
-except ImportError:
-    llm = None
+# Import DI and Protocol
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols import LLMProtocol
 
 # Import Deterministic Executor (GAD-5000: DETERMINISTIC INTELLIGENCE)
 try:
@@ -648,6 +646,7 @@ class UniversalProvider:
                 logger.warning(f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine")
 
         # Fallback: Use legacy llm engine if available (GAD-6000)
+        llm = ServiceRegistry.get(LLMProtocol)
         if llm:
             try:
                 response = llm.speak(agent_name, context, user_msg)
@@ -752,6 +751,7 @@ class UniversalProvider:
                 logger.debug(f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine")
 
         # Fallback: Use legacy llm engine (GAD-6000)
+        llm = ServiceRegistry.get(LLMProtocol)
         if llm:
             try:
                 return llm.speak(agent_display, context, user_input)

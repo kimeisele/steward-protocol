@@ -24,15 +24,18 @@ from threading import Lock
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
-from vibe_core.protocols import StateServiceProtocol, StateSyncWeaverProtocol
+from vibe_core.protocols import (
+    PrakritiProtocol,
+    StateServiceProtocol,
+    StateSyncHolonProtocol,
+    StateSyncWeaverProtocol,
+)
 from vibe_core.state.schema import CommitResult
 
 from .runtime_state import RuntimeStateDefinition, get_runtime_state_definition
 
 if TYPE_CHECKING:
     from .guna_classifier import StateGuna
-    from .prakriti import Prakriti
-    from .sync_holon import StateSyncHolon
 
 
 class CommitStrategy(str, Enum):
@@ -129,20 +132,47 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
 
     def __init__(
         self,
-        prakriti: "Prakriti",
-        sync_holon: Optional["StateSyncHolon"] = None,
+        prakriti: Optional[PrakritiProtocol] = None,
+        sync_holon: Optional[StateSyncHolonProtocol] = None,
     ):
         """
         Initialize the Weaver.
 
         Args:
-            prakriti: The core state engine
-            sync_holon: Plugin state discovery (optional, uses prakriti's if not provided)
+            prakriti: Optional prakriti engine (if None, fetched from DI)
+            sync_holon: Optional sync holon (if None, fetched from DI)
         """
-        self.prakriti = prakriti
-        self.sync_holon = sync_holon or getattr(prakriti, "sync_holon", None)
-        self.workspace = prakriti._workspace if hasattr(prakriti, "_workspace") else Path(".")
+        self._prakriti_override = prakriti
+        self._sync_holon_override = sync_holon
+        self.workspace = Path(".")  # Will be updated during first pulse if needed
+        self._runtime_definition = None
+
+    @property
+    def prakriti(self) -> Optional[PrakritiProtocol]:
+        """Fetch Prakriti from registry (or override)."""
+        return self._prakriti_override or ServiceRegistry.get(PrakritiProtocol)
+
+    @property
+    def sync_holon(self) -> Optional[StateSyncHolonProtocol]:
+        """Fetch StateSyncHolon from registry (or override)."""
+        return self._sync_holon_override or ServiceRegistry.get(StateSyncHolonProtocol)
+
+    def _ensure_initialized(self) -> bool:
+        """Ensure workspace-dependent state is initialized."""
+        if self._runtime_definition:
+            return True
+
+        prakriti = self.prakriti
+        if not prakriti:
+            return False
+
+        if hasattr(prakriti, "_workspace"):
+            self.workspace = prakriti._workspace
+        elif hasattr(prakriti, "workspace"):
+            self.workspace = prakriti.workspace
+
         self._runtime_definition = get_runtime_state_definition(self.workspace)
+        return True
 
     # =========================================================================
     # PUBLIC API
@@ -168,6 +198,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         if os.environ.get("VIBE_NO_GIT_COMMIT") == "1":
             return CommitResult(git_sha="0000000", message="Git disabled (Shunyata)", success=True)
 
+        if not self._ensure_initialized():
+            return CommitResult(success=False, error="StateSyncWeaver: Dependencies (Prakriti) not ready", message="Dependency error")
+
         with self._commit_lock:
             # 1. Discover
             state_map = self._discover_all_state()
@@ -191,6 +224,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         """
         Session boundary integration - Called when session ends.
         """
+        if not self._ensure_initialized():
+            return CommitResult(success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error")
+
         with self._commit_lock:
             state_map = self._discover_all_state()
             classified = self._classify_state(state_map)
@@ -210,6 +246,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         """
         Full weaving cycle with cognitive intelligence.
         """
+        if not self._ensure_initialized():
+            return CommitResult(success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error")
+
         with self._commit_lock:
             state_map = self._discover_all_state()
             classified = self._classify_state(state_map)
@@ -525,12 +564,15 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
 _global_weaver: Optional[StateSyncWeaver] = None
 
 
-def get_state_sync_weaver(prakriti: Optional["Prakriti"] = None) -> Optional[StateSyncWeaver]:
+def get_state_sync_weaver(
+    prakriti: Optional[PrakritiProtocol] = None,
+    sync_holon: Optional[StateSyncHolonProtocol] = None,
+) -> Optional[StateSyncWeaver]:
     """Get the global StateSyncWeaver singleton."""
     global _global_weaver
 
-    if _global_weaver is None and prakriti is not None:
-        _global_weaver = StateSyncWeaver(prakriti)
+    if _global_weaver is None:
+        _global_weaver = StateSyncWeaver(prakriti, sync_holon)
 
         # Register in DI for protocol-based discovery
         ServiceRegistry.register(StateSyncWeaverProtocol, _global_weaver)

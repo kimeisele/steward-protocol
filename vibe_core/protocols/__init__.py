@@ -18,6 +18,8 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 from .cognition import CognitiveKernelProtocol, SystemHeartbeatProtocol
+from .llm import LLMProtocol
+from .opus import OpusAssistantProtocol
 from .ledger import (
     KernelStatus,
     VibeKernel,
