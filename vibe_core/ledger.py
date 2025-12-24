@@ -191,8 +191,6 @@ def _get_db_lock(db_path: str) -> threading.RLock:
         return _db_locks[abs_path]
 
 
-
-
 class SQLiteLedger(VibeLedger):
     """Persistent SQLite-backed Event Ledger - Append-only task record with persistence"""
 
