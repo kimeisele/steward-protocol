@@ -29,6 +29,7 @@ from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, Circuit
 from .code_module_loader import CodeMetadata, CodeModuleLoader, CodeModuleLoadError, CodeModuleMeta, CodeRegistry
 from .cortex_loader import CortexLoader, CortexLoadError, CortexMetadata, CortexRegistry, get_cortex, list_cortices
 from .handler_loader import HandlerLoader, HandlerLoadError, HandlerMetadata, HandlerRegistry
+from .manifest_registry import ManifestEntry, ManifestRegistry
 from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
 from .sense_loader import SenseLoader, SenseLoadError, SenseMetadata, SenseRegistry
 from .template_loader import TemplateLoader
@@ -38,6 +39,9 @@ __all__ = [
     "UnifiedLoader",
     "ItemMeta",
     "LoaderRegistry",
+    # OPUS-307 Phase F: Manifest-Driven Discovery
+    "ManifestRegistry",
+    "ManifestEntry",
     # Code Module Loader (VEDA-4 code-only pattern)
     "CodeModuleLoader",
     "CodeModuleMeta",

@@ -23,6 +23,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 from vibe_core.loaders.container_loader import ContainerMounter
 
+# OPUS-307 Phase F: Import will be done lazily to avoid circular imports
+# ManifestRegistry is imported when needed
+
 logger = logging.getLogger("UNIFIED.LOADER")
 
 
@@ -201,6 +204,55 @@ class UnifiedLoader(ABC):
                         meta.error = "Instance creation failed"
 
         logger.info(f"[{cls.item_type}] Loaded {len(instances)} items")
+        return instances, metadata
+
+    @classmethod
+    def discover_from_registry(
+        cls,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[ItemRegistry, ItemMetadata]:
+        """
+        OPUS-307 Phase F: Discover items from ManifestRegistry (NO iterdir!).
+
+        This is the NEW preferred method. Uses pre-scanned manifests.
+
+        Args:
+            config: Global config (e.g., from Phoenix)
+
+        Returns:
+            Tuple of (instances, metadata)
+        """
+        # Lazy import to avoid circular dependency
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+        instances: ItemRegistry = {}
+        metadata: ItemMetadata = {}
+
+        # Get manifests from registry (NO iterdir - already scanned!)
+        entries = ManifestRegistry.get_enabled(cls.item_type)
+
+        logger.debug(f"[{cls.item_type}] Found {len(entries)} entries in ManifestRegistry")
+
+        for entry in entries:
+            # Use existing VEDA-4 processing logic
+            meta = cls._process_item_directory(entry.parent_dir, config)
+
+            if meta is None:
+                continue
+
+            metadata[meta.item_id] = meta
+
+            # Only add to instances if loaded successfully
+            if meta.loaded_successfully and meta.entry_class:
+                instance = cls._create_instance(meta, config)
+                if instance:
+                    instances[meta.item_id] = instance
+                    logger.info(f"  ✅ Loaded: {meta.item_id}")
+                else:
+                    meta.loaded_successfully = False
+                    meta.error = "Instance creation failed"
+
+        logger.info(f"[{cls.item_type}] Loaded {len(instances)} items (via ManifestRegistry)")
         return instances, metadata
 
     @classmethod
