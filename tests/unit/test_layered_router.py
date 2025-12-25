@@ -1,13 +1,21 @@
 """
 tests/unit/test_layered_router.py
 
-Unit tests for LayeredRouter - 3-layer routing cascade.
-Tests Layer 1 (exact), Layer 2 (semantic), Layer 3 (context), and fallback behavior.
+Unit tests for LayeredRouter - 4-layer routing cascade.
+Tests Layer 1 (exact), Layer 2 (semantic), Layer 3 (context), Layer 3.5 (akshara),
+and fallback behavior.
+
+OPUS-305: Updated attribute names to match RouteResult schema from state/schema.py:
+  - circuit_id -> target_id
+  - layer -> reason
+  - extracted_params -> params
+  - syscall_type/target_agent -> now in params dict
 """
 
 import pytest
 
-from vibe_core.runtime.layered_router import LayeredRouter, RouteResult
+from vibe_core.runtime.layered_router import LayeredRouter
+from vibe_core.state.schema import RouteResult
 
 
 @pytest.fixture
@@ -65,34 +73,34 @@ class TestLayer1Exact:
     def test_exact_match(self, router_with_circuits):
         """Test exact keyword match."""
         result = router_with_circuits.route("status")
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.target_id == "SYSTEM_STATUS_V2"
         assert result.confidence == 1.0
-        assert result.layer == "exact"
+        assert result.reason == "exact"
 
     def test_exact_match_case_insensitive(self, router_with_circuits):
         """Test exact match is case-insensitive."""
         result = router_with_circuits.route("STATUS")
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.target_id == "SYSTEM_STATUS_V2"
         assert result.confidence == 1.0
 
     def test_exact_match_mixed_case(self, router_with_circuits):
         """Test exact match with mixed case."""
         result = router_with_circuits.route("Health")
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.target_id == "SYSTEM_STATUS_V2"
         assert result.confidence == 1.0
 
     def test_exact_prefix_with_args(self, router_with_circuits):
         """Test exact prefix match with arguments."""
         result = router_with_circuits.route("status verbose")
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.target_id == "SYSTEM_STATUS_V2"
         assert result.confidence == 0.95
-        assert result.layer == "exact_prefix"
-        assert result.extracted_params.get("args") == "verbose"
+        assert result.reason == "exact_prefix"
+        assert result.params.get("args") == "verbose"
 
     def test_exact_match_multi_word_pattern(self, router_with_circuits):
         """Test exact match with multi-word patterns."""
         result = router_with_circuits.route("system status")
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.target_id == "SYSTEM_STATUS_V2"
         assert result.confidence == 1.0
 
     def test_no_partial_exact_match(self, router_with_circuits):
@@ -100,7 +108,7 @@ class TestLayer1Exact:
         # "system" alone shouldn't match "system status"
         result = router_with_circuits.route("system")
         # Should fall through to Layer 2/3/fallback, not match Layer 1
-        assert result.circuit_id != "SYSTEM_STATUS_V2" or result.layer != "exact"
+        assert result.target_id != "SYSTEM_STATUS_V2" or result.reason != "exact"
 
 
 class TestLayer2Semantic:
@@ -109,47 +117,47 @@ class TestLayer2Semantic:
     def test_semantic_match_basic(self, router_with_circuits):
         """Test semantic pattern matching."""
         result = router_with_circuits.route("implement a new feature for logging")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
+        assert result.reason == "semantic"
         assert result.confidence >= 0.7
 
     def test_semantic_match_variation(self, router_with_circuits):
         """Test semantic pattern with variation."""
         result = router_with_circuits.route("add functionality to track users")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
+        assert result.reason == "semantic"
 
     def test_semantic_param_extraction(self, router_with_circuits):
         """Test parameter extraction from natural language."""
         result = router_with_circuits.route("implement feature for api call logging")
-        assert "feature_description" in result.extracted_params
+        assert "feature_description" in result.params
         # Should extract "feature for api call logging" from the input
-        desc = result.extracted_params["feature_description"]
+        desc = result.params["feature_description"]
         assert "api" in desc.lower() or "logging" in desc.lower() or "feature" in desc.lower()
 
     def test_semantic_debug_match(self, router_with_circuits):
         """Test semantic match for debug patterns."""
         result = router_with_circuits.route("fix the bug in auth module")
-        assert result.circuit_id == "DEBUG_FIX_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "DEBUG_FIX_V2"
+        assert result.reason == "semantic"
 
     def test_semantic_error_match(self, router_with_circuits):
         """Test semantic match for error patterns."""
         result = router_with_circuits.route("debug the error in parser")
-        assert result.circuit_id == "DEBUG_FIX_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "DEBUG_FIX_V2"
+        assert result.reason == "semantic"
 
     def test_semantic_syscall_metadata(self, router_with_circuits):
-        """Test that semantic_grounding metadata is included."""
+        """Test that semantic_grounding metadata is included in params."""
         result = router_with_circuits.route("implement new feature")
-        assert result.syscall_type == "DISPATCH_TASK"
-        assert result.target_agent == "engineer"
+        assert result.params.get("syscall_type") == "DISPATCH_TASK"
+        assert result.params.get("target_agent") == "engineer"
 
     def test_semantic_pattern_specificity(self, router_with_circuits):
         """Test that more specific patterns get higher scores."""
         # More specific pattern should win
         result = router_with_circuits.route("implement a new feature for api logging")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
         assert result.confidence >= 0.7
 
 
@@ -177,7 +185,7 @@ class TestLayer3Context:
         result = router_with_circuits.route("implement new feature for users")
         # Should have boosted confidence due to recent usage
         assert result.confidence > 0.7
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
 
     def test_concept_extraction(self, router_with_circuits):
         """Test concept extraction from input."""
@@ -192,14 +200,14 @@ class TestFallback:
     def test_fallback_on_no_match(self, router_with_circuits):
         """Test fallback when no patterns match."""
         result = router_with_circuits.route("xyzzy random gibberish")
-        assert result.circuit_id == "SIMPLE_QUERY"
-        assert result.layer == "fallback"
+        assert result.target_id == "SIMPLE_QUERY"
+        assert result.reason == "fallback"
         assert result.confidence == 0.3
 
     def test_fallback_includes_original_input(self, router_with_circuits):
         """Test that fallback preserves original input."""
         result = router_with_circuits.route("xyzzy")
-        assert result.extracted_params.get("user_input") == "xyzzy"
+        assert result.params.get("user_input") == "xyzzy"
 
 
 class TestIndexBuilding:
@@ -229,28 +237,28 @@ class TestEdgeCases:
     def test_empty_input(self, router_with_circuits):
         """Test handling of empty input."""
         result = router_with_circuits.route("")
-        assert result.circuit_id == "SIMPLE_QUERY"
-        assert result.layer == "fallback"
+        assert result.target_id == "SIMPLE_QUERY"
+        assert result.reason == "fallback"
 
     def test_whitespace_only_input(self, router_with_circuits):
         """Test handling of whitespace-only input."""
         result = router_with_circuits.route("   ")
-        assert result.circuit_id == "SIMPLE_QUERY"
-        assert result.layer == "fallback"
+        assert result.target_id == "SIMPLE_QUERY"
+        assert result.reason == "fallback"
 
     def test_very_long_input(self, router_with_circuits):
         """Test handling of very long input."""
         long_input = "implement feature " + "with a very long description " * 50
         result = router_with_circuits.route(long_input)
         # Should still match semantic patterns
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
+        assert result.reason == "semantic"
 
     def test_special_characters(self, router_with_circuits):
         """Test handling of special characters."""
         result = router_with_circuits.route("implement @#$% feature")
         # Should still match despite special chars
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2" or result.layer == "fallback"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2" or result.reason == "fallback"
 
     def test_unicode_characters(self, router_with_circuits):
         """Test handling of unicode characters."""
@@ -260,35 +268,34 @@ class TestEdgeCases:
 
 
 class TestRouteResult:
-    """Tests for RouteResult dataclass."""
+    """Tests for RouteResult dataclass from state/schema.py."""
 
     def test_route_result_construction(self):
-        """Test RouteResult can be constructed."""
+        """Test RouteResult can be constructed with correct schema."""
         result = RouteResult(
-            circuit_id="TEST_CIRCUIT",
+            target_id="TEST_CIRCUIT",
+            target_type="circuit",
             confidence=0.95,
-            layer="semantic",
-            extracted_params={"key": "value"},
-            syscall_type="TEST_TYPE",
-            target_agent="test_agent",
+            reason="semantic",
+            params={"key": "value", "syscall_type": "TEST_TYPE", "target_agent": "test_agent"},
         )
-        assert result.circuit_id == "TEST_CIRCUIT"
+        assert result.target_id == "TEST_CIRCUIT"
+        assert result.target_type == "circuit"
         assert result.confidence == 0.95
-        assert result.layer == "semantic"
-        assert result.extracted_params == {"key": "value"}
-        assert result.syscall_type == "TEST_TYPE"
-        assert result.target_agent == "test_agent"
+        assert result.reason == "semantic"
+        assert result.params == {"key": "value", "syscall_type": "TEST_TYPE", "target_agent": "test_agent"}
+        assert result.params.get("syscall_type") == "TEST_TYPE"
+        assert result.params.get("target_agent") == "test_agent"
 
     def test_route_result_default_params(self):
         """Test RouteResult defaults."""
-        result = RouteResult(circuit_id="TEST", confidence=1.0, layer="exact")
-        assert result.extracted_params == {}
-        assert result.syscall_type is None
-        assert result.target_agent is None
+        result = RouteResult(target_id="TEST", target_type="circuit", confidence=1.0, reason="exact")
+        assert result.params == {}
+        assert result.is_fallback is False
 
 
 class TestLayerCascade:
-    """Tests for the 3-layer cascade behavior."""
+    """Tests for the 4-layer cascade behavior."""
 
     def test_layer1_takes_precedence(self, router_with_circuits):
         """Test that Layer 1 results are returned without checking Layer 2."""
@@ -305,20 +312,20 @@ class TestLayerCascade:
 
         result = router_with_circuits.route("status")
         # Should return Layer 1 match, not Layer 2
-        assert result.layer == "exact"
-        assert result.circuit_id == "SYSTEM_STATUS_V2"
+        assert result.reason == "exact"
+        assert result.target_id == "SYSTEM_STATUS_V2"
 
     def test_layer2_used_when_layer1_fails(self, router_with_circuits):
         """Test that Layer 2 is used when Layer 1 finds no match."""
         result = router_with_circuits.route("implement new feature for logging")
-        assert result.layer == "semantic"
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
+        assert result.reason == "semantic"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
 
     def test_fallback_used_when_all_fail(self, router_with_circuits):
         """Test that fallback is used when no layers match."""
         result = router_with_circuits.route("completely unrelated gibberish")
-        assert result.layer == "fallback"
-        assert result.circuit_id == "SIMPLE_QUERY"
+        assert result.reason == "fallback"
+        assert result.target_id == "SIMPLE_QUERY"
 
 
 class TestRegexPatterns:
@@ -349,16 +356,16 @@ class TestRegexPatterns:
     def test_case_insensitive_regex(self, router_with_circuits):
         """Test that regex patterns are case-insensitive."""
         result = router_with_circuits.route("IMPLEMENT a new FEATURE")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
-        assert result.layer == "semantic"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
+        assert result.reason == "semantic"
 
     def test_regex_with_alternation(self, router_with_circuits):
         """Test regex patterns with alternation."""
         result = router_with_circuits.route("add new functionality")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
 
         result = router_with_circuits.route("add feature for tracking")
-        assert result.circuit_id == "FEATURE_IMPLEMENT_V2"
+        assert result.target_id == "FEATURE_IMPLEMENT_V2"
 
 
 class TestParamExtraction:
@@ -367,7 +374,7 @@ class TestParamExtraction:
     def test_basic_param_extraction(self, router_with_circuits):
         """Test basic parameter extraction."""
         result = router_with_circuits.route("implement feature for user authentication")
-        params = result.extracted_params
+        params = result.params
         assert "feature_description" in params
         # Should extract something containing auth or feature
         assert "auth" in params["feature_description"].lower() or "feature" in params["feature_description"].lower()
@@ -375,7 +382,7 @@ class TestParamExtraction:
     def test_param_extraction_with_articles(self, router_with_circuits):
         """Test parameter extraction handles articles correctly."""
         result = router_with_circuits.route("add a new feature for caching")
-        params = result.extracted_params
+        params = result.params
         assert "feature_description" in params
         # Should extract "caching" or similar
         assert any(word in params["feature_description"].lower() for word in ["caching", "feature"])
@@ -404,7 +411,7 @@ class TestParamExtraction:
         router._build_indexes()
 
         result = router.route("action deploy on production")
-        params = result.extracted_params
+        params = result.params
         # Should extract both action_type and target
         assert "action_type" in params or "target" in params
 
@@ -416,23 +423,27 @@ class TestConfidenceScoring:
         """Test that exact matches have highest confidence."""
         result = router_with_circuits.route("status")
         assert result.confidence == 1.0
+        assert result.reason == "exact"
 
     def test_exact_prefix_slightly_lower(self, router_with_circuits):
         """Test that exact prefix match has slightly lower confidence."""
         result = router_with_circuits.route("status verbose output")
         # First match is exact prefix which is 0.95
         assert result.confidence == 0.95
+        assert result.reason == "exact_prefix"
 
     def test_semantic_match_lower_confidence(self, router_with_circuits):
         """Test that semantic matches have lower confidence than exact."""
         result = router_with_circuits.route("implement new feature")
         assert result.confidence < 1.0
         assert result.confidence >= 0.7
+        assert result.reason == "semantic"
 
     def test_fallback_lowest_confidence(self, router_with_circuits):
         """Test that fallback has lowest confidence."""
         result = router_with_circuits.route("totally unrelated")
         assert result.confidence == 0.3
+        assert result.is_fallback is True
 
 
 if __name__ == "__main__":
