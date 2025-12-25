@@ -975,14 +975,16 @@ class CognitiveCircuitExecutor:
         # Build final result
         final_state = state.current_state
         # BACKWARD COMPATIBILITY: Accept multiple success indicators
-        # - Explicit "SUCCESS" state name
+        # - Explicit "SUCCESS" state name or success-indicating names
         # - Terminal state with result.status == "success"
         # - Terminal state without explicit failure markers
-        success = final_state == "SUCCESS"
+        success_state_names = ["success", "healthy", "complete", "done", "finished"]
+        success = any(s in final_state.lower() for s in success_state_names)
+
+        # Also check output status if present
         if not success and state.is_terminal and state.output:
-            # Check if terminal state indicates success via result field
             result_status = state.output.get("status", "").lower()
-            success = result_status == "success"
+            success = result_status in success_state_names
 
         result = CircuitExecutionResult(
             success=success,
@@ -1022,7 +1024,8 @@ class CognitiveCircuitExecutor:
 
         for transition in transitions:
             condition = transition.get("condition", "")
-            target = transition.get("to")
+            # Support both "to" and "next_state" field names
+            target = transition.get("to") or transition.get("next_state")
 
             logger.info(f"   Checking: '{condition}' → {target}")
             result = self._evaluate_condition(condition, variables)
