@@ -64,9 +64,11 @@ from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageEventType  # Phase 5: Only EventType (LineageChain is lazy)
 from .manifest_registry import InMemoryManifestRegistry
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
+
 # OPUS-301: Lazy import - network_proxy loads 'requests' which is 180ms
 # from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
+
 # OPUS-301: Direct import to avoid loading all of protocols (saves ~440ms)
 from .protocols.agent import AgentManifest, VibeAgent
 
@@ -78,8 +80,8 @@ from .protocols.auditor import AuditorProtocol, NullAuditor
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
-from .state.schema import ExecutionRequest
 from .scheduling import InMemoryScheduler, Task
+from .state.schema import ExecutionRequest
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
@@ -308,7 +310,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             from pathlib import Path
 
             lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
-        
+
         # OPUS-301: Lazy load LineageChain
         LazyLineageChain = lazy_class("vibe_core.lineage", "LineageChain")
         self.lineage = LazyLineageChain(db_path=lineage_path)
@@ -406,18 +408,22 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             import os
             from pathlib import Path
 
+            from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+            # OPUS-307 Phase F: Ensure manifests are scanned (idempotent)
+            ManifestRegistry.scan_all()
+
             # OPUS-020 Phase 3: Support custom plugin paths via env var
             # Usage: VIBE_PLUGIN_PATH=dist/plugins:custom/plugins python -m vibe_core.cli boot
             custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
             if custom_paths_env:
+                # Custom paths: Use legacy iterdir (env override)
                 scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
                 logger.info(f"🔌 Using custom plugin paths from VIBE_PLUGIN_PATH: {scan_paths}")
+                self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
             else:
-                # Default: Scan both plugins and knowledge directories
-                scan_paths = [Path("vibe_core/plugins"), Path("knowledge")]
-
-            # Use discover_and_load to get metadata (needed for cognitive packs)
-            self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
+                # OPUS-307: Use ManifestRegistry (NO iterdir!)
+                self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
             self._plugins = list(self._plugins_map.values())
 
             # OPUS-112: Auto-register plugin capabilities from manifest (VEDA-4)
@@ -529,6 +535,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """OPUS-301: Lazy-loaded network proxy. Saves ~180ms on boot."""
         if self._network is None:
             from .network_proxy import KernelNetworkProxy
+
             self._network = KernelNetworkProxy(kernel=self)
         return self._network
 

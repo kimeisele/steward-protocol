@@ -12,6 +12,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from vibe_core.loaders.manifest_registry import ManifestRegistry
 from vibe_core.runtime.context_loader import ContextLoader
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
@@ -24,6 +25,10 @@ class BootSequence:
 
     def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or Path.cwd()
+
+        # OPUS-307 Phase F: Scan manifests ONCE at boot (before any loader runs)
+        # "Das System WEISS was installiert ist, es RATET nicht."
+        ManifestRegistry.scan_all()
 
         # Conveyor Belt 1: Context (Unified Load)
         # BootSequence uses the 'project' context item provided by ContextLoader
