@@ -722,9 +722,9 @@ class StewardProtocolPlugin(KernelPlugin):
     def _load_config(self) -> None:
         """Load Protocol configuration from Phoenix steward.yaml."""
         try:
-            from vibe_core.phoenix.config import PhoenixConfig
+            from vibe_core.phoenix.config import get_config
 
-            phoenix = PhoenixConfig.from_files(config_dir=self._project_root / "config")
+            phoenix = get_config()
             self._config = phoenix.steward
             logger.debug("📜 Protocol config loaded from Phoenix")
         except Exception as e:

@@ -241,10 +241,10 @@ class KernelTickHandler:
 
             # ⚡ PHOENIX INJECTION: Load config from Phoenix (Dharma)
             # This replaces the hardcoded ManasConfig() with config from YAML
-            from vibe_core.phoenix.config import PhoenixConfig
+            from vibe_core.phoenix.config import get_config
 
             try:
-                phoenix = PhoenixConfig.from_files(config_dir=workspace / "config")
+                phoenix = get_config()
 
                 # Load MANAS policy from Phoenix
                 phoenix_manas_section = phoenix.get_section("manas")
