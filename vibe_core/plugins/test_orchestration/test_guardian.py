@@ -101,7 +101,7 @@ class MutationEvent:
 # ============================================================================
 
 
-class TestGuardian:
+class Guardian:
     """
     Guardian of test suite integrity.
 
