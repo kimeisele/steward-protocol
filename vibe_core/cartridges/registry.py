@@ -20,6 +20,8 @@ import importlib.util
 import logging
 from pathlib import Path
 
+from vibe_core.protocols.agent import VibeAgent
+
 from .base import CartridgeBase, CartridgeSpec
 
 logger = logging.getLogger(__name__)
@@ -67,18 +69,27 @@ class CartridgeRegistry:
         raise RuntimeError("Could not detect vibe-agency root. Please set VIBE_ROOT environment variable.")
 
     def _auto_discover(self) -> None:
-        """Auto-discover cartridges in vibe_core/cartridges/ directory."""
-        cartridges_dir = self.vibe_root / "vibe_core" / "cartridges"
+        """
+        Auto-discover cartridges via ManifestRegistry.
 
-        if not cartridges_dir.exists():
-            logger.warning(f"⚠️ Cartridges directory not found: {cartridges_dir}")
+        OPUS-307 Phase F: No iterdir() - use manifest-driven discovery.
+        Das System WEISS was installiert ist.
+        """
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+        # Ensure registry is scanned
+        ManifestRegistry._ensure_scanned()
+
+        # Get all cartridge manifests
+        entries = ManifestRegistry.get_enabled("cartridge")
+
+        if not entries:
+            logger.warning("⚠️ No cartridge manifests found in ManifestRegistry")
             return
 
-        # Look for cartridge directories (skip __pycache__, base.py, registry.py, etc.)
-        for item in cartridges_dir.iterdir():
-            if item.is_dir() and not item.name.startswith("_"):
-                # Look for cartridge_main.py or __init__.py with CartridgeBase subclass
-                self._load_cartridge_from_dir(item)
+        for entry in entries:
+            # entry.parent_dir is the cartridge directory (e.g., vibe_core/cartridges/system/auditor/)
+            self._load_cartridge_from_dir(entry.parent_dir)
 
     def _load_cartridge_from_dir(self, cartridge_dir: Path) -> None:
         """
@@ -119,15 +130,23 @@ class CartridgeRegistry:
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
 
-                # Find CartridgeBase subclass in the module
+                # Find VibeAgent or CartridgeBase subclass in the module
+                # Priority: VibeAgent (new pattern) > CartridgeBase (legacy)
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
-                    if isinstance(attr, type) and issubclass(attr, CartridgeBase) and attr is not CartridgeBase:
-                        self._registry[cartridge_name] = attr
-                        logger.info(f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})")
-                        return
+                    if isinstance(attr, type):
+                        # Check VibeAgent first (new pattern)
+                        if issubclass(attr, VibeAgent) and attr is not VibeAgent:
+                            self._registry[cartridge_name] = attr
+                            logger.info(f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})")
+                            return
+                        # Fallback to CartridgeBase (legacy)
+                        if issubclass(attr, CartridgeBase) and attr is not CartridgeBase:
+                            self._registry[cartridge_name] = attr
+                            logger.info(f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})")
+                            return
 
-                logger.warning(f"⚠️ No CartridgeBase subclass found in {file_path} for {cartridge_name}")
+                logger.warning(f"⚠️ No VibeAgent/CartridgeBase subclass found in {file_path} for {cartridge_name}")
 
         except Exception as e:
             logger.warning(f"⚠️ Failed to load cartridge {cartridge_name}: {e}")
