@@ -166,7 +166,21 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         self.execution_id = None
         self.last_result = None
 
+        # OPUS-307 D.2: Register external services for DI
+        self._register_services()
+
         logger.info("✅ HERALD: Ready for operation")
+
+    def _register_services(self) -> None:
+        """Register external services in ServiceRegistry for DI."""
+        from vibe_core.cartridges.system.herald.services import RedditService, TwitterService
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols import RedditProtocol, TwitterProtocol
+
+        # Register implementations - tools get these via self.services.get(Protocol)
+        ServiceRegistry.register(TwitterProtocol, TwitterService())
+        ServiceRegistry.register(RedditProtocol, RedditService())
+        logger.info("📡 HERALD: External services registered (Twitter, Reddit)")
 
     @property
     def event_log(self):
