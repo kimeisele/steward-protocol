@@ -114,7 +114,8 @@ Next session, OPUS reads PREP file and jumps straight in.
 | 303 | Pulse Optimization | ✅ COMPLETE | ~50ms → ~15ms (70%) |
 | 304 | Boot Singleton Fix | ✅ COMPLETE | 943ms warm boot |
 | 305 | Test Suite Health | ✅ COMPLETE | 499 passed, 0 circular imports |
-| 306 | Kernel Boot Performance | 🔥 READY FOR SONNET | Boot: 102s → target <10s |
+| 306 | Kernel Boot Performance | ✅ COMPLETE | Boot: 97s → 7.4s (13x faster) |
+| 307 | Full Inventory | 🔥 READY FOR HAIKU | Pre-analysis of all components |
 
 ### OPUS-301/303/304 Commits
 ```
