@@ -408,6 +408,79 @@ class CognitiveCircuitExecutor:
             except Exception as e:
                 logger.error(f"Failed to load circuit {yaml_file}: {e}")
 
+    def execute_by_id(
+        self,
+        circuit_id: str,
+        input_vars: Dict[str, Any] = None,
+        requester_id: str = "user",
+    ) -> CircuitExecutionResult:
+        """
+        Execute a specific circuit by ID (OPUS-307 Phase G).
+
+        Unlike execute() which uses BlueprintGenerator for routing,
+        this method runs a circuit directly by its ID.
+
+        Args:
+            circuit_id: The circuit ID (e.g., "OUROBOROS_V1")
+            input_vars: Input variables for the circuit
+            requester_id: Who is making this request
+
+        Returns:
+            CircuitExecutionResult
+        """
+        if circuit_id not in self.circuits:
+            return CircuitExecutionResult(
+                success=False,
+                final_state="NOT_FOUND",
+                output={},
+                state_history=[],
+                syscall_count=0,
+                error=f"Circuit '{circuit_id}' not found. Available: {list(self.circuits.keys())}",
+            )
+
+        logger.info(f"🎯 DIRECT CIRCUIT EXECUTION: {circuit_id}")
+
+        circuit_def = self.circuits[circuit_id]
+
+        # Create minimal compilation result for direct execution
+
+        @dataclass
+        class MinimalCompilation:
+            is_syscall: bool = False
+            playbook_vars: Dict[str, Any] = None
+            syscall_request: Optional[SyscallRequest] = None
+            confidence: float = 1.0  # Direct execution = high confidence
+
+            def __post_init__(self):
+                if self.playbook_vars is None:
+                    self.playbook_vars = {}
+
+        # Create a dummy syscall request for direct circuit execution
+        # Use DISPATCH_TASK with required params to pass validation
+        dummy_syscall = SyscallRequest(
+            syscall_type=SyscallType.DISPATCH_TASK,
+            params={
+                "circuit_id": circuit_id,
+                "agent_id": "circuit_executor",  # Required by DISPATCH_TASK
+                "task_payload": input_vars or {},  # Required by DISPATCH_TASK
+                **(input_vars or {}),
+            },
+            requester_id=requester_id,
+        )
+
+        compilation = MinimalCompilation(
+            is_syscall=True,
+            playbook_vars=input_vars or {},
+            syscall_request=dummy_syscall,
+        )
+
+        return self._execute_circuit(
+            circuit_def,
+            raw_input=str(input_vars or {}),
+            compilation=compilation,
+            requester_id=requester_id,
+        )
+
     def execute(
         self,
         raw_input: str,

@@ -274,10 +274,11 @@ Examples:
         try:
             # Import executor
             from vibe_core.cortex.engines.circuit_engine import create_circuit_executor
-            from vibe_core.service_registry import ServiceRegistry
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.ledger import VibeKernel
 
             # OPUS-307: Circuits require kernel for syscall execution
-            kernel = ServiceRegistry.get("kernel")
+            kernel = ServiceRegistry.get(VibeKernel)
             if kernel is None:
                 print("❌ Circuit execution requires kernel. Use 'steward run' with full boot.")
                 return
@@ -286,7 +287,7 @@ Examples:
 
             # Execute
             print(f"Executing circuit: {circuit_id}...")
-            result = executor.execute(user_input=user_input or "")
+            result = executor.execute(raw_input=user_input or "")
 
             if as_json:
                 print(

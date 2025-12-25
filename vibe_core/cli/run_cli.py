@@ -64,6 +64,21 @@ class RunCLI:
             self._registry.discover_all()
         return self._registry
 
+    def _ensure_kernel(self) -> None:
+        """Boot kernel for circuit execution (OPUS-307 Phase G)."""
+        from vibe_core.protocols.ledger import VibeKernel
+
+        if ServiceRegistry.get(VibeKernel) is not None:
+            return  # Already booted
+
+        print("Booting kernel for circuit execution...")
+
+        from vibe_core.kernel_impl import RealVibeKernel
+
+        kernel = RealVibeKernel()
+        ServiceRegistry.register(VibeKernel, kernel)
+        logger.info("Kernel booted and registered for circuit execution")
+
     def run(self, args: List[str]) -> int:
         """
         Main entry point.
@@ -302,6 +317,10 @@ Examples:
 
         meta = registry.get_meta(cap_id)
         type_name = meta.capability_type.value if meta else "unknown"
+
+        # OPUS-307: Boot kernel for molecular (circuit) capabilities
+        if meta and meta.capability_type == CapabilityType.MOLECULAR:
+            self._ensure_kernel()
 
         print(f"Executing {cap_id} ({type_name})...")
 
