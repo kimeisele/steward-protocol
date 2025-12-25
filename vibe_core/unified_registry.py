@@ -107,12 +107,24 @@ class CircuitCapabilityAdapter:
 
         start = time.time()
         try:
+            # OPUS-307: Circuits require kernel for syscall execution
+            # Get kernel from ServiceRegistry if available
+            from vibe_core.service_registry import ServiceRegistry
+
+            kernel = ServiceRegistry.get("kernel")
+            if kernel is None:
+                return CapabilityResult(
+                    success=False,
+                    output=None,
+                    error="Circuit execution requires kernel. Use 'steward run' with full boot.",
+                    capability_id=self.capability_id,
+                    capability_type=self.capability_type,
+                    execution_time_ms=(time.time() - start) * 1000,
+                )
+
             from vibe_core.cortex.engines.circuit_engine import create_circuit_executor
 
-            executor = create_circuit_executor(
-                circuit_definition=self.circuit_def,
-                kernel=None,
-            )
+            executor = create_circuit_executor(kernel=kernel)
             user_input = parameters.get("input", parameters.get("user_input", ""))
             result = executor.execute(user_input=user_input)
 

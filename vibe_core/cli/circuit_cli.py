@@ -274,12 +274,15 @@ Examples:
         try:
             # Import executor
             from vibe_core.cortex.engines.circuit_engine import create_circuit_executor
+            from vibe_core.service_registry import ServiceRegistry
 
-            # Create executor (headless mode skips full kernel boot)
-            executor = create_circuit_executor(
-                circuit_definition=circuit_def,
-                kernel=None,  # Headless - no kernel
-            )
+            # OPUS-307: Circuits require kernel for syscall execution
+            kernel = ServiceRegistry.get("kernel")
+            if kernel is None:
+                print("❌ Circuit execution requires kernel. Use 'steward run' with full boot.")
+                return
+
+            executor = create_circuit_executor(kernel=kernel)
 
             # Execute
             print(f"Executing circuit: {circuit_id}...")
