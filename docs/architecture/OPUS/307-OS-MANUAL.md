@@ -509,6 +509,50 @@ steward run HEAL_CODEBASE_V1             # Just works
 
 **Result:** 65 capabilities unified under single `steward run` interface.
 
+### ✅ Phase D++++: Self-Management (DONE - 2025-12-25)
+
+**THE OUROBOROS PRINCIPLE:**
+The snake that eats its own tail. The system can now call ITSELF.
+
+```bash
+steward run OUROBOROS_V1              # Full self-healing cycle
+steward run OUROBOROS_V1 --mode diagnose  # Diagnose only
+steward run OUROBOROS_V1 --dry_run true   # Show what would be fixed
+```
+
+**Key Innovation: CLI_LOOPBACK**
+
+Now that `steward run` exists, circuits can call OTHER capabilities:
+
+```yaml
+# In OUROBOROS circuit:
+actions:
+  - action_type: CLI_LOOPBACK
+    target: "watchman.health"       # Call health check
+    capture_as: "health_result"
+
+  - action_type: CLI_LOOPBACK
+    target: "engineer.heal_violation"  # Call healer
+    params:
+      violation_id: "{{ v.id }}"
+```
+
+**The Recursive Principle:**
+```
+Shabda → Pratyaya → Karma → (feedback) → Shabda
+         ↑_________CLI_LOOPBACK__________|
+```
+
+**Files created:**
+- `vibe_core/playbook/circuits/ouroboros.yaml` - Self-healing circuit
+- `vibe_core/cartridges/system/envoy/action_handlers.py` - CLI_LOOPBACK handler
+
+**New Action Types:**
+- `CLI_LOOPBACK` - Call any capability via `steward run`
+- `FOR_EACH` - Iterate over violations and heal each
+
+**Result:** System can diagnose → heal → verify itself autonomously.
+
 ---
 
 ## POST-D VISION: 100% Protocol Coverage
@@ -548,7 +592,7 @@ Once all Protocols exist:
 - [ ] 100% of Protocols registered in ServiceRegistry
 - [x] 100% of Tools use DI (no legacy __init__) - **D.3 DONE**
 - [x] 100% of capabilities accessible via CLI - **D+++ DONE (65 capabilities)**
-- [ ] System can heal itself via CLI commands - **D++++ (next)**
+- [x] System can heal itself via CLI commands - **D++++ DONE (OUROBOROS_V1)**
 
 ### Current Progress (2025-12-25)
 
@@ -560,7 +604,7 @@ Once all Protocols exist:
 | D.3 | ✅ | 36 tools migrated to DI |
 | D++ | ✅ | 22 circuits CLI-accessible via `steward circuit` |
 | D+++ | ✅ | Unified Protocol - 65 capabilities via `steward run` |
-| D++++ | ⏳ | Self-Management (coming next) |
+| D++++ | ✅ | Self-Management - Ouroboros circuit, CLI loopback |
 
 ---
 

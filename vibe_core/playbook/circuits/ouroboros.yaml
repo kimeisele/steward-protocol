@@ -1,0 +1,325 @@
+# 🐍 OUROBOROS CIRCUIT - THE SELF-HEALING LOOP
+#
+# OPUS-307 D++++: Self-Management
+# The snake that eats its own tail.
+#
+# THE RECURSIVE PRINCIPLE:
+# Now that `steward run` exists, the system can call ITSELF.
+# This circuit uses CLI loopback to diagnose and heal.
+#
+# Shabda → Pratyaya → Karma → (feedback) → Shabda
+#
+# Usage:
+#   steward run OUROBOROS_V1
+#   steward run OUROBOROS_V1 --mode diagnose
+#   steward run OUROBOROS_V1 --mode heal
+#   steward run OUROBOROS_V1 --mode verify
+
+circuit:
+  id: OUROBOROS_V1
+  description: Self-healing system loop - diagnose, heal, verify via CLI loopback
+  domain: META
+  version: "1.0.0"
+  author: "Opus (D++++ Self-Management)"
+
+  # Dharmic Purpose: System heals itself
+  dharmic_intent: "sattva"  # Purity, balance, self-correction
+  entry_state: "diagnose"
+
+  # Input Schema
+  input:
+    mode:
+      type: string
+      enum: ["full", "diagnose", "heal", "verify"]
+      default: "full"
+    auto_fix:
+      type: boolean
+      default: true
+      description: "Automatically apply fixes if issues found"
+    dry_run:
+      type: boolean
+      default: false
+      description: "Show what would be done without executing"
+
+  states:
+    # ============================================================
+    # PHASE 1: DIAGNOSE - Run all health checks
+    # ============================================================
+    diagnose:
+      name: "System Diagnosis"
+      description: "Run comprehensive health checks via CLI loopback"
+      actions:
+        # CLI LOOPBACK: The system calls itself
+        - action_type: CLI_LOOPBACK
+          target: "watchman.health"
+          params:
+            output_format: "json"
+          capture_as: "health_result"
+
+        - action_type: CLI_LOOPBACK
+          target: "watchman.standards"
+          params:
+            action: "inspect_all"
+            output_format: "json"
+          capture_as: "standards_result"
+
+        - action_type: CLI_LOOPBACK
+          target: "auditor.compliance"
+          params:
+            scope: "quick"
+          capture_as: "compliance_result"
+
+      on_success: analyze_results
+      on_failure: report_diagnosis_failure
+
+    # ============================================================
+    # PHASE 2: ANALYZE - Determine what needs fixing
+    # ============================================================
+    analyze_results:
+      name: "Analyze Diagnosis Results"
+      description: "Determine issues and required fixes"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "ouroboros.analyze"
+          params:
+            health: "{{ health_result }}"
+            standards: "{{ standards_result }}"
+            compliance: "{{ compliance_result }}"
+          capture_as: "analysis"
+
+      transitions:
+        - condition: "{{ analysis.issues_found }} == false"
+          next_state: report_healthy
+        - condition: "{{ input.mode }} == 'diagnose'"
+          next_state: report_issues
+        - condition: "{{ input.auto_fix }} == true"
+          next_state: heal
+        - otherwise: report_issues
+
+    report_healthy:
+      name: "System Healthy"
+      description: "No issues found"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.healthy"
+          params:
+            message: "System is healthy. No action required."
+            checks_passed: "{{ analysis.checks_passed }}"
+      terminal: true
+
+    report_issues:
+      name: "Issues Found"
+      description: "Report issues without fixing"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.issues"
+          params:
+            issue_count: "{{ analysis.issue_count }}"
+            issues: "{{ analysis.issues }}"
+            suggested_fixes: "{{ analysis.suggested_fixes }}"
+      terminal: true
+
+    # ============================================================
+    # PHASE 3: HEAL - Apply fixes via CLI loopback
+    # ============================================================
+    heal:
+      name: "Self-Healing"
+      description: "Apply fixes via CLI loopback"
+      actions:
+        # For each violation, call the heal tool
+        - action_type: FOR_EACH
+          items: "{{ analysis.healable_violations }}"
+          as: "violation"
+          do:
+            - action_type: CLI_LOOPBACK
+              target: "engineer.heal_violation"
+              params:
+                violation_id: "{{ violation.id }}"
+                rule_id: "{{ violation.rule_id }}"
+                file_path: "{{ violation.file_path }}"
+                dry_run: "{{ input.dry_run }}"
+              capture_as: "heal_results.{{ violation.id }}"
+
+      on_success: verify
+      on_failure: report_heal_failure
+
+    # ============================================================
+    # PHASE 4: VERIFY - Confirm fixes worked
+    # ============================================================
+    verify:
+      name: "Verification"
+      description: "Verify fixes were applied correctly"
+      actions:
+        # Re-run diagnosis to confirm fixes
+        - action_type: CLI_LOOPBACK
+          target: "watchman.standards"
+          params:
+            action: "inspect_all"
+            output_format: "json"
+          capture_as: "post_heal_standards"
+
+        - action_type: EXECUTE_SCRIPT
+          target: "ouroboros.verify"
+          params:
+            before: "{{ standards_result }}"
+            after: "{{ post_heal_standards }}"
+            heal_results: "{{ heal_results }}"
+          capture_as: "verification"
+
+      transitions:
+        - condition: "{{ verification.all_fixed }} == true"
+          next_state: report_success
+        - otherwise: report_partial_success
+
+    # ============================================================
+    # TERMINAL STATES
+    # ============================================================
+    report_success:
+      name: "Self-Healing Complete"
+      description: "All issues fixed successfully"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.complete"
+          params:
+            status: "SUCCESS"
+            issues_fixed: "{{ verification.fixed_count }}"
+            message: "Ouroboros cycle complete. System healed."
+      terminal: true
+
+    report_partial_success:
+      name: "Partial Success"
+      description: "Some issues remain"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.partial"
+          params:
+            status: "PARTIAL"
+            fixed: "{{ verification.fixed_count }}"
+            remaining: "{{ verification.remaining_count }}"
+            message: "Some issues could not be auto-fixed. Manual intervention required."
+      terminal: true
+
+    report_diagnosis_failure:
+      name: "Diagnosis Failed"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.error"
+          params:
+            phase: "diagnosis"
+            error: "{{ error }}"
+      terminal: true
+
+    report_heal_failure:
+      name: "Healing Failed"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "ouroboros.error"
+          params:
+            phase: "healing"
+            error: "{{ error }}"
+      terminal: true
+
+# ============================================================
+# SCRIPT IMPLEMENTATIONS
+# ============================================================
+
+scripts:
+  ouroboros.analyze: |
+    # Analyze all diagnostic results and determine required fixes
+    health = params.get("health", {})
+    standards = params.get("standards", {})
+    compliance = params.get("compliance", {})
+
+    issues = []
+    healable = []
+    checks_passed = 0
+
+    # Analyze standards violations
+    violations = standards.get("violations", [])
+    for v in violations:
+        issue = {
+            "source": "standards",
+            "id": v.get("id"),
+            "rule_id": v.get("rule_id"),
+            "file_path": v.get("file_path"),
+            "severity": v.get("severity", "MEDIUM"),
+            "message": v.get("message"),
+            "healable": v.get("has_sattva_remedy", False)
+        }
+        issues.append(issue)
+        if issue["healable"]:
+            healable.append(issue)
+
+    # Analyze health checks
+    if health.get("status") == "healthy":
+        checks_passed += 1
+    else:
+        for check in health.get("failed_checks", []):
+            issues.append({
+                "source": "health",
+                "id": check.get("name"),
+                "message": check.get("message"),
+                "severity": "HIGH",
+                "healable": False
+            })
+
+    # Analyze compliance
+    if compliance.get("compliant", False):
+        checks_passed += 1
+    else:
+        for gap in compliance.get("gaps", []):
+            issues.append({
+                "source": "compliance",
+                "id": gap.get("rule"),
+                "message": gap.get("description"),
+                "severity": "HIGH",
+                "healable": False
+            })
+
+    return {
+        "issues_found": len(issues) > 0,
+        "issue_count": len(issues),
+        "issues": issues,
+        "healable_violations": healable,
+        "healable_count": len(healable),
+        "checks_passed": checks_passed,
+        "suggested_fixes": [f"steward run engineer.heal_violation --violation_id {v['id']}" for v in healable]
+    }
+
+  ouroboros.verify: |
+    # Verify fixes were applied by comparing before/after
+    before = params.get("before", {})
+    after = params.get("after", {})
+    heal_results = params.get("heal_results", {})
+
+    before_count = len(before.get("violations", []))
+    after_count = len(after.get("violations", []))
+    fixed_count = before_count - after_count
+
+    # Count successful heals
+    successful_heals = sum(1 for r in heal_results.values() if r.get("success", False))
+
+    return {
+        "all_fixed": after_count == 0,
+        "fixed_count": fixed_count,
+        "remaining_count": after_count,
+        "heal_success_rate": successful_heals / len(heal_results) if heal_results else 0,
+        "before_violations": before_count,
+        "after_violations": after_count
+    }
+
+# ============================================================
+# INVOCATION EXAMPLES
+# ============================================================
+#
+# Full self-healing cycle:
+#   steward run OUROBOROS_V1
+#
+# Diagnose only (no fixes):
+#   steward run OUROBOROS_V1 --mode diagnose
+#
+# Dry-run (show what would be fixed):
+#   steward run OUROBOROS_V1 --dry_run true
+#
+# Skip verification:
+#   steward run OUROBOROS_V1 --mode heal
