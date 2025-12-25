@@ -18,14 +18,16 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 from .cognition import CognitiveKernelProtocol, SystemHeartbeatProtocol
-from .llm import LLMProtocol
-from .opus import OpusAssistantProtocol
+
+# OPUS-307 D.2: External Service Protocols
+from .external import RedditProtocol, TwitterProtocol
 from .ledger import (
     KernelStatus,
     VibeKernel,
     VibeLedger,
     VibeScheduler,
 )
+from .llm import LLMProtocol
 from .operator_protocol import (
     GitState,
     IntentType,
@@ -40,6 +42,7 @@ from .operator_protocol import (
     create_response,
     create_system_context,
 )
+from .opus import OpusAssistantProtocol
 from .registry import ManifestRegistry  # Canonical source for ManifestRegistry
 from .state import (
     PrakritiProtocol,
@@ -114,4 +117,7 @@ __all__ = [
     "TestableRegistry",
     "get_global_registry",
     "reset_global_registry",
+    # OPUS-307 D.2: External Service Protocols
+    "TwitterProtocol",
+    "RedditProtocol",
 ]
