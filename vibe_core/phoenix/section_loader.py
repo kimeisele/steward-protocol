@@ -100,52 +100,43 @@ class SectionLoader(UnifiedLoader):
         """
         Discover and instantiate all config sections.
 
-        Supports BOTH:
-        - NEW-style: folders with manifest.json + section_main.py
-        - OLD-style: single .py files with section_id class attribute
+        OPUS-307 Phase F: Uses ManifestRegistry (NO iterdir!).
+        Das System WEISS welche Sections installiert sind.
 
         Args:
             config_dir: Directory containing YAML config files
-            sections_dir: Directory containing section definitions
+            sections_dir: Directory containing section definitions (legacy, unused)
 
         Returns:
             Tuple of (section_instances, metadata)
         """
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
         cls.config_dir = config_dir
-        scan_path = Path(sections_dir)
 
         sections: SectionInstances = {}
         metadata: Dict[str, SectionMeta] = {}
 
-        if not scan_path.exists():
-            logger.warning(f"Sections directory not found: {scan_path}")
+        # OPUS-307: Use ManifestRegistry instead of iterdir()
+        ManifestRegistry._ensure_scanned()
+        entries = ManifestRegistry.get_enabled("section")
+
+        if not entries:
+            logger.warning("[section] No section manifests found in ManifestRegistry")
             return sections, metadata
 
-        logger.info(f"[section] Scanning {scan_path}...")
+        logger.info(f"[section] Loading {len(entries)} sections from ManifestRegistry...")
 
-        # Process items in sections directory
-        for item in scan_path.iterdir():
-            if item.name.startswith((".", "_")):
-                continue
+        for entry in entries:
+            # entry.parent_dir is the section directory
+            section_dir = entry.parent_dir
 
-            if item.is_dir():
-                # NEW-style: folder with manifest.json
-                manifest_path = item / "manifest.json"
-                if manifest_path.exists():
-                    result = cls._load_new_style_section(item, config_dir)
-                    if result:
-                        section_id, instance, meta = result
-                        sections[section_id] = instance
-                        metadata[section_id] = meta
-                        logger.info(f"  ✅ Loaded: {section_id} (new-style)")
-
-            elif item.is_file() and item.suffix == ".py":
-                # OLD-style: single .py file
-                results = cls._load_old_style_sections(item, scan_path, config_dir)
-                for section_id, instance, meta in results:
-                    sections[section_id] = instance
-                    metadata[section_id] = meta
-                    logger.info(f"  ✅ Loaded: {section_id} (old-style)")
+            result = cls._load_new_style_section(section_dir, config_dir)
+            if result:
+                section_id, instance, meta = result
+                sections[section_id] = instance
+                metadata[section_id] = meta
+                logger.info(f"  ✅ Loaded: {section_id}")
 
         # Sort by priority
         sorted_sections = dict(sorted(sections.items(), key=lambda x: metadata[x[0]].priority))
