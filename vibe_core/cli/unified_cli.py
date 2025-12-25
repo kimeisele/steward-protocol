@@ -1196,13 +1196,7 @@ class UnifiedCLI:
             print(f"  {name:<15} (System)")
 
         print("\nTOOL PROTOCOL (OPUS-307):")
-        tool_help = {
-            "tool list": "List all available tools [--json] [--agent <id>]",
-            "tool info": "Show tool details <tool_name>",
-            "tool run": "Execute tool <tool_name> [--param=value]",
-        }
-        for name, help_text in tool_help.items():
-            print(f"  {name:<15} {help_text}")
+        print("  tool             Use 'steward tool --help' for subcommands")
 
         print("\nPRAKRITI COMMANDS (Unified State):")
         prakriti_help = {
