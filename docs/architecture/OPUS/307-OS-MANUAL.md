@@ -345,37 +345,59 @@ def __init__(self, services=None):
 Tool Protocol now:
 - Accepts `services: ServiceRegistry` parameter
 - ToolDiscovery injects registry automatically
-- 1/30 tools migrated (broadcast_tool), 29 pending
 
-### 🔄 Phase D.2: Service Protocols (NEXT)
+Commits:
+- `841350a2`: fix(di): SSOT - Remove fallback
 
-Create typed protocols for external services:
+### ✅ Phase D.2: Service Protocols (DONE - 2025-12-25)
+
+Created typed protocols for external services:
 
 ```python
 # vibe_core/protocols/external.py
-class TwitterProtocol(Protocol):
+class TwitterProtocol(ABC):
     def publish(self, content: str) -> bool: ...
     def scan_mentions(self, since_id: str) -> List[dict]: ...
 
-class RedditProtocol(Protocol):
+class RedditProtocol(ABC):
     def post(self, subreddit: str, title: str, content: str) -> bool: ...
 ```
 
-Register in plugin init:
+Service implementations in `vibe_core/cartridges/system/herald/services/`.
+Registered by HeraldCartridge on init.
+
+Commits:
+- `581e406b`: feat(di): OPUS-307 D.2 - Service Protocols
+
+### ✅ Phase D.3: Mass Tool Migration (DONE - 2025-12-25)
+
+Migrated 36 tools across 12 cartridges:
+
+| Cartridge | Tools |
+|-----------|-------|
+| analyst | architecture, code, deps, docs, git |
+| archivist | audit, observer, verifier |
+| auditor | compliance, invariant, watchdog |
+| chronicle | git_tools |
+| civic | bank, dashboard, ledger, license, vault |
+| engineer | builder, refactor, shuddhi |
+| envoy | city_control, curator, diplomacy, gap_report, hil_assistant, run_campaign |
+| herald | broadcast, identity, research, scout, scribe |
+| oracle | introspection |
+| science | web_search |
+| supreme_court | appeals, precedent, verdict |
+
+**Pattern applied:**
 ```python
-# plugins/herald/plugin_main.py
-def on_load(self, kernel):
-    ServiceRegistry.register(TwitterProtocol, TwitterClient())
-    ServiceRegistry.register(RedditProtocol, RedditClient())
+def __init__(self, services: Optional["ServiceRegistry"] = None):
+    super().__init__(services)
 ```
 
-### ⏳ Phase D.3: Mass Tool Migration
+**Result:** 43 tools discoverable via `steward tool list`.
 
-Migrate remaining 29 tools:
-1. Add `services` parameter to `__init__`
-2. Call `super().__init__(services)`
-3. Get dependencies from `self.services.get(Protocol)`
-4. Remove legacy `_init_*()` methods
+Commits:
+- `660eaf25`: feat(di): OPUS-307 D.3 - Mass Tool DI Migration
+- `13cff113`: feat(di): OPUS-307 D.3 - Add DI to refactor_tool
 
 ### ⏳ Phase D++: Circuit CLI
 
@@ -391,16 +413,44 @@ Everything becomes a Tool. No Plugin/Agent split.
 
 ---
 
-## NEXT CONCRETE STEP
+## POST-D VISION: 100% Protocol Coverage
 
-**Phase D.2: Create TwitterProtocol + RedditProtocol**
+### The Bottleneck
 
-1. Create `vibe_core/protocols/external.py`
-2. Define TwitterProtocol, RedditProtocol
-3. Update herald plugin to register implementations
-4. Update broadcast_tool to use typed protocols
+Everything must flow through:
+```
+Component → Protocol → ServiceRegistry → DI → Controllable
+```
 
-This completes the "broadcast_tool as pilot" migration.
+If it's not a Protocol, it's not in ServiceRegistry.
+If it's not in ServiceRegistry, it's not injectable.
+If it's not injectable, it's spaghetti.
+
+### After D Phases Complete
+
+| Phase | Focus | Goal |
+|-------|-------|------|
+| **E** | Protocol Audit | Identify ALL components not yet Protocol-based |
+| **F** | Protocol Migration | Convert remaining components to Protocols |
+| **G** | Registry Completeness | Verify 100% ServiceRegistry coverage |
+| **H** | CLI Completeness | Every Protocol accessible via CLI |
+| **I** | Self-Management | System can inspect/heal itself via CLI |
+
+### The "Glue" Phase
+
+Once all Protocols exist:
+1. **Discovery**: `steward protocols list` - shows all Protocols
+2. **Coverage**: `steward protocols coverage` - shows registration status
+3. **Health**: `steward protocols health` - tests all registered services
+4. **Graph**: `steward protocols graph` - shows dependency graph
+
+### Success Criteria (Windows 7)
+
+- [ ] 100% of components are Protocols
+- [ ] 100% of Protocols registered in ServiceRegistry
+- [ ] 100% of Tools use DI (no legacy __init__)
+- [ ] 100% of capabilities accessible via CLI
+- [ ] System can heal itself via CLI commands
 
 ---
 
