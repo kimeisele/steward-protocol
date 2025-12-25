@@ -104,6 +104,19 @@ rules:
     has_sattva_remedy: true
 
   # ANTI-PATTERN: Path scanning for discovery
+  # OPUS-307 Phase F: iterdir() is TAMAS (blind darkness)
+  # The system must KNOW what's installed, not GUESS.
+  - id: "iterdir_discovery"
+    target: "Call"
+    match:
+      attr: "iterdir"
+    severity: "HIGH"
+    message: "iterdir() is TAMAS - blind filesystem scanning. Das System RATET statt zu WISSEN."
+    fix_suggestion: "Use ManifestRegistry.get_by_type() or discover_from_registry(). The ONLY allowed iterdir is in ManifestRegistry._scan_directory()."
+    has_sattva_remedy: true
+    allowed_files: ["vibe_core/loaders/manifest_registry.py"]
+
+  # Legacy rule (softer version, kept for backwards compatibility)
   - id: "path_scanning_discovery"
     target: "Call"
     match:
@@ -111,8 +124,8 @@ rules:
       context_contains: ["discover", "load", "scan"]
     severity: "MEDIUM"
     message: "Using filesystem scanning for discovery. Fragile and implicit."
-    fix_suggestion: "Use manifest-driven discovery (plugins.yaml, cartridges.yaml) instead of path scanning."
-    has_sattva_remedy: false
+    fix_suggestion: "Use manifest-driven discovery via ManifestRegistry instead of path scanning."
+    has_sattva_remedy: true
 
   # ANTI-PATTERN: Global module-level singletons
   - id: "global_singleton_dict"
