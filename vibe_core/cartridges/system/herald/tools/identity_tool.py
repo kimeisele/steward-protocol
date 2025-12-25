@@ -17,9 +17,12 @@ SECURITY NOTE: Private key writes intentionally bypass the I/O Service.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 # SECURITY FIX (OPUS-018): Always import steward/crypto.py for ECDSA signing
 # This replaces the insecure HMAC-SHA256 fallback
@@ -58,14 +61,21 @@ class IdentityTool(Tool):
     SECURITY: ECDSA signatures are asymmetric - verification without secret key.
     """
 
-    def __init__(self, identity_file: str = "herald/STEWARD.md", agent_id: str = "herald"):
+    def __init__(
+        self,
+        services: Optional["ServiceRegistry"] = None,
+        identity_file: str = "herald/STEWARD.md",
+        agent_id: str = "herald",
+    ):
         """
         Initialize identity tool with HERALD's identity file.
 
         Args:
+            services: ServiceRegistry for dependency injection
             identity_file: Path to HERALD's STEWARD.md identity file
             agent_id: Agent identifier for key storage
         """
+        super().__init__(services)
         self.identity_file = Path(identity_file)
         self.agent_id = agent_id
         self.client = None

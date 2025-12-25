@@ -13,9 +13,12 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 
 class DiplomacyTool(Tool):
@@ -29,7 +32,8 @@ class DiplomacyTool(Tool):
     - Human approval required
     """
 
-    def __init__(self, degradation_chain=None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, degradation_chain=None):
+        super().__init__(services)
         self.diplomatic_bag = Path("diplomatic_bag")
         self.diplomatic_bag.mkdir(exist_ok=True)
         self.chain = degradation_chain

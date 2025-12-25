@@ -17,11 +17,14 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import yaml
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("AUDITOR_COMPLIANCE")
 
@@ -88,13 +91,15 @@ class ComplianceTool(Tool):
     the SYSTEM that contains these agents.
     """
 
-    def __init__(self, root_path: Path = Path(".")):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, root_path: Path = Path(".")):
         """
         Initialize compliance tool.
 
         Args:
+            services: Service registry for dependency injection
             root_path: Root path of the repository
         """
+        super().__init__(services)
         self.root_path = root_path
         self.violations: List[ComplianceViolation] = []
         self.warnings: List[ComplianceViolation] = []

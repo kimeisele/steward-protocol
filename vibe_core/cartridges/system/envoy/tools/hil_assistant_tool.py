@@ -15,9 +15,12 @@ Tool Protocol compliant for kernel-managed execution.
 
 import logging
 import re
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HIL_ASSISTANT")
@@ -30,7 +33,8 @@ class HILAssistantTool(Tool):
     Transforms complex system states into simple, strategic directives.
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        super().__init__(services)
         logger.info("🧠 HIL Assistant (VAD Layer) initialized")
 
     @property

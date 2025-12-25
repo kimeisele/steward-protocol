@@ -14,9 +14,12 @@ This tool implements the Tool Protocol for kernel-managed execution.
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 try:
     from tavily import TavilyClient
@@ -46,15 +49,17 @@ class ResearchTool(Tool, OfflineCapableMixin):
     - Offline: Falls back to LocalLLM or templates
     """
 
-    def __init__(self, degradation_chain=None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, degradation_chain=None):
         """
         Initialize research tool.
 
         Args:
+            services: ServiceRegistry for dependency injection
             degradation_chain: Optional DegradationChain for offline fallback.
                                If provided, enables graceful degradation when
                                Tavily is unavailable.
         """
+        super().__init__(services)
         # Initialize offline capability
         self.init_offline_capability(degradation_chain)
 

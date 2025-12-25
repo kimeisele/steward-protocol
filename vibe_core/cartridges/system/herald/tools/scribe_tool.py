@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
     from vibe_core.io_service import KernelIOService
 
 # OPUS-121: Import LedgerEvent from canonical location
@@ -61,6 +62,7 @@ class Scribe(Tool):
 
     def __init__(
         self,
+        services: Optional["ServiceRegistry"] = None,
         chronicle_path: Optional[Path] = None,
         io_service: Optional["KernelIOService"] = None,
     ):
@@ -68,10 +70,12 @@ class Scribe(Tool):
         Initialize the Scribe.
 
         Args:
+            services: ServiceRegistry for dependency injection
             chronicle_path: Path to docs/chronicles.md
             io_service: Kernel I/O Service for centralized file writes.
                         If None, falls back to direct writes (deprecated in kernel context).
         """
+        super().__init__(services)
         self.chronicle_path = chronicle_path or Path("docs/chronicles.md")
         self._io_service = io_service
 

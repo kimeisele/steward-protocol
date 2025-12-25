@@ -33,9 +33,12 @@ import logging
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -77,7 +80,8 @@ class CityControlTool(Tool):
     - 💰 check_credits() - View economic status
     """
 
-    def __init__(self, kernel=None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, kernel=None):
+        super().__init__(services)
         """
         Initialize City Control Tool.
 

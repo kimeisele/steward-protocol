@@ -16,10 +16,13 @@ import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.cartridges.system.civic.tools.exceptions import InsufficientFundsError
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("CIVIC_LEDGER")
 
@@ -60,8 +63,9 @@ class LedgerTool(Tool):
     _DB_PATH_DEFAULT = "data/economy.db"
     DB_PATH = None
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize the Ledger Tool (kernel-managed)."""
+        super().__init__(services)
         logger.info("🏦 Initializing LedgerTool (self-contained)...")
         self._conn = None
         self._db_path = None

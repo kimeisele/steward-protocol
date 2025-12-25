@@ -20,7 +20,10 @@ import logging
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -38,8 +41,9 @@ class GitTools(Tool):
     - manifest_reality(files): Stage and prepare
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize Git Tools (kernel-managed)."""
+        super().__init__(services)
         self.repo_path = Path(".")
         self.logger = logger
 

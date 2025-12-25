@@ -18,7 +18,10 @@ Tool Protocol Compliant (Kernel-Managed).
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -38,8 +41,9 @@ class IntrospectionTool(Tool):
     Read-only access to all ledgers. Aggregates data into meaningful context.
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize introspection engine (kernel-managed)."""
+        super().__init__(services)
         self._bank = None
         logger.info("🔮 ORACLE INTROSPECTION ENGINE initialized")
 

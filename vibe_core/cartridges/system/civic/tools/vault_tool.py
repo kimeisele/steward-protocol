@@ -18,9 +18,12 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 # Lazy import for cryptography to prevent import-time crashes
 Fernet = None
@@ -93,8 +96,9 @@ class VaultTool(Tool):
     MASTER_KEY_PATH = None  # Set dynamically in _ensure_master_key
     LEASE_COST = 5  # Credits per lease
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize Vault Tool (kernel-managed)."""
+        super().__init__(services)
         self._bank_conn = None  # Will be injected by setter if needed
         self._crypto_available = None  # Lazy check
 

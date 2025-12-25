@@ -6,7 +6,10 @@ Verifies events from other agents (like HERALD) and creates attestations.
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("ARCHIVIST_AUDIT")
 
@@ -28,13 +31,15 @@ class AuditTool:
     # VAJRA: Kernel binding slot
     _vibe_kernel = None
 
-    def __init__(self, agent_name: str = "archivist"):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, agent_name: str = "archivist"):
         """
         Initialize the audit tool.
 
         Args:
+            services: Service registry for DI
             agent_name: Name of this auditor agent
         """
+        super().__init__(services)
         self.agent_name = agent_name
         self.verified_count = 0
         self.failed_count = 0

@@ -24,9 +24,12 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("JUDGE_INVARIANT")
 
@@ -134,8 +137,9 @@ class InvariantEngine(Tool):
     Runs checks on the event ledger to ensure system integrity.
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize the invariant engine with all rules"""
+        super().__init__(services)
         logger.info("⚖️  JUDGE: Initializing Invariant Engine")
 
         self.rules: Dict[str, InvariantRule] = {}

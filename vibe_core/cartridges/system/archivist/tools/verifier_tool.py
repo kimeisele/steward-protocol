@@ -16,7 +16,10 @@ Implementation:
 import hashlib
 import logging
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("ARCHIVIST_VERIFIER")
 
@@ -49,7 +52,8 @@ class VerifierTool:
     # VAJRA: Kernel binding slot
     _vibe_kernel = None
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        super().__init__(services)
         self.logger = logger
         self.simulation_mode = not (CRYPTO_ENABLED and CRYPTO_AVAILABLE)
 

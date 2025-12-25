@@ -22,9 +22,12 @@ import logging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("CIVIC_BANK_TOOL")
 
@@ -52,8 +55,8 @@ class BankTool(Tool):
     _DB_PATH_DEFAULT = "data/economy.db"
     DB_PATH = None  # Set at runtime from config or parameters
 
-    def __init__(self):
-        """Initialize Bank Tool (kernel-managed)."""
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        super().__init__(services)
         self._conn = None
         self._db_path = None
 

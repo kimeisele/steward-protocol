@@ -9,9 +9,12 @@ This tool implements the Tool Protocol for kernel-managed execution.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("HERALD_SCOUT")
 
@@ -28,13 +31,17 @@ class ScoutTool(Tool):
     3. Tweet frequency/patterns (if available)
     """
 
-    def __init__(self, pokedex_path: str = "data/federation/pokedex.json"):
+    def __init__(
+        self, services: Optional["ServiceRegistry"] = None, pokedex_path: str = "data/federation/pokedex.json"
+    ):
         """
         Initialize Scout Tool.
 
         Args:
+            services: ServiceRegistry for dependency injection
             pokedex_path: Path to pokedex JSON file (default: data/federation/pokedex.json)
         """
+        super().__init__(services)
         self.pokedex_path = Path(pokedex_path)
         self.known_agents = self._load_pokedex()
 

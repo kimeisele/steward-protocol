@@ -17,7 +17,10 @@ Tool Protocol Compliant (Kernel-Managed).
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -73,8 +76,9 @@ class WebSearchTool(Tool):
     Philosophy: No mocks. Real data or failure.
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize search tool (kernel-managed)."""
+        super().__init__(services)
         global _bank, _vault
 
         self.api_key = None
