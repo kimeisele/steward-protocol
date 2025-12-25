@@ -126,12 +126,10 @@ class UnifiedExecutor:
             )
 
         try:
-            if request.execution_path == ExecutionPath.FAST_COMMAND:
+            # OPUS-307: All paths route to _execute_circuit (ExecutorSingularity)
+            # ExecutionPath.PLAYBOOK removed - was dead code (never set by UnifiedRouter)
+            if request.execution_path in (ExecutionPath.FAST_COMMAND, ExecutionPath.CIRCUIT):
                 result = await self._execute_circuit(request)
-            elif request.execution_path == ExecutionPath.CIRCUIT:
-                result = await self._execute_circuit(request)
-            elif request.execution_path == ExecutionPath.PLAYBOOK:
-                result = await self._execute_playbook(request)
             else:
                 result = await self._execute_fallback(request)
 
@@ -230,10 +228,9 @@ class UnifiedExecutor:
             },
         )
 
-    async def _execute_playbook(self, request: ExecutionRequest) -> ExecutionResult:
-        """Execute a legacy playbook"""
-        # For now, delegate to circuit executor (they share the same backend)
-        return await self._execute_circuit(request)
+    # OPUS-307: _execute_playbook() REMOVED - was dead code
+    # UnifiedRouter never sets ExecutionPath.PLAYBOOK
+    # All playbooks converted to circuits by ExecutorSingularity
 
     async def _execute_fallback(self, request: ExecutionRequest) -> ExecutionResult:
         """Handle unknown requests"""
