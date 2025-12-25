@@ -17,7 +17,10 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -60,8 +63,9 @@ class VerdictTool(Tool):
     Tool Protocol Compliant (Kernel-Managed).
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize verdict tool (kernel-managed)."""
+        super().__init__(services)
         self._root_path = None
         logger.info("⚖️  Verdict Tool initialized")
 

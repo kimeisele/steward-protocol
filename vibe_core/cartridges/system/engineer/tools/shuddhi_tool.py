@@ -7,7 +7,10 @@ This tool bridges the gap between the 'HEAL_CODEBASE' circuit and the Core Shudd
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.io_service import DocumentType, KernelIOService
@@ -26,7 +29,8 @@ class ShuddhiHealTool(Tool):
         steward do "heal violation in file.py rule unsafe_io_write"
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        super().__init__(services)
         self.io_service: Optional[KernelIOService] = None
         self._kernel = None
 

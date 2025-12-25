@@ -19,9 +19,12 @@ import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("WATCHDOG")
 
@@ -106,13 +109,15 @@ class Watchdog(Tool):
     Monitors system invariants and triggers alarms on violations.
     """
 
-    def __init__(self, config: WatchdogConfig = None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, config: WatchdogConfig = None):
         """
         Initialize the Watchdog.
 
         Args:
+            services: Service registry for dependency injection
             config: WatchdogConfig instance (uses defaults if None)
         """
+        super().__init__(services)
         self.config = config or WatchdogConfig()
         self.last_checked_index = 0
         self.violation_count = 0

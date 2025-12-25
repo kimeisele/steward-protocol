@@ -16,7 +16,10 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -53,6 +56,7 @@ class PrecedentTool(Tool):
 
     def __init__(
         self,
+        services: Optional["ServiceRegistry"] = None,
         vfs: Optional[Any] = None,
         io: Optional[Any] = None,
     ):
@@ -60,9 +64,11 @@ class PrecedentTool(Tool):
         Initialize precedent tool (kernel-managed).
 
         Args:
+            services: Service registry for DI
             vfs: Optional VirtualFileSystem for sandboxing
             io: Optional KernelIOService for audited atomic writes
         """
+        super().__init__(services)
         self.vfs = vfs
         self.io = io
         self._root_path = None

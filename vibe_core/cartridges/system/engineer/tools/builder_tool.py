@@ -11,7 +11,10 @@ Tool Protocol compliant for kernel-managed execution.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
@@ -30,8 +33,9 @@ class BuilderTool(Tool):
     - (Future: generate via LLM service)
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """Initialize builder tool."""
+        super().__init__(services)
         self._genesis_service: Optional[Any] = None
         logger.info("🔨 Builder Tool initialized (OPUS-160: Stadtamt integration)")
 

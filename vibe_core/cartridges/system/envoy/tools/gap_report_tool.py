@@ -17,9 +17,12 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GAP_REPORT_TOOL")
@@ -35,12 +38,14 @@ class GAPReportTool(Tool):
 
     def __init__(
         self,
+        services: Optional["ServiceRegistry"] = None,
         ledger_path: str = "data/registry/ledger.jsonl",
         licenses_path: str = "data/registry/licenses.json",
         proposals_path: str = "data/governance/executed",
         vfs: Optional[Any] = None,
         io: Optional[Any] = None,
     ):
+        super().__init__(services)
         """
         Initialize G.A.P. Report Tool.
 

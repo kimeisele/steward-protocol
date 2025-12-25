@@ -18,9 +18,12 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("ANALYST_ARCHITECTURE_TOOL")
 
@@ -33,13 +36,15 @@ class ArchitectureAnalysisTool(Tool):
     Reveals kernel internals, dataflow, and integration patterns.
     """
 
-    def __init__(self, root_dir: str = "."):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, root_dir: str = "."):
         """
         Initialize architecture analysis tool.
 
         Args:
+            services: Service registry for DI
             root_dir: Repository root directory
         """
+        super().__init__(services)
         self.root_dir = Path(root_dir).resolve()
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel = None

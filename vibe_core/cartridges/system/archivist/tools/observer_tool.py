@@ -5,7 +5,10 @@ Reads and monitors Twitter timeline for HERALD broadcasts
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("ARCHIVIST_OBSERVER")
 
@@ -22,7 +25,8 @@ class ObserverTool:
     # VAJRA: Kernel binding slot
     _vibe_kernel = None
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        super().__init__(services)
         self.logger = logger
         self.logger.info("Observer Tool initialized")
 

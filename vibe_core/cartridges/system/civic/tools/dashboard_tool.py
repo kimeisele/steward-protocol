@@ -18,9 +18,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import yaml
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("DASHBOARD")
 
@@ -43,13 +46,15 @@ class DashboardGenerator:
     Generates the OPERATIONS.md dashboard from matrix.yaml and ledger.
     """
 
-    def __init__(self, repo_root: str = "."):
+    def __init__(self, repo_root: str = ".", services: Optional["ServiceRegistry"] = None):
         """
         Initialize dashboard generator.
 
         Args:
             repo_root: Root directory of steward-protocol repo
+            services: Optional service registry for dependency injection
         """
+        self.services = services
         self.repo_root = Path(repo_root)
         self.matrix_path = self.repo_root / "config" / "matrix.yaml"
         self.ledger_path = self.repo_root / "data" / "ledger" / "audit_trail.jsonl"

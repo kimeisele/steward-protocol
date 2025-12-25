@@ -17,7 +17,12 @@ Supported formats:
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from vibe_core.tools.tool_protocol import Tool
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("HERALD_VISUAL")
 
@@ -34,7 +39,7 @@ class VisualAsset:
     height: Optional[int] = None
 
 
-class VisualTool:
+class VisualTool(Tool):
     """
     Generates visual assets to complement text content.
 
@@ -88,8 +93,14 @@ class VisualTool:
         "verification": ["checkmark", "seal"],
     }
 
-    def __init__(self):
-        """Initialize visual tool."""
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        """
+        Initialize visual tool.
+
+        Args:
+            services: ServiceRegistry for dependency injection
+        """
+        super().__init__(services)
         self.theme_cache = {}
         logger.info("🎨 Visual Tool initialized")
 

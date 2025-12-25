@@ -22,9 +22,12 @@ Intent → Resource Check → Research → Content → Publishing → Ledger Rec
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RUN_CAMPAIGN_TOOL")
@@ -52,7 +55,8 @@ class RunCampaignTool(Tool):
     5. Records outcomes in ledger
     """
 
-    def __init__(self, kernel=None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, kernel=None):
+        super().__init__(services)
         """
         Initialize the campaign orchestration tool.
 

@@ -13,9 +13,12 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 
 class CuratorTool(Tool):
@@ -29,7 +32,8 @@ class CuratorTool(Tool):
     - Insight generation (for HERALD to share)
     """
 
-    def __init__(self, degradation_chain=None):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, degradation_chain=None):
+        super().__init__(services)
         # Use relative paths for VFS compliance (sandbox root)
         self.intelligence_dir = Path("intelligence")
         self.intelligence_dir.mkdir(parents=True, exist_ok=True)

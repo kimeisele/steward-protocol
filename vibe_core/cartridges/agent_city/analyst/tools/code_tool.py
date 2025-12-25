@@ -14,9 +14,12 @@ import ast
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("ANALYST_CODE_TOOL")
 
@@ -29,13 +32,15 @@ class CodeAnalysisTool(Tool):
     Not just commit messages, but actual CODE analysis.
     """
 
-    def __init__(self, root_dir: str = "."):
+    def __init__(self, services: Optional["ServiceRegistry"] = None, root_dir: str = "."):
         """
         Initialize code analysis tool.
 
         Args:
+            services: Service registry for DI
             root_dir: Repository root directory
         """
+        super().__init__(services)
         self.root_dir = Path(root_dir).resolve()
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel = None

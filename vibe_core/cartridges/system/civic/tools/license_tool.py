@@ -21,9 +21,12 @@ import logging
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("CIVIC_LICENSE")
 
@@ -136,12 +139,13 @@ class LicenseTool(Tool):
     NOW implements Tool protocol - kernel-managed initialization.
     """
 
-    def __init__(self):
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
         """
         Initialize the License Tool (kernel-managed).
 
         License database path deferred to _ensure_db_path() for lazy loading.
         """
+        super().__init__(services)
         self._license_db_path = None
         self.licenses: Dict[str, License] = {}
 
