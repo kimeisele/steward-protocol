@@ -9,6 +9,7 @@ Contains self-contained operations that don't need tight kernel coupling:
 - Pulse (heartbeat/snapshot)
 """
 
+import asyncio
 import json
 import logging
 import time

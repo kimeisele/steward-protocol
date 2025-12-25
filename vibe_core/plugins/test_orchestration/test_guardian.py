@@ -535,7 +535,6 @@ class Guardian:
 # ============================================================================
 
 __all__ = [
-    "TestGuardian",
     "TestContract",
     "MutationEvent",
 ]
