@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2025-12-25T09:37:03.679561",
-  "total_cycles": 25,
+  "saved_at": "2025-12-25T09:39:04.044416",
+  "total_cycles": 26,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679582"
+      "timestamp": "2025-12-25T09:39:04.044427"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679587"
+      "timestamp": "2025-12-25T09:39:04.044432"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679591"
+      "timestamp": "2025-12-25T09:39:04.044435"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679594"
+      "timestamp": "2025-12-25T09:39:04.044438"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679598"
+      "timestamp": "2025-12-25T09:39:04.044442"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-25T09:37:03.679602"
+      "timestamp": "2025-12-25T09:39:04.044444"
     },
     {
       "cycle_id": "36dd6ee8",
@@ -99,7 +99,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679607"
+      "timestamp": "2025-12-25T09:39:04.044448"
     },
     {
       "cycle_id": "b7a258f3",
@@ -119,7 +119,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679613"
+      "timestamp": "2025-12-25T09:39:04.044452"
     },
     {
       "cycle_id": "be095401",
@@ -139,7 +139,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679616"
+      "timestamp": "2025-12-25T09:39:04.044455"
     },
     {
       "cycle_id": "6df1dba3",
@@ -159,7 +159,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679619"
+      "timestamp": "2025-12-25T09:39:04.044457"
     },
     {
       "cycle_id": "cec6f0de",
@@ -180,7 +180,7 @@
         "agents_discovered": 0,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679621"
+      "timestamp": "2025-12-25T09:39:04.044459"
     },
     {
       "cycle_id": "e52ff3d6",
@@ -201,7 +201,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679624"
+      "timestamp": "2025-12-25T09:39:04.044462"
     },
     {
       "cycle_id": "5c718f1f",
@@ -222,7 +222,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679626"
+      "timestamp": "2025-12-25T09:39:04.044464"
     },
     {
       "cycle_id": "ff702b54",
@@ -243,7 +243,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679629"
+      "timestamp": "2025-12-25T09:39:04.044467"
     },
     {
       "cycle_id": "5ae8a3b2",
@@ -264,7 +264,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679633"
+      "timestamp": "2025-12-25T09:39:04.044477"
     },
     {
       "cycle_id": "150dbb36",
@@ -285,7 +285,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679636"
+      "timestamp": "2025-12-25T09:39:04.044480"
     },
     {
       "cycle_id": "6ad1d3a3",
@@ -301,7 +301,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-25T09:37:03.679638"
+      "timestamp": "2025-12-25T09:39:04.044482"
     },
     {
       "cycle_id": "244a8b0a",
@@ -317,7 +317,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-25T09:37:03.679641"
+      "timestamp": "2025-12-25T09:39:04.044485"
     },
     {
       "cycle_id": "9a17effd",
@@ -333,7 +333,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-25T09:37:03.679643"
+      "timestamp": "2025-12-25T09:39:04.044487"
     },
     {
       "cycle_id": "b1b91986",
@@ -353,7 +353,27 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-25T09:37:03.679645"
+      "timestamp": "2025-12-25T09:39:04.044489"
+    },
+    {
+      "cycle_id": "fb6b9e49",
+      "parent_cycle_id": null,
+      "trace_id": "8dcdae3b",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "agents_registered": 1
+      },
+      "timestamp": "2025-12-25T09:39:04.044490"
     }
   ],
   "errors": [
@@ -377,7 +397,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-25T09:37:03.679649"
+      "timestamp": "2025-12-25T09:39:04.044494"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -399,7 +419,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-25T09:37:03.679652"
+      "timestamp": "2025-12-25T09:39:04.044497"
     },
     {
       "cycle_id": "60f300f5",
@@ -421,7 +441,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-25T09:37:03.679655"
+      "timestamp": "2025-12-25T09:39:04.044499"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -443,7 +463,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-25T09:37:03.679658"
+      "timestamp": "2025-12-25T09:39:04.044501"
     },
     {
       "cycle_id": "e9194249",
@@ -461,7 +481,7 @@
         "discovery_skipped": true,
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-25T09:37:03.679660"
+      "timestamp": "2025-12-25T09:39:04.044503"
     }
   ]
 }
