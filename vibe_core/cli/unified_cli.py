@@ -31,6 +31,8 @@ with warnings.catch_warnings():
     from vibe_core.cli.legacy import StewardCLI
 
 # OPUS-307 Phase D: Tool Protocol CLI
+# OPUS-307 Phase D++: Circuit Protocol CLI
+from vibe_core.cli.circuit_cli import CircuitCLI
 from vibe_core.cli.tool_cli import ToolCLI
 
 logger = logging.getLogger("UNIFIED_CLI")
@@ -60,6 +62,7 @@ class UnifiedCLI:
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
         self._tool_cli = ToolCLI()  # OPUS-307 Phase D: Tool Protocol CLI
+        self._circuit_cli = CircuitCLI()  # OPUS-307 Phase D++: Circuit Protocol CLI
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -127,6 +130,10 @@ class UnifiedCLI:
         # 2. OPUS-307 Phase D: Tool Protocol CLI
         if command_name == "tool":
             return self._tool_cli.run(remaining_args)
+
+        # 2b. OPUS-307 Phase D++: Circuit Protocol CLI
+        if command_name == "circuit":
+            return self._circuit_cli.run(remaining_args)
 
         # 3. Check Plugin Commands
         commands = self._loader.discover_commands()
