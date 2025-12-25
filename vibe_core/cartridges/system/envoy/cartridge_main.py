@@ -23,7 +23,12 @@ from typing import Any, Dict, Optional
 # VibeOS Integration
 from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
-from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+
+# OPUS-307 Phase I.2: ExecutorSingularity replaces DeterministicExecutor
+from vibe_core.cartridges.system.envoy.executor_singularity import (
+    ExecutorSingularity,
+    create_executor_singularity,
+)
 
 # GAD-5500: The Missing Link (Wiring)
 from vibe_core.config import CityConfig
@@ -102,11 +107,11 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
 
         logger.info("👁️  ENVOY (VibeAgent v3.1) is initializing...")
 
-        # GAD-5500: Initialize The Brain (Router) and The Hand (Executor)
+        # OPUS-307 Phase I.2: ExecutorSingularity (lazy init - needs kernel)
         # Router will be accessed from EnvoyPlugin via kernel
         self._router = None  # Lazy - set when kernel available
-        self.executor = DeterministicExecutor()
-        logger.info("✋ Deterministic Executor initialized (Execution Engine)")
+        self._executor_singularity = None  # Lazy - needs kernel
+        logger.info("✋ ExecutorSingularity will be initialized with kernel (OPUS-307)")
 
         # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
         # NO tool instances owned - agent is NAKED
@@ -139,6 +144,18 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             if hasattr(self.kernel, "envoy") and self.kernel.envoy:
                 self._router = self.kernel.envoy._unified_router
         return self._router
+
+    @property
+    def executor(self) -> ExecutorSingularity:
+        """
+        OPUS-307 Phase I.2: Lazy-init ExecutorSingularity.
+
+        Returns the unified executor (no fallback, no DeterministicExecutor).
+        """
+        if self._executor_singularity is None and self.kernel:
+            self._executor_singularity = create_executor_singularity(self.kernel)
+            logger.info("✋ ExecutorSingularity initialized (OPUS-307)")
+        return self._executor_singularity
 
     # NO set_kernel() override - tools accessed via self.system.execute_tool()
 
@@ -241,12 +258,11 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             elif status == "routing":
                 # Execute based on path
                 if path == "flash":
-                    # Simple queries - use DeterministicExecutor with simple playbook
+                    # Simple queries - use ExecutorSingularity (OPUS-307)
                     result = await self.executor.execute(
-                        playbook_id="SIMPLE_QUERY",
+                        playbook_or_circuit_id="SIMPLE_QUERY",
                         user_input=user_input,
                         intent_vector=routing_decision.get("details"),
-                        kernel=self.kernel,
                     )
                     return result
 
@@ -273,10 +289,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     # P4.1: Unknown path - log warning and use flash as fallback
                     logger.warning(f"Unknown routing path '{path}', using flash fallback")
                     result = await self.executor.execute(
-                        playbook_id="SIMPLE_QUERY",
+                        playbook_or_circuit_id="SIMPLE_QUERY",
                         user_input=user_input,
                         intent_vector=routing_decision.get("details"),
-                        kernel=self.kernel,
                     )
                     return result
 

@@ -3,22 +3,24 @@ UNIFIED EXECUTION FULL - Executor Only (OPUS-301 Boot Optimization)
 ====================================================================
 
 OPUS-301: Split for lazy loading - Core loaded at boot, Full loaded on first use.
-OPUS-307 Phase I.1: ExecutorSingularity - ALL execution routes to CognitiveCircuitExecutor.
+OPUS-307 Phase I.2: ExecutorSingularity - THE ONLY executor. No fallback.
 
 Full contains:
 - UnifiedExecutor (execution logic)
 - ExecutorSingularity (OPUS-307: unified execution)
-- Heavy imports (DeterministicExecutor as fallback)
 
 Core (unified_execution_core.py) contains:
 - UnifiedRouter (routing logic)
 - Route decision making
 
 This reduces boot time by ~265ms by deferring executor imports until first execution.
+
+OPUS-307 Phase I.2: DeterministicExecutor REMOVED. Singularity or FAIL.
+"Ein Executor, eine Engine, eine Wahrheit."
 """
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibe_core.cartridges.system.envoy.executor_singularity import ExecutorSingularity
@@ -32,9 +34,6 @@ from vibe_core.state.schema import (
 
 logger = logging.getLogger("UNIFIED_EXECUTION")
 
-# OPUS-307: ExecutorSingularity flag
-EXECUTOR_SINGULARITY_ENABLED = True  # Set to False to fallback to DeterministicExecutor
-
 # =============================================================================
 # UNIFIED EXECUTOR (BREAK 4 + BREAK 6 fix)
 # =============================================================================
@@ -44,64 +43,53 @@ class UnifiedExecutor:
     """
     Execute based on routing decision.
 
+    OPUS-307 Phase I.2: ExecutorSingularity is THE ONLY executor.
+    No fallback. No DeterministicExecutor. One engine, one truth.
+
     Features:
     - Eager initialization (BREAK 4 fix - no lazy loading race conditions)
     - All async (BREAK 6 fix - consistent async boundaries)
-    - OPUS-307 Phase I.1: ExecutorSingularity - ALL execution via CognitiveCircuitExecutor
-    - Delegates to specialized executors
+    - ExecutorSingularity routes ALL execution via CognitiveCircuitExecutor
     """
 
     def __init__(self, kernel: "RealVibeKernel", ephemeral=None):
         """
-        Eager initialization - all executors created at construction time.
-        No lazy loading = no race conditions.
+        Eager initialization - ExecutorSingularity created at construction time.
 
         Args:
             kernel: The kernel instance
-            ephemeral: EphemeralStorage instance (OPUS Phase 2: dependency injection)
+            ephemeral: EphemeralStorage instance (reserved for future use)
+
+        Raises:
+            RuntimeError: If ExecutorSingularity fails to initialize
         """
         self._kernel = kernel
         self._ephemeral = ephemeral
 
-        # OPUS-307: ExecutorSingularity (primary)
-        self._singularity: Optional["ExecutorSingularity"] = None
-        if EXECUTOR_SINGULARITY_ENABLED:
-            self._init_singularity()
+        # OPUS-307 Phase I.2: ExecutorSingularity is THE ONLY executor
+        self._singularity: "ExecutorSingularity" = self._init_singularity()
 
-        # DeterministicExecutor (fallback only)
-        self._circuit_executor = None
-        if not EXECUTOR_SINGULARITY_ENABLED or self._singularity is None:
-            self._init_circuit_executor()
+        logger.info("[EXECUTOR] 🎯 UnifiedExecutor ready (Singularity mode)")
 
-        logger.info("[EXECUTOR] UnifiedExecutor initialized (eager)")
-
-    def _init_singularity(self):
+    def _init_singularity(self) -> "ExecutorSingularity":
         """
-        OPUS-307 Phase I.1: Initialize ExecutorSingularity.
+        OPUS-307 Phase I.2: Initialize ExecutorSingularity.
 
-        This is the unified executor that routes ALL execution
-        through CognitiveCircuitExecutor.
+        This is THE unified executor. No fallback. If this fails, execution fails.
+
+        Returns:
+            ExecutorSingularity instance
+
+        Raises:
+            RuntimeError: If initialization fails
         """
-        try:
-            from vibe_core.cartridges.system.envoy.executor_singularity import (
-                create_executor_singularity,
-            )
+        from vibe_core.cartridges.system.envoy.executor_singularity import (
+            create_executor_singularity,
+        )
 
-            self._singularity = create_executor_singularity(self._kernel)
-            logger.info("[EXECUTOR] 🎯 ExecutorSingularity ready (OPUS-307 Phase I.1)")
-        except Exception as e:
-            logger.warning(f"[EXECUTOR] ExecutorSingularity not available, falling back: {e}")
-            self._singularity = None
-
-    def _init_circuit_executor(self):
-        """Initialize circuit executor with ephemeral storage (OPUS Phase 2) - FALLBACK ONLY"""
-        try:
-            from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
-
-            self._circuit_executor = DeterministicExecutor(ephemeral=self._ephemeral)
-            logger.info("[EXECUTOR] DeterministicExecutor ready (fallback)")
-        except Exception as e:
-            logger.warning(f"[EXECUTOR] DeterministicExecutor not available: {e}")
+        singularity = create_executor_singularity(self._kernel)
+        logger.info("[EXECUTOR] 🎯 ExecutorSingularity initialized (OPUS-307 Phase I.2)")
+        return singularity
 
     async def execute(self, request: ExecutionRequest) -> ExecutionResult:
         """
@@ -160,63 +148,25 @@ class UnifiedExecutor:
 
     async def _execute_circuit(self, request: ExecutionRequest) -> ExecutionResult:
         """
-        Execute a circuit.
+        Execute a circuit via ExecutorSingularity.
 
-        OPUS-307 Phase I.1: Routes to ExecutorSingularity (CognitiveCircuitExecutor)
-        with DeterministicExecutor as fallback.
+        OPUS-307 Phase I.2: No fallback. Singularity or FAIL.
         """
-        # OPUS-307: Try ExecutorSingularity first
-        if self._singularity is not None:
-            try:
-                raw_result = await self._singularity.execute(
-                    playbook_or_circuit_id=request.target_id,
-                    user_input=request.user_input,
-                    intent_vector=None,
-                )
-
-                # Extract rendered response
-                details = raw_result.get("details", {})
-                rendered = details.get("rendered", {})
-                if isinstance(rendered, dict):
-                    response = rendered.get("rendered", "")
-                elif isinstance(rendered, str):
-                    response = rendered
-                else:
-                    response = raw_result.get("output", "")
-
-                return ExecutionResult(
-                    success=raw_result.get("status") == "COMPLETED",
-                    result={
-                        "response": response,
-                        "data": raw_result,
-                        "target_id": request.target_id,
-                        "execution_mode": "singularity",
-                    },
-                )
-            except Exception as e:
-                logger.warning(f"[EXECUTOR] Singularity failed, trying fallback: {e}")
-                # Fall through to DeterministicExecutor
-
-        # Fallback: DeterministicExecutor
-        if not self._circuit_executor:
-            return ExecutionResult(
-                success=False,
-                error="No executor available",
-                result={"target_id": request.target_id},
-            )
-
-        # Execute circuit via legacy executor
-        raw_result = await self._circuit_executor.execute(
-            playbook_id=request.target_id,
+        raw_result = await self._singularity.execute(
+            playbook_or_circuit_id=request.target_id,
             user_input=request.user_input,
             intent_vector=None,
-            kernel=self._kernel,
         )
 
         # Extract rendered response
         details = raw_result.get("details", {})
         rendered = details.get("rendered", {})
-        response = rendered.get("rendered", "") if isinstance(rendered, dict) else ""
+        if isinstance(rendered, dict):
+            response = rendered.get("rendered", "")
+        elif isinstance(rendered, str):
+            response = rendered
+        else:
+            response = raw_result.get("output", "")
 
         return ExecutionResult(
             success=raw_result.get("status") == "COMPLETED",
@@ -224,7 +174,7 @@ class UnifiedExecutor:
                 "response": response,
                 "data": raw_result,
                 "target_id": request.target_id,
-                "execution_mode": "deterministic",
+                "execution_mode": "singularity",
             },
         )
 

@@ -236,10 +236,10 @@ class EnvoyPlugin(KernelPlugin):
 
     def execute_circuit(self, circuit_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Execute a circuit by ID using DeterministicExecutor.
+        Execute a circuit by ID using ExecutorSingularity.
 
-        GAD-6000: Real circuit execution via action handlers.
-        No more stubs - actual QUERY_GRAPH, RENDER_TEMPLATE, etc.
+        OPUS-307 Phase I.2: All execution via ExecutorSingularity.
+        No DeterministicExecutor. One engine, one truth.
 
         Args:
             circuit_id: The circuit identifier
@@ -255,22 +255,23 @@ class EnvoyPlugin(KernelPlugin):
         logger.info(f"📬 Executing circuit: {circuit_id}")
 
         try:
-            # Get the DeterministicExecutor (lazy init)
-            if not hasattr(self, "_executor") or self._executor is None:
-                from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+            # Get ExecutorSingularity (lazy init) - OPUS-307 Phase I.2
+            if not hasattr(self, "_executor_singularity") or self._executor_singularity is None:
+                from vibe_core.cartridges.system.envoy.executor_singularity import (
+                    create_executor_singularity,
+                )
 
-                self._executor = DeterministicExecutor()
-                logger.info("📬 DeterministicExecutor initialized")
+                self._executor_singularity = create_executor_singularity(self._kernel)
+                logger.info("📬 ExecutorSingularity initialized (OPUS-307)")
 
-            # Execute circuit via DeterministicExecutor
+            # Execute circuit via ExecutorSingularity
             import asyncio
 
             result = asyncio.get_event_loop().run_until_complete(
-                self._executor.execute(
-                    playbook_id=circuit_id,
+                self._executor_singularity.execute(
+                    playbook_or_circuit_id=circuit_id,
                     user_input=params.get("user_input", "") if params else "",
                     intent_vector=params.get("intent_vector") if params else None,
-                    kernel=self._kernel,
                 )
             )
 
