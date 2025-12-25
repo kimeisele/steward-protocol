@@ -18,11 +18,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
+from vibe_core.protocols.cli import CLIMeta, register_cli
 from vibe_core.tool_discovery import ToolDiscovery
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 from vibe_core.tools.tool_registry import ToolRegistry
 
 
+@register_cli
 class ToolCLI:
     """
     Auto-generated CLI for Tool Protocol.
@@ -30,6 +32,17 @@ class ToolCLI:
     No manual command definitions needed.
     Discovers all tools and generates CLI from their schemas.
     """
+
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="tool",
+            description="Tool Protocol CLI (list, info, run)",
+            domain="execution",
+            subcommands=["list", "info", "run"],
+            tags=["tool", "execution", "protocol"],
+        )
 
     def __init__(self):
         """Initialize with auto-discovered tools."""

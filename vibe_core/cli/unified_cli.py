@@ -30,19 +30,16 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from vibe_core.cli.legacy import StewardCLI
 
-# OPUS-307 Phase D: Tool Protocol CLI
-# OPUS-307 Phase D++: Circuit Protocol CLI
-# OPUS-307 Phase D+++: Unified Capability Protocol
-# These imports trigger @register_cli decorator - DO NOT REMOVE
-import vibe_core.cli.knowledge_cli  # noqa: F401
-import vibe_core.cli.remedies_cli  # noqa: F401
-import vibe_core.cli.standards_cli  # noqa: F401
-from vibe_core.cli.circuit_cli import CircuitCLI
-from vibe_core.cli.run_cli import RunCLI
-from vibe_core.cli.tool_cli import ToolCLI
-
 # OPUS-307 Phase E+: CLIProtocol (Anti-God-Object)
 # Import CLIRegistry and trigger registration of all CLI handlers
+# OPUS-307 Phase D/E+: Protocol-based CLI handlers
+# These imports trigger @register_cli decorator - DO NOT REMOVE
+import vibe_core.cli.circuit_cli  # noqa: F401 - registers "circuit"
+import vibe_core.cli.knowledge_cli  # noqa: F401 - registers "knowledge"
+import vibe_core.cli.remedies_cli  # noqa: F401 - registers "remedies"
+import vibe_core.cli.run_cli  # noqa: F401 - registers "run"
+import vibe_core.cli.standards_cli  # noqa: F401 - registers "standards"
+import vibe_core.cli.tool_cli  # noqa: F401 - registers "tool"
 from vibe_core.protocols.cli import CLIRegistry
 
 logger = logging.getLogger("UNIFIED_CLI")
@@ -71,12 +68,10 @@ class UnifiedCLI:
         self._loader = CLILoader()
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
-        self._tool_cli = ToolCLI()  # OPUS-307 Phase D: Tool Protocol CLI
-        self._circuit_cli = CircuitCLI()  # OPUS-307 Phase D++: Circuit Protocol CLI
-        self._run_cli = RunCLI()  # OPUS-307 Phase D+++: Unified Capability Protocol
 
         # OPUS-307 Phase E+: Protocol-based CLI handlers are discovered via CLIRegistry
         # No more hardcoded instances - handlers register themselves via @register_cli
+        # Registered CLIs: tool, circuit, run, knowledge, standards, remedies
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -141,23 +136,10 @@ class UnifiedCLI:
                 # We need to bridge argparse to method args.
                 return self._dispatch_legacy(command_name, handler, remaining_args)
 
-        # 2. OPUS-307 Phase D: Tool Protocol CLI
-        if command_name == "tool":
-            return self._tool_cli.run(remaining_args)
-
-        # 2b. OPUS-307 Phase D++: Circuit Protocol CLI
-        if command_name == "circuit":
-            return self._circuit_cli.run(remaining_args)
-
-        # 2c. OPUS-307 Phase D+++: Unified Capability Protocol
-        # THE FRACTAL PRINCIPLE: Tool, Circuit, Agent are all just "capabilities"
-        # Pratyaya decides the executor - user doesn't need to know
-        if command_name == "run":
-            return self._run_cli.run(remaining_args)
-
-        # 2d. OPUS-307 Phase E+: Protocol-based CLI handlers via CLIRegistry
+        # 2. OPUS-307 Phase E+: Protocol-based CLI handlers via CLIRegistry
         # GAD-000 COMPLIANT: No hardcoding, dynamic discovery
         # PROMPT.md: "Protocol statt konkrete Klassen"
+        # Handles: tool, circuit, run, knowledge, standards, remedies
         cli_handler = CLIRegistry.get(command_name)
         if cli_handler is not None:
             return cli_handler.run(remaining_args)
