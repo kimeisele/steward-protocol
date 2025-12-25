@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from vibe_core.loaders.circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
+from vibe_core.circuit_service import CircuitService
+from vibe_core.loaders.circuit_loader import CircuitMeta, CircuitMetadata, CircuitRegistry
 from vibe_core.protocols.cli import CLIMeta, register_cli
 
 if TYPE_CHECKING:
@@ -55,8 +56,14 @@ class CircuitCLI:
         self._executor: Optional["CognitiveCircuitExecutor"] = None
 
     def _ensure_circuits(self) -> Tuple[CircuitRegistry, CircuitMetadata]:
-        """Lazy-load circuits via CircuitLoader."""
+        """Lazy-load circuits via CircuitService (OPUS-307)."""
         if self._circuits is None:
+            # OPUS-307: Use CircuitService instead of direct CircuitLoader
+            from vibe_core.loaders.circuit_loader import CircuitLoader
+
+            svc = CircuitService.get_instance()
+            svc.scan()
+            # Still need the raw registry for execution
             self._circuits, self._metadata = CircuitLoader.discover_and_load()
         return self._circuits, self._metadata or {}
 
