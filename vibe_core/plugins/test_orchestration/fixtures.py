@@ -824,6 +824,15 @@ class IsolatedTestContext:
             except Exception:
                 pass
 
+        # OPUS-305: Shutdown async logging listener to prevent test timeouts
+        # Kernel is immutable (VISNU protection), so we call it from test context instead
+        try:
+            from vibe_core.utils.async_logging import shutdown_async_logging
+
+            shutdown_async_logging()
+        except Exception:
+            pass
+
         self._state = None
         return False  # Don't suppress exceptions
 
