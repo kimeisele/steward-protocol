@@ -33,15 +33,17 @@ with warnings.catch_warnings():
 # OPUS-307 Phase D: Tool Protocol CLI
 # OPUS-307 Phase D++: Circuit Protocol CLI
 # OPUS-307 Phase D+++: Unified Capability Protocol
-# OPUS-307 Phase E: Knowledge CLI
-# OPUS-307 Phase E.2: Standards CLI
-# OPUS-307 Phase E.3: Remedies CLI
+# These imports trigger @register_cli decorator - DO NOT REMOVE
+import vibe_core.cli.knowledge_cli  # noqa: F401
+import vibe_core.cli.remedies_cli  # noqa: F401
+import vibe_core.cli.standards_cli  # noqa: F401
 from vibe_core.cli.circuit_cli import CircuitCLI
-from vibe_core.cli.knowledge_cli import KnowledgeCLI
-from vibe_core.cli.remedies_cli import RemediesCLI
 from vibe_core.cli.run_cli import RunCLI
-from vibe_core.cli.standards_cli import StandardsCLI
 from vibe_core.cli.tool_cli import ToolCLI
+
+# OPUS-307 Phase E+: CLIProtocol (Anti-God-Object)
+# Import CLIRegistry and trigger registration of all CLI handlers
+from vibe_core.protocols.cli import CLIRegistry
 
 logger = logging.getLogger("UNIFIED_CLI")
 
@@ -72,9 +74,9 @@ class UnifiedCLI:
         self._tool_cli = ToolCLI()  # OPUS-307 Phase D: Tool Protocol CLI
         self._circuit_cli = CircuitCLI()  # OPUS-307 Phase D++: Circuit Protocol CLI
         self._run_cli = RunCLI()  # OPUS-307 Phase D+++: Unified Capability Protocol
-        self._knowledge_cli = KnowledgeCLI()  # OPUS-307 Phase E: Knowledge CLI
-        self._standards_cli = StandardsCLI()  # OPUS-307 Phase E.2: Standards CLI
-        self._remedies_cli = RemediesCLI()  # OPUS-307 Phase E.3: Remedies CLI
+
+        # OPUS-307 Phase E+: Protocol-based CLI handlers are discovered via CLIRegistry
+        # No more hardcoded instances - handlers register themselves via @register_cli
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -153,20 +155,12 @@ class UnifiedCLI:
         if command_name == "run":
             return self._run_cli.run(remaining_args)
 
-        # 2d. OPUS-307 Phase E: Knowledge CLI
-        # GAD-000: Knowledge must be machine-readable and composable
-        if command_name == "knowledge":
-            return self._knowledge_cli.run(remaining_args)
-
-        # 2e. OPUS-307 Phase E.2: Standards CLI
-        # GAD-000: Standards must be machine-readable and composable
-        if command_name == "standards":
-            return self._standards_cli.run(remaining_args)
-
-        # 2f. OPUS-307 Phase E.3: Remedies CLI
-        # GAD-000: Remedies must be machine-readable (SATTVA layer)
-        if command_name == "remedies":
-            return self._remedies_cli.run(remaining_args)
+        # 2d. OPUS-307 Phase E+: Protocol-based CLI handlers via CLIRegistry
+        # GAD-000 COMPLIANT: No hardcoding, dynamic discovery
+        # PROMPT.md: "Protocol statt konkrete Klassen"
+        cli_handler = CLIRegistry.get(command_name)
+        if cli_handler is not None:
+            return cli_handler.run(remaining_args)
 
         # 3. Check Plugin Commands
         commands = self._loader.discover_commands()

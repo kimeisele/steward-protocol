@@ -17,6 +17,9 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
+
+# OPUS-307 Phase E+: CLI Protocol (Anti-God-Object)
+from .cli import CLIHandler, CLIMeta, CLIRegistry, CLIResult, register_cli
 from .cognition import CognitiveKernelProtocol, SystemHeartbeatProtocol
 
 # OPUS-307 D.2: External Service Protocols
@@ -120,4 +123,10 @@ __all__ = [
     # OPUS-307 D.2: External Service Protocols
     "TwitterProtocol",
     "RedditProtocol",
+    # OPUS-307 Phase E+: CLI Protocol
+    "CLIHandler",
+    "CLIMeta",
+    "CLIResult",
+    "CLIRegistry",
+    "register_cli",
 ]

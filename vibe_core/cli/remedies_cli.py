@@ -32,6 +32,8 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from vibe_core.protocols.cli import CLIMeta, register_cli
+
 logger = logging.getLogger("REMEDIES_CLI")
 
 CONFIG_ROOT = Path("config")
@@ -40,6 +42,7 @@ GENESIS_CIRCUITS = Path("knowledge/genesis/circuits")
 PLUGIN_CIRCUITS = Path("vibe_core/plugins/opus_assistant/circuits")
 
 
+@register_cli
 class RemediesCLI:
     """
     CLI for accessing Healing/Remedy Knowledge.
@@ -47,6 +50,17 @@ class RemediesCLI:
     GAD-000: Remedies must be machine-readable and composable.
     SATTVA: Pure knowledge for healing.
     """
+
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="remedies",
+            description="SATTVA Healing Layer (Fixes, Patterns, Circuits)",
+            domain="healing",
+            subcommands=["list", "fixes", "patterns", "circuits", "get", "for"],
+            tags=["remedies", "sattva", "healing", "ouroboros"],
+        )
 
     def __init__(self):
         self._cache: Dict[str, Any] = {}

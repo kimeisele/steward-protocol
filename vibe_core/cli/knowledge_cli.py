@@ -31,17 +31,31 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from vibe_core.protocols.cli import CLIMeta, register_cli
+
 logger = logging.getLogger("KNOWLEDGE_CLI")
 
 KNOWLEDGE_ROOT = Path("knowledge")
 
 
+@register_cli
 class KnowledgeCLI:
     """
     CLI for accessing the Knowledge Graph.
 
     GAD-000: Knowledge must be machine-readable and composable.
     """
+
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="knowledge",
+            description="Access Knowledge Graph (SANKHYA, DHARMA, VEDA-4, Soul)",
+            domain="knowledge",
+            subcommands=["list", "concepts", "intents", "circuits", "soul", "query", "show"],
+            tags=["knowledge", "sankhya", "dharma", "veda"],
+        )
 
     def __init__(self):
         self._cache: Dict[str, Any] = {}
