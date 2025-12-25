@@ -44,6 +44,20 @@ except ImportError:
     BlueprintGenerator = None
     CompilationResult = None
 
+# OPUS-307 Phase H: Action Handler Registry for CLI_LOOPBACK etc.
+try:
+    from vibe_core.cartridges.system.envoy.action_handlers import (
+        ActionContext,
+        ActionHandlerRegistry,
+        create_registry_with_ephemeral,
+    )
+
+    ACTION_HANDLERS_AVAILABLE = True
+except ImportError:
+    ACTION_HANDLERS_AVAILABLE = False
+    ActionContext = None
+    ActionHandlerRegistry = None
+
 # OPUS-118: Import canonical types from shared module
 from vibe_core.circuit_types import (
     CircuitExecutionResult,
@@ -344,6 +358,12 @@ class CognitiveCircuitExecutor:
 
         # Invariant checker - SECURITY ENFORCEMENT
         self.invariant_checker = InvariantChecker()
+
+        # OPUS-307 Phase H: Action Handler Registry for CLI_LOOPBACK, FOR_EACH, etc.
+        self.action_registry: Optional[ActionHandlerRegistry] = None
+        if ACTION_HANDLERS_AVAILABLE:
+            self.action_registry = create_registry_with_ephemeral()
+            logger.info(f"✅ Action handlers: {self.action_registry.registered_types}")
 
         # Meta-circuit callbacks for TASK_LEDGER and ERROR_RECOVERY integration
         self._on_circuit_start: Optional[callable] = None
@@ -873,6 +893,62 @@ class CognitiveCircuitExecutor:
                         }
 
                     logger.info(f"⚡ SYSCALL {syscall_type_str}: success={result.success}")
+
+            # ================================================================
+            # OPUS-307 Phase H: Execute actions (CLI_LOOPBACK, FOR_EACH, etc.)
+            # These are different from operations - they use action_type and the
+            # action handler registry for dispatch.
+            # ================================================================
+            import asyncio
+
+            actions = current_state_def.get("actions", [])
+            for action_def in actions:
+                action_type = action_def.get("action_type")
+                target = action_def.get("target", "")
+                params = self._resolve_params(action_def.get("params", {}), state.variables)
+                capture_as = action_def.get("capture_as")
+
+                if not action_type:
+                    logger.warning(f"⚠️ Action missing action_type: {action_def}")
+                    continue
+
+                logger.info(f"🎯 ACTION: {action_type} → {target}")
+
+                if self.action_registry and self.action_registry.has(action_type):
+                    handler = self.action_registry.get(action_type)
+
+                    # Create action context
+                    action_context = ActionContext(
+                        phase_id=current_state_name,
+                        playbook_id=circuit_id,
+                        execution_id=f"circuit_{circuit_id}_{len(state.history)}",
+                        user_input=raw_input,
+                        phase_results=state.variables,
+                        kernel=self.kernel,
+                        emit_event=None,  # TODO: Wire up event emitter
+                    )
+
+                    try:
+                        # Run async handler (action handlers are async)
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        try:
+                            result = loop.run_until_complete(handler.execute(target, params, action_context))
+                        finally:
+                            loop.close()
+
+                        if result.success:
+                            logger.info(f"   ✅ {action_type} succeeded")
+                            if capture_as:
+                                state.variables[capture_as] = result.data
+                        else:
+                            logger.error(f"   ❌ {action_type} failed: {result.error}")
+                            state.variables[f"{action_type.lower()}_error"] = result.error
+                    except Exception as e:
+                        logger.error(f"   ❌ Action handler exception: {e}")
+                        state.variables[f"{action_type.lower()}_error"] = str(e)
+                else:
+                    logger.warning(f"⚠️ No handler for action_type: {action_type}")
 
             # ================================================================
             # POST-OPERATION INVARIANT CHECK - Ensure operations didn't break anything
