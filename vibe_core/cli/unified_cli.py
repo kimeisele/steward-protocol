@@ -34,13 +34,25 @@ with warnings.catch_warnings():
 # Import CLIRegistry and trigger registration of all CLI handlers
 # OPUS-307 Phase D/E+: Protocol-based CLI handlers
 # These imports trigger @register_cli decorator - DO NOT REMOVE
+import vibe_core.cli.audit_cli  # noqa: F401 - registers "audit" (OPUS-307 Phase 4)
+import vibe_core.cli.cartridge_bridge  # noqa: F401 - registers "cartridges" (OPUS-307)
 import vibe_core.cli.circuit_cli  # noqa: F401 - registers "circuit"
+import vibe_core.cli.create_cli  # noqa: F401 - registers "create" (OPUS-307 Phase 5)
+import vibe_core.cli.genesis_cli  # noqa: F401 - registers "genesis" (OPUS-307)
 import vibe_core.cli.knowledge_cli  # noqa: F401 - registers "knowledge"
+import vibe_core.cli.plugins_cli  # noqa: F401 - registers "plugins" (OPUS-307)
+import vibe_core.cli.prakriti_cli  # noqa: F401 - registers "prakriti" (OPUS-307)
 import vibe_core.cli.remedies_cli  # noqa: F401 - registers "remedies"
 import vibe_core.cli.run_cli  # noqa: F401 - registers "run"
+import vibe_core.cli.sections_cli  # noqa: F401 - registers "sections" (OPUS-307)
 import vibe_core.cli.standards_cli  # noqa: F401 - registers "standards"
 import vibe_core.cli.tool_cli  # noqa: F401 - registers "tool"
+
+# OPUS-307: Register dynamic cartridge CLI bridges (lazy loading)
+from vibe_core.cli.cartridge_bridge import register_cartridge_bridges
 from vibe_core.protocols.cli import CLIRegistry
+
+register_cartridge_bridges()
 
 logger = logging.getLogger("UNIFIED_CLI")
 
