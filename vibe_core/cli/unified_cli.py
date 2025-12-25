@@ -32,7 +32,9 @@ with warnings.catch_warnings():
 
 # OPUS-307 Phase D: Tool Protocol CLI
 # OPUS-307 Phase D++: Circuit Protocol CLI
+# OPUS-307 Phase D+++: Unified Capability Protocol
 from vibe_core.cli.circuit_cli import CircuitCLI
+from vibe_core.cli.run_cli import RunCLI
 from vibe_core.cli.tool_cli import ToolCLI
 
 logger = logging.getLogger("UNIFIED_CLI")
@@ -63,6 +65,7 @@ class UnifiedCLI:
         self._legacy = StewardCLI()
         self._tool_cli = ToolCLI()  # OPUS-307 Phase D: Tool Protocol CLI
         self._circuit_cli = CircuitCLI()  # OPUS-307 Phase D++: Circuit Protocol CLI
+        self._run_cli = RunCLI()  # OPUS-307 Phase D+++: Unified Capability Protocol
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -134,6 +137,12 @@ class UnifiedCLI:
         # 2b. OPUS-307 Phase D++: Circuit Protocol CLI
         if command_name == "circuit":
             return self._circuit_cli.run(remaining_args)
+
+        # 2c. OPUS-307 Phase D+++: Unified Capability Protocol
+        # THE FRACTAL PRINCIPLE: Tool, Circuit, Agent are all just "capabilities"
+        # Pratyaya decides the executor - user doesn't need to know
+        if command_name == "run":
+            return self._run_cli.run(remaining_args)
 
         # 3. Check Plugin Commands
         commands = self._loader.discover_commands()
@@ -1202,8 +1211,17 @@ class UnifiedCLI:
         for name in sorted(self._legacy_map.keys()):
             print(f"  {name:<15} (System)")
 
-        print("\nTOOL PROTOCOL (OPUS-307):")
+        print("\nUNIFIED RUN (OPUS-307 D+++):")
+        print("  run              THE unified command - Tool/Circuit/Agent")
+        print("                   'steward run <capability>' - Pratyaya decides")
+        print("                   'steward run list' - List all capabilities")
+        print("                   'steward run info <cap>' - Show details")
+
+        print("\nTOOL PROTOCOL (OPUS-307 D):")
         print("  tool             Use 'steward tool --help' for subcommands")
+
+        print("\nCIRCUIT PROTOCOL (OPUS-307 D++):")
+        print("  circuit          Use 'steward circuit --help' for subcommands")
 
         print("\nPRAKRITI COMMANDS (Unified State):")
         prakriti_help = {
