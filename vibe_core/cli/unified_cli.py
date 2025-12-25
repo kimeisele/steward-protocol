@@ -30,6 +30,9 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from vibe_core.cli.legacy import StewardCLI
 
+# OPUS-307 Phase D: Tool Protocol CLI
+from vibe_core.cli.tool_cli import ToolCLI
+
 logger = logging.getLogger("UNIFIED_CLI")
 
 
@@ -56,6 +59,7 @@ class UnifiedCLI:
         self._loader = CLILoader()
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
+        self._tool_cli = ToolCLI()  # OPUS-307 Phase D: Tool Protocol CLI
 
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
@@ -120,7 +124,11 @@ class UnifiedCLI:
                 # We need to bridge argparse to method args.
                 return self._dispatch_legacy(command_name, handler, remaining_args)
 
-        # 2. Check Plugin Commands
+        # 2. OPUS-307 Phase D: Tool Protocol CLI
+        if command_name == "tool":
+            return self._tool_cli.run(remaining_args)
+
+        # 3. Check Plugin Commands
         commands = self._loader.discover_commands()
         if command_name in commands:
             cmd_def = commands[command_name]
@@ -1186,6 +1194,15 @@ class UnifiedCLI:
         print("\nSYSTEM COMMANDS:")
         for name in sorted(self._legacy_map.keys()):
             print(f"  {name:<15} (System)")
+
+        print("\nTOOL PROTOCOL (OPUS-307):")
+        tool_help = {
+            "tool list": "List all available tools [--json] [--agent <id>]",
+            "tool info": "Show tool details <tool_name>",
+            "tool run": "Execute tool <tool_name> [--param=value]",
+        }
+        for name, help_text in tool_help.items():
+            print(f"  {name:<15} {help_text}")
 
         print("\nPRAKRITI COMMANDS (Unified State):")
         prakriti_help = {

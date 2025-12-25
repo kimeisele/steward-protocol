@@ -219,45 +219,104 @@ This document declares the Steward Protocol as an **Agent Operating System**.
 
 ---
 
-## PART 5: ACTION PLAN
+## PART 5: THE D PROTOCOL (Windows 7 Roadmap)
 
-### FUNDAMENTAL DECISION REQUIRED
+### VERIFIED: Plugin/Agent Split is Historical Accident
 
-**The Problem:** 15/16 agents have no CLI → not GAD-000 compliant.
+From Haiku Analysis:
+> "The separation between Plugin and Agent is NOT justified architecturally -
+> it's HISTORICAL ACCIDENT masquerading as design."
 
-**Options:**
+**The Tool Protocol is ALREADY the unified interface.** 43+ tools exist with:
+- `name`, `description`, `parameters_schema`
+- `validate()`, `execute()`
+- Auto-discoverable via `ToolDiscovery`
 
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A: Individual plugins | Create 15 new plugins wrapping each agent | Clean separation | 15 more plugins, maintenance |
-| B: system_agents plugin | One plugin wrapping all agents | Single point of entry | Tight coupling, huge plugin |
-| C: CLI Bridge | Add direct CLI in unified_cli.py | Minimal change | Bypasses plugin architecture |
-| D: Tool Protocol CLI | Auto-generate CLI from Tool registry | Elegant, scalable | Requires new infrastructure |
+### THE D PROTOCOL: Incremental Unification
 
-**Recommendation:** Option D (Tool Protocol CLI)
-- Every Tool already has `name`, `description`, `parameters_schema`
-- CLI could auto-discover: `steward tool <tool_name> [args]`
-- Example: `steward tool watchman.standards --action inspect_all`
+| Phase | Name | What | Result |
+|-------|------|------|--------|
+| **D** | Tool CLI | `steward tool <name>` | Humans can use all 43+ tools |
+| **D+** | Agent CLI | Agents call CLI internally | Agents use same interface as humans |
+| **D++** | Circuit CLI | `steward circuit run <name>` | Workflows via CLI |
+| **D+++** | Unified Protocol | Everything is a "Tool" | One interface for all |
+| **D++++** | Self-Management | System heals via CLI | Windows 7 achieved |
 
-### Phase 1: Tool Protocol CLI (D)
-1. Add `steward tool list` - show all 43 tools
-2. Add `steward tool <name> [--params JSON]` - execute any tool
-3. Auto-generate --help from parameters_schema
+### Phase D: Tool Protocol CLI (~500 LOC, 1.75 days)
 
-### Phase 2: Declarative Remedies
-1. Create `config/remedies.yaml` schema
-2. Move CST patterns to YAML definitions
-3. Make Engineer read from config, not hardcode
+**Files to create:**
+1. `vibe_core/cli/tool_cli.py` - ToolCLI class
+2. `vibe_core/cli/tool_argparse.py` - Auto-generated parser
+3. Update `unified_cli.py` - Route "tool" commands
 
-### Phase 3: Self-Healing Wiring
-1. `steward tool watchman.standards` → Get violations
-2. `steward execute --circuit heal_codebase.yaml` → Trigger healing
-3. Chain them: `steward heal --auto`
+**Commands:**
+```bash
+steward tool list                              # All 43+ tools
+steward tool info watchman.standards           # Show schema
+steward tool run watchman.standards --json     # Execute, JSON output
+steward tool run civic.bank --interactive      # Prompt for params
+```
 
-### Phase 4: Verification
-1. Add @HARNESS sections to this doc
-2. Create automated GAD-000 compliance tests
-3. Run and document results
+**Zero manual wiring:** CLI reads directly from Tool Protocol.
+
+### Phase D+: Agents Use CLI
+
+Instead of:
+```python
+# Current: Direct tool call
+result = self.tool_registry.execute("watchman.standards", params)
+```
+
+Agents do:
+```python
+# D+: Via CLI protocol
+result = self.system.cli("tool run watchman.standards --json")
+```
+
+**Why?** Same interface for humans AND agents. Logs, audit, everything unified.
+
+### Phase D++: Circuit CLI
+
+```bash
+steward circuit list                           # All circuits
+steward circuit run heal_codebase --violation-file X --rule Y
+steward circuit status <execution_id>          # Check progress
+```
+
+### Phase D+++: Everything is a Tool
+
+```python
+# Plugins expose themselves as tools
+class WatchmanPlugin(KernelPlugin):
+    def get_tools(self) -> List[Tool]:
+        return [
+            PatrolTool(),      # From agent
+            InspectTool(),     # From agent
+            StatusTool(),      # Plugin-level
+        ]
+```
+
+No more Plugin vs Agent. Just: **Components that provide Tools.**
+
+### Phase D++++: Self-Management (Windows 7)
+
+```bash
+# The system manages itself
+steward heal --auto                            # Full pipeline
+steward health --fix                           # Auto-repair
+steward upgrade --safe                         # Self-update
+```
+
+**GAD-000 achieved:** AI can operate EVERYTHING via CLI.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. **NOW: Phase D** - Tool Protocol CLI
+2. **NEXT: Phase D++** - Circuit CLI
+3. **THEN: Phase D+** - Agents use CLI
+4. **FINALLY: D+++/D++++** - Full unification
 
 ---
 
