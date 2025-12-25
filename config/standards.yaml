@@ -76,3 +76,97 @@ rules:
   #   severity: "CRITICAL"
   #   message: "Plugin calls weaver.pulse() directly. Breaks state commit batching."
   #   fix_suggestion: "Remove weaver.pulse(). StateService handles commits via background worker."
+
+  # ============================================================================
+  # OPUS-307 PHASE E+: ARCHITECTURAL PATTERN VIOLATIONS
+  # These patterns were discovered during blind spot analysis.
+  # The system must learn to detect AND heal these autonomously.
+  # ============================================================================
+
+  # ANTI-PATTERN: get_instance() statt ServiceRegistry
+  - id: "get_instance_antipattern"
+    target: "Call"
+    match:
+      attr: "get_instance"
+    severity: "HIGH"
+    message: "Using .get_instance() singleton instead of ServiceRegistry DI."
+    fix_suggestion: "Replace X.get_instance() with ServiceRegistry.get(XProtocol) or ServiceRegistry.require(XProtocol)"
+    has_sattva_remedy: true
+
+  # ANTI-PATTERN: Direct instantiation statt DI
+  - id: "direct_registry_instantiation"
+    target: "Call"
+    match:
+      func_in: ["ToolRegistry", "UnifiedRegistry", "CartridgeRegistry"]
+    severity: "MEDIUM"
+    message: "Direct instantiation of Registry class. Should be injected via ServiceRegistry."
+    fix_suggestion: "Use ServiceRegistry.get(ToolRegistry) instead of ToolRegistry()"
+    has_sattva_remedy: true
+
+  # ANTI-PATTERN: Path scanning for discovery
+  - id: "path_scanning_discovery"
+    target: "Call"
+    match:
+      attr: "iterdir"
+      context_contains: ["discover", "load", "scan"]
+    severity: "MEDIUM"
+    message: "Using filesystem scanning for discovery. Fragile and implicit."
+    fix_suggestion: "Use manifest-driven discovery (plugins.yaml, cartridges.yaml) instead of path scanning."
+    has_sattva_remedy: false
+
+  # ANTI-PATTERN: Global module-level singletons
+  - id: "global_singleton_dict"
+    target: "Assign"
+    match:
+      name_pattern: "_instances"
+      value_type: "Dict"
+      context: "module_level"
+    severity: "LOW"
+    message: "Global _instances dict for singleton pattern. Legacy pattern."
+    fix_suggestion: "Migrate to ServiceRegistry for consistent DI."
+    has_sattva_remedy: false
+
+  # ============================================================================
+  # STRUCTURAL RULES (require semantic analysis, not just AST)
+  # These are documented but may need custom Watchman handlers to detect.
+  # ============================================================================
+
+  # STRUCTURAL: God Object detection
+  # - id: "god_object_class"
+  #   target: "ClassDef"
+  #   condition: "method_count > 50 OR line_count > 1000"
+  #   severity: "HIGH"
+  #   message: "God Object detected. Class has too many responsibilities."
+  #   fix_suggestion: "Extract focused manager classes (e.g., AgentManager, CapabilityManager)."
+  #   has_sattva_remedy: false
+  #   requires: "semantic_analysis"
+
+  # STRUCTURAL: Missing protocol implementation
+  # - id: "missing_protocol"
+  #   target: "ClassDef"
+  #   condition: "name endswith 'Plugin' AND NOT implements 'KernelPlugin'"
+  #   severity: "CRITICAL"
+  #   message: "Plugin class does not implement KernelPlugin protocol."
+  #   fix_suggestion: "Implement KernelPlugin protocol with plugin_id property and on_boot() method."
+  #   has_sattva_remedy: true
+  #   requires: "type_checking"
+
+  # STRUCTURAL: CLI not using @register_cli
+  # - id: "unregistered_cli"
+  #   target: "ClassDef"
+  #   condition: "name endswith 'CLI' AND NOT has_decorator 'register_cli'"
+  #   severity: "HIGH"
+  #   message: "CLI class not using @register_cli decorator. Not discoverable."
+  #   fix_suggestion: "Add @register_cli decorator and implement meta property."
+  #   has_sattva_remedy: true
+  #   requires: "decorator_analysis"
+
+  # STRUCTURAL: Mixin instead of DI
+  # - id: "mixin_injection"
+  #   target: "ClassDef"
+  #   condition: "inherits 'OathMixin' OR inherits '*Mixin'"
+  #   severity: "MEDIUM"
+  #   message: "Using Mixin for dependency injection. Prefer constructor injection."
+  #   fix_suggestion: "Replace Mixin inheritance with constructor parameter injection via ServiceRegistry."
+  #   has_sattva_remedy: false
+  #   requires: "inheritance_analysis"
