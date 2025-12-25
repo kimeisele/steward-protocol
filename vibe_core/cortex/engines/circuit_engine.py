@@ -1347,8 +1347,31 @@ class MetaCircuitManager:
 # ============================================================================
 
 
-def create_circuit_executor(kernel: "RealVibeKernel") -> CognitiveCircuitExecutor:
-    """Factory function to create a Cognitive Circuit Executor."""
+def create_circuit_executor(
+    kernel: "RealVibeKernel" = None,
+    circuit_definition: Dict[str, Any] = None,
+) -> CognitiveCircuitExecutor:
+    """
+    Factory function to create a Cognitive Circuit Executor.
+
+    Args:
+        kernel: The kernel instance. Required for execution.
+        circuit_definition: DEPRECATED - circuits are loaded from filesystem.
+
+    Raises:
+        ValueError: If kernel is None (headless execution not supported)
+    """
+    if circuit_definition is not None:
+        logger.warning(
+            "circuit_definition parameter is deprecated - circuits are loaded from filesystem via ManifestRegistry"
+        )
+
+    if kernel is None:
+        raise ValueError(
+            "CognitiveCircuitExecutor requires a kernel. "
+            "Headless execution not supported - use RunCLI with kernel boot."
+        )
+
     return CognitiveCircuitExecutor(kernel)
 
 
