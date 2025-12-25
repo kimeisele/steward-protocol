@@ -133,7 +133,7 @@ class TestAnalyzerLoaderStrictMode:
             workspace=Path.cwd(),
             strict=False,
         )
-        assert len(analyzers) == 5
+        assert len(analyzers) == 7
 
 
 class TestAnalyzerLoaderUtilities:
@@ -147,7 +147,7 @@ class TestAnalyzerLoaderUtilities:
         """Test list_analyzers utility method."""
         names = AnalyzerLoader.list_analyzers(workspace=Path.cwd())
         assert isinstance(names, list)
-        assert len(names) == 5
+        assert len(names) == 7
 
     def test_get_analyzer(self):
         """Test get_analyzer utility method."""
