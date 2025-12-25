@@ -97,7 +97,7 @@ class ManifestRegistry:
     }
 
     # Manifest filenames to look for (in order of priority)
-    MANIFEST_FILENAMES = ["manifest.json", "manifest.yaml"]
+    MANIFEST_FILENAMES = ["manifest.json", "manifest.yaml", "cartridge.yaml"]
 
     # The registry (populated by scan_all)
     _entries: Dict[str, ManifestEntry] = {}
@@ -194,7 +194,12 @@ class ManifestRegistry:
 
     @classmethod
     def _load_manifest(cls, path: Path) -> Dict[str, Any]:
-        """Load manifest from file."""
+        """
+        Load manifest from file.
+
+        Handles special cases:
+        - cartridge.yaml: Has nested 'meta:' section containing id, name, etc.
+        """
         if path.suffix == ".json":
             with open(path) as f:
                 return json.load(f)
@@ -202,7 +207,24 @@ class ManifestRegistry:
             import yaml
 
             with open(path) as f:
-                return yaml.safe_load(f)
+                data = yaml.safe_load(f)
+
+            # Handle cartridge.yaml format: unwrap 'meta' section
+            if path.name == "cartridge.yaml" and "meta" in data:
+                # Merge meta into top level but preserve original structure
+                meta = data.get("meta", {})
+                return {
+                    "id": meta.get("id", path.parent.name),
+                    "name": meta.get("name"),
+                    "version": meta.get("version"),
+                    "type": "cartridge",
+                    "description": meta.get("description"),
+                    "enabled": data.get("enabled", True),
+                    "priority": data.get("priority", 100),
+                    "_raw": data,  # Keep original for reference
+                }
+
+            return data
         else:
             raise ValueError(f"Unknown manifest format: {path.suffix}")
 
