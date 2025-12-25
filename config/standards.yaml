@@ -64,13 +64,15 @@ rules:
     fix_suggestion: "Use lazy-loading @property pattern."
 
   # OPUS-306: STATE AUTHORITY VIOLATION
-  # Plugins must NOT call weaver.pulse() directly - StateService is sole authority
-  - id: "plugin_weaver_pulse"
-    target: "Call"
-    context: "vibe_core/plugins/"
-    match:
-      attr: "pulse"
-      object_type: "StateSyncWeaver"
-    severity: "CRITICAL"
-    message: "Plugin calls weaver.pulse() directly. Breaks state commit batching."
-    fix_suggestion: "Remove weaver.pulse(). StateService handles commits via background worker."
+  # NOTE: Disabled - the match criteria (attr, object_type, context) are not yet
+  # implemented in StandardsInspectionTool._matches_rule(). This caused 39K false positives.
+  # TODO: Implement attr/object_type matching in the tool before re-enabling.
+  # - id: "plugin_weaver_pulse"
+  #   target: "Call"
+  #   context: "vibe_core/plugins/"
+  #   match:
+  #     attr: "pulse"
+  #     object_type: "StateSyncWeaver"
+  #   severity: "CRITICAL"
+  #   message: "Plugin calls weaver.pulse() directly. Breaks state commit batching."
+  #   fix_suggestion: "Remove weaver.pulse(). StateService handles commits via background worker."
