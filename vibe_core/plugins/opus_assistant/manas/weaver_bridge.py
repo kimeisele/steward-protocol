@@ -1,5 +1,5 @@
 """
-OPUS-167: Weaver Bridge - Cognitive Weaver and State Sync
+OPUS-167: Weaver Bridge - Cognitive Weaver Integration
 
 Extracted from CognitiveKernel to reduce kernel size.
 This bridge handles:
@@ -8,9 +8,8 @@ This bridge handles:
    - Unified access to state layer and knowledge layer
    - Session context injection from OPUS.md
 
-2. StateSyncWeaver (OPUS-096): Runtime state commits
-   - Discovers dirty runtime files via git status
-   - Commits during kernel operation (invisible hand)
+NOTE: State commits are handled by StateService (OPUS-306).
+      Plugins must NOT call weaver.pulse() directly.
 
 "Gedächtnis ohne Wissen ist blind. Wissen ohne Gedächtnis ist vergesslich."
 """
@@ -44,9 +43,6 @@ class WeaverBridge:
 
         # Consult knowledge before action
         result = bridge.consult_knowledge("delete_file", {"path": "foo.py"})
-
-        # Pulse state sync
-        bridge.weaver_pulse()
     """
 
     def __init__(self, workspace: Optional[Path] = None):
@@ -225,35 +221,6 @@ class WeaverBridge:
         except Exception as e:
             logger.debug(f"🧵 WEAVER BRIDGE: Could not diagnose: {e}")
             return None
-
-    def weaver_pulse(self) -> None:
-        """
-        OPUS-096: Trigger StateSyncWeaver to commit runtime state.
-
-        The Weaver discovers dirty runtime files via git status (independent of StateService).
-        This ensures files written during MANAS cycle get committed to git.
-
-        This is the "invisible hand" that keeps state synced to git during kernel operation.
-        The Weaver is also called from heartbeat.py for scheduled commits.
-        """
-        try:
-            from vibe_core.state.prakriti import Prakriti
-            from vibe_core.state.weaver import StateSyncWeaver
-
-            prakriti = Prakriti(workspace_path=self._workspace)
-            weaver = StateSyncWeaver(prakriti)
-            result = weaver.pulse()
-
-            if result.success and result.sha:
-                logger.debug(f"🧵 WEAVER BRIDGE: Committed runtime state ({result.sha[:8]})")
-            elif result.success:
-                logger.debug("🧵 WEAVER BRIDGE: No runtime changes to commit")
-            else:
-                logger.debug(f"🧵 WEAVER BRIDGE: {result.error or result.message}")
-
-        except Exception as e:
-            # Weaver failure should not break MANAS cycle
-            logger.debug(f"🧵 WEAVER BRIDGE: Skipped ({e})")
 
 
 # =============================================================================
