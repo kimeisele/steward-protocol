@@ -6,7 +6,7 @@ Tests execution paths, result formats, and error handling using Standard Fixture
 
 import asyncio
 
-from vibe_core.plugins.test_orchestration.fixtures import TestContext
+from vibe_core.plugins.test_orchestration.fixtures import IsolatedTestContext
 from vibe_core.runtime.unified_execution import (
     ExecutionPath,
     ExecutionRequest,
@@ -17,7 +17,7 @@ from vibe_core.runtime.unified_execution import (
 
 def test_executor_eager_initialization():
     """Executor should initialize eagerly (no lazy loading)."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
         executor = UnifiedExecutor(ctx.kernel)
         assert executor is not None
         # executor._kernel is private but we can verify it's set
@@ -26,7 +26,7 @@ def test_executor_eager_initialization():
 
 def test_executor_returns_structured_result():
     """Executor should return ExecutionResult with consistent structure."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
 
         async def test_async():
             executor = UnifiedExecutor(ctx.kernel)
@@ -47,7 +47,7 @@ def test_executor_returns_structured_result():
 
 def test_executor_handles_fallback_path():
     """Executor should handle fallback execution path."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
 
         async def test_async():
             executor = UnifiedExecutor(ctx.kernel)
@@ -66,7 +66,7 @@ def test_executor_handles_fallback_path():
 
 def test_executor_marks_request_status():
     """Executor should update request status during execution."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
 
         async def test_async():
             executor = UnifiedExecutor(ctx.kernel)
@@ -87,7 +87,7 @@ def test_executor_marks_request_status():
 
 def test_executor_handles_errors_gracefully():
     """Executor should handle errors and return failed result."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
 
         async def test_async():
             executor = UnifiedExecutor(ctx.kernel)
@@ -126,7 +126,7 @@ def test_executor_handles_errors_gracefully():
 
 def test_executor_tracks_duration():
     """Executor should track execution duration."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
 
         async def test_async():
             executor = UnifiedExecutor(ctx.kernel)
