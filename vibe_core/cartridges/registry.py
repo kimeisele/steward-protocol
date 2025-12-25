@@ -70,26 +70,20 @@ class CartridgeRegistry:
 
     def _auto_discover(self) -> None:
         """
-        Auto-discover cartridges via ManifestRegistry.
+        Auto-discover cartridges via CartridgeService.
 
-        OPUS-307 Phase F: No iterdir() - use manifest-driven discovery.
-        Das System WEISS was installiert ist.
+        OPUS-307: Unified via CartridgeService (GAD-000).
         """
-        from vibe_core.loaders.manifest_registry import ManifestRegistry
+        from vibe_core.cartridge_service import CartridgeService
 
-        # Ensure registry is scanned
-        ManifestRegistry._ensure_scanned()
+        # Use unified service
+        svc = CartridgeService.get_instance(self.vibe_root)
+        svc.scan()
 
-        # Get all cartridge manifests
-        entries = ManifestRegistry.get_enabled("cartridge")
-
-        if not entries:
-            logger.warning("⚠️ No cartridge manifests found in ManifestRegistry")
-            return
-
-        for entry in entries:
-            # entry.parent_dir is the cartridge directory (e.g., vibe_core/cartridges/system/auditor/)
-            self._load_cartridge_from_dir(entry.parent_dir)
+        for info in svc.list():
+            if not info.enabled:
+                continue
+            self._load_cartridge_from_dir(info.path)
 
     def _load_cartridge_from_dir(self, cartridge_dir: Path) -> None:
         """
