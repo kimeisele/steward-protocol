@@ -1,0 +1,69 @@
+# =============================================================================
+# TEST_SINGULARITY - Legacy Playbook Format (Phase I.1.5 Acid Test)
+# =============================================================================
+# This is a LEGACY PLAYBOOK format (phases[], not states{}).
+# It should be automatically converted by PlaybookToCircuitConverter
+# and executed via CognitiveCircuitExecutor.
+#
+# SUCCESS CRITERIA:
+# - ExecutorSingularity receives this
+# - Converts phases[] -> states{}
+# - CognitiveCircuitExecutor runs it
+# - NO DeterministicExecutor phase-loop code runs
+# =============================================================================
+
+playbook:
+  id: TEST_SINGULARITY
+  name: "Singularity Acid Test"
+  description: "Legacy playbook to verify PlaybookToCircuitConverter works"
+
+  intent_match:
+    primary: "TEST"
+    secondary: ["SINGULARITY", "VERIFY"]
+
+  variables:
+    test_message: "Hello from legacy playbook!"
+    iteration: 1
+
+  phases:
+    # Phase 1: Emit start event
+    - phase_id: "phase_start"
+      name: "Start Test"
+      description: "Emit event to show we started"
+      state_var: "start_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "singularity_test_started"
+          params:
+            source: "legacy_playbook"
+            message: "{{ test_message }}"
+      on_success: "phase_check"
+      on_failure: "ABORT"
+
+    # Phase 2: Check state (simulates validation)
+    - phase_id: "phase_check"
+      name: "Check State"
+      description: "Verify we can check state"
+      state_var: "check_result"
+      actions:
+        - action_type: CHECK_STATE
+          target: "test_state"
+          params:
+            expected: "running"
+      on_success: "phase_complete"
+      on_failure: "ABORT"
+
+    # Phase 3: Complete
+    - phase_id: "phase_complete"
+      name: "Complete Test"
+      description: "Final phase - emit completion"
+      state_var: "complete_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "singularity_test_completed"
+          params:
+            source: "legacy_playbook"
+            status: "SUCCESS"
+            phases_executed: 3
+      on_success: "COMPLETE"
+      on_failure: "ABORT"
