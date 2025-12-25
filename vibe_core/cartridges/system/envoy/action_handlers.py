@@ -1088,16 +1088,27 @@ class CLILoopbackHandler(ActionHandler):
     - Self-healing: Call engineer.heal_violation
     - Self-verification: Re-run diagnostics after fixes
 
+    OPUS-307 Phase E.4: Now also supports CLI subcommands:
+    - Knowledge: steward knowledge list/query/show
+    - Standards: steward standards list/gads/rules
+    - Remedies: steward remedies list/get/for
+
     The key D++++ innovation: Now that `steward run` exists,
     the system can manage itself recursively.
 
-    Target format: "capability_id" (e.g., "watchman.health", "WIRING_AUDIT")
+    Target formats:
+    - Capability: "capability_id" (e.g., "watchman.health", "WIRING_AUDIT")
+    - CLI command: "command" (e.g., "remedies", "knowledge", "standards")
 
     Params:
+        subcommand: For CLI commands (e.g., "get", "list", "query")
         output_format: "json" or "text" (default: json)
         capture_as: Variable name to store result (handled by circuit engine)
-        Any additional params are passed as --key=value to the capability
+        Any additional params are passed as --key=value or positional args
     """
+
+    # CLI commands that are routed directly (not via `steward run`)
+    CLI_COMMANDS = {"remedies", "knowledge", "standards"}
 
     @property
     def action_type(self) -> str:
@@ -1113,18 +1124,36 @@ class CLILoopbackHandler(ActionHandler):
         import asyncio
         import json as json_module
 
-        logger.info(f"  🐍 CLI_LOOPBACK: steward run {target}")
-
         try:
-            # Build command
-            cmd = ["python", "-m", "vibe_core.cli", "run", target]
+            # Make a copy to avoid mutating original params
+            params = dict(params)
 
-            # Add params as --key=value
+            # Determine if this is a CLI command or a capability
+            is_cli_command = target in self.CLI_COMMANDS
             output_format = params.pop("output_format", "json")
             params.pop("capture_as", None)  # Handled by circuit engine
 
-            if output_format == "json":
-                cmd.append("--json")
+            if is_cli_command:
+                # CLI command: steward <command> <subcommand> [args]
+                subcommand = params.pop("subcommand", "list")
+                logger.info(f"  🐍 CLI_LOOPBACK: steward {target} {subcommand}")
+                cmd = ["python", "-m", "vibe_core.cli", target, subcommand]
+
+                # Handle positional args (e.g., rule_id for 'remedies get <rule_id>')
+                positional_keys = ["rule_id", "term", "path", "id"]
+                for key in positional_keys:
+                    if key in params:
+                        cmd.append(str(params.pop(key)))
+
+                if output_format == "json":
+                    cmd.append("--json")
+            else:
+                # Capability: steward run <capability>
+                logger.info(f"  🐍 CLI_LOOPBACK: steward run {target}")
+                cmd = ["python", "-m", "vibe_core.cli", "run", target]
+
+                if output_format == "json":
+                    cmd.append("--json")
 
             for key, value in params.items():
                 if isinstance(value, bool):
@@ -1153,15 +1182,21 @@ class CLILoopbackHandler(ActionHandler):
                 result_data = {}
                 if output_format == "json" and stdout_str:
                     try:
-                        # Find JSON in output (skip log lines)
-                        lines = stdout_str.split("\n")
-                        json_lines = [l for l in lines if l.startswith("{") or l.startswith("[")]
-                        if json_lines:
-                            result_data = json_module.loads(json_lines[-1])
-                        else:
-                            result_data = {"raw_output": stdout_str}
+                        # First try parsing the entire output as JSON
+                        result_data = json_module.loads(stdout_str)
                     except json_module.JSONDecodeError:
-                        result_data = {"raw_output": stdout_str}
+                        try:
+                            # Find JSON in output (skip log lines)
+                            # Look for content between first { and last }
+                            first_brace = stdout_str.find("{")
+                            last_brace = stdout_str.rfind("}")
+                            if first_brace != -1 and last_brace != -1:
+                                json_str = stdout_str[first_brace : last_brace + 1]
+                                result_data = json_module.loads(json_str)
+                            else:
+                                result_data = {"raw_output": stdout_str}
+                        except json_module.JSONDecodeError:
+                            result_data = {"raw_output": stdout_str}
                 else:
                     result_data = {"raw_output": stdout_str}
 

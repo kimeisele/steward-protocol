@@ -121,22 +121,39 @@ circuit:
 
     # ============================================================
     # PHASE 3: HEAL - Apply fixes via CLI loopback
+    # OPUS-307 Phase E.4: Now powered by KNOWLEDGE!
     # ============================================================
     heal:
       name: "Self-Healing"
-      description: "Apply fixes via CLI loopback"
+      description: "Apply fixes via CLI loopback with remedy knowledge"
       actions:
-        # For each violation, call the heal tool
+        # For each violation:
+        # 1. Query remedies CLI for fix knowledge (ARTHA)
+        # 2. Apply fix via engineer (KARMA)
         - action_type: FOR_EACH
           items: "{{ analysis.healable_violations }}"
           as: "violation"
           do:
+            # STEP 1: ARTHA - Query remedy knowledge
+            # The snake consumes its own knowledge
+            - action_type: CLI_LOOPBACK
+              target: "remedies"
+              params:
+                subcommand: "get"
+                rule_id: "{{ violation.rule_id }}"
+                output_format: "json"
+              capture_as: "remedy_knowledge.{{ violation.rule_id }}"
+
+            # STEP 2: KARMA - Apply the fix with knowledge
             - action_type: CLI_LOOPBACK
               target: "engineer.heal_violation"
               params:
                 violation_id: "{{ violation.id }}"
                 rule_id: "{{ violation.rule_id }}"
                 file_path: "{{ violation.file_path }}"
+                # Pass the remedy knowledge to the engineer
+                fix_suggestion: "{{ remedy_knowledge[violation.rule_id].fix_suggestion }}"
+                healing_circuit: "{{ remedy_knowledge[violation.rule_id].healing_circuit }}"
                 dry_run: "{{ input.dry_run }}"
               capture_as: "heal_results.{{ violation.id }}"
 
