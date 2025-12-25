@@ -690,4 +690,442 @@ steward heal --auto --dry-run
 
 ---
 
-*"Von Windows 95 zu Windows 7. Der Weg ist klar. Die Arbeit beginnt."*
+## PHASE F: MANIFEST-DRIVEN DISCOVERY (DONE - 2025-12-25)
+
+**THE SATTVA PRINCIPLE:** The system must KNOW what's installed, not GUESS.
+
+### Before (TAMAS - Blind Scanning)
+```python
+# iterdir() everywhere - O(n) filesystem crawl
+for item in scan_path.iterdir():
+    if item.name == "manifest.json":
+        # Load and hope...
+```
+
+### After (SATTVA - Manifest Registry)
+```python
+# ManifestRegistry scans ONCE at boot - O(1) lookups
+ManifestRegistry._ensure_scanned()
+entries = ManifestRegistry.get_enabled("cartridge")  # Instant
+```
+
+**ManifestRegistry Stats:**
+- 76 manifests scanned at boot
+- Types: plugin, cartridge, section, circuit, cognitive_pack
+- Zero iterdir() in production code
+
+**Migrated Loaders:**
+| Loader | Before | After |
+|--------|--------|-------|
+| CartridgeRegistry | iterdir() | ManifestRegistry |
+| SectionLoader | iterdir() | ManifestRegistry |
+| PluginLoader | iterdir() | ManifestRegistry |
+| AgentLoader | iterdir() | ManifestRegistry |
+
+**New Rule in standards.yaml:**
+```yaml
+- id: "iterdir_discovery"
+  severity: "HIGH"
+  message: "iterdir() is TAMAS - blind filesystem scanning"
+  fix_suggestion: "Use ManifestRegistry.get_by_type()"
+```
+
+---
+
+## PHASE G: OUROBOROS LIVE-FIRE (DONE - 2025-12-25)
+
+**THE TEST:** Run OUROBOROS_V1 and verify end-to-end circuit execution.
+
+**Result:**
+```
+============================================================
+OUROBOROS_V1 RESULT:
+============================================================
+  SUCCESS: True
+  Final State: report_healthy
+  State History: diagnose → analyze_results → report_healthy
+============================================================
+```
+
+**Bugs Fixed During Live-Fire:**
+1. `create_circuit_executor()` signature mismatch
+2. ServiceRegistry import path (`vibe_core.di` not `vibe_core.service_registry`)
+3. `raw_input` vs `user_input` parameter naming
+4. DISPATCH_TASK required params (agent_id, task_payload)
+5. MinimalCompilation missing attributes (syscall_request, confidence)
+6. Transition parsing (`to` vs `next_state` field names)
+7. Terminal state success detection
+
+---
+
+## PHASE H: ACTION HANDLER INTEGRATION (DONE - 2025-12-25)
+
+**THE PROBLEM:** Circuit Engine didn't dispatch `actions` to ActionHandlerRegistry.
+
+**THE FIX:** Added action handler dispatch loop to `circuit_engine.py`:
+
+```python
+# OPUS-307 Phase H: Execute actions (CLI_LOOPBACK, FOR_EACH, etc.)
+actions = current_state_def.get("actions", [])
+for action_def in actions:
+    action_type = action_def.get("action_type")
+    if self.action_registry and self.action_registry.has(action_type):
+        handler = self.action_registry.get(action_type)
+        result = await handler.execute(target, params, action_context)
+```
+
+**Available Action Handlers (12):**
+- CHECK_STATE, EXECUTE_SCRIPT, EMIT_EVENT
+- CALL_AGENT, CALL_PLAYBOOK
+- QUERY_GRAPH, RENDER_TEMPLATE
+- STORE_EPHEMERAL, RETRIEVE_EPHEMERAL
+- GIT_COMMIT
+- **CLI_LOOPBACK** (new)
+- **FOR_EACH** (new)
+
+---
+
+## CRITICAL FINDING: EXECUTOR SINGULARITY PROBLEM
+
+### The Discovery (2025-12-25)
+
+During Phase H, we discovered **5 parallel execution engines**:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  EXECUTION ENGINE LANDSCAPE (Ist-Zustand)                      │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  1. DeterministicExecutor     1,150 LOC  (Playbooks/Phases)   │
+│  2. CognitiveCircuitExecutor  1,556 LOC  (Circuits/States)    │
+│  3. PlaybookRunner              530 LOC  (Wrapper)            │
+│  4. GraphExecutor               729 LOC  (DAG/Topo-Sort)      │
+│  5. CLI Executor                306 LOC  (Command Dispatch)   │
+│                                                                │
+│  TOTAL: ~4,300 LOC für das gleiche Konzept                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### The Insight: Playbook = Linear Circuit
+
+A Playbook is just a Circuit with implicit `next` transitions:
+
+```yaml
+# Playbook (implicit transitions)
+phases:
+  - phase_id: step1
+  - phase_id: step2
+  - phase_id: step3
+
+# Equivalent Circuit (explicit transitions)
+states:
+  step1:
+    transitions:
+      - condition: "true"
+        to: step2
+  step2:
+    transitions:
+      - condition: "true"
+        to: step3
+  step3:
+    terminal: true
+```
+
+### The Plan: EXECUTOR SINGULARITY
+
+**Goal:** 5 Engines → 1 Engine
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│           UNIFIED SEMANTIC EXECUTOR (Soll-Zustand)          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Input: ANY YAML                                            │
+│    ├─ type: playbook  → Auto-convert to circuit            │
+│    ├─ type: circuit   → Execute directly                   │
+│    └─ type: workflow  → DAG → Circuit                      │
+│                                                             │
+│  Core:                                                      │
+│    ├─ InvariantChecker     (Security)                      │
+│    ├─ ActionHandlerRegistry (Dispatch)                     │
+│    ├─ BlueprintGenerator   (Compiler)                      │
+│    ├─ SemanticSyscallExecutor (Kernel)                     │
+│    └─ MetaCircuitManager   (Observability)                 │
+│                                                             │
+│  Benefit: 4,300 LOC → ~1,800 LOC                           │
+│           5 Engines → 1 Engine                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Why CognitiveCircuitExecutor as Base?
+
+| Feature | DeterministicExecutor | CognitiveCircuitExecutor |
+|---------|----------------------|--------------------------|
+| Invariants | ❌ | ✅ Security Layer |
+| Meta-Circuits | ❌ | ✅ TASK_LEDGER, ERROR_RECOVERY |
+| Syscall Support | Via Delegation | ✅ Native |
+| Recursion | CALL_PLAYBOOK | ✅ EXECUTE_MICRO_CIRCUIT |
+| State Machine | Linear only | ✅ Full conditional |
+
+**Decision:** CognitiveCircuitExecutor is the foundation for unification.
+
+---
+
+## PHASE I: EXECUTOR SINGULARITY (PLANNED)
+
+### Step 1: Unified YAML Format
+
+```yaml
+# Universal Execution Format
+meta:
+  id: MY_WORKFLOW
+  type: circuit          # or: playbook, workflow
+  version: "1.0"
+
+# For type=playbook, auto-convert to states
+phases:                  # (optional, for linear workflows)
+  - id: step1
+    actions: [...]
+  - id: step2
+    actions: [...]
+
+# For type=circuit, use directly
+states:                  # (optional, for state machines)
+  INIT:
+    actions: [...]
+    transitions:
+      - condition: "..."
+        to: NEXT
+```
+
+### Step 2: Adapter Pattern
+
+```python
+# DeterministicExecutor becomes thin wrapper
+class DeterministicExecutor:
+    def execute(self, playbook_id, ...):
+        circuit = self._convert_playbook_to_circuit(playbook_id)
+        return self.circuit_executor.execute_circuit(circuit)
+```
+
+### Step 3: Migration
+
+1. Convert existing playbooks to unified format
+2. Update all callers to use unified interface
+3. Deprecate legacy executors
+4. Remove dead code
+
+### Success Criteria
+
+- [ ] Single execute() method in the system
+- [ ] All YAML formats supported (playbook, circuit, workflow)
+- [ ] 4,300 LOC → ~1,800 LOC
+- [ ] Zero semantic mismatch
+
+---
+
+## PHASE I RESEARCH: COMPLETE ROUTING ARCHITECTURE
+
+### The TWO Execution Flows (Semantic Mismatch Identified)
+
+**CRITICAL FINDING**: There are TWO completely separate execution paths!
+
+```
+FLOW 1: CLI Direct Execution
+==========================
+steward circuit run X
+        ↓
+    CircuitCLI
+        ↓
+    create_circuit_executor()
+        ↓
+    CognitiveCircuitExecutor  ← YAML state machines
+        ↓
+    ActionHandlerRegistry
+        ↓
+    CLI_LOOPBACK, FOR_EACH, etc.
+
+
+FLOW 2: Runtime Routing Execution
+================================
+User Input (natural language)
+        ↓
+    LayeredRouter (4 layers)
+    ├── Layer 1: Exact match (instinct)
+    ├── Layer 2: Semantic regex (knowledge)
+    ├── Layer 3: Context boost (memory)
+    └── Layer 3.5: Akshara (experience)
+        ↓
+    UnifiedRouter (wrapper)
+        ↓
+    ExecutionRequest {path, target_id}
+        ↓
+    UnifiedExecutor
+        ↓
+    DeterministicExecutor  ← Playbook phases, NOT circuits!
+```
+
+### The Mismatch
+
+| Aspect | CLI Flow | Runtime Flow |
+|--------|----------|--------------|
+| Entry Point | `steward circuit run` | Natural language |
+| Router | None (direct) | LayeredRouter → UnifiedRouter |
+| Executor | **CognitiveCircuitExecutor** | **DeterministicExecutor** |
+| Format | YAML circuits (states) | Playbooks (phases) |
+| Actions | ActionHandlerRegistry | Phase operations |
+
+**Result**: Same command executed via CLI vs natural language uses DIFFERENT executors!
+
+### LayeredRouter Architecture (4 Layers)
+
+```yaml
+LayeredRouter:
+  layer_1_exact:
+    type: "instinct"
+    source: "circuit.intent_patterns"
+    confidence: 1.0
+    example: "status" → SYSTEM_STATUS_V2
+
+  layer_2_semantic:
+    type: "knowledge"
+    source: "circuit.semantic_grounding.intent_patterns"
+    method: "regex + param_extraction"
+    confidence: 0.7-0.95
+
+  layer_3_context:
+    type: "memory"
+    sources:
+      - EphemeralStorage (recent circuits)
+      - KnowledgeGraph (concept → agent mapping)
+    boost: 0.05-0.1
+
+  layer_3.5_akshara:
+    type: "experience"
+    method: "learned synaptic weights + PRANA"
+    purpose: "paths that worked before"
+    confidence: 0.5-0.75
+
+  fallback:
+    target: SIMPLE_QUERY
+    confidence: 0.3
+```
+
+### SemanticRouter vs LayeredRouter
+
+**Two parallel semantic systems exist:**
+
+| Router | Method | Used By |
+|--------|--------|---------|
+| `LayeredRouter` | Regex + Context + Akshara | UnifiedRouter (runtime) |
+| `SemanticRouter` | sentence-transformers (vector) | Standalone (not wired) |
+
+The SemanticRouter (Project JNANA) uses AI embeddings:
+- Cosine similarity to concepts
+- Confidence thresholds: SATYA (>0.85), MANTHAN (0.6-0.84), NETI (< 0.6)
+- But NOT currently used in the main execution path!
+
+### MATRIX.md: The Routing Patch Bay
+
+```
+MATRIX.md (auto-generated):
+- 23 circuits registered
+- 1 playbook registered
+- Types: cognitive_circuit, state_machine, organism_circuit, circuit
+```
+
+The DeterministicExecutor loads playbooks from MATRIX, but circuits are loaded separately via CircuitLoader.
+
+### The Unification Path
+
+```
+BEFORE (current state):
+┌─────────────┐     ┌─────────────────────┐
+│ CLI Direct  │ ──→ │ CognitiveCircuitExec│
+└─────────────┘     └─────────────────────┘
+
+┌─────────────┐     ┌─────────────┐     ┌────────────────────┐
+│ User Input  │ ──→ │LayeredRouter│ ──→ │DeterministicExecutor│
+└─────────────┘     └─────────────┘     └────────────────────┘
+
+
+AFTER (Phase I complete):
+┌─────────────┐
+│ CLI Direct  │─────────────────────────────┐
+└─────────────┘                             │
+                                            ▼
+┌─────────────┐     ┌─────────────┐     ┌──────────────────┐
+│ User Input  │ ──→ │LayeredRouter│ ──→ │UnifiedCircuitExec│
+└─────────────┘     └─────────────┘     └──────────────────┘
+                                            ▲
+┌─────────────┐                             │
+│ Cron/Events │─────────────────────────────┘
+└─────────────┘
+```
+
+### Integration Points Summary
+
+```
+1. SemanticRouter (semantic_engine.py)
+   └── NOT wired to execution (dormant)
+
+2. LayeredRouter (layered_router.py)
+   └── Wired to UnifiedRouter
+       └── Wired to UnifiedExecutor
+           └── Uses DeterministicExecutor
+
+3. CircuitLoader (circuit_loader.py)
+   └── Wired to CircuitCLI
+       └── Uses CognitiveCircuitExecutor
+
+4. ManifestRegistry (manifest_registry.py)
+   └── Wired to boot sequence
+       └── Provides discovery to all loaders
+```
+
+---
+
+## ROADMAP UPDATE (2025-12-25)
+
+| Phase | Name | Status | Description |
+|-------|------|--------|-------------|
+| D | Tool CLI | ✅ | 43 tools CLI-accessible |
+| D+ | Agent CLI | ✅ | Agents use CLI internally |
+| D++ | Circuit CLI | ✅ | 22 circuits CLI-accessible |
+| D+++ | Unified Protocol | ✅ | 65 capabilities via `steward run` |
+| D++++ | Self-Management | ⚠️ | Architecture only, no real healing yet |
+| E | Knowledge Layer | ✅ | Knowledge/Standards/Remedies CLIs |
+| F | Manifest Registry | ✅ | No more iterdir() |
+| G | Live-Fire Test | ✅ | OUROBOROS runs end-to-end |
+| H | Action Handlers | ✅ | CLI_LOOPBACK works in circuits |
+| I.research | Routing Architecture | ✅ | Complete flow traced (above) |
+| **I.impl** | **Executor Singularity** | ⏳ | **5 Engines → 1 Engine** |
+| J | UI Layer | ⏳ | Markdown Dashboard |
+| K | Full Coverage | ⏳ | 300K LOC under control |
+
+### Phase I Implementation Tasks
+
+1. **Wire UnifiedExecutor to CognitiveCircuitExecutor**
+   - Replace DeterministicExecutor delegation
+   - Keep DeterministicExecutor as thin adapter for playbooks only
+
+2. **Merge SemanticRouter into LayeredRouter**
+   - Layer 2.5: Vector similarity (optional, when model loaded)
+   - Graceful degradation without sentence-transformers
+
+3. **Unified YAML Format**
+   - Circuit states = Playbook phases
+   - Actions = Operations
+   - Single loader, single executor
+
+4. **Test: Same result via CLI and natural language**
+   - `steward circuit run HEAL_CODEBASE_V1`
+   - vs "fix the codebase violations"
+   - Must use identical executor
+
+---
+
+*"Von Windows 95 zu Windows 7. Der Weg ist klar. Die Executor Singularity ist der nächste Schritt."*
+*"Phase I Research complete. Now we truly understand how the pieces connect."*
