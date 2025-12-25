@@ -38,7 +38,8 @@ class TestMonitorLoader:
                     return [MockMonitor()]
 
             # 3. MonitorLoader iterates over kernel.plugins (expects list)
-            ctx.kernel.plugins = [MockPlugin()]
+            # Note: plugins property is read-only, set _plugins directly in tests
+            ctx.kernel._plugins = [MockPlugin()]
 
             # 4. Discover
             monitors = MonitorLoader.discover_monitors(ctx.kernel)
