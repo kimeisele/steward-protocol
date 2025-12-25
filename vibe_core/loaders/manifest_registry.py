@@ -92,6 +92,8 @@ class ManifestRegistry:
             Path("knowledge/genesis/circuits"),
             Path("knowledge/circuits"),
         ],
+        # Knowledge packs (cognitive packs, genesis, etc.)
+        "cognitive_pack": [Path("knowledge")],
     }
 
     # Manifest filenames to look for (in order of priority)
