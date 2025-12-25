@@ -28,9 +28,11 @@ class ShuddhiEngine(ShuddhiProtocol):
 
     def _register_default_remedies(self):
         """Register built-in healers."""
+        from vibe_core.shuddhi.remedies.silent_failure import SilentFailureRemedy
         from vibe_core.shuddhi.remedies.unsafe_io_write import UnsafeIOWriteRemedy
 
         self.register_remedy(UnsafeIOWriteRemedy)
+        self.register_remedy(SilentFailureRemedy)
 
     def register_remedy(self, remedy_class: Type[CSTRemedy]):
         """Register a new healer class."""
