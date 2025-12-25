@@ -2,8 +2,8 @@
     "type": "plugin",
     "id": "lifecycle",
     "name": "Lifecycle Plugin",
-    "version": "1.0.0",
-    "description": "The Gatekeeper of Existence - grants life to new agents after governance verification",
+    "version": "1.1.0",
+    "description": "The Gatekeeper of Existence - grants life to new agents after governance verification. OPUS-307: Now with CLI visibility.",
     "entry_point": "plugin_main.py",
     "entry_class": "LifecyclePlugin",
     "priority": 10,
@@ -22,11 +22,89 @@
             ".prakriti/snapshots/*.json"
         ]
     },
+    "cli": {
+        "namespace": "agents",
+        "commands": [
+            {
+                "name": "list",
+                "handler": "cmd_agents_list",
+                "execution_mode": "hybrid",
+                "help": "List all registered agents (like ps aux)",
+                "args": [
+                    {
+                        "name": "json",
+                        "type": "bool",
+                        "help": "Output as JSON for pipelines",
+                        "required": false,
+                        "default": false
+                    }
+                ]
+            },
+            {
+                "name": "status",
+                "handler": "cmd_agents_status",
+                "execution_mode": "hybrid",
+                "help": "Show detailed status of a specific agent",
+                "args": [
+                    {
+                        "name": "agent_id",
+                        "type": "str",
+                        "help": "Agent ID to inspect",
+                        "required": true
+                    },
+                    {
+                        "name": "json",
+                        "type": "bool",
+                        "help": "Output as JSON",
+                        "required": false,
+                        "default": false
+                    }
+                ]
+            },
+            {
+                "name": "kill",
+                "handler": "cmd_agents_kill",
+                "execution_mode": "hybrid",
+                "help": "Terminate an agent (Narasimha Protocol)",
+                "args": [
+                    {
+                        "name": "agent_id",
+                        "type": "str",
+                        "help": "Agent ID to terminate",
+                        "required": true
+                    },
+                    {
+                        "name": "force",
+                        "type": "bool",
+                        "help": "Force kill (no graceful shutdown)",
+                        "required": false,
+                        "default": false
+                    }
+                ]
+            },
+            {
+                "name": "spawn-log",
+                "handler": "cmd_agents_spawn_log",
+                "execution_mode": "offline",
+                "help": "Show spawn history for this session",
+                "args": [
+                    {
+                        "name": "limit",
+                        "type": "int",
+                        "help": "Max entries to show",
+                        "required": false,
+                        "default": 20
+                    }
+                ]
+            }
+        ]
+    },
     "author": "OPUS-012",
     "tags": [
         "lifecycle",
         "spawning",
         "governance",
-        "birth"
+        "birth",
+        "cli"
     ]
 }

@@ -2,8 +2,8 @@
   "type": "plugin",
   "id": "task_manager",
   "name": "Task Manager Plugin",
-  "version": "1.0.0",
-  "description": "Sub-operating system for complete task lifecycle: ingestion, queueing, execution, history",
+  "version": "1.1.0",
+  "description": "Sub-operating system for complete task lifecycle: ingestion, queueing, execution, history. OPUS-307: Now with CLI.",
   "author": "STEWARD Protocol",
   "entry_point": "plugin_main.py",
   "entry_class": "TaskManagerPlugin",
@@ -13,12 +13,53 @@
   "priority": 95,
   "enabled": true,
   "dependencies": [],
+  "cli": {
+    "namespace": "tasks",
+    "commands": [
+      {
+        "name": "list",
+        "handler": "cmd_tasks_list",
+        "execution_mode": "offline",
+        "help": "List all tasks with status",
+        "args": [
+          {
+            "name": "status",
+            "type": "str",
+            "help": "Filter by status (pending, in_progress, completed, failed)",
+            "required": false
+          },
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON",
+            "required": false,
+            "default": false
+          }
+        ]
+      },
+      {
+        "name": "stats",
+        "handler": "cmd_tasks_stats",
+        "execution_mode": "offline",
+        "help": "Show task queue statistics",
+        "args": []
+      },
+      {
+        "name": "next",
+        "handler": "cmd_tasks_next",
+        "execution_mode": "offline",
+        "help": "Show next pending task",
+        "args": []
+      }
+    ]
+  },
   "tags": [
     "tasks",
     "management",
     "inbox",
     "queueing",
     "execution",
-    "lifecycle"
+    "lifecycle",
+    "cli"
   ]
 }

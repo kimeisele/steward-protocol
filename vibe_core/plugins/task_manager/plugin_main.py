@@ -708,3 +708,139 @@ Recommendation:
 Evidence:
 {chr(10).join(f"  - {e}" for e in finding.evidence)}
 """
+
+    # =========================================================================
+    # OPUS-307 Phase II: CLI Command Handlers
+    # "steward tasks" namespace - visibility into task queue
+    # =========================================================================
+
+    def cmd_tasks_list(self, status: Optional[str] = None, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward tasks:list
+
+        List all tasks, optionally filtered by status.
+
+        Args:
+            status: Filter by status (pending, in_progress, completed, failed)
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Dict with task listing
+        """
+        all_tasks = self.manager.get_all_tasks()
+
+        # Filter by status if specified
+        if status:
+            status_upper = status.upper()
+            try:
+                target_status = TaskStatus[status_upper]
+                all_tasks = [t for t in all_tasks if t.status == target_status]
+            except KeyError:
+                return {"success": False, "error": f"Unknown status: {status}"}
+
+        tasks_data = []
+        for t in all_tasks:
+            tasks_data.append(
+                {
+                    "id": t.id,
+                    "title": t.title,
+                    "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+                    "type": getattr(t, "type", "general"),
+                }
+            )
+
+        result = {
+            "success": True,
+            "count": len(tasks_data),
+            "filter": status,
+            "tasks": tasks_data,
+        }
+
+        if not json:
+            lines = [f"📋 TASKS ({len(tasks_data)} total" + (f", filter: {status}" if status else "") + ")"]
+            lines.append("=" * 60)
+            status_icons = {
+                "pending": "⏳",
+                "in_progress": "🔄",
+                "completed": "✅",
+                "failed": "❌",
+                "blocked": "🚫",
+            }
+            for t in tasks_data:
+                icon = status_icons.get(t["status"], "❓")
+                lines.append(f"  {icon} [{t['id'][:8]}] {t['title'][:40]}")
+            lines.append("=" * 60)
+            result["formatted"] = "\n".join(lines)
+
+        return result
+
+    def cmd_tasks_stats(self) -> Dict[str, Any]:
+        """
+        CLI Handler: steward tasks:stats
+
+        Show task queue statistics.
+
+        Returns:
+            Dict with stats
+        """
+        stats = self.manager.get_stats()
+
+        result = {
+            "success": True,
+            "stats": stats,
+        }
+
+        lines = ["📊 TASK QUEUE STATISTICS"]
+        lines.append("=" * 40)
+        lines.append(f"  Total:       {stats.get('total', 0)}")
+        lines.append(f"  ⏳ Pending:    {stats.get('pending', 0)}")
+        lines.append(f"  🔄 In Progress: {stats.get('in_progress', 0)}")
+        lines.append(f"  ✅ Completed:  {stats.get('completed', 0)}")
+        lines.append(f"  ❌ Failed:     {stats.get('failed', 0)}")
+        lines.append(f"  🚫 Blocked:    {stats.get('blocked', 0)}")
+        lines.append("=" * 40)
+        result["formatted"] = "\n".join(lines)
+
+        return result
+
+    def cmd_tasks_next(self) -> Dict[str, Any]:
+        """
+        CLI Handler: steward tasks:next
+
+        Show the next pending task.
+
+        Returns:
+            Dict with next task info
+        """
+        next_task = self.manager.get_next_pending()
+
+        if not next_task:
+            return {
+                "success": True,
+                "message": "No pending tasks",
+                "formatted": "📋 No pending tasks in queue",
+            }
+
+        result = {
+            "success": True,
+            "task": {
+                "id": next_task.id,
+                "title": next_task.title,
+                "description": getattr(next_task, "description", ""),
+                "type": getattr(next_task, "type", "general"),
+                "status": next_task.status.value if hasattr(next_task.status, "value") else str(next_task.status),
+            },
+        }
+
+        lines = ["📋 NEXT PENDING TASK"]
+        lines.append("=" * 60)
+        lines.append(f"  ID:          {next_task.id}")
+        lines.append(f"  Title:       {next_task.title}")
+        lines.append(f"  Type:        {getattr(next_task, 'type', 'general')}")
+        desc = getattr(next_task, "description", "")
+        if desc:
+            lines.append(f"  Description: {desc[:50]}...")
+        lines.append("=" * 60)
+        result["formatted"] = "\n".join(lines)
+
+        return result
