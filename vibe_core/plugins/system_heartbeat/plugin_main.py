@@ -18,7 +18,6 @@ from vibe_core.event_bus import Event, EventType
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols import (
     CognitiveKernelProtocol,
-    StateSyncWeaverProtocol,
     SystemHeartbeatProtocol,
     VibeKernel,
 )
@@ -80,22 +79,9 @@ class SystemHeartbeatPlugin(KernelPlugin, SystemHeartbeatProtocol):
             logger.error(f"   ❌ Snapshot failed: {e}")
             results["success"] = False
 
-        # 2. SYNCHRONIZATION (Weaver)
-        try:
-            weaver = ServiceRegistry.get(StateSyncWeaverProtocol)
-            if weaver:
-                logger.info("   + StateSyncWeaver: Sealing runtime state...")
-                res = weaver.pulse()
-                results["state_sync"] = res.success
-                if res.success:
-                    logger.info(f"   ✅ State synchronized: {res.git_sha}")
-                else:
-                    logger.warning(f"   ⚠️ State sync partial: {res.error}")
-            else:
-                logger.warning("   ⚠️ StateSyncWeaver not available in DI")
-        except Exception as e:
-            logger.error(f"   ❌ Sync failed: {e}")
-            results["success"] = False
+        # NOTE: State sync is handled by StateService background worker (OPUS-306)
+        # Plugins must NOT call weaver.pulse() directly - that breaks batching
+        # StateService.mark_dirty() → batches → weaver.pulse() (single authority)
 
         return results
 
