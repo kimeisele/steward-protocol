@@ -311,12 +311,96 @@ steward upgrade --safe                         # Self-update
 
 ---
 
-## IMPLEMENTATION ORDER
+## IMPLEMENTATION STATUS
 
-1. **NOW: Phase D** - Tool Protocol CLI
-2. **NEXT: Phase D++** - Circuit CLI
-3. **THEN: Phase D+** - Agents use CLI
-4. **FINALLY: D+++/D++++** - Full unification
+### ✅ Phase D: Tool Protocol CLI (DONE - 2025-12-25)
+
+```bash
+steward tool list                    # 43+ tools, grouped by agent
+steward tool info watchman.standards # Show schema
+steward tool run watchman.standards --action inspect_all
+```
+
+Commits:
+- `e119b122`: feat(cli): OPUS-307 Phase D - Tool Protocol CLI
+- `c8edca09`: feat(di): OPUS-307 D.1 - Tool-DI Integration
+
+### ✅ Phase D.1: Tool-DI Integration (DONE - 2025-12-25)
+
+**PRINCIPLE: SSOT - No Fallback. No Spaghetti.**
+
+```python
+# OLD (Spaghetti):
+def __init__(self):
+    self.twitter = self._init_twitter()  # Hardcoded side-effect
+
+# NEW (SSOT):
+def __init__(self, services=None):
+    super().__init__(services)
+    if self.services:
+        self.twitter = self.services.get("TwitterClient")
+    # NO FALLBACK. If not in registry, stays None.
+```
+
+Tool Protocol now:
+- Accepts `services: ServiceRegistry` parameter
+- ToolDiscovery injects registry automatically
+- 1/30 tools migrated (broadcast_tool), 29 pending
+
+### 🔄 Phase D.2: Service Protocols (NEXT)
+
+Create typed protocols for external services:
+
+```python
+# vibe_core/protocols/external.py
+class TwitterProtocol(Protocol):
+    def publish(self, content: str) -> bool: ...
+    def scan_mentions(self, since_id: str) -> List[dict]: ...
+
+class RedditProtocol(Protocol):
+    def post(self, subreddit: str, title: str, content: str) -> bool: ...
+```
+
+Register in plugin init:
+```python
+# plugins/herald/plugin_main.py
+def on_load(self, kernel):
+    ServiceRegistry.register(TwitterProtocol, TwitterClient())
+    ServiceRegistry.register(RedditProtocol, RedditClient())
+```
+
+### ⏳ Phase D.3: Mass Tool Migration
+
+Migrate remaining 29 tools:
+1. Add `services` parameter to `__init__`
+2. Call `super().__init__(services)`
+3. Get dependencies from `self.services.get(Protocol)`
+4. Remove legacy `_init_*()` methods
+
+### ⏳ Phase D++: Circuit CLI
+
+```bash
+steward circuit list
+steward circuit run heal_codebase --file X
+steward circuit status <id>
+```
+
+### ⏳ Phase D+++: Unified Protocol
+
+Everything becomes a Tool. No Plugin/Agent split.
+
+---
+
+## NEXT CONCRETE STEP
+
+**Phase D.2: Create TwitterProtocol + RedditProtocol**
+
+1. Create `vibe_core/protocols/external.py`
+2. Define TwitterProtocol, RedditProtocol
+3. Update herald plugin to register implementations
+4. Update broadcast_tool to use typed protocols
+
+This completes the "broadcast_tool as pilot" migration.
 
 ---
 
