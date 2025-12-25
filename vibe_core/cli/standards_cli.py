@@ -29,6 +29,8 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from vibe_core.protocols.cli import CLIMeta, register_cli
+
 logger = logging.getLogger("STANDARDS_CLI")
 
 CONFIG_ROOT = Path("config")
@@ -36,12 +38,24 @@ DOCS_ROOT = Path("docs/architecture")
 KNOWLEDGE_ROOT = Path("knowledge")
 
 
+@register_cli
 class StandardsCLI:
     """
     CLI for accessing Standards and GADs.
 
     GAD-000: Standards must be machine-readable and composable.
     """
+
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="standards",
+            description="Access Standards and GADs (38 GADs + Code Rules)",
+            domain="governance",
+            subcommands=["list", "gads", "rules", "show", "check"],
+            tags=["standards", "gad", "governance", "todsünden"],
+        )
 
     def __init__(self):
         self._cache: Dict[str, Any] = {}
