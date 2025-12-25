@@ -2,15 +2,21 @@
 Tool Discovery - Automatic tool registration from agent directories.
 
 Scans agent tool directories and registers tools automatically.
+
+OPUS-307 D.1: Now supports dependency injection via ServiceRegistry.
+Tools that accept a 'services' parameter will receive the global registry.
 """
 
 import importlib.util
 import inspect
 import logging
 from pathlib import Path
-from typing import List, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from vibe_core.tools.tool_protocol import Tool
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("TOOL_DISCOVERY")
 
@@ -46,14 +52,17 @@ class ToolDiscovery:
         "vibe_core/cartridges/agent_city",
     ]
 
-    def __init__(self, root_path: Path = Path(".")):
+    def __init__(self, root_path: Path = Path("."), services: Optional["ServiceRegistry"] = None):
         """
         Initialize tool discovery.
 
         Args:
             root_path: Project root path (default: current directory)
+            services: ServiceRegistry for dependency injection (OPUS-307 D.1).
+                     If provided, tools that accept 'services' will receive it.
         """
         self.root_path = Path(root_path).resolve()
+        self.services = services
         self.discovered_tools: List[Tool] = []
         self.failed_tools: List[dict] = []
 
@@ -172,7 +181,7 @@ class ToolDiscovery:
         # Instantiate and collect tools
         for tool_class in tool_classes:
             try:
-                tool = tool_class()
+                tool = self._instantiate_tool(tool_class)
                 self.discovered_tools.append(tool)
                 logger.info(f"   ✅ Discovered: {tool.name} ({tool_class.__name__})")
 
@@ -185,6 +194,30 @@ class ToolDiscovery:
                         "error": f"Instantiation failed: {e}",
                     }
                 )
+
+    def _instantiate_tool(self, tool_class: Type[Tool]) -> Tool:
+        """
+        Instantiate a tool with dependency injection support.
+
+        OPUS-307 D.1: Tries to inject ServiceRegistry if tool accepts it.
+        Falls back to no-argument instantiation for legacy tools.
+
+        Args:
+            tool_class: Tool class to instantiate
+
+        Returns:
+            Tool instance
+        """
+        # Check if tool's __init__ accepts 'services' parameter
+        sig = inspect.signature(tool_class.__init__)
+        params = sig.parameters
+
+        if "services" in params and self.services is not None:
+            # New-style tool with DI support
+            return tool_class(services=self.services)
+        else:
+            # Legacy tool without DI - instantiate without arguments
+            return tool_class()
 
     def _find_tool_classes(self, module) -> List[Type[Tool]]:
         """

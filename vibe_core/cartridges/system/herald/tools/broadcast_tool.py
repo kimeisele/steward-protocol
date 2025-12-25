@@ -5,13 +5,18 @@ Handles publishing to multiple platforms with graceful fallback.
 Offline-capable with dry-run modes for safety.
 
 This tool implements the Tool Protocol for kernel-managed execution.
+
+OPUS-307 D.1: Updated to support dependency injection via ServiceRegistry.
 """
 
 import logging
 import os
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 try:
     import tweepy
@@ -37,10 +42,28 @@ class BroadcastTool(Tool):
     Graceful fallback when API keys unavailable.
     """
 
-    def __init__(self):
-        """Initialize broadcast tool."""
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        """
+        Initialize broadcast tool with optional DI support.
+
+        OPUS-307 D.1: Accepts ServiceRegistry for dependency injection.
+        Falls back to legacy initialization if services not provided.
+
+        Args:
+            services: ServiceRegistry for dependency injection (optional)
+        """
+        super().__init__(services)
         self.twitter_client = None
         self.reddit_client = None
+
+        # OPUS-307 D.1: Future - get clients from ServiceRegistry
+        # if self.services:
+        #     self.twitter_client = self.services.get(TwitterProtocol)
+        #     self.reddit_client = self.services.get(RedditProtocol)
+        # else:
+        #     self._init_legacy()
+
+        # Legacy init (until TwitterProtocol/RedditProtocol are created)
         self._init_twitter()
         self._init_reddit()
 

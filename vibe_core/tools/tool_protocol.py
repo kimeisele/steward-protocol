@@ -14,7 +14,10 @@ Design Principles:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.di import ServiceRegistry
 
 
 @dataclass
@@ -83,6 +86,10 @@ class Tool(ABC):
     run commands, etc.). Each tool implements this protocol to ensure
     safe, auditable, type-safe execution.
 
+    OPUS-307 D.1: Dependency Injection Support
+        Tools can receive a ServiceRegistry to access system services.
+        This enables testable, loosely-coupled tool implementations.
+
     Lifecycle:
         1. Agent emits ToolCall with tool name and parameters
         2. ToolRegistry looks up Tool instance by name
@@ -112,6 +119,27 @@ class Tool(ABC):
         ...         message = parameters["message"]
         ...         return ToolResult(success=True, output=message)
     """
+
+    # OPUS-307 D.1: ServiceRegistry for dependency injection
+    _services: Optional["ServiceRegistry"] = None
+
+    def __init__(self, services: Optional["ServiceRegistry"] = None):
+        """
+        Initialize tool with optional service registry.
+
+        Args:
+            services: ServiceRegistry for dependency injection (optional).
+                     If None, tools fall back to legacy self-init behavior.
+
+        Note: Subclasses that override __init__ should call super().__init__(services)
+              or accept services as a keyword argument for forward compatibility.
+        """
+        self._services = services
+
+    @property
+    def services(self) -> Optional["ServiceRegistry"]:
+        """Access to injected ServiceRegistry for getting dependencies."""
+        return self._services
 
     @property
     @abstractmethod

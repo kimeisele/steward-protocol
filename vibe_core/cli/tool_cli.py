@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.tool_discovery import ToolDiscovery
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 from vibe_core.tools.tool_registry import ToolRegistry
@@ -36,9 +37,10 @@ class ToolCLI:
         self._discovery: Optional[ToolDiscovery] = None
 
     def _ensure_registry(self) -> ToolRegistry:
-        """Lazy-load tool registry."""
+        """Lazy-load tool registry with DI support (OPUS-307 D.1)."""
         if self._registry is None:
-            self._discovery = ToolDiscovery(root_path=Path("."))
+            # Pass ServiceRegistry to enable dependency injection
+            self._discovery = ToolDiscovery(root_path=Path("."), services=ServiceRegistry)
             tools = self._discovery.discover_all_tools()
 
             self._registry = ToolRegistry()
