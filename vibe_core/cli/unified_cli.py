@@ -37,11 +37,13 @@ with warnings.catch_warnings():
 import vibe_core.cli.audit_cli  # noqa: F401 - registers "audit" (OPUS-307 Phase 4)
 import vibe_core.cli.cartridge_bridge  # noqa: F401 - registers "cartridges" (OPUS-307)
 import vibe_core.cli.circuit_cli  # noqa: F401 - registers "circuit"
+import vibe_core.cli.config_cli  # noqa: F401 - registers "config" (OPUS-307)
 import vibe_core.cli.create_cli  # noqa: F401 - registers "create" (OPUS-307 Phase 5)
 import vibe_core.cli.genesis_cli  # noqa: F401 - registers "genesis" (OPUS-307)
 import vibe_core.cli.knowledge_cli  # noqa: F401 - registers "knowledge"
 import vibe_core.cli.plugins_cli  # noqa: F401 - registers "plugins" (OPUS-307)
 import vibe_core.cli.prakriti_cli  # noqa: F401 - registers "prakriti" (OPUS-307)
+import vibe_core.cli.prompts_cli  # noqa: F401 - registers "prompts" (OPUS-307)
 import vibe_core.cli.remedies_cli  # noqa: F401 - registers "remedies"
 import vibe_core.cli.run_cli  # noqa: F401 - registers "run"
 import vibe_core.cli.sections_cli  # noqa: F401 - registers "sections" (OPUS-307)
@@ -1234,6 +1236,12 @@ class UnifiedCLI:
 
         print("\nCIRCUIT PROTOCOL (OPUS-307 D++):")
         print("  circuit          Use 'steward circuit --help' for subcommands")
+
+        print("\nOPUS-307 UNIFIED SERVICES:")
+        print("  config           Config management (list, show, validate)")
+        print("  prompts          Prompt registry (list, get, info)")
+        print("  sections         Phoenix sections (list, info)")
+        print("  plugins          Plugin registry (list, info, status)")
 
         print("\nPRAKRITI COMMANDS (Unified State):")
         prakriti_help = {
