@@ -162,10 +162,9 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         self._init_session_state()
 
         # 🔌 WIRING: Trigger genesis check for karma-aware boot
+        # OPUS-307 Phase I.3: Removed duplicate _setup_kernel_tick() and _setup_syscall_listener()
+        # They are already called at lines 145 and 148. Double subscription causes double events!
         if not self._is_test_mode():
-            self._setup_kernel_tick()
-            self._setup_syscall_listener()
-
             # Synthesize initial state
             self.synthesize_context()
 
