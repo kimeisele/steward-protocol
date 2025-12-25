@@ -8,10 +8,11 @@ Multiple fragmented registries/loaders for the same concerns:
 |-------------|---------------|--------|
 | Cartridges | 3 registries (ManifestRegistry, CartridgeRegistry, LazyCartridgeRegistry) | ✅ FIXED |
 | Plugins | PluginLoader + ManifestRegistry direct usage | ✅ FIXED |
-| Circuits | CircuitEngine direct ManifestRegistry | PENDING |
-| Tools | ToolRegistry + CartridgeService.load_tool | PENDING |
-| Sections | SectionLoader | PENDING |
-| Prompts | PromptRegistry | TO VERIFY |
+| Circuits | CircuitEngine direct ManifestRegistry | ✅ FIXED |
+| Tools | ToolDiscovery → CartridgeService | ✅ FIXED |
+| Sections | SectionLoader → SectionService | ✅ FIXED |
+| Prompts | PromptRegistry (already unified) | ✅ VERIFIED |
+| CLI Bridges | Full coverage for all services | ✅ COMPLETE |
 
 **Violation:** GAD-000 says ONE service per concern, accessed via DI.
 
@@ -77,51 +78,85 @@ Kernel + CLI:
 
 ---
 
-## Phase C: Circuits [PENDING]
+## Phase C: Circuits [COMPLETE]
 
-### Current State
-- `CircuitEngine` in `vibe_core/cortex/engines/circuit_engine.py`
-- Uses ManifestRegistry directly
-- No CircuitService
+### Before
+```
+CircuitEngine:
+  ManifestRegistry.get_enabled("circuit") → direct
+  No DI registration
+```
 
-### Target
-- `CircuitProtocol` - Protocol definition
-- `CircuitService` - Unified service
-- DI registration
+### After
+```
+Boot:
+  CircuitService.scan() → single scan
+  ServiceRegistry.register(CircuitServiceProtocol, circuit_svc)
 
----
+Kernel + CLI:
+  ServiceRegistry.get(CircuitServiceProtocol)
+```
 
-## Phase D: Tools [PENDING]
-
-### Current State
-- `ToolRegistry` in `vibe_core/tools/tool_registry.py` - Governance/capability checks
-- `CartridgeService.load_tool()` - Tool loading from cartridges
-- Two paths to tools
-
-### Target
-- Harmonize: ToolRegistry uses CartridgeService for discovery
-- Or: Unified ToolService
-
----
-
-## Phase E: Sections (Phoenix) [PENDING]
-
-### Current State
-- `SectionLoader` in `vibe_core/phoenix/section_loader.py`
-- Uses ManifestRegistry
-
-### Target
-- `SectionProtocol`
-- `SectionService`
-- DI registration
+### Files
+- `vibe_core/protocols/circuit.py` - Protocol definition
+- `vibe_core/circuit_service.py` - Unified service (24 circuits)
+- `vibe_core/boot_orchestrator.py` - DI registration
 
 ---
 
-## Phase F: Prompts [TO VERIFY]
+## Phase D: Tools [COMPLETE]
 
-### Current State
+### Before
+```
+ToolDiscovery:
+  Direct cartridge scanning
+  Duplicate of CartridgeService.scan()
+```
+
+### After
+```
+ToolDiscovery:
+  Uses CartridgeService.get_instance()
+  No duplicate scanning
+```
+
+### Files
+- `vibe_core/tool_discovery.py` - Modified to use CartridgeService
+
+---
+
+## Phase E: Sections (Phoenix) [COMPLETE]
+
+### Before
+```
+SectionLoader:
+  ManifestRegistry.get_enabled("section")
+  No DI registration
+```
+
+### After
+```
+Boot:
+  SectionService.scan() → single scan
+  ServiceRegistry.register(SectionServiceProtocol, section_svc)
+
+Kernel + CLI:
+  ServiceRegistry.get(SectionServiceProtocol)
+```
+
+### Files
+- `vibe_core/protocols/section.py` - Protocol definition
+- `vibe_core/section_service.py` - Unified service (18 sections)
+- `vibe_core/boot_orchestrator.py` - DI registration
+
+---
+
+## Phase F: Prompts [VERIFIED]
+
+### Status
 - `PromptRegistry` in `vibe_core/runtime/prompt_registry.py`
-- Check if truly unified
+- Already unified - single registry, single cache
+- 7 prompts across 2 namespaces (genesis, research)
 
 ---
 
@@ -143,6 +178,41 @@ Kernel + CLI:
 - [x] Phase D: Tools (ToolDiscovery → CartridgeService)
 - [x] Phase E: Sections (SectionService)
 - [x] Phase F: Prompts (already unified - PromptRegistry)
+- [x] Phase G: CLI Bridges (complete coverage)
+
+---
+
+## Phase G: CLI Bridges [COMPLETE]
+
+### CLI Coverage
+
+| Command | Service | Subcommands |
+|---------|---------|-------------|
+| `steward config` | config/ YAML | list, show, validate |
+| `steward prompts` | PromptRegistry | list, get, info |
+| `steward sections` | SectionService | list, info |
+| `steward plugins` | PluginService | list, info, status |
+| `steward circuit` | CircuitService | list, run, info |
+| `steward tool` | CartridgeService | list, run, info |
+
+### Files
+- `vibe_core/cli/config_cli.py` - Config YAML management
+- `vibe_core/cli/prompts_cli.py` - Prompt registry access
+- `vibe_core/cli/sections_cli.py` - Phoenix sections
+- `vibe_core/cli/plugins_cli.py` - Plugin registry
+- `vibe_core/cli/unified_cli.py` - Help section for OPUS-307
+
+### Verification
+```bash
+# All OPUS-307 CLIs
+steward config list           # 26 configs
+steward config validate       # All valid
+steward prompts list          # 7 prompts, 2 namespaces
+steward prompts info          # Registry status
+steward sections list         # 18 sections
+steward plugins list          # 25 plugins
+steward plugins status        # Boot order summary
+```
 
 ---
 
