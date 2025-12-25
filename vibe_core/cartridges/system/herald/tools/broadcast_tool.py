@@ -44,28 +44,25 @@ class BroadcastTool(Tool):
 
     def __init__(self, services: Optional["ServiceRegistry"] = None):
         """
-        Initialize broadcast tool with optional DI support.
+        Initialize broadcast tool via DI.
 
-        OPUS-307 D.1: Accepts ServiceRegistry for dependency injection.
-        Falls back to legacy initialization if services not provided.
+        OPUS-307 D.1: NO FALLBACK. Dependencies come from ServiceRegistry.
+        If services not available, tool operates in offline/simulation mode.
 
         Args:
-            services: ServiceRegistry for dependency injection (optional)
+            services: ServiceRegistry for dependency injection
         """
         super().__init__(services)
+
+        # OPUS-307: SSOT - Get from registry or stay offline
+        # Phase D.2 will register TwitterProtocol/RedditProtocol
         self.twitter_client = None
         self.reddit_client = None
 
-        # OPUS-307 D.1: Future - get clients from ServiceRegistry
-        # if self.services:
-        #     self.twitter_client = self.services.get(TwitterProtocol)
-        #     self.reddit_client = self.services.get(RedditProtocol)
-        # else:
-        #     self._init_legacy()
-
-        # Legacy init (until TwitterProtocol/RedditProtocol are created)
-        self._init_twitter()
-        self._init_reddit()
+        if self.services:
+            # Try to get from registry (will be None until protocols registered)
+            self.twitter_client = self.services.get("TwitterClient")
+            self.reddit_client = self.services.get("RedditClient")
 
     @property
     def name(self) -> str:
