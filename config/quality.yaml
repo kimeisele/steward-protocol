@@ -122,7 +122,7 @@ test:
         - e2e
       workers: 0  # auto-parallel
       fail_fast: true
-      timeout: 30
+      timeout: 120  # OPUS-306: Increased from 30 (kernel boot takes ~30-60s)
       verbose: false
       show_durations: 5
 
@@ -173,7 +173,7 @@ test:
         - slow
       workers: 0
       fail_fast: false
-      timeout: 30
+      timeout: 120  # OPUS-306: Increased from 30 (kernel boot takes ~30-60s)
       show_durations: 5
 
     # INTEGRATION - Integration tests only
