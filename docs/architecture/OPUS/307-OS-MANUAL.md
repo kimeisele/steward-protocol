@@ -1101,29 +1101,84 @@ AFTER (Phase I complete):
 | G | Live-Fire Test | ✅ | OUROBOROS runs end-to-end |
 | H | Action Handlers | ✅ | CLI_LOOPBACK works in circuits |
 | I.research | Routing Architecture | ✅ | Complete flow traced (above) |
-| **I.impl** | **Executor Singularity** | ⏳ | **5 Engines → 1 Engine** |
-| J | UI Layer | ⏳ | Markdown Dashboard |
+| **I.1** | **Executor Singularity** | ✅ | **DeterministicExecutor → Wrapper** |
+| I.2 | Router Unification | ⏳ | LayeredRouter → Circuits (not playbooks) |
+| **J** | **Markdown UI + Settings** | ⏳ | **The Grand Vision: MD-driven interface** |
 | K | Full Coverage | ⏳ | 300K LOC under control |
 
-### Phase I Implementation Tasks
+### Phase I.1 Implementation: EXECUTOR SINGULARITY ✅
 
-1. **Wire UnifiedExecutor to CognitiveCircuitExecutor**
-   - Replace DeterministicExecutor delegation
-   - Keep DeterministicExecutor as thin adapter for playbooks only
+**Date**: 2025-12-25
+**Status**: IMPLEMENTED
 
-2. **Merge SemanticRouter into LayeredRouter**
+The "Death of DeterministicExecutor" is complete. All execution now routes
+through `CognitiveCircuitExecutor` via the new `ExecutorSingularity` adapter.
+
+#### New Components
+
+```
+vibe_core/cartridges/system/envoy/executor_singularity.py
+├── PlaybookToCircuitConverter   # Converts playbooks → circuits
+└── ExecutorSingularity          # Unified execution gateway
+```
+
+#### The Conversion
+
+```
+Playbook (legacy)              Circuit (unified)
+================              =================
+phases: [                     states:
+  {phase_id: "p1", ...}         p1: {...}
+  {phase_id: "p2", ...}         p2: {...}
+]                             entry_state: "p1"
+```
+
+#### Execution Flow (AFTER Phase I.1)
+
+```
+User Input (natural language)
+        ↓
+    LayeredRouter (4 layers)
+        ↓
+    UnifiedRouter
+        ↓
+    UnifiedExecutor
+        ↓
+    ExecutorSingularity  ← NEW! (OPUS-307)
+        ↓
+    CognitiveCircuitExecutor  ← SINGLE ENGINE
+        ↓
+    ActionHandlerRegistry
+```
+
+#### Fallback Strategy
+
+```python
+# In unified_execution_full.py
+EXECUTOR_SINGULARITY_ENABLED = True  # Toggle flag
+
+if self._singularity:
+    result = await self._singularity.execute(...)  # Primary
+else:
+    result = await self._circuit_executor.execute(...)  # Fallback
+```
+
+#### Files Modified
+
+1. `executor_singularity.py` - NEW: Unified execution adapter
+2. `unified_execution_full.py` - Wire singularity as primary executor
+3. `circuit_engine.py` - Already has action handler support (Phase H)
+
+### Phase I.2 Implementation Tasks (REMAINING)
+
+1. **Merge SemanticRouter into LayeredRouter**
    - Layer 2.5: Vector similarity (optional, when model loaded)
    - Graceful degradation without sentence-transformers
 
-3. **Unified YAML Format**
-   - Circuit states = Playbook phases
-   - Actions = Operations
-   - Single loader, single executor
-
-4. **Test: Same result via CLI and natural language**
+2. **Test: Same result via CLI and natural language**
    - `steward circuit run HEAL_CODEBASE_V1`
    - vs "fix the codebase violations"
-   - Must use identical executor
+   - Now uses identical executor (CognitiveCircuitExecutor)
 
 ---
 
