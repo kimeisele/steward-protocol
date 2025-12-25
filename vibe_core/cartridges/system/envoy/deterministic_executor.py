@@ -151,6 +151,20 @@ class DeterministicExecutor:
     """
     The Dungeon Master - GAD-5000 Deterministic Execution Engine.
     Loads playbooks, matches intents, and executes phases deterministically.
+
+    ⚠️ DEPRECATED (OPUS-307 Phase I.2):
+    =================================
+    This class is DEPRECATED for EXECUTION.
+    All execution should route through ExecutorSingularity.
+
+    Still valid for:
+    - find_playbook() - Playbook discovery/registry
+    - generate_playbook_proposal() - EAD proposals
+
+    NOT valid for (use ExecutorSingularity instead):
+    - execute() - Use ExecutorSingularity.execute()
+
+    "Ein Executor, eine Engine, eine Wahrheit."
     """
 
     def __init__(self, knowledge_dir: str = "knowledge", playbooks_dir: str = None, ephemeral=None):
@@ -546,6 +560,16 @@ class DeterministicExecutor:
         """
         Execute a playbook step-by-step.
 
+        ⚠️ DEPRECATED (OPUS-307 Phase I.2):
+        ==================================
+        Use ExecutorSingularity.execute() instead.
+        This method will be removed in a future version.
+
+        All callers should migrate to:
+            from vibe_core.cartridges.system.envoy.executor_singularity import create_executor_singularity
+            singularity = create_executor_singularity(kernel)
+            result = await singularity.execute(playbook_or_circuit_id, user_input, intent_vector)
+
         GAD-5500: Now routes to VEDA-4 Circuit Executor for syscall intents.
 
         Args:
@@ -558,6 +582,12 @@ class DeterministicExecutor:
         Returns:
             Execution result with status and phase results
         """
+        # OPUS-307 Phase I.2: Deprecation warning
+        logger.warning(
+            "⚠️ DEPRECATED: DeterministicExecutor.execute() called. "
+            "Use ExecutorSingularity.execute() instead. "
+            "This method will be removed in a future version."
+        )
         # =====================================================================
         # GAD-5500: VEDA-4 CIRCUIT ROUTING
         # Try circuit execution first for syscall intents

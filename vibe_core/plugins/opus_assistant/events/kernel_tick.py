@@ -14,11 +14,11 @@ Circuit-Driven Pattern:
 3. Execute circuits via CognitiveCircuitExecutor (via Envoy)
 4. Circuits define behavior - NOT hardcoded actions!
 
-OPUS-030: Envoy Pattern - We don't talk directly to CognitiveCircuitExecutor.
-We talk to DeterministicExecutor which handles the routing:
-- Natural language → BlueprintGenerator → Syscall detection
-- Syscall → CognitiveCircuitExecutor (agent birth, etc.)
-- Standard → Traditional playbook execution
+OPUS-307 Phase I.2: ExecutorSingularity - ALL execution routes here.
+We talk to ExecutorSingularity which is the ONLY executor:
+- Natural language → ExecutorSingularity → CognitiveCircuitExecutor
+- All circuits/playbooks → Converted and executed uniformly
+- "Ein Executor, eine Engine, eine Wahrheit."
 
 OPUS-032: MANAS - The cognitive kernel that generates its own input.
 Without MANAS, the system waits for events (reactive).
@@ -31,14 +31,18 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-# 🧠 OPUS-030: Envoy Pattern - Cognitive Executor Bridge
+# 🧠 OPUS-307 Phase I.2: ExecutorSingularity - THE unified executor
 try:
-    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+    from vibe_core.cartridges.system.envoy.executor_singularity import (
+        ExecutorSingularity,
+        create_executor_singularity,
+    )
 
-    ENVOY_AVAILABLE = True
+    SINGULARITY_AVAILABLE = True
 except ImportError:
-    ENVOY_AVAILABLE = False
-    DeterministicExecutor = None
+    SINGULARITY_AVAILABLE = False
+    ExecutorSingularity = None
+    create_executor_singularity = None
 
 # 🧠 OPUS-032: MANAS - The Cognitive Kernel
 try:
@@ -135,8 +139,8 @@ class KernelTickHandler:
         self._circuit_breaker_threshold = 3  # Failures before disable
         self._circuit_breaker_cooldown = 300.0  # 5 min cooldown
 
-        # 🧠 OPUS-030: Envoy Pattern - Cognitive Executor
-        self._deterministic_executor: Optional[Any] = None
+        # 🧠 OPUS-307 Phase I.2: ExecutorSingularity - THE unified executor
+        self._executor_singularity: Optional[Any] = None
         self._cognitive_ready = False
 
         # 🧠 OPUS-032: MANAS - The Cognitive Kernel
@@ -199,24 +203,17 @@ class KernelTickHandler:
 
     def _init_cognitive_executor(self) -> None:
         """
-        🧠 OPUS-030: Initialize the DeterministicExecutor (Envoy Pattern).
+        🧠 OPUS-307 Phase I.2: Initialize ExecutorSingularity.
 
-        This is the bridge to CognitiveCircuitExecutor via the Envoy layer.
-        The Envoy handles:
-        - BlueprintGenerator (semantic compilation)
-        - Syscall detection and routing
-        - Cognitive circuit execution (agent_birth, etc.)
+        This is THE unified executor - all paths lead here.
+        No DeterministicExecutor. No fallback. Singularity or fail.
         """
-        if not ENVOY_AVAILABLE:
-            logger.debug("⚠️ Envoy not available - cognitive features disabled")
+        if not SINGULARITY_AVAILABLE:
+            logger.debug("⚠️ ExecutorSingularity not available - cognitive features disabled")
             return
 
-        try:
-            self._deterministic_executor = DeterministicExecutor()
-            logger.info("🧠 OPUS-030: DeterministicExecutor initialized (Envoy Pattern)")
-        except Exception as e:
-            logger.warning(f"Could not init cognitive executor: {e}")
-            self._deterministic_executor = None
+        # Note: Actual initialization requires kernel, done in _ensure_cognitive_ready
+        logger.debug("🧠 OPUS-307: ExecutorSingularity will be initialized with kernel")
 
     def _init_manas(self) -> None:
         """
@@ -329,14 +326,14 @@ class KernelTickHandler:
 
     def _ensure_cognitive_ready(self) -> bool:
         """
-        🧠 OPUS-030: Lazy-init the cognitive executor with kernel.
+        🧠 OPUS-307 Phase I.2: Lazy-init ExecutorSingularity with kernel.
 
         Returns True if cognitive features are ready to use.
         """
         if self._cognitive_ready:
             return True
 
-        if not self._deterministic_executor:
+        if not SINGULARITY_AVAILABLE:
             return False
 
         plugin = self._plugin
@@ -345,41 +342,42 @@ class KernelTickHandler:
             return False
 
         try:
-            # Lazy-init the circuit executor with kernel
-            if self._deterministic_executor._ensure_circuit_executor(kernel):
-                self._cognitive_ready = True
-                logger.info("🧠 OPUS-030: Cognitive executor ready (with kernel)")
+            # Initialize ExecutorSingularity with kernel (OPUS-307)
+            if not self._executor_singularity:
+                self._executor_singularity = create_executor_singularity(kernel)
+                logger.info("🧠 OPUS-307: ExecutorSingularity initialized with kernel")
 
-                # ⚡ VAJRA: Late kernel injection for MANAS if not already done
-                if self._manas and not getattr(self._manas, "_vibe_kernel", None):
-                    self._manas.inject_kernel(kernel)
-                    logger.info("⚡ VAJRA: MANAS late-bound to core ledger")
+            self._cognitive_ready = True
 
-                # ⚡ PRAMANA: Late kernel injection for TestCortex
-                if TEST_CORTEX_AVAILABLE and not self._test_cortex:
-                    workspace = self._workspace
-                    self._test_cortex = TestCortex(workspace=workspace)
-                    self._test_cortex.inject_kernel(kernel)
-                    logger.info("⚡ PRAMANA: TestCortex late-bound to core kernel")
+            # ⚡ VAJRA: Late kernel injection for MANAS if not already done
+            if self._manas and not getattr(self._manas, "_vibe_kernel", None):
+                self._manas.inject_kernel(kernel)
+                logger.info("⚡ VAJRA: MANAS late-bound to core ledger")
 
-                return True
+            # ⚡ PRAMANA: Late kernel injection for TestCortex
+            if TEST_CORTEX_AVAILABLE and not self._test_cortex:
+                workspace = self._workspace
+                self._test_cortex = TestCortex(workspace=workspace)
+                self._test_cortex.inject_kernel(kernel)
+                logger.info("⚡ PRAMANA: TestCortex late-bound to core kernel")
+
+            return True
         except Exception as e:
-            logger.debug(f"Could not init cognitive executor with kernel: {e}")
+            logger.debug(f"Could not init ExecutorSingularity with kernel: {e}")
 
         return False
 
     async def _execute_cognitive_task(self, intent: str) -> Dict[str, Any]:
         """
-        🧠 OPUS-030: Execute a cognitive task via the Envoy pattern.
+        🧠 OPUS-307 Phase I.2: Execute a cognitive task via ExecutorSingularity.
 
         This is for high-level cognitive operations like:
         - "spawn a monitoring agent"
         - "analyze this drift and suggest fixes"
         - "auto-heal the system"
 
-        The Envoy (DeterministicExecutor) handles the routing:
-        - If it compiles to a Syscall → CognitiveCircuitExecutor
-        - If it's a standard task → Traditional playbook
+        ExecutorSingularity routes ALL execution to CognitiveCircuitExecutor.
+        No fallback. One engine, one truth.
 
         Args:
             intent: Natural language intent (e.g., "spawn a monitoring agent")
@@ -390,28 +388,24 @@ class KernelTickHandler:
         if not self._ensure_cognitive_ready():
             return {
                 "success": False,
-                "error": "Cognitive executor not available",
-                "mode": "fallback",
+                "error": "ExecutorSingularity not available",
+                "mode": "failed",
             }
 
         try:
-            plugin = self._plugin
-            kernel = getattr(plugin, "_kernel", None) if plugin else None
-
             # Log the cognitive task
             self._log_observation_info(f"🧠 Cognitive task: {intent[:50]}...", "cognitive")
 
-            # Execute via Envoy - it handles syscall detection and routing
-            result = self._deterministic_executor.execute(
-                playbook_id="auto_detect",
+            # Execute via ExecutorSingularity (OPUS-307 Phase I.2)
+            result = await self._executor_singularity.execute(
+                playbook_or_circuit_id="AUTO_DETECT",
                 user_input=intent,
                 intent_vector=None,
-                kernel=kernel,
             )
 
             # Log result
             status = result.get("status", "UNKNOWN")
-            mode = result.get("execution_mode", "unknown")
+            mode = result.get("execution_mode", "singularity")
             if status == "COMPLETED":
                 self._log_observation_info(f"🧠 Cognitive task completed ({mode})", "cognitive")
             else:

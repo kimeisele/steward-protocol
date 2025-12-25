@@ -229,23 +229,12 @@ class ExecutorSingularity:
 
         try:
             # Execute via CognitiveCircuitExecutor
-            # It will load the circuit by ID if circuit_def not provided
-            if circuit_def:
-                # For converted playbooks, we need to execute by definition
-                # This requires the circuit executor to have an execute_definition method
-                # For now, we'll use execute_by_id and ensure circuit is loaded
-                result = self.circuit_executor.execute_by_id(
-                    circuit_id=playbook_or_circuit_id,
-                    input_vars={"user_input": user_input},
-                    raw_input=user_input,
-                )
-            else:
-                # Direct circuit execution
-                result = self.circuit_executor.execute_by_id(
-                    circuit_id=playbook_or_circuit_id,
-                    input_vars={"user_input": user_input},
-                    raw_input=user_input,
-                )
+            # Signature: execute_by_id(circuit_id, input_vars, requester_id)
+            result = self.circuit_executor.execute_by_id(
+                circuit_id=playbook_or_circuit_id,
+                input_vars={"user_input": user_input, "raw_input": user_input},
+                requester_id="singularity",
+            )
 
             # Convert CircuitExecutionResult to dict
             return {

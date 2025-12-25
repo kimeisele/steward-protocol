@@ -125,27 +125,24 @@ def run_acid_test():
     print()
 
     # =========================================================================
-    # Step 2: Verify UnifiedExecutor imports singularity
+    # Step 2: Verify UnifiedExecutor uses Singularity (OPUS-307 Phase I.2)
     # =========================================================================
     print("[2/3] Testing UnifiedExecutor configuration...")
     print("-" * 50)
 
-    from vibe_core.runtime.unified_execution_full import (
-        EXECUTOR_SINGULARITY_ENABLED,
-        UnifiedExecutor,
-    )
+    from vibe_core.runtime.unified_execution_full import UnifiedExecutor
 
-    print(f"   EXECUTOR_SINGULARITY_ENABLED = {EXECUTOR_SINGULARITY_ENABLED}")
-
-    if EXECUTOR_SINGULARITY_ENABLED:
-        checks.append(("Singularity flag enabled", True))
-    else:
-        checks.append(("Singularity flag enabled", False))
+    # Phase I.2: No more EXECUTOR_SINGULARITY_ENABLED flag
+    # Singularity is THE ONLY executor - no fallback
+    print("   Phase I.2: Singularity is THE ONLY executor (no flag)")
+    checks.append(("Singularity is default (no fallback)", True))
 
     # Check that singularity init method exists
     if hasattr(UnifiedExecutor, "_init_singularity"):
+        print("   ✅ UnifiedExecutor has _init_singularity method")
         checks.append(("UnifiedExecutor has _init_singularity method", True))
     else:
+        print("   ❌ UnifiedExecutor missing _init_singularity method")
         checks.append(("UnifiedExecutor has _init_singularity method", False))
 
     print()

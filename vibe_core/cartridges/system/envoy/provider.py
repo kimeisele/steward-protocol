@@ -58,7 +58,20 @@ except ImportError:
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols import LLMProtocol
 
-# Import Deterministic Executor (GAD-5000: DETERMINISTIC INTELLIGENCE)
+# OPUS-307 Phase I.2: ExecutorSingularity for execution
+# DeterministicExecutor kept ONLY for PlaybookRegistry (find_playbook, generate_proposal)
+# All execution routes to ExecutorSingularity
+try:
+    from vibe_core.cartridges.system.envoy.executor_singularity import (
+        create_executor_singularity,
+    )
+
+    SINGULARITY_AVAILABLE = True
+except ImportError:
+    create_executor_singularity = None
+    SINGULARITY_AVAILABLE = False
+
+# DeterministicExecutor (DEPRECATED for execution - registry/discovery only)
 try:
     from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 except ImportError:
@@ -225,14 +238,16 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  Reflex Engine initialization failed: {e}")
 
-        # Engine 2: DeterministicExecutor (Deterministic multi-phase execution)
+        # Engine 2: PlaybookRegistry (discovery only) + ExecutorSingularity (execution)
+        # OPUS-307 Phase I.2: DeterministicExecutor used ONLY for registry, not execution
         self.playbook_engine = None
+        self._executor_singularity = None  # Lazy init - needs kernel
         if DeterministicExecutor:
             try:
                 self.playbook_engine = DeterministicExecutor(knowledge_dir=knowledge_dir)
-                logger.info("🎯 Deterministic Executor initialized - Deterministic Intelligence active")
+                logger.info("🎯 PlaybookRegistry initialized (OPUS-307: registry only)")
             except Exception as e:
-                logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
+                logger.warning(f"⚠️  Playbook Registry initialization failed: {e}")
 
         # Engine 3: LLMEngineAdapter (Intelligent fallback for conversational intents)
         self.llm_engine = None
@@ -416,15 +431,23 @@ class UniversalProvider:
                     except Exception as e:
                         logger.debug(f"Event emission failed: {e}")
 
-                # Execute the playbook
+                # Execute the playbook via ExecutorSingularity (OPUS-307 Phase I.2)
                 try:
-                    result = await self.playbook_engine.execute(
-                        playbook_id=playbook.id,
-                        user_input=user_input,
-                        intent_vector=vector,
-                        kernel=self.kernel,
-                        emit_event=emit_event,
-                    )
+                    # Lazy init ExecutorSingularity
+                    if self._executor_singularity is None and SINGULARITY_AVAILABLE and self.kernel:
+                        self._executor_singularity = create_executor_singularity(self.kernel)
+                        logger.info("🎯 ExecutorSingularity initialized (OPUS-307)")
+
+                    if self._executor_singularity:
+                        result = await self._executor_singularity.execute(
+                            playbook_or_circuit_id=playbook.id,
+                            user_input=user_input,
+                            intent_vector=vector,
+                        )
+                    else:
+                        # Fallback if singularity not available (should not happen)
+                        logger.warning("ExecutorSingularity not available, execution failed")
+                        result = {"status": "FAILED", "error": "ExecutorSingularity not available"}
                     return result
                 except Exception as e:
                     logger.error(f"❌ Playbook execution failed: {e}")
