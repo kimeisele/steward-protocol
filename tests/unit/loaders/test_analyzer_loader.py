@@ -25,16 +25,18 @@ class TestAnalyzerLoaderDiscovery:
             strict=True,
         )
 
-        # Must have exactly 5 analyzers
-        assert len(analyzers) == 5, f"Expected 5 analyzers, got {len(analyzers)}"
+        # Must have exactly 7 analyzers (updated: added inverse_scan and triage)
+        assert len(analyzers) == 7, f"Expected 7 analyzers, got {len(analyzers)}"
 
         # Verify expected analyzers exist
         expected_names = {
             "ci_monitor",
             "contract_analyzer",
             "doc_harness_analyzer",
+            "inverse_scan_analyzer",
             "pratyaya",
             "semantic_analyzer",
+            "triage_analyzer",
         }
         actual_names = set(analyzers.keys())
         assert actual_names == expected_names, f"Missing analyzers: {expected_names - actual_names}"
