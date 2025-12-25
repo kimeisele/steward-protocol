@@ -449,13 +449,23 @@ Commits:
 - `660eaf25`: feat(di): OPUS-307 D.3 - Mass Tool DI Migration
 - `13cff113`: feat(di): OPUS-307 D.3 - Add DI to refactor_tool
 
-### ⏳ Phase D++: Circuit CLI
+### ✅ Phase D++: Circuit CLI (DONE - 2025-12-25)
 
 ```bash
-steward circuit list
-steward circuit run heal_codebase --file X
-steward circuit status <id>
+steward circuit list                           # 22 circuits
+steward circuit list --json --type state_machine
+steward circuit info HEAL_CODEBASE_V1          # Show states, triggers
+steward circuit run SIMPLE_QUERY --input "..."
+steward circuit status <execution_id>
 ```
+
+**Result:** 22 circuits CLI-accessible:
+- 14 cognitive circuits
+- 7 state machines
+- 1 organism circuit
+
+Commits:
+- `3886cbf9`: feat(cli): OPUS-307 D++ - Circuit Protocol CLI
 
 ### ⏳ Phase D+++: Unified Protocol
 
