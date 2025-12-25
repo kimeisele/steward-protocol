@@ -68,10 +68,10 @@ class InterfacePlugin(KernelPlugin):
         # Discover and load renderers
         self._load_renderers()
 
-        # Initial render on boot - don't wait for ticks!
-        self.render_all()
-
-        logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active)")
+        # OPUS-306: Skip initial render on boot for faster startup
+        # Rendering will happen on first pulse (PRANA heartbeat)
+        # This reduces boot time by ~14 seconds
+        logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active, render deferred)")
 
     def on_pulse(self, kernel: "RealVibeKernel", transaction: Any) -> HookResult:
         """

@@ -49,8 +49,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.di import ServiceRegistry
+from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.protocols import OpusAssistantProtocol
 
 if TYPE_CHECKING:
@@ -132,21 +132,11 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         # OPUS-112: Register MANAS as system-level agent for tool access
         self._register_manas_capabilities(kernel)
 
-        # OPUS-167: Wake up MANAS Cognitive Kernel (The Mind)
-        # This ensures MANAS is registered in DI for heartbeat pulses
-        from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import (
-            CognitiveKernel,
-        )
-
-        manas = CognitiveKernel.get_instance(workspace=self._workspace)
-
-        # OPUS-112: Inject Kernel into MANAS (VAJRA Binding + TaskKernel Enablement)
-        manas.inject_kernel(kernel)
-
-        # OPUS-095: Wire MANAS to orchestration cycle (fix attribute setup error)
-        if hasattr(kernel, "trace") and hasattr(kernel, "_event_bus"):
-            manas.setup(kernel.trace, kernel._event_bus, steward_context=None)
-            logger.info("🔄 MANAS wired to CycleRegistry (via plugin boot)")
+        # OPUS-306: MANAS boot deferred to first use for faster startup
+        # The CognitiveKernel singleton is created but NOT booted here.
+        # It will boot lazily on first tick() or perceive() call.
+        # This saves ~17 seconds of boot time.
+        self._manas_kernel_ref = kernel  # Store for lazy init
 
         # Load fraktale config
         self._load_fraktale_config()

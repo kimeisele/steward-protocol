@@ -252,16 +252,16 @@ class BootOrchestrator(CognitiveCycle):
 
             # AGNI: Fire - Make system visible (capabilities, UI)
             logger.info("⚡ OPUS-095: Making system visible (AGNI)")
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.shuddhi import ShuddhiProtocol
+            from vibe_core.protocols.task import TaskProtocol
             from vibe_core.runtime.oracle import KernelOracle
             from vibe_core.shuddhi.engine import ShuddhiEngine
-            from vibe_core.protocols.shuddhi import ShuddhiProtocol
             from vibe_core.task_management.task_manager import TaskManager
-            from vibe_core.protocols.task import TaskProtocol
-            from vibe_core.di import ServiceRegistry
 
             if self.kernel:
                 self.oracle = KernelOracle(self.kernel, self.project_root)
-                
+
                 # OPUS-212: Register Shuddhi self-healing service
                 ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
                 logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
@@ -379,8 +379,10 @@ class BootOrchestrator(CognitiveCycle):
             logger.info("⚡ OPUS-095: Persistence and kernel finalization (PRITHVI)")
 
             # Boot the kernel (finalizes manifests, ledger, scheduler)
+            # OPUS-306: Use boot_async() directly since we're in async context
+            # Using sync boot() causes deadlock (60s timeout in future.result())
             if self.kernel:
-                self.kernel.boot(boot_mode=self.boot_mode)
+                await self.kernel.boot_async(boot_mode=self.boot_mode)
                 logger.info("      → Kernel booted, ledger active")
 
                 # OPUS-031 Layer 4: Skip Daily Ritual in headless mode
