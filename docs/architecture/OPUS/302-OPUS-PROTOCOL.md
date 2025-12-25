@@ -105,17 +105,19 @@ Next session, OPUS reads PREP file and jumps straight in.
 
 ---
 
-## CURRENT STATUS (2025-12-24)
+## CURRENT STATUS (2025-12-25)
 
 | OPUS | Title | Status | Results |
 |------|-------|--------|---------|
 | 301 | Boot/Runtime | ✅ COMPLETE | 3940ms → ~2500ms (38%) |
 | 302 | Protocol | ✅ ACTIVE | This doc |
 | 303 | Pulse Optimization | ✅ COMPLETE | ~50ms → ~15ms (70%) |
-| 304 | Deep Lazy Loading | 📋 PLANNED | See below |
+| 304 | Boot Singleton Fix | ✅ COMPLETE | 943ms warm boot |
+| 305 | Test Suite Health | 🔥 NEEDED | See below |
 
-### OPUS-301/303 Commits (2025-12-24)
+### OPUS-301/303/304 Commits
 ```
+bc5acc59 - fix(boot): Replace PhoenixConfig.from_files() with get_config() singleton
 d17d7940 - perf(pulse): OPUS-303 Phase 1+3 Async I/O + Health cache
 32d76fdf - fix(executor): Fix ExecutionResult API mismatch
 ca9409ac - perf(ledger): OPUS-301/303 Lazy connection + count cache
@@ -125,42 +127,81 @@ a94b4c76 - perf(boot): OPUS-301 Split unified_execution into Core + Full
 
 ---
 
-## OPUS-304: DEEP LAZY LOADING
+## OPUS-304: BOOT SINGLETON FIX
 
-> Status: READY FOR SONNET
-> Next: OPUS-305
+> Status: ✅ COMPLETE
+> Commit: bc5acc59
 
-### Target
-Boot: 2500ms → <1000ms
+### Das Problem
+`PhoenixConfig.from_files()` wurde 5-6x während Boot aufgerufen statt `get_config()` singleton.
+
+### Der Fix
+grep + replace in 5 files:
+- boot_sequence.py (3x)
+- steward_protocol/plugin_main.py
+- opus_assistant/events/kernel_tick.py
+
+### Ergebnis
+943ms warm boot (< 1000ms target) ✅
+
+### ⚠️ WARUM S1-S4 TASKS FALSCH WAREN
+
+**OPUS plante diese Tasks - ALLE EXISTIERTEN BEREITS:**
+
+| Task | Geplant | Realität |
+|------|---------|----------|
+| S1: lazy_import.py | "NEW" | ✅ Existierte bereits |
+| S2: config_cache.py | "NEW" | ✅ Existierte & war integriert |
+| S3: async_logging.py | "NEW" | ✅ Existierte bereits |
+| S4: boot_optimizer/ | "NEW plugin" | Unnötig |
+
+**Root Cause:** OPUS hat nicht gecheckt ob die Files existieren bevor Tasks erstellt wurden.
+
+**Lektion für zukünftige OPUS Sessions:**
+1. IMMER `ls` / `find` vor "NEW file" Tasks
+2. IMMER das echte Problem diagnostizieren (hier: singleton nicht benutzt)
+3. Sonnet soll NICHT blind Tasks ausführen - erst prüfen ob sinnvoll
+
+---
+
+## OPUS-305: TEST SUITE HEALTH
+
+> Status: 🔥 NEEDED
+> Priority: HIGH
+
+### Bekannte Probleme (2025-12-25)
+
+1. **test_agent_city_boot TIMEOUT**
+   - async_logging QueueListener blockt
+   - Hängt in `queue.get(block=True)`
+   - File: `vibe_core/utils/async_logging.py`
+
+2. **PytestCollectionWarnings**
+   - TestOrchestrationPlugin hat `__init__` constructor
+   - TestGuardian hat `__init__` constructor
+   - TestContext hat `__init__` constructor
+   - Pytest kann diese nicht als Tests sammeln
+
+3. **2116 tests, unbekannt wie viele kaputt**
+   - Nur erster Fehler gesehen wegen `-x` flag
 
 ### SONNET TASKS
 
-1. [ ] **S1: Lazy Import Wrapper** - `vibe_core/utils/lazy_import.py` (NEW)
-   - Create utility for deferred imports
-   - Test with ledger import
-   - Commit
+1. [ ] **T1: Fix async_logging timeout**
+   - File: `vibe_core/utils/async_logging.py`
+   - Problem: QueueListener.stop() wird nicht aufgerufen
+   - Fix: Proper cleanup in test fixtures
 
-2. [ ] **S2: Config Cache** - `vibe_core/phoenix/config_cache.py` (NEW)
-   - Pickle parsed config
-   - Hash-based invalidation
-   - Integrate into phoenix/config.py
-   - Commit
+2. [ ] **T2: Fix pytest collection warnings**
+   - Rename TestOrchestrationPlugin → OrchestrationPlugin
+   - Rename TestGuardian → Guardian
+   - Rename TestContext → Context
+   - Oder: Prefix mit underscore
 
-3. [ ] **S3: Async Logging** - `vibe_core/utils/async_logging.py` (NEW)
-   - QueueHandler + QueueListener pattern
-   - Non-blocking file writes
-   - Commit
-
-4. [ ] **S4: Boot Optimizer Plugin** - `vibe_core/plugins/boot_optimizer/` (NEW)
-   - Plugin to patch heavy properties lazy
-   - Not Ring 0 (safe for Sonnet)
-   - Commit
-
-### WHEN DONE
-Spawn Haiku to pre-analyze OPUS-305:
-- Read vibe_core/cli/ for CLI optimization opportunities
-- Read vibe_core/runtime/interface.py for interface latency
-- Identify remaining boot blockers with `python3 -X importtime`
+3. [ ] **T3: Full test suite run**
+   - `python -m pytest tests/ --tb=short`
+   - Dokumentiere alle Failures
+   - Kategorisiere: flaky / broken / needs fix
 
 ---
 
