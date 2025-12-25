@@ -181,10 +181,10 @@ class BootSequence:
             return "continue"
 
         # Load guardrails config
-        from vibe_core.phoenix.config import PhoenixConfig
+        from vibe_core.phoenix.config import get_config
         from vibe_core.phoenix.sections.guardrails import GuardrailMode
 
-        phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+        phoenix = get_config()
 
         # Default to WARN if guardrails section not loaded
         mode = GuardrailMode.WARN
@@ -224,9 +224,9 @@ class BootSequence:
 
             # Get auto-generated files from Interface Config (SSOT)
             # The InterfacePlugin is the authority for which files it generates
-            from vibe_core.phoenix.config import PhoenixConfig
+            from vibe_core.phoenix.config import get_config
 
-            phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+            phoenix = get_config()
             auto_generated_files = set()
             if phoenix.interface:
                 for renderer in phoenix.interface.get_enabled_renderers().values():
@@ -343,9 +343,9 @@ ACTION REQUIRED:
         not an agent identity (STEWARD is the Protocol, not an agent).
         """
         # Load steward config from Phoenix
-        from vibe_core.phoenix.config import PhoenixConfig
+        from vibe_core.phoenix.config import get_config
 
-        phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+        phoenix = get_config()
         steward_config = phoenix.steward
 
         # Resolve dynamic context values
