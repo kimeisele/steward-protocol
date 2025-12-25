@@ -7,22 +7,22 @@ from .action_handlers import (
 )
 from .fixtures import (
     TestAgents,
-    TestContext,
+    IsolatedTestContext,
     TestContextState,
     TestKernel,
     TestPlugins,
     TestTasks,
 )
 from .playbook_executor import DeterministicPlaybookExecutor, PlaybookResult, execute_playbook
-from .plugin_main import TestOrchestrationPlugin
-from .test_guardian import MutationEvent, TestContract, TestGuardian
+from .plugin_main import OrchestrationPlugin
+from .test_guardian import MutationEvent, TestContract, Guardian
 from .test_validation_tool import TestValidationTool, create_test_validation_tool
 
 __all__ = [
     # Main plugin
-    "TestOrchestrationPlugin",
+    "OrchestrationPlugin",
     # Test Guardian (mutation protection)
-    "TestGuardian",
+    "Guardian",
     "TestContract",
     "MutationEvent",
     # MINIATURWUNDERLAND Fixtures
@@ -30,7 +30,7 @@ __all__ = [
     "TestPlugins",
     "TestKernel",
     "TestTasks",
-    "TestContext",
+    "IsolatedTestContext",
     "TestContextState",
     # PANOPTICON+ Circuit Execution (Nano Agent City)
     "TestValidationCircuitExecutor",

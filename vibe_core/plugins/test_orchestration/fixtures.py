@@ -734,7 +734,7 @@ class TestContextState:
     recorder: Optional[_RecordingTestPlugin] = None
 
 
-class TestContext:
+class IsolatedTestContext:
     """
     Context manager for full test isolation.
 
@@ -745,7 +745,7 @@ class TestContext:
     - Helper methods for common operations
 
     USAGE:
-        with TestContext() as ctx:
+        with IsolatedTestContext() as ctx:
             ctx.register_compliant_agent("my-agent")
             ctx.kernel.boot()
 

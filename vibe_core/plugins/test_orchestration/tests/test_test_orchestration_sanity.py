@@ -6,12 +6,12 @@ Minimal test for container packaging compliance (OPUS-020).
 
 
 def test_test_orchestration_plugin_imports():
-    """Verify TestOrchestrationPlugin can be imported."""
-    from vibe_core.plugins.test_orchestration.plugin_main import TestOrchestrationPlugin
+    """Verify OrchestrationPlugin can be imported."""
+    from vibe_core.plugins.test_orchestration.plugin_main import OrchestrationPlugin
 
-    assert TestOrchestrationPlugin is not None
-    assert hasattr(TestOrchestrationPlugin, "on_boot")
-    assert hasattr(TestOrchestrationPlugin, "plugin_id")
+    assert OrchestrationPlugin is not None
+    assert hasattr(OrchestrationPlugin, "on_boot")
+    assert hasattr(OrchestrationPlugin, "plugin_id")
 
 
 def test_fixtures_available():

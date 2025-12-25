@@ -106,7 +106,7 @@ class TestSpec:
 # ============================================================================
 
 
-class TestOrchestrationPlugin(KernelPlugin):
+class OrchestrationPlugin(KernelPlugin):
     """
     UNIVERSAL Test Orchestration Plugin.
 
@@ -476,11 +476,11 @@ class TestOrchestrationPlugin(KernelPlugin):
 
     @property
     def guardian(self):
-        """Get or create the TestGuardian instance."""
+        """Get or create the Guardian instance."""
         if self._guardian is None:
-            from vibe_core.plugins.test_orchestration.test_guardian import TestGuardian
+            from vibe_core.plugins.test_orchestration.test_guardian import Guardian
 
-            self._guardian = TestGuardian(self._kernel)
+            self._guardian = Guardian(self._kernel)
         return self._guardian
 
     def validate_tests_before_run(self, test_path: str = "tests") -> Dict[str, Any]:
