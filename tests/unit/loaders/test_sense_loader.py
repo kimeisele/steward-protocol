@@ -25,10 +25,10 @@ class TestSenseLoaderDiscovery:
             strict=True,
         )
 
-        # Must have exactly 8 senses (OPUS-155: +AkashaSense)
-        assert len(senses) == 8, f"Expected 8 senses, got {len(senses)}"
+        # Must have exactly 10 senses (OPUS-305: +ArchitectureSense, +NadiSense)
+        assert len(senses) == 10, f"Expected 10 senses, got {len(senses)}"
 
-        # Verify all 8 Jnanendriyas exist
+        # Verify all 10 Jnanendriyas exist
         expected_names = {
             "prakriti_sense",  # System state perception
             "dharma_sense",  # Ethical alignment
@@ -38,6 +38,8 @@ class TestSenseLoaderDiscovery:
             "karma_sense",  # Historical patterns
             "viveka_sense",  # Coverage discrimination
             "akasha_sense",  # Knowledge graph perception (OPUS-155)
+            "architecture_sense",  # Architecture understanding (OPUS-305)
+            "nadi_sense",  # Flow/channel perception (OPUS-305)
         }
         actual_names = set(senses.keys())
         assert actual_names == expected_names, f"Missing senses: {expected_names - actual_names}"
@@ -134,7 +136,7 @@ class TestSenseLoaderStrictMode:
             workspace=Path.cwd(),
             strict=False,
         )
-        assert len(senses) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
+        assert len(senses) == 10  # OPUS-305: 10 Jnanendriyas (+Architecture, +Nadi)
 
 
 class TestSenseLoaderUtilities:
@@ -148,7 +150,7 @@ class TestSenseLoaderUtilities:
         """Test list_senses utility method."""
         names = SenseLoader.list_senses(workspace=Path.cwd())
         assert isinstance(names, list)
-        assert len(names) == 8  # OPUS-155: 8 Jnanendriyas (+ AkashaSense)
+        assert len(names) == 10  # OPUS-305: 10 Jnanendriyas (+Architecture, +Nadi)
 
     def test_get_sense(self):
         """Test get_sense utility method."""
