@@ -96,7 +96,7 @@ class HealViolationTool(Tool):
 
     @property
     def name(self) -> str:
-        return "engineer.heal_violation"
+        return "engineer.refactor_violation"
 
     @property
     def description(self) -> str:
