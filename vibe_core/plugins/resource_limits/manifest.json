@@ -1,14 +1,50 @@
 {
     "id": "resource_limits",
     "name": "Resource Limits",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "plugin",
-    "description": "CRITICAL - Resource Quota Management as a Service",
+    "description": "CRITICAL - Resource Quota Management as a Service. OPUS-307: Now with CLI.",
     "author": "OPUS-209",
     "license": "MIT",
+    "entry_point": "plugin_main.py",
+    "entry_class": "ResourceLimitsPlugin",
     "execution": {
         "mode": "thread",
         "isolation": "none"
     },
-    "priority": 5
+    "priority": 5,
+    "cli": {
+        "namespace": "resources",
+        "commands": [
+            {
+                "name": "usage",
+                "handler": "cmd_resources_usage",
+                "execution_mode": "hybrid",
+                "help": "Show resource usage per agent (like top)",
+                "args": [
+                    {
+                        "name": "json",
+                        "type": "bool",
+                        "help": "Output as JSON",
+                        "required": false,
+                        "default": false
+                    }
+                ]
+            },
+            {
+                "name": "quotas",
+                "handler": "cmd_resources_quotas",
+                "execution_mode": "hybrid",
+                "help": "Show resource quotas for all agents",
+                "args": []
+            },
+            {
+                "name": "violations",
+                "handler": "cmd_resources_violations",
+                "execution_mode": "hybrid",
+                "help": "Check for quota violations",
+                "args": []
+            }
+        ]
+    }
 }

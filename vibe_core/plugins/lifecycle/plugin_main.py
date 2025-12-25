@@ -403,3 +403,210 @@ class LifecyclePlugin(KernelPlugin):
         skip_audit = params.get("skip_audit", False)
 
         return self.spawn_agent(spec, passport, skip_audit=skip_audit)
+
+    # =========================================================================
+    # OPUS-307 Phase II: CLI Command Handlers
+    # "steward agents" namespace - visibility into the agent registry
+    # =========================================================================
+
+    def cmd_agents_list(self, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward agents:list
+
+        List all registered agents - like `ps aux` for the agent OS.
+
+        Args:
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Dict with agent listing
+        """
+        if not self._kernel:
+            return {"success": False, "error": "Kernel not initialized"}
+
+        agents = []
+        registry = getattr(self._kernel, "agent_registry", {})
+
+        for agent_id, agent in registry.items():
+            agent_info = {
+                "id": agent_id,
+                "name": getattr(agent, "name", agent_id),
+                "version": getattr(agent, "version", "unknown"),
+                "domain": getattr(agent, "domain", "unknown"),
+                "oath_sworn": getattr(agent, "oath_sworn", False),
+            }
+
+            # Get capabilities if available
+            if hasattr(agent, "capabilities"):
+                agent_info["capabilities"] = len(agent.capabilities)
+
+            agents.append(agent_info)
+
+        result = {
+            "success": True,
+            "count": len(agents),
+            "agents": agents,
+            "spawned_this_session": len(self._spawn_log),
+        }
+
+        if not json:
+            # Format for human display
+            lines = [f"📋 REGISTERED AGENTS ({len(agents)} total)"]
+            lines.append("=" * 60)
+            for a in agents:
+                oath = "✅" if a.get("oath_sworn") else "❌"
+                caps = a.get("capabilities", "?")
+                lines.append(f"  {oath} {a['id']:<20} v{a['version']:<8} [{a['domain']}] ({caps} caps)")
+            lines.append("=" * 60)
+            lines.append(f"Spawned this session: {len(self._spawn_log)}")
+            result["formatted"] = "\n".join(lines)
+
+        return result
+
+    def cmd_agents_status(self, agent_id: str, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward agents:status <agent_id>
+
+        Show detailed status of a specific agent.
+
+        Args:
+            agent_id: Agent ID to inspect
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Dict with agent details
+        """
+        if not self._kernel:
+            return {"success": False, "error": "Kernel not initialized"}
+
+        registry = getattr(self._kernel, "agent_registry", {})
+        agent = registry.get(agent_id)
+
+        if not agent:
+            return {"success": False, "error": f"Agent '{agent_id}' not found"}
+
+        # Gather detailed info
+        status = {
+            "success": True,
+            "agent_id": agent_id,
+            "name": getattr(agent, "name", agent_id),
+            "version": getattr(agent, "version", "unknown"),
+            "author": getattr(agent, "author", "unknown"),
+            "domain": getattr(agent, "domain", "unknown"),
+            "description": getattr(agent, "description", ""),
+            "oath_sworn": getattr(agent, "oath_sworn", False),
+            "capabilities": list(getattr(agent, "capabilities", [])),
+        }
+
+        # Check if in spawn log
+        spawned = [s for s in self._spawn_log if s["agent_id"] == agent_id]
+        if spawned:
+            status["spawn_info"] = spawned[-1]
+
+        if not json:
+            lines = [f"🔍 AGENT STATUS: {agent_id}"]
+            lines.append("=" * 60)
+            lines.append(f"  Name:        {status['name']}")
+            lines.append(f"  Version:     {status['version']}")
+            lines.append(f"  Author:      {status['author']}")
+            lines.append(f"  Domain:      {status['domain']}")
+            lines.append(f"  Oath Sworn:  {'✅ Yes' if status['oath_sworn'] else '❌ No'}")
+            lines.append(f"  Description: {status['description'][:50]}...")
+            lines.append(f"  Capabilities ({len(status['capabilities'])}):")
+            for cap in status["capabilities"][:10]:
+                lines.append(f"    - {cap}")
+            if len(status["capabilities"]) > 10:
+                lines.append(f"    ... and {len(status['capabilities']) - 10} more")
+            lines.append("=" * 60)
+            status["formatted"] = "\n".join(lines)
+
+        return status
+
+    def cmd_agents_kill(self, agent_id: str, force: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward agents:kill <agent_id>
+
+        Terminate an agent via Narasimha Protocol.
+
+        Args:
+            agent_id: Agent ID to terminate
+            force: If True, force kill without graceful shutdown
+
+        Returns:
+            Dict with termination result
+        """
+        if not self._kernel:
+            return {"success": False, "error": "Kernel not initialized"}
+
+        registry = getattr(self._kernel, "agent_registry", {})
+        if agent_id not in registry:
+            return {"success": False, "error": f"Agent '{agent_id}' not found"}
+
+        # Use Narasimha if available
+        narasimha = getattr(self._kernel, "_narasimha", None)
+        if narasimha and hasattr(narasimha, "terminate_agent"):
+            try:
+                reason = "CLI kill command" + (" (forced)" if force else "")
+                narasimha.terminate_agent(agent_id, reason=reason)
+                logger.info(f"🗡️ Agent '{agent_id}' terminated via Narasimha")
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "method": "narasimha",
+                    "forced": force,
+                }
+            except Exception as e:
+                logger.error(f"Narasimha termination failed: {e}")
+                if not force:
+                    return {"success": False, "error": str(e)}
+
+        # Direct kernel termination
+        if hasattr(self._kernel, "terminate_agent"):
+            try:
+                self._kernel.terminate_agent(agent_id)
+                logger.info(f"🗡️ Agent '{agent_id}' terminated via kernel")
+                return {
+                    "success": True,
+                    "agent_id": agent_id,
+                    "method": "kernel",
+                    "forced": force,
+                }
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+
+        return {"success": False, "error": "No termination method available"}
+
+    def cmd_agents_spawn_log(self, limit: int = 20) -> Dict[str, Any]:
+        """
+        CLI Handler: steward agents:spawn-log
+
+        Show spawn history for this session.
+
+        Args:
+            limit: Max entries to show
+
+        Returns:
+            Dict with spawn log
+        """
+        import time
+
+        log = self._spawn_log[-limit:] if limit > 0 else self._spawn_log
+
+        result = {
+            "success": True,
+            "total": len(self._spawn_log),
+            "showing": len(log),
+            "entries": log,
+        }
+
+        # Format for display
+        lines = [f"🌱 SPAWN LOG ({len(log)}/{len(self._spawn_log)} entries)"]
+        lines.append("=" * 60)
+        for entry in log:
+            ts = time.strftime("%H:%M:%S", time.localtime(entry["timestamp"]))
+            audit = "⚠️ no audit" if entry.get("audit_skipped") else "✅"
+            lines.append(f"  [{ts}] {entry['agent_id']} {audit}")
+        lines.append("=" * 60)
+        result["formatted"] = "\n".join(lines)
+
+        return result
