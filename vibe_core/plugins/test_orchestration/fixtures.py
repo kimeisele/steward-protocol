@@ -771,7 +771,7 @@ class IsolatedTestContext:
         self._with_recording = with_recording
         self._state: Optional[TestContextState] = None
 
-    def __enter__(self) -> "TestContext":
+    def __enter__(self) -> "IsolatedTestContext":
         """Enter context - create kernel and plugins."""
         self._state = TestContextState()
 
@@ -791,15 +791,36 @@ class IsolatedTestContext:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Exit context - cleanup."""
+        """Exit context - cleanup.
+
+        OPUS-305: Must call kernel.shutdown_async() to properly cleanup
+        async logging listener and prevent test timeouts.
+        """
         if self._state and self._state.kernel:
             try:
-                # Shutdown kernel
-                for plugin in self._state.kernel._plugins:
-                    try:
-                        plugin.on_shutdown(self._state.kernel)
-                    except Exception:
-                        pass
+                # Properly shutdown kernel (includes async logging cleanup)
+                import asyncio
+
+                # Try to get or create event loop
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_closed():
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                # Run kernel shutdown
+                if hasattr(self._state.kernel, "shutdown_async"):
+                    loop.run_until_complete(self._state.kernel.shutdown_async("Test context exit"))
+                else:
+                    # Fallback: manual plugin shutdown
+                    for plugin in self._state.kernel._plugins:
+                        try:
+                            plugin.on_shutdown(self._state.kernel)
+                        except Exception:
+                            pass
             except Exception:
                 pass
 
@@ -860,6 +881,6 @@ __all__ = [
     # Task fixtures
     "TestTasks",
     # Context manager
-    "TestContext",
+    "IsolatedTestContext",
     "TestContextState",
 ]

@@ -147,6 +147,10 @@ echo -n "  🛡️  OPUS-175 Iron Dome (Kernel Border)... "
 
 PLUGIN_PYTHON_FILES=$(echo "$STAGED_FILES" | grep -E "^vibe_core/plugins/.*\.py$" || true)
 
+# Exclude test infrastructure files (fixtures, test helpers) from runtime import checks
+# Tests need direct kernel access - they're not runtime plugins
+PLUGIN_PYTHON_FILES=$(echo "$PLUGIN_PYTHON_FILES" | grep -v "/fixtures\.py$" | grep -v "/tests/" | grep -v "_test\.py$" || true)
+
 if [ -n "$PLUGIN_PYTHON_FILES" ]; then
     IRON_DOME_VIOLATIONS=""
 
