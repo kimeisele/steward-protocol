@@ -355,8 +355,7 @@ async def _async_write_snapshot(kernel: "RealVibeKernel", snapshot: Dict[str, An
         # Run blocking I/O in thread pool to avoid blocking event loop
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(
-            None,
-            lambda: kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
+            None, lambda: kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
         )
         if result.success:
             logger.debug("💓 Pulse written: vibe_snapshot.json (async)")
@@ -373,10 +372,10 @@ async def execute_playbook(
     user_input: str = "",
 ) -> Dict[str, Any]:
     """
-    Execute a playbook through the DeterministicExecutor.
+    Execute a playbook/circuit through ExecutorSingularity.
 
-    This method enables nested playbook execution, allowing playbooks to call
-    other playbooks via the CALL_PLAYBOOK action type.
+    OPUS-307 Phase I.2: All execution routes to ExecutorSingularity.
+    Legacy playbooks are auto-converted to circuits.
 
     Args:
         kernel: The kernel instance
@@ -397,33 +396,24 @@ async def execute_playbook(
     # Import here to avoid circular dependency
     import os
 
-    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+    from vibe_core.cartridges.system.envoy.executor_singularity import (
+        create_executor_singularity,
+    )
 
-    # Get or create executor instance
-    if not hasattr(kernel, "_playbook_executor"):
-        kernel._playbook_executor = DeterministicExecutor()
+    # Get or create ExecutorSingularity instance (OPUS-307 Phase I.2)
+    if not hasattr(kernel, "_executor_singularity"):
+        kernel._executor_singularity = create_executor_singularity(kernel)
 
     # Extract playbook_id from path (e.g., "wiring_audit" from "circuits/wiring_audit.yaml")
-    playbook_id = os.path.splitext(os.path.basename(playbook_path))[0]
+    playbook_id = os.path.splitext(os.path.basename(playbook_path))[0].upper()
 
-    # Create a minimal intent vector (playbooks don't always need full intent analysis)
-    class MinimalIntentVector:
-        def __init__(self, user_input: str):
-            self.raw_input = user_input
-            self.concepts = set()
-            self.target_agent = None
-
-    intent_vector = MinimalIntentVector(user_input or "Nested playbook execution")
-
-    # Execute the playbook
-    logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
+    # Execute via ExecutorSingularity
+    logger.info(f"🎯 Kernel executing via Singularity: {playbook_id} from {playbook_path}")
     start_time = time.time()
-    result = await kernel._playbook_executor.execute(
-        playbook_id=playbook_id,
+    result = await kernel._executor_singularity.execute(
+        playbook_or_circuit_id=playbook_id,
         user_input=user_input or str(input_data),
-        intent_vector=intent_vector,
-        kernel=kernel,
-        emit_event=None,
+        intent_vector=None,
     )
     duration_ms = (time.time() - start_time) * 1000
 
