@@ -3,10 +3,12 @@ UNIFIED EXECUTION FULL - Executor Only (OPUS-301 Boot Optimization)
 ====================================================================
 
 OPUS-301: Split for lazy loading - Core loaded at boot, Full loaded on first use.
+OPUS-307 Phase I.1: ExecutorSingularity - ALL execution routes to CognitiveCircuitExecutor.
 
 Full contains:
 - UnifiedExecutor (execution logic)
-- Heavy imports (DeterministicExecutor, etc.)
+- ExecutorSingularity (OPUS-307: unified execution)
+- Heavy imports (DeterministicExecutor as fallback)
 
 Core (unified_execution_core.py) contains:
 - UnifiedRouter (routing logic)
@@ -16,9 +18,10 @@ This reduces boot time by ~265ms by deferring executor imports until first execu
 """
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
+    from vibe_core.cartridges.system.envoy.executor_singularity import ExecutorSingularity
     from vibe_core.kernel_impl import RealVibeKernel
 
 from vibe_core.state.schema import (
@@ -28,6 +31,9 @@ from vibe_core.state.schema import (
 )
 
 logger = logging.getLogger("UNIFIED_EXECUTION")
+
+# OPUS-307: ExecutorSingularity flag
+EXECUTOR_SINGULARITY_ENABLED = True  # Set to False to fallback to DeterministicExecutor
 
 # =============================================================================
 # UNIFIED EXECUTOR (BREAK 4 + BREAK 6 fix)
@@ -41,6 +47,7 @@ class UnifiedExecutor:
     Features:
     - Eager initialization (BREAK 4 fix - no lazy loading race conditions)
     - All async (BREAK 6 fix - consistent async boundaries)
+    - OPUS-307 Phase I.1: ExecutorSingularity - ALL execution via CognitiveCircuitExecutor
     - Delegates to specialized executors
     """
 
@@ -56,19 +63,43 @@ class UnifiedExecutor:
         self._kernel = kernel
         self._ephemeral = ephemeral
 
-        # Import and initialize executors eagerly
+        # OPUS-307: ExecutorSingularity (primary)
+        self._singularity: Optional["ExecutorSingularity"] = None
+        if EXECUTOR_SINGULARITY_ENABLED:
+            self._init_singularity()
+
+        # DeterministicExecutor (fallback only)
         self._circuit_executor = None
-        self._init_circuit_executor()
+        if not EXECUTOR_SINGULARITY_ENABLED or self._singularity is None:
+            self._init_circuit_executor()
 
         logger.info("[EXECUTOR] UnifiedExecutor initialized (eager)")
 
+    def _init_singularity(self):
+        """
+        OPUS-307 Phase I.1: Initialize ExecutorSingularity.
+
+        This is the unified executor that routes ALL execution
+        through CognitiveCircuitExecutor.
+        """
+        try:
+            from vibe_core.cartridges.system.envoy.executor_singularity import (
+                create_executor_singularity,
+            )
+
+            self._singularity = create_executor_singularity(self._kernel)
+            logger.info("[EXECUTOR] 🎯 ExecutorSingularity ready (OPUS-307 Phase I.1)")
+        except Exception as e:
+            logger.warning(f"[EXECUTOR] ExecutorSingularity not available, falling back: {e}")
+            self._singularity = None
+
     def _init_circuit_executor(self):
-        """Initialize circuit executor with ephemeral storage (OPUS Phase 2)"""
+        """Initialize circuit executor with ephemeral storage (OPUS Phase 2) - FALLBACK ONLY"""
         try:
             from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
             self._circuit_executor = DeterministicExecutor(ephemeral=self._ephemeral)
-            logger.info("[EXECUTOR] DeterministicExecutor ready")
+            logger.info("[EXECUTOR] DeterministicExecutor ready (fallback)")
         except Exception as e:
             logger.warning(f"[EXECUTOR] DeterministicExecutor not available: {e}")
 
@@ -130,15 +161,53 @@ class UnifiedExecutor:
             )
 
     async def _execute_circuit(self, request: ExecutionRequest) -> ExecutionResult:
-        """Execute a circuit via DeterministicExecutor"""
+        """
+        Execute a circuit.
+
+        OPUS-307 Phase I.1: Routes to ExecutorSingularity (CognitiveCircuitExecutor)
+        with DeterministicExecutor as fallback.
+        """
+        # OPUS-307: Try ExecutorSingularity first
+        if self._singularity is not None:
+            try:
+                raw_result = await self._singularity.execute(
+                    playbook_or_circuit_id=request.target_id,
+                    user_input=request.user_input,
+                    intent_vector=None,
+                )
+
+                # Extract rendered response
+                details = raw_result.get("details", {})
+                rendered = details.get("rendered", {})
+                if isinstance(rendered, dict):
+                    response = rendered.get("rendered", "")
+                elif isinstance(rendered, str):
+                    response = rendered
+                else:
+                    response = raw_result.get("output", "")
+
+                return ExecutionResult(
+                    success=raw_result.get("status") == "COMPLETED",
+                    result={
+                        "response": response,
+                        "data": raw_result,
+                        "target_id": request.target_id,
+                        "execution_mode": "singularity",
+                    },
+                )
+            except Exception as e:
+                logger.warning(f"[EXECUTOR] Singularity failed, trying fallback: {e}")
+                # Fall through to DeterministicExecutor
+
+        # Fallback: DeterministicExecutor
         if not self._circuit_executor:
             return ExecutionResult(
                 success=False,
-                error="Circuit executor not available",
+                error="No executor available",
                 result={"target_id": request.target_id},
             )
 
-        # Execute circuit
+        # Execute circuit via legacy executor
         raw_result = await self._circuit_executor.execute(
             playbook_id=request.target_id,
             user_input=request.user_input,
@@ -153,7 +222,12 @@ class UnifiedExecutor:
 
         return ExecutionResult(
             success=raw_result.get("status") == "COMPLETED",
-            result={"response": response, "data": raw_result, "target_id": request.target_id},
+            result={
+                "response": response,
+                "data": raw_result,
+                "target_id": request.target_id,
+                "execution_mode": "deterministic",
+            },
         )
 
     async def _execute_playbook(self, request: ExecutionRequest) -> ExecutionResult:
@@ -165,5 +239,9 @@ class UnifiedExecutor:
         """Handle unknown requests"""
         return ExecutionResult(
             success=True,
-            result={"response": f"Unknown command: {request.user_input}", "fallback": True, "target_id": request.target_id},
+            result={
+                "response": f"Unknown command: {request.user_input}",
+                "fallback": True,
+                "target_id": request.target_id,
+            },
         )
