@@ -1,0 +1,10 @@
+{
+  "agent_id": "cleaner",
+  "name": "CLEANER",
+  "version": "0.1.0",
+  "domain": "MAINTENANCE",
+  "constitution_hash": null,
+  "oath_sworn": false,
+  "generated_at": "2025-12-25T23:14:05.260922",
+  "genesis": "OPUS-159"
+}

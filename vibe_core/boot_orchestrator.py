@@ -271,6 +271,15 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(TaskProtocol, task_manager)
                 logger.info("      → TaskProtocol registered in ServiceRegistry (Core Stack)")
 
+                # OPUS-307: Register Cartridge Service (unified cartridge management)
+                from vibe_core.cartridge_service import CartridgeService
+                from vibe_core.protocols.cartridge import CartridgeProtocol
+
+                cartridge_svc = CartridgeService.get_instance(self.project_root)
+                cartridge_svc.scan()
+                ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
+                logger.info(f"      → CartridgeProtocol registered ({len(cartridge_svc.list())} cartridges)")
+
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
