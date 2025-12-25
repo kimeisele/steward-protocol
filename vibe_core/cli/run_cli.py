@@ -19,12 +19,15 @@ import logging
 import sys
 from typing import Any, Dict, List, Optional
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.protocols.capability import CapabilityMeta, CapabilityResult, CapabilityType
+from vibe_core.protocols.cli import CLIMeta, register_cli
 from vibe_core.unified_registry import UnifiedRegistry
 
 logger = logging.getLogger("RUN_CLI")
 
 
+@register_cli
 class RunCLI:
     """
     Unified execution CLI.
@@ -35,13 +38,29 @@ class RunCLI:
     - Same interface for everything
     """
 
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="run",
+            description="Unified Capability CLI (fractal execution)",
+            domain="execution",
+            subcommands=["list", "info", "search"],
+            tags=["run", "capability", "fractal", "unified"],
+        )
+
     def __init__(self):
         self._registry: Optional[UnifiedRegistry] = None
 
     def _ensure_registry(self) -> UnifiedRegistry:
-        """Lazy-load unified registry."""
+        """Lazy-load unified registry via ServiceRegistry (OPUS-307 DI pattern)."""
         if self._registry is None:
-            self._registry = UnifiedRegistry.get_instance()
+            # OPUS-307: Use ServiceRegistry DI instead of get_instance() singleton
+            self._registry = ServiceRegistry.get(UnifiedRegistry)
+            if self._registry is None:
+                # Fallback: create and register
+                self._registry = UnifiedRegistry()
+                ServiceRegistry.register(UnifiedRegistry, self._registry)
             self._registry.discover_all()
         return self._registry
 

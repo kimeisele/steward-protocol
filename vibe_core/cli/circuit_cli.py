@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from vibe_core.loaders.circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
+from vibe_core.protocols.cli import CLIMeta, register_cli
 
 if TYPE_CHECKING:
     from vibe_core.cortex.engines.circuit_engine import CognitiveCircuitExecutor
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("CIRCUIT_CLI")
 
 
+@register_cli
 class CircuitCLI:
     """
     Auto-generated CLI for Circuit Protocol.
@@ -34,6 +36,17 @@ class CircuitCLI:
 
     OPUS-307 D++: Shabda (CLI command) → Pratyaya (CircuitExecutor) → Karma (Result)
     """
+
+    @property
+    def meta(self) -> CLIMeta:
+        """CLI metadata for registry discovery."""
+        return CLIMeta(
+            command="circuit",
+            description="Circuit Protocol CLI (list, info, run, status)",
+            domain="execution",
+            subcommands=["list", "info", "run", "status"],
+            tags=["circuit", "execution", "state_machine"],
+        )
 
     def __init__(self):
         """Initialize circuit CLI."""
