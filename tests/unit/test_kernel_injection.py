@@ -5,12 +5,12 @@ Test P3.1 - Verify kernel injection to agents
 import asyncio
 
 from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
-from vibe_core.plugins.test_orchestration.fixtures import TestContext, TestTasks
+from vibe_core.plugins.test_orchestration.fixtures import IsolatedTestContext, TestTasks
 
 
 def test_kernel_injection():
     """Verify kernel injection using standard TestContext."""
-    with TestContext() as ctx:
+    with IsolatedTestContext() as ctx:
         # Boot kernel (minimal by default in context)
         # Note: TestContext auto-creates a kernel but doesn't auto-boot unless specified?
         # Actually checking fixtures.py: TestContext creates kernel but doesn't boot it.

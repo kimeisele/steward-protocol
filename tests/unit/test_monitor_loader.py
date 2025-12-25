@@ -5,7 +5,7 @@ Tests for Glass Box system introspection using standardized fixtures.
 """
 
 from vibe_core.cli.monitor_loader import MonitorLoader
-from vibe_core.plugins.test_orchestration.fixtures import TestContext
+from vibe_core.plugins.test_orchestration.fixtures import IsolatedTestContext
 
 
 class TestMonitorLoader:
@@ -16,14 +16,14 @@ class TestMonitorLoader:
 
     def test_discover_monitors_no_plugins(self):
         """Should return empty registry if no plugins."""
-        with TestContext() as ctx:
+        with IsolatedTestContext() as ctx:
             # ctx.kernel is minimal (no plugins)
             monitors = MonitorLoader.discover_monitors(ctx.kernel)
             assert len(monitors) == 0
 
     def test_discover_monitors_with_plugin(self):
         """Should discover monitors from plugin with proper structure."""
-        with TestContext() as ctx:
+        with IsolatedTestContext() as ctx:
             # 1. Define a Mock Monitor with required attributes
             class MockMonitor:
                 monitor_id = "test_monitor"
@@ -48,7 +48,7 @@ class TestMonitorLoader:
 
     def test_cache_behavior(self):
         """Should cache results."""
-        with TestContext() as ctx:
+        with IsolatedTestContext() as ctx:
             MonitorLoader.clear_cache()
 
             # First call - should populate cache based on kernel plugins

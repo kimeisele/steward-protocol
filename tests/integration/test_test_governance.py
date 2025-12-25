@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from vibe_core.plugins.test_orchestration.plugin_main import TestOrchestrationPlugin
-from vibe_core.plugins.test_orchestration.test_guardian import TestGuardian
+from vibe_core.plugins.test_orchestration.plugin_main import OrchestrationPlugin
+from vibe_core.plugins.test_orchestration.test_guardian import Guardian
 
 
 class TestTestGovernanceIntegration:
@@ -27,7 +27,7 @@ class TestTestGovernanceIntegration:
 
         # Mock the test_governance section config
         governance_config = MagicMock()
-        # The TestGuardian expects config object to have attributes matching the fields
+        # The Guardian expects config object to have attributes matching the fields
         # It seems it uses the config object directly.
         # Let's check TestGovernanceConfig definition.
         # It likely has fields like mutation_policy, baseline_path etc.
@@ -45,7 +45,7 @@ class TestTestGovernanceIntegration:
 
         config.get_section.side_effect = get_section
 
-        # ALSO set it as an attribute because TestGuardian uses getattr(config, "test_governance")
+        # ALSO set it as an attribute because Guardian uses getattr(config, "test_governance")
         config.test_governance = governance_config
 
         kernel.config = config
@@ -53,14 +53,14 @@ class TestTestGovernanceIntegration:
 
     def test_guardian_initialization(self, mock_kernel):
         """Test that the guardian initializes correctly."""
-        plugin = TestOrchestrationPlugin()
+        plugin = OrchestrationPlugin()
         plugin.on_boot(mock_kernel)
         assert plugin.guardian is not None
-        assert isinstance(plugin.guardian, TestGuardian)
+        assert isinstance(plugin.guardian, Guardian)
 
     def test_mutation_detection(self, mock_kernel, temp_dir):
         """Test that mutations are detected."""
-        plugin = TestOrchestrationPlugin()
+        plugin = OrchestrationPlugin()
         plugin.on_boot(mock_kernel)
 
         # Create a dummy test file
@@ -94,7 +94,7 @@ class TestTestGovernanceIntegration:
 
     def test_run_pytest_integration(self, mock_kernel, temp_dir):
         """Test that run_pytest calls validation."""
-        plugin = TestOrchestrationPlugin()
+        plugin = OrchestrationPlugin()
         plugin.on_boot(mock_kernel)
 
         # Create a dummy test file
