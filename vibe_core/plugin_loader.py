@@ -64,14 +64,18 @@ class PluginLoader(UnifiedLoader):
         """
         Discover and load all plugins.
 
-        Supports BOTH:
-        - NEW-style: folders with manifest.json + plugin_main.py
-        - OLD-style: single .py files in plugins directory
+        OPUS-307 Phase F: Uses ManifestRegistry when no custom paths.
+        Falls back to iterdir() only for custom scan_paths (VIBE_PLUGIN_PATH).
 
         Returns:
             Tuple of (plugin_instances, metadata), sorted by priority
         """
-        paths = scan_paths or cls.scan_paths
+        # OPUS-307: If no custom paths, use ManifestRegistry
+        if scan_paths is None:
+            return cls.discover_from_registry(config)
+
+        # Legacy fallback for custom paths (VIBE_PLUGIN_PATH override)
+        paths = scan_paths
 
         # Candidate tracking for Precedence Logic (Container > Folder)
         # item_id -> (plugin_instance, metadata)
