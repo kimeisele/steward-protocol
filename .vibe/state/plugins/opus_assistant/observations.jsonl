@@ -1,8 +1,3 @@
-{"timestamp": "2025-12-23T13:13:20.939813", "severity": "WARN", "message": "Drift detected: 35 missing files (tick #257)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-23T13:13:20.946731", "severity": "ALERT", "message": "Persistent drift! 257 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-23T13:13:21.639245", "severity": "WARN", "message": "Drift detected: 35 missing files (tick #257)", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-23T13:13:21.641474", "severity": "ALERT", "message": "Persistent drift! 257 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
-{"timestamp": "2025-12-23T13:13:22.438208", "severity": "WARN", "message": "Drift detected: 35 missing files (tick #258)", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-23T13:13:22.443113", "severity": "ALERT", "message": "Persistent drift! 258 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-23T13:13:23.093042", "severity": "WARN", "message": "Drift detected: 35 missing files (tick #258)", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-23T13:13:23.097229", "severity": "ALERT", "message": "Persistent drift! 258 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
@@ -998,3 +993,8 @@
 {"timestamp": "2025-12-23T13:19:15.894642", "severity": "ALERT", "message": "Persistent drift! 506 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-23T13:19:16.629227", "severity": "WARN", "message": "Drift detected: 35 missing files (tick #506)", "source": "drift_detector", "context_hash": null}
 {"timestamp": "2025-12-23T13:19:16.633467", "severity": "ALERT", "message": "Persistent drift! 506 consecutive unhealthy checks", "source": "drift_detector", "context_hash": null}
+{"timestamp": "2025-12-25T07:42:05.519447", "severity": "WARN", "message": "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}", "source": "auto_verify", "context_hash": null}
+{"timestamp": "2025-12-25T07:43:37.797106", "severity": "WARN", "message": "Warning message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-25T07:43:37.809107", "severity": "ALERT", "message": "Alert message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-25T07:43:37.856872", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-25T07:43:37.871613", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
