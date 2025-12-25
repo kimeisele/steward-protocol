@@ -1199,18 +1199,75 @@ Test Files:
 - `test_singularity.yaml` - Legacy playbook format (phases[])
 - `test_singularity_acid.py` - Verification script
 
-### Phase I.2 Implementation Tasks (REMAINING)
+### Phase I.1.5 FINDINGS: Complete Architecture Map ✅
 
-1. **Merge SemanticRouter into LayeredRouter**
-   - Layer 2.5: Vector similarity (optional, when model loaded)
-   - Graceful degradation without sentence-transformers
+**Date**: 2025-12-25
+**Status**: ARCHITECTURE VERIFIED - NO DORMANT COMPONENTS
 
-2. **Test: Same result via CLI and natural language**
-   - `steward circuit run HEAL_CODEBASE_V1`
-   - vs "fix the codebase violations"
-   - Now uses identical executor (CognitiveCircuitExecutor)
+After comprehensive analysis, the routing architecture is **CORRECT AS DESIGNED**.
+
+#### Two Parallel Routing Systems (BY DESIGN)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ROUTING ARCHITECTURE                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  CLI / Chat Input                                               │
+│       ↓                                                         │
+│  ┌─────────────────────┐                                        │
+│  │   LayeredRouter     │  ← Circuit Routing (regex-based)       │
+│  │   (4 Layers)        │                                        │
+│  │   ├─ L1: Exact      │                                        │
+│  │   ├─ L2: Semantic   │  (regex patterns, NOT vectors)         │
+│  │   ├─ L3: Context    │                                        │
+│  │   └─ L3.5: Akshara  │                                        │
+│  └─────────────────────┘                                        │
+│       ↓                                                         │
+│  ExecutorSingularity → CognitiveCircuitExecutor                 │
+│                                                                 │
+│  ═══════════════════════════════════════════════════════════   │
+│                                                                 │
+│  MANAS / Natural Language Intent                                │
+│       ↓                                                         │
+│  ┌─────────────────────┐                                        │
+│  │  SemanticRouter     │  ← Intent Understanding (vector-based) │
+│  │  (sentence-trans.)  │  cognitive_kernel.py:538               │
+│  │  ├─ SATYA >0.85     │  provider.py:199                       │
+│  │  ├─ MANTHAN 0.6-0.84│  degradation_chain.py                  │
+│  │  └─ NETI <0.60      │                                        │
+│  └─────────────────────┘                                        │
+│       ↓                                                         │
+│  IntentRouter (OPUS-171) → HandlerLoader                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Key Finding: SemanticRouter is ACTIVE (not dormant!)
+
+| Component | Purpose | Status | Wired In |
+|-----------|---------|--------|----------|
+| LayeredRouter | Circuit routing | ✅ ACTIVE | `unified_execution_core.py` |
+| SemanticRouter | Intent vectors | ✅ ACTIVE | MANAS, Envoy, DegradationChain |
+| IntentRouter | MANAS dispatch | ✅ ACTIVE | `cognitive_kernel.py` |
+
+**Correction**: Previous assumption that SemanticRouter was "dormant" was WRONG.
+It serves a DIFFERENT purpose than LayeredRouter:
+- LayeredRouter: Fast circuit routing (regex)
+- SemanticRouter: Deep intent understanding (vectors) for MANAS
+
+#### Phase I.2 Re-evaluation
+
+**Original Plan (Gemini)**: "Merge SemanticRouter into LayeredRouter"
+
+**Reality**: They serve DIFFERENT purposes - merging would be wrong!
+
+**Revised Phase I.2 Tasks**:
+1. ~~Merge SemanticRouter~~ → NOT NEEDED (different purposes)
+2. ⏳ Clean up dead code (ExecutionPath.PLAYBOOK handler)
+3. ⏳ Live integration test through full stack
 
 ---
 
 *"Von Windows 95 zu Windows 7. Der Weg ist klar. Die Executor Singularity ist der nächste Schritt."*
-*"Phase I Research complete. Now we truly understand how the pieces connect."*
+*"Phase I Research complete. Architecture verified - no dormant components."*
