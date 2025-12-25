@@ -74,10 +74,17 @@ class AgentLoader(UnifiedLoader):
         """
         Discover and load all agents (folders + containers).
 
+        OPUS-307 Phase F: Uses ManifestRegistry for cartridges.
+        Still scans library path for .vibe containers.
+
         Supports precedence: Container (.vibe) > Folder.
         Supports recursion: Scans 'hollows/' inside containers.
         """
-        paths = scan_paths or cls.scan_paths
+        # OPUS-307: If no custom paths, use ManifestRegistry + library scan
+        if scan_paths is None:
+            return cls._discover_from_registry_and_library(config)
+
+        paths = scan_paths
 
         # Runtime Separation (OPUS-016): Add library_path from config
         # Runtime Separation (OPUS-016): Add library_path from config
@@ -192,6 +199,59 @@ class AgentLoader(UnifiedLoader):
         instances = {aid: inst for aid, (inst, _) in candidates.items() if inst is not None}
         metadata = {aid: meta for aid, (_, meta) in candidates.items()}
 
+        return instances, metadata
+
+    @classmethod
+    def _discover_from_registry_and_library(
+        cls,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[AgentInstances, AgentMetadata]:
+        """
+        OPUS-307 Phase F: Discover agents via ManifestRegistry + library containers.
+
+        Uses ManifestRegistry for cartridges (NO iterdir!).
+        Still scans library path for .vibe containers.
+        """
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+        candidates: Dict[str, Tuple[Any, ItemMeta]] = {}
+
+        def add_candidate(meta: ItemMeta, instance: Any):
+            if not meta or not meta.loaded_successfully:
+                return
+            aid = meta.manifest.get("agent_id") or meta.item_id
+            if aid not in candidates:
+                candidates[aid] = (instance, meta)
+                logger.info(f"  ✅ Loaded: {aid}")
+
+        # 1. Load cartridges from ManifestRegistry
+        ManifestRegistry._ensure_scanned()
+        entries = ManifestRegistry.get_enabled("cartridge")
+
+        logger.info(f"[agent] Loading {len(entries)} cartridges from ManifestRegistry...")
+
+        for entry in entries:
+            meta = cls._process_item_directory(entry.parent_dir, config)
+            if meta and meta.loaded_successfully:
+                instance = cls._create_instance(meta, config)
+                add_candidate(meta, instance)
+
+        # 2. Scan library path for .vibe containers (if exists)
+        library_path = Path("library")
+        if library_path.exists():
+            logger.info(f"[agent] Scanning library: {library_path}...")
+            for item in library_path.iterdir():
+                if item.suffix == ".vibe" and zipfile.is_zipfile(item):
+                    meta = cls._process_container(item, config)
+                    if meta and meta.loaded_successfully:
+                        instance = cls._create_instance(meta, config)
+                        add_candidate(meta, instance)
+
+        # Build results
+        instances = {aid: inst for aid, (inst, _) in candidates.items() if inst is not None}
+        metadata = {aid: meta for aid, (_, meta) in candidates.items()}
+
+        logger.info(f"[agent] Total agents loaded: {len(instances)}")
         return instances, metadata
 
     @classmethod
