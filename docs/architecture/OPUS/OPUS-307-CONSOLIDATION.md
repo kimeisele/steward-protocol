@@ -1,19 +1,25 @@
-# OPUS-307-CONSOLIDATION: Registry Unification
+# OPUS-307-CONSOLIDATION: System-Wide Registry Unification
 
 ## Problem
 
-Drei Registries für Cartridges:
+Multiple fragmented registries/loaders for the same concerns:
 
-| Registry | Location | Purpose | Used By |
-|----------|----------|---------|---------|
-| `ManifestRegistry` | `loaders/manifest_registry.py` | Scans YAML manifests | Boot, Discovery |
-| `CartridgeRegistry` | `cartridges/registry.py` | Loads cartridge classes | Kernel |
-| `LazyCartridgeRegistry` | `cli/cartridge_bridge.py` | CLI tool discovery | CLI only |
+| Module Type | Fragmentation | Status |
+|-------------|---------------|--------|
+| Cartridges | 3 registries (ManifestRegistry, CartridgeRegistry, LazyCartridgeRegistry) | ✅ FIXED |
+| Plugins | PluginLoader + ManifestRegistry direct usage | ✅ FIXED |
+| Circuits | CircuitEngine direct ManifestRegistry | PENDING |
+| Tools | ToolRegistry + CartridgeService.load_tool | PENDING |
+| Sections | SectionLoader | PENDING |
+| Prompts | PromptRegistry | TO VERIFY |
 
 **Violation:** GAD-000 says ONE service per concern, accessed via DI.
 
-## Current Flow (Fragmented)
+---
 
+## Phase A: Cartridges [COMPLETE]
+
+### Before
 ```
 Boot:
   ManifestRegistry.scan_all() → finds YAMLs
@@ -21,98 +27,123 @@ Boot:
 
 CLI:
   LazyCartridgeRegistry.scan_manifests() → separate scan
-  CartridgeBridgeCLI → wraps cartridges for CLI
 
 Kernel:
   kernel.register_agent() → receives already-loaded agents
 ```
 
-Three separate scans. Three separate caches. Inconsistent.
-
-## Target Flow (Unified)
-
+### After
 ```
 Boot:
-  CartridgeService.initialize() → single scan, single cache
+  CartridgeService.scan() → single scan, single cache
+  ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
 
-CLI:
-  ServiceRegistry.get(CartridgeProtocol) → same service
-
-Kernel:
+CLI + Kernel:
   ServiceRegistry.get(CartridgeProtocol) → same service
 ```
 
-## Implementation Plan
-
-### Phase 1: Protocol Definition
-
-```python
-# vibe_core/protocols/cartridge.py
-class CartridgeProtocol(Protocol):
-    def scan(self) -> int: ...
-    def get(self, cartridge_id: str) -> CartridgeInfo: ...
-    def list(self) -> List[CartridgeInfo]: ...
-    def load_tool(self, cartridge_id: str, tool_id: str) -> Tool: ...
-```
-
-### Phase 2: Unified Service
-
-```python
-# vibe_core/services/cartridge_service.py
-class CartridgeService(CartridgeProtocol):
-    """Single source of truth for cartridges."""
-
-    def __init__(self):
-        self._manifests: Dict[str, ManifestEntry] = {}
-        self._classes: Dict[str, Type] = {}
-        self._tools: Dict[str, ToolStub] = {}
-```
-
-### Phase 3: DI Registration
-
-```python
-# vibe_core/di.py or boot
-ServiceRegistry.register(CartridgeProtocol, CartridgeService())
-```
-
-### Phase 4: Migration
-
-1. `CartridgeRegistry` → delegates to `CartridgeService`
-2. `LazyCartridgeRegistry` → delegates to `CartridgeService`
-3. `ManifestRegistry` → kept for generic manifest scanning, cartridge-specific logic moves out
-
-### Phase 5: Cleanup
-
-- Remove duplicate scanning logic
-- Remove duplicate caches
-- Single source of truth
-
-## Files Affected
-
-| File | Change |
-|------|--------|
-| `vibe_core/protocols/cartridge.py` | NEW - Protocol definition |
-| `vibe_core/services/cartridge_service.py` | NEW - Unified service |
-| `vibe_core/cartridges/registry.py` | MODIFY - Delegate to service |
-| `vibe_core/cli/cartridge_bridge.py` | MODIFY - Use service |
-| `vibe_core/loaders/manifest_registry.py` | MODIFY - Remove cartridge-specific |
-| `vibe_core/di.py` | MODIFY - Register service |
-
-## Success Criteria
-
-1. `ServiceRegistry.get(CartridgeProtocol)` works everywhere
-2. Single scan at boot, single cache
-3. CLI and Kernel use same data
-4. No duplicate code
-
-## Status
-
-- [x] Phase 1: Protocol (`vibe_core/protocols/cartridge.py`)
-- [x] Phase 2: Service (`vibe_core/cartridge_service.py`)
-- [x] Phase 3: DI Registration (`boot_orchestrator.py`)
-- [x] Phase 4: Migration (CartridgeRegistry, LazyCartridgeRegistry delegate to CartridgeService)
-- [x] Phase 5: Cleanup (ManifestRegistry kept for generic scanning)
+### Files
+- `vibe_core/protocols/cartridge.py` - Protocol definition
+- `vibe_core/cartridge_service.py` - Unified service
+- `vibe_core/cartridges/registry.py` - Delegates to CartridgeService
+- `vibe_core/cli/cartridge_bridge.py` - Delegates to CartridgeService
+- `vibe_core/boot_orchestrator.py` - DI registration
 
 ---
 
-*"Drei Registries sind zwei zu viel."*
+## Phase B: Plugins [COMPLETE]
+
+### Before
+```
+Kernel:
+  PluginLoader.discover_and_load() → direct call
+  No DI registration
+```
+
+### After
+```
+Boot:
+  PluginService.scan() → single scan
+  ServiceRegistry.register(PluginServiceProtocol, plugin_svc)
+
+Kernel + CLI:
+  ServiceRegistry.get(PluginServiceProtocol)
+```
+
+### Files
+- `vibe_core/protocols/plugin.py` - Protocol definition
+- `vibe_core/plugin_service.py` - Unified service
+- `vibe_core/boot_orchestrator.py` - DI registration
+
+---
+
+## Phase C: Circuits [PENDING]
+
+### Current State
+- `CircuitEngine` in `vibe_core/cortex/engines/circuit_engine.py`
+- Uses ManifestRegistry directly
+- No CircuitService
+
+### Target
+- `CircuitProtocol` - Protocol definition
+- `CircuitService` - Unified service
+- DI registration
+
+---
+
+## Phase D: Tools [PENDING]
+
+### Current State
+- `ToolRegistry` in `vibe_core/tools/tool_registry.py` - Governance/capability checks
+- `CartridgeService.load_tool()` - Tool loading from cartridges
+- Two paths to tools
+
+### Target
+- Harmonize: ToolRegistry uses CartridgeService for discovery
+- Or: Unified ToolService
+
+---
+
+## Phase E: Sections (Phoenix) [PENDING]
+
+### Current State
+- `SectionLoader` in `vibe_core/phoenix/section_loader.py`
+- Uses ManifestRegistry
+
+### Target
+- `SectionProtocol`
+- `SectionService`
+- DI registration
+
+---
+
+## Phase F: Prompts [TO VERIFY]
+
+### Current State
+- `PromptRegistry` in `vibe_core/runtime/prompt_registry.py`
+- Check if truly unified
+
+---
+
+## Success Criteria
+
+1. Every module type has: Protocol → Service → DI
+2. Single scan at boot, single cache per type
+3. CLI and Kernel use same services
+4. No duplicate code paths
+5. `ServiceRegistry.get(XProtocol)` works everywhere
+
+---
+
+## Status
+
+- [x] Phase A: Cartridges (CartridgeService)
+- [x] Phase B: Plugins (PluginService)
+- [x] Phase C: Circuits (CircuitService)
+- [x] Phase D: Tools (ToolDiscovery → CartridgeService)
+- [x] Phase E: Sections (SectionService)
+- [x] Phase F: Prompts (already unified - PromptRegistry)
+
+---
+
+*"Ein System, ein Service, ein Cache."*

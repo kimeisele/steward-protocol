@@ -280,6 +280,33 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
                 logger.info(f"      → CartridgeProtocol registered ({len(cartridge_svc.list())} cartridges)")
 
+                # OPUS-307: Register Plugin Service (unified plugin management)
+                from vibe_core.plugin_service import PluginService
+                from vibe_core.protocols.plugin import PluginServiceProtocol
+
+                plugin_svc = PluginService.get_instance(self.project_root)
+                plugin_svc.scan()
+                ServiceRegistry.register(PluginServiceProtocol, plugin_svc)
+                logger.info(f"      → PluginServiceProtocol registered ({len(plugin_svc.list())} plugins)")
+
+                # OPUS-307: Register Circuit Service (unified circuit management)
+                from vibe_core.circuit_service import CircuitService
+                from vibe_core.protocols.circuit import CircuitServiceProtocol
+
+                circuit_svc = CircuitService.get_instance(self.project_root)
+                circuit_svc.scan()
+                ServiceRegistry.register(CircuitServiceProtocol, circuit_svc)
+                logger.info(f"      → CircuitServiceProtocol registered ({len(circuit_svc.list())} circuits)")
+
+                # OPUS-307: Register Section Service (unified section management)
+                from vibe_core.protocols.section import SectionServiceProtocol
+                from vibe_core.section_service import SectionService
+
+                section_svc = SectionService.get_instance(self.project_root)
+                section_svc.scan()
+                ServiceRegistry.register(SectionServiceProtocol, section_svc)
+                logger.info(f"      → SectionServiceProtocol registered ({len(section_svc.list())} sections)")
+
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
