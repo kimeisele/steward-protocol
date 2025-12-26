@@ -1,0 +1,11 @@
+{# OPUS-314: Task Summary Prompt #}
+Summarize this task result for the user.
+
+Task: {{ task_name }}
+Status: {{ status }}
+Duration: {{ duration_ms | default(0) }}ms
+
+Result:
+{{ result | default('No result') }}
+
+Provide a concise, actionable summary.

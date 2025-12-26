@@ -1,0 +1,25 @@
+{# OPUS-314: Git Analysis Template #}
+## Git Analysis
+
+**Branch:** {{ branch | default('unknown') }}
+**Commit:** {{ commit | default('HEAD') }}
+**Author:** {{ author | default('unknown') }}
+
+### Recent Activity
+| Commits | Files Changed | Insertions | Deletions |
+|---------|---------------|------------|-----------|
+| {{ commit_count | default(0) }} | {{ files_changed | default(0) }} | +{{ insertions | default(0) }} | -{{ deletions | default(0) }} |
+
+{% if hot_files %}
+### Hot Files (Most Changed)
+{% for f in hot_files[:10] %}
+- `{{ f.path }}` ({{ f.changes }} changes)
+{% endfor %}
+{% endif %}
+
+{% if contributors %}
+### Contributors
+{% for c in contributors[:5] %}
+- {{ c.name }}: {{ c.commits }} commits
+{% endfor %}
+{% endif %}

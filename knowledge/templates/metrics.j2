@@ -1,0 +1,21 @@
+{# OPUS-314: Metrics Template #}
+## System Metrics
+
+**Timestamp:** {{ timestamp | default('now') }}
+
+### Performance
+| Metric | Value | Trend |
+|--------|-------|-------|
+| Boot Time | {{ boot_time_ms | default(0) }}ms | {{ boot_trend | default('→') }} |
+| Avg Response | {{ avg_response_ms | default(0) }}ms | {{ response_trend | default('→') }} |
+| Memory | {{ memory_mb | default(0) }}MB | {{ memory_trend | default('→') }} |
+
+### Activity
+| Metric | Count |
+|--------|-------|
+| Commands Executed | {{ commands_executed | default(0) }} |
+| Intents Generated | {{ intents_generated | default(0) }} |
+| Errors | {{ error_count | default(0) }} |
+
+### Health Score
+**{{ health_score | default(100) }}%** {{ '🟢' if health_score | default(100) >= 80 else '🟡' if health_score | default(100) >= 50 else '🔴' }}

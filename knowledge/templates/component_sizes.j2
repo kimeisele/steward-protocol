@@ -1,0 +1,16 @@
+{# OPUS-314: Component Sizes Template #}
+## Component Sizes
+
+**Total:** {{ total_files | default(0) }} files, {{ total_lines | default(0) }} lines
+
+### By Directory
+| Component | Files | Lines | % |
+|-----------|-------|-------|---|
+{% for c in components | default([]) %}
+| {{ c.name }} | {{ c.files }} | {{ c.lines }} | {{ c.percent | default(0) }}% |
+{% endfor %}
+
+### Largest Files
+{% for f in largest_files | default([]) %}
+1. `{{ f.path }}` - {{ f.lines }} lines
+{% endfor %}

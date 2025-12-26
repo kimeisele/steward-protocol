@@ -1,0 +1,14 @@
+{# OPUS-314: Context Extraction Prompt #}
+Extract the relevant context from the following user input.
+
+User Input: {{ user_input }}
+
+Available Context:
+{% for key, value in context.items() | default([]) %}
+- {{ key }}: {{ value }}
+{% endfor %}
+
+Return a JSON object with:
+- intent: The user's primary intent
+- entities: Key entities mentioned
+- context_needed: Additional context required

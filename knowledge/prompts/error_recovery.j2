@@ -1,0 +1,11 @@
+{# OPUS-314: Error Recovery Prompt #}
+An error occurred. Suggest recovery options.
+
+Error: {{ error_message }}
+Context: {{ context | default('No context available') }}
+Previous Action: {{ previous_action | default('None') }}
+
+Suggest:
+1. Immediate fix (if possible)
+2. Workaround
+3. Escalation path

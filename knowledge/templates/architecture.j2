@@ -1,0 +1,27 @@
+{# OPUS-314: Architecture Template #}
+## Architecture
+
+### Module Dependency Graph
+
+```mermaid
+flowchart LR
+{% for edge in edges | default([]) %}
+    {{ edge.from }} --> {{ edge.to }}
+{% endfor %}
+{% if not edges %}
+    A[Core] --> B[Plugins]
+    B --> C[Cartridges]
+{% endif %}
+```
+
+### Critical Modules
+{% for m in critical_modules | default([]) %}
+- **{{ m.name }}**: {{ m.imports }} imports ({{ m.description | default('') }})
+{% endfor %}
+
+### Module Sizes
+| Module | Files | Lines |
+|--------|-------|-------|
+{% for m in modules | default([]) %}
+| {{ m.name }} | {{ m.files }} | {{ m.lines }} |
+{% endfor %}

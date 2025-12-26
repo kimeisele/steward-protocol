@@ -1,0 +1,11 @@
+{# OPUS-314: Intent Classifier Prompt #}
+Classify the user's intent from this input.
+
+Input: {{ input }}
+
+Intent Categories:
+{% for cat in categories | default(['query', 'action', 'navigation', 'system']) %}
+- {{ cat }}
+{% endfor %}
+
+Return JSON: {"intent": "category", "confidence": 0.0-1.0}

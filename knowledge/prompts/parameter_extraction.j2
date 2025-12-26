@@ -1,0 +1,11 @@
+{# OPUS-314: Parameter Extraction Prompt #}
+Extract structured parameters from the user request.
+
+Request: {{ request }}
+
+Expected Parameters:
+{% for param in expected_params | default([]) %}
+- {{ param.name }}: {{ param.type }} {% if param.required %}(required){% endif %}
+{% endfor %}
+
+Return a JSON object with extracted parameter values.

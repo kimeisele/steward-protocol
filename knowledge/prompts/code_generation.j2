@@ -1,0 +1,16 @@
+{# OPUS-314: Code Generation Prompt #}
+Generate code based on this specification.
+
+Language: {{ language | default('python') }}
+Specification: {{ spec }}
+
+Requirements:
+{% for req in requirements | default([]) %}
+- {{ req }}
+{% endfor %}
+
+Follow STEWARD Protocol conventions:
+- Type hints required
+- Docstrings with Args/Returns/Raises
+- No silent failures
+- Phoenix-pattern recovery
