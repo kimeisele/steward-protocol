@@ -201,6 +201,48 @@ class ChangeDetector:
         matches = re.findall(pattern, content, re.DOTALL | re.IGNORECASE)
         return "\n".join(m.strip() for m in matches)
 
+    def extract_commands(self, path: Path) -> List[Dict[str, Any]]:
+        """
+        Extract commands from @HUMAN sections.
+
+        Command format: "- ACTION target args..."
+        Returns list of parsed command dicts.
+        """
+        try:
+            content = path.read_text(encoding="utf-8")
+        except Exception:
+            return []
+
+        human_content = self._extract_human_sections(content)
+        commands = []
+
+        for line in human_content.split("\n"):
+            line = line.strip()
+            # Skip non-command lines
+            if not line.startswith("- ") and not line.startswith("* "):
+                continue
+            # Skip already processed (strikethrough) or annotated
+            if line.startswith("- ~~") or "<!-- @OK" in line or "<!-- @ERROR" in line:
+                continue
+
+            cmd_text = line[2:].strip()
+            if not cmd_text:
+                continue
+
+            # Parse: ACTION target args
+            parts = cmd_text.split(None, 2)
+            commands.append(
+                {
+                    "raw": cmd_text,
+                    "action": parts[0].upper() if parts else "",
+                    "target": parts[1] if len(parts) > 1 else None,
+                    "args": parts[2] if len(parts) > 2 else None,
+                    "line": line,
+                }
+            )
+
+        return commands
+
 
 # =============================================================================
 # SCHEMA SECTION DEFINITION
@@ -473,11 +515,15 @@ class ManifestationService:
         """
         Manifestation tick - called from kernel tick.
 
-        For each registered source with frequency="tick":
-        1. Get data from source (plugin or kernel)
-        2. Render to Markdown
-        3. Write atomically
+        BIDIRECTIONAL LOOP:
+        1. SENSE: Check for @HUMAN changes, extract commands
+        2. DISPATCH: Send commands to plugins/kernel
+        3. MANIFEST: Render @LIVE sections
         """
+        # Phase 1: SENSE - Check for user input
+        self._process_user_input()
+
+        # Phase 2: MANIFEST - Render all sources
         # Plugin manifestations
         for plugin_id, reg in self._registered.items():
             if reg.declaration.frequency != "tick":
@@ -497,6 +543,67 @@ class ManifestationService:
                 self._manifest_kernel_source(source)
             except Exception as e:
                 logger.error(f"Manifestation failed for {output}: {e}")
+
+    def _process_user_input(self) -> None:
+        """
+        BIDIRECTIONAL: Sense and process @HUMAN section changes.
+
+        For each manifestation:
+        1. Check if @HUMAN sections changed (ChangeDetector)
+        2. Extract commands
+        3. Dispatch to owner (plugin or kernel)
+        4. Annotate results (Red/Green Pen)
+        """
+        # Check all indexed manifestations
+        for path in self._index.all_manifestations():
+            if not self._change_detector.should_process(path):
+                continue
+
+            # Extract commands from @HUMAN sections
+            commands = self._change_detector.extract_commands(path)
+            if not commands:
+                continue
+
+            logger.info(f"User input detected: {path.name} ({len(commands)} commands)")
+
+            # Find owner and dispatch
+            entity_id = self._index.find_by_path(path)
+            for cmd in commands:
+                self._dispatch_command(path, entity_id, cmd)
+
+    def _dispatch_command(self, path: Path, entity_id: Optional[str], cmd: Dict[str, Any]) -> None:
+        """
+        Dispatch a command to its owner and annotate result.
+
+        Tries plugin first, then kernel, then fails with Red Pen.
+        """
+        action = cmd.get("action", "")
+        line = cmd.get("line", "")
+
+        # Try plugin handler
+        if entity_id and entity_id in self._registered:
+            reg = self._registered[entity_id]
+            if hasattr(reg.plugin_instance, "handle_command"):
+                try:
+                    result = reg.plugin_instance.handle_command(cmd)
+                    self.annotate_success(path, line, f"Executed: {action}")
+                    return
+                except Exception as e:
+                    self.annotate_error(path, line, str(e))
+                    return
+
+        # Try kernel handler
+        if hasattr(self._kernel, "handle_command"):
+            try:
+                result = self._kernel.handle_command(cmd)
+                self.annotate_success(path, line, f"Executed: {action}")
+                return
+            except Exception as e:
+                self.annotate_error(path, line, str(e))
+                return
+
+        # No handler found
+        self.annotate_error(path, line, f"Unknown command: {action}")
 
     def _manifest_plugin(self, reg: RegisteredManifestation) -> None:
         """Manifest a single plugin."""
@@ -631,6 +738,59 @@ class ManifestationService:
                 lines.append(f"{sep} {item} {sep}")
 
         return "\n".join(lines)
+
+    # =========================================================================
+    # RED PEN: In-file annotations (GAD-000 Transparency)
+    # =========================================================================
+
+    def annotate_error(self, path: Path, line_content: str, error_msg: str) -> bool:
+        """
+        THE RED PEN - Annotate error in file.
+
+        "Invisible = Doesn't Exist" (GAD-000)
+        User must SEE errors in the file, not just logs.
+        """
+        try:
+            content = path.read_text(encoding="utf-8")
+            annotation = f"<!-- @ERROR: {error_msg} -->"
+
+            # Find the line and add annotation after it
+            if line_content in content and annotation not in content:
+                content = content.replace(
+                    line_content,
+                    f"{line_content}\n{annotation}",
+                )
+                path.write_text(content, encoding="utf-8")
+                logger.debug(f"Red Pen: {path.name} - {error_msg}")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"annotate_error failed: {e}")
+            return False
+
+    def annotate_success(self, path: Path, line_content: str, result_msg: str) -> bool:
+        """
+        THE GREEN PEN - Annotate success in file.
+
+        Confirms command execution to user.
+        """
+        try:
+            content = path.read_text(encoding="utf-8")
+            timestamp = datetime.utcnow().strftime("%H:%M:%S")
+            annotation = f"<!-- @OK: {result_msg} ({timestamp}) -->"
+
+            if line_content in content and "<!-- @OK" not in content.split(line_content)[1][:100]:
+                content = content.replace(
+                    line_content,
+                    f"{line_content}\n{annotation}",
+                )
+                path.write_text(content, encoding="utf-8")
+                logger.debug(f"Green Pen: {path.name} - {result_msg}")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"annotate_success failed: {e}")
+            return False
 
     # =========================================================================
     # SPAWN: Create new manifestation
@@ -875,50 +1035,6 @@ class ManifestationService:
             )
         except Exception:
             return None
-
-    # =========================================================================
-    # RED PEN ANNOTATIONS
-    # =========================================================================
-
-    def annotate_error(self, path: Path, section_id: str, line: str, message: str) -> bool:
-        """Add @ERROR annotation after a line."""
-        if not path.exists():
-            return False
-
-        try:
-            content = path.read_text(encoding="utf-8")
-            annotation = self.ERROR_ANNOTATION.format(message=message)
-            escaped = re.escape(line.strip())
-            pattern = f"({escaped})(?!\n<!--\\s*@ERROR)"
-            new_content = re.sub(pattern, f"\\1\n{annotation}", content, count=1)
-
-            if new_content == content:
-                return False
-
-            path.write_text(new_content, encoding="utf-8")
-            return True
-        except Exception:
-            return False
-
-    def annotate_success(self, path: Path, section_id: str, line: str, message: str) -> bool:
-        """Add @OK annotation after a line."""
-        if not path.exists():
-            return False
-
-        try:
-            content = path.read_text(encoding="utf-8")
-            annotation = self.SUCCESS_ANNOTATION.format(message=message)
-            escaped = re.escape(line.strip())
-            pattern = f"({escaped})(?!\n<!--\\s*@OK)"
-            new_content = re.sub(pattern, f"\\1\n{annotation}", content, count=1)
-
-            if new_content == content:
-                return False
-
-            path.write_text(new_content, encoding="utf-8")
-            return True
-        except Exception:
-            return False
 
     def render_section_error(self, section_id: str, error: Exception, trace_id: str) -> str:
         """Generate error placeholder for crashed section."""
