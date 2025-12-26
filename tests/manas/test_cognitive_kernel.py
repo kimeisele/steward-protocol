@@ -47,15 +47,16 @@ class TestManasConfig:
         assert config.auto_execute_safe is False
         assert config.auto_execute_safe != True  # noqa: E712 - explicit
 
-    def test_karma_threshold_default_is_high(self):
+    def test_karma_threshold_default_is_achievable(self):
         """
-        Mutation killer: Karma threshold should be 90 (high bar for trust).
+        OPUS-314: Karma threshold should be 70 (achievable earned autonomy).
 
-        A mutant that lowers this would grant autonomy too easily.
+        Balance: High enough for security (>= 60), low enough to earn (<= 80).
         """
         config = ManasConfig()
-        assert config.karma_auto_execute_threshold == 90
-        assert config.karma_auto_execute_threshold >= 80  # At least 80
+        assert config.karma_auto_execute_threshold == 70
+        assert config.karma_auto_execute_threshold >= 60  # Security floor
+        assert config.karma_auto_execute_threshold <= 80  # Achievability ceiling
 
     def test_survival_first_default_is_true(self):
         """

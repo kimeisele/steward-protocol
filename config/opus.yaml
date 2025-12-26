@@ -256,7 +256,7 @@ manas:
 
   # OPUS-009: Karma Gate (Earned Autonomy)
   # High karma grants trust for LOW risk auto-execute
-  karma_auto_execute_threshold: 90  # Bhakti threshold for auto-execution
+  karma_auto_execute_threshold: 70  # OPUS-314: Lowered for earned autonomy
 
   # Safety limit: max autonomous actions per session
   max_autonomous_steps: 10

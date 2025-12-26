@@ -48,7 +48,8 @@ class ManasConfig:
 
     # Karma threshold for earned autonomy (0-100)
     # If karma >= this value, auto-execute LOW risk intents
-    karma_auto_execute_threshold: int = 90
+    # OPUS-314: Lowered from 90 to 70 for earned autonomy
+    karma_auto_execute_threshold: int = 70
 
     # =========================================================================
     # Intent Management
@@ -88,7 +89,7 @@ class ManasConfig:
             thinking_interval_minutes=data.get("thinking_interval_minutes", 60),
             idle_threshold_minutes=data.get("idle_threshold_minutes", 30),
             auto_execute_safe=data.get("auto_execute_safe", False),
-            karma_auto_execute_threshold=data.get("karma_auto_execute_threshold", 90),
+            karma_auto_execute_threshold=data.get("karma_auto_execute_threshold", 70),
             max_intent_buffer_size=data.get("max_intent_buffer_size", 10),
             intent_expiry_hours=data.get("intent_expiry_hours", 24),
             max_intents_per_tick=data.get("max_intents_per_tick", 3),

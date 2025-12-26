@@ -53,7 +53,10 @@ manas:
   # - Consistent successful executions
   # - Devotional practices (Bhakti - admitting mistakes, following TDD)
   # - Long-term system stability
-  karma_auto_execute_threshold: 90
+  # OPUS-314: Lowered from 90 to 70 to enable earned autonomy
+  # With success_reward: 5 and failure_penalty: -10,
+  # MANAS needs consistent wins to reach 70% karma
+  karma_auto_execute_threshold: 70
 
   # =========================================================================
   # Intent Management
