@@ -498,8 +498,26 @@ _event_bus_instance: Optional[EventBus] = None
 
 
 def get_event_bus() -> EventBus:
-    """Get the global event bus singleton"""
+    """
+    Get the global event bus singleton.
+
+    OPUS-311: Now integrates with ServiceRegistry for DI.
+    Priority: 1. ServiceRegistry, 2. Module singleton, 3. Create new.
+    """
     global _event_bus_instance
+
+    # OPUS-311: Try ServiceRegistry first (if kernel registered it)
+    try:
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.event import EventBusProtocol
+
+        registered = ServiceRegistry.get(EventBusProtocol)
+        if registered is not None:
+            return registered
+    except ImportError:
+        pass  # DI not available
+
+    # Fallback to module singleton
     if _event_bus_instance is None:
         _event_bus_instance = EventBus()
     return _event_bus_instance
