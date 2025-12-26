@@ -466,6 +466,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                     plugin_instance = self._plugins_map.get(plugin_id)
                     if plugin_instance:
                         self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
+
+            # OPUS-308: Register kernel-native SETTINGS.md
+            # SETTINGS.md is a kernel feature, not a plugin
+            self.manifestation.register_kernel_source(
+                output="SETTINGS.md",
+                schema="config_bidirectional",
+                data_getter=self._get_settings_manifestation_data,
+            )
         else:
             self._plugins = []
             self._plugins = []
@@ -1218,6 +1226,68 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 "top_hash": self._ledger.get_top_hash(),
             },
             "total_credits": total_credits,
+        }
+
+    def _get_settings_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Kernel-native data source for SETTINGS.md.
+
+        Returns data for the config_bidirectional schema sections:
+        - current: Current kernel configuration
+        - available: Available agents and their status
+        - history: Recent command execution history
+        """
+        # Current configuration
+        config = self._config or _get_config()
+        log_level = logging.getLevelName(logging.getLogger("VIBE_KERNEL").getEffectiveLevel())
+        verbose = getattr(self, "_verbose", False)
+        provider = "unknown"
+        mode = "simulation"
+
+        if config:
+            if hasattr(config, "llm"):
+                provider = getattr(config.llm, "provider", provider)
+            if hasattr(config, "runtime"):
+                mode = getattr(config.runtime, "mode", mode)
+
+        current = [
+            {"Setting": "`kernel.log_level`", "Value": f"`{log_level}`", "Description": "Logging verbosity"},
+            {"Setting": "`kernel.verbose`", "Value": f"`{verbose}`", "Description": "Verbose mode"},
+            {"Setting": "`provider`", "Value": f"`{provider}`", "Description": "LLM Provider"},
+            {"Setting": "`mode`", "Value": f"`{mode}`", "Description": "Execution Mode"},
+            {"Setting": "`agents`", "Value": f"`{len(self._agent_registry)}`", "Description": "Registered agents"},
+            {"Setting": "`plugins`", "Value": f"`{len(self._plugins)}`", "Description": "Loaded plugins"},
+        ]
+
+        # Available agents (from registry)
+        available = []
+        for agent_id in self._agent_registry.keys():
+            status = "ACTIVE"
+            # Check if paused via governance
+            if self.governance and hasattr(self.governance, "get_paused_agents"):
+                if agent_id in self.governance.get_paused_agents():
+                    status = "PAUSED"
+            available.append({"Agent": f"`{agent_id}`", "Status": status})
+
+        # History - get from ledger (last 10 events)
+        history = []
+        try:
+            events = self._ledger.get_all_events()[-10:]
+            for event in events:
+                history.append(
+                    {
+                        "Time": event.get("timestamp", "")[:19],
+                        "Type": event.get("event_type", "")[:20],
+                        "Agent": event.get("agent_id", "")[:15],
+                    }
+                )
+        except Exception:
+            pass
+
+        return {
+            "current": current,
+            "available": available,
+            "history": history,
         }
 
     def _process_ipc_events(self) -> None:
