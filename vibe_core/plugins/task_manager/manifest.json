@@ -53,6 +53,12 @@
       }
     ]
   },
+  "manifestation": {
+    "output": "TASKS.md",
+    "schema": "config_bidirectional",
+    "frequency": "tick",
+    "location": "root"
+  },
   "tags": [
     "tasks",
     "management",

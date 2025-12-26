@@ -803,6 +803,68 @@ Evidence:
 
         return result
 
+    # =========================================================================
+    # OPUS-308: Manifestation Protocol
+    # "The Paper is the Truth" - TASKS.md is manifested by this plugin
+    # =========================================================================
+
+    def get_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Return data for TASKS.md manifestation.
+
+        Maps to config_bidirectional schema sections:
+        - current: Active tasks summary
+        - available: Task queue metrics
+        - history: Recently completed tasks
+        """
+        stats = self.manager.get_stats()
+        all_tasks = self.manager.get_all_tasks()
+
+        # Current - active tasks
+        active = [t for t in all_tasks if t.status in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS)]
+        current = []
+        for t in active[:10]:
+            status_icon = "🔄" if t.status == TaskStatus.IN_PROGRESS else "⏳"
+            current.append(
+                {
+                    "Task": f"{status_icon} {t.title[:40]}",
+                    "Status": t.status.value if hasattr(t.status, "value") else str(t.status),
+                    "Type": getattr(t, "type", "general"),
+                }
+            )
+        if not current:
+            current = [{"Task": "_No active tasks_", "Status": "-", "Type": "-"}]
+
+        # Available - queue metrics
+        available = {
+            "Total Tasks": stats.get("total", 0),
+            "Pending": stats.get("pending", 0),
+            "In Progress": stats.get("in_progress", 0),
+            "Completed": stats.get("completed", 0),
+            "Failed": stats.get("failed", 0),
+            "Blocked": stats.get("blocked", 0),
+        }
+
+        # History - recently completed
+        completed = [t for t in all_tasks if t.status == TaskStatus.COMPLETED]
+        completed.sort(key=lambda x: getattr(x, "updated_at", ""), reverse=True)
+        history = []
+        for t in completed[:10]:
+            history.append(
+                {
+                    "Task": f"✅ {t.title[:35]}",
+                    "Completed": str(getattr(t, "updated_at", ""))[:16],
+                }
+            )
+        if not history:
+            history = [{"Task": "_No completed tasks_", "Completed": "-"}]
+
+        return {
+            "current": current,
+            "available": available,
+            "history": history,
+        }
+
     def cmd_tasks_next(self) -> Dict[str, Any]:
         """
         CLI Handler: steward tasks:next
