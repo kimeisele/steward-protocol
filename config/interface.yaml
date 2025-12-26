@@ -322,12 +322,12 @@ renderers:
     interval: 60
 
   # OPUS - Master AI Dashboard (SSOT for kernel work)
-  # ARCHITECTURE (CLEAN SEPARATION):
-  # - InterfacePlugin.OpusRenderer = FRONTEND (writes via kernel.io)
-  # - opus_assistant.OpusDashboardRenderer = BACKEND (provides DATA)
-  # - All writes go through kernel.io (single writer principle)
+  # ARCHITECTURE (OPUS-312 CLEANUP):
+  # - opus_assistant.on_pulse() owns OPUS.md via kernel.manifestation + StateMutation
+  # - InterfacePlugin's opus renderer is DISABLED (was redundant wrapper)
+  # - Single Writer: opus_assistant through proper kernel channels
   opus:
-    enabled: true  # Interface Plugin is the MASTER renderer
+    enabled: false  # OPUS-312: Disabled - opus_assistant owns OPUS.md via kernel.manifestation
     output: OPUS.md
     view_type: workspace
     interval: 30
