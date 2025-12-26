@@ -1,0 +1,29 @@
+{# OPUS-314: Git Status Template #}
+## Git Status
+
+**Branch:** `{{ branch | default('main') }}`
+**Clean:** {{ '✅ Yes' if clean else '⚠️ No' }}
+
+{% if staged %}
+### Staged Changes
+{% for f in staged %}
+- {{ f }}
+{% endfor %}
+{% endif %}
+
+{% if modified %}
+### Modified (Unstaged)
+{% for f in modified %}
+- {{ f }}
+{% endfor %}
+{% endif %}
+
+{% if untracked %}
+### Untracked
+{% for f in untracked[:10] %}
+- {{ f }}
+{% endfor %}
+{% if untracked | length > 10 %}
+- ... and {{ untracked | length - 10 }} more
+{% endif %}
+{% endif %}

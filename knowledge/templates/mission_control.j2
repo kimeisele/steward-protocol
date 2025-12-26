@@ -1,0 +1,23 @@
+{# OPUS-314: Mission Control Template #}
+## Mission Control
+
+### Active Missions
+{% if missions %}
+{% for m in missions %}
+| {{ m.priority | default('P2') }} | {{ m.name }} | {{ m.status | default('active') }} |
+{% endfor %}
+{% else %}
+_No active missions_
+{% endif %}
+
+### Task Queue
+| Priority | Task | Status | Agent |
+|----------|------|--------|-------|
+{% for t in tasks | default([]) %}
+| {{ t.priority }} | {{ t.name }} | {{ t.status }} | {{ t.agent | default('-') }} |
+{% endfor %}
+
+### System Health
+- **Kernel:** {{ kernel_status | default('UNKNOWN') }}
+- **Agents:** {{ agent_count | default(0) }} active
+- **Tasks:** {{ pending_count | default(0) }} pending

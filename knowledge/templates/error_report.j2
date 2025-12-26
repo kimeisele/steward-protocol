@@ -1,0 +1,27 @@
+{# OPUS-314: Error Report Template #}
+## Error Report
+
+**Type:** {{ error_type | default('Unknown') }}
+**Message:** {{ message }}
+**Timestamp:** {{ timestamp | default('now') }}
+
+{% if stack_trace %}
+### Stack Trace
+```
+{{ stack_trace }}
+```
+{% endif %}
+
+{% if context %}
+### Context
+{% for key, value in context.items() %}
+- **{{ key }}:** {{ value }}
+{% endfor %}
+{% endif %}
+
+{% if suggestions %}
+### Suggested Actions
+{% for s in suggestions %}
+- {{ s }}
+{% endfor %}
+{% endif %}

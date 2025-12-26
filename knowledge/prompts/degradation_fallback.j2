@@ -1,0 +1,11 @@
+{# OPUS-314: Degradation Fallback Prompt (German) #}
+Das System arbeitet im eingeschränkten Modus.
+
+Anfrage: {{ request }}
+
+Verfügbare Funktionen:
+{% for func in available_functions | default(['basic_response']) %}
+- {{ func }}
+{% endfor %}
+
+Bitte antworte so hilfreich wie möglich mit den verfügbaren Ressourcen.

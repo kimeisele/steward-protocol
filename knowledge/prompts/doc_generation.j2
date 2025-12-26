@@ -1,0 +1,13 @@
+{# OPUS-314: Documentation Generation Prompt #}
+Generate documentation for this code.
+
+Code:
+```{{ language | default('python') }}
+{{ code }}
+```
+
+Include:
+- Purpose and philosophy
+- Usage examples
+- API reference
+- @HARNESS section if applicable

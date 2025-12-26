@@ -1,0 +1,17 @@
+{# OPUS-314: Plugin Status Template #}
+## Plugin Status
+
+**Loaded:** {{ loaded_count | default(0) }} / {{ total_count | default(0) }}
+
+| Plugin | Status | Version |
+|--------|--------|---------|
+{% for p in plugins | default([]) %}
+| {{ p.name }} | {{ '✅' if p.loaded else '❌' }} {{ p.status | default('unknown') }} | {{ p.version | default('-') }} |
+{% endfor %}
+
+{% if errors %}
+### Load Errors
+{% for e in errors %}
+- **{{ e.plugin }}**: {{ e.message }}
+{% endfor %}
+{% endif %}

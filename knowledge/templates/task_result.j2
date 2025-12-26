@@ -1,0 +1,24 @@
+{# OPUS-314: Task Result Template #}
+## Task Result: {{ task_name | default('Unnamed Task') }}
+
+**Status:** {{ '✅' if success else '❌' }} {{ status | default('Unknown') }}
+**Duration:** {{ duration_ms | default(0) }}ms
+
+{% if result %}
+### Output
+{{ result }}
+{% endif %}
+
+{% if errors %}
+### Errors
+{% for e in errors %}
+- {{ e }}
+{% endfor %}
+{% endif %}
+
+{% if next_steps %}
+### Next Steps
+{% for step in next_steps %}
+1. {{ step }}
+{% endfor %}
+{% endif %}

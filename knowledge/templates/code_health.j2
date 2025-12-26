@@ -1,0 +1,20 @@
+{# OPUS-314: Code Health Template #}
+## Code Health
+
+**Total Issues:** {{ total | default(0) }}
+
+| Type | Count |
+|------|-------|
+| TODO | {{ todo_count | default(0) }} |
+| HACK | {{ hack_count | default(0) }} |
+| FIXME | {{ fixme_count | default(0) }} |
+
+{% if issues %}
+### Issues
+{% for issue in issues[:20] %}
+- `{{ issue.file }}:{{ issue.line }}` - {{ issue.text | truncate(60) }}
+{% endfor %}
+{% if issues | length > 20 %}
+_...and {{ issues | length - 20 }} more_
+{% endif %}
+{% endif %}
