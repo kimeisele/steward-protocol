@@ -68,48 +68,12 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("MANAS.Kernel")
 
-# ⚡ PHOENIX INJECTION: Import ManasConfig from Phoenix section (Dharma)
-# This ensures MANAS uses the same config structure as Phoenix defines
-try:
-    from vibe_core.phoenix.sections.manas import ManasConfig
+# ⚡ PHOENIX INJECTION: ManasConfig from Phoenix section (Dharma)
+# OPUS-314: NO LOCAL FALLBACK - Phoenix is REQUIRED
+# Config values come from config/manas.yaml via Phoenix, nowhere else
+from vibe_core.phoenix.sections.manas import ManasConfig
 
-    logger.debug("⚡ MANAS: Using ManasConfig from Phoenix section (Dharma)")
-except ImportError:
-    # Fallback: Define locally if Phoenix not available
-    @dataclass
-    class ManasConfig:
-        """Configuration for MANAS Cognitive Kernel (Local Fallback)."""
-
-        # Thinking rate limit (minimum time between thought cycles)
-        # OPUS-174: Was 60 (lobotomy!), now 10min for responsiveness
-        thinking_interval_minutes: int = 10
-
-        # Idle threshold (activate MANAS after this much idle time)
-        # OPUS-174: Was 30, now 5min for faster idle detection
-        idle_threshold_minutes: int = 5
-
-        # Auto-execute safe intents without approval?
-        auto_execute_safe: bool = False  # Conservative default
-
-        # Max intents to keep in buffer
-        max_intent_buffer_size: int = 10
-
-        # Intent expiry (hours)
-        intent_expiry_hours: int = 24
-
-        # KARMA GATE: Threshold for earned autonomy (0-100)
-        # High karma (Bhakti + success) grants trust for LOW risk auto-execute
-        karma_auto_execute_threshold: int = 90
-
-        # OPUS-035: Intent Throttling - Don't overwhelm the human
-        # Max intents to generate per tick (prioritize CRITICAL/HIGH over LOW)
-        max_intents_per_tick: int = 3
-
-        # OPUS-035: Prioritize survival over growth
-        # If True, CRITICAL/ERROR intents are processed before GENESIS intents
-        survival_first: bool = True
-
-    logger.warning("⚠️ MANAS: Phoenix section not available, using local ManasConfig fallback")
+logger.debug("⚡ MANAS: Using ManasConfig from Phoenix section (Dharma)")
 
 
 @dataclass
