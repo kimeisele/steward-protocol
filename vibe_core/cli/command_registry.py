@@ -358,6 +358,7 @@ class CommandRegistry:
             Dict with counts per system
         """
         results = {
+            "core": self.register_core_commands(),  # OPUS-310 core commands
             "manifests": self.scan_manifests(),
             "cartridge_tools": self.scan_cartridge_tools(),
             "tool_registry": self.scan_tool_registry(),

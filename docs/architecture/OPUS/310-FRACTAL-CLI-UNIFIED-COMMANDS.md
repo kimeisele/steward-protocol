@@ -1,9 +1,22 @@
 # OPUS-310: Fractal CLI - Unified Command Protocol
 
-**Status:** PROPOSED
+**Status:** PHASE 1-3 COMPLETE, PHASE 4 IN PROGRESS
 **Depends:** OPUS-309 (CognitiveProtocol)
 **Author:** Claude Opus 4.5
 **Date:** 2025-12-26
+**Updated:** 2025-12-26
+
+## Implementation Status
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | CommandProtocol + Registry | ✅ COMPLETE |
+| 2 | Manifest Integration | ✅ COMPLETE |
+| 3 | Unified Discovery (5 systems) | ✅ COMPLETE |
+| 4 | MANAS Intent-to-Command | 🔄 IN PROGRESS |
+| 5 | Holon Commands | ⏳ PENDING |
+
+**Current Stats:** 159 commands from 5 execution systems
 
 ## The Vision
 
@@ -266,3 +279,204 @@ ManifestRegistry (scanning) → CommandRegistry (exposing) → CLI (executing)
 ```
 
 This is the missing link.
+
+---
+
+## Phase 4: Intent-to-Command (MANAS Awareness)
+
+### The Problem
+
+Currently `steward chat` returns generic responses even when a command exists:
+
+```
+User: "show me all agents"
+MANAS: "I am an assistant that can help with..." (generic chat)
+
+# But we HAVE the command:
+agents.list → "List all registered agents"
+```
+
+### The Solution: IntentMatcherProtocol
+
+PROMPT.md: "Protocol statt konkrete Klassen"
+
+```python
+# vibe_core/protocols/intent.py
+
+@runtime_checkable
+class IntentMatcherProtocol(Protocol):
+    """
+    GAD-000: AI operates the system on behalf of human.
+
+    Matches natural language intent to available commands.
+    No hardcoding. Everything via CommandRegistry.
+    """
+
+    def match(self, intent: str, commands: List[CommandInfo]) -> List[IntentMatch]:
+        """
+        Match intent to commands.
+
+        Returns ranked list of matches with confidence scores.
+        """
+        ...
+
+    def extract_params(self, intent: str, command: CommandInfo) -> Dict[str, Any]:
+        """
+        Extract parameters from natural language.
+
+        E.g., "show agent status for worker-1" → {"agent_id": "worker-1"}
+        """
+        ...
+```
+
+### IntentMatch Result
+
+```python
+@dataclass
+class IntentMatch:
+    """Result of intent matching."""
+
+    command: CommandInfo        # The matched command
+    confidence: float           # 0.0 - 1.0
+    extracted_params: Dict      # Parameters extracted from intent
+    reasoning: str              # Why this match was chosen
+```
+
+### Matching Strategy (No LLM Required)
+
+```python
+class CommandAwareIntentMatcher:
+    """
+    Semantic matching using command metadata.
+
+    No LLM calls - pure pattern matching on:
+    - Command names (fuzzy match)
+    - Command descriptions (keyword extraction)
+    - Command tags (exact match)
+    - Command parameters (slot filling)
+    """
+
+    def match(self, intent: str, commands: List[CommandInfo]) -> List[IntentMatch]:
+        matches = []
+
+        # Tokenize intent
+        tokens = self._tokenize(intent)
+
+        for cmd in commands:
+            score = 0.0
+
+            # Name matching (highest weight)
+            name_score = self._fuzzy_match(tokens, cmd.name.split("."))
+            score += name_score * 0.4
+
+            # Description matching
+            desc_score = self._keyword_match(tokens, cmd.description)
+            score += desc_score * 0.3
+
+            # Tag matching
+            tag_score = self._tag_match(tokens, cmd.tags)
+            score += tag_score * 0.3
+
+            if score > 0.3:  # Threshold
+                matches.append(IntentMatch(
+                    command=cmd,
+                    confidence=score,
+                    extracted_params=self._extract_params(intent, cmd),
+                    reasoning=self._explain_match(cmd, score),
+                ))
+
+        return sorted(matches, key=lambda m: m.confidence, reverse=True)
+```
+
+### Integration with MANASCognitive
+
+```python
+class MANASCognitive:
+    """
+    OPUS-309 + OPUS-310 Phase 4
+
+    Now aware of CommandRegistry.
+    """
+
+    def __init__(self, ...):
+        ...
+        self._intent_matcher: IntentMatcherProtocol = None  # Injected
+
+    async def process_intent(self, intent: str, context: CognitiveContext) -> CognitiveResult:
+        # Phase 4: Try command matching FIRST
+        if self._intent_matcher and self._command_registry:
+            commands = self._command_registry.list_commands()
+            matches = self._intent_matcher.match(intent, commands)
+
+            if matches:
+                best = matches[0]
+
+                # High confidence → Execute
+                if best.confidence >= 0.8:
+                    return CognitiveResult(
+                        intent_type=IntentType.EXECUTE,
+                        syscall_type=best.command.name,
+                        syscall_params=best.extracted_params,
+                        confidence=best.confidence,
+                        reasoning=best.reasoning,
+                    )
+
+                # Medium confidence → Suggest
+                elif best.confidence >= 0.5:
+                    suggestions = [m.command.name for m in matches[:3]]
+                    return CognitiveResult(
+                        intent_type=IntentType.QUERY,
+                        response=f"Did you mean: {', '.join(suggestions)}?",
+                        alternatives=suggestions,
+                        confidence=best.confidence,
+                    )
+
+        # Fall back to JnanaHandler chat
+        return await self._generate_jnana_response(intent, context)
+```
+
+### Execution Flow
+
+```
+User: "show all agents"
+         │
+         ▼
+MANASCognitive.process_intent()
+         │
+         ├─→ IntentMatcher.match("show all agents", 159 commands)
+         │   ├─→ "agents.list" (confidence: 0.85) ✓
+         │   ├─→ "agents.status" (confidence: 0.60)
+         │   └─→ "city.citizens" (confidence: 0.40)
+         │
+         ▼
+High confidence (0.85) → EXECUTE
+         │
+         ▼
+CognitiveResult(intent_type=EXECUTE, syscall="agents.list")
+         │
+         ▼
+Kernel executes → CommandRegistry.execute("agents.list")
+         │
+         ▼
+Output shown to user
+```
+
+### Success Criteria (Phase 4)
+
+1. `steward chat "list agents"` → Executes `agents.list`
+2. `steward chat "run tests"` → Executes `test.run`
+3. `steward chat "what can herald do?"` → Suggests `herald.*` commands
+4. No hardcoded command mappings
+5. Works with all 159+ commands via CommandRegistry
+
+### The Ouroboros Complete
+
+With Phase 4:
+- MANAS sees all commands (via CommandRegistry)
+- MANAS matches intents to commands (via IntentMatcher)
+- MANAS executes via unified protocol (via CognitiveResult)
+- User speaks naturally, system acts precisely
+
+```
+YANTRA (Protocol) + MANTRA (Intent) + SHAKTI (Registry) = SIDDHI (Intelligent CLI)
+```
