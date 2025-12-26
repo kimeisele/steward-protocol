@@ -149,28 +149,27 @@ class MANASCognitive:
             return "[JnanaHandler not available]"
 
         try:
-            # Build context for JnanaHandler
-            jnana_context = {
-                "kernel_status": context.kernel_status,
-                "active_agents": context.active_agents,
-                "pending_tasks": context.pending_tasks,
-                "session_id": context.session_id,
-            }
+            # JnanaHandler.handle() takes SamvadaMessage, not (prompt, context)
+            from .manas.cortex.samvada import SamvadaMessage
 
-            # JnanaHandler.handle() or similar method
-            if hasattr(jnana, "handle_async"):
-                response = await jnana.handle_async(prompt, jnana_context)
-            elif hasattr(jnana, "handle"):
-                response = jnana.handle(prompt, jnana_context)
-            else:
-                # Direct chat method
-                from .manas.cortex.samvada import SamvadaMessage
+            # Build message with context in metadata
+            msg = SamvadaMessage(
+                content=prompt,
+                msg_type="chat",
+                metadata={
+                    "kernel_status": context.kernel_status,
+                    "active_agents": context.active_agents,
+                    "pending_tasks": context.pending_tasks,
+                    "session_id": context.session_id,
+                },
+            )
 
-                msg = SamvadaMessage(content=prompt, msg_type="chat")
-                response = await jnana.process_message(msg)
-                if hasattr(response, "content"):
-                    response = response.content
+            # JnanaHandler.handle() is async and takes SamvadaMessage
+            response = await jnana.handle(msg)
 
+            # Extract content from SamvadaResponse
+            if hasattr(response, "content"):
+                return str(response.content)
             return str(response)
         except Exception as e:
             logger.error(f"🧠 JnanaHandler error: {e}")

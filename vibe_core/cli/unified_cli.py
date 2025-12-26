@@ -958,7 +958,7 @@ class UnifiedCLI:
                 print("   Upgrade to OPUS-309 or later.")
                 return 1
 
-            from vibe_core.protocols.cognition import CognitiveIntentType
+            from vibe_core.protocols.cognition import IntentType as CognitiveIntentType
 
             result = asyncio.run(kernel.process_operator_input(message))
 
