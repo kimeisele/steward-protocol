@@ -45,6 +45,17 @@ from .event import (
 
 # OPUS-307 D.2: External Service Protocols
 from .external import RedditProtocol, TwitterProtocol
+from .feedback import (
+    FailurePattern,
+    FeedbackProtocol,
+    FeedbackStats,
+    InMemoryFeedback,
+    NullFeedback,
+    Signal,
+    SignalType,
+    SuccessPattern,
+    get_feedback_safe,
+)
 from .ledger import (
     KernelStatus,
     VibeKernel,
@@ -67,6 +78,17 @@ from .manifestation import (
     SectionOwnership,
     SemanticUIProtocol,
 )
+
+# OPUS-311 Sprint 3: Autonomy Protocols
+from .memory import (
+    Entity,
+    InMemoryMemory,
+    MemoryEntry,
+    MemoryProtocol,
+    MemoryStats,
+    NullMemory,
+    get_memory_safe,
+)
 from .operator_protocol import (
     GitState,
     IntentType,
@@ -82,12 +104,36 @@ from .operator_protocol import (
     create_system_context,
 )
 from .opus import OpusAssistantProtocol
+from .reflection import (
+    BasicReflection,
+    ExecutionRecord,
+    Insight,
+    InsightType,
+    NullReflection,
+    Proposal,
+    ProposalStatus,
+    ProposalType,
+    ReflectionProtocol,
+    ReflectionStats,
+    get_reflection_safe,
+)
 from .registry import ManifestRegistry  # Canonical source for ManifestRegistry
 from .state import (
     PrakritiProtocol,
     StateServiceProtocol,
     StateSyncHolonProtocol,
     StateSyncWeaverProtocol,
+)
+from .synapse import (
+    Connection,
+    LocalSynapse,
+    MessagePriority,
+    MessageType,
+    NullSynapse,
+    SynapseMessage,
+    SynapseProtocol,
+    SynapseStats,
+    get_synapse_safe,
 )
 
 # Universal Testable Protocol
@@ -197,4 +243,44 @@ __all__ = [
     "NullEventBus",
     "create_event",
     "get_event_bus_safe",
+    # OPUS-311 Sprint 3: Memory Protocol
+    "MemoryProtocol",
+    "MemoryEntry",
+    "MemoryStats",
+    "Entity",
+    "NullMemory",
+    "InMemoryMemory",
+    "get_memory_safe",
+    # OPUS-311 Sprint 3: Reflection Protocol
+    "ReflectionProtocol",
+    "ExecutionRecord",
+    "Insight",
+    "InsightType",
+    "Proposal",
+    "ProposalType",
+    "ProposalStatus",
+    "ReflectionStats",
+    "NullReflection",
+    "BasicReflection",
+    "get_reflection_safe",
+    # OPUS-311 Sprint 3: Synapse Protocol
+    "SynapseProtocol",
+    "SynapseMessage",
+    "SynapseStats",
+    "Connection",
+    "MessageType",
+    "MessagePriority",
+    "NullSynapse",
+    "LocalSynapse",
+    "get_synapse_safe",
+    # OPUS-311 Sprint 3: Feedback Protocol
+    "FeedbackProtocol",
+    "Signal",
+    "SignalType",
+    "FailurePattern",
+    "SuccessPattern",
+    "FeedbackStats",
+    "NullFeedback",
+    "InMemoryFeedback",
+    "get_feedback_safe",
 ]
