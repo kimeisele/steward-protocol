@@ -40,7 +40,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
 
 from vibe_core.protocols.manifestation import (
     ManifestationDeclaration,
@@ -232,6 +232,17 @@ class RegisteredManifestation:
     plugin_instance: Any  # The actual plugin object
 
 
+@dataclass
+class KernelSource:
+    """A kernel-native manifestation (no plugin required)."""
+
+    output: str  # Filename: "SETTINGS.md"
+    schema: str  # Schema from 308-SCHEMAS.yaml
+    data_getter: Callable[[], Dict[str, Any]]  # Lambda that returns section data
+    frequency: str = "tick"
+    location: str = "root"
+
+
 # =============================================================================
 # MANIFESTATION SERVICE - THE CORE SERVICE
 # =============================================================================
@@ -271,6 +282,9 @@ class ManifestationService:
 
         # Registered manifestations (populated when plugins boot)
         self._registered: Dict[str, RegisteredManifestation] = {}
+
+        # Kernel-native sources (no plugin required)
+        self._kernel_sources: Dict[str, KernelSource] = {}
 
         # Schemas (loaded from YAML)
         self._schemas: Dict[str, List[SchemaSection]] = {}
@@ -348,6 +362,57 @@ class ManifestationService:
             logger.debug(f"Unregistered manifestation: {plugin_id}")
 
     # =========================================================================
+    # KERNEL-NATIVE REGISTRATION (No plugin required)
+    # =========================================================================
+
+    def register_kernel_source(
+        self,
+        output: str,
+        schema: str,
+        data_getter: Callable[[], Dict[str, Any]],
+        frequency: str = "tick",
+        location: str = "root",
+    ) -> bool:
+        """
+        Register a kernel-native manifestation.
+
+        For things like SETTINGS.md that are part of the kernel itself,
+        not a plugin. The kernel provides a lambda that returns the data.
+
+        Args:
+            output: Filename (e.g., "SETTINGS.md")
+            schema: Schema name from 308-SCHEMAS.yaml
+            data_getter: Callable that returns section data dict
+            frequency: "tick" | "on_change" | "manual"
+            location: "root" | ".vibe" | custom path
+
+        Returns:
+            True if registered successfully
+        """
+        # Validate schema exists
+        if schema not in self._schemas:
+            logger.warning(f"Unknown schema '{schema}' for {output}, using config_bidirectional")
+            schema = "config_bidirectional"
+
+        source = KernelSource(
+            output=output,
+            schema=schema,
+            data_getter=data_getter,
+            frequency=frequency,
+            location=location,
+        )
+
+        self._kernel_sources[output] = source
+        logger.info(f"Registered kernel source: {output} (schema: {schema})")
+        return True
+
+    def unregister_kernel_source(self, output: str) -> None:
+        """Unregister a kernel-native source."""
+        if output in self._kernel_sources:
+            del self._kernel_sources[output]
+            logger.debug(f"Unregistered kernel source: {output}")
+
+    # =========================================================================
     # MANIFESTATION CYCLE (Called on kernel tick)
     # =========================================================================
 
@@ -355,11 +420,12 @@ class ManifestationService:
         """
         Manifestation tick - called from kernel tick.
 
-        For each registered plugin with frequency="tick":
-        1. Get data from plugin
+        For each registered source with frequency="tick":
+        1. Get data from source (plugin or kernel)
         2. Render to Markdown
         3. Write atomically
         """
+        # Plugin manifestations
         for plugin_id, reg in self._registered.items():
             if reg.declaration.frequency != "tick":
                 continue
@@ -368,6 +434,16 @@ class ManifestationService:
                 self._manifest_plugin(reg)
             except Exception as e:
                 logger.error(f"Manifestation failed for {plugin_id}: {e}")
+
+        # Kernel-native manifestations
+        for output, source in self._kernel_sources.items():
+            if source.frequency != "tick":
+                continue
+
+            try:
+                self._manifest_kernel_source(source)
+            except Exception as e:
+                logger.error(f"Manifestation failed for {output}: {e}")
 
     def _manifest_plugin(self, reg: RegisteredManifestation) -> None:
         """Manifest a single plugin."""
@@ -393,6 +469,32 @@ class ManifestationService:
 
         # Update @LIVE sections
         live_sections = self._format_data_for_sections(reg.declaration.schema, data)
+        self.update_live_sections(output_path, live_sections)
+
+    def _manifest_kernel_source(self, source: KernelSource) -> None:
+        """Manifest a kernel-native source."""
+        # Get output path
+        if source.location == "root":
+            output_path = self._workspace / source.output
+        elif source.location == ".vibe":
+            output_path = self._workspace / ".vibe" / source.output
+        else:
+            output_path = self._workspace / source.location / source.output
+
+        # Get data from kernel lambda
+        try:
+            data = source.data_getter()
+        except Exception as e:
+            logger.error(f"data_getter() failed for {source.output}: {e}")
+            data = {"status": {"error": str(e)}}
+
+        # Check if file exists, spawn if not
+        if not output_path.exists():
+            self.spawn(output_path, source.schema, data)
+            return
+
+        # Update @LIVE sections
+        live_sections = self._format_data_for_sections(source.schema, data)
         self.update_live_sections(output_path, live_sections)
 
     def _format_data_for_sections(self, schema: str, data: Dict[str, Any]) -> Dict[str, str]:
@@ -812,6 +914,7 @@ See trace_id `{trace_id}` for details."""
         """Get manifestation service status."""
         return {
             "registered_plugins": list(self._registered.keys()),
+            "kernel_sources": list(self._kernel_sources.keys()),
             "schemas_loaded": list(self._schemas.keys()),
             "manifestations_indexed": len(self._index.all_manifestations()),
         }
