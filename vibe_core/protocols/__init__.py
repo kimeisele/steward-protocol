@@ -31,6 +31,21 @@ from .ledger import (
     VibeScheduler,
 )
 from .llm import LLMProtocol
+
+# OPUS-308: Manifestation Protocol
+from .manifestation import (
+    ChangeDetectorProtocol,
+    Command,
+    ManifestationConfig,
+    ManifestationProtocol,
+    ManifestationState,
+    ManifestationType,
+    ManifestHeader,
+    ManifestIndexProtocol,
+    Section,
+    SectionOwnership,
+    SemanticUIProtocol,
+)
 from .operator_protocol import (
     GitState,
     IntentType,
@@ -129,4 +144,16 @@ __all__ = [
     "CLIResult",
     "CLIRegistry",
     "register_cli",
+    # OPUS-308: Manifestation Protocol
+    "SectionOwnership",
+    "ManifestationType",
+    "ManifestationState",
+    "Section",
+    "ManifestHeader",
+    "ManifestationConfig",
+    "Command",
+    "ManifestationProtocol",
+    "ManifestIndexProtocol",
+    "ChangeDetectorProtocol",
+    "SemanticUIProtocol",
 ]
