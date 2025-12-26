@@ -29,7 +29,10 @@ class ParameterType(Enum):
     STRING = "string"
     INTEGER = "integer"
     BOOLEAN = "boolean"
+    BOOL = "bool"  # Alias for BOOLEAN (legacy manifest format)
     FLOAT = "float"
+    INT = "int"  # Alias for INTEGER (legacy manifest format)
+    STR = "str"  # Alias for STRING (legacy manifest format)
     OBJECT = "object"
     ARRAY = "array"
 
