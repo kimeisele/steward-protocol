@@ -46,6 +46,7 @@ class ManifestCommandSpec:
     description: str = ""
     protocol: Optional[str] = None
     method: Optional[str] = None
+    handler: Optional[str] = None  # Legacy format: "cmd_opus_status"
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     source: str = "manifest"
 
@@ -204,34 +205,85 @@ class CommandRegistry:
             return 0
 
     def _extract_commands(self, manifest: Dict[str, Any], source: str) -> int:
-        """Extract commands from a manifest."""
-        commands = manifest.get("commands", [])
+        """
+        Extract commands from a manifest.
+
+        Supports two formats:
+        1. New format: top-level "commands" array
+        2. Legacy format: "cli.commands" with namespace
+
+        Both are converted to CommandProtocol implementations.
+        """
         count = 0
 
+        # Format 1: Top-level "commands" array (new OPUS-310 format)
+        commands = manifest.get("commands", [])
         for cmd_spec in commands:
-            if not isinstance(cmd_spec, dict):
-                continue
+            if self._register_command_spec(cmd_spec, source):
+                count += 1
 
-            name = cmd_spec.get("name")
-            if not name:
-                continue
-
-            spec = ManifestCommandSpec(
-                name=name,
-                description=cmd_spec.get("description", ""),
-                protocol=cmd_spec.get("protocol"),
-                method=cmd_spec.get("method"),
-                parameters=cmd_spec.get("parameters", []),
-                source=source,
-            )
-
-            # Create command without executor (pending wiring)
-            command = ManifestCommand(spec)
-            self._commands[name] = command
-            self._pending_wiring[name] = spec
-            count += 1
+        # Format 2: "cli.commands" with namespace (existing format)
+        cli_section = manifest.get("cli", {})
+        if cli_section and "commands" in cli_section:
+            namespace = cli_section.get("namespace", "")
+            for cmd_spec in cli_section.get("commands", []):
+                # Prefix with namespace if present
+                if namespace and "name" in cmd_spec:
+                    cmd_spec = dict(cmd_spec)  # Copy to avoid mutation
+                    cmd_spec["name"] = f"{namespace}.{cmd_spec['name']}"
+                if self._register_command_spec(cmd_spec, source, cli_section):
+                    count += 1
 
         return count
+
+    def _register_command_spec(
+        self,
+        cmd_spec: Dict[str, Any],
+        source: str,
+        cli_section: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """Register a single command specification."""
+        if not isinstance(cmd_spec, dict):
+            return False
+
+        name = cmd_spec.get("name")
+        if not name:
+            return False
+
+        # Already registered? Skip
+        if name in self._commands:
+            return False
+
+        # Convert args to parameters format
+        parameters = []
+        for arg in cmd_spec.get("args", cmd_spec.get("parameters", [])):
+            if isinstance(arg, dict):
+                parameters.append(
+                    {
+                        "name": arg.get("name", "arg"),
+                        "type": arg.get("type", "string"),
+                        "required": arg.get("required", False),
+                        "default": arg.get("default"),
+                        "description": arg.get("help", arg.get("description", "")),
+                    }
+                )
+
+        spec = ManifestCommandSpec(
+            name=name,
+            description=cmd_spec.get("help", cmd_spec.get("description", "")),
+            protocol=cmd_spec.get("protocol"),
+            method=cmd_spec.get("method"),
+            handler=cmd_spec.get("handler"),  # Legacy format uses handler
+            parameters=parameters,
+            source=source,
+        )
+
+        # Create command without executor (pending wiring)
+        command = ManifestCommand(spec)
+        self._commands[name] = command
+        self._pending_wiring[name] = spec
+
+        return True
 
     def wire_command(
         self,
@@ -256,6 +308,130 @@ class CommandRegistry:
             return True
 
         return False
+
+    def wire_from_plugins(self, plugins: Any) -> int:
+        """
+        Wire pending commands to their handlers in loaded plugins.
+
+        Looks for 'handler' in pending specs and finds the method
+        in the corresponding plugin.
+
+        Args:
+            plugins: List or Dict of plugins
+
+        Returns:
+            Number of commands wired
+        """
+        # Convert list to dict by plugin id
+        if isinstance(plugins, list):
+            plugins_dict: Dict[str, Any] = {}
+            for p in plugins:
+                # Try various ways to get plugin id
+                plugin_id = getattr(p, "id", None)
+                if not plugin_id:
+                    plugin_id = getattr(p, "plugin_id", None)
+                if not plugin_id:
+                    # Try to extract from class name (e.g., OpusAssistantPlugin -> opus_assistant)
+                    class_name = type(p).__name__
+                    if class_name.endswith("Plugin"):
+                        # Convert CamelCase to snake_case
+                        import re
+
+                        plugin_id = re.sub(r"(?<!^)(?=[A-Z])", "_", class_name[:-6]).lower()
+                if plugin_id:
+                    plugins_dict[plugin_id] = p
+            plugins = plugins_dict
+
+        wired = 0
+
+        for name, spec in list(self._pending_wiring.items()):
+            if not spec.handler:
+                continue
+
+            # Extract plugin id from source (e.g., "plugin:opus_assistant")
+            source_parts = spec.source.split(":")
+            if len(source_parts) != 2 or source_parts[0] != "plugin":
+                continue
+
+            plugin_id = source_parts[1]
+            plugin = plugins.get(plugin_id)
+
+            if not plugin:
+                continue
+
+            # Find handler method on plugin
+            handler_method = getattr(plugin, spec.handler, None)
+            if handler_method and callable(handler_method):
+                # Create async wrapper if needed
+                async def make_executor(method, cmd_name):
+                    async def executor(args: List[str], context: CommandContext) -> CommandResult:
+                        try:
+                            # Call the handler - most are sync
+                            import asyncio
+
+                            if asyncio.iscoroutinefunction(method):
+                                result = await method(args)
+                            else:
+                                result = method(args)
+
+                            # Convert to CommandResult
+                            if isinstance(result, CommandResult):
+                                return result
+                            elif isinstance(result, int):
+                                return CommandResult(
+                                    success=result == 0,
+                                    exit_code=result,
+                                )
+                            elif isinstance(result, str):
+                                return CommandResult(success=True, output=result)
+                            else:
+                                return CommandResult(success=True, output=str(result))
+                        except Exception as e:
+                            return CommandResult(success=False, error=str(e))
+
+                    return executor
+
+                # Wire it
+                import asyncio
+
+                executor = (
+                    asyncio.get_event_loop().run_until_complete(make_executor(handler_method, name))
+                    if False
+                    else self._create_executor(handler_method)
+                )
+
+                if self.wire_command(name, executor):
+                    wired += 1
+                    logger.debug(f"Wired {name} -> {plugin_id}.{spec.handler}")
+
+        if wired:
+            logger.info(f"[COMMAND.REGISTRY] Wired {wired} commands from plugins")
+
+        return wired
+
+    def _create_executor(self, method: Callable) -> Callable:
+        """Create an async executor wrapper for a handler method."""
+        import asyncio
+
+        async def executor(args: List[str], context: CommandContext) -> CommandResult:
+            try:
+                if asyncio.iscoroutinefunction(method):
+                    result = await method(args)
+                else:
+                    result = method(args)
+
+                if isinstance(result, CommandResult):
+                    return result
+                elif isinstance(result, int):
+                    return CommandResult(success=result == 0, exit_code=result)
+                elif isinstance(result, str):
+                    return CommandResult(success=True, output=result)
+                else:
+                    return CommandResult(success=True, output=str(result) if result else "OK")
+            except Exception as e:
+                return CommandResult(success=False, error=str(e))
+
+        return executor
 
     def get(self, name: str) -> Optional[CommandProtocol]:
         """Get command by name."""
