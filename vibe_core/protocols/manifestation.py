@@ -452,12 +452,20 @@ class ManifestationDeclaration:
             "schema": "agent_standard",
             "frequency": "tick"
         }
+
+    For complex UIs (like OPUS.md), use a Jinja2 template:
+        "manifestation": {
+            "output": "OPUS.md",
+            "schema": "opus_dashboard",
+            "template": "vibe_core/plugins/opus_assistant/templates/opus_dashboard.md.j2"
+        }
     """
 
     output: str  # Filename: "ENVOY.md"
     schema: str  # Schema from 308-SCHEMAS.yaml
     frequency: str = "tick"  # "tick" | "on_change" | "manual"
     location: str = "root"  # "root" | ".vibe" | custom path
+    template: Optional[str] = None  # Jinja2 template path (for complex UIs)
 
 
 class Manifestable(Protocol):

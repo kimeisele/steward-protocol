@@ -42,6 +42,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
 
+# Lazy Jinja2 import for template support
+_jinja2_env = None
+
 from vibe_core.protocols.manifestation import (
     ManifestationDeclaration,
     ManifestationProtocol,
@@ -431,6 +434,7 @@ class ManifestationService:
                 schema=manifestation_config.get("schema", "agent_standard"),
                 frequency=manifestation_config.get("frequency", "tick"),
                 location=manifestation_config.get("location", "root"),
+                template=manifestation_config.get("template"),  # Jinja2 template path
             )
         except Exception as e:
             logger.error(f"Invalid manifestation config for {plugin_id}: {e}")
@@ -622,6 +626,11 @@ class ManifestationService:
             logger.error(f"get_manifestation_data() failed for {reg.plugin_id}: {e}")
             data = {"status": f"ERROR: {e}"}
 
+        # TEMPLATE RENDERING: If plugin has a Jinja2 template, use that
+        if reg.declaration.template:
+            self._manifest_with_template(output_path, reg.declaration.template, data)
+            return
+
         # Check if file exists, spawn if not
         if not output_path.exists():
             self.spawn(output_path, reg.declaration.schema, data)
@@ -630,6 +639,67 @@ class ManifestationService:
         # Update @LIVE sections
         live_sections = self._format_data_for_sections(reg.declaration.schema, data)
         self.update_live_sections(output_path, live_sections)
+
+    def _manifest_with_template(
+        self,
+        output_path: Path,
+        template_path: str,
+        data: Dict[str, Any],
+    ) -> None:
+        """
+        Manifest using Jinja2 template (for complex UIs like OPUS.md).
+
+        Template-based manifestations:
+        1. Render entire document with Jinja2
+        2. Preserve @HUMAN sections from existing file
+        3. Write atomically
+
+        The template has full control over document structure.
+        @HUMAN sections are injected back after rendering.
+        """
+        # Render with template
+        rendered = self.render_with_template(template_path, data)
+        if rendered is None:
+            logger.error(f"Template rendering failed: {template_path}")
+            return
+
+        # If file exists, preserve @HUMAN sections
+        if output_path.exists():
+            try:
+                existing = output_path.read_text(encoding="utf-8")
+                existing_sections = self._parse_sections(existing)
+
+                # Find @HUMAN sections in existing file
+                human_sections = {
+                    sid: sec
+                    for sid, sec in existing_sections.items()
+                    if sec.owner in (SectionOwnership.HUMAN, SectionOwnership.AI)
+                }
+
+                # Inject preserved @HUMAN content into rendered output
+                for sid, sec in human_sections.items():
+                    marker = self.SECTION_START.format(id=sid, owner=sec.owner.value)
+                    if marker in rendered:
+                        # Replace template's placeholder with preserved content
+                        pattern = re.escape(marker) + r"(.*?)" + re.escape(self.SECTION_END)
+                        replacement = f"{marker}\n{sec.content}\n{self.SECTION_END}"
+                        rendered = re.sub(pattern, replacement, rendered, flags=re.DOTALL)
+            except Exception as e:
+                logger.warning(f"Failed to preserve @HUMAN sections: {e}")
+
+        # Write
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(rendered, encoding="utf-8")
+            self._index.on_file_created(output_path)
+
+            # Update change detector hash
+            human_content = self._change_detector._extract_human_sections(rendered)
+            self._change_detector.update_hash(output_path, human_content)
+
+            logger.debug(f"Manifested with template: {output_path.name}")
+        except Exception as e:
+            logger.error(f"Failed to write template manifestation: {e}")
 
     def _manifest_kernel_source(self, source: KernelSource) -> None:
         """Manifest a kernel-native source."""
@@ -738,6 +808,81 @@ class ManifestationService:
                 lines.append(f"{sep} {item} {sep}")
 
         return "\n".join(lines)
+
+    # =========================================================================
+    # JINJA2 TEMPLATE RENDERING (for complex manifestations like OPUS.md)
+    # =========================================================================
+
+    def _get_jinja_env(self):
+        """
+        Get or create Jinja2 environment.
+
+        Lazy loading - only imports jinja2 when needed.
+        Templates are loaded from workspace root.
+        """
+        global _jinja2_env
+        if _jinja2_env is None:
+            try:
+                from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+                _jinja2_env = Environment(
+                    loader=FileSystemLoader(str(self._workspace)),
+                    autoescape=select_autoescape(["html", "xml"]),
+                    trim_blocks=True,
+                    lstrip_blocks=True,
+                )
+                logger.debug("Jinja2 environment initialized")
+            except ImportError:
+                logger.warning("Jinja2 not available, template rendering disabled")
+                return None
+        return _jinja2_env
+
+    def render_with_template(self, template_path: str, data: Dict[str, Any]) -> Optional[str]:
+        """
+        Render manifestation using Jinja2 template.
+
+        For complex manifestations like OPUS.md that need more than
+        simple table formatting.
+
+        Args:
+            template_path: Path to .j2 template (relative to workspace)
+            data: Context dict from get_manifestation_data()
+
+        Returns:
+            Rendered markdown string, or None if template not found
+        """
+        env = self._get_jinja_env()
+        if env is None:
+            return None
+
+        try:
+            template = env.get_template(template_path)
+            rendered = template.render(**data)
+            return rendered
+        except Exception as e:
+            logger.error(f"Template render failed: {template_path} - {e}")
+            return None
+
+    def _format_data_for_sections_with_template(
+        self,
+        schema: str,
+        data: Dict[str, Any],
+        template_path: Optional[str] = None,
+    ) -> Dict[str, str]:
+        """
+        Format data using template OR schema-based formatting.
+
+        If template_path is provided, renders entire document with Jinja2.
+        Otherwise falls back to schema-based section formatting.
+        """
+        if template_path:
+            rendered = self.render_with_template(template_path, data)
+            if rendered:
+                # For template-based rendering, return single "content" section
+                return {"_template_content": rendered}
+
+        # Fall back to schema-based formatting
+        return self._format_data_for_sections(schema, data)
 
     # =========================================================================
     # RED PEN: In-file annotations (GAD-000 Transparency)

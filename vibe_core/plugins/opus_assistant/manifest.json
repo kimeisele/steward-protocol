@@ -268,6 +268,13 @@
     "auto_verify_on_boot": false,
     "drift_detection_enabled": true
   },
+  "manifestation": {
+    "output": "OPUS.md",
+    "schema": "opus_dashboard",
+    "template": "vibe_core/plugins/opus_assistant/templates/opus_dashboard.md.j2",
+    "frequency": "tick",
+    "location": "root"
+  },
   "author": "STEWARD Protocol",
   "tags": [
     "opus",
