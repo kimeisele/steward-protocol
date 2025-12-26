@@ -53,11 +53,22 @@ from vibe_core.protocols.memory import (
     MemoryProtocol,
     get_memory_safe,
 )
+
+# OPUS-311 Sprint 4: Reactor (Drift Detection)
+from vibe_core.protocols.reactor import (
+    DriftEvent,
+    DriftType,
+    ReactorProtocol,
+    get_reactor_safe,
+)
 from vibe_core.protocols.reflection import (
     ExecutionRecord,
     ReflectionProtocol,
     get_reflection_safe,
 )
+
+# OPUS-311 Sprint 4: LearningLoop (Ouroboros)
+from vibe_core.services.learning_loop import LearningLoop
 
 logger = logging.getLogger("MANAS.Cognitive")
 
@@ -94,8 +105,60 @@ class MANASCognitive:
         self._feedback: FeedbackProtocol = get_feedback_safe()
         self._reflection: ReflectionProtocol = get_reflection_safe()
 
+        # OPUS-311 Sprint 4: LearningLoop (Ouroboros - self-improvement)
+        self._learning_loop = LearningLoop.get_instance()
+
+        # OPUS-311 Sprint 4: Reactor (Drift Detection → Reflection)
+        self._reactor: ReactorProtocol = get_reactor_safe()
+        self._register_drift_handlers()
+
         logger.info(f"🧠 MANASCognitive initialized (workspace: {self._workspace})")
-        logger.debug("🧠 Autonomy protocols: Memory, Feedback, Reflection")
+        logger.debug("🧠 Autonomy protocols: Memory, Feedback, Reflection, LearningLoop, Reactor")
+
+    def _register_drift_handlers(self) -> None:
+        """
+        OPUS-311 Sprint 4: Register drift handlers that feed into Reflection.
+
+        Connects Reactor → Reflection for the Ouroboros loop.
+        """
+
+        # Handler for performance drift
+        def handle_performance_drift(drift: DriftEvent) -> bool:
+            logger.warning(f"🔄 Performance drift detected: {drift.message}")
+            # Record as insight in Reflection
+            from vibe_core.protocols.reflection import Insight, InsightType
+
+            insight = Insight(
+                type=InsightType.PERFORMANCE,
+                message=drift.message,
+                confidence=0.8,
+                data=drift.data,
+            )
+            # Propose improvement
+            proposal = self._reflection.propose_improvement([insight])
+            if proposal:
+                logger.info(f"🔄 Proposed improvement: {proposal.title}")
+            return True  # Handled (but not corrected - just observed)
+
+        # Handler for reliability drift
+        def handle_reliability_drift(drift: DriftEvent) -> bool:
+            logger.warning(f"🔄 Reliability drift detected: {drift.message}")
+            from vibe_core.protocols.reflection import Insight, InsightType
+
+            insight = Insight(
+                type=InsightType.FAILURE_PATTERN,
+                message=drift.message,
+                confidence=0.9,
+                data=drift.data,
+            )
+            proposal = self._reflection.propose_improvement([insight])
+            if proposal:
+                logger.info(f"🔄 Proposed improvement: {proposal.title}")
+            return True
+
+        # Register handlers
+        self._reactor.on_drift(DriftType.PERFORMANCE, handle_performance_drift)
+        self._reactor.on_drift(DriftType.RELIABILITY, handle_reliability_drift)
 
     def _ensure_jnana_handler(self):
         """Lazy-load JnanaHandler."""
@@ -267,6 +330,7 @@ class MANASCognitive:
         Called after command execution to:
         1. Signal Feedback (pain/pleasure)
         2. Record in Reflection (pattern analysis)
+        3. Update Reactor metrics (drift detection)
 
         This enables the Autonomy Loop to learn from experience.
         """
@@ -277,6 +341,9 @@ class MANASCognitive:
             self._feedback.signal_success(command, context, duration_ms, session_id)
         else:
             self._feedback.signal_failure(command, error or "unknown", context, duration_ms, session_id)
+
+        # OPUS-311 Sprint 4: Update Reactor metrics for drift detection
+        self._reactor.update_metrics(command, duration_ms, success)
 
         # Record for Reflection
         record = ExecutionRecord(
@@ -341,6 +408,15 @@ class MANASCognitive:
 
         # High confidence → Execute
         if best.confidence >= 0.8:
+            # OPUS-311 Sprint 4: Record input → command resolution for learning
+            # This enables LearningLoop to propose aliases (e.g., "agents" → "list_agents")
+            if intent.lower().strip() != best.command.name.lower():
+                self._learning_loop.record_input_resolution(
+                    input_text=intent,
+                    resolved_command=best.command.name,
+                    success=True,  # Will be updated by record_execution_result
+                )
+
             # If we resolved an entity, inject it into params
             params = best.extracted_params.copy() if best.extracted_params else {}
             if resolved_entity:
@@ -519,10 +595,38 @@ class MANASCognitive:
         OPUS-311: Get autonomy protocol statistics.
 
         Returns:
-            Stats from Memory, Feedback, and Reflection protocols
+            Stats from Memory, Feedback, Reflection, LearningLoop, and Reactor
         """
         return {
             "memory": self._memory.get_stats().__dict__,
             "feedback": self._feedback.get_stats().__dict__,
             "reflection": self._reflection.get_stats().__dict__,
+            "learning_loop": self._learning_loop.get_stats(),
+            "reactor": self._reactor.get_stats().__dict__,
+        }
+
+    def learning_tick(self) -> Dict[str, Any]:
+        """
+        OPUS-311 Sprint 4: Trigger learning loop tick.
+
+        Called during idle time or by scheduler.
+        Analyzes patterns, auto-applies approved aliases, and detects drift.
+
+        Returns:
+            Summary of learning actions taken
+        """
+        # Learning loop tick (alias proposals)
+        learning_result = self._learning_loop.tick()
+
+        # Drift detection tick (triggers handlers → Reflection)
+        drift_events = self._reactor.detect_drift()
+
+        # Trigger correction for each drift
+        for drift in drift_events:
+            self._reactor.trigger_correction(drift)
+
+        return {
+            "learning": learning_result,
+            "drift_detected": len(drift_events),
+            "active_drifts": len(self._reactor.get_active_drifts()),
         }

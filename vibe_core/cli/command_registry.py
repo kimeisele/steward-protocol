@@ -266,6 +266,7 @@ class CommandRegistry:
     def __init__(self):
         self._commands: Dict[str, CommandProtocol] = {}
         self._pending_wiring: Dict[str, ManifestCommandSpec] = {}
+        self._aliases: Dict[str, str] = {}  # OPUS-311: alias -> target command
         self._scanned = False
 
     @classmethod
@@ -309,6 +310,63 @@ class CommandRegistry:
     def register_class(self, command_class: Type[BaseCommand]) -> bool:
         """Register a command class (instantiates it)."""
         return self.register(command_class())
+
+    def register_alias(
+        self,
+        alias: str,
+        target: str,
+        source: str = "learning",
+    ) -> bool:
+        """
+        OPUS-311 Sprint 4: Register an alias for a command.
+
+        Used by LearningLoop to auto-register frequently used shortcuts.
+
+        Args:
+            alias: The alias name (e.g., "agents")
+            target: The target command (e.g., "list_agents")
+            source: Where this alias came from (e.g., "learning", "manifest")
+
+        Returns:
+            True if registered, False if conflict
+        """
+        # Don't override existing commands
+        if alias in self._commands:
+            logger.debug(f"Cannot create alias '{alias}': command exists")
+            return False
+
+        # Don't override existing aliases (unless same target)
+        if alias in self._aliases and self._aliases[alias] != target:
+            logger.debug(f"Alias '{alias}' already points to '{self._aliases[alias]}'")
+            return False
+
+        # Target must exist
+        if target not in self._commands:
+            logger.debug(f"Cannot create alias '{alias}': target '{target}' not found")
+            return False
+
+        self._aliases[alias] = target
+        logger.info(f"[COMMAND.REGISTRY] Registered alias: {alias} → {target} (source: {source})")
+        return True
+
+    def resolve_alias(self, name: str) -> str:
+        """
+        OPUS-311: Resolve an alias to its target command.
+
+        Returns the original name if not an alias.
+        """
+        return self._aliases.get(name, name)
+
+    def get_aliases(self) -> Dict[str, str]:
+        """Get all registered aliases."""
+        return dict(self._aliases)
+
+    def remove_alias(self, alias: str) -> bool:
+        """Remove an alias."""
+        if alias in self._aliases:
+            del self._aliases[alias]
+            return True
+        return False
 
     def scan_manifests(self) -> int:
         """
@@ -784,12 +842,22 @@ class CommandRegistry:
         return executor
 
     def get(self, name: str) -> Optional[CommandProtocol]:
-        """Get command by name."""
-        return self._commands.get(name)
+        """
+        Get command by name.
+
+        OPUS-311: Resolves aliases automatically.
+        """
+        # Resolve alias first
+        resolved = self.resolve_alias(name)
+        return self._commands.get(resolved)
 
     def has(self, name: str) -> bool:
-        """Check if command exists."""
-        return name in self._commands
+        """
+        Check if command exists.
+
+        OPUS-311: Also checks aliases.
+        """
+        return name in self._commands or name in self._aliases
 
     def list_commands(self) -> List[CommandInfo]:
         """
