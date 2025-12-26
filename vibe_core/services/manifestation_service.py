@@ -290,7 +290,60 @@ class ManifestationService:
         self._schemas: Dict[str, List[SchemaSection]] = {}
         self._load_schemas()
 
+        # Interface config cache (lazy-loaded from Phoenix)
+        self._interface_config_cache = None
+
         logger.info("ManifestationService initialized (CORE)")
+
+    # =========================================================================
+    # INTERFACE CONFIG (Phoenix-driven, not hardcoded!)
+    # =========================================================================
+
+    def _get_interface_config(self):
+        """
+        Get interface config from Phoenix (SINGLE SOURCE OF TRUTH).
+
+        Uses lazy loading with caching.
+        Falls back to None if Phoenix not available.
+        """
+        if self._interface_config_cache is not None:
+            return self._interface_config_cache
+
+        try:
+            from vibe_core.phoenix.config import get_config
+
+            self._interface_config_cache = get_config().interface
+            return self._interface_config_cache
+        except (ImportError, AttributeError) as e:
+            logger.debug(f"Phoenix interface config not available: {e}")
+            return None
+
+    def _get_element_type_config(self, element_type: str) -> dict:
+        """
+        Get element type config (table, list, status, etc.) from Phoenix.
+
+        Falls back to sensible defaults if config not available.
+        """
+        config = self._get_interface_config()
+        if config and hasattr(config, "element_types"):
+            elem_config = config.element_types.get(element_type)
+            if elem_config:
+                # Convert dataclass to dict if needed
+                if hasattr(elem_config, "__dict__"):
+                    return elem_config.__dict__
+                return elem_config
+
+        # Sensible defaults (matches interface.yaml defaults)
+        defaults = {
+            "table": {"header_style": "bold", "alignment": "left", "separator": "|"},
+            "status": {
+                "icons": {"running": "🟢", "stopped": "🔴", "warning": "🟡", "unknown": "⚪"},
+                "format": "{icon} {label}",
+            },
+            "list": {"bullet": "-", "checkbox_empty": "[ ]", "checkbox_checked": "[x]", "indent": 2},
+            "metric": {"format": "{label}: {value} {unit}", "progress_bar": True},
+        }
+        return defaults.get(element_type, {})
 
     @property
     def index(self) -> ManifestIndex:
@@ -521,20 +574,44 @@ class ManifestationService:
         return formatted
 
     def _format_table_from_dict(self, title: Optional[str], data: Dict[str, Any]) -> str:
-        """Format dict as markdown table."""
+        """
+        Format dict as markdown table using Phoenix element_types config.
+
+        Uses interface.yaml → element_types.table for styling.
+        """
+        config = self._get_element_type_config("table")
+        sep = config.get("separator", "|")
+        alignment = config.get("alignment", "left")
+
+        # Alignment markers
+        align_map = {"left": ":---", "center": ":---:", "right": "---:"}
+        align_marker = align_map.get(alignment, "---")
+
         lines = []
         if title:
             lines.append(f"## {title}")
             lines.append("")
 
-        lines.extend(["| Key | Value |", "| :--- | :--- |"])
+        lines.append(f"{sep} Key {sep} Value {sep}")
+        lines.append(f"{sep} {align_marker} {sep} {align_marker} {sep}")
         for k, v in data.items():
-            lines.append(f"| {k} | {v} |")
+            lines.append(f"{sep} {k} {sep} {v} {sep}")
 
         return "\n".join(lines)
 
     def _format_table_from_list(self, title: Optional[str], data: List[Any]) -> str:
-        """Format list as markdown table."""
+        """
+        Format list as markdown table using Phoenix element_types config.
+
+        Uses interface.yaml → element_types.table for styling.
+        """
+        config = self._get_element_type_config("table")
+        sep = config.get("separator", "|")
+        alignment = config.get("alignment", "left")
+
+        align_map = {"left": ":---", "center": ":---:", "right": "---:"}
+        align_marker = align_map.get(alignment, "---")
+
         lines = []
         if title:
             lines.append(f"## {title}")
@@ -542,15 +619,16 @@ class ManifestationService:
 
         if data and isinstance(data[0], dict):
             headers = list(data[0].keys())
-            lines.append("| " + " | ".join(headers) + " |")
-            lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+            lines.append(f"{sep} " + f" {sep} ".join(headers) + f" {sep}")
+            lines.append(f"{sep} " + f" {sep} ".join([align_marker] * len(headers)) + f" {sep}")
             for item in data:
                 values = [str(item.get(h, "")) for h in headers]
-                lines.append("| " + " | ".join(values) + " |")
+                lines.append(f"{sep} " + f" {sep} ".join(values) + f" {sep}")
         else:
-            lines.extend(["| Value |", "| --- |"])
+            lines.append(f"{sep} Value {sep}")
+            lines.append(f"{sep} {align_marker} {sep}")
             for item in data:
-                lines.append(f"| {item} |")
+                lines.append(f"{sep} {item} {sep}")
 
         return "\n".join(lines)
 
