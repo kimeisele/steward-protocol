@@ -342,6 +342,212 @@ class SynapseProtocol(Protocol):
 
 ---
 
+## Critical 5% (Senior Insights)
+
+These are the issues that separate "working code" from "living architecture".
+
+### 1. The Amnesia Trap (Context Continuity)
+
+**Problem:** `steward chat "list agents"` works. But `steward chat "delete the second one"` fails.
+
+```python
+# Current: Per-request context (amnesia)
+result = await kernel.process_operator_input("list agents")  # Works
+result = await kernel.process_operator_input("delete the second one")  # WHAT second one?
+```
+
+**Root Cause:** `CognitiveContext` is per-request. No episodic memory.
+
+**Solution:** ContextServiceProtocol with session persistence.
+
+```python
+@runtime_checkable
+class ContextServiceProtocol(Protocol):
+    """Episodic memory for conversation continuity."""
+
+    def remember_result(self, session_id: str, key: str, result: Any) -> None: ...
+    def recall_result(self, session_id: str, key: str) -> Optional[Any]: ...
+    def get_last_entities(self, session_id: str) -> List[Entity]: ...  # "the second one"
+```
+
+**Priority:** P1 (required for natural conversation)
+
+---
+
+### 2. The Lazy Loading House of Cards
+
+**Problem:** Errors hidden until runtime.
+
+```python
+# Boot time: Everything looks fine
+steward boot  # ✅ Success
+
+# 3 hours later: User triggers lazy load
+steward chat "run audit"  # 💥 ImportError: archivist.audit failed
+```
+
+**Root Cause:** `if self._tool is None: load()` pattern masks broken plugins.
+
+**Solution:** Boot-time integrity check.
+
+```python
+class IntegrityCheckProtocol(Protocol):
+    """Dry-run all lazy loaders at boot."""
+
+    def check_all_loadable(self) -> List[IntegrityIssue]: ...
+    def warm_cache(self) -> None: ...  # Touch all lazy loaders
+
+# In boot sequence:
+issues = integrity_checker.check_all_loadable()
+if issues:
+    logger.warning(f"🔥 {len(issues)} components failed integrity check")
+    for issue in issues:
+        logger.warning(f"   - {issue.component}: {issue.error}")
+```
+
+**Priority:** P0 (Dharma: reliability)
+
+---
+
+### 3. The One-Way Feedback Loop
+
+**Problem:** No learning from failures.
+
+```
+Current:  Input → Intent → Command → Output → (void)
+Needed:   Input → Intent → Command → Output → Sensor → Reflection → Memory → Improvement
+```
+
+**Root Cause:** When command fails (exit code 1), MANAS sees the error string but doesn't **feel** it.
+
+```python
+# Current: Error is just text
+cmd_result = await registry.execute(...)
+if not cmd_result.success:
+    print(f"❌ {cmd_result.error}")  # User sees it
+    # MANAS learns... nothing
+```
+
+**Solution:** ReactorProtocol + MemoryProtocol feedback loop.
+
+```python
+@runtime_checkable
+class FeedbackProtocol(Protocol):
+    """Pain/pleasure signals for learning."""
+
+    def signal_success(self, command: str, context: Dict) -> None: ...
+    def signal_failure(self, command: str, error: str, context: Dict) -> None: ...
+    def get_failure_patterns(self) -> List[FailurePattern]: ...
+
+# In execution:
+if cmd_result.success:
+    feedback.signal_success(cmd_name, context)
+else:
+    feedback.signal_failure(cmd_name, cmd_result.error, context)
+    # Next time: IntentMatcher can avoid this pattern
+```
+
+**Priority:** P2 (required for Autonomy Loop)
+
+---
+
+### 4. The Kernel God-Object
+
+**Problem:** `kernel_impl.py` holds too much.
+
+```python
+# Current: Kernel is a container
+class RealVibeKernel:
+    self.plugins = ...
+    self.io = ...
+    self.scheduler = ...
+    self.ledger = ...
+    self.event_bus = ...
+```
+
+**Root Cause:** Kernel "knows" about implementations, not just protocols.
+
+**Solution:** Pure DI - Kernel should be almost empty.
+
+```python
+# Target: Kernel is pure protocol orchestration
+class RealVibeKernel:
+    def __init__(self, container: DIContainer):
+        # Kernel knows NOTHING except how to wire protocols
+        self._container = container
+
+    @property
+    def scheduler(self) -> SchedulerProtocol:
+        return self._container.get(SchedulerProtocol)
+
+    @property
+    def io(self) -> IOServiceProtocol:
+        return self._container.get(IOServiceProtocol)
+```
+
+**Priority:** P1 (architectural debt)
+
+---
+
+### 5. The Identity Crisis (Who Am I?)
+
+**Problem:** Anonymous mode is dangerous.
+
+```
+⚠️ [Steward] Identity file herald/STEWARD.md not found. Running in anonymous mode.
+```
+
+**Root Cause:** Commands execute without permission check.
+
+```python
+# Current: Execute anything
+result = await registry.execute("delete_everything", [], context)  # No auth check!
+```
+
+**Solution:** GovernanceGate before every execution.
+
+```python
+@runtime_checkable
+class GovernanceGateProtocol(Protocol):
+    """Permission check before execution."""
+
+    def can_execute(self,
+                    identity: Identity,
+                    command: str,
+                    context: ExecutionContext) -> PermissionResult: ...
+
+# In CommandRegistry.execute():
+permission = governance_gate.can_execute(identity, cmd_name, context)
+if not permission.allowed:
+    return CommandResult(
+        success=False,
+        error=f"Permission denied: {permission.reason}"
+    )
+```
+
+**Priority:** P0 (security - Agent Virus requires this)
+
+---
+
+## Acceptance Criteria (Hardened System)
+
+### Boot-Time Guarantees
+- [ ] All lazy loaders validated at boot (IntegrityCheckProtocol)
+- [ ] All protocols have registered implementations or Null fallbacks
+- [ ] Identity established before any command execution
+
+### Runtime Guarantees
+- [ ] Every command execution has permission check (GovernanceGate)
+- [ ] Every failure feeds back to learning system (FeedbackProtocol)
+- [ ] Session context persists across requests (ContextServiceProtocol)
+
+### Architectural Guarantees
+- [ ] Kernel imports ZERO concrete implementations
+- [ ] All wiring via ServiceRegistry/DI
+- [ ] Any component hot-swappable without restart
+
+---
+
 ## The Mantra
 
 ```
