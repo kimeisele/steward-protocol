@@ -104,6 +104,20 @@ from .operator_protocol import (
     create_system_context,
 )
 from .opus import OpusAssistantProtocol
+
+# OPUS-311 Sprint 4: Reactor Protocol (Drift Detection)
+from .reactor import (
+    BasicReactor,
+    DriftEvent,
+    DriftHandler,
+    DriftMetrics,
+    DriftSeverity,
+    DriftType,
+    NullReactor,
+    ReactorProtocol,
+    ReactorStats,
+    get_reactor_safe,
+)
 from .reflection import (
     BasicReflection,
     ExecutionRecord,
@@ -283,4 +297,15 @@ __all__ = [
     "NullFeedback",
     "InMemoryFeedback",
     "get_feedback_safe",
+    # OPUS-311 Sprint 4: Reactor Protocol
+    "ReactorProtocol",
+    "DriftEvent",
+    "DriftType",
+    "DriftSeverity",
+    "DriftMetrics",
+    "DriftHandler",
+    "ReactorStats",
+    "NullReactor",
+    "BasicReactor",
+    "get_reactor_safe",
 ]
