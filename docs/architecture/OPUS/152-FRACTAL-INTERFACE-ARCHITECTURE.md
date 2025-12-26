@@ -6,29 +6,26 @@
 > **HARNESS**: @SAMSKARA → @AKSHARA → @DOJO → @MANTRA → @SIDDHI
 
 <!-- @HARNESS
+# OPUS-313: Updated - envoy.py/settings.py deleted, replaced by ManifestationService
 intent: "Teach render_sections() pattern for config-driven renderers"
 files:
   - path: vibe_core/plugins/interface/renderers/base.py
     required: true
-  - path: vibe_core/plugins/interface/renderers/envoy.py
-    required: true
-  - path: vibe_core/plugins/interface/renderers/settings.py
-    required: true
   - path: vibe_core/plugins/interface/renderers/state.py
     required: true
   - path: vibe_core/plugins/interface/renderers/economy.py
+    required: true
+  - path: vibe_core/services/manifestation_service.py
     required: true
   - path: config/interface.yaml
     required: true
 wiring:
   - pattern: "def render_sections"
     in: vibe_core/plugins/interface/renderers/base.py
-  - pattern: "_register_data_sources"
-    in: vibe_core/plugins/interface/renderers/envoy.py
   - pattern: "register_custom_renderer"
     in: vibe_core/plugins/interface/plugin_main.py
-tests:
-  - tests/unit/test_interface_renderers.py
+  - pattern: "ManifestationService"
+    in: vibe_core/services/manifestation_service.py
 -->
 
 ---
