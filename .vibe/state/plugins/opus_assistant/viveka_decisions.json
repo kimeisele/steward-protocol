@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2025-12-23T22:04:24.058236",
-    "intent_type": "crash_handler",
-    "intent_title": "💀 Poison Intent",
-    "trigger": "trigger:crash_handler",
+    "timestamp": "2025-12-26T19:16:52.098844",
+    "intent_type": "genesis_test",
+    "intent_title": "Test Code Generation",
+    "trigger": "trigger:genesis_test",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,
