@@ -447,6 +447,18 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         )
         self._action_manager.inject_narasimha(self._narasimha)
 
+        # OPUS-314: Inject ShuddhiEngine for code purification
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.shuddhi import ShuddhiProtocol
+
+            shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+            if shuddhi:
+                self._action_manager.inject_shuddhi(shuddhi)
+                logger.debug("🔮 MANAS: ShuddhiEngine wired to ActionManager")
+        except Exception as e:
+            logger.debug(f"🔮 MANAS: Could not wire ShuddhiEngine: {e}")
+
         # Biorhythm
         _ = self._biorhythm_proc  # Initialize via lazy property
 

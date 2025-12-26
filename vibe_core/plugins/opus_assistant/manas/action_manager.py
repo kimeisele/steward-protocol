@@ -107,6 +107,10 @@ class ToolSelector:
         "code_refactor": ["read_file", "write_file"],
         "test_create": ["read_file", "write_file"],
         "test_run": [],  # Uses Bash, not tools
+        # OPUS-314: Shuddhi purification (uses CST, not file tools)
+        "purify_code": [],  # Handled by ShuddhiEngine directly
+        "fix_violation": [],
+        "apply_remedy": [],
         # Inspection
         "inspect_result": ["inspect_result"],
         # Delegate to other agent
@@ -226,6 +230,9 @@ class ActionManager:
         # Narasimha guardian (injected later)
         self._narasimha: Optional[Any] = None
 
+        # OPUS-314: Shuddhi engine for code purification
+        self._shuddhi: Optional[Any] = None
+
         # OPUS-175: ToolSelector and registry for TaskKernel spawning
         self._tool_registry: Optional[Any] = None
         self._tool_selector = ToolSelector()
@@ -242,6 +249,11 @@ class ActionManager:
     def inject_narasimha(self, narasimha: Any) -> None:
         """Inject Narasimha for technical guardian checks."""
         self._narasimha = narasimha
+
+    def inject_shuddhi(self, shuddhi: Any) -> None:
+        """OPUS-314: Inject ShuddhiEngine for code purification."""
+        self._shuddhi = shuddhi
+        logger.debug("🖐️ ACTION MANAGER: ShuddhiEngine injected for purification")
 
     def inject_prakriti(self, sense: Any) -> None:
         """Inject PrakritiSense for healing."""
@@ -478,6 +490,11 @@ class ActionManager:
             result = await self._execute_healing(intent)
             return result, result.get("success", False)
 
+        # 1b. OPUS-314: Code purification intents (Shuddhi)
+        if intent.intent_type in ("purify_code", "fix_violation", "apply_remedy"):
+            result = await self._execute_purification(intent)
+            return result, result.get("success", False)
+
         # 2. Memory review (dreaming)
         if intent.intent_type == "memory_review":
             result = await self._execute_memory_review(intent)
@@ -585,6 +602,91 @@ class ActionManager:
                 return {"success": False, "error": f"Unknown healing intent type: {intent.intent_type}"}
 
         except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _execute_purification(self, intent: "Intent") -> Dict[str, Any]:
+        """
+        OPUS-314: Execute a code purification intent via ShuddhiEngine.
+
+        Shuddhi performs CST-based surgical code transformations to fix
+        structural violations (unsafe IO, missing guards, etc).
+
+        Args:
+            intent: The purification intent with params:
+                - file_path: Path to the file to purify
+                - rule_id: The rule/violation to fix
+
+        Returns:
+            Execution result with success/failure and diff
+        """
+        if not self._shuddhi:
+            return {"success": False, "error": "ShuddhiEngine not available"}
+
+        try:
+            file_path_str = intent.params.get("file_path") or intent.params.get("path")
+            rule_id = intent.params.get("rule_id") or intent.params.get("violation_type")
+
+            if not file_path_str:
+                return {"success": False, "error": "Missing file_path in intent params"}
+            if not rule_id:
+                return {"success": False, "error": "Missing rule_id in intent params"}
+
+            file_path = Path(file_path_str)
+            if not file_path.is_absolute():
+                file_path = self._workspace / file_path
+
+            logger.info(f"🔮 SHUDDHI: Purifying {file_path} for rule {rule_id}")
+
+            # Execute purification
+            result = self._shuddhi.purify(file_path, rule_id)
+
+            # Map ShuddhiResult to dict
+            from vibe_core.protocols.shuddhi import ShuddhiStatus
+
+            if result.status == ShuddhiStatus.PURIFIED:
+                # Write the purified code
+                if result.purified_code:
+                    file_path.write_text(result.purified_code)
+                    logger.info(f"🔮 SHUDDHI: Purified {file_path}")
+
+                return {
+                    "success": True,
+                    "status": "purified",
+                    "file_path": str(file_path),
+                    "rule_id": rule_id,
+                    "message": result.message,
+                    "diff": result.diff,
+                }
+
+            elif result.status == ShuddhiStatus.SKIPPED:
+                return {
+                    "success": True,  # Not an error, just no violations
+                    "status": "skipped",
+                    "file_path": str(file_path),
+                    "rule_id": rule_id,
+                    "message": result.message,
+                }
+
+            elif result.status == ShuddhiStatus.OUT_OF_SCOPE:
+                return {
+                    "success": False,
+                    "status": "out_of_scope",
+                    "file_path": str(file_path),
+                    "rule_id": rule_id,
+                    "message": result.message,
+                }
+
+            else:  # FAILED
+                return {
+                    "success": False,
+                    "status": "failed",
+                    "file_path": str(file_path),
+                    "rule_id": rule_id,
+                    "error": result.message,
+                }
+
+        except Exception as e:
+            logger.error(f"🔮 SHUDDHI: Purification failed: {e}")
             return {"success": False, "error": str(e)}
 
     async def _execute_memory_review(self, intent: "Intent") -> Dict[str, Any]:
