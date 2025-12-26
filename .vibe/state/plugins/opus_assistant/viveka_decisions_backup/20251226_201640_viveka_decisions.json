@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2025-12-23T21:27:15.267675",
-    "intent_type": "echo",
-    "intent_title": "Pramana Live Fire pramana_fire_0f376fdd",
-    "trigger": "trigger:echo",
+    "timestamp": "2025-12-26T19:16:30.062121",
+    "intent_type": "log_observation",
+    "intent_title": "Test Observation",
+    "trigger": "trigger:log_observation",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,
