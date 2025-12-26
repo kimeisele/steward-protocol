@@ -25,8 +25,13 @@ class ObserverTool:
     # VAJRA: Kernel binding slot
     _vibe_kernel = None
 
+    @property
+    def name(self) -> str:
+        """Tool name for registry."""
+        return "archivist.observer"
+
     def __init__(self, services: Optional["ServiceRegistry"] = None):
-        super().__init__(services)
+        self._services = services
         self.logger = logger
         self.logger.info("Observer Tool initialized")
 

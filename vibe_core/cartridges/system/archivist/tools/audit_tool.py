@@ -39,6 +39,11 @@ class AuditTool:
     # VAJRA: Kernel binding slot
     _vibe_kernel = None
 
+    @property
+    def name(self) -> str:
+        """Tool name for registry."""
+        return "archivist.audit"
+
     def __init__(self, services: Optional["ServiceRegistry"] = None, agent_name: str = "archivist"):
         """
         Initialize the audit tool.
@@ -47,7 +52,7 @@ class AuditTool:
             services: Service registry for DI
             agent_name: Name of this auditor agent
         """
-        super().__init__(services)
+        self._services = services
         self.agent_name = agent_name
         self.verified_count = 0
         self.failed_count = 0
