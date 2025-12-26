@@ -81,6 +81,7 @@ from .protocols.auditor import AuditorProtocol, NullAuditor
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
+from .services.manifestation_service import ManifestationService
 from .state.schema import ExecutionRequest
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
@@ -375,6 +376,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.io = KernelIOService(self)
         logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
+        # MANIFESTATION SERVICE: High-level Markdown rendering engine
+        # OPUS-308: The Rendering Engine of Reality
+        # Plugins declare manifestation in manifest.json, implement get_manifestation_data()
+        # This service handles: schema-based rendering, section ownership, atomic updates
+        # See: docs/architecture/OPUS/308-MARKDOWN-MANIFESTATION-PROTOCOL.md
+        self.manifestation = ManifestationService(self)
+        logger.info("📄 ManifestationService initialized (OPUS-308 Core)")
+
         # Phase 6: Universal Tool Registry
         # EXTRACTED TO PLUGIN: ToolsPlugin handles registry initialization
         # Plugin sets kernel.tool_registry on boot
@@ -449,6 +458,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
             for plugin in self._plugins:
                 plugin.on_boot(self)
+
+            # OPUS-308: Auto-register plugins for manifestation
+            # Plugins with "manifestation" config in manifest.json get registered
+            for plugin_id, meta in self._plugin_metadata.items():
+                if meta.manifest and meta.manifest.get("manifestation"):
+                    plugin_instance = self._plugins_map.get(plugin_id)
+                    if plugin_instance:
+                        self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
         else:
             self._plugins = []
             self._plugins = []
@@ -1794,6 +1811,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
                 for plugin in self._plugins:
                     plugin.on_tick_post(self)
+
+                # OPUS-308: Manifestation tick (render all registered plugin UIs)
+                self.manifestation.tick()
 
             except Exception as e:
                 error = str(kernel_fault("task_tick_async", str(e)))
