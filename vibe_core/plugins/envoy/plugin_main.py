@@ -342,6 +342,65 @@ class EnvoyPlugin(KernelPlugin):
 
         return routes
 
+    # =========================================================================
+    # OPUS-308: MANIFESTATION PROTOCOL
+    # =========================================================================
+
+    def get_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Provide data for @LIVE sections.
+
+        This is the NEW way. The plugin provides DATA, the Kernel manifests.
+        No more rendering Markdown in the plugin!
+
+        Returns:
+            Dict mapping section IDs to their data
+        """
+        # Status section
+        status = {
+            "State": "RUNNING" if self._kernel else "OFFLINE",
+            "Circuits": len(self._circuits),
+            "Pending": len(self._pending_requests),
+            "Architecture": "OPUS-308",
+        }
+
+        # Capabilities section (routes as list of dicts)
+        capabilities = []
+        for route in self.get_routes()[:20]:  # Limit to 20
+            capabilities.append(
+                {
+                    "Route": f"`{route.get('name', '')}`",
+                    "Description": route.get("description", "")[:50],
+                }
+            )
+
+        # Response section (last request result)
+        response = "_Awaiting command..._"
+        if self._request_history:
+            last = self._request_history[-1]
+            status_text = last.get("status", "")
+            result = last.get("response", last.get("error", ""))[:100]
+            response = f"**{status_text}**: {result}"
+
+        # History section (last 5)
+        history = []
+        for entry in reversed(self._request_history[-5:]):
+            history.append(
+                {
+                    "Time": entry.get("timestamp", "")[:8] if entry.get("timestamp") else "",
+                    "Command": entry.get("request", "")[:30],
+                    "Status": entry.get("status", ""),
+                    "Result": (entry.get("response") or entry.get("error") or "")[:30],
+                }
+            )
+
+        return {
+            "status": status,
+            "capabilities": capabilities,
+            "response": response,
+            "history": history,
+        }
+
     def submit_request(self, request: str, source: str = "envoy.md") -> Dict[str, Any]:
         """
         Submit a user request for processing.
@@ -722,13 +781,25 @@ class EnvoyPlugin(KernelPlugin):
     # =========================================================================
 
     def _load_config(self) -> None:
-        """Load ENVOY config from Phoenix."""
+        """Load ENVOY config from Phoenix (OPUS-307)."""
+        import yaml
+
         try:
-            # TODO: Create envoy.yaml config section
-            # For now, use defaults
-            self._config = {"enabled": True}
-            logger.debug("📬 ENVOY config: using defaults")
+            # Load from config/envoy.yaml
+            config_path = Path("config") / "envoy.yaml"
+            if config_path.exists():
+                with open(config_path) as f:
+                    self._config = yaml.safe_load(f) or {}
+                logger.info(f"📬 ENVOY config loaded from {config_path}")
+
+                # Apply config
+                self._max_history = self._config.get("request", {}).get("max_history", 50)
+            else:
+                # Fallback to defaults
+                self._config = {"enabled": True}
+                logger.debug("📬 ENVOY config: using defaults (no envoy.yaml found)")
         except Exception as e:
+            self._config = {"enabled": True}
             logger.warning(f"📬 Could not load ENVOY config: {e}")
 
     def _init_unified_runtime(self) -> None:

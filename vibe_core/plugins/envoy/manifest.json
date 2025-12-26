@@ -13,5 +13,11 @@
     "steward_protocol",
     "tools"
   ],
-  "provides_api": true
+  "provides_api": true,
+  "manifestation": {
+    "output": "ENVOY.md",
+    "schema": "agent_standard",
+    "frequency": "tick",
+    "location": "root"
+  }
 }

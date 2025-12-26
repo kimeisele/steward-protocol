@@ -1,0 +1,294 @@
+# OPUS-308: Manifestation Schema Definitions
+# Version: 1.0
+# Date: 2025-12-26
+#
+# These schemas define the structure of manifested markdown files.
+# The schema dictates the parser - NOT the other way around.
+#
+# Each schema defines:
+#   - sections: ordered list of section definitions
+#   - Each section has: id, owner, title, required, description
+#
+# Ownership:
+#   - live:   System writes, user reads only
+#   - human:  User writes, system preserves exactly
+#   - ai:     AI writes, user can override
+#   - shared: Both can write (requires merge strategy)
+
+---
+
+# =============================================================================
+# CORE SCHEMAS
+# =============================================================================
+
+agent_standard:
+  description: "Standard schema for agent manifestations (ENVOY.md, HERALD.md)"
+  manifestation_type: bidirectional
+  sections:
+    - id: status
+      owner: live
+      title: "Status"
+      required: true
+      description: "Agent state, health, current activity"
+
+    - id: capabilities
+      owner: live
+      title: "Capabilities"
+      required: false
+      description: "What this agent can do"
+
+    - id: commands
+      owner: human
+      title: "Commands"
+      required: true
+      description: "User command queue - system reads and executes"
+
+    - id: response
+      owner: live
+      title: "Response"
+      required: false
+      description: "Agent's response to last command"
+
+    - id: history
+      owner: live
+      title: "History"
+      required: false
+      description: "Recent command execution log"
+
+    - id: notes
+      owner: human
+      title: "Notes"
+      required: false
+      description: "User's personal notes (never touched by system)"
+
+---
+
+config_bidirectional:
+  description: "Schema for configuration interfaces (SETTINGS.md)"
+  manifestation_type: bidirectional
+  sections:
+    - id: current
+      owner: live
+      title: "Current Settings"
+      required: true
+      description: "Currently applied configuration values"
+
+    - id: pending
+      owner: human
+      title: "Pending Commands"
+      required: true
+      description: "Commands waiting to be executed"
+
+    - id: executed
+      owner: live
+      title: "Executed"
+      required: false
+      description: "Recently executed commands with timestamps"
+
+    - id: available
+      owner: live
+      title: "Available Options"
+      required: false
+      description: "Documentation of all configurable options"
+
+    - id: history
+      owner: live
+      title: "Change History"
+      required: false
+      description: "Log of configuration changes"
+
+---
+
+dashboard_readonly:
+  description: "Schema for read-only status dashboards (OPERATIONS.md)"
+  manifestation_type: readonly
+  sections:
+    - id: header
+      owner: live
+      title: null  # Uses document title
+      required: true
+      description: "Title, timestamp, summary line"
+
+    - id: metrics
+      owner: live
+      title: "Metrics"
+      required: true
+      description: "Key numbers and statistics"
+
+    - id: status
+      owner: live
+      title: "System Status"
+      required: true
+      description: "Current state of system components"
+
+    - id: details
+      owner: live
+      title: "Details"
+      required: false
+      description: "Expandable detailed information"
+
+    - id: alerts
+      owner: live
+      title: "Alerts"
+      required: false
+      description: "Warnings, errors, notifications"
+
+---
+
+# =============================================================================
+# SPECIALIZED SCHEMAS
+# =============================================================================
+
+opus_dashboard:
+  description: "Schema for OPUS.md - the AI assistant dashboard"
+  manifestation_type: bidirectional
+  extends: dashboard_readonly
+  sections:
+    - id: control_cables
+      owner: human
+      title: "Control Cables"
+      required: true
+      description: "User control switches and commands"
+
+    - id: cognition
+      owner: live
+      title: "Cognition"
+      required: false
+      description: "AI thought process visualization"
+
+    - id: economy
+      owner: live
+      title: "Economy"
+      required: false
+      description: "Token/resource usage"
+
+---
+
+state_snapshot:
+  description: "Schema for point-in-time state captures (STATE.md)"
+  manifestation_type: snapshot
+  sections:
+    - id: timestamp
+      owner: live
+      title: "Captured"
+      required: true
+      description: "When this snapshot was taken"
+
+    - id: state
+      owner: live
+      title: "State"
+      required: true
+      description: "The actual state data"
+
+    - id: diff
+      owner: live
+      title: "Changes Since Last"
+      required: false
+      description: "Delta from previous snapshot"
+
+---
+
+index_navigation:
+  description: "Schema for navigation indices (INDEX.md, MATRIX.md)"
+  manifestation_type: readonly
+  sections:
+    - id: overview
+      owner: live
+      title: "Overview"
+      required: true
+      description: "What this index covers"
+
+    - id: entries
+      owner: live
+      title: "Entries"
+      required: true
+      description: "The actual index entries"
+
+    - id: legend
+      owner: live
+      title: "Legend"
+      required: false
+      description: "How to read this index"
+
+---
+
+economy_ledger:
+  description: "Schema for economic/resource tracking (ECONOMY.md)"
+  manifestation_type: readonly
+  sections:
+    - id: summary
+      owner: live
+      title: "Summary"
+      required: true
+      description: "Current balances and totals"
+
+    - id: budget
+      owner: live
+      title: "Budget"
+      required: false
+      description: "Allocated vs spent"
+
+    - id: transactions
+      owner: live
+      title: "Recent Transactions"
+      required: false
+      description: "Recent resource movements"
+
+    - id: projections
+      owner: live
+      title: "Projections"
+      required: false
+      description: "Forecasted usage"
+
+---
+
+# =============================================================================
+# META SCHEMAS
+# =============================================================================
+
+spawned_custom:
+  description: "Schema for user/agent-spawned custom manifestations"
+  manifestation_type: bidirectional
+  sections:
+    - id: purpose
+      owner: ai
+      title: "Purpose"
+      required: true
+      description: "Why this manifestation exists"
+
+    - id: content
+      owner: shared
+      title: "Content"
+      required: true
+      description: "The main content area"
+
+    - id: notes
+      owner: human
+      title: "Notes"
+      required: false
+      description: "User annotations"
+
+    - id: metadata
+      owner: live
+      title: "Metadata"
+      required: false
+      description: "System tracking data"
+
+---
+
+# =============================================================================
+# SCHEMA METADATA
+# =============================================================================
+
+_meta:
+  version: "1.0"
+  protocol: "OPUS-308"
+  ownership_types:
+    live: "System writes, user reads only"
+    human: "User writes, system preserves exactly"
+    ai: "AI writes, user can override"
+    shared: "Both can write (requires merge strategy)"
+  manifestation_types:
+    readonly: "System → User only"
+    bidirectional: "System ↔ User"
+    snapshot: "Point-in-time capture"
