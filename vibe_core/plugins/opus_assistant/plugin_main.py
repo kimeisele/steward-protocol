@@ -126,6 +126,14 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         # Register in DI container
         ServiceRegistry.register(OpusAssistantProtocol, self)
 
+        # OPUS-309: Register MANASCognitive as kernel's cognitive layer
+        # This is the Hot-Swap hook - kernel doesn't know MANAS, only the protocol
+        from vibe_core.plugins.opus_assistant.cognitive import MANASCognitive
+
+        cognitive = MANASCognitive(workspace=getattr(kernel, "workspace_path", None) or Path.cwd(), kernel=kernel)
+        kernel.register_cognitive(cognitive)
+        logger.info("🧠 OPUS-309: MANASCognitive registered with kernel")
+
         # Get workspace path
         self._workspace = getattr(kernel, "workspace_path", None) or Path.cwd()
 

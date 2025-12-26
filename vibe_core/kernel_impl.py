@@ -78,6 +78,18 @@ from .protocols.agent import AgentManifest, VibeAgent
 # The auditor plugin registers itself; kernel uses NullAuditor fallback
 from .protocols.auditor import AuditorProtocol, NullAuditor
 
+# OPUS-309: Operator Cognitive Protocol (Hot-Swap Hook)
+# Kernel doesn't know MANAS exists - only knows this protocol
+from .protocols.cognition import (
+    CognitiveContext,
+    CognitiveResult,
+    NullCognitive,
+    OperatorCognitiveProtocol,
+)
+from .protocols.cognition import (
+    IntentType as CognitiveIntentType,
+)
+
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
@@ -401,6 +413,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # Supports loose coupling between agents
         self._event_bus = get_event_bus()
         logger.info("🎵 Event Bus initialized (pub/sub ready)")
+
+        # OPUS-309: Cognitive Hook (Hot-Swap)
+        # Plugins can register cognitive layer via register_cognitive()
+        # Arjuna-Pattern: NullCognitive fallback if no plugin registers
+        self._cognitive: OperatorCognitiveProtocol = NullCognitive()
+        logger.info("🧠 Cognitive hook initialized (NullCognitive fallback)")
 
         # Unified Execution Runtime (Router + Executor)
         # Replaces legacy PlaybookRouter and MilkOceanRouter
@@ -1575,6 +1593,94 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             event_type: Optional event type filter
         """
         self._event_bus.unsubscribe(callback, event_type)
+
+    # =========================================================================
+    # OPUS-309: Cognitive Protocol (Hot-Swap Hook)
+    # =========================================================================
+
+    def register_cognitive(self, cognitive: OperatorCognitiveProtocol) -> None:
+        """
+        Register a cognitive plugin for operator input processing.
+
+        PROMPT.md: "Hot-Swap-Fähigkeit – Module austauschbar ohne Neustart"
+
+        Can be called multiple times to swap implementations.
+        The last registered cognitive wins.
+
+        Args:
+            cognitive: Implementation of OperatorCognitiveProtocol
+
+        Usage:
+            # In plugin (e.g., opus_assistant):
+            kernel.register_cognitive(MANASCognitive())
+        """
+        old_type = type(self._cognitive).__name__
+        self._cognitive = cognitive
+        new_type = type(cognitive).__name__
+        logger.info(f"🧠 Cognitive hook updated: {old_type} → {new_type}")
+
+        # Log capabilities (sync - no event loop needed during boot)
+        caps = cognitive.get_capabilities() if hasattr(cognitive, "get_capabilities") else []
+        if caps:
+            logger.debug(f"🧠 Cognitive capabilities: {caps[:5]}{'...' if len(caps) > 5 else ''}")
+
+    async def process_operator_input(self, input_text: str, session_id: Optional[str] = None) -> CognitiveResult:
+        """
+        Process natural language input from operator (human or AI).
+
+        OPUS-309: Main entry point for operator input.
+        Routes through registered cognitive plugin.
+
+        GAD-000: AI operates the system on behalf of human.
+        The cognitive layer decides: chat, execute, query, or route.
+
+        Args:
+            input_text: Raw natural language input
+            session_id: Optional session ID for conversation context
+
+        Returns:
+            CognitiveResult with intent_type and relevant data
+
+        Usage:
+            result = await kernel.process_operator_input("create a monitoring agent")
+            if result.intent_type == CognitiveIntentType.EXECUTE:
+                # Execute the syscall
+                ...
+        """
+        # Build context
+        context = CognitiveContext(
+            kernel_status=self._status.value if hasattr(self._status, "value") else str(self._status),
+            active_agents=list(self._agents.keys()) if hasattr(self, "_agents") else [],
+            pending_tasks=len(self._scheduler.pending_tasks) if hasattr(self._scheduler, "pending_tasks") else 0,
+            session_id=session_id,
+            available_tools=list(self.tool_registry.list_tools()) if self.tool_registry else [],
+            available_agents=list(self._agents.keys()) if hasattr(self, "_agents") else [],
+        )
+
+        # Process through cognitive layer
+        try:
+            result = await self._cognitive.process_intent(input_text, context)
+            logger.debug(f"🧠 Cognitive result: {result.intent_type.value} (confidence: {result.confidence:.2f})")
+            return result
+        except Exception as e:
+            logger.error(f"🧠 Cognitive processing failed: {e}")
+            # Fallback: Route to Envoy
+            return CognitiveResult(
+                intent_type=CognitiveIntentType.ROUTE,
+                confidence=0.0,
+                target="envoy",
+                reasoning=f"Cognitive processing failed: {e}",
+            )
+
+    def get_cognitive_capabilities(self) -> List[str]:
+        """
+        GAD-000: Discoverability.
+
+        Returns capabilities of the registered cognitive layer.
+        """
+        if hasattr(self._cognitive, "get_capabilities"):
+            return self._cognitive.get_capabilities()
+        return []
 
     async def broadcast_event(
         self, event_type: str, broadcaster_id: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None

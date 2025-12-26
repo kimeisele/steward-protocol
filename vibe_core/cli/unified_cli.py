@@ -920,10 +920,14 @@ class UnifiedCLI:
 
     def cmd_chat(self, args: List[str]) -> int:
         """
-        Send a message to MANAS and get a response.
+        Send a message to the cognitive layer and get a response.
 
         OPUS-042: SAMVADA (The Dialogue)
-        OPUS-075: Now uses headless mode (JnanaHandler direct) - no daemon needed!
+        OPUS-309: Routes through kernel.process_operator_input()
+
+        PROMPT.md: "Protocol statt konkrete Klassen"
+        CLI knows ONLY the Kernel. Kernel knows ONLY the Protocol.
+        NO direct plugin imports. NO fallbacks. NO spaghetti.
 
         Usage:
             steward chat "Status report"
@@ -937,64 +941,91 @@ class UnifiedCLI:
             print("\n❌ No message provided")
             return 1
 
-        # Join all args into a single message (handles unquoted multi-word)
         message = " ".join(args)
 
         try:
-            # OPUS-075 FIX: Use headless mode instead of socket
-            # This works without daemon - direct JnanaHandler invocation
             import asyncio
-            from pathlib import Path
 
-            from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
-            from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
-
-            handler = JnanaHandler(workspace=Path.cwd())
-
-            # OPUS-080: Wire up LLM provider for intelligent responses
-            # JnanaHandler expects .chat(prompt) -> str, but providers have .invoke() -> LLMResponse
-            # Create adapter to bridge the interface gap
-            try:
-                from vibe_core.runtime.providers.factory import get_default_provider
-
-                provider = get_default_provider()
-                if hasattr(provider, "invoke") and provider.__class__.__name__ != "NoOpProvider":
-                    # Create adapter: chat(prompt) -> invoke(prompt).content
-                    class LLMAdapter:
-                        def __init__(self, provider):
-                            self._provider = provider
-
-                        def chat(self, prompt):
-                            # Use haiku for fast, cheap chat responses
-                            response = self._provider.invoke(
-                                prompt=prompt if isinstance(prompt, str) else str(prompt),
-                                model="anthropic/claude-3.5-haiku",  # Fast & cheap
-                                max_tokens=1024,
-                                temperature=0.7,
-                            )
-                            return response.content
-
-                    handler.configure_llm(LLMAdapter(provider))
-                    logger.info("MANAS: LLM provider configured (OpenRouter)")
-            except Exception as e:
-                logger.debug(f"LLM provider not available: {e} - using basic mode")
-
-            msg = SamvadaMessage(content=message, msg_type="chat")
-            response = asyncio.run(handler.handle(msg))
-
-            if response.success:
-                print(f"🗣️ MANAS: {response.content}")
-                return 0
-            else:
-                print(f"❌ Error: {response.error}")
+            # OPUS-309: CLI → Kernel → Protocol → Plugin
+            # No shortcuts. No exceptions.
+            kernel = self._get_kernel()
+            if not kernel:
+                print("❌ Kernel not available. Run 'steward boot' first.")
                 return 1
+
+            if not hasattr(kernel, "process_operator_input"):
+                print("❌ Kernel does not support cognitive processing.")
+                print("   Upgrade to OPUS-309 or later.")
+                return 1
+
+            from vibe_core.protocols.cognition import CognitiveIntentType
+
+            result = asyncio.run(kernel.process_operator_input(message))
+
+            # Handle result by intent type - NO hardcoded plugin names!
+            if result.intent_type == CognitiveIntentType.CHAT:
+                print(f"🗣️ {result.response}")
+                return 0
+
+            elif result.intent_type == CognitiveIntentType.EXECUTE:
+                print(f"🎯 Execution intent detected: {result.syscall_type}")
+                if result.syscall_params:
+                    print(f"   Parameters: {result.syscall_params}")
+                print(f"   Confidence: {result.confidence:.0%}")
+                if result.reasoning:
+                    print(f"   Reasoning: {result.reasoning}")
+                print("\n   To execute: steward run <capability>")
+                return 0
+
+            elif result.intent_type == CognitiveIntentType.ROUTE:
+                print(f"🔀 Routing to: {result.target}")
+                if result.reasoning:
+                    print(f"   Reason: {result.reasoning}")
+                return 0
+
+            elif result.intent_type == CognitiveIntentType.QUERY:
+                if result.query_result:
+                    import json
+
+                    print(json.dumps(result.query_result, indent=2))
+                else:
+                    print(f"🔍 Query: {result.query_type}")
+                return 0
+
+            else:
+                # Unknown intent type - still no hardcoded names
+                print(f"🗣️ {result.response or '[No response]'}")
+                return 0
 
         except Exception as e:
             print(f"❌ Chat failed: {e}")
-            import traceback
-
-            traceback.print_exc()
+            logger.error(f"cmd_chat error: {e}")
             return 1
+
+    def _get_kernel(self):
+        """
+        OPUS-309: Get kernel from DI or create one.
+
+        PROMPT.md: No fallback to direct plugin access.
+        If kernel fails, we fail. That's the contract.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.ledger import VibeKernel
+
+            # Try DI first (kernel already running)
+            kernel = ServiceRegistry.get(VibeKernel)
+            if kernel:
+                return kernel
+
+            # Create kernel with plugins (will register cognitive layer)
+            from vibe_core.kernel_impl import RealVibeKernel
+
+            return RealVibeKernel(load_plugins=True)
+
+        except Exception as e:
+            logger.error(f"Kernel initialization failed: {e}")
+            return None
 
     # =========================================================================
     # OPUS-075: MANAS HIL BRIDGE COMMANDS

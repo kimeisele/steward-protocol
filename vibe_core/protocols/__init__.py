@@ -20,7 +20,15 @@ from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 
 # OPUS-307 Phase E+: CLI Protocol (Anti-God-Object)
 from .cli import CLIHandler, CLIMeta, CLIRegistry, CLIResult, register_cli
-from .cognition import CognitiveKernelProtocol, SystemHeartbeatProtocol
+from .cognition import (
+    CognitiveContext,
+    CognitiveKernelProtocol,
+    CognitiveResult,
+    IntentType as CognitiveIntentType,  # Avoid collision with operator_protocol.IntentType
+    NullCognitive,
+    OperatorCognitiveProtocol,
+    SystemHeartbeatProtocol,
+)
 
 # OPUS-307 D.2: External Service Protocols
 from .external import RedditProtocol, TwitterProtocol
@@ -162,4 +170,10 @@ __all__ = [
     # Vedic Governance Protocol
     "VarnaType",
     "VedicGovernanceProtocol",
+    # OPUS-309: Operator Cognitive Protocol
+    "OperatorCognitiveProtocol",
+    "CognitiveResult",
+    "CognitiveContext",
+    "CognitiveIntentType",
+    "NullCognitive",
 ]
