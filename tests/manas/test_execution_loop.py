@@ -9,7 +9,10 @@ TDD: We write the test first to discover what's broken.
 "If you can't test it, you can't trust it."
 """
 
+import asyncio
 from pathlib import Path
+
+import pytest
 
 from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import (
     CognitiveKernel,
@@ -24,6 +27,7 @@ from vibe_core.plugins.opus_assistant.manas.intent_router import (
     IntentRouter,
     create_execution_callback,
 )
+from vibe_core.plugins.opus_assistant.manas.router import list_handlers
 
 # =============================================================================
 # SECTION 1: CALLBACK WIRING TESTS
@@ -60,12 +64,12 @@ class TestIntentRouterExecution:
 
     def test_router_has_handlers_registered(self):
         """Router must have handlers for common intent types."""
-        router = IntentRouter(workspace=Path("."))
+        # OPUS-314: Use list_handlers() instead of router._handlers
+        handlers = list_handlers(workspace=Path("."))
+        assert len(handlers) > 0
 
-        # Check that handlers dict is populated
-        assert len(router._handlers) > 0
-
-    def test_router_routes_documentation_intent(self):
+    @pytest.mark.asyncio
+    async def test_router_routes_documentation_intent(self):
         """Documentation intents should route to Sutra handler."""
         router = IntentRouter(workspace=Path("."))
 
@@ -81,14 +85,16 @@ class TestIntentRouterExecution:
             params={"file": "README.md"},
         )
 
-        result = router.route(intent)
+        # OPUS-314: route() is now async
+        result = await router.route(intent)
 
         # Should not error - handler should exist
         # Success depends on actual handler implementation
         assert result is not None
-        assert hasattr(result, "handler")
+        assert hasattr(result, "executed_by")
 
-    def test_router_returns_error_for_unknown_intent_type(self):
+    @pytest.mark.asyncio
+    async def test_router_returns_error_for_unknown_intent_type(self):
         """Unknown intent types should return error, not crash."""
         router = IntentRouter(workspace=Path("."))
 
@@ -104,7 +110,8 @@ class TestIntentRouterExecution:
             params={},
         )
 
-        result = router.route(intent)
+        # OPUS-314: route() is now async
+        result = await router.route(intent)
 
         assert result is not None
         assert result.success is False
@@ -122,7 +129,8 @@ class TestIntentRouterExecution:
 class TestEndToEndExecution:
     """Tests the full execution loop: Intent -> Callback -> Router -> Handler."""
 
-    def test_callback_routes_intent_and_returns_result(self):
+    @pytest.mark.asyncio
+    async def test_callback_routes_intent_and_returns_result(self):
         """Callback should route intent through router and return result."""
         callback = create_execution_callback(workspace=Path("."))
 
@@ -138,7 +146,8 @@ class TestEndToEndExecution:
             params={},
         )
 
-        result = callback(intent)
+        # OPUS-314: callback is now async
+        result = await callback(intent)
 
         # Callback must return a dict
         assert isinstance(result, dict)
@@ -147,7 +156,8 @@ class TestEndToEndExecution:
         # Must have handler key (tells us who handled it)
         assert "handler" in result
 
-    def test_full_loop_with_kernel(self):
+    @pytest.mark.asyncio
+    async def test_full_loop_with_kernel(self):
         """
         Full loop: Kernel with callback executes intent.
 
@@ -174,8 +184,8 @@ class TestEndToEndExecution:
         )
 
         # Execute through kernel's internal method
-        # This simulates what happens when MANAS auto-executes
-        result = kernel._execution_callback(intent)
+        # OPUS-314: callback is now async
+        result = await kernel._execution_callback(intent)
 
         assert result is not None
         assert isinstance(result, dict)
@@ -189,14 +199,15 @@ class TestEndToEndExecution:
 class TestHandlerVerification:
     """Tests that specific handlers actually DO something."""
 
-    def test_sutra_handler_exists_and_responds(self):
+    @pytest.mark.asyncio
+    async def test_sutra_handler_exists_and_responds(self):
         """Sutra (documentation) handler must exist and respond."""
         router = IntentRouter(workspace=Path("."))
 
-        # Check if sutra handler is registered
-        handler = router._handlers.get("update_documentation")
-        if handler is None:
-            handler = router._handlers.get("generate_docs")
+        # OPUS-314: Use list_handlers() to check handlers
+        handlers = list_handlers(workspace=Path("."))
+        # At least some handlers should be registered
+        assert len(handlers) > 0
 
         # At minimum, routing shouldn't crash
         intent = Intent(
@@ -211,10 +222,12 @@ class TestHandlerVerification:
             params={},
         )
 
-        result = router.route(intent)
+        # OPUS-314: route() is now async
+        result = await router.route(intent)
         assert result is not None
 
-    def test_silpa_handler_exists_and_responds(self):
+    @pytest.mark.asyncio
+    async def test_silpa_handler_exists_and_responds(self):
         """Silpa (code generation) handler must exist and respond."""
         router = IntentRouter(workspace=Path("."))
 
@@ -230,5 +243,6 @@ class TestHandlerVerification:
             params={},
         )
 
-        result = router.route(intent)
+        # OPUS-314: route() is now async
+        result = await router.route(intent)
         assert result is not None

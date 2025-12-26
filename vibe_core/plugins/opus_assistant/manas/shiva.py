@@ -198,6 +198,11 @@ class ShivaLifecycleManager:
         """
         archived = 0
 
+        # OPUS-314: Guard against unbooted kernel
+        if not kernel._buffer:
+            logger.debug("🕉️ Shiva: Kernel buffer not initialized, skipping sweep")
+            return 0
+
         # OPUS-174: Use _buffer (IntentBuffer), not _intent_buffer
         for entry in kernel._buffer:
             if entry.status != "pending":

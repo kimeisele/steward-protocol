@@ -520,9 +520,10 @@ class TestCognitiveKernelIntegration:
         result = kernel.think(force=True)
         assert isinstance(result, list)
 
-    def test_approve_nonexistent_intent_returns_false(self, kernel):
+    @pytest.mark.asyncio
+    async def test_approve_nonexistent_intent_returns_false(self, kernel):
         """Mutation killer: Approving non-existent intent should fail."""
-        result = kernel.approve_intent("nonexistent_id")
+        result = await kernel.approve_intent("nonexistent_id")
         assert result is False
 
     def test_reject_nonexistent_intent_returns_false(self, kernel):
