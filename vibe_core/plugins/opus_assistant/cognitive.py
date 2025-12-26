@@ -1,5 +1,5 @@
 """
-OPUS-309 + OPUS-310: MANASCognitive Adapter
+OPUS-309 + OPUS-310 + OPUS-311: MANASCognitive Adapter
 
 Implements OperatorCognitiveProtocol for the OPUS Assistant plugin.
 
@@ -8,6 +8,11 @@ Bridges:
 - JnanaHandler (intelligent chat responses)
 - BlueprintGenerator (intent → syscall)
 - VedaPipeline (SHABDA → ARTHA → PRATYAYA → KARMA)
+
+OPUS-311 Sprint 3: Autonomy Protocols
+- MemoryProtocol: Session context, entity resolution ("the second one")
+- FeedbackProtocol: Pain/pleasure signals for learning
+- ReflectionProtocol: Pattern analysis, improvement proposals
 
 PROMPT.md: "Protocol statt konkrete Klassen"
 GAD-000: AI operates the system on behalf of human.
@@ -24,6 +29,7 @@ Usage:
 """
 
 import logging
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -35,7 +41,23 @@ from vibe_core.protocols.cognition import (
 from vibe_core.protocols.cognition import (
     IntentType as CognitiveIntentType,
 )
+from vibe_core.protocols.feedback import (
+    FeedbackProtocol,
+    get_feedback_safe,
+)
 from vibe_core.protocols.intent import IntentMatcherProtocol, NullIntentMatcher
+
+# OPUS-311 Sprint 3: Autonomy Protocols
+from vibe_core.protocols.memory import (
+    Entity,
+    MemoryProtocol,
+    get_memory_safe,
+)
+from vibe_core.protocols.reflection import (
+    ExecutionRecord,
+    ReflectionProtocol,
+    get_reflection_safe,
+)
 
 logger = logging.getLogger("MANAS.Cognitive")
 
@@ -67,7 +89,13 @@ class MANASCognitive:
         self._intent_matcher: Optional[IntentMatcherProtocol] = None  # OPUS-310 Phase 4
         self._command_registry = None  # Lazy loaded
 
+        # OPUS-311 Sprint 3: Autonomy Protocols (DI with fallbacks)
+        self._memory: MemoryProtocol = get_memory_safe()
+        self._feedback: FeedbackProtocol = get_feedback_safe()
+        self._reflection: ReflectionProtocol = get_reflection_safe()
+
         logger.info(f"🧠 MANASCognitive initialized (workspace: {self._workspace})")
+        logger.debug("🧠 Autonomy protocols: Memory, Feedback, Reflection")
 
     def _ensure_jnana_handler(self):
         """Lazy-load JnanaHandler."""
@@ -137,9 +165,138 @@ class MANASCognitive:
                 logger.warning(f"🧠 CommandRegistry not available: {e}")
         return self._command_registry
 
-    async def _try_command_match(self, intent: str) -> Optional[CognitiveResult]:
+    def _resolve_entity_references(self, intent: str, session_id: Optional[str]) -> tuple[str, Optional[Entity]]:
+        """
+        OPUS-311: Resolve entity references like "the second one".
+
+        Uses MemoryProtocol to look up last entities from session.
+
+        Returns:
+            (resolved_intent, resolved_entity) - entity is None if no reference found
+        """
+        if not session_id:
+            return intent, None
+
+        # Check for ordinal references
+        ordinal_patterns = [
+            "the first",
+            "the second",
+            "the third",
+            "the fourth",
+            "the fifth",
+            "the last",
+            "that one",
+            "the one",
+            "it",
+        ]
+
+        intent_lower = intent.lower()
+        for pattern in ordinal_patterns:
+            if pattern in intent_lower:
+                entity = self._memory.resolve_reference(pattern, session_id)
+                if entity:
+                    # Replace reference with entity name/id
+                    resolved = intent_lower.replace(pattern, entity.name)
+                    logger.debug(f"🧠 Resolved '{pattern}' → '{entity.name}'")
+                    return resolved, entity
+
+        return intent, None
+
+    def _remember_result_entities(
+        self,
+        result: CognitiveResult,
+        session_id: Optional[str],
+    ) -> None:
+        """
+        OPUS-311: Extract and remember entities from result.
+
+        Enables future "the second one" resolution.
+        """
+        if not session_id:
+            return
+
+        # Try to extract entities from syscall_params or response
+        entities = []
+
+        # Check if result contains agent list
+        if result.syscall_params and "agents" in result.syscall_params:
+            agents = result.syscall_params["agents"]
+            if isinstance(agents, list):
+                for i, agent in enumerate(agents):
+                    name = agent.get("name", agent) if isinstance(agent, dict) else str(agent)
+                    entities.append(
+                        Entity(
+                            type="agent",
+                            id=str(i),
+                            name=name,
+                            position=i + 1,
+                        )
+                    )
+
+        # Check if result contains task list
+        if result.syscall_params and "tasks" in result.syscall_params:
+            tasks = result.syscall_params["tasks"]
+            if isinstance(tasks, list):
+                for i, task in enumerate(tasks):
+                    name = task.get("id", task) if isinstance(task, dict) else str(task)
+                    entities.append(
+                        Entity(
+                            type="task",
+                            id=str(i),
+                            name=name,
+                            position=i + 1,
+                        )
+                    )
+
+        if entities:
+            self._memory.remember_entities(entities, session_id)
+            logger.debug(f"🧠 Remembered {len(entities)} entities for session {session_id}")
+
+    def record_execution_result(
+        self,
+        command: str,
+        args: List[str],
+        success: bool,
+        error: Optional[str] = None,
+        duration_ms: float = 0.0,
+        session_id: Optional[str] = None,
+    ) -> None:
+        """
+        OPUS-311: Record execution result for learning.
+
+        Called after command execution to:
+        1. Signal Feedback (pain/pleasure)
+        2. Record in Reflection (pattern analysis)
+
+        This enables the Autonomy Loop to learn from experience.
+        """
+        context = {"args": args, "session_id": session_id}
+
+        # Signal Feedback
+        if success:
+            self._feedback.signal_success(command, context, duration_ms, session_id)
+        else:
+            self._feedback.signal_failure(command, error or "unknown", context, duration_ms, session_id)
+
+        # Record for Reflection
+        record = ExecutionRecord(
+            command=command,
+            args=args,
+            success=success,
+            error=error,
+            duration_ms=duration_ms,
+            session_id=session_id,
+            context=context,
+        )
+        self._reflection.record_execution(record)
+
+        logger.debug(f"🧠 Recorded execution: {command} ({'✅' if success else '❌'})")
+
+    async def _try_command_match(self, intent: str, session_id: Optional[str] = None) -> Optional[CognitiveResult]:
         """
         OPUS-310 Phase 4: Try to match intent to a command.
+
+        OPUS-311: Now resolves entity references and checks failure patterns.
 
         Uses CommandRegistry + IntentMatcher.
         No LLM calls - pure semantic matching.
@@ -154,28 +311,51 @@ class MANASCognitive:
         if not registry:
             return None
 
+        # OPUS-311: Resolve entity references ("the second one" → "archivist")
+        resolved_intent, resolved_entity = self._resolve_entity_references(intent, session_id)
+        if resolved_entity:
+            logger.debug(f"🧠 Resolved entity: {resolved_entity.name} ({resolved_entity.type})")
+
         # Get all commands from registry
         commands = registry.list_commands()
         if not commands:
             return None
 
-        # Match intent to commands
-        matches = matcher.match(intent, commands)
+        # Match intent to commands (use resolved intent)
+        matches = matcher.match(resolved_intent, commands)
         if not matches:
-            logger.debug(f"🧠 IntentMatcher: no matches for '{intent}'")
+            logger.debug(f"🧠 IntentMatcher: no matches for '{resolved_intent}'")
             return None
 
         best = matches[0]
         logger.debug(f"🧠 IntentMatcher: best match '{best.command.name}' ({best.confidence:.0%})")
 
+        # OPUS-311: Check for failure warnings
+        warning = self._feedback.should_warn(best.command.name, {"intent": intent})
+        if warning:
+            logger.warning(f"🧠 Feedback warning: {warning}")
+            # Add warning to reasoning but don't block execution
+            best_reasoning = f"{best.reasoning} (⚠️ {warning})"
+        else:
+            best_reasoning = best.reasoning
+
         # High confidence → Execute
         if best.confidence >= 0.8:
+            # If we resolved an entity, inject it into params
+            params = best.extracted_params.copy() if best.extracted_params else {}
+            if resolved_entity:
+                params["_resolved_entity"] = {
+                    "type": resolved_entity.type,
+                    "id": resolved_entity.id,
+                    "name": resolved_entity.name,
+                }
+
             return CognitiveResult(
                 intent_type=CognitiveIntentType.EXECUTE,
                 confidence=best.confidence,
                 syscall_type=best.command.name,
-                syscall_params=best.extracted_params,
-                reasoning=f"IntentMatcher: {best.reasoning}",
+                syscall_params=params,
+                reasoning=f"IntentMatcher: {best_reasoning}",
             )
 
         # Medium confidence → Suggest options
@@ -186,7 +366,7 @@ class MANASCognitive:
                 intent_type=CognitiveIntentType.QUERY,
                 confidence=best.confidence,
                 response=suggestion_text,
-                reasoning=f"IntentMatcher (medium confidence): {best.reasoning}",
+                reasoning=f"IntentMatcher (medium confidence): {best_reasoning}",
             )
 
         # Low confidence → Fall through to next handler
@@ -197,17 +377,24 @@ class MANASCognitive:
         """
         Process natural language intent.
 
-        OPUS-309 + OPUS-310: Main entry point from Kernel.
+        OPUS-309 + OPUS-310 + OPUS-311: Main entry point from Kernel.
         Decides: chat, execute, query, or route.
 
-        The flow (OPUS-310 Phase 4):
-        1. Try IntentMatcher against CommandRegistry (no LLM, pure semantic)
-        2. Try BlueprintGenerator for complex syscalls (LLM-based)
-        3. Fall back to JnanaHandler for chat
+        The flow (OPUS-310 Phase 4 + OPUS-311):
+        1. Resolve entity references ("the second one" → "archivist")
+        2. Try IntentMatcher against CommandRegistry (no LLM, pure semantic)
+        3. Try BlueprintGenerator for complex syscalls (LLM-based)
+        4. Fall back to JnanaHandler for chat
+        5. Remember entities from result for future reference
         """
+        session_id = context.session_id
+
         # OPUS-310 Phase 4: Try command matching FIRST (no LLM required)
-        command_match = await self._try_command_match(intent)
+        # OPUS-311: Pass session_id for entity resolution
+        command_match = await self._try_command_match(intent, session_id)
         if command_match:
+            # OPUS-311: Remember entities from result
+            self._remember_result_entities(command_match, session_id)
             return command_match
 
         # Try to detect execution intent via BlueprintGenerator (LLM-based)
@@ -315,4 +502,27 @@ class MANASCognitive:
         if self._ensure_jnana_handler():
             caps.extend(["intelligent_response", "context_aware_chat", "drift_detection", "knowledge_query"])
 
+        # OPUS-311 Sprint 3: Autonomy protocols
+        caps.extend(
+            [
+                "session_memory",  # MemoryProtocol
+                "entity_resolution",  # "the second one" → agent
+                "feedback_learning",  # FeedbackProtocol
+                "pattern_detection",  # ReflectionProtocol
+            ]
+        )
+
         return caps
+
+    def get_autonomy_stats(self) -> Dict[str, Any]:
+        """
+        OPUS-311: Get autonomy protocol statistics.
+
+        Returns:
+            Stats from Memory, Feedback, and Reflection protocols
+        """
+        return {
+            "memory": self._memory.get_stats().__dict__,
+            "feedback": self._feedback.get_stats().__dict__,
+            "reflection": self._reflection.get_stats().__dict__,
+        }

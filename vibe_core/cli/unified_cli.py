@@ -969,6 +969,8 @@ class UnifiedCLI:
 
             elif result.intent_type == CognitiveIntentType.EXECUTE:
                 # OPUS-310: Actually execute the command via CommandRegistry
+                import time as time_module
+
                 from vibe_core.cli.command_registry import CommandRegistry
                 from vibe_core.protocols.command import CommandContext
 
@@ -978,11 +980,12 @@ class UnifiedCLI:
                 if registry.stats()["total"] == 0:
                     registry.scan_all()
 
-                # Build args from params
+                # Build args from params (skip internal params like _resolved_entity)
                 args = []
                 if result.syscall_params:
                     for k, v in result.syscall_params.items():
-                        args.append(str(v))
+                        if not k.startswith("_"):  # Skip internal params
+                            args.append(str(v))
 
                 # Execute with kernel context
                 context = CommandContext(
@@ -991,6 +994,7 @@ class UnifiedCLI:
                     caller="cli.chat",
                 )
 
+                start_time = time_module.time()
                 cmd_result = asyncio.run(
                     registry.execute(
                         result.syscall_type,
@@ -998,6 +1002,18 @@ class UnifiedCLI:
                         context,
                     )
                 )
+                duration_ms = (time_module.time() - start_time) * 1000
+
+                # OPUS-311: Record execution for learning (Feedback + Reflection)
+                if hasattr(kernel, "_cognitive") and hasattr(kernel._cognitive, "record_execution_result"):
+                    kernel._cognitive.record_execution_result(
+                        command=result.syscall_type,
+                        args=args,
+                        success=cmd_result.success,
+                        error=cmd_result.error,
+                        duration_ms=duration_ms,
+                        session_id=None,
+                    )
 
                 if cmd_result.success:
                     if cmd_result.output:
