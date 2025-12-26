@@ -221,7 +221,8 @@ class TestCognitiveKernelIntegration:
         assert hasattr(kernel, "_execute_intent")
         assert callable(kernel._execute_intent)
 
-    def test_execute_intent_uses_circuit_executor(self, tmp_path):
+    @pytest.mark.asyncio
+    async def test_execute_intent_uses_circuit_executor(self, tmp_path):
         """_execute_intent must call circuit executor for circuit intents."""
         from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import (
             CognitiveKernel,
@@ -233,7 +234,13 @@ class TestCognitiveKernelIntegration:
             IntentRisk,
         )
 
+        # OPUS-314: Setup workspace directories needed for boot
+        (tmp_path / ".opus_state").mkdir(exist_ok=True)
+        (tmp_path / ".git").mkdir(exist_ok=True)
+
         kernel = CognitiveKernel(workspace=tmp_path)
+        # OPUS-314: Boot the kernel so _action_manager is initialized
+        kernel.boot()
 
         # Create an intent with circuit_to_execute
         intent = Intent(
@@ -256,8 +263,8 @@ class TestCognitiveKernelIntegration:
             "vibe_core.plugins.opus_assistant.manas.circuit_executor.CognitiveCircuitExecutor",
             return_value=mock_executor,
         ):
-            # Execute
-            result = kernel._execute_intent(entry)
+            # OPUS-314: _execute_intent is now async
+            result = await kernel._execute_intent(entry)
 
             # Verify circuit executor was called
             mock_executor.execute_circuit.assert_called_once_with("maintenance_pulse")

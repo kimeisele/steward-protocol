@@ -113,10 +113,9 @@ class TestShivaSweep:
         kernel = CognitiveKernel(workspace=Path("."), config=config)
 
         shiva = ShivaLifecycleManager(workspace=Path("."))
-        shiva.inject_kernel(kernel)
 
-        # Sweep should process intents
-        archived_count = shiva.sweep_stale_intents()
+        # OPUS-314: sweep_stale_intents now takes kernel as parameter
+        archived_count = shiva.sweep_stale_intents(kernel)
 
         # Should return count (may be 0 if nothing stale)
         assert isinstance(archived_count, int)

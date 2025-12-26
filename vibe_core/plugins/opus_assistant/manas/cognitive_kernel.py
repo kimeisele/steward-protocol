@@ -2511,6 +2511,8 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
     def _find_intent_entry(self, intent_id: str) -> Optional[IntentBufferEntry]:
         """Find intent entry by ID."""
+        if not self._buffer:
+            return None
         return self._buffer.find(intent_id)
 
     async def _execute_intent(self, entry: IntentBufferEntry) -> bool:
@@ -2519,6 +2521,11 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         This closes the loop between the Kernel (Manas) and ActionManager (Karmendriya).
         """
+        # OPUS-314: Guard against unbooted kernel
+        if not self._action_manager:
+            logger.warning("🧠 MANAS: Cannot execute intent - kernel not booted")
+            return False
+
         # Get ledger from vibe_kernel
         ledger = getattr(self, "_ledger", None)
         if not ledger and self._vibe_kernel:
