@@ -520,6 +520,14 @@ def get_event_bus() -> EventBus:
     # Fallback to module singleton
     if _event_bus_instance is None:
         _event_bus_instance = EventBus()
+        # OPUS-311: Auto-register so get_event_bus_safe() also finds it
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.event import EventBusProtocol
+
+            ServiceRegistry.register(EventBusProtocol, _event_bus_instance)
+        except ImportError:
+            pass
     return _event_bus_instance
 
 
