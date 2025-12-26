@@ -842,6 +842,8 @@ class CommandRegistry:
         Execute a command by name.
 
         The universal execution entry point.
+
+        OPUS-311: Includes GovernanceGate permission check.
         """
         cmd = self.get(name)
         if not cmd:
@@ -852,6 +854,15 @@ class CommandRegistry:
             )
 
         context = context or CommandContext()
+
+        # OPUS-311: Permission check via GovernanceGate
+        permission_result = self._check_permission(name, args, context)
+        if not permission_result.allowed:
+            return CommandResult(
+                success=False,
+                error=f"Permission denied: {permission_result.message or permission_result.reason.value if permission_result.reason else 'unknown'}",
+                exit_code=126,  # Command invoked cannot execute
+            )
 
         # Validate
         errors = cmd.validate(args)
@@ -872,6 +883,43 @@ class CommandRegistry:
                 error=f"Execution failed: {e}",
                 exit_code=1,
             )
+
+    def _check_permission(self, name: str, args: List[str], context: CommandContext) -> Any:  # PermissionResult
+        """
+        OPUS-311: Check permission via GovernanceGate.
+
+        Returns PermissionResult (allowed/denied).
+        """
+        from vibe_core.protocols.governance_gate import (
+            ANONYMOUS,
+            SYSTEM,
+            ExecutionContext,
+            GovernanceGate,
+            Identity,
+            PermissionResult,
+        )
+
+        # Get or create governance gate
+        if not hasattr(self, "_governance_gate"):
+            self._governance_gate = GovernanceGate()
+
+        # Determine identity from context
+        if context.caller == "system":
+            identity = SYSTEM
+        elif context.metadata.get("identity"):
+            identity = context.metadata["identity"]
+        else:
+            identity = ANONYMOUS
+
+        # Build execution context
+        exec_context = ExecutionContext(
+            command=name,
+            args=args,
+            caller=context.caller,
+            session_id=context.session_id,
+        )
+
+        return self._governance_gate.can_execute(identity, name, exec_context)
 
     def get_pending_wiring(self) -> Dict[str, ManifestCommandSpec]:
         """Get commands that need executors wired."""

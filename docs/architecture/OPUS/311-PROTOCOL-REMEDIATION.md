@@ -529,6 +529,117 @@ if not permission.allowed:
 
 ---
 
+### 6. The Sync/Async Death Trap
+
+**Problem:** Mixing `async def` (Cognitive) with blocking calls (Legacy Tools).
+
+```python
+# Current: Some tools block
+async def execute(self, args, context):
+    result = some_legacy_tool.run()  # BLOCKS! Freezes entire event loop
+    return CommandResult(...)
+```
+
+**Root Cause:** Not all tools are async-safe.
+
+**Solution:** Force everything through executor.
+
+```python
+@runtime_checkable
+class AsyncSafeProtocol(Protocol):
+    """Ensure all execution is non-blocking."""
+
+    async def run_sync(self, func: Callable, *args) -> Any:
+        """Run blocking function in thread executor."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, func, *args)
+
+# In CommandProtocol enforcement:
+if not asyncio.iscoroutinefunction(cmd.execute):
+    raise ProtocolViolation("Commands MUST be async")
+```
+
+**Priority:** P1 (stability)
+
+---
+
+### 7. The Stringly-Typed Catastrophe
+
+**Problem:** `args: List[str]` with no schema validation.
+
+```python
+# "delete agent 5" vs "delete agent --id 5" vs "delete agent id=5"
+# All different, all passed as List[str], validation happens... never?
+```
+
+**Root Cause:** No input schema enforcement.
+
+**Solution:** Pydantic schemas per command.
+
+```python
+from pydantic import BaseModel
+
+class DeleteAgentParams(BaseModel):
+    agent_id: str
+    force: bool = False
+
+@runtime_checkable
+class TypedCommandProtocol(Protocol):
+    """Commands with validated input schemas."""
+
+    @property
+    def input_schema(self) -> Type[BaseModel]: ...
+
+    async def execute(self, params: BaseModel, context: CommandContext) -> CommandResult: ...
+
+# IntentMatcher validates BEFORE execution:
+try:
+    validated = cmd.input_schema(**extracted_params)
+except ValidationError as e:
+    return CommandResult(success=False, error=f"Invalid parameters: {e}")
+```
+
+**Priority:** P1 (reliability)
+
+---
+
+### 8. The Observer Effect (Log Explosion)
+
+**Problem:** MANAS reads its own logs → infinite loop.
+
+```python
+# Reflection reads logs
+logs = get_recent_logs()
+insight = analyze(logs)  # This gets logged
+logs = get_recent_logs()  # Now includes the analysis
+insight = analyze(logs)  # "I see that I see that I see..."
+```
+
+**Root Cause:** No separation between operational logs and agent memory.
+
+**Solution:** Separate log streams.
+
+```python
+class LogStreamProtocol(Protocol):
+    """Separated log streams."""
+
+    def operational_log(self, msg: str) -> None:
+        """For humans/debugging - MANAS cannot read."""
+        ...
+
+    def episodic_log(self, event: EpisodicEvent) -> None:
+        """For agent memory - structured, queryable."""
+        ...
+
+    def get_episodic_events(self, since: datetime) -> List[EpisodicEvent]:
+        """Agent can query its own history (not raw logs)."""
+        ...
+```
+
+**Priority:** P2 (autonomy loop)
+
+---
+
 ## Acceptance Criteria (Hardened System)
 
 ### Boot-Time Guarantees
