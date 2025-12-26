@@ -968,13 +968,45 @@ class UnifiedCLI:
                 return 0
 
             elif result.intent_type == CognitiveIntentType.EXECUTE:
-                print(f"🎯 Execution intent detected: {result.syscall_type}")
+                # OPUS-310: Actually execute the command via CommandRegistry
+                from vibe_core.cli.command_registry import CommandRegistry
+                from vibe_core.protocols.command import CommandContext
+
+                registry = CommandRegistry.get_instance()
+
+                # Ensure commands are scanned
+                if registry.stats()["total"] == 0:
+                    registry.scan_all()
+
+                # Build args from params
+                args = []
                 if result.syscall_params:
-                    print(f"   Parameters: {result.syscall_params}")
-                print(f"   Confidence: {result.confidence:.0%}")
-                if result.reasoning:
-                    print(f"   Reasoning: {result.reasoning}")
-                print("\n   To execute: steward run <capability>")
+                    for k, v in result.syscall_params.items():
+                        args.append(str(v))
+
+                # Execute with kernel context
+                context = CommandContext(
+                    kernel=kernel,
+                    session_id=None,
+                    caller="cli.chat",
+                )
+
+                cmd_result = asyncio.run(
+                    registry.execute(
+                        result.syscall_type,
+                        args,
+                        context,
+                    )
+                )
+
+                if cmd_result.success:
+                    if cmd_result.output:
+                        print(cmd_result.output)
+                    else:
+                        print(f"✅ {result.syscall_type} executed successfully")
+                else:
+                    print(f"❌ {result.syscall_type} failed: {cmd_result.error}")
+                    return 1
                 return 0
 
             elif result.intent_type == CognitiveIntentType.ROUTE:
@@ -984,7 +1016,10 @@ class UnifiedCLI:
                 return 0
 
             elif result.intent_type == CognitiveIntentType.QUERY:
-                if result.query_result:
+                # OPUS-310: Show suggestions for medium confidence matches
+                if result.response:
+                    print(f"🔍 {result.response}")
+                elif result.query_result:
                     import json
 
                     print(json.dumps(result.query_result, indent=2))
