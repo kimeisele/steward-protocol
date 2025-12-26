@@ -474,6 +474,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 schema="config_bidirectional",
                 data_getter=self._get_settings_manifestation_data,
             )
+
+            # OPUS-308: Register kernel-native OPERATIONS.md
+            # OPERATIONS.md shows scheduler, agents, events - all kernel state
+            self.manifestation.register_kernel_source(
+                output="OPERATIONS.md",
+                schema="dashboard_readonly",
+                data_getter=self._get_operations_manifestation_data,
+            )
         else:
             self._plugins = []
             self._plugins = []
@@ -1288,6 +1296,74 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             "current": current,
             "available": available,
             "history": history,
+        }
+
+    def _get_operations_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Kernel-native data source for OPERATIONS.md.
+
+        Returns data for the dashboard_readonly schema sections:
+        - metrics: Key numbers (queue size, agent count, event count)
+        - status: Current kernel and agent states
+        - details: Scheduler queue details
+        """
+        # Metrics - key numbers
+        queue_status = self._scheduler.get_queue_status() if hasattr(self, "_scheduler") else {}
+        event_status = self._event_bus.get_status() if hasattr(self, "_event_bus") else {}
+
+        metrics = {
+            "Kernel Status": self._status.value,
+            "Agents": len(self._agent_registry),
+            "Queue Length": queue_status.get("queue_length", 0),
+            "Pending Tasks": queue_status.get("pending", 0),
+            "Total Events": event_status.get("total_emitted", 0),
+            "Plugins": len(self._plugins),
+        }
+
+        # Status - agent states
+        status = []
+        for agent_id, agent in sorted(self._agent_registry.items()):
+            name = getattr(agent, "name", agent_id)
+            domain = getattr(agent, "domain", "UNKNOWN")
+            status.append(
+                {
+                    "Agent": f"`{agent_id}`",
+                    "Name": name,
+                    "Domain": domain,
+                    "Status": "ACTIVE",
+                }
+            )
+
+        if not status:
+            status = [{"Agent": "_No agents_", "Name": "-", "Domain": "-", "Status": "-"}]
+
+        # Details - queue and events
+        details = []
+        tasks = queue_status.get("tasks", [])[:5]
+        for t in tasks:
+            details.append(
+                {
+                    "Item": f"Task: {t.get('id', '?')[:20]}",
+                    "Info": f"Priority: {t.get('priority', '?')}",
+                }
+            )
+
+        type_counts = event_status.get("type_counts", {})
+        for event_type, count in sorted(type_counts.items(), key=lambda x: -x[1])[:5]:
+            details.append(
+                {
+                    "Item": f"Event: {event_type[:20]}",
+                    "Info": f"Count: {count}",
+                }
+            )
+
+        if not details:
+            details = [{"Item": "_No activity_", "Info": "-"}]
+
+        return {
+            "metrics": metrics,
+            "status": status,
+            "details": details,
         }
 
     def _process_ipc_events(self) -> None:
