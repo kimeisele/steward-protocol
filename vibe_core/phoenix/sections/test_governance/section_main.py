@@ -151,17 +151,19 @@ class TestGovernanceConfig:
     # VALIDATION
     # ========================================================================
 
-    def validate(self) -> bool:
-        """Validate configuration."""
+    def validate(self) -> List[str]:
+        """Validate configuration. Returns list of error messages."""
+        errors: List[str] = []
+
         valid_policies = ["blocked", "human_approval", "warn_only"]
         if self.mutation_policy not in valid_policies:
-            raise ValueError(f"mutation_policy must be one of {valid_policies}")
+            errors.append(f"mutation_policy must be one of {valid_policies}")
 
         valid_modes = ["fix_code_not_test", "allow_test_updates"]
         if self.regression_mode not in valid_modes:
-            raise ValueError(f"regression_mode must be one of {valid_modes}")
+            errors.append(f"regression_mode must be one of {valid_modes}")
 
-        return True
+        return errors
 
     def is_frozen(self, test_path: str) -> bool:
         """Check if a test file is frozen (can never be modified)."""
