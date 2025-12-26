@@ -69,6 +69,10 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     """Configure pytest from quality.yaml."""
+    # OPUS-312: Set VIBE_NO_LOCK to bypass Prakriti session lock in tests
+    # This prevents "Session already running" errors when running tests
+    os.environ["VIBE_NO_LOCK"] = "1"
+
     # Register markers from config
     config.addinivalue_line("markers", "fast: Quick unit tests (<1s)")
     config.addinivalue_line("markers", "slow: Slow tests (>5s)")
