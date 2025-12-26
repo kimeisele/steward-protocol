@@ -321,6 +321,43 @@ class VerificationEngine:
         except Exception:
             return None
 
+    def _is_command_not_path(self, pattern: str) -> bool:
+        """
+        OPUS-313: Detect if a pattern is a command rather than a file path.
+
+        Some @HARNESS blocks incorrectly contain verification commands like:
+          - python -c "from vibe_core.state import X; print('OK')"
+          - python scripts/ci/test_kernel_boot.py
+
+        These should be in a 'semantic:' section, not 'tests:' or 'files:'.
+        We filter them out to prevent false-positive "missing file" warnings.
+
+        Also catches placeholder garbage like:
+          - 'rationale'
+          - 'required'
+          - 'your/module/other.py'
+        """
+        # Commands start with executable names
+        command_prefixes = ("python ", "python3 ", "vibe ", "bash ", "sh ")
+        if pattern.startswith(command_prefixes):
+            return True
+
+        # Commands often have spaces (except in quoted paths)
+        # Real paths rarely have unquoted spaces
+        if " " in pattern and not pattern.startswith('"'):
+            return True
+
+        # Placeholder garbage (single words without slashes, not extensions)
+        garbage_patterns = {"rationale", "required", "optional", "note", "description"}
+        if pattern.lower() in garbage_patterns:
+            return True
+
+        # Example/placeholder paths
+        if pattern.startswith("your/") or "/other.py" in pattern:
+            return True
+
+        return False
+
     def _verify_files(self, files: List[Any]) -> Dict[str, Any]:
         """Verify that required files exist."""
         if not files:
@@ -336,6 +373,10 @@ class VerificationEngine:
             else:
                 path = file_spec.get("path", "")
                 required = file_spec.get("required", True)
+
+            # OPUS-313: Filter out commands and garbage
+            if self._is_command_not_path(path):
+                continue
 
             full_path = self._root / path
             if full_path.exists():
@@ -366,6 +407,12 @@ class VerificationEngine:
             if not isinstance(test_pattern, str) or not test_pattern:
                 missing.append(f"Invalid test pattern: {test_item}")
                 continue
+
+            # OPUS-313: Filter out command-like strings (parser bug fix)
+            # Some @HARNESS blocks incorrectly put verification commands in tests:
+            # e.g., 'python -c "from vibe_core..."' - these are NOT file paths
+            if self._is_command_not_path(test_pattern):
+                continue  # Skip commands silently - they're not missing files
 
             try:
                 # Support glob patterns
@@ -881,19 +928,21 @@ class VerificationEngine:
                 content = md_file.read_text()
                 harness = self._extract_harness(content, harness_marker)
                 if harness:
-                    # Collect files
+                    # Collect files (OPUS-313: filter commands/garbage)
                     for f in harness.get("files", []):
-                        if isinstance(f, str):
-                            all_files.add(f)
-                        elif isinstance(f, dict):
-                            all_files.add(f.get("path", ""))
-                    # Collect tests
+                        path = f if isinstance(f, str) else f.get("path", "")
+                        if path and not self._is_command_not_path(path):
+                            all_files.add(path)
+                    # Collect tests (OPUS-313: filter commands/garbage)
                     for t in harness.get("tests", []):
-                        if isinstance(t, str):
-                            all_files.add(t)
+                        path = t if isinstance(t, str) else t.get("path", "") if isinstance(t, dict) else ""
+                        if path and not self._is_command_not_path(path):
+                            all_files.add(path)
                     # Collect wiring targets
                     for w in harness.get("wiring", []):
-                        all_files.add(w.get("in", ""))
+                        target = w.get("in", "")
+                        if target and not self._is_command_not_path(target):
+                            all_files.add(target)
             except Exception:
                 continue
 

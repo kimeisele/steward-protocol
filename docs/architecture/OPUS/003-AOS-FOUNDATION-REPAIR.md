@@ -6,31 +6,22 @@
 > **Scope**: 7 critical wiring breaks + Knowledge system test fix
 
 <!-- @HARNESS
+# OPUS-313: Updated - removed references to deleted legacy renderers
+# The EnvoyRenderer was replaced by ManifestationService (OPUS-308)
 files:
   - path: vibe_core/cartridges/system/envoy/cartridge_main.py
     required: true
-  - path: vibe_core/envoy_sync.py
-    required: true
   - path: vibe_core/kernel_impl.py
-    required: true
-  - path: vibe_core/plugins/envoy/plugin_main.py
     required: true
   - path: vibe_core/plugins/interface/plugin_main.py
     required: true
-  - path: vibe_core/plugins/interface/renderers/envoy.py
+  - path: vibe_core/services/manifestation_service.py
     required: true
 wiring:
-  - pattern: "EnvoyRenderer"
-    in: vibe_core/plugins/interface/renderers/envoy.py
-  - pattern: "EnvoySync"
-    in: vibe_core/envoy_sync.py
   - pattern: "EnvoyCartridge"
     in: vibe_core/cartridges/system/envoy/cartridge_main.py
-absent:
-  - pattern: "TODO.*envoy"
-    in: vibe_core/plugins/interface/renderers/envoy.py
-  - pattern: "TODO.*data_flow"
-    in: vibe_core/envoy_sync.py
+  - pattern: "ManifestationService"
+    in: vibe_core/services/manifestation_service.py
 config:
   - section: interface
 -->
