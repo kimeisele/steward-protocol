@@ -265,6 +265,19 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
             except Exception as e:
                 logger.warning(f"   ⚠️ MANAS tick failed during pulse: {e}")
 
+            # 1b. OPUS-311 Sprint 4: Trigger LearningLoop (Ouroboros)
+            # Analyzes patterns, proposes aliases, detects drift
+            try:
+                if hasattr(kernel, "_cognitive") and hasattr(kernel._cognitive, "learning_tick"):
+                    logger.info("   + OUROBOROS: Triggering learning tick...")
+                    result = kernel._cognitive.learning_tick()
+                    if result.get("applied_aliases", 0) > 0:
+                        logger.info(f"   ✨ Applied {result['applied_aliases']} new aliases")
+                    if result.get("drift_detected", 0) > 0:
+                        logger.warning(f"   ⚠️ Detected {result['drift_detected']} drift events")
+            except Exception as e:
+                logger.debug(f"   Learning tick skipped: {e}")
+
             # 2. OPUS-308: Use ManifestationService for rendering
             # Get data via get_manifestation_data(), render via service template
             workspace = self._workspace or Path.cwd()
