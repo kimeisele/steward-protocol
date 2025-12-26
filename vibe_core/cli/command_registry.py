@@ -100,6 +100,150 @@ class ManifestCommand(BaseCommand):
         )
 
 
+class CartridgeToolCommand(BaseCommand):
+    """Command wrapping a cartridge tool (lazy-loaded)."""
+
+    def __init__(self, spec: ManifestCommandSpec, cartridge_id: str, tool_id: str):
+        self.name = spec.name
+        self.description = spec.description
+        self.source = spec.source
+        self._cartridge_id = cartridge_id
+        self._tool_id = tool_id
+        self._tool = None
+        self._parameters = []
+        self.tags = ["cartridge", "tool"]
+
+    def _ensure_tool(self):
+        """Lazy-load the tool."""
+        if self._tool is None:
+            from vibe_core.cartridge_service import CartridgeService
+
+            service = CartridgeService.get_instance()
+            self._tool = service.load_tool(self._cartridge_id, self._tool_id)
+        return self._tool
+
+    async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
+        """Execute the cartridge tool."""
+        tool = self._ensure_tool()
+        if not tool:
+            return CommandResult(
+                success=False,
+                error=f"Failed to load tool: {self._cartridge_id}.{self._tool_id}",
+            )
+
+        try:
+            # Build parameters from args
+            params = {"args": args}
+            if context.kernel:
+                params["kernel"] = context.kernel
+
+            # Tools have execute() method
+            if hasattr(tool, "execute"):
+                result = await tool.execute(params) if hasattr(tool.execute, "__await__") else tool.execute(params)
+                if hasattr(result, "output"):
+                    return CommandResult(success=result.success, output=str(result.output))
+                return CommandResult(success=True, output=str(result))
+            else:
+                return CommandResult(success=False, error="Tool has no execute method")
+        except Exception as e:
+            return CommandResult(success=False, error=str(e))
+
+
+class ToolRegistryCommand(BaseCommand):
+    """Command wrapping a ToolRegistry tool."""
+
+    def __init__(self, spec: ManifestCommandSpec, tool_name: str):
+        self.name = spec.name
+        self.description = spec.description
+        self.source = spec.source
+        self._tool_name = tool_name
+        self._parameters = []
+        self.tags = ["tool"]
+
+    async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
+        """Execute via ToolRegistry."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.tools.tool_protocol import ToolCall
+            from vibe_core.tools.tool_registry import ToolRegistry as TR
+
+            registry = ServiceRegistry.get(TR)
+            if not registry:
+                return CommandResult(success=False, error="ToolRegistry not available")
+
+            # Build ToolCall
+            call = ToolCall(
+                tool_name=self._tool_name,
+                parameters={"args": args},
+            )
+
+            result = registry.execute(call)
+            return CommandResult(
+                success=result.success,
+                output=result.output if hasattr(result, "output") else str(result),
+                error=result.error if hasattr(result, "error") else None,
+            )
+        except Exception as e:
+            return CommandResult(success=False, error=str(e))
+
+
+class CircuitCommand(BaseCommand):
+    """Command wrapping a circuit execution."""
+
+    def __init__(self, spec: ManifestCommandSpec, circuit_id: str):
+        self.name = spec.name
+        self.description = spec.description
+        self.source = spec.source
+        self._circuit_id = circuit_id
+        self._parameters = []
+        self.tags = ["circuit"]
+
+    async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
+        """Execute via ExecutorSingularity."""
+        try:
+            from vibe_core.cartridges.system.envoy.executor_singularity import (
+                create_executor_singularity,
+            )
+
+            executor = create_executor_singularity(context.kernel)
+
+            # Build input variables from args
+            input_vars = {"args": args, "raw_input": " ".join(args)}
+
+            result = await executor.execute(self._circuit_id, input_vars)
+
+            return CommandResult(
+                success=result.success if hasattr(result, "success") else True,
+                output=str(result.output) if hasattr(result, "output") else str(result),
+                data=result.output if hasattr(result, "output") else None,
+            )
+        except Exception as e:
+            return CommandResult(success=False, error=str(e))
+
+
+class CLIHandlerCommand(BaseCommand):
+    """Command wrapping a CLIRegistry handler."""
+
+    def __init__(self, spec: ManifestCommandSpec, handler: Any):
+        self.name = spec.name
+        self.description = spec.description
+        self.source = spec.source
+        self._handler = handler
+        self._parameters = []
+        self.tags = ["cli"]
+
+    async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
+        """Execute via CLIHandler.run()."""
+        try:
+            exit_code = self._handler.run(args)
+            return CommandResult(
+                success=exit_code == 0,
+                exit_code=exit_code,
+            )
+        except Exception as e:
+            return CommandResult(success=False, error=str(e))
+
+
 class CommandRegistry:
     """
     OPUS-310: The One Registry to Rule Them All.
@@ -195,7 +339,6 @@ class CommandRegistry:
             for entry in ManifestRegistry.get_by_type("cartridge"):
                 count += self._extract_commands(entry.manifest, f"cartridge:{entry.id}")
 
-            self._scanned = True
             logger.info(f"[COMMAND.REGISTRY] Discovered {count} commands from manifests")
 
             return count
@@ -203,6 +346,212 @@ class CommandRegistry:
         except ImportError as e:
             logger.warning(f"ManifestRegistry not available: {e}")
             return 0
+
+    def scan_all(self) -> Dict[str, int]:
+        """
+        OPUS-310: Scan ALL execution systems.
+
+        The One Scan to Rule Them All.
+        No manual wiring - everything discovered declaratively.
+
+        Returns:
+            Dict with counts per system
+        """
+        results = {
+            "manifests": self.scan_manifests(),
+            "cartridge_tools": self.scan_cartridge_tools(),
+            "tool_registry": self.scan_tool_registry(),
+            "circuits": self.scan_circuits(),
+            "cli_handlers": self.scan_cli_handlers(),
+        }
+
+        self._scanned = True
+
+        total = sum(results.values())
+        logger.info(f"[COMMAND.REGISTRY] Total: {total} commands from {len(results)} systems")
+
+        return results
+
+    def scan_cartridge_tools(self) -> int:
+        """
+        Scan CartridgeService for tools.
+
+        Each tool becomes a command: cartridge.tool_id
+        """
+        count = 0
+
+        try:
+            from vibe_core.cartridge_service import CartridgeService
+
+            service = CartridgeService.get_instance()
+            service.scan()
+
+            for cartridge in service.list():
+                for tool_id, tool_info in cartridge.tools.items():
+                    cmd_name = f"{cartridge.cartridge_id}.{tool_id}"
+
+                    if cmd_name in self._commands:
+                        continue
+
+                    # Create command spec
+                    spec = ManifestCommandSpec(
+                        name=cmd_name,
+                        description=tool_info.description or f"Tool: {tool_id}",
+                        source=f"cartridge:{cartridge.cartridge_id}",
+                        parameters=[],  # Will be extracted from tool
+                    )
+
+                    # Create command with lazy tool loading
+                    command = CartridgeToolCommand(
+                        spec=spec,
+                        cartridge_id=cartridge.cartridge_id,
+                        tool_id=tool_id,
+                    )
+
+                    self._commands[cmd_name] = command
+                    count += 1
+
+            if count:
+                logger.info(f"[COMMAND.REGISTRY] Discovered {count} cartridge tools")
+
+        except ImportError as e:
+            logger.debug(f"CartridgeService not available: {e}")
+
+        return count
+
+    def scan_tool_registry(self) -> int:
+        """
+        Scan ToolRegistry for registered tools.
+
+        Each tool becomes a command: tool.<tool_name>
+        """
+        count = 0
+
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.tools.tool_registry import ToolRegistry as TR
+
+            # Try to get from DI first
+            tool_registry = ServiceRegistry.get(TR)
+
+            if not tool_registry:
+                return 0
+
+            for tool_name in tool_registry.list_tools():
+                cmd_name = f"tool.{tool_name}"
+
+                if cmd_name in self._commands:
+                    continue
+
+                tool = tool_registry.get(tool_name)
+                if not tool:
+                    continue
+
+                spec = ManifestCommandSpec(
+                    name=cmd_name,
+                    description=getattr(tool, "description", f"Tool: {tool_name}"),
+                    source="tool_registry",
+                    parameters=[],
+                )
+
+                command = ToolRegistryCommand(
+                    spec=spec,
+                    tool_name=tool_name,
+                )
+
+                self._commands[cmd_name] = command
+                count += 1
+
+            if count:
+                logger.info(f"[COMMAND.REGISTRY] Discovered {count} tools from registry")
+
+        except ImportError as e:
+            logger.debug(f"ToolRegistry not available: {e}")
+
+        return count
+
+    def scan_circuits(self) -> int:
+        """
+        Scan PhoenixConfig for circuits.
+
+        Each circuit becomes a command: circuit.<circuit_id>
+        """
+        count = 0
+
+        try:
+            from vibe_core.phoenix.config import PhoenixConfig
+
+            config = PhoenixConfig.from_files()
+
+            for circuit_id, circuit_config in config.circuits.items():
+                cmd_name = f"circuit.{circuit_id}"
+
+                if cmd_name in self._commands:
+                    continue
+
+                spec = ManifestCommandSpec(
+                    name=cmd_name,
+                    description=getattr(circuit_config, "description", f"Circuit: {circuit_id}"),
+                    source="circuit",
+                    parameters=[],
+                )
+
+                command = CircuitCommand(
+                    spec=spec,
+                    circuit_id=circuit_id,
+                )
+
+                self._commands[cmd_name] = command
+                count += 1
+
+            if count:
+                logger.info(f"[COMMAND.REGISTRY] Discovered {count} circuits")
+
+        except ImportError as e:
+            logger.debug(f"PhoenixConfig not available: {e}")
+
+        return count
+
+    def scan_cli_handlers(self) -> int:
+        """
+        Scan CLIRegistry for registered handlers.
+
+        Each handler becomes a command.
+        """
+        count = 0
+
+        try:
+            from vibe_core.protocols.cli import CLIRegistry
+
+            for handler in CLIRegistry.all():
+                meta = handler.meta
+                cmd_name = meta.command
+
+                if cmd_name in self._commands:
+                    continue
+
+                spec = ManifestCommandSpec(
+                    name=cmd_name,
+                    description=meta.description,
+                    source="cli_registry",
+                    parameters=[],
+                )
+
+                command = CLIHandlerCommand(
+                    spec=spec,
+                    handler=handler,
+                )
+
+                self._commands[cmd_name] = command
+                count += 1
+
+            if count:
+                logger.info(f"[COMMAND.REGISTRY] Discovered {count} CLI handlers")
+
+        except ImportError as e:
+            logger.debug(f"CLIRegistry not available: {e}")
+
+        return count
 
     def _extract_commands(self, manifest: Dict[str, Any], source: str) -> int:
         """
