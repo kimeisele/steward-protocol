@@ -56,9 +56,7 @@ def test_spawn_child_kernel_creates_isolated_instance(fresh_kernel):
     # Child is tracked
     assert child in parent._child_kernels
 
-    # Cleanup
-    child.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_spawn_child_kernel_with_memory_ledger(fresh_kernel):
@@ -88,9 +86,7 @@ def test_spawn_child_kernel_with_memory_ledger(fresh_kernel):
     events = child._ledger.get_all_events()
     assert any(get_event_type(e) == "TEST_EVENT" for e in events)
 
-    # Cleanup
-    child.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_child_kernel_knows_parent(fresh_kernel):
@@ -117,9 +113,7 @@ def test_child_kernel_knows_parent(fresh_kernel):
     # Parent is not ephemeral
     assert parent.is_ephemeral is False
 
-    # Cleanup
-    child.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_merge_child_result_records_proof(fresh_kernel):
@@ -164,8 +158,7 @@ def test_merge_child_result_records_proof(fresh_kernel):
     merge_events = [e for e in parent_events if get_event_type(e) == "EPHEMERAL_CITY_MERGE"]
     assert len(merge_events) >= 1
 
-    # Cleanup
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_merge_unknown_child_raises_error(fresh_kernel):
@@ -183,9 +176,7 @@ def test_merge_unknown_child_raises_error(fresh_kernel):
     with pytest.raises(ValueError, match="unknown child kernel"):
         parent.merge_child_result(foreign_kernel, {"result": "test"})
 
-    # Cleanup
-    foreign_kernel.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_multiple_children_independent(fresh_kernel):
@@ -212,10 +203,7 @@ def test_multiple_children_independent(fresh_kernel):
     assert child1._parent is parent
     assert child2._parent is parent
 
-    # Cleanup
-    child1.shutdown()
-    child2.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_child_uses_provided_config(fresh_kernel):
@@ -231,9 +219,7 @@ def test_child_uses_provided_config(fresh_kernel):
     # Child has the config
     assert child._config is config
 
-    # Cleanup
-    child.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 def test_fast_code_config_structure():
@@ -285,9 +271,7 @@ def test_parent_ledger_untouched_during_child_execution(fresh_kernel):
     parent_work_events = [e for e in parent._ledger.get_all_events() if get_event_type(e) == "CHILD_WORK"]
     assert len(parent_work_events) == 0, "Parent should not have child's work events"
 
-    # Cleanup
-    child.shutdown()
-    parent.shutdown()
+    # Cleanup not needed - tests use VIBE_NO_LOCK for session bypass
 
 
 if __name__ == "__main__":
