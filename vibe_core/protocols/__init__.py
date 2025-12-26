@@ -24,10 +24,23 @@ from .cognition import (
     CognitiveContext,
     CognitiveKernelProtocol,
     CognitiveResult,
-    IntentType as CognitiveIntentType,  # Avoid collision with operator_protocol.IntentType
     NullCognitive,
     OperatorCognitiveProtocol,
     SystemHeartbeatProtocol,
+)
+from .cognition import (
+    IntentType as CognitiveIntentType,  # Avoid collision with operator_protocol.IntentType
+)
+
+# OPUS-311 Sprint 2: Event Bus Protocol
+from .event import (
+    Event,
+    EventBusProtocol,
+    EventBusStatus,
+    EventType,
+    NullEventBus,
+    create_event,
+    get_event_bus_safe,
 )
 
 # OPUS-307 D.2: External Service Protocols
@@ -176,4 +189,12 @@ __all__ = [
     "CognitiveContext",
     "CognitiveIntentType",
     "NullCognitive",
+    # OPUS-311 Sprint 2: Event Bus Protocol
+    "Event",
+    "EventType",
+    "EventBusProtocol",
+    "EventBusStatus",
+    "NullEventBus",
+    "create_event",
+    "get_event_bus_safe",
 ]
