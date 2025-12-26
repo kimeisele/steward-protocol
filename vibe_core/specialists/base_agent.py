@@ -21,8 +21,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# [ARCH-005] Import Store
-from vibe_core.store.sqlite_store import SQLiteStore
+# OPUS-307 Phase 4: Removed SQLiteStore import (vibe_agency.db was dead code)
 
 logger = logging.getLogger(__name__)
 
@@ -86,9 +85,8 @@ class BaseAgent:
         # Load context from runtime
         self.context = self._load_context()
 
-        # [ARCH-005] Initialize DB Connection (Shadow Mode)
-        self.db: SQLiteStore | None = None
-        self._init_db_connection()
+        # OPUS-307 Phase 4: Removed dead vibe_agency.db connection
+        self.db = None
 
         # Verify infrastructure is available
         self._verify_infrastructure()
@@ -131,20 +129,7 @@ class BaseAgent:
                 "context_load_error": str(e),
             }
 
-    def _init_db_connection(self) -> None:
-        """
-        Initialize SQLiteStore connection safely (Shadow Mode).
-
-        [ARCH-005] Agents can now access the persistent database layer.
-        If the DB is unavailable, the agent continues normally (resilience first).
-        """
-        try:
-            db_path = self.vibe_root / ".vibe" / "state" / "vibe_agency.db"
-            self.db = SQLiteStore(str(db_path))
-            logger.debug(f"✅ Agent '{self.name}' connected to SQLiteStore")
-        except Exception as e:
-            logger.warning(f"⚠️ Agent '{self.name}' running without DB: {e}. Database features disabled.")
-            self.db = None
+    # OPUS-307 Phase 4: Removed _init_db_connection (dead code - vibe_agency.db never used)
 
     def _verify_infrastructure(self):
         """Verify that required infrastructure is available."""

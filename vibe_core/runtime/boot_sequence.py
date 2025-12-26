@@ -17,7 +17,6 @@ from vibe_core.runtime.context_loader import ContextLoader
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
 from vibe_core.runtime.unified_execution import UnifiedRouter
-from vibe_core.store.sqlite_store import SQLiteStore
 
 
 class BootSequence:
@@ -33,13 +32,8 @@ class BootSequence:
         # Conveyor Belt 1: Context (Unified Load)
         # BootSequence uses the 'project' context item provided by ContextLoader
 
-        # State Persistence (vibe.db)
-        # Initialize BEFORE ProjectMemoryManager which depends on it
-        # OPUS-025: Bootstrap Paradox - Config not yet loaded, construct from defaults
-        # ADR-025b: project.state_db = ".vibe/vibe.db"
-        _vibe_root = ".vibe"
-        _state_db = "vibe.db"
-        self.sqlite_store = SQLiteStore(self.project_root / _vibe_root / _state_db)
+        # OPUS-307 Phase 4: Removed dead .vibe/vibe.db (never used, always empty)
+        # State persistence now via data/vibe_ledger.db (STHULA) and .vibe/state/*.json (PRANA)
 
         items, _ = ContextLoader.discover_and_load(scan_paths=[self.project_root])
         self.context_loader = items["project"]  # Actually a ContextManager instance
@@ -66,7 +60,7 @@ class BootSequence:
 
         # Memory System
 
-        self.memory_manager = ProjectMemoryManager(self.project_root, self.sqlite_store)
+        self.memory_manager = ProjectMemoryManager(self.project_root, None)  # OPUS-307: No sqlite_store needed
 
         # Knowledge Graph (Unified)
         from vibe_core.knowledge.graph import get_knowledge_graph
@@ -115,8 +109,7 @@ class BootSequence:
         if guardrail_action == "halt":
             return  # Soft halt - exit cleanly, agent sees warning
 
-        # MIGRATION: Import legacy JSON state if present (ARCH-003)
-        self._migrate_legacy_json()
+        # OPUS-307 Phase 4: Removed dead _migrate_legacy_json (target DB never used)
 
         # Conveyor Belt 1: Load Context
         print("🔄 Loading context...", file=sys.stderr)
@@ -549,57 +542,7 @@ EXECUTION PROTOCOL
             print(f"   Examples: {', '.join(route['examples'])}")
             print()
 
-    def _migrate_legacy_json(self) -> None:
-        """
-        Migrate legacy active_mission.json to SQLite (ARCH-003)
-
-        Strategy: Phase 1 - Dual-Write/Import
-        - Check for existing active_mission.json
-        - Import to SQLite if not already present
-        - Rename JSON (keep as backup, DO NOT DELETE)
-        - Log migration status
-
-        Safety: NO DATA LOSS - JSON is preserved
-        """
-        json_file = self.project_root / ".vibe" / "state" / "active_mission.json"
-
-        if not json_file.exists():
-            # No legacy JSON - nothing to migrate
-            return
-
-        try:
-            # Load JSON data
-            with open(json_file) as f:
-                json_data = json.load(f)
-
-            mission_uuid = json_data.get("mission_id", "unknown")
-
-            # Import to SQLite (idempotent - won't duplicate)
-            imported_id = self.sqlite_store.import_legacy_mission(json_data)
-
-            if imported_id:
-                # Mission was imported - rename JSON as backup
-                timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-                backup_name = f"active_mission_migrated_{timestamp}.json"
-                backup_path = json_file.parent / backup_name
-
-                os.rename(json_file, backup_path)
-
-                print("✅ Legacy mission imported to SQLite", file=sys.stderr)
-                print(f"   Mission UUID: {mission_uuid}", file=sys.stderr)
-                print(f"   SQLite ID: {imported_id}", file=sys.stderr)
-                print(f"   Backup: {backup_path.name}", file=sys.stderr)
-            else:
-                # Mission already in DB - just log it
-                print(f"ℹ️  Mission '{mission_uuid}' already in database", file=sys.stderr)
-
-        except json.JSONDecodeError as e:
-            print(f"⚠️ Failed to parse legacy JSON: {e}", file=sys.stderr)
-            print(f"   File preserved at: {json_file}", file=sys.stderr)
-        except Exception as e:
-            print(f"⚠️ Migration error (non-critical): {e}", file=sys.stderr)
-            print(f"   JSON file preserved at: {json_file}", file=sys.stderr)
-            # Continue boot - JSON is still available
+    # OPUS-307 Phase 4: Removed _migrate_legacy_json (dead code - target DB never used)
 
     def health_check(self) -> bool:
         """Quick health check - returns True if system is operational"""

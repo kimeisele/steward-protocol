@@ -8,132 +8,18 @@
 
 > 🟡 **NOTICE** - Trust Score 77% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2025-12-26 12:12:25 UTC | Kernel: STOPPED (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-26 13:21:23 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
 
 
-## 🎛️ Control Plane
-
-
-**Status:** full_power | **Karma:** 100% | **Health:** DEGRADED
-
-**Panels:**
-
-- [x] Tests - [x] Code Health - [ ] Debug _(hidden)_
-
-**Layer 1.5 Settings:**
-- [ ] Auto-Heal Mode - [x] Live Fire Mode 🔥_(active!)_- [ ] Aggressive Refactoring - [x] Budget Limit: $5.00
-
-**💰 Treasury:** $0.0000 / $5.00 (0.0%)
-
----
-
-
-## 🎯 Intent Buffer
-
-_No pending intents. The system is idle._
-
-> 💡 **Tip:** MANAS will generate proactive suggestions after 30 minutes of idle time or on the hourly pulse.
-
----
-
-
-## ⚡ Syscall Console
-
-
-**Status:** 38.5% real success | 500 total | 191 learned
-> 🔒 **Security System Active:** 4 permission denials (correct behavior, not failures!)
-
-| Time | Intent | Type | Result |
-|------|--------|------|--------|
-| `5.569766` | Execute ALLOCATE_PRANA | **ALLOCATE_PRANA** | ✅ |
-| `5.567375` | Execute ALLOCATE_PRANA | **ALLOCATE_PRANA** | ✅ |
-| `5.564164` | Execute ALLOCATE_PRANA | **ALLOCATE_PRANA** | ✅ |
-| `5.560625` | Execute ALLOCATE_PRANA | **ALLOCATE_PRANA** | ✅ |
-| `5.556524` | Execute ALLOCATE_PRANA | **ALLOCATE_PRANA** | ✅ |
-
-**By Type:**
-- `SPAWN_COGNITION`: 0/122 successful
-- `GRANT_MANDATE`: 0/183 successful
-- `ALLOCATE_PRANA`: 183/183 successful
-- `REVOKE_MANDATE`: 4/8 successful (🔒 4 security blocks)
-- `BROADCAST_EVENT`: 4/4 successful
-
-> 🧠 **Experience Replay:** 20 entries available for few-shot learning
-
-
----
-
-
-## 🧠 MANAS Status
-
-
-### System Status
-
-| Metric | Value |
-|--------|-------|
-| **Kernel** | ⚪ OFFLINE |
-| **Intent Buffer** | 0 pending |
-| **Last Updated** | `never` |
-
-_No pending intents. MANAS is idle._
-
-
-### Documentation Health (Self-Healing)
-
-| Metric | Value |
-|--------|-------|
-| **Total OPUS Docs** | 154 |
-| **With @HARNESS** | 100 |
-| **Coverage** | 🟠 **57%** |
-| **Broken Harnesses** | 🔴 76 |
-
-### 🧠 Neural Learning (OPUS-133)
-
-*"MANAS lernt nicht um zu gewinnen, sondern um zu dienen."*
-
-#### ⏱️ Operational Status
-
-| Event | Timestamp | Status |
-|-------|-----------|--------|
-| **Last Synapse Update** | `never` | ⚪ No activity |
-| **Last Reinforcement** | `2025-12-20T15:48:26` | 🔴 -0.10 |
-| **Synapses File** | `2025-12-21T19:11:44` | 📄 .opus_state/synapses.json |
-
-<details>
-<summary>Last Reinforcement Details</summary>
-
-- **Intent:** `evaluate_renderer_pattern`
-- **Title:** Recognize render_sections() as correct pattern
-- **Result:** ❌ Failure- **Weight:** 0.250 → 0.150
-- **Delta:** -0.100
-
-</details>
-
-#### 📊 Synaptic Metrics
-
-| Metric | Value | Description |
-|--------|-------|-------------|
-| **Synapses** | 43 triggers / 43 connections | Learned patterns |
-| **Avg Weight** | 🟠 **0.44** | Pattern confidence |
-| **High Confidence** | 1 | Weights > 0.8 |
-| **Low Confidence** | 4 | Weights < 0.3 |
-| **Latest Learning** | `2025-12-20T15:37:44` | Most recent synapse |
-
-#### Prabhupada Patch (Anti-Ego)
-
-| Feature | Config | Purpose |
-|---------|--------|---------|
-| 🍂 **Vairagya** | >0.95 → ×0.99 | Ego pruning |
-| 🕉️ **Nishkama** | 5 duties | No reward for duties |
-| 🛡️ **Prasadam** | >0.8 | Grace for pure intent |
 
 
 
 
----
+
+
 
 <!-- @LIVE:state_of_mind -->
 ## 🧠 State of Mind
@@ -142,12 +28,12 @@ _No pending intents. MANAS is idle._
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `unknown` @ `unknown`
-- **Working Tree:** ✅ Clean
+- **Branch:** `main` @ `fba179f`
+- **Working Tree:** ⚠️ Uncommitted
 ### Layer 2 - Prana (Runtime Energy)
 
 - **Kernel:** ⚪ STOPPED- **Agents:** 0 active
-- **Session:** `94e60421...`
+- **Session:** `8c96c899...`
 ### Layer 3 - Purusha (Cognitive Identity)
 
 - **Ephemeral Thoughts:** 0
@@ -158,6 +44,7 @@ _No pending intents. MANAS is idle._
 - **Trend:** ➡️ Stable
 ### 🎯 Focus Areas
 
+- Commit pending changes
 - Documentation drift detected
 
 <!-- /@LIVE -->
@@ -672,7 +559,7 @@ flowchart LR
 | **phoenix** | Phoenix Configuration System - The config that never dies. | 39 | ❌ | `vibe_core/phoenix/` |
 | **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
 | **plugins** | Kernel Plugins Package | 285 | ✅ | `vibe_core/plugins/` |
-| **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 27 | ❌ | `vibe_core/protocols/` |
+| **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 28 | ❌ | `vibe_core/protocols/` |
 | **reactor** | OPUS-200/201: Sanskrit Quantum Reactor | 3 | ❌ | `vibe_core/reactor/` |
 | **runtime** | Runtime Components Package | 29 | ❌ | `vibe_core/runtime/` |
 | **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
@@ -691,16 +578,16 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/services/manifestation_service.py` | 5 | feat(opus-308): Jinja2 template support  |
+| `vibe_core/services/manifestation_service.py` | 6 | feat(opus-308): Complete ManifestationSe |
 | `vibe_core/kernel_impl.py` | 5 | feat(opus-308): OPERATIONS.md as kernel- |
 | `vibe_core/cortex/engines/circuit_engine.py` | 5 | docs(opus): Phase I Research complete -  |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 4 | feat(opus-308): Complete ManifestationSe |
 | `vibe_core/cli/circuit_cli.py` | 4 | feat(opus-307): CLI Bridges for all Serv |
 | `vibe_core/runtime/unified_execution_full.py` | 4 | feat(opus-307): Phase I.2 Complete - Exe |
-| `vibe_core/plugins/opus_assistant/plugin_main.py` | 3 | feat(opus-308): Jinja2 template support  |
+| `vibe_core/protocols/__init__.py` | 3 | fix: Remove OS/Plugin spaghetti with Ved |
+| `vibe_core/steward/daily_ritual.py` | 3 | fix(opus-308): Remove plugin spaghetti f |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 3 | feat(opus-308): Complete ManifestationSe |
 | `vibe_core/plugins/task_manager/plugin_main.py` | 3 | feat(opus-308): TASKS.md migrated to Tas |
-| `vibe_core/plugins/envoy/plugin_main.py` | 3 | feat(opus-308): ManifestationService as  |
-| `vibe_core/cli/unified_cli.py` | 3 | feat(opus-307): Phase G Complete - Full  |
-| `vibe_core/boot_orchestrator.py` | 3 | feat(opus-307): System-wide Registry Con |
 
 <!-- /@LIVE -->
 
@@ -741,7 +628,7 @@ flowchart LR
         cartridges -->|32| protocols
         cartridges -->|31| scheduling
         cli -->|22| protocols
-        plugins -->|19| protocols
+        plugins -->|20| protocols
         cartridges -->|15| config
     end
 
@@ -760,8 +647,8 @@ flowchart LR
 | `cartridges` | 192 |  |
 | `phoenix` | 39 |  |
 | `runtime` | 29 |  |
+| `protocols` | 28 | ⭐ |
 | `cli` | 27 |  |
-| `protocols` | 27 | ⭐ |
 | `state` | 23 | ⭐ |
 | `loaders` | 17 |  |
 | `steward` | 11 |  |
@@ -799,16 +686,16 @@ flowchart LR
 
 | Property | Value |
 | --- | --- |
-| Session ID | `94e60421` |
+| Session ID | `8c96c899` |
 | Boot Commit | `unknown` |
 | Boot Mode | full_power |
-| Started | `2025-12-26T08:13:22.443877` |
+| Started | `2025-12-26T13:21:21.944344` |
 
 ### 🔮 Three Layers
 
 | Layer | Name | Status | Details |
 | --- | --- | --- | --- |
-| 1 | STHULA (Physical) | ✅ | Clean on `unknown` |
+| 1 | STHULA (Physical) | 🟡 | Dirty on `main` |
 | 2 | PRANA (Runtime) | ⏹️ | Stopped |
 | 3 | PURUSHA (Identity) | ⚪ | No personas defined |
 
@@ -816,8 +703,8 @@ flowchart LR
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `unknown` | ⚪ |
-| Ledger HEAD | `unknown` | ⚪ |
+| Git HEAD | `fba179f` | ⚪ |
+| Ledger HEAD | `d5aa4ec4ebc2` | ⚪ |
 
 ### 🔮 Tri-Guna (State Health)
 
@@ -875,7 +762,7 @@ flowchart LR
 - [P1] `fix_code_reference` → 005-UNIFICATION-ROADMAP.m (medium)
 
 
-*Last Scan: 2025-12-26 12:12:44 UTC*
+*Last Scan: 2025-12-26 13:21:41 UTC*
 
 <!-- /@LIVE -->
 
@@ -905,9 +792,9 @@ flowchart LR
 - `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:275` - # TODO: Implement perception logic
 - `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:315` - # TODO: Add intent types this action handles
 - `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:329` - # TODO: Implement action logic
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2404` - # TODO: Implement actual logic here
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2454` - # TODO: Implement analysis logic
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2492` - # TODO: Implement formatting logic
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2402` - # TODO: Implement actual logic here
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2452` - # TODO: Implement analysis logic
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2490` - # TODO: Implement formatting logic
 - _...and 6 more_
 
 </details>
@@ -986,4 +873,4 @@ _Review and approve actions above_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-26 12:12:25 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-26 13:21:23 UTC*

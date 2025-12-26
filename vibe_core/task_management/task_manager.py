@@ -263,9 +263,14 @@ class TaskManager:
             roadmap_id=final_roadmap_id,
         )
 
-        # LEGACY ROUTER REMOVED (MilkOcean)
-        # TODO: Integrate with UnifiedRouter for dynamic prioritization
-        milk_ocean_priority = 1  # Default MEDIUM
+        # OPUS-307: Map task priority (0-100) to routing priority (0-3)
+        # 0-24 → 0 (LOW), 25-49 → 1 (MEDIUM), 50-74 → 2 (HIGH), 75+ → 3 (CRITICAL)
+        if priority <= 3:
+            # Legacy: priority already in 0-3 range
+            routing_priority = priority
+        else:
+            # Scale from 0-100 to 0-3
+            routing_priority = min(3, priority // 25)
 
         # Topology-aware routing (Gap 4.1 closure - Part 1)
         if assigned_agent:
@@ -275,8 +280,8 @@ class TaskManager:
                 task.topology_layer = placement.layer
                 task.varna = placement.varna
 
-        # Set routing priority (from MilkOcean or default)
-        task.routing_priority = milk_ocean_priority
+        # Set routing priority (OPUS-307: derived from task priority)
+        task.routing_priority = routing_priority
 
         # Validate
         self.validator_registry.validate_task(task)

@@ -1,0 +1,44 @@
+# ENVOY Configuration
+# ====================
+# OPUS-307: Phoenix config for the ENVOY Plugin (System Shell).
+#
+# ENVOY routes user intent to circuits, playbooks, and agents.
+# This is the "shell" of the Agent Operating System.
+
+# Global enable/disable
+enabled: true
+debug: false
+
+# Request handling
+request:
+  max_history: 50          # Keep last N requests in memory
+  timeout_seconds: 60      # Default request timeout
+  enable_circuit_cache: true
+
+# Routing configuration
+routing:
+  # Layered routing thresholds (3-layer system)
+  exact_match_priority: 1.0      # Layer 1: Exact intent match
+  semantic_match_threshold: 0.75  # Layer 2: Semantic similarity
+  context_match_threshold: 0.5    # Layer 3: Context-aware
+
+  # Fallback behavior
+  fallback_circuit: "CONVERSATION"  # Default circuit if no match
+  enable_akshara: true              # Enable Akshara semantic index
+
+# Circuit discovery
+circuits:
+  auto_discover: true        # Auto-load circuits from playbook/circuits/
+  hot_reload: false          # Watch for circuit changes (dev mode)
+  enable_meta_circuits: true # Enable TASK_LEDGER, ERROR_RECOVERY
+
+# Execution settings
+execution:
+  parallel_limit: 5          # Max concurrent circuit executions
+  enable_syscall_tracing: true
+  enable_invariant_checks: true
+
+# EphemeralStorage settings (per-request context)
+ephemeral:
+  max_keys: 100              # Max keys per request context
+  persist_on_complete: false # Don't persist by default

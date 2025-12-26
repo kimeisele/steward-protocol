@@ -31,6 +31,9 @@ import yaml
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+# OPUS-307: EventBus integration for action handlers
+from vibe_core.event_bus import Event, EventType, get_event_bus
+
 # Lazy import for Runtime Separation (OPUS-016)
 try:
     from vibe_core.cartridges.system.envoy.blueprint_generator import (
@@ -404,6 +407,49 @@ class CognitiveCircuitExecutor:
         self._on_circuit_end = on_end
         self._on_error = on_error
         logger.info("🔗 Meta-circuit callbacks registered")
+
+    def _create_emit_event_callback(self, circuit_id: str) -> callable:
+        """
+        Create a sync callback that emits events to the EventBus.
+
+        OPUS-307: Wires action handlers to the global EventBus.
+
+        Args:
+            circuit_id: The circuit emitting events (for agent_id tagging)
+
+        Returns:
+            Callable that accepts event_data dict and emits to EventBus
+        """
+        import asyncio
+
+        def emit_callback(event_data: Dict[str, Any]) -> None:
+            """Sync wrapper for async EventBus emission."""
+            event_type = event_data.get("event_type", "ACTION")
+            message = event_data.get("message", f"Circuit {circuit_id} action")
+
+            event = Event(
+                event_type=event_type,
+                agent_id=f"circuit.{circuit_id}",
+                message=message,
+                details=event_data,
+            )
+
+            # Get event bus and emit (handle async from sync context)
+            bus = get_event_bus()
+            try:
+                loop = asyncio.get_running_loop()
+                asyncio.create_task(bus.emit(event))
+            except RuntimeError:
+                # No running loop - create one temporarily
+                loop = asyncio.new_event_loop()
+                try:
+                    loop.run_until_complete(bus.emit(event))
+                finally:
+                    loop.close()
+
+            logger.debug(f"📡 Circuit event emitted: {event_type}")
+
+        return emit_callback
 
     def _load_circuits(self) -> None:
         """Load all circuit definitions from YAML files (Recursive)."""
@@ -917,7 +963,7 @@ class CognitiveCircuitExecutor:
                 if self.action_registry and self.action_registry.has(action_type):
                     handler = self.action_registry.get(action_type)
 
-                    # Create action context
+                    # Create action context with EventBus wiring (OPUS-307)
                     action_context = ActionContext(
                         phase_id=current_state_name,
                         playbook_id=circuit_id,
@@ -925,7 +971,7 @@ class CognitiveCircuitExecutor:
                         user_input=raw_input,
                         phase_results=state.variables,
                         kernel=self.kernel,
-                        emit_event=None,  # TODO: Wire up event emitter
+                        emit_event=self._create_emit_event_callback(circuit_id),
                     )
 
                     try:

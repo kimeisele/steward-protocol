@@ -1,0 +1,1 @@
+{"event_type": "VIOLATION", "timestamp": "2025-12-26T07:34:16.760399+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}

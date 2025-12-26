@@ -107,6 +107,38 @@ class _TaskWrapper:
         return getattr(self._task, "type", None) or self._task.metadata.get("type", "general")
 
 
+class NullTaskManager:
+    """
+    Noop fallback when TaskProtocol is not in ServiceRegistry.
+
+    Allows manifestation to work with empty data instead of crashing.
+    """
+
+    def add_task(self, title: str, description: str = "", type: str = "general", metadata: Dict = None):
+        """Noop - return None."""
+        return None
+
+    def get_next_pending(self):
+        """No tasks."""
+        return None
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Return zero stats."""
+        return {"total": 0, "pending": 0, "in_progress": 0, "completed": 0, "failed": 0, "blocked": 0}
+
+    def update_status(self, task_id: str, status: TaskStatus):
+        """Noop."""
+        pass
+
+    def get_all_tasks(self) -> List:
+        """Empty list."""
+        return []
+
+    def get_task(self, task_id: str):
+        """No task."""
+        return None
+
+
 logger = logging.getLogger("TASK_MANAGER_PLUGIN")
 
 # Import execution dependencies (graceful degradation if unavailable)
@@ -184,12 +216,9 @@ class TaskManagerPlugin(KernelPlugin):
             if core:
                 self._manager = CoreManagerAdapter(core)
             else:
-                logger.warning("⚠️ TaskProtocol not in ServiceRegistry - falling back to local state")
-                # Fallback: Use legacy JsonTaskManager if Core not available
-                from .state_store import JsonTaskManager
-
-                state_dir = Path(__file__).parent / ".state"
-                self._manager = JsonTaskManager(state_dir)
+                logger.warning("⚠️ TaskProtocol not in ServiceRegistry - using NullTaskManager")
+                # Fallback: Use NullTaskManager (noop) when Core not available
+                self._manager = NullTaskManager()
         return self._manager
 
     @property
