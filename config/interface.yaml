@@ -241,21 +241,12 @@ renderers:
     interval: 60
 
   # Operations/Status
+  # OPUS-314: Removed unused sections (renderer doesn't read them)
   operations:
     enabled: true
     output: OPERATIONS.md
     view_type: dashboard
     interval: 10
-    sections:
-      - id: system_status
-        owner: live
-        source: kernel.health
-      - id: task_queue
-        owner: live
-        source: scheduler.queue
-      - id: recent_events
-        owner: live
-        source: events.recent
 
   # DISABLED: Redundant with OPERATIONS.md (gemini/opus-declutter-and-enhance)
   # dashboard:
@@ -266,36 +257,19 @@ renderers:
 
   # Bidirectional (user can write)
   # IMPORTANT: interval=0 so completions are detected immediately on every tick
+  # OPUS-314: Removed unused sections (renderer doesn't read them)
   envoy:
     enabled: true
     output: ENVOY.md
     view_type: terminal
     interval: 0
-    sections:
-      - id: request
-        owner: human
-        element_type: terminal
-      - id: status
-        owner: live
-        source: envoy.pending_tasks
-      - id: history
-        owner: live
-        source: envoy.history
-      - id: routes
-        owner: live
-        source: envoy.routes
 
+  # OPUS-314: Removed unused sections (renderer doesn't read them)
   settings:
     enabled: true
     output: SETTINGS.md
     view_type: terminal
     interval: 5
-    sections:
-      - id: commands
-        owner: human
-      - id: current_config
-        owner: live
-        source: config.current
 
   # DISABLED: Empty stub, pure noise (gemini/opus-declutter-and-enhance)
   # rag:
@@ -319,21 +293,12 @@ renderers:
         source: git.log
 
   # Tasks
+  # OPUS-314: Removed unused sections (renderer doesn't read them)
   tasks:
     enabled: true
     output: TASKS.md
     view_type: workflow
     interval: 10
-    sections:
-      - id: inbox
-        owner: human
-        element_type: list
-      - id: active
-        owner: live
-        source: tasks.active
-      - id: completed
-        owner: live
-        source: tasks.completed
 
   # Matrix (routing)
   matrix:
