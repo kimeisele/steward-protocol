@@ -88,6 +88,9 @@ from .testable_registry import (
     reset_global_registry,
 )
 
+# Vedic Governance Protocol (OS-level access to taxonomy)
+from .vedic import VarnaType, VedicGovernanceProtocol
+
 # Note: ManifestRegistry and VibeScheduler are re-exported from .ledger module
 # The .registry and .scheduler modules exist for backwards compatibility
 
@@ -156,4 +159,7 @@ __all__ = [
     "ManifestIndexProtocol",
     "ChangeDetectorProtocol",
     "SemanticUIProtocol",
+    # Vedic Governance Protocol
+    "VarnaType",
+    "VedicGovernanceProtocol",
 ]

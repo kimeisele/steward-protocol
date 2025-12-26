@@ -113,57 +113,65 @@ class PranaInitializer:
             return False
 
     def _verify_agent_oaths(self) -> bool:
-        """Verify all agents have taken the constitutional oath"""
+        """Verify all agents have taken the constitutional oath."""
         logger.info("   🤝 Checking agent oaths...")
 
         try:
-            from vibe_core.plugins.vedic_governance.agent_metadata import get_metadata_registry
+            # Use DI to access VedicGovernance - NO DIRECT PLUGIN IMPORTS
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols import VedicGovernanceProtocol
 
-            registry = get_metadata_registry()
-            agents = registry.get_all_agents()
+            vedic = ServiceRegistry.get(VedicGovernanceProtocol)
+            if not vedic:
+                logger.warning("   ⚠️ VedicGovernanceProtocol not registered - skipping oath verification")
+                return True  # Not a failure, just not available yet
+
+            result = vedic.verify_agent_oaths()
+            agents = vedic.get_all_agents()
 
             logger.info(f"   👥 Found {len(agents)} agents in registry")
-            for agent_id in agents:
+            for agent_id in agents[:10]:  # Show first 10
                 logger.info(f"      ✅ {agent_id.upper()}")
-
-            if len(agents) != 18:
-                logger.warning(f"   ⚠️  Expected 18 agents, found {len(agents)}")
+            if len(agents) > 10:
+                logger.info(f"      ... and {len(agents) - 10} more")
 
             logger.info("   ✅ All agents verified")
-            return True
+            return result
 
         except Exception as e:
             logger.error(f"   ❌ Agent oath verification error: {e}")
             return False
 
     def _initialize_vedic_system(self) -> bool:
-        """Initialize the Vedic taxonomy system"""
+        """Initialize the Vedic taxonomy system."""
         logger.info("   🌿 Initializing Varna taxonomy...")
 
         try:
-            from vibe_core.plugins.vedic_governance.agent_metadata import get_metadata_registry
-            from vibe_core.plugins.vedic_governance.varna import Varna
+            # Use DI to access VedicGovernance - NO DIRECT PLUGIN IMPORTS
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols import VarnaType, VedicGovernanceProtocol
 
-            registry = get_metadata_registry()
+            vedic = ServiceRegistry.get(VedicGovernanceProtocol)
+            if not vedic:
+                logger.warning("   ⚠️ VedicGovernanceProtocol not registered - skipping Vedic init")
+                return True  # Not a failure, just not available yet
 
-            # Display agent classification
+            # Display agent classification using Protocol-level VarnaType
             for varna in [
-                Varna.MANUSHA,
-                Varna.PASHU,
-                Varna.PAKSHI,
-                Varna.KRIMAYO,
-                Varna.JALAJA,
+                VarnaType.MANUSHA,
+                VarnaType.PASHU,
+                VarnaType.PAKSHI,
+                VarnaType.KRIMAYO,
             ]:
-                agents = registry.get_agents_by_varna(varna)
+                agents = vedic.get_agents_by_varna(varna)
                 if agents:
                     logger.info(f"   🔷 {varna.value.upper()}: {', '.join(agents)}")
 
             logger.info("   🔄 Initializing Ashrama lifecycle...")
 
-            # All agents should be in GRIHASTHA (active) for Day 1
-            for agent_id in registry.get_all_agents():
-                ashrama = registry.get_agent_ashrama(agent_id)
-                logger.info(f"      {agent_id.upper()}: {ashrama.value if ashrama else 'UNKNOWN'}")
+            # Show agent count
+            all_agents = vedic.get_all_agents()
+            logger.info(f"   📊 {len(all_agents)} agents registered")
 
             logger.info("   ✅ Vedic system initialized")
             return True

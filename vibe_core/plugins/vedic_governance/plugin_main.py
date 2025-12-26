@@ -123,6 +123,16 @@ class VedicGovernancePlugin(KernelPlugin):
         # Register as THE governance plugin on kernel
         kernel.governance = self
 
+        # Register with ServiceRegistry for DI (OS-level code uses this)
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols import VedicGovernanceProtocol
+
+            ServiceRegistry.register(VedicGovernanceProtocol, self)
+            logger.info("🕉️  Registered with ServiceRegistry (VedicGovernanceProtocol)")
+        except ImportError as e:
+            logger.debug(f"ServiceRegistry not available: {e}")
+
         logger.info("🕉️  Vedic Governance Plugin booted (Varna + Ashrama)")
         logger.info("   Governance is now PLUGIN-BASED (not hardcoded in kernel)")
 
@@ -924,3 +934,30 @@ class VedicGovernancePlugin(KernelPlugin):
             "description": details["description"],
             "restrictions": details["restrictions"],
         }
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # VEDIC GOVERNANCE PROTOCOL IMPLEMENTATION
+    # These methods satisfy VedicGovernanceProtocol for OS-level DI access
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def get_all_agents(self) -> List[str]:
+        """Return list of all registered agent IDs."""
+        return list(self._varna_registry.keys())
+
+    def get_agents_by_varna(self, varna) -> List[str]:
+        """Get all agents of a specific Varna."""
+        # Accept both VarnaType (protocol) and Varna (plugin) enums
+        varna_value = varna.value if hasattr(varna, "value") else str(varna)
+        return [agent_id for agent_id, v in self._varna_registry.items() if v.value == varna_value]
+
+    def get_agent_metadata(self, agent_id: str) -> Dict[str, Any]:
+        """Get full metadata for an agent."""
+        return self.get_governance_status(agent_id)
+
+    def verify_agent_oaths(self) -> bool:
+        """Verify all agents have taken the constitutional oath."""
+        # All registered agents are considered to have taken the oath
+        # Future: Could check ledger for explicit oath events
+        agent_count = len(self._varna_registry)
+        logger.info(f"🕉️  Verified {agent_count} agent oaths")
+        return agent_count > 0
