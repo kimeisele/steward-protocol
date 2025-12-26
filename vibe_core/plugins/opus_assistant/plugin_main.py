@@ -1249,3 +1249,30 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         else:
             # Normal mode: deterministic search
             return explore_codebase(query, workspace, limit=limit, json_mode=json)
+
+    # =========================================================================
+    # OPUS-308: MANIFESTATION PROTOCOL (Markdown as UI)
+    # =========================================================================
+
+    def get_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Return data for ManifestationService to render OPUS.md.
+
+        This is the Manifestable protocol implementation. The renderer's
+        _gather_context() does all the heavy lifting - we just delegate.
+
+        The ManifestationService uses the Jinja2 template to render the
+        actual markdown content.
+
+        Returns:
+            Context dict for opus_dashboard.md.j2 template
+        """
+        from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+            OpusDashboardRenderer,
+        )
+
+        workspace = self._workspace or Path.cwd()
+        renderer = OpusDashboardRenderer(workspace_root=workspace, kernel=self._kernel)
+
+        # Use the renderer's gather_context method (synchronous data collection)
+        return renderer._gather_context(quick=False)
