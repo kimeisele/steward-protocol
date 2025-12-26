@@ -346,6 +346,7 @@ class CommandRegistry:
             return False
 
         self._aliases[alias] = target
+        self._save_aliases()  # OPUS-311: Persist to disk
         logger.info(f"[COMMAND.REGISTRY] Registered alias: {alias} → {target} (source: {source})")
         return True
 
@@ -365,8 +366,102 @@ class CommandRegistry:
         """Remove an alias."""
         if alias in self._aliases:
             del self._aliases[alias]
+            self._save_aliases()  # OPUS-311: Persist removal
             return True
         return False
+
+    # =========================================================================
+    # OPUS-311 Sprint 4: Alias Persistence
+    # =========================================================================
+
+    ALIAS_STATE_FILE = ".vibe/state/aliases.json"
+
+    def _get_alias_path(self) -> Path:
+        """Get the path to the alias state file."""
+        # Try workspace first, fall back to cwd
+        workspace = Path.cwd()
+        return workspace / self.ALIAS_STATE_FILE
+
+    def _save_aliases(self) -> bool:
+        """
+        OPUS-311: Persist aliases to .vibe/state/aliases.json.
+
+        Called automatically after register_alias() and remove_alias().
+
+        Returns:
+            True if saved successfully
+        """
+        import json
+
+        alias_path = self._get_alias_path()
+
+        try:
+            # Ensure directory exists
+            alias_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Build state
+            state = {
+                "version": 1,
+                "aliases": self._aliases,
+                "metadata": {
+                    "count": len(self._aliases),
+                    "updated_at": __import__("datetime").datetime.now().isoformat(),
+                },
+            }
+
+            # Write atomically
+            temp_path = alias_path.with_suffix(".tmp")
+            with open(temp_path, "w") as f:
+                json.dump(state, f, indent=2)
+            temp_path.replace(alias_path)
+
+            logger.debug(f"Saved {len(self._aliases)} aliases to {alias_path}")
+            return True
+
+        except Exception as e:
+            logger.warning(f"Failed to save aliases: {e}")
+            return False
+
+    def load_aliases(self) -> int:
+        """
+        OPUS-311: Load aliases from .vibe/state/aliases.json.
+
+        Called during boot to restore learned aliases.
+
+        Returns:
+            Number of aliases loaded
+        """
+        import json
+
+        alias_path = self._get_alias_path()
+
+        if not alias_path.exists():
+            logger.debug(f"No alias state file at {alias_path}")
+            return 0
+
+        try:
+            with open(alias_path) as f:
+                state = json.load(f)
+
+            aliases = state.get("aliases", {})
+            loaded = 0
+
+            for alias, target in aliases.items():
+                # Only load if target command exists
+                if target in self._commands:
+                    self._aliases[alias] = target
+                    loaded += 1
+                else:
+                    logger.debug(f"Skipping alias '{alias}' → '{target}' (target not found)")
+
+            if loaded:
+                logger.info(f"[COMMAND.REGISTRY] Loaded {loaded} aliases from {alias_path}")
+
+            return loaded
+
+        except Exception as e:
+            logger.warning(f"Failed to load aliases: {e}")
+            return 0
 
     def scan_manifests(self) -> int:
         """
@@ -425,6 +520,9 @@ class CommandRegistry:
         }
 
         self._scanned = True
+
+        # OPUS-311: Load persisted aliases after commands are available
+        results["aliases"] = self.load_aliases()
 
         total = sum(results.values())
         logger.info(f"[COMMAND.REGISTRY] Total: {total} commands from {len(results)} systems")
