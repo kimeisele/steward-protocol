@@ -2137,3 +2137,16 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             self.process_manager.shutdown()
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
+
+    def shutdown(self, reason: str = "User shutdown") -> None:
+        """
+        🛑 SYNC SHUTDOWN (OPUS-314)
+        Synchronous wrapper for shutdown_async. For use in tests and sync code.
+        """
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.shutdown_async(reason))
+        except RuntimeError:
+            asyncio.run(self.shutdown_async(reason))
