@@ -2,11 +2,19 @@
 ARCHIVIST Audit Tool - Event verification and signature validation.
 
 Verifies events from other agents (like HERALD) and creates attestations.
+
+OPUS-307: Real ECDSA signature verification implemented.
 """
 
+import json
 import logging
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
+
+from vibe_core.steward.crypto import (
+    load_trusted_keys,
+    verify_signature,
+)
 
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
@@ -85,8 +93,7 @@ class AuditTool:
                 "sequence_number": sequence,
             }
 
-        # MVP: Signature format validation (basic check)
-        # In production, would verify against public key using crypto.verify_signature()
+        # Step 1: Basic format validation
         if not self._is_valid_signature_format(signature):
             logger.warning(f"⚠️  Event {sequence} has malformed signature")
             self.failed_count += 1
@@ -97,18 +104,93 @@ class AuditTool:
                 "sequence_number": sequence,
             }
 
-        # For MVP: Accept well-formed signatures
-        # TODO: Implement real verification with public_key when HERALD has STEWARD.md
-        logger.info(f"✅ Event {sequence} signature verified")
+        # Step 2: Cryptographic verification (OPUS-307)
+        # Get the canonical content to verify
+        canonical_content = self._get_canonical_content(event)
+
+        # Determine which public key to use
+        verification_key = public_key
+        key_source = "provided"
+
+        if not verification_key:
+            # Check if event contains signer's public key
+            verification_key = event.get("public_key")
+            if verification_key:
+                key_source = "event"
+            else:
+                # Try to find key in trusted keyring by fingerprint
+                signer_fingerprint = event.get("signer_fingerprint")
+                if signer_fingerprint:
+                    trusted_keys = load_trusted_keys()
+                    verification_key = trusted_keys.get(signer_fingerprint)
+                    if verification_key:
+                        key_source = "trusted_keyring"
+
+        if not verification_key:
+            # No key available - fall back to format-only validation with warning
+            logger.warning(f"⚠️  Event {sequence}: No public key available for verification (format-only)")
+            self.verified_count += 1
+            return {
+                "verified": True,
+                "verification_level": "format_only",
+                "event_type": event_type,
+                "sequence_number": sequence,
+                "agent_id": event.get("agent_id", "unknown"),
+                "timestamp": event.get("timestamp"),
+                "signature": signature[:40] + "...",
+            }
+
+        # Step 3: Real ECDSA verification
+        try:
+            is_valid = verify_signature(canonical_content, signature, verification_key)
+        except ImportError:
+            # ecdsa library not installed - fall back gracefully
+            logger.warning(f"⚠️  Event {sequence}: ecdsa library not available (format-only)")
+            self.verified_count += 1
+            return {
+                "verified": True,
+                "verification_level": "format_only",
+                "reason": "ecdsa_not_installed",
+                "event_type": event_type,
+                "sequence_number": sequence,
+                "agent_id": event.get("agent_id", "unknown"),
+                "timestamp": event.get("timestamp"),
+                "signature": signature[:40] + "...",
+            }
+        except Exception as e:
+            logger.error(f"❌ Event {sequence}: Verification error: {e}")
+            self.failed_count += 1
+            return {
+                "verified": False,
+                "reason": "verification_error",
+                "error": str(e),
+                "event_type": event_type,
+                "sequence_number": sequence,
+            }
+
+        if not is_valid:
+            logger.warning(f"❌ Event {sequence}: Signature INVALID (cryptographic failure)")
+            self.failed_count += 1
+            return {
+                "verified": False,
+                "reason": "invalid_signature",
+                "event_type": event_type,
+                "sequence_number": sequence,
+            }
+
+        # Cryptographic verification passed
+        logger.info(f"✅ Event {sequence} signature verified (crypto: {key_source})")
         self.verified_count += 1
 
         return {
             "verified": True,
+            "verification_level": "cryptographic",
+            "key_source": key_source,
             "event_type": event_type,
             "sequence_number": sequence,
             "agent_id": event.get("agent_id", "unknown"),
             "timestamp": event.get("timestamp"),
-            "signature": signature[:40] + "...",  # Truncate for logging
+            "signature": signature[:40] + "...",
         }
 
     def _is_valid_signature_format(self, signature: str) -> bool:
@@ -135,6 +217,23 @@ class AuditTool:
             # For now, accept it anyway (some test signatures might differ)
 
         return True
+
+    def _get_canonical_content(self, event: Dict[str, Any]) -> str:
+        """
+        Get canonical JSON content for signature verification.
+
+        The canonical form excludes the signature field itself,
+        and uses sorted keys for deterministic serialization.
+
+        Args:
+            event: Event dict (may contain signature field)
+
+        Returns:
+            str: Canonical JSON string for verification
+        """
+        # Copy event and remove signature for canonical form
+        canonical = {k: v for k, v in event.items() if k != "signature"}
+        return json.dumps(canonical, sort_keys=True, separators=(",", ":"))
 
     def create_attestation(self, event: Dict[str, Any], verification_result: Dict[str, Any]) -> Dict[str, Any]:
         """

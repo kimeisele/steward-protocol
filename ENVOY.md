@@ -11,11 +11,12 @@
 <!-- @SECTION:status OWNER:live -->
 ## Status
 
-| Metric | Value |
+| Key | Value |
 | :--- | :--- |
-| State | **OFFLINE** |
-| Reason | EnvoyPlugin not loaded |
-| Action | Check boot sequence |
+| State | RUNNING |
+| Circuits | 24 |
+| Pending | 0 |
+| Architecture | OPUS-308 |
 <!-- /@SECTION -->
 
 <!-- @SECTION:commands OWNER:human -->
@@ -30,44 +31,41 @@ _No pending commands._
 <!-- @SECTION:response OWNER:live -->
 ## Response
 
-**ENVOY System Offline**
-
-Check kernel logs for boot errors.
+_Awaiting command..._
 <!-- /@SECTION -->
 
 <!-- @SECTION:history OWNER:live -->
 ## History
 
-| Time | Command | Status | Result |
-| :--- | :--- | :--- | :--- |
-
-_No recent history._
+| Value |
+| :--- |
 <!-- /@SECTION -->
 
 <!-- @SECTION:capabilities OWNER:live -->
-## Available Routes
+## Capabilities
 
 | Route | Description |
 | :--- | :--- |
-| `AGENT_BIRTH_V1` | Spawn new agent |
-| `ARCHITECTURE_ANALYSIS` | Analyze codebase architecture |
-| `CONTENT_GENERATION_V2` | Generate content |
-| `CONTEXT_SYNTH` | Synthesize context |
-| `DEBUG_FIX_V2` | Debug and fix issues |
-| `DOC_INDEX_RENDER` | Render documentation index |
-| `ERROR_RECOVERY_V1` | Recover from errors |
-| `FEATURE_IMPLEMENT_V2` | Implement features |
-| `GOVERNANCE_VOTE_V2` | Governance voting |
-| `DEBATE_V1` | Start debate |
-| `PROJECT_SCAFFOLD_V2` | Scaffold new project |
-| `RESEARCH_SYNTH_V2` | Research synthesis |
-| `SIMPLE_QUERY` | Simple query execution |
-| `SYSTEM_DESIGN_V2` | System design |
-| `TASK_LEDGER_V1` | Task ledger operations |
-| `WIRING_AUDIT` | Audit system wiring |
-| `HEAL_CODEBASE_V1` | Heal codebase issues |
-| `PURGE_TECHNICAL_DEBT_V1` | Purge technical debt |
-| `SYSTEM_STATUS_V2` | System status |
+| `ARCHITECTURE_ANALYSIS` |  |
+| `HEAL_CODEBASE_V1` |  |
+| `DEBUG_FIX_V2` |  |
+| `GOVERNANCE_VOTE_V2` |  |
+| `RESEARCH_SYNTH_V2` |  |
+| `AGENT_BIRTH_V1` |  |
+| `SIMPLE_QUERY` |  |
+| `WIRING_AUDIT` |  |
+| `TASK_LEDGER_V1` |  |
+| `DEBATE_V1` |  |
+| `PURGE_TECHNICAL_DEBT_V1` |  |
+| `CONTEXT_SYNTH` |  |
+| `PROJECT_SCAFFOLD_V2` |  |
+| `FEATURE_IMPLEMENT_V2` |  |
+| `SYSTEM_DESIGN_V2` |  |
+| `ERROR_RECOVERY_V1` |  |
+| `SYSTEM_STATUS_V2` |  |
+| `CONTENT_GENERATION_V2` |  |
+| `OUROBOROS_V1` |  |
+| `DOC_INDEX_RENDER` |  |
 <!-- /@SECTION -->
 
 <!-- @SECTION:notes OWNER:human -->

@@ -138,7 +138,7 @@ class PhoenixConfig:
         cls,
         circuits_dir: Path = Path("vibe_core/playbook/circuits"),
         routing_path: Path = Path("MATRIX.md"),
-        config_dir: Path = Path("config"),
+        config_dir: Optional[Path] = None,
     ) -> "PhoenixConfig":
         """
         Load configuration from all source files via auto-discovery.
@@ -149,14 +149,28 @@ class PhoenixConfig:
         - YAML from config/ is loaded and passed to from_dict()
         - Result stored in _sections dict
 
+        OPUS-307: PHOENIX_CONFIG_DIR environment variable support.
+        If set, overrides the default config directory.
+
         Args:
             circuits_dir: Directory containing circuit YAML files
             routing_path: Path to MATRIX.md (routing rules)
-            config_dir: Directory containing section YAML files
+            config_dir: Directory containing section YAML files (defaults to
+                        PHOENIX_CONFIG_DIR env var or "config")
 
         Returns:
             Fully loaded PhoenixConfig
         """
+        import os
+
+        # OPUS-307: Support PHOENIX_CONFIG_DIR environment variable
+        if config_dir is None:
+            env_config_dir = os.getenv("PHOENIX_CONFIG_DIR")
+            if env_config_dir:
+                config_dir = Path(env_config_dir)
+                logger.info(f"Using PHOENIX_CONFIG_DIR: {config_dir}")
+            else:
+                config_dir = Path("config")
         from .config_cache import get_cached_or_parse
 
         def _parse():
@@ -190,11 +204,18 @@ class PhoenixConfig:
             config._circuits_dir = circuits_dir
             config._routing_path = routing_path
             config._config_dir = config_dir
-            
+
             return config
 
         config = get_cached_or_parse(config_dir, _parse)
         logger.info(f"PhoenixConfig loaded with {len(config._sections)} sections: {list(config._sections.keys())}")
+
+        # OPUS-307: Validate at load time
+        validation_errors = config.validate()
+        if validation_errors:
+            for err in validation_errors:
+                logger.warning(f"Config validation: {err}")
+            logger.warning(f"PhoenixConfig has {len(validation_errors)} validation issues")
 
         return config
 

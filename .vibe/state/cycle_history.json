@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2025-12-26T08:31:45.669722",
-  "total_cycles": 36,
+  "saved_at": "2025-12-26T08:46:52.076550",
+  "total_cycles": 38,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669754"
+      "timestamp": "2025-12-26T08:46:52.076576"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669764"
+      "timestamp": "2025-12-26T08:46:52.076588"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669861"
+      "timestamp": "2025-12-26T08:46:52.076595"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669869"
+      "timestamp": "2025-12-26T08:46:52.076603"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669874"
+      "timestamp": "2025-12-26T08:46:52.076610"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-26T08:31:45.669878"
+      "timestamp": "2025-12-26T08:46:52.076616"
     },
     {
       "cycle_id": "36dd6ee8",
@@ -99,7 +99,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669882"
+      "timestamp": "2025-12-26T08:46:52.076623"
     },
     {
       "cycle_id": "b7a258f3",
@@ -119,7 +119,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669886"
+      "timestamp": "2025-12-26T08:46:52.076629"
     },
     {
       "cycle_id": "be095401",
@@ -139,7 +139,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669913"
+      "timestamp": "2025-12-26T08:46:52.076635"
     },
     {
       "cycle_id": "6df1dba3",
@@ -159,7 +159,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669920"
+      "timestamp": "2025-12-26T08:46:52.076643"
     },
     {
       "cycle_id": "cec6f0de",
@@ -180,7 +180,7 @@
         "agents_discovered": 0,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669927"
+      "timestamp": "2025-12-26T08:46:52.076649"
     },
     {
       "cycle_id": "e52ff3d6",
@@ -201,7 +201,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669933"
+      "timestamp": "2025-12-26T08:46:52.076655"
     },
     {
       "cycle_id": "5c718f1f",
@@ -222,7 +222,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669940"
+      "timestamp": "2025-12-26T08:46:52.076662"
     },
     {
       "cycle_id": "ff702b54",
@@ -243,7 +243,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669946"
+      "timestamp": "2025-12-26T08:46:52.076669"
     },
     {
       "cycle_id": "5ae8a3b2",
@@ -264,7 +264,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669953"
+      "timestamp": "2025-12-26T08:46:52.076676"
     },
     {
       "cycle_id": "150dbb36",
@@ -285,7 +285,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669960"
+      "timestamp": "2025-12-26T08:46:52.076683"
     },
     {
       "cycle_id": "6ad1d3a3",
@@ -301,7 +301,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-26T08:31:45.669966"
+      "timestamp": "2025-12-26T08:46:52.076689"
     },
     {
       "cycle_id": "244a8b0a",
@@ -317,7 +317,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-26T08:31:45.669972"
+      "timestamp": "2025-12-26T08:46:52.076696"
     },
     {
       "cycle_id": "9a17effd",
@@ -333,7 +333,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-26T08:31:45.669980"
+      "timestamp": "2025-12-26T08:46:52.076703"
     },
     {
       "cycle_id": "b1b91986",
@@ -353,7 +353,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-26T08:31:45.669986"
+      "timestamp": "2025-12-26T08:46:52.076709"
     },
     {
       "cycle_id": "fb6b9e49",
@@ -373,7 +373,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2025-12-26T08:31:45.669992"
+      "timestamp": "2025-12-26T08:46:52.076715"
     },
     {
       "cycle_id": "22e70696",
@@ -393,7 +393,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2025-12-26T08:31:45.669999"
+      "timestamp": "2025-12-26T08:46:52.076721"
     },
     {
       "cycle_id": "d071830b",
@@ -414,7 +414,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670005"
+      "timestamp": "2025-12-26T08:46:52.076727"
     },
     {
       "cycle_id": "7eb9cc21",
@@ -435,7 +435,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670012"
+      "timestamp": "2025-12-26T08:46:52.076734"
     },
     {
       "cycle_id": "c36bc3df",
@@ -456,7 +456,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670018"
+      "timestamp": "2025-12-26T08:46:52.076740"
     },
     {
       "cycle_id": "832f6a8b",
@@ -477,7 +477,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670025"
+      "timestamp": "2025-12-26T08:46:52.076746"
     },
     {
       "cycle_id": "804f46e2",
@@ -498,7 +498,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670031"
+      "timestamp": "2025-12-26T08:46:52.076753"
     },
     {
       "cycle_id": "33d69c26",
@@ -519,7 +519,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670048"
+      "timestamp": "2025-12-26T08:46:52.076759"
     },
     {
       "cycle_id": "ff52ee74",
@@ -540,7 +540,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670056"
+      "timestamp": "2025-12-26T08:46:52.076767"
     },
     {
       "cycle_id": "d5eaa980",
@@ -561,7 +561,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670063"
+      "timestamp": "2025-12-26T08:46:52.076774"
     },
     {
       "cycle_id": "0fba376a",
@@ -582,7 +582,33 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-26T08:31:45.670070"
+      "timestamp": "2025-12-26T08:46:52.076781"
+    },
+    {
+      "cycle_id": "c4f389da",
+      "parent_cycle_id": null,
+      "trace_id": "409f867d",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-26T08:46:52.076789"
+    },
+    {
+      "cycle_id": "cdc588c2",
+      "parent_cycle_id": null,
+      "trace_id": "ac404a85",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2025-12-26T08:46:52.076795"
     }
   ],
   "errors": [
@@ -606,7 +632,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-26T08:31:45.670080"
+      "timestamp": "2025-12-26T08:46:52.076815"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -628,7 +654,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-26T08:31:45.670087"
+      "timestamp": "2025-12-26T08:46:52.076823"
     },
     {
       "cycle_id": "60f300f5",
@@ -650,7 +676,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-26T08:31:45.670094"
+      "timestamp": "2025-12-26T08:46:52.076829"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -672,7 +698,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-26T08:31:45.670101"
+      "timestamp": "2025-12-26T08:46:52.076836"
     },
     {
       "cycle_id": "e9194249",
@@ -690,7 +716,7 @@
         "discovery_skipped": true,
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-26T08:31:45.670107"
+      "timestamp": "2025-12-26T08:46:52.076842"
     }
   ]
 }

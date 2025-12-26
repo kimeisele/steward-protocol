@@ -1041,11 +1041,17 @@ class ManifestationService:
             if section.owner == SectionOwnership.LIVE:
                 section_data = initial_data.get(section.id, "_No data_")
                 if isinstance(section_data, dict):
-                    for k, v in section_data.items():
-                        lines.append(f"**{k}**: {v}")
+                    # Use table formatter for dicts
+                    table = self._format_table_from_dict(None, section_data)
+                    lines.append(table)
                 elif isinstance(section_data, list):
-                    for item in section_data[:10]:
-                        lines.append(f"- {item}")
+                    # Use table formatter for list of dicts, bullet list for simple items
+                    if section_data and isinstance(section_data[0], dict):
+                        table = self._format_table_from_list(None, section_data)
+                        lines.append(table)
+                    else:
+                        for item in section_data[:10]:
+                            lines.append(f"- {item}")
                 else:
                     lines.append(str(section_data))
             elif section.owner == SectionOwnership.HUMAN:

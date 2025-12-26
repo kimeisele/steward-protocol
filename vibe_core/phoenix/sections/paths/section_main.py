@@ -137,8 +137,8 @@ class ProjectPathsConfig:
     These are per-project paths that live inside the project directory.
 
     Maps to violations in:
-    - boot_sequence.py: .vibe/vibe.db
-    - sqlite_store.py: .vibe/state/vibe_agency.db
+    - boot_sequence.py: .vibe/vibe.db (OPUS-307: REMOVED - dead code)
+    - sqlite_store.py: .vibe/state/vibe_agency.db (OPUS-307: REMOVED - dead code)
     - task_manager.py: .vibe/state, .vibe/config
     - vfs.py, kernel_impl.py: /tmp/vibe_os (migrating to .vibe/runtime)
     - engineer/cartridge_main.py: workspaces/sandbox (migrating to .vibe/sandboxes)
@@ -236,7 +236,7 @@ class DataPathsConfig:
     - supreme_court tools: data/supreme_court
     - kernel_impl.py: data/vibe_ledger.db
     - librarian tools: data/library/catalog.json
-    - milk_ocean.py: data/milk_ocean.db
+    - milk_ocean.py: data/milk_ocean.db (OPUS-307: REMOVED - legacy router replaced)
     - test_governance: data/test_baselines.json, data/logs/test_mutations.log
     - gap_report_tool.py: data/governance/executed
     """
@@ -259,11 +259,11 @@ class DataPathsConfig:
     vibe_ledger: str = "data/vibe_ledger.db"
     library_catalog: str = "data/library/catalog.json"
     logs_transactions: str = "data/logs/transactions.log"
-    milk_ocean_db: str = "data/milk_ocean.db"
+    # OPUS-307 Phase 4: Removed milk_ocean_db (legacy router removed)
     test_baselines: str = "data/test_baselines.json"
     test_mutations_log: str = "data/logs/test_mutations.log"
     governance_executed: str = "data/governance/executed"
-    vibe_agency_db: str = "data/vibe_agency.db"
+    # OPUS-307 Phase 4: Removed vibe_agency_db (never used)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPathsConfig":
@@ -291,11 +291,9 @@ class DataPathsConfig:
             vibe_ledger=_resolve("vibe_ledger", "data/vibe_ledger.db"),
             library_catalog=_resolve("library_catalog", "data/library/catalog.json"),
             logs_transactions=_resolve("logs_transactions", "data/logs/transactions.log"),
-            milk_ocean_db=_resolve("milk_ocean_db", "data/milk_ocean.db"),
             test_baselines=_resolve("test_baselines", "data/test_baselines.json"),
             test_mutations_log=_resolve("test_mutations_log", "data/logs/test_mutations.log"),
             governance_executed=_resolve("governance_executed", "data/governance/executed"),
-            vibe_agency_db=_resolve("vibe_agency_db", "data/vibe_agency.db"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -317,11 +315,9 @@ class DataPathsConfig:
             "vibe_ledger": self.vibe_ledger,
             "library_catalog": self.library_catalog,
             "logs_transactions": self.logs_transactions,
-            "milk_ocean_db": self.milk_ocean_db,
             "test_baselines": self.test_baselines,
             "test_mutations_log": self.test_mutations_log,
             "governance_executed": self.governance_executed,
-            "vibe_agency_db": self.vibe_agency_db,
         }
 
     def resolve(self, path_key: str) -> Path:
@@ -697,11 +693,9 @@ class PathsConfig:
             "vibe_ledger",
             "library_catalog",
             "logs_transactions",
-            "milk_ocean_db",
             "test_baselines",
             "test_mutations_log",
             "governance_executed",
-            "vibe_agency_db",
         ]:
             try:
                 result[f"data.{key}"] = self.data.resolve(key)
