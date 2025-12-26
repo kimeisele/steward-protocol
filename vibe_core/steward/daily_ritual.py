@@ -538,41 +538,54 @@ class DailyRitual:
 
     def _render_opus_dashboard(self) -> bool:
         """
-        OPUS-076: Render OPUS.md dashboard.
+        OPUS-076/308: Render OPUS.md dashboard via ManifestationService.
 
         Tries in order:
-        1. If kernel running: Use interface plugin (proper channel)
-        2. Fallback: Use opus_dashboard_renderer directly (headless)
+        1. If kernel running: Use ManifestationService.force_manifest()
+        2. Fallback: Use opus_assistant.get_manifestation_data() + template (headless)
 
         Returns:
             True if render succeeded
         """
-        # Try interface plugin first (proper architecture)
-        if self.kernel:
+        # OPUS-308: Try ManifestationService first (proper architecture)
+        if self.kernel and hasattr(self.kernel, "manifestation"):
             try:
-                interface_plugin = self.kernel.get_plugin("interface")
-                if interface_plugin and hasattr(interface_plugin, "render_view"):
-                    interface_plugin.render_view("opus", force=True)
-                    logger.info("   ✅ OPUS.md rendered via interface plugin")
+                content = self.kernel.manifestation.force_manifest("opus_assistant")
+                if content:
+                    logger.info("   ✅ OPUS.md rendered via ManifestationService")
                     return True
             except Exception as e:
-                logger.warning(f"Interface plugin render failed: {e}")
+                logger.warning(f"ManifestationService render failed: {e}")
 
         # Fallback: headless renderer (for CI/headless mode)
         try:
             from pathlib import Path
 
-            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
-                OpusDashboardRenderer,
-            )
+            from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-            renderer = OpusDashboardRenderer(Path("."), kernel=self.kernel)
-            content = renderer.render(quick=False)
+            from vibe_core.plugins.opus_assistant.plugin_main import OpusAssistantPlugin
+
+            # Create plugin and gather data
+            plugin = OpusAssistantPlugin()
+            plugin._workspace = Path(".")
+            plugin._kernel = self.kernel
+            data = plugin.get_manifestation_data()
+
+            # Render template
+            template_dir = Path("vibe_core/plugins/opus_assistant/templates")
+            env = Environment(
+                loader=FileSystemLoader(str(template_dir)),
+                autoescape=select_autoescape(["html", "xml"]),
+                trim_blocks=True,
+                lstrip_blocks=True,
+            )
+            template = env.get_template("opus_dashboard.md.j2")
+            content = template.render(**data)
 
             # Write directly (headless mode - no kernel.io)
             opus_path = Path("OPUS.md")
             opus_path.write_text(content)
-            logger.info("   ✅ OPUS.md rendered via headless renderer")
+            logger.info("   ✅ OPUS.md rendered via headless template")
             return True
 
         except Exception as e:

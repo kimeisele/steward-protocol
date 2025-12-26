@@ -899,25 +899,21 @@ class KernelTickHandler:
 
     async def _write_opus_md(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Trigger OPUS.md regeneration through InterfacePlugin.
+        Trigger OPUS.md regeneration through ManifestationService.
 
-        ARCHITECTURE: opus_assistant is BACKEND only - no direct file writes.
-        InterfacePlugin is FRONTEND - writes via kernel.io.
+        OPUS-308: Now uses ManifestationService.force_manifest() instead
+        of the old InterfacePlugin.render_view() flow.
         """
         try:
-            # Get InterfacePlugin and trigger opus render
-            if self._kernel:
-                interface_plugin = self._kernel.get_plugin("interface")
-                if interface_plugin and hasattr(interface_plugin, "render_view"):
-                    interface_plugin.render_view("opus", force=True)
-                    return {"success": True, "method": "interface_plugin"}
+            # OPUS-308: Use ManifestationService for rendering
+            if self._kernel and hasattr(self._kernel, "manifestation"):
+                content = self._kernel.manifestation.force_manifest("opus_assistant")
+                if content:
+                    return {"success": True, "method": "manifestation_service", "chars": len(content)}
 
-            # Fallback: Log warning if InterfacePlugin not available
-            logger.warning(
-                "⚠️ Cannot render OPUS.md: InterfacePlugin not available. "
-                "opus_assistant is BACKEND only - requires InterfacePlugin for writes."
-            )
-            return {"success": False, "error": "InterfacePlugin not available"}
+            # Fallback: Log warning if ManifestationService not available
+            logger.warning("⚠️ Cannot render OPUS.md: ManifestationService not available.")
+            return {"success": False, "error": "ManifestationService not available"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 

@@ -236,6 +236,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         """
         OPUS-087 PRANA: Refresh OPUS.md during heartbeat pulse.
         OPUS-212: Trigger MANAS cognitive cycle during pulse.
+        OPUS-308: Now uses ManifestationService for rendering.
 
         This runs every 15 minutes via GitHub Actions (headless mode).
         Collects system state and registers mutation for OPUS.md update.
@@ -256,16 +257,47 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
             except Exception as e:
                 logger.warning(f"   ⚠️ MANAS tick failed during pulse: {e}")
 
-            # 2. Use the proper renderer to generate full dashboard
-            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
-                OpusDashboardRenderer,
-            )
-
+            # 2. OPUS-308: Use ManifestationService for rendering
+            # Get data via get_manifestation_data(), render via service template
             workspace = self._workspace or Path.cwd()
-            renderer = OpusDashboardRenderer(workspace_root=workspace, kernel=kernel)
+            template_path = "vibe_core/plugins/opus_assistant/templates/opus_dashboard.md.j2"
 
-            # Render the full markdown content
-            content = await renderer.render(quick=False)
+            # Gather data (this calls OpusDashboardRenderer._gather_context internally)
+            data = self.get_manifestation_data()
+
+            # Apply control cables (bidirectional: read user edits before render)
+            try:
+                from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                    OpusDashboardRenderer,
+                )
+
+                renderer = OpusDashboardRenderer(workspace_root=workspace, kernel=kernel)
+                await renderer._apply_control_cables()
+            except Exception as e:
+                logger.debug(f"Control cables skipped: {e}")
+
+            # Render via ManifestationService template support
+            content = None
+            if hasattr(kernel, "manifestation"):
+                content = kernel.manifestation.render_with_template(template_path, data)
+
+            # Fallback: direct Jinja2 render if service unavailable
+            if content is None:
+                try:
+                    from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+                    template_dir = workspace / "vibe_core/plugins/opus_assistant/templates"
+                    env = Environment(
+                        loader=FileSystemLoader(str(template_dir)),
+                        autoescape=select_autoescape(["html", "xml"]),
+                        trim_blocks=True,
+                        lstrip_blocks=True,
+                    )
+                    template = env.get_template("opus_dashboard.md.j2")
+                    content = template.render(**data)
+                except Exception as e:
+                    logger.error(f"Template render failed: {e}")
+                    return HookResult.error(f"OPUS render failed: {e}")
 
             # 3. Register mutation
             transaction.register(
@@ -1161,11 +1193,10 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         """
         CLI Handler: steward opus:refresh
 
-        Manually regenerate OPUS.md via InterfacePlugin.
+        Manually regenerate OPUS.md via ManifestationService.
 
-        ARCHITECTURE:
-        - opus_assistant is BACKEND only (data provider)
-        - InterfacePlugin is FRONTEND (writes via kernel.io)
+        OPUS-308: Now uses ManifestationService.force_manifest() instead
+        of the old InterfacePlugin.render_view() flow.
 
         Args:
             quick: If True, skip semantic checks (faster, default)
@@ -1178,20 +1209,21 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
 
         start = time.time()
 
-        # Trigger InterfacePlugin to render OPUS.md
+        # OPUS-308: Use ManifestationService for rendering
         result_path = None
-        if self._kernel:
-            interface_plugin = self._kernel.get_plugin("interface")
-            if interface_plugin and hasattr(interface_plugin, "render_view"):
-                interface_plugin.render_view("opus", force=True)
+        content = None
+
+        if self._kernel and hasattr(self._kernel, "manifestation"):
+            content = self._kernel.manifestation.force_manifest("opus_assistant")
+            if content:
                 result_path = self._workspace / "OPUS.md" if self._workspace else Path("OPUS.md")
 
         elapsed = time.time() - start
 
-        if result_path is None:
+        if result_path is None or content is None:
             return {
                 "status": "error",
-                "error": "InterfacePlugin not available - opus_assistant is BACKEND only",
+                "error": "ManifestationService not available or rendering failed",
                 "elapsed_ms": int(elapsed * 1000),
             }
 

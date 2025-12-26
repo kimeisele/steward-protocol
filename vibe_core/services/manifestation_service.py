@@ -548,6 +548,64 @@ class ManifestationService:
             except Exception as e:
                 logger.error(f"Manifestation failed for {output}: {e}")
 
+    def force_manifest(self, plugin_id: str) -> Optional[str]:
+        """
+        Force immediate manifestation of a single plugin.
+
+        Used by cmd_opus_refresh and other manual triggers.
+        Bypasses frequency check - manifests NOW.
+
+        Args:
+            plugin_id: Plugin to manifest (e.g., "opus_assistant")
+
+        Returns:
+            Rendered content string, or None if failed
+        """
+        if plugin_id not in self._registered:
+            logger.warning(f"Plugin {plugin_id} not registered for manifestation")
+            return None
+
+        reg = self._registered[plugin_id]
+
+        # Get output path
+        if reg.declaration.location == "root":
+            output_path = self._workspace / reg.declaration.output
+        elif reg.declaration.location == ".vibe":
+            output_path = self._workspace / ".vibe" / reg.declaration.output
+        else:
+            output_path = self._workspace / reg.declaration.location / reg.declaration.output
+
+        # Get data from plugin
+        try:
+            data = reg.plugin_instance.get_manifestation_data()
+        except Exception as e:
+            logger.error(f"get_manifestation_data() failed for {plugin_id}: {e}")
+            return None
+
+        # Render with template if available
+        if reg.declaration.template:
+            content = self.render_with_template(reg.declaration.template, data)
+            if content:
+                # Write to file
+                try:
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    output_path.write_text(content, encoding="utf-8")
+                    self._index.on_file_created(output_path)
+                    logger.info(f"Force manifested: {output_path.name} ({len(content)} chars)")
+                    return content
+                except Exception as e:
+                    logger.error(f"Failed to write manifestation: {e}")
+                    return None
+
+        # Schema-based rendering (fallback)
+        if not output_path.exists():
+            self.spawn(output_path, reg.declaration.schema, data)
+            return output_path.read_text(encoding="utf-8") if output_path.exists() else None
+
+        live_sections = self._format_data_for_sections(reg.declaration.schema, data)
+        self.update_live_sections(output_path, live_sections)
+        return output_path.read_text(encoding="utf-8") if output_path.exists() else None
+
     def _process_user_input(self) -> None:
         """
         BIDIRECTIONAL: Sense and process @HUMAN section changes.
