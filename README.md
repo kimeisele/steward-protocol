@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # 🕉️ STEWARD PROTOCOL
@@ -9,6 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Agents](https://img.shields.io/badge/agents-30-purple.svg)](#the-federation)
 [![Tests](https://img.shields.io/badge/tests-685%20passed-brightgreen.svg)](#testing)
+
 *What if AI agents had cryptographic identities, constitutional rights, and governed themselves?*
 
 [Quick Start](#-quick-start) • [Why STEWARD?](#-why-steward) • [Architecture](#-architecture) • [CLI](#-unified-cli)
@@ -134,6 +136,8 @@ steward karma                # See MANAS performance stats
 
 30 agents form a self-governing federation:
 
+
+
 ### Governance
 
 | Agent | Role | Capabilities |
@@ -141,6 +145,10 @@ steward karma                # See MANAS performance stats
 | **AUDITOR** | GAD-000 compliance enforcement agent | 3 |
 | **CIVIC** | Governance agent: enforces rules, manages licenses, aud… | 4 |
 | **SUPREME_COURT** | Appellate justice system with mercy protocol | 2 |
+
+
+
+
 ### Intelligence
 
 | Agent | Role | Capabilities |
@@ -150,12 +158,20 @@ steward karma                # See MANAS performance stats
 | **ORACLE** | System introspection and explanation agent | 3 |
 | **SCIENCE** | External intelligence module via web research | 3 |
 | **ANALYST** | Multi-Source Repository Analysis (Realtime Architecture… | 6 |
+
+
+
+
 ### Communications
 
 | Agent | Role | Capabilities |
 |-------|------|--------------|
 | **HERALD** | Protocol communications and identity verification agent… | 5 |
 | **AMBASSADOR** | External relations and partnerships | 1 |
+
+
+
+
 ### Infrastructure
 
 | Agent | Role | Capabilities |
@@ -164,6 +180,10 @@ steward karma                # See MANAS performance stats
 | **CHRONICLE** | Temporal operations and event tracking | 1 |
 | **ENGINEER** | Meta-agent for building new agents and code | 3 |
 | **SCRIBE** | Autonomous documentation generation agent | 3 |
+
+
+
+
 ### Content
 
 | Agent | Role | Capabilities |
@@ -171,6 +191,11 @@ steward karma                # See MANAS performance stats
 | **ARTISAN** | Media and technical operations | 1 |
 | **MARKETER** | Autonomous content strategist and generator for social … | 4 |
 | **PULSE** | Social media amplification | 2 |
+
+
+
+
+
 
 <details>
 <summary><b>View all 30 agents →</b></summary>
@@ -227,6 +252,7 @@ pytest tests/manas/ -v              # Cognitive tests
 ```
 
 **Coverage:** 685 tests
+
 ---
 
 ## 🤝 Contributing
