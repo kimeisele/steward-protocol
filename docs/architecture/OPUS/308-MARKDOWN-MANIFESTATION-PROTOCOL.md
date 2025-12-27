@@ -700,7 +700,7 @@ The 30+ existing renderers in `vibe_core/plugins/interface/renderers/` will be m
 | Artifact | Location | Status |
 |----------|----------|--------|
 | **Design Document** | This file | v0.4 FINAL |
-| **Schema Definitions** | `docs/architecture/OPUS/308-SCHEMAS.yaml` | COMPLETE |
+| **Schema Definitions** | `config/manifestation.yaml` | COMPLETE |
 | **Protocol Interfaces** | `vibe_core/protocols/manifestation.py` | COMPLETE (with Red Pen methods) |
 
 ---
@@ -742,7 +742,7 @@ The 30+ existing renderers in `vibe_core/plugins/interface/renderers/` will be m
 | **OPUS-014** | Unified UI Transparency - prior art on @LIVE/@HUMAN |
 | **OPUS-023** | Fractal UI Architecture - holon/manifest model |
 | **OPUS-151** | Markdown Reality - philosophical foundation |
-| **308-SCHEMAS.yaml** | Schema definitions for all file types |
+| **config/manifestation.yaml** | Schema definitions for all file types |
 | **manifestation.py** | Protocol interfaces (Layer 2 & 3) |
 
 ---
