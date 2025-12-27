@@ -1890,6 +1890,9 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
     def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
         """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""
+        # OPUS-306: Ensure booted before any operation
+        self._ensure_booted()
+
         # OPUS-211: Housekeeping - Mark stale intents before thinking
         if self._buffer:
             stale_count = self._buffer.cleanup_stale()
@@ -2239,6 +2242,9 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get summary of MANAS memory for display."""
+        # OPUS-306: Ensure booted before accessing memory
+        self._ensure_booted()
+
         memories = self._memory.get_all_memories()
         successful_patterns = self._memory.get_successful_patterns(limit=5)
 
@@ -2579,6 +2585,9 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         Returns data ready to be rendered in the Intent Buffer section.
         """
+        # OPUS-306: Ensure booted before accessing buffer
+        self._ensure_booted()
+
         all_entries = self._buffer.get_all()
         pending = [entry for entry in all_entries if entry.status == "pending"]
         executed = [entry for entry in all_entries if entry.status == "executed"][-5:]  # Last 5
