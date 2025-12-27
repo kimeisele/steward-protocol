@@ -752,6 +752,7 @@ See [OPUS.md](OPUS.md) for current goals and roadmap."""
             Path to updated README.md
         """
         import warnings
+
         warnings.warn(
             "MukhaGenerator.update_readme() is deprecated. "
             "Use ManifestationService with ReadmeDataProvider instead (OPUS-308).",
@@ -858,7 +859,9 @@ class ReadmeDataProvider:
                     "version": str(project.get("version", "0.0.0")),
                     "requires_python": str(project.get("requires-python", ">=3.11")),
                     "urls": {
-                        "Source": str(project.get("urls", {}).get("Source", "https://github.com/kimeisele/steward-protocol")),
+                        "Source": str(
+                            project.get("urls", {}).get("Source", "https://github.com/kimeisele/steward-protocol")
+                        ),
                     },
                 }
         except Exception as e:
@@ -916,11 +919,13 @@ class ReadmeDataProvider:
             name = agent.name.lower()
             category = category_map.get(name, "Other")
 
-            categories[category].append({
-                "name": agent.name,
-                "description": agent.description,
-                "tool_count": len(agent.capabilities),
-            })
+            categories[category].append(
+                {
+                    "name": agent.name,
+                    "description": agent.description,
+                    "tool_count": len(agent.capabilities),
+                }
+            )
 
         # Remove empty categories
         return {k: v for k, v in categories.items() if v}
