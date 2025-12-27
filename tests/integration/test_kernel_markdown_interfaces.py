@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
 """
-Integration Test: Kernel Markdown Interfaces (SETTINGS.md + ENVOY.md)
-======================================================================
+LEGACY TESTS: Kernel Markdown Interfaces (SETTINGS.md + ENVOY.md)
+==================================================================
 
+⚠️ DEPRECATED: This test file uses the OLD InterfacePlugin + Renderer pattern.
+
+The architecture has been REPLACED by:
+  - kernel.manifestation (ManifestationService)
+  - Plugins implement get_manifestation_data()
+  - See: vibe_core/services/manifestation_service.py
+  - See: vibe_core/protocols/manifestation.py
+
+These tests fail because:
+  - get_renderer(kernel, "envoy") → "envoy" renderer doesn't exist
+  - get_renderer(kernel, "settings") → "settings" renderer doesn't exist
+  - The old renderers were replaced by ManifestationService
+
+DO NOT try to "fix" these tests by adding old renderers back!
+Instead: Write new tests for ManifestationService.
+
+Original docstring preserved below for reference:
+-------------------------------------------------
 Tests the markdown-based control interfaces via the Unified Interface Plugin:
 
 1. SETTINGS.md - Command Queue Interface
@@ -27,6 +45,12 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
+# LEGACY: Skip entire module - architecture replaced by ManifestationService
+pytestmark = pytest.mark.skip(
+    reason="LEGACY: InterfacePlugin+Renderer replaced by ManifestationService. "
+    "See vibe_core/services/manifestation_service.py"
+)
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -544,7 +568,6 @@ show me the status
         # No change now
         assert not renderer.sync.check_file_changed(renderer.state.last_modified)
 
-    @pytest.mark.skip(reason="kernel.envoy public API not implemented yet - OPUS Phase 2 TODO")
     def test_dispatch_request_routes_via_playbook(self, kernel, temp_workdir):
         """Test that requests are routed via UnifiedRouter (NO LLM)."""
         # We test this via sync_to_reality since dispatch is internal to it now
