@@ -3,7 +3,7 @@ meta:
   name: "SCRIBE Agent (The Documentarian)"
   version: "1.0.0"
   author: "Steward Protocol"
-  description: "Autonomous documentation generation agent - auto-generates AGENTS.md, CITYMAP.md, HELP.md, README.md"
+  description: "Documentation agent - UI rendering delegated to InterfacePlugin"
 
 agent:
   domain: "INFRASTRUCTURE"
