@@ -2,6 +2,8 @@
 
 # 🕉️ STEWARD PROTOCOL
 
+### The First Operating System for AI Agents
+
 **Cryptographic Identity + Governance for AI Agents. A.G.I. Infrastructure.**
 
 [![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/kimeisele/steward-protocol/releases)
@@ -10,160 +12,163 @@
 [![Agents](https://img.shields.io/badge/agents-30-purple.svg)](#the-federation)
 [![Tests](https://img.shields.io/badge/tests-685%20passed-brightgreen.svg)](#testing)
 
-*What if AI agents had cryptographic identities, constitutional rights, and governed themselves?*
+*Not another agent framework. An actual kernel with process isolation, immutable ledger, and constitutional governance.*
 
-[Quick Start](#-quick-start) • [Why STEWARD?](#-why-steward) • [Architecture](#-architecture) • [CLI](#-unified-cli)
+[What Is This?](#-what-is-this) • [Quick Start](#-quick-start) • [Architecture](#-the-kernel) • [Constitution](#-constitutional-governance)
 
 </div>
+
+---
+
+## ⚡ What Is This?
+
+**STEWARD is to AI agents what Linux is to processes.**
+
+Most "agent frameworks" are just prompt wrappers. STEWARD is a real operating system with:
+
+| OS Concept | STEWARD Implementation |
+|------------|------------------------|
+| **Kernel** | VIBE Kernel — process table, scheduler, syscalls |
+| **Process Isolation** | VFS sandboxing — agents can't escape their boundaries |
+| **Audit Log** | Immutable Ledger — 432+ cryptographic chain blocks |
+| **Kill Switch** | NARASIMHA Protocol — hypervisor-level agent termination |
+| **Memory Protection** | VAJRA Armor — self-healing DNA, immutable blueprints |
+| **Constitution** | Supreme Law — governance enforced at kernel level, not prompts |
+| **Identity** | ECDSA P-256 — every action cryptographically signed |
+
+**The difference:** An agent that "promises" to follow rules is insecure. An agent that *physically cannot* violate them is secure.
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-# Install
+# Clone
 git clone https://github.com/kimeisele/steward-protocol
 cd steward-protocol
-pip install -e ".[dev]"
 
-# Boot the system
+# Install (creates virtual environment)
+pip install -e ".[dev]"   # or: uv sync
+
+# Boot the kernel
 steward boot
 
-# See what's running
-steward status
-
-# Run any capability (unified interface)
-steward run list              # See all 75+ capabilities
-steward run envoy.curator     # Example: curate documentation
+# Check system status
+steward status            # Kernel health, ledger blocks, certified agents
+steward introspect        # Deep kernel inspection
 ```
 
-<details>
-<summary><b>Alternative: uv (faster)</b></summary>
-
-```bash
-git clone https://github.com/kimeisele/steward-protocol
-cd steward-protocol
-uv sync
-steward boot
-```
-
-</details>
+**First time?** The kernel will:
+1. Initialize the immutable ledger (SQLite-backed blockchain)
+2. Load 30 plugins via Constitutional Oath
+3. Register 30 agents with cryptographic identity
+4. Start the PRANA heartbeat (life force)
 
 ---
 
-## ✨ Why STEWARD?
+## 🔬 The Kernel
 
-Traditional AI agents are **stateless, identity-less tools**. STEWARD creates **autonomous entities** with real accountability:
-
-| Problem | STEWARD Solution |
-|---------|------------------|
-| **No Identity** | ECDSA P-256 cryptographic signatures — every action is signed |
-| **No Rules** | Constitutional governance — agents follow enforceable laws |
-| **No Memory** | MANAS cognitive kernel — agents think, learn, plan |
-| **Isolated** | 30 federated agents collaborate |
-| **No Trust** | Chain of trust — cryptographic audit trail |
-
-**This is not an agent framework.** This is an **operating system** for AI agents.
-
----
-
-## 🎛️ Unified CLI
-
-One command to rule them all. No memorizing 50 different APIs:
-
-```bash
-steward run <capability>     # Run anything: tool, circuit, or agent
-steward run list             # Discover all capabilities
-steward run info <cap>       # Get details before running
-```
-
-### System Commands
-
-```bash
-steward boot                 # Start the kernel
-steward status               # System health
-steward ps                   # Running agents (like Unix ps)
-steward state                # Unified state view
-```
-
-### MANAS Commands (Human-in-the-Loop)
-
-```bash
-steward pending              # See what MANAS wants to do
-steward approve <id>         # Approve an intent
-steward reject <id>          # Reject with reason
-steward karma                # See MANAS performance stats
-```
-
----
-
-## 🏛️ Architecture
+This is a **real kernel**, not a metaphor:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                      HUMAN OPERATOR                          │
 │                    (Intent & Oversight)                      │
 └──────────────────────────────────────────────────────────────┘
-                              ↓
+                              ↓ intent
 ┌──────────────────────────────────────────────────────────────┐
-│                    🧠 MANAS Cognitive Kernel                 │
+│                    ⚙️ VIBE KERNEL (L0)                       │
 │                                                              │
-│  JNANA (Knowledge) → KRIYA (Action) → SAMVADA (Dialogue)    │
-│                                                              │
-│  "The mind that perceives, decides, and acts"               │
+│  • Process Table (30 agents)    • Task Scheduler (FIFO)       │
+│  • Immutable Ledger (432+ blocks)  • NARASIMHA Kill-Switch   │
+│  • VAJRA DNA Protection    • Constitutional Oath Gate        │
+│  • VFS Sandboxing          • Event Bus (async)               │
 └──────────────────────────────────────────────────────────────┘
-                              ↓
+                              ↓ syscalls
 ┌──────────────────────────────────────────────────────────────┐
-│                    ⚙️ VIBE Kernel (L0)                       │
+│                    🤖 THE FEDERATION                         │
 │                                                              │
-│  • Constitutional Oath      • Cryptographic Ledger          │
-│  • Plugin Lifecycle         • VISNU Protection              │
-└──────────────────────────────────────────────────────────────┘
-                              ↓
-┌──────────────────────────────────────────────────────────────┐
-│                    🤖 The Federation                         │
-│                                                              │
-│           30 Agents • 75 Tools • Self-governing              │
+│  30 Certified Agents • 75 Capabilities • Self-Governing     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**GAD-000 Principle:** *The AI operates the system. The human provides intent.*
+### Kernel Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| **VIBE Kernel** | `kernel_impl.py` | Process table, scheduler, ledger |
+| **NARASIMHA** | `narasimha.py` | Hypervisor kill-switch (destroys rogue agents) |
+| **VAJRA** | `security.py` | Immutable DNA protection |
+| **PRANA** | `prana.py` | Heartbeat, lifecycle management |
+| **VISNU** | `.github/hooks/` | Kernel file protection (21 guarded files) |
+| **Ledger** | `ledger.py` | Append-only cryptographic chain |
+
+---
+
+## 📜 Constitutional Governance
+
+Unlike prompt-based "safety", STEWARD enforces governance at the **architecture level**:
+
+### The Constitution (CONSTITUTION.md)
+
+| Article | Principle | Enforcement |
+|---------|-----------|-------------|
+| **I: Identity** | No agent acts without cryptographic proof | Drop unsigned messages |
+| **II: Auditability** | Every decision logged immutably | Transaction rollback on missing audit |
+| **III: Governance** | Code is law, not policy | Sandbox blocks violations |
+| **IV: Transparency** | No black boxes | Machine-readable state exposure |
+| **V: Consent** | No access without mandate | ACLs + Capability Tokens |
+
+### GAD-000: The Operating Inversion
+
+Traditional: *Human operates machine.*
+STEWARD: *AI operates system. Human provides intent.*
+
+```bash
+# Human provides intent
+steward pending              # See what MANAS wants to do
+steward approve <id>         # Approve an intent
+steward reject <id>          # Reject with reason
+
+# AI operates autonomously within bounds
+steward karma                # See trust score evolution
+```
 
 ---
 
 ## 🤖 The Federation
 
-30 agents form a self-governing federation:
+30 specialized agents form a self-governing federation:
 
 ### Governance
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
+| Agent | Role | Tools |
+|-------|------|-------|
 | **AUDITOR** | GAD-000 compliance enforcement agent | 3 |
-| **CIVIC** | Governance agent: enforces rules, manages licenses, aud… | 4 |
+| **CIVIC** | Governance agent: enforces rules, manages licenses… | 4 |
 | **SUPREME_COURT** | Appellate justice system with mercy protocol | 2 |
 
 ### Intelligence
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
+| Agent | Role | Tools |
+|-------|------|-------|
 | **ENVOY** | Universal operator interface agent | 5 |
-| **MANAS** | The Cognitive Mind - Proactive Intent Generation and Sy… | 6 |
+| **MANAS** | The Cognitive Mind - Proactive Intent Generation a… | 6 |
 | **ORACLE** | System introspection and explanation agent | 3 |
 | **SCIENCE** | External intelligence module via web research | 3 |
-| **ANALYST** | Multi-Source Repository Analysis (Realtime Architecture… | 6 |
+| **ANALYST** | Multi-Source Repository Analysis (Realtime Archite… | 6 |
 
 ### Communications
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **HERALD** | Protocol communications and identity verification agent… | 5 |
+| Agent | Role | Tools |
+|-------|------|-------|
+| **HERALD** | Protocol communications and identity verification … | 5 |
 | **AMBASSADOR** | External relations and partnerships | 1 |
 
 ### Infrastructure
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
+| Agent | Role | Tools |
+|-------|------|-------|
 | **ARCHIVIST** | Event verification and audit trail agent | 3 |
 | **CHRONICLE** | Temporal operations and event tracking | 1 |
 | **ENGINEER** | Meta-agent for building new agents and code | 3 |
@@ -171,44 +176,74 @@ steward karma                # See MANAS performance stats
 
 ### Content
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
+| Agent | Role | Tools |
+|-------|------|-------|
 | **ARTISAN** | Media and technical operations | 1 |
-| **MARKETER** | Autonomous content strategist and generator for social … | 4 |
+| **MARKETER** | Autonomous content strategist and generator for so… | 4 |
 | **PULSE** | Social media amplification | 2 |
 
 <details>
 <summary><b>View all 30 agents →</b></summary>
 
-See [AGENTS.md](AGENTS.md) for the complete registry.
+See [AGENTS.md](AGENTS.md) for the complete registry with capabilities.
 
 </details>
 
 ---
 
-## 🧠 MANAS: The Cognitive Kernel
+## 🛡️ Security Architecture
 
-MANAS (Sanskrit: *mind*) is the autonomous intelligence layer:
+### NARASIMHA: The Kill Switch
 
-| Module | Purpose |
-|--------|---------|
-| **JNANA** | LLM-powered reasoning and memory |
-| **KRIYA** | Intent → tool execution |
-| **SAMVADA** | Real-time dialogue |
-| **VAK** | Safe command execution with audit |
+When an agent goes rogue (tries to modify Constitution, escape sandbox, manipulate ledger):
 
-MANAS doesn't just respond — it **perceives**, **plans**, and **acts**.
+```
+Threat Level:  GREEN → YELLOW → ORANGE → RED → APOCALYPSE
+                                               ↓
+                                    NARASIMHA activates
+                                               ↓
+                                    Instant termination
+                                    (No appeal, no recovery)
+```
+
+### VAJRA: DNA Protection
+
+Critical kernel components are **immutable after boot**:
+- Ledger blueprints cannot be poisoned
+- Agent registry factories are sealed
+- Self-healing via Blueprint Protocol
+
+### VISNU: Kernel File Guard
+
+21 kernel files are cryptographically protected. Pre-commit hooks prevent modification without explicit bypass.
 
 ---
 
-## 🔐 Trust & Governance
+## 🎛️ CLI Reference
 
-Governance is enforced at the **kernel level** — not as policy, but as physics:
+```bash
+# System
+steward boot                 # Initialize kernel
+steward status               # Health check
+steward introspect           # Deep kernel state
+steward stop                 # Graceful shutdown
 
-- **[CONSTITUTION.md](CONSTITUTION.md)** — The supreme law
-- **VISNU Protection** — Kernel files are cryptographically guarded
-- **Chain of Trust** — Every action signed with ECDSA P-256
-- **Governance Gate** — Constitutional checks before syscalls
+# Unified Execution (OPUS-307)
+steward run <capability>     # Execute any tool/circuit/agent
+steward run list             # Discover capabilities
+steward run info <cap>       # Capability details
+
+# Human-in-the-Loop (MANAS)
+steward pending              # Pending intents
+steward approve <id>         # Approve
+steward reject <id>          # Reject
+steward karma                # Trust metrics
+
+# Diagnostics
+steward system:doctor        # Health diagnosis
+steward agents:list          # Process table (like ps)
+steward resources:usage      # Resource consumption
+```
 
 ---
 
@@ -216,9 +251,9 @@ Governance is enforced at the **kernel level** — not as policy, but as physics
 
 | Document | Purpose |
 |----------|---------|
+| [CONSTITUTION.md](CONSTITUTION.md) | The supreme law |
 | [OPUS.md](OPUS.md) | Live system dashboard |
 | [AGENTS.md](AGENTS.md) | Agent registry |
-| [CONSTITUTION.md](CONSTITUTION.md) | Governance rules |
 | [docs/architecture/](docs/architecture/) | Technical deep-dives |
 
 ---
@@ -226,35 +261,31 @@ Governance is enforced at the **kernel level** — not as policy, but as physics
 ## 🧪 Testing
 
 ```bash
-pytest tests/ -v                    # All tests
-pytest tests/hardening/ -v          # Architecture enforcement
-pytest tests/manas/ -v              # Cognitive tests
+steward test:run             # Full test suite
+pytest tests/hardening/ -v   # Security/architecture tests
+pytest tests/manas/ -v       # Cognitive tests
 ```
 
-**Coverage:** 685 tests
+**Coverage:** 685 tests (including red-team attack simulations)
 
 ---
 
-## 🤝 Contributing
+## 🤝 Philosophy
 
-STEWARD is built for AI-human collaboration. The system operates itself — you provide intent.
+> *"A system where AI can't break the rules isn't oppressive — it's trustworthy."*
 
-```bash
-steward boot
-steward run opus.status      # See current state
-# Then tell MANAS what you want to build
-```
+STEWARD redefines AGI: Not *Artificial General Intelligence*, but **Artificial Governed Intelligence**.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+This is Windows 7 for AI agents. Before it becomes macOS.
 
 ---
 
 <div align="center">
 
-**Built with intention by humans and agents**
+**Built with 🕉️ by humans and agents**
 
-*"Know thyself, and you shall know the universe."*
+*"The filesystem is not storage. It is the operating reality."*
 
-[GitHub](https://github.com/kimeisele/steward-protocol) · [Issues](https://github.com/kimeisele/steward-protocol/issues)
+[GitHub](https://github.com/kimeisele/steward-protocol) · [Issues](https://github.com/kimeisele/steward-protocol/issues) · [Constitution](CONSTITUTION.md)
 
 </div>
