@@ -140,6 +140,22 @@ rules:
     has_sattva_remedy: false
 
   # ============================================================================
+  # OPUS-XXX: TYPING DISCIPLINE (Yantra)
+  # "Any ist verboten. Wenn du Any schreibst, hast du das Datenmodell nicht verstanden."
+  # ============================================================================
+
+  # TODSÜNDE: Any Usage (verboten laut PROMPT.md)
+  - id: "any_type_usage"
+    target: "Name"
+    match:
+      name: "Any"
+    severity: "MEDIUM"
+    message: "Any type usage detected. Violates PROMPT.md typing discipline."
+    fix_suggestion: "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data."
+    has_sattva_remedy: false
+    # NOTE: This rule requires AST Name matching which may need implementation
+
+  # ============================================================================
   # STRUCTURAL RULES (require semantic analysis, not just AST)
   # These are documented but may need custom Watchman handlers to detect.
   # ============================================================================
