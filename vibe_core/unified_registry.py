@@ -57,6 +57,15 @@ class ToolCapabilityAdapter:
         start = time.time()
         try:
             result = self.tool.execute(parameters)
+            # OPUS-307: Guard against tools returning None
+            if result is None:
+                return CapabilityResult(
+                    success=False,
+                    error="Tool returned None - check tool implementation",
+                    capability_id=self.capability_id,
+                    capability_type=self.capability_type,
+                    execution_time_ms=(time.time() - start) * 1000,
+                )
             return CapabilityResult(
                 success=result.success,
                 output=result.output,

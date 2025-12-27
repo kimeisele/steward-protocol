@@ -206,6 +206,10 @@ class BankTool(Tool):
                 stats = self._get_stats()
                 return ToolResult(success=True, output=stats)
 
+            # Fallback for any unhandled action (should not reach here after validate)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
         except ValueError as e:
             # Business logic errors (insufficient funds, etc.)
             logger.warning(f"⚠️  Bank operation '{action}' rejected: {e}")

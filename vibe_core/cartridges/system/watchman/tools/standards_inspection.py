@@ -77,6 +77,10 @@ class UniversalRuleVisitor(ast.NodeVisitor):
         self._check_node(node, "Assign")
         self.generic_visit(node)
 
+    def visit_Name(self, node: ast.Name) -> None:
+        self._check_node(node, "Name")
+        self.generic_visit(node)
+
     def _check_node(self, node: ast.AST, target_type: str) -> None:
         for rule in self.rules:
             if rule.get("target") != target_type:
@@ -116,6 +120,27 @@ class UniversalRuleVisitor(ast.NodeVisitor):
             if name != match["func"]:
                 return False
 
+        # 1b. Match Function Name in List (func_in)
+        if "func_in" in match:
+            if not isinstance(node, ast.Call):
+                return False
+            name = ""
+            if isinstance(node.func, ast.Name):
+                name = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                name = node.func.attr
+            if name not in match["func_in"]:
+                return False
+
+        # 1c. Match Attribute Name (e.g., .get_instance(), .iterdir())
+        if "attr" in match:
+            if not isinstance(node, ast.Call):
+                return False
+            if not isinstance(node.func, ast.Attribute):
+                return False
+            if node.func.attr != match["attr"]:
+                return False
+
         # 2. Match Object Name
         if "object" in match:
             obj = ""
@@ -141,10 +166,50 @@ class UniversalRuleVisitor(ast.NodeVisitor):
             if not found:
                 return False
 
+        # 3a. Match Arguments starting with prefix (args_starts_with)
+        if "args_starts_with" in match:
+            prefix = match["args_starts_with"]
+            if not isinstance(node, ast.Call):
+                return False
+            found = False
+            for arg in node.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    if arg.value.startswith(prefix):
+                        found = True
+                        break
+            if not found:
+                return False
+
+        # 3b. Match Assignment name pattern (for global_singleton_dict)
+        if "name_pattern" in match:
+            if not isinstance(node, ast.Assign):
+                return False
+            # Check if any target matches the pattern
+            pattern = match["name_pattern"]
+            pattern_matched = False
+            for target in node.targets:
+                if isinstance(target, ast.Name) and pattern in target.id:
+                    pattern_matched = True
+                    break
+            if not pattern_matched:
+                return False
+
+        # 3c. Match Name node directly (e.g., Any, Optional without subscript)
+        if "name" in match:
+            if not isinstance(node, ast.Name):
+                return False
+            if node.id != match["name"]:
+                return False
+
         # 4. Custom Conditions
         if rule.get("condition") == "is_pass_only":
             if isinstance(node, ast.ExceptHandler):
                 return len(node.body) == 1 and isinstance(node.body[0], ast.Pass)
+
+        # 5. Check allowed_files exclusion
+        allowed = rule.get("allowed_files", [])
+        if allowed and any(af in self.file_path for af in allowed):
+            return False  # Skip violations in allowed files
 
         return True
 
