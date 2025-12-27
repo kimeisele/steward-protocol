@@ -75,6 +75,74 @@ class PrecedentTool(Tool):
         logger.info("📚 Precedent Tool initialized (Sandboxed: %s, Audited: %s)", bool(vfs), bool(io))
 
     @property
+    def name(self) -> str:
+        """Tool name for registry."""
+        return "supreme_court.precedent"
+
+    @property
+    def description(self) -> str:
+        """Tool description for LLM context."""
+        return "Builds and manages legal precedent library for Supreme Court decisions"
+
+    @property
+    def parameters_schema(self) -> Dict[str, Any]:
+        """JSON schema for tool parameters."""
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "enum": ["record", "search", "cite"],
+                "description": "Action to perform",
+            },
+            "case": {"type": "object", "required": False, "description": "Case data for record action"},
+            "query": {"type": "string", "required": False, "description": "Search query"},
+            "case_id": {"type": "string", "required": False, "description": "Case ID for cite action"},
+        }
+
+    def validate(self, parameters: Dict[str, Any]) -> None:
+        """Validate parameters before execution."""
+        action = parameters.get("action")
+        if not action:
+            raise ValueError("Missing required parameter: action")
+        if action == "record" and "case" not in parameters:
+            raise ValueError("'record' action requires 'case' parameter")
+        if action == "cite" and "case_id" not in parameters:
+            raise ValueError("'cite' action requires 'case_id' parameter")
+
+    def execute(self, parameters: Dict[str, Any]) -> "ToolResult":
+        """Execute precedent action and return ToolResult."""
+        action = parameters["action"]
+        if action == "record":
+            case_data = parameters["case"]
+            case = PrecedentCase(
+                case_id=case_data.get("case_id", str(uuid.uuid4())[:8]),
+                verdict_id=case_data.get("verdict_id", ""),
+                appeal_id=case_data.get("appeal_id", ""),
+                agent_id=case_data.get("agent_id", ""),
+                verdict_type=case_data.get("verdict_type", "unknown"),
+                justification=case_data.get("justification", ""),
+                category=case_data.get("category", "general"),
+                recorded_at=datetime.now(timezone.utc).isoformat(),
+            )
+            self._append_case(case)
+            return ToolResult(success=True, result={"recorded": case.to_dict()})
+        elif action == "search":
+            cases = self._load_cases()
+            query = parameters.get("query", "").lower()
+            matches = [c for c in cases if query in json.dumps(c).lower()]
+            return ToolResult(success=True, result={"matches": matches, "count": len(matches)})
+        elif action == "cite":
+            case_id = parameters["case_id"]
+            cases = self._load_cases()
+            for c in cases:
+                if c.get("case_id") == case_id:
+                    c["citations"] = c.get("citations", 0) + 1
+                    self._rewrite_cases(cases)
+                    return ToolResult(success=True, result={"cited": c})
+            return ToolResult(success=False, result={"error": f"Case {case_id} not found"})
+        return ToolResult(success=False, result={"error": f"Unknown action: {action}"})
+
+    @property
     def root_path(self) -> Path:
         """Lazy-load root_path from system sandbox."""
         if self._root_path is None:

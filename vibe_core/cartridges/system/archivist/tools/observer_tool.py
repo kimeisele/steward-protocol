@@ -10,10 +10,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 logger = logging.getLogger("ARCHIVIST_OBSERVER")
 
 
-class ObserverTool:
+class ObserverTool(Tool):
     """
     Observes and collects HERALD broadcasts from Twitter.
 
@@ -29,6 +31,32 @@ class ObserverTool:
     def name(self) -> str:
         """Tool name for registry."""
         return "archivist.observer"
+
+    @property
+    def description(self) -> str:
+        """Tool description for LLM context."""
+        return "Observes and collects HERALD broadcasts from Twitter timeline"
+
+    @property
+    def parameters_schema(self) -> Dict[str, Any]:
+        """JSON schema for tool parameters."""
+        return {
+            "timeline_source": {
+                "type": "string",
+                "required": False,
+                "default": "simulated",
+                "description": "Source to fetch from",
+            },
+        }
+
+    def validate(self, parameters: Dict[str, Any]) -> None:
+        """Validate parameters before execution."""
+        pass  # All parameters optional
+
+    def execute(self, parameters: Dict[str, Any]) -> "ToolResult":
+        """Execute observation and return ToolResult."""
+        tweets = self.fetch_tweets(timeline_source=parameters.get("timeline_source", "simulated"))
+        return ToolResult(success=True, result={"tweets": tweets, "count": len(tweets)})
 
     def __init__(self, services: Optional["ServiceRegistry"] = None):
         self._services = services
