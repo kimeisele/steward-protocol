@@ -102,12 +102,14 @@ class SystemHandler(BaseHandler):
                     pycache_bytes += size
                     pycache_count += 1
             if pycache_count > 0:
-                candidates.append({
-                    "type": "__pycache__",
-                    "count": pycache_count,
-                    "bytes": pycache_bytes,
-                    "description": f"{pycache_count} __pycache__ directories",
-                })
+                candidates.append(
+                    {
+                        "type": "__pycache__",
+                        "count": pycache_count,
+                        "bytes": pycache_bytes,
+                        "description": f"{pycache_count} __pycache__ directories",
+                    }
+                )
                 total_bytes += pycache_bytes
         except Exception as e:
             logger.debug(f"pycache scan error: {e}")
@@ -117,12 +119,14 @@ class SystemHandler(BaseHandler):
             pytest_cache = self._workspace / ".pytest_cache"
             if pytest_cache.exists():
                 size = sum(f.stat().st_size for f in pytest_cache.rglob("*") if f.is_file())
-                candidates.append({
-                    "type": ".pytest_cache",
-                    "count": 1,
-                    "bytes": size,
-                    "description": ".pytest_cache directory",
-                })
+                candidates.append(
+                    {
+                        "type": ".pytest_cache",
+                        "count": 1,
+                        "bytes": size,
+                        "description": ".pytest_cache directory",
+                    }
+                )
                 total_bytes += size
         except Exception as e:
             logger.debug(f"pytest_cache scan error: {e}")
@@ -132,12 +136,14 @@ class SystemHandler(BaseHandler):
             mypy_cache = self._workspace / ".mypy_cache"
             if mypy_cache.exists():
                 size = sum(f.stat().st_size for f in mypy_cache.rglob("*") if f.is_file())
-                candidates.append({
-                    "type": ".mypy_cache",
-                    "count": 1,
-                    "bytes": size,
-                    "description": ".mypy_cache directory",
-                })
+                candidates.append(
+                    {
+                        "type": ".mypy_cache",
+                        "count": 1,
+                        "bytes": size,
+                        "description": ".mypy_cache directory",
+                    }
+                )
                 total_bytes += size
         except Exception as e:
             logger.debug(f"mypy_cache scan error: {e}")
@@ -152,12 +158,14 @@ class SystemHandler(BaseHandler):
                     log_bytes += log.stat().st_size
                     log_count += 1
             if log_count > 0:
-                candidates.append({
-                    "type": "old_logs",
-                    "count": log_count,
-                    "bytes": log_bytes,
-                    "description": f"{log_count} log files older than 7 days",
-                })
+                candidates.append(
+                    {
+                        "type": "old_logs",
+                        "count": log_count,
+                        "bytes": log_bytes,
+                        "description": f"{log_count} log files older than 7 days",
+                    }
+                )
                 total_bytes += log_bytes
         except Exception as e:
             logger.debug(f"log scan error: {e}")
