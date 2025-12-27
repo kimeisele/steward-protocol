@@ -89,6 +89,42 @@ def atomic_write_json(
     atomic_write_text(path, content)
 
 
+def safe_read_yaml(path: Union[str, Path], default: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Liest YAML sicher mit einheitlicher Fehlerbehandlung.
+
+    Args:
+        path: Quellpfad
+        default: Rückgabewert wenn Datei nicht existiert oder leer (default: {})
+
+    Returns:
+        Geladene Daten als Dict
+
+    Raises:
+        ImportError: Wenn PyYAML nicht installiert
+        yaml.YAMLError: Bei Parse-Fehlern (keine Silent Failures!)
+
+    Garantie:
+        - Verwendet immer safe_load (keine Code-Execution)
+        - Einheitliche UTF-8 Kodierung
+        - Leere Dateien → default statt None
+    """
+    import yaml
+
+    if default is None:
+        default = {}
+
+    path = Path(path)
+
+    if not path.exists():
+        return default
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    return data if data is not None else default
+
+
 def atomic_write_yaml(path: Union[str, Path], data: Dict[str, Any]) -> None:
     """
     Schreibt YAML atomar in eine Datei.

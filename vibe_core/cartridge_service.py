@@ -12,9 +12,8 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 
-import yaml
-
 from vibe_core.protocols.cartridge import CartridgeInfo, CartridgeProtocol, ToolInfo
+from vibe_core.utils import safe_read_yaml
 
 logger = logging.getLogger("CARTRIDGE_SERVICE")
 
@@ -83,12 +82,9 @@ class CartridgeService(CartridgeProtocol):
     def _scan_cartridge(self, cartridge_dir: Path) -> None:
         """Scan a single cartridge directory."""
         yaml_path = cartridge_dir / "cartridge.yaml"
-        if not yaml_path.exists():
-            return
 
         try:
-            with open(yaml_path) as f:
-                manifest = yaml.safe_load(f)
+            manifest = safe_read_yaml(yaml_path)
 
             if not manifest:
                 return
