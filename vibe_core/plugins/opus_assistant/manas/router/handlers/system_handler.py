@@ -78,92 +78,130 @@ class SystemHandler(BaseHandler):
 
     def _handle_cleanup_disk(self, intent: "Intent") -> Dict[str, Any]:
         """
-        Clean up disk space by removing temporary files and old logs.
+        Analyze disk space and report what COULD be cleaned.
 
-        Safe operations only - no destructive actions without explicit approval.
+        DHARMA: This handler is READ-ONLY by default.
+        It reports what could be cleaned, but does NOT delete anything
+        unless explicitly approved via params["execute"] = True.
+
+        This prevents accidental data loss from automated cleanup.
         """
-        logger.info("🗑️ MANAS: Starting disk cleanup...")
+        logger.info("🔍 MANAS: Analyzing disk for cleanup candidates...")
 
-        cleaned = []
-        errors = []
-        bytes_freed = 0
+        execute = intent.params.get("execute", False)
+        candidates = []
+        total_bytes = 0
 
-        # 1. Clean Python cache (__pycache__)
+        # 1. Count Python cache (__pycache__)
         try:
             pycache_count = 0
+            pycache_bytes = 0
             for pycache in self._workspace.rglob("__pycache__"):
                 if pycache.is_dir():
                     size = sum(f.stat().st_size for f in pycache.rglob("*") if f.is_file())
-                    bytes_freed += size
-                    shutil.rmtree(pycache)
+                    pycache_bytes += size
                     pycache_count += 1
             if pycache_count > 0:
-                cleaned.append(f"Removed {pycache_count} __pycache__ directories")
+                candidates.append({
+                    "type": "__pycache__",
+                    "count": pycache_count,
+                    "bytes": pycache_bytes,
+                    "description": f"{pycache_count} __pycache__ directories",
+                })
+                total_bytes += pycache_bytes
         except Exception as e:
-            errors.append(f"pycache cleanup: {e}")
+            logger.debug(f"pycache scan error: {e}")
 
-        # 2. Clean .pyc files
-        try:
-            pyc_count = 0
-            for pyc in self._workspace.rglob("*.pyc"):
-                if pyc.is_file():
-                    bytes_freed += pyc.stat().st_size
-                    pyc.unlink()
-                    pyc_count += 1
-            if pyc_count > 0:
-                cleaned.append(f"Removed {pyc_count} .pyc files")
-        except Exception as e:
-            errors.append(f"pyc cleanup: {e}")
-
-        # 3. Clean .pytest_cache
+        # 2. Count .pytest_cache
         try:
             pytest_cache = self._workspace / ".pytest_cache"
             if pytest_cache.exists():
                 size = sum(f.stat().st_size for f in pytest_cache.rglob("*") if f.is_file())
-                bytes_freed += size
-                shutil.rmtree(pytest_cache)
-                cleaned.append("Removed .pytest_cache")
+                candidates.append({
+                    "type": ".pytest_cache",
+                    "count": 1,
+                    "bytes": size,
+                    "description": ".pytest_cache directory",
+                })
+                total_bytes += size
         except Exception as e:
-            errors.append(f"pytest_cache cleanup: {e}")
+            logger.debug(f"pytest_cache scan error: {e}")
 
-        # 4. Clean old log files (older than 7 days)
-        try:
-            log_count = 0
-            cutoff = datetime.now().timestamp() - (7 * 24 * 60 * 60)
-            for log in self._workspace.rglob("*.log"):
-                if log.is_file() and log.stat().st_mtime < cutoff:
-                    bytes_freed += log.stat().st_size
-                    log.unlink()
-                    log_count += 1
-            if log_count > 0:
-                cleaned.append(f"Removed {log_count} old log files")
-        except Exception as e:
-            errors.append(f"log cleanup: {e}")
-
-        # 5. Clean mypy cache
+        # 3. Count .mypy_cache
         try:
             mypy_cache = self._workspace / ".mypy_cache"
             if mypy_cache.exists():
                 size = sum(f.stat().st_size for f in mypy_cache.rglob("*") if f.is_file())
-                bytes_freed += size
-                shutil.rmtree(mypy_cache)
-                cleaned.append("Removed .mypy_cache")
+                candidates.append({
+                    "type": ".mypy_cache",
+                    "count": 1,
+                    "bytes": size,
+                    "description": ".mypy_cache directory",
+                })
+                total_bytes += size
         except Exception as e:
-            errors.append(f"mypy_cache cleanup: {e}")
+            logger.debug(f"mypy_cache scan error: {e}")
 
-        mb_freed = bytes_freed / (1024 * 1024)
+        # 4. Count old log files (older than 7 days)
+        try:
+            log_count = 0
+            log_bytes = 0
+            cutoff = datetime.now().timestamp() - (7 * 24 * 60 * 60)
+            for log in self._workspace.rglob("*.log"):
+                if log.is_file() and log.stat().st_mtime < cutoff:
+                    log_bytes += log.stat().st_size
+                    log_count += 1
+            if log_count > 0:
+                candidates.append({
+                    "type": "old_logs",
+                    "count": log_count,
+                    "bytes": log_bytes,
+                    "description": f"{log_count} log files older than 7 days",
+                })
+                total_bytes += log_bytes
+        except Exception as e:
+            logger.debug(f"log scan error: {e}")
 
-        logger.info(f"🗑️ Cleanup complete: {mb_freed:.2f} MB freed")
+        mb_total = total_bytes / (1024 * 1024)
 
+        # If execute=True, actually clean (requires explicit approval)
+        if execute and candidates:
+            logger.warning("🗑️ MANAS: Executing cleanup (approved)...")
+            # Only clean safe items: caches, not logs
+            cleaned = []
+            for c in candidates:
+                if c["type"] == "__pycache__":
+                    for pycache in self._workspace.rglob("__pycache__"):
+                        if pycache.is_dir():
+                            shutil.rmtree(pycache)
+                    cleaned.append(c["description"])
+                elif c["type"] == ".pytest_cache":
+                    shutil.rmtree(self._workspace / ".pytest_cache")
+                    cleaned.append(c["description"])
+                elif c["type"] == ".mypy_cache":
+                    shutil.rmtree(self._workspace / ".mypy_cache")
+                    cleaned.append(c["description"])
+                # NOTE: old_logs are NOT auto-deleted - too risky
+
+            return {
+                "success": True,
+                "handler": self.name,
+                "action": "cleanup_executed",
+                "cleaned": cleaned,
+                "mb_freed": round(mb_total, 2),
+                "message": f"Cleanup executed: {mb_total:.2f} MB freed",
+            }
+
+        # Default: Report only (safe)
         return {
-            "success": len(errors) == 0,
+            "success": True,
             "handler": self.name,
-            "action": "cleanup_disk",
-            "cleaned": cleaned,
-            "errors": errors if errors else None,
-            "bytes_freed": bytes_freed,
-            "mb_freed": round(mb_freed, 2),
-            "message": f"Disk cleanup complete: {mb_freed:.2f} MB freed",
+            "action": "cleanup_analysis",
+            "candidates": candidates,
+            "total_bytes": total_bytes,
+            "mb_available": round(mb_total, 2),
+            "execute_required": True,
+            "message": f"Found {mb_total:.2f} MB that could be cleaned. Set execute=True to proceed.",
         }
 
     def _handle_read_file(self, intent: "Intent") -> Dict[str, Any]:
