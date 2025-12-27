@@ -99,9 +99,7 @@ class VedicGovernancePlugin(KernelPlugin):
         # Reference to kernel (set on boot)
         self._kernel: Optional["RealVibeKernel"] = None
 
-    def on_boot(
-        self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None
-    ) -> HookResult:
+    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
         """
         Called when kernel boots.
 
