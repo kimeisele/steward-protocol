@@ -19,10 +19,12 @@ from vibe_core.steward.crypto import (
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 logger = logging.getLogger("ARCHIVIST_AUDIT")
 
 
-class AuditTool:
+class AuditTool(Tool):
     """
     Tool for auditing and verifying agent events.
 
@@ -43,6 +45,32 @@ class AuditTool:
     def name(self) -> str:
         """Tool name for registry."""
         return "archivist.audit"
+
+    @property
+    def description(self) -> str:
+        """Tool description for LLM context."""
+        return "Audits and verifies agent events with cryptographic signatures"
+
+    @property
+    def parameters_schema(self) -> Dict[str, Any]:
+        """JSON schema for tool parameters."""
+        return {
+            "event": {"type": "object", "required": True, "description": "Event to audit"},
+            "public_key": {"type": "string", "required": False, "description": "Public key for verification"},
+        }
+
+    def validate(self, parameters: Dict[str, Any]) -> None:
+        """Validate parameters before execution."""
+        if "event" not in parameters:
+            raise ValueError("Missing required parameter: event")
+
+    def execute(self, parameters: Dict[str, Any]) -> "ToolResult":
+        """Execute audit and return ToolResult."""
+        result = self.verify_event_signature(
+            event=parameters["event"],
+            public_key=parameters.get("public_key"),
+        )
+        return ToolResult(success=result.get("verified", False), result=result)
 
     def __init__(self, services: Optional["ServiceRegistry"] = None, agent_name: str = "archivist"):
         """

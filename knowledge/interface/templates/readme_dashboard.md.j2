@@ -1,16 +1,24 @@
+{#- OPUS-308: README.md Manifestation Template
+
+  The public face of STEWARD Protocol.
+  Balance: Show the depth, stay accessible to tech world.
+  All data is dynamic via get_manifestation_data().
+-#}
 <div align="center">
 
-# STEWARD PROTOCOL
+# {{ project.name | upper | replace("-", " ") }}
 
 ### The Operating System for AI Agents
 
-**Cryptographic Identity + Governance for AI Agents. A.G.I. Infrastructure.**
+**{{ project.description }}**
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/kimeisele/steward-protocol/releases)
-[![Python](https://img.shields.io/badge/python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Version](https://img.shields.io/badge/version-{{ project.version }}-blue.svg)]({{ project.urls.Source }}/releases)
+[![Python](https://img.shields.io/badge/python-{{ project.requires_python | replace('>=', '') }}+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Agents](https://img.shields.io/badge/agents-30-purple.svg)](#the-federation)
-[![Tests](https://img.shields.io/badge/tests-685%20passed-brightgreen.svg)](#testing)
+[![Agents](https://img.shields.io/badge/agents-{{ stats.agent_count }}-purple.svg)](#the-federation)
+{% if stats.test_count -%}
+[![Tests](https://img.shields.io/badge/tests-{{ stats.test_count }}%20passed-brightgreen.svg)](#testing)
+{%- endif %}
 
 *An actual kernel with process isolation, immutable ledger, and constitutional governance.*
 
@@ -44,8 +52,8 @@ Most "agent frameworks" are orchestration layers. STEWARD is a real operating sy
 
 ```bash
 # Clone
-git clone https://github.com/kimeisele/steward-protocol
-cd steward-protocol
+git clone {{ project.urls.Source }}
+cd {{ project.name }}
 
 # Install
 pip install -e ".[dev]"   # or: uv sync
@@ -60,8 +68,8 @@ steward introspect        # Deep kernel inspection
 
 **What happens on first boot:**
 1. Initializes the immutable ledger (append-only event chain)
-2. Loads 30 plugins via oath verification
-3. Registers 30 agents with cryptographic identity
+2. Loads {{ stats.plugin_count }} plugins via oath verification
+3. Registers {{ stats.agent_count }} agents with cryptographic identity
 4. Starts the heartbeat system for liveness monitoring
 
 ---
@@ -88,7 +96,7 @@ This is a real kernel implementation (`vibe_core/kernel_impl.py`):
 ┌──────────────────────────────────────────────────────────────┐
 │                      THE FEDERATION                          │
 │                                                              │
-│      30 Certified Agents • 75 Capabilities              │
+│      {{ stats.agent_count }} Certified Agents • {{ stats.tool_count }} Capabilities              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -185,51 +193,22 @@ The `tests/hardening/` suite includes attack simulations:
 
 ## The Federation
 
-30 specialized agents form a self-governing federation:
+{{ stats.agent_count }} specialized agents form a self-governing federation:
+{%- for category, agents in agents_by_category.items() %}
+{%- if category != "Other" and agents|length > 0 %}
 
-### Governance
-
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **AUDITOR** | GAD-000 compliance enforcement agent | 3 |
-| **CIVIC** | Governance agent: enforces rules, manages lic… | 4 |
-| **SUPREME_COURT** | Appellate justice system with mercy protocol | 2 |
-
-### Intelligence
+### {{ category }}
 
 | Agent | Role | Capabilities |
 |-------|------|--------------|
-| **ENVOY** | Universal operator interface agent | 5 |
-| **MANAS** | The Cognitive Mind - Proactive Intent Generat… | 6 |
-| **ORACLE** | System introspection and explanation agent | 3 |
-| **SCIENCE** | External intelligence module via web research | 3 |
-
-### Communications
-
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **HERALD** | Protocol communications and identity verifica… | 5 |
-| **AMBASSADOR** | External relations and partnerships | 1 |
-
-### Infrastructure
-
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **ARCHIVIST** | Event verification and audit trail agent | 3 |
-| **CHRONICLE** | Temporal operations and event tracking | 1 |
-| **ENGINEER** | Meta-agent for building new agents and code | 3 |
-| **SCRIBE** | Autonomous documentation generation agent | 3 |
-
-### Content
-
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **ARTISAN** | Media and technical operations | 1 |
-| **MARKETER** | Autonomous content strategist and generator f… | 4 |
-| **PULSE** | Social media amplification | 2 |
+{%- for agent in agents[:4] %}
+| **{{ agent.name }}** | {{ agent.description[:45] }}{% if agent.description|length > 45 %}…{% endif %} | {{ agent.tool_count }} |
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
 
 <details>
-<summary><b>View all 30 agents</b></summary>
+<summary><b>View all {{ stats.agent_count }} agents</b></summary>
 
 See [AGENTS.md](AGENTS.md) for the complete registry.
 
@@ -281,8 +260,10 @@ steward test:run             # Full test suite
 pytest tests/hardening/ -v   # Security/architecture tests
 pytest tests/manas/ -v       # Cognitive tests
 ```
+{%- if stats.test_count %}
 
-**685 tests** including red-team attack simulations.
+**{{ stats.test_count }} tests** including red-team attack simulations.
+{%- endif %}
 
 ---
 
@@ -300,6 +281,6 @@ STEWARD redefines AGI as **Artificial Governed Intelligence** — autonomous sys
 
 *"The filesystem is not storage. It is the operating reality."*
 
-[GitHub](https://github.com/kimeisele/steward-protocol) · [Issues](https://github.com/kimeisele/steward-protocol/issues) · [Constitution](CONSTITUTION.md)
+[GitHub]({{ project.urls.Source }}) · [Issues]({{ project.urls.Source }}/issues) · [Constitution](CONSTITUTION.md)
 
 </div>

@@ -22,7 +22,7 @@ Key Concepts:
     - SKIN: The bidirectional membrane between entity and operator
     - @LIVE/@HUMAN/@AI: Section ownership determines who can write
 
-The Schema dictates the Parser. See: docs/architecture/OPUS/308-SCHEMAS.yaml
+The Schema dictates the Parser. See: config/manifestation.yaml
 """
 
 from dataclasses import dataclass
@@ -95,7 +95,7 @@ class ManifestationConfig:
     output: str  # Filename: "ENVOY.md"
     location: str  # "root" | ".vibe" | custom path
     manifest_type: ManifestationType
-    schema: str  # Schema name from 308-SCHEMAS.yaml
+    schema: str  # Schema name from config/manifestation.yaml
 
 
 @dataclass
@@ -138,7 +138,7 @@ class ManifestationProtocol(Protocol):
 
         Args:
             path: Where to create the file
-            schema: Schema name from 308-SCHEMAS.yaml
+            schema: Schema name from config/manifestation.yaml
             initial_state: Data for initial @LIVE sections
 
         Returns:
@@ -462,7 +462,7 @@ class ManifestationDeclaration:
     """
 
     output: str  # Filename: "ENVOY.md"
-    schema: str  # Schema from 308-SCHEMAS.yaml
+    schema: str  # Schema from config/manifestation.yaml
     frequency: str = "tick"  # "tick" | "on_change" | "manual"
     location: str = "root"  # "root" | ".vibe" | custom path
     template: Optional[str] = None  # Jinja2 template path (for complex UIs)
