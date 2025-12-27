@@ -198,12 +198,9 @@ dependencies:
 # =============================================================================
 renderers:
   # Core navigation/status
-  # DISABLED: README.md is owned by MANAS/Mukha (OPUS-047)
-  # MukhaGenerator provides intelligent identity-aware README generation
-  # with system topology scanning, agent registry, and archive support.
-  # See: vibe_core/plugins/opus_assistant/manas/cortex/mukha.py
+  # README.md via Jinja2 template (readme_dashboard.md.j2)
   readme:
-    enabled: false
+    enabled: true
     output: README.md
     template: readme.md.j2
     view_type: docs
