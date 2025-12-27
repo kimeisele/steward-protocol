@@ -282,7 +282,7 @@ class KernelSource:
     """A kernel-native manifestation (no plugin required)."""
 
     output: str  # Filename: "SETTINGS.md"
-    schema: str  # Schema from 308-SCHEMAS.yaml
+    schema: str  # Schema from config/manifestation.yaml
     data_getter: Callable[[], Dict[str, Any]]  # Lambda that returns section data
     frequency: str = "tick"
     location: str = "root"
@@ -482,7 +482,7 @@ class ManifestationService:
 
         Args:
             output: Filename (e.g., "SETTINGS.md")
-            schema: Schema name from 308-SCHEMAS.yaml
+            schema: Schema name from config/manifestation.yaml
             data_getter: Callable that returns section data dict
             frequency: "tick" | "on_change" | "manual"
             location: "root" | ".vibe" | custom path
@@ -1272,10 +1272,10 @@ See trace_id `{trace_id}` for details."""
     # =========================================================================
 
     def _load_schemas(self) -> None:
-        """Load schemas from 308-SCHEMAS.yaml."""
+        """Load manifestation schemas from config/manifestation.yaml."""
         import yaml
 
-        schema_path = self._workspace / "docs/architecture/OPUS/308-SCHEMAS.yaml"
+        schema_path = self._workspace / "config/manifestation.yaml"
         if not schema_path.exists():
             logger.warning(f"Schema file not found: {schema_path}")
             return

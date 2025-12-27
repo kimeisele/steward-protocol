@@ -208,7 +208,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
 
         Data comes from ReadmeDataProvider (uses IdentityScanner).
         Template: knowledge/interface/templates/readme_dashboard.md.j2
-        Schema: readme_dashboard (in 308-SCHEMAS.yaml)
+        Schema: readme_dashboard (in config/manifestation.yaml)
         """
         if not hasattr(kernel, "manifestation"):
             logger.debug("ManifestationService not available, README registration skipped")

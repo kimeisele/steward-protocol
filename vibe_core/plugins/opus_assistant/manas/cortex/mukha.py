@@ -802,7 +802,7 @@ class ReadmeDataProvider:
         # ManifestationService renders via template
 
     Template: knowledge/interface/templates/readme_dashboard.md.j2
-    Schema: readme_dashboard (in 308-SCHEMAS.yaml)
+    Schema: readme_dashboard (in config/manifestation.yaml)
     """
 
     def __init__(self, workspace: Optional[Path] = None):
