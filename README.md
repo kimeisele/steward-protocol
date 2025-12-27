@@ -134,12 +134,12 @@ STEWARD model: *AI operates system. Human provides intent.*
 
 ```bash
 # Human provides intent
-steward pending              # See what the system wants to do
-steward approve <id>         # Approve an intent
-steward reject <id>          # Reject with reason
+steward opus:pending         # See what the system wants to do
+steward opus:approve <id>    # Approve an intent
+steward opus:reject <id>     # Reject with reason
 
 # System operates autonomously within bounds
-steward karma                # See trust score evolution
+steward opus:karma           # See trust score evolution
 ```
 
 ---
