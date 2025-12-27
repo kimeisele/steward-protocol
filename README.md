@@ -1,4 +1,3 @@
-
 <div align="center">
 
 # 🕉️ STEWARD PROTOCOL
@@ -136,8 +135,6 @@ steward karma                # See MANAS performance stats
 
 30 agents form a self-governing federation:
 
-
-
 ### Governance
 
 | Agent | Role | Capabilities |
@@ -145,9 +142,6 @@ steward karma                # See MANAS performance stats
 | **AUDITOR** | GAD-000 compliance enforcement agent | 3 |
 | **CIVIC** | Governance agent: enforces rules, manages licenses, aud… | 4 |
 | **SUPREME_COURT** | Appellate justice system with mercy protocol | 2 |
-
-
-
 
 ### Intelligence
 
@@ -159,18 +153,12 @@ steward karma                # See MANAS performance stats
 | **SCIENCE** | External intelligence module via web research | 3 |
 | **ANALYST** | Multi-Source Repository Analysis (Realtime Architecture… | 6 |
 
-
-
-
 ### Communications
 
 | Agent | Role | Capabilities |
 |-------|------|--------------|
 | **HERALD** | Protocol communications and identity verification agent… | 5 |
 | **AMBASSADOR** | External relations and partnerships | 1 |
-
-
-
 
 ### Infrastructure
 
@@ -181,9 +169,6 @@ steward karma                # See MANAS performance stats
 | **ENGINEER** | Meta-agent for building new agents and code | 3 |
 | **SCRIBE** | Autonomous documentation generation agent | 3 |
 
-
-
-
 ### Content
 
 | Agent | Role | Capabilities |
@@ -191,11 +176,6 @@ steward karma                # See MANAS performance stats
 | **ARTISAN** | Media and technical operations | 1 |
 | **MARKETER** | Autonomous content strategist and generator for social … | 4 |
 | **PULSE** | Social media amplification | 2 |
-
-
-
-
-
 
 <details>
 <summary><b>View all 30 agents →</b></summary>
