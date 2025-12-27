@@ -251,9 +251,9 @@ steward run <capability>     # Execute any tool/circuit/agent
 steward run list             # Discover all capabilities
 
 # Human-in-the-Loop
-steward pending              # Pending intents
-steward approve <id>         # Approve execution
-steward reject <id>          # Reject with reason
+steward opus:pending         # Pending intents
+steward opus:approve <id>    # Approve execution
+steward opus:reject <id>     # Reject with reason
 
 # Diagnostics
 steward system:doctor        # Health diagnosis
