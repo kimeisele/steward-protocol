@@ -26,7 +26,7 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-from vibe_core.plugin_protocol import KernelPlugin
+from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols.testable import (
     AgentTestableAdapter,
     BaseTestable,
@@ -140,7 +140,9 @@ class OrchestrationPlugin(KernelPlugin):
     def priority(self) -> int:
         return 200  # Run after everything else
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(
+        self, kernel: "RealVibeKernel", config: Optional[Dict[str, object]] = None
+    ) -> HookResult:
         """Called when kernel boots - auto-discover all testable components."""
         self._kernel = kernel
         logger.info("UNIVERSAL TestOrchestrationPlugin booting...")
@@ -151,6 +153,8 @@ class OrchestrationPlugin(KernelPlugin):
         summary = self._registry.get_summary()
         logger.info(f"Discovered {summary['total_testables']} components with {summary['total_tests']} tests")
         logger.info(f"  By type: {summary['by_type']}")
+
+        return HookResult()
 
     def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
         """When new agent registers, create testable adapter for it."""
