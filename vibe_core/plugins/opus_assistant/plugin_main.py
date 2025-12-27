@@ -149,6 +149,9 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
         # Load fraktale config
         self._load_fraktale_config()
 
+        # OPUS-308: Register README.md manifestation via ManifestationService
+        self._register_readme_manifestation(kernel)
+
         # Subscribe to kernel tick
         self._setup_kernel_tick()
 
@@ -190,6 +193,46 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
             self._syscall_listener.unsubscribe()
 
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
+
+    # =========================================================================
+    # OPUS-308: README MANIFESTATION REGISTRATION
+    # =========================================================================
+
+    def _register_readme_manifestation(self, kernel: "RealVibeKernel") -> None:
+        """
+        OPUS-308: Register README.md as a kernel-native manifestation.
+
+        Instead of MukhaGenerator writing directly to filesystem (Rogue),
+        we register README.md with the ManifestationService. The service
+        uses the readme_dashboard.md.j2 template to render the content.
+
+        Data comes from ReadmeDataProvider (uses IdentityScanner).
+        Template: knowledge/interface/templates/readme_dashboard.md.j2
+        Schema: readme_dashboard (in 308-SCHEMAS.yaml)
+        """
+        if not hasattr(kernel, "manifestation"):
+            logger.debug("ManifestationService not available, README registration skipped")
+            return
+
+        try:
+            from vibe_core.plugins.opus_assistant.manas.cortex.mukha import ReadmeDataProvider
+
+            workspace = self._workspace or Path.cwd()
+            provider = ReadmeDataProvider(workspace=workspace)
+
+            # Register as kernel source - ManifestationService handles rendering
+            kernel.manifestation.register_kernel_source(
+                output="README.md",
+                schema="readme_dashboard",
+                data_getter=provider.get_manifestation_data,
+                frequency="manual",  # README updates on-demand, not every tick
+                location="root",
+                template="knowledge/interface/templates/readme_dashboard.md.j2",
+            )
+
+            logger.info("📖 OPUS-308: README.md registered with ManifestationService")
+        except Exception as e:
+            logger.warning(f"README manifestation registration failed: {e}")
 
     # =========================================================================
     # OPUS-112: MANAS CAPABILITY REGISTRATION (VEDA-4)

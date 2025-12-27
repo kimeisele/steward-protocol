@@ -80,6 +80,7 @@ from vibe_core.plugins.opus_assistant.manas.cortex.mukha import (
     AgentIdentity,
     IdentityScanner,
     MukhaGenerator,
+    ReadmeDataProvider,
 )
 
 # OPUS-174: NADI SENSE (The 8th Sense - Wiring Health)
@@ -261,6 +262,7 @@ __all__ = [
     "MukhaGenerator",
     "IdentityScanner",
     "AgentIdentity",
+    "ReadmeDataProvider",
     # OPUS-166: PRANA SENSE (The 7th Sense - Agent Presence)
     "PranaSense",
     "PranaPerception",

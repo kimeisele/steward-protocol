@@ -242,6 +242,78 @@ economy_ledger:
 
 ---
 
+readme_dashboard:
+  description: "Schema for README.md - the project's public face (Mukha)"
+  manifestation_type: readonly
+  sections:
+    - id: hero
+      owner: live
+      title: null
+      required: true
+      description: "Project name, tagline, badges - the hook"
+
+    - id: value_proposition
+      owner: live
+      title: "Why STEWARD?"
+      required: true
+      description: "The problem/solution pitch"
+
+    - id: quick_start
+      owner: live
+      title: "Quick Start"
+      required: true
+      description: "Get running in 60 seconds"
+
+    - id: architecture
+      owner: live
+      title: "Architecture"
+      required: true
+      description: "Visual system overview"
+
+    - id: agents
+      owner: live
+      title: "Agents"
+      required: true
+      description: "The agent federation (categorized)"
+
+    - id: cognition
+      owner: live
+      title: "MANAS"
+      required: false
+      description: "The cognitive kernel explanation"
+
+    - id: governance
+      owner: live
+      title: "Trust & Governance"
+      required: true
+      description: "Constitutional enforcement"
+
+    - id: documentation
+      owner: live
+      title: "Documentation"
+      required: true
+      description: "Links to other docs"
+
+    - id: testing
+      owner: live
+      title: "Testing"
+      required: false
+      description: "How to run tests"
+
+    - id: contributing
+      owner: live
+      title: "Contributing"
+      required: false
+      description: "How to contribute"
+
+    - id: footer
+      owner: live
+      title: null
+      required: true
+      description: "Closing quote, links"
+
+---
+
 # =============================================================================
 # META SCHEMAS
 # =============================================================================
