@@ -77,6 +77,10 @@ class UniversalRuleVisitor(ast.NodeVisitor):
         self._check_node(node, "Assign")
         self.generic_visit(node)
 
+    def visit_Name(self, node: ast.Name) -> None:
+        self._check_node(node, "Name")
+        self.generic_visit(node)
+
     def _check_node(self, node: ast.AST, target_type: str) -> None:
         for rule in self.rules:
             if rule.get("target") != target_type:
@@ -182,12 +186,19 @@ class UniversalRuleVisitor(ast.NodeVisitor):
                 return False
             # Check if any target matches the pattern
             pattern = match["name_pattern"]
-            matched = False
+            pattern_matched = False
             for target in node.targets:
                 if isinstance(target, ast.Name) and pattern in target.id:
-                    matched = True
+                    pattern_matched = True
                     break
-            if not matched:
+            if not pattern_matched:
+                return False
+
+        # 3c. Match Name node directly (e.g., Any, Optional without subscript)
+        if "name" in match:
+            if not isinstance(node, ast.Name):
+                return False
+            if node.id != match["name"]:
                 return False
 
         # 4. Custom Conditions
