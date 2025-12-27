@@ -347,11 +347,12 @@ class Prakriti(PrakritiProtocol):
         scope: str = "state",
         stage_patterns: Optional[List[str]] = None,
         sync_ledger: bool = True,
+        only_files: Optional[List[str]] = None,
     ) -> Optional[CommitResult]:
         """Commit current changes if workspace is dirty.
 
         This is the main orchestration method that:
-        1. Stages files
+        1. Stages files (unless only_files is set)
         2. Creates Git commit (with VISNU protection)
         3. Syncs to Ledger (Cryptographic Zipper)
         4. Updates session tracking
@@ -360,8 +361,11 @@ class Prakriti(PrakritiProtocol):
             message: Commit message
             commit_type: Conventional commit type (chore, feat, fix, etc.)
             scope: Commit scope
-            stage_patterns: Patterns to stage (default: ["*.md"])
+            stage_patterns: Patterns to stage (default: ["*.md"]) - IGNORED if only_files is set
             sync_ledger: Also record in Ledger (default: True)
+            only_files: VIMANA ISOLATION - If set, use git commit --only to commit
+                        ONLY these files, ignoring the staging area completely.
+                        This prevents PRANA from accidentally committing developer's staged code.
 
         Returns:
             CommitResult if committed, None if nothing to commit
@@ -370,9 +374,12 @@ class Prakriti(PrakritiProtocol):
             logger.debug("[PRAKRITI] Nothing to commit (clean state)")
             return None
 
-        # 1. Stage files
-        patterns = stage_patterns or ["*.md"]
-        self.git.stage(patterns)
+        # 1. Stage files (ONLY if not using isolated mode)
+        # VIMANA ISOLATION: When only_files is set, we skip staging entirely.
+        # The git commit --only command will handle the files directly.
+        if not only_files:
+            patterns = stage_patterns or ["*.md"]
+            self.git.stage(patterns)
 
         # 2. Build trailers (OPUS-027 Implementation Guidelines)
         trailers = {}
@@ -383,12 +390,13 @@ class Prakriti(PrakritiProtocol):
         if ledger_head:
             trailers["Ledger-Head"] = ledger_head[:16]
 
-        # 3. Git commit
+        # 3. Git commit (with VIMANA isolation if only_files is set)
         git_commit = self.git.commit(
             message=message,
             commit_type=commit_type,
             scope=scope,
             trailers=trailers if trailers else None,
+            only_files=only_files,
         )
         if not git_commit:
             return None

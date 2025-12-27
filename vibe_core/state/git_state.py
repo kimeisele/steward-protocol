@@ -323,6 +323,7 @@ class GitState:
         scope: str = "auto",
         no_verify: bool = True,
         trailers: Optional[Dict[str, str]] = None,
+        only_files: Optional[List[str]] = None,
     ) -> Optional[GitCommit]:
         """Create a commit with VISNU protection.
 
@@ -334,12 +335,14 @@ class GitState:
             scope: Commit scope
             no_verify: Skip pre-commit hooks (True for auto-commits)
             trailers: Git trailers for machine readability (e.g., {"Session-ID": "abc"})
+            only_files: If set, use --only to commit ONLY these files (ignores staging area).
+                        This is the ISOLATED commit mode for PRANA state commits.
 
         Returns:
             GitCommit if successful, None if nothing to commit
 
         Raises:
-            GovernanceViolation: If VISNU protected files are staged
+            GovernanceViolation: If VISNU protected files would be committed
         """
         if not self.is_git_repo():
             return None
@@ -350,8 +353,10 @@ class GitState:
                 return None
 
             # 2. VISNU protection check
-            staged = self._get_staged_files()
-            protected = [f for f in staged if f in VISNU_PROTECTED]
+            # When using --only mode, check the explicit files
+            # Otherwise, check staged files
+            files_to_check = only_files if only_files else self._get_staged_files()
+            protected = [f for f in files_to_check if f in VISNU_PROTECTED]
             if protected:
                 from vibe_core.exceptions import GovernanceViolation
 
@@ -368,7 +373,14 @@ class GitState:
                     formatted_msg += f"\n{key}: {value}"
 
             # 4. Create commit
-            cmd = ["commit", "-m", formatted_msg]
+            # VIMANA ISOLATION: When only_files is set, use --only to commit
+            # ONLY those files, ignoring the staging area completely.
+            # This prevents PRANA from accidentally committing developer's staged code.
+            if only_files:
+                cmd = ["commit", "--only"] + only_files + ["-m", formatted_msg]
+            else:
+                cmd = ["commit", "-m", formatted_msg]
+
             if no_verify:
                 cmd.insert(1, "--no-verify")
 
