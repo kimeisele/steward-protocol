@@ -120,9 +120,9 @@ steward karma                # See MANAS performance stats
 └──────────────────────────────────────────────────────────────┘
                               ↓
 ┌──────────────────────────────────────────────────────────────┐
-│              🤖 The Federation (30 Agents)                       │
+│                    🤖 The Federation                         │
 │                                                              │
-│  75 tools • 30 plugins • Self-governing                   │
+│           30 Agents • 75 Tools • Self-governing              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
