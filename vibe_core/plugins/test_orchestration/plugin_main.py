@@ -140,9 +140,7 @@ class OrchestrationPlugin(KernelPlugin):
     def priority(self) -> int:
         return 200  # Run after everything else
 
-    def on_boot(
-        self, kernel: "RealVibeKernel", config: Optional[Dict[str, object]] = None
-    ) -> HookResult:
+    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, object]] = None) -> HookResult:
         """Called when kernel boots - auto-discover all testable components."""
         self._kernel = kernel
         logger.info("UNIVERSAL TestOrchestrationPlugin booting...")
