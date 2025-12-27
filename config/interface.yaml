@@ -326,62 +326,62 @@ renderers:
   # - opus_assistant.on_pulse() owns OPUS.md via kernel.manifestation + StateMutation
   # - InterfacePlugin's opus renderer is DISABLED (was redundant wrapper)
   # - Single Writer: opus_assistant through proper kernel channels
-  opus:
-    enabled: false  # OPUS-312: Disabled - opus_assistant owns OPUS.md via kernel.manifestation
-    output: OPUS.md
-    view_type: workspace
-    interval: 30
-    sections:
-      # LIVE: Kernel status
-      - id: status
-        owner: live
-        source: kernel.status
-      - id: metrics
-        owner: live
-        source: opus.metrics
-        element_type: table
-      # LIVE: Architecture (integrated)
-      - id: architecture
-        owner: live
-        source: arch.mermaid
-      - id: component_sizes
-        owner: live
-        source: arch.components
-        element_type: table
-      - id: plugin_status
-        owner: live
-        source: arch.plugins
-        element_type: table
-      # LIVE: Roadmap from manifest.json
-      - id: roadmap
-        owner: live
-        source: opus.roadmap
-        element_type: table
-      # LIVE: Architecture docs from manifest.json
-      - id: documents
-        owner: live
-        source: opus.documents
-        element_type: table
-      # LIVE: P0 Plans (expanded)
-      - id: p0_plans
-        owner: live
-        source: opus.p0_plans
-      # AI: I maintain these
-      - id: current_goal
-        owner: ai
-      - id: phase_status
-        owner: ai
-        element_type: list
-      - id: extraction_log
-        owner: ai
-        element_type: table
-      - id: blockers
-        owner: ai
-        element_type: list
-      # HUMAN: User approves
-      - id: next_actions
-        owner: human
-        element_type: list
+  # opus:
+  #   enabled: false  # OPUS-312: Disabled - opus_assistant owns OPUS.md via kernel.manifestation
+  #   output: OPUS.md
+  #   view_type: workspace
+  #   interval: 30
+  #   sections:
+  #     # LIVE: Kernel status
+  #     - id: status
+  #       owner: live
+  #       source: kernel.status
+  #     - id: metrics
+  #       owner: live
+  #       source: opus.metrics
+  #       element_type: table
+  #     # LIVE: Architecture (integrated)
+  #     - id: architecture
+  #       owner: live
+  #       source: arch.mermaid
+  #     - id: component_sizes
+  #       owner: live
+  #       source: arch.components
+  #       element_type: table
+  #     - id: plugin_status
+  #       owner: live
+  #       source: arch.plugins
+  #       element_type: table
+  #     # LIVE: Roadmap from manifest.json
+  #     - id: roadmap
+  #       owner: live
+  #       source: opus.roadmap
+  #       element_type: table
+  #     # LIVE: Architecture docs from manifest.json
+  #     - id: documents
+  #       owner: live
+  #       source: opus.documents
+  #       element_type: table
+  #     # LIVE: P0 Plans (expanded)
+  #     - id: p0_plans
+  #       owner: live
+  #       source: opus.p0_plans
+  #     # AI: I maintain these
+  #     - id: current_goal
+  #       owner: ai
+  #     - id: phase_status
+  #       owner: ai
+  #       element_type: list
+  #     - id: extraction_log
+  #       owner: ai
+  #       element_type: table
+  #     - id: blockers
+  #       owner: ai
+  #       element_type: list
+  #     # HUMAN: User approves
+  #     - id: next_actions
+  #       owner: human
+  #       element_type: list
 
 
   # ARCHITECTURE - Dynamic code analysis
