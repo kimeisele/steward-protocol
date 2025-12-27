@@ -735,11 +735,30 @@ See [OPUS.md](OPUS.md) for current goals and roadmap."""
 
     def update_readme(self) -> Path:
         """
-        Update the repository README.md with current system state.
+        DEPRECATED: Use ManifestationService with ReadmeDataProvider instead.
+
+        This method writes directly to the filesystem, bypassing the kernel's
+        ManifestationService. This is a violation of OPUS-308 architecture.
+
+        The correct pattern is:
+            kernel.manifestation.register_kernel_source(
+                output="README.md",
+                schema="readme_dashboard",
+                data_getter=ReadmeDataProvider().get_manifestation_data,
+                template="knowledge/interface/templates/readme_dashboard.md.j2",
+            )
 
         Returns:
             Path to updated README.md
         """
+        import warnings
+        warnings.warn(
+            "MukhaGenerator.update_readme() is deprecated. "
+            "Use ManifestationService with ReadmeDataProvider instead (OPUS-308).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         # Scan system
         identity = self._scanner.scan()
 
@@ -761,3 +780,175 @@ See [OPUS.md](OPUS.md) for current goals and roadmap."""
         logger.info(f"✨ Updated README.md ({len(content)} bytes)")
 
         return readme_path
+
+
+# =============================================================================
+# OPUS-308: README DATA PROVIDER (Manifestable Protocol)
+# =============================================================================
+
+
+class ReadmeDataProvider:
+    """
+    OPUS-308 Compliant: Provides data for README.md manifestation.
+
+    This replaces the Rogue rendering in MukhaGenerator.
+    Instead of writing directly to filesystem, this provides DATA
+    that the ManifestationService renders via the readme_dashboard.md.j2 template.
+
+    Usage:
+        provider = ReadmeDataProvider(workspace)
+        data = provider.get_manifestation_data()
+        # ManifestationService renders via template
+
+    Template: knowledge/interface/templates/readme_dashboard.md.j2
+    Schema: readme_dashboard (in 308-SCHEMAS.yaml)
+    """
+
+    def __init__(self, workspace: Optional[Path] = None):
+        self._workspace = workspace or Path.cwd()
+        self._scanner = IdentityScanner(workspace=workspace)
+
+    def get_manifestation_data(self) -> Dict[str, Any]:
+        """
+        Return data for ManifestationService to render README.md.
+
+        This is the Manifestable protocol implementation.
+
+        Returns:
+            Context dict for readme_dashboard.md.j2 template
+        """
+        identity = self._scanner.scan()
+        project = self._load_project_metadata()
+
+        # Categorize agents
+        agents_by_category = self._categorize_agents(identity)
+
+        # Calculate stats
+        all_agents = identity.system_agents + identity.city_agents
+        total_tools = sum(len(a.capabilities) for a in all_agents)
+
+        return {
+            "project": project,
+            "stats": {
+                "agent_count": identity.total_agents,
+                "tool_count": total_tools,
+                "test_count": identity.manas_tests,
+                "plugin_count": len(identity.plugins),
+            },
+            "agents_by_category": agents_by_category,
+            "manas_modules": self._get_manas_modules(),
+            "recent_opus": self._get_recent_opus(),
+            "kernel_status": "RUNNING",
+            "timestamp": identity.generated_at,
+        }
+
+    def _load_project_metadata(self) -> Dict[str, Any]:
+        """Load project metadata from pyproject.toml."""
+        try:
+            import tomlkit
+
+            pyproject_path = self._workspace / "pyproject.toml"
+            if pyproject_path.exists():
+                with open(pyproject_path) as f:
+                    data = tomlkit.load(f)
+                project = data.get("project", {})
+                return {
+                    "name": str(project.get("name", "steward-protocol")),
+                    "description": str(project.get("description", "The Operating System for AI Agents")),
+                    "version": str(project.get("version", "0.0.0")),
+                    "requires_python": str(project.get("requires-python", ">=3.11")),
+                    "urls": {
+                        "Source": str(project.get("urls", {}).get("Source", "https://github.com/kimeisele/steward-protocol")),
+                    },
+                }
+        except Exception as e:
+            logger.warning(f"Failed to load pyproject.toml: {e}")
+
+        return {
+            "name": "steward-protocol",
+            "description": "The Operating System for AI Agents",
+            "version": "0.2.0",
+            "requires_python": ">=3.11",
+            "urls": {"Source": "https://github.com/kimeisele/steward-protocol"},
+        }
+
+    def _categorize_agents(self, identity: SystemIdentity) -> Dict[str, List[Dict[str, Any]]]:
+        """Categorize agents into groups for the template."""
+        categories: Dict[str, List[Dict[str, Any]]] = {
+            "Governance": [],
+            "Intelligence": [],
+            "Communications": [],
+            "Infrastructure": [],
+            "Content": [],
+            "Other": [],
+        }
+
+        # Category mapping by domain/name patterns
+        category_map = {
+            # Governance
+            "auditor": "Governance",
+            "civic": "Governance",
+            "discoverer": "Governance",
+            "supreme_court": "Governance",
+            # Intelligence
+            "manas": "Intelligence",
+            "oracle": "Intelligence",
+            "science": "Intelligence",
+            "analyst": "Intelligence",
+            # Communications
+            "envoy": "Intelligence",
+            "herald": "Communications",
+            "ambassador": "Communications",
+            # Infrastructure
+            "archivist": "Infrastructure",
+            "chronicle": "Infrastructure",
+            "engineer": "Infrastructure",
+            "scribe": "Infrastructure",
+            # Content
+            "artisan": "Content",
+            "marketer": "Content",
+            "pulse": "Content",
+        }
+
+        all_agents = identity.system_agents + identity.city_agents
+
+        for agent in all_agents:
+            name = agent.name.lower()
+            category = category_map.get(name, "Other")
+
+            categories[category].append({
+                "name": agent.name,
+                "description": agent.description,
+                "tool_count": len(agent.capabilities),
+            })
+
+        # Remove empty categories
+        return {k: v for k, v in categories.items() if v}
+
+    def _get_manas_modules(self) -> List[Dict[str, str]]:
+        """Return MANAS cognitive module descriptions."""
+        return [
+            {"name": "JNANA", "sanskrit": "ज्ञान (knowledge)", "function": "LLM-powered reasoning and memory"},
+            {"name": "KRIYA", "sanskrit": "क्रिया (action)", "function": "Intent → tool execution bridging"},
+            {"name": "SAMVADA", "sanskrit": "संवाद (dialogue)", "function": "Real-time communication protocol"},
+            {"name": "VAK", "sanskrit": "वाक् (voice)", "function": "Safe command execution with audit"},
+        ]
+
+    def _get_recent_opus(self) -> List[str]:
+        """Get recent OPUS commits."""
+        try:
+            import subprocess
+
+            result = subprocess.run(
+                ["git", "log", "--oneline", "--grep=fix:", "-5"],
+                capture_output=True,
+                text=True,
+                cwd=str(self._workspace),
+                timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                commits = result.stdout.strip().split("\n")
+                return [c.split(" ", 1)[1] if " " in c else c for c in commits[:5]]
+        except Exception:
+            pass
+        return []

@@ -286,6 +286,7 @@ class KernelSource:
     data_getter: Callable[[], Dict[str, Any]]  # Lambda that returns section data
     frequency: str = "tick"
     location: str = "root"
+    template: Optional[str] = None  # Jinja2 template path for complex UIs
 
 
 # =============================================================================
@@ -471,6 +472,7 @@ class ManifestationService:
         data_getter: Callable[[], Dict[str, Any]],
         frequency: str = "tick",
         location: str = "root",
+        template: Optional[str] = None,
     ) -> bool:
         """
         Register a kernel-native manifestation.
@@ -484,6 +486,7 @@ class ManifestationService:
             data_getter: Callable that returns section data dict
             frequency: "tick" | "on_change" | "manual"
             location: "root" | ".vibe" | custom path
+            template: Optional Jinja2 template path for complex UIs
 
         Returns:
             True if registered successfully
@@ -499,6 +502,7 @@ class ManifestationService:
             data_getter=data_getter,
             frequency=frequency,
             location=location,
+            template=template,
         )
 
         self._kernel_sources[output] = source
@@ -775,6 +779,11 @@ class ManifestationService:
         except Exception as e:
             logger.error(f"data_getter() failed for {source.output}: {e}")
             data = {"status": {"error": str(e)}}
+
+        # TEMPLATE RENDERING: If source has a Jinja2 template, use that
+        if source.template:
+            self._manifest_with_template(output_path, source.template, data)
+            return
 
         # Check if file exists, spawn if not
         if not output_path.exists():
