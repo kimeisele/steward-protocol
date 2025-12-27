@@ -22,7 +22,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
-from vibe_core.plugin_protocol import KernelPlugin
+from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
 # Vedic governance types (co-located with plugin)
 from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition, get_ashrama_description
@@ -99,7 +99,7 @@ class VedicGovernancePlugin(KernelPlugin):
         # Reference to kernel (set on boot)
         self._kernel: Optional["RealVibeKernel"] = None
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
         """
         Called when kernel boots.
 
@@ -135,6 +135,8 @@ class VedicGovernancePlugin(KernelPlugin):
 
         logger.info("🕉️  Vedic Governance Plugin booted (Varna + Ashrama)")
         logger.info("   Governance is now PLUGIN-BASED (not hardcoded in kernel)")
+
+        return HookResult()
 
     # =========================================================================
     # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)

@@ -2,9 +2,19 @@
 VIBE_CORE UTILS - Shared Utilities
 
 Low-level utilities that provide guarantees:
-- atomic_io: Crash-safe file operations
+- atomic_io: Crash-safe file operations (read + write)
 """
 
-from .atomic_io import atomic_write_json, atomic_write_text
+from .atomic_io import (
+    atomic_write_json,
+    atomic_write_text,
+    atomic_write_yaml,
+    safe_read_yaml,
+)
 
-__all__ = ["atomic_write_json", "atomic_write_text"]
+__all__ = [
+    "atomic_write_json",
+    "atomic_write_text",
+    "atomic_write_yaml",
+    "safe_read_yaml",
+]

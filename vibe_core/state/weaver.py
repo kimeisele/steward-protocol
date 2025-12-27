@@ -199,7 +199,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
             return CommitResult(git_sha="0000000", message="Git disabled (Shunyata)", success=True)
 
         if not self._ensure_initialized():
-            return CommitResult(success=False, error="StateSyncWeaver: Dependencies (Prakriti) not ready", message="Dependency error")
+            return CommitResult(
+                success=False, error="StateSyncWeaver: Dependencies (Prakriti) not ready", message="Dependency error"
+            )
 
         with self._commit_lock:
             # 1. Discover
@@ -225,7 +227,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         Session boundary integration - Called when session ends.
         """
         if not self._ensure_initialized():
-            return CommitResult(success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error")
+            return CommitResult(
+                success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error"
+            )
 
         with self._commit_lock:
             state_map = self._discover_all_state()
@@ -247,7 +251,9 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         Full weaving cycle with cognitive intelligence.
         """
         if not self._ensure_initialized():
-            return CommitResult(success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error")
+            return CommitResult(
+                success=False, error="StateSyncWeaver: Dependencies not ready", message="Dependency error"
+            )
 
         with self._commit_lock:
             state_map = self._discover_all_state()
@@ -448,11 +454,14 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
                 if not runtime_patterns:
                     return CommitResult(success=True, message="No runtime files to commit")
 
+                # VIMANA ISOLATION: Use only_files for isolated state commits
+                # This prevents PRANA from accidentally committing developer's staged code.
+                # git commit --only ignores the staging area completely.
                 result = self.prakriti.commit_if_dirty(
                     message=plan.message.split(":", 1)[-1].strip() if ":" in plan.message else plan.message,
                     commit_type="chore",
                     scope="state",
-                    stage_patterns=runtime_patterns,  # Only stage specific runtime files
+                    only_files=runtime_patterns,  # VIMANA: Isolated state-only commit
                 )
 
                 if result:
