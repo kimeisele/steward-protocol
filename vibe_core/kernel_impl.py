@@ -451,7 +451,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             else:
                 # OPUS-307: Use ManifestRegistry (NO iterdir!)
                 self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
-            self._plugins = list(self._plugins_map.values())
+            # OPUS-FIX: Sort plugins by priority before on_boot (lower = earlier)
+            self._plugins = sorted(
+                self._plugins_map.values(),
+                key=lambda p: getattr(p, "priority", 50),
+            )
 
             # OPUS-112: Auto-register plugin capabilities from manifest (VEDA-4)
             for plugin_id, meta in self._plugin_metadata.items():
