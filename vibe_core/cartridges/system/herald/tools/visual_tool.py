@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from vibe_core.tools.tool_protocol import Tool
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
@@ -92,6 +92,41 @@ class VisualTool(Tool):
         "trust": ["chain", "link"],
         "verification": ["checkmark", "seal"],
     }
+
+    @property
+    def name(self) -> str:
+        """Tool name for registry."""
+        return "herald.visual"
+
+    @property
+    def description(self) -> str:
+        """Tool description for LLM context."""
+        return "Generates visual assets (ASCII art, SVG) to complement text content"
+
+    @property
+    def parameters_schema(self) -> Dict[str, Any]:
+        """JSON schema for tool parameters."""
+        return {
+            "text_draft": {"type": "string", "required": True, "description": "Text content to visualize"},
+            "style_preset": {"type": "string", "required": False, "default": "agent_city"},
+            "format_type": {"type": "string", "required": False, "default": "ascii", "enum": ["ascii", "svg"]},
+        }
+
+    def validate(self, parameters: Dict[str, Any]) -> None:
+        """Validate parameters before execution."""
+        if "text_draft" not in parameters:
+            raise ValueError("Missing required parameter: text_draft")
+
+    def execute(self, parameters: Dict[str, Any]) -> "ToolResult":
+        """Execute visual generation and return ToolResult."""
+        from dataclasses import asdict
+
+        asset = self.generate(
+            text_draft=parameters["text_draft"],
+            style_preset=parameters.get("style_preset", "agent_city"),
+            format_type=parameters.get("format_type", "ascii"),
+        )
+        return ToolResult(success=True, result=asdict(asset))
 
     def __init__(self, services: Optional["ServiceRegistry"] = None):
         """

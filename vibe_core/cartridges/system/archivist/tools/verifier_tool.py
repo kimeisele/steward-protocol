@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 logger = logging.getLogger("ARCHIVIST_VERIFIER")
 
 # Import real crypto functions
@@ -37,7 +39,7 @@ except ImportError:
 CRYPTO_ENABLED = True
 
 
-class VerifierTool:
+class VerifierTool(Tool):
     """
     Content verification tool for the Chain of Trust.
 
@@ -56,6 +58,36 @@ class VerifierTool:
     def name(self) -> str:
         """Tool name for registry."""
         return "archivist.verifier"
+
+    @property
+    def description(self) -> str:
+        """Tool description for LLM context."""
+        return "Cryptographic verification tool using ECDSA P-256 signatures"
+
+    @property
+    def parameters_schema(self) -> Dict[str, Any]:
+        """JSON schema for tool parameters."""
+        return {
+            "content": {"type": "string", "required": True, "description": "Content to verify"},
+            "signature": {"type": "string", "required": True, "description": "Base64 signature"},
+            "signer": {"type": "string", "required": True, "description": "Signer identity"},
+        }
+
+    def validate(self, parameters: Dict[str, Any]) -> None:
+        """Validate parameters before execution."""
+        required = ["content", "signature", "signer"]
+        missing = [p for p in required if p not in parameters]
+        if missing:
+            raise ValueError(f"Missing required parameters: {missing}")
+
+    def execute(self, parameters: Dict[str, Any]) -> "ToolResult":
+        """Execute verification and return ToolResult."""
+        is_valid, details = self.verify_signature(
+            content=parameters["content"],
+            signature=parameters["signature"],
+            signer=parameters["signer"],
+        )
+        return ToolResult(success=is_valid, result={"verified": is_valid, "details": details})
 
     def __init__(self, services: Optional["ServiceRegistry"] = None):
         self._services = services
