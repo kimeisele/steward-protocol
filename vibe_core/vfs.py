@@ -278,9 +278,11 @@ class VirtualFileSystem:
         caller_frame = inspect.currentframe()
         if caller_frame and caller_frame.f_back:
             caller_file = caller_frame.f_back.f_code.co_filename
-            # Allow calls from kernel_ops.py and verification scripts only
-            allowed_callers = ("kernel_ops.py", "verify_monkey_patching.py", "test_")
-            if not any(caller_file.endswith(allowed) for allowed in allowed_callers):
+            # Allow calls from kernel_ops.py, verification scripts, and test files
+            allowed_suffixes = ("kernel_ops.py", "verify_monkey_patching.py")
+            is_allowed = any(caller_file.endswith(s) for s in allowed_suffixes)
+            is_test = "/tests/" in caller_file or "\\tests\\" in caller_file
+            if not is_allowed and not is_test:
                 logger.warning(f"🚨 SANDBOX ESCAPE ATTEMPT: {caller_file} tried to call create_symlink()")
                 raise PermissionError(
                     "NARASIMHA VIOLATION: create_symlink() can only be called by kernel. "
