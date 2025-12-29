@@ -921,6 +921,81 @@ Alle Configs verweisen auf Environment Variables, keine hardcoded Secrets gefund
 
 ---
 
+## TEIL I: ANGEWANDTE FIXES (Nicht-VISNU)
+
+### Fix-Session: 2025-12-29
+
+Die folgenden Fixes wurden in dieser Session angewendet:
+
+| ID | Finding | Status | Commit |
+|----|---------|--------|--------|
+| F3-1 | Gateway CORS Wildcard | ✅ FIXED | gateway/api.py:58-68 |
+| F3-2 | Gateway Hardcoded API Key | ✅ FIXED | gateway/api.py:146-152 |
+| F3-3 | Gateway Path Traversal | ✅ FIXED | gateway/api.py:556-568 |
+| B-P0-1 | VFS Sandbox Escape | ✅ FIXED | vibe_core/vfs.py:270-282 |
+| B-P1-2 | VFS /tmp Fallback | ✅ FIXED | vibe_core/vfs.py:51-59 |
+| B-P1-3 | Crypto chmod Silent | ✅ FIXED | vibe_core/steward/crypto.py:66-71 |
+| B-P0-2 | System Audit Silent | ✅ FIXED | vibe_core/tools/system_audit.py (3 Stellen) |
+
+### Fix-Details:
+
+**F3-1: CORS jetzt konfigurierbar**
+```python
+# Vorher: allow_origins=["*"]
+# Nachher:
+_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,...")
+allow_origins=_cors_origins
+```
+
+**F3-2: Kein Fallback-Key mehr**
+```python
+# Vorher: valid_keys = [os.getenv("VIBE_API_KEY", "steward-secret-key")]
+# Nachher: Raises HTTPException 503 wenn VIBE_API_KEY nicht gesetzt
+```
+
+**F3-3: Path Traversal Validierung hinzugefügt**
+```python
+# check_visa_status() hat jetzt dieselbe Validierung wie submit_visa_application()
+if not re.match(r"^[a-zA-Z0-9_-]+$", agent_id):
+    raise HTTPException(...)
+```
+
+**B-P0-1: VFS Sandbox Escape blockiert**
+```python
+# create_symlink() prüft jetzt den Caller via inspect
+# Nur kernel_ops.py und Tests dürfen aufrufen
+caller_file = caller_frame.f_back.f_code.co_filename
+if not any(caller_file.endswith(allowed) for allowed in allowed_callers):
+    raise PermissionError("NARASIMHA VIOLATION...")
+```
+
+**B-P1-2: VFS nutzt persistenten Fallback**
+```python
+# Vorher: Path("/tmp") / "vibe_os" / "agents"
+# Nachher: Path.cwd() / "workspaces" / "agents"
+```
+
+**B-P1-3 & B-P0-2: Silent Failures → Logging**
+```python
+# Alle "except: pass" ersetzt durch:
+except Exception as e:
+    logger.warning/error(f"... {e}")
+```
+
+### Verbleibende VISNU-Protected Issues
+
+Diese können NUR lokal auf main behoben werden:
+
+| ID | Finding | Datei |
+|----|---------|-------|
+| A-P0-1 | Silent PRAGMA Failure | vibe_core/ledger.py:211-214 |
+| A-P0-2 | Ledger ohne Caller Verification | vibe_core/ledger.py:85-109 |
+| A-P0-3 | Blueprint Resurrection leer | vibe_core/kernel_impl.py:248 |
+| A-P0-4 | Blueprint verliert Ledger | vibe_core/kernel_impl.py:256 |
+
+---
+
 *Report generiert von Claude Opus 4.5 am 2025-12-29*
 *Audit-Dauer: ~3 Stunden systematische Analyse (erweitert)*
 *Confidence Level: 95%*
+*Fixes angewendet: 7 von 50 Findings (14%)*

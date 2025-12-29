@@ -141,7 +141,9 @@ class DatabaseAuditor:
                     try:
                         cursor.execute(f"SELECT COUNT(*) FROM {table}")
                         row_counts[table] = cursor.fetchone()[0]
-                    except:
+                    except Exception as e:
+                        # SECURITY FIX B-P0-2: Log instead of silent failure
+                        logger.warning(f"Failed to count rows in {table}: {e}")
                         row_counts[table] = -1
 
                 conn.close()
@@ -185,8 +187,9 @@ class DatabaseAuditor:
                     content = py_file.read_text()
                     if db_name in content:
                         references.append(str(py_file.relative_to(self.root)))
-                except:
-                    pass
+                except Exception as e:
+                    # SECURITY FIX B-P0-2: Log instead of silent failure
+                    logger.debug(f"Failed to read {py_file} for reference search: {e}")
 
         return references[:10]  # Limit to 10
 
@@ -256,8 +259,9 @@ class LedgerAuditor:
                     if success:
                         tool_calls[tool_name]["successes"] += 1
                     tool_calls[tool_name]["last"] = timestamp
-                except:
-                    pass
+                except Exception as e:
+                    # SECURITY FIX B-P0-2: Log instead of silent failure
+                    logger.debug(f"Failed to parse tool call event: {e}")
 
             conn.close()
 

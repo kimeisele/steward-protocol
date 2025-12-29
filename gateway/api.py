@@ -55,12 +55,17 @@ def _get_runtime_config():
 
 app = FastAPI(title="VibeChat Gateway // GAD-3000")
 
-# --- CORS: THE DOOR UNLOCKER (FIXES 405/422 ERRORS) ---
+# --- CORS: CONFIGURABLE ORIGINS (SECURITY FIX F3-1) ---
+# Default to localhost only; set CORS_ORIGINS env var for production
+_cors_origins_env = os.getenv(
+    "CORS_ORIGINS", "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000"
+)
+_cors_origins = [origin.strip() for origin in _cors_origins_env.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Erlaubt alles (Localhost, Network IP)
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Erlaubt POST, GET, OPTIONS, etc.
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -140,9 +145,12 @@ class YagyaRequest(BaseModel):
 # --- ENDPOINT ---
 @app.post("/v1/chat")
 async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(None)):
-    # 1. Auth Check
-    valid_keys = [os.getenv("VIBE_API_KEY", "steward-secret-key")]
-    if x_api_key not in valid_keys:
+    # 1. Auth Check (SECURITY FIX F3-2: No hardcoded fallback key)
+    api_key = os.getenv("VIBE_API_KEY")
+    if not api_key:
+        logger.error("VIBE_API_KEY environment variable not set!")
+        raise HTTPException(status_code=503, detail="Service misconfigured: API key not set")
+    if x_api_key != api_key:
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
     logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
@@ -550,6 +558,17 @@ def submit_visa_application(request: VisaApplicationRequest):
 @app.get("/api/visa/{agent_id}")
 def check_visa_status(agent_id: str):
     """Check visa application status for an agent."""
+    import re
+
+    # SECURITY FIX F3-3: Validate agent_id to prevent path traversal
+    if not agent_id or len(agent_id) < 3:
+        raise HTTPException(status_code=400, detail="Agent ID must be at least 3 characters")
+    if not re.match(r"^[a-zA-Z0-9_-]+$", agent_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Agent ID can only contain alphanumeric, underscore, and hyphen",
+        )
+
     try:
         citizen_file = Path("agent-city/registry/citizens") / f"{agent_id}.json"
 
@@ -568,6 +587,8 @@ def check_visa_status(agent_id: str):
             "application": citizen_data,
             "citizenship_status": "pending",  # Would be updated by AUDITOR
         }
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions
     except Exception as e:
         logger.error(f"❌ Visa status check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

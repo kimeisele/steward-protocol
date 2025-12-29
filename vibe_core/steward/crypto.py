@@ -63,10 +63,14 @@ def load_or_generate_keys() -> Tuple[str, str]:
     PUBLIC_KEY_PATH.write_text(pub)
 
     # Secure private key permissions (read/write for owner only)
+    # SECURITY FIX B-P1-3: Log chmod failures instead of silent pass
     try:
         PRIVATE_KEY_PATH.chmod(0o600)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(
+            f"SECURITY WARNING: Failed to set private key permissions to 0600: {e}. "
+            f"Private key at {PRIVATE_KEY_PATH} may be world-readable!"
+        )
 
     return priv, pub
 
