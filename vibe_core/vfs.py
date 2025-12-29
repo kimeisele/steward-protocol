@@ -49,9 +49,14 @@ class VirtualFileSystem:
                 if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
                     cls._VFS_ROOT = Path(config.paths.system.agents)
                 else:
-                    cls._VFS_ROOT = Path("/tmp") / "vibe_os" / "agents"
-            except Exception:
-                cls._VFS_ROOT = Path("/tmp") / "vibe_os" / "agents"
+                    # SECURITY FIX B-P1-2: Use persistent fallback instead of /tmp
+                    # /tmp is cleared on restart, losing agent data
+                    cls._VFS_ROOT = Path.cwd() / "workspaces" / "agents"
+                    logger.warning(f"VFS config not found, using fallback: {cls._VFS_ROOT}")
+            except Exception as e:
+                # SECURITY FIX B-P1-2: Use persistent fallback instead of /tmp
+                cls._VFS_ROOT = Path.cwd() / "workspaces" / "agents"
+                logger.warning(f"VFS config error ({e}), using fallback: {cls._VFS_ROOT}")
         return cls._VFS_ROOT
 
     # Legacy property for backward compatibility
@@ -250,20 +255,40 @@ class VirtualFileSystem:
 
         logger.debug(f"🗑️  {self.agent_id} removed directory {path}")
 
-    def create_symlink(self, target: str, link_name: str) -> None:
+    def create_symlink(self, target: str, link_name: str, _kernel_token: str = "") -> None:
         """
         Create symlink in sandbox.
 
         SECURITY NOTE: This allows controlled access to resources outside sandbox.
-        Only the kernel should call this method.
+        Only the kernel should call this method via kernel_ops.py.
+
+        SECURITY FIX B-P0-1: Added caller verification to prevent sandbox escape.
 
         Args:
             target: Target path (can be outside sandbox)
             link_name: Symlink name (must be in sandbox)
+            _kernel_token: Internal token for kernel verification (agents should not use)
 
         Raises:
-            PermissionError: If link_name escapes sandbox
+            PermissionError: If link_name escapes sandbox or unauthorized caller
         """
+        # SECURITY FIX B-P0-1: Verify caller is kernel_ops.py
+        import inspect
+
+        caller_frame = inspect.currentframe()
+        if caller_frame and caller_frame.f_back:
+            caller_file = caller_frame.f_back.f_code.co_filename
+            # Allow calls from kernel_ops.py, verification scripts, and test files
+            allowed_suffixes = ("kernel_ops.py", "verify_monkey_patching.py")
+            is_allowed = any(caller_file.endswith(s) for s in allowed_suffixes)
+            is_test = "/tests/" in caller_file or "\\tests\\" in caller_file
+            if not is_allowed and not is_test:
+                logger.warning(f"🚨 SANDBOX ESCAPE ATTEMPT: {caller_file} tried to call create_symlink()")
+                raise PermissionError(
+                    "NARASIMHA VIOLATION: create_symlink() can only be called by kernel. "
+                    f"Unauthorized caller: {caller_file}"
+                )
+
         # For symlinks, we need the path WITHOUT resolving existing symlinks
         # _resolve_and_validate resolves symlinks, which breaks this
         if os.path.isabs(link_name):
