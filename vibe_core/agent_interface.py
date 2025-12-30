@@ -224,7 +224,7 @@ class AgentSystemInterface:
         Returns:
             List of filenames
         """
-        return self.vfs.listdir(path)
+        return self.vfs.list_dir(path)
 
     def open_file(self, path: str, mode: str = "r", **kwargs) -> IO:
         """
