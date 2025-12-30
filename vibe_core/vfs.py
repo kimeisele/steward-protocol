@@ -101,21 +101,20 @@ class VirtualFileSystem:
             full_path = Path(path).resolve()
         else:
             # Relative path - resolve relative to sandbox root
-            # IMPORTANT: Don't resolve symlinks yet, just get the path
-            full_path = self.root / path
+            # SECURITY FIX: Resolve/normalize BEFORE security check to catch ../
+            # This prevents "../other_agent/file" from escaping sandbox
+            full_path = (self.root / path).resolve()
 
-        # Security check: ensure path (before resolving symlinks) is within sandbox
+        # Security check: ensure RESOLVED path is within THIS AGENT'S sandbox
+        # Not just any VFS root, but THIS agent's specific directory
         try:
-            # Check if the path itself (not its target) is in sandbox
             full_path.relative_to(self.root)
         except ValueError:
             logger.warning(
-                f"🚫 {self.agent_id} attempted to access {path} (resolved to {full_path}, outside sandbox {self.root})"
+                f"🚫 SANDBOX ESCAPE BLOCKED: {self.agent_id} attempted to access {path} "
+                f"(resolved to {full_path}, outside sandbox {self.root})"
             )
-            raise PermissionError(f"Access denied: {path} is outside agent sandbox")
-
-        # Now resolve symlinks - this may point outside sandbox (allowed for controlled escapes)
-        full_path = full_path.resolve()
+            raise PermissionError(f"Access denied: {path} escapes agent sandbox")
 
         return full_path
 
