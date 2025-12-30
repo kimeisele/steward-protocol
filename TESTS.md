@@ -35,14 +35,14 @@
 | Assertions | 2.572 (+163) | ~1 pro Test |
 | Fixtures | 208 | ✅ Gut |
 | Exception-Tests | 80 | ⚠️ NIEDRIG |
-| Parametrisierte Tests | 8 | ❌ KRITISCH |
+| Parametrisierte Tests | 46 (+38) | ✅ VERBESSERT |
 
 **Kritischste Findings (aktualisiert):**
 1. ~~**5.031 Zeilen kritischer Core-Code OHNE Tests**~~ → **2.450 Zeilen** (P0 behoben)
 2. **13 von 16 Cartridge-Tests sind Platzhalter (`assert True`)**
 3. **28 von 49 Plugin-Tests sind nur Import-Checks (Sanity)**
 4. **Nur 1 Concurrency-Test für das gesamte System**
-5. **Nur 8 parametrisierte Tests für 2.651 Test-Funktionen**
+5. ~~**Nur 8 parametrisierte Tests**~~ → **46 Tests** (Edge Cases abgedeckt)
 
 ---
 
