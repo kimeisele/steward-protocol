@@ -63,17 +63,22 @@ class MockKernel:
 class TestDocumentType:
     """Test DocumentType enum."""
 
-    def test_readonly_type_exists(self):
-        """Should have READONLY type."""
-        assert DocumentType.READONLY.value == "readonly"
+    @pytest.mark.parametrize(
+        "doc_type,expected_value,description",
+        [
+            (DocumentType.READONLY, "readonly", "Kernel writes, user reads"),
+            (DocumentType.BIDIRECTIONAL, "bidir", "Both write, kernel preserves"),
+            (DocumentType.SNAPSHOT, "snapshot", "Internal state files"),
+        ],
+    )
+    def test_document_type_values(self, doc_type, expected_value, description):
+        """Should have correct string value for each document type."""
+        assert doc_type.value == expected_value
 
-    def test_bidirectional_type_exists(self):
-        """Should have BIDIRECTIONAL type."""
-        assert DocumentType.BIDIRECTIONAL.value == "bidir"
-
-    def test_snapshot_type_exists(self):
-        """Should have SNAPSHOT type."""
-        assert DocumentType.SNAPSHOT.value == "snapshot"
+    def test_all_types_unique(self):
+        """All document type values should be unique."""
+        values = [t.value for t in DocumentType]
+        assert len(values) == len(set(values))
 
 
 # =============================================================================
@@ -254,6 +259,58 @@ class TestSandboxValidation:
                 service._validate_sandbox("escape_link/target.txt")
 
             assert "SHAKATASURA BLOCKED" in str(exc_info.value)
+
+    # =========================================================================
+    # PARAMETRIZED TESTS: Sandbox Escape Patterns
+    # =========================================================================
+
+    @pytest.mark.parametrize(
+        "malicious_path,description",
+        [
+            ("../escape.txt", "simple parent traversal"),
+            ("../../escape.txt", "double parent traversal"),
+            ("foo/../../../escape.txt", "nested parent traversal"),
+            ("./foo/../../escape.txt", "dot-prefixed traversal"),
+            ("/etc/passwd", "absolute path to system file"),
+            ("/tmp/malicious", "absolute path to tmp"),
+            ("foo/bar/../../../etc/passwd", "deep nested escape"),
+        ],
+    )
+    def test_sandbox_blocks_escape_patterns(self, malicious_path, description):
+        """Should block various sandbox escape patterns."""
+        kernel = MockKernel()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            service = KernelIOService(kernel, root_path=Path(tmpdir))
+
+            with pytest.raises(PermissionError) as exc_info:
+                service._validate_sandbox(malicious_path)
+
+            assert "SHAKATASURA BLOCKED" in str(exc_info.value), f"Failed for: {description}"
+
+    @pytest.mark.parametrize(
+        "safe_path",
+        [
+            "file.md",
+            "docs/file.md",
+            "deep/nested/path/file.txt",
+            "UPPERCASE.MD",
+            "with-dashes.md",
+            "with_underscores.md",
+            "file.with.dots.md",
+            "unicode_日本語.md",
+        ],
+    )
+    def test_sandbox_accepts_safe_paths(self, safe_path):
+        """Should accept various safe path patterns."""
+        kernel = MockKernel()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            service = KernelIOService(kernel, root_path=Path(tmpdir))
+
+            # Should not raise
+            result = service._validate_sandbox(safe_path)
+            assert result is not None
 
 
 # =============================================================================
