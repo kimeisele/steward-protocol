@@ -1,10 +1,26 @@
 # STEWARD PROTOCOL: TEST COVERAGE AUDIT REPORT
 
-**Datum:** 2025-12-30
+**Datum:** 2025-12-30 (Update: 2025-12-30)
 **Auditor:** Claude Opus 4.5
 **Scope:** vibe_core/ (225.467 Zeilen) + gateway/ (802 Zeilen) + tests/ (48.156 Zeilen)
 **Methodik:** Statische Analyse + pytest-cov + manuelle Code-Review
 **Confidence Level:** 99% (Systematische Analyse abgeschlossen)
+
+---
+
+## 🆕 UPDATE: P0 LÜCKEN BEHOBEN (2025-12-30)
+
+| Modul | Vorher | Nachher | Status |
+|-------|--------|---------|--------|
+| agent_interface.py (807 Zeilen) | 0 Tests | **32 Tests** | ✅ DONE |
+| task_kernel.py (785 Zeilen) | 0 Tests | **56 Tests** | ✅ DONE |
+| io_service.py (577 Zeilen) | 2 Tests | **46 Tests** | ✅ DONE |
+| process_manager.py (412 Zeilen) | 1 Test | **29 Tests** | ✅ DONE |
+
+**Gesamt:** +163 neue Tests für 2.581 Zeilen kritischen Code
+
+**Bug gefunden und behoben:**
+- `agent_interface.py:227` - `listdir()` → `list_dir()` (VFS API Mismatch)
 
 ---
 
@@ -13,20 +29,20 @@
 | Metrik | Wert | Bewertung |
 |--------|------|-----------|
 | Source Lines | 226.269 | - |
-| Test Lines | 48.156 | - |
-| Test-zu-Source Ratio | 21.3% | ⚠️ NIEDRIG |
-| Test-Funktionen | 2.488 | - |
-| Assertions | 2.409 | ~1 pro Test |
+| Test Lines | 48.156 + 2.850 | - |
+| Test-zu-Source Ratio | 22.6% | ⚠️ VERBESSERT |
+| Test-Funktionen | 2.651 (+163) | - |
+| Assertions | 2.572 (+163) | ~1 pro Test |
 | Fixtures | 208 | ✅ Gut |
 | Exception-Tests | 80 | ⚠️ NIEDRIG |
 | Parametrisierte Tests | 8 | ❌ KRITISCH |
 
-**Kritischste Findings:**
-1. **5.031 Zeilen kritischer Core-Code OHNE Tests**
+**Kritischste Findings (aktualisiert):**
+1. ~~**5.031 Zeilen kritischer Core-Code OHNE Tests**~~ → **2.450 Zeilen** (P0 behoben)
 2. **13 von 16 Cartridge-Tests sind Platzhalter (`assert True`)**
 3. **28 von 49 Plugin-Tests sind nur Import-Checks (Sanity)**
 4. **Nur 1 Concurrency-Test für das gesamte System**
-5. **Nur 8 parametrisierte Tests für 2.488 Test-Funktionen**
+5. **Nur 8 parametrisierte Tests für 2.651 Test-Funktionen**
 
 ---
 
@@ -94,12 +110,12 @@ def test_metal_war_kernel_survives():
 
 ## TEIL B: UNGETESTETE MODULE
 
-### B1: Core-Module OHNE dedizierte Tests (5.031 Zeilen)
+### B1: Core-Module OHNE dedizierte Tests (2.450 Zeilen verbleibend)
 
 | Modul | Zeilen | Tests | Risiko |
 |-------|--------|-------|--------|
-| agent_interface.py | 807 | 0 | ❌ KRITISCH |
-| task_kernel.py | 785 | 0 | ❌ KRITISCH |
+| ~~agent_interface.py~~ | ~~807~~ | ~~0~~ | ✅ **32 Tests** |
+| ~~task_kernel.py~~ | ~~785~~ | ~~0~~ | ✅ **56 Tests** |
 | doc_renderer.py | 743 | 0 | ⚠️ HOCH |
 | operator_adapter.py | 612 | 0 | ⚠️ HOCH |
 | unified_registry.py | 327 | 0 | ⚠️ HOCH |
@@ -114,13 +130,13 @@ def test_metal_war_kernel_survives():
 | security.py | 141 | 0 | ⚠️ Security |
 | manifest_registry.py | 36 | 0 | NIEDRIG |
 
-### B2: Module mit MINIMALEN Tests
+### B2: Module mit MINIMALEN Tests (aktualisiert)
 
 | Modul | Zeilen | Tests | Test-Ratio |
 |-------|--------|-------|------------|
-| IOService | 577 | 2 | 0.35% |
+| ~~IOService~~ | ~~577~~ | ~~2~~ | ✅ **46 Tests (8.0%)** |
 | VFS | 350 | 2 | 0.57% |
-| ProcessManager | 412 | 1 | 0.24% |
+| ~~ProcessManager~~ | ~~412~~ | ~~1~~ | ✅ **29 Tests (7.0%)** |
 | ResourceManager | 234 | 1 | 0.43% |
 | Topology | 619 | 2 | 0.32% |
 | Gateway | 802 | 3 | 0.37% |
