@@ -51,7 +51,27 @@
 - Resource exhaustion prevention
 - Privilege escalation prevention
 
-**SECURITY FINDING:** Cross-agent sandbox access vulnerability discovered and documented (SKIPPED until fixed)
+### 🔒 SECURITY FIX: VFS Cross-Agent Sandbox Escape (GEFIXT!)
+
+**Vulnerability:** Test `test_agent_cannot_access_other_agent_sandbox` fand, dass Agent 2 über
+`../agent_1/secret.txt` auf Agent 1's Sandbox zugreifen konnte.
+
+**Root Cause:** `vibe_core/vfs.py:_resolve_and_validate()` normalisierte Pfade NACH dem
+Security Check statt DAVOR. Dadurch wurde `../other_agent/` nicht erkannt.
+
+**Fix Applied:**
+```python
+# VORHER (vulnerabel):
+full_path = self.root / path  # ../agent_1 bleibt drin
+full_path.relative_to(self.root)  # Check passiert
+full_path = full_path.resolve()  # Jetzt wird's zu agent_1!
+
+# NACHHER (sicher):
+full_path = (self.root / path).resolve()  # ../agent_1 wird zu agent_1
+full_path.relative_to(self.root)  # Check FAILED - agent_1 != agent_2
+```
+
+**Verification:** 13 VFS-related Tests bestanden nach Fix
 
 ---
 

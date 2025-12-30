@@ -236,15 +236,12 @@ class TestResourceExhaustionPrevention:
 class TestPrivilegeEscalation:
     """Test privilege escalation prevention."""
 
-    @pytest.mark.skip(reason="VULNERABILITY FOUND: Cross-agent sandbox access possible. See SECURITY-ISSUE-001.")
     def test_agent_cannot_access_other_agent_sandbox(self, tmp_path):
         """
         One agent cannot access another agent's sandbox.
 
-        SECURITY FINDING: This test revealed that path traversal between agent
-        sandboxes IS possible when using the same VFS root. This needs a fix:
-        - Each agent's VFS should validate paths are within their OWN sandbox
-        - Currently only validates against the shared VFS root
+        SECURITY FIX VERIFIED: Path traversal between agent sandboxes is now blocked.
+        The VFS now resolves paths BEFORE the security check, catching ../ escapes.
         """
         with patch.object(VirtualFileSystem, "_get_vfs_root", return_value=tmp_path):
             vfs_agent1 = VirtualFileSystem("agent_1")
