@@ -1,10 +1,57 @@
 # STEWARD PROTOCOL: TEST COVERAGE AUDIT REPORT
 
-**Datum:** 2025-12-30 (Update: 2025-12-30)
+**Datum:** 2025-12-30 (Update: 2025-12-30 - Final)
 **Auditor:** Claude Opus 4.5
 **Scope:** vibe_core/ (225.467 Zeilen) + gateway/ (802 Zeilen) + tests/ (48.156 Zeilen)
 **Methodik:** Statische Analyse + pytest-cov + manuelle Code-Review
 **Confidence Level:** 99% (Systematische Analyse abgeschlossen)
+
+---
+
+## 🆕 UPDATE: P1-3 + P1-4 LÜCKEN BEHOBEN (2025-12-30)
+
+### P1-3: Concurrency Tests (KRITISCH → BEHOBEN)
+
+| Bereich | Vorher | Nachher | Status |
+|---------|--------|---------|--------|
+| EventBus Concurrency | 0 Tests | **15 Tests** | ✅ DONE |
+| ProcessManager Concurrency | 0 Tests | **11 Tests** | ✅ DONE |
+| Kernel Concurrency | 0 Tests | **10 Tests** | ✅ DONE |
+| Rasa Lila Dance | 1 Test | 1 Test | ✅ Behalten |
+
+**Gesamt P1-3:** 1 → **36 Tests** für Thread-Safety, Race Conditions, Deadlock Prevention
+
+**Neue Tests decken ab:**
+- Concurrent emit/subscribe in EventBus
+- Rate limiting (SudarshanaGuard) thread safety
+- Zombie subscriber detection
+- Scheduler task submission concurrency
+- Capability registry concurrent registration
+- Manifest registry concurrent access
+- Deadlock prevention scenarios
+
+### P1-4: Security Tests (MINIMAL → ERWEITERT)
+
+| Bereich | Vorher | Nachher | Status |
+|---------|--------|---------|--------|
+| Gateway Hardening | 7 Tests | 7 Tests | ✅ Gut |
+| Identity Spoofing | 5 Tests | 5 Tests | ✅ Gut |
+| Injection Attacks | 0 Tests | **35 Tests** | ✅ NEU |
+| VFS Symlink Guard | 4 Tests | 4 Tests | ✅ Gut |
+| Other Security | 6 Tests | 6 Tests | ✅ Gut |
+
+**Gesamt P1-4:** 22 → **57 Tests** (+35 Injection Attack Tests)
+
+**Neue Security Tests:**
+- Command injection (8 patterns)
+- Null byte injection (3 patterns)
+- Path traversal (10 patterns)
+- Template injection (5 patterns)
+- Event injection (4 privileged types)
+- Resource exhaustion prevention
+- Privilege escalation prevention
+
+**SECURITY FINDING:** Cross-agent sandbox access vulnerability discovered and documented (SKIPPED until fixed)
 
 ---
 
@@ -64,8 +111,9 @@
 1. ~~**5.031 Zeilen kritischer Core-Code OHNE Tests**~~ → **2.450 Zeilen** (P0 behoben)
 2. ~~**13 von 16 Cartridge-Tests sind Platzhalter (`assert True`)**~~ → **203 Tests** (P1-1 behoben)
 3. **28 von 49 Plugin-Tests sind nur Import-Checks (Sanity)**
-4. **Nur 1 Concurrency-Test für das gesamte System**
+4. ~~**Nur 1 Concurrency-Test für das gesamte System**~~ → **36 Tests** (P1-3 behoben)
 5. ~~**Nur 8 parametrisierte Tests**~~ → **46 Tests** (Edge Cases abgedeckt)
+6. ~~**Nur 22 Security Tests**~~ → **57 Tests** (P1-4 behoben)
 
 ---
 
@@ -78,9 +126,9 @@
 | tests/unit/ | 46 | 1.068 | ✅ Hoch |
 | tests/integration/ | 61 | 1.213 | ✅ Hoch |
 | tests/hardening/ | 15 | 103 | ✅ Stress-Tests |
-| tests/security/ | 6 | 25 | ⚠️ Wenig |
+| tests/security/ | 7 | **57 Tests** | ✅ VERBESSERT |
 | tests/manas/ | 31 | ~300 | ✅ Gut |
-| tests/concurrency/ | 1 | ~10 | ❌ KRITISCH |
+| tests/concurrency/ | 4 | **36 Tests** | ✅ VERBESSERT |
 | tests/perf/ | 2 | ~20 | ⚠️ Wenig |
 | tests/reactor/ | 2 | ~30 | ⚠️ Wenig |
 | tests/tools/ | 8 | ~100 | ✅ Gut |
