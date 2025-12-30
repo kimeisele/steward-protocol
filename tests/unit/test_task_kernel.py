@@ -173,29 +173,25 @@ def create_test_capabilities(
 class TestTaskKernelStatus:
     """Test TaskKernelStatus enum."""
 
-    def test_spawned_status_exists(self):
-        """Should have SPAWNED status."""
-        assert TaskKernelStatus.SPAWNED.value == "spawned"
+    @pytest.mark.parametrize(
+        "status,expected_value",
+        [
+            (TaskKernelStatus.SPAWNED, "spawned"),
+            (TaskKernelStatus.EXECUTING, "executing"),
+            (TaskKernelStatus.COMPLETED, "completed"),
+            (TaskKernelStatus.FAILED, "failed"),
+            (TaskKernelStatus.TIMEOUT, "timeout"),
+            (TaskKernelStatus.CANCELLED, "cancelled"),
+        ],
+    )
+    def test_status_values(self, status, expected_value):
+        """Should have correct string value for each status."""
+        assert status.value == expected_value
 
-    def test_executing_status_exists(self):
-        """Should have EXECUTING status."""
-        assert TaskKernelStatus.EXECUTING.value == "executing"
-
-    def test_completed_status_exists(self):
-        """Should have COMPLETED status."""
-        assert TaskKernelStatus.COMPLETED.value == "completed"
-
-    def test_failed_status_exists(self):
-        """Should have FAILED status."""
-        assert TaskKernelStatus.FAILED.value == "failed"
-
-    def test_timeout_status_exists(self):
-        """Should have TIMEOUT status."""
-        assert TaskKernelStatus.TIMEOUT.value == "timeout"
-
-    def test_cancelled_status_exists(self):
-        """Should have CANCELLED status."""
-        assert TaskKernelStatus.CANCELLED.value == "cancelled"
+    def test_all_statuses_unique(self):
+        """All status values should be unique."""
+        values = [s.value for s in TaskKernelStatus]
+        assert len(values) == len(set(values))
 
 
 # =============================================================================
@@ -715,6 +711,29 @@ class TestReinforcementSignal:
         signal = kernel._calculate_reinforcement(TaskKernelStatus.CANCELLED)
 
         assert signal == 0.0
+
+    # =========================================================================
+    # PARAMETRIZED TESTS: Reinforcement Signals
+    # =========================================================================
+
+    @pytest.mark.parametrize(
+        "status,expected_signal,description",
+        [
+            (TaskKernelStatus.COMPLETED, 0.8, "completed without tools"),
+            (TaskKernelStatus.FAILED, -1.0, "failed execution"),
+            (TaskKernelStatus.TIMEOUT, -0.3, "timeout"),
+            (TaskKernelStatus.CANCELLED, 0.0, "cancelled - neutral"),
+        ],
+    )
+    def test_reinforcement_signal_by_status(self, status, expected_signal, description):
+        """Should return correct reinforcement signal for each status."""
+        task = create_test_task()
+        caps = create_test_capabilities()
+        kernel = TaskKernel(task=task, capabilities=caps)
+
+        signal = kernel._calculate_reinforcement(status)
+
+        assert signal == expected_signal, f"Wrong signal for {description}"
 
     @pytest.mark.asyncio
     async def test_failed_gives_negative_signal(self):
