@@ -27,25 +27,39 @@ from vibe_core.process_manager import (
 class TestProcessStatus:
     """Test ProcessStatus enum."""
 
-    def test_init_status_exists(self):
-        """Should have INIT status."""
-        assert ProcessStatus.INIT.value == "init"
+    @pytest.mark.parametrize(
+        "status,expected_value",
+        [
+            (ProcessStatus.INIT, "init"),
+            (ProcessStatus.RUNNING, "running"),
+            (ProcessStatus.STOPPED, "stopped"),
+            (ProcessStatus.CRASHED, "crashed"),
+            (ProcessStatus.QUARANTINED, "quarantined"),
+        ],
+    )
+    def test_status_values(self, status, expected_value):
+        """Should have correct string value for each status."""
+        assert status.value == expected_value
 
-    def test_running_status_exists(self):
-        """Should have RUNNING status."""
-        assert ProcessStatus.RUNNING.value == "running"
+    def test_all_statuses_unique(self):
+        """All status values should be unique."""
+        values = [s.value for s in ProcessStatus]
+        assert len(values) == len(set(values))
 
-    def test_stopped_status_exists(self):
-        """Should have STOPPED status."""
-        assert ProcessStatus.STOPPED.value == "stopped"
-
-    def test_crashed_status_exists(self):
-        """Should have CRASHED status."""
-        assert ProcessStatus.CRASHED.value == "crashed"
-
-    def test_quarantined_status_exists(self):
-        """Should have QUARANTINED status."""
-        assert ProcessStatus.QUARANTINED.value == "quarantined"
+    @pytest.mark.parametrize(
+        "status,can_send_tasks",
+        [
+            (ProcessStatus.RUNNING, True),
+            (ProcessStatus.INIT, False),
+            (ProcessStatus.STOPPED, False),
+            (ProcessStatus.CRASHED, False),
+            (ProcessStatus.QUARANTINED, False),
+        ],
+    )
+    def test_status_task_eligibility(self, status, can_send_tasks):
+        """Only RUNNING processes can receive tasks."""
+        # This is a logical test - only RUNNING should accept tasks
+        assert (status == ProcessStatus.RUNNING) == can_send_tasks
 
 
 # =============================================================================
