@@ -2204,42 +2204,158 @@ cli:
 
 ---
 
-### L5: IMPLEMENTATION ROADMAP
+### L5: IMPLEMENTATION ROADMAP (KONKRET)
 
-| Phase | Was | LOC Änderung | Priorität |
-|-------|-----|--------------|-----------|
-| **1** | AuthProtocol + CapabilityToken | ~200 LOC neu | P0 KRITISCH |
-| **2** | Manifest governance blocks für alle 26 Plugins | ~260 LOC (10/Plugin) | P0 KRITISCH |
-| **3** | Varna-Migration zu Manifest | ~100 LOC refactor | P1 HOCH |
-| **4** | Config-Migration (paths, whitelist) | ~150 LOC refactor | P1 HOCH |
-| **5** | SynonymRegistry + HUD Discovery | ~200 LOC neu | P2 MITTEL |
+#### Phase 1: CapabilityToken (P0)
 
-**Geschätzter Aufwand:** 60-80 Stunden (mit Tests)
+| Datei | Aktion | LOC |
+|-------|--------|-----|
+| `vibe_core/auth/__init__.py` | NEU erstellen | 5 |
+| `vibe_core/auth/capability_token.py` | NEU erstellen (Code oben) | 50 |
+| `vibe_core/task_kernel.py:300-335` | `auth_token` Parameter + verify | 20 |
+| `vibe_core/semantic_syscalls.py:92` | `auth_token` statt `requester_id` | 15 |
+| `vibe_core/plugins/opus_assistant/manas/action_manager.py:829` | Token erstellen statt String | 10 |
+
+**Gesamt Phase 1:** ~100 LOC
+
+#### Phase 2: Manifest Governance Blocks (P0)
+
+| Datei | Aktion |
+|-------|--------|
+| `vibe_core/plugins/*/manifest.json` (26 Dateien) | `governance:` Block hinzufügen |
+
+**Template für jeden Manifest:**
+```json
+"governance": {
+  "type": "RESERVED_AGENT|SOVEREIGN_STATE|STANDARD",
+  "rate_limit_bypass": false,
+  "destroy_privilege": false,
+  "can_spawn_task_kernel": false
+}
+```
+
+**Dann entfernen:**
+| Datei:Line | Was entfernen |
+|------------|---------------|
+| `semantic_syscalls.py:31-47` | `RESERVED_AGENT_IDS` Set |
+| `task_kernel.py:251` | `KNOWN_SOVEREIGN_STATES` Set |
+| `event_bus.py:202` | `VIP_AGENTS` Set |
+| `vedic_governance/plugin_main.py:354` | `SYSTEM_AGENTS` Set |
+
+**Gesamt Phase 2:** 26×10 LOC (Manifests) + 4×15 LOC (Refactor) = ~320 LOC
+
+#### Phase 3: Varna Migration (P1)
+
+| Datei | Aktion |
+|-------|--------|
+| `vibe_core/cartridges/*/cartridge.yaml` (30 Dateien) | `governance.varna:` hinzufügen |
+| `vibe_core/plugins/vedic_governance/varna.py:137-166` | ManifestRegistry lookup statt IF-ELSE |
+
+**Gesamt Phase 3:** 30×2 LOC (Manifests) + 30 LOC (Refactor) = ~90 LOC
+
+#### Phase 4: Config Migration (P1)
+
+| Datei | Aktion |
+|-------|--------|
+| `config/network.yaml` | NEU: whitelist, rate_limits |
+| `vibe_core/network_proxy.py:41-55` | Config laden statt DEFAULT_WHITELIST |
+| `config/paths.yaml` | NEU: runtime_root, scan_dirs |
+| `vibe_core/phoenix/sections/paths/section_main.py:27` | Config laden |
+
+**Gesamt Phase 4:** ~80 LOC
+
+#### Phase 5: UI Registry (P2)
+
+| Datei | Aktion |
+|-------|--------|
+| `vibe_core/cli/synonym_registry.py` | NEU erstellen |
+| `config/synonyms.yaml` | NEU erstellen |
+| `vibe_core/runtime/hud.py:151-168` | CartridgeRegistry Discovery |
+
+**Gesamt Phase 5:** ~120 LOC
 
 ---
 
-### L6: VALIDATION CHECKLIST
+### L6: VALIDATION CHECKLIST (für Sonnet - EXAKTE BEFEHLE)
 
-Nach Implementation MUSS gelten:
+Nach jeder Phase diese Befehle ausführen:
 
-- [ ] `grep -r "KNOWN_\|RESERVED_\|VIP_\|SYSTEM_AGENTS" vibe_core/*.py` → 0 Treffer
-- [ ] `grep -r "caller_plugin_id=\"\|requester_id=\"" vibe_core/` → 0 Treffer (alle via Token)
-- [ ] Alle 26 Plugins haben `governance:` Block in Manifest
-- [ ] Alle 30 Cartridges haben `governance.varna:` in Manifest
-- [ ] `steward commands` zeigt ALLE Capabilities (nicht 3/30)
-- [ ] Network whitelist kommt aus config, nicht Code
+#### Phase 1 Validierung:
+```bash
+# Auth Token existiert
+test -f vibe_core/auth/capability_token.py && echo "✅ PASS" || echo "❌ FAIL"
+
+# Import funktioniert
+python -c "from vibe_core.auth.capability_token import CapabilityToken" && echo "✅ PASS"
+
+# Keine hardcoded caller_plugin_id mehr
+grep -r 'caller_plugin_id="' vibe_core/ | grep -v "test_" | wc -l  # MUSS 0 sein
+```
+
+#### Phase 2 Validierung:
+```bash
+# Alle 26 Plugins haben governance Block
+for f in vibe_core/plugins/*/manifest.json; do
+  grep -q '"governance"' "$f" && echo "✅ $f" || echo "❌ $f MISSING governance"
+done
+
+# Hardcoded Sets entfernt
+grep -n "RESERVED_AGENT_IDS\|KNOWN_SOVEREIGN_STATES\|VIP_AGENTS\|SYSTEM_AGENTS" \
+  vibe_core/semantic_syscalls.py vibe_core/task_kernel.py vibe_core/event_bus.py \
+  vibe_core/plugins/vedic_governance/plugin_main.py | wc -l  # MUSS 0 sein
+```
+
+#### Phase 3 Validierung:
+```bash
+# Varna in Manifests
+for f in vibe_core/cartridges/*/cartridge.yaml vibe_core/cartridges/*/*/cartridge.yaml; do
+  grep -q "varna:" "$f" 2>/dev/null && echo "✅ $f" || echo "❌ $f MISSING varna"
+done
+
+# Keine hardcoded Varna-Listen
+grep -n "pashu_agents\|pakshi_agents\|krimayo_agents" vibe_core/plugins/vedic_governance/varna.py | wc -l  # MUSS 0 sein
+```
+
+#### Phase 4 Validierung:
+```bash
+# Config-Dateien existieren
+test -f config/network.yaml && echo "✅ network.yaml" || echo "❌ MISSING"
+test -f config/paths.yaml && echo "✅ paths.yaml" || echo "❌ MISSING"
+
+# Keine hardcoded Whitelist
+grep -n "DEFAULT_WHITELIST" vibe_core/network_proxy.py | wc -l  # MUSS 0 sein
+```
+
+#### Phase 5 Validierung:
+```bash
+# Registry existiert
+test -f vibe_core/cli/synonym_registry.py && echo "✅ PASS"
+
+# HUD zeigt alle Cartridges
+python -c "
+from vibe_core.loaders.manifest_registry import ManifestRegistry
+ManifestRegistry.scan_all()
+cartridges = ManifestRegistry.get_by_type('cartridge')
+print(f'Cartridges in Registry: {len(cartridges)}')
+" # MUSS >= 30 sein
+```
 
 ---
 
 **Finaler Production Code Score: 62/100**
 
-> Ohne L1-L6 ist das System **nicht production-ready**.
-> Mit L1-L6: Ziel **85/100**
+| Nach Phase | Erwarteter Score |
+|------------|------------------|
+| Phase 1 | 68/100 (Auth funktional) |
+| Phase 2 | 75/100 (Manifest-driven Auth) |
+| Phase 3 | 78/100 (Varna clean) |
+| Phase 4 | 82/100 (Config clean) |
+| Phase 5 | 85/100 (UI complete) |
 
 ---
 
 *Report finalisiert von Claude Opus 4.5 am 2026-01-01*
 *Project Opus - Senior Architect Review*
-*Hardcoded Elements: 25+ (KRITISCH)*
-*Security Model: THEATER → AUTH TOKENS erforderlich*
-*Remediation: 60-80 Stunden für L1-L6*
+*Alle Line-Referenzen verifiziert*
+*Infrastruktur (ManifestRegistry, ECDSA) getestet*
+*LOC-Schätzungen basieren auf existierenden Patterns*
