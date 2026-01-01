@@ -1364,9 +1364,10 @@ Die verbleibenden Issues sind:
 | **ThoughtEntry/IntentBuffer Disconnect** | 🔴 KRITISCH | ephemeral_state.py, manas/ | ARCHITEKTUR-LÜCKE |
 | DI-Verletzungen im Kernel (teilweise) | 🟠 HOCH | kernel_impl.py | TEILWEISE BEHOBEN |
 | EventBus Singleton Anti-Pattern | 🟠 HOCH | 14+ Module | OFFEN |
-| CLI nicht vollständig unified | 🟡 MITTEL | unified_cli.py | IN ARBEIT |
+| **HUD.CARTRIDGES hardcoded** | 🟡 MITTEL | hud.py | 3/30 CARTRIDGES |
+| **OPUS-310 Phase 4 IntentMatcher** | ✅ GUT | cognitive.py, intent.py | VOLLSTÄNDIG |
 
-**Revidierter Production Code Score:** 65/100 (BHARAT-Debt reduziert Score weiter)
+**Revidierter Production Code Score:** 67/100 (HUD-Fix einfach, OPUS-310 positiv)
 
 ---
 
@@ -1521,6 +1522,76 @@ $ grep -r "IntentBuffer" vibe_core/plugins/opus_assistant/manas/ | wc -l
 - Warum zwei parallele Systeme?
 
 **Status:** UNKLAR - Benötigt Governance-Entscheidung
+
+---
+
+### K1.7: HUD.CARTRIDGES HARDCODED (MITTEL)
+
+> **PROMPT.md Verletzung:** "Manifest-driven, nicht hardcoded!"
+
+**Datei:** `vibe_core/runtime/hud.py:151-168`
+
+#### Das Problem:
+
+```python
+# Hardcoded cartridge descriptions (can be extended)
+CARTRIDGES = {
+    "steward": {...},
+    "studio": {...},
+    "archivist": {...},
+}  # NUR 3 CARTRIDGES!
+```
+
+#### Die Realität:
+
+```bash
+$ find vibe_core/cartridges -name "cartridge.yaml" | wc -l
+30  # 30 CARTRIDGES EXISTIEREN!
+```
+
+**27 von 30 Cartridges werden in HUD nicht angezeigt!**
+
+#### Was FEHLT:
+
+- HUD sollte `CartridgeRegistry` nutzen
+- Descriptions kommen aus `cartridge.yaml` (alle haben `description:`)
+- Kein hardcoded Dictionary
+
+#### OPUS-310 Vision:
+
+> "steward commands" shows ALL capabilities (plugins, cartridges, holons)
+
+HUD widerspricht dieser Vision direkt.
+
+---
+
+### K1.8: OPUS-310 PHASE 4 - IMPLEMENTIERT ✅
+
+> **Positive Feststellung:** IntentMatcherProtocol ist vollständig integriert
+
+**Dateien:**
+- `vibe_core/protocols/intent.py` - Protocol Definition
+- `vibe_core/cli/intent_matcher.py` - CommandAwareIntentMatcher
+- `vibe_core/plugins/opus_assistant/cognitive.py:362-450` - MANAS Integration
+
+#### Beweis:
+
+```python
+# cognitive.py:362-450
+async def _try_command_match(self, intent: str, ...) -> Optional[CognitiveResult]:
+    registry = self._ensure_command_registry()
+    matcher = self._ensure_intent_matcher()
+
+    commands = registry.list_commands()
+    matches = matcher.match(resolved_intent, commands)
+
+    if best.confidence >= 0.8:
+        return CognitiveResult(intent_type=EXECUTE, ...)  # Auto-execute
+    elif best.confidence >= 0.5:
+        return CognitiveResult(intent_type=QUERY, ...)    # Suggest options
+```
+
+**Status:** ✅ VOLLSTÄNDIG - MANAS nutzt CommandRegistry + IntentMatcher
 
 ---
 
