@@ -1360,12 +1360,13 @@ Die verbleibenden Issues sind:
 
 | Kategorie | Schwere | Betroffene Bereiche | Status |
 |-----------|---------|---------------------|--------|
+| **OPUS-176 BHARAT nicht implementiert** | 🔴 KRITISCH | Governance, Manifests | 4% FERTIG |
+| **ThoughtEntry/IntentBuffer Disconnect** | 🔴 KRITISCH | ephemeral_state.py, manas/ | ARCHITEKTUR-LÜCKE |
 | DI-Verletzungen im Kernel (teilweise) | 🟠 HOCH | kernel_impl.py | TEILWEISE BEHOBEN |
 | EventBus Singleton Anti-Pattern | 🟠 HOCH | 14+ Module | OFFEN |
 | CLI nicht vollständig unified | 🟡 MITTEL | unified_cli.py | IN ARBEIT |
-| Stale TODOs | 🟡 MITTEL | 48 Stellen | OFFEN |
 
-**Revidierter Production Code Score:** 72/100 (vorher 77 - leichte Korrektur nach Verifizierung)
+**Revidierter Production Code Score:** 65/100 (BHARAT-Debt reduziert Score weiter)
 
 ---
 
@@ -1413,6 +1414,113 @@ KNOWN_SOVEREIGN_STATES = {"opus_assistant", "agent_city"}
 | Issue | Line | Schwere | Begründung |
 |-------|------|---------|------------|
 | `open()` statt IOService | 268 | 🟡 MITTEL | Verletzt THREE-BODIES, aber in ephemeral context akzeptabel |
+
+---
+
+### K1.5: OPUS-176 BHARAT - SOVEREIGNTY NICHT IMPLEMENTIERT (KRITISCH)
+
+> **PROMPT.md Verletzung:** "Protocol statt konkrete Klassen" + Manifest-driven Architecture
+
+**Referenz:** `docs/architecture/OPUS/176-BHARAT-SOVEREIGN-UNION.md`
+
+#### Das Design (OPUS-176 Vision):
+
+```python
+# OPUS-176 Zeile 196-216 - SO SOLLTE ES SEIN:
+class Envoy:
+    def can_spawn_task_kernel(self, plugin_id: str) -> bool:
+        manifest = self.get_manifest(plugin_id)
+        governance = manifest.get("governance", {})
+
+        # Manifest-driven, nicht hardcoded!
+        if governance.get("type") != "SOVEREIGN_STATE":
+            return False
+        return True
+```
+
+#### Die Realität (task_kernel.py:250-255):
+
+```python
+# HARDCODED WORKAROUND - Verletzt OPUS-176!
+KNOWN_SOVEREIGN_STATES = {"opus_assistant", "agent_city"}
+
+# Fast path: check known sovereigns ← BYPASSES MANIFEST!
+if plugin_id in KNOWN_SOVEREIGN_STATES:
+    return True  # Manifest wird NIE geprüft für diese!
+```
+
+#### OPUS-176 Phases Implementation Status:
+
+| Phase | OPUS-176 Vision | Realität | % Fertig |
+|-------|-----------------|----------|----------|
+| **Phase 1: Census** | 26 Plugins mit governance taggen | 1/26 (nur opus_assistant) | **4%** |
+| **Phase 2: Border Control** | Manifest-driven via Envoy | Hardcoded `KNOWN_SOVEREIGN_STATES` | **WORKAROUND** |
+| **Phase 3: President's Rule** | Governor Agent, State Sanitization | Nur String in manifest | **0%** |
+| **Phase 4: Constitutional Bodies** | Narasimha mit Veto Power | Nicht implementiert | **0%** |
+
+#### Beweis - Fehlende Governance Blocks:
+
+```bash
+$ grep -l '"governance":' vibe_core/plugins/*/manifest.json
+vibe_core/plugins/opus_assistant/manifest.json  # NUR EINER!
+
+$ ls vibe_core/plugins/*/manifest.json | wc -l
+26  # 26 PLUGINS TOTAL
+```
+
+**25 von 26 Plugins haben KEINEN governance Block!**
+
+#### Was FEHLT konkret:
+
+1. **Governance Tagging** für: herald, civic, analyst, oracle, scribe, narasimha, etc.
+2. **Envoy Border Control** - sollte Manifest lesen, nicht hardcoded Set
+3. **President's Rule Implementation** - `is_under_presidents_rule()` existiert nicht
+4. **Governor Agent** - nicht implementiert
+5. **Constitutional Crisis Handling** - nicht implementiert
+
+#### PROMPT.md Verletzung:
+
+> "Protocol statt konkrete Klassen"
+
+TaskKernel verwendet hardcoded Set statt:
+- GovernanceProtocol
+- ManifestRegistry lookup
+- DI für Sovereignty-Prüfung
+
+---
+
+### K1.6: THOUGHTENTRY / INTENTBUFFER ARCHITEKTUR-LÜCKE (KRITISCH)
+
+#### Zwei parallele "Thought" Systeme ohne Verbindung:
+
+| System | Location | Verwendung in MANAS |
+|--------|----------|---------------------|
+| `ThoughtEntry` + `add_thought()` | `ephemeral_state.py` | ❌ **UNBENUTZT** |
+| `IntentBuffer` + `IntentBufferEntry` | `manas/intent_buffer.py` | ✅ AKTIV |
+
+#### Beweis:
+
+```bash
+$ grep -r "ThoughtEntry\|add_thought" vibe_core/plugins/opus_assistant/manas/
+# ZERO RESULTS!
+
+$ grep -r "IntentBuffer" vibe_core/plugins/opus_assistant/manas/ | wc -l
+35  # IntentBuffer wird aktiv verwendet
+```
+
+#### Das Problem:
+
+1. **EphemeralState hat Chain of Thought** (`ThoughtEntry`)
+2. **MANAS ignoriert es** und hat eigenes System (`IntentBuffer`)
+3. **Keine Integration** zwischen ephemeral_state und manas cognitive layer
+
+#### Architektur-Frage:
+
+- Ist `ThoughtEntry` deprecated?
+- Sollte `IntentBuffer` ThoughtEntry NUTZEN?
+- Warum zwei parallele Systeme?
+
+**Status:** UNKLAR - Benötigt Governance-Entscheidung
 
 ---
 
