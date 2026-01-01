@@ -1360,14 +1360,17 @@ Die verbleibenden Issues sind:
 
 | Kategorie | Schwere | Betroffene Bereiche | Status |
 |-----------|---------|---------------------|--------|
-| **OPUS-176 BHARAT nicht implementiert** | 🔴 KRITISCH | Governance, Manifests | 4% FERTIG |
-| **ThoughtEntry/IntentBuffer Disconnect** | 🔴 KRITISCH | ephemeral_state.py, manas/ | ARCHITEKTUR-LÜCKE |
-| DI-Verletzungen im Kernel (teilweise) | 🟠 HOCH | kernel_impl.py | TEILWEISE BEHOBEN |
+| **Authorization = Security Theater** | 🔴 KRITISCH | syscalls, task_kernel | KEINE CALLER AUTH |
+| **OPUS-176 BHARAT - Konzept valide, Impl. nicht** | 🔴 KRITISCH | Governance, Manifests | 4% + BYPASS |
+| **ThoughtEntry/IntentBuffer Disconnect** | 🟠 HOCH | ephemeral_state.py, manas/ | ARCHITEKTUR-LÜCKE |
+| DI-Verletzungen im Kernel (teilweise) | 🟠 HOCH | kernel_impl.py | 50% |
 | EventBus Singleton Anti-Pattern | 🟠 HOCH | 14+ Module | OFFEN |
+| **4 Hardcoded Auth-Sets** | 🟠 HOCH | syscalls, prana, kernel | MANIFEST-DRIVEN FEHLT |
 | **HUD.CARTRIDGES hardcoded** | 🟡 MITTEL | hud.py | 3/30 CARTRIDGES |
 | **OPUS-310 Phase 4 IntentMatcher** | ✅ GUT | cognitive.py, intent.py | VOLLSTÄNDIG |
+| **TODOs** | ✅ GUT | ~48 Stellen | KEINE STALE |
 
-**Revidierter Production Code Score:** 67/100 (HUD-Fix einfach, OPUS-310 positiv)
+**Revidierter Production Code Score:** 62/100 (Security Theater ist kritisch)
 
 ---
 
@@ -1592,6 +1595,84 @@ async def _try_command_match(self, intent: str, ...) -> Optional[CognitiveResult
 ```
 
 **Status:** ✅ VOLLSTÄNDIG - MANAS nutzt CommandRegistry + IntentMatcher
+
+---
+
+### K1.9: SYSTEMISCHE AUTHORIZATION - SECURITY THEATER (KRITISCH)
+
+> **PROMPT.md Verletzung:** Capability-based Security erfordert Authentifizierung
+
+#### Das Problem: Keine Authentifizierung von Callern
+
+Alle Authorization-Checks basieren auf STRING-PARAMETER die der Caller selbst setzt:
+
+```python
+# semantic_syscalls.py:92 - JEDER KANN SICH ALS SYSTEM AUSGEBEN!
+@dataclass
+class SyscallRequest:
+    requester_id: str = "system"  # <- Kein Auth, nur String!
+
+# task_kernel.py:829 - JEDER KANN OPUS_ASSISTANT CLAIMEN!
+task_kernel = TaskKernel.spawn(
+    caller_plugin_id="opus_assistant",  # <- Kein Auth!
+)
+```
+
+#### Hardcoded Authorization Sets (ANTI-PATTERN):
+
+| Konstante | Datei | Line | Verwendung |
+|-----------|-------|------|------------|
+| `RESERVED_AGENT_IDS` | semantic_syscalls.py | 31 | Destroy-Berechtigung |
+| `KNOWN_SOVEREIGN_STATES` | task_kernel.py | 251 | TaskKernel-Spawning |
+| `PRIVILEGED_SYSCALLS` | manas/cartridge_main.py | 50 | Syscall-Filter |
+| `ALLOWED_ACTIONS` | prana_orchestrator.py | 56 | Mutation-Validierung |
+
+#### BHARAT Konzept Validierung:
+
+| Aspekt | Bewertung |
+|--------|-----------|
+| Konzept valide? | ✅ JA - Tiered Governance ist sinnvoll für OS |
+| Manifest-Schema? | ✅ JA - governance block definiert |
+| Manifests getaggt? | ❌ 4% (1/26) |
+| Border Control? | ⚠️ BYPASS via hardcoded Set |
+| Caller Authentication? | ❌ KEINE - nur String-Parameter |
+| President's Rule? | ❌ 0% |
+| Constitutional Bodies? | ❌ 0% |
+
+**Fazit:** BHARAT ist architektonisch valide, aber die Implementation ist **Security Theater**.
+Jeder Code kann behaupten, "opus_assistant" oder "system" zu sein.
+
+#### Was FEHLT für echte Security:
+
+1. **Caller Verification** - Stack inspection, signed tokens, oder process isolation
+2. **Manifest-driven Authorization** - Nicht hardcoded Sets
+3. **Audit Trail** - Wer hat was mit welcher Berechtigung getan
+
+---
+
+### K1.10: TODO-ANALYSE - KEINE STALE GEFUNDEN
+
+> **Methodologie:** Prüfung ob TODOs bereits woanders implementiert sind
+
+#### Kategorien der 48 TODOs:
+
+| Kategorie | Anzahl | Status |
+|-----------|--------|--------|
+| Template/Generator-Code | ~15 | ✅ ERWARTET |
+| Backward-Compatibility Aliases | 3 | ✅ INTENTIONAL |
+| Auto-Generated Stubs (Genesis) | ~10 | ✅ ERWARTET |
+| Echte Implementation Gaps | ~20 | ⚠️ OFFEN |
+
+#### Beispiele echter fehlender Features:
+
+| TODO Location | Feature | Implementiert woanders? |
+|---------------|---------|-------------------------|
+| `buddhi.py:329` | CPU/Memory Resource Checking | ❌ NEIN |
+| `buddhi.py:348` | Intent Dependency Checking | ❌ NEIN |
+| `sandbox.py:70` | Network Access Blocking | ❌ NEIN |
+| `dojo/__init__.py:21` | Mirror Self-Inspection | ❌ NEIN |
+
+**Fazit:** Keine echten "stale" TODOs gefunden. Die offenen sind legitime Implementation Gaps.
 
 ---
 
