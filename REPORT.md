@@ -1676,6 +1676,64 @@ Jeder Code kann behaupten, "opus_assistant" oder "system" zu sein.
 
 ---
 
+### K1.11: VOLLSTÄNDIGE HARDCODED-INVENTUR (KRITISCH)
+
+> **PROMPT.md:** "Alles was hardcodet ist ist schlecht" - SYSTEMATISCHE VERLETZUNG
+
+#### Kategorie A: Authorization & Security (KRITISCH)
+
+| Konstante | Datei:Line | Inhalt | Problem |
+|-----------|------------|--------|---------|
+| `RESERVED_AGENT_IDS` | semantic_syscalls.py:31 | 17 Agent IDs | Destroy-Berechtigung hardcoded |
+| `KNOWN_SOVEREIGN_STATES` | task_kernel.py:251 | opus_assistant, agent_city | TaskKernel-Bypass |
+| `VIP_AGENTS` | event_bus.py:202 | kernel, system, watchman, narasimha, test | Rate-Limit Bypass |
+| `SYSTEM_AGENTS` | vedic_governance/plugin_main.py:354 | envoy, kernel, scheduler, ledger | Governance Bypass |
+| `PRIVILEGED_SYSCALLS` | manas/cartridge_main.py:50 | GRANT_MANDATE, REVOKE_MANDATE | Syscall Filter |
+
+#### Kategorie B: Varna (Caste) System - KOMPLETT HARDCODED
+
+| Konstante | Datei:Line | Inhalt | Problem |
+|-----------|------------|--------|---------|
+| `pashu_agents` | varna.py:143 | pulse, lens, artisan, temple | Agent-Klassifikation |
+| `pakshi_agents` | varna.py:148 | envoy, ambassador | Agent-Klassifikation |
+| `krimayo_agents` | varna.py:153 | watchman, mechanic | Agent-Klassifikation |
+| `manusha` check | varna.py:137 | "manas" in agent_id | Sonderfall hardcoded |
+
+**Das gesamte Varna-System ist IF-ELSE auf Strings!**
+
+#### Kategorie C: Network & Paths
+
+| Konstante | Datei:Line | Inhalt | Problem |
+|-----------|------------|--------|---------|
+| `DEFAULT_WHITELIST` | network_proxy.py:41 | 10 Domains | API-Whitelist in Code |
+| `DEFAULT_SCAN_DIRS` | vajra/scanner.py:79 | Scan-Verzeichnisse | Paths in Code |
+| `_DEFAULT_RUNTIME_ROOT` | phoenix/paths/section_main.py:27 | /tmp/vibe_os | Path in Code |
+
+#### Kategorie D: UI/UX
+
+| Konstante | Datei:Line | Inhalt | Problem |
+|-----------|------------|--------|---------|
+| `CARTRIDGES` | hud.py:152 | 3 Cartridges | 27 fehlen |
+| `ACTION_SYNONYMS` | intent_matcher.py:41-50 | Wort-Mappings | Nicht erweiterbar |
+| `STOP_WORDS` | intent_matcher.py:54-95 | 40+ Stoppwörter | Nicht lokalisierbar |
+
+#### Kategorie E: Domain Logic
+
+| Konstante | Datei:Line | Inhalt | Problem |
+|-----------|------------|--------|---------|
+| `LEGAL_CARTRIDGE_CATEGORIES` | dharma.py:184 | system, agent_city | Kategorien hardcoded |
+| `dangerous_modules` | narasimha.py:232 | os, subprocess, shutil, etc. | Security-Blacklist |
+| `safe_types` / `unsafe_types` | cognitive_kernel.py:139-140 | Intent-Typen | Risk-Klassifikation |
+
+#### GESAMT: 25+ Hardcoded Sets
+
+**Keines davon sollte im Code sein. Alles gehört in:**
+- Manifests (governance, varna, capabilities)
+- Config (paths, whitelist, defaults)
+- Registries (UI-Elemente, synonyme)
+
+---
+
 ### K2: DEPENDENCY INJECTION STATUS (KORRIGIERT)
 
 **Datei:** `vibe_core/kernel_impl.py`
@@ -1911,8 +1969,237 @@ steward task cancel <task_id>
 
 ---
 
-*Report erweitert von Claude Opus 4.5 am 2026-01-01*
-*Senior System Architekt Review - MIT KORREKTUR*
-*Initiale Fehlanalyse: TaskKernel ≠ TaskManager*
-*Korrigierter Production Code Score: 72/100*
-*Verbleibender Remediation-Aufwand: ~40-50 Stunden (EventBus DI, CLI Unification)*
+## TEIL L: LÖSUNGEN - MANIFEST-DRIVEN ARCHITECTURE (Project Opus)
+
+> **Ziel:** ZERO Hardcoding. Alles über Manifests, Config, und Registries.
+
+### L1: AUTHORIZATION - VON SECURITY THEATER ZU ECHTER SECURITY
+
+#### L1.1: Caller Authentication Protocol
+
+**Problem:** `caller_plugin_id` und `requester_id` sind unauth'd Strings.
+
+**Lösung:** Capability Token System
+
+```python
+# vibe_core/protocols/auth.py (NEU)
+
+@dataclass
+class CapabilityToken:
+    """Cryptographically signed capability."""
+    issuer_id: str           # Wer hat ausgestellt (kernel)
+    grantee_id: str          # Wer darf nutzen
+    capability: str          # Was darf getan werden
+    expires_at: float        # Ablaufzeit
+    signature: bytes         # Ed25519 Signatur
+
+    def verify(self, public_key: bytes) -> bool:
+        """Verify token signature."""
+        ...
+
+class AuthProtocol(Protocol):
+    """Authentication for syscalls and kernel operations."""
+
+    def create_token(self, grantee: str, capability: str, ttl: int) -> CapabilityToken:
+        """Kernel creates token for plugin."""
+        ...
+
+    def verify_token(self, token: CapabilityToken) -> bool:
+        """Verify token is valid and not expired."""
+        ...
+```
+
+**Migration:**
+```python
+# VORHER (Security Theater):
+task_kernel = TaskKernel.spawn(
+    caller_plugin_id="opus_assistant",  # Jeder kann das claimen!
+)
+
+# NACHHER (Echte Auth):
+token = kernel.auth.create_token(
+    grantee="opus_assistant",
+    capability="spawn_task_kernel",
+    ttl=300  # 5 min
+)
+task_kernel = TaskKernel.spawn(
+    auth_token=token,  # Cryptographisch verifiziert
+)
+```
+
+#### L1.2: Manifest-Driven Authorization Sets
+
+**Problem:** `RESERVED_AGENT_IDS`, `VIP_AGENTS`, etc. sind hardcoded.
+
+**Lösung:** Alles in Manifests
+
+```yaml
+# vibe_core/plugins/herald/manifest.yaml
+governance:
+  type: RESERVED_AGENT
+  capabilities:
+    - cannot_be_overwritten
+    - rate_limit_bypass: false
+    - destroy_privilege: false
+
+# vibe_core/plugins/kernel/manifest.yaml
+governance:
+  type: SYSTEM_CORE
+  capabilities:
+    - rate_limit_bypass: true
+    - destroy_privilege: true
+    - spawn_task_kernel: true
+```
+
+**Runtime Lookup:**
+```python
+# VORHER:
+if agent_id in RESERVED_AGENT_IDS:  # Hardcoded!
+    return False
+
+# NACHHER:
+manifest = ManifestRegistry.get(agent_id)
+if manifest.governance.type == "RESERVED_AGENT":
+    return False
+```
+
+---
+
+### L2: VARNA SYSTEM - VON IF-ELSE ZU MANIFEST
+
+**Problem:** Gesamtes Varna-System ist String-Matching.
+
+**Lösung:** Varna in Manifest deklarieren
+
+```yaml
+# vibe_core/cartridges/agent_city/pulse/manifest.yaml
+governance:
+  varna: PASHU         # Servant/Helper
+  ashrama: GRIHASTHA   # Householder
+
+# vibe_core/cartridges/system/herald/manifest.yaml
+governance:
+  varna: PAKSHI        # Messenger
+  ashrama: VANAPRASTHA # Elder
+```
+
+**Runtime:**
+```python
+# VORHER (varna.py:143):
+pashu_agents = {"pulse", "lens", "artisan", "temple"}
+if agent_id.lower() in pashu_agents:
+    return Varna.PASHU
+
+# NACHHER:
+def get_varna(agent_id: str) -> Varna:
+    manifest = ManifestRegistry.get(agent_id)
+    return Varna[manifest.governance.varna]
+```
+
+---
+
+### L3: CONFIG MIGRATION
+
+**Problem:** Paths, Whitelists, Defaults in Code.
+
+**Lösung:** Phoenix Config Sections
+
+```yaml
+# config/network.yaml
+network:
+  whitelist:
+    - api.anthropic.com
+    - api.openai.com
+    - api.github.com
+  rate_limits:
+    default: 100/minute
+    vip_agents: unlimited  # Manifest-driven, nicht hardcoded
+
+# config/paths.yaml
+paths:
+  runtime_root: /tmp/vibe_os
+  scan_dirs:
+    - vibe_core/plugins
+    - vibe_core/cartridges
+```
+
+---
+
+### L4: UI/UX REGISTRY
+
+**Problem:** `HUD.CARTRIDGES`, `ACTION_SYNONYMS`, `STOP_WORDS` hardcoded.
+
+**Lösung:** Registries mit Manifest-Discovery
+
+```python
+# vibe_core/cli/synonym_registry.py (NEU)
+class SynonymRegistry:
+    """Extensible synonym registry - loaded from config."""
+
+    def __init__(self, config_path: Path):
+        self._synonyms = yaml.safe_load(config_path.read_text())
+
+    def get_synonyms(self, word: str) -> Set[str]:
+        return self._synonyms.get(word, {word})
+
+    def add_plugin_synonyms(self, plugin_id: str, synonyms: Dict):
+        """Plugins can extend synonyms via manifest."""
+        ...
+```
+
+```yaml
+# config/synonyms.yaml
+action_synonyms:
+  show: [list, get, display, view, see]
+  create: [add, new, make, spawn]
+  # Erweiterbar!
+
+# Plugin kann erweitern:
+# vibe_core/plugins/german_locale/manifest.yaml
+cli:
+  synonyms:
+    zeige: [show, list]
+    erstelle: [create, add]
+```
+
+---
+
+### L5: IMPLEMENTATION ROADMAP
+
+| Phase | Was | LOC Änderung | Priorität |
+|-------|-----|--------------|-----------|
+| **1** | AuthProtocol + CapabilityToken | ~200 LOC neu | P0 KRITISCH |
+| **2** | Manifest governance blocks für alle 26 Plugins | ~260 LOC (10/Plugin) | P0 KRITISCH |
+| **3** | Varna-Migration zu Manifest | ~100 LOC refactor | P1 HOCH |
+| **4** | Config-Migration (paths, whitelist) | ~150 LOC refactor | P1 HOCH |
+| **5** | SynonymRegistry + HUD Discovery | ~200 LOC neu | P2 MITTEL |
+
+**Geschätzter Aufwand:** 60-80 Stunden (mit Tests)
+
+---
+
+### L6: VALIDATION CHECKLIST
+
+Nach Implementation MUSS gelten:
+
+- [ ] `grep -r "KNOWN_\|RESERVED_\|VIP_\|SYSTEM_AGENTS" vibe_core/*.py` → 0 Treffer
+- [ ] `grep -r "caller_plugin_id=\"\|requester_id=\"" vibe_core/` → 0 Treffer (alle via Token)
+- [ ] Alle 26 Plugins haben `governance:` Block in Manifest
+- [ ] Alle 30 Cartridges haben `governance.varna:` in Manifest
+- [ ] `steward commands` zeigt ALLE Capabilities (nicht 3/30)
+- [ ] Network whitelist kommt aus config, nicht Code
+
+---
+
+**Finaler Production Code Score: 62/100**
+
+> Ohne L1-L6 ist das System **nicht production-ready**.
+> Mit L1-L6: Ziel **85/100**
+
+---
+
+*Report finalisiert von Claude Opus 4.5 am 2026-01-01*
+*Project Opus - Senior Architect Review*
+*Hardcoded Elements: 25+ (KRITISCH)*
+*Security Model: THEATER → AUTH TOKENS erforderlich*
+*Remediation: 60-80 Stunden für L1-L6*
