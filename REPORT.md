@@ -1972,96 +1972,136 @@ steward task cancel <task_id>
 ## TEIL L: LÖSUNGEN - MANIFEST-DRIVEN ARCHITECTURE (Project Opus)
 
 > **Ziel:** ZERO Hardcoding. Alles über Manifests, Config, und Registries.
+> **KEIN SPAGHETTI:** Die Infrastruktur EXISTIERT. Wir nutzen sie nur nicht überall.
+
+### L0: EXISTIERENDE INFRASTRUKTUR (VERIFIZIERT ✅)
+
+| Komponente | Datei | API | Status |
+|------------|-------|-----|--------|
+| **ManifestRegistry** | `loaders/manifest_registry.py` | `.get()`, `.get_by_type()`, `.scan_all()` | ✅ PRODUKTIV |
+| **ECDSA Crypto** | `steward/crypto.py` | `sign_content()`, `verify_signature()` | ✅ PRODUKTIV |
+| **ServiceRegistry** | `protocols/service.py` | `.get()`, `.register()` | ✅ PRODUKTIV |
+
+```python
+# BEREITS VORHANDEN - ManifestRegistry
+from vibe_core.loaders.manifest_registry import ManifestRegistry
+ManifestRegistry.scan_all()                    # Boot
+manifest = ManifestRegistry.get("opus_assistant")  # O(1) lookup
+plugins = ManifestRegistry.get_by_type("plugin")   # All plugins
+
+# BEREITS VORHANDEN - ECDSA
+from vibe_core.steward.crypto import sign_content, verify_signature
+signature = sign_content(content, private_key)
+valid = verify_signature(content, signature, public_key)
+```
+
+---
 
 ### L1: AUTHORIZATION - VON SECURITY THEATER ZU ECHTER SECURITY
 
-#### L1.1: Caller Authentication Protocol
+#### L1.1: CapabilityToken (nutzt existierendes ECDSA)
 
-**Problem:** `caller_plugin_id` und `requester_id` sind unauth'd Strings.
+**Problem:** `caller_plugin_id` = unauth'd String → Jeder kann "opus_assistant" claimen.
 
-**Lösung:** Capability Token System
+**Lösung:** ~50 LOC neue Datei, nutzt `steward/crypto.py`:
 
 ```python
-# vibe_core/protocols/auth.py (NEU)
+# vibe_core/auth/capability_token.py (NEU - nutzt steward/crypto.py)
+from vibe_core.steward.crypto import sign_content, verify_signature
+import json, time
 
 @dataclass
 class CapabilityToken:
-    """Cryptographically signed capability."""
-    issuer_id: str           # Wer hat ausgestellt (kernel)
-    grantee_id: str          # Wer darf nutzen
-    capability: str          # Was darf getan werden
-    expires_at: float        # Ablaufzeit
-    signature: bytes         # Ed25519 Signatur
+    issuer: str              # "kernel"
+    grantee: str             # "opus_assistant"
+    capability: str          # "spawn_task_kernel"
+    expires_at: float        # Unix timestamp
+    signature: str = ""      # ECDSA Base64
 
-    def verify(self, public_key: bytes) -> bool:
-        """Verify token signature."""
-        ...
+    def to_signable(self) -> str:
+        return json.dumps({
+            "issuer": self.issuer, "grantee": self.grantee,
+            "capability": self.capability, "expires": self.expires_at
+        }, sort_keys=True)
 
-class AuthProtocol(Protocol):
-    """Authentication for syscalls and kernel operations."""
+    @classmethod
+    def create(cls, grantee: str, capability: str, ttl: int, private_key: str):
+        token = cls("kernel", grantee, capability, time.time() + ttl)
+        token.signature = sign_content(token.to_signable(), private_key)
+        return token
 
-    def create_token(self, grantee: str, capability: str, ttl: int) -> CapabilityToken:
-        """Kernel creates token for plugin."""
-        ...
-
-    def verify_token(self, token: CapabilityToken) -> bool:
-        """Verify token is valid and not expired."""
-        ...
+    def verify(self, public_key: str) -> bool:
+        if time.time() > self.expires_at:
+            return False
+        return verify_signature(self.to_signable(), self.signature, public_key)
 ```
 
-**Migration:**
-```python
-# VORHER (Security Theater):
-task_kernel = TaskKernel.spawn(
-    caller_plugin_id="opus_assistant",  # Jeder kann das claimen!
-)
-
-# NACHHER (Echte Auth):
-token = kernel.auth.create_token(
-    grantee="opus_assistant",
-    capability="spawn_task_kernel",
-    ttl=300  # 5 min
-)
-task_kernel = TaskKernel.spawn(
-    auth_token=token,  # Cryptographisch verifiziert
-)
-```
-
-#### L1.2: Manifest-Driven Authorization Sets
-
-**Problem:** `RESERVED_AGENT_IDS`, `VIP_AGENTS`, etc. sind hardcoded.
-
-**Lösung:** Alles in Manifests
-
-```yaml
-# vibe_core/plugins/herald/manifest.yaml
-governance:
-  type: RESERVED_AGENT
-  capabilities:
-    - cannot_be_overwritten
-    - rate_limit_bypass: false
-    - destroy_privilege: false
-
-# vibe_core/plugins/kernel/manifest.yaml
-governance:
-  type: SYSTEM_CORE
-  capabilities:
-    - rate_limit_bypass: true
-    - destroy_privilege: true
-    - spawn_task_kernel: true
-```
-
-**Runtime Lookup:**
+**Migration (20 LOC pro Stelle):**
 ```python
 # VORHER:
-if agent_id in RESERVED_AGENT_IDS:  # Hardcoded!
-    return False
+TaskKernel.spawn(caller_plugin_id="opus_assistant")  # FAKE!
 
 # NACHHER:
-manifest = ManifestRegistry.get(agent_id)
-if manifest.governance.type == "RESERVED_AGENT":
-    return False
+token = kernel.create_capability_token("opus_assistant", "spawn_task_kernel", 300)
+TaskKernel.spawn(auth_token=token)  # VERIFIZIERT via ECDSA
 ```
+
+#### L1.2: Manifest-Driven Authorization (nutzt existierende ManifestRegistry)
+
+**Problem:** 5 hardcoded Sets für Authorization.
+
+**Lösung:** Governance in Manifests + ManifestRegistry Lookup
+
+```json
+// vibe_core/plugins/herald/manifest.json (ERWEITERN um governance)
+{
+  "plugin_id": "herald",
+  "governance": {
+    "type": "RESERVED_AGENT",
+    "rate_limit_bypass": false,
+    "destroy_privilege": false,
+    "can_spawn_task_kernel": false
+  }
+}
+
+// vibe_core/plugins/opus_assistant/manifest.json (BEREITS DA!)
+{
+  "governance": {
+    "type": "SOVEREIGN_STATE",
+    "can_spawn_task_kernel": true  // <- Das gibt's schon!
+  }
+}
+```
+
+**Runtime Lookup (nutzt EXISTIERENDE API):**
+```python
+from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+# VORHER (semantic_syscalls.py:612):
+if request.requester_id not in RESERVED_AGENT_IDS:  # HARDCODED!
+    return SyscallResult(success=False, error="Unauthorized")
+
+# NACHHER (15 LOC Änderung):
+def _is_reserved_agent(agent_id: str) -> bool:
+    entry = ManifestRegistry.get(agent_id)
+    if not entry:
+        return False
+    governance = entry.manifest.get("governance", {})
+    return governance.get("type") == "RESERVED_AGENT"
+
+if not _is_reserved_agent(request.requester_id):
+    return SyscallResult(success=False, error="Unauthorized")
+```
+
+**Betroffene Stellen (alle gleiche Migration):**
+
+| Hardcoded Set | Datei | Manifest-Feld |
+|---------------|-------|---------------|
+| `RESERVED_AGENT_IDS` | semantic_syscalls.py:31 | `governance.type == "RESERVED_AGENT"` |
+| `VIP_AGENTS` | event_bus.py:202 | `governance.rate_limit_bypass == true` |
+| `KNOWN_SOVEREIGN_STATES` | task_kernel.py:251 | `governance.can_spawn_task_kernel == true` |
+| `SYSTEM_AGENTS` | vedic_governance/plugin_main.py:354 | `governance.type == "SYSTEM_CORE"` |
+| `PRIVILEGED_SYSCALLS` | manas/cartridge_main.py:50 | (Config, nicht Manifest) |
 
 ---
 
