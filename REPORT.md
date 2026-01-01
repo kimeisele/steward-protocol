@@ -1963,7 +1963,7 @@ steward task cancel <task_id>
 3. **CLI Legacy Map** - noch nicht vollständig migriert
 4. **48 TODOs** - davon ~10 kritische in Production Code
 
-**Korrigierter Score: 72/100** (vorher 77, initial fälschlich auf 61 korrigiert)
+**Score nach K-Analyse: 62/100** (von 77, reduziert durch Security Theater + 25 Hardcoded Sets)
 
 > "Verifiziere bevor du urteilst. Code ist Wahrheit, aber du musst ihn auch verstehen."
 
