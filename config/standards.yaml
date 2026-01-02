@@ -42,6 +42,19 @@ rules:
     severity: "HIGH"
     message: "Silent failure (except: pass) detected. Hides bugs."
     fix_suggestion: "Add logging (logger.error) or proper exception handling."
+    has_sattva_remedy: true
+
+  # TODSÜNDE #3: Subprocess without Timeout (DoS Risk)
+  - id: "subprocess_timeout"
+    target: "Call"
+    match:
+      object: "subprocess"
+      func_in: ["run", "call", "check_call", "check_output"]
+      keyword_absent: "timeout"
+    severity: "HIGH"
+    message: "subprocess call without timeout. Risk: DoS via hung process."
+    fix_suggestion: "Add timeout=30 parameter to subprocess call."
+    has_sattva_remedy: true
 
   # NAKED AGENT PATTERN
   - id: "direct_path_data"

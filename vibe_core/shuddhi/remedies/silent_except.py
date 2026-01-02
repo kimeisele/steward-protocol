@@ -1,11 +1,10 @@
 """
-OPUS-212: SilentExceptRemedy - Heals Hidden Failures.
+OPUS-212: SilentFailureRemedy - Heals Hidden Failures.
 
 Transforms silent exception handlers (except: pass) to log the error,
 ensuring violations don't go undetected.
 
-Detection: NarasimhaGuardrail (SEC008)
-Bridge: CSTLocator
+Detection: Watchman StandardsInspectionTool (rule: silent_failure)
 Surgery: This CSTRemedy
 
 Philosophy:
@@ -35,7 +34,7 @@ class SilentExceptRemedy(CSTRemedy):
 
     @property
     def rule_id(self) -> str:
-        return "silent_except"
+        return "silent_failure"
 
     @property
     def requirements(self) -> List[str]:
