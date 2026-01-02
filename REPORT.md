@@ -3135,7 +3135,90 @@ WATCHMAN (Detection) → SHUDDHI (Purification) → LEDGER (Audit)
 3. Manas selbst heilen (bevor es andere heilen kann)
 ```
 
-### O5: BOOTSTRAP PROBLEM
+### O5: WATCHMAN UPGRADE VISION (Blueprint Integration)
+
+> **Quelle:** Externe Architektur-Analyse (Blueprints für Self-Healing Loop)
+> **Das Big Picture:** Watchman ist der Container für die neuen "Super-Waffen"
+
+**AKTUELL → UPGRADE:**
+
+#### 1. Watchman als Architektur-Auditor (LCOM4)
+
+| Aspekt | Status Quo | Nach Upgrade |
+|--------|------------|--------------|
+| Metrik | McCabe (einfach) | LCOM4 (Graphentheorie) |
+| Detection | Syntaxfehler | God Classes via Abhängigkeitsgraph |
+| Output | Warning-String | Strukturierte Daten für Manas |
+
+```
+LCOM4 > 1 → Connected Components zeigen WO die Klasse gesplittet werden muss
+```
+
+#### 2. Watchman als Security-Gatekeeper (Narasimha AST-Policies)
+
+| Aspekt | Status Quo | Nach Upgrade |
+|--------|------------|--------------|
+| Detection | Regex/Grep (fragil) | AST-Visitor (semantisch) |
+| Beispiel | `grep "subprocess"` | `subprocess ohne timeout` → Block |
+| Bypass | Leicht (Obfuscation) | Schwer (Struktur-basiert) |
+
+```python
+# Narasimha Policy: "Subprocess muss Timeout haben"
+# AST-based, nicht String-based
+```
+
+#### 3. Watchman als Brückenbauer (AST→CST Position Bridge)
+
+| Aspekt | Status Quo | Nach Upgrade |
+|--------|------------|--------------|
+| Fehler-Report | "Fehler in Datei X" | "Fehler an CST-Knoten Y" |
+| Für Shuddhi | Muss selbst suchen | GPS-Koordinaten mitgeliefert |
+| Reparatur | Ungenau | Chirurgisch präzise |
+
+```
+Watchman findet Fehler (AST) → PositionProvider → Shuddhi operiert (CST)
+```
+
+#### Die Vision (Self-Healing Closed Loop):
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SELF-HEALING LOOP                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  WATCHMAN (Upgraded)                                        │
+│  ├── LCOM4 Analyzer (God Class Detection)                   │
+│  ├── Narasimha Engine (AST Security Policies)               │
+│  └── PositionProvider (AST→CST Bridge)                      │
+│           │                                                 │
+│           ▼                                                 │
+│  MANAS (Cognitive)                                          │
+│  ├── Interpretiert strukturierte Daten                      │
+│  ├── Entscheidet: Fix? Ignore? Escalate?                    │
+│  └── Generiert Intent für Shuddhi                           │
+│           │                                                 │
+│           ▼                                                 │
+│  SHUDDHI (Surgical)                                         │
+│  ├── Empfängt CST-Koordinaten von Watchman                  │
+│  ├── Wendet CSTRemedy an (libcst)                           │
+│  └── Verifiziert via Compile-Check                          │
+│           │                                                 │
+│           ▼                                                 │
+│  LEDGER (Audit Trail)                                       │
+│  └── Immutable Record of Change                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Was das bedeutet:**
+- Watchman ist NICHT ersetzt - er wird massiv aufgerüstet
+- Manas macht Entscheidungen auf strukturierten Daten (nicht if-then)
+- Shuddhi bekommt "GPS-Koordinaten" für chirurgische Eingriffe
+- Ledger macht alles auditierbar
+
+---
+
+### O6: BOOTSTRAP PROBLEM
 
 > **Das Meta-Problem:** Wer heilt den Heiler?
 
@@ -3153,7 +3236,7 @@ Manas hat 164 unused imports
 3. **Phase 2:** Geheiltes Manas kann mehr Remedies schreiben
 4. **Phase 3:** Selbstverstärkender Loop
 
-### O6: KONKRETE NÄCHSTE SCHRITTE
+### O7: KONKRETE NÄCHSTE SCHRITTE
 
 | # | Aktion | Wer | Output |
 |---|--------|-----|--------|
