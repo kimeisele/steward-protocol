@@ -1,0 +1,563 @@
+Technical Compendium: Architectural Blueprints for the Software Immune System
+Executive Summary
+The transition from passive static analysis to an active "Software Immune System" represents a paradigm shift in software quality assurance. Traditional testing methodologies—often characterized by rigid, example-based unit tests and superficial linting—fail to capture the dynamic temporal couplings and structural entropy that plague modern, high-scale systems. This report provides the definitive architectural blueprints for four critical subsystems identified as void in the current infrastructure: Stateful Testing Logic, Structural Cohesion Metrics, Syntax Tree Bridging, and AST-Based Security Guardrails.
+This compendium moves beyond theoretical abstraction to provide production-ready mathematical models, algorithmic definitions, and Python implementation patterns. By synthesizing insights from formal methods, graph theory, and compiler design, we establish a rigorous foundation for a system capable of self-diagnosis and automated reasoning.
+The analysis reveals a profound interconnectivity between these clusters. The structural cohesion measured by LCOM4 (Cluster 2) directly influences the complexity of the state machines required for testing (Cluster 1). Similarly, the detection of security vulnerabilities (Cluster 4) relies on the precise syntax tree mapping (Cluster 3) to enable automated, lossless remediation. The following sections detail the "missing blueprints" required to operationalize this ecosystem.
+Part I: The Engine of Verification (Research Cluster 1)
+1.1 Theoretical Framework: From Example-Based to Property-Based Testing
+Standard unit testing operates on the premise of f(x) -> y, checking specific, hard-coded inputs against expected outputs. While necessary, this approach is insufficient for complex, stateful systems like transactional databases, where defects often emerge from obscure sequences of valid operations rather than invalid individual inputs. To fill the "P2" testing engine void, we employ Property-Based Testing (PBT) using the hypothesis library. PBT shifts the focus from checking "examples" to verifying "properties"—invariants that must hold true across all valid states.
+The core architectural shift here is the adoption of the Rule-Based State Machine. Unlike simple fuzzing, which throws random data at an entry point, a Rule-Based State Machine models the system as a directed graph of states and transitions. The testing engine performs a random walk through this graph, attempting to drive the system into a state where a defined invariant is violated.
+1.2 Mathematical Model: The Rule-Based State Machine
+Formally, we define the System Under Test (SUT) as a tuple M = (S, T, I, \Sigma), where:
+ * S is the potentially infinite set of concrete states (e.g., the exact byte-level content of the database).
+ * T: S \times \Sigma \rightarrow S is the transition function, representing operations (rules) that modify the state.
+ * I: S \rightarrow \{True, False\} is the set of invariant predicates.
+ * \Sigma is the alphabet of inputs (arguments to the rules).
+The objective of the Hypothesis engine is to discover a sequence of transitions t_1, t_2, \dots, t_n such that I(S_{final}) = False.
+1.2.1 The "Bundle" Pattern for Referential Integrity
+A critical challenge in testing databases is Referential Integrity. Randomly generating integers for an update_user(user_id,...) rule is ineffective because the probability of guessing a valid, existing user_id is near zero.
+To solve this, Hypothesis employs the Bundle pattern. A Bundle acts as a dynamic typed channel that connects the output of one rule to the input of another. It serves as a reservoir of generated entities.
+ * Rule A (Producer): create_user(...) -> uid. The return value uid is pushed into the users Bundle.
+ * Rule B (Consumer): delete_user(uid). The engine draws a value uid from the users Bundle, ensuring that delete_user is always called with an ID that was previously created and not yet discarded (if managed correctly).
+This creates a closed-loop system where the test data evolves with the state of the SUT, mimicking the behavior of a real application session.
+1.3 Blueprint: Transactional Database Testing Engine
+The following implementation pattern fulfills the requirement for a "P2" testing engine. It utilizes RuleBasedStateMachine to validate a transactional database system. The architecture relies on a Model-Oracle pattern, where a simplified in-memory model (a Python dictionary) runs in parallel with the complex SUT (SQL Database). The test verifies that the complex implementation remains consistent with the simple specification.
+#### 1.3.1 Implementation Logic
+import unittest
+import sqlite3
+from hypothesis import strategies as st
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    Bundle,
+    rule,
+    initialize,
+    precondition,
+    invariant,
+    consumes,
+)
+
+# --- The System Under Test (Simulated Complex Transactional Logic) ---
+class TransactionalDB:
+    def __init__(self):
+        # In-memory SQLite simulating a production DB
+        self.conn = sqlite3.connect(":memory:")
+        self.cursor = self.conn.cursor()
+        self.cursor.execute("CREATE TABLE accounts (id INTEGER PRIMARY KEY, balance INTEGER)")
+        self.cursor.execute("CREATE TABLE logs (msg TEXT)")
+
+    def create_account(self, initial_balance):
+        self.cursor.execute("INSERT INTO accounts (balance) VALUES (?)", (initial_balance,))
+        return self.cursor.lastrowid
+
+    def transfer(self, sender, receiver, amount):
+        # Simulating a transaction with potential race conditions or logic errors
+        try:
+            # Explicit transaction start
+            self.cursor.execute("BEGIN TRANSACTION")
+            
+            # Check funds
+            self.cursor.execute("SELECT balance FROM accounts WHERE id =?", (sender,))
+            res = self.cursor.fetchone()
+            if not res or res < amount:
+                self.conn.rollback()
+                return False
+
+            # Perform transfer
+            self.cursor.execute("UPDATE accounts SET balance = balance -? WHERE id =?", (amount, sender))
+            self.cursor.execute("UPDATE accounts SET balance = balance +? WHERE id =?", (amount, receiver))
+            
+            self.conn.commit()
+            return True
+        except Exception:
+            self.conn.rollback()
+            return False
+
+    def get_balance(self, account_id):
+        self.cursor.execute("SELECT balance FROM accounts WHERE id =?", (account_id,))
+        res = self.cursor.fetchone()
+        return res if res else None
+
+
+# --- The Missing Blueprint: Stateful Testing Logic ---
+class DatabaseIntegrityMachine(RuleBasedStateMachine):
+    """
+    A stochastic state machine designed to stress-test transactional integrity.
+    It compares the SUT (SQLite) against a Model (Python Dict).
+    """
+    
+    # Bundle Definition: Represents the set of known, valid Account IDs.
+    # The machine will populate this bundle dynamically.
+    accounts = Bundle("accounts")
+
+    def __init__(self):
+        super().__init__()
+        self.db = TransactionalDB()
+        self.model = {}  # The Oracle: A simple dictionary {id: balance}
+
+    @initialize(target=accounts)
+    def init_account(self):
+        """
+        Initialization Rule: Seeds the state machine.
+        """
+        balance = 1000
+        uid = self.db.create_account(balance)
+        self.model[uid] = balance
+        return uid
+
+    @rule(target=accounts, balance=st.integers(min_value=0, max_value=10000))
+    def create_new_account(self, balance):
+        """
+        Growth Rule: Expands the state space by adding new entities.
+        Returns the new ID to be added to the 'accounts' bundle.
+        """
+        uid = self.db.create_account(balance)
+        self.model[uid] = balance
+        return uid
+
+    @rule(
+        sender=accounts, 
+        receiver=accounts, 
+        amount=st.integers(min_value=1, max_value=5000)
+    )
+    def execute_transfer(self, sender, receiver, amount):
+        """
+        Transaction Rule: Attempts to mutate state via transfer.
+        """
+        # Logic in the Oracle (Model)
+        # We define the expected behavior of a transfer simply:
+        if sender!= receiver and self.model.get(sender, 0) >= amount:
+            valid_transaction = True
+            self.model[sender] -= amount
+            self.model[receiver] += amount
+        else:
+            valid_transaction = False
+
+        # Logic in the System Under Test (DB)
+        success = self.db.transfer(sender, receiver, amount)
+
+        # Assertion: Did the DB behave exactly as the Oracle predicted?
+        assert success == valid_transaction, \
+            f"Model/DB Divergence: Model said {valid_transaction}, DB said {success}"
+
+    @rule(target=accounts, account=consumes(accounts))
+    def delete_account_logic(self, account):
+        """
+        Destructive Rule: Tests handling of removed entities.
+        'consumes' removes the ID from the bundle, preventing future use.
+        """
+        # NOTE: Implementation of delete in DB omitted for brevity, 
+        # but this demonstrates the 'consumes' pattern for bundle management.
+        pass
+
+    @invariant()
+    def invariant_conservation_of_money(self):
+        """
+        Global Invariant: Total system money must remain constant (closed system).
+        This detects 'leakage' or 'fabrication' of funds during transactions.
+        """
+        total_model = sum(self.model.values())
+        
+        self.db.cursor.execute("SELECT SUM(balance) FROM accounts")
+        res = self.db.cursor.fetchone()
+        total_db = res if res is not None else 0
+        
+        assert total_model == total_db, \
+            f"Conservation Violated! Model: {total_model}, DB: {total_db}"
+
+# Implementation Artifact: The Test Case
+TestDatabaseFlow = DatabaseIntegrityMachine.TestCase
+
+1.3.2 Code Analysis and Patterns
+ * @initialize vs @rule: initialize is critical for bootstrapping the state. Without it, the machine might start in an empty state and struggle to find entry points. It populates the accounts Bundle immediately.
+ * @precondition: While not used in the snippet above, explicit preconditions (e.g., @precondition(lambda self: len(self.model) > 1)) can be applied to rules to guide the fuzzer. This effectively prunes the search tree, preventing the engine from wasting cycles on invalid transitions.
+ * The Oracle: The comparison between self.model (the specification) and self.db (the implementation) is the heart of the test. The invariant asserts that these two representations are isomorphic at every step.
+1.4 Algorithmic Deep Dive: Corpus Minimization (Shrinking)
+The user requested the logic behind Hypothesis's shrinking mechanism to replicate reporting. It is imperative to understand that Hypothesis does not use the classic Delta Debugging (ddmin) algorithm acting on the input values directly. Instead, it uses Internal Shrinking operating on the underlying choice sequence.
+1.4.1 The Choice Sequence Abstraction
+Hypothesis decouples the "source of randomness" from the "data generation."
+ * The Source: A stream of bytes (infinite entropy).
+ * The Generator (Strategy): A deterministic parser that consumes bytes to produce objects.
+For example, st.integers() is not a random number generator; it is a parser that reads bytes from the stream and converts them into an integer.
+1.4.2 The Shrinking Algorithm: Shortlex Order
+The shrinking engine aims to find the lexicographically smallest byte stream that reproduces the failure. This is defined by Shortlex Order: sequence A is smaller than B if length(A) < length(B), or if lengths are equal and A is lexicographically smaller than B.
+The Reduction Operations:
+The shrinker iteratively applies operations to the byte stream trace recorded during the failing run:
+ * Deletion: It removes chunks of bytes. If the generator was building a list ``, deleting the bytes corresponding to B causes the generator to produce [A, C]. If the test still fails, the shrink is accepted.
+ * Lexical Reduction (Zeroing): It attempts to lower the numerical value of individual bytes (e.g., 255 -> 0). Since strategies are designed such that "simpler" values (0, empty strings, False) correspond to lower byte values, this naturally simplifies the high-level object.
+ * Sorting: It swaps chunks of bytes to canonicalize the order (e.g., sorting a list to remove ordering as a variable).
+1.4.3 Implications for the "Software Immune System"
+To replicate a similar reporting mechanism for the "Immune System," the architecture must not report the raw random inputs. Instead:
+ * Trace Logging: The system must log the sequence of transitions (e.g., ``) rather than just the final state.
+ * Minimization Loop: When a failure is detected, the system should enter a minimization loop. It should attempt to remove transitions from the tail and the middle of the sequence, re-running the test each time.
+ * Canonicalization: It should attempt to simplify arguments (e.g., reduce transfer amounts) to find the minimal boundary condition (e.g., transferring exactly 0 or -1).
+Part II: The Metric of Structure (Research Cluster 2)
+2.1 Theoretical Framework: Structural Cohesion and the "God Class"
+In object-oriented architecture, Cohesion measures the degree to which the elements inside a class belong together. A "God Class" (or Large Class anti-pattern) typically exhibits low cohesion, acting as a dumping ground for unrelated functionality. To mathematically detect this, we utilize Lack of Cohesion of Methods (LCOM4).
+LCOM4 is superior to its predecessors (LCOM1-3) because it accounts for both data usage and method invocations, and it produces an integer value that directly corresponds to the number of architectural splits required.
+2.1.1 Comparative Analysis of Cohesion Metrics
+| Metric | Definition | Limitation |
+|---|---|---|
+| LCOM1 | Pairs of methods without shared fields. | Ignores method calls; overly sensitive. |
+| LCOM2 | P - Q (disjoint pairs minus shared pairs). | Value is abstract; hard to interpret for refactoring. |
+| LCOM3 | Graph-based, connected components. | Fails to account for method-to-method calls (transitive cohesion). |
+| LCOM4 | Graph-based, includes transitive dependencies. | Directly indicates the number of responsibilities. |
+2.2 Mathematical Algorithm: Connected Components
+The calculation of LCOM4 is a problem of Graph Theory.
+Definition:
+Let Class C be a graph G = (V, E).
+ * Vertices (V): The set of all methods M = \{m_1, \dots, m_n\} defined in the class.
+ * Edges (E): An edge (m_i, m_j) exists if and only if:
+   * Shared Attribute: \exists a \in A such that both m_i and m_j access attribute a.
+   * Method Call: m_i calls m_j or m_j calls m_i.
+Algorithm:
+
+Interpretation:
+ * LCOM4 = 1: Ideal. The class is a single cohesive unit.
+ * LCOM4 > 1: The class contains disparate functionalities and should be refactored into LCOM4 separate classes.
+ * LCOM4 = 0: Degenerate case (no methods).
+Critical Edge Cases:
+ * Constructors (__init__): These typically initialize all attributes. Inclusion of the constructor would artificially connect all methods, masking poor cohesion. Rule: Exclude __init__ from the vertex set V.
+ * Getters/Setters: These usually access single attributes. In LCOM4, they often appear as leaves in the graph or small isolated components if not called internally. Rule: Treat property accessors as standard methods, but be aware they can inflate the score.
+2.3 Blueprint: LCOM4 Analyzer using Python AST and NetworkX
+The following implementation pattern fills the architectural void for cohesion analysis. It parses Python source code (without execution), builds the dependency graph, and utilizes the networkx library to compute the connected components.
+import ast
+import networkx as nx
+from collections import defaultdict, deque
+
+class LCOM4GraphBuilder(ast.NodeVisitor):
+    """
+    AST Visitor that extracts the Method-Attribute and Method-Method 
+    dependency graph for LCOM4 calculation.
+    """
+    def __init__(self):
+        self.methods = set()
+        self.method_accesses = defaultdict(set) # method -> {attrs}
+        self.method_calls = defaultdict(set)    # method -> {called_methods}
+        self.current_method = None
+        self.class_attrs = set()
+
+    def visit_ClassDef(self, node):
+        # We only analyze the top-level class in this visitor instance
+        # Reset state for each class visit if reused
+        for item in node.body:
+            if isinstance(item, ast.FunctionDef):
+                # Filter out __init__ and magic methods to prevent artificial cohesion
+                if item.name == "__init__":
+                    continue
+                
+                self.current_method = item.name
+                self.methods.add(item.name)
+                self.visit(item) # Visit function body
+                self.current_method = None
+
+    def visit_Attribute(self, node):
+        # Detect 'self.variable' usage
+        # Logic: We look for Attributes where the value is a Name(id='self')
+        if isinstance(node.value, ast.Name) and node.value.id == 'self':
+            if self.current_method:
+                # We assume any attribute access on self is a field access
+                # unless it matches a known method name (handled in visit_Call)
+                self.method_accesses[self.current_method].add(node.attr)
+
+    def visit_Call(self, node):
+        # Detect 'self.method()' calls
+        if isinstance(node.func, ast.Attribute):
+            if isinstance(node.func.value, ast.Name) and node.func.value.id == 'self':
+                if self.current_method:
+                    self.method_calls[self.current_method].add(node.func.attr)
+        self.generic_visit(node)
+
+def calculate_lcom4(source_code: str) -> dict:
+    """
+    Calculates LCOM4 metric for all classes in the source code.
+    Returns: Dict {ClassName: LCOM4_Score}
+    """
+    tree = ast.parse(source_code)
+    results = {}
+
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            builder = LCOM4GraphBuilder()
+            builder.visit(node) # Use specific visitor logic manually or via visit
+
+            # If no methods (e.g. data class or empty), LCOM4 is 0 [span_18](start_span)[span_18](end_span)
+            if not builder.methods:
+                results[node.name] = 0
+                continue
+
+            # 1. Initialize Graph
+            G = nx.Graph()
+            G.add_nodes_from(builder.methods)
+
+            # 2. Add Edges based on Shared Attributes
+            # We must invert the mapping: Attr -> [Methods using it]
+            attr_map = defaultdict(list)
+            for method, attrs in builder.method_accesses.items():
+                for attr in attrs:
+                    # Filter: Only consider attributes, not methods
+                    if attr not in builder.methods:
+                        attr_map[attr].append(method)
+
+            for attr, methods in attr_map.items():
+                # Connect every pair of methods sharing this attribute
+                for i in range(len(methods)):
+                    for j in range(i + 1, len(methods)):
+                        G.add_edge(methods[i], methods[j])
+
+            # 3. Add Edges based on Method Calls (A calls B)
+            for caller, callees in builder.method_calls.items():
+                for callee in callees:
+                    if callee in builder.methods:
+                        G.add_edge(caller, callee)
+
+            # 4. Compute Connected Components
+            # networkx.connected_components returns a generator of sets
+            try:
+                components = list(nx.connected_components(G))
+                lcom4 = len(components)
+                
+                # Insight: A score > 1 implies the class can be split.
+                # The 'components' list actually tells us HOW to split it.
+                # components = methods for Class A, components = methods for Class B
+                results[node.name] = lcom4
+            except Exception as e:
+                results[node.name] = -1 # Error state
+
+    return results
+
+Implementation Insight:
+This script provides more than just a metric; it provides a refactoring roadmap. The components list returned by nx.connected_components(G) contains the exact sets of methods that should be extracted into new classes. If lcom4 is 2, and the components are {m1, m2} and {m3, m4}, the system can automatically suggest: "Split this class. Class A contains m1, m2. Class B contains m3, m4."
+Part III: The Bridge of Modification (Research Cluster 3)
+3.1 Theoretical Framework: AST vs. CST
+The third void bridges the gap between analysis (AST) and refactoring (CST).
+ * Abstract Syntax Tree (AST): Lossy. Optimized for semantic understanding. Discards whitespace, comments, and formatting. Fast to parse and analyze (used by ast module).
+ * Concrete Syntax Tree (CST): Lossless. Preserves every byte of the source file, including indentation and comments. Complex to traverse. Used by LibCST.
+The "Software Immune System" analyzes code using ast (Cluster 2 & 4) but must apply fixes using LibCST to preserve code quality. The challenge is Mapping.
+3.2 The Bridge Pattern: Position Metadata Providers
+Standard ast nodes possess lineno and col_offset attributes. LibCST nodes, by default, do not store position data to minimize memory footprint. To link them, we must explicitly enable the PositionProvider metadata wrapper.
+The bridge logic relies on the fact that ast and LibCST (when populated with metadata) share a coordinate system.
+ * AST Coordinates: 1-based lines, 0-based columns (UTF-8 byte offsets).
+ * LibCST Coordinates: CodePosition(line, column).
+3.3 Blueprint: The AST-to-CST Locator
+The following pattern implements the "Bridge." It allows the system to take a violation detected by the LCOM4 analyzer or Security Sandbox (which return AST nodes) and locate the exact corresponding node in the CST for modification.
+import libcst as cst
+from libcst.metadata import PositionProvider, CodeRange
+
+class CSTLocator(cst.CSTVisitor):
+    """
+    The Bridge: Locates a CST node corresponding to specific AST coordinates.
+    """
+    # Declare dependency on PositionProvider to populate node.code_range
+    METADATA_DEPENDENCIES = (PositionProvider,)
+
+    def __init__(self, target_line, target_col, node_type_filter=None):
+        self.target_line = target_line
+        self.target_col = target_col
+        self.node_type_filter = node_type_filter
+        self.best_match = None
+        self.best_match_range = None
+
+    def on_visit(self, node: cst.CSTNode) -> bool:
+        """
+        Generic visit hook called for every node.
+        """
+        # Retrieve the computed position (CodeRange) for this node
+        # [span_32](start_span)[span_32](end_span): PositionProvider calculates this dynamically
+        pos = self.get_metadata(PositionProvider, node)
+        
+        # Check if the target point is within this node's range
+        # AST lineno is 1-based; CodePosition is 1-based.
+        # AST col_offset is 0-based; CodePosition is 0-based.
+        if (pos.start.line == self.target_line and 
+            pos.start.column == self.target_col):
+            
+            # Refinement: If we have a type filter, enforce it
+            if self.node_type_filter and not isinstance(node, self.node_type_filter):
+                return True
+
+            # Logic: We want the *most specific* node.
+            # If we find a match, it might be a parent (e.g., IfStmt).
+            # We continue traversal to see if a child (e.g., Name) also matches.
+            # LibCST visits parents before children.
+            self.best_match = node
+            self.best_match_range = pos
+            
+            # Continue traversal to find tighter matches (children)
+            return True
+            
+        # Optimization: If target line is past this node's end, skip children
+        if pos.end.line < self.target_line:
+            return False
+            
+        return True
+
+def bridge_ast_to_cst(source_code: str, ast_node) -> cst.CSTNode:
+    """
+    Converts an AST node into a modifiable LibCST node.
+    """
+    # 1. Parse Module into CST
+    wrapper = cst.metadata.MetadataWrapper(cst.parse_module(source_code))
+    
+    # 2. Extract Coordinates from AST Node
+    # Note: ast nodes usually have lineno/col_offset. 
+    # Some nodes (like Module) might not.
+    if not hasattr(ast_node, 'lineno'):
+        raise ValueError("AST Node lacks position information")
+
+    # 3. Execute Locator
+    # We map the AST class type to CST class type if possible, 
+    # but generic location often suffices.
+    locator = CSTLocator(ast_node.lineno, ast_node.col_offset)
+    wrapper.visit(locator)
+    
+    if locator.best_match:
+        return locator.best_match
+    else:
+        raise RuntimeError("No corresponding CST node found for AST coordinates.")
+
+
+Deep Dive on MetadataWrapper:
+The MetadataWrapper is essential. It creates a copy of the module and manages the computation of dependencies. It ensures that get_metadata returns valid CodeRange objects. Without this wrapper, LibCST nodes are position-agnostic structure containers.
+Second-Order Insight: This bridge enables Automated Refactoring. For example, if the Security Guardrail (Cluster 4) detects a subprocess.call without a timeout, it can pass the AST node to this bridge. The bridge returns the cst.Call node. A CSTTransformer can then append Arg(keyword=Name("timeout"), value=Integer("30")) to the arguments list, fixing the vulnerability programmatically while preserving the surrounding comments.
+Part IV: The Shield of Syntax (Research Cluster 4)
+4.1 Theoretical Framework: Semantic Security Guardrails
+The "Narasimha" sandbox represents a shift from signature-based detection (grep) to Abstract Syntax Tree Analysis. Standard regex cannot reliably detect "subprocess calls without timeouts" because the timeout argument can appear anywhere in the argument list, or on multiple lines. AST analysis is robust against formatting variations.
+4.2 Threat Modeling and Attack Vectors
+The research identifies three high-priority attack vectors that require AST-level intervention:
+ * Insecure Deserialization (The Pickle Problem):
+   * Mechanism: Python's pickle module allows the execution of arbitrary bytecode during the unpickling process via the __reduce__ method. This is a primary vector for Remote Code Execution (RCE).
+      *   AST Signature: Calls to pickle.load, pickle.loads, cPickle.load, dill.load, shelve.open.
+   * Policy: Absolute ban on pickle for untrusted data. Use json or hmac signatures.
+2.  Resource Exhaustion (DoS via Subprocess):
+*   Mechanism: Spawning external processes without a timeout can cause the application to hang indefinitely if the child process blocks (e.g., waiting for network I/O). This leads to thread pool starvation.
+ *   AST Signature: Calls to subprocess functions (run, call, Popen) where the timeout keyword argument is absent.
+ * XML External Entities (XXE):
+   * Mechanism: Standard XML parsers (xml.etree, xml.dom) resolve external entities (e.g., <!ENTITY xxe SYSTEM "file:///etc/passwd">). Parsing such a file exfiltrates local data.
+   * AST Signature: Imports of xml.etree.ElementTree, xml.sax, xml.dom.minidom, lxml.
+   * Policy: Mandate defusedxml wrappers.
+### 4.3 Policy Logic: The "Semgrep" Abstraction
+Tools like Semgrep use a declarative syntax to match AST patterns. They introduce concepts like:
+ * Metavariables ($X): Matches any expression/node.
+ * Ellipsis (...): Matches any sequence of arguments or statements.
+To build "Narasimha" without external dependencies, we must implement a Python NodeVisitor that mimics this logic. We are essentially writing a hard-coded Semgrep engine specialized for our security policies.
+4.4 Blueprint: The Narasimha Security Visitor
+This implementation provides the logic to enforce the identified guardrails. It inspects imports for banned libraries and analyzes call sites for missing security arguments.
+import ast
+
+class SecurityViolation:
+    def __init__(self, node, code, message, severity):
+        self.line = getattr(node, 'lineno', 0)
+        self.code = code
+        self.message = message
+        self.severity = severity
+    
+    def __repr__(self):
+        return f"[{self.severity}] {self.code} Line {self.line}: {self.message}"
+
+class NarasimhaGuardrail(ast.NodeVisitor):
+    """
+    AST-based Security Sandbox enforcing structural security policies.
+    """
+    def __init__(self):
+        self.violations =
+        # Policy Definition: Banned Modules 
+   [span_30](start_span)[span_30](end_span)     self.banned_imports = {
+            'pickle': ('SEC001', 'CRITICAL', 'Pickle allows RCE. Use JSON.'),
+            'cPickle': ('SEC001', 'CRITICAL', 'Pickle allows RCE. Use JSON.'),
+            'dill': ('SEC001', 'CRITICAL', 'Dill allows RCE. Use JSON.'),
+            'xml.etree.ElementTree': ('SEC002', 'HIGH', 'XML parser vulnerable to XXE. Use defusedxml.'),
+            'xml.sax': ('SEC002', 'HIGH', 'XML parser vulnerable to XXE. Use defusedxml.'),
+            'telnetlib': ('SEC003', 'MEDIUM', 'Telnet is insecure. Use SSH.'),
+        }
+        # Track aliases to detect aliased usage (e.g. import pickle as p; p.load())
+        self.module_aliases = {} 
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            name = alias.name
+            asname = alias.asname or alias.name
+            self.module_aliases[asname] = name
+            
+            if name in self.banned_imports:
+                code, severity, msg = self.banned_imports[name]
+                self.violations.append(SecurityViolation(node, code, msg, severity))
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node):
+        if node.module in self.banned_imports:
+            code, severity, msg = self.banned_imports[node.module]
+            self.violations.append(SecurityViolation(node, code, msg, severity))
+        self.generic_visit(node)
+
+    def visit_Call(self, node):
+        """
+        Structural Analysis of Function Calls
+        """
+        # Resolve the function name being called
+        func_name = self._resolve_call_name(node.func)
+        
+        # Guardrail: Insecure Deserialization (Method Call check)
+        # Matches: pickle.load(), pickle.loads()
+        if func_name and ('.load' in func_name or '.loads' in func_name):
+            root_module = func_name.split('.')
+            # Check if the root module is a banned deserializer (even via alias)
+            real_module = self.module_aliases.get(root_module, root_module)
+            if real_module in ['pickle', 'cPickle', 'dill', 'jsonpickle']:
+                 self.violations.append(SecurityViolation(
+                    node, 'SEC001', 
+                    f"Insecure deserialization detected: {func_name}", 
+                    'CRITICAL'
+                ))
+
+        # Guardrail: Subprocess Denial of Service 
+   [span_31](start_span)[span_31](end_span)     # Matches: subprocess.call, subprocess.run, subprocess.check_output
+        if func_name and 'subprocess' in func_name:
+            method = func_name.split('.')[-1]
+            if method in ['call', 'run', 'check_output', 'check_call', 'Popen']:
+                # Logic: Check keywords for 'timeout'
+                has_timeout = any(k.arg == 'timeout' for k in node.keywords)
+                if not has_timeout:
+                    self.violations.append(SecurityViolation(
+                        node, 'SEC004',
+                        f"DoS Risk: {func_name} called without 'timeout'.",
+                        'HIGH'
+                    ))
+        
+        # Guardrail: Code Injection (eval/exec)
+        # Matches: eval(x), exec(x)
+        if isinstance(node.func, ast.Name) and node.func.id in ['eval', 'exec']:
+            self.violations.append(SecurityViolation(
+                node, 'SEC005',
+                f"Code Injection Risk: Usage of {node.func.id} detected.",
+                'CRITICAL'
+            ))
+
+        self.generic_visit(node)
+
+    def _resolve_call_name(self, func_node):
+        """Helper to flatten AST Attribute nodes into strings (e.g. os.path.join)"""
+        if isinstance(func_node, ast.Name):
+            return func_node.id
+        elif isinstance(func_node, ast.Attribute):
+            value = self._resolve_call_name(func_node.value)
+            if value:
+                return f"{value}.{func_node.attr}"
+        return None
+
+def scan_security(source_code):
+    tree = ast.parse(source_code)
+    visitor = NarasimhaGuardrail()
+    visitor.visit(tree)
+    return visitor.violations
+
+4.5 Integration Logic
+This security visitor acts as the "Antigen Detector." When scan_security returns violations:
+ * Critical (RCE/XXE): The commit is blocked immediately.
+ * High (DoS): The violation is passed to the Cluster 3 Bridge. The bridge locates the subprocess.call node in the CST. An automated patcher adds timeout=30 and suggests this fix to the developer.
+Conclusion
+This report has synthesized the "Missing Blueprints" for the Software Immune System, adhering to the requirement for exhaustion and rigorous detail. We have established:
+ * Stateful Verification: A RuleBasedStateMachine architecture using Bundles and Oracles to prove transactional consistency, backed by Shortlex shrinking.
+ * Structural Analysis: A graph-theoretic LCOM4 analyzer utilizing networkx to mathematically identify components requiring decomposition.
+ * Syntactic Bridging: A high-fidelity PositionProvider mechanism linking the diagnostic power of ast with the surgical precision of LibCST.
+ * Security Governance: An AST-based policy engine ("Narasimha") that enforces guardrails against RCE, DoS, and XXE attacks at the structural level.
+Implementing these patterns will elevate the organization's quality assurance from simple testing to automated, structural self-healing.
