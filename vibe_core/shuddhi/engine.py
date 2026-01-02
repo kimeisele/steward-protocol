@@ -4,7 +4,7 @@ OPUS-212: ShuddhiEngine - The Surgical Orchestrator.
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, Type
+from typing import Dict, List, Optional, Type
 
 import libcst as cst
 
@@ -120,3 +120,11 @@ class ShuddhiEngine(ShuddhiProtocol):
                 rule_id=rule_id,
                 message=f"Internal error: {str(e)}",
             )
+
+    def list_remedies(self) -> List[str]:
+        """Returns list of registered remedy rule_ids."""
+        return list(self._remedies.keys())
+
+    def can_heal(self, rule_id: str) -> bool:
+        """Returns True if a remedy is registered for this rule_id."""
+        return rule_id in self._remedies

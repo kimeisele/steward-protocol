@@ -8,7 +8,7 @@ code transformations using Concrete Syntax Trees (CST).
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Protocol, runtime_checkable
+from typing import List, Optional, Protocol, runtime_checkable
 
 
 class ShuddhiStatus(str, Enum):
@@ -57,4 +57,12 @@ class ShuddhiProtocol(Protocol):
         Returns:
             ShuddhiResult indicating the outcome of the surgery.
         """
+        ...
+
+    def list_remedies(self) -> List[str]:
+        """Returns list of registered remedy rule_ids."""
+        ...
+
+    def can_heal(self, rule_id: str) -> bool:
+        """Returns True if a remedy is registered for this rule_id."""
         ...

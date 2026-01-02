@@ -19,6 +19,7 @@ from typing import Optional
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
 from vibe_core.di import ServiceRegistry
+from vibe_core.protocols.shuddhi import ShuddhiProtocol
 from vibe_core.protocols.task import TaskProtocol
 
 # Constitutional Oath Mixin
@@ -404,10 +405,16 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         # PHASE 3: Create healing tasks for violations with Shuddhi remedies
         healing_tasks_created = 0
         task_service = ServiceRegistry.get(TaskProtocol)
+        shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+
         if task_service and violations:
             for v in violations:
-                if v.get("has_remedy"):
-                    task_title = f"HEAL: {v.get('rule_id')} in {Path(v.get('file_path', '')).name}"
+                rule_id = v.get("rule_id")
+                # Validate: YAML flag AND actual remedy registered
+                can_heal = v.get("has_remedy") and (shuddhi.can_heal(rule_id) if shuddhi else False)
+
+                if can_heal:
+                    task_title = f"HEAL: {rule_id} in {Path(v.get('file_path', '')).name}"
                     # Check for existing task to avoid duplicates
                     existing = [t for t in task_service.list_tasks() if t.title == task_title]
                     if not existing:
@@ -415,7 +422,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                             title=task_title,
                             description=(
                                 f"Auto-heal violation detected by Watchman:\n"
-                                f"Rule: {v.get('rule_id')}\n"
+                                f"Rule: {rule_id}\n"
                                 f"File: {v.get('file_path')}\n"
                                 f"Line: {v.get('line_number')}\n"
                                 f"Code: {v.get('code_snippet')}\n\n"
