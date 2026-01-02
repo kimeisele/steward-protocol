@@ -32,17 +32,31 @@
 **PROMPT.md Compliance Score: 21/100**
 **Production Code Score: 26/100** (korrigiert von 62)
 
+### Maintainability Issues (TEIL N - KRITISCH)
+
+| Metrik | Wert | Problem |
+|--------|------|---------|
+| **God Files (>1000 LOC)** | 19 | Unmaintainable |
+| **kernel_tick.py** | 3381 lines | Größte Datei |
+| **Stub Functions** | 145 | Leere Hüllen |
+| **Duplicate Classes** | 59 | Import-Chaos |
+| **Copy-Paste (to_dict)** | 197 | Keine Inheritance |
+| **return None** | 540 | Versteckte Fehler |
+| **Result Types** | 0 | Keine Error-Architektur |
+
 ### Kritischste Findings:
 1. **Security Theater** - Authorization basiert auf String-Parameter ohne Crypto (P0)
 2. **Type Safety Nightmare** - 2154 Dict[str, Any] (YANTRA VIOLATION)
 3. **AI-Slop** - 1968 unused imports (Clean Code VIOLATION)
-4. **Phoenix Guarantee Broken** - InMemoryScheduler/Ledger verliert State bei Crash
-5. VFS Sandbox Escape via `create_symlink()` (P0, FIXABLE)
-6. 253 direkte `open()` statt VFS (korrigiert von 81)
+4. **God Files** - 19 Dateien >1000 Zeilen, kernel_tick.py hat 3381 (N1)
+5. **Phoenix Guarantee Broken** - InMemoryScheduler/Ledger verliert State bei Crash
+6. **Zero Error Architecture** - 540 return None, 0 Result types (N5)
 
 ### Für AOS Training (watchman/shuddhi/manas):
-- Siehe **TEIL M6** für Erkennungsmuster
-- 6 kritische Anti-Patterns identifiziert
+- Siehe **TEIL M6** für PROMPT.md Erkennungsmuster
+- Siehe **TEIL N8** für AI-Slop Erkennungsmuster
+- Siehe **TEIL N9** für automatisierbare Fixes
+- 10+ kritische Anti-Patterns identifiziert
 - Positive und negative Code-Beispiele dokumentiert
 
 ---
@@ -2726,6 +2740,232 @@ def process(data: ProcessInput) -> ProcessOutput:
 
 ---
 
+## TEIL N: MAINTAINABILITY & AI-SLOP DEEP DIVE (Senior Architekt - 2026-01-02)
+
+> **Die unbequeme Wahrheit:** AI-generierter Code ohne menschliche Supervision
+> akkumuliert spezifische Schulden-Patterns die exponentiell schlimmer werden.
+
+### N1: GOD FILES (Unmaintainable)
+
+> **Regel:** Keine Datei >500 Zeilen. Sonst: Refactor.
+
+```bash
+$ find vibe_core -name "*.py" -exec wc -l {} \; | awk '$1 > 1000' | sort -rn
+```
+
+| Datei | Lines | Problem |
+|-------|-------|---------|
+| `kernel_tick.py` | **3381** | 🔴 UNMAINTAINABLE |
+| `cognitive_kernel.py` | **2621** | 🔴 UNMAINTAINABLE |
+| `kernel_impl.py` | **2156** | 🔴 UNMAINTAINABLE |
+| `opus_dashboard_renderer.py` | 1805 | 🟠 SEHR GROSS |
+| `viveka_action.py` | 1670 | 🟠 SEHR GROSS |
+| `sqlite_store.py` | 1639 | 🟠 SEHR GROSS |
+| `circuit_engine.py` | 1600 | 🟠 SEHR GROSS |
+| `sutra_sense.py` | 1549 | 🟠 SEHR GROSS |
+| `plugin_main.py` | 1374 | 🟠 SEHR GROSS |
+| `unified_cli.py` | 1358 | 🟠 SEHR GROSS |
+| ... | ... | ... |
+| **GESAMT >1000 lines** | **19 Dateien** | 🔴 KRITISCH |
+
+**Warum das passiert bei AI:**
+- AI hat kein Gedächtnis zwischen Sessions
+- Jede Session fügt Code hinzu, niemand refactored
+- Kein "Code Review" oder "PR Feedback"
+
+### N2: STUB FUNCTIONS - 145 Leere Hüllen
+
+```bash
+$ grep -rPzn "def [^:]+:\s*\n\s+(pass|\.\.\.)\s*\n" vibe_core --include="*.py" | wc -l
+145
+```
+
+**145 Funktionen die NICHTS tun:**
+
+```python
+# Typisches AI-Pattern:
+def process_advanced_intent(self, intent: str) -> Result:
+    pass  # <- AI hat "geplant" aber nie implementiert
+
+def validate_deep_state(self, state: dict) -> bool:
+    ...  # <- Placeholder, nie ausgefüllt
+```
+
+**Zusätzlich:**
+- 11 `raise NotImplementedError` (intentional stubs)
+- 20 `# TODO: Implement` Kommentare in Funktionen
+
+### N3: DUPLICATE CLASS NAMES - 59 Konflikte
+
+```bash
+$ grep -rh "^class " vibe_core --include="*.py" | sed 's/class \([A-Z][^(:]*\).*/\1/' | sort | uniq -c | awk '$1 > 1' | wc -l
+59  # Klassen die mehrfach definiert sind
+```
+
+**AI-Slop Pattern:** AI erstellt in jeder Session neue Klassen ohne zu prüfen ob sie schon existieren.
+
+| Klasse | Vorkommen | Problem |
+|--------|-----------|---------|
+| `IntentType` | 3x | 3 verschiedene Definitionen! |
+| `Test` | 3x | Generischer Name |
+| `ValidationResult` | 2x | Welche ist die richtige? |
+| `SessionContext` | 2x | Import-Konflikte |
+| `ToolResult` | 2x | Welche verwenden? |
+| ... (54 weitere) | 2x each | ... |
+
+**Konsequenz:** Import-Chaos, falsche Klasse wird verwendet, Runtime-Fehler.
+
+### N4: COPY-PASTE ANTI-PATTERN
+
+```bash
+$ grep -rh "def .*self.*:" vibe_core --include="*.py" | sort | uniq -c | sort -rn | head -5
+428 def __init__(self, ...):
+197 def to_dict(self) -> Dict[str, Any]:
+ 85 def name(self) -> str:
+ 67 def description(self) -> str:
+ 58 def execute(self, ...) -> ToolResult:
+```
+
+**197 to_dict() Methoden!** AI kopiert das Pattern überall statt:
+- Eine `Serializable` Base-Klasse zu nutzen
+- Pydantic mit `.dict()` zu verwenden
+- Ein Mixin zu erstellen
+
+**85 name-Properties, 67 description-Properties** - identische Implementierungen überall kopiert.
+
+### N5: ERROR HANDLING = NONE EVERYWHERE
+
+```bash
+$ grep -rn "return None" vibe_core --include="*.py" | wc -l
+540  # 540x return None
+
+$ grep -rn "Result\[" vibe_core --include="*.py" | wc -l
+0    # ZERO Result types
+
+$ grep -rn "Optional\[" vibe_core --include="*.py" | wc -l
+2029  # 2029 Optional types
+```
+
+**Das Problem:**
+- **540 `return None`** - Fehler werden als None versteckt
+- **0 Result Types** - Kein Railway-Oriented Programming
+- **2029 Optional** - Alles kann None sein, kein typisierter Error
+
+**PROMPT.md YANTRA:** "Keine versteckten Zustände"
+**Realität:** None IST ein versteckter Zustand.
+
+### N6: COMPLEXITY METRICS
+
+| Metrik | Wert | Schwelle | Status |
+|--------|------|----------|--------|
+| Files >1000 LOC | 19 | 0 | 🔴 KRITISCH |
+| Files >500 LOC | ~50 | 5 | 🔴 KRITISCH |
+| Stub functions | 145 | 0 | 🔴 KRITISCH |
+| Duplicate classes | 59 | 0 | 🟠 HOCH |
+| Copy-paste methods | 197+ | 10 | 🔴 KRITISCH |
+| return None | 540 | 50 | 🔴 KRITISCH |
+| Result types | 0 | 100+ | 🔴 KRITISCH |
+
+### N7: IST DAS ZU RETTEN?
+
+> **Ehrliche Antwort:** Ja, aber es braucht systematische Arbeit.
+
+**Was NORMAL ist für Projekt dieser Größe:**
+- 100-200k LOC ist normal für ein OS
+- Komplexe Interdependencies sind normal
+- Einige god classes sind normal (kernel, scheduler)
+
+**Was NICHT NORMAL ist (AI-Slop):**
+- 1968 unused imports → AI-generiert, nie aufgeräumt
+- 59 duplicate classes → AI vergisst was es erstellt hat
+- 145 stub functions → AI plant aber implementiert nicht
+- 197 kopierte to_dict() → AI versteht Inheritance nicht
+- 0 Result types → AI macht keine Error-Architektur
+
+**Prognose:**
+| Ohne Intervention | Mit Intervention |
+|-------------------|------------------|
+| Score sinkt auf ~15/100 | Score kann auf 70+ steigen |
+| Bugs werden schlimmer | Systematisches Cleanup |
+| Irgendwann Rewrite nötig | Inkrementelle Verbesserung |
+
+### N8: WAS DAS AOS LERNEN MUSS
+
+> **Für watchman/shuddhi/manas Training:**
+
+#### N8.1: GOD FILE DETECTION
+
+```python
+# shuddhi sollte warnen:
+if file.line_count > 500:
+    emit_warning(f"{file.path} has {file.line_count} lines - consider refactoring")
+if file.line_count > 1000:
+    emit_error(f"{file.path} is unmaintainable - MUST refactor")
+```
+
+#### N8.2: DUPLICATE DETECTION
+
+```python
+# watchman sollte blocken:
+def pre_commit_check(new_class_name: str):
+    existing = find_classes_by_name(new_class_name)
+    if existing:
+        block_commit(f"Class {new_class_name} already exists at {existing[0].path}")
+```
+
+#### N8.3: STUB DETECTION
+
+```python
+# manas sollte warnen beim Erstellen:
+def validate_function(func):
+    if func.body in ["pass", "..."]:
+        emit_warning("Stub function created - add TODO ticket")
+    if "TODO" in func.body:
+        create_ticket_if_not_exists(func)
+```
+
+#### N8.4: ERROR HANDLING ENFORCEMENT
+
+```python
+# shuddhi sollte enforced:
+def validate_return_type(func):
+    if func.return_type == "Optional[X]":
+        if "return None" in func.body and "error" not in func.docstring:
+            emit_error("Optional return without documented error case")
+```
+
+---
+
+### N9: REMEDIATION ROADMAP FÜR AOS
+
+> **Automatisierte Fixes die shuddhi/watchman ausführen können:**
+
+#### Phase A: Low-Hanging Fruit (Automatisierbar)
+
+| Task | Tool | Effort | Impact |
+|------|------|--------|--------|
+| Remove unused imports | `ruff --fix` | 5 min | -1968 issues |
+| Format all code | `ruff format` | 5 min | Consistency |
+| Type stub completion | AI + human review | 2h | -145 stubs |
+
+#### Phase B: Structural (Semi-Automatisierbar)
+
+| Task | Approach | Effort | Impact |
+|------|----------|--------|--------|
+| Deduplicate classes | Merge identical, create base | 1 week | -59 duplicates |
+| Extract base classes | `Serializable`, `Named` | 1 week | -197 to_dict copies |
+| Split god files | Modularize by responsibility | 2 weeks | -19 god files |
+
+#### Phase C: Architectural (Manual)
+
+| Task | Approach | Effort | Impact |
+|------|----------|--------|--------|
+| Result types | Railway-oriented programming | 2 weeks | +Error safety |
+| Pydantic migration | Replace dataclass cross-module | 3 weeks | +Runtime validation |
+| DI everywhere | ServiceRegistry for all | 2 weeks | +Testability |
+
+---
+
 **KORRIGIERTER Finaler Production Code Score: 26/100**
 
 | Phase | Nach Fix | Delta |
@@ -2737,6 +2977,8 @@ def process(data: ProcessInput) -> ProcessOutput:
 | Phase 5: Phoenix (persistent) | 75/100 | +10 |
 | Phase 6: Cleanup (imports) | 80/100 | +5 |
 | Phase 7: Ledger Coverage | 85/100 | +5 |
+| **NEU Phase 8: God File Split** | 88/100 | +3 |
+| **NEU Phase 9: Deduplication** | 90/100 | +2 |
 
 ---
 
