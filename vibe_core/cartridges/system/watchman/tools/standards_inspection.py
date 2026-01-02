@@ -201,6 +201,16 @@ class UniversalRuleVisitor(ast.NodeVisitor):
             if node.id != match["name"]:
                 return False
 
+        # 3d. Match keyword argument absence (e.g., subprocess.run without timeout)
+        if "keyword_absent" in match:
+            if not isinstance(node, ast.Call):
+                return False
+            keyword_name = match["keyword_absent"]
+            # If keyword IS present, rule doesn't match
+            for kw in node.keywords:
+                if kw.arg == keyword_name:
+                    return False  # Keyword found, so NOT a violation
+
         # 4. Custom Conditions
         if rule.get("condition") == "is_pass_only":
             if isinstance(node, ast.ExceptHandler):

@@ -92,6 +92,14 @@ class SilentExceptRemedy(CSTRemedy):
         if updated_node.name and isinstance(updated_node.name.name, cst.Name):
             exc_name = updated_node.name.name.value
 
+        # Handle bare except (no type) - must add Exception type
+        new_type = updated_node.type
+        new_whitespace = updated_node.whitespace_after_except
+        if new_type is None:
+            new_type = cst.Name("Exception")
+            # CST requires whitespace between 'except' and type
+            new_whitespace = cst.SimpleWhitespace(" ")
+
         # Create new 'as _exc' clause if missing
         new_name = updated_node.name
         if new_name is None:
@@ -122,7 +130,12 @@ class SilentExceptRemedy(CSTRemedy):
         # Replace body
         new_body = cst.IndentedBlock(body=[log_stmt])
 
-        return updated_node.with_changes(name=new_name, body=new_body)
+        return updated_node.with_changes(
+            type=new_type,
+            whitespace_after_except=new_whitespace,
+            name=new_name,
+            body=new_body,
+        )
 
     def _is_silent_handler(self, node: cst.ExceptHandler) -> bool:
         """Check if handler body is just pass or ellipsis."""
