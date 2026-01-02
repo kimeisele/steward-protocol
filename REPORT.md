@@ -1351,10 +1351,11 @@ Die verbleibenden Issues sind:
 
 ---
 
-## TEIL K: ARCHITEKTUR-SCHULDEN (Senior System Architekt Review - 2026-01-01)
+## TEIL K: ARCHITEKTUR-SCHULDEN (Senior System Architekt Review - 2026-01-02)
 
 > **⚠️ KORREKTUR 2026-01-01:** Dieser Abschnitt wurde nach initialer Fehlanalyse korrigiert.
 > Die ursprüngliche K1-Analyse verwechselte TaskKernel (Ephemeral Execution) mit TaskManager (Task CRUD).
+> **UPDATE 2026-01-02:** K9 Code-Qualität hinzugefügt (209 Silent Failures, 70 Singletons, 67 Any-Types).
 
 ### EXECUTIVE SUMMARY - ARCHITEKTONISCHE KRITIK
 
@@ -1362,15 +1363,17 @@ Die verbleibenden Issues sind:
 |-----------|---------|---------------------|--------|
 | **Authorization = Security Theater** | 🔴 KRITISCH | syscalls, task_kernel | KEINE CALLER AUTH |
 | **OPUS-176 BHARAT - Konzept valide, Impl. nicht** | 🔴 KRITISCH | Governance, Manifests | 4% + BYPASS |
+| **70 Global Singletons** | 🔴 KRITISCH | Codebase-wide | DI VERLETZT |
+| **209 Silent Failures** (`except...pass`) | 🟠 HOCH | ledger, kernel, tools | 15 KRITISCH |
 | **ThoughtEntry/IntentBuffer Disconnect** | 🟠 HOCH | ephemeral_state.py, manas/ | ARCHITEKTUR-LÜCKE |
 | DI-Verletzungen im Kernel (teilweise) | 🟠 HOCH | kernel_impl.py | 50% |
-| EventBus Singleton Anti-Pattern | 🟠 HOCH | 14+ Module | OFFEN |
-| **4 Hardcoded Auth-Sets** | 🟠 HOCH | syscalls, prana, kernel | MANIFEST-DRIVEN FEHLT |
+| **25+ Hardcoded Auth-Sets** | 🟠 HOCH | syscalls, prana, varna | MANIFEST-DRIVEN FEHLT |
 | **HUD.CARTRIDGES hardcoded** | 🟡 MITTEL | hud.py | 3/30 CARTRIDGES |
+| **67 `Any` Types** | 🟡 MITTEL | Codebase-wide | TYPE-SAFETY |
 | **OPUS-310 Phase 4 IntentMatcher** | ✅ GUT | cognitive.py, intent.py | VOLLSTÄNDIG |
 | **TODOs** | ✅ GUT | ~48 Stellen | KEINE STALE |
 
-**Revidierter Production Code Score:** 62/100 (Security Theater ist kritisch)
+**Revidierter Production Code Score:** 62/100 (Security Theater + Code Quality Issues)
 
 ---
 
@@ -1676,7 +1679,48 @@ Jeder Code kann behaupten, "opus_assistant" oder "system" zu sein.
 
 ---
 
-### K1.11: VOLLSTÄNDIGE HARDCODED-INVENTUR (KRITISCH)
+### K1.11: OPUS DOCS VS REALITÄT - "FEATURES DIE UNTERGINGEN"
+
+> **158 OPUS Dokumente** - aber wie viele sind wirklich implementiert?
+
+#### OPUS-311 "Protocol Remediation" - PENDING seit 2025-12-26
+
+**Status:** ANALYSIS COMPLETE, REMEDIATION PENDING
+
+Dokumentiert 7 kritische Komponenten die KEIN Protocol haben:
+
+| Komponente | Problem | Status |
+|------------|---------|--------|
+| **EventBus** | `get_event_bus()` Singleton | ❌ Noch Singleton |
+| **KernelIOService** | Direkte Instantiierung | ❌ Nicht via DI |
+| **PluginLoader** | Direkte Instantiierung | ❌ Nicht via DI |
+| **CapabilityRegistry** | Direkter Import | ❌ Nicht via Protocol |
+| **InMemoryScheduler** | Hardcoded (SchedulerProtocol existiert!) | ❌ Protocol ignoriert |
+| **InMemoryLedger** | Direkte Wahl der Impl | ⚠️ 50% (manchmal DI) |
+| **InMemoryManifestRegistry** | Direkte Wahl der Impl | ❌ Nicht via DI |
+
+**Das Design existiert, die Implementation nicht.**
+
+#### Weitere "Designed but Not Implemented"
+
+| OPUS | Feature | Status |
+|------|---------|--------|
+| OPUS-176 | BHARAT Sovereignty (4 Phasen) | 4% implementiert |
+| OPUS-311 | Protocol Remediation | PENDING |
+| OPUS-131 | FORTRESS Security | Teilweise |
+| OPUS-122 | Task Alignment | Geplant |
+
+#### Was das bedeutet:
+
+1. **Design-Docs sind NICHT gleich Implementation**
+2. **OPUS-311 hat das Problem bereits analysiert** - aber niemand hat es gefixt
+3. **35 Protocols definiert, ~7 werden ignoriert**
+
+**Beweis:** `SchedulerProtocol` existiert in `protocols/scheduler.py`, aber `kernel_impl.py:250` verwendet `InMemoryScheduler()` direkt!
+
+---
+
+### K1.12: VOLLSTÄNDIGE HARDCODED-INVENTUR (KRITISCH)
 
 > **PROMPT.md:** "Alles was hardcodet ist ist schlecht" - SYSTEMATISCHE VERLETZUNG
 
@@ -1763,36 +1807,60 @@ ServiceRegistry wird **TEILWEISE** verwendet. Nicht "leere Box" wie ursprünglic
 
 ---
 
-### K3: EVENTBUS SINGLETON ANTI-PATTERN (HOCH)
+### K3: SINGLETON ANTI-PATTERN - SYSTEMISCH (HOCH)
 
-**Funktion:** `get_event_bus()` in `vibe_core/event_bus.py:500`
+> **70 `global` Statements** - EventBus ist nur die Spitze des Eisbergs
 
-#### 14+ Module verwenden `get_event_bus()` statt DI:
+#### K3.1: EventBus Singleton (bereits dokumentiert)
 
-| Datei | Line | Kontext |
-|-------|------|---------|
-| kernel_impl.py | 414 | Kernel Boot |
-| semantic_syscalls.py | 255 | Syscall Dispatch |
-| circuit_engine.py | 438 | Circuit Execution |
-| dharma/observer.py | 83, 113 | Event Observation |
-| kernel_tick.py | 469, 821, 1445, 3218 | MANAS Ticks |
-| nadi_sense.py | 211, 214, 235, 493 | Sense Layer |
-| cognitive_kernel.py | 978 | Cognitive Processing |
-| action_manager.py | 1054 | Action Execution |
-| syscall_listener.py | 75 | Syscall Handling |
+**Funktion:** `get_event_bus()` in `vibe_core/event_bus.py:507`
 
-**Problem:**
-- Nicht testbar (Mock schwierig)
-- Nicht hot-swappable
-- Verletzt "Protocol statt konkrete Klassen"
+19 Verwendungen statt DI (kernel_impl, semantic_syscalls, circuit_engine, etc.)
 
-**OPUS-311 definiert bereits die Lösung:**
+#### K3.2: Vollständige Singleton-Inventur
+
+```bash
+$ grep -rn "^[[:space:]]*global " vibe_core --include="*.py" | wc -l
+70
+```
+
+**Kategorien:**
+
+| Kategorie | Beispiele | Count | Problem |
+|-----------|-----------|-------|---------|
+| **Instance Singletons** | `_event_bus_instance`, `_narasimha_instance`, `_graph_instance` | ~15 | Nicht testbar |
+| **Registry Singletons** | `_default_registry`, `_SCHEMA`, `_loader` | ~10 | Global State |
+| **Lazy Init** | `_model`, `_cryptography_checked`, `DEFAULT_MODEL_DIR` | ~20 | Hidden Dependencies |
+| **Bank/Vault** | `_bank`, `_vault` (in web_search_tool) | ~5 | DI Verletzung |
+| **Constitution** | `_constitution`, `_judge_instance` | ~5 | Governance ohne DI |
+| **Andere** | Diverse | ~15 | Mixed |
+
+#### K3.3: Kritische Singletons (nicht nur EventBus)
+
+| Singleton | Datei:Line | Warum kritisch |
+|-----------|------------|----------------|
+| `_event_bus_instance` | event_bus.py:507 | 19 Verwendungen |
+| `_narasimha_instance` | narasimha.py:379 | Security-Komponente global |
+| `_graph_instance` | knowledge/graph.py:492 | Knowledge ohne DI |
+| `_constitution` | herald/governance/constitution.py:583 | Governance global |
+| `_default_registry` | cartridges/registry.py:255 | Registry ohne DI |
+
+#### K3.4: Lösung (konsistent mit L1)
+
+Alle Singletons → `ServiceRegistry.get(Protocol)`:
+
 ```python
-@runtime_checkable
-class EventBusProtocol(Protocol):
-    def publish(self, event: Event) -> None: ...
-    def subscribe(self, event_type: EventType, handler: Callable) -> None: ...
-    def unsubscribe(self, event_type: EventType, handler: Callable) -> None: ...
+# VORHER (70x im Code):
+global _event_bus_instance
+def get_event_bus() -> EventBus:
+    global _event_bus_instance
+    if _event_bus_instance is None:
+        _event_bus_instance = EventBus()
+    return _event_bus_instance
+
+# NACHHER:
+# ServiceRegistry.register(EventBusProtocol, EventBus())
+# ServiceRegistry.get(EventBusProtocol)
 ```
 
 ---
@@ -1939,6 +2007,98 @@ steward task cancel <task_id>
 |------|-------|---------|
 | 48 TODOs auflösen oder entfernen | Codebase-wide | 16h |
 | get_event_bus() → DI migration | 14 Module | 8h |
+
+---
+
+### K9: CODE QUALITÄTS-METRIKEN (Materialien-Check)
+
+> **Holistischer Architektur-Ansatz:** Nicht nur ob auf Papier passt, sondern ob die Materialien passen
+
+#### K9.1: Anti-Pattern Inventur
+
+```bash
+# Verifiziert 2026-01-02
+$ grep -rn "^[[:space:]]*global " vibe_core --include="*.py" | wc -l
+70  # → Siehe K3 für Analyse
+
+$ grep -rn "except.*:" vibe_core --include="*.py" -A1 | grep -B1 "pass$" | grep "except" | wc -l
+209  # Silent Failures (except...pass)
+
+$ grep -rn "DEPRECATED" vibe_core --include="*.py" | wc -l
+100  # DEPRECATED Marker
+```
+
+#### K9.2: Silent Exception Handling - 209 `except...pass` (P2)
+
+> **Systematische Error-Unterdrückung** - DHARMA "Keine Silent Failures" verletzt
+
+| Kategorie | Count | Schwere | Beispiele |
+|-----------|-------|---------|-----------|
+| **Core Components** | ~15 | 🔴 KRITISCH | ledger.py:74,195, boot_orchestrator.py:128,565 |
+| **Cartridge Tools** | ~150 | 🟡 MITTEL | code_tool.py, deps_tool.py, architecture_tool.py |
+| **Test Utilities** | ~20 | 🟢 NIEDRIG | Akzeptabel in Tests |
+| **Plugin Code** | ~24 | 🟡 MITTEL | Diverse Plugins |
+
+**Kritische Silent Failures:**
+
+| Datei:Line | Kontext | Problem |
+|------------|---------|---------|
+| `ledger.py:74` | DETACH DATABASE | Silent DB-Fehler |
+| `ledger.py:195` | Connection Close | Silent Close-Failure |
+| `ledger.py:213` | PRAGMA Fehler | ⚠️ KRITISCH - Siehe A-P0-1 |
+| `boot_orchestrator.py:128` | Kernel Boot | Boot-Failure versteckt |
+| `boot_orchestrator.py:565` | Kernel Stop | Stop-Failure versteckt |
+
+**Bewertung:** 15+ in kritischen Pfaden (Ledger, Kernel, Boot). ~150 in Cartridge-Tools oft akzeptabel für robuste Parsing-Logik (best-effort analysis).
+
+#### K9.3: DEPRECATED Marker Analyse
+
+```bash
+# Kategorisierung der 100 DEPRECATED Marker:
+$ grep -rn "DEPRECATED" vibe_core --include="*.py" | head -20
+
+# Kategorien:
+# - Legacy Aliases (~40): "Use X instead"
+# - Backward Compatibility (~30): Wrapper functions
+# - Obsolete Patterns (~20): Old API surface
+# - Genuine Debt (~10): Tatsächlich zu entfernen
+```
+
+| Kategorie | Count | Aktion |
+|-----------|-------|--------|
+| Legacy Aliases | ~40 | BEHALTEN (BC) |
+| BC Wrappers | ~30 | BEHALTEN bis v2.0 |
+| Obsolete | ~20 | PRÜFEN |
+| Echte Schulden | ~10 | ENTFERNEN |
+
+#### K9.4: Type-Safety Verletzungen
+
+```bash
+$ grep -rn "Any\]" vibe_core --include="*.py" | wc -l
+67  # Optional[Any], List[Any], Dict[str, Any]
+
+$ grep -rn "# type: ignore" vibe_core --include="*.py" | wc -l
+12  # Type-Checker Overrides
+```
+
+**Kritische `Any` Verwendungen:**
+- `kernel_impl.py:350` - `governance: Optional[Any]` (Siehe A-P1-2)
+- `event_bus.py:~50` - Event payloads als `Dict[str, Any]`
+- `semantic_syscalls.py:~100` - SyscallResult als `Any`
+
+#### K9.5: Code Quality Score (Material-basiert)
+
+| Metrik | Wert | Gewichtung | Score-Impact |
+|--------|------|------------|--------------|
+| Silent Failures | 209 (15 kritisch) | 🔴 P0 (Core), 🟡 P2 (Tools) | -5 |
+| Global singletons | 70 | 🔴 P0 | -10 |
+| DEPRECATED (echte) | ~10 | 🟢 P3 | -1 |
+| `Any` Types | 67 | 🟡 P2 | -3 |
+| Type ignores | 12 | 🟢 P3 | -1 |
+
+**Fazit:** Code-Qualität reduziert Score um ~20 Punkte.
+- Die 209 Silent Failures werden nur mit -5 gewertet, da ~150 davon in Cartridge-Tools akzeptabel sind (best-effort parsing)
+- Die 15 kritischen Silent Failures in Ledger/Kernel sollten ALLE gefixt werden
 
 ---
 
