@@ -18,6 +18,8 @@ from typing import Optional
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols.task import TaskProtocol
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -399,6 +401,34 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             logger.info("\n✅ SYSTEM CLEAN - All agents compliant")
             status = "COMPLIANT"
 
+        # PHASE 3: Create healing tasks for violations with Shuddhi remedies
+        healing_tasks_created = 0
+        task_service = ServiceRegistry.get(TaskProtocol)
+        if task_service and violations:
+            for v in violations:
+                if v.get("has_remedy"):
+                    task_title = f"HEAL: {v.get('rule_id')} in {Path(v.get('file_path', '')).name}"
+                    # Check for existing task to avoid duplicates
+                    existing = [t for t in task_service.list_tasks() if t.title == task_title]
+                    if not existing:
+                        task_service.add_task(
+                            title=task_title,
+                            description=(
+                                f"Auto-heal violation detected by Watchman:\n"
+                                f"Rule: {v.get('rule_id')}\n"
+                                f"File: {v.get('file_path')}\n"
+                                f"Line: {v.get('line_number')}\n"
+                                f"Code: {v.get('code_snippet')}\n\n"
+                                f"Use: engineer.heal_violation(file_path, rule_id)"
+                            ),
+                            priority=80,  # High priority for auto-heal
+                            assigned_agent="engineer",
+                        )
+                        healing_tasks_created += 1
+
+            if healing_tasks_created > 0:
+                logger.info(f"🛡️ Created {healing_tasks_created} healing tasks for Engineer")
+
         logger.info("=" * 70 + "\n")
 
         return {
@@ -406,6 +436,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "should_fail_build": report["should_fail_build"],
             "total_violations": report["total_violations"],
             "critical_count": report["critical_count"],
+            "healing_tasks_created": healing_tasks_created,
             "report": report,
             "violations": report["violations"],
         }

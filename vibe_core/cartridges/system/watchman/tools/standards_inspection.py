@@ -39,6 +39,7 @@ class Violation:
     message: str
     code_snippet: Optional[str] = None
     fix_suggestion: Optional[str] = None
+    has_remedy: bool = False  # True if Shuddhi can auto-heal this violation
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -50,6 +51,7 @@ class Violation:
             "message": self.message,
             "code_snippet": self.code_snippet,
             "fix_suggestion": self.fix_suggestion,
+            "has_remedy": self.has_remedy,
         }
 
 
@@ -102,6 +104,7 @@ class UniversalRuleVisitor(ast.NodeVisitor):
                         message=rule.get("message", "Violation"),
                         code_snippet=snippet,
                         fix_suggestion=rule.get("fix_suggestion"),
+                        has_remedy=rule.get("has_sattva_remedy", False),
                     )
                 )
 
