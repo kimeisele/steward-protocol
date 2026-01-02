@@ -2984,6 +2984,10 @@ def validate_return_type(func):
 
 ## TEIL O: AOS IMMUNSYSTEM - REALITY CHECK (Senior Architekt - 2026-01-02)
 
+> **⚠️ CAVEAT:** Dieser Abschnitt basiert auf oberflächlicher Code-Analyse.
+> Die vollständige Integration von Watchman, Manas und Shuddhi erfordert
+> tiefere Recherche in separater Session. Hier dokumentiert: WAS WIR GESEHEN haben.
+
 > **Die gute Nachricht:** Das Immunsystem existiert und ist GENIAL designed.
 > **Die schlechte Nachricht:** Es ist unvollständig.
 
@@ -2995,7 +2999,7 @@ def validate_return_type(func):
 # Das ist WEB 3.0 - nicht pre-commit hooks!
 class ShuddhiEngine(ShuddhiProtocol):
     def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
-        # 1. Parse mit libcst (AST, nicht text!)
+        # 1. Parse mit libcst (CST = Concrete Syntax Tree, erhält Formatierung!)
         module = cst.parse_module(source_code)
 
         # 2. Transform via CSTRemedy
@@ -3084,11 +3088,31 @@ FORBIDDEN_PATTERNS = {
 
 **Location:** `vibe_core/plugins/opus_assistant/manas/` (107 files)
 
-**Status:** INFECTED with AI-slop
+**Protocol:** `vibe_core/protocols/cognition.py` - CognitiveKernelProtocol
+
+```python
+# MANAS ist der "zentrale Orchestrator autonomen Denkens und Handelns"
+class CognitiveKernelProtocol(ABC):
+    def tick(self) -> Dict[str, Any]:
+        """Consciousness tick - updates biorhythm"""
+    def think(self, context, force) -> List[Any]:
+        """OODA loop - generates intents based on perceived state"""
+```
+
+**Rolle im Immunsystem (laut Architektur-Vision):**
+- Watchman liefert strukturierte Daten (Detection)
+- Manas interpretiert diese Daten für Entscheidungen
+- Shuddhi führt chirurgische Reparaturen aus
+
+**⚠️ CAVEAT:** Die genaue Integration zwischen Watchman, Manas und Shuddhi
+ist aus dem Code nicht sofort ersichtlich und erfordert tiefere Analyse.
+
+**Status:** INFECTED with AI-slop (selbst behandlungsbedürftig)
 - 164 unused imports
 - 455 Dict[str, Any]
 
 **Bedeutung:** Manas kann nicht zuverlässig Code bewerten wenn es selbst die Patterns verletzt.
+**Nächster Schritt:** Manas heilen bevor es andere heilen kann.
 
 ### O4: IMMUNSYSTEM STRATEGIE
 
@@ -3100,7 +3124,7 @@ FORBIDDEN_PATTERNS = {
 ```
 WATCHMAN (Detection) → SHUDDHI (Purification) → LEDGER (Audit)
          ↓                      ↓                     ↓
-    "Found violation"    "Fixed via AST"      "Recorded change"
+    "Found violation"    "Fixed via CST"      "Recorded change"
 ```
 
 **WAS FEHLT:**
@@ -3256,7 +3280,28 @@ SONDERN SO:
 | Nach Phase 4 | 70/100 | Immunsystem aktiv |
 | Langfristig | 85/100 | Self-healing Loop |
 
-### Q6: FINAL VERDICT
+### Q6: WAS NOCH RESEARCH BRAUCHT
+
+> **Ehrlichkeit:** Dieser Report ist NICHT vollständig. Folgende Bereiche brauchen tiefere Analyse:
+
+| Bereich | Was wir wissen | Was wir NICHT wissen |
+|---------|----------------|---------------------|
+| **Shuddhi** | Engine existiert, nutzt libcst/CST | Wie werden Remedies getriggert? |
+| **Watchman** | Pattern-Detection existiert | Wie kommuniziert er mit Shuddhi? |
+| **Manas** | CognitiveKernelProtocol definiert | Wie interpretiert er Watchman-Daten? |
+| **Integration** | Vision ist klar | Ist der Data-Flow implementiert? |
+
+**Externe Analyse (nicht in diesem Repo):**
+Ein separater technischer Report beschreibt:
+- LCOM4-Metrik für God-Class Detection (Graphentheorie)
+- AST-to-CST Bridge Pattern für Shuddhi
+- Property-Based Testing mit State Machines
+- Narasimha als AST-basierte Policy Engine
+
+→ Diese Blueprints sollen Watchman, Manas und Shuddhi aufrüsten.
+→ Separate Session nötig um diese zu integrieren.
+
+### Q7: FINAL VERDICT
 
 > **IST DAS PROJEKT WELTKLASSE?**
 >
