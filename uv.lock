@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.9"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -4710,6 +4710,9 @@ dependencies = [
     { name = "jinja2" },
     { name = "jsonschema" },
     { name = "libcst" },
+    { name = "networkx", version = "3.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "openai" },
     { name = "pillow", version = "11.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pillow", version = "12.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -4790,6 +4793,7 @@ requires-dist = [
     { name = "libcst", specifier = ">=1.0.0" },
     { name = "llama-cpp-python", marker = "extra == 'full'", specifier = ">=0.2.0" },
     { name = "llama-cpp-python", marker = "extra == 'local-llm'", specifier = ">=0.2.0" },
+    { name = "networkx", specifier = ">=3.2.1" },
     { name = "numpy", marker = "extra == 'full'", specifier = ">=1.24.0" },
     { name = "numpy", marker = "extra == 'semantic'", specifier = ">=1.24.0" },
     { name = "openai", specifier = ">=1.0.0" },

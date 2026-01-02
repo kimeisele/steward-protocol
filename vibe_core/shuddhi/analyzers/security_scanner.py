@@ -1,11 +1,12 @@
 """
-OPUS-212: NarasimhaGuardrail - The AST-Based Security Shield.
+OPUS-212: WatchmanASTScanner - AST-Based Security Analysis for Watchman.
 
-Named after the fierce protector deity, Narasimha guards the codebase
-against security vulnerabilities using Abstract Syntax Tree analysis.
+This module provides AST-based security scanning to upgrade Watchman's
+regex-based FORBIDDEN_PATTERNS to proper semantic analysis.
 
-This replaces the regex-based detection in Watchman with proper
-semantic analysis that is robust against formatting variations.
+NOTE: This is a WATCHMAN tool, not Narasimha!
+- WATCHMAN: Scans and detects violations (this module helps with that)
+- NARASIMHA: The Kill Switch that destroys rogue agents (vibe_core/narasimha.py)
 
 Threat Model (High Priority):
 1. Insecure Deserialization (Pickle RCE)
@@ -47,15 +48,15 @@ class SecurityViolation:
         return f"[{self.severity.value}] {self.code} Line {self.line}: {self.message}"
 
 
-class NarasimhaGuardrail(ast.NodeVisitor):
+class WatchmanASTScanner(ast.NodeVisitor):
     """
-    AST-based Security Sandbox enforcing structural security policies.
+    AST-based Security Scanner for Watchman.
 
-    Unlike regex-based detection, this analyzer:
+    Upgrades Watchman's regex patterns to semantic AST analysis:
     - Handles multi-line code correctly
     - Understands argument positions and names
     - Tracks import aliases
-    - Provides precise line/column for CST bridge
+    - Provides precise line/column for CST bridge (Shuddhi)
     """
 
     # Policy: Banned Modules
@@ -329,7 +330,7 @@ def analyze_source(source_code: str) -> List[SecurityViolation]:
         List of SecurityViolation objects
     """
     tree = ast.parse(source_code)
-    guardrail = NarasimhaGuardrail()
+    guardrail = WatchmanASTScanner()
     guardrail.visit(tree)
     return guardrail.violations
 

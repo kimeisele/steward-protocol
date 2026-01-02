@@ -3,16 +3,19 @@ OPUS-212: Self-Healing Loop - The Software Immune System.
 
 This module orchestrates the complete self-healing cycle:
 
-    NARASIMHA (Detection) → MANAS (Decision) → SHUDDHI (Repair) → LEDGER (Audit)
-           AST                 Score              CST              Log
+    WATCHMAN (Detection) → MANAS (Decision) → SHUDDHI (Repair) → LEDGER (Audit)
+         AST Scanner           Score              CST              Log
+                                 ↓
+                           NARASIMHA (Kill Switch for rogues)
 
 The loop is triggered by Watchman patrols or on-demand scans.
 
 Architecture:
-- Narasimha provides AST-based security analysis (SEC codes)
+- WatchmanASTScanner provides AST-based security analysis (SEC codes)
 - LCOM4 provides cohesion analysis (GOD_CLASS codes)
 - The bridge maps AST locations to CST for surgery
 - Shuddhi remedies apply CST transformations
+- Narasimha is the KILL SWITCH for unfixable/rogue agents (not used here)
 - Results are logged for audit trail
 """
 
@@ -23,7 +26,7 @@ from typing import Dict, List, Optional
 
 from vibe_core.protocols.shuddhi import ShuddhiResult, ShuddhiStatus
 from vibe_core.shuddhi.analyzers.lcom4 import LCOM4Result, calculate_lcom4
-from vibe_core.shuddhi.analyzers.narasimha import (
+from vibe_core.shuddhi.analyzers.security_scanner import (
     SecurityViolation,
     Severity,
     analyze_source,
@@ -34,7 +37,7 @@ from vibe_core.shuddhi.engine import ShuddhiEngine
 logger = logging.getLogger("SELF_HEALING")
 
 
-# Mapping from Narasimha SEC codes to Shuddhi remedy rule_ids
+# Mapping from Watchman SEC codes to Shuddhi remedy rule_ids
 VIOLATION_TO_REMEDY: Dict[str, str] = {
     "SEC005": "subprocess_timeout",  # subprocess without timeout
     "SEC007": "unsafe_io_write",  # open() for writing
