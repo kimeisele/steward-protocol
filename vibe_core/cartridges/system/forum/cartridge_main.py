@@ -669,8 +669,11 @@ class ForumCartridge(VibeAgent, OathMixin):
             try:
                 num = int(prop_id.split("-")[1])
                 max_id = max(max_id, num)
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log malformed proposal IDs
+                import logging
+
+                logging.getLogger("FORUM").warning(f"Malformed proposal ID {prop_id}: {e}")
 
         return max_id + 1
 

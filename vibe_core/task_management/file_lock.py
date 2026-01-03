@@ -57,8 +57,11 @@ class FileLock:
         try:
             if self.lock_path.exists():
                 self.lock_path.unlink()
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log lock release failures (could cause stale locks)
+            import logging
+
+            logging.getLogger("FILELOCK").warning(f"Lock release failed for {self.lock_path}: {e}")
 
     def __enter__(self):
         """Context manager entry."""

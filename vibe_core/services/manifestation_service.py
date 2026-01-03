@@ -139,7 +139,11 @@ class ManifestIndex:
                 return match.group(1)
 
             return path.stem.lower()
-        except Exception:
+        except Exception as e:
+            # OPUS-312: Log extraction failures
+            import logging
+
+            logging.getLogger("MANIFESTATION").warning(f"Entity ID extraction failed for {path}: {e}")
             return None
 
     def on_file_created(self, path: Path) -> None:
