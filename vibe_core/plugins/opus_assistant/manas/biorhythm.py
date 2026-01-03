@@ -305,6 +305,11 @@ class BiorhythmProcessor:
         if tick % 10 == 0:
             self._reinforce_recent_patterns()
 
+        # OUROBOROS WIRE: Scan KG violations → curiosity (every 15 ticks in Sattva)
+        # This drives self-directed training from recurring violation patterns
+        if tick % 15 == 0:
+            self._scan_violation_patterns()
+
         return {
             "state": "sattva",
             "action": "reflect",
@@ -351,6 +356,33 @@ class BiorhythmProcessor:
             _ = recent[:2]  # Just acknowledge we checked
         except Exception as e:
             logger.debug(f"Pattern reinforcement failed: {e}")
+
+    def _scan_violation_patterns(self) -> None:
+        """
+        OUROBOROS WIRE: Scan KG violations and feed patterns to DojoAgency.
+
+        This creates the self-healing loop:
+        KG Violations → DojoAgency.report_violation_patterns() → Curiosity → Training
+
+        Called periodically during Sattva state (reflection).
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.dojo.agency import get_dojo_agency
+
+            # Get workspace from kernel
+            workspace = getattr(self.kernel, "_workspace", None)
+            if not workspace:
+                return
+
+            agency = get_dojo_agency(workspace)
+            patterns_found = agency.report_violation_patterns(threshold=3)
+
+            if patterns_found > 0:
+                logger.info(f"🔄 OUROBOROS: {patterns_found} violation patterns fed to curiosity")
+        except ImportError:
+            logger.debug("DojoAgency not available, skipping violation scan")
+        except Exception as e:
+            logger.debug(f"Violation pattern scan failed: {e}")
 
     def _persist_awareness(self) -> None:
         """Persist awareness state for transparency."""
