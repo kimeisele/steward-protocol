@@ -123,14 +123,38 @@ class StateService(StateServiceProtocol):
     """
 
     # =========================================================================
-    # 🍎 APPLE MAGIC CONSTANTS
+    # 🍎 APPLE MAGIC CONSTANTS - Loaded from config/prana.yaml
     # =========================================================================
-    # OPUS-XXX: Increased thresholds to reduce commit spam
-    # Previous: 5 writes / 30 seconds = hyperactive commits
-    # New: 50 writes / 300 seconds = batched, less noise
-    AUTO_COMMIT_THRESHOLD = 50  # Auto-commit after N writes (was 5)
-    AUTO_COMMIT_SECONDS = 300  # Or after N seconds since last commit (was 30)
+    # These are DEFAULTS only - actual values loaded from prana.yaml in __init__
+    AUTO_COMMIT_THRESHOLD = 50  # Default, overridden by prana.yaml
+    AUTO_COMMIT_SECONDS = 300  # Default, overridden by prana.yaml
     HEARTBEAT_PULSE_FILE = "last_pulse.json"  # Check if Heartbeat is alive
+
+    @classmethod
+    def _load_config(cls) -> None:
+        """Load config from prana.yaml (YAML > Code principle)."""
+        try:
+            from pathlib import Path
+
+            import yaml
+
+            prana_path = Path("config/prana.yaml")
+            if prana_path.exists():
+                with open(prana_path) as f:
+                    config = yaml.safe_load(f)
+
+                state_cfg = config.get("state_service", {})
+                if "auto_commit_threshold" in state_cfg:
+                    cls.AUTO_COMMIT_THRESHOLD = state_cfg["auto_commit_threshold"]
+                if "auto_commit_seconds" in state_cfg:
+                    cls.AUTO_COMMIT_SECONDS = state_cfg["auto_commit_seconds"]
+
+                logger.debug(
+                    f"StateService config loaded: threshold={cls.AUTO_COMMIT_THRESHOLD}, "
+                    f"seconds={cls.AUTO_COMMIT_SECONDS}"
+                )
+        except Exception as e:
+            logger.debug(f"Using default config (prana.yaml load failed: {e})")
 
     _lock = threading.Lock()
     _dirty_files: Set[Path] = set()
@@ -145,6 +169,9 @@ class StateService(StateServiceProtocol):
             agent_id: Optional agent ID for namespacing
             plugin_id: Optional plugin ID for namespacing
         """
+        # Load config from prana.yaml FIRST (YAML > Code principle)
+        self._load_config()
+
         self.workspace = Path(workspace).resolve()
         self.agent_id = agent_id
         self.plugin_id = plugin_id
