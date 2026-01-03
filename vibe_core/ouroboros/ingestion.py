@@ -3,6 +3,8 @@ Violation Ingestion - Universal intake for all error sources.
 
 Any source of violations (ruff, pytest, mypy, CI/CD, watchman) can feed
 into the Knowledge Graph through this interface.
+
+Pattern: Uses ServiceRegistry for KG access (injected by Prakriti on boot).
 """
 
 import json
