@@ -316,9 +316,10 @@ class ExecuteScriptHandler(ActionHandler):
                 logger.error(f"  ❌ Script failed: {target} - {e}")
                 return ActionResult.fail(str(e))
         else:
-            # Unknown script - log and pass (stub behavior)
-            logger.warning(f"  ⚠️ Unknown script (stub): {target}")
-            return ActionResult.ok({"script": target, "status": "stub", "params": params})
+            # Unknown script - FAIL instead of stubbing (Semantic Integrity)
+            error_msg = f"Unknown script target: {target}. Available: {list(self._scripts.keys())}"
+            logger.error(f"  ❌ {error_msg}")
+            return ActionResult.fail(error_msg)
 
     async def _create_folders(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Create folder structure for a project"""
