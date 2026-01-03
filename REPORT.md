@@ -3550,3 +3550,30 @@ tick % 45 → _scan_healable_violations() → DRY RUN scan
          Awaiting operator action (manual heal)
 ```
 
+
+### R9: MERGE CONFLICT ROOT CAUSE - FIXED
+
+**Symptom:** `index.lock` errors, merge conflicts in state files
+
+**Root Cause:** Archivist.seal() bypassed CommitAuthority via direct `subprocess.run(["git", "commit"])`:
+```python
+# BEFORE (BROKEN):
+subprocess.run(["git", "commit", "-m", msg], ...)  # Bypasses _commit_lock!
+
+# AFTER (FIXED):
+authority = CommitAuthority()
+result = authority.commit(paths=[...], message=msg, ...)  # Uses _commit_lock
+```
+
+**Architecture Violation:**
+```
+CORRECT:   ANY COMMIT → Weaver._commit_lock → CommitAuthority → Git
+VIOLATED:  Archivist → subprocess.run() → Git (NO LOCK!)
+```
+
+**Fix Applied:** `vibe_core/cartridges/system/archivist/cartridge_main.py`
+- Replaced direct subprocess calls with CommitAuthority.commit()
+- Now respects _commit_lock preventing concurrent git operations
+
+**Note:** Sutra (wiki sync) was investigated but is OK - commits to separate wiki repo.
+
