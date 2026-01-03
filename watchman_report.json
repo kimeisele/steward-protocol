@@ -38382,39 +38382,6 @@
     },
     {
       "agent_id": "core",
-      "file_path": "vibe_core/ouroboros/parser_loader.py",
-      "line_number": 226,
-      "rule_id": "silent_failure",
-      "severity": "HIGH",
-      "message": "Silent failure (except: pass) detected. Hides bugs.",
-      "code_snippet": "except Exception:\n    pass",
-      "fix_suggestion": "Add logging (logger.error) or proper exception handling.",
-      "has_remedy": true
-    },
-    {
-      "agent_id": "core",
-      "file_path": "vibe_core/ouroboros/verification.py",
-      "line_number": 94,
-      "rule_id": "any_type_usage",
-      "severity": "MEDIUM",
-      "message": "Any type usage detected. Violates PROMPT.md typing discipline.",
-      "code_snippet": "Any",
-      "fix_suggestion": "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data.",
-      "has_remedy": false
-    },
-    {
-      "agent_id": "core",
-      "file_path": "vibe_core/ouroboros/verification.py",
-      "line_number": 374,
-      "rule_id": "any_type_usage",
-      "severity": "MEDIUM",
-      "message": "Any type usage detected. Violates PROMPT.md typing discipline.",
-      "code_snippet": "Any",
-      "fix_suggestion": "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data.",
-      "has_remedy": false
-    },
-    {
-      "agent_id": "core",
       "file_path": "vibe_core/ouroboros/ingestion.py",
       "line_number": 60,
       "rule_id": "any_type_usage",
@@ -38522,6 +38489,39 @@
       "code_snippet": "Any",
       "fix_suggestion": "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data.",
       "has_remedy": false
+    },
+    {
+      "agent_id": "core",
+      "file_path": "vibe_core/ouroboros/verification.py",
+      "line_number": 94,
+      "rule_id": "any_type_usage",
+      "severity": "MEDIUM",
+      "message": "Any type usage detected. Violates PROMPT.md typing discipline.",
+      "code_snippet": "Any",
+      "fix_suggestion": "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data.",
+      "has_remedy": false
+    },
+    {
+      "agent_id": "core",
+      "file_path": "vibe_core/ouroboros/verification.py",
+      "line_number": 374,
+      "rule_id": "any_type_usage",
+      "severity": "MEDIUM",
+      "message": "Any type usage detected. Violates PROMPT.md typing discipline.",
+      "code_snippet": "Any",
+      "fix_suggestion": "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data.",
+      "has_remedy": false
+    },
+    {
+      "agent_id": "core",
+      "file_path": "vibe_core/ouroboros/parser_loader.py",
+      "line_number": 226,
+      "rule_id": "silent_failure",
+      "severity": "HIGH",
+      "message": "Silent failure (except: pass) detected. Hides bugs.",
+      "code_snippet": "except Exception:\n    pass",
+      "fix_suggestion": "Add logging (logger.error) or proper exception handling.",
+      "has_remedy": true
     },
     {
       "agent_id": "core",
