@@ -1,0 +1,22 @@
+# MANAS Cartridge - The Cognitive Mind
+# Part of the STEWARD Protocol system agents.
+
+meta:
+  id: system.manas
+  name: MANAS
+  description: "The Cognitive Mind - Proactive Intent Generation and Syscall Execution"
+  version: "1.1.0"
+
+agent:
+  domain: GOVERNANCE
+  capabilities:
+    - manas.cognition
+    - manas.spawn_agent
+    - manas.grant_capability
+    - manas.syscall
+    - manas.intent_generation
+    - manas.genesis
+
+config:
+  enabled: true
+  priority: 10
