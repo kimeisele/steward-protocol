@@ -156,6 +156,10 @@ os.kill(os.getpid(), 9)
                 stdout, stderr = proc.communicate(timeout=5)
             except subprocess.TimeoutExpired:
                 proc.kill()
+                # SECURITY FIX B-P1-1: Count timeouts as test failures, don't silently skip
+                # A timeout during crash simulation is a failure to complete the test
+                lost += 1
+                print(f"⚠️ Iteration {i} timed out - counting as potential data loss")
                 continue
 
             # Verify event survived

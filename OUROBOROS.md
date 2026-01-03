@@ -2,8 +2,8 @@
 
 > "Die Schlange, die sich selbst frisst" - The system that heals itself.
 
-**Status:** IN PROGRESS
-**Score:** 26/100 → Ziel: 85/100
+**Status:** IN PROGRESS (Phase 1 & 2 Complete)
+**Score:** 26/100 → 45/100 (Ziel: 85/100)
 **Erstellt:** 2026-01-03
 **Branch:** `claude/fix-architecture-debt-lzeEz`
 
@@ -66,7 +66,9 @@ Das Steward Protocol soll ein **selbstheilendes Immunsystem** haben:
 
 ## 3. ROADMAP (Die 5 Brücken)
 
-### Phase 1: Watchman → Knowledge Graph Bridge (P0)
+### Phase 1: Watchman → Knowledge Graph Bridge (P0) ✅ ERLEDIGT
+
+**Status:** ✅ IMPLEMENTIERT (2026-01-03)
 
 **Ziel:** Violations werden als Nodes im Knowledge Graph gespeichert.
 
@@ -120,7 +122,9 @@ print(f'Stored violations: {len(violations)}')
 
 ---
 
-### Phase 2: Knowledge Graph → Manas Dojo Connection (P0)
+### Phase 2: Knowledge Graph → Manas Dojo Connection (P0) ✅ ERLEDIGT
+
+**Status:** ✅ IMPLEMENTIERT (2026-01-03)
 
 **Ziel:** Manas Mirror Room liest Violations und generiert Gap-Training.
 
