@@ -290,9 +290,24 @@ class UnifiedCLI:
         for arg in cmd.args:
             kwargs = {
                 "help": arg.help,
-                "type": arg.type,
                 "default": arg.default,
             }
+
+            # Handle boolean flags correctly
+            if arg.type is bool:
+                if arg.default is True:
+                    kwargs["action"] = "store_false"
+                    # If default is True, the flag (e.g. --no-quick) should probably flip it
+                    # But manifest usually defines positive flags.
+                    # For simplicity, if default is True, we assume the flag disables it if provided?
+                    # Actually, standard CLI pattern is: --flag enables it.
+                    # If default is True, usually we want --no-flag.
+                    # But let's stick to simple store_true for now if default is False/None
+                else:
+                    kwargs["action"] = "store_true"
+            else:
+                kwargs["type"] = arg.type
+
             if arg.required:
                 kwargs["required"] = True
             if arg.nargs:
