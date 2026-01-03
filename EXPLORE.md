@@ -401,3 +401,163 @@ agency.curiosity.report_gap(f"Found {len(healable)} healable violations")
 ---
 
 > **Next Session:** Create CorrectionDispatcher, NOT wire reactors together.
+
+---
+
+## SILENT KILLER AUDIT (2026-01-03)
+
+### THE PROBLEM: "Code Compiles" ≠ "Code Works"
+
+biorhythm.py bug revealed a systemic issue: **26 silent failure hotspots** where exceptions are caught and swallowed.
+
+### Pattern Taxonomy
+
+| Pattern | Count | Danger Level |
+|---------|-------|--------------|
+| `except Exception: pass` | 11 | ☠️ CRITICAL |
+| `except Exception: logger.debug()` | 4 | ☠️ HIDDEN |
+| `return None` on failure | 5 | ⚠️ CASCADE |
+| `getattr(obj, attr, None)` | 3 | ⚠️ SILENT DEFAULT |
+| Optional import fallback | 3 | ⚠️ FEATURE DEATH |
+
+### P0 SILENT KILLERS (10 found)
+
+```
+biorhythm.py:170-175       - Config loading swallowed
+kernel_impl.py:213-216     - Async logging setup swallowed
+kernel_impl.py:2123-2124   - Shutdown cleanup swallowed
+parser_loader.py:223-227   - Parser discovery swallowed
+sync.py:344-345            - Git sync health swallowed
+file_lock.py:60-61         - Lock release swallowed
+herald/broadcast.py:12-15  - Twitter API silently disabled
+envoy/executor.py:38-74    - Jinja2 silently disabled
+dependency_manager.py:25-33 - TOML silently disabled
+base.py:145-147            - LLM provider silently disabled
+```
+
+### P1 SILENT KILLERS (13 found)
+
+```
+unified_cli.py:629-640     - State files silently discarded
+unified_cli.py:500-507     - Config fallback silent
+manifestation_service.py:142-143 - Plugin lookup returns None
+dead_code_tool.py:94-95    - SQL errors swallowed
+vajra/scanner.py:132-133   - Wiring scan failures swallowed
+ouroboros/verification.py:286-287 - Verification false negative
+kernel_impl.py:560-1137    - Multiple getattr(None) defaults
+action_handlers.py:644-668 - Cartridge attr access silent
+```
+
+---
+
+## DEAD CLI COMMANDS (2026-01-03)
+
+### `ci status` - SILENTLY SUCCEEDS
+
+```python
+# vibe_core/cli/ci_cli.py:350-355
+def _show_status(self, args: List[str]) -> int:
+    print("📊 CI Status: Not implemented yet")
+    return 0  # ← LIES! Returns success
+```
+
+### `delegate` - MAPPED TO NONE
+
+```python
+# vibe_core/cli/unified_cli.py:102
+"delegate": None,  # TODO: Migrate to plugin
+```
+
+---
+
+## SERVICEREGISTRY SPLIT-BRAIN (2026-01-03)
+
+### DEAD REGISTRATIONS (6 protocols registered, never retrieved)
+
+| Protocol | Why Dead |
+|----------|----------|
+| CartridgeProtocol | CLI uses CartridgeService.get_instance() |
+| CircuitServiceProtocol | CLI uses CircuitService.get_instance() |
+| PluginServiceProtocol | CLI uses PluginService.get_instance() |
+| SectionServiceProtocol | Nobody retrieves it |
+| RedditProtocol | Tools use self.services.get() |
+| TwitterProtocol | Tools use self.services.get() |
+
+### MISSING REGISTRATIONS (15 protocols retrieved, never registered)
+
+| Protocol | Impact |
+|----------|--------|
+| **UnifiedKnowledgeGraph** | CRITICAL - 6 files try to get it |
+| AuditorProtocol | Falls back to NullAuditor |
+| BankProtocol | EconomyPlugin uses register_factory() |
+| VaultProtocol | EconomyPlugin uses register_factory() |
+| GenesisProtocol | Code gen only |
+| FeedbackProtocol | NullFeedback fallback |
+| MemoryProtocol | NullMemory fallback |
+| ReactorProtocol | NullReactor fallback |
+| ReflectionProtocol | NullReflection fallback |
+| SynapseProtocol | NullSynapse fallback |
+| ToolRegistryProtocol | Code gen only |
+| UnifiedRegistryProtocol | Code gen only |
+| RegistryProtocol | Code gen only |
+
+### PRIVATE INSTANTIATION BYPASS (6 patterns)
+
+Components that create their own instances instead of using ServiceRegistry:
+
+```
+CartridgeService.get_instance()     - 6 files
+CircuitService.get_instance()       - cli/circuit_cli.py
+PluginService.get_instance()        - cli/plugins_cli.py
+GenesisService.get_instance()       - 5+ CLI files
+UnifiedRegistry.get_instance()      - Multiple
+BiorhythmProcessor(kernel=self)     - cognitive_kernel.py:1864
+```
+
+---
+
+## IMMUNE SYSTEM REQUIREMENTS
+
+The system needs runtime health monitoring that:
+
+1. **DETECTS** silent failures (not just exceptions)
+2. **REPORTS** to knowledge graph for learning
+3. **SURFACES** via CLI (`steward explore`, `steward health`)
+4. **ALERTS** on pattern degradation
+
+### Proposed Architecture
+
+```
+DETECT: SilentFailureWatchdog
+├── Monitors exception handlers
+├── Tracks None cascades
+├── Validates ServiceRegistry wiring
+└── Emits DegradationEvent
+
+REPORT: UnifiedKnowledgeGraph
+├── Stores degradation patterns
+├── Correlates with violations
+└── Feeds learning loops
+
+SURFACE: CLI Integration
+├── steward health --silent-failures
+├── steward explore --wiring-gaps
+└── steward audit --split-brain
+```
+
+---
+
+## PRIORITY MATRIX (Updated)
+
+| Priority | What | Why |
+|----------|------|-----|
+| P0 | ~~Wire VFS to IOService~~ | ✅ DONE |
+| P0 | ~~Wire OUROBOROS parsers~~ | ✅ DONE |
+| P0 | ~~Wire SettingsExecutor~~ | ✅ DONE |
+| P0 | ~~Fix biorhythm split-brain~~ | ✅ DONE (PR #636) |
+| P0 | Register UnifiedKnowledgeGraph | 6 files need it |
+| P0 | Fix `ci status` silent success | Lies to operators |
+| P1 | Audit 26 silent failure hotspots | System stability |
+| P1 | Remove 6 dead registrations | Clean architecture |
+| P2 | Create CorrectionDispatcher | Unified healing |
+| P2 | Migrate .opus_state (93 refs) | State hygiene |
