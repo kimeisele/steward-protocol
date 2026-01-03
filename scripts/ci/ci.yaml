@@ -1,0 +1,69 @@
+# CI/CD Hook Manifest
+#
+# PROMPT.md Compliance:
+# - Discoverable: All hooks listed here
+# - Observable: Phase, order, description
+# - Hot-Swap: Add hooks without workflow changes
+#
+# Usage: steward ci run-all
+#        steward ci run <hook_id>
+
+manifest:
+  version: "1.0.0"
+  description: "CI/CD Hooks for Ouroboros Self-Healing Loop"
+
+# Execution phases (in order)
+phases:
+  - validate    # Fast checks, fail early
+  - analyze     # Deep analysis (AST, linting)
+  - test        # Run tests
+  - report      # Generate reports
+  - ingest      # Feed back to system (Ouroboros)
+
+# Registered hooks
+hooks:
+  verify_agents:
+    phase: validate
+    script: verify_agents_manifest.py
+    description: "Verify agent manifests exist and are valid"
+    fail_build: true
+
+  kernel_boot:
+    phase: validate
+    script: test_kernel_boot.py
+    description: "Verify kernel can boot"
+    fail_build: true
+
+  gateway_boot:
+    phase: validate
+    script: test_gateway_boot.py
+    description: "Verify gateway can boot"
+    fail_build: false
+
+  watchman_inspection:
+    phase: analyze
+    script: run_watchman_inspection.py
+    description: "Deep AST-based code analysis"
+    fail_build: true
+    outputs:
+      - watchman_report.json
+
+  security_scan:
+    phase: analyze
+    script: security_scan.py
+    description: "Security vulnerability scan"
+    fail_build: true
+
+  constitutional_verdict:
+    phase: analyze
+    script: run_constitutional_verdict.py
+    description: "Constitutional compliance check"
+    fail_build: false
+
+  ingest_violations:
+    phase: ingest
+    script: ingest_violations.py
+    description: "Ingest violations into Knowledge Graph (Ouroboros)"
+    fail_build: false
+    depends_on:
+      - watchman_inspection
