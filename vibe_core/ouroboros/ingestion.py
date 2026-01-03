@@ -43,7 +43,12 @@ class ViolationSource(Enum):
 
 @dataclass
 class ViolationRecord:
-    """A violation record from any source."""
+    """
+    A violation record from any source.
+
+    SATYA Enhancement: Now includes verification metadata.
+    Violations should be verified before ingestion to avoid Maya (illusion).
+    """
 
     source: ViolationSource
     rule_id: str
@@ -53,6 +58,11 @@ class ViolationRecord:
     severity: str = "MEDIUM"
     has_remedy: bool = False
     context: Optional[Dict[str, Any]] = None
+
+    # SATYA: Verification metadata (optional, populated by SatyaValidator)
+    verification_status: str = "unverified"  # unverified | verified | stale | maya
+    verified_at: Optional[str] = None
+    origin: str = "unknown"  # live_scan | report | ci | manual
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -65,7 +75,19 @@ class ViolationRecord:
             "has_remedy": self.has_remedy,
             "context": self.context or {},
             "ingested_at": datetime.now().isoformat(),
+            # SATYA: Verification metadata
+            "verification_status": self.verification_status,
+            "verified_at": self.verified_at,
+            "origin": self.origin,
         }
+
+    def is_verified(self) -> bool:
+        """Check if this violation has been verified to exist."""
+        return self.verification_status in ("verified", "stale")
+
+    def is_maya(self) -> bool:
+        """Check if this violation is Maya (false positive / no longer exists)."""
+        return self.verification_status == "maya"
 
 
 class ViolationIngester:
@@ -74,11 +96,28 @@ class ViolationIngester:
 
     Accepts violations from any source and persists them to the Knowledge Graph.
     This is the "stomach" of Ouroboros - it digests all errors.
+
+    SATYA Enhancement: Can optionally verify violations before ingestion.
+    This prevents Maya (illusion) from entering the Knowledge Graph.
     """
 
-    def __init__(self, kg: Optional[UnifiedKnowledgeGraph] = None):
-        """Initialize with optional Knowledge Graph injection."""
+    def __init__(
+        self,
+        kg: Optional[UnifiedKnowledgeGraph] = None,
+        verify: bool = False,
+        project_root: Optional[Path] = None,
+    ):
+        """
+        Initialize with optional Knowledge Graph injection.
+
+        Args:
+            kg: Optional Knowledge Graph instance
+            verify: If True, verify violations before ingesting (via SatyaValidator)
+            project_root: Root directory for verification
+        """
         self._kg = kg
+        self._verify = verify
+        self._project_root = project_root
 
     @property
     def kg(self) -> UnifiedKnowledgeGraph:
@@ -89,18 +128,38 @@ class ViolationIngester:
             raise RuntimeError("Knowledge Graph not available in ServiceRegistry")
         return self._kg
 
-    def ingest(self, violations: List[ViolationRecord]) -> int:
+    def ingest(
+        self,
+        violations: List[ViolationRecord],
+        verify: Optional[bool] = None,
+    ) -> int:
         """
         Ingest a batch of violations into the Knowledge Graph.
 
+        SATYA: If verify=True, violations are verified against current code
+        before ingestion. Maya (false positives) are discarded.
+
         Args:
             violations: List of violation records
+            verify: Override instance-level verify setting
 
         Returns:
-            Number of violations ingested
+            Number of violations ingested (excludes Maya)
         """
+        should_verify = verify if verify is not None else self._verify
+
+        if should_verify:
+            violations = self._verify_violations(violations)
+
         count = 0
+        maya_count = 0
+
         for v in violations:
+            # Skip Maya (false positives)
+            if v.is_maya():
+                maya_count += 1
+                continue
+
             try:
                 self.kg.add_violation(
                     file_path=v.file_path or "unknown",
@@ -108,17 +167,54 @@ class ViolationIngester:
                     rule_id=v.rule_id,
                     message=v.message,
                     has_remedy=v.has_remedy,
+                    verification_status=v.verification_status,
+                    verified_at=v.verified_at,
+                    origin=v.origin,
                 )
                 count += 1
             except Exception as e:
                 logger.warning(f"[OUROBOROS] Failed to ingest violation: {e}")
 
-        if count > 0:
-            logger.info(
-                f"[OUROBOROS] Ingested {count} violations from {violations[0].source.value if violations else 'unknown'}"
-            )
+        if count > 0 or maya_count > 0:
+            source = violations[0].source.value if violations else "unknown"
+            logger.info(f"[OUROBOROS] Ingested {count} violations from {source} (Maya discarded: {maya_count})")
 
         return count
+
+    def _verify_violations(
+        self,
+        violations: List[ViolationRecord],
+    ) -> List[ViolationRecord]:
+        """
+        Verify violations using SatyaValidator.
+
+        Returns violations with updated verification_status.
+        """
+        from vibe_core.ouroboros.verification import (
+            SatyaValidator,
+            ViolationOrigin,
+        )
+
+        validator = SatyaValidator(project_root=self._project_root)
+        result = validator.verify_batch(violations, origin=ViolationOrigin.REPORT)
+
+        # Convert verified violations back to ViolationRecords
+        verified_records = []
+
+        for v in result.verified:
+            record = v.record
+            record.verification_status = v.verification_status.value
+            record.verified_at = v.verified_at
+            record.origin = v.origin.value
+            verified_records.append(record)
+
+        for v in result.maya:
+            record = v.record
+            record.verification_status = "maya"
+            record.origin = v.origin.value
+            verified_records.append(record)
+
+        return verified_records
 
     def ingest_from_json(self, json_path: Path, source: ViolationSource) -> int:
         """

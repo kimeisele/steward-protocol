@@ -231,6 +231,9 @@ class UnifiedKnowledgeGraph:
         rule_id: str,
         message: str,
         has_remedy: bool = False,
+        verification_status: str = "unverified",
+        verified_at: Optional[str] = None,
+        origin: str = "unknown",
     ) -> Node:
         """
         OUROBOROS: Add a violation node to the graph.
@@ -238,12 +241,18 @@ class UnifiedKnowledgeGraph:
         This enables the self-healing loop by persisting violations
         for Manas to learn from.
 
+        SATYA Enhancement: Now includes verification metadata to distinguish
+        between verified (Shruti) and unverified (Smriti) violations.
+
         Args:
             file_path: Path to the file with violation
             line: Line number of violation
             rule_id: The standards.yaml rule that was violated
             message: Human-readable violation message
             has_remedy: Whether a Shuddhi remedy exists
+            verification_status: unverified | verified | stale | maya
+            verified_at: ISO timestamp of last verification
+            origin: live_scan | report | ci | manual
 
         Returns:
             The created violation node
@@ -267,11 +276,16 @@ class UnifiedKnowledgeGraph:
                 "has_remedy": has_remedy,
                 "detected_at": datetime.now().isoformat(),
                 "healed": False,
+                # SATYA: Verification metadata
+                "verification_status": verification_status,
+                "verified_at": verified_at,
+                "origin": origin,
             },
         )
 
         self.add_node(node)
-        logger.info(f"[OUROBOROS] Violation recorded: {rule_id} in {file_path}:{line}")
+        status_emoji = "✓" if verification_status == "verified" else "?"
+        logger.info(f"[OUROBOROS] Violation recorded [{status_emoji}]: {rule_id} in {file_path}:{line}")
         return node
 
     def mark_violation_healed(self, violation_id: str, remedy_id: str) -> None:
