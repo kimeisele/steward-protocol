@@ -547,7 +547,7 @@ SURFACE: CLI Integration
 
 ---
 
-## PRIORITY MATRIX (Updated)
+## PRIORITY MATRIX (Updated 2026-01-04)
 
 | Priority | What | Why |
 |----------|------|-----|
@@ -555,9 +555,17 @@ SURFACE: CLI Integration
 | P0 | ~~Wire OUROBOROS parsers~~ | ✅ DONE |
 | P0 | ~~Wire SettingsExecutor~~ | ✅ DONE |
 | P0 | ~~Fix biorhythm split-brain~~ | ✅ DONE (PR #636) |
-| P0 | Register UnifiedKnowledgeGraph | 6 files need it |
-| P0 | Fix `ci status` silent success | Lies to operators |
-| P1 | Audit 26 silent failure hotspots | System stability |
+| P0 | ~~Register UnifiedKnowledgeGraph~~ | ✅ DONE (boot_orchestrator.py) |
+| P0 | ~~Fix `ci status` silent success~~ | ✅ DONE (returns 1 now) |
+| P0 | ~~Kernel silent killers (2)~~ | ✅ DONE (VISNU bypass) |
+| P0 | ~~parser_loader.py silent killer~~ | ✅ DONE |
+| P1 | Audit remaining 20 silent failures | System stability |
 | P1 | Remove 6 dead registrations | Clean architecture |
-| P2 | Create CorrectionDispatcher | Unified healing |
-| P2 | Migrate .opus_state (93 refs) | State hygiene |
+| P1 | Create CorrectionDispatcher | Unified healing (design complete) |
+| P2 | Migrate .opus_state (274 refs, 82 files) | State hygiene |
+
+### Battle Progress
+- **Silent Killers Eliminated:** 6
+- **Silent Killers Remaining:** 20
+- **CorrectionDispatcher:** Design complete (subagent report)
+- **GAD Standards:** 38 GADs mapped, GAD-000 = Operator Inversion
