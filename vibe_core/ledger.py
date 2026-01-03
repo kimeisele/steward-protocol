@@ -71,8 +71,11 @@ class ArchiveAttachment:
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             self.connection.execute(f"DETACH DATABASE {self.alias}")
-        except sqlite3.Error:
-            pass
+        except sqlite3.Error as e:
+            # OPUS-312: Log detach failures at debug (cleanup, non-critical)
+            import logging
+
+            logging.getLogger("LEDGER").debug(f"DETACH DATABASE {self.alias} failed: {e}")
 
 
 class InMemoryLedger(VibeLedger):
@@ -192,8 +195,11 @@ def _get_shared_conn(db_path: str) -> sqlite3.Connection:
             if not os.path.exists(abs_path):
                 try:
                     _db_shared_conns[abs_path].close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # OPUS-312: Log connection close failures at debug
+                    import logging
+
+                    logging.getLogger("LEDGER").debug(f"DB close failed for {abs_path}: {e}")
                 del _db_shared_conns[abs_path]
             else:
                 # Check 2: Is connection still usable?
@@ -210,8 +216,11 @@ def _get_shared_conn(db_path: str) -> sqlite3.Connection:
             try:
                 conn.execute("PRAGMA journal_mode=WAL;")
                 conn.execute("PRAGMA synchronous=NORMAL;")
-            except sqlite3.Error:
-                pass
+            except sqlite3.Error as e:
+                # OPUS-312: Log PRAGMA failures at debug (performance optimization, non-critical)
+                import logging
+
+                logging.getLogger("LEDGER").debug(f"PRAGMA setup failed for {abs_path}: {e}")
             _db_shared_conns[abs_path] = conn
         return _db_shared_conns[abs_path]
 
@@ -667,8 +676,9 @@ class SQLiteLedger(VibeLedger):
             if row.get("payload") and row.get("details") is None:
                 try:
                     row["details"] = json.loads(row["payload"])
-                except (json.JSONDecodeError, TypeError):
-                    pass
+                except (json.JSONDecodeError, TypeError) as e:
+                    # OPUS-312: Log JSON parse failures at debug (graceful degradation)
+                    logger.debug(f"JSON parse failed for payload: {e}")
         return rows
 
     def _list_archives(self) -> List[str]:
@@ -806,8 +816,9 @@ class SQLiteLedger(VibeLedger):
             if event.get("payload") and event.get("details") is None:
                 try:
                     event["details"] = json.loads(event["payload"])
-                except (json.JSONDecodeError, TypeError):
-                    pass
+                except (json.JSONDecodeError, TypeError) as e:
+                    # OPUS-312: Log JSON parse failures at debug (graceful degradation)
+                    logger.debug(f"JSON parse failed for event payload: {e}")
             events.append(event)
         return events
 
