@@ -503,8 +503,11 @@ class UnifiedCLI:
                     lib_path = getattr(config.paths.system, "library_path", None)
                     if lib_path:
                         target_dir = Path(lib_path)
-            except Exception:
-                pass  # Use default
+            except Exception as e:
+                # OPUS-312: Don't swallow config failures silently
+                import logging
+
+                logging.getLogger("CLI").warning(f"PhoenixConfig load failed: {e}, using default")
 
         # Ensure target exists
         if not target_dir.exists():
@@ -626,7 +629,11 @@ class UnifiedCLI:
             if memory_path.exists():
                 try:
                     memory = json.loads(memory_path.read_text())
-                except Exception:
+                except Exception as e:
+                    # OPUS-312: Log state file corruption
+                    import logging
+
+                    logging.getLogger("CLI").warning(f"Memory state corrupted: {e}")
                     memory = {}
             else:
                 memory = {}
@@ -636,7 +643,11 @@ class UnifiedCLI:
             if synapse_path.exists():
                 try:
                     synapses = json.loads(synapse_path.read_text())
-                except Exception:
+                except Exception as e:
+                    # OPUS-312: Log state file corruption
+                    import logging
+
+                    logging.getLogger("CLI").warning(f"Synapses state corrupted: {e}")
                     synapses = {"schema": "v1", "weights": {}}
             else:
                 synapses = {"schema": "v1", "weights": {}}
@@ -646,7 +657,11 @@ class UnifiedCLI:
             if awareness_path.exists():
                 try:
                     awareness = json.loads(awareness_path.read_text())
-                except Exception:
+                except Exception as e:
+                    # OPUS-312: Log state file corruption
+                    import logging
+
+                    logging.getLogger("CLI").warning(f"Awareness state corrupted: {e}")
                     awareness = {"state": "unknown", "consciousness_level": 0.0}
             else:
                 awareness = {"state": "unknown", "consciousness_level": 0.0, "tick": 0}

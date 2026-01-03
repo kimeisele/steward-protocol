@@ -91,8 +91,11 @@ class DeadCodeTool(Tool):
                     try:
                         cursor.execute(f"SELECT COUNT(*) FROM {table}")
                         total_rows += cursor.fetchone()[0]
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log SQL failures
+                        import logging
+
+                        logging.getLogger("CLEANER").warning(f"SQL count failed for {table}: {e}")
 
                 conn.close()
 

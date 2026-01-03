@@ -223,8 +223,13 @@ class ViolationParserLoader:
             try:
                 if parser.can_parse(path):
                     matching.append(parser)
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log parser failures (don't swallow silently)
+                import logging
+
+                logging.getLogger("OUROBOROS").warning(
+                    f"Parser {parser.__class__.__name__}.can_parse() failed for {path}: {e}"
+                )
 
         return matching
 

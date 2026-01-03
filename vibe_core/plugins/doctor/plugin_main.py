@@ -67,8 +67,11 @@ class DoctorPlugin(KernelPlugin):
                         if "@deprecated" in content or "DeprecationWarning" in content:
                             deprecated_count += 1
                             report["issues"].append(f"Legacy code detected in: {py_file}")
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log file read failures at debug
+                        import logging
+
+                        logging.getLogger("DOCTOR").debug(f"Could not read {py_file}: {e}")
 
             report["checks"].append(
                 {

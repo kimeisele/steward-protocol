@@ -142,8 +142,9 @@ class CartridgeBase:
             from vibe_core.runtime.providers.factory import LLMProviderFactory
 
             return LLMProviderFactory.create("smart_local")
-        except Exception:
-            logger.debug(f"Could not initialize LLM provider for {self.name} (fallback to local mode)")
+        except Exception as e:
+            # OPUS-312: Log at WARNING not DEBUG - LLM init failure is significant
+            logger.warning(f"⚠️ LLM provider init failed for {self.name}: {e} (fallback to local mode)")
             return None
 
     def _load_playbooks(self) -> dict[str, Any]:

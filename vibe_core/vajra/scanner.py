@@ -129,8 +129,11 @@ class VAJRAScanner:
             for py_file in dir_path.rglob("*.py"):
                 try:
                     self._scan_file_for_wiring_calls(py_file)
-                except Exception:
-                    pass  # Already logged in phase 1
+                except Exception as e:
+                    # OPUS-312: Log wiring scan failures
+                    import logging
+
+                    logging.getLogger("VAJRA").warning(f"Wiring scan failed for {py_file}: {e}")
 
         # Phase 3: Determine wiring status
         for name, component in self._wirable_classes.items():

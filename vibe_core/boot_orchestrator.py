@@ -125,8 +125,11 @@ class BootOrchestrator(CognitiveCycle):
                 phoenix_config = get_config()
                 if phoenix_config and hasattr(phoenix_config, "paths"):
                     ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log config resolution failure
+                import logging
+
+                logging.getLogger("BOOT").warning(f"Phoenix config resolution failed: {e}")
             # Final fallback: construct from config defaults (not hardcoded string)
             if ledger_path is None:
                 from pathlib import Path as _Path
@@ -570,8 +573,9 @@ class BootOrchestrator(CognitiveCycle):
                     branch=branch.stdout.strip() or None,
                     is_clean=True,  # Simplified for now
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log git state resolution failure
+            logger.debug(f"Git state resolution failed (non-fatal): {e}")
 
         # Get available agents
         available_agents = list(self.kernel.agent_registry.keys()) if hasattr(self.kernel, "agent_registry") else []

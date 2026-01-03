@@ -171,8 +171,9 @@ class BiorhythmProcessor:
             full_config = getattr(self.kernel, "_full_config", {})
             if full_config and "biorhythm" in full_config:
                 weights = full_config["biorhythm"].get("weights", weights)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log config loading failures
+            logger.warning(f"⚠️ Biorhythm config loading failed: {e}, using defaults")
 
         # 1. Synaptic urgency
         if tick % 10 == 0:
