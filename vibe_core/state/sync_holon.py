@@ -54,6 +54,7 @@ from vibe_core.protocols import StateSyncHolonProtocol, StateSyncWeaverProtocol
 
 # OPUS-098: Import StateGuna from canonical location
 from vibe_core.state.guna_classifier import StateGuna
+from vibe_core.state.runtime_state import get_runtime_state_definition
 
 if TYPE_CHECKING:
     from vibe_core.state.prakriti import Prakriti
@@ -438,18 +439,28 @@ class StateSyncHolon(StateSyncHolonProtocol):
 
     def ensure_tracked(self) -> List[str]:
         """
-        Ensure all state paths are git-tracked (not ignored).
+        Ensure all SOURCE state paths are git-tracked (not ignored).
 
         This is the LOBOTOMY PREVENTION check.
 
+        P0 FIX (DEATH LOOP): RUNTIME state IS allowed to be in .gitignore.
+        Only SOURCE state must be tracked. Runtime state (.vibe/state/, .prakriti/,
+        .opus_state/) changes constantly and SHOULD be ignored by git.
+
         Raises:
-            GovernanceViolation: If any state path is in .gitignore
+            GovernanceViolation: If any SOURCE state path is in .gitignore
         """
         violations = []
+        runtime_def = get_runtime_state_definition()
 
         for plugin, infos in self.discover_state_paths().items():
             for info in infos:
                 if info.is_ignored:
+                    # P0 FIX: Runtime state IS allowed to be ignored - that's correct!
+                    path_str = str(info.path)
+                    if runtime_def.is_runtime_state(path_str):
+                        logger.debug(f"[SYNC_HOLON] Runtime state correctly ignored: {path_str}")
+                        continue  # This is correct behavior for runtime state
                     violations.append(f"{plugin}: {info.path} is IGNORED (LOBOTOMY!)")
 
         if violations:
@@ -594,9 +605,20 @@ class StateSyncHolon(StateSyncHolonProtocol):
         self._create_from_template(path)
 
     def _commit_and_sync(self, path: Path) -> None:
-        """Commit dirty state and sync with ledger."""
+        """Commit dirty state and sync with ledger.
+
+        P0 FIX (DEATH LOOP): Only commit SOURCE state, not RUNTIME state.
+        Runtime state (.vibe/state/, .prakriti/, .opus_state/) should NOT be committed.
+        """
         if self._is_dirty(path):
             try:
+                # P0 FIX: Check if this is runtime state - if so, skip commit
+                runtime_def = get_runtime_state_definition()
+                path_str = str(path.relative_to(self.prakriti.workspace) if path.is_absolute() else path)
+                if runtime_def.is_runtime_state(path_str):
+                    logger.debug(f"[SYNC_HOLON] Skipping runtime state commit: {path_str}")
+                    return  # Don't commit runtime state to git
+
                 self.prakriti.git.stage([str(path)])
                 self.prakriti.commit_if_dirty(
                     message=f"state(sync): Auto-commit {path.name}",

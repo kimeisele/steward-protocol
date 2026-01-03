@@ -422,6 +422,11 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         Phase 4: DECIDE - What to do?
 
         Decide the commit strategy based on classified state and advice.
+
+        P0 FIX (DEATH LOOP): Filter out RUNTIME state files.
+        Runtime state (.vibe/state/, .prakriti/, .opus_state/) should NOT be committed to git.
+        These files change constantly and cause merge conflicts.
+        Only SOURCE state (code, config) should be committed.
         """
         if not classified.rajas:
             return CommitPlan(
@@ -430,13 +435,28 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
                 message="Nothing to commit",
             )
 
-        paths = advice.priority_paths or [info.path for info in classified.rajas]
+        all_paths = advice.priority_paths or [info.path for info in classified.rajas]
+
+        # P0 FIX: Filter out runtime state - these should NOT be committed to git
+        committable_paths = []
+        for path in all_paths:
+            path_str = str(path)
+            if self._runtime_definition and self._runtime_definition.is_runtime_state(path_str):
+                continue  # Runtime state - skip git commit
+            committable_paths.append(path)
+
+        if not committable_paths:
+            return CommitPlan(
+                paths=[],
+                strategy=CommitStrategy.SKIP,
+                message="All changes are runtime state (not committed to git)",
+            )
 
         return CommitPlan(
-            paths=paths,
+            paths=committable_paths,
             strategy=CommitStrategy.IMMEDIATE,
-            message="chore(state): Auto-sync runtime state",
-            no_verify=True,  # Runtime state skips hooks
+            message="chore(state): Auto-sync source state",
+            no_verify=True,  # State commits skip hooks for speed
         )
 
     def _execute_commit(self, plan: CommitPlan) -> CommitResult:
