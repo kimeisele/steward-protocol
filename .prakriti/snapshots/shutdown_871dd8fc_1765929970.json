@@ -1,0 +1,58 @@
+{
+  "timestamp": 1765929970.793241,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/unified-state-management-wDhNc",
+    "sha": "83fba6d",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "dirty_count": 1594,
+    "dirty_files": [
+      ".boot_pid",
+      ".dockerignore",
+      ".env.example",
+      ".gitignore",
+      ".pre-commit-config.yaml",
+      "AGENTS.md",
+      "AGI_MANIFESTO.md",
+      "ARCHITECTURE.md",
+      "CITYMAP.md",
+      "CONSTITUTION.md"
+    ],
+    "last_snapshot": null
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 2.77561092376709,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 14
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "871dd8fc",
+    "boot_time": 1765929969.5820081,
+    "commit_count": 1
+  }
+}
