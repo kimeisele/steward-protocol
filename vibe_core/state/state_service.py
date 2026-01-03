@@ -706,12 +706,14 @@ class StateService(StateServiceProtocol):
             intent_context={"source": "state_service", "reason": reason},
         )
 
+        # CommitResult.success property returns True for SUCCESS, HEALED, or SKIPPED
         if result.success:
-            logger.info(f"🍎 CommitAuthority: {len(dirty_list)} files committed")
+            if result.outcome.value != "skipped":
+                logger.info(f"🍎 CommitAuthority: {len(dirty_list)} files committed")
             return True
-        elif result.skipped_reason == "nothing_to_commit":
-            return True  # Clean state is success
 
+        # Log failure reason
+        logger.warning(f"🍎 CommitAuthority failed: {result.outcome.value} - {result.message}")
         return False
 
 
