@@ -5,10 +5,14 @@ Any source of violations (ruff, pytest, mypy, CI/CD, watchman) can feed
 into the Knowledge Graph through this interface.
 
 Pattern: Uses ServiceRegistry for KG access (injected by Prakriti on boot).
+
+KARMA: All significant operations emit Ledger events.
+YANTRA: duration_ms tracked for performance monitoring.
 """
 
 import json
 import logging
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -139,6 +143,9 @@ class ViolationIngester:
         SATYA: If verify=True, violations are verified against current code
         before ingestion. Maya (false positives) are discarded.
 
+        KARMA: Emits VIOLATION_INGESTED ledger event for audit trail.
+        YANTRA: Tracks duration_ms for performance monitoring.
+
         Args:
             violations: List of violation records
             verify: Override instance-level verify setting
@@ -146,6 +153,7 @@ class ViolationIngester:
         Returns:
             Number of violations ingested (excludes Maya)
         """
+        start_time = time.perf_counter()
         should_verify = verify if verify is not None else self._verify
 
         if should_verify:
@@ -153,6 +161,7 @@ class ViolationIngester:
 
         count = 0
         maya_count = 0
+        source = violations[0].source.value if violations else "unknown"
 
         for v in violations:
             # Skip Maya (false positives)
@@ -175,11 +184,67 @@ class ViolationIngester:
             except Exception as e:
                 logger.warning(f"[OUROBOROS] Failed to ingest violation: {e}")
 
+        # YANTRA: Calculate duration
+        duration_ms = (time.perf_counter() - start_time) * 1000
+
         if count > 0 or maya_count > 0:
-            source = violations[0].source.value if violations else "unknown"
-            logger.info(f"[OUROBOROS] Ingested {count} violations from {source} (Maya discarded: {maya_count})")
+            logger.info(
+                f"[OUROBOROS] Ingested {count} violations from {source} "
+                f"(Maya discarded: {maya_count}, duration: {duration_ms:.1f}ms)"
+            )
+
+            # KARMA: Record to Ledger (significant action = must be recorded)
+            self._record_ingestion_event(
+                source=source,
+                count=count,
+                maya_count=maya_count,
+                duration_ms=duration_ms,
+                verified=should_verify,
+            )
+
+        # YANTRA: Warn on slow operations (>100ms as per PROMPT.md)
+        if duration_ms > 100:
+            logger.warning(f"[OUROBOROS] Slow ingestion: {duration_ms:.1f}ms for {count} violations")
 
         return count
+
+    def _record_ingestion_event(
+        self,
+        source: str,
+        count: int,
+        maya_count: int,
+        duration_ms: float,
+        verified: bool,
+    ) -> None:
+        """
+        KARMA: Record violation ingestion to Ledger.
+
+        This creates an immutable audit trail of all ingestion operations.
+        """
+        try:
+            from vibe_core.protocols.ledger import VibeLedger
+
+            ledger = ServiceRegistry.get(VibeLedger)
+            if ledger is None:
+                logger.debug("[OUROBOROS] Ledger not available, skipping event recording")
+                return
+
+            ledger.record_event(
+                event_type="VIOLATION_INGESTED",
+                agent_id="ouroboros",
+                details={
+                    "source": source,
+                    "violations_ingested": count,
+                    "maya_discarded": maya_count,
+                    "duration_ms": round(duration_ms, 2),
+                    "verified": verified,
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+            logger.debug("[OUROBOROS] Recorded ingestion event to Ledger")
+        except Exception as e:
+            # DHARMA: Never crash on Ledger failure, but always log
+            logger.warning(f"[OUROBOROS] Failed to record to Ledger: {e}")
 
     def _verify_violations(
         self,

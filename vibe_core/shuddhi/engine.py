@@ -3,11 +3,16 @@ OPUS-212: ShuddhiEngine - The Surgical Orchestrator.
 
 OPUS-307: No more hardcoded remedies!
 Remedies are auto-discovered via RemedyLoader (VEDA-4 pattern).
+
+KARMA: All healing operations emit Ledger events for audit trail.
+YANTRA: duration_ms tracked for performance monitoring.
 """
 
 import logging
+import time
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import libcst as cst
 
@@ -155,6 +160,53 @@ class ShuddhiEngine(ShuddhiProtocol):
         self._discover_remedies()
 
     # =========================================================================
+    # KARMA: Ledger Event Recording
+    # =========================================================================
+
+    def _record_healing_event(
+        self,
+        event_type: str,
+        file_path: Path,
+        rule_id: str,
+        status: str,
+        duration_ms: float,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        KARMA: Record healing operation to Ledger.
+
+        This creates an immutable audit trail of all healing operations.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.ledger import VibeLedger
+
+            ledger = ServiceRegistry.get(VibeLedger)
+            if ledger is None:
+                logger.debug("[SHUDDHI] Ledger not available, skipping event recording")
+                return
+
+            event_details = {
+                "file_path": str(file_path),
+                "rule_id": rule_id,
+                "status": status,
+                "duration_ms": round(duration_ms, 2),
+                "timestamp": datetime.now().isoformat(),
+            }
+            if details:
+                event_details.update(details)
+
+            ledger.record_event(
+                event_type=event_type,
+                agent_id="shuddhi",
+                details=event_details,
+            )
+            logger.debug(f"[SHUDDHI] Recorded {event_type} to Ledger")
+        except Exception as e:
+            # DHARMA: Never crash on Ledger failure, but always log
+            logger.warning(f"[SHUDDHI] Failed to record to Ledger: {e}")
+
+    # =========================================================================
     # OUROBOROS: Knowledge Graph Integration
     # =========================================================================
 
@@ -171,6 +223,9 @@ class ShuddhiEngine(ShuddhiProtocol):
         This is the Nadi (channel) between Shuddhi and the self-healing loop.
         When healing succeeds, the violation is marked as healed in KG.
 
+        KARMA: Emits VIOLATION_HEALED ledger event for audit trail.
+        YANTRA: Tracks duration_ms for performance monitoring.
+
         Args:
             file_path: Path to the file to heal
             rule_id: The rule ID to apply
@@ -180,10 +235,15 @@ class ShuddhiEngine(ShuddhiProtocol):
         Returns:
             ShuddhiResult with healing outcome
         """
+        start_time = time.perf_counter()
+
         # 1. Perform the healing
         result = self.purify(file_path, rule_id)
 
-        # 2. If successful, update Knowledge Graph
+        # 2. Calculate duration
+        duration_ms = (time.perf_counter() - start_time) * 1000
+
+        # 3. If successful, update Knowledge Graph
         if result.status == ShuddhiStatus.PURIFIED:
             try:
                 from vibe_core.di import ServiceRegistry
@@ -194,7 +254,7 @@ class ShuddhiEngine(ShuddhiProtocol):
                     kg.mark_violation_healed(violation_id, rule_id)
                     logger.info(f"[SHUDDHI→KG] Marked violation {violation_id} as healed")
 
-                # 3. Optionally write the healed file
+                # 4. Optionally write the healed file
                 if write_file and result.purified_code:
                     file_path.write_text(result.purified_code)
                     logger.info(f"[SHUDDHI] Wrote healed code to {file_path}")
@@ -202,6 +262,24 @@ class ShuddhiEngine(ShuddhiProtocol):
             except Exception as e:
                 # Don't fail the healing if KG update fails
                 logger.warning(f"[SHUDDHI→KG] Failed to record healing: {e}")
+
+        # KARMA: Record to Ledger
+        self._record_healing_event(
+            event_type="VIOLATION_HEALED",
+            file_path=file_path,
+            rule_id=rule_id,
+            status=result.status.value,
+            duration_ms=duration_ms,
+            details={
+                "violation_id": violation_id,
+                "write_file": write_file,
+                "message": result.message,
+            },
+        )
+
+        # YANTRA: Warn on slow operations (>100ms per PROMPT.md)
+        if duration_ms > 100:
+            logger.warning(f"[SHUDDHI] Slow healing: {duration_ms:.1f}ms for {rule_id} in {file_path}")
 
         return result
 
@@ -212,13 +290,20 @@ class ShuddhiEngine(ShuddhiProtocol):
         This is the automatic healing loop - reads violations from KG,
         applies remedies where available, marks them as healed.
 
+        KARMA: Emits HEALING_BATCH_COMPLETE ledger event for audit trail.
+        YANTRA: Tracks duration_ms for performance monitoring.
+
         Args:
             dry_run: If True, don't write files (just return diffs)
 
         Returns:
             List of ShuddhiResults for each attempted healing
         """
+        start_time = time.perf_counter()
         results = []
+        healed_count = 0
+        skipped_count = 0
+        failed_count = 0
 
         try:
             from vibe_core.di import ServiceRegistry
@@ -233,6 +318,7 @@ class ShuddhiEngine(ShuddhiProtocol):
             violations = kg.get_violations(healed=False)
             logger.info(f"[SHUDDHI] Found {len(violations)} unhealed violations")
 
+            healable_count = 0
             for v in violations:
                 rule_id = v.properties.get("rule_id", "")
                 file_path_str = v.properties.get("file_path", "")
@@ -245,7 +331,9 @@ class ShuddhiEngine(ShuddhiProtocol):
                 if not file_path.exists():
                     continue
 
-                # Attempt healing
+                healable_count += 1
+
+                # Attempt healing (heal_and_record already tracks its own duration)
                 result = self.heal_and_record(
                     file_path=file_path,
                     rule_id=rule_id,
@@ -255,9 +343,73 @@ class ShuddhiEngine(ShuddhiProtocol):
                 results.append(result)
 
                 if result.status == ShuddhiStatus.PURIFIED:
+                    healed_count += 1
                     logger.info(f"[SHUDDHI] ✅ Healed {rule_id} in {file_path}")
+                elif result.status == ShuddhiStatus.SKIPPED:
+                    skipped_count += 1
+                else:
+                    failed_count += 1
 
         except Exception as e:
             logger.exception(f"[SHUDDHI] Error in heal_all_violations: {e}")
 
+        # YANTRA: Calculate total batch duration
+        duration_ms = (time.perf_counter() - start_time) * 1000
+
+        # KARMA: Record batch completion to Ledger
+        if results or healable_count > 0:
+            self._record_batch_event(
+                healed=healed_count,
+                skipped=skipped_count,
+                failed=failed_count,
+                total_violations=len(violations) if "violations" in dir() else 0,
+                healable=healable_count if "healable_count" in dir() else 0,
+                duration_ms=duration_ms,
+                dry_run=dry_run,
+            )
+
+        # YANTRA: Warn on slow batch operations (>100ms per PROMPT.md)
+        if duration_ms > 100:
+            logger.warning(f"[SHUDDHI] Slow batch healing: {duration_ms:.1f}ms for {len(results)} attempts")
+
         return results
+
+    def _record_batch_event(
+        self,
+        healed: int,
+        skipped: int,
+        failed: int,
+        total_violations: int,
+        healable: int,
+        duration_ms: float,
+        dry_run: bool,
+    ) -> None:
+        """KARMA: Record batch healing completion to Ledger."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.ledger import VibeLedger
+
+            ledger = ServiceRegistry.get(VibeLedger)
+            if ledger is None:
+                return
+
+            ledger.record_event(
+                event_type="HEALING_BATCH_COMPLETE",
+                agent_id="shuddhi",
+                details={
+                    "healed": healed,
+                    "skipped": skipped,
+                    "failed": failed,
+                    "total_violations": total_violations,
+                    "healable": healable,
+                    "duration_ms": round(duration_ms, 2),
+                    "dry_run": dry_run,
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+            logger.info(
+                f"[SHUDDHI] Batch complete: {healed} healed, {skipped} skipped, "
+                f"{failed} failed ({duration_ms:.1f}ms, dry_run={dry_run})"
+            )
+        except Exception as e:
+            logger.warning(f"[SHUDDHI] Failed to record batch event: {e}")
