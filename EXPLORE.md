@@ -292,56 +292,112 @@ plugins/envoy/tests/test_envoy_sanity.py
 
 ## DEEP ARCHITECTURE INSIGHT (2026-01-03)
 
-### Two Reactor Systems - Must Be Unified
+### CRITICAL: ReactorProtocol ≠ QuantumReactor
+
+**THEY ARE SEPARATE SYSTEMS - NOT TO BE UNIFIED**
 
 ```
 QuantumReactor (vibe_core/reactor/quantum.py)
-├── Sanskrit phonetic resonance
-├── Continuous energy fields (NOT boolean)
-├── "Actions manifest when energy overcomes inertia"
-├── VarnaTensor, ResonanceField, phonetic_resonance
-└── STATUS: EXISTS but not wired to healing
+├── Domain: Sanskrit phonetic resonance computation
+├── Returns: ResonanceField (continuous energy 0.0-1.0)
+├── Methods: resonate(), manifest(), encode()
+├── Used by: kernel, VAJRA, unified_execution, state
+├── Purpose: "Actions manifest when energy overcomes inertia"
+└── STATUS: FULLY WIRED at OS level (5 integration points)
 
 ReactorProtocol (vibe_core/protocols/reactor.py)
-├── Drift detection (performance, reliability, state)
-├── trigger_correction() method
-├── DriftHandler callbacks
-├── "Prajna - transcendent wisdom that observes and corrects"
-└── STATUS: EXISTS with BasicReactor impl
+├── Domain: Runtime performance monitoring
+├── Returns: DriftEvent, DriftMetrics, ReactorStats
+├── Methods: detect_drift(), trigger_correction(), on_drift()
+├── Used by: opus_assistant/cognitive.py only
+├── Purpose: "Prajna that detects performance degradation"
+└── STATUS: ORPHANED from kernel (only plugin uses it)
 
-THE GAP:
-  - dry_run=True is BINARY
-  - Should be: if energy > inertia → manifest healing
-  - QuantumReactor has the physics
-  - ReactorProtocol has the correction loop
-  - They are NOT connected
+ZERO IMPORTS BETWEEN THEM. DIFFERENT PARADIGMS.
+Naming collision creates semantic confusion.
 ```
 
-### The Non-Binary Solution
+### The REAL Problem: 4 Drift Systems, 0 Coordination
+
+```
+OS-Level:
+├── ReactorProtocol.detect_drift() → DriftEvent (performance)
+├── VajraEnforcer.detect_drift() → bool (config)
+└── ShuddhiEngine.heal_all_violations() → ShuddhiResult (structural)
+
+Plugin-Level:
+├── DriftDetector.detect() → DriftReport (code-doc)
+├── dharma.check_drift_for_chat() → str (cognitive)
+└── auto_heal.yaml circuit (OPUS-specific)
+
+NO UNIFIED INTERFACE. NO DISPATCH MECHANISM.
+Each system runs independently.
+```
+
+### The REAL Problem: Healing Ownership Conflict
+
+```
+Bug in biorhythm.py:451:
+  engine = ShuddhiEngine(project_root=workspace)  # NEW instance!
+
+But boot_orchestrator.py:266 already registered:
+  ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())  # Singleton!
+
+DOUBLE INSTANTIATION = inconsistent state.
+```
+
+### Correct Architecture (NOT implemented yet)
+
+```
+MISSING: CorrectionDispatcher
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│  DriftRegistry (unified)                        │
+│  ├── ReactorProtocol (performance)              │
+│  ├── VajraEnforcer (config)                     │
+│  ├── DriftDetector (code-doc)                   │
+│  └── dharma (cognitive)                         │
+│                                                 │
+│         ↓ all return DriftReport                │
+│                                                 │
+│  CorrectionDispatcher                           │
+│  ├── if source=structural → Shuddhi            │
+│  ├── if source=performance → ReactorHandler    │
+│  ├── if source=code-doc → auto_heal circuit    │
+│  └── if source=cognitive → MANAS learning      │
+│                                                 │
+│         ↓ all return HealingResult              │
+│                                                 │
+│  Knowledge Graph (unified feedback)             │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+### What biorhythm SHOULD do
 
 ```python
-# CURRENT (binary):
+# CURRENT (WRONG - executes healing):
+engine = ShuddhiEngine(project_root=workspace)
 results = engine.heal_all_violations(dry_run=True)
 
-# SHOULD BE (resonance-based):
-field = quantum.resonate(violation, remedy)
-if field.total_energy > quantum.inertia:
-    # Energy overcomes inertia → manifest
-    engine.heal_and_record(write_file=True)
-else:
-    # Observe only, don't manifest
-    report_to_curiosity(field)
+# CORRECT (observe only):
+shuddhi = ServiceRegistry.get(ShuddhiProtocol)  # Singleton
+kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+violations = kg.get_violations(healed=False)
+healable = [v for v in violations if shuddhi.can_heal(v.rule_id)]
+agency.curiosity.report_gap(f"Found {len(healable)} healable violations")
+# Let HEAL_CODEBASE circuit own the actual healing
 ```
 
-### Who Signals Healing?
+### Terminology Cleanup Needed
 
-```
-PRAKRITI → Detects violations (via Watchman)
-QUANTUM  → Computes resonance energy
-REACTOR  → Decides if energy > inertia
-SHUDDHI  → Applies healing (write_file=True)
-```
+| Current Term | Used For | Should Be |
+|--------------|----------|-----------|
+| ReactorProtocol | Performance drift | DriftDetectorProtocol |
+| QuantumReactor | Resonance physics | ResonanceEngine |
+| detect_drift() | 4 different things | Unified DriftReport |
+| heal/healing | 3 different systems | Unified HealingResult |
 
 ---
 
-> **Next Session:** Wire QuantumReactor to ReactorProtocol for resonance-based healing.
+> **Next Session:** Create CorrectionDispatcher, NOT wire reactors together.
