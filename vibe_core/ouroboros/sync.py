@@ -286,8 +286,11 @@ class CISyncService:
                                 has_remedy=True,
                             )
                         )
-                    except (ValueError, IndexError):
-                        pass
+                    except (ValueError, IndexError) as e:
+                        # OPUS-312: Log parse failures at debug (not critical)
+                        import logging
+
+                        logging.getLogger("OUROBOROS").debug(f"Lint line parse failed: {e}")
 
             # Pytest pattern: FAILED test_file.py::test_name
             elif "FAILED" in line and "::" in line:

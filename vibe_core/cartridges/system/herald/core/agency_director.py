@@ -112,7 +112,9 @@ class AgencyDirector:
                 self.state_dir = config.paths.data.resolve("reports")
             else:
                 self.state_dir = Path("data") / "reports"
-        except Exception:
+        except Exception as e:
+            # OPUS-312: Log config failures
+            logger.warning(f"⚠️ HERALD Agency Director config failed: {e}, using default")
             self.state_dir = Path("data") / "reports"
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.state_file = self.state_dir / "agency_state.json"

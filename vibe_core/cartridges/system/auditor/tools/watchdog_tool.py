@@ -64,7 +64,11 @@ class WatchdogConfig:
                 else:
                     # Use data/ prefix with class constant
                     self.ledger_path = Path("data") / self._LEDGER_PATH_DEFAULT
-            except Exception:
+            except Exception as e:
+                # OPUS-312: Log config failures
+                import logging
+
+                logging.getLogger("AUDITOR").warning(f"Ledger path config failed: {e}")
                 self.ledger_path = Path("data") / self._LEDGER_PATH_DEFAULT
 
         if self.violations_path is None:
@@ -76,7 +80,11 @@ class WatchdogConfig:
                     self.violations_path = config.paths.data.resolve("violations_ledger")
                 else:
                     self.violations_path = Path("data") / self._VIOLATIONS_PATH_DEFAULT
-            except Exception:
+            except Exception as e:
+                # OPUS-312: Log config failures
+                import logging
+
+                logging.getLogger("AUDITOR").warning(f"Violations path config failed: {e}")
                 self.violations_path = Path("data") / self._VIOLATIONS_PATH_DEFAULT
 
 

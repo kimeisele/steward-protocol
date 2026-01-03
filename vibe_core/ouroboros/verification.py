@@ -283,7 +283,13 @@ class SatyaValidator:
                     return verified
                 verified.line_exists = True
                 verified.evidence = lines[violation.line - 1] if lines else None
-            except Exception:
+            except Exception as e:
+                # OPUS-312: Log verification failures
+                import logging
+
+                logging.getLogger("OUROBOROS").warning(
+                    f"Line verification failed for {violation.file_path}:{violation.line}: {e}"
+                )
                 verified.line_exists = False
         else:
             # No line specified, can't check
