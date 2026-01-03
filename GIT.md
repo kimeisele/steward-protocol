@@ -11,7 +11,7 @@ Quick Start: python -m vibe_core.cli boot
 
 **Last Updated**: 2026-01-03 06:18:01
 
-**Overall Health**: 🟢 **LOW**
+**Overall Health**: 🟡 **MEDIUM**
 
 ---
 
@@ -35,13 +35,11 @@ Quick Start: python -m vibe_core.cli boot
 
 ## 🚨 Risk Assessment
 
-- ✅ No major risks detected
+- 🟡 Low test coverage (1 test commits) - quality risk
 
 ---
 
 ## 💡 Actionable Insights
-
-✅ Repository health is GOOD - no major concerns detected
 
 🧪 Test infrastructure LAGGING - prioritize test coverage
 
