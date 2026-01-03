@@ -266,6 +266,14 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
                 logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
 
+                # OPUS-312: Register UnifiedKnowledgeGraph (singleton)
+                # 6+ components need this: shuddhi, ouroboros, watchman, dojo, mirror
+                from vibe_core.knowledge.graph import UnifiedKnowledgeGraph, get_knowledge_graph
+
+                kg = get_knowledge_graph()  # Get or create singleton
+                ServiceRegistry.register(UnifiedKnowledgeGraph, kg)
+                logger.info("      → UnifiedKnowledgeGraph registered in ServiceRegistry")
+
                 # OPUS-212: Register Core Task Service
                 task_manager = TaskManager(self.project_root, self.kernel.io)
                 ServiceRegistry.register(TaskProtocol, task_manager)
