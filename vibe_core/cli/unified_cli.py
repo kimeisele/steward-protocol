@@ -254,8 +254,9 @@ class UnifiedCLI:
                     try:
                         idx = args.index("--tail")
                         tail = int(args[idx + 1])
-                    except (ValueError, IndexError):
-                        pass
+                    except (ValueError, IndexError) as e:
+                        # OPUS-312: Log arg parse failures
+                        logging.getLogger("CLI").debug(f"--tail arg parse failed: {e}")
                 return handler(tail=tail)
             else:
                 print(f"⚠️ Command '{name}' is known but dispatch is not implemented in UnifiedCLI.")
@@ -672,8 +673,9 @@ class UnifiedCLI:
             if session_path.exists():
                 try:
                     session = json.loads(session_path.read_text())
-                except Exception:
-                    pass
+                except Exception as e:
+                    # OPUS-312: Log session file corruption
+                    logging.getLogger("CLI").warning(f"Session file corrupted: {e}")
 
             # RAW MODE: Just dump JSON
             if parsed_args.raw:
@@ -879,8 +881,9 @@ class UnifiedCLI:
                             age = f"{delta.seconds // 3600}h"
                         else:
                             age = f"{delta.seconds // 60}m"
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log timestamp parse failures
+                        logging.getLogger("CLI").debug(f"Timestamp parse failed: {e}")
                 table.add_row(i_id, i_type, i_title, age)
 
             console.print(table)

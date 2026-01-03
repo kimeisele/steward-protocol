@@ -68,8 +68,11 @@ class SystemInspector:
                 # Fallback to direct inspection if needed (Python is permissive)
                 elif hasattr(kernel._scheduler, "_queue"):
                     queue_stats["pending"] = len(kernel._scheduler._queue)
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log scheduler inspection failures
+                import logging
+
+                logging.getLogger("CLI").debug(f"Scheduler inspection failed: {e}")
 
         # 3. Agent Stats
         agents_status = {}
