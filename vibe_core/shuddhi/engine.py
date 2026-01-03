@@ -1,15 +1,19 @@
 """
 OPUS-212: ShuddhiEngine - The Surgical Orchestrator.
+
+OPUS-307: No more hardcoded remedies!
+Remedies are auto-discovered via RemedyLoader (VEDA-4 pattern).
 """
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, Type
+from typing import Dict, List, Optional, Type
 
 import libcst as cst
 
 from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
 from vibe_core.shuddhi.remedies.base import CSTRemedy, ShuddhiScopeError
+from vibe_core.shuddhi.remedy_loader import get_remedy_loader
 
 logger = logging.getLogger("SHUDDHI")
 
@@ -20,17 +24,22 @@ class ShuddhiEngine(ShuddhiProtocol):
 
     This engine manages the lifecycle of a healing operation:
     Parse -> Transform -> Verify -> Result.
+
+    OPUS-307: Remedies are auto-discovered from vibe_core/shuddhi/remedies/
+    No hardcoded imports - scales to hundreds of remedies.
     """
 
     def __init__(self):
         self._remedies: Dict[str, Type[CSTRemedy]] = {}
-        self._register_default_remedies()
+        self._loader = get_remedy_loader()
+        self._discover_remedies()
 
-    def _register_default_remedies(self):
-        """Register built-in healers."""
-        from vibe_core.shuddhi.remedies.unsafe_io_write import UnsafeIOWriteRemedy
-
-        self.register_remedy(UnsafeIOWriteRemedy)
+    def _discover_remedies(self):
+        """Auto-discover all remedies via RemedyLoader."""
+        discovered = self._loader.discover_and_load()
+        for rule_id, remedy_class in discovered.items():
+            self._remedies[rule_id] = remedy_class
+            logger.debug(f"[SHUDDHI] Discovered remedy: {rule_id}")
 
     def register_remedy(self, remedy_class: Type[CSTRemedy]):
         """Register a new healer class."""
@@ -116,3 +125,31 @@ class ShuddhiEngine(ShuddhiProtocol):
                 rule_id=rule_id,
                 message=f"Internal error: {str(e)}",
             )
+
+    def list_remedies(self) -> List[str]:
+        """Returns list of registered remedy rule_ids."""
+        return list(self._remedies.keys())
+
+    def can_heal(self, rule_id: str) -> bool:
+        """Returns True if a remedy is registered for this rule_id."""
+        return rule_id in self._remedies
+
+    def add_remedy_path(self, path: Path) -> None:
+        """
+        Add a custom path for remedy discovery.
+
+        Use Case: Agent-written remedies in a dynamic directory.
+        This allows the system to write and load its own remedies.
+        """
+        self._loader.add_scan_path(path)
+        # Re-discover to pick up new remedies
+        self._discover_remedies()
+
+    def refresh_remedies(self) -> None:
+        """
+        Force refresh of remedy discovery.
+
+        Use Case: After system writes new remedies, call this to pick them up.
+        """
+        self._loader.clear_cache()
+        self._discover_remedies()

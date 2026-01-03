@@ -209,6 +209,120 @@ class UnifiedKnowledgeGraph:
         return [n for n in self.nodes.values() if query_lower in n.name.lower() or query_lower in n.description.lower()]
 
     # ═══════════════════════════════════════════════════════════════════
+    # MUTATIONS (Add/Update nodes and edges)
+    # ═══════════════════════════════════════════════════════════════════
+
+    def add_node(self, node: Node) -> None:
+        """Add a node to the graph."""
+        self.nodes[node.id] = node
+        logger.debug(f"Added node: {node.id} ({node.type.value})")
+
+    def add_edge(self, edge: Edge) -> None:
+        """Add an edge to the graph."""
+        if edge.source not in self.edges:
+            self.edges[edge.source] = []
+        self.edges[edge.source].append(edge)
+        logger.debug(f"Added edge: {edge.source} -> {edge.target} ({edge.relation.value})")
+
+    def add_violation(
+        self,
+        file_path: str,
+        line: int,
+        rule_id: str,
+        message: str,
+        has_remedy: bool = False,
+    ) -> Node:
+        """
+        OUROBOROS: Add a violation node to the graph.
+
+        This enables the self-healing loop by persisting violations
+        for Manas to learn from.
+
+        Args:
+            file_path: Path to the file with violation
+            line: Line number of violation
+            rule_id: The standards.yaml rule that was violated
+            message: Human-readable violation message
+            has_remedy: Whether a Shuddhi remedy exists
+
+        Returns:
+            The created violation node
+        """
+        from datetime import datetime
+
+        # Generate unique ID
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        node_id = f"violation_{rule_id}_{timestamp}"
+
+        node = Node(
+            id=node_id,
+            type=NodeType.VIOLATION,
+            name=rule_id,
+            domain="shuddhi",
+            description=message,
+            properties={
+                "file": file_path,
+                "line": line,
+                "rule_id": rule_id,
+                "has_remedy": has_remedy,
+                "detected_at": datetime.now().isoformat(),
+                "healed": False,
+            },
+        )
+
+        self.add_node(node)
+        logger.info(f"[OUROBOROS] Violation recorded: {rule_id} in {file_path}:{line}")
+        return node
+
+    def mark_violation_healed(self, violation_id: str, remedy_id: str) -> None:
+        """
+        OUROBOROS: Mark a violation as healed and create HEALED_BY edge.
+
+        Args:
+            violation_id: The violation node ID
+            remedy_id: The remedy that healed it
+        """
+        node = self.get_node(violation_id)
+        if node and node.type == NodeType.VIOLATION:
+            node.properties["healed"] = True
+            node.properties["healed_by"] = remedy_id
+            node.properties["healed_at"] = __import__("datetime").datetime.now().isoformat()
+
+            # Create HEALED_BY edge
+            edge = Edge(
+                source=violation_id,
+                target=remedy_id,
+                relation=RelationType.HEALED_BY,
+            )
+            self.add_edge(edge)
+            logger.info(f"[OUROBOROS] Violation {violation_id} healed by {remedy_id}")
+
+    def get_violations(
+        self,
+        rule_id: Optional[str] = None,
+        healed: Optional[bool] = None,
+    ) -> List[Node]:
+        """
+        OUROBOROS: Get violation nodes with optional filters.
+
+        Args:
+            rule_id: Filter by specific rule
+            healed: Filter by healed status (True/False/None for all)
+
+        Returns:
+            List of violation nodes
+        """
+        violations = self.get_nodes_by_type(NodeType.VIOLATION)
+
+        if rule_id:
+            violations = [v for v in violations if v.properties.get("rule_id") == rule_id]
+
+        if healed is not None:
+            violations = [v for v in violations if v.properties.get("healed") == healed]
+
+        return violations
+
+    # ═══════════════════════════════════════════════════════════════════
     # DIMENSION 2: TOPOLOGY QUERIES (How things relate)
     # ═══════════════════════════════════════════════════════════════════
 

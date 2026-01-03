@@ -40,11 +40,10 @@ dependencies = [
     "cryptography>=41.0.0",
     "cffi>=1.15.0",
     "libcst>=1.0.0",
-
+    "networkx>=3.0",  # LCOM4 cohesion analysis
     # Semantic AI (PROJECT JNANA) - Not yet implemented, commented out for now
     # "sentence-transformers>=2.2.0",
     # "numpy>=1.24.0",
-
     # API & Web
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
@@ -52,7 +51,6 @@ dependencies = [
     "aiofiles>=23.2.1",
     "aiohttp>=3.9.0",
     "beautifulsoup4>=4.12.0",
-
     # External APIs
     "tavily-python>=0.3.0",
     "tweepy>=4.14.0",
@@ -60,10 +58,8 @@ dependencies = [
     "PyGithub>=2.0.0",
     "google-api-python-client>=2.100.0",
     "google-generativeai>=0.8.5",
-
     # Templating
     "Jinja2>=3.0.0",
-
     # Utilities
     "gitpython>=3.1.0",
     "Pillow>=10.0.0",
@@ -71,6 +67,7 @@ dependencies = [
     "psutil>=7.1.3",
     "jsonschema>=4.17.0",
     "tomlkit>=0.12.0",
+    "networkx>=3.2.1",
 ]
 
 [project.optional-dependencies]

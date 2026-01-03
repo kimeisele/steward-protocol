@@ -18,6 +18,9 @@ from typing import Optional
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
+from vibe_core.di import ServiceRegistry
+from vibe_core.protocols.shuddhi import ShuddhiProtocol
+from vibe_core.protocols.task import TaskProtocol
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -399,6 +402,45 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             logger.info("\n✅ SYSTEM CLEAN - All agents compliant")
             status = "COMPLIANT"
 
+        # PHASE 3: Create healing tasks for violations with Shuddhi remedies
+        healing_tasks_created = 0
+        task_service = ServiceRegistry.get(TaskProtocol)
+        shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+
+        if task_service and violations:
+            for v in violations:
+                rule_id = v.get("rule_id")
+                # Validate: YAML flag AND actual remedy registered
+                can_heal = v.get("has_remedy") and (shuddhi.can_heal(rule_id) if shuddhi else False)
+
+                if can_heal:
+                    task_title = f"HEAL: {rule_id} in {Path(v.get('file_path', '')).name}"
+                    # Check for existing task to avoid duplicates
+                    existing = [t for t in task_service.list_tasks() if t.title == task_title]
+                    if not existing:
+                        task_service.add_task(
+                            title=task_title,
+                            description=(
+                                f"Auto-heal violation detected by Watchman:\n"
+                                f"Rule: {rule_id}\n"
+                                f"File: {v.get('file_path')}\n"
+                                f"Line: {v.get('line_number')}\n"
+                                f"Code: {v.get('code_snippet')}\n\n"
+                                f"Use: engineer.heal_violation(file_path, rule_id)"
+                            ),
+                            priority=80,  # High priority for auto-heal
+                            assigned_agent="engineer",
+                        )
+                        healing_tasks_created += 1
+
+            if healing_tasks_created > 0:
+                logger.info(f"🛡️ Created {healing_tasks_created} healing tasks for Engineer")
+
+        # PHASE 4: OUROBOROS - Persist violations to Knowledge Graph
+        violations_recorded = self._record_violations_to_knowledge_graph(violations)
+        if violations_recorded > 0:
+            logger.info(f"🐍 OUROBOROS: Recorded {violations_recorded} violations to Knowledge Graph")
+
         logger.info("=" * 70 + "\n")
 
         return {
@@ -406,6 +448,8 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "should_fail_build": report["should_fail_build"],
             "total_violations": report["total_violations"],
             "critical_count": report["critical_count"],
+            "healing_tasks_created": healing_tasks_created,
+            "violations_recorded": violations_recorded,
             "report": report,
             "violations": report["violations"],
         }
@@ -574,6 +618,59 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 return computed_sig == stored_sig
         except Exception:
             return False
+
+    def _record_violations_to_knowledge_graph(self, violations: list) -> int:
+        """
+        OUROBOROS: Record violations to Knowledge Graph for self-improvement loop.
+
+        This enables:
+        1. Manas Dojo to learn from real violations
+        2. Synapse pattern reinforcement
+        3. Gap analysis for training curricula
+
+        Args:
+            violations: List of violation dicts from deep inspection
+
+        Returns:
+            Number of violations recorded
+        """
+        if not violations:
+            return 0
+
+        try:
+            # Get Knowledge Graph - try ServiceRegistry first
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+            kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+            if not kg:
+                # Fallback: create new instance (ephemeral)
+                kg = UnifiedKnowledgeGraph()
+                logger.debug("[OUROBOROS] Using ephemeral Knowledge Graph")
+
+            recorded = 0
+            for v in violations:
+                file_path = v.get("file_path", "unknown")
+                line = v.get("line_number", 0)
+                rule_id = v.get("rule_id", "unknown")
+                message = v.get("message", "")
+                has_remedy = v.get("has_remedy", False)
+
+                # Add violation to graph
+                kg.add_violation(
+                    file_path=file_path,
+                    line=line,
+                    rule_id=rule_id,
+                    message=message,
+                    has_remedy=has_remedy,
+                )
+                recorded += 1
+
+            return recorded
+
+        except Exception as e:
+            logger.warning(f"[OUROBOROS] Failed to record violations: {e}")
+            return 0
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
