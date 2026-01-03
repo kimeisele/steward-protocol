@@ -14,34 +14,14 @@ Extracted from inline YAML script for maintainability.
 OPUS-167 FIX: Direct tool invocation (no kernel overhead).
 The kernel machinery was causing hangs due to tight coupling.
 The tool itself runs in <1 second.
-
-OPUS-131: Threshold-based failure for tech debt baseline.
 """
 
 import json
 import sys
 from pathlib import Path
 
-import yaml
-
 # OPUS-167: Direct tool import - skip kernel machinery
 from vibe_core.cartridges.system.watchman.tools.standards_inspection import StandardsInspectionTool
-
-
-def get_critical_threshold() -> int:
-    """Read critical_threshold from ci.yaml (OPUS-131)."""
-    ci_yaml = Path("scripts/ci/ci.yaml")
-    if ci_yaml.exists():
-        try:
-            with open(ci_yaml) as f:
-                config = yaml.safe_load(f)
-            hooks = config.get("hooks", {})
-            watchman = hooks.get("watchman_inspection", {})
-            return watchman.get("critical_threshold", 0)
-        except Exception:
-            pass
-    return 0  # Default: zero tolerance
-
 
 print("⚔️  Initializing Watchman Standards Inspection...")
 tool = StandardsInspectionTool()
@@ -99,23 +79,15 @@ if result["total_violations"] > 0:
         if count > 0:
             print(f"  • {severity}: {count}")
 
-# OPUS-131: Threshold-based failure
-threshold = get_critical_threshold()
-exceeds_threshold = critical_count > threshold
-
 # Determine exit code
-if exceeds_threshold:
-    print(f"\n❌ BUILD FAILED - Critical violations ({critical_count}) exceed threshold ({threshold})")
+if result["should_fail_build"]:
+    print("\n❌ BUILD FAILED - Critical violations detected")
     print("\nTo fix:")
     print("  1. Review violations in the uploaded artifact")
     print("  2. Use agent.system.get_sandbox_path() instead of Path('data/...')")
     print("  3. Remove any requirements.txt files")
     print("  4. See Phase 2 migration examples (Herald, Forum, Civic)")
     sys.exit(1)
-elif critical_count > 0:
-    print(f"\n⚠️  BUILD WARNING - Critical violations ({critical_count}) at or below threshold ({threshold})")
-    print("OPUS-131: These are known tech debt. Reduce to 0 for full compliance.")
-    sys.exit(0)
 elif result["total_violations"] > 0:
     print("\n⚠️  BUILD WARNING - Non-critical violations detected")
     print("Consider addressing these in a future PR")

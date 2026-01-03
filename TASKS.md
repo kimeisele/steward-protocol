@@ -13,9 +13,7 @@
 
 | Task | Status | Type |
 | :--- | :--- | :--- |
-| ⏳ T | PENDING | general |
-| ⏳ A | PENDING | general |
-| ⏳ Test | PENDING | general |
+| _No active tasks_ | - | - |
 <!-- /@SECTION -->
 
 <!-- @SECTION:pending OWNER:human -->
@@ -37,7 +35,7 @@ _No data_
 
 | Key | Value |
 | :--- | :--- |
-| Total Tasks | 5 |
+| Total Tasks | 0 |
 | Pending | 0 |
 | In Progress | 0 |
 | Completed | 0 |
@@ -50,6 +48,5 @@ _No data_
 
 | Task | Completed |
 | :--- | :--- |
-| ✅ Test | 2026-01-03 16:14 |
-| ✅ Test | 2026-01-03 16:14 |
+| _No completed tasks_ | - |
 <!-- /@SECTION -->

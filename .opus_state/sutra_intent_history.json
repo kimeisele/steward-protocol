@@ -1,0 +1,200 @@
+[
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Update state manager docs",
+    "timestamp": "2025-12-17T01:29:20.261268"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "state_management",
+    "title": "Fix state sync bug",
+    "timestamp": "2025-12-17T01:29:20.262054"
+  },
+  {
+    "intent_type": "test_create",
+    "topic": "state_management",
+    "title": "Add state tests",
+    "timestamp": "2025-12-17T01:29:20.262713"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Document state flow",
+    "timestamp": "2025-12-17T01:29:20.264536"
+  },
+  {
+    "intent_type": "review",
+    "topic": "vedic_governance",
+    "title": "Review dharma gates",
+    "timestamp": "2025-12-17T01:29:20.266070"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "vedic_governance",
+    "title": "Update governance docs",
+    "timestamp": "2025-12-17T01:29:20.267410"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "vedic_governance",
+    "title": "Implement bhakti tracking",
+    "timestamp": "2025-12-17T01:29:20.268714"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+    "timestamp": "2025-12-17T01:39:21.943580"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+    "timestamp": "2025-12-17T01:39:21.965136"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Update state manager docs",
+    "timestamp": "2025-12-17T01:39:25.876927"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "state_management",
+    "title": "Fix state sync bug",
+    "timestamp": "2025-12-17T01:39:25.879516"
+  },
+  {
+    "intent_type": "test_create",
+    "topic": "state_management",
+    "title": "Add state tests",
+    "timestamp": "2025-12-17T01:39:25.881900"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "state_management",
+    "title": "Document state flow",
+    "timestamp": "2025-12-17T01:39:25.884248"
+  },
+  {
+    "intent_type": "review",
+    "topic": "vedic_governance",
+    "title": "Review dharma gates",
+    "timestamp": "2025-12-17T01:39:25.887112"
+  },
+  {
+    "intent_type": "doc_modify",
+    "topic": "vedic_governance",
+    "title": "Update governance docs",
+    "timestamp": "2025-12-17T01:39:25.889734"
+  },
+  {
+    "intent_type": "code_modify",
+    "topic": "vedic_governance",
+    "title": "Implement bhakti tracking",
+    "timestamp": "2025-12-17T01:39:25.892067"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+    "timestamp": "2025-12-17T01:58:17.286559"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+    "timestamp": "2025-12-17T01:58:17.307222"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+    "timestamp": "2025-12-17T02:08:19.480514"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+    "timestamp": "2025-12-17T02:08:19.502195"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references your/module/file.py   ...",
+    "timestamp": "2025-12-17T11:17:30.666054"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_your_module...",
+    "timestamp": "2025-12-17T11:17:30.733079"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 077-PRATYAYA-MUTATION.md references vibe_core/...",
+    "timestamp": "2025-12-17T11:19:04.556311"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-17T11:19:04.628249"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:56:58.885874"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:56:58.896069"
+  },
+  {
+    "intent_type": "harness_broken",
+    "topic": "harness",
+    "title": "Fix broken @HARNESS in 008-PRAKRITI-PROTOTYPE",
+    "timestamp": "2025-12-18T21:56:58.903478"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:58:07.348468"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:58:07.358481"
+  },
+  {
+    "intent_type": "semantic_gap_test",
+    "topic": "semantic",
+    "title": "Create tests for MANAS cognitive kernel",
+    "timestamp": "2025-12-18T21:58:07.365795"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 096-STATE-SYNC-HOLON-WEAVER.md references vibe...",
+    "timestamp": "2025-12-18T21:58:33.094622"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-18T21:58:33.104898"
+  },
+  {
+    "intent_type": "commit_pending_changes",
+    "topic": "commit",
+    "title": "Commit 20 pending changes",
+    "timestamp": "2025-12-18T21:58:33.111405"
+  }
+]

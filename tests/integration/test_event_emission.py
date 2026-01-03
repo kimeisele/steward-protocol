@@ -65,61 +65,34 @@ class TestManasRequirements:
 
     def test_hourly_pulse_source(self):
         """
-        Verify HOURLY_PULSE mechanism exists in the system.
+        Verify HOURLY_PULSE comes from heartbeat.py.
 
-        OPUS-091: Heartbeat emits HOURLY_PULSE via DI-discovered service.
-        OPUS-212: Architecture changed to SystemHeartbeatProtocol via DI.
-
-        The test now verifies:
-        1. HOURLY_PULSE event type exists in the event system
-        2. Heartbeat uses DI to discover pulse service (modern architecture)
+        OPUS-091: FIXED! Heartbeat now emits HOURLY_PULSE instead of direct manas.think() call.
         """
-        # Check 1: HOURLY_PULSE event type exists
-        from vibe_core.event_bus import EventType
-
-        assert hasattr(EventType, "HOURLY_PULSE"), "EventType.HOURLY_PULSE should exist"
-
-        # Check 2: Heartbeat uses DI-based architecture (OPUS-212)
         heartbeat_path = Path(__file__).parent.parent.parent / "scripts" / "heartbeat.py"
         content = heartbeat_path.read_text()
 
-        # OPUS-212: heartbeat.py now uses SystemHeartbeatProtocol via ServiceRegistry
-        uses_di_pattern = "ServiceRegistry" in content or "SystemHeartbeatProtocol" in content
+        # OPUS-091: heartbeat.py now emits HOURLY_PULSE event
+        has_hourly_pulse = "HOURLY_PULSE" in content and "EventType.HOURLY_PULSE" in content
 
-        assert uses_di_pattern, (
-            "heartbeat.py should use DI pattern (ServiceRegistry/SystemHeartbeatProtocol) per OPUS-212 architecture"
-        )
+        assert has_hourly_pulse, "HOURLY_PULSE should be emitted by heartbeat.py (OPUS-091)"
 
 
 class TestHeartbeatManasConnection:
     """
     Tests that heartbeat.py is connected to MANAS.
     This is the RIGHT place for MANAS triggering - not the kernel.
-
-    OPUS-212: Architecture changed - heartbeat uses SystemHeartbeatProtocol via DI.
-    MANAS is triggered indirectly through the plugin system.
     """
 
     def test_heartbeat_imports_manas(self):
-        """
-        Verify heartbeat.py connects to cognitive layer.
-
-        OPUS-073: Original - direct manas import
-        OPUS-212: Modern - DI via SystemHeartbeatProtocol which triggers MANAS
-        """
+        """Verify heartbeat.py uses MANAS. STATUS: PASSING (OPUS-073)"""
         heartbeat_path = Path(__file__).parent.parent.parent / "scripts" / "heartbeat.py"
         content = heartbeat_path.read_text()
 
-        # OPUS-212: Modern architecture uses DI patterns
-        has_di_pattern = "SystemHeartbeatProtocol" in content or "ServiceRegistry" in content
+        has_manas = "manas" in content.lower() or "cognitive_kernel" in content.lower() or "think(" in content
 
-        # Legacy pattern (still valid if present)
-        has_manas_direct = "manas" in content.lower() or "cognitive_kernel" in content.lower()
-
-        assert has_di_pattern or has_manas_direct, (
-            "heartbeat.py should connect to MANAS either:\n"
-            "- Directly (manas/cognitive_kernel import)\n"
-            "- Via DI (SystemHeartbeatProtocol/ServiceRegistry)"
+        assert has_manas, (
+            "heartbeat.py should import and use MANAS.\nThis is the right place for MANAS triggering - not the kernel."
         )
 
     @pytest.mark.xfail(reason="OPUS-073: Heartbeat DRY RUN only")

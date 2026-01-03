@@ -1,0 +1,267 @@
+{
+  "schema": "akshara-graph-v1",
+  "description": "OPUS-114: Akshara Graph - Sanskrit Phonemic Computation Matrix",
+  "nodes": {
+    "trigger:test_failure": {
+      "pattern": "trigger:test_failure",
+      "akshara": "ङ",
+      "varga": "KANTHYA",
+      "layer": "KERNEL",
+      "element": "Akasha",
+      "node_type": "trigger"
+    },
+    "action:notify_operator": {
+      "pattern": "action:notify_operator",
+      "akshara": "म",
+      "varga": "OSHTHYA",
+      "layer": "OUTPUT",
+      "element": "Prithvi",
+      "node_type": "action"
+    },
+    "action:analyze_error": {
+      "pattern": "action:analyze_error",
+      "akshara": "ञ",
+      "varga": "TALAVYA",
+      "layer": "COGNITION",
+      "element": "Vayu",
+      "node_type": "action"
+    },
+    "action:auto_retry": {
+      "pattern": "action:auto_retry",
+      "akshara": "ङ",
+      "varga": "KANTHYA",
+      "layer": "KERNEL",
+      "element": "Akasha",
+      "node_type": "action"
+    },
+    "trigger:file_changed:vibe_core/**": {
+      "pattern": "trigger:file_changed:vibe_core/**",
+      "akshara": "म",
+      "varga": "OSHTHYA",
+      "layer": "OUTPUT",
+      "element": "Prithvi",
+      "node_type": "trigger"
+    },
+    "action:run_tests": {
+      "pattern": "action:run_tests",
+      "akshara": "ङ",
+      "varga": "KANTHYA",
+      "layer": "KERNEL",
+      "element": "Akasha",
+      "node_type": "action"
+    },
+    "action:check_lint": {
+      "pattern": "action:check_lint",
+      "akshara": "ङ",
+      "varga": "KANTHYA",
+      "layer": "KERNEL",
+      "element": "Akasha",
+      "node_type": "action"
+    },
+    "trigger:intent_stuck": {
+      "pattern": "trigger:intent_stuck",
+      "akshara": "ञ",
+      "varga": "TALAVYA",
+      "layer": "COGNITION",
+      "element": "Vayu",
+      "node_type": "trigger"
+    },
+    "action:escalate_to_operator": {
+      "pattern": "action:escalate_to_operator",
+      "akshara": "म",
+      "varga": "OSHTHYA",
+      "layer": "OUTPUT",
+      "element": "Prithvi",
+      "node_type": "action"
+    },
+    "action:log_diagnostic": {
+      "pattern": "action:log_diagnostic",
+      "akshara": "ञ",
+      "varga": "TALAVYA",
+      "layer": "COGNITION",
+      "element": "Vayu",
+      "node_type": "action"
+    },
+    "trigger:duplicate_class_detected": {
+      "pattern": "trigger:duplicate_class_detected",
+      "akshara": "ण",
+      "varga": "MURDHANYA",
+      "layer": "REPAIR",
+      "element": "Agni",
+      "node_type": "trigger"
+    },
+    "action:consolidate": {
+      "pattern": "action:consolidate",
+      "akshara": "ण",
+      "varga": "MURDHANYA",
+      "layer": "REPAIR",
+      "element": "Agni",
+      "node_type": "action"
+    },
+    "action:report_to_operator": {
+      "pattern": "action:report_to_operator",
+      "akshara": "म",
+      "varga": "OSHTHYA",
+      "layer": "OUTPUT",
+      "element": "Prithvi",
+      "node_type": "action"
+    },
+    "trigger:error_detected": {
+      "pattern": "trigger:error_detected",
+      "akshara": "ण",
+      "varga": "MURDHANYA",
+      "layer": "REPAIR",
+      "element": "Agni",
+      "node_type": "trigger"
+    }
+  },
+  "edges": [
+    {
+      "source": "trigger:test_failure",
+      "target": "action:notify_operator",
+      "weight": 1.0,
+      "resonance": 0.2,
+      "dharmic_score": 0.2
+    },
+    {
+      "source": "trigger:test_failure",
+      "target": "action:analyze_error",
+      "weight": 0.8,
+      "resonance": 0.8,
+      "dharmic_score": 0.6400000000000001
+    },
+    {
+      "source": "trigger:test_failure",
+      "target": "action:auto_retry",
+      "weight": 0.3,
+      "resonance": 1.0,
+      "dharmic_score": 0.3
+    },
+    {
+      "source": "trigger:file_changed:vibe_core/**",
+      "target": "action:run_tests",
+      "weight": 0.9,
+      "resonance": 0.2,
+      "dharmic_score": 0.18000000000000002
+    },
+    {
+      "source": "trigger:file_changed:vibe_core/**",
+      "target": "action:check_lint",
+      "weight": 0.7,
+      "resonance": 0.2,
+      "dharmic_score": 0.13999999999999999
+    },
+    {
+      "source": "trigger:intent_stuck",
+      "target": "action:escalate_to_operator",
+      "weight": 0.95,
+      "resonance": 0.4,
+      "dharmic_score": 0.38
+    },
+    {
+      "source": "trigger:intent_stuck",
+      "target": "action:log_diagnostic",
+      "weight": 0.8,
+      "resonance": 1.0,
+      "dharmic_score": 0.8
+    },
+    {
+      "source": "trigger:duplicate_class_detected",
+      "target": "action:consolidate",
+      "weight": 0.7,
+      "resonance": 1.0,
+      "dharmic_score": 0.7
+    },
+    {
+      "source": "trigger:duplicate_class_detected",
+      "target": "action:report_to_operator",
+      "weight": 0.9,
+      "resonance": 0.6,
+      "dharmic_score": 0.54
+    },
+    {
+      "source": "trigger:error_detected",
+      "target": "action:analyze_error",
+      "weight": 0.405,
+      "resonance": 0.8,
+      "dharmic_score": 0.32400000000000007
+    },
+    {
+      "source": "trigger:error_detected",
+      "target": "action:notify_operator",
+      "weight": 0.7,
+      "resonance": 0.6,
+      "dharmic_score": 0.42
+    }
+  ],
+  "meta": {
+    "vargas": {
+      "KANTHYA": [
+        "कण्ठ्य",
+        "Kanthya",
+        "Guttural",
+        "Throat"
+      ],
+      "TALAVYA": [
+        "तालव्य",
+        "Talavya",
+        "Palatal",
+        "Palate"
+      ],
+      "MURDHANYA": [
+        "मूर्धन्य",
+        "Murdhanya",
+        "Retroflex",
+        "Cerebral"
+      ],
+      "DANTYA": [
+        "दन्त्य",
+        "Dantya",
+        "Dental",
+        "Teeth"
+      ],
+      "OSHTHYA": [
+        "ओष्ठ्य",
+        "Oshthya",
+        "Labial",
+        "Lips"
+      ]
+    },
+    "elements": {
+      "KANTHYA": [
+        "आकाश",
+        "Akasha",
+        "Ether"
+      ],
+      "TALAVYA": [
+        "वायु",
+        "Vayu",
+        "Air"
+      ],
+      "MURDHANYA": [
+        "अग्नि",
+        "Agni",
+        "Fire"
+      ],
+      "DANTYA": [
+        "जल",
+        "Jala",
+        "Water"
+      ],
+      "OSHTHYA": [
+        "पृथ्वी",
+        "Prithvi",
+        "Earth"
+      ]
+    },
+    "layers": {
+      "0": "KERNEL",
+      "1": "COGNITION",
+      "2": "REPAIR",
+      "3": "INTERFACE",
+      "4": "OUTPUT"
+    },
+    "total_nodes": 14,
+    "total_edges": 11
+  }
+}

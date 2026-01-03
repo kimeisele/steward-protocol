@@ -55,9 +55,6 @@ from vibe_core.protocols import StateSyncHolonProtocol, StateSyncWeaverProtocol
 # OPUS-098: Import StateGuna from canonical location
 from vibe_core.state.guna_classifier import StateGuna
 
-# P0 FIX: Import RuntimeStateDefinition to filter runtime state from commits
-from vibe_core.state.runtime_state import get_runtime_state_definition
-
 if TYPE_CHECKING:
     from vibe_core.state.prakriti import Prakriti
 
@@ -441,27 +438,18 @@ class StateSyncHolon(StateSyncHolonProtocol):
 
     def ensure_tracked(self) -> List[str]:
         """
-        Ensure SOURCE state paths are git-tracked (not ignored).
+        Ensure all state paths are git-tracked (not ignored).
 
-        P0 FIX: RUNTIME state (.vibe/state/, .prakriti/, .opus_state/) is
-        ALLOWED to be ignored - that's correct! Only SOURCE state must be tracked.
+        This is the LOBOTOMY PREVENTION check.
 
         Raises:
-            GovernanceViolation: If any SOURCE state path is in .gitignore
+            GovernanceViolation: If any state path is in .gitignore
         """
         violations = []
-        runtime_def = get_runtime_state_definition()
 
         for plugin, infos in self.discover_state_paths().items():
             for info in infos:
                 if info.is_ignored:
-                    # P0 FIX: Check if this is runtime state (OK to be ignored)
-                    path_str = str(info.path)
-                    if runtime_def.is_runtime_state(path_str):
-                        # Runtime state being ignored is CORRECT behavior
-                        logger.debug(f"[SYNC_HOLON] Runtime state correctly ignored: {path_str}")
-                        continue
-                    # SOURCE state being ignored is LOBOTOMY
                     violations.append(f"{plugin}: {info.path} is IGNORED (LOBOTOMY!)")
 
         if violations:
@@ -472,7 +460,7 @@ class StateSyncHolon(StateSyncHolonProtocol):
                     "StateSyncHolon",
                     {"violations": violations},
                 )
-            raise GovernanceViolation("Source state files in .gitignore = LOBOTOMY!\n" + "\n".join(violations))
+            raise GovernanceViolation("State files in .gitignore = LOBOTOMY!\n" + "\n".join(violations))
 
         return list(self._discovered.keys())
 
@@ -606,23 +594,8 @@ class StateSyncHolon(StateSyncHolonProtocol):
         self._create_from_template(path)
 
     def _commit_and_sync(self, path: Path) -> None:
-        """Commit dirty state and sync with ledger.
-
-        P0 FIX: Only commit SOURCE state, not RUNTIME state.
-        Runtime state (.vibe/state/, .prakriti/, .opus_state/) is written to disk
-        but NOT committed to git to prevent the death loop.
-        """
+        """Commit dirty state and sync with ledger."""
         if self._is_dirty(path):
-            # P0 FIX: Check if this is runtime state (should NOT be committed)
-            try:
-                runtime_def = get_runtime_state_definition()
-                path_str = str(path.relative_to(self.prakriti.workspace) if path.is_absolute() else path)
-                if runtime_def.is_runtime_state(path_str):
-                    logger.debug(f"[SYNC_HOLON] Skipping runtime state commit: {path_str}")
-                    return  # Don't commit runtime state to git
-            except Exception:
-                pass  # If check fails, proceed with commit
-
             try:
                 self.prakriti.git.stage([str(path)])
                 self.prakriti.commit_if_dirty(

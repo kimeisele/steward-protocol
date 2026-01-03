@@ -14,7 +14,6 @@ import logging
 import os
 import shutil
 import subprocess
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 from vibe_core.config import CityConfig
@@ -155,26 +154,27 @@ class ArchivistCartridge(VibeAgent, OathMixin):
         # ===== GIT COMMIT =====
         cwd = os.getcwd()  # Project root for git operations
         try:
-            # OPUS-XXX: Route through CommitAuthority to prevent index.lock conflicts
-            # Previously used direct subprocess.run() which bypassed the commit lock
-            from vibe_core.state.commit_authority import CommitAuthority, CommitOutcome
+            # Stage the file
+            subprocess.run(["git", "add", dest_rel_path], check=True, cwd=cwd, timeout=30)
+            logger.info(f"✅ File staged: {dest_rel_path}")
 
-            authority = CommitAuthority()
+            # Commit with message
+            # Optional: Add -S flag for signing if key available
             commit_msg = f"feat: {message}"
+            try:
+                # Try to sign (may fail if no signing key configured)
+                subprocess.run(["git", "commit", "-S", "-m", commit_msg], check=True, cwd=cwd, timeout=30)
+                signed = True
+            except subprocess.CalledProcessError:
+                # Fall back to unsigned commit
+                logger.warning("⚠️  Signing failed, creating unsigned commit")
+                subprocess.run(["git", "commit", "-m", commit_msg], check=True, cwd=cwd, timeout=30)
+                signed = False
 
-            result = authority.commit(
-                paths=[Path(dest_rel_path)],
-                message=commit_msg,
-                intent_context={"source": "archivist", "action": "seal"},
-            )
+            logger.info("✅ Commit created")
 
-            if not result.success:
-                logger.error(f"❌ CommitAuthority failed: {result.message}")
-                return {"status": "error", "error": result.message}
-
-            signed = False  # CommitAuthority handles signing via config
-            rev = result.sha or "unknown"
-            logger.info("✅ Commit created via CommitAuthority")
+            # Get commit hash
+            rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd, timeout=30).decode().strip()
 
             logger.info(f"✅ SEALED: Commit {rev[:7]}")
 

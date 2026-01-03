@@ -29,30 +29,8 @@ _test_kernel = None
 _test_envoy = None
 
 
-async def get_test_kernel_async():
-    """Get or create shared test kernel (async-safe)."""
-    global _test_kernel, _test_envoy
-    if _test_kernel is None:
-        from vibe_core.plugins.test_orchestration import TestKernel
-
-        _test_kernel = TestKernel.with_governance()
-        # Use boot_async to avoid blocking the event loop
-        await _test_kernel.boot_async()
-
-        # Get envoy from registry
-        _test_envoy = _test_kernel._agent_registry.get("envoy")
-        if _test_envoy is None:
-            # Fallback: create manually if not auto-registered
-            from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
-
-            _test_envoy = EnvoyCartridge()
-            _test_kernel.register_agent(_test_envoy, spawn_process=False)
-
-    return _test_kernel, _test_envoy
-
-
 def get_test_kernel():
-    """Get or create shared test kernel (sync - use outside async context)."""
+    """Get or create shared test kernel."""
     global _test_kernel, _test_envoy
     if _test_kernel is None:
         from vibe_core.plugins.test_orchestration import TestKernel
@@ -86,8 +64,8 @@ async def test_envoy_routes_and_executes():
 
     from vibe_core.scheduling.task import Task
 
-    # Get shared kernel and envoy (async-safe)
-    kernel, envoy = await get_test_kernel_async()
+    # Get shared kernel and envoy
+    kernel, envoy = get_test_kernel()
 
     # Verify kernel was injected (P3.1)
     assert envoy.kernel is not None, "Kernel should be injected (P3.1)"
@@ -111,65 +89,61 @@ async def test_envoy_routes_and_executes():
     if result["status"] == "FAILED":
         print("   Note: Execution failed (expected without LLM)")
         print(f"   Phases executed: {len(result.get('phases_executed', []))}")
-    elif result["status"] == "error":
-        print(f"   Note: Error: {result.get('error')} (expected if EnvoyPlugin not loaded)")
     elif result["status"] in ["queued", "delegated"]:
         print(f"   Note: Task {result['status']} (async execution)")
     else:
         print(f"   Full result: {result}")
 
-    # Verify router got kernel (P3.2) - optional if EnvoyPlugin not loaded
-    if envoy.router is not None:
-        assert envoy.router.kernel is not None, "Router should have kernel (P3.2)"
-        print(f"✅ Router has kernel: {envoy.router.kernel is not None}")
-    else:
-        print("⚠️  Router not initialized (EnvoyPlugin not loaded in test env)")
+    # Verify router got kernel (P3.2)
+    assert envoy.router.kernel is not None, "Router should have kernel (P3.2)"
+    print(f"✅ Router has kernel: {envoy.router.kernel is not None}")
 
     print("✅ TEST 1 PASSED")
 
 
 # Test 2: Heartbeat Full Cycle
-@pytest.mark.asyncio
-async def test_heartbeat_full_cycle():
+def test_heartbeat_full_cycle():
     """
     Test heartbeat: pulse triggers MANAS thinking.
 
     Architecture note: TaskManager was moved to plugin-sovereign design.
     Heartbeat now drives MANAS (cognitive kernel) + PRANA (plugin pulse).
-
-    OPUS-212: HeartbeatEngine was replaced with SystemHeartbeatProtocol.
-    This test now validates the heartbeat service via DI.
     """
     print("\n" + "=" * 60)
     print("TEST 2: Heartbeat Full Cycle")
     print("=" * 60)
 
-    from vibe_core.di import ServiceRegistry
+    from scripts.heartbeat import HeartbeatEngine
 
-    # Get shared kernel (async-safe)
-    kernel, _ = await get_test_kernel_async()
+    # Create engine
+    engine = HeartbeatEngine(project_root)
 
-    # OPUS-212: Try to get heartbeat service via DI
+    # Verify MANAS is wired (OPUS-073)
+    print(f"   MANAS available: {engine.manas is not None}")
+
+    # Simulate one heartbeat pulse
+    # This triggers PRANA plugins + MANAS thinking
     try:
-        from vibe_core.protocols import SystemHeartbeatProtocol
+        engine.pulse()
+        print("✅ Heartbeat pulse executed")
+    except Exception as e:
+        print(f"⚠️  Pulse error (expected if no LLM): {e}")
+        # Still pass - pulse attempted execution
 
-        hb_service = ServiceRegistry.get(SystemHeartbeatProtocol)
-        if hb_service:
-            print("✅ SystemHeartbeatProtocol available via DI")
-            # Don't actually run pulse in test (would trigger full system)
-        else:
-            print("⚠️  SystemHeartbeatProtocol not registered (expected in minimal test env)")
-    except ImportError:
-        print("⚠️  SystemHeartbeatProtocol not available")
+    # Verify engine components are wired
+    assert hasattr(engine, "manas"), "HeartbeatEngine should have manas attribute"
+    assert hasattr(engine, "router"), "HeartbeatEngine should have router attribute"
+    assert hasattr(engine, "ledger"), "HeartbeatEngine should have ledger attribute"
 
-    # Test that kernel has plugins loaded (heartbeat uses plugins)
-    plugins = getattr(kernel, "_plugins", [])
-    print(f"✅ Plugins loaded: {len(plugins)}")
-
-    # Get loaded plugin IDs
-    plugins_map = getattr(kernel, "_plugins_map", {})
-    if plugins_map:
-        print(f"   Plugin IDs: {list(plugins_map.keys())[:5]}...")  # Show first 5
+    # If MANAS is available, check it can think
+    if engine.manas:
+        print("✅ MANAS cognitive kernel ready")
+        # Check intent buffer exists
+        try:
+            buffer = engine.manas.get_intent_buffer_for_opus()
+            print(f"   Intent buffer: {len(buffer.get('pending', []))} pending intents")
+        except Exception as e:
+            print(f"   Intent buffer check: {e}")
 
     print("✅ TEST 2 PASSED")
 
@@ -188,8 +162,8 @@ async def test_science_delegation():
 
     from vibe_core.scheduling.task import Task
 
-    # Get shared kernel and envoy (async-safe)
-    kernel, envoy = await get_test_kernel_async()
+    # Get shared kernel and envoy
+    kernel, envoy = get_test_kernel()
 
     # Create a complex query (should trigger science path)
     # Note: MilkOcean might route this to "flash" if no semantic router available
@@ -225,11 +199,13 @@ async def test_critical_priority():
     print("=" * 60)
 
     from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
+
+    # from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter (REMOVED)
     from vibe_core.plugins.test_orchestration import TestKernel
 
-    # Setup (async-safe boot)
+    # Setup
     kernel = TestKernel.with_governance()
-    await kernel.boot_async()
+    kernel.boot()
 
     envoy = EnvoyCartridge()
     kernel.register_agent(envoy)

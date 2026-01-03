@@ -123,38 +123,11 @@ class StateService(StateServiceProtocol):
     """
 
     # =========================================================================
-    # 🍎 APPLE MAGIC CONSTANTS - Loaded from config/prana.yaml
+    # 🍎 APPLE MAGIC CONSTANTS
     # =========================================================================
-    # These are DEFAULTS only - actual values loaded from prana.yaml in __init__
-    AUTO_COMMIT_THRESHOLD = 50  # Default, overridden by prana.yaml
-    AUTO_COMMIT_SECONDS = 300  # Default, overridden by prana.yaml
+    AUTO_COMMIT_THRESHOLD = 5  # Auto-commit after N writes
+    AUTO_COMMIT_SECONDS = 30  # Or after N seconds since last commit
     HEARTBEAT_PULSE_FILE = "last_pulse.json"  # Check if Heartbeat is alive
-
-    @classmethod
-    def _load_config(cls) -> None:
-        """Load config from prana.yaml (YAML > Code principle)."""
-        try:
-            from pathlib import Path
-
-            import yaml
-
-            prana_path = Path("config/prana.yaml")
-            if prana_path.exists():
-                with open(prana_path) as f:
-                    config = yaml.safe_load(f)
-
-                state_cfg = config.get("state_service", {})
-                if "auto_commit_threshold" in state_cfg:
-                    cls.AUTO_COMMIT_THRESHOLD = state_cfg["auto_commit_threshold"]
-                if "auto_commit_seconds" in state_cfg:
-                    cls.AUTO_COMMIT_SECONDS = state_cfg["auto_commit_seconds"]
-
-                logger.debug(
-                    f"StateService config loaded: threshold={cls.AUTO_COMMIT_THRESHOLD}, "
-                    f"seconds={cls.AUTO_COMMIT_SECONDS}"
-                )
-        except Exception as e:
-            logger.debug(f"Using default config (prana.yaml load failed: {e})")
 
     _lock = threading.Lock()
     _dirty_files: Set[Path] = set()
@@ -169,9 +142,6 @@ class StateService(StateServiceProtocol):
             agent_id: Optional agent ID for namespacing
             plugin_id: Optional plugin ID for namespacing
         """
-        # Load config from prana.yaml FIRST (YAML > Code principle)
-        self._load_config()
-
         self.workspace = Path(workspace).resolve()
         self.agent_id = agent_id
         self.plugin_id = plugin_id
@@ -605,14 +575,8 @@ class StateService(StateServiceProtocol):
     def trigger_commit(self) -> None:
         """Manually trigger a background commit."""
         if self._commit_event:
-            # Async path: signal background worker
             self._commit_event.set()
-            logger.debug("✍️  StateService: Commit triggered (async).")
-        else:
-            # SYNC FALLBACK: Worker not running, commit directly
-            # This prevents files from never being committed when async fails
-            logger.debug("✍️  StateService: Commit triggered (sync fallback).")
-            self._do_auto_commit(reason="sync_fallback")
+            logger.debug("✍️  StateService: Commit triggered.")
 
     def _maybe_auto_commit(self) -> None:
         """
@@ -722,9 +686,6 @@ class StateService(StateServiceProtocol):
         OPUS-209: Uses CommitAuthority for single commit path.
         State files (.vibe/state/*) use no_verify=True as they are not
         kernel-protected, but this is now centralized with audit trail.
-
-        OPUS-XXX: Fixed API mismatch - CommitAuthority.commit() takes
-        paths (not files), and requires instance (not class method).
         """
         from vibe_core.state.commit_authority import CommitAuthority
 
@@ -733,23 +694,19 @@ class StateService(StateServiceProtocol):
             return False
 
         msg = f"🍎 Auto-commit ({reason}): {len(dirty_list)} state files"
-
-        # Instantiate CommitAuthority and call with correct params
-        authority = CommitAuthority()
-        result = authority.commit(
-            paths=dirty_list,
+        result = CommitAuthority.commit(
+            files=dirty_list,
             message=msg,
-            intent_context={"source": "state_service", "reason": reason},
+            author="state_service",
+            no_verify=True,  # State files skip hooks (not kernel-protected)
         )
 
-        # CommitResult.success property returns True for SUCCESS, HEALED, or SKIPPED
         if result.success:
-            if result.outcome.value != "skipped":
-                logger.info(f"🍎 CommitAuthority: {len(dirty_list)} files committed")
+            logger.info(f"🍎 CommitAuthority: {len(dirty_list)} files committed")
             return True
+        elif result.skipped_reason == "nothing_to_commit":
+            return True  # Clean state is success
 
-        # Log failure reason
-        logger.warning(f"🍎 CommitAuthority failed: {result.outcome.value} - {result.message}")
         return False
 
 

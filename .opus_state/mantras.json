@@ -1,0 +1,143 @@
+{
+  "version": "1.0",
+  "updated_at": "2025-12-23T14:09:18",
+  "mantras": {
+    "ञख": {
+      "signature": "ञख",
+      "layer": "COGNITION",
+      "decision": "WARN_EXECUTE",
+      "meaning": "COGNITION actions should WARN_EXECUTE",
+      "total_repetitions": 12,
+      "successful_repetitions": 12,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.95
+    },
+    "ञग": {
+      "signature": "ञग",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "meaning": "COGNITION actions should BLOCK",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "ङक": {
+      "signature": "ङक",
+      "layer": "KERNEL",
+      "decision": "EXECUTE",
+      "meaning": "KERNEL actions should EXECUTE",
+      "total_repetitions": 15,
+      "successful_repetitions": 15,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.98
+    },
+    "नख": {
+      "signature": "नख",
+      "layer": "INTERFACE",
+      "decision": "WARN_EXECUTE",
+      "meaning": "INTERFACE actions should WARN_EXECUTE",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "ङग": {
+      "signature": "ङग",
+      "layer": "KERNEL",
+      "decision": "BLOCK",
+      "meaning": "KERNEL actions should BLOCK",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "णख": {
+      "signature": "णख",
+      "layer": "REPAIR",
+      "decision": "WARN_EXECUTE",
+      "meaning": "REPAIR actions should WARN_EXECUTE",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "मग": {
+      "signature": "मग",
+      "layer": "OUTPUT",
+      "decision": "BLOCK",
+      "meaning": "OUTPUT actions should BLOCK",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "नग": {
+      "signature": "नग",
+      "layer": "INTERFACE",
+      "decision": "BLOCK",
+      "meaning": "INTERFACE actions should BLOCK",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "नक": {
+      "signature": "नक",
+      "layer": "INTERFACE",
+      "decision": "EXECUTE",
+      "meaning": "INTERFACE actions should EXECUTE",
+      "total_repetitions": 11,
+      "successful_repetitions": 11,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T14:09:18",
+      "last_meditation": "2025-12-23T14:09:18",
+      "avg_dharmic_score": 0.92
+    },
+    "मख": {
+      "signature": "मख",
+      "layer": "OUTPUT",
+      "decision": "WARN_EXECUTE",
+      "meaning": "OUTPUT actions should WARN_EXECUTE",
+      "total_repetitions": 0,
+      "successful_repetitions": 0,
+      "siddhi": false,
+      "siddhi_achieved_at": null,
+      "last_meditation": null,
+      "avg_dharmic_score": 0.5
+    },
+    "ञक": {
+      "signature": "ञक",
+      "layer": "COGNITION",
+      "decision": "EXECUTE",
+      "meaning": "COGNITION actions should EXECUTE",
+      "total_repetitions": 108,
+      "successful_repetitions": 108,
+      "siddhi": true,
+      "siddhi_achieved_at": "2025-12-23T16:15:00",
+      "last_meditation": "2025-12-23T16:15:00",
+      "avg_dharmic_score": 0.99
+    }
+  },
+  "summary": {
+    "total": 11,
+    "siddhi_achieved": 4,
+    "in_progress": 7
+  }
+}

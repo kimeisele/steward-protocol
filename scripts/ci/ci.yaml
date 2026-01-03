@@ -45,10 +45,6 @@ hooks:
     script: run_watchman_inspection.py
     description: "Deep AST-based code analysis"
     fail_build: true
-    # OPUS-131: Threshold allows existing tech debt while blocking new violations
-    # Current baseline: 29 critical (all in cartridges that need sandbox migration)
-    # Set to 0 when OPUS-131 "The Fortress" is complete
-    critical_threshold: 30
     outputs:
       - watchman_report.json
 

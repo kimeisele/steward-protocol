@@ -1,0 +1,8 @@
+{
+<<<<<<< HEAD
+  "last_pulse": "2025-12-23T14:05:08.214945",
+=======
+  "last_pulse": "2025-12-23T14:35:40.463658",
+>>>>>>> 645494a8 (arch(kernel): nationalize heartbeat and decouple MANAS cognition)
+  "kernel_running": true
+}

@@ -81,18 +81,6 @@ chronicle:
   # Only commit if changes detected
   commit_only_if_dirty: true
 
-# State Service Configuration (AHAMKARA)
-# Controls automatic state persistence and commit behavior
-state_service:
-  # Auto-commit after N writes (batch writes together)
-  auto_commit_threshold: 50
-
-  # Or auto-commit after N seconds since last commit
-  auto_commit_seconds: 300
-
-  # Enable/disable auto-commit entirely
-  auto_commit_enabled: true
-
 # Safety Limits
 limits:
   # Max concurrent agents

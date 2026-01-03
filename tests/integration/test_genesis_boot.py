@@ -9,7 +9,6 @@ from vibe_core.kernel_impl import RealVibeKernel
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 
 
-@pytest.mark.xfail(reason="OPUS-307: Genesis path set during boot_async() - test needs async refactor")
 def test_genesis_boot_loading():
     """
     Verify that the kernel boots and loads the Genesis Cognitive Pack.
@@ -17,10 +16,6 @@ def test_genesis_boot_loading():
     NOTE: This test uses RealVibeKernel with load_plugins=True but does NOT
     call boot(), so the gateway is NOT started. This is intentional - we only
     need to verify plugin discovery and genesis loading.
-
-    KNOWN ISSUE (OPUS-307): genesis_path is now set during boot_async() in the
-    plugin loading phase, not during kernel construction. This test needs to be
-    refactored to use boot_async() or accept that genesis loading requires boot.
 
     Checks:
     1. PluginLoader discovers 'genesis_knowledge'.

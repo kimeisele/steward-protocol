@@ -6,9 +6,9 @@
 
 # OPUS - System State
 
-> 🟡 **NOTICE** - Trust Score 78% - Minor issues detected
+> 🟡 **NOTICE** - Trust Score 77% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2026-01-03 16:14:12 UTC | Kernel: RUNNING (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-26 13:21:23 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
@@ -28,12 +28,12 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/fix-architecture-debt-lzeEz` @ `9cc9d24`
+- **Branch:** `main` @ `fba179f`
 - **Working Tree:** ⚠️ Uncommitted
 ### Layer 2 - Prana (Runtime Energy)
 
-- **Kernel:** 🟢 Running- **Agents:** 0 active
-- **Session:** `c0f8ad1c...`
+- **Kernel:** ⚪ STOPPED- **Agents:** 0 active
+- **Session:** `8c96c899...`
 ### Layer 3 - Purusha (Cognitive Identity)
 
 - **Ephemeral Thoughts:** 0
@@ -199,7 +199,7 @@ flowchart LR
 <!-- @LIVE:verification -->
 ## System Verification (OPUS-000)
 
-**Trust Score: **🟡 DEGRADED** 78%** (100 docs verified, 58 without @HARNESS)
+**Trust Score: **🟡 DEGRADED** 77%** (100 docs verified, 54 without @HARNESS)
 
 ### OPUS Docs
 
@@ -208,7 +208,7 @@ flowchart LR
 | 000-INDEX.md | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | 001-KERNEL-EXTRACTION.md | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 002-PHOENIX-CONFIG.md | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 003-AOS-FOUNDATION-REPAIR | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 003-AOS-FOUNDATION-REPAIR | 60% | ❌ | ✅ | ❌ | ✅ | ✅ | ⚪ |
 | 004-BOOT-SEQUENCE-AUDIT.m | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 005-UNIFICATION-ROADMAP.m | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 006-GAD000-COMPLIANCE-AUD | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
@@ -227,15 +227,15 @@ flowchart LR
 | 020-CONTAINER-MIGRATION.m | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 021-TEST-ARCHITECTURE.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 022-KERNEL-SCALING.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 023-FRACTAL-UI-ARCHITECTU | 50% | ❌ | ✅ | ❌ | ✅ | ✅ | ⚪ |
-| 024-KERNEL-PROTECTION-AUD | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 023-FRACTAL-UI-ARCHITECTU | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 024-KERNEL-PROTECTION-AUD | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 025-PATH-LOBOTOMY-CRISIS. | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 026-SEMANTIC-VERIFICATION | 80% | ❌ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 027-UNIFIED-STATE-IMPLEME | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 028-PRAKRITI-GIT-INTEGRAT | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 026-SEMANTIC-VERIFICATION | 100% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 027-UNIFIED-STATE-IMPLEME | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
+| 028-PRAKRITI-GIT-INTEGRAT | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 029-OPUS-PLUGIN-ARCHITECT | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | 030-GENESIS-PLUGIN.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 031-OPUS-MULTIVERSE-VISIO | 70% | ❌ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 031-OPUS-MULTIVERSE-VISIO | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 032-SINGULARITY-50-ROADMA | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 038-SANCTUARY-MUTATION.md | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | 039-ECDSA-REGRESSION-REPO | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
@@ -243,7 +243,7 @@ flowchart LR
 | 051-MANDALA.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | 052-AKASHA.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | 053-SILPA.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| 054-SUTRA.md | 70% | ✅ | ✅ | ❌ | ✅ | ✅ | ⚪ |
+| 054-SUTRA.md | 35% | ❌ | ❌ | ❌ | ✅ | ✅ | ⚪ |
 | 055-SANKALPA.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | 056-SHUDDHI.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 057-VAJRA.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
@@ -280,7 +280,7 @@ flowchart LR
 | 102-SANKALPA-ACTION.md | 80% | ✅ | ✅ | ✅ | ✅ | ❌ | ⚪ |
 | 103-LIVE-FIRE-GENESIS.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 105-GENESIS-FORTRESS.md | 35% | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| 106-COGNITIVE-FORTRESS.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 106-COGNITIVE-FORTRESS.md | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 108-AUTONOMY-LOOP.md | 35% | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
 | 110-BIG-BUG-HUNT.md | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 111-SIGNAL-ALIGNMENT.md | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
@@ -305,7 +305,7 @@ flowchart LR
 | 133-MANAS-NEURAL-LEARNING | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 150-UNIFIED-INTERFACE-AUD | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | 151-MARKDOWN-REALITY.md | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
-| 152-FRACTAL-INTERFACE-ARC | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 152-FRACTAL-INTERFACE-ARC | 35% | ❌ | ❌ | ❌ | ✅ | ✅ | ⚪ |
 | 153-OPUS-MANAS-KNOWLEDGE- | 90% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 154-UNIFIED-AKSHARA.md | 75% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 155-AKASHA-NERVOUS-SYSTEM | 55% | ✅ | ❌ | ❌ | ✅ | ✅ | ⚪ |
@@ -346,12 +346,8 @@ flowchart LR
 | 307-OS-MANUAL.md | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | 308-FILESYSTEM-UI-PROTOCO | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | 308-MARKDOWN-MANIFESTATIO | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
-| 309-FRACTAL-CLI-COGNITIVE | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
-| 310-FRACTAL-CLI-UNIFIED-C | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
-| 311-PROTOCOL-REMEDIATION. | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | ADR-204-ASYNC-PERSISTENCE | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | ADR-205-LEDGER-ROTATION.m | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
-| MANAS-TRAINING-SESSION-00 | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | OPUS-140-SANSKRIT-MATRIX. | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | OPUS-141-VAJRA-HARDENING. | 70% | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
 | OPUS-176-BIORHYTHM-EXTRAC | 70% | ✅ | ✅ | ❌ | ✅ | ✅ | ⚪ |
@@ -366,6 +362,8 @@ flowchart LR
 
 ### ❌ Failures
 
+- **003-AOS-FOUNDATION-REPAIR.md** [files]: vibe_core/plugins/interface/renderers/envoy.py
+- **003-AOS-FOUNDATION-REPAIR.md** [wiring]: EnvoyRenderer in vibe_core/plugins/interface/renderers/envoy.py (file not found)
 - **008-PRAKRITI-PROTOTYPE.md** [doc]: ## Status
 - **009-UNIFIED-STATE-PRAKRITI.md** [doc]: ## Status
 - **011-LAYERED-ROUTER.md** [doc]: ## Status
@@ -374,9 +372,7 @@ flowchart LR
 - **014-UNIFIED-UI-TRANSPARENCY.md** [doc]: ## Status
 - **015a-SECURITY-ADDENDUM.md** [doc]: ## Implementation
 - **016-RUNTIME-SEPARATION.md** [doc]: ## Implementation
-- **017-SECURITY-AUDIT.md** [doc]: ## Status
-- **017-SECURITY-AUDIT.md** [doc]: ## Implementation
-- _...and 239 more_
+- _...and 252 more_
 
 <!-- /@LIVE -->
 
@@ -384,7 +380,7 @@ flowchart LR
 <!-- @LIVE:architecture_plans -->
 ## Architecture Plans
 
-**157 documents** in `docs/architecture/OPUS/`
+**153 documents** in `docs/architecture/OPUS/`
 
 - [000-INDEX](docs/architecture/OPUS/000-INDEX.md)
 - [001-KERNEL-EXTRACTION](docs/architecture/OPUS/001-KERNEL-EXTRACTION.md)
@@ -527,12 +523,8 @@ flowchart LR
 - [307-OS-MANUAL](docs/architecture/OPUS/307-OS-MANUAL.md)
 - [308-FILESYSTEM-UI-PROTOCOL](docs/architecture/OPUS/308-FILESYSTEM-UI-PROTOCOL.md)
 - [308-MARKDOWN-MANIFESTATION-PROTOCOL](docs/architecture/OPUS/308-MARKDOWN-MANIFESTATION-PROTOCOL.md)
-- [309-FRACTAL-CLI-COGNITIVE-HOOK](docs/architecture/OPUS/309-FRACTAL-CLI-COGNITIVE-HOOK.md)
-- [310-FRACTAL-CLI-UNIFIED-COMMANDS](docs/architecture/OPUS/310-FRACTAL-CLI-UNIFIED-COMMANDS.md)
-- [311-PROTOCOL-REMEDIATION](docs/architecture/OPUS/311-PROTOCOL-REMEDIATION.md)
 - [ADR-204-ASYNC-PERSISTENCE](docs/architecture/OPUS/ADR-204-ASYNC-PERSISTENCE.md)
 - [ADR-205-LEDGER-ROTATION](docs/architecture/OPUS/ADR-205-LEDGER-ROTATION.md)
-- [MANAS-TRAINING-SESSION-001](docs/architecture/OPUS/MANAS-TRAINING-SESSION-001.md)
 - [OPUS-140-SANSKRIT-MATRIX](docs/architecture/OPUS/OPUS-140-SANSKRIT-MATRIX.md)
 - [OPUS-141-VAJRA-HARDENING](docs/architecture/OPUS/OPUS-141-VAJRA-HARDENING.md)
 - [OPUS-176-BIORHYTHM-EXTRACTION](docs/architecture/OPUS/OPUS-176-BIORHYTHM-EXTRACTION.md)
@@ -554,8 +546,8 @@ flowchart LR
 | Module | Description | Files | Tests | Path |
 |--------|-------------|-------|-------|------|
 | **agents** | Agent implementations for vibe-agency OS. | 6 | ❌ | `vibe_core/agents/` |
-| **cartridges** | Cartridges - ARCH-050 | 195 | ✅ | `vibe_core/cartridges/` |
-| **cli** | Fractal CLI System - Auto-discoverable, plugin-based command | 36 | ❌ | `vibe_core/cli/` |
+| **cartridges** | Cartridges - ARCH-050 | 192 | ✅ | `vibe_core/cartridges/` |
+| **cli** | Fractal CLI System - Auto-discoverable, plugin-based command | 27 | ❌ | `vibe_core/cli/` |
 | **config** | THE DHARMA ENGINE: Configuration-Driven System Architecture | 2 | ❌ | `vibe_core/config/` |
 | **cortex** | CORTEX - The Cognitive Engine Layer | 6 | ❌ | `vibe_core/cortex/` |
 | **gateway** | (2 files) | 2 | ❌ | `vibe_core/gateway/` |
@@ -564,15 +556,15 @@ flowchart LR
 | **knowledge** | Unified Knowledge Graph Module | 5 | ❌ | `vibe_core/knowledge/` |
 | **llm** | LLM integration for vibe-agency OS. | 8 | ❌ | `vibe_core/llm/` |
 | **loaders** | Unified Loader System - VEDA-4 Pattern for ALL Item Types. | 17 | ❌ | `vibe_core/loaders/` |
-| **ouroboros** | OUROBOROS - The Self-Healing Loop | 11 | ❌ | `vibe_core/ouroboros/` |
 | **phoenix** | Phoenix Configuration System - The config that never dies. | 39 | ❌ | `vibe_core/phoenix/` |
 | **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
-| **plugins** | Kernel Plugins Package | 288 | ✅ | `vibe_core/plugins/` |
-| **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 38 | ❌ | `vibe_core/protocols/` |
+| **plugins** | Kernel Plugins Package | 285 | ✅ | `vibe_core/plugins/` |
+| **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 28 | ❌ | `vibe_core/protocols/` |
 | **reactor** | OPUS-200/201: Sanskrit Quantum Reactor | 3 | ❌ | `vibe_core/reactor/` |
 | **runtime** | Runtime Components Package | 29 | ❌ | `vibe_core/runtime/` |
 | **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
 | **scripts** | (1 files) | 1 | ❌ | `vibe_core/scripts/` |
+| **services** | (1 files) | 1 | ❌ | `vibe_core/services/` |
 
 **20 modules** in `vibe_core/`
 
@@ -586,16 +578,16 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/shuddhi/engine.py` | 8 | feat(ouroboros): Add KARMA/YANTRA compli |
-| `vibe_core/plugins/opus_assistant/manas/biorhythm.py` | 6 | chore(recovery): Crash recovery: uncommi |
-| `vibe_core/plugins/opus_assistant/manas/dojo/rooms/mirror.py` | 6 | fix(ouroboros): Remove GAD-000 noise, re |
-| `vibe_core/cartridges/system/watchman/cartridge_main.py` | 6 | feat(ouroboros): Phase 1 - Watchman → Kn |
-| `vibe_core/ouroboros/ingestion.py` | 5 | feat(ouroboros): Complete KARMA/YANTRA c |
-| `vibe_core/knowledge/graph.py` | 5 | feat(ouroboros): SATYA verification laye |
-| `vibe_core/cartridges/system/watchman/tools/standards_inspection.py` | 5 | feat(shuddhi): Wire Watchman detection t |
-| `vibe_core/protocols/shuddhi.py` | 5 | feat(shuddhi): Add RemedyProtocol, tests |
-| `vibe_core/cartridge_service.py` | 4 | fix(architecture): Fix tool discovery, G |
-| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 4 | fix: Fix circuit trigger schema mismatch |
+| `vibe_core/services/manifestation_service.py` | 6 | feat(opus-308): Complete ManifestationSe |
+| `vibe_core/kernel_impl.py` | 5 | feat(opus-308): OPERATIONS.md as kernel- |
+| `vibe_core/cortex/engines/circuit_engine.py` | 5 | docs(opus): Phase I Research complete -  |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 4 | feat(opus-308): Complete ManifestationSe |
+| `vibe_core/cli/circuit_cli.py` | 4 | feat(opus-307): CLI Bridges for all Serv |
+| `vibe_core/runtime/unified_execution_full.py` | 4 | feat(opus-307): Phase I.2 Complete - Exe |
+| `vibe_core/protocols/__init__.py` | 3 | fix: Remove OS/Plugin spaghetti with Ved |
+| `vibe_core/steward/daily_ritual.py` | 3 | fix(opus-308): Remove plugin spaghetti f |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 3 | feat(opus-308): Complete ManifestationSe |
+| `vibe_core/plugins/task_manager/plugin_main.py` | 3 | feat(opus-308): TASKS.md migrated to Tas |
 
 <!-- /@LIVE -->
 
@@ -608,8 +600,8 @@ flowchart LR
 ### Critical Modules (Most Imported)
 
 - **protocols** - Heavily depended upon, changes here ripple!
-- **di** - Heavily depended upon, changes here ripple!
 - **kernel_impl** - Heavily depended upon, changes here ripple!
+- **di** - Heavily depended upon, changes here ripple!
 - **tools** - Heavily depended upon, changes here ripple!
 - **state** - Heavily depended upon, changes here ripple!
 
@@ -619,30 +611,30 @@ flowchart LR
 flowchart LR
     subgraph Core["🔌 Core Modules"]
         protocols[protocols]
-        di[di]
         kernel_impl[kernel_impl]
+        di[di]
         tools[tools]
         state[state]
     end
 
     subgraph Edges["📦 Import Relations"]
-        plugins -->|53| kernel_impl
-        cartridges -->|51| tools
-        plugins -->|46| plugin_protocol
-        cartridges -->|43| protocols
-        cartridges -->|42| di
+        plugins -->|55| kernel_impl
+        cartridges -->|48| tools
         cartridges -->|41| steward
+        cartridges -->|40| di
+        plugins -->|39| plugin_protocol
         plugins -->|38| state
-        cli -->|37| protocols
-        plugins -->|33| loaders
+        plugins -->|34| loaders
+        cartridges -->|32| protocols
         cartridges -->|31| scheduling
-        plugins -->|31| protocols
-        plugins -->|18| di
+        cli -->|22| protocols
+        plugins -->|20| protocols
+        cartridges -->|15| config
     end
 
     style protocols fill:#e8f5e9
-    style di fill:#e8f5e9
     style kernel_impl fill:#e8f5e9
+    style di fill:#e8f5e9
     style tools fill:#e8f5e9
     style state fill:#e8f5e9
 ```
@@ -651,21 +643,20 @@ flowchart LR
 
 | Module | Files | Critical? |
 |--------|-------|-----------|
-| `plugins` | 288 |  |
-| `cartridges` | 195 |  |
+| `plugins` | 285 |  |
+| `cartridges` | 192 |  |
 | `phoenix` | 39 |  |
-| `protocols` | 38 | ⭐ |
-| `cli` | 36 |  |
 | `runtime` | 29 |  |
+| `protocols` | 28 | ⭐ |
+| `cli` | 27 |  |
 | `state` | 23 | ⭐ |
-| `shuddhi` | 19 |  |
 | `loaders` | 17 |  |
-| `ouroboros` | 11 |  |
 | `steward` | 11 |  |
 | `task_management` | 10 |  |
 | `tools` | 10 | ⭐ |
 | `llm` | 8 |  |
 | `playbook` | 7 |  |
+| `shuddhi` | 7 |  |
 | `agents` | 6 |  |
 | `cortex` | 6 |  |
 | `genesis` | 6 |  |
@@ -679,10 +670,11 @@ flowchart LR
 | `scheduling` | 3 |  |
 | `config` | 2 |  |
 | `gateway` | 2 |  |
-| `services` | 2 |  |
 | `store` | 2 |  |
 | `scripts` | 1 |  |
-| `shadow_labs` | 0 |  |
+| `services` | 1 |  |
+| `shadow_labs` | 1 |  |
+| `tests` | 0 |  |
 
 <!-- /@LIVE -->
 
@@ -694,25 +686,25 @@ flowchart LR
 
 | Property | Value |
 | --- | --- |
-| Session ID | `c0f8ad1c` |
+| Session ID | `8c96c899` |
 | Boot Commit | `unknown` |
 | Boot Mode | full_power |
-| Started | `2026-01-03T16:14:05.591373` |
+| Started | `2025-12-26T13:21:21.944344` |
 
 ### 🔮 Three Layers
 
 | Layer | Name | Status | Details |
 | --- | --- | --- | --- |
-| 1 | STHULA (Physical) | 🟡 | Dirty on `claude/fix-architecture-debt-lzeEz` |
-| 2 | PRANA (Runtime) | ✅ | Running (0 agents) |
+| 1 | STHULA (Physical) | 🟡 | Dirty on `main` |
+| 2 | PRANA (Runtime) | ⏹️ | Stopped |
 | 3 | PURUSHA (Identity) | ⚪ | No personas defined |
 
 ### 🔗 Cryptographic Zipper
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `9cc9d24` | ✅ |
-| Ledger HEAD | `17a466cbd92e` | ✅ |
+| Git HEAD | `fba179f` | ⚪ |
+| Ledger HEAD | `d5aa4ec4ebc2` | ⚪ |
 
 ### 🔮 Tri-Guna (State Health)
 
@@ -744,8 +736,8 @@ flowchart LR
 | Total OPUS Docs | 36 | - |
 | With @HARNESS | 30 | ✅ |
 | Without @HARNESS | 6 | ⚠️ |
-| Doc/Code Gaps | 262 | 🔴 |
-| Health Ratio | **0%** | 🔴 |
+| Doc/Code Gaps | 249 | 🔴 |
+| Health Ratio | **5%** | 🔴 |
 
 **Top Gaps (Need Attention):**
 - 🟡 `missing_harness`: Doc 069-SRUTI-SMRITI-PATTERN.md has no @HARNESS block (069-SRUTI-SMRITI-PATTERN.md)
@@ -758,19 +750,19 @@ flowchart LR
 
 | Capability | Count | Status |
 | --- | --- | --- |
-| Hidden Code Elements | 469 | ⚠️ 24 high priority |
-| Roadmap Items | 117 | 📋 Action needed |
+| Hidden Code Elements | 468 | ⚠️ 24 high priority |
+| Roadmap Items | 113 | 📋 Action needed |
 | Intent Clusters | 0 | ⚪ |
 
 **Roadmap Preview (Top 5):**
-- [P1] `fix_code_reference` → intent_matcher.py (medium)
-- [P1] `fix_code_reference` → prompts_cli.py (medium)
-- [P1] `fix_code_reference` → run_cli.py (medium)
-- [P1] `fix_code_reference` → ci_cli.py (medium)
 - [P1] `fix_code_reference` → routing.py (medium)
+- [P1] `fix_code_reference` → run_cli.py (medium)
+- [P1] `fix_code_reference` → prompts_cli.py (medium)
+- [P1] `fix_code_reference` → 002-PHOENIX-CONFIG.md (medium)
+- [P1] `fix_code_reference` → 005-UNIFICATION-ROADMAP.m (medium)
 
 
-*Last Scan: 2026-01-03 16:14:44 UTC*
+*Last Scan: 2025-12-26 13:21:41 UTC*
 
 <!-- /@LIVE -->
 
@@ -778,32 +770,32 @@ flowchart LR
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
-**Total: 29** (TODO: 27, HACK: 2, FIXME: 0)
+**Total: 28** (TODO: 26, HACK: 2, FIXME: 0)
 
 <details>
-<summary>TODOs (27)</summary>
+<summary>TODOs (26)</summary>
 
-- `vibe_core/cartridges/system/cleaner/cartridge_main.py:39` - # TODO: Implement task processing
-- `vibe_core/cartridges/system/engineer/cartridge_main.py:495` - # TODO: Implement agent-specific logic
-- `vibe_core/cartridges/system/engineer/templates/agent/cartridge_main.py:101` - # TODO: Implement your capability
-- `vibe_core/cartridges/system/engineer/templates/agent/cartridge_main.py:106` - # TODO: Implement your capability
-- `vibe_core/cartridges/system/engineer/tools/refactor_tool.py:48` - '# TODO: Use self.system.read_file() - Requires VFS migratio
 - `vibe_core/cartridges/system/envoy/tools/wiring_audit_scripts.py:221` - "# TODO.*implement": "MEDIUM",
 - `vibe_core/cartridges/system/herald/core/memory.py:66` - # TODO: Add deprecation warning in future version
-- `vibe_core/cli/unified_cli.py:101` - "delegate": None,  # TODO: Migrate to plugin
-- `vibe_core/cli/ci_cli.py:352` - # TODO: Read from .prakriti/ci_status.json
-- `vibe_core/config/__init__.py:21` - # TODO: Remove in v2.0
-- `vibe_core/genesis/templates.py:225` - # TODO: Implement task processing
-- `vibe_core/genesis/templates.py:391` - # TODO: Implement analysis logic
-- `vibe_core/genesis/templates.py:426` - # TODO: Implement perception logic
-- `vibe_core/genesis/templates.py:462` - # TODO: Add intent types this action handles
-- `vibe_core/genesis/templates.py:467` - # TODO: Implement action logic
+- `vibe_core/cartridges/system/cleaner/cartridge_main.py:39` - # TODO: Implement task processing
+- `vibe_core/cartridges/system/engineer/cartridge_main.py:495` - # TODO: Implement agent-specific logic
+- `vibe_core/cartridges/system/engineer/tools/refactor_tool.py:48` - '# TODO: Use self.system.read_file() - Requires VFS migratio
+- `vibe_core/cartridges/system/engineer/templates/agent/cartridge_main.py:101` - # TODO: Implement your capability
+- `vibe_core/cartridges/system/engineer/templates/agent/cartridge_main.py:106` - # TODO: Implement your capability
 - `vibe_core/playbook/__init__.py:22` - # TODO: Remove in v2.0
+- `vibe_core/config/__init__.py:21` - # TODO: Remove in v2.0
+- `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:58` - # TODOs (collapsible if many)
+- `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:65` - lines.append("### TODOs")
 - `vibe_core/plugins/doctor/plugin_main.py:86` - # TODO: Clarify offline mode dependency injection.
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2417` - # TODO: Implement actual logic here
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2467` - # TODO: Implement analysis logic
-- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2505` - # TODO: Implement formatting logic
-- _...and 7 more_
+- `vibe_core/plugins/opus_assistant/manas/cortex/silpa.py:844` - # TODO: Parse refactoring commands
+- `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:230` - # TODO: Implement analysis logic
+- `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:275` - # TODO: Implement perception logic
+- `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:315` - # TODO: Add intent types this action handles
+- `vibe_core/plugins/opus_assistant/manas/cortex/genesis/generator.py:329` - # TODO: Implement action logic
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2402` - # TODO: Implement actual logic here
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2452` - # TODO: Implement analysis logic
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py:2490` - # TODO: Implement formatting logic
+- _...and 6 more_
 
 </details>
 <!-- /@LIVE -->
@@ -814,13 +806,13 @@ flowchart LR
 
 | Metric | Count | Status |
 | --- | --- | --- |
-| Active Tests | 190 | - |
+| Active Tests | 179 | - |
 | Archived (broken) | 1 | - |
-| Organized | 186/190 | - |
-| Unit Tests | 50 | - |
-| Integration Tests | 63 | - |
+| Organized | 175/179 | - |
+| Unit Tests | 47 | - |
+| Integration Tests | 61 | - |
 | Hardening Tests | 15 | - |
-| Using Fixtures | 9/15 (60%) | OK |
+| Using Fixtures | 3/3 (100%) | OK |
 
 **Debt:** 1 tests in `tests/archive/` need revival
 <!-- /@LIVE -->
@@ -881,4 +873,4 @@ _Review and approve actions above_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2026-01-03 16:14:12 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-26 13:21:23 UTC*

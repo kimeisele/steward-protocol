@@ -17,7 +17,6 @@
 
 rules:
   # TODSÜNDE #2: Ghost State (Raw File Writes)
-  # EXEMPTIONS: Kernel/core infrastructure that legitimately needs direct file access
   - id: "unsafe_io_write"
     target: "Call"
     match:
@@ -26,30 +25,8 @@ rules:
     severity: "CRITICAL"
     message: "Raw write-access detected. Bypasses VFS and KernelIO audit."
     fix_suggestion: "Use self.system.write_file() or kernel.io.write_document()"
-    allowed_files:
-      # Kernel State Layer - needs direct writes for state persistence
-      - "vibe_core/state/"
-      - "vibe_core/ledger.py"
-      - "vibe_core/vfs.py"
-      # CLI Layer - needs file writes for user-facing operations
-      - "vibe_core/cli/"
-      # Core Infrastructure
-      - "vibe_core/dependency_manager.py"
-      - "vibe_core/agent_interface.py"
-      # Runtime Layer - core execution infrastructure
-      - "vibe_core/runtime/"
-      - "vibe_core/phoenix/"
-      - "vibe_core/playbook/"
-      - "vibe_core/task_management/"
-      # Plugin Core (not individual cartridges)
-      - "vibe_core/plugins/opus_assistant/"
-      - "vibe_core/plugins/interface/"
-      - "vibe_core/plugins/test_orchestration/"
-      - "vibe_core/plugins/vedic_governance/"
-      - "vibe_core/plugins/asura/"
 
   # TODSÜNDE #2: Unsandboxed IO
-  # EXEMPTIONS: Kernel/core infrastructure that legitimately needs shutil
   - id: "unsafe_shutil"
     target: "Attribute"
     match:
@@ -57,25 +34,6 @@ rules:
     severity: "CRITICAL"
     message: "Direct shutil usage detected. Bypasses sandbox isolation."
     fix_suggestion: "Use self.system.publish_artifact() for repo writes."
-    allowed_files:
-      # Core infrastructure
-      - "vibe_core/vfs.py"
-      - "vibe_core/agent_interface.py"
-      - "vibe_core/dependency_manager.py"
-      - "vibe_core/ledger.py"
-      # State layer
-      - "vibe_core/state/"
-      # CLI Layer
-      - "vibe_core/cli/"
-      # Runtime Layer
-      - "vibe_core/runtime/"
-      - "vibe_core/phoenix/"
-      - "vibe_core/playbook/"
-      # Plugin Core (not individual cartridges)
-      - "vibe_core/plugins/opus_assistant/"
-      - "vibe_core/plugins/interface/"
-      - "vibe_core/plugins/test_orchestration/"
-      - "vibe_core/plugins/asura/"
 
   # TODSÜNDE #1: Silent Failures
   - id: "silent_failure"

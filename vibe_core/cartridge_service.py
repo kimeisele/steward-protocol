@@ -121,15 +121,7 @@ class CartridgeService(CartridgeProtocol):
                         tool_id = tool_id[:-5]
 
                     # Infer class name
-                    # Handle both "_tool" and "_tools" suffixes (e.g., git_tools.py → GitTools)
-                    base_name = "".join(word.title() for word in tool_id.split("_"))
-                    # Only add "Tool" suffix if name doesn't already end with "Tool" or "Tools"
-                    if base_name.endswith("Tools"):
-                        class_name = base_name  # Already has Tools suffix (e.g., GitTools)
-                    elif base_name.endswith("Tool"):
-                        class_name = base_name  # Already has Tool suffix
-                    else:
-                        class_name = base_name + "Tool"
+                    class_name = "".join(word.title() for word in tool_id.split("_")) + "Tool"
 
                     info.tools[tool_id] = ToolInfo(
                         tool_id=tool_id,

@@ -46,26 +46,26 @@ _Awaiting command..._
 
 | Route | Description |
 | :--- | :--- |
-| `AGENT_BIRTH_V1` |  |
 | `ARCHITECTURE_ANALYSIS` |  |
-| `CONTENT_GENERATION_V2` |  |
-| `CONTEXT_SYNTH` |  |
-| `DEBUG_FIX_V2` |  |
-| `DOC_INDEX_RENDER` |  |
-| `ERROR_RECOVERY_V1` |  |
-| `FEATURE_IMPLEMENT_V2` |  |
-| `GOVERNANCE_VOTE_V2` |  |
 | `HEAL_CODEBASE_V1` |  |
-| `OUROBOROS_V1` |  |
-| `DEBATE_V1` |  |
-| `PROJECT_SCAFFOLD_V2` |  |
-| `PURGE_TECHNICAL_DEBT_V1` |  |
+| `DEBUG_FIX_V2` |  |
+| `GOVERNANCE_VOTE_V2` |  |
 | `RESEARCH_SYNTH_V2` |  |
+| `AGENT_BIRTH_V1` |  |
 | `SIMPLE_QUERY` |  |
-| `SYSTEM_DESIGN_V2` |  |
-| `SYSTEM_STATUS_V2` |  |
+| `WIRING_AUDIT` |  |
 | `TASK_LEDGER_V1` |  |
-| `test_singularity` |  |
+| `DEBATE_V1` |  |
+| `PURGE_TECHNICAL_DEBT_V1` |  |
+| `CONTEXT_SYNTH` |  |
+| `PROJECT_SCAFFOLD_V2` |  |
+| `FEATURE_IMPLEMENT_V2` |  |
+| `SYSTEM_DESIGN_V2` |  |
+| `ERROR_RECOVERY_V1` |  |
+| `SYSTEM_STATUS_V2` |  |
+| `CONTENT_GENERATION_V2` |  |
+| `OUROBOROS_V1` |  |
+| `DOC_INDEX_RENDER` |  |
 <!-- /@SECTION -->
 
 <!-- @SECTION:notes OWNER:human -->

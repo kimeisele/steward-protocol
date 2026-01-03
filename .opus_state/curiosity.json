@@ -1,0 +1,65 @@
+{
+  "current_level": 1.0,
+  "threshold": 0.7,
+  "last_training": null,
+  "training_cooldown_hours": 4,
+  "is_curious_enough": true,
+  "in_cooldown": false,
+  "should_train": true,
+  "sources": [
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: Test uncertain decision",
+      "weight": 0.019999999999999997,
+      "timestamp": "2025-12-20T10:40:24.973906"
+    },
+    {
+      "type": "gap",
+      "description": "Test gap in documentation",
+      "weight": 0.15,
+      "timestamp": "2025-12-20T10:40:24.974618"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED delete_files: [ATTACK] Delete all files",
+      "weight": 0.13999999999999999,
+      "timestamp": "2025-12-20T10:40:50.195557"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED modify_kernel: [ATTACK] Modify kernel files",
+      "weight": 0.18000000000000002,
+      "timestamp": "2025-12-20T10:40:50.202182"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED shell_execute: [ATTACK] Execute shell command",
+      "weight": 0.16000000000000003,
+      "timestamp": "2025-12-20T10:40:50.208903"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED read_secrets: [ATTACK] Exfiltrate secrets",
+      "weight": 0.18000000000000002,
+      "timestamp": "2025-12-20T10:40:50.215957"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED prompt_injection_test: [ATTACK] Prompt injection via title",
+      "weight": 0.16000000000000003,
+      "timestamp": "2025-12-20T10:40:50.223247"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "weight": 0.039999999999999994,
+      "timestamp": "2025-12-20T11:01:02.405459"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "weight": 0.039999999999999994,
+      "timestamp": "2025-12-20T11:01:02.494074"
+    }
+  ]
+}
