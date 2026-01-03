@@ -9,5 +9,6 @@ from .boot import BootCommand
 from .chat import ChatCommand
 from .commands import CommandsCommand
 from .status import StatusCommand
+from .sync_ci import SyncCICommand
 
-__all__ = ["ChatCommand", "BootCommand", "StatusCommand", "CommandsCommand"]
+__all__ = ["ChatCommand", "BootCommand", "StatusCommand", "CommandsCommand", "SyncCICommand"]
