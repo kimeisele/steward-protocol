@@ -17,8 +17,8 @@ _No data_
 
 | Key | Value |
 | :--- | :--- |
-| Kernel Status | STOPPED |
-| Agents | 1 |
+| Kernel Status | RUNNING |
+| Agents | 28 |
 | Queue Length | 0 |
 | Pending Tasks | 0 |
 | Total Events | 0 |
@@ -30,7 +30,34 @@ _No data_
 
 | Agent | Name | Domain | Status |
 | :--- | :--- | :--- | :--- |
+| `agora` | AGORA | COMMUNITY | ACTIVE |
+| `ambassador` | AMBASSADOR | DIPLOMACY | ACTIVE |
+| `analyst` | ANALYST | RESEARCH | ACTIVE |
+| `archivist` | ARCHIVIST | SYSTEM | ACTIVE |
+| `artisan` | ARTISAN | MEDIA | ACTIVE |
+| `auditor` | AUDITOR | SECURITY | ACTIVE |
+| `chronicle` | CHRONICLE | SYSTEM | ACTIVE |
+| `civic` | CIVIC | GOVERNANCE | ACTIVE |
+| `cleaner` | CLEANER | MAINTENANCE | ACTIVE |
+| `dhruva` | Dhruva Anchor | DATA_ETHICS | ACTIVE |
+| `discoverer` | The Discoverer | GOVERNANCE | ACTIVE |
+| `engineer` | ENGINEER | INFRASTRUCTURE | ACTIVE |
 | `envoy` | ENVOY | INTERFACE | ACTIVE |
+| `forum` | FORUM | GOVERNANCE | ACTIVE |
+| `herald` | HERALD | COMMUNICATIONS | ACTIVE |
+| `lens` | LENS | OBSERVATION | ACTIVE |
+| `librarian` | LIBRARIAN | KNOWLEDGE | ACTIVE |
+| `market` | MARKET | ECONOMY | ACTIVE |
+| `marketer` | MARKETER | CONTENT | ACTIVE |
+| `mechanic` | MECHANIC | MAINTENANCE | ACTIVE |
+| `oracle` | ORACLE | SYSTEM | ACTIVE |
+| `ping` | PING | SYSTEM | ACTIVE |
+| `pulse` | PULSE | MEDIA | ACTIVE |
+| `science` | SCIENCE | INTELLIGENCE | ACTIVE |
+| `scribe` | SCRIBE | INFRASTRUCTURE | ACTIVE |
+| `supreme_court` | Supreme Court | JUSTICE | ACTIVE |
+| `temple` | TEMPLE | SPIRITUAL | ACTIVE |
+| `watchman` | WATCHMAN | SYSTEM | ACTIVE |
 <!-- /@SECTION -->
 
 <!-- @SECTION:details OWNER:live -->
@@ -38,7 +65,10 @@ _No data_
 
 | Item | Info |
 | :--- | :--- |
-| _No activity_ | - |
+| Event: THOUGHT | Count: 3 |
+| Event: ACTION | Count: 1 |
+| Event: ERROR | Count: 1 |
+| Event: COMPLETED | Count: 1 |
 <!-- /@SECTION -->
 
 <!-- @SECTION:alerts OWNER:live -->

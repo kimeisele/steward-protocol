@@ -17,7 +17,7 @@
 | `kernel.verbose` | `False` | Verbose mode |
 | `provider` | `unknown` | LLM Provider |
 | `mode` | `simulation` | Execution Mode |
-| `agents` | `1` | Registered agents |
+| `agents` | `28` | Registered agents |
 | `plugins` | `22` | Loaded plugins |
 <!-- /@SECTION -->
 
@@ -41,6 +41,33 @@ _No data_
 | Agent | Status |
 | :--- | :--- |
 | `envoy` | ACTIVE |
+| `discoverer` | ACTIVE |
+| `archivist` | ACTIVE |
+| `auditor` | ACTIVE |
+| `chronicle` | ACTIVE |
+| `civic` | ACTIVE |
+| `cleaner` | ACTIVE |
+| `engineer` | ACTIVE |
+| `forum` | ACTIVE |
+| `herald` | ACTIVE |
+| `oracle` | ACTIVE |
+| `ping` | ACTIVE |
+| `science` | ACTIVE |
+| `scribe` | ACTIVE |
+| `supreme_court` | ACTIVE |
+| `watchman` | ACTIVE |
+| `agora` | ACTIVE |
+| `ambassador` | ACTIVE |
+| `analyst` | ACTIVE |
+| `artisan` | ACTIVE |
+| `dhruva` | ACTIVE |
+| `lens` | ACTIVE |
+| `librarian` | ACTIVE |
+| `market` | ACTIVE |
+| `marketer` | ACTIVE |
+| `mechanic` | ACTIVE |
+| `pulse` | ACTIVE |
+| `temple` | ACTIVE |
 <!-- /@SECTION -->
 
 <!-- @SECTION:history OWNER:live -->
@@ -48,12 +75,14 @@ _No data_
 
 | Time | Type | Agent |
 | :--- | :--- | :--- |
-| 2025-12-26T13:21:18 | capability_registere | system_heartbea |
-| 2025-12-26T13:21:18 | capability_registere | boot_optimizer |
-| 2025-12-26T13:21:18 | capability_registere | kala |
-| 2025-12-26T13:21:18 | capability_registere | opus_assistant |
-| 2025-12-26T13:21:18 | capability_registere | node_pulse |
-| 2025-12-26T13:21:21 | capability_registere | envoy |
-| 2025-12-26T13:21:21 | MANIFEST_REGISTERED | envoy |
-| 2025-12-26T13:21:21 | capability_registere | manas |
+| 2026-01-03T15:28:24 | TOOL_CALL_INITIATED | chronicle |
+| 2026-01-03T15:28:24 | TOOL_CALL_COMPLETED | chronicle |
+| 2026-01-03T15:28:24 | TOOL_CALL_INITIATED | herald |
+| 2026-01-03T15:28:24 | TOOL_CALL_COMPLETED | herald |
+| 2026-01-03T15:28:24 | TOOL_CALL_INITIATED | herald |
+| 2026-01-03T15:28:24 | TOOL_CALL_COMPLETED | herald |
+| 2026-01-03T15:28:24 | IO_WRITE | KERNEL |
+| 2026-01-03T15:28:24 | task_start | ping |
+| 2026-01-03T15:28:24 | task_completed | ping |
+| 2026-01-03T15:28:24 | TRUST_SCORE_UPDATED | ping |
 <!-- /@SECTION -->
