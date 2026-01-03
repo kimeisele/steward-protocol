@@ -11,9 +11,14 @@
 ### 1. VFS ORPHANED - No Sandbox
 ```
 File: vibe_core/vfs.py
-Status: EXISTS but NEVER IMPORTED
+Status: EXISTS, IMPORTED, but NOT ENFORCED
 Risk: Agents write DIRECTLY to host filesystem
 Impact: rm -rf / has no guard
+
+FIX APPLIED (2026-01-03):
+  - file_tools.py: ReadFileTool/WriteFileTool now DENY without VFS
+  - Agents without VFS get "SANDBOX REQUIRED" error
+  - Only allow_unrestricted=True (kernel/admin) bypasses
 ```
 
 ### 2. SettingsExecutor ORPHANED - Config is Placebo
