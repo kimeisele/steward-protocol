@@ -1129,15 +1129,19 @@ class CLILoopbackHandler(ActionHandler):
             params = dict(params)
 
             # Determine if this is a CLI command or a capability
-            is_cli_command = target in self.CLI_COMMANDS
+            # OPUS-307: Treat namespaced commands (containing :) as CLI commands
+            is_cli_command = target in self.CLI_COMMANDS or ":" in target
             output_format = params.pop("output_format", "json")
             params.pop("capture_as", None)  # Handled by circuit engine
 
             if is_cli_command:
                 # CLI command: steward <command> <subcommand> [args]
-                subcommand = params.pop("subcommand", "list")
-                logger.info(f"  🐍 CLI_LOOPBACK: steward {target} {subcommand}")
-                cmd = ["python", "-m", "vibe_core.cli", target, subcommand]
+                subcommand = params.pop("subcommand", None)
+                logger.info(f"  🐍 CLI_LOOPBACK: steward {target} {subcommand if subcommand else ''}")
+
+                cmd = ["python", "-m", "vibe_core.cli", target]
+                if subcommand:
+                    cmd.append(subcommand)
 
                 # Handle positional args (e.g., rule_id for 'remedies get <rule_id>')
                 positional_keys = ["rule_id", "term", "path", "id"]

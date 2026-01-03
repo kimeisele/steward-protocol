@@ -66,6 +66,27 @@ Das Steward Protocol soll ein **selbstheilendes Immunsystem** haben:
 
 ## 3. ROADMAP (Die 5 Brücken)
 
+### Phase 0: The Sensor Network & Infrastructure Wiring (P0 - Critical)
+
+**Diagnose:** Das System leidet an "Schema Mismatches" und "Phantom Dependencies".
+- `⚠ Unknown script (stub)` Logs sind nutzlos für Manas.
+- `UnifiedCLI` Argument Parsing war fehlerhaft (bool flags).
+- `ActionHandler` und `KernelTickHandler` nutzen unterschiedliche Logiken.
+
+**Ziel:** Standardisierung der Signale und Nervenbahnen.
+
+**Dateien zu ändern:**
+- `vibe_core/cli/unified_cli.py`: Bool-Flag Fix (Done).
+- `vibe_core/cartridges/system/envoy/action_handlers.py`: `CLILoopbackHandler` muss Namespaced Commands (`opus:verify`) unterstützen (Done).
+- `vibe_core/cortex/engines/circuit_engine.py`: `_evaluate_condition` muss `InvariantChecker` nutzen (DRY) (Done).
+
+**Maßnahmen:**
+1.  **Semantic Log Parsing (The Ears):** ActionHandler müssen strukturierte `ActionResult` Objekte zurückgeben, die maschinenlesbar sind. Keine "Stub" Logs mehr.
+2.  **Unified State Perception (The Eyes):** `Prakriti` als SINGLE Source of Truth.
+3.  **Fractal CLI Consolidation:** Alles läuft über `steward` (UnifiedCLI). `python -m` ist nur der interne Entrypoint.
+
+---
+
 ### Phase 1: Watchman → Knowledge Graph Bridge (P0)
 
 **Ziel:** Violations werden als Nodes im Knowledge Graph gespeichert.
