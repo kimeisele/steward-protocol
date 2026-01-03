@@ -422,6 +422,10 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
         Phase 4: DECIDE - What to do?
 
         Decide the commit strategy based on classified state and advice.
+
+        P0 FIX: Filter out RUNTIME state files that should NOT be committed.
+        Runtime state (.vibe/state/, .prakriti/, .opus_state/) lives on disk
+        but is NOT tracked in git - committing them causes the death loop.
         """
         if not classified.rajas:
             return CommitPlan(
@@ -430,13 +434,32 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
                 message="Nothing to commit",
             )
 
-        paths = advice.priority_paths or [info.path for info in classified.rajas]
+        # P0 FIX: Filter out runtime state - these should NOT be committed
+        # They are written to disk by StateService but must not go to git
+        all_paths = advice.priority_paths or [info.path for info in classified.rajas]
+
+        # Filter: only commit SOURCE state, not RUNTIME state
+        committable_paths = []
+        for path in all_paths:
+            path_str = str(path)
+            # Check if this is runtime state (should NOT be committed)
+            if self._runtime_definition and self._runtime_definition.is_runtime_state(path_str):
+                # Runtime state - skip git commit (but it's already on disk)
+                continue
+            committable_paths.append(path)
+
+        if not committable_paths:
+            return CommitPlan(
+                paths=[],
+                strategy=CommitStrategy.SKIP,
+                message="All changes are runtime state (not committed to git)",
+            )
 
         return CommitPlan(
-            paths=paths,
+            paths=committable_paths,
             strategy=CommitStrategy.IMMEDIATE,
-            message="chore(state): Auto-sync runtime state",
-            no_verify=True,  # Runtime state skips hooks
+            message="chore(state): Auto-sync source state",
+            no_verify=True,  # State commits skip hooks
         )
 
     def _execute_commit(self, plan: CommitPlan) -> CommitResult:
