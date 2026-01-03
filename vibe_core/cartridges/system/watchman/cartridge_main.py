@@ -616,7 +616,11 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
                 # v1: Direct hash comparison
                 return computed_sig == stored_sig
-        except Exception:
+        except Exception as e:
+            # OPUS-312: Log signature verification failures (security-relevant)
+            import logging
+
+            logging.getLogger("WATCHMAN").warning(f"Signature verification failed for {file_path}: {e}")
             return False
 
     def _record_violations_to_knowledge_graph(self, violations: list) -> int:

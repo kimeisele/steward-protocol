@@ -202,7 +202,9 @@ class CheckStateHandler(ActionHandler):
                     value = getattr(value, part, None)
                 if value is None:
                     break
-        except Exception:
+        except Exception as e:
+            # OPUS-312: Log audit gate extraction failures
+            logger.warning(f"Audit gate field extraction failed for {check_field}: {e}")
             value = None
 
         # Compare with expected
