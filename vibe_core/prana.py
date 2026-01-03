@@ -207,7 +207,8 @@ def ensure_kernel_running(config: Optional[PranaConfig] = None, background: bool
 
 def get_last_heartbeat() -> Optional[str]:
     """Get timestamp of last heartbeat from state file."""
-    state_file = Path(".opus_state/prana_heartbeat.json")
+    # OPUS-312: Kernel state lives in .vibe/state/kernel/ (not legacy .opus_state/)
+    state_file = Path(".vibe/state/kernel/prana_heartbeat.json")
     if not state_file.exists():
         return None
 
@@ -228,7 +229,8 @@ def record_heartbeat() -> None:
     import tempfile
     from datetime import datetime
 
-    state_file = Path(".opus_state/prana_heartbeat.json")
+    # OPUS-312: Kernel state lives in .vibe/state/kernel/ (not legacy .opus_state/)
+    state_file = Path(".vibe/state/kernel/prana_heartbeat.json")
     state_file.parent.mkdir(parents=True, exist_ok=True)
 
     data = {

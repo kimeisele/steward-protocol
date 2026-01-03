@@ -310,15 +310,25 @@ server.log
 *.log
 __pycache__/
 
-# OPUS-009 PRAKRITI: State directories are now TRACKED (LOBOTOMY HEALED)
-# The brain must persist. Git is consciousness. State files = Neurons.
-# Removed: .vibe/ (task_manager state)
-# Removed: .prakriti/ (prakriti state)
-# Removed: *.vibe (vibe state files)
+# OPUS-312 THREE BODIES DOCTRINE (Scalable State Architecture)
+# ============================================================
+# STHULA (Brain/Persistent) → TRACKED in Git
+#   - .vibe/state/plugins/{plugin_id}/manas_*.json
+#   - .vibe/state/plugins/{plugin_id}/sankalpa.json
+#   - The brain. Memory. Commitments.
+#
+# PRANA (Ephemeral/Runtime) → IGNORED
+#   - Session locks, heartbeats, debug snapshots
+#   - Dies with process. Scales to 1000s of plugins.
+#
+# PURUSHA (Identity) → TRACKED
+#   - config/personas/, manifest.json
 
-# OPUS-061 AMRITA: .opus_state/ is now TRACKED
-# The brain must persist. Git is consciousness.
-# Removed: .opus_state/
+# PRANA Layer: Ephemeral patterns (scales to ANY plugin/agent)
+.prakriti/
+**/session.lock
+**/prana_heartbeat.json
+**/*_heartbeat.json
 .state/
 
 # OPUS-166: NodeState - PULS Layer (Ephemeral runtime presence)
