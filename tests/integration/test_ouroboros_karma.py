@@ -305,5 +305,77 @@ class TestLedgerResilience:
         assert result is not None
 
 
+class TestCISyncServiceKarma:
+    """Tests for CISyncService Ledger event emission."""
+
+    def test_sync_emits_ledger_event(self, mock_ledger, mock_kg, clean_registry):
+        """KARMA: sync_latest MUST emit CI_SYNC_COMPLETE event."""
+
+        from vibe_core.ouroboros.sync import CISyncService
+
+        # Mock the gh CLI calls to avoid network calls
+        with patch("subprocess.run") as mock_run:
+            # Mock _detect_repo
+            mock_run.return_value.stdout = "git@github.com:test/repo.git"
+            mock_run.return_value.returncode = 0
+
+            sync = CISyncService(repo="test/repo")
+
+            # Mock _get_latest_run to return no runs (simplest case)
+            mock_run.return_value.stdout = "[]"
+
+            result = sync.sync_latest("test.yml")
+
+        # Should have recorded an event
+        assert len(mock_ledger.events) == 1
+
+        event = mock_ledger.events[0]
+        assert event["event_type"] == "CI_SYNC_COMPLETE"
+        assert event["agent_id"] == "ouroboros"
+        assert "duration_ms" in event["details"]
+        assert event["details"]["workflow"] == "test.yml"
+
+    def test_sync_tracks_duration(self, mock_ledger, mock_kg, clean_registry):
+        """YANTRA: sync_latest MUST track duration_ms."""
+
+        from vibe_core.ouroboros.sync import CISyncService
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value.stdout = "[]"
+            mock_run.return_value.returncode = 0
+
+            sync = CISyncService(repo="test/repo")
+            result = sync.sync_latest()
+
+        # Result should include duration
+        assert "duration_ms" in result
+        assert isinstance(result["duration_ms"], (int, float))
+
+    def test_sync_survives_ledger_failure(self, mock_kg, clean_registry):
+        """DHARMA: Sync must NOT crash if Ledger fails."""
+        from unittest.mock import MagicMock
+
+        from vibe_core.ouroboros.sync import CISyncService
+        from vibe_core.protocols.ledger import VibeLedger
+
+        # Register a broken ledger
+        broken_ledger = MagicMock()
+        broken_ledger.record_event.side_effect = Exception("Ledger exploded!")
+        ServiceRegistry.register(VibeLedger, broken_ledger)
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value.stdout = "[]"
+            mock_run.return_value.returncode = 0
+
+            sync = CISyncService(repo="test/repo")
+
+            # Should NOT raise
+            result = sync.sync_latest()
+
+        # Sync still returns result despite Ledger failure
+        assert result is not None
+        assert "synced_at" in result
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

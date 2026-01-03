@@ -4,12 +4,16 @@ CI/CD Sync Service - Bridge between remote CI and local Knowledge Graph.
 This service fetches CI/CD results from GitHub Actions and ingests them
 into the local Knowledge Graph, enabling the Ouroboros loop to learn
 from remote failures.
+
+KARMA: All sync operations emit Ledger events for audit trail.
+YANTRA: duration_ms tracked for performance monitoring.
 """
 
 import json
 import logging
 import subprocess
 import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -72,12 +76,17 @@ class CISyncService:
         """
         Sync the latest CI run results.
 
+        KARMA: Emits CI_SYNC_COMPLETE ledger event for audit trail.
+        YANTRA: Tracks duration_ms for performance monitoring.
+
         Args:
             workflow: Workflow file name to sync
 
         Returns:
             Sync result summary
         """
+        start_time = time.perf_counter()
+
         result = {
             "synced_at": datetime.now().isoformat(),
             "workflow": workflow,
@@ -91,28 +100,73 @@ class CISyncService:
             run_info = self._get_latest_run(workflow)
             if not run_info:
                 result["errors"].append("No recent CI runs found")
-                return result
+                # Fall through to record event (don't return early)
+            else:
+                result["run_id"] = run_info.get("databaseId")
+                result["run_status"] = run_info.get("status")
+                result["run_conclusion"] = run_info.get("conclusion")
+                result["runs_checked"] = 1
 
-            result["run_id"] = run_info.get("databaseId")
-            result["run_status"] = run_info.get("status")
-            result["run_conclusion"] = run_info.get("conclusion")
-            result["runs_checked"] = 1
+                # Only sync failed runs
+                if run_info.get("conclusion") == "failure":
+                    violations = self._extract_violations_from_run(run_info)
+                    if violations:
+                        count = self.ingester.ingest(violations)
+                        result["violations_ingested"] = count
 
-            # Only sync failed runs
-            if run_info.get("conclusion") == "failure":
-                violations = self._extract_violations_from_run(run_info)
-                if violations:
-                    count = self.ingester.ingest(violations)
-                    result["violations_ingested"] = count
-
-            self._last_sync = datetime.now()
-            logger.info(f"[OUROBOROS] CI sync complete: {result['violations_ingested']} violations ingested")
+                self._last_sync = datetime.now()
+                logger.info(f"[OUROBOROS] CI sync complete: {result['violations_ingested']} violations ingested")
 
         except Exception as e:
             logger.error(f"[OUROBOROS] CI sync failed: {e}")
             result["errors"].append(str(e))
 
+        # YANTRA: Calculate duration (always, even on error/no-runs)
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        result["duration_ms"] = round(duration_ms, 2)
+
+        # KARMA: Record to Ledger (always, for audit trail)
+        self._record_sync_event(result, duration_ms)
+
+        # YANTRA: Warn on slow operations (>100ms per PROMPT.md)
+        if duration_ms > 100:
+            logger.warning(f"[OUROBOROS] Slow CI sync: {duration_ms:.1f}ms")
+
         return result
+
+    def _record_sync_event(self, result: Dict[str, Any], duration_ms: float) -> None:
+        """
+        KARMA: Record CI sync operation to Ledger.
+
+        This creates an immutable audit trail of all CI sync operations.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.ledger import VibeLedger
+
+            ledger = ServiceRegistry.get(VibeLedger)
+            if ledger is None:
+                logger.debug("[OUROBOROS] Ledger not available, skipping sync event")
+                return
+
+            ledger.record_event(
+                event_type="CI_SYNC_COMPLETE",
+                agent_id="ouroboros",
+                details={
+                    "repo": self.repo,
+                    "workflow": result.get("workflow"),
+                    "run_id": result.get("run_id"),
+                    "run_conclusion": result.get("run_conclusion"),
+                    "violations_ingested": result.get("violations_ingested", 0),
+                    "errors": result.get("errors", []),
+                    "duration_ms": round(duration_ms, 2),
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+            logger.debug("[OUROBOROS] Recorded CI sync event to Ledger")
+        except Exception as e:
+            # DHARMA: Never crash on Ledger failure, but always log
+            logger.warning(f"[OUROBOROS] Failed to record sync to Ledger: {e}")
 
     def _get_latest_run(self, workflow: str) -> Optional[Dict[str, Any]]:
         """Get latest workflow run info using gh CLI."""

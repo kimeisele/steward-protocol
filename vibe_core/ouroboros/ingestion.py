@@ -17,7 +17,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
+
+# YANTRA: Type aliases for JSON data structures
+# These replace naked 'Any' with precise typing
+ViolationJsonItem = Dict[str, object]  # Single violation record from JSON
+ViolationJsonData = Union[List[ViolationJsonItem], Dict[str, object]]  # List or wrapper
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
@@ -369,7 +374,7 @@ class ViolationIngester:
 
         return self.ingest(violations)
 
-    def _parse_violations(self, data: Any, source: ViolationSource) -> List[ViolationRecord]:
+    def _parse_violations(self, data: ViolationJsonData, source: ViolationSource) -> List[ViolationRecord]:
         """Parse violations from generic JSON data."""
         violations = []
 
