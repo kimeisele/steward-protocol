@@ -169,8 +169,11 @@ class ResourceLimitsPlugin(KernelPlugin):
             from vibe_core.protocols.process import ProcessSupervisorProtocol
 
             process_manager = ServiceRegistry.get(ProcessSupervisorProtocol)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log service lookup failures at debug
+            import logging
+
+            logging.getLogger("RESOURCE_LIMITS").debug(f"ProcessSupervisorProtocol lookup failed: {e}")
 
         if not process_manager:
             return {
@@ -256,8 +259,11 @@ class ResourceLimitsPlugin(KernelPlugin):
             from vibe_core.protocols.process import ProcessSupervisorProtocol
 
             process_manager = ServiceRegistry.get(ProcessSupervisorProtocol)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log service lookup failures at debug
+            import logging
+
+            logging.getLogger("RESOURCE_LIMITS").debug(f"ProcessSupervisorProtocol lookup failed: {e}")
 
         if not process_manager:
             return {
