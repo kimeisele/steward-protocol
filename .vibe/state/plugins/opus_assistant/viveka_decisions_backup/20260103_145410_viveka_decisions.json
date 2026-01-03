@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2026-01-03T14:53:58.768776",
-    "intent_type": "totally_fake_intent_type_xyz",
-    "intent_title": "Unknown Intent",
-    "trigger": "trigger:totally_fake_intent_type_xyz",
+    "timestamp": "2026-01-03T14:54:04.339970",
+    "intent_type": "system_status_check",
+    "intent_title": "Check System Status",
+    "trigger": "trigger:system_status_check",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,

@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2026-01-03T14:53:52.668595",
-    "intent_type": "update_documentation",
-    "intent_title": "Update README",
-    "trigger": "trigger:update_documentation",
+    "timestamp": "2026-01-03T14:54:10.294531",
+    "intent_type": "log_observation",
+    "intent_title": "Test Observation",
+    "trigger": "trigger:log_observation",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,

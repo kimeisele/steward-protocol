@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2026-01-03T14:47:00.253158",
-  "total_cycles": 47,
+  "saved_at": "2026-01-03T14:57:21.911029",
+  "total_cycles": 49,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253171"
+      "timestamp": "2026-01-03T14:57:21.911045"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253175"
+      "timestamp": "2026-01-03T14:57:21.911051"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253178"
+      "timestamp": "2026-01-03T14:57:21.911055"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253181"
+      "timestamp": "2026-01-03T14:57:21.911058"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253184"
+      "timestamp": "2026-01-03T14:57:21.911063"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253186"
+      "timestamp": "2026-01-03T14:57:21.911067"
     },
     {
       "cycle_id": "36dd6ee8",
@@ -99,7 +99,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253189"
+      "timestamp": "2026-01-03T14:57:21.911071"
     },
     {
       "cycle_id": "b7a258f3",
@@ -119,7 +119,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253192"
+      "timestamp": "2026-01-03T14:57:21.911075"
     },
     {
       "cycle_id": "be095401",
@@ -139,7 +139,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253194"
+      "timestamp": "2026-01-03T14:57:21.911079"
     },
     {
       "cycle_id": "6df1dba3",
@@ -159,7 +159,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253197"
+      "timestamp": "2026-01-03T14:57:21.911084"
     },
     {
       "cycle_id": "cec6f0de",
@@ -180,7 +180,7 @@
         "agents_discovered": 0,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253200"
+      "timestamp": "2026-01-03T14:57:21.911088"
     },
     {
       "cycle_id": "e52ff3d6",
@@ -201,7 +201,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253202"
+      "timestamp": "2026-01-03T14:57:21.911092"
     },
     {
       "cycle_id": "5c718f1f",
@@ -222,7 +222,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253205"
+      "timestamp": "2026-01-03T14:57:21.911096"
     },
     {
       "cycle_id": "ff702b54",
@@ -243,7 +243,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253208"
+      "timestamp": "2026-01-03T14:57:21.911100"
     },
     {
       "cycle_id": "5ae8a3b2",
@@ -264,7 +264,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253210"
+      "timestamp": "2026-01-03T14:57:21.911105"
     },
     {
       "cycle_id": "150dbb36",
@@ -285,7 +285,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253213"
+      "timestamp": "2026-01-03T14:57:21.911109"
     },
     {
       "cycle_id": "6ad1d3a3",
@@ -301,7 +301,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2026-01-03T14:47:00.253215"
+      "timestamp": "2026-01-03T14:57:21.911112"
     },
     {
       "cycle_id": "244a8b0a",
@@ -317,7 +317,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2026-01-03T14:47:00.253218"
+      "timestamp": "2026-01-03T14:57:21.911116"
     },
     {
       "cycle_id": "9a17effd",
@@ -333,7 +333,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2026-01-03T14:47:00.253220"
+      "timestamp": "2026-01-03T14:57:21.911121"
     },
     {
       "cycle_id": "b1b91986",
@@ -353,7 +353,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2026-01-03T14:47:00.253222"
+      "timestamp": "2026-01-03T14:57:21.911124"
     },
     {
       "cycle_id": "fb6b9e49",
@@ -373,7 +373,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2026-01-03T14:47:00.253224"
+      "timestamp": "2026-01-03T14:57:21.911127"
     },
     {
       "cycle_id": "22e70696",
@@ -393,7 +393,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2026-01-03T14:47:00.253226"
+      "timestamp": "2026-01-03T14:57:21.911130"
     },
     {
       "cycle_id": "d071830b",
@@ -414,7 +414,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253228"
+      "timestamp": "2026-01-03T14:57:21.911133"
     },
     {
       "cycle_id": "7eb9cc21",
@@ -435,7 +435,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253230"
+      "timestamp": "2026-01-03T14:57:21.911135"
     },
     {
       "cycle_id": "c36bc3df",
@@ -456,7 +456,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253241"
+      "timestamp": "2026-01-03T14:57:21.911137"
     },
     {
       "cycle_id": "832f6a8b",
@@ -477,7 +477,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253243"
+      "timestamp": "2026-01-03T14:57:21.911140"
     },
     {
       "cycle_id": "804f46e2",
@@ -498,7 +498,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253245"
+      "timestamp": "2026-01-03T14:57:21.911143"
     },
     {
       "cycle_id": "33d69c26",
@@ -519,7 +519,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253247"
+      "timestamp": "2026-01-03T14:57:21.911145"
     },
     {
       "cycle_id": "ff52ee74",
@@ -540,7 +540,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253250"
+      "timestamp": "2026-01-03T14:57:21.911147"
     },
     {
       "cycle_id": "d5eaa980",
@@ -561,7 +561,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253252"
+      "timestamp": "2026-01-03T14:57:21.911149"
     },
     {
       "cycle_id": "0fba376a",
@@ -582,7 +582,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253254"
+      "timestamp": "2026-01-03T14:57:21.911151"
     },
     {
       "cycle_id": "c4f389da",
@@ -595,7 +595,7 @@
       "decisions_count": 0,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253256"
+      "timestamp": "2026-01-03T14:57:21.911153"
     },
     {
       "cycle_id": "cdc588c2",
@@ -608,7 +608,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2026-01-03T14:47:00.253258"
+      "timestamp": "2026-01-03T14:57:21.911155"
     },
     {
       "cycle_id": "ea68977e",
@@ -629,7 +629,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253261"
+      "timestamp": "2026-01-03T14:57:21.911157"
     },
     {
       "cycle_id": "bbe67054",
@@ -650,7 +650,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253267"
+      "timestamp": "2026-01-03T14:57:21.911160"
     },
     {
       "cycle_id": "4433f382",
@@ -671,7 +671,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253270"
+      "timestamp": "2026-01-03T14:57:21.911163"
     },
     {
       "cycle_id": "b04fe07a",
@@ -692,7 +692,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253272"
+      "timestamp": "2026-01-03T14:57:21.911166"
     },
     {
       "cycle_id": "9339ffa9",
@@ -713,7 +713,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253274"
+      "timestamp": "2026-01-03T14:57:21.911169"
     },
     {
       "cycle_id": "3f7a1e8f",
@@ -734,7 +734,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253276"
+      "timestamp": "2026-01-03T14:57:21.911173"
     },
     {
       "cycle_id": "5c0f7851",
@@ -755,7 +755,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253278"
+      "timestamp": "2026-01-03T14:57:21.911411"
     },
     {
       "cycle_id": "51441e26",
@@ -776,7 +776,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253282"
+      "timestamp": "2026-01-03T14:57:21.911418"
     },
     {
       "cycle_id": "149ed82a",
@@ -797,7 +797,33 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2026-01-03T14:47:00.253284"
+      "timestamp": "2026-01-03T14:57:21.911421"
+    },
+    {
+      "cycle_id": "3131ff68",
+      "parent_cycle_id": null,
+      "trace_id": "b1c2da6f",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-03T14:57:21.911423"
+    },
+    {
+      "cycle_id": "a43df879",
+      "parent_cycle_id": null,
+      "trace_id": "c8aae9a6",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-03T14:57:21.911424"
     }
   ],
   "errors": [
@@ -821,7 +847,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2026-01-03T14:47:00.253287"
+      "timestamp": "2026-01-03T14:57:21.911428"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -843,7 +869,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2026-01-03T14:47:00.253289"
+      "timestamp": "2026-01-03T14:57:21.911430"
     },
     {
       "cycle_id": "60f300f5",
@@ -865,7 +891,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2026-01-03T14:47:00.253294"
+      "timestamp": "2026-01-03T14:57:21.911432"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -887,7 +913,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2026-01-03T14:47:00.253296"
+      "timestamp": "2026-01-03T14:57:21.911434"
     },
     {
       "cycle_id": "e9194249",
@@ -905,7 +931,7 @@
         "discovery_skipped": true,
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2026-01-03T14:47:00.253298"
+      "timestamp": "2026-01-03T14:57:21.911436"
     }
   ]
 }
