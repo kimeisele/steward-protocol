@@ -66,10 +66,11 @@ _No data_
 
 | Item | Info |
 | :--- | :--- |
+| Event: PRANA_FLOW | Count: 50 |
 | Event: THOUGHT | Count: 3 |
+| Event: KRISHNA_SIGNAL | Count: 1 |
 | Event: ACTION | Count: 1 |
 | Event: ERROR | Count: 1 |
-| Event: COMPLETED | Count: 1 |
 <!-- /@SECTION -->
 
 <!-- @SECTION:alerts OWNER:live -->
