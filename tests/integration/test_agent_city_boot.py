@@ -12,6 +12,8 @@ Test Flow:
 5. Check kernel pulse
 """
 
+import asyncio
+
 import pytest
 
 from vibe_core.boot_orchestrator import BootOrchestrator
@@ -69,9 +71,12 @@ def test_agent_city_boot():
         task_id = kernel.submit_task(test_task)
         assert task_id is not None, "Task submission failed"
 
-        # PHASE 4: TICK KERNEL
-        for i in range(3):
-            kernel.tick()
+        # PHASE 4: TICK KERNEL (async method - run in new event loop)
+        async def do_ticks():
+            for _ in range(3):
+                await kernel.tick_async()
+
+        asyncio.run(do_ticks())
 
     # PHASE 5: FINAL STATUS
     final_status = kernel.get_status()

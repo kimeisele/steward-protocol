@@ -469,12 +469,27 @@ class KernelTickHandler:
             bus = get_event_bus()
 
             # Collect ALL event types from circuit triggers
+            # Handle both list and dict trigger formats
             events_to_subscribe = set()
             for circuit_def in self._circuits.values():
-                for trigger in circuit_def.get("triggers", []):
-                    event_name = trigger.get("event", "")
-                    if event_name:
-                        events_to_subscribe.add(event_name)
+                triggers = circuit_def.get("triggers", [])
+
+                # Normalize triggers to list format
+                trigger_list = []
+                if isinstance(triggers, list):
+                    trigger_list = triggers
+                elif isinstance(triggers, dict):
+                    # Dict format: {primary: [...], anti_triggers: [...]}
+                    trigger_list = triggers.get("primary", [])
+
+                for trigger in trigger_list:
+                    if isinstance(trigger, dict):
+                        event_name = trigger.get("event", "")
+                        if event_name:
+                            events_to_subscribe.add(event_name)
+                    elif isinstance(trigger, str):
+                        # Simple string trigger
+                        events_to_subscribe.add(trigger)
 
             # Fallback if no circuits loaded
             # OPUS-075: KERNEL_BOOT is critical for MANAS awakening
