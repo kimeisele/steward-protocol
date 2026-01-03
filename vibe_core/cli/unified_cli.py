@@ -36,6 +36,7 @@ with warnings.catch_warnings():
 # These imports trigger @register_cli decorator - DO NOT REMOVE
 import vibe_core.cli.audit_cli  # noqa: F401 - registers "audit" (OPUS-307 Phase 4)
 import vibe_core.cli.cartridge_bridge  # noqa: F401 - registers "cartridges" (OPUS-307)
+import vibe_core.cli.ci_cli  # noqa: F401 - registers "ci" (CI/CD hooks)
 import vibe_core.cli.circuit_cli  # noqa: F401 - registers "circuit"
 import vibe_core.cli.config_cli  # noqa: F401 - registers "config" (OPUS-307)
 import vibe_core.cli.create_cli  # noqa: F401 - registers "create" (OPUS-307 Phase 5)

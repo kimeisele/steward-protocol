@@ -1,2 +1,3 @@
 {"event_type": "VIOLATION", "timestamp": "2025-12-26T07:34:16.760399+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}
 {"event_type": "VIOLATION", "timestamp": "2026-01-03T14:48:55.372836+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}
+{"event_type": "VIOLATION", "timestamp": "2026-01-03T18:57:11.508261+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}

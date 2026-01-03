@@ -1,0 +1,125 @@
+{
+  "verdict": "WARNINGS",
+  "should_fail_build": false,
+  "total_violations": 12,
+  "by_severity": {
+    "CONSTITUTIONAL": 0,
+    "GOVERNANCE": 0,
+    "WARNING": 12
+  },
+  "by_article": {
+    "Article V: Zustimmung (Consent)": 7,
+    "Article III: Governance (Boundaries)": 5
+  },
+  "violations": [
+    {
+      "agent_id": "auditor",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/auditor/cartridge_main.py",
+      "line_number": 136,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "civic",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/civic/cartridge_main.py",
+      "line_number": 331,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "cleaner",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "vibe_core/cartridges/system/cleaner/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "discoverer",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "vibe_core/cartridges/system/discoverer/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "envoy",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/envoy/cartridge_main.py",
+      "line_number": 576,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "forum",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/forum/cartridge_main.py",
+      "line_number": 360,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "herald",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/herald/cartridge_main.py",
+      "line_number": 798,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "manas",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "vibe_core/cartridges/system/manas/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "ping",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "vibe_core/cartridges/system/ping/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "science",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/science/cartridge_main.py",
+      "line_number": 409,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "scribe",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "vibe_core/cartridges/system/scribe/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "watchman",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "vibe_core/cartridges/system/watchman/cartridge_main.py",
+      "line_number": 233,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    }
+  ],
+  "constitutional_hash": "df4bf7b77c367643"
+}
