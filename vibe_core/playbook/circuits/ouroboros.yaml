@@ -261,7 +261,7 @@ scripts:
             "file_path": v.get("file_path"),
             "severity": v.get("severity", "MEDIUM"),
             "message": v.get("message"),
-            "healable": v.get("has_sattva_remedy", False)
+            "healable": v.get("has_remedy", False)  # Aligned with Violation.to_dict()
         }
         issues.append(issue)
         if issue["healable"]:

@@ -38,6 +38,10 @@ class NodeType(Enum):
     TEST = "test"  # Test file/class
     TESTCASE = "testcase"  # Individual test method
 
+    # Self-healing types (Shuddhi)
+    REMEDY = "remedy"  # CST transformation remedy
+    VIOLATION = "violation"  # Detected code violation
+
 
 class RelationType(Enum):
     """Types of relations between nodes."""
@@ -67,6 +71,9 @@ class RelationType(Enum):
     TESTED_BY = "tested_by"  # Code -> Test
     MISSING_DOC = "missing_doc"  # Code with no documentation edge
     MISSING_TEST = "missing_test"  # Code with no test edge
+
+    # Self-healing relations (Shuddhi)
+    HEALED_BY = "healed_by"  # Code -> Remedy (ouroboros memory)
 
 
 class ConstraintType(Enum):

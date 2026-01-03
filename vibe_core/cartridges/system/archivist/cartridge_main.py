@@ -155,7 +155,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
         cwd = os.getcwd()  # Project root for git operations
         try:
             # Stage the file
-            subprocess.run(["git", "add", dest_rel_path], check=True, cwd=cwd)
+            subprocess.run(["git", "add", dest_rel_path], check=True, cwd=cwd, timeout=30)
             logger.info(f"✅ File staged: {dest_rel_path}")
 
             # Commit with message
@@ -163,18 +163,18 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             commit_msg = f"feat: {message}"
             try:
                 # Try to sign (may fail if no signing key configured)
-                subprocess.run(["git", "commit", "-S", "-m", commit_msg], check=True, cwd=cwd)
+                subprocess.run(["git", "commit", "-S", "-m", commit_msg], check=True, cwd=cwd, timeout=30)
                 signed = True
             except subprocess.CalledProcessError:
                 # Fall back to unsigned commit
                 logger.warning("⚠️  Signing failed, creating unsigned commit")
-                subprocess.run(["git", "commit", "-m", commit_msg], check=True, cwd=cwd)
+                subprocess.run(["git", "commit", "-m", commit_msg], check=True, cwd=cwd, timeout=30)
                 signed = False
 
             logger.info("✅ Commit created")
 
             # Get commit hash
-            rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd).decode().strip()
+            rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd, timeout=30).decode().strip()
 
             logger.info(f"✅ SEALED: Commit {rev[:7]}")
 

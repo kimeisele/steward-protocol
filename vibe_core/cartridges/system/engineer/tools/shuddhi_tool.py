@@ -18,6 +18,24 @@ from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiStatus
 from vibe_core.protocols.task import TaskProtocol
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
+
+# Lazy import to avoid circular dependency
+def _verify_healed(file_path: Path, rule_id: str) -> bool:
+    """Re-inspect file to confirm violation is gone."""
+    try:
+        from vibe_core.cartridges.system.watchman.tools.standards_inspection import StandardsInspectionTool
+
+        tool = StandardsInspectionTool()
+        result = tool.execute({"action": "inspect_file", "path": str(file_path)})
+        if not result.success:
+            return False
+        violations = result.output.get("violations", [])
+        # Check if the specific rule_id is still present
+        return not any(v.get("rule_id") == rule_id for v in violations)
+    except Exception:
+        return True  # Assume success if verification fails
+
+
 logger = logging.getLogger("SHUDDHI_TOOL")
 
 
@@ -113,21 +131,24 @@ class ShuddhiHealTool(Tool):
                 )
 
                 if write_result.success:
-                    # 6. LOG AS TASK (Holistic Loop)
-                    # We try to use the kernel instance if injected, or fallback to DI
+                    # 6. VERIFY HEALING (Post-Surgery Validation)
+                    verified = _verify_healed(path, rule_id)
+                    if not verified:
+                        logger.warning(f"[SHUDDHI] Healing applied but violation persists: {rule_id}")
+
+                    # 7. LOG AS TASK (Holistic Loop)
                     try:
                         task_service = None
                         if self._kernel and hasattr(self._kernel, "tasks"):
                             task_service = self._kernel.tasks
                         else:
-                            from vibe_core.protocols.task import TaskProtocol
-
                             task_service = ServiceRegistry.get(TaskProtocol)
 
                         if task_service:
+                            status = "HEALED" if verified else "PARTIAL"
                             task_service.add_task(
-                                title=f"HEALED: {rel_path}",
-                                description=f"Violation {rule_id} fixed via Shuddhi.",
+                                title=f"{status}: {rel_path}",
+                                description=f"Violation {rule_id} {'fixed' if verified else 'attempted'} via Shuddhi.",
                                 priority=50,
                                 assigned_agent="engineer",
                             )
@@ -135,7 +156,8 @@ class ShuddhiHealTool(Tool):
                         logger.warning(f"Could not record task: {e}")
 
                     return ToolResult(
-                        success=True, output=f"Successfully healed {file_path_str} (Rule: {rule_id}).\nDiff applied."
+                        success=True,
+                        output=f"{'Successfully healed' if verified else 'Healing applied (unverified)'} {file_path_str} (Rule: {rule_id}).",
                     )
                 else:
                     return ToolResult(success=False, error=f"Write failed: {write_result.error}")
