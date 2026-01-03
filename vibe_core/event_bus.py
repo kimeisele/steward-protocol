@@ -526,8 +526,11 @@ def get_event_bus() -> EventBus:
             from vibe_core.protocols.event import EventBusProtocol
 
             ServiceRegistry.register(EventBusProtocol, _event_bus_instance)
-        except ImportError:
-            pass
+        except ImportError as e:
+            # OPUS-312: Log DI unavailability at debug (optional feature)
+            import logging
+
+            logging.getLogger("EVENT_BUS").debug(f"ServiceRegistry unavailable, skipping registration: {e}")
     return _event_bus_instance
 
 
