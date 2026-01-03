@@ -100,6 +100,41 @@ class CommitResult:
         """Was commit successful (including healed)?"""
         return self.outcome in (CommitOutcome.SUCCESS, CommitOutcome.HEALED, CommitOutcome.SKIPPED)
 
+    # =========================================================================
+    # Compatibility properties for schema.CommitResult interface (OPUS-211)
+    # =========================================================================
+
+    @property
+    def git_sha(self) -> Optional[str]:
+        """Alias for sha (schema.CommitResult compatibility)."""
+        return self.sha
+
+    @property
+    def commit_hash(self) -> Optional[str]:
+        """Alias for sha (legacy compatibility)."""
+        return self.sha
+
+    @property
+    def files_committed(self) -> List[str]:
+        """String paths (schema.CommitResult compatibility)."""
+        return [str(p) for p in self.paths_committed]
+
+    @property
+    def skipped_reason(self) -> Optional[str]:
+        """Derive from outcome (schema.CommitResult compatibility)."""
+        if self.outcome == CommitOutcome.SKIPPED:
+            return "nothing_to_commit"
+        elif self.outcome == CommitOutcome.DEFERRED:
+            return "deferred_by_oracle"
+        return None
+
+    @property
+    def error(self) -> Optional[str]:
+        """Derive from outcome/message (schema.CommitResult compatibility)."""
+        if self.outcome == CommitOutcome.PANIC_DUMPED:
+            return self.message or "panic_dump_required"
+        return None
+
 
 @dataclass
 class ResonanceResult:
