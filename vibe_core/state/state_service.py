@@ -686,6 +686,9 @@ class StateService(StateServiceProtocol):
         OPUS-209: Uses CommitAuthority for single commit path.
         State files (.vibe/state/*) use no_verify=True as they are not
         kernel-protected, but this is now centralized with audit trail.
+
+        OPUS-XXX: Fixed API mismatch - CommitAuthority.commit() takes
+        paths (not files), and requires instance (not class method).
         """
         from vibe_core.state.commit_authority import CommitAuthority
 
@@ -694,11 +697,13 @@ class StateService(StateServiceProtocol):
             return False
 
         msg = f"🍎 Auto-commit ({reason}): {len(dirty_list)} state files"
-        result = CommitAuthority.commit(
-            files=dirty_list,
+
+        # Instantiate CommitAuthority and call with correct params
+        authority = CommitAuthority()
+        result = authority.commit(
+            paths=dirty_list,
             message=msg,
-            author="state_service",
-            no_verify=True,  # State files skip hooks (not kernel-protected)
+            intent_context={"source": "state_service", "reason": reason},
         )
 
         if result.success:
