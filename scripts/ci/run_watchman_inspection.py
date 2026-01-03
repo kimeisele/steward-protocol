@@ -42,6 +42,7 @@ def get_critical_threshold() -> int:
             pass
     return 0  # Default: zero tolerance
 
+
 print("⚔️  Initializing Watchman Standards Inspection...")
 tool = StandardsInspectionTool()
 
