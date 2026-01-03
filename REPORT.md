@@ -3415,3 +3415,107 @@ Aber die Implementation ist AI-Slop weil niemand das Immunsystem aktiviert hat.
 *TEIL P: Test Coverage Reference*
 *TEIL Q: Strategic Recommendation*
 *Score: 26/100 (realistisch) → 85/100 (erreichbar)*
+
+---
+
+## TEIL R: ARCHITECTURE DEBT SESSION (2026-01-03)
+
+### R1: SESSION CONTEXT
+
+**Branch:** `claude/fix-architecture-debt-lzeEz`
+**Focus:** Fixing architectural fragmentation blocking Ouroboros self-healing
+
+### R2: ISSUES FIXED THIS SESSION
+
+#### ✅ FIX 1: StateService CommitAuthority API Mismatch
+
+**Problem:** `_commit_via_git()` called `CommitAuthority.commit()` with wrong parameters:
+- Used `files=` instead of `paths=`
+- Used `author=` and `no_verify=` which don't exist
+- Called as class method instead of instance method
+- Checked `result.skipped_reason` which doesn't exist on CommitResult
+
+**Root Cause:** Two different `CommitResult` classes exist:
+```
+schema.py:           success: bool, skipped_reason: Optional[str]
+commit_authority.py: outcome: CommitOutcome, success: @property
+```
+
+**Fix:** Updated `state_service.py:682-717`:
+```python
+authority = CommitAuthority()
+result = authority.commit(
+    paths=dirty_list,
+    message=msg,
+    intent_context={"source": "state_service", "reason": reason},
+)
+if result.success:  # Property handles SUCCESS, HEALED, SKIPPED
+    ...
+```
+
+**Commits:**
+- `e93aa932` - Fix CommitAuthority API mismatch
+- `94711d52` - Fix CommitResult attribute mismatch
+
+#### ✅ FIX 2: Async Test Deadlock
+
+**Problem:** `test_complete_wiring.py` called `kernel.boot()` synchronously inside async context → deadlock
+
+**Fix:** Added `get_test_kernel_async()` that uses `boot_async()`
+
+**Commit:** Part of previous session fixes
+
+### R3: ARCHITECTURAL ISLANDS DISCOVERED
+
+| Island | Problem | Status |
+|--------|---------|--------|
+| **CommitResult Duplication** | 2 classes with different designs | 🔴 OPEN |
+| **SettingsSync** | Reads `---` markdown as commands | 🔴 OPEN |
+| **Tool Discovery** | SHUDDHI + ManifestRegistry both active | 🔴 OPEN |
+| **State Fragmentation** | STHULA/PRANA/PURUSHA not unified | 🔴 OPEN |
+| **Ouroboros Learning** | Detection ✅ but Learning not autonomous | 🔴 OPEN |
+
+### R4: PROTOCOL STATUS
+
+**39 Protocols** defined in `vibe_core/protocols/`:
+- VibeAgent, Cartridge, Plugin, State, Ledger, Task, Circuit
+- Intent, GovernanceGate, Testable, Vedic, etc.
+
+**366 Tests** auto-discovered via TestableProtocol
+
+**Schema Mismatches Found:**
+| Class | Location 1 | Location 2 | Conflict |
+|-------|-----------|-----------|----------|
+| `CommitResult` | schema.py | commit_authority.py | Different fields |
+| `WriteResult` | state_service.py | io_service.py | Dual definition |
+| `ActionResult` | schema.py | cartridge executors | Copy-paste |
+
+### R5: PRIORITY FIX QUEUE
+
+| # | Task | Impact | Effort |
+|---|------|--------|--------|
+| 1 | **Unify CommitResult** | API clarity | 2h |
+| 2 | **Fix SettingsSync** | Stop silent failures | 1h |
+| 3 | **State Query Interface** | FORTRESS pattern | 4h |
+| 4 | **Ouroboros Learning Loop** | Autonomous healing | 8h |
+
+### R6: KERNEL STATUS
+
+```
+Kernel:     ✅ ONLINE
+Pulse:      ✅ ACTIVE
+Parampara:  ✅ VERIFIED (1745 blocks)
+Auto-commit: ✅ FIXED (CommitAuthority integration)
+```
+
+### R7: NEXT STEPS
+
+1. **Unify CommitResult** - Make `commit_authority.CommitResult` the canonical one
+2. **Fix SettingsSync** - Ignore markdown separators (`---`)
+3. **Complete FORTRESS** - Unified state query interface
+4. **Wire Ouroboros** - Connect learning loop to automatic fixes
+
+---
+
+*Session: 2026-01-03 | Branch: claude/fix-architecture-debt-lzeEz*
+*Operator: Claude Opus 4.5 | Mode: Architecture Debt Reduction*
