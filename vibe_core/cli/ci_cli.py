@@ -350,6 +350,6 @@ Add hooks to scripts/ci/ci.yaml - no workflow changes needed.
     def _show_status(self, args: List[str]) -> int:
         """Show status of last CI run."""
         # TODO: Read from .prakriti/ci_status.json
-        print("📊 CI Status: Not implemented yet")
+        print("⚠️  CI Status: Not implemented yet")
         print("   Last run results will be stored in Prakriti")
-        return 0
+        return 1  # HONEST: Return failure for unimplemented command
