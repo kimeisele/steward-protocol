@@ -1116,10 +1116,11 @@ class CommandRegistry:
             ChatCommand,
             CommandsCommand,
             StatusCommand,
+            SyncCICommand,
         )
 
         count = 0
-        for cmd_class in [ChatCommand, BootCommand, StatusCommand, CommandsCommand]:
+        for cmd_class in [ChatCommand, BootCommand, StatusCommand, CommandsCommand, SyncCICommand]:
             if self.register(cmd_class()):
                 count += 1
 
