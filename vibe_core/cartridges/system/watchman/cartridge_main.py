@@ -436,6 +436,11 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             if healing_tasks_created > 0:
                 logger.info(f"🛡️ Created {healing_tasks_created} healing tasks for Engineer")
 
+        # PHASE 4: OUROBOROS - Persist violations to Knowledge Graph
+        violations_recorded = self._record_violations_to_knowledge_graph(violations)
+        if violations_recorded > 0:
+            logger.info(f"🐍 OUROBOROS: Recorded {violations_recorded} violations to Knowledge Graph")
+
         logger.info("=" * 70 + "\n")
 
         return {
@@ -444,6 +449,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "total_violations": report["total_violations"],
             "critical_count": report["critical_count"],
             "healing_tasks_created": healing_tasks_created,
+            "violations_recorded": violations_recorded,
             "report": report,
             "violations": report["violations"],
         }
@@ -612,6 +618,59 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 return computed_sig == stored_sig
         except Exception:
             return False
+
+    def _record_violations_to_knowledge_graph(self, violations: list) -> int:
+        """
+        OUROBOROS: Record violations to Knowledge Graph for self-improvement loop.
+
+        This enables:
+        1. Manas Dojo to learn from real violations
+        2. Synapse pattern reinforcement
+        3. Gap analysis for training curricula
+
+        Args:
+            violations: List of violation dicts from deep inspection
+
+        Returns:
+            Number of violations recorded
+        """
+        if not violations:
+            return 0
+
+        try:
+            # Get Knowledge Graph - try ServiceRegistry first
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+            kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+            if not kg:
+                # Fallback: create new instance (ephemeral)
+                kg = UnifiedKnowledgeGraph()
+                logger.debug("[OUROBOROS] Using ephemeral Knowledge Graph")
+
+            recorded = 0
+            for v in violations:
+                file_path = v.get("file_path", "unknown")
+                line = v.get("line_number", 0)
+                rule_id = v.get("rule_id", "unknown")
+                message = v.get("message", "")
+                has_remedy = v.get("has_remedy", False)
+
+                # Add violation to graph
+                kg.add_violation(
+                    file_path=file_path,
+                    line=line,
+                    rule_id=rule_id,
+                    message=message,
+                    has_remedy=has_remedy,
+                )
+                recorded += 1
+
+            return recorded
+
+        except Exception as e:
+            logger.warning(f"[OUROBOROS] Failed to record violations: {e}")
+            return 0
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
