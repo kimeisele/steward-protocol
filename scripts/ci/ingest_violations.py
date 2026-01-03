@@ -2,34 +2,24 @@
 """
 Ouroboros Violation Ingestion - CI/CD Script
 
-Ingests violations from watchman_report.json into Knowledge Graph.
-This closes the feedback loop: CI finds violations → KG learns → System heals.
+Ingests violations from watchman_report.json into persistent storage.
+This closes the feedback loop: CI finds violations → persisted → System heals.
 
-Pattern: Same as run_watchman_inspection.py
-- Direct imports (no kernel overhead)
-- Reads existing report
-- Writes to Prakriti's Knowledge Graph
+Pattern: Direct file persistence (no kernel overhead)
 """
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
-from vibe_core.ouroboros.ingestion import ViolationIngester, ViolationSource
-
-# Boot Prakriti (registers KG in ServiceRegistry)
-from vibe_core.state.prakriti import Prakriti
-
-print("🐍 OUROBOROS: Ingesting violations into Knowledge Graph...")
+print("🐍 OUROBOROS: Ingesting violations...")
 
 # Check for report
 report_path = Path("watchman_report.json")
 if not report_path.exists():
     print("⚠️  No watchman_report.json found - nothing to ingest")
     sys.exit(0)
-
-# Boot Prakriti (this registers KG automatically)
-prakriti = Prakriti()
 
 # Load violations
 report = json.loads(report_path.read_text())
@@ -41,26 +31,33 @@ if not violations:
 
 print(f"📥 Found {len(violations)} violations to ingest")
 
-# Ingest via ViolationIngester
-ingester = ViolationIngester()
-count = 0
+# Persistence path (OUROBOROS state)
+state_dir = Path(".vibe/state/ouroboros")
+state_dir.mkdir(parents=True, exist_ok=True)
+violations_file = state_dir / "violations.jsonl"
 
-for v in violations:
-    try:
-        ingester.kg.add_violation(
-            file_path=v.get("file_path", "unknown"),
-            line=v.get("line_number", 0),
-            rule_id=v.get("rule_id", "UNKNOWN"),
-            message=v.get("message", ""),
-            has_remedy=v.get("has_remedy", False),
-        )
-        count += 1
-    except Exception as e:
-        print(f"⚠️  Failed to ingest: {e}")
+# Append violations to JSONL (append-only log)
+ingested = 0
+with open(violations_file, "a") as f:
+    for v in violations:
+        record = {
+            "ingested_at": datetime.utcnow().isoformat(),
+            "file_path": v.get("file_path", "unknown"),
+            "line": v.get("line_number"),
+            "rule_id": v.get("rule_id", "UNKNOWN"),
+            "message": v.get("message", ""),
+            "severity": v.get("severity", "MEDIUM"),
+            "has_remedy": v.get("has_remedy", False),
+            "agent": v.get("agent", "watchman"),
+        }
+        f.write(json.dumps(record) + "\n")
+        ingested += 1
 
-# Persist to disk
-prakriti.save_knowledge()
+print(f"✅ Ingested {ingested} violations")
+print(f"📁 Persisted to: {violations_file}")
 
-print(f"✅ Ingested {count} violations into Knowledge Graph")
-print("📁 Persisted to: .prakriti/knowledge.json")
+# Summary stats
+total_lines = sum(1 for _ in open(violations_file)) if violations_file.exists() else 0
+print(f"📊 Total violations in log: {total_lines}")
+
 sys.exit(0)

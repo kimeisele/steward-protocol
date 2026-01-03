@@ -30,17 +30,19 @@ class ReadFileTool(Tool):
         >>> print(result.output)  # Content from sandbox/input.txt
     """
 
-    def __init__(self, vfs: Optional["VirtualFileSystem"] = None):
+    def __init__(self, vfs: Optional["VirtualFileSystem"] = None, allow_unrestricted: bool = False):
         """
         Initialize ReadFileTool.
 
         Args:
             vfs: Optional VirtualFileSystem for sandboxing.
-                 If None, operates on host filesystem (ADMIN ONLY).
+            allow_unrestricted: If True AND vfs is None, allow host filesystem access.
+                               SECURITY: Only kernel/admin should set this True.
         """
         self.vfs = vfs
-        if not self.vfs:
-            logger.warning("⚠️ ReadFileTool initialized without VFS - unrestricted file access enabled")
+        self._allow_unrestricted = allow_unrestricted
+        if not self.vfs and not allow_unrestricted:
+            logger.info("📁 ReadFileTool: VFS not set, will require VFS at execute time")
 
     @property
     def name(self) -> str:
@@ -101,8 +103,8 @@ class ReadFileTool(Tool):
                 # Sandboxed execution
                 content = self.vfs.read_text(path_str)
                 actual_path = str(self.vfs.get_sandbox_path() / path_str)
-            else:
-                # Unrestricted execution
+            elif self._allow_unrestricted:
+                # Unrestricted execution (ADMIN ONLY)
                 path = Path(path_str).expanduser().resolve()
                 if not path.exists():
                     return ToolResult(success=False, error=f"File not found: {path}")
@@ -110,6 +112,12 @@ class ReadFileTool(Tool):
                     return ToolResult(success=False, error=f"Path is not a file: {path}")
                 content = path.read_text(encoding="utf-8")
                 actual_path = str(path)
+            else:
+                # SECURITY: No VFS and not allowed unrestricted = DENY
+                logger.warning(f"🛡️ SANDBOX REQUIRED: ReadFileTool blocked without VFS: {path_str}")
+                return ToolResult(
+                    success=False, error="SANDBOX REQUIRED: File operations require VFS. Agent not sandboxed."
+                )
 
             logger.info(f"ReadFileTool: Read file {actual_path} ({len(content)} bytes)")
 
@@ -155,17 +163,19 @@ class WriteFileTool(Tool):
         ... })
     """
 
-    def __init__(self, vfs: Optional["VirtualFileSystem"] = None):
+    def __init__(self, vfs: Optional["VirtualFileSystem"] = None, allow_unrestricted: bool = False):
         """
         Initialize WriteFileTool.
 
         Args:
             vfs: Optional VirtualFileSystem for sandboxing.
-                 If None, operates on host filesystem (ADMIN ONLY).
+            allow_unrestricted: If True AND vfs is None, allow host filesystem access.
+                               SECURITY: Only kernel/admin should set this True.
         """
         self.vfs = vfs
-        if not self.vfs:
-            logger.warning("⚠️ WriteFileTool initialized without VFS - unrestricted file access enabled")
+        self._allow_unrestricted = allow_unrestricted
+        if not self.vfs and not allow_unrestricted:
+            logger.info("📁 WriteFileTool: VFS not set, will require VFS at execute time")
 
     @property
     def name(self) -> str:
@@ -274,8 +284,8 @@ class WriteFileTool(Tool):
                 self.vfs.write_text(path_str, content)
                 actual_path = str(self.vfs.get_sandbox_path() / path_str)
 
-            else:
-                # Unrestricted execution
+            elif self._allow_unrestricted:
+                # Unrestricted execution (ADMIN ONLY)
                 path = Path(path_str).expanduser().resolve()
                 parent = path.parent
                 if not parent.exists():
@@ -290,6 +300,12 @@ class WriteFileTool(Tool):
 
                 path.write_text(content, encoding="utf-8")
                 actual_path = str(path)
+            else:
+                # SECURITY: No VFS and not allowed unrestricted = DENY
+                logger.warning(f"🛡️ SANDBOX REQUIRED: WriteFileTool blocked without VFS: {path_str}")
+                return ToolResult(
+                    success=False, error="SANDBOX REQUIRED: File operations require VFS. Agent not sandboxed."
+                )
 
             logger.info(f"WriteFileTool: Wrote file {actual_path} ({len(content)} bytes)")
 
