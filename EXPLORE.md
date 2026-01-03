@@ -290,4 +290,58 @@ plugins/envoy/tests/test_envoy_sanity.py
 
 ---
 
-> **Next Session:** Pick ONE P0 item. Wire it. Verify. Commit.
+## DEEP ARCHITECTURE INSIGHT (2026-01-03)
+
+### Two Reactor Systems - Must Be Unified
+
+```
+QuantumReactor (vibe_core/reactor/quantum.py)
+├── Sanskrit phonetic resonance
+├── Continuous energy fields (NOT boolean)
+├── "Actions manifest when energy overcomes inertia"
+├── VarnaTensor, ResonanceField, phonetic_resonance
+└── STATUS: EXISTS but not wired to healing
+
+ReactorProtocol (vibe_core/protocols/reactor.py)
+├── Drift detection (performance, reliability, state)
+├── trigger_correction() method
+├── DriftHandler callbacks
+├── "Prajna - transcendent wisdom that observes and corrects"
+└── STATUS: EXISTS with BasicReactor impl
+
+THE GAP:
+  - dry_run=True is BINARY
+  - Should be: if energy > inertia → manifest healing
+  - QuantumReactor has the physics
+  - ReactorProtocol has the correction loop
+  - They are NOT connected
+```
+
+### The Non-Binary Solution
+
+```python
+# CURRENT (binary):
+results = engine.heal_all_violations(dry_run=True)
+
+# SHOULD BE (resonance-based):
+field = quantum.resonate(violation, remedy)
+if field.total_energy > quantum.inertia:
+    # Energy overcomes inertia → manifest
+    engine.heal_and_record(write_file=True)
+else:
+    # Observe only, don't manifest
+    report_to_curiosity(field)
+```
+
+### Who Signals Healing?
+
+```
+PRAKRITI → Detects violations (via Watchman)
+QUANTUM  → Computes resonance energy
+REACTOR  → Decides if energy > inertia
+SHUDDHI  → Applies healing (write_file=True)
+```
+
+---
+
+> **Next Session:** Wire QuantumReactor to ReactorProtocol for resonance-based healing.
