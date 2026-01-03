@@ -125,8 +125,11 @@ class StateService(StateServiceProtocol):
     # =========================================================================
     # 🍎 APPLE MAGIC CONSTANTS
     # =========================================================================
-    AUTO_COMMIT_THRESHOLD = 5  # Auto-commit after N writes
-    AUTO_COMMIT_SECONDS = 30  # Or after N seconds since last commit
+    # OPUS-XXX: Increased thresholds to reduce commit spam
+    # Previous: 5 writes / 30 seconds = hyperactive commits
+    # New: 50 writes / 300 seconds = batched, less noise
+    AUTO_COMMIT_THRESHOLD = 50  # Auto-commit after N writes (was 5)
+    AUTO_COMMIT_SECONDS = 300  # Or after N seconds since last commit (was 30)
     HEARTBEAT_PULSE_FILE = "last_pulse.json"  # Check if Heartbeat is alive
 
     _lock = threading.Lock()
@@ -575,8 +578,14 @@ class StateService(StateServiceProtocol):
     def trigger_commit(self) -> None:
         """Manually trigger a background commit."""
         if self._commit_event:
+            # Async path: signal background worker
             self._commit_event.set()
-            logger.debug("✍️  StateService: Commit triggered.")
+            logger.debug("✍️  StateService: Commit triggered (async).")
+        else:
+            # SYNC FALLBACK: Worker not running, commit directly
+            # This prevents files from never being committed when async fails
+            logger.debug("✍️  StateService: Commit triggered (sync fallback).")
+            self._do_auto_commit(reason="sync_fallback")
 
     def _maybe_auto_commit(self) -> None:
         """

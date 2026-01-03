@@ -3598,3 +3598,31 @@ steward ci list         # List hooks
 steward ci status       # Show status
 ```
 
+
+### R11: STATE AUTO-COMMIT FIXES
+
+**Problem 1:** Files never committed
+- `trigger_commit()` only worked if async worker was running
+- If `_commit_event = None`, commits never happened
+
+**Fix:** Added sync fallback in `trigger_commit()`:
+```python
+if self._commit_event:
+    self._commit_event.set()  # Async
+else:
+    self._do_auto_commit()    # Sync fallback
+```
+
+**Problem 2:** Hyperactive commit spam
+- Threshold was 5 writes / 30 seconds
+- Kernel ticks every 1 second, writes awareness every tick
+- Result: Commit every 5 seconds = SPAM
+
+**Fix:** Increased thresholds:
+```python
+AUTO_COMMIT_THRESHOLD = 50   # Was 5
+AUTO_COMMIT_SECONDS = 300    # Was 30
+```
+
+Now: Commits every ~5 minutes instead of every ~5 seconds.
+
