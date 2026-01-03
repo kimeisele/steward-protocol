@@ -305,6 +305,21 @@ class BiorhythmProcessor:
         if tick % 10 == 0:
             self._reinforce_recent_patterns()
 
+        # OUROBOROS WIRE: Scan KG violations → curiosity (every 15 ticks in Sattva)
+        # This drives self-directed training from recurring violation patterns
+        if tick % 15 == 0:
+            self._scan_violation_patterns()
+
+        # OUROBOROS WIRE: Sync CI/CD failures → KG (every 30 ticks in Sattva)
+        # This closes the feedback loop: CI failures get ingested into KG
+        if tick % 30 == 0:
+            self._sync_ci_failures()
+
+        # OUROBOROS WIRE: Scan for HEALABLE violations (every 45 ticks in Sattva)
+        # DRY RUN ONLY - identifies what could be healed, does NOT modify files
+        if tick % 45 == 0:
+            self._scan_healable_violations()
+
         return {
             "state": "sattva",
             "action": "reflect",
@@ -351,6 +366,119 @@ class BiorhythmProcessor:
             _ = recent[:2]  # Just acknowledge we checked
         except Exception as e:
             logger.debug(f"Pattern reinforcement failed: {e}")
+
+    def _scan_violation_patterns(self) -> None:
+        """
+        OUROBOROS WIRE: Scan KG violations and feed patterns to DojoAgency.
+
+        This creates the self-healing loop:
+        KG Violations → DojoAgency.report_violation_patterns() → Curiosity → Training
+
+        Called periodically during Sattva state (reflection).
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.manas.dojo.agency import get_dojo_agency
+
+            # Get workspace from kernel
+            workspace = getattr(self.kernel, "_workspace", None)
+            if not workspace:
+                return
+
+            agency = get_dojo_agency(workspace)
+            patterns_found = agency.report_violation_patterns(threshold=3)
+
+            if patterns_found > 0:
+                logger.info(f"🔄 OUROBOROS: {patterns_found} violation patterns fed to curiosity")
+        except ImportError:
+            logger.debug("DojoAgency not available, skipping violation scan")
+        except Exception as e:
+            logger.debug(f"Violation pattern scan failed: {e}")
+
+    def _sync_ci_failures(self) -> None:
+        """
+        OUROBOROS WIRE: Sync CI/CD failures from GitHub Actions to local KG.
+
+        This closes the feedback loop:
+        CI Failures (remote) → CISyncService → KG → Training
+
+        Called every 30 ticks (~90s) during Sattva state.
+        Uses gh CLI to fetch failures, so requires authentication.
+        """
+        try:
+            from vibe_core.ouroboros.sync import CISyncService
+
+            sync = CISyncService()
+
+            # Check if gh CLI is available (no point syncing without it)
+            if not sync._check_gh_cli():
+                logger.debug("[OUROBOROS] gh CLI not available, skipping CI sync")
+                return
+
+            result = sync.sync_latest()
+
+            if result.get("violations_ingested", 0) > 0:
+                logger.info(
+                    f"🔄 OUROBOROS: Synced {result['violations_ingested']} "
+                    f"CI violations from {result.get('run_id', 'unknown')}"
+                )
+            elif result.get("errors"):
+                logger.debug(f"[OUROBOROS] CI sync errors: {result['errors']}")
+        except ImportError:
+            logger.debug("CISyncService not available, skipping CI sync")
+        except Exception as e:
+            logger.debug(f"CI sync failed: {e}")
+
+    def _scan_healable_violations(self) -> None:
+        """
+        OUROBOROS WIRE: Scan for violations that CAN be automatically healed.
+
+        This connects ShuddhiEngine to the curiosity system:
+        KG Violations → Shuddhi.heal_all_violations(dry_run=True) → Report healable
+
+        SAFETY: This is DRY RUN ONLY - it identifies but does NOT modify files.
+        Actual healing requires explicit operator request.
+
+        Called every 45 ticks (~2.25 min) during Sattva state.
+        """
+        try:
+            from vibe_core.shuddhi.engine import ShuddhiEngine
+
+            # Get workspace from kernel
+            workspace = getattr(self.kernel, "_workspace", None)
+            if not workspace:
+                return
+
+            engine = ShuddhiEngine(project_root=workspace)
+
+            # DRY RUN - identify what could be healed, don't modify anything
+            results = engine.heal_all_violations(dry_run=True)
+
+            healable_count = sum(1 for r in results if r.status.value == "purified")
+
+            if healable_count > 0:
+                logger.info(
+                    f"🩹 OUROBOROS: Found {healable_count} violations that CAN be auto-healed "
+                    f"(dry run - no changes made)"
+                )
+
+                # Report to DojoAgency as high-priority curiosity
+                try:
+                    from vibe_core.plugins.opus_assistant.manas.dojo.agency import (
+                        get_dojo_agency,
+                    )
+
+                    agency = get_dojo_agency(workspace)
+                    agency.curiosity.report_gap(
+                        f"Shuddhi found {healable_count} auto-healable violations",
+                        weight=0.2,  # High priority
+                    )
+                except Exception:
+                    pass  # Curiosity reporting is optional
+
+        except ImportError:
+            logger.debug("ShuddhiEngine not available, skipping healable scan")
+        except Exception as e:
+            logger.debug(f"Healable violation scan failed: {e}")
 
     def _persist_awareness(self) -> None:
         """Persist awareness state for transparency."""

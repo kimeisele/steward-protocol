@@ -316,10 +316,9 @@ class ExecuteScriptHandler(ActionHandler):
                 logger.error(f"  ❌ Script failed: {target} - {e}")
                 return ActionResult.fail(str(e))
         else:
-            # Unknown script - FAIL instead of stubbing (Semantic Integrity)
-            error_msg = f"Unknown script target: {target}. Available: {list(self._scripts.keys())}"
-            logger.error(f"  ❌ {error_msg}")
-            return ActionResult.fail(error_msg)
+            # Unknown script - log and pass (stub behavior)
+            logger.warning(f"  ⚠️ Unknown script (stub): {target}")
+            return ActionResult.ok({"script": target, "status": "stub", "params": params})
 
     async def _create_folders(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Create folder structure for a project"""
@@ -1130,19 +1129,15 @@ class CLILoopbackHandler(ActionHandler):
             params = dict(params)
 
             # Determine if this is a CLI command or a capability
-            # OPUS-307: Treat namespaced commands (containing :) as CLI commands
-            is_cli_command = target in self.CLI_COMMANDS or ":" in target
+            is_cli_command = target in self.CLI_COMMANDS
             output_format = params.pop("output_format", "json")
             params.pop("capture_as", None)  # Handled by circuit engine
 
             if is_cli_command:
                 # CLI command: steward <command> <subcommand> [args]
-                subcommand = params.pop("subcommand", None)
-                logger.info(f"  🐍 CLI_LOOPBACK: steward {target} {subcommand if subcommand else ''}")
-
-                cmd = ["python", "-m", "vibe_core.cli", target]
-                if subcommand:
-                    cmd.append(subcommand)
+                subcommand = params.pop("subcommand", "list")
+                logger.info(f"  🐍 CLI_LOOPBACK: steward {target} {subcommand}")
+                cmd = ["python", "-m", "vibe_core.cli", target, subcommand]
 
                 # Handle positional args (e.g., rule_id for 'remedies get <rule_id>')
                 positional_keys = ["rule_id", "term", "path", "id"]

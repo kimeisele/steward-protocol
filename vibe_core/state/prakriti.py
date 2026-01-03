@@ -25,9 +25,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
-
-# OPUS-314: Knowledge Graph Integration (Layer 4: Akasha)
-from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
 from vibe_core.protocols import PrakritiProtocol
 from vibe_core.state.schema import CommitResult
 
@@ -55,7 +52,6 @@ class StateSnapshot:
     kernel: Optional[Dict[str, Any]] = None
     ephemeral: Optional[Dict[str, Any]] = None
     personas: Optional[Dict[str, Any]] = None
-    knowledge: Optional[Dict[str, Any]] = None  # Layer 4
 
 
 @dataclass
@@ -111,7 +107,6 @@ class Prakriti(PrakritiProtocol):
     - Layer 1 (STHULA): Git + Files (Physical)
     - Layer 2 (PRANA): Kernel + Ephemeral (Runtime)
     - Layer 3 (PURUSHA): Personas (Identity)
-    - Layer 4 (AKASHA): Knowledge Graph (Wisdom)
     """
 
     def __init__(self, workspace_path: Optional[Path] = None, db_path: Optional[Path] = None):
@@ -146,65 +141,10 @@ class Prakriti(PrakritiProtocol):
         self.session: Optional[KernelSessionContext] = None
         self._prakriti_dir = self._workspace / ".prakriti"
 
-        # Layer 4: Knowledge (AKASHA)
-        self.knowledge = UnifiedKnowledgeGraph()
-        self._init_knowledge()
-
         # Register in DI container
         ServiceRegistry.register(PrakritiProtocol, self)
 
-        # Register Knowledge Graph separately for direct access
-        ServiceRegistry.register(UnifiedKnowledgeGraph, self.knowledge)
-
         logger.info(f"[PRAKRITI] Initialized at {self._workspace} (Ledger: {db_path})")
-
-    def _init_knowledge(self) -> None:
-        """Initialize Knowledge Graph (Layer 4)."""
-        try:
-            # 1. Load static knowledge (Schema/Ontology)
-            knowledge_dir = self._workspace / "knowledge"
-            if knowledge_dir.exists():
-                self.knowledge.load(knowledge_dir)
-
-            # 2. Load dynamic state (Violations/Learning)
-            # OPUS-314: Persist in .prakriti (System Territory)
-            state_file = self._prakriti_dir / "knowledge.json"
-            if state_file.exists():
-                try:
-                    data = json.loads(state_file.read_text())
-                    # Merge dynamic state into graph
-                    dynamic_graph = UnifiedKnowledgeGraph.from_dict(data)
-
-                    # Merge nodes (dynamic overrides static)
-                    self.knowledge.nodes.update(dynamic_graph.nodes)
-                    # Merge edges
-                    for src, edges in dynamic_graph.edges.items():
-                        if src not in self.knowledge.edges:
-                            self.knowledge.edges[src] = []
-                        self.knowledge.edges[src].extend(edges)
-                    # Merge constraints/metrics
-                    self.knowledge.constraints.update(dynamic_graph.constraints)
-                    self.knowledge.metrics.update(dynamic_graph.metrics)
-
-                    logger.info(f"[AKASHA] Loaded dynamic knowledge from {state_file}")
-                except Exception as e:
-                    logger.warning(f"[AKASHA] Failed to load dynamic state: {e}")
-        except Exception as e:
-            logger.error(f"[AKASHA] Initialization failed: {e}")
-
-    def save_knowledge(self) -> None:
-        """Persist Knowledge Graph state."""
-        try:
-            # OPUS-314: Persist in .prakriti (System Territory)
-            self._prakriti_dir.mkdir(parents=True, exist_ok=True)
-            state_file = self._prakriti_dir / "knowledge.json"
-
-            # Serialize
-            data = self.knowledge.to_dict()
-            state_file.write_text(json.dumps(data, indent=2))
-            logger.debug(f"[AKASHA] Knowledge state saved to {state_file}")
-        except Exception as e:
-            logger.error(f"[AKASHA] Failed to save state: {e}")
 
     # =========================================================================
     # Factory Methods
@@ -242,7 +182,6 @@ class Prakriti(PrakritiProtocol):
                 "sync_ledger_git",
                 "begin_session",
                 "end_session",
-                "save_knowledge",
             ],
             "layers": {
                 "sthula": {
@@ -256,10 +195,6 @@ class Prakriti(PrakritiProtocol):
                 "purusha": {
                     "status": "active",
                     "components": ["personas"],
-                },
-                "akasha": {
-                    "status": "active",
-                    "components": ["knowledge"],
                 },
             },
             "workspace": str(self._workspace),
@@ -277,19 +212,12 @@ class Prakriti(PrakritiProtocol):
 
     def get_system_status(self) -> Dict[str, Any]:
         """GAD-000 Test 2: Current state summary."""
-        kg_stats = {
-            "nodes": len(self.knowledge.nodes),
-            "edges": sum(len(e) for e in self.knowledge.edges.values()),
-            "constraints": len(self.knowledge.constraints),
-            "violations": len(self.knowledge.get_violations(healed=False)),
-        }
         return {
             "timestamp": time.time(),
             "workspace": str(self._workspace),
             # "git": self.git.status(),  # DEBUG: Disabled (Blocking IO)
             # "files": self.files.status(), # DEBUG: Disabled (Blocking IO)
             "kernel": self.kernel.status(),
-            "knowledge": kg_stats,
             # "ephemeral": self.ephemeral.status(),
             # "personas": self.personas.status(),
         }
@@ -304,7 +232,6 @@ class Prakriti(PrakritiProtocol):
         Returns:
             StateSnapshot with all layer states
         """
-        kg_snapshot = self.knowledge.to_dict()
         return StateSnapshot(
             timestamp=time.time(),
             git=self.git.status(),
@@ -312,7 +239,6 @@ class Prakriti(PrakritiProtocol):
             kernel=self.kernel.status(),
             ephemeral=self.ephemeral.status(),
             personas=self.personas.status(),
-            knowledge=kg_snapshot,
         )
 
     def inject_kernel(self, kernel: "VibeKernel") -> None:

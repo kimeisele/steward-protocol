@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -41,6 +42,11 @@ from typing import Any, Dict, List, Optional
 from ..synaptic_seeder import BASELINE_BAD_PATTERNS, BASELINE_GOOD_PATTERNS
 
 logger = logging.getLogger("DOJO.MIRROR")
+
+
+# ============================================================================
+# OUROBOROS PHASE 2: Knowledge Graph Integration
+# ============================================================================
 
 
 @dataclass
@@ -274,6 +280,130 @@ class Mirror:
         }
 
         logger.info(f"🪞 MIRROR: Generated gap curriculum with {len(scenarios)} scenarios")
+        return curriculum
+
+    # =========================================================================
+    # OUROBOROS PHASE 2: Violation Analysis
+    # =========================================================================
+
+    def analyze_violations(self, threshold: int = 3) -> List[GapAnalysis]:
+        """
+        OUROBOROS PHASE 2: Analyze violations from Knowledge Graph for training gaps.
+
+        This connects the self-healing loop:
+        - Watchman detects violations → stored in Knowledge Graph
+        - Mirror reads KG → identifies patterns
+        - Mirror generates training → Manas learns to prevent recurrence
+
+        Args:
+            threshold: Minimum occurrences to consider a pattern (default: 3)
+
+        Returns:
+            List of GapAnalysis objects for violation patterns
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+            kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+            if kg is None:
+                logger.debug("🪞 MIRROR: Knowledge Graph not available")
+                return []
+
+            # Get all unhealed violations
+            violations = kg.get_violations(healed=False)
+
+            if not violations:
+                logger.debug("🪞 MIRROR: No violations in Knowledge Graph")
+                return []
+
+            # Group by rule_id to find patterns
+            by_rule: Dict[str, list] = defaultdict(list)
+            for v in violations:
+                rule_id = v.properties.get("rule_id", "unknown")
+                by_rule[rule_id].append(v)
+
+            # Generate gaps for frequent violations
+            gaps = []
+            for rule_id, instances in by_rule.items():
+                if len(instances) >= threshold:
+                    # This rule keeps appearing - MANAS needs to learn
+                    files = list({inst.properties.get("file_path", "unknown") for inst in instances})
+                    recent = max(inst.properties.get("detected_at", "") for inst in instances)
+
+                    gaps.append(
+                        GapAnalysis(
+                            pattern=f"violation:{rule_id}",
+                            gap_type="recurring_violation",
+                            current_weight=None,
+                            baseline_weight=None,
+                            severity=min(0.9, 0.3 + len(instances) * 0.1),  # More occurrences = higher severity
+                            recommendation=f"Pattern detected: {rule_id} occurred {len(instances)} times. Train to prevent.",
+                            metadata={
+                                "rule_id": rule_id,
+                                "occurrence_count": len(instances),
+                                "affected_files": files[:5],  # Top 5
+                                "last_seen": recent,
+                            },
+                        )
+                    )
+
+            if gaps:
+                logger.info(f"🪞 MIRROR: Found {len(gaps)} violation patterns from Knowledge Graph")
+
+            return sorted(gaps, key=lambda g: g.severity, reverse=True)
+
+        except Exception as e:
+            logger.warning(f"🪞 MIRROR: Failed to analyze violations: {e}")
+            return []
+
+    def generate_violation_curriculum(self, max_scenarios: int = 10) -> Dict[str, Any]:
+        """
+        OUROBOROS PHASE 2: Generate curriculum from recurring violations.
+
+        This creates training scenarios based on real violations detected
+        in the codebase, closing the self-improvement loop.
+
+        Args:
+            max_scenarios: Maximum number of scenarios to generate
+
+        Returns:
+            YAML-compatible curriculum dict
+        """
+        violation_gaps = self.analyze_violations(threshold=2)
+
+        if not violation_gaps:
+            return {"curriculum": {"id": "no_violations", "scenarios": []}}
+
+        scenarios = []
+        for gap in violation_gaps[:max_scenarios]:
+            rule_id = gap.metadata.get("rule_id", "unknown")
+            count = gap.metadata.get("occurrence_count", 0)
+
+            scenario = {
+                "id": f"ouroboros_{rule_id}",
+                "name": f"[OUROBOROS] Learn from {rule_id} ({count} occurrences)",
+                "description": f"Auto-generated training from {count} real violations",
+                "intent_type": f"detect:{rule_id}",
+                "params": {"source": "ouroboros", "from_violations": True},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["ouroboros", "auto_generated", "violation_training"],
+            }
+            scenarios.append(scenario)
+
+        curriculum = {
+            "curriculum": {
+                "id": f"ouroboros_training_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "name": "Ouroboros Auto-Training (from real violations)",
+                "description": f"MANAS auto-generated curriculum from {len(scenarios)} violation patterns",
+                "difficulty": 3,
+                "tags": ["ouroboros", "self_healing", "auto_generated"],
+            },
+            "scenarios": scenarios,
+        }
+
+        logger.info(f"🐍 OUROBOROS: Generated violation curriculum with {len(scenarios)} scenarios")
         return curriculum
 
     def _analyze_all_gaps(self, synapses: Dict[str, Any]) -> List[GapAnalysis]:

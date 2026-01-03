@@ -18,6 +18,7 @@ Curiosity Sources:
     2. Uncertainty - Low-confidence decisions in VivekaAction
     3. Novel Patterns - Triggers/actions not seen before
     4. Explicit Request - Operator asks MANAS to practice
+    5. Violation Patterns - Recurring violations from Knowledge Graph (OUROBOROS WIRE)
 
 <!-- @HARNESS
 files:
@@ -39,10 +40,13 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from vibe_core.di import ServiceRegistry
 
 logger = logging.getLogger("DOJO.AGENCY")
 
@@ -352,6 +356,89 @@ class DojoAgency:
                 "timestamp": datetime.now().isoformat(),
             },
         }
+
+    def report_violation_patterns(self, threshold: int = 3) -> int:
+        """
+        OUROBOROS WIRE: Read KG violations and report recurring patterns as curiosity.
+
+        This is the critical connection between the Knowledge Graph and self-directed
+        training. When the same rule_id appears multiple times (unhealed), it indicates
+        a pattern that MANAS should learn to avoid.
+
+        VEDA-4 Pattern:
+            SHABDA → Read violations from KG
+            ARTHA  → Group by rule_id, find recurring patterns
+            PRATYAYA → Threshold check (3+ = pattern)
+            KARMA  → Report as curiosity source
+
+        Args:
+            threshold: Minimum violation count to consider a pattern (default: 3)
+
+        Returns:
+            Number of patterns reported as curiosity sources
+        """
+        from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+        # Get KG via ServiceRegistry (lazy, optional dependency)
+        kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+        if kg is None:
+            logger.debug("[AGENCY] KG not available, skipping violation pattern scan")
+            return 0
+
+        # Get unhealed violations
+        try:
+            violations = kg.get_violations(healed=False)
+        except Exception as e:
+            logger.warning(f"[AGENCY] Failed to read violations from KG: {e}")
+            return 0
+
+        if not violations:
+            logger.debug("[AGENCY] No unhealed violations in KG")
+            return 0
+
+        # Group by rule_id to find patterns
+        rule_counts: Counter = Counter()
+        rule_examples: Dict[str, List[str]] = {}
+
+        for v in violations:
+            rule_id = v.properties.get("rule_id", "unknown")
+            rule_counts[rule_id] += 1
+
+            # Store example file paths for context
+            if rule_id not in rule_examples:
+                rule_examples[rule_id] = []
+            file_path = v.properties.get("file_path", "")
+            if file_path and len(rule_examples[rule_id]) < 3:
+                rule_examples[rule_id].append(file_path)
+
+        # Report recurring patterns as curiosity sources
+        patterns_reported = 0
+
+        for rule_id, count in rule_counts.most_common():
+            if count >= threshold:
+                # This is a recurring pattern - MANAS should learn to avoid it
+                examples = rule_examples.get(rule_id, [])
+                examples_str = ", ".join(examples[:2]) if examples else "various files"
+
+                description = f"Recurring violation: {rule_id} ({count}x in {examples_str})"
+
+                # Weight based on count (more = more curious)
+                weight = min(0.25, 0.1 + (count - threshold) * 0.05)
+
+                self.curiosity.report_gap(description, weight=weight)
+                patterns_reported += 1
+
+                logger.info(
+                    f"[AGENCY] 🔄 Violation pattern → Curiosity: {rule_id} (count={count}, weight={weight:.2f})"
+                )
+
+        if patterns_reported > 0:
+            logger.info(
+                f"[AGENCY] Reported {patterns_reported} violation patterns as curiosity "
+                f"(total violations: {len(violations)}, threshold: {threshold})"
+            )
+
+        return patterns_reported
 
 
 def get_dojo_agency(workspace: Path = None) -> DojoAgency:

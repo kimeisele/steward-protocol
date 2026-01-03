@@ -36,9 +36,6 @@ with warnings.catch_warnings():
 # These imports trigger @register_cli decorator - DO NOT REMOVE
 import vibe_core.cli.audit_cli  # noqa: F401 - registers "audit" (OPUS-307 Phase 4)
 import vibe_core.cli.cartridge_bridge  # noqa: F401 - registers "cartridges" (OPUS-307)
-
-# Ouroboros CI/CD integration
-import vibe_core.cli.ci_cli  # noqa: F401 - registers "ci" (Ouroboros loop)
 import vibe_core.cli.circuit_cli  # noqa: F401 - registers "circuit"
 import vibe_core.cli.config_cli  # noqa: F401 - registers "config" (OPUS-307)
 import vibe_core.cli.create_cli  # noqa: F401 - registers "create" (OPUS-307 Phase 5)
@@ -293,24 +290,9 @@ class UnifiedCLI:
         for arg in cmd.args:
             kwargs = {
                 "help": arg.help,
+                "type": arg.type,
                 "default": arg.default,
             }
-
-            # Handle boolean flags correctly
-            if arg.type is bool:
-                if arg.default is True:
-                    kwargs["action"] = "store_false"
-                    # If default is True, the flag (e.g. --no-quick) should probably flip it
-                    # But manifest usually defines positive flags.
-                    # For simplicity, if default is True, we assume the flag disables it if provided?
-                    # Actually, standard CLI pattern is: --flag enables it.
-                    # If default is True, usually we want --no-flag.
-                    # But let's stick to simple store_true for now if default is False/None
-                else:
-                    kwargs["action"] = "store_true"
-            else:
-                kwargs["type"] = arg.type
-
             if arg.required:
                 kwargs["required"] = True
             if arg.nargs:

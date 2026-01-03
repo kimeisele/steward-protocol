@@ -1164,17 +1164,72 @@ class CognitiveCircuitExecutor:
         """
         Evaluate a condition string against variables.
 
-        Delegates to InvariantChecker for robust parsing and evaluation.
+        Supports:
+        - "variable is not empty"
+        - "variable is empty"
+        - "variable == value"
+        - "variable != value"
         """
-        if not condition or condition.lower() == "true":
-            return True
-        if condition.lower() == "false":
+        try:
+            condition = condition.strip()
+
+            # Simple boolean literals
+            if condition.lower() == "true":
+                return True
+            if condition.lower() == "false":
+                return False
+
+            # Pattern: "X is not empty"
+            if " is not empty" in condition:
+                path = condition.replace(" is not empty", "").strip()
+                value = self._resolve_path(path, variables)
+                result = value is not None and value != "" and value != [] and value != {}
+                logger.debug(f"Condition check: {path} is not empty? {result} (value: {type(value)})")
+                return result
+
+            # Pattern: "X is empty"
+            if " is empty" in condition:
+                path = condition.replace(" is empty", "").strip()
+                value = self._resolve_path(path, variables)
+                result = value is None or value == "" or value == [] or value == {}
+                logger.debug(f"Condition check: {path} is empty? {result} (value: {type(value)})")
+                return result
+
+            # Pattern: "X != Y"
+            if " != " in condition:
+                parts = condition.split(" != ")
+                path = parts[0].strip()
+                expected = parts[1].strip().lower()
+                value = self._resolve_path(path, variables)
+
+                if expected == "null" or expected == "none":
+                    return value is not None
+
+                result = str(value).lower() != expected
+                return result
+
+            # Pattern: "X == Y"
+            if " == " in condition:
+                parts = condition.split(" == ")
+                path = parts[0].strip()
+                expected = parts[1].strip().lower()
+                value = self._resolve_path(path, variables)
+
+                if expected == "null" or expected == "none":
+                    return value is None
+
+                if expected in ("true", "false"):
+                    result = bool(value) == (expected == "true")
+                else:
+                    result = str(value).lower() == expected
+                return result
+
+            logger.warning(f"Unknown condition format: {condition}")
             return False
 
-        # Delegate to InvariantChecker logic
-        # We ignore the reason string, just need the boolean result
-        passed, _ = self.invariant_checker._evaluate_invariant(condition, variables)
-        return passed
+        except Exception as e:
+            logger.warning(f"Condition evaluation failed: {condition} - {e}")
+            return False
 
     def _resolve_path(self, path: str, variables: Dict[str, Any]) -> Any:
         """Resolve a dotted path against variables dict."""

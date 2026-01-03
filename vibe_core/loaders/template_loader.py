@@ -86,6 +86,7 @@ class TemplateLoader:
         """Get or create Jinja2 environment."""
         if self._env is None:
             from jinja2 import Environment, FileSystemLoader
+
             self._env = Environment(
                 loader=FileSystemLoader([str(d) for d in self._template_dirs]),
                 autoescape=False,
@@ -117,6 +118,7 @@ class TemplateLoader:
     def render(self, template_name: str, **context: Any) -> str:
         """Render template with context."""
         from jinja2 import TemplateNotFound
+
         try:
             template = self.env.get_template(template_name)
             return template.render(**context)

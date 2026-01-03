@@ -1169,7 +1169,9 @@ class SQLiteStore:
 
         return mission_id
 
-    def import_project_manifest(self, manifest: dict[str, object], project_memory: dict[str, object] | None = None) -> int:
+    def import_project_manifest(
+        self, manifest: dict[str, object], project_memory: dict[str, object] | None = None
+    ) -> int:
         """
         Import project manifest and optional project memory to SQLite (ARCH-003)
 
