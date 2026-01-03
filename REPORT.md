@@ -3577,3 +3577,24 @@ VIOLATED:  Archivist → subprocess.run() → Git (NO LOCK!)
 
 **Note:** Sutra (wiki sync) was investigated but is OK - commits to separate wiki repo.
 
+
+### R10: CI CLI NOT REGISTERED - FIXED
+
+**Symptom:** `steward ci run-all` → "Unknown command: ci"
+
+**Root Cause:** `ci_cli.py` existed with `@register_cli` decorator, but was NOT imported in `unified_cli.py`
+
+```python
+# unified_cli.py - MISSING IMPORT:
+import vibe_core.cli.ci_cli  # noqa: F401 - registers "ci"
+```
+
+**Fix Applied:** Added import to `unified_cli.py:39`
+
+**Now working:**
+```
+steward ci run-all      # Run all hooks
+steward ci list         # List hooks
+steward ci status       # Show status
+```
+
