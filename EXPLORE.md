@@ -29,9 +29,11 @@ Risk: SETTINGS.md changes are IGNORED
 Impact: System runs on hardcoded defaults
 
 FIX APPLIED (2026-01-03):
-  - kernel_impl.py:314: MarkdownUIManager now instantiated
-  - kernel_impl.py:2078: sync_all() called in tick_async
+  - Created vibe_core/plugins/settings_sync/ plugin
+  - Plugin initializes MarkdownUIManager on_boot
+  - Plugin calls sync_all() in on_tick_post hook
   - SETTINGS.md commands (RESTART, REFRESH, SET) now execute
+  - VISNU-compliant: No kernel modification required
 ```
 
 ### 3. OUROBOROS Parsers ORPHANED - Loop Cannot Close

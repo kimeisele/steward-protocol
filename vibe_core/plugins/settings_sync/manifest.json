@@ -1,0 +1,13 @@
+{
+  "id": "settings_sync",
+  "name": "Settings Sync Plugin",
+  "description": "OPUS-312: Wires MarkdownUIManager and SettingsExecutor into kernel tick. SETTINGS.md commands (RESTART, REFRESH, SET) now execute.",
+  "version": "1.0.0",
+  "priority": 50,
+  "author": "Claude Opus 4.5",
+  "capabilities": [
+    "settings_execution",
+    "envoy_sync"
+  ],
+  "dependencies": []
+}
