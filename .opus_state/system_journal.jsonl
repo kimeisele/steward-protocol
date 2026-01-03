@@ -1,3 +1,0 @@
-{"timestamp": "2025-12-19T09:09:31.437227", "type": "SYSTEM_ACT", "actor": "manas", "intent_id": "e2e-test-001", "intent_type": "chronicle.git", "tool": "chronicle.git", "success": false, "risk": "safe"}
-{"timestamp": "2025-12-19T09:10:34.230469", "type": "SYSTEM_ACT", "actor": "manas", "intent_id": "e2e-test-001", "intent_type": "chronicle.git", "tool": "chronicle.git", "success": false, "risk": "safe"}
-{"timestamp": "2025-12-19T09:11:35.415568", "type": "SYSTEM_ACT", "actor": "manas", "intent_id": "e2e-test-001", "intent_type": "chronicle.git", "tool": "chronicle.git", "success": false, "risk": "safe"}
