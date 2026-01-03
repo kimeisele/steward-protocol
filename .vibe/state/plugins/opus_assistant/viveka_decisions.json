@@ -190,10 +190,10 @@
     "result": null
   },
   {
-    "timestamp": "2025-12-26T19:16:52.098844",
-    "intent_type": "genesis_test",
-    "intent_title": "Test Code Generation",
-    "trigger": "trigger:genesis_test",
+    "timestamp": "2026-01-03T14:54:04.339970",
+    "intent_type": "system_status_check",
+    "intent_title": "Check System Status",
+    "trigger": "trigger:system_status_check",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,

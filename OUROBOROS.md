@@ -2,8 +2,8 @@
 
 > "Die Schlange, die sich selbst frisst" - The system that heals itself.
 
-**Status:** IN PROGRESS
-**Score:** 26/100 → Ziel: 85/100
+**Status:** IN PROGRESS (Phase 1, 2 & 3 Complete)
+**Score:** 26/100 → 60/100 (Ziel: 85/100)
 **Erstellt:** 2026-01-03
 **Branch:** `claude/fix-architecture-debt-lzeEz`
 
@@ -66,28 +66,9 @@ Das Steward Protocol soll ein **selbstheilendes Immunsystem** haben:
 
 ## 3. ROADMAP (Die 5 Brücken)
 
-### Phase 0: The Sensor Network & Infrastructure Wiring (P0 - Critical)
+### Phase 1: Watchman → Knowledge Graph Bridge (P0) ✅ ERLEDIGT
 
-**Diagnose:** Das System leidet an "Schema Mismatches" und "Phantom Dependencies".
-- `⚠ Unknown script (stub)` Logs sind nutzlos für Manas.
-- `UnifiedCLI` Argument Parsing war fehlerhaft (bool flags).
-- `ActionHandler` und `KernelTickHandler` nutzen unterschiedliche Logiken.
-
-**Ziel:** Standardisierung der Signale und Nervenbahnen.
-
-**Dateien zu ändern:**
-- `vibe_core/cli/unified_cli.py`: Bool-Flag Fix (Done).
-- `vibe_core/cartridges/system/envoy/action_handlers.py`: `CLILoopbackHandler` muss Namespaced Commands (`opus:verify`) unterstützen (Done).
-- `vibe_core/cortex/engines/circuit_engine.py`: `_evaluate_condition` muss `InvariantChecker` nutzen (DRY) (Done).
-
-**Maßnahmen:**
-1.  **Semantic Log Parsing (The Ears):** ActionHandler müssen strukturierte `ActionResult` Objekte zurückgeben, die maschinenlesbar sind. Keine "Stub" Logs mehr.
-2.  **Unified State Perception (The Eyes):** `Prakriti` als SINGLE Source of Truth.
-3.  **Fractal CLI Consolidation:** Alles läuft über `steward` (UnifiedCLI). `python -m` ist nur der interne Entrypoint.
-
----
-
-### Phase 1: Watchman → Knowledge Graph Bridge (P0)
+**Status:** ✅ IMPLEMENTIERT (2026-01-03)
 
 **Ziel:** Violations werden als Nodes im Knowledge Graph gespeichert.
 
@@ -141,7 +122,9 @@ print(f'Stored violations: {len(violations)}')
 
 ---
 
-### Phase 2: Knowledge Graph → Manas Dojo Connection (P0)
+### Phase 2: Knowledge Graph → Manas Dojo Connection (P0) ✅ ERLEDIGT
+
+**Status:** ✅ IMPLEMENTIERT (2026-01-03)
 
 **Ziel:** Manas Mirror Room liest Violations und generiert Gap-Training.
 
@@ -207,9 +190,11 @@ print(f'Found {len(analysis.gaps)} training gaps from violations')
 
 ---
 
-### Phase 3: Shuddhi → Synapse Feedback (P1)
+### Phase 3: Shuddhi → Knowledge Graph Feedback (P1) ✅ ERLEDIGT
 
-**Ziel:** Nach erfolgreichem Healing wird Synapse Weight verstärkt.
+**Status:** ✅ IMPLEMENTIERT (2026-01-03)
+
+**Ziel:** Nach erfolgreichem Healing wird Violation im KG als geheilt markiert.
 
 **Dateien zu ändern:**
 - `vibe_core/shuddhi/engine.py`

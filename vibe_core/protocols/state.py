@@ -122,8 +122,3 @@ class PrakritiProtocol(ABC):
     def end_session(self) -> Optional[Any]:
         """End current session."""
         pass
-
-    @abstractmethod
-    def save_knowledge(self) -> None:
-        """Persist Knowledge Graph state."""
-        pass

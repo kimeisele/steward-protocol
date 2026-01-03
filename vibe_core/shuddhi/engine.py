@@ -153,3 +153,111 @@ class ShuddhiEngine(ShuddhiProtocol):
         """
         self._loader.clear_cache()
         self._discover_remedies()
+
+    # =========================================================================
+    # OUROBOROS: Knowledge Graph Integration
+    # =========================================================================
+
+    def heal_and_record(
+        self,
+        file_path: Path,
+        rule_id: str,
+        violation_id: Optional[str] = None,
+        write_file: bool = False,
+    ) -> ShuddhiResult:
+        """
+        OUROBOROS: Heal a violation AND record the healing in Knowledge Graph.
+
+        This is the Nadi (channel) between Shuddhi and the self-healing loop.
+        When healing succeeds, the violation is marked as healed in KG.
+
+        Args:
+            file_path: Path to the file to heal
+            rule_id: The rule ID to apply
+            violation_id: Optional KG node ID to mark as healed
+            write_file: If True, write the healed code to disk
+
+        Returns:
+            ShuddhiResult with healing outcome
+        """
+        # 1. Perform the healing
+        result = self.purify(file_path, rule_id)
+
+        # 2. If successful, update Knowledge Graph
+        if result.status == ShuddhiStatus.PURIFIED:
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+                kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+                if kg and violation_id:
+                    kg.mark_violation_healed(violation_id, rule_id)
+                    logger.info(f"[SHUDDHI→KG] Marked violation {violation_id} as healed")
+
+                # 3. Optionally write the healed file
+                if write_file and result.purified_code:
+                    file_path.write_text(result.purified_code)
+                    logger.info(f"[SHUDDHI] Wrote healed code to {file_path}")
+
+            except Exception as e:
+                # Don't fail the healing if KG update fails
+                logger.warning(f"[SHUDDHI→KG] Failed to record healing: {e}")
+
+        return result
+
+    def heal_all_violations(self, dry_run: bool = True) -> List[ShuddhiResult]:
+        """
+        OUROBOROS: Heal all violations from Knowledge Graph that have remedies.
+
+        This is the automatic healing loop - reads violations from KG,
+        applies remedies where available, marks them as healed.
+
+        Args:
+            dry_run: If True, don't write files (just return diffs)
+
+        Returns:
+            List of ShuddhiResults for each attempted healing
+        """
+        results = []
+
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+            kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+            if not kg:
+                logger.warning("[SHUDDHI] Knowledge Graph not available")
+                return results
+
+            # Get unhealed violations
+            violations = kg.get_violations(healed=False)
+            logger.info(f"[SHUDDHI] Found {len(violations)} unhealed violations")
+
+            for v in violations:
+                rule_id = v.properties.get("rule_id", "")
+                file_path_str = v.properties.get("file_path", "")
+
+                # Check if we have a remedy
+                if not self.can_heal(rule_id):
+                    continue
+
+                file_path = Path(file_path_str)
+                if not file_path.exists():
+                    continue
+
+                # Attempt healing
+                result = self.heal_and_record(
+                    file_path=file_path,
+                    rule_id=rule_id,
+                    violation_id=v.id,
+                    write_file=not dry_run,
+                )
+                results.append(result)
+
+                if result.status == ShuddhiStatus.PURIFIED:
+                    logger.info(f"[SHUDDHI] ✅ Healed {rule_id} in {file_path}")
+
+        except Exception as e:
+            logger.exception(f"[SHUDDHI] Error in heal_all_violations: {e}")
+
+        return results

@@ -190,9 +190,9 @@
     "result": null
   },
   {
-    "timestamp": "2025-12-26T19:16:40.767042",
+    "timestamp": "2026-01-03T14:53:52.668595",
     "intent_type": "update_documentation",
-    "intent_title": "Test Doc Update",
+    "intent_title": "Update README",
     "trigger": "trigger:update_documentation",
     "file_path": null,
     "dharmic_score": 0.5,
