@@ -2378,8 +2378,9 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                     trigger = normalize_trigger(entry.intent)
                     if trigger:
                         triggers.append(trigger.value)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log trigger extraction failures at debug
+            logger.debug(f"Pending intent trigger extraction failed: {e}")
 
         # Check recent observations
         try:
@@ -2387,8 +2388,9 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 for obs in getattr(self, "_last_observations", [])[-10:]:
                     if hasattr(obs, "trigger"):
                         triggers.append(obs.trigger)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log observation trigger extraction failures at debug
+            logger.debug(f"Observation trigger extraction failed: {e}")
 
         return list(set(triggers))  # Deduplicate
 
