@@ -229,26 +229,43 @@ class RuntimeStateDefinition:
         """
         Discover patterns from SyncHolon conventions.
 
-        These are well-known state directories that exist by convention.
-        Only includes directories that ACTUALLY EXIST in the workspace.
+        OPUS-096 P0 FIX: Only truly ephemeral files should be filtered.
+        NOT entire directories like .vibe/state/ - those contain important state!
+
+        Ephemeral = changes constantly, causes merge conflicts:
+        - Heartbeat/tick counters
+        - Session locks
+        - Temporary backups
+
+        Important state = should be committed:
+        - manas_intents.json (pending tasks)
+        - manas_memory.json (memory)
+        - syscalls.jsonl (audit trail)
+        - etc.
         """
-        conventions = [
-            (".opus_state", "opus_assistant"),
-            (".prakriti", "prakriti"),
-            (".vibe/state", "vibe_state"),
-            (".vibe/config", "vibe_config"),
+        # Only truly ephemeral FILES (not entire directories!)
+        ephemeral_patterns = [
+            # Session/lock files (change on every run)
+            "**/session.json",
+            "**/session.lock",
+            "**/*.lock",
+            # Heartbeat/tick counters (change constantly)
+            "**/prana_heartbeat.json",
+            "**/heartbeat.json",
+            "**/*_heartbeat.json",
+            # Cycle counters
+            "**/cycle_history.json",
+            "**/cycle_history.tmp",
+            # Temporary backups (created during writes)
+            "**/*.backup",
+            "**/*.bak",
+            "**/*.tmp",
+            # Awareness state (changes every tick)
+            "**/manas_awareness.json",
         ]
 
         discovered: Dict[str, List[str]] = {}
-
-        for dir_path, source_name in conventions:
-            full_path = workspace / dir_path
-            if full_path.exists():
-                patterns = [
-                    f"{dir_path}/*",
-                    f"{dir_path}/**/*",
-                ]
-                discovered[f"convention:{source_name}"] = patterns
+        discovered["convention:ephemeral"] = ephemeral_patterns
 
         return discovered
 
