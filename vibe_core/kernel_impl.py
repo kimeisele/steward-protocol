@@ -212,8 +212,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if not self._test_mode:
             try:
                 setup_async_logging()
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Don't swallow logging setup failures silently
+                logger.warning(f"⚠️ KERNEL: Async logging setup failed: {e}")
 
         if self._test_mode:
             import os
@@ -2120,8 +2121,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             if ss._worker_task:
                 ss._worker_task.cancel()
                 logger.info("🛑 StateService: Background scribe stopped.")
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Don't swallow shutdown failures silently
+            logger.warning(f"⚠️ KERNEL: StateService shutdown failed: {e}")
 
         # Plugin Hook
         for plugin in self._plugins:
