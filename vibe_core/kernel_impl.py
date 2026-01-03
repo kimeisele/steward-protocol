@@ -1312,8 +1312,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                         "Agent": event.get("agent_id", "")[:15],
                     }
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log ledger access failures at debug
+            logger.debug(f"Ledger event history fetch failed: {e}")
 
         return {
             "current": current,
