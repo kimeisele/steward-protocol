@@ -35,9 +35,13 @@ Files:
   - vibe_core/ouroboros/parsers/report_md.py
   - vibe_core/ouroboros/parsers/watchman_json.py
   - vibe_core/ouroboros/parsers/tests_md.py
-Status: EXISTS but NEVER IMPORTED
-Risk: Self-healing loop is BROKEN
-Impact: Violations detected but never ingested
+Status: EXISTS, AUTO-DISCOVERED by ViolationParserLoader
+Risk: WAS broken - ingest script called non-existent method
+
+FIX APPLIED (2026-01-03):
+  - ingest_violations.py: Fixed broken prakriti.save_knowledge() call
+  - Now persists to .vibe/state/ouroboros/violations.jsonl
+  - LOOP IS CLOSED: CI → Watchman → Ingest → Persist
 ```
 
 ---
