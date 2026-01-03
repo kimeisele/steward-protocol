@@ -1,0 +1,99 @@
+{
+  "timestamp": 1767456455.8126633,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/fix-architecture-debt-lzeEz",
+    "sha": "e879b96",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": false,
+    "error": "No kernel injected"
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy",
+      "discoverer",
+      "archivist",
+      "auditor",
+      "chronicle",
+      "civic",
+      "cleaner",
+      "engineer",
+      "forum",
+      "herald",
+      "manas",
+      "oracle",
+      "ping",
+      "science",
+      "scribe",
+      "supreme_court",
+      "watchman",
+      "agora",
+      "ambassador",
+      "analyst",
+      "artisan",
+      "dhruva",
+      "lens",
+      "librarian",
+      "market",
+      "marketer",
+      "mechanic",
+      "pulse",
+      "temple"
+    ],
+    "modified": [
+      "librarian",
+      "lens",
+      "watchman",
+      "civic",
+      "oracle",
+      "temple",
+      "dhruva",
+      "ping",
+      "marketer",
+      "auditor",
+      "archivist",
+      "artisan",
+      "herald",
+      "engineer",
+      "mechanic",
+      "analyst",
+      "market",
+      "supreme_court",
+      "agora",
+      "ambassador",
+      "scribe",
+      "pulse",
+      "manas",
+      "envoy",
+      "forum",
+      "chronicle",
+      "cleaner",
+      "science",
+      "discoverer"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-e412",
+    "boot_time": 1767456420.1268334,
+    "commit_count": 0
+  }
+}

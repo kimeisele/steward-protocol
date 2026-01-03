@@ -1,0 +1,43 @@
+{
+  "timestamp": 1767456926.5087254,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/fix-architecture-debt-lzeEz",
+    "sha": "6c3ff2d",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": false,
+    "error": "No kernel injected"
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-7227",
+    "boot_time": 1767456924.9513314,
+    "commit_count": 0
+  }
+}
