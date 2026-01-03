@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2025-12-27T07:58:45.595097",
-  "total_cycles": 44,
+  "saved_at": "2026-01-03T14:44:56.880441",
+  "total_cycles": 46,
   "completed": [
     {
       "cycle_id": "test1234",
@@ -14,7 +14,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595109"
+      "timestamp": "2026-01-03T14:44:56.880453"
     },
     {
       "cycle_id": "pran_4498",
@@ -27,7 +27,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595112"
+      "timestamp": "2026-01-03T14:44:56.880456"
     },
     {
       "cycle_id": "boot_4509",
@@ -40,7 +40,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595115"
+      "timestamp": "2026-01-03T14:44:56.880459"
     },
     {
       "cycle_id": "cogn_4521",
@@ -53,7 +53,7 @@
       "decisions_count": 3,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595118"
+      "timestamp": "2026-01-03T14:44:56.880462"
     },
     {
       "cycle_id": "plug_4533",
@@ -66,7 +66,7 @@
       "decisions_count": 1,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595120"
+      "timestamp": "2026-01-03T14:44:56.880465"
     },
     {
       "cycle_id": "pran_4544",
@@ -79,7 +79,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595122"
+      "timestamp": "2026-01-03T14:44:56.880467"
     },
     {
       "cycle_id": "36dd6ee8",
@@ -99,7 +99,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595123"
+      "timestamp": "2026-01-03T14:44:56.880470"
     },
     {
       "cycle_id": "b7a258f3",
@@ -119,7 +119,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595130"
+      "timestamp": "2026-01-03T14:44:56.880473"
     },
     {
       "cycle_id": "be095401",
@@ -139,7 +139,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595132"
+      "timestamp": "2026-01-03T14:44:56.880475"
     },
     {
       "cycle_id": "6df1dba3",
@@ -159,7 +159,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595134"
+      "timestamp": "2026-01-03T14:44:56.880478"
     },
     {
       "cycle_id": "cec6f0de",
@@ -180,7 +180,7 @@
         "agents_discovered": 0,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595136"
+      "timestamp": "2026-01-03T14:44:56.880481"
     },
     {
       "cycle_id": "e52ff3d6",
@@ -201,7 +201,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595138"
+      "timestamp": "2026-01-03T14:44:56.880485"
     },
     {
       "cycle_id": "5c718f1f",
@@ -222,7 +222,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595140"
+      "timestamp": "2026-01-03T14:44:56.880487"
     },
     {
       "cycle_id": "ff702b54",
@@ -243,7 +243,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595142"
+      "timestamp": "2026-01-03T14:44:56.880489"
     },
     {
       "cycle_id": "5ae8a3b2",
@@ -264,7 +264,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595144"
+      "timestamp": "2026-01-03T14:44:56.880491"
     },
     {
       "cycle_id": "150dbb36",
@@ -285,7 +285,7 @@
         "agents_discovered": 26,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595145"
+      "timestamp": "2026-01-03T14:44:56.880493"
     },
     {
       "cycle_id": "6ad1d3a3",
@@ -301,7 +301,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-27T07:58:45.595147"
+      "timestamp": "2026-01-03T14:44:56.880495"
     },
     {
       "cycle_id": "244a8b0a",
@@ -317,7 +317,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-27T07:58:45.595151"
+      "timestamp": "2026-01-03T14:44:56.880506"
     },
     {
       "cycle_id": "9a17effd",
@@ -333,7 +333,7 @@
         "boot_config_valid": true,
         "error": "'NoneType' object has no attribute 'register_agent'"
       },
-      "timestamp": "2025-12-27T07:58:45.595153"
+      "timestamp": "2026-01-03T14:44:56.880508"
     },
     {
       "cycle_id": "b1b91986",
@@ -353,7 +353,7 @@
         "discovery_skipped": true,
         "error": ""
       },
-      "timestamp": "2025-12-27T07:58:45.595155"
+      "timestamp": "2026-01-03T14:44:56.880510"
     },
     {
       "cycle_id": "fb6b9e49",
@@ -373,7 +373,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2025-12-27T07:58:45.595156"
+      "timestamp": "2026-01-03T14:44:56.880513"
     },
     {
       "cycle_id": "22e70696",
@@ -393,7 +393,7 @@
         "discovery_skipped": true,
         "agents_registered": 1
       },
-      "timestamp": "2025-12-27T07:58:45.595158"
+      "timestamp": "2026-01-03T14:44:56.880515"
     },
     {
       "cycle_id": "d071830b",
@@ -414,7 +414,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595160"
+      "timestamp": "2026-01-03T14:44:56.880516"
     },
     {
       "cycle_id": "7eb9cc21",
@@ -435,7 +435,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595162"
+      "timestamp": "2026-01-03T14:44:56.880518"
     },
     {
       "cycle_id": "c36bc3df",
@@ -456,7 +456,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595164"
+      "timestamp": "2026-01-03T14:44:56.880520"
     },
     {
       "cycle_id": "832f6a8b",
@@ -477,7 +477,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595165"
+      "timestamp": "2026-01-03T14:44:56.880522"
     },
     {
       "cycle_id": "804f46e2",
@@ -498,7 +498,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595167"
+      "timestamp": "2026-01-03T14:44:56.880524"
     },
     {
       "cycle_id": "33d69c26",
@@ -519,7 +519,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595171"
+      "timestamp": "2026-01-03T14:44:56.880528"
     },
     {
       "cycle_id": "ff52ee74",
@@ -540,7 +540,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595172"
+      "timestamp": "2026-01-03T14:44:56.880531"
     },
     {
       "cycle_id": "d5eaa980",
@@ -561,7 +561,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595174"
+      "timestamp": "2026-01-03T14:44:56.880532"
     },
     {
       "cycle_id": "0fba376a",
@@ -582,7 +582,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595175"
+      "timestamp": "2026-01-03T14:44:56.880534"
     },
     {
       "cycle_id": "c4f389da",
@@ -595,7 +595,7 @@
       "decisions_count": 0,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595177"
+      "timestamp": "2026-01-03T14:44:56.880536"
     },
     {
       "cycle_id": "cdc588c2",
@@ -608,7 +608,7 @@
       "decisions_count": 2,
       "actions_count": 0,
       "errors": {},
-      "timestamp": "2025-12-27T07:58:45.595179"
+      "timestamp": "2026-01-03T14:44:56.880537"
     },
     {
       "cycle_id": "ea68977e",
@@ -629,7 +629,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595180"
+      "timestamp": "2026-01-03T14:44:56.880540"
     },
     {
       "cycle_id": "bbe67054",
@@ -650,7 +650,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595182"
+      "timestamp": "2026-01-03T14:44:56.880542"
     },
     {
       "cycle_id": "4433f382",
@@ -671,7 +671,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595184"
+      "timestamp": "2026-01-03T14:44:56.880544"
     },
     {
       "cycle_id": "b04fe07a",
@@ -692,7 +692,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595185"
+      "timestamp": "2026-01-03T14:44:56.880545"
     },
     {
       "cycle_id": "9339ffa9",
@@ -713,7 +713,7 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595189"
+      "timestamp": "2026-01-03T14:44:56.880547"
     },
     {
       "cycle_id": "3f7a1e8f",
@@ -734,7 +734,49 @@
         "agents_discovered": 26,
         "agents_registered": 28
       },
-      "timestamp": "2025-12-27T07:58:45.595190"
+      "timestamp": "2026-01-03T14:44:56.880549"
+    },
+    {
+      "cycle_id": "5c0f7851",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='139273647765008'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 26,
+        "agents_registered": 28
+      },
+      "timestamp": "2026-01-03T14:44:56.880551"
+    },
+    {
+      "cycle_id": "51441e26",
+      "parent_cycle_id": null,
+      "trace_id": "9ba3f8a1",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 26,
+        "agents_registered": 28
+      },
+      "timestamp": "2026-01-03T14:44:56.880553"
     }
   ],
   "errors": [
@@ -758,7 +800,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-27T07:58:45.595194"
+      "timestamp": "2026-01-03T14:44:56.880557"
     },
     {
       "cycle_id": "0fbeaffa",
@@ -780,7 +822,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-27T07:58:45.595195"
+      "timestamp": "2026-01-03T14:44:56.880559"
     },
     {
       "cycle_id": "60f300f5",
@@ -802,7 +844,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-27T07:58:45.595197"
+      "timestamp": "2026-01-03T14:44:56.880561"
     },
     {
       "cycle_id": "0eb6fbdc",
@@ -824,7 +866,7 @@
         "error": "asyncio.run() cannot be called from a running event loop",
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-27T07:58:45.595201"
+      "timestamp": "2026-01-03T14:44:56.880563"
     },
     {
       "cycle_id": "e9194249",
@@ -842,7 +884,7 @@
         "discovery_skipped": true,
         "orchestrate": "BootOrchestrator._persist() takes 1 positional argument but 2 were given"
       },
-      "timestamp": "2025-12-27T07:58:45.595202"
+      "timestamp": "2026-01-03T14:44:56.880564"
     }
   ]
 }

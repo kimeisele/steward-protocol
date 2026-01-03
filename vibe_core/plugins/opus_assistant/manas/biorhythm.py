@@ -315,6 +315,11 @@ class BiorhythmProcessor:
         if tick % 30 == 0:
             self._sync_ci_failures()
 
+        # OUROBOROS WIRE: Scan for HEALABLE violations (every 45 ticks in Sattva)
+        # DRY RUN ONLY - identifies what could be healed, does NOT modify files
+        if tick % 45 == 0:
+            self._scan_healable_violations()
+
         return {
             "state": "sattva",
             "action": "reflect",
@@ -422,6 +427,58 @@ class BiorhythmProcessor:
             logger.debug("CISyncService not available, skipping CI sync")
         except Exception as e:
             logger.debug(f"CI sync failed: {e}")
+
+    def _scan_healable_violations(self) -> None:
+        """
+        OUROBOROS WIRE: Scan for violations that CAN be automatically healed.
+
+        This connects ShuddhiEngine to the curiosity system:
+        KG Violations → Shuddhi.heal_all_violations(dry_run=True) → Report healable
+
+        SAFETY: This is DRY RUN ONLY - it identifies but does NOT modify files.
+        Actual healing requires explicit operator request.
+
+        Called every 45 ticks (~2.25 min) during Sattva state.
+        """
+        try:
+            from vibe_core.shuddhi.engine import ShuddhiEngine
+
+            # Get workspace from kernel
+            workspace = getattr(self.kernel, "_workspace", None)
+            if not workspace:
+                return
+
+            engine = ShuddhiEngine(project_root=workspace)
+
+            # DRY RUN - identify what could be healed, don't modify anything
+            results = engine.heal_all_violations(dry_run=True)
+
+            healable_count = sum(1 for r in results if r.status.value == "purified")
+
+            if healable_count > 0:
+                logger.info(
+                    f"🩹 OUROBOROS: Found {healable_count} violations that CAN be auto-healed "
+                    f"(dry run - no changes made)"
+                )
+
+                # Report to DojoAgency as high-priority curiosity
+                try:
+                    from vibe_core.plugins.opus_assistant.manas.dojo.agency import (
+                        get_dojo_agency,
+                    )
+
+                    agency = get_dojo_agency(workspace)
+                    agency.curiosity.report_gap(
+                        f"Shuddhi found {healable_count} auto-healable violations",
+                        weight=0.2,  # High priority
+                    )
+                except Exception:
+                    pass  # Curiosity reporting is optional
+
+        except ImportError:
+            logger.debug("ShuddhiEngine not available, skipping healable scan")
+        except Exception as e:
+            logger.debug(f"Healable violation scan failed: {e}")
 
     def _persist_awareness(self) -> None:
         """Persist awareness state for transparency."""
