@@ -310,6 +310,11 @@ class BiorhythmProcessor:
         if tick % 15 == 0:
             self._scan_violation_patterns()
 
+        # OUROBOROS WIRE: Sync CI/CD failures → KG (every 30 ticks in Sattva)
+        # This closes the feedback loop: CI failures get ingested into KG
+        if tick % 30 == 0:
+            self._sync_ci_failures()
+
         return {
             "state": "sattva",
             "action": "reflect",
@@ -383,6 +388,40 @@ class BiorhythmProcessor:
             logger.debug("DojoAgency not available, skipping violation scan")
         except Exception as e:
             logger.debug(f"Violation pattern scan failed: {e}")
+
+    def _sync_ci_failures(self) -> None:
+        """
+        OUROBOROS WIRE: Sync CI/CD failures from GitHub Actions to local KG.
+
+        This closes the feedback loop:
+        CI Failures (remote) → CISyncService → KG → Training
+
+        Called every 30 ticks (~90s) during Sattva state.
+        Uses gh CLI to fetch failures, so requires authentication.
+        """
+        try:
+            from vibe_core.ouroboros.sync import CISyncService
+
+            sync = CISyncService()
+
+            # Check if gh CLI is available (no point syncing without it)
+            if not sync._check_gh_cli():
+                logger.debug("[OUROBOROS] gh CLI not available, skipping CI sync")
+                return
+
+            result = sync.sync_latest()
+
+            if result.get("violations_ingested", 0) > 0:
+                logger.info(
+                    f"🔄 OUROBOROS: Synced {result['violations_ingested']} "
+                    f"CI violations from {result.get('run_id', 'unknown')}"
+                )
+            elif result.get("errors"):
+                logger.debug(f"[OUROBOROS] CI sync errors: {result['errors']}")
+        except ImportError:
+            logger.debug("CISyncService not available, skipping CI sync")
+        except Exception as e:
+            logger.debug(f"CI sync failed: {e}")
 
     def _persist_awareness(self) -> None:
         """Persist awareness state for transparency."""
