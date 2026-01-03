@@ -27,6 +27,11 @@ File: vibe_core/settings_executor.py
 Status: EXISTS but NEVER CALLED
 Risk: SETTINGS.md changes are IGNORED
 Impact: System runs on hardcoded defaults
+
+FIX APPLIED (2026-01-03):
+  - kernel_impl.py:314: MarkdownUIManager now instantiated
+  - kernel_impl.py:2078: sync_all() called in tick_async
+  - SETTINGS.md commands (RESTART, REFRESH, SET) now execute
 ```
 
 ### 3. OUROBOROS Parsers ORPHANED - Loop Cannot Close
