@@ -427,6 +427,29 @@ class StateService(StateServiceProtocol):
         with self._lock:
             self._dirty_files.clear()
 
+    # OPUS-312: Ephemeral file patterns that should NOT trigger auto-commit
+    # These change every tick and would cause death loops if committed
+    EPHEMERAL_PATTERNS = [
+        "session.json",
+        "prana_heartbeat.json",
+        "*_heartbeat.json",
+        "manas_awareness.json",
+        "*.lock",
+        "*.tmp",
+        "*.backup",
+        "vibe_snapshot.json",
+    ]
+
+    def _is_ephemeral(self, path: Path) -> bool:
+        """Check if a file is ephemeral (should not trigger auto-commit)."""
+        from fnmatch import fnmatch
+
+        name = path.name
+        for pattern in self.EPHEMERAL_PATTERNS:
+            if fnmatch(name, pattern):
+                return True
+        return False
+
     def mark_dirty(self, path: Path) -> None:
         """
         Mark an external file as dirty for auto-commit tracking.
@@ -434,9 +457,17 @@ class StateService(StateServiceProtocol):
         This allows external writers (like IOService) to register their
         writes with StateService's unified auto-commit system.
 
+        OPUS-312: Ephemeral files (session.json, heartbeat, etc.) are filtered
+        to prevent the "death loop" where constant writes trigger constant commits.
+
         Args:
             path: Absolute path to the dirty file
         """
+        # OPUS-312: Filter ephemeral files to prevent death loop
+        if self._is_ephemeral(path):
+            logger.debug(f"🔇 Ephemeral file skipped from auto-commit: {path.name}")
+            return
+
         with self._lock:
             self._dirty_files.add(path)
             self._writes_since_commit += 1

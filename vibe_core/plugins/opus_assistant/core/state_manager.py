@@ -39,8 +39,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("OPUS_STATE")
 
-# Default state directory name (relative to plugin root)
-DEFAULT_STATE_DIR = ".opus_state"
+# Default state directory name (DEPRECATED - StateService computes path dynamically)
+# Kept for backwards compatibility but not used when StateService is available
+DEFAULT_STATE_DIR = ".vibe/state/plugins/opus_assistant"
 
 
 @dataclass
