@@ -152,14 +152,67 @@ def parse_tests_md(tests_path: Path) -> List[ViolationRecord]:
     return violations
 
 
+def discover_violation_sources(project_root: Path) -> List[Path]:
+    """
+    Auto-discover violation source files.
+
+    Looks for:
+    - REPORT.md, TESTS.md (standard names)
+    - *_AUDIT.md, *_REPORT.md (pattern match)
+    - Files in .prakriti/violations/ (if exists)
+
+    Returns paths sorted by modification time (newest first).
+    """
+    sources = []
+
+    # Standard files
+    for name in ["REPORT.md", "TESTS.md", "REAL_TECH_DEBT_AUDIT.md"]:
+        path = project_root / name
+        if path.exists():
+            sources.append(path)
+
+    # Pattern match in docs/
+    docs_dir = project_root / "docs"
+    if docs_dir.exists():
+        for pattern in ["*AUDIT*.md", "*REPORT*.md"]:
+            sources.extend(docs_dir.glob(f"**/{pattern}"))
+
+    # Deduplicate and sort by mtime
+    seen = set()
+    unique = []
+    for p in sources:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+
+    return sorted(unique, key=lambda p: p.stat().st_mtime, reverse=True)
+
+
 def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="OUROBOROS: Ingest tech debt as training fuel")
+    parser.add_argument("--report", "-r", type=Path, help="Path to REPORT.md (auto-discovered if not specified)")
+    parser.add_argument("--tests", "-t", type=Path, help="Path to TESTS.md (auto-discovered if not specified)")
+    parser.add_argument("--discover", "-d", action="store_true", help="Auto-discover all violation sources")
+    args = parser.parse_args()
+
     print("🐍 OUROBOROS: Ingesting Tech Debt as Training Fuel...")
     print("=" * 60)
 
-    # Paths
+    # Paths - either from args or auto-discover
     project_root = Path(__file__).parent.parent.parent
-    report_path = project_root / "REPORT.md"
-    tests_path = project_root / "TESTS.md"
+
+    if args.discover:
+        sources = discover_violation_sources(project_root)
+        print(f"\n🔍 Auto-discovered {len(sources)} violation sources:")
+        for s in sources:
+            print(f"   - {s.relative_to(project_root)}")
+        report_path = next((s for s in sources if "REPORT" in s.name.upper()), None)
+        tests_path = next((s for s in sources if "TEST" in s.name.upper()), None)
+    else:
+        report_path = args.report or project_root / "REPORT.md"
+        tests_path = args.tests or project_root / "TESTS.md"
 
     # Boot Prakriti (registers KG in ServiceRegistry)
     prakriti = Prakriti()
