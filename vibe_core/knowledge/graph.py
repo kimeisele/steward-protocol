@@ -593,6 +593,126 @@ class UnifiedKnowledgeGraph:
 
         return "\n".join(lines)
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize graph to dictionary for persistence."""
+        return {
+            "nodes": [
+                {
+                    "id": n.id,
+                    "type": n.type.value,
+                    "name": n.name,
+                    "domain": n.domain,
+                    "description": n.description,
+                    "properties": n.properties,
+                }
+                for n in self.nodes.values()
+            ],
+            "edges": [
+                {
+                    "source": e.source,
+                    "target": e.target,
+                    "relation": e.relation.value,
+                    "weight": e.weight,
+                    "properties": e.properties,
+                }
+                for edge_list in self.edges.values()
+                for e in edge_list
+            ],
+            "constraints": [
+                {
+                    "id": c.id,
+                    "type": c.type.value,
+                    "condition": c.condition,
+                    "action": c.action.value,
+                    "message": c.message,
+                    "applies_to": c.applies_to,
+                }
+                for c in self.constraints.values()
+            ],
+            "metrics": {
+                node_id: {
+                    metric_type.value: {
+                        "node_id": m.node_id,
+                        "metric_type": m.metric_type.value,
+                        "value": m.value,
+                        "scale_min": m.scale_min,
+                        "scale_max": m.scale_max,
+                    }
+                    for metric_type, m in metrics.items()
+                }
+                for node_id, metrics in self.metrics.items()
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "UnifiedKnowledgeGraph":
+        """Deserialize graph from dictionary."""
+        graph = cls()
+
+        # Load Nodes
+        for node_data in data.get("nodes", []):
+            try:
+                node = Node(
+                    id=node_data["id"],
+                    type=NodeType(node_data["type"]),
+                    name=node_data["name"],
+                    domain=node_data["domain"],
+                    description=node_data.get("description", ""),
+                    properties=node_data.get("properties", {}),
+                )
+                graph.nodes[node.id] = node
+            except Exception as e:
+                logger.warning(f"Failed to load node: {e}")
+
+        # Load Edges
+        for edge_data in data.get("edges", []):
+            try:
+                edge = Edge(
+                    source=edge_data["source"],
+                    target=edge_data["target"],
+                    relation=RelationType(edge_data["relation"]),
+                    weight=edge_data.get("weight", 1.0),
+                    properties=edge_data.get("properties", {}),
+                )
+                graph.add_edge(edge)
+            except Exception as e:
+                logger.warning(f"Failed to load edge: {e}")
+
+        # Load Constraints
+        for c_data in data.get("constraints", []):
+            try:
+                constraint = Constraint(
+                    id=c_data["id"],
+                    type=ConstraintType(c_data["type"]),
+                    condition=c_data["condition"],
+                    action=ConstraintAction(c_data["action"]),
+                    message=c_data["message"],
+                    applies_to=c_data["applies_to"],
+                )
+                graph.constraints[constraint.id] = constraint
+            except Exception as e:
+                logger.warning(f"Failed to load constraint: {e}")
+
+        # Load Metrics
+        for node_id, metrics_map in data.get("metrics", {}).items():
+            for metric_type_str, m_data in metrics_map.items():
+                try:
+                    metric = Metric(
+                        node_id=m_data["node_id"],
+                        metric_type=MetricType(m_data["metric_type"]),
+                        value=m_data["value"],
+                        scale_min=m_data["scale_min"],
+                        scale_max=m_data["scale_max"],
+                    )
+                    if node_id not in graph.metrics:
+                        graph.metrics[node_id] = {}
+                    graph.metrics[node_id][metric.metric_type] = metric
+                except Exception as e:
+                    logger.warning(f"Failed to load metric: {e}")
+
+        graph._loaded = True
+        return graph
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SINGLETON
