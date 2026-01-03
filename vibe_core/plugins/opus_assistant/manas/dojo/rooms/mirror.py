@@ -406,6 +406,84 @@ class Mirror:
         logger.info(f"🐍 OUROBOROS: Generated violation curriculum with {len(scenarios)} scenarios")
         return curriculum
 
+    def generate_gad000_boost(self) -> Dict[str, Any]:
+        """
+        GAD-000 BOOST: Add compliance training scenarios.
+
+        GAD-000 is the Operator Inversion Principle - AI operates system,
+        Human provides intent. Training on GAD-000 violations helps MANAS
+        understand AI-native interface design.
+
+        Returns:
+            Curriculum dict with GAD-000 compliance scenarios
+        """
+        scenarios = [
+            {
+                "id": "gad000_discoverability",
+                "name": "[GAD-000] Discoverability Check",
+                "description": "Can AI discover this tool exists? Check for --help --json or equivalent.",
+                "intent_type": "detect:gad000_discoverability",
+                "params": {"standard": "GAD-000", "check": "discoverability"},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["gad000", "compliance", "ai_native"],
+            },
+            {
+                "id": "gad000_observability",
+                "name": "[GAD-000] Observability Check",
+                "description": "Can AI query current system state? Is state structured?",
+                "intent_type": "detect:gad000_observability",
+                "params": {"standard": "GAD-000", "check": "observability"},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["gad000", "compliance", "ai_native"],
+            },
+            {
+                "id": "gad000_parseability",
+                "name": "[GAD-000] Parseability Check",
+                "description": "Are errors machine-readable with codes and context?",
+                "intent_type": "detect:gad000_parseability",
+                "params": {"standard": "GAD-000", "check": "parseability"},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["gad000", "compliance", "ai_native"],
+            },
+            {
+                "id": "gad000_composability",
+                "name": "[GAD-000] Composability Check",
+                "description": "Can AI chain this tool with other operations?",
+                "intent_type": "detect:gad000_composability",
+                "params": {"standard": "GAD-000", "check": "composability"},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["gad000", "compliance", "ai_native"],
+            },
+            {
+                "id": "gad000_idempotency",
+                "name": "[GAD-000] Idempotency Check",
+                "description": "Can AI safely retry this operation?",
+                "intent_type": "detect:gad000_idempotency",
+                "params": {"standard": "GAD-000", "check": "idempotency"},
+                "expected_decision": "EXECUTE",
+                "expected_dharmic_range": [0.7, 1.0],
+                "tags": ["gad000", "compliance", "ai_native"],
+            },
+        ]
+
+        curriculum = {
+            "curriculum": {
+                "id": "gad000_boost",
+                "name": "GAD-000 Compliance Training (Operator Inversion)",
+                "description": "Train MANAS to detect AI-native interface violations",
+                "difficulty": 3,
+                "tags": ["gad000", "constitutional", "foundational"],
+            },
+            "scenarios": scenarios,
+        }
+
+        logger.info("🚀 GAD-000 BOOST: Generated 5 compliance scenarios")
+        return curriculum
+
     def _analyze_all_gaps(self, synapses: Dict[str, Any]) -> List[GapAnalysis]:
         """Analyze all types of gaps."""
         gaps = []
