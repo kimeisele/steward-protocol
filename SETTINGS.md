@@ -17,7 +17,7 @@
 | `kernel.verbose` | `False` | Verbose mode |
 | `provider` | `unknown` | LLM Provider |
 | `mode` | `simulation` | Execution Mode |
-| `agents` | `28` | Registered agents |
+| `agents` | `29` | Registered agents |
 | `plugins` | `22` | Loaded plugins |
 <!-- /@SECTION -->
 
@@ -50,6 +50,7 @@ _No data_
 | `engineer` | ACTIVE |
 | `forum` | ACTIVE |
 | `herald` | ACTIVE |
+| `manas` | ACTIVE |
 | `oracle` | ACTIVE |
 | `ping` | ACTIVE |
 | `science` | ACTIVE |
@@ -75,14 +76,14 @@ _No data_
 
 | Time | Type | Agent |
 | :--- | :--- | :--- |
-| 2026-01-03T15:32:19 | TOOL_CALL_INITIATED | chronicle |
-| 2026-01-03T15:32:19 | TOOL_CALL_COMPLETED | chronicle |
-| 2026-01-03T15:32:19 | TOOL_CALL_INITIATED | herald |
-| 2026-01-03T15:32:19 | TOOL_CALL_COMPLETED | herald |
-| 2026-01-03T15:32:19 | TOOL_CALL_INITIATED | herald |
-| 2026-01-03T15:32:19 | TOOL_CALL_COMPLETED | herald |
-| 2026-01-03T15:32:19 | IO_WRITE | KERNEL |
-| 2026-01-03T15:32:19 | task_start | ping |
-| 2026-01-03T15:32:19 | task_completed | ping |
-| 2026-01-03T15:32:19 | TRUST_SCORE_UPDATED | ping |
+| 2026-01-03T15:41:50 | TOOL_CALL_INITIATED | chronicle |
+| 2026-01-03T15:41:51 | TOOL_CALL_COMPLETED | chronicle |
+| 2026-01-03T15:41:51 | TOOL_CALL_INITIATED | herald |
+| 2026-01-03T15:41:51 | TOOL_CALL_COMPLETED | herald |
+| 2026-01-03T15:41:51 | TOOL_CALL_INITIATED | herald |
+| 2026-01-03T15:41:51 | TOOL_CALL_COMPLETED | herald |
+| 2026-01-03T15:41:51 | IO_WRITE | KERNEL |
+| 2026-01-03T15:41:51 | task_start | ping |
+| 2026-01-03T15:41:51 | task_completed | ping |
+| 2026-01-03T15:41:51 | TRUST_SCORE_UPDATED | ping |
 <!-- /@SECTION -->

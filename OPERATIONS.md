@@ -18,7 +18,7 @@ _No data_
 | Key | Value |
 | :--- | :--- |
 | Kernel Status | RUNNING |
-| Agents | 28 |
+| Agents | 29 |
 | Queue Length | 0 |
 | Pending Tasks | 0 |
 | Total Events | 0 |
@@ -47,6 +47,7 @@ _No data_
 | `herald` | HERALD | COMMUNICATIONS | ACTIVE |
 | `lens` | LENS | OBSERVATION | ACTIVE |
 | `librarian` | LIBRARIAN | KNOWLEDGE | ACTIVE |
+| `manas` | MANAS | SYSTEM | ACTIVE |
 | `market` | MARKET | ECONOMY | ACTIVE |
 | `marketer` | MARKETER | CONTENT | ACTIVE |
 | `mechanic` | MECHANIC | MAINTENANCE | ACTIVE |
