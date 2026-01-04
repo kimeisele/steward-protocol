@@ -30,6 +30,7 @@ from vibe_core.protocols.naga import SeshaProtocol, TakshakaProtocol, VasukiProt
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
+    from vibe_core.naga.commit_watcher import NagaCommitWatcher
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
@@ -54,6 +55,7 @@ class NagaOrchestrator:
         self._vasuki: Optional["VasukiService"] = None
         self._takshaka: Optional["TakshakaService"] = None
         self._flood_manager: Optional["NagaFloodManager"] = None
+        self._commit_watcher: Optional["NagaCommitWatcher"] = None
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
 
@@ -184,6 +186,21 @@ class NagaOrchestrator:
             logger.warning(f"🌊 NAGA Flood Manager failed to start: {e}")
             # Non-critical - continue without flooding
 
+        # 5. COMMIT WATCHER - Der Wächter-Pattern (Phase 4)
+        # "NAGAs notice when things go wrong"
+        try:
+            from vibe_core.naga.commit_watcher import NagaCommitWatcher
+
+            self._commit_watcher = NagaCommitWatcher(
+                sesha=self._sesha,
+                takshaka=self._takshaka,
+                enabled=True,
+            )
+            logger.info("👁️ NAGA Commit Watcher initialized - Der Wächter observes")
+        except Exception as e:
+            logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
+            # Non-critical - continue without watcher
+
         self._initialized = True
         logger.info("🐍 NAGA Federation initialized")
 
@@ -198,6 +215,8 @@ class NagaOrchestrator:
             "sesha": self._sesha.get_status().to_dict() if self._sesha else None,
             "vasuki": self._vasuki.get_status().to_dict() if self._vasuki else None,
             "takshaka": self._takshaka.get_status().to_dict() if self._takshaka else None,
+            "flood_manager": self._flood_manager.get_status() if self._flood_manager else None,
+            "commit_watcher": self._commit_watcher.get_stats() if self._commit_watcher else None,
         }
 
     def is_ready(self) -> bool:
@@ -238,3 +257,13 @@ class NagaOrchestrator:
     def config(self) -> Optional["NagaConfig"]:
         """Get the active configuration."""
         return self._config
+
+    @property
+    def flood_manager(self) -> Optional["NagaFloodManager"]:
+        """Get Flood Manager (or None if disabled)."""
+        return self._flood_manager
+
+    @property
+    def commit_watcher(self) -> Optional["NagaCommitWatcher"]:
+        """Get Commit Watcher (or None if disabled)."""
+        return self._commit_watcher
