@@ -366,6 +366,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         self._capability_enforcer = CapabilityEnforcerService()
 
+        # LIFECYCLE SERVICE: Boot/Shutdown/Tick/Run logic extracted
+        from vibe_core.services.lifecycle_service import LifecycleService
+
+        self._lifecycle = LifecycleService(self)
+
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
         # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
@@ -1067,8 +1072,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
         """
-        import time
-
         # Get queue status
         queue_status = {}
         if hasattr(self, "_scheduler") and self._scheduler:
@@ -1842,284 +1845,30 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             loop.close()
             logger.info("🌐 Gateway Sidecar shutdown complete")
 
+    # =========================================================================
+    # LIFECYCLE METHODS - Delegated to LifecycleService
+    # =========================================================================
+
     def boot(self, boot_mode: BootMode | None = None) -> None:
-        """
-        Boot the kernel synchronously (backward compatibility wrapper).
-
-        OPUS-203 introduced boot_async(), but 30+ callers still use sync boot().
-        This wrapper ensures backward compatibility while delegating to boot_async().
-
-        For new code, prefer boot_async() in async contexts.
-
-        Args:
-            boot_mode: Optional BootMode (FULL, HEADLESS, MINIMAL).
-                       If None, defaults to FULL for backward compatibility.
-        """
-        import asyncio
-
-        from vibe_core.boot_mode import BootMode
-
-        if boot_mode is None:
-            boot_mode = BootMode.FULL
-
-        # Check if we're already in an async context
-        try:
-            loop = asyncio.get_running_loop()
-            # We're in an async context - schedule and wait
-            import concurrent.futures
-
-            future = concurrent.futures.Future()
-
-            async def _boot_and_signal():
-                try:
-                    await self.boot_async(boot_mode)
-                    future.set_result(None)
-                except Exception as e:
-                    future.set_exception(e)
-
-            loop.create_task(_boot_and_signal())
-            # Note: This will block the current thread waiting for boot
-            # In pure async code, use boot_async() directly
-            future.result(timeout=60)
-        except RuntimeError:
-            # No running event loop - use asyncio.run()
-            asyncio.run(self.boot_async(boot_mode))
+        """Boot the kernel synchronously. Delegates to LifecycleService."""
+        self._lifecycle.boot(boot_mode)
 
     async def boot_async(self, boot_mode: BootMode | None = None) -> None:
-        """
-        🚀 ASYNC BOOT (OPUS-203)
-        Registers manifests, activates Prakriti, and starts Gateway task.
-        """
-        from vibe_core.boot_mode import BootMode
-
-        if boot_mode is None:
-            boot_mode = BootMode.FULL
-
-        self._status = KernelStatus.BOOTING
-        self._boot_time = time.time()
-        logger.info(f"⚙️  KERNEL BOOTING ASYNC... (mode: {boot_mode.value})")
-
-        # Phase 5: Record Kernel Boot in Parampara
-        self.lineage.add_block(
-            event_type=LineageEventType.KERNEL_BOOT,
-            agent_id=None,
-            data={
-                "version": "2.0.0",
-                "timestamp": datetime.utcnow().isoformat(),
-                "agents_registered": len(self._agent_registry),
-                "boot_mode": boot_mode.value,
-            },
-        )
-
-        # Register all agent manifests
-        for agent_id, agent in self._agent_registry.items():
-            try:
-                if hasattr(agent, "get_manifest"):
-                    manifest = agent.get_manifest()
-                    self._manifest_registry.register(manifest)
-                    logger.info(f"   📜 {agent_id}: {manifest.description}")
-            except Exception as e:
-                logger.warning(f"   ⚠️  Failed to register manifest for {agent_id}: {e}")
-
-        self._status = KernelStatus.RUNNING
-        logger.info("✅ KERNEL RUNNING (ASYNC)")
-
-        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
-        try:
-            self.prakriti.begin_session()
-            self.prakriti.sync_ledger_git(strategy="git_wins")
-            if self.prakriti.is_dirty:
-                self.prakriti.recover_from_crash()
-        except Exception as e:
-            logger.error(f"❌ Prakriti Boot Failure: {e}")
-
-        # 🍎 ASYNC PERSISTENCE (ADR-204)
-        try:
-            from vibe_core.state.state_service import get_state_service
-
-            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
-            ss.start_background_worker()
-        except Exception as e:
-            logger.warning(f"⚠️  Failed to start background persistence: {e}")
-
-        # PULSE: Write initial snapshot on boot
-        await self._pulse()
-
-        # Phase 18: Gateway as Task (instead of Thread)
-        if boot_mode.should_skip_gateway():
-            logger.info("🚫 Network Gateway SKIPPED (headless mode)")
-            self._gateway_task = None
-        else:
-            self._gateway_task = asyncio.create_task(self._run_gateway_async())
-            logger.info("🌐 Network Gateway task started")
+        """Async boot. Delegates to LifecycleService."""
+        await self._lifecycle.boot_async(boot_mode)
 
     async def run_forever(self) -> None:
-        """
-        🔄 MAIN KERNEL LOOP (OPUS-203)
-        Runs tick_async() at 100ms intervals until shutdown.
-        """
-        logger.info("🔄 Entering Unified Async Kernel loop...")
-        try:
-            while self._status == KernelStatus.RUNNING:
-                await self.tick_async()
-                await asyncio.sleep(0.1)
-        except asyncio.CancelledError:
-            logger.info("🛑 Kernel loop cancelled")
-        finally:
-            if self._status == KernelStatus.RUNNING:
-                await self.shutdown_async("Loop terminated")
+        """Main kernel loop. Delegates to LifecycleService."""
+        await self._lifecycle.run_forever()
 
     async def tick_async(self) -> None:
-        """
-        💓 ASYNC TICK (OPUS-203)
-        Drives the heartbeat, scheduler, and event emission natively.
-        """
-        self.enforce_entropy_limits()
-
-        if self._status != KernelStatus.RUNNING:
-            return
-
-        # Plugin Hook: Pre-Tick
-        for plugin in self._plugins:
-            plugin.on_tick_pre(self)
-
-        task = self._scheduler.next_task()
-
-        if not task:
-            # Idle Pulse
-            if time.time() - self._last_pulse_time >= 5.0:
-                await self._pulse()
-                self._last_pulse_time = time.time()
-        else:
-            # Get target agent
-            agent = self._agent_registry.get(task.agent_id)
-            if not agent:
-                error = f"Agent {task.agent_id} not found"
-                logger.error(f"❌ {error}")
-                self._ledger.record_failure(task, error)
-                return
-
-            # Task Execution
-            try:
-                self._ledger.record_start(task)
-
-                # Execution (Process vs In-Process)
-                has_process = (
-                    self.process_manager
-                    and task.agent_id in self.process_manager.processes
-                    and self.process_manager.processes[task.agent_id].process.is_alive()
-                )
-
-                if has_process:
-                    # Dispatch to isolated process
-                    self.process_manager.send_task(task.agent_id, task)
-                else:
-                    # Execute natively (supports async agents!)
-                    if asyncio.iscoroutinefunction(agent.process):
-                        result = await agent.process(task)
-                    else:
-                        result = agent.process(task)
-
-                    self._ledger.record_completion(task, result)
-
-                    for plugin in self._plugins:
-                        plugin.on_task_completed(self, task.task_id, result)
-
-                # Maintenance
-                await self._pulse()
-                self._check_system_health()
-                if self.process_manager:
-                    self.process_manager.check_health()
-                self._process_ipc_events()
-                self._sync_resource_quotas()
-
-                for plugin in self._plugins:
-                    plugin.on_tick_post(self)
-
-                # OPUS-308: Manifestation tick (render all registered plugin UIs)
-                self.manifestation.tick()
-
-            except Exception as e:
-                error = str(kernel_fault("task_tick_async", str(e)))
-                logger.exception(f"❌ Task {task.task_id} failed: {error}")
-                self._ledger.record_failure(task, error)
-                for plugin in self._plugins:
-                    plugin.on_task_failed(self, task.task_id, error)
-
-        # NATIVE HEARTBEAT (Direct await! Emitted every tick to drive circuits)
-        await self._event_bus.emit(
-            Event(event_type=EventType.KERNEL_TICK, agent_id="kernel", message="Kernel heartbeat tick")
-        )
-
-    async def _run_gateway_async(self) -> None:
-        """Runs the NetworkGateway as an asyncio task."""
-        if self.gateway is None:
-            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
-            return
-        try:
-            await self.gateway.start()
-        except Exception as e:
-            logger.error(f"🌐 Gateway task crashed: {e}")
+        """Async tick. Delegates to LifecycleService."""
+        await self._lifecycle.tick_async()
 
     async def shutdown_async(self, reason: str = "User shutdown") -> None:
-        """
-        🛑 ASYNC SHUTDOWN (OPUS-203)
-        Gracefully stops gateway task and preserves Prakriti state.
-        """
-        logger.critical(f"🛑 KERNEL SHUTTING DOWN ASYNC: {reason}")
-
-        # Record shutdown
-        if hasattr(self, "lineage"):
-            self.lineage.add_block(event_type=LineageEventType.KERNEL_SHUTDOWN, agent_id=None, data={"reason": reason})
-            self.lineage.close()
-
-        # Preserve state
-        try:
-            if hasattr(self, "prakriti"):
-                self.prakriti.end_session()
-        except Exception as e:
-            logger.error(f"❌ State preservation failed: {e}")
-
-        # 🍎 ASYNC PERSISTENCE CLEANUP (ADR-204)
-        try:
-            from vibe_core.state.state_service import get_state_service
-
-            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
-            if ss._worker_task:
-                ss._worker_task.cancel()
-                logger.info("🛑 StateService: Background scribe stopped.")
-        except Exception as e:
-            # OPUS-312: Don't swallow shutdown failures silently
-            logger.warning(f"⚠️ KERNEL: StateService shutdown failed: {e}")
-
-        # Plugin Hook
-        for plugin in self._plugins:
-            plugin.on_shutdown(self)
-
-        self._status = KernelStatus.STOPPED
-
-        # Cancel Gateway
-        if hasattr(self, "_gateway_task") and self._gateway_task:
-            self._gateway_task.cancel()
-            try:
-                await self._gateway_task
-            except asyncio.CancelledError:
-                pass
-        # Cleanup processes
-        if self.process_manager:
-            self.process_manager.shutdown()
-        if isinstance(self._ledger, SQLiteLedger):
-            self._ledger.close()
+        """Async shutdown. Delegates to LifecycleService."""
+        await self._lifecycle.shutdown_async(reason)
 
     def shutdown(self, reason: str = "User shutdown") -> None:
-        """
-        🛑 SYNC SHUTDOWN (OPUS-314)
-        Synchronous wrapper for shutdown_async. For use in tests and sync code.
-        """
-        import asyncio
-
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(self.shutdown_async(reason))
-        except RuntimeError:
-            asyncio.run(self.shutdown_async(reason))
+        """Sync shutdown. Delegates to LifecycleService."""
+        self._lifecycle.shutdown(reason)
