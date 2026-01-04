@@ -27,12 +27,16 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional
 
 if TYPE_CHECKING:
+    from vibe_core.naga.cortex.signals import CommitSignal
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.state.commit_authority import CommitOutcome, CommitResult
+
+# Type alias for cortex signal callback
+CortexCommitCallback = Callable[["CommitSignal"], None]
 
 logger = logging.getLogger("NAGA.COMMIT_WATCHER")
 
@@ -136,7 +140,15 @@ class NagaCommitWatcher:
         self._consecutive_deferrals = 0
         self._alert_handlers: List[callable] = []
 
+        # Cortex integration (optional, non-invasive)
+        self._cortex_callback: Optional[CortexCommitCallback] = None
+
         logger.info("[COMMIT_WATCHER] Initialized")
+
+    def set_cortex_callback(self, callback: CortexCommitCallback) -> None:
+        """Set callback for sending signals to Cortex. Non-invasive integration."""
+        self._cortex_callback = callback
+        logger.debug("[COMMIT_WATCHER] Cortex callback registered")
 
     # =========================================================================
     # MAIN API
@@ -198,6 +210,33 @@ class NagaCommitWatcher:
         if alert:
             self._stats.alerts_generated += 1
             self._dispatch_alert(alert)
+
+        # --- CORTEX SIGNAL (non-invasive) ---
+        # Send observation to Cortex for correlation
+        if self._cortex_callback:
+            try:
+                from vibe_core.naga.cortex.signals import CommitSignal
+
+                # Map outcome to pattern name
+                pattern_map = {
+                    CommitOutcome.SUCCESS: "SUCCESS",
+                    CommitOutcome.SKIPPED: "SKIPPED",
+                    CommitOutcome.DEFERRED: "DEFERRAL",
+                    CommitOutcome.HEALED: "HEALED",
+                    CommitOutcome.PANIC_DUMPED: "PANIC",
+                }
+                pattern = pattern_map.get(outcome, "UNKNOWN")
+
+                signal = CommitSignal(
+                    source_id="commit_watcher",
+                    pattern=pattern,
+                    commit_sha=getattr(result, "sha", "") or "",
+                    files_changed=tuple(getattr(result, "files_changed", []) or []),
+                    severity=alert.severity if alert else "INFO",
+                )
+                self._cortex_callback(signal)
+            except Exception:
+                pass  # Silent fail - observer must not crash
 
         return alert
 

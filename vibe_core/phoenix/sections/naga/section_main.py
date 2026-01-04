@@ -105,6 +105,39 @@ class TakshakaConfig:
 
 
 @dataclass
+class CortexConfig:
+    """Cortex - Central Nervous System configuration."""
+
+    enabled: bool = True
+    signal_buffer_size: int = 100
+    correlation_threshold: int = 3
+    max_signal_age_seconds: float = 300.0
+    auto_dispatch: bool = True
+    log_decisions: bool = True
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "CortexConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            signal_buffer_size=data.get("signal_buffer_size", 100),
+            correlation_threshold=data.get("correlation_threshold", 3),
+            max_signal_age_seconds=data.get("max_signal_age_seconds", 300.0),
+            auto_dispatch=data.get("auto_dispatch", True),
+            log_decisions=data.get("log_decisions", True),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "signal_buffer_size": self.signal_buffer_size,
+            "correlation_threshold": self.correlation_threshold,
+            "max_signal_age_seconds": self.max_signal_age_seconds,
+            "auto_dispatch": self.auto_dispatch,
+            "log_decisions": self.log_decisions,
+        }
+
+
+@dataclass
 class NagaConfig:
     """
     NAGA Federation Configuration.
@@ -124,6 +157,7 @@ class NagaConfig:
     sesha: SeshaConfig = field(default_factory=SeshaConfig)
     vasuki: VasukiConfig = field(default_factory=VasukiConfig)
     takshaka: TakshakaConfig = field(default_factory=TakshakaConfig)
+    cortex: CortexConfig = field(default_factory=CortexConfig)
 
     # Track if loaded from YAML vs defaults
     _loaded_from_yaml: bool = field(default=False, repr=False)
@@ -166,6 +200,7 @@ class NagaConfig:
             sesha=SeshaConfig.from_dict(data.get("sesha", {})),
             vasuki=VasukiConfig.from_dict(data.get("vasuki", {})),
             takshaka=TakshakaConfig.from_dict(data.get("takshaka", {})),
+            cortex=CortexConfig.from_dict(data.get("cortex", {})),
         )
         config._loaded_from_yaml = True
         return config
@@ -176,6 +211,7 @@ class NagaConfig:
             "sesha": self.sesha.to_dict(),
             "vasuki": self.vasuki.to_dict(),
             "takshaka": self.takshaka.to_dict(),
+            "cortex": self.cortex.to_dict(),
         }
 
     def validate(self) -> List[str]:
