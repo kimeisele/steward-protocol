@@ -315,7 +315,78 @@ plugins/envoy/tests/test_envoy_sanity.py
 
 ---
 
+## KURUKSHETRA RECONNAISSANCE (2026-01-04)
+
+> **Operation:** Deep dive into Chat/Cognitive/Knowledge layers
+> **Dedicated Document:** [CHAT.md](./CHAT.md) - Full chat architecture exploration
+
+### Summary Findings
+
+**MANAS Architecture:**
+- 40+ cortex modules ALL WIRED via VEDA-4 loaders
+- VEDA 4-fold processing FULLY IMPLEMENTED (Shabda→Artha→Pratyaya→Karma)
+- 10 senses (Jnanendriyas), 8 actions (Karmendriyas), 7 handlers
+- Chat flow: CLI → Kernel → MANASCognitive → VedaPipeline → Handlers
+
+**Knowledge/State Layer:**
+- Knowledge Graph: 79 nodes, 38 edges, 17 constraints
+- 3,499 violations tracked in OUROBOROS
+- Three Bodies architecture implemented (Sthula/Prana/Purusha)
+- Chat has READ access to all layers, WRITE limited by Bhakti
+
+**GAD-000 Compliance:**
+
+| Criterion | Score | Status |
+|-----------|-------|--------|
+| Discoverability | 50% | ⚠️ Partial |
+| Observability | 60% | ⚠️ Partial |
+| Parseability | 75% | ✅ Good |
+| Composability | 65% | ⚠️ Partial |
+| Idempotency | 70% | ✅ Good |
+| **Identity** | 40% | ❌ CRITICAL |
+
+**Overall: 60%** → Target: 92%
+
+### Critical Gap: Identity (GAD-1000)
+
+```
+PROBLEM: Chat operations NOT cryptographically signed
+
+LOCATION: vibe_core/kernel_impl.py:1633-1690
+
+IMPACT:
+- Cannot distinguish human vs AI operator
+- No audit trail for chat operations
+- Breaks GAD-000 Operator Inversion principle
+
+FIX: See CHAT.md Phase 1 action plan
+```
+
+### LLM Response Quality Issue
+
+```
+SYMPTOM: Chat responses hallucinate (Maya)
+- "System health at 50%" ← Real diagnostic, but context may be wrong
+- "Amendment endorsedMMM择dong" ← Garbage output
+
+ROOT CAUSE:
+- Context injection incomplete
+- No response validation
+- PrakritiSense returns partial data (2/4 checks)
+
+FIX: See CHAT.md P1 recommendations
+```
+
+---
+
 ## CHANGELOG
+
+### 2026-01-04: KURUKSHETRA Reconnaissance
+- Deep dive into Chat/Cognitive/Knowledge layers
+- Created [CHAT.md](./CHAT.md) for dedicated chat exploration
+- GAD-000 compliance matrix (60% overall, Identity at 40% CRITICAL)
+- MANAS architecture fully mapped (40+ modules)
+- Action plan for fixing Identity gap (P0)
 
 ### 2026-01-03: Initial Creation
 - Mapped 123 orphaned modules

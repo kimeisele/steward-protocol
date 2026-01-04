@@ -15,8 +15,12 @@ import sys
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("LIVE_FIRE_TEST")
 
-# Add repo to path
-sys.path.insert(0, "/home/user/steward-protocol")
+# Add project root to Python path (discover dynamically)
+import os
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(os.path.dirname(_script_dir))  # scripts/testing -> project root
+sys.path.insert(0, _project_root)
 
 
 async def run_live_fire():
