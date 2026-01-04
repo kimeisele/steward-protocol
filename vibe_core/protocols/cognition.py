@@ -101,6 +101,47 @@ class CognitiveResult:
 
 
 @dataclass
+class SignedOperatorInput:
+    """
+    GAD-000 v2.0 + CONSTITUTION v2.0: The 37th Principle.
+
+    Every operator input MUST be signed by a sovereign entity.
+    The 37th is not a feature - it's the GROUND from which operations derive legitimacy.
+
+    Without signature: Mayavad (dead mechanism, no WHO)
+    With signature: Vaishnava (living operation, sovereign will)
+
+    Usage:
+        signed = SignedOperatorInput(
+            message="deploy the feature",
+            signature="base64-encoded-ecdsa-signature",
+            public_key="base64-encoded-public-key",
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    """
+
+    message: str
+    timestamp: str  # ISO 8601
+
+    # The 37th: Sovereign Identity
+    signature: Optional[str] = None  # Base64 ECDSA signature
+    public_key: Optional[str] = None  # Base64 public key (for verification)
+    signer_id: Optional[str] = None  # Human-readable signer identity
+
+    # Verification result (filled by kernel)
+    is_verified: bool = False
+    verification_error: Optional[str] = None
+
+    def is_signed(self) -> bool:
+        """Check if this input has a signature (regardless of verification)."""
+        return self.signature is not None and self.public_key is not None
+
+    def is_sovereign(self) -> bool:
+        """Check if this input has a verified sovereign signature (The 37th)."""
+        return self.is_signed() and self.is_verified
+
+
+@dataclass
 class CognitiveContext:
     """
     Context passed to cognitive processing.
@@ -125,6 +166,10 @@ class CognitiveContext:
     available_tools: List[str] = field(default_factory=list)
     available_circuits: List[str] = field(default_factory=list)
     available_agents: List[str] = field(default_factory=list)
+
+    # GAD-000 v2.0: The 37th Principle
+    signed_input: Optional[SignedOperatorInput] = None
+    sovereign_verified: bool = False  # True if 37th signature is valid
 
 
 @runtime_checkable
