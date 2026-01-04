@@ -59,6 +59,7 @@ from vibe_core.protocols.correction import (
     HealingResult,
     HealingStatus,
     HealingStrategy,
+    HealingStrategyResolverProtocol,
     UnifiedDriftReport,
     adapt_reactor_drift,
     adapt_shuddhi_result,
@@ -279,11 +280,25 @@ class BasicCorrectionOrchestrator:
         self,
         registry: Optional[DriftRegistryProtocol] = None,
         dispatcher: Optional[CorrectionDispatcherProtocol] = None,
+        resolver: Optional["HealingStrategyResolverProtocol"] = None,
         skip_default_init: bool = False,
     ):
         self._registry = registry or BasicDriftRegistry()
         self._dispatcher = dispatcher or BasicCorrectionDispatcher()
+        self._resolver = resolver  # Lazy-loaded if None
         self._initialized = skip_default_init  # Skip if explicitly set
+
+    @property
+    def resolver(self) -> Optional["HealingStrategyResolverProtocol"]:
+        """Access the healing strategy resolver (lazy-loaded)."""
+        if self._resolver is None:
+            try:
+                from vibe_core.services.healing_resolver import get_healing_resolver
+
+                self._resolver = get_healing_resolver()
+            except ImportError:
+                pass
+        return self._resolver
 
     @property
     def registry(self) -> DriftRegistryProtocol:
@@ -448,6 +463,7 @@ class BasicCorrectionOrchestrator:
         self,
         source: Optional[DriftSource] = None,
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
+        agent_id: Optional[str] = None,
         auto_only: bool = True,
     ) -> List[HealingResult]:
         """
@@ -455,7 +471,8 @@ class BasicCorrectionOrchestrator:
 
         Args:
             source: Filter to specific source, or None for all
-            strategy: How to apply corrections
+            strategy: How to apply corrections (or RESONANCE to use resolver)
+            agent_id: Agent requesting healing (required for RESONANCE strategy)
             auto_only: Only heal drifts marked auto_healable
 
         Returns:
@@ -470,7 +487,20 @@ class BasicCorrectionOrchestrator:
             logger.info("No healable drifts found")
             return []
 
-        results = self._dispatcher.dispatch_all(drifts, strategy)
+        results = []
+        for drift in drifts:
+            # Resolve strategy per-drift if using RESONANCE
+            effective_strategy = strategy
+            if strategy == HealingStrategy.RESONANCE:
+                if agent_id and self.resolver:
+                    effective_strategy = self.resolver.resolve(agent_id, drift)
+                    logger.debug(f"Resolved strategy for {agent_id}: {effective_strategy.value}")
+                else:
+                    logger.warning("RESONANCE strategy requires agent_id and resolver, falling back to DRY_RUN")
+                    effective_strategy = HealingStrategy.DRY_RUN
+
+            result = self._dispatcher.dispatch(drift, effective_strategy)
+            results.append(result)
 
         healed = sum(1 for r in results if r.healed)
         logger.info(f"Healing complete: {healed}/{len(drifts)} drifts healed")

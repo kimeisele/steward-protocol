@@ -85,6 +85,7 @@ class HealingStrategy(str, Enum):
     DRY_RUN = "dry_run"  # Compute but don't apply
     MANUAL = "manual"  # Requires human approval
     CIRCUIT = "circuit"  # Delegate to healing circuit
+    RESONANCE = "resonance"  # Use Quantum Reactor to determine
 
 
 class HealingStatus(str, Enum):
@@ -224,6 +225,56 @@ DriftDetector = Callable[[], List[UnifiedDriftReport]]
 
 # Handler: (drift, strategy) -> HealingResult
 CorrectionHandler = Callable[[UnifiedDriftReport, HealingStrategy], HealingResult]
+
+
+# =============================================================================
+# Strategy Resolution Protocol
+# =============================================================================
+
+
+@runtime_checkable
+class HealingStrategyResolverProtocol(Protocol):
+    """
+    Resolves HealingStrategy from agent context.
+
+    Uses Vedic governance (Bhakti, Ashrama) and Quantum Reactor
+    to determine if an agent has earned write privileges.
+
+    This replaces hardcoded dry_run=True with graduated trust.
+    """
+
+    def resolve(
+        self,
+        agent_id: str,
+        drift: UnifiedDriftReport,
+    ) -> HealingStrategy:
+        """
+        Determine healing strategy based on agent trust level.
+
+        Logic:
+        1. Get agent's Bhakti balance (earned trust)
+        2. Get agent's Ashrama stage (lifecycle permissions)
+        3. Compute resonance via Quantum Reactor
+        4. If resonance > inertia → AUTO (earned privilege)
+        5. If Bhakti >= 50 → MANUAL (high trust, needs review)
+        6. Otherwise → DRY_RUN (still learning)
+
+        Args:
+            agent_id: The agent requesting the healing
+            drift: The drift being healed (for severity context)
+
+        Returns:
+            HealingStrategy determining write privilege
+        """
+        ...
+
+    def get_trust_level(self, agent_id: str) -> float:
+        """
+        Get normalized trust level (0.0-1.0) for an agent.
+
+        Combines Bhakti, Ashrama, and historical performance.
+        """
+        ...
 
 
 # =============================================================================
@@ -566,6 +617,7 @@ __all__ = [
     "DriftRegistryProtocol",
     "CorrectionDispatcherProtocol",
     "CorrectionOrchestratorProtocol",
+    "HealingStrategyResolverProtocol",
     # Type Aliases
     "DriftDetector",
     "CorrectionHandler",
