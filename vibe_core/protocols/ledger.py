@@ -159,12 +159,81 @@ class VibeKernel(ABC):
 
 
 # =============================================================================
-# PHASE 2: LedgerProtocol - Hot-Swappable Immutable Ledger
+# PHASE 2: Protocols for Hot-Swappable Services
 # PROMPT.md: "Protocol statt konkrete Klassen (Dependency Inversion)"
 #
-# This protocol enables swapping SQLiteLedger for InMemoryLedger or other
-# implementations without modifying kernel code.
+# These protocols enable swapping implementations without modifying kernel code.
+# Unlike ABCs, Protocols use structural subtyping (no inheritance required).
 # =============================================================================
+
+
+@runtime_checkable
+class SchedulerProtocol(Protocol):
+    """
+    Protocol for task scheduler.
+
+    GEMINI DIRECTIVE: "Use Protocols (structural subtyping, no inheritance)"
+
+    Implementations:
+        - PriorityScheduler (priority queue)
+        - FIFOScheduler (simple queue)
+        - RateLimitedScheduler (with throttling)
+
+    Usage:
+        scheduler = ServiceRegistry.get(SchedulerProtocol)
+        task_id = scheduler.submit_task(task)
+    """
+
+    def submit_task(self, task: Any) -> str:
+        """
+        Submit a task to the queue.
+
+        Args:
+            task: Task object to schedule
+
+        Returns:
+            task_id: Unique identifier for tracking
+        """
+        ...
+
+    def next_task(self) -> Optional[Any]:
+        """
+        Pop next task from queue.
+
+        Returns:
+            Task object or None if queue empty
+        """
+        ...
+
+    def get_queue_status(self) -> Dict[str, Any]:
+        """
+        Get queue statistics.
+
+        Returns:
+            Dict with queue_length, pending_count, etc.
+        """
+        ...
+
+    def cancel_task(self, task_id: str) -> bool:
+        """
+        Cancel a pending task.
+
+        Args:
+            task_id: ID of task to cancel
+
+        Returns:
+            True if cancelled, False if not found/already running
+        """
+        ...
+
+    def get_task_status(self, task_id: str) -> Optional[str]:
+        """
+        Get status of a specific task.
+
+        Returns:
+            Status string or None if not found
+        """
+        ...
 
 
 @runtime_checkable

@@ -81,6 +81,8 @@ from .feedback import (
 )
 from .ledger import (
     KernelStatus,
+    LedgerProtocol,
+    SchedulerProtocol,
     VibeKernel,
     VibeLedger,
     VibeScheduler,
