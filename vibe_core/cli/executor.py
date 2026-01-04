@@ -185,8 +185,9 @@ class CLIExecutor:
             if kernel:
                 try:
                     kernel.shutdown()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # OPUS-312: Log kernel shutdown failures
+                    logger.debug(f"Kernel shutdown failed (cleanup): {e}")
 
     async def _execute_hybrid(
         self,

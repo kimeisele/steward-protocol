@@ -304,8 +304,11 @@ class GunaClassifier:
         if self.git_state and hasattr(self.git_state, "check_ignore"):
             try:
                 return self.git_state.check_ignore(path)
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log git ignore check failures
+                import logging
+
+                logging.getLogger("STATE").debug(f"Git ignore check failed: {e}")
 
         # Fallback: manual check
         if self._gitignore_patterns is None:
@@ -325,8 +328,11 @@ class GunaClassifier:
             try:
                 if path.match(pattern):
                     return True
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log pattern match failures
+                import logging
+
+                logging.getLogger("STATE").debug(f"Pattern match failed for {pattern}: {e}")
 
         return False
 
@@ -403,8 +409,11 @@ class GunaClassifier:
                 elif hasattr(self.git_state, "is_dirty"):
                     # Fall back to general dirty check
                     return self.git_state.is_dirty()
-            except Exception:
-                pass
+            except Exception as e:
+                # OPUS-312: Log dirty check failures
+                import logging
+
+                logging.getLogger("STATE").debug(f"Git dirty check failed: {e}")
         return False
 
 

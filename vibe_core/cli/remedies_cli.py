@@ -342,8 +342,11 @@ Examples:
                                     "entry_state": circuit_data.get("entry_state", "?"),
                                 }
                             )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            # OPUS-312: Log circuit YAML parse failures
+                            import logging
+
+                            logging.getLogger("CLI").debug(f"Healing circuit parse failed for {f}: {e}")
 
         if as_json:
             print(json.dumps({"healing_circuits": circuits, "count": len(circuits)}, indent=2))
