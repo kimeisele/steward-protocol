@@ -345,6 +345,9 @@ class ManifestationService:
 
         logger.info("ManifestationService initialized (CORE)")
 
+        # OPUS-LASAGNE: Auto-register kernel-native sources
+        self._register_kernel_natives()
+
     # =========================================================================
     # INTERFACE CONFIG (Phoenix-driven, not hardcoded!)
     # =========================================================================
@@ -518,6 +521,170 @@ class ManifestationService:
         if output in self._kernel_sources:
             del self._kernel_sources[output]
             logger.debug(f"Unregistered kernel source: {output}")
+
+    def _register_kernel_natives(self) -> None:
+        """
+        OPUS-LASAGNE: Auto-register kernel-native SETTINGS.md and OPERATIONS.md.
+
+        Extracted from kernel_impl.py to reduce kernel LOC.
+        These are kernel features, not plugins.
+        """
+        # SETTINGS.md - kernel configuration UI
+        self.register_kernel_source(
+            output="SETTINGS.md",
+            schema="config_bidirectional",
+            data_getter=self._get_settings_data,
+        )
+
+        # OPERATIONS.md - kernel dashboard
+        self.register_kernel_source(
+            output="OPERATIONS.md",
+            schema="dashboard_readonly",
+            data_getter=self._get_operations_data,
+        )
+
+    def _get_settings_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Data source for SETTINGS.md.
+
+        Returns data for the config_bidirectional schema sections:
+        - current: Current kernel configuration
+        - available: Available agents and their status
+        - history: Recent command execution history
+        """
+        import logging as log_module
+
+        kernel = self._kernel
+
+        # Current configuration
+        config = getattr(kernel, "_config", None)
+        if config is None:
+            try:
+                from vibe_core.phoenix.config import get_config
+                config = get_config()
+            except Exception:
+                config = None
+
+        log_level = log_module.getLevelName(log_module.getLogger("VIBE_KERNEL").getEffectiveLevel())
+        verbose = getattr(kernel, "_verbose", False)
+        provider = "unknown"
+        mode = "simulation"
+
+        if config:
+            if hasattr(config, "llm"):
+                provider = getattr(config.llm, "provider", provider)
+            if hasattr(config, "runtime"):
+                mode = getattr(config.runtime, "mode", mode)
+
+        current = [
+            {"Setting": "`kernel.log_level`", "Value": f"`{log_level}`", "Description": "Logging verbosity"},
+            {"Setting": "`kernel.verbose`", "Value": f"`{verbose}`", "Description": "Verbose mode"},
+            {"Setting": "`provider`", "Value": f"`{provider}`", "Description": "LLM Provider"},
+            {"Setting": "`mode`", "Value": f"`{mode}`", "Description": "Execution Mode"},
+            {"Setting": "`agents`", "Value": f"`{len(kernel._agent_registry)}`", "Description": "Registered agents"},
+            {"Setting": "`plugins`", "Value": f"`{len(kernel._plugins)}`", "Description": "Loaded plugins"},
+        ]
+
+        # Available agents (from registry)
+        available = []
+        for agent_id in kernel._agent_registry.keys():
+            status = "ACTIVE"
+            # Check if paused via governance
+            if kernel.governance and hasattr(kernel.governance, "get_paused_agents"):
+                if agent_id in kernel.governance.get_paused_agents():
+                    status = "PAUSED"
+            available.append({"Agent": f"`{agent_id}`", "Status": status})
+
+        # History - get from ledger (last 10 events)
+        history = []
+        try:
+            events = kernel._ledger.get_all_events()[-10:]
+            for event in events:
+                history.append(
+                    {
+                        "Time": event.get("timestamp", "")[:19],
+                        "Type": event.get("event_type", "")[:20],
+                        "Agent": event.get("agent_id", "")[:15],
+                    }
+                )
+        except Exception as e:
+            logger.debug(f"Ledger event history fetch failed: {e}")
+
+        return {
+            "current": current,
+            "available": available,
+            "history": history,
+        }
+
+    def _get_operations_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Data source for OPERATIONS.md.
+
+        Returns data for the dashboard_readonly schema sections:
+        - metrics: Key numbers (queue size, agent count, event count)
+        - status: Current kernel and agent states
+        - details: Scheduler queue details
+        """
+        kernel = self._kernel
+
+        # Metrics - key numbers
+        queue_status = kernel._scheduler.get_queue_status() if hasattr(kernel, "_scheduler") else {}
+        event_status = kernel._event_bus.get_status() if hasattr(kernel, "_event_bus") else {}
+
+        metrics = {
+            "Kernel Status": kernel._status.value,
+            "Agents": len(kernel._agent_registry),
+            "Queue Length": queue_status.get("queue_length", 0),
+            "Pending Tasks": queue_status.get("pending", 0),
+            "Total Events": event_status.get("total_emitted", 0),
+            "Plugins": len(kernel._plugins),
+        }
+
+        # Status - agent states
+        status = []
+        for agent_id, agent in sorted(kernel._agent_registry.items()):
+            name = getattr(agent, "name", agent_id)
+            domain = getattr(agent, "domain", "UNKNOWN")
+            status.append(
+                {
+                    "Agent": f"`{agent_id}`",
+                    "Name": name,
+                    "Domain": domain,
+                    "Status": "ACTIVE",
+                }
+            )
+
+        if not status:
+            status = [{"Agent": "_No agents_", "Name": "-", "Domain": "-", "Status": "-"}]
+
+        # Details - queue and events
+        details = []
+        tasks = queue_status.get("tasks", [])[:5]
+        for t in tasks:
+            details.append(
+                {
+                    "Item": f"Task: {t.get('id', '?')[:20]}",
+                    "Info": f"Priority: {t.get('priority', '?')}",
+                }
+            )
+
+        type_counts = event_status.get("type_counts", {})
+        for event_type, count in sorted(type_counts.items(), key=lambda x: -x[1])[:5]:
+            details.append(
+                {
+                    "Item": f"Event: {event_type[:20]}",
+                    "Info": f"Count: {count}",
+                }
+            )
+
+        if not details:
+            details = [{"Item": "_No activity_", "Info": "-"}]
+
+        return {
+            "metrics": metrics,
+            "status": status,
+            "details": details,
+        }
 
     # =========================================================================
     # MANIFESTATION CYCLE (Called on kernel tick)
