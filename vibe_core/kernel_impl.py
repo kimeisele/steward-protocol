@@ -283,248 +283,160 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
 
-        # Load immune system (Auditor)
-        # OPUS-209: Auditor is now accessed via ServiceRegistry
-        # If no auditor plugin loaded, use NullAuditor fallback
+        # Auditor (immune system) - NullAuditor fallback if no plugin
         from vibe_core.di import ServiceRegistry
 
         self._auditor = ServiceRegistry.get(AuditorProtocol) or NullAuditor()
-        auditor_type = type(self._auditor).__name__
-        if auditor_type == "NullAuditor":
-            logger.warning("⚠️  No auditor plugin loaded - using NullAuditor")
-        else:
-            logger.info(f"🛡️  Immune system loaded (Auditor: {auditor_type})")
+        if type(self._auditor).__name__ == "NullAuditor":
+            logger.warning("⚠️  No auditor plugin - using NullAuditor")
 
-        # Phase 2: Process Manager
-        # OPUS-209: Extracted to process_isolation plugin
-        # ProcessManager is created and registered by ProcessIsolationPlugin.on_boot()
-        # CRITICAL: Plugin MUST be loaded, or kernel cannot run agents
-        self.process_manager = None  # Set by ProcessIsolationPlugin
-
-        # Phase 3: Resource Manager
-        # OPUS-209: Extracted to resource_limits plugin
-        # ResourceManager is created and registered by ResourceLimitsPlugin.on_boot()
-        # CRITICAL: Plugin MUST be loaded for quota enforcement
-        self.resource_manager = None  # Set by ResourceLimitsPlugin
-        self._last_quota_sync = 0  # Timestamp of last credit→quota sync
-        self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
-        # OPUS-303: Agent health cache (TTL 30s) to reduce OS syscalls in pulse
-        self._agent_health_cache: Dict[str, AgentHealth] = {}
-
-        # Phase 18: Network Gateway (Sangha)
-        # OPUS-209: Extracted to sangha_network plugin
-        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
-        self.gateway = None  # Set by SanghaNetworkPlugin
+        # Plugin-managed components (set by plugins on_boot)
+        self.process_manager = None
+        self.resource_manager = None
+        self.gateway = None
         self._gateway_thread = None
         self._gateway_loop = None
+        self._last_quota_sync = 0
+        self._last_pulse_time = 0
+        self._agent_health_cache: Dict[str, AgentHealth] = {}
+        self._network = None
 
-        # Markdown UI Manager (Centralized UI Coordination)
-        # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
-        # logger.info("🖥️  Markdown UI Manager initialized")
-
-        # Phase 4: Network Proxy (OPUS-301: Lazy loaded)
-        self._network = None  # Lazy: created on first access
-
-        # Phase 5: Parampara Lineage Chain
+        # Parampara Lineage Chain
         phoenix_config = _get_config()
         if phoenix_config and hasattr(phoenix_config, "paths"):
             lineage_path = str(phoenix_config.paths.system.resolve("lineage_db"))
         else:
-            # OPUS-025: Fallback with Path pattern
             from pathlib import Path
 
             lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
-
-        # OPUS-301: Lazy load LineageChain
         LazyLineageChain = lazy_class("vibe_core.lineage", "LineageChain")
         self.lineage = LazyLineageChain(db_path=lineage_path)
-        logger.info("⛓️  Parampara chain initialized (lazy)")
 
-        # Economic Substrate (Lazy Loaded)
+        # Lazy-loaded subsystems
         self._bank = None
         self._vault = None
-
-        # OPUS-200/201: Quantum Resonance Engine (Core Primitive)
-        # The reactor is the kernel's physics engine - how actions manifestation
         self._reactor = None
-        self._akasha_field = ""  # Cumulative resonance field hash
+        self._akasha_field = ""
 
-        # Phase 4: Data Exchange Store (Inter-Agent Communication)
-        # {agent_id: {key: value}} - Published data from agents
+        # Inter-agent data exchange
         self._data_store: Dict[str, AgentData] = {}
-        logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
 
-        # GOVERNANCE PLUGIN SLOT
-        # Governance is handled by plugins (e.g., VedicGovernancePlugin)
-        # The plugin sets kernel.governance = self on boot
-        # This keeps the kernel CLEAN and governance SWAPPABLE
+        # Governance (hot-swappable via plugins)
         self.governance: Optional[GovernanceProtocol] = None
 
-        # LAYER 0 SECURITY: Capability Enforcer (CANNOT be hot-swapped)
-        # Gemini Decision: "Security cannot be a plugin"
+        # Layer 0 Security (cannot be hot-swapped)
         from vibe_core.services.capability_enforcer import CapabilityEnforcerService
 
         self._capability_enforcer = CapabilityEnforcerService()
 
-        # LIFECYCLE SERVICE: Boot/Shutdown/Tick/Run logic extracted
+        # Core services
+        from vibe_core.runtime.unified_trace import UnifiedTrace
         from vibe_core.services.lifecycle_service import LifecycleService
 
         self._lifecycle = LifecycleService(self)
-
-        # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
-        # Stores agent capabilities with support for selective revocation
-        # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
-        from vibe_core.runtime.unified_trace import UnifiedTrace
-
         self.trace = UnifiedTrace()
 
-        # OPUS-009: PRAKRITI Unified State Engine
-        # OPUS-301: Lazy load Prakriti
+        # Prakriti State Engine (lazy)
         LazyPrakriti = lazy_class("vibe_core.state", "Prakriti")
-
         prakriti_db_path = None
         if phoenix_config and hasattr(phoenix_config, "paths"):
             try:
                 prakriti_db_path = phoenix_config.paths.data.resolve("vibe_ledger")
-            except Exception as e:
-                logger.warning(f"⚠️  KERNEL: Could not resolve Prakriti DB path: {e}")
-
+            except Exception:
+                pass
         self.prakriti = LazyPrakriti(db_path=prakriti_db_path)
 
-        # OPUS-096: State Sync Holon Weaver (MetaData Orchestration)
+        # State Sync Weaver
         from vibe_core.state.weaver import get_state_sync_weaver
 
         get_state_sync_weaver()
 
-        # 3. CAPABILITY REGISTRY (with blueprint)
-        # Phase 2: Capability Registry (Must be before plugins)
+        # Capability Registry (with blueprint for self-healing)
         self._capability_registry_blueprint = lambda: CapabilityRegistry(ledger=self.ledger)
         self.__capability_registry = CapabilityRegistry(ledger=self.ledger)
 
-        # I/O SERVICE: Central file operation controller
-        # IMPORTANT: Must be initialized BEFORE tool discovery
-        # Tools may inject io_service during registration via set_io_service()
-        # All file writes MUST go through this service.
-        # Plugins produce content, Kernel writes through self.io
-        # See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
+        # I/O and Manifestation services
         self.io = KernelIOService(self)
-        logger.info("📁 Kernel I/O Service initialized (central file controller)")
-
-        # MANIFESTATION SERVICE: High-level Markdown rendering engine
-        # OPUS-308: The Rendering Engine of Reality
-        # Plugins declare manifestation in manifest.json, implement get_manifestation_data()
-        # This service handles: schema-based rendering, section ownership, atomic updates
-        # See: docs/architecture/OPUS/308-MARKDOWN-MANIFESTATION-PROTOCOL.md
         self.manifestation = ManifestationService(self)
-        logger.info("📄 ManifestationService initialized (OPUS-308 Core)")
+        self.tool_registry = None  # Set by ToolsPlugin
 
-        # Phase 6: Universal Tool Registry
-        # EXTRACTED TO PLUGIN: ToolsPlugin handles registry initialization
-        # Plugin sets kernel.tool_registry on boot
-        # See: vibe_core/plugins/tools/plugin_main.py
-        self.tool_registry = None  # Set by ToolsPlugin.on_boot()
-
-        # Phase 7: NARASIMHA Kill-Switch (Hypervisor Level)
-        # SECURITY FIX: Wire destruction handlers so Narasimha can actually kill agents
+        # Narasimha kill-switch and Event Bus
         self._narasimha = get_narasimha()
         self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
-        logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
-
-        # Phase 2: Event Bus (Agent Communication & Reactive Patterns)
-        # Allows agents to subscribe to system-wide events
-        # Supports loose coupling between agents
         self._event_bus = get_event_bus()
-        logger.info("🎵 Event Bus initialized (pub/sub ready)")
 
-        # OPUS-309: Cognitive Hook (Hot-Swap)
-        # Plugins can register cognitive layer via register_cognitive()
-        # Arjuna-Pattern: NullCognitive fallback if no plugin registers
+        # Cognitive hook (NullCognitive fallback)
         self._cognitive: OperatorCognitiveProtocol = NullCognitive()
-        logger.info("🧠 Cognitive hook initialized (NullCognitive fallback)")
 
         # Unified Execution Runtime (Router + Executor)
         # Replaces legacy PlaybookRouter and MilkOceanRouter
         self._unified_router, self._unified_executor = create_unified_runtime(self)
         self._playbook_router = self._unified_router  # Alias for backward compatibility (temporarily)
 
-        # PLUGIN SYSTEM (The Avatars of Vishnu)
-        # Phase 1: Load and boot all plugins
-        # Phase 6: Load Cognitive Packs (Genesis)
+        # PLUGIN SYSTEM: Load and boot all plugins
         self.genesis_path = None
         self._plugin_metadata = {}
+        self._init_plugins()
 
-        if self._load_plugins:
-            import os
-            from pathlib import Path
-
-            from vibe_core.loaders.manifest_registry import ManifestRegistry
-
-            # OPUS-307 Phase F: Ensure manifests are scanned (idempotent)
-            ManifestRegistry.scan_all()
-
-            # OPUS-020 Phase 3: Support custom plugin paths via env var
-            # Usage: VIBE_PLUGIN_PATH=dist/plugins:custom/plugins python -m vibe_core.cli boot
-            custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
-            if custom_paths_env:
-                # Custom paths: Use legacy iterdir (env override)
-                scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
-                logger.info(f"🔌 Using custom plugin paths from VIBE_PLUGIN_PATH: {scan_paths}")
-                self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
-            else:
-                # OPUS-307: Use ManifestRegistry (NO iterdir!)
-                self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
-            # OPUS-FIX: Sort plugins by priority before on_boot (lower = earlier)
-            self._plugins = sorted(
-                self._plugins_map.values(),
-                key=lambda p: getattr(p, "priority", 50),
-            )
-
-            # OPUS-112: Auto-register plugin capabilities from manifest (VEDA-4)
-            for plugin_id, meta in self._plugin_metadata.items():
-                if meta.manifest:
-                    caps = meta.manifest.get("capabilities", [])
-                    if caps:
-                        self._capability_registry.register_agent(plugin_id, caps)
-                        logger.debug(f"🔐 Plugin '{plugin_id}' capabilities registered: {caps}")
-
-            # Check for Genesis Cognitive Pack
-            genesis_meta = self._plugin_metadata.get("genesis_knowledge")
-            if genesis_meta and genesis_meta.loaded_successfully:
-                # Use manifest parent dir (entry_path is None for data-only packs)
-                self.genesis_path = genesis_meta.manifest_path.parent if genesis_meta.manifest_path else None
-                logger.info(f"🧠 Genesis Knowledge Pack loaded at: {self.genesis_path}")
-                if genesis_meta.manifest.get("version"):
-                    logger.info(f"   Version: {genesis_meta.manifest.get('version')}")
-            else:
-                logger.warning(
-                    "⚠️ Genesis Knowledge Pack NOT found or failed to load - System running without base knowledge"
-                )
-
-            for plugin in self._plugins:
-                plugin.on_boot(self)
-
-            # OPUS-308: Auto-register plugins for manifestation
-            # Plugins with "manifestation" config in manifest.json get registered
-            for plugin_id, meta in self._plugin_metadata.items():
-                if meta.manifest and meta.manifest.get("manifestation"):
-                    plugin_instance = self._plugins_map.get(plugin_id)
-                    if plugin_instance:
-                        self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
-
-            # OPUS-LASAGNE: SETTINGS.md and OPERATIONS.md registration moved to ManifestationService
-            # ManifestationService._register_kernel_natives() handles this automatically
-        else:
-            self._plugins = []
-            self._plugins = []
-            logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
-
-        # =====================================================================
-
-        # =====================================================================
-        # VAJRA ARMOR: Seal the kernel DNA (PUTANA BLOCKED!)
-        # After this, blueprints cannot be modified.
-        # =====================================================================
+        # VAJRA ARMOR: Seal kernel DNA (blueprints immutable after this)
         self.vajra_seal()
+
+    def _init_plugins(self) -> None:
+        """
+        Initialize plugin system: discover, load, and boot all plugins.
+
+        OPUS-LASAGNE: Extracted from __init__ to reduce kernel LOC.
+        """
+        if not self._load_plugins:
+            self._plugins = []
+            logger.info("🛡️ Kernel booted in Safe Mode (plugins disabled)")
+            return
+
+        import os
+        from pathlib import Path
+
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+        # Scan manifests (idempotent)
+        ManifestRegistry.scan_all()
+
+        # Load plugins from custom paths or registry
+        custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
+        if custom_paths_env:
+            scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
+            logger.info(f"🔌 Using custom plugin paths: {scan_paths}")
+            self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
+        else:
+            self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
+
+        # Sort by priority (lower = earlier)
+        self._plugins = sorted(self._plugins_map.values(), key=lambda p: getattr(p, "priority", 50))
+
+        # Register plugin capabilities
+        for plugin_id, meta in self._plugin_metadata.items():
+            if meta.manifest:
+                caps = meta.manifest.get("capabilities", [])
+                if caps:
+                    self._capability_registry.register_agent(plugin_id, caps)
+
+        # Check Genesis Knowledge Pack
+        genesis_meta = self._plugin_metadata.get("genesis_knowledge")
+        if genesis_meta and genesis_meta.loaded_successfully:
+            self.genesis_path = genesis_meta.manifest_path.parent if genesis_meta.manifest_path else None
+            logger.info(f"🧠 Genesis Knowledge Pack: {self.genesis_path}")
+        else:
+            logger.warning("⚠️ Genesis Knowledge Pack not loaded")
+
+        # Boot all plugins
+        for plugin in self._plugins:
+            plugin.on_boot(self)
+
+        # Register plugins for manifestation
+        for plugin_id, meta in self._plugin_metadata.items():
+            if meta.manifest and meta.manifest.get("manifestation"):
+                plugin_instance = self._plugins_map.get(plugin_id)
+                if plugin_instance:
+                    self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
 
     # =========================================================================
     # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
