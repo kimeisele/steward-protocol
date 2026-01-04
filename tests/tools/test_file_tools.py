@@ -21,7 +21,7 @@ class TestReadFileTool:
     @pytest.fixture
     def tool(self):
         """Get tool instance."""
-        return ReadFileTool()
+        return ReadFileTool(allow_unrestricted=True)
 
     @pytest.fixture
     def temp_file(self, tmp_path):
@@ -166,7 +166,7 @@ class TestWriteFileTool:
     @pytest.fixture
     def tool(self):
         """Get tool instance."""
-        return WriteFileTool()
+        return WriteFileTool(allow_unrestricted=True)
 
     # =========================================================================
     # Property Tests
@@ -340,8 +340,8 @@ class TestFileToolsIntegration:
 
     def test_write_then_read(self, tmp_path):
         """Test writing a file then reading it back."""
-        read_tool = ReadFileTool()
-        write_tool = WriteFileTool()
+        read_tool = ReadFileTool(allow_unrestricted=True)
+        write_tool = WriteFileTool(allow_unrestricted=True)
         file_path = tmp_path / "roundtrip.txt"
         content = "Round trip content with special chars: äöü 你好"
 
