@@ -159,14 +159,19 @@ class FederationStatusTool(Tool):
         if federation.flood_manager:
             try:
                 flood_status = federation.flood_manager.get_status()
+                # FloodManager returns enabled/started, not "active"
+                is_active = flood_status.get("enabled", False) and flood_status.get("started", False)
+                event_flood = flood_status.get("event_flood", {})
                 report["components"]["flood_manager"] = {
-                    "active": flood_status.get("active", False),
-                    "observations": flood_status.get("total_observations", 0),
+                    "healthy": is_active,
+                    "enabled": flood_status.get("enabled", False),
+                    "started": flood_status.get("started", False),
+                    "events_seen": event_flood.get("events_seen", 0),
                 }
             except Exception as e:
-                report["components"]["flood_manager"] = {"active": False, "error": str(e)}
+                report["components"]["flood_manager"] = {"healthy": False, "error": str(e)}
         else:
-            report["components"]["flood_manager"] = {"active": False, "status": "disabled"}
+            report["components"]["flood_manager"] = {"healthy": False, "status": "disabled"}
 
         # CommitWatcher
         if federation.commit_watcher:
