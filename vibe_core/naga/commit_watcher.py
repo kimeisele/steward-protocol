@@ -35,8 +35,9 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.state.commit_authority import CommitOutcome, CommitResult
 
-# Type alias for cortex signal callback
+# Type aliases for callbacks (GAD-000 Typing Discipline)
 CortexCommitCallback = Callable[["CommitSignal"], None]
+AlertHandler = Callable[["CommitAlert"], None]
 
 logger = logging.getLogger("NAGA.COMMIT_WATCHER")
 
@@ -138,7 +139,7 @@ class NagaCommitWatcher:
         # Rolling window for pattern detection
         self._recent_outcomes: Deque[tuple] = deque(maxlen=100)  # (timestamp, outcome)
         self._consecutive_deferrals = 0
-        self._alert_handlers: List[callable] = []
+        self._alert_handlers: List[AlertHandler] = []
 
         # Cortex integration (optional, non-invasive)
         self._cortex_callback: Optional[CortexCommitCallback] = None
@@ -235,8 +236,9 @@ class NagaCommitWatcher:
                     severity=alert.severity if alert else "INFO",
                 )
                 self._cortex_callback(signal)
-            except Exception:
-                pass  # Silent fail - observer must not crash
+            except Exception as e:
+                # Observer must not crash, but errors should be tracked (GAD-000 Parseability)
+                logger.warning(f"[COMMIT_WATCHER] Cortex callback failed: {type(e).__name__}: {e}")
 
         return alert
 
@@ -338,7 +340,7 @@ class NagaCommitWatcher:
     # ALERT DISPATCH
     # =========================================================================
 
-    def add_alert_handler(self, handler: callable) -> None:
+    def add_alert_handler(self, handler: AlertHandler) -> None:
         """Add a handler to be called when alerts are generated."""
         self._alert_handlers.append(handler)
 
@@ -420,9 +422,9 @@ class NagaCommitWatcher:
 
 
 def wrap_commit_with_watcher(
-    commit_func: callable,
+    commit_func: Callable[..., "CommitResult"],
     watcher: NagaCommitWatcher,
-) -> callable:
+) -> Callable[..., "CommitResult"]:
     """
     Wrap a commit function to automatically observe results.
 
@@ -430,7 +432,7 @@ def wrap_commit_with_watcher(
         authority.commit = wrap_commit_with_watcher(authority.commit, watcher)
     """
 
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: Any, **kwargs: Any) -> "CommitResult":
         result = commit_func(*args, **kwargs)
         watcher.observe(result)
         return result

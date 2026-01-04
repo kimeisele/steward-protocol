@@ -347,8 +347,9 @@ class NagaFloodController:
                         patterns_detected=tuple(getattr(toxicity, "patterns", [])),
                     )
                     self._cortex_callback(signal)
-                except Exception:
-                    pass  # Silent fail - observer must not crash
+                except Exception as e:
+                    # Observer must not crash, but errors should be tracked (GAD-000 Parseability)
+                    logger.warning(f"[FLOOD] Cortex callback failed: {type(e).__name__}: {e}")
 
             if toxicity.blocked:
                 self._stats.violations_detected += 1
