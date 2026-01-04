@@ -85,6 +85,7 @@ from .protocols.cognition import (
     CognitiveResult,
     NullCognitive,
     OperatorCognitiveProtocol,
+    SignedOperatorInput,
 )
 from .protocols.cognition import (
     IntentType as CognitiveIntentType,
@@ -1630,43 +1631,101 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         if caps:
             logger.debug(f"🧠 Cognitive capabilities: {caps[:5]}{'...' if len(caps) > 5 else ''}")
 
-    async def process_operator_input(self, input_text: str, session_id: Optional[str] = None) -> CognitiveResult:
+    async def process_operator_input(
+        self,
+        input_text: str,
+        session_id: Optional[str] = None,
+        signed_input: Optional[SignedOperatorInput] = None,
+    ) -> CognitiveResult:
         """
         Process natural language input from operator (human or AI).
 
         OPUS-309: Main entry point for operator input.
         Routes through registered cognitive plugin.
 
-        GAD-000: AI operates the system on behalf of human.
+        GAD-000 v2.0: The 37th Principle.
+        Every operation should be signed by a sovereign entity.
         The cognitive layer decides: chat, execute, query, or route.
 
         Args:
             input_text: Raw natural language input
             session_id: Optional session ID for conversation context
+            signed_input: Optional signed input (The 37th - sovereign signature)
 
         Returns:
             CognitiveResult with intent_type and relevant data
 
         Usage:
-            result = await kernel.process_operator_input("create a monitoring agent")
-            if result.intent_type == CognitiveIntentType.EXECUTE:
-                # Execute the syscall
-                ...
+            # Unsigned (legacy, Mayavad mode - will log warning)
+            result = await kernel.process_operator_input("create an agent")
+
+            # Signed (37th compliant, Vaishnava mode)
+            signed = SignedOperatorInput(message="create an agent", ...)
+            result = await kernel.process_operator_input("create an agent", signed_input=signed)
         """
-        # Build context
+        # GAD-000 v2.0: Verify sovereign signature if provided
+        sovereign_verified = False
+        if signed_input and signed_input.is_signed():
+            try:
+                from vibe_core.steward.crypto import verify_signature
+
+                is_valid = verify_signature(
+                    signed_input.message,
+                    signed_input.signature,
+                    signed_input.public_key,
+                )
+                signed_input.is_verified = is_valid
+                sovereign_verified = is_valid
+
+                if is_valid:
+                    logger.info(f"✅ 37th verified: {signed_input.signer_id or 'anonymous'}")
+                else:
+                    signed_input.verification_error = "Signature verification failed"
+                    logger.warning(f"⚠️ 37th signature INVALID for: {input_text[:50]}...")
+
+            except Exception as e:
+                signed_input.is_verified = False
+                signed_input.verification_error = str(e)
+                logger.error(f"❌ 37th verification error: {e}")
+        elif signed_input is None:
+            # Mayavad mode: No signature provided
+            logger.debug("🔓 Unsigned operator input (Mayavad mode)")
+
+        # Build context with 37th status
         context = CognitiveContext(
             kernel_status=self._status.value if hasattr(self._status, "value") else str(self._status),
-            active_agents=list(self._agents.keys()) if hasattr(self, "_agents") else [],
+            active_agents=list(self._agent_registry.keys()),
             pending_tasks=len(self._scheduler.pending_tasks) if hasattr(self._scheduler, "pending_tasks") else 0,
             session_id=session_id,
             available_tools=list(self.tool_registry.list_tools()) if self.tool_registry else [],
-            available_agents=list(self._agents.keys()) if hasattr(self, "_agents") else [],
+            available_agents=list(self._agent_registry.keys()),
+            # GAD-000 v2.0: The 37th Principle
+            signed_input=signed_input,
+            sovereign_verified=sovereign_verified,
         )
 
         # Process through cognitive layer
         try:
             result = await self._cognitive.process_intent(input_text, context)
             logger.debug(f"🧠 Cognitive result: {result.intent_type.value} (confidence: {result.confidence:.2f})")
+
+            # Record to ledger if we have one (audit trail)
+            if hasattr(self, "_ledger") and self._ledger:
+                try:
+                    self._ledger.record_event(
+                        event_type="OPERATOR_INPUT",
+                        agent_id=signed_input.signer_id if signed_input else "anonymous",
+                        details={
+                            "message": input_text[:200],  # Truncate for storage
+                            "intent_type": result.intent_type.value,
+                            "confidence": result.confidence,
+                            "sovereign_verified": sovereign_verified,
+                            "session_id": session_id,
+                        },
+                    )
+                except Exception as ledger_err:
+                    logger.debug(f"Ledger recording skipped: {ledger_err}")
+
             return result
         except Exception as e:
             logger.error(f"🧠 Cognitive processing failed: {e}")
