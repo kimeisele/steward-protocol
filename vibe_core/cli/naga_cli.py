@@ -45,8 +45,19 @@ class NagaCLI:
             command="naga",
             description="NAGA Federation CLI - The Invisible Guardians",
             domain="security",
-            subcommands=["status", "scan", "detect", "flood", "bite", "remediate", "audit"],
-            tags=["naga", "security", "guardian", "fractal", "executive"],
+            subcommands=[
+                "status",
+                "scan",
+                "detect",
+                "flood",
+                "bite",
+                "remediate",
+                "audit",
+                "observe",
+                "cortex",
+                "gaps",
+            ],
+            tags=["naga", "security", "guardian", "fractal", "executive", "intelligence"],
         )
 
     def __init__(self):
@@ -93,6 +104,12 @@ class NagaCLI:
             return self.cmd_remediate(args[1:])
         elif cmd == "audit":
             return self.cmd_audit(args[1:])
+        elif cmd == "observe":
+            return self.cmd_observe(args[1:])
+        elif cmd == "cortex":
+            return self.cmd_cortex(args[1:])
+        elif cmd == "gaps":
+            return self.cmd_gaps(args[1:])
         elif cmd == "help" or cmd == "--help":
             self._print_usage()
             return 0
@@ -108,14 +125,21 @@ class NagaCLI:
     ===================
     "Wir sind selbst NAGAs - Hüter des Schatzes dieses AOS."
 
-    COMMANDS:
+    OBSERVATION:
         steward naga status     Federation health status
-        steward naga scan       Scan codebase for issues (REAL scanning!)
-        steward naga detect     Detect drifts from CommitWatcher
+        steward naga observe    LIVE intelligence - watch events flow
+        steward naga cortex     Cortex decision state + signal buffer
         steward naga flood      FloodManager observation status
+
+    ACTION:
+        steward naga scan       Scan codebase for issues
+        steward naga detect     Detect drifts from CommitWatcher
         steward naga bite       Record a violation to Ledger
         steward naga remediate  Actually FIX detected issues
+
+    INTELLIGENCE:
         steward naga audit      Query Ledger audit trail
+        steward naga gaps       System-wide gap analysis (TODOs, stubs)
 
     OPTIONS:
         --path <path>    Target path for scanning
@@ -123,7 +147,7 @@ class NagaCLI:
         --fix            Auto-fix issues (remediate)
         --verbose        Show detailed output
 
-    NAGAs don't just observe. NAGAs ACT.
+    NAGAs don't just observe. NAGAs UNDERSTAND.
         """)
 
     # =========================================================================
@@ -686,6 +710,344 @@ class NagaCLI:
 
         except Exception as e:
             print(f"\n    Audit query failed: {e}")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    # =========================================================================
+    # OBSERVE - Live Intelligence Gathering
+    # =========================================================================
+
+    def cmd_observe(self, args: List[str]) -> int:
+        """
+        Watch live events flowing through the system.
+
+        INTELLIGENCE GATHERING: Understand how NAGAs think and communicate.
+        """
+        print("\n    NAGA OBSERVATION MODE")
+        print("=" * 60)
+
+        federation = self._get_federation()
+
+        if not federation:
+            print("\n    Federation not initialized.")
+            print("    Boot the kernel first: steward boot")
+            print("\n    Showing standalone observation...")
+            return self._observe_standalone()
+
+        print("\n    LIVE INTELLIGENCE:")
+
+        # 1. FloodManager observations
+        if federation.flood_manager:
+            print("\n    FLOOD MANAGER (Event Flow):")
+            status = federation.flood_manager.get_status()
+            print(f"      Total observations: {status.get('total_observations', 0)}")
+            print(f"      Queue size: {status.get('queue_size', 0)}")
+            print(f"      Subscribers: {status.get('subscriber_count', 0)}")
+
+            # Show recent organic events
+            if hasattr(federation.flood_manager, "_recent_events"):
+                recent = list(federation.flood_manager._recent_events)[-5:]
+                if recent:
+                    print("\n      Recent events:")
+                    for evt in recent:
+                        evt_type = (
+                            evt.get("event_type", "UNKNOWN") if isinstance(evt, dict) else str(type(evt).__name__)
+                        )
+                        print(f"        - {evt_type}")
+
+        # 2. Cortex signal buffer
+        if federation.cortex:
+            print("\n    CORTEX (Decision Engine):")
+            stats = federation.cortex.get_stats()
+            print(f"      Signals received: {stats.get('signals_received', 0)}")
+            print(f"      Decisions made: {stats.get('decisions_made', 0)}")
+            print(f"      Signal buffer: {stats.get('buffer_size', 0)} pending")
+
+        # 3. CommitWatcher
+        if federation.commit_watcher:
+            print("\n    COMMIT WATCHER (Git Observer):")
+            cstats = federation.commit_watcher.get_stats()
+            print(f"      Commits observed: {cstats.get('total_observed', 0)}")
+            print(f"      Panic patterns: {cstats.get('panic_count', 0)}")
+            print(f"      Alerts: {cstats.get('alerts_generated', 0)}")
+
+        # 4. OUROBOROS
+        if federation.ouroboros:
+            print("\n    OUROBOROS (Self-Healing):")
+            ostats = federation.ouroboros.get_status()
+            print(f"      Corrections observed: {ostats.get('corrections_observed', 0)}")
+            print(f"      Loops detected: {ostats.get('loops_detected', 0)}")
+            print(f"      Paused sources: {len(ostats.get('paused_sources', []))}")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    def _observe_standalone(self) -> int:
+        """Standalone observation without federation."""
+        # Check event bus directly
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.events import EventBusProtocol
+
+            event_bus = ServiceRegistry.get(EventBusProtocol)
+            if event_bus:
+                print("\n    EVENT BUS:")
+                if hasattr(event_bus, "get_stats"):
+                    stats = event_bus.get_stats()
+                    print(f"      Events published: {stats.get('total_published', 0)}")
+                    print(f"      Subscribers: {stats.get('subscriber_count', 0)}")
+        except Exception:
+            print("\n    No event bus available.")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    # =========================================================================
+    # CORTEX - Decision Intelligence
+    # =========================================================================
+
+    def cmd_cortex(self, args: List[str]) -> int:
+        """
+        Show Cortex decision state and signal buffer.
+
+        THE BRAIN OF THE NAGA FEDERATION.
+        """
+        print("\n    NAGA CORTEX INTELLIGENCE")
+        print("=" * 60)
+
+        federation = self._get_federation()
+
+        if not federation or not federation.cortex:
+            print("\n    Cortex not available.")
+            print("    Boot the kernel first: steward boot")
+            return 1
+
+        cortex = federation.cortex
+        verbose = "--verbose" in args or "-v" in args
+
+        # Stats
+        stats = cortex.get_stats()
+        print("\n    CORTEX STATISTICS:")
+        print(f"      Signals received:    {stats.get('signals_received', 0)}")
+        print(f"      Decisions made:      {stats.get('decisions_made', 0)}")
+        print(f"      Correlations:        {stats.get('correlations', 0)}")
+        print(f"      Buffer size:         {stats.get('buffer_size', 0)}")
+
+        # Signal buffer
+        if hasattr(cortex, "_signal_buffer"):
+            buffer = cortex._signal_buffer
+            print(f"\n    SIGNAL BUFFER ({len(buffer)} signals):")
+            if verbose and buffer:
+                for sig in list(buffer)[-5:]:
+                    sig_type = getattr(sig, "signal_type", "UNKNOWN")
+                    source = getattr(sig, "source", "unknown")
+                    print(f"      [{sig_type}] from {source}")
+
+        # Decision history
+        if hasattr(cortex, "_decision_history"):
+            history = cortex._decision_history
+            print(f"\n    DECISION HISTORY ({len(history)} decisions):")
+            if verbose and history:
+                for dec in list(history)[-5:]:
+                    action = getattr(dec, "action", "UNKNOWN")
+                    target = getattr(dec, "target", "unknown")
+                    reason = getattr(dec, "reason_code", None)
+                    reason_str = f" ({reason.value})" if reason else ""
+                    print(f"      {action} -> {target}{reason_str}")
+
+        # Identity
+        if hasattr(cortex, "_identity") and cortex._identity:
+            print("\n    IDENTITY:")
+            print(f"      Fingerprint: {cortex._identity.fingerprint}")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    # =========================================================================
+    # GAPS - System-wide Gap Analysis
+    # =========================================================================
+
+    def cmd_gaps(self, args: List[str]) -> int:
+        """
+        System-wide gap analysis.
+
+        Find TODOs, stubs, missing tests, tech debt.
+        THE TRUTH ABOUT WHAT'S LACKING.
+        """
+        print("\n    SYSTEM GAP ANALYSIS")
+        print("=" * 60)
+
+        verbose = "--verbose" in args or "-v" in args
+        target_path = self._repo_root / "vibe_core"
+
+        for i, arg in enumerate(args):
+            if arg == "--path" and i + 1 < len(args):
+                target_path = Path(args[i + 1])
+
+        results = {
+            "todos": [],
+            "fixmes": [],
+            "hacks": [],
+            "stubs": [],
+            "not_implemented": [],
+            "any_types": [],
+            "missing_tests": [],
+        }
+
+        print(f"\n    Scanning: {target_path}")
+
+        # Scan Python files
+        py_files = list(target_path.rglob("*.py"))
+        print(f"    Files: {len(py_files)}")
+        print()
+
+        for py_file in py_files:
+            try:
+                content = py_file.read_text(encoding="utf-8", errors="ignore")
+                lines = content.split("\n")
+
+                for i, line in enumerate(lines, 1):
+                    # Skip comments that are just documentation
+                    stripped = line.strip()
+
+                    # TODOs
+                    if "TODO" in line and not stripped.startswith('"""'):
+                        results["todos"].append(
+                            {
+                                "file": str(py_file.relative_to(self._repo_root)),
+                                "line": i,
+                                "text": stripped[:80],
+                            }
+                        )
+
+                    # FIXMEs
+                    if "FIXME" in line:
+                        results["fixmes"].append(
+                            {
+                                "file": str(py_file.relative_to(self._repo_root)),
+                                "line": i,
+                                "text": stripped[:80],
+                            }
+                        )
+
+                    # HACKs
+                    if "HACK" in line or "XXX" in line:
+                        results["hacks"].append(
+                            {
+                                "file": str(py_file.relative_to(self._repo_root)),
+                                "line": i,
+                                "text": stripped[:80],
+                            }
+                        )
+
+                    # NotImplementedError
+                    if "NotImplementedError" in line:
+                        results["not_implemented"].append(
+                            {
+                                "file": str(py_file.relative_to(self._repo_root)),
+                                "line": i,
+                                "text": stripped[:80],
+                            }
+                        )
+
+                    # Any types (tech debt)
+                    if re.search(r":\s*Any\b", line) and not stripped.startswith("#"):
+                        results["any_types"].append(
+                            {
+                                "file": str(py_file.relative_to(self._repo_root)),
+                                "line": i,
+                            }
+                        )
+
+            except Exception:
+                pass
+
+        # Check for missing tests
+        source_modules = set()
+        test_modules = set()
+
+        for py_file in (self._repo_root / "vibe_core").rglob("*.py"):
+            if "__pycache__" in str(py_file):
+                continue
+            rel = py_file.relative_to(self._repo_root / "vibe_core")
+            source_modules.add(str(rel.parent / rel.stem))
+
+        for py_file in (self._repo_root / "tests").rglob("test_*.py"):
+            if "__pycache__" in str(py_file):
+                continue
+            # Extract module name from test file
+            name = py_file.stem.replace("test_", "")
+            test_modules.add(name)
+
+        # Find modules without tests (simplified)
+        major_modules = ["kernel_impl", "ledger", "event_bus", "security"]
+        for mod in major_modules:
+            if mod not in test_modules:
+                results["missing_tests"].append({"module": mod})
+
+        # Report
+        print("    GAP SUMMARY")
+        print("-" * 60)
+
+        total_gaps = 0
+
+        if results["todos"]:
+            count = len(results["todos"])
+            total_gaps += count
+            print(f"\n    TODOs: {count}")
+            if verbose:
+                for item in results["todos"][:10]:
+                    print(f"      {item['file']}:{item['line']}")
+                    print(f"        {item['text']}")
+
+        if results["fixmes"]:
+            count = len(results["fixmes"])
+            total_gaps += count
+            print(f"\n    FIXMEs: {count}")
+            if verbose:
+                for item in results["fixmes"][:5]:
+                    print(f"      {item['file']}:{item['line']}: {item['text']}")
+
+        if results["hacks"]:
+            count = len(results["hacks"])
+            total_gaps += count
+            print(f"\n    HACKs/XXX: {count}")
+
+        if results["not_implemented"]:
+            count = len(results["not_implemented"])
+            total_gaps += count
+            print(f"\n    NotImplementedError: {count}")
+            if verbose:
+                for item in results["not_implemented"][:5]:
+                    print(f"      {item['file']}:{item['line']}")
+
+        if results["any_types"]:
+            count = len(results["any_types"])
+            print(f"\n    Any-Type Violations: {count}")
+
+        if results["missing_tests"]:
+            count = len(results["missing_tests"])
+            print(f"\n    Missing Tests: {count}")
+            if verbose:
+                for item in results["missing_tests"]:
+                    print(f"      {item['module']}")
+
+        print()
+        print("-" * 60)
+        print(f"    TOTAL GAPS: {total_gaps}")
+        print(f"    ANY-TYPES: {len(results['any_types'])} (tech debt)")
+
+        # Health score
+        health = max(0, 100 - (total_gaps * 2) - (len(results["any_types"]) // 10))
+        print(f"\n    HEALTH SCORE: {health}/100")
+
+        if health < 50:
+            print("    STATUS: CRITICAL - Major tech debt")
+        elif health < 75:
+            print("    STATUS: WARNING - Significant gaps")
+        else:
+            print("    STATUS: OK - Manageable")
 
         print("\n" + "=" * 60)
         return 0
