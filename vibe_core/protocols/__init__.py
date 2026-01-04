@@ -32,6 +32,28 @@ from .cognition import (
     IntentType as CognitiveIntentType,  # Avoid collision with operator_protocol.IntentType
 )
 
+# OPUS-LZ2: CorrectionDispatcher Protocol (Unified Drift/Healing)
+from .correction import (
+    CorrectionDispatcherProtocol,
+    CorrectionHandler,
+    CorrectionOrchestratorProtocol,
+    CorrectionStats,
+    DriftDetector,
+    DriftRegistryProtocol,
+    DriftSource,
+    HealingResult,
+    HealingStatus,
+    HealingStrategy,
+    NullCorrectionDispatcher,
+    NullDriftRegistry,
+    UnifiedDriftReport,
+    adapt_reactor_drift,
+    adapt_shuddhi_result,
+)
+
+# Rename to avoid collision with correction.DriftSeverity
+from .correction import DriftSeverity as UnifiedDriftSeverity
+
 # OPUS-311 Sprint 2: Event Bus Protocol
 from .event import (
     Event,
@@ -308,4 +330,21 @@ __all__ = [
     "NullReactor",
     "BasicReactor",
     "get_reactor_safe",
+    # OPUS-LZ2: CorrectionDispatcher Protocol
+    "DriftSource",
+    "UnifiedDriftSeverity",
+    "HealingStrategy",
+    "HealingStatus",
+    "UnifiedDriftReport",
+    "HealingResult",
+    "CorrectionStats",
+    "DriftDetector",
+    "CorrectionHandler",
+    "DriftRegistryProtocol",
+    "CorrectionDispatcherProtocol",
+    "CorrectionOrchestratorProtocol",
+    "NullDriftRegistry",
+    "NullCorrectionDispatcher",
+    "adapt_reactor_drift",
+    "adapt_shuddhi_result",
 ]
