@@ -206,33 +206,37 @@ class NagaOrchestrator:
 
         # 4. FLOOD MANAGER - Organic Flooding (Phase 2)
         # "Wie Wasser in jede Ritze" - with safety guards
-        try:
-            from vibe_core.naga.flood import NagaFloodManager
+        if self._config.flood.enabled:
+            try:
+                from vibe_core.naga.flood import NagaFloodManager
 
-            self._flood_manager = NagaFloodManager(
-                sesha=self._sesha,
-                takshaka=self._takshaka,
-                enabled=True,  # TODO: Add to NagaConfig
-            )
-            self._flood_manager.start()
-            logger.info("🌊 NAGA Flood Manager started - organic flooding active")
-        except Exception as e:
-            logger.warning(f"🌊 NAGA Flood Manager failed to start: {e}")
+                self._flood_manager = NagaFloodManager(
+                    sesha=self._sesha,
+                    takshaka=self._takshaka,
+                    enabled=self._config.flood.enabled,
+                    config=self._config.flood,
+                )
+                self._flood_manager.start()
+                logger.info("🌊 NAGA Flood Manager started - organic flooding active")
+            except Exception as e:
+                logger.warning(f"🌊 NAGA Flood Manager failed to start: {e}")
             # Non-critical - continue without flooding
 
         # 5. COMMIT WATCHER - Der Wächter-Pattern (Phase 4)
         # "NAGAs notice when things go wrong"
-        try:
-            from vibe_core.naga.commit_watcher import NagaCommitWatcher
+        if self._config.commit_watcher.enabled:
+            try:
+                from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
-            self._commit_watcher = NagaCommitWatcher(
-                sesha=self._sesha,
-                takshaka=self._takshaka,
-                enabled=True,
-            )
-            logger.info("👁️ NAGA Commit Watcher initialized - Der Wächter observes")
-        except Exception as e:
-            logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
+                self._commit_watcher = NagaCommitWatcher(
+                    sesha=self._sesha,
+                    takshaka=self._takshaka,
+                    enabled=self._config.commit_watcher.enabled,
+                    config=self._config.commit_watcher,
+                )
+                logger.info("👁️ NAGA Commit Watcher initialized - Der Wächter observes")
+            except Exception as e:
+                logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
             # Non-critical - continue without watcher
 
         # 6. CORTEX - Das Zentrale Nervensystem (Phase 8)
