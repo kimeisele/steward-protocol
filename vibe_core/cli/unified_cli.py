@@ -42,6 +42,7 @@ import vibe_core.cli.config_cli  # noqa: F401 - registers "config" (OPUS-307)
 import vibe_core.cli.create_cli  # noqa: F401 - registers "create" (OPUS-307 Phase 5)
 import vibe_core.cli.genesis_cli  # noqa: F401 - registers "genesis" (OPUS-307)
 import vibe_core.cli.knowledge_cli  # noqa: F401 - registers "knowledge"
+import vibe_core.cli.naga_cli  # noqa: F401 - registers "naga" (NAGA Federation CLI)
 import vibe_core.cli.plugins_cli  # noqa: F401 - registers "plugins" (OPUS-307)
 import vibe_core.cli.prakriti_cli  # noqa: F401 - registers "prakriti" (OPUS-307)
 import vibe_core.cli.prompts_cli  # noqa: F401 - registers "prompts" (OPUS-307)

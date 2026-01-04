@@ -1,0 +1,64 @@
+meta:
+  id: "agent.steward.naga"
+  name: "NAGA Federation Cartridge"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Invisible Guardian - Security, Audit, Detection, Executive Layer"
+  tagline: "Niemand darf es merken - sie infiltrieren unsichtbar."
+
+mission:
+  core_principle: "BUDDHI vor MANAS - discrimination before thinking. NAGAs are the executive layer."
+  technical_definition: "Federation orchestration + Security scanning + Audit trail + Drift detection"
+  enforcement_model: |
+    The NAGA Federation provides the executive layer between analysis and action:
+    1. SESHA - Data foundation, gossip sync, Ledger access (Brahmana)
+    2. VASUKI - Network bridge, serialization, external boundary (Vaishya)
+    3. TAKSHAKA - Security guardian, toxicity detection (Kshatriya)
+    4. FLOOD MANAGER - EventBus observation (Shudra)
+    5. COMMIT WATCHER - Pattern detection and alerting (Shudra)
+
+philosophy:
+  varna: "Kshatriya - Protector, not Ruler"
+  karma: "Nishkama Karma - Selfless action serving Dharma"
+  ashrama: "Grihastha - Active service phase"
+  level: "-1 (Ananta Shesha - Foundation of Truth)"
+
+dependencies:
+  - "vibe_core.naga"
+  - "vibe_core.di"
+  - "vibe_core.ledger"
+
+config:
+  federation:
+    sesha_enabled: true
+    vasuki_enabled: true
+    takshaka_enabled: true
+    flood_enabled: true
+    commit_watch_enabled: true
+
+  security:
+    trust_mode: "strict"  # strict | permissive
+    toxicity_threshold: 0.3
+    rate_limit_rpm: 100
+
+  audit:
+    log_all_events: true
+    retention_days: 90
+
+tools:
+  - name: "naga.status"
+    description: "Get NAGA Federation health status"
+    file: "tools/federation_status.py"
+
+  - name: "naga.scan"
+    description: "Scan content for toxicity (Takshaka)"
+    file: "tools/toxicity_scan.py"
+
+  - name: "naga.detect"
+    description: "Get drift and violation detections"
+    file: "tools/drift_detection.py"
+
+enforcement:
+  mode: "passive"  # passive | active | strict
+  report_path: "data/reports/naga_status.json"
+  alert_on_critical: true

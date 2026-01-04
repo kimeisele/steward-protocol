@@ -37,6 +37,8 @@ __all__ = [
     "SeshaService",
     "VasukiService",
     "TakshakaService",
+    # State Proxy (Der Kommissar)
+    "NagaStateProxy",
     # Flooding
     "NagaFloodManager",
     "NagaFloodController",
@@ -48,7 +50,11 @@ __all__ = [
 
 def __getattr__(name: str):
     """Lazy import for optional components."""
-    if name == "SeshaService":
+    if name == "NagaStateProxy":
+        from vibe_core.services.naga.state_proxy import NagaStateProxy
+
+        return NagaStateProxy
+    elif name == "SeshaService":
         from vibe_core.naga.services.sesha import SeshaService
 
         return SeshaService

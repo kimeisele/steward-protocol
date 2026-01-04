@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols.correction import DriftSource
 from vibe_core.protocols.naga import SeshaProtocol, TakshakaProtocol, VasukiProtocol
+from vibe_core.protocols.state import StateServiceProtocol
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.vasuki import VasukiService
     from vibe_core.phoenix.sections.naga.section_main import NagaConfig
     from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
+    from vibe_core.services.naga.state_proxy import NagaStateProxy
 
 logger = logging.getLogger("NAGA")
 
@@ -56,6 +58,7 @@ class NagaOrchestrator:
         self._takshaka: Optional["TakshakaService"] = None
         self._flood_manager: Optional["NagaFloodManager"] = None
         self._commit_watcher: Optional["NagaCommitWatcher"] = None
+        self._state_proxy: Optional["NagaStateProxy"] = None
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
 
@@ -153,6 +156,30 @@ class NagaOrchestrator:
                 priority=100,  # Highest priority for security
             )
             logger.info(f"🐍 TAKSHAKA registered - trust_mode={self._config.takshaka.trust_mode}")
+
+        # 2.5 NAGA STATE PROXY - Der Politische Kommissar
+        # Wraps StateService with Dharma validation (4 principles)
+        try:
+            from vibe_core.services.naga.state_proxy import NagaStateProxy
+            from vibe_core.state.state_service import get_state_service
+
+            # Get the real StateService
+            real_state = get_state_service()
+
+            # Wrap it with NAGA protection
+            self._state_proxy = NagaStateProxy(
+                state_service=real_state,
+                takshaka=self._takshaka,
+                strict_mode=True,  # Raise on violations
+            )
+
+            # Register the proxy as the StateServiceProtocol
+            # Now all callers get NAGA-protected StateService!
+            ServiceRegistry.register(StateServiceProtocol, self._state_proxy)
+            logger.info("🐍 NAGA STATE PROXY registered - Der Kommissar wacht")
+        except Exception as e:
+            logger.warning(f"🐍 NAGA State Proxy failed to initialize: {e}")
+            # Non-critical - continue without proxy
 
         # 3. VASUKI - The Bridge (needs Sesha and Takshaka)
         if self._config.vasuki.enabled:
@@ -267,3 +294,8 @@ class NagaOrchestrator:
     def commit_watcher(self) -> Optional["NagaCommitWatcher"]:
         """Get Commit Watcher (or None if disabled)."""
         return self._commit_watcher
+
+    @property
+    def state_proxy(self) -> Optional["NagaStateProxy"]:
+        """Get State Proxy (Der Kommissar) for Dharma-validated state writes."""
+        return self._state_proxy
