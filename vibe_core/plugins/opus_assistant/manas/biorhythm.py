@@ -434,28 +434,34 @@ class BiorhythmProcessor:
         OUROBOROS WIRE: Discover violations that CAN be automatically healed.
 
         OBSERVATIONAL ONLY - does NOT execute healing.
-        Uses ServiceRegistry singleton (not private instance).
+        Uses CorrectionOrchestrator from ServiceRegistry.
         Reports findings to curiosity system for HEAL_CODEBASE circuit.
 
         Called every 45 ticks (~2.25 min) during Sattva state.
+
+        OPUS-LZ2: Refactored to use unified CorrectionOrchestrator.
         """
         try:
             from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.shuddhi import ShuddhiProtocol
+            from vibe_core.protocols.correction import (
+                CorrectionOrchestratorProtocol,
+                DriftSource,
+            )
 
-            # Get singleton from ServiceRegistry (NOT private instance)
-            shuddhi = ServiceRegistry.get(ShuddhiProtocol)
-            if shuddhi is None:
-                logger.debug("🩹 OUROBOROS: ShuddhiProtocol not registered, skipping scan")
+            # Get CorrectionOrchestrator from ServiceRegistry
+            orchestrator = ServiceRegistry.get(CorrectionOrchestratorProtocol)
+            if orchestrator is None:
+                logger.debug("🩹 OUROBOROS: CorrectionOrchestrator not registered, skipping scan")
                 return
 
             # Get workspace for curiosity reporting
             workspace = getattr(self.kernel, "_workspace", None)
 
-            # Query for healable violations (dry_run=True, observation only)
-            results = shuddhi.heal_all_violations(dry_run=True)
+            # Detect structural violations (observation only)
+            drifts = orchestrator.detect_and_report(source=DriftSource.STRUCTURAL)
 
-            healable_count = sum(1 for r in results if r.status.value == "purified")
+            # Count auto-healable violations
+            healable_count = sum(1 for d in drifts if d.auto_healable)
 
             if healable_count > 0:
                 logger.info(f"🩹 OUROBOROS: Discovered {healable_count} violations ready for HEAL_CODEBASE circuit")
@@ -469,14 +475,14 @@ class BiorhythmProcessor:
 
                         agency = get_dojo_agency(workspace)
                         agency.curiosity.report_gap(
-                            f"Shuddhi found {healable_count} auto-healable violations",
+                            f"CorrectionDispatcher found {healable_count} auto-healable violations",
                             weight=0.2,  # High priority
                         )
-                    except Exception:
-                        pass  # Curiosity reporting is optional
+                    except Exception as e:
+                        logger.debug(f"Curiosity reporting failed: {e}")
 
         except ImportError as e:
-            logger.debug(f"OUROBOROS: Shuddhi imports unavailable: {e}")
+            logger.debug(f"OUROBOROS: CorrectionOrchestrator imports unavailable: {e}")
         except Exception as e:
             logger.warning(f"🩹 OUROBOROS: Healable scan failed: {e}")
 
