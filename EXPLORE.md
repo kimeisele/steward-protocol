@@ -561,7 +561,7 @@ SURFACE: CLI Integration
 | P0 | ~~parser_loader.py silent killer~~ | ✅ DONE |
 | P1 | Audit remaining 20 silent failures | System stability |
 | P1 | Remove 6 dead registrations | Clean architecture |
-| P1 | Create CorrectionDispatcher | Unified healing (design complete) |
+| P1 | ~~Create CorrectionDispatcher~~ | ✅ DONE (protocol + service + tests) |
 | P2 | Migrate .opus_state (274 refs, 82 files) | State hygiene |
 
 ### Battle Progress (Updated 2026-01-04)
@@ -634,9 +634,103 @@ phoenix/: 6 (config loading)
 ```
 
 **Next Logical Steps:**
-1. P1: Create CorrectionDispatcher protocol - unified healing
+1. ~~P1: Create CorrectionDispatcher protocol - unified healing~~ ✅ DONE
 2. P2: .opus_state → .vibe/state migration (274 refs, 82 files)
 3. P2: Systematic plugin sweep (55+ remaining)
+
+---
+
+## CORRECTIONDISPATCHER (2026-01-04) ✅ COMPLETE
+
+### THE PROBLEM: 4 Drift Systems, 0 Coordination
+
+```
+OS-Level:
+├── ReactorProtocol.detect_drift() → DriftEvent (performance)
+├── VajraEnforcer.detect_drift() → bool (config)
+└── ShuddhiEngine.heal_all_violations() → ShuddhiResult (structural)
+
+Plugin-Level:
+├── DriftDetector.detect() → DriftReport (code-doc)
+└── dharma.check_drift_for_chat() → str (cognitive)
+
+NO UNIFIED INTERFACE. NO DISPATCH MECHANISM.
+```
+
+### THE SOLUTION: Unified CorrectionDispatcher
+
+```
+┌─────────────────────────────────────────────────┐
+│  DriftRegistry (unified detection)              │
+│  ├── register_detector(source, detector)        │
+│  └── detect_all() → List[UnifiedDriftReport]    │
+│                                                 │
+│         ↓ all return UnifiedDriftReport         │
+│                                                 │
+│  CorrectionDispatcher (unified healing)         │
+│  ├── register_handler(source, handler)          │
+│  ├── dispatch(drift) → HealingResult            │
+│  └── dispatch_all() → List[HealingResult]       │
+│                                                 │
+│         ↓ all return HealingResult              │
+│                                                 │
+│  CorrectionOrchestrator (high-level API)        │
+│  ├── detect_and_report() → observation only     │
+│  └── detect_and_heal() → execute corrections    │
+└─────────────────────────────────────────────────┘
+```
+
+### FILES CREATED
+
+| File | Purpose |
+|------|---------|
+| `vibe_core/protocols/correction.py` | Protocol interfaces + data classes |
+| `vibe_core/services/correction_dispatcher.py` | BasicDriftRegistry, BasicCorrectionDispatcher, BasicCorrectionOrchestrator |
+| `tests/unit/test_correction_dispatcher.py` | 10 unit tests |
+
+### KEY TYPES
+
+```python
+# Unified drift report (all detectors produce this)
+UnifiedDriftReport(
+    id: str,
+    source: DriftSource,  # PERFORMANCE, STRUCTURAL, CONFIG, CODE_DOC, etc.
+    severity: DriftSeverity,
+    message: str,
+    file_path: Optional[Path],
+    rule_id: Optional[str],
+    auto_healable: bool,
+)
+
+# Unified healing result (all handlers produce this)
+HealingResult(
+    drift_id: str,
+    status: HealingStatus,  # HEALED, SKIPPED, FAILED, DEFERRED, MANUAL_REQUIRED
+    handler_id: str,
+    files_modified: List[Path],
+)
+```
+
+### USAGE
+
+```python
+# In biorhythm.py (observation only):
+orchestrator = ServiceRegistry.get(CorrectionOrchestratorProtocol)
+drifts = orchestrator.detect_and_report(source=DriftSource.STRUCTURAL)
+healable = [d for d in drifts if d.auto_healable]
+
+# In healing circuit (execute corrections):
+results = orchestrator.detect_and_heal(
+    strategy=HealingStrategy.AUTO,
+    auto_only=True
+)
+```
+
+### INTEGRATION
+
+- Registered in `boot_orchestrator.py` via ServiceRegistry
+- Auto-wires ReactorProtocol, ShuddhiProtocol, VajraEnforcer
+- `biorhythm.py` refactored to use CorrectionOrchestrator
 
 ---
 
