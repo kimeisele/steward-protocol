@@ -53,8 +53,9 @@ class TestMohiniOuroboros:
         router = IntentRouter(workspace=tmp_path)
 
         # Create pending intents file with circular deps
-        state_dir = tmp_path / ".opus_state"
-        state_dir.mkdir(exist_ok=True)
+        # IntentRouter uses .vibe/state/plugins/opus_assistant/ (HIL_STATE_DIR)
+        state_dir = tmp_path / ".vibe" / "state" / "plugins" / "opus_assistant"
+        state_dir.mkdir(parents=True, exist_ok=True)
 
         pending_intents = [
             {
@@ -111,8 +112,8 @@ class TestMohiniOuroboros:
 
         router = IntentRouter(workspace=tmp_path)
 
-        state_dir = tmp_path / ".opus_state"
-        state_dir.mkdir(exist_ok=True)
+        state_dir = tmp_path / ".vibe" / "state" / "plugins" / "opus_assistant"
+        state_dir.mkdir(parents=True, exist_ok=True)
 
         pending_intents = [
             {
@@ -157,8 +158,7 @@ class TestMohiniOuroboros:
         print(f"   Cycle detected: {cycle}")
 
         assert cycle is not None, (
-            "MOHINI VICTORY: Complex chain cycle was not detected! "
-            "Indirect cycles are the sneakiest traps."
+            "MOHINI VICTORY: Complex chain cycle was not detected! Indirect cycles are the sneakiest traps."
         )
 
         assert len(cycle) >= 4, f"Cycle too short: {cycle}"
@@ -175,8 +175,8 @@ class TestMohiniOuroboros:
 
         router = IntentRouter(workspace=tmp_path)
 
-        state_dir = tmp_path / ".opus_state"
-        state_dir.mkdir(exist_ok=True)
+        state_dir = tmp_path / ".vibe" / "state" / "plugins" / "opus_assistant"
+        state_dir.mkdir(parents=True, exist_ok=True)
 
         pending_intents = [
             {
@@ -196,10 +196,7 @@ class TestMohiniOuroboros:
         print("   Intent depends on itself")
         print(f"   Cycle detected: {cycle}")
 
-        assert cycle is not None, (
-            "MOHINI VICTORY: Self-reference not detected! "
-            "The narcissist loops forever."
-        )
+        assert cycle is not None, "MOHINI VICTORY: Self-reference not detected! The narcissist loops forever."
 
         print("✅ Self-Reference DETECTED: Narcissism loop broken")
 
@@ -214,13 +211,34 @@ class TestMohiniOuroboros:
 
         router = IntentRouter(workspace=tmp_path)
 
-        state_dir = tmp_path / ".opus_state"
-        state_dir.mkdir(exist_ok=True)
+        state_dir = tmp_path / ".vibe" / "state" / "plugins" / "opus_assistant"
+        state_dir.mkdir(parents=True, exist_ok=True)
 
         pending_intents = [
-            {"id": "A", "intent_type": "root", "title": "A", "description": "", "reasoning": "", "dependencies": ["B", "C"]},
-            {"id": "B", "intent_type": "branch", "title": "B", "description": "", "reasoning": "", "dependencies": ["D"]},
-            {"id": "C", "intent_type": "branch", "title": "C", "description": "", "reasoning": "", "dependencies": ["D"]},
+            {
+                "id": "A",
+                "intent_type": "root",
+                "title": "A",
+                "description": "",
+                "reasoning": "",
+                "dependencies": ["B", "C"],
+            },
+            {
+                "id": "B",
+                "intent_type": "branch",
+                "title": "B",
+                "description": "",
+                "reasoning": "",
+                "dependencies": ["D"],
+            },
+            {
+                "id": "C",
+                "intent_type": "branch",
+                "title": "C",
+                "description": "",
+                "reasoning": "",
+                "dependencies": ["D"],
+            },
             {"id": "D", "intent_type": "leaf", "title": "D", "description": "", "reasoning": "", "dependencies": []},
         ]
 
@@ -246,8 +264,8 @@ class TestMohiniOuroboros:
 
         router = IntentRouter(workspace=tmp_path)
 
-        state_dir = tmp_path / ".opus_state"
-        state_dir.mkdir(exist_ok=True)
+        state_dir = tmp_path / ".vibe" / "state" / "plugins" / "opus_assistant"
+        state_dir.mkdir(parents=True, exist_ok=True)
 
         pending_intents = [
             {
