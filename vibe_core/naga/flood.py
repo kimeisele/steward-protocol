@@ -172,10 +172,31 @@ class NagaFloodController:
             else:
                 logger.warning("[FLOOD] EventBus has no subscribe method")
 
+            # Start the async analysis loop
+            self._start_analysis_loop_background()
+
         except ImportError:
             logger.debug("[FLOOD] EventBus not available")
         except Exception as e:
             logger.error(f"[FLOOD] Failed to subscribe: {e}")
+
+    def _start_analysis_loop_background(self) -> None:
+        """Start the analysis loop in the background."""
+        try:
+            loop = asyncio.get_running_loop()
+            self._analysis_task = loop.create_task(self.start_analysis_loop())
+            logger.info("[FLOOD] 🔬 Analysis loop task started")
+        except RuntimeError:
+            # No running loop - try to get or create one
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    self._analysis_task = loop.create_task(self.start_analysis_loop())
+                    logger.info("[FLOOD] 🔬 Analysis loop task started (existing loop)")
+                else:
+                    logger.warning("[FLOOD] No running event loop - analysis loop deferred")
+            except Exception as e:
+                logger.warning(f"[FLOOD] Could not start analysis loop: {e}")
 
     def stop(self) -> None:
         """Stop the flood controller."""

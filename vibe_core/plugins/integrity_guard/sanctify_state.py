@@ -45,14 +45,25 @@ def sanctify_state_system(kernel: "KernelProtocol") -> None:
                 logger.info("🕉️  StateSyncHolon Protocol sanctified in ServiceRegistry")
 
         # 3. Sanctify StateService (Ahamkara / Persistence)
-        from vibe_core.state.state_service import get_state_service
+        # NAGA-AWARE: Check if NagaStateProxy is already registered
+        # If so, preserve it (don't overwrite with raw service)
+        existing = ServiceRegistry.get(StateServiceProtocol)
+        if existing is not None:
+            # Check if it's a NagaStateProxy
+            proxy_class_name = type(existing).__name__
+            if "NagaStateProxy" in proxy_class_name:
+                logger.info("🐍 StateService already has NAGA proxy - preserving")
+            else:
+                logger.info("🕉️  StateService already registered - preserving")
+        else:
+            from vibe_core.state.state_service import get_state_service
 
-        # Resolve workspace from kernel
-        workspace = getattr(kernel, "_workspace", None)
-        state_service = get_state_service(workspace)
+            # Resolve workspace from kernel
+            workspace = getattr(kernel, "_workspace", None)
+            state_service = get_state_service(workspace)
 
-        ServiceRegistry.register(StateServiceProtocol, state_service)
-        logger.info("🕉️  StateService Protocol sanctified in ServiceRegistry")
+            ServiceRegistry.register(StateServiceProtocol, state_service)
+            logger.info("🕉️  StateService Protocol sanctified in ServiceRegistry")
 
         # 4. Sanctify StateSyncWeaver (Meta-orchestration)
         from vibe_core.state.weaver import get_state_sync_weaver
