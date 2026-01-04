@@ -16,10 +16,12 @@ The "churning" metaphor from Samudra Manthan:
 Raw Python objects become transportable nectar.
 """
 
+import asyncio
 import logging
 import time
+from collections import deque
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Deque, Dict, List, Optional
 
 from vibe_core.protocols.correction import (
     DriftSource,
@@ -84,9 +86,14 @@ class VasukiService(VasukiProtocol):
         self._takshaka = takshaka
         self._sign_outbound = sign_outbound
         self._peers: List[NodeAddress] = []
+        self._peer_urls: Dict[NodeAddress, str] = {}  # peer -> URL mapping
         self._events_processed = 0
         self._errors = 0
         self._last_heartbeat = datetime.now()
+
+        # Network infrastructure
+        self._receive_queue: Deque[SignedEnvelope] = deque(maxlen=1000)
+        self._send_timeout = 10.0  # seconds
 
         self._private_key: Optional[str] = None
         self._public_key: Optional[str] = None
@@ -179,26 +186,111 @@ class VasukiService(VasukiProtocol):
     # =========================================================================
 
     async def send(self, target: NodeAddress, envelope: SignedEnvelope) -> SendResult:
-        """Send envelope to a peer node."""
+        """Send envelope to a peer node via HTTP POST."""
         self._last_heartbeat = datetime.now()
+        envelope_hash = self._hash_envelope(envelope)
 
         if target not in self._peers:
             self._peers.append(target)
 
-        # TODO: Actual network send
-        logger.debug(f"VASUKI: Would send to {target} ({len(envelope.payload)} bytes)")
+        # Get peer URL
+        peer_url = self._peer_urls.get(target)
+        if not peer_url:
+            logger.warning(f"VASUKI: No URL for peer {target}")
+            return SendResult(
+                status=SendStatus.FAILED,
+                envelope_hash=envelope_hash,
+                message=f"No URL configured for {target}",
+            )
 
-        return SendResult(
-            status=SendStatus.QUEUED,
-            envelope_hash=self._hash_envelope(envelope),
-            message=f"Queued for {target}",
-        )
+        # Serialize envelope for transport
+        import base64
+
+        wire_data = {
+            "payload": base64.b64encode(envelope.payload).decode(),
+            "signature": base64.b64encode(envelope.signature).decode() if envelope.signature else "",
+            "sender_key": envelope.sender_key,
+            "timestamp": envelope.timestamp,
+            "content_type": envelope.content_type,
+        }
+
+        try:
+            import aiohttp
+
+            async with aiohttp.ClientSession() as session:
+                url = f"{peer_url.rstrip('/')}/api/v1/naga/envelope"
+                async with session.post(
+                    url,
+                    json=wire_data,
+                    timeout=aiohttp.ClientTimeout(total=self._send_timeout),
+                ) as resp:
+                    if resp.status == 200:
+                        self._events_processed += 1
+                        logger.debug(f"VASUKI: Sent to {target} ({len(envelope.payload)} bytes)")
+                        return SendResult(
+                            status=SendStatus.SENT,
+                            envelope_hash=envelope_hash,
+                            message=f"Sent to {target}",
+                        )
+                    else:
+                        self._errors += 1
+                        return SendResult(
+                            status=SendStatus.FAILED,
+                            envelope_hash=envelope_hash,
+                            message=f"HTTP {resp.status} from {target}",
+                        )
+
+        except asyncio.TimeoutError:
+            self._errors += 1
+            logger.warning(f"VASUKI: Timeout sending to {target}")
+            return SendResult(
+                status=SendStatus.FAILED,
+                envelope_hash=envelope_hash,
+                message=f"Timeout after {self._send_timeout}s",
+            )
+        except Exception as e:
+            self._errors += 1
+            logger.warning(f"VASUKI: Send failed: {e}")
+            return SendResult(
+                status=SendStatus.FAILED,
+                envelope_hash=envelope_hash,
+                message=str(e),
+            )
 
     async def receive(self) -> AsyncIterator[SignedEnvelope]:
-        """Receive envelopes from the network."""
-        # TODO: Actual network receive
-        return
-        yield  # Make it a generator
+        """
+        Receive envelopes from the queue.
+
+        Envelopes are pushed to the queue via push_received() when
+        the NetworkGateway receives an incoming /api/v1/naga/envelope request.
+        """
+        while self._receive_queue:
+            envelope = self._receive_queue.popleft()
+            self._events_processed += 1
+            self._last_heartbeat = datetime.now()
+            yield envelope
+
+    def push_received(self, envelope: SignedEnvelope) -> bool:
+        """
+        Push an envelope to the receive queue.
+
+        Called by NetworkGateway when it receives an incoming envelope.
+
+        Args:
+            envelope: The received SignedEnvelope
+
+        Returns:
+            True if queued, False if queue is full
+        """
+        if len(self._receive_queue) >= 1000:
+            logger.warning("VASUKI: Receive queue full, dropping envelope")
+            self._errors += 1
+            return False
+
+        self._receive_queue.append(envelope)
+        self._last_heartbeat = datetime.now()
+        logger.debug(f"VASUKI: Queued incoming envelope ({len(envelope.payload)} bytes)")
+        return True
 
     def _hash_envelope(self, envelope: SignedEnvelope) -> str:
         """Compute hash of envelope for tracking."""
@@ -228,16 +320,25 @@ class VasukiService(VasukiProtocol):
         """Get known peer nodes."""
         return list(self._peers)
 
-    def add_peer(self, peer: NodeAddress) -> None:
-        """Add a peer node."""
+    def add_peer(self, peer: NodeAddress, url: Optional[str] = None) -> None:
+        """
+        Add a peer node.
+
+        Args:
+            peer: Peer identifier (NodeAddress)
+            url: HTTP URL for the peer (e.g., "http://192.168.1.100:8000")
+        """
         if peer not in self._peers:
             self._peers.append(peer)
-            logger.info(f"VASUKI: Added peer {peer}")
+            if url:
+                self._peer_urls[peer] = url
+            logger.info(f"VASUKI: Added peer {peer}" + (f" ({url})" if url else ""))
 
     def remove_peer(self, peer: NodeAddress) -> bool:
         """Remove a peer node."""
         if peer in self._peers:
             self._peers.remove(peer)
+            self._peer_urls.pop(peer, None)
             return True
         return False
 
