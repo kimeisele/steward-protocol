@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.cortex.signals import FloodSignal
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
+    from vibe_core.phoenix.sections.naga.section_main import FloodConfig
     from vibe_core.protocols.event import Event
 
 # Type alias for cortex signal callback
@@ -62,11 +63,13 @@ SKIP_EVENT_TYPES = frozenset(
     ]
 )
 
-# Maximum events to queue for async analysis
-MAX_ANALYSIS_QUEUE = 1000
-
-# Timeout for async analysis (prevents hanging)
-ANALYSIS_TIMEOUT_MS = 50
+# Default values (used when no config provided - for backwards compatibility)
+DEFAULT_MAX_ANALYSIS_QUEUE = 1000
+DEFAULT_ANALYSIS_TIMEOUT_MS = 50
+DEFAULT_QUEUE_WAIT_TIMEOUT = 5.0
+DEFAULT_SEEN_EVENTS_MAX = 10000
+DEFAULT_SEEN_EVENTS_TRIM = 5000
+DEFAULT_MAX_CONTENT_SIZE = 10000
 
 
 # =============================================================================
@@ -127,6 +130,7 @@ class NagaFloodController:
         sesha: Optional["SeshaService"] = None,
         takshaka: Optional["TakshakaService"] = None,
         enabled: bool = True,
+        config: Optional["FloodConfig"] = None,
     ):
         self._sesha = sesha
         self._takshaka = takshaka
@@ -134,18 +138,27 @@ class NagaFloodController:
         self._stats = FloodStats()
         self._subscribed = False
 
-        # Async analysis queue (bounded)
-        self._analysis_queue: asyncio.Queue = asyncio.Queue(maxsize=MAX_ANALYSIS_QUEUE)
+        # Load config values (fall back to defaults for backwards compatibility)
+        self._max_analysis_queue = config.max_analysis_queue if config else DEFAULT_MAX_ANALYSIS_QUEUE
+        self._analysis_timeout_ms = config.analysis_timeout_ms if config else DEFAULT_ANALYSIS_TIMEOUT_MS
+        self._queue_wait_timeout = config.queue_wait_timeout_seconds if config else DEFAULT_QUEUE_WAIT_TIMEOUT
+        self._seen_events_max = config.seen_events_max if config else DEFAULT_SEEN_EVENTS_MAX
+        self._seen_events_trim = config.seen_events_trim_size if config else DEFAULT_SEEN_EVENTS_TRIM
+        self._max_content_size = config.max_content_size if config else DEFAULT_MAX_CONTENT_SIZE
+
+        # Async analysis queue (bounded by config)
+        self._analysis_queue: asyncio.Queue = asyncio.Queue(maxsize=self._max_analysis_queue)
         self._analysis_task: Optional[asyncio.Task] = None
 
         # Seen event IDs (prevent duplicate analysis)
         self._seen_events: Set[str] = set()
-        self._seen_events_max = 10000
 
         # Cortex integration (optional, non-invasive)
         self._cortex_callback: Optional[CortexSignalCallback] = None
 
-        logger.debug("[FLOOD] Controller initialized")
+        logger.debug(
+            f"[FLOOD] Controller initialized (queue={self._max_analysis_queue}, timeout={self._analysis_timeout_ms}ms)"
+        )
 
     def set_cortex_callback(self, callback: CortexSignalCallback) -> None:
         """Set callback for sending signals to Cortex. Non-invasive integration."""
@@ -268,8 +281,8 @@ class NagaFloodController:
         # Mark as seen (prevent re-analysis)
         self._seen_events.add(event_id)
         if len(self._seen_events) > self._seen_events_max:
-            # Trim oldest (simple LRU)
-            self._seen_events = set(list(self._seen_events)[-5000:])
+            # Trim oldest (simple LRU - keep most recent events)
+            self._seen_events = set(list(self._seen_events)[-self._seen_events_trim :])
 
         # --- ASYNC HANDOFF (Fire and Forget) ---
         try:
@@ -291,14 +304,14 @@ class NagaFloodController:
                 # Wait for event from queue
                 event = await asyncio.wait_for(
                     self._analysis_queue.get(),
-                    timeout=5.0,  # Check for shutdown every 5s
+                    timeout=self._queue_wait_timeout,
                 )
 
                 # Analyze with timeout
                 try:
                     await asyncio.wait_for(
                         self._analyze_event(event),
-                        timeout=ANALYSIS_TIMEOUT_MS / 1000,
+                        timeout=self._analysis_timeout_ms / 1000,
                     )
                     self._stats.events_analyzed += 1
                 except asyncio.TimeoutError:
@@ -375,7 +388,7 @@ class NagaFloodController:
                 elif isinstance(value, dict):
                     parts.append(str(value))
 
-        return " ".join(parts)[:10000]  # Limit size
+        return " ".join(parts)[: self._max_content_size]  # Limit size
 
     async def _dispatch_violation(self, event: "Event", toxicity: Any) -> None:
         """
@@ -526,13 +539,15 @@ class NagaFloodManager:
         sesha: Optional["SeshaService"] = None,
         takshaka: Optional["TakshakaService"] = None,
         enabled: bool = True,
+        config: Optional["FloodConfig"] = None,
     ):
         self._sesha = sesha
         self._takshaka = takshaka
         self._enabled = enabled
+        self._config = config
 
-        # Sub-controllers
-        self._event_flood = NagaFloodController(sesha, takshaka, enabled)
+        # Sub-controllers (pass config to NagaFloodController)
+        self._event_flood = NagaFloodController(sesha, takshaka, enabled, config)
         self._signal_watch = NagaSignalWatcher(sesha, takshaka)
 
         self._started = False

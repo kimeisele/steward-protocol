@@ -114,9 +114,9 @@ class TestPanicPatternDetection:
         from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
         watcher = NagaCommitWatcher(enabled=True)
-        # Lower threshold for testing
-        watcher.PANIC_THRESHOLD = 2
-        watcher.PANIC_WINDOW_SECONDS = 60
+        # Lower threshold for testing (use instance variables)
+        watcher._panic_threshold = 2
+        watcher._panic_window_seconds = 60
         return watcher
 
     @pytest.fixture
@@ -161,7 +161,8 @@ class TestDeferralLoopDetection:
         from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
         watcher = NagaCommitWatcher(enabled=True)
-        watcher.DEFERRAL_THRESHOLD = 3
+        # Lower threshold for testing (use instance variable)
+        watcher._deferral_threshold = 3
         return watcher
 
     @pytest.fixture
@@ -216,7 +217,8 @@ class TestConflictDriftDetection:
         from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
         watcher = NagaCommitWatcher(enabled=True)
-        watcher.CONFLICT_RATE_THRESHOLD = 0.5
+        # Use instance variable for testing
+        watcher._conflict_rate_threshold = 0.5
         return watcher
 
     @pytest.fixture
@@ -253,7 +255,8 @@ class TestAlertHandlers:
         from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
         watcher = NagaCommitWatcher(enabled=True)
-        watcher.PANIC_THRESHOLD = 1  # Immediate trigger
+        # Use instance variable for testing
+        watcher._panic_threshold = 1  # Immediate trigger
         return watcher
 
     @pytest.fixture

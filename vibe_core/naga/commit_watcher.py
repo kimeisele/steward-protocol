@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.cortex.signals import CommitSignal
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
+    from vibe_core.phoenix.sections.naga.section_main import CommitWatcherConfig
     from vibe_core.state.commit_authority import CommitOutcome, CommitResult
 
 # Type aliases for callbacks (GAD-000 Typing Discipline)
@@ -40,6 +41,18 @@ CortexCommitCallback = Callable[["CommitSignal"], None]
 AlertHandler = Callable[["CommitAlert"], None]
 
 logger = logging.getLogger("NAGA.COMMIT_WATCHER")
+
+
+# =============================================================================
+# DEFAULTS (used when no config provided - backwards compatibility)
+# =============================================================================
+
+DEFAULT_PANIC_THRESHOLD = 3  # Panic dumps in window
+DEFAULT_PANIC_WINDOW_SECONDS = 300  # 5 minutes
+DEFAULT_STAGNATION_SECONDS = 600  # 10 minutes without commit
+DEFAULT_DEFERRAL_THRESHOLD = 5  # Consecutive deferrals
+DEFAULT_CONFLICT_RATE_THRESHOLD = 0.5  # 50% healed
+DEFAULT_ROLLING_WINDOW_SIZE = 100
 
 
 # =============================================================================
@@ -118,33 +131,37 @@ class NagaCommitWatcher:
         watcher.observe(result)  # <- The hook
     """
 
-    # Alert thresholds
-    PANIC_THRESHOLD = 3  # Panic dumps in window
-    PANIC_WINDOW_SECONDS = 300  # 5 minutes
-    STAGNATION_SECONDS = 600  # 10 minutes without commit
-    DEFERRAL_THRESHOLD = 5  # Consecutive deferrals
-    CONFLICT_RATE_THRESHOLD = 0.5  # 50% healed
-
     def __init__(
         self,
         sesha: Optional["SeshaService"] = None,
         takshaka: Optional["TakshakaService"] = None,
         enabled: bool = True,
+        config: Optional["CommitWatcherConfig"] = None,
     ):
         self._sesha = sesha
         self._takshaka = takshaka
         self._enabled = enabled
         self._stats = CommitStats()
 
+        # Load config values (fall back to defaults for backwards compatibility)
+        self._panic_threshold = config.panic_threshold if config else DEFAULT_PANIC_THRESHOLD
+        self._panic_window_seconds = config.panic_window_seconds if config else DEFAULT_PANIC_WINDOW_SECONDS
+        self._stagnation_seconds = config.stagnation_seconds if config else DEFAULT_STAGNATION_SECONDS
+        self._deferral_threshold = config.deferral_threshold if config else DEFAULT_DEFERRAL_THRESHOLD
+        self._conflict_rate_threshold = config.conflict_rate_threshold if config else DEFAULT_CONFLICT_RATE_THRESHOLD
+        rolling_window_size = config.rolling_window_size if config else DEFAULT_ROLLING_WINDOW_SIZE
+
         # Rolling window for pattern detection
-        self._recent_outcomes: Deque[tuple] = deque(maxlen=100)  # (timestamp, outcome)
+        self._recent_outcomes: Deque[tuple] = deque(maxlen=rolling_window_size)
         self._consecutive_deferrals = 0
         self._alert_handlers: List[AlertHandler] = []
 
         # Cortex integration (optional, non-invasive)
         self._cortex_callback: Optional[CortexCommitCallback] = None
 
-        logger.info("[COMMIT_WATCHER] Initialized")
+        logger.info(
+            f"[COMMIT_WATCHER] Initialized (panic_threshold={self._panic_threshold}, stagnation={self._stagnation_seconds}s)"
+        )
 
     def set_cortex_callback(self, callback: CortexCommitCallback) -> None:
         """Set callback for sending signals to Cortex. Non-invasive integration."""
@@ -260,23 +277,23 @@ class NagaCommitWatcher:
         if current_outcome == CommitOutcome.PANIC_DUMPED:
             panic_count = self._count_recent_outcomes(
                 CommitOutcome.PANIC_DUMPED,
-                window_seconds=self.PANIC_WINDOW_SECONDS,
+                window_seconds=self._panic_window_seconds,
             )
-            if panic_count >= self.PANIC_THRESHOLD:
+            if panic_count >= self._panic_threshold:
                 return CommitAlert(
                     alert_type="PANIC_PATTERN",
                     severity="CRITICAL",
-                    message=f"Panic dump pattern detected: {panic_count} panics in {self.PANIC_WINDOW_SECONDS}s",
+                    message=f"Panic dump pattern detected: {panic_count} panics in {self._panic_window_seconds}s",
                     details={
                         "panic_count": panic_count,
-                        "window_seconds": self.PANIC_WINDOW_SECONDS,
+                        "window_seconds": self._panic_window_seconds,
                     },
                 )
 
         # Check STAGNATION
         if self._stats.last_success_at:
             time_since_success = now - self._stats.last_success_at
-            if time_since_success > self.STAGNATION_SECONDS:
+            if time_since_success > self._stagnation_seconds:
                 # Only alert once per stagnation period
                 if self._stats.total_observed % 10 == 0:  # Throttle
                     return CommitAlert(
@@ -285,26 +302,26 @@ class NagaCommitWatcher:
                         message=f"No successful commits in {int(time_since_success)}s",
                         details={
                             "seconds_since_success": time_since_success,
-                            "threshold_seconds": self.STAGNATION_SECONDS,
+                            "threshold_seconds": self._stagnation_seconds,
                         },
                     )
 
         # Check DEFERRAL_LOOP
-        if self._consecutive_deferrals >= self.DEFERRAL_THRESHOLD:
+        if self._consecutive_deferrals >= self._deferral_threshold:
             return CommitAlert(
                 alert_type="DEFERRAL_LOOP",
                 severity="WARNING",
                 message=f"Decision paralysis: {self._consecutive_deferrals} consecutive deferrals",
                 details={
                     "consecutive_deferrals": self._consecutive_deferrals,
-                    "threshold": self.DEFERRAL_THRESHOLD,
+                    "threshold": self._deferral_threshold,
                 },
             )
 
         # Check CONFLICT_DRIFT
         if self._stats.total_observed >= 10:  # Need minimum sample
             healed_rate = self._stats.healed_count / self._stats.total_observed
-            if healed_rate > self.CONFLICT_RATE_THRESHOLD:
+            if healed_rate > self._conflict_rate_threshold:
                 # Only alert periodically
                 if self._stats.total_observed % 20 == 0:  # Throttle
                     return CommitAlert(

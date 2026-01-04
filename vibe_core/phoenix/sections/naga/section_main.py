@@ -138,6 +138,83 @@ class CortexConfig:
 
 
 @dataclass
+class FloodConfig:
+    """FloodManager - EventBus/SignalBus observation configuration."""
+
+    enabled: bool = True
+    # Analysis queue settings
+    max_analysis_queue: int = 1000
+    analysis_timeout_ms: int = 50
+    queue_wait_timeout_seconds: float = 5.0
+    # Seen events deduplication
+    seen_events_max: int = 10000
+    seen_events_trim_size: int = 5000
+    # Content extraction
+    max_content_size: int = 10000
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FloodConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            max_analysis_queue=data.get("max_analysis_queue", 1000),
+            analysis_timeout_ms=data.get("analysis_timeout_ms", 50),
+            queue_wait_timeout_seconds=data.get("queue_wait_timeout_seconds", 5.0),
+            seen_events_max=data.get("seen_events_max", 10000),
+            seen_events_trim_size=data.get("seen_events_trim_size", 5000),
+            max_content_size=data.get("max_content_size", 10000),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "max_analysis_queue": self.max_analysis_queue,
+            "analysis_timeout_ms": self.analysis_timeout_ms,
+            "queue_wait_timeout_seconds": self.queue_wait_timeout_seconds,
+            "seen_events_max": self.seen_events_max,
+            "seen_events_trim_size": self.seen_events_trim_size,
+            "max_content_size": self.max_content_size,
+        }
+
+
+@dataclass
+class CommitWatcherConfig:
+    """CommitWatcher - Git pattern detection configuration."""
+
+    enabled: bool = True
+    # Pattern detection thresholds
+    panic_threshold: int = 3
+    panic_window_seconds: int = 300
+    stagnation_seconds: int = 600
+    deferral_threshold: int = 5
+    conflict_rate_threshold: float = 0.5
+    # Rolling window
+    rolling_window_size: int = 100
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "CommitWatcherConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            panic_threshold=data.get("panic_threshold", 3),
+            panic_window_seconds=data.get("panic_window_seconds", 300),
+            stagnation_seconds=data.get("stagnation_seconds", 600),
+            deferral_threshold=data.get("deferral_threshold", 5),
+            conflict_rate_threshold=data.get("conflict_rate_threshold", 0.5),
+            rolling_window_size=data.get("rolling_window_size", 100),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "panic_threshold": self.panic_threshold,
+            "panic_window_seconds": self.panic_window_seconds,
+            "stagnation_seconds": self.stagnation_seconds,
+            "deferral_threshold": self.deferral_threshold,
+            "conflict_rate_threshold": self.conflict_rate_threshold,
+            "rolling_window_size": self.rolling_window_size,
+        }
+
+
+@dataclass
 class NagaConfig:
     """
     NAGA Federation Configuration.
@@ -158,6 +235,8 @@ class NagaConfig:
     vasuki: VasukiConfig = field(default_factory=VasukiConfig)
     takshaka: TakshakaConfig = field(default_factory=TakshakaConfig)
     cortex: CortexConfig = field(default_factory=CortexConfig)
+    flood: FloodConfig = field(default_factory=FloodConfig)
+    commit_watcher: CommitWatcherConfig = field(default_factory=CommitWatcherConfig)
 
     # Track if loaded from YAML vs defaults
     _loaded_from_yaml: bool = field(default=False, repr=False)
@@ -201,6 +280,8 @@ class NagaConfig:
             vasuki=VasukiConfig.from_dict(data.get("vasuki", {})),
             takshaka=TakshakaConfig.from_dict(data.get("takshaka", {})),
             cortex=CortexConfig.from_dict(data.get("cortex", {})),
+            flood=FloodConfig.from_dict(data.get("flood", {})),
+            commit_watcher=CommitWatcherConfig.from_dict(data.get("commit_watcher", {})),
         )
         config._loaded_from_yaml = True
         return config
@@ -212,6 +293,8 @@ class NagaConfig:
             "vasuki": self.vasuki.to_dict(),
             "takshaka": self.takshaka.to_dict(),
             "cortex": self.cortex.to_dict(),
+            "flood": self.flood.to_dict(),
+            "commit_watcher": self.commit_watcher.to_dict(),
         }
 
     def validate(self) -> List[str]:
