@@ -433,19 +433,21 @@ class BiorhythmProcessor:
         """
         OUROBOROS WIRE: Discover violations that CAN be automatically healed.
 
-        OBSERVATIONAL ONLY - does NOT execute healing.
-        Uses CorrectionOrchestrator from ServiceRegistry.
-        Reports findings to curiosity system for HEAL_CODEBASE circuit.
+        Uses RESONANCE strategy for karma-based graduated trust.
+        Healing happens when earned trust (Bhakti + Ashrama + Resonance) allows.
+        Reports findings to curiosity system.
 
         Called every 45 ticks (~2.25 min) during Sattva state.
 
         OPUS-LZ2: Refactored to use unified CorrectionOrchestrator.
+        OPUS-LZ3: Now uses RESONANCE strategy for karma-based graduated trust.
         """
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.correction import (
                 CorrectionOrchestratorProtocol,
                 DriftSource,
+                HealingStrategy,
             )
 
             # Get CorrectionOrchestrator from ServiceRegistry
@@ -457,16 +459,30 @@ class BiorhythmProcessor:
             # Get workspace for curiosity reporting
             workspace = getattr(self.kernel, "_workspace", None)
 
-            # Detect structural violations (observation only)
-            drifts = orchestrator.detect_and_report(source=DriftSource.STRUCTURAL)
+            # HEAL using RESONANCE strategy (karma-based graduated trust)
+            # The resolver determines AUTO/MANUAL/DRY_RUN based on:
+            # - Ashrama lifecycle stage
+            # - Bhakti balance (earned trust)
+            # - Quantum Reactor resonance
+            results = orchestrator.detect_and_heal(
+                source=DriftSource.STRUCTURAL,
+                strategy=HealingStrategy.RESONANCE,
+                agent_id="opus_assistant",
+                auto_only=True,
+            )
 
-            # Count auto-healable violations
-            healable_count = sum(1 for d in drifts if d.auto_healable)
+            # Count results by status
+            healed = sum(1 for r in results if r.healed)
+            deferred = sum(1 for r in results if r.status.value == "deferred")
+            total = len(results)
 
-            if healable_count > 0:
-                logger.info(f"🩹 OUROBOROS: Discovered {healable_count} violations ready for HEAL_CODEBASE circuit")
+            if total > 0:
+                if healed > 0:
+                    logger.info(f"🩹 OUROBOROS: Healed {healed}/{total} violations via RESONANCE")
+                elif deferred > 0:
+                    logger.info(f"🩹 OUROBOROS: {deferred}/{total} violations observed (DRY_RUN - earning trust)")
 
-                # Report to DojoAgency as high-priority curiosity
+                # Report to DojoAgency
                 if workspace:
                     try:
                         from vibe_core.plugins.opus_assistant.manas.dojo.agency import (
@@ -474,10 +490,16 @@ class BiorhythmProcessor:
                         )
 
                         agency = get_dojo_agency(workspace)
-                        agency.curiosity.report_gap(
-                            f"CorrectionDispatcher found {healable_count} auto-healable violations",
-                            weight=0.2,  # High priority
-                        )
+                        if healed > 0:
+                            agency.curiosity.report_gap(
+                                f"RESONANCE healed {healed} violations (trust earned!)",
+                                weight=0.1,  # Lower priority - already healed
+                            )
+                        else:
+                            agency.curiosity.report_gap(
+                                f"Found {total} violations - building trust via observation",
+                                weight=0.2,  # Higher priority - needs attention
+                            )
                     except Exception as e:
                         logger.debug(f"Curiosity reporting failed: {e}")
 
