@@ -466,7 +466,12 @@ grep -n ": Any" vibe_core/kernel_impl.py  # Should return nothing
 | 2026-01-04 | Fixed _agents -> _agent_registry bug | Opus | 2218 |
 | 2026-01-04 | Added SignedOperatorInput import | Opus | 2218 |
 | 2026-01-04 | Added OPERATION LASAGNE plan | Opus | 2218 |
-| TBD | Phase 1: Type Protocols | - | - |
+| 2026-01-04 | **Phase 0: Constitutional Break** | Opus+Gemini | 2218 |
+|            | - Created KernelProtocol (sovereign interface) | | |
+|            | - Created KernelFactoryProtocol | | |
+|            | - Refactored 50 plugins to use KernelProtocol | | |
+|            | - Broke circular dependency chain | | |
+| 2026-01-04 | Phase 1: Type Protocols (kernel_types.py, crypto.py) | Opus | 2218 |
 | TBD | Phase 2: Ledger/Scheduler Protocols | - | - |
 | TBD | Phase 3: Extract EphemeralCities | - | - |
 | TBD | Phase 4: Extract ManifestationData | - | - |
