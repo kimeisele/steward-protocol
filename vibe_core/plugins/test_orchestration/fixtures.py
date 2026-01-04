@@ -47,7 +47,7 @@ from vibe_core.scheduling import Task
 from vibe_core.steward.oath_mixin import OathMixin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("TEST_FIXTURES")
 
@@ -582,7 +582,7 @@ class TestKernel:
         Returns:
             RealVibeKernel with minimal configuration
         """
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.protocols.kernel_protocol import KernelProtocol
 
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
         return kernel
@@ -598,7 +598,7 @@ class TestKernel:
         Returns:
             RealVibeKernel with specified plugins
         """
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.protocols.kernel_protocol import KernelProtocol
 
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
         kernel._plugins = plugins
@@ -634,7 +634,7 @@ class TestKernel:
         Returns:
             RealVibeKernel with governance plugins only
         """
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.protocols.kernel_protocol import KernelProtocol
 
         # Boot minimal kernel - NO automatic plugin loading
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)

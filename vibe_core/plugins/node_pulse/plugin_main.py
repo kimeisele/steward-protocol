@@ -31,7 +31,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.state.node_state import NodeState
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.prana_orchestrator import PulseTransaction
 
 logger = logging.getLogger("NODE_PULSE")
@@ -53,7 +53,7 @@ class NodePulsePlugin(KernelPlugin):
 
     def __init__(self):
         """Initialize NodePulse plugin."""
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._pulse_count = 0
         self._agents_updated = 0
 
@@ -69,7 +69,7 @@ class NodePulsePlugin(KernelPlugin):
     def pulse_phase(self) -> PulsePhase:
         return PulsePhase.ACTUATORS  # Write state after sensors collect
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Initialize on kernel boot.
 
@@ -91,7 +91,7 @@ class NodePulsePlugin(KernelPlugin):
 
     def on_pulse(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         transaction: "PulseTransaction",
     ) -> HookResult:
         """
@@ -137,7 +137,7 @@ class NodePulsePlugin(KernelPlugin):
             }
         )
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """
         Release presence for all registered agents.
 

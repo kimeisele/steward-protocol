@@ -23,7 +23,7 @@ except ImportError:
     InvariantChecker = None  # type: ignore
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("TOOLS_PLUGIN")
 
@@ -51,7 +51,7 @@ class ToolsPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """Initialize tool registry and discover tools."""
@@ -94,7 +94,7 @@ class ToolsPlugin(KernelPlugin):
             logger.error(f"ToolsPlugin boot failed: {e}")
             return HookResult.error(str(e))
 
-    def _register_core_tools(self, kernel: "RealVibeKernel") -> None:
+    def _register_core_tools(self, kernel: "KernelProtocol") -> None:
         """
         Register core tools that are available to all agents.
 
@@ -127,7 +127,7 @@ class ToolsPlugin(KernelPlugin):
         tool_names = ", ".join(self._registry.list_tools())
         logger.info(f"Registered {len(self._registry)} core tools: {tool_names}")
 
-    def _discover_agent_tools(self, kernel: "RealVibeKernel") -> None:
+    def _discover_agent_tools(self, kernel: "KernelProtocol") -> None:
         """
         Auto-discover and register agent tools.
 

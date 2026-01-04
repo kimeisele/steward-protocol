@@ -19,7 +19,7 @@ import yaml
 from vibe_core.plugins.interface.renderer_protocol import Renderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RENDERER.ECONOMY")
 
@@ -33,7 +33,7 @@ class EconomyRenderer(Renderer):
     - Transactions: Recent economic events
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
         self._register_data_sources()
 
@@ -336,6 +336,6 @@ class EconomyRenderer(Renderer):
         return lines
 
 
-def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> EconomyRenderer:
+def create_renderer(kernel: "KernelProtocol", config: Dict[str, Any]) -> EconomyRenderer:
     """Factory function for InterfacePlugin."""
     return EconomyRenderer(kernel)

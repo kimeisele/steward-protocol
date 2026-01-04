@@ -20,12 +20,12 @@ from vibe_core.protocols import (
 )
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("INTEGRITY_GUARD.SANCTIFIER")
 
 
-def sanctify_state_system(kernel: "RealVibeKernel") -> None:
+def sanctify_state_system(kernel: "KernelProtocol") -> None:
     """
     Sanctifies the state engine into the global ServiceRegistry.
 

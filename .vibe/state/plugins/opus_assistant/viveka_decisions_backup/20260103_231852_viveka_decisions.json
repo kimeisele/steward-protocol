@@ -1,0 +1,21 @@
+[
+  {
+    "timestamp": "2026-01-03T22:18:37.208620",
+    "intent_type": "log_observation",
+    "intent_title": "Test Observation",
+    "trigger": "trigger:log_observation",
+    "file_path": null,
+    "dharmic_score": 0.5,
+    "resonance": 1.0,
+    "harmony": "perfect",
+    "varga_trigger": "TALAVYA",
+    "varga_action": "TALAVYA",
+    "confidence_level": "medium",
+    "decision": "WARN_EXECUTE",
+    "reasoning": "Neutral dharmic score (0.50) - proceeding with caution",
+    "shiva_context_applied": false,
+    "shiva_reason": null,
+    "action_taken": null,
+    "result": null
+  }
+]

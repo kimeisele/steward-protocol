@@ -2360,7 +2360,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.runtime.syscalls import register_syscall
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("{name.upper()}")
 
@@ -2375,7 +2375,7 @@ class {name.title().replace("_", "")}Plugin(KernelPlugin):
     plugin_id = "{name}"
     priority = 80  # Low priority (loads after core plugins)
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Register syscall on boot."""
         register_syscall(
             "{syscall_name}",
@@ -2385,7 +2385,7 @@ class {name.title().replace("_", "")}Plugin(KernelPlugin):
         )
         logger.info("🐍 OUROBOROS: {syscall_name} syscall registered")
 
-    def _handle_{name}(self, kernel: "RealVibeKernel", params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_{name}(self, kernel: "KernelProtocol", params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle {syscall_name} syscall.
 

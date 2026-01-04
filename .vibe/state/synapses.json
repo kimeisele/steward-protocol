@@ -1,0 +1,32 @@
+{
+  "schema": "v3",
+  "version": "2026-01-03",
+  "weights": {
+    "trigger:test_failure": {
+      "action:notify_operator": 1.0,
+      "action:analyze_error": 0.8,
+      "action:auto_retry": 0.3
+    },
+    "trigger:file_changed:vibe_core/**": {
+      "action:run_tests": 0.9,
+      "action:check_lint": 0.7
+    },
+    "trigger:intent_stuck": {
+      "action:escalate_to_operator": 0.95,
+      "action:log_diagnostic": 0.8
+    },
+    "trigger:duplicate_class_detected": {
+      "action:consolidate": 0.7,
+      "action:report_to_operator": 0.9
+    },
+    "trigger:maintenance": {
+      "action:maintenance": 0.55
+    }
+  },
+  "triggers": [],
+  "meta": {
+    "created": "2026-01-03T22:16:51.585643Z",
+    "last_updated": "2026-01-03T22:16:51.591236Z",
+    "updates_count": 1
+  }
+}

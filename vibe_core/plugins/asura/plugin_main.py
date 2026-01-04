@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
     from .agents.putana import PutanaAgent
 
@@ -54,7 +54,7 @@ class AsuraPlugin(KernelPlugin):
     """
 
     def __init__(self):
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._active_demons: List[Any] = []
 
     @property
@@ -64,7 +64,7 @@ class AsuraPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, object]] = None,
     ) -> HookResult:
         """Initialize the ASURA plugin (summon demons)."""
@@ -73,7 +73,7 @@ class AsuraPlugin(KernelPlugin):
         logger.warning("⚠️  This plugin is for RED TEAM TESTING ONLY!")
         return HookResult.ok()
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_shutdown(self, kernel: "KernelProtocol") -> HookResult:
         """Shutdown (banish demons)."""
         for demon in self._active_demons:
             if hasattr(demon, "retreat"):

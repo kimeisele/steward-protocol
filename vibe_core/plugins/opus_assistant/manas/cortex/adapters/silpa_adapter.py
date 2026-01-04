@@ -30,7 +30,7 @@ from vibe_core.plugins.opus_assistant.manas.cortex.base_cortex import (
 )
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
 logger = logging.getLogger("MANAS.Cortex.Adapter.Silpa")
@@ -61,7 +61,7 @@ class SilpaCortexAdapter(BaseCortex):
     def __init__(
         self,
         workspace: Optional[Path] = None,
-        kernel: Optional["RealVibeKernel"] = None,
+        kernel: Optional["KernelProtocol"] = None,
     ):
         super().__init__(workspace, kernel)
         self._architect = None

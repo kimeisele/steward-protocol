@@ -31,7 +31,7 @@ from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_
 
 if TYPE_CHECKING:
     from vibe_core import Task
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("VEDIC_GOVERNANCE")
 
@@ -97,9 +97,9 @@ class VedicGovernancePlugin(KernelPlugin):
         self._state_manager: Optional[VedicStateManager] = None
 
         # Reference to kernel (set on boot)
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
 
-    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
+    def on_boot(self, kernel: "KernelProtocol", config: Optional[Dict[str, Any]] = None) -> HookResult:
         """
         Called when kernel boots.
 
@@ -311,7 +311,7 @@ class VedicGovernancePlugin(KernelPlugin):
             if completions > self._task_completions.get(agent_id, 0):
                 self._task_completions[agent_id] = completions
 
-    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+    def on_agent_registered(self, kernel: "KernelProtocol", agent_id: str) -> None:
         """
         Called when a new agent is registered.
 
@@ -338,7 +338,7 @@ class VedicGovernancePlugin(KernelPlugin):
             f"Ashrama={ashrama.current_ashrama.value}"
         )
 
-    def on_task_pre_assign(self, kernel: "RealVibeKernel", agent_id: str, task: "Task") -> bool:
+    def on_task_pre_assign(self, kernel: "KernelProtocol", agent_id: str, task: "Task") -> bool:
         """
         GOVERNANCE GATE: Check if agent can receive this task.
 
@@ -396,7 +396,7 @@ class VedicGovernancePlugin(KernelPlugin):
 
         return True  # Allow task
 
-    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
+    def on_task_completed(self, kernel: "KernelProtocol", task_id: str, result: Any) -> None:
         """
         Track task completions for automatic graduation.
 
@@ -421,7 +421,7 @@ class VedicGovernancePlugin(KernelPlugin):
                 agent_id, Ashrama.GRIHASTHA, reason=f"Graduated after {count} successful tasks"
             )
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up on shutdown."""
         logger.info(f"🕉️  Vedic Governance shutting down ({len(self._varna_registry)} agents tracked)")
 

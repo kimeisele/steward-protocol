@@ -36,7 +36,7 @@ from vibe_core.protocols.testable import (
 from vibe_core.protocols.testable_registry import TestableRegistry
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("TEST_ORCHESTRATION")
 
@@ -128,7 +128,7 @@ class OrchestrationPlugin(KernelPlugin):
     def __init__(self):
         self._registry = TestableRegistry()
         self._results: List[TestResult] = []
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._discovery_counts: Dict[str, int] = {}
         self._guardian = None  # Lazy-loaded TestGuardian
 
@@ -140,7 +140,7 @@ class OrchestrationPlugin(KernelPlugin):
     def priority(self) -> int:
         return 200  # Run after everything else
 
-    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, object]] = None) -> HookResult:
+    def on_boot(self, kernel: "KernelProtocol", config: Optional[Dict[str, object]] = None) -> HookResult:
         """Called when kernel boots - auto-discover all testable components."""
         self._kernel = kernel
         logger.info("UNIVERSAL TestOrchestrationPlugin booting...")
@@ -154,7 +154,7 @@ class OrchestrationPlugin(KernelPlugin):
 
         return HookResult()
 
-    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+    def on_agent_registered(self, kernel: "KernelProtocol", agent_id: str) -> None:
         """When new agent registers, create testable adapter for it."""
         agent = kernel.agent_registry.get(agent_id)
         if agent:

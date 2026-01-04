@@ -14,7 +14,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.runtime.syscalls import register_syscall
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("COMPLEXITY_ANALYZER")
 
@@ -66,7 +66,7 @@ class ComplexityAnalyzerPlugin(KernelPlugin):
     plugin_id = "complexity_analyzer"
     priority = 80
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Register syscall on boot."""
         register_syscall(
             "ANALYZE_COMPLEXITY",
@@ -76,7 +76,7 @@ class ComplexityAnalyzerPlugin(KernelPlugin):
         )
         logger.info("🐍 OUROBOROS: ANALYZE_COMPLEXITY syscall registered")
 
-    def _handle_analyze_complexity(self, kernel: "RealVibeKernel", params: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_analyze_complexity(self, kernel: "KernelProtocol", params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle ANALYZE_COMPLEXITY syscall.
 

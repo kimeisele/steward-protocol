@@ -23,7 +23,7 @@ from vibe_core.protocols.resource import ResourceSupervisorProtocol
 from vibe_core.resource_manager import ResourceManager
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RESOURCE_LIMITS")
 
@@ -93,7 +93,7 @@ class ResourceLimitsPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """
@@ -119,7 +119,7 @@ class ResourceLimitsPlugin(KernelPlugin):
             logger.critical(f"❌ CRITICAL: Resource Limits Plugin failed to boot: {e}")
             return HookResult.fatal(str(e))
 
-    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+    def on_agent_registered(self, kernel: "KernelProtocol", agent_id: str) -> None:
         """
         Set initial resource quota for newly registered agent.
 

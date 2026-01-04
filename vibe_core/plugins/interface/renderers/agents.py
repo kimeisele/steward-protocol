@@ -15,13 +15,13 @@ from vibe_core.io_service import DocumentType
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 
 class AgentsRenderer(BaseRenderer):
     """Renders AGENTS.md from the Kernel's Agent Registry."""
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
         self._register_data_sources()
 
@@ -118,6 +118,6 @@ class AgentsRenderer(BaseRenderer):
         return "\n".join(lines)
 
 
-def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> AgentsRenderer:
+def create_renderer(kernel: "KernelProtocol", config: Dict[str, Any]) -> AgentsRenderer:
     """Factory function for InterfacePlugin."""
     return AgentsRenderer(kernel)

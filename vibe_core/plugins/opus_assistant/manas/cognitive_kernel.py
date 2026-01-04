@@ -54,7 +54,7 @@ from .sense_manager import SenseManager
 from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
     from vibe_core.tools.tool_registry import ToolRegistry
 
@@ -666,7 +666,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
     # =========================================================================
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "KernelProtocol") -> None:
         """
         Inject the core VibeKernel for ledger access and tool registry.
 

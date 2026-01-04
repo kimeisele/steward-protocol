@@ -24,7 +24,7 @@ from vibe_core.protocols.task import TaskProtocol
 from vibe_core.task_types import TaskStatus
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 
 # =============================================================================
@@ -234,7 +234,7 @@ class TaskManagerPlugin(KernelPlugin):
     def priority(self) -> int:
         return 95  # High priority - run early in sensors phase
 
-    def on_pulse(self, kernel: "RealVibeKernel", transaction) -> HookResult:
+    def on_pulse(self, kernel: "KernelProtocol", transaction) -> HookResult:
         """
         Execute during SENSORS, ACTUATORS, and CLEANUP phases.
 
@@ -305,7 +305,7 @@ class TaskManagerPlugin(KernelPlugin):
             logger.debug("⚙️ SENSORS: No new tasks to ingest")
             return HookResult.ok(data={"ingested": 0, "phase": "sensors"})
 
-    def _handle_actuators(self, kernel: "RealVibeKernel", project_root: Path) -> HookResult:
+    def _handle_actuators(self, kernel: "KernelProtocol", project_root: Path) -> HookResult:
         """Handle ACTUATORS phase: Execute pending tasks."""
         try:
             logger.info("⚙️ ACTUATORS: Task execution phase...")

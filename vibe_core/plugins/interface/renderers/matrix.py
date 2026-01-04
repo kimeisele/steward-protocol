@@ -16,7 +16,7 @@ from vibe_core.io_service import DocumentType
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RENDERER_MATRIX")
 
@@ -29,7 +29,7 @@ class MatrixRenderer(BaseRenderer):
     Loaders handle caching internally.
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
 
     @property

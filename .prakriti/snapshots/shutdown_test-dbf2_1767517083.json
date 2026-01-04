@@ -1,0 +1,99 @@
+{
+  "timestamp": 1767517083.380471,
+  "git": {
+    "is_repo": true,
+    "branch": "main",
+    "sha": "56b72e0",
+    "dirty": true,
+    "workspace": "/Users/ss/Downloads/steward-protocol"
+  },
+  "files": {
+    "workspace": "/Users/ss/Downloads/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": false,
+    "error": "No kernel injected"
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/Users/ss/Downloads/steward-protocol/config/personas",
+    "loaded": [
+      "envoy",
+      "discoverer",
+      "manas",
+      "ping",
+      "civic",
+      "archivist",
+      "supreme_court",
+      "oracle",
+      "science",
+      "forum",
+      "watchman",
+      "scribe",
+      "herald",
+      "chronicle",
+      "cleaner",
+      "auditor",
+      "engineer",
+      "librarian",
+      "analyst",
+      "marketer",
+      "mechanic",
+      "agora",
+      "ambassador",
+      "pulse",
+      "artisan",
+      "lens",
+      "market",
+      "dhruva",
+      "temple"
+    ],
+    "modified": [
+      "supreme_court",
+      "agora",
+      "auditor",
+      "mechanic",
+      "engineer",
+      "watchman",
+      "science",
+      "discoverer",
+      "analyst",
+      "herald",
+      "lens",
+      "cleaner",
+      "librarian",
+      "pulse",
+      "ping",
+      "scribe",
+      "temple",
+      "ambassador",
+      "chronicle",
+      "envoy",
+      "oracle",
+      "forum",
+      "marketer",
+      "manas",
+      "dhruva",
+      "market",
+      "civic",
+      "artisan",
+      "archivist"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-dbf2",
+    "boot_time": 1767517082.291908,
+    "commit_count": 0
+  }
+}

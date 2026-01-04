@@ -1,0 +1,43 @@
+{
+  "timestamp": 1767425024.079392,
+  "git": {
+    "is_repo": true,
+    "branch": "main",
+    "sha": "cf1f157",
+    "dirty": true,
+    "workspace": "/Users/ss/Downloads/steward-protocol"
+  },
+  "files": {
+    "workspace": "/Users/ss/Downloads/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": false,
+    "error": "No kernel injected"
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/Users/ss/Downloads/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "e2c3dde5",
+    "boot_time": 1767425012.9461231,
+    "commit_count": 0
+  }
+}

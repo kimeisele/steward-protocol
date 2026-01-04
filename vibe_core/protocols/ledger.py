@@ -10,7 +10,7 @@ This stub allows cartridges to be type-checked and developed standalone.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 from .agent import AgentManifest, VibeAgent
 from .registry import ManifestRegistry
@@ -156,3 +156,77 @@ class VibeKernel(ABC):
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         """Find agents with a specific capability"""
         pass
+
+
+# =============================================================================
+# PHASE 2: LedgerProtocol - Hot-Swappable Immutable Ledger
+# PROMPT.md: "Protocol statt konkrete Klassen (Dependency Inversion)"
+#
+# This protocol enables swapping SQLiteLedger for InMemoryLedger or other
+# implementations without modifying kernel code.
+# =============================================================================
+
+
+@runtime_checkable
+class LedgerProtocol(Protocol):
+    """
+    Protocol for immutable event ledger.
+
+    Implementations:
+        - SQLiteLedger (persistent)
+        - InMemoryLedger (ephemeral)
+
+    Usage:
+        ledger = ServiceRegistry.get(LedgerProtocol)
+        event_id = ledger.record_event("AGENT_BORN", "herald", {"role": "announcer"})
+    """
+
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+        """
+        Record an immutable event.
+
+        Args:
+            event_type: Type of event (e.g., "AGENT_BORN", "TASK_COMPLETED")
+            agent_id: ID of agent this event belongs to
+            details: Event payload
+
+        Returns:
+            event_id: Unique identifier for this event
+        """
+        ...
+
+    def get_all_events(self) -> List[Dict[str, Any]]:
+        """Get all events in chronological order."""
+        ...
+
+    def count_events(self) -> int:
+        """Get total number of events."""
+        ...
+
+    def get_top_hash(self) -> str:
+        """Get hash of latest event (blockchain-style)."""
+        ...
+
+    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Get task event by task_id."""
+        ...
+
+    def record_start(self, task) -> None:
+        """Record task start event."""
+        ...
+
+    def record_completion(self, task, result) -> None:
+        """Record task completion event."""
+        ...
+
+    def record_failure(self, task, error: str) -> None:
+        """Record task failure event."""
+        ...
+
+    def close(self) -> None:
+        """Close any open resources (e.g., database connections)."""
+        ...
+
+    def get_all_entries(self) -> List[Dict[str, Any]]:
+        """Alias for get_all_events (backward compatibility)."""
+        ...

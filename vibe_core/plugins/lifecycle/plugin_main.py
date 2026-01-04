@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("LIFECYCLE")
 
@@ -50,7 +50,7 @@ class LifecyclePlugin(KernelPlugin):
 
     def __init__(self):
         """Initialize Lifecycle state."""
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._constitution_hash: Optional[str] = None
         self._sandbox_path: Optional[Path] = None
         self._spawn_log: list[Dict[str, Any]] = []
@@ -59,7 +59,7 @@ class LifecyclePlugin(KernelPlugin):
     # Plugin Lifecycle Hooks
     # =========================================================================
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Called when kernel boots.
 
@@ -85,7 +85,7 @@ class LifecyclePlugin(KernelPlugin):
 
         logger.info(f"🌱 LifecyclePlugin initialized (constitution: {self._constitution_hash[:16]}...)")
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up on shutdown."""
         logger.info(f"🌱 LifecyclePlugin shutdown ({len(self._spawn_log)} agents spawned)")
 
@@ -382,7 +382,7 @@ class LifecyclePlugin(KernelPlugin):
 
     def _handle_spawn_cognition(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         params: Dict[str, Any],
     ) -> Dict[str, Any]:
         """

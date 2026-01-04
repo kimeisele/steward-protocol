@@ -54,7 +54,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.protocols import OpusAssistantProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
     from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
@@ -102,14 +102,14 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
 
     def __init__(self):
         """Initialize plugin state."""
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._workspace: Optional[Path] = None
         self._config: Dict[str, Any] = {}
         self._config_loader: Optional["ConfigLoader"] = None
         self._tick_handler: Optional["KernelTickHandler"] = None
         self._syscall_listener: Optional["SyscallListener"] = None
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Initialize OPUS Assistant on kernel boot.
 
@@ -181,7 +181,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
 
         logger.info(f"🎯 OPUS Assistant online (Workspace: {self._workspace})")
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Cleanup on kernel shutdown."""
         # 🔌 WIRING: Save final session state before shutdown
         self._save_session_state()
@@ -198,7 +198,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
     # OPUS-308: README MANIFESTATION REGISTRATION
     # =========================================================================
 
-    def _register_readme_manifestation(self, kernel: "RealVibeKernel") -> None:
+    def _register_readme_manifestation(self, kernel: "KernelProtocol") -> None:
         """
         OPUS-308: Register README.md as a kernel-native manifestation.
 
@@ -238,7 +238,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
     # OPUS-112: MANAS CAPABILITY REGISTRATION (VEDA-4)
     # =========================================================================
 
-    def _register_manas_capabilities(self, kernel: "RealVibeKernel") -> None:
+    def _register_manas_capabilities(self, kernel: "KernelProtocol") -> None:
         """
         OPUS-112: Register MANAS as agent with capabilities from manifest.
 
@@ -965,7 +965,7 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
 
     def on_tool_executed(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         agent_id: str,
         tool_name: str,
         params: Dict[str, Any],

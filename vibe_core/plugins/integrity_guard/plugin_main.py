@@ -16,7 +16,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from .sanctify_state import sanctify_state_system
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("INTEGRITY_GUARD")
 
@@ -34,7 +34,7 @@ class IntegrityGuardPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """
@@ -74,7 +74,7 @@ class IntegrityGuardPlugin(KernelPlugin):
                 logger.error("   The Law is in disrepair. System remains in DEGRADED mode.")
                 return HookResult.error(f"Integrity check failed: {e}")
 
-    def _enforce_standard(self, kernel: "RealVibeKernel") -> None:
+    def _enforce_standard(self, kernel: "KernelProtocol") -> None:
         """Run standard checks (lint, fast tests)."""
 
         # 1. Lint Check
@@ -99,11 +99,11 @@ class IntegrityGuardPlugin(KernelPlugin):
             logger.error(f"Test Failure Output:\n{res_test.stdout}")
             raise RuntimeError("Fundamental system tests failed.")
 
-    def on_tick_pre(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_tick_pre(self, kernel: "KernelProtocol") -> HookResult:
         return HookResult.ok()
 
-    def on_tick_post(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_tick_post(self, kernel: "KernelProtocol") -> HookResult:
         return HookResult.ok()
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_shutdown(self, kernel: "KernelProtocol") -> HookResult:
         return HookResult.ok()

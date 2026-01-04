@@ -10,7 +10,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 from . import is_test_mode
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("TEST_MODE_PLUGIN")
 
@@ -36,9 +36,9 @@ class TestModePlugin(KernelPlugin):
         return 1  # Runs first
 
     def __init__(self):
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Called when kernel boots."""
         self._kernel = kernel
         if is_test_mode():

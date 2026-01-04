@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any, Dict, List
 from ..base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 
 class GoldenRenderer(BaseRenderer):
@@ -40,7 +40,7 @@ class GoldenRenderer(BaseRenderer):
     3. Data source methods -> return data for LIVE sections
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
         self._register_data_sources()
 
@@ -100,6 +100,6 @@ class GoldenRenderer(BaseRenderer):
         ]
 
 
-def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> GoldenRenderer:
+def create_renderer(kernel: "KernelProtocol", config: Dict[str, Any]) -> GoldenRenderer:
     """Factory function - required for plugin loading."""
     return GoldenRenderer(kernel)

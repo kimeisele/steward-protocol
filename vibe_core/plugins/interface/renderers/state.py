@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 
 class StateRenderer(BaseRenderer):
@@ -31,7 +31,7 @@ class StateRenderer(BaseRenderer):
     - PURUSHA (Identity): Personas
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
         self._register_data_sources()
 
@@ -317,6 +317,6 @@ class StateRenderer(BaseRenderer):
         return lines
 
 
-def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> StateRenderer:
+def create_renderer(kernel: "KernelProtocol", config: Dict[str, Any]) -> StateRenderer:
     """Factory function for InterfacePlugin."""
     return StateRenderer(kernel)

@@ -22,7 +22,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("ECONOMY")
 
@@ -98,7 +98,7 @@ class EconomyPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """

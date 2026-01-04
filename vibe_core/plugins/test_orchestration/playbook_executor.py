@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from vibe_core.loaders import PlaybookLoader, PlaybookMeta, PlaybookStage
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("PLAYBOOK.EXECUTOR")
 
@@ -95,17 +95,17 @@ class DeterministicPlaybookExecutor:
             return {"analysis": {...}}
     """
 
-    def __init__(self, kernel: Optional["RealVibeKernel"] = None):
+    def __init__(self, kernel: Optional["KernelProtocol"] = None):
         self.handlers: Dict[str, HandlerFunc] = {}
         self.playbooks: Dict[str, PlaybookMeta] = {}
-        self._kernel: Optional["RealVibeKernel"] = kernel
+        self._kernel: Optional["KernelProtocol"] = kernel
         self._register_default_handlers()
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INJECTION (OPUS-059)
     # =========================================================================
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "KernelProtocol") -> None:
         """
         Inject the core VibeKernel for ledger access.
 
@@ -548,7 +548,7 @@ def execute_playbook(
     playbook_id: str,
     inputs: Dict[str, Any],
     dry_run: bool = False,
-    kernel: Optional["RealVibeKernel"] = None,
+    kernel: Optional["KernelProtocol"] = None,
 ) -> PlaybookResult:
     """
     Convenience function to execute a playbook.

@@ -1,0 +1,13 @@
+{
+  "session_id": "3f1c493e",
+  "started_at": "2026-01-04T09:33:39.307945",
+  "last_karma_score": 100,
+  "observation_count": 0,
+  "boot_mode": "full_power",
+  "view_preferences": {
+    "show_tests": true,
+    "show_debug": false,
+    "show_code_health": true
+  },
+  "pending_intent": null
+}
