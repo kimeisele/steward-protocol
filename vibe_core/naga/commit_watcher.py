@@ -27,6 +27,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional
 
 if TYPE_CHECKING:
@@ -41,6 +42,24 @@ CortexCommitCallback = Callable[["CommitSignal"], None]
 AlertHandler = Callable[["CommitAlert"], None]
 
 logger = logging.getLogger("NAGA.COMMIT_WATCHER")
+
+
+# =============================================================================
+# GAD-000 PARSEABILITY: ALERT CODES
+# =============================================================================
+
+
+class AlertCode(Enum):
+    """
+    Machine-parseable alert codes (GAD-000 Parseability).
+
+    Format: AXXX where X is a 3-digit code.
+    """
+
+    A001_PANIC_PATTERN = "A001"
+    A002_STAGNATION = "A002"
+    A003_DEFERRAL_LOOP = "A003"
+    A004_CONFLICT_DRIFT = "A004"
 
 
 # =============================================================================
@@ -69,10 +88,13 @@ class CommitAlert:
     message: str
     details: Dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
+    # GAD-000 Parseability: Machine-readable alert code
+    alert_code: AlertCode = AlertCode.A001_PANIC_PATTERN
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "alert_type": self.alert_type,
+            "alert_code": self.alert_code.value,  # Machine-parseable
             "severity": self.severity,
             "message": self.message,
             "details": self.details,
@@ -282,6 +304,7 @@ class NagaCommitWatcher:
             if panic_count >= self._panic_threshold:
                 return CommitAlert(
                     alert_type="PANIC_PATTERN",
+                    alert_code=AlertCode.A001_PANIC_PATTERN,
                     severity="CRITICAL",
                     message=f"Panic dump pattern detected: {panic_count} panics in {self._panic_window_seconds}s",
                     details={
@@ -298,6 +321,7 @@ class NagaCommitWatcher:
                 if self._stats.total_observed % 10 == 0:  # Throttle
                     return CommitAlert(
                         alert_type="STAGNATION",
+                        alert_code=AlertCode.A002_STAGNATION,
                         severity="WARNING",
                         message=f"No successful commits in {int(time_since_success)}s",
                         details={
@@ -310,6 +334,7 @@ class NagaCommitWatcher:
         if self._consecutive_deferrals >= self._deferral_threshold:
             return CommitAlert(
                 alert_type="DEFERRAL_LOOP",
+                alert_code=AlertCode.A003_DEFERRAL_LOOP,
                 severity="WARNING",
                 message=f"Decision paralysis: {self._consecutive_deferrals} consecutive deferrals",
                 details={
@@ -326,6 +351,7 @@ class NagaCommitWatcher:
                 if self._stats.total_observed % 20 == 0:  # Throttle
                     return CommitAlert(
                         alert_type="CONFLICT_DRIFT",
+                        alert_code=AlertCode.A004_CONFLICT_DRIFT,
                         severity="WARNING",
                         message=f"High conflict rate: {healed_rate:.1%} commits require healing",
                         details={

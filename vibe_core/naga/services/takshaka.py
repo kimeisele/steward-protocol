@@ -15,9 +15,11 @@ Responsibilities:
 BEVOR der Payload deserialisiert wird"
 """
 
+import hashlib
 import logging
 import re
 import time
+from collections import OrderedDict
 from datetime import datetime
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
@@ -82,6 +84,10 @@ class TakshakaService(TakshakaProtocol):
         self._errors = 0
         self._bites = 0
         self._last_heartbeat = datetime.now()
+
+        # GAD-000 Idempotency: Track seen violations to prevent duplicates
+        self._seen_violations: OrderedDict[str, str] = OrderedDict()  # hash -> event_id
+        self._seen_violations_max = 10000
 
         self._init_patterns()
 
@@ -311,11 +317,32 @@ class TakshakaService(TakshakaProtocol):
     # Bite (Record Attack)
     # =========================================================================
 
+    def _compute_violation_hash(self, violation: VajraViolation) -> str:
+        """
+        Compute fingerprint for violation (GAD-000 Idempotency).
+
+        Used to deduplicate identical violations.
+        """
+        payload = f"{violation.violation_type}:{violation.source}"
+        return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
     def bite(self, violation: VajraViolation) -> str:
-        """Record a security violation in the ledger."""
-        self._bites += 1
+        """
+        Record a security violation in the ledger.
+
+        GAD-000 Idempotency: Duplicate violations are detected and the
+        existing event_id is returned instead of creating a new entry.
+        """
         self._last_heartbeat = datetime.now()
 
+        # GAD-000 Idempotency: Check for duplicate violation
+        violation_hash = self._compute_violation_hash(violation)
+        if violation_hash in self._seen_violations:
+            existing_id = self._seen_violations[violation_hash]
+            logger.debug(f"TAKSHAKA: Duplicate violation {violation_hash[:8]}, returning {existing_id}")
+            return existing_id
+
+        self._bites += 1
         logger.warning(f"TAKSHAKA BITE: {violation.violation_type} from {violation.source}")
 
         if not self._ledger:
@@ -326,9 +353,20 @@ class TakshakaService(TakshakaProtocol):
             event_id = self._ledger.record_event(
                 event_type="VAJRA_VIOLATION",
                 agent_id="TAKSHAKA",
-                details=violation.to_dict(),
+                details={
+                    **violation.to_dict(),
+                    "violation_hash": violation_hash,  # GAD-000 Parseability
+                },
                 result="BITTEN",
             )
+
+            # Track for deduplication
+            self._seen_violations[violation_hash] = event_id
+
+            # LRU: Trim oldest when exceeding max
+            while len(self._seen_violations) > self._seen_violations_max:
+                self._seen_violations.popitem(last=False)
+
             return event_id
         except Exception as e:
             logger.error(f"TAKSHAKA: Failed to record bite: {e}")
