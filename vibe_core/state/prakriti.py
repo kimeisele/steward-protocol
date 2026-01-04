@@ -416,13 +416,18 @@ class Prakriti(PrakritiProtocol):
 
         logger.info(f"[PRAKRITI] Committed: {git_commit.short_sha} - {message}")
 
-        return CommitResult(
+        result = CommitResult(
             success=True,
             git_sha=git_commit.sha,
             ledger_event_id=ledger_event_id,
             session_id=self.session.session_id if self.session else None,
             files_committed=staged_files if sync_ledger else [],
         )
+
+        # 6. NAGA CommitWatcher hook - Der Wächter observes
+        self._notify_commit_watcher(result)
+
+        return result
 
     def sync_ledger_git(self, strategy: str = "git_wins") -> SyncResult:
         """Reconcile Ledger and Git if they diverged.
@@ -663,6 +668,26 @@ class Prakriti(PrakritiProtocol):
     # =========================================================================
     # Private Helpers
     # =========================================================================
+
+    def _notify_commit_watcher(self, result: CommitResult) -> None:
+        """Notify NAGA CommitWatcher about a commit.
+
+        Der Wächter observes all commits for pattern detection.
+        Non-critical - failures are logged but don't block commits.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import NagaFederationProtocol
+
+            # Try to get NAGA Federation from ServiceRegistry
+            # The commit_watcher is accessed through the federation
+            naga = ServiceRegistry.get(NagaFederationProtocol)
+            if naga and hasattr(naga, "commit_watcher") and naga.commit_watcher:
+                naga.commit_watcher.observe(result)
+                logger.debug(f"[PRAKRITI] NAGA CommitWatcher notified: {result.git_sha[:7]}")
+        except Exception as e:
+            # Non-critical - don't block commits
+            logger.debug(f"[PRAKRITI] NAGA CommitWatcher not available: {e}")
 
     def _is_process_alive(self, pid: int) -> bool:
         """Check if a process with given PID is still running.

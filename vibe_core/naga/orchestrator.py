@@ -26,7 +26,12 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols.correction import DriftSource
-from vibe_core.protocols.naga import SeshaProtocol, TakshakaProtocol, VasukiProtocol
+from vibe_core.protocols.naga import (
+    NagaFederationProtocol,
+    SeshaProtocol,
+    TakshakaProtocol,
+    VasukiProtocol,
+)
 from vibe_core.protocols.state import StateServiceProtocol
 
 if TYPE_CHECKING:
@@ -227,6 +232,11 @@ class NagaOrchestrator:
         except Exception as e:
             logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
             # Non-critical - continue without watcher
+
+        # 6. Register the Federation itself for service discovery
+        # This allows other components (like Prakriti) to find the CommitWatcher
+        ServiceRegistry.register(NagaFederationProtocol, self)
+        logger.info("🐍 NAGA Federation registered in ServiceRegistry")
 
         self._initialized = True
         logger.info("🐍 NAGA Federation initialized")
