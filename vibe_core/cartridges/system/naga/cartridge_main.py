@@ -100,20 +100,15 @@ class NagaCartridge(VibeAgent, OathMixin):
 
     @property
     def federation(self):
-        """Lazy-load NagaOrchestrator from ServiceRegistry."""
+        """Lazy-load NagaFederation from ServiceRegistry."""
         if self._federation is None:
             try:
                 from vibe_core.di import ServiceRegistry
-                from vibe_core.naga import NagaOrchestrator
+                from vibe_core.protocols.naga import NagaFederationProtocol
 
-                # Try protocol first, then class
-                try:
-                    self._federation = ServiceRegistry.get("NagaOrchestrator")
-                except Exception:
-                    # May be registered directly
-                    self._federation = ServiceRegistry.get(NagaOrchestrator)
+                self._federation = ServiceRegistry.get(NagaFederationProtocol)
             except Exception as e:
-                logger.debug(f"NagaOrchestrator not available: {e}")
+                logger.debug(f"NagaFederation not available: {e}")
                 return None
         return self._federation
 
