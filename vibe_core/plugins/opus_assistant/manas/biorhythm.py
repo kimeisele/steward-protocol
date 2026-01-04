@@ -311,6 +311,11 @@ class BiorhythmProcessor:
         if tick % 15 == 0:
             self._scan_violation_patterns()
 
+        # OUROBOROS WIRE: Ingest local sources → KG (every 20 ticks in Sattva)
+        # This closes the parser loop: REPORT.md, watchman_report.json → Parsers → KG
+        if tick % 20 == 0:
+            self._ingest_local_sources()
+
         # OUROBOROS WIRE: Sync CI/CD failures → KG (every 30 ticks in Sattva)
         # This closes the feedback loop: CI failures get ingested into KG
         if tick % 30 == 0:
@@ -394,6 +399,40 @@ class BiorhythmProcessor:
             logger.debug("DojoAgency not available, skipping violation scan")
         except Exception as e:
             logger.debug(f"Violation pattern scan failed: {e}")
+
+    def _ingest_local_sources(self) -> None:
+        """
+        OUROBOROS WIRE: Ingest local violation sources into Knowledge Graph.
+
+        This closes the parser loop:
+        Sources (REPORT.md, watchman_report.json) → Parsers → KG → Training
+
+        Called every 20 ticks (~60s) during Sattva state.
+
+        OPUS-LZ3: Wires ViolationParserLoader → ViolationIngester → KG.
+        """
+        try:
+            from vibe_core.ouroboros.loop_orchestrator import run_ingestion_tick
+
+            # Get workspace from kernel
+            workspace = getattr(self.kernel, "_workspace", None)
+            if not workspace:
+                return
+
+            result = run_ingestion_tick(workspace)
+
+            if result.ingested_count > 0:
+                logger.info(
+                    f"🐍 OUROBOROS: Ingested {result.ingested_count} violations from {result.sources_parsed} sources"
+                )
+            elif result.sources_found > 0:
+                logger.debug(
+                    f"🐍 OUROBOROS: Found {result.sources_found} sources, {result.violations_found} violations (0 new)"
+                )
+        except ImportError as e:
+            logger.debug(f"Loop orchestrator not available: {e}")
+        except Exception as e:
+            logger.debug(f"Local source ingestion failed: {e}")
 
     def _sync_ci_failures(self) -> None:
         """
