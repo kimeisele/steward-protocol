@@ -91,6 +91,15 @@ from .protocols.cognition import (
     IntentType as CognitiveIntentType,
 )
 
+# OPERATION LASAGNE Phase 1: Type Protocols (kill Any)
+from .protocols.kernel_types import (
+    AgentData,
+    AgentHealth,
+    GovernanceProtocol,
+    PluginProtocol,
+    TaskResult,
+)
+
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
@@ -250,7 +259,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._agent_registry_blueprint = lambda: {}  # Factory for empty registry
 
         self._scheduler = InMemoryScheduler()
-        self._completed_tasks: Dict[str, Any] = {}  # Temporary result cache for async IPC
+        self._completed_tasks: Dict[str, TaskResult] = {}  # Temporary result cache for async IPC
 
         # 2. LEDGER (with blueprint)
         # Store the factory, not just the instance
@@ -300,7 +309,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
         self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
         # OPUS-303: Agent health cache (TTL 30s) to reduce OS syscalls in pulse
-        self._agent_health_cache: Dict[str, Dict[str, Any]] = {}
+        self._agent_health_cache: Dict[str, AgentHealth] = {}
 
         # Phase 18: Network Gateway (Sangha)
         # OPUS-209: Extracted to sangha_network plugin
@@ -342,14 +351,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # Phase 4: Data Exchange Store (Inter-Agent Communication)
         # {agent_id: {key: value}} - Published data from agents
-        self._data_store: Dict[str, Dict[str, Any]] = {}
+        self._data_store: Dict[str, AgentData] = {}
         logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
 
         # GOVERNANCE PLUGIN SLOT
         # Governance is handled by plugins (e.g., VedicGovernancePlugin)
         # The plugin sets kernel.governance = self on boot
         # This keeps the kernel CLEAN and governance SWAPPABLE
-        self.governance: Optional[Any] = None
+        self.governance: Optional[GovernanceProtocol] = None
 
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
@@ -1016,7 +1025,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         return self._status
 
     @property
-    def plugins(self) -> List[Any]:
+    def plugins(self) -> List[PluginProtocol]:
         """Get list of loaded plugins (for state snapshotting)"""
         return self._plugins
 
