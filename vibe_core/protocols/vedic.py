@@ -26,6 +26,23 @@ class VarnaType(Enum):
     KRIMAYO = "krimayo"  # Background, minimal consciousness
 
 
+class AsharamaStage(Enum):
+    """
+    Ashrama lifecycle stages for agents.
+
+    Determines write privileges and permissions:
+    - BRAHMACHARI: Read-only, learning phase
+    - GRIHASTHA: Full write access, active work
+    - VANAPRASTHA: Read + teach, deprecating
+    - SANNYASA: System functions only, daemon mode
+    """
+
+    BRAHMACHARI = "brahmachari"  # Student: read, observe, learn
+    GRIHASTHA = "grihastha"  # Householder: read, write, create
+    VANAPRASTHA = "vanaprastha"  # Retiree: read, teach, archive
+    SANNYASA = "sannyasa"  # Renunciate: system functions only
+
+
 class VedicGovernanceProtocol(Protocol):
     """
     Protocol for Vedic governance operations.
@@ -54,8 +71,64 @@ class VedicGovernanceProtocol(Protocol):
         """Verify all agents have taken the constitutional oath."""
         ...
 
+    # =========================================================================
+    # ASHRAMA LIFECYCLE (Stage-based permissions)
+    # =========================================================================
+
+    def get_agent_ashrama(self, agent_id: str) -> AsharamaStage:
+        """Get the Ashrama lifecycle stage of an agent."""
+        ...
+
+    def promote_agent(self, agent_id: str, reason: str = "Promotion") -> bool:
+        """Promote agent to next Ashrama stage (BRAHMACHARI→GRIHASTHA→etc)."""
+        ...
+
+    def get_agent_permissions(self, agent_id: str) -> List[str]:
+        """Get list of permissions for agent based on Ashrama stage."""
+        ...
+
+    def check_agent_permission(self, agent_id: str, permission: str) -> bool:
+        """Check if agent has a specific permission (e.g., 'write', 'create')."""
+        ...
+
+    # =========================================================================
+    # BHAKTI (Earned trust/karma)
+    # =========================================================================
+
+    def get_bhakti_balance(self, agent_id: str) -> int:
+        """
+        Get agent's Bhakti (devotion/trust) balance.
+
+        Bhakti is earned through:
+        - Successful task completion
+        - Selfless service (seva)
+        - Code purification (tapas)
+        - Tests before code (TDD dharma)
+
+        Scale: 0-200+ (50+ allows permission overrides)
+        """
+        ...
+
+    def add_bhakti(self, agent_id: str, amount: int, reason: str = "Service") -> bool:
+        """Add Bhakti points to agent (reward for devotional practice)."""
+        ...
+
+    # =========================================================================
+    # GUNA (Quality ratios - Sattva/Rajas/Tamas)
+    # =========================================================================
+
+    def get_agent_guna(self, agent_id: str) -> Dict[str, float]:
+        """
+        Get agent's Guna composition (quality ratios).
+
+        Returns: {"sattva": 0.0-1.0, "rajas": 0.0-1.0, "tamas": 0.0-1.0}
+        Sum always equals 1.0
+        """
+        ...
+
 
 __all__ = [
     "VarnaType",
+    "AsharamaStage",
     "VedicGovernanceProtocol",
 ]

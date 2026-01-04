@@ -182,8 +182,30 @@ TRIGGER_VARGA_MAP = {
 DETECT → STORE → ANALYZE → HEAL → [WRITE] → [PR] → VERIFY
   ✅       ✅       ✅       ✅      ❌       ❌      ✅
 
-Gap: dry_run=True always (biorhythm.py:454)
+Gap: biorhythm.py calls detect_and_report() only (OBSERVE)
+Gap: Never calls detect_and_heal() (no healing code path!)
+✅ FIXED: HealingStrategy.RESONANCE uses Quantum Reactor
+✅ FIXED: QuantumHealingResolver wired into CorrectionOrchestrator
 Gap: Parsers not imported (loop can't ingest)
+```
+
+### Biorhythm Code Smell Audit (2026-01-04)
+```
+CRITICAL:
+  - 15+ private attribute accesses (kernel._buffer, kernel._awareness, etc.)
+  - CognitiveKernel in plugin layer (should be kernel layer)
+  ✅ FIXED: dry_run replaced with HealingStrategy.RESONANCE
+
+HIGH:
+  - 15+ hardcoded thresholds not configurable
+  - CISyncService direct instantiation (should be DI)
+  - DojoAgency lacks protocol (uses factory function)
+
+GOOD:
+  - CorrectionDispatcher properly separated (protocol + DI)
+  - HealingStrategy enum exists (DRY_RUN, AUTO, MANUAL, RESONANCE)
+  - ServiceRegistry.get(CorrectionOrchestratorProtocol) works
+  ✅ QuantumHealingResolver wired for karma-based trust
 ```
 
 ### CI Feedback
@@ -855,6 +877,125 @@ return value  # String fallback
 
 - **CorrectionDispatcher:** Design complete (subagent report)
 - **GAD Standards:** 38 GADs mapped, GAD-000 = Operator Inversion
+
+---
+
+## KARMA SYSTEM: Graduated Healing Trust ✅ COMPLETE
+
+### Status: DONE (2026-01-04)
+
+Replaced binary `dry_run=True` with graduated trust via Quantum Reactor resonance.
+
+### The Problem: Binary Healing Decisions
+
+```
+BEFORE:
+  biorhythm.py: results = engine.heal_all_violations(dry_run=True)
+                                                      ^^^^^^^^^^^^
+                                         HARDCODED! NEVER HEALS!
+
+  No trust concept. No earning privileges. Just a boolean.
+```
+
+### The Solution: QuantumHealingResolver
+
+```
+AFTER:
+  1. Check Ashrama stage (lifecycle permissions)
+     - BRAHMACHARI → DRY_RUN only (learning)
+     - GRIHASTHA → Can earn AUTO (active)
+     - VANAPRASTHA → MANUAL (retiring)
+     - SANNYASA → DRY_RUN only (daemon)
+
+  2. Get Bhakti balance (earned trust 0-200)
+     - Earned via successful tasks, seva, TDD dharma
+     - 50+ enables MANUAL override
+
+  3. Compute resonance via Quantum Reactor
+     - energy vs inertia threshold
+     - If energy > inertia → AUTO (manifest!)
+     - Else → DRY_RUN (observe)
+```
+
+### Files Created/Modified
+
+| File | Purpose |
+|------|---------|
+| `vibe_core/protocols/vedic.py` | Extended with AsharamaStage enum + Bhakti methods |
+| `vibe_core/protocols/correction.py` | Added RESONANCE to HealingStrategy, HealingStrategyResolverProtocol |
+| `vibe_core/services/healing_resolver.py` | QuantumHealingResolver implementation |
+| `vibe_core/services/correction_dispatcher.py` | Wired resolver into BasicCorrectionOrchestrator |
+
+### Key Types
+
+```python
+# Ashrama lifecycle stages (vedic.py)
+class AsharamaStage(Enum):
+    BRAHMACHARI = "brahmachari"  # Student: read, observe, learn
+    GRIHASTHA = "grihastha"      # Householder: read, write, create
+    VANAPRASTHA = "vanaprastha"  # Retiree: read, teach, archive
+    SANNYASA = "sannyasa"        # Renunciate: system functions only
+
+# Healing strategies (correction.py)
+class HealingStrategy(str, Enum):
+    AUTO = "auto"           # Execute immediately
+    DRY_RUN = "dry_run"     # Observe only
+    MANUAL = "manual"       # Requires human approval
+    CIRCUIT = "circuit"     # Delegate to circuit executor
+    RESONANCE = "resonance" # Use Quantum Reactor to determine
+
+# Resolver protocol (correction.py)
+class HealingStrategyResolverProtocol(Protocol):
+    def resolve(agent_id: str, drift: UnifiedDriftReport) -> HealingStrategy: ...
+    def get_trust_level(agent_id: str) -> float: ...  # 0.0-1.0
+```
+
+### Usage
+
+```python
+# RESONANCE strategy: let resolver decide per-drift
+orchestrator = ServiceRegistry.get(CorrectionOrchestratorProtocol)
+results = orchestrator.detect_and_heal(
+    strategy=HealingStrategy.RESONANCE,
+    agent_id="opus_assistant",  # Required for trust lookup
+)
+
+# Resolver flow:
+# 1. BRAHMACHARI/SANNYASA → DRY_RUN
+# 2. resonance.manifest() with bhakti → AUTO if energy > inertia
+# 3. High bhakti (50+) but no manifest → MANUAL
+# 4. Else → DRY_RUN (still learning)
+```
+
+### Architecture
+
+```
+VedicGovernanceProtocol          QuantumReactor
+├── get_agent_ashrama()          ├── manifest(intent, salt)
+├── get_bhakti_balance()         └── returns ResonanceField
+└── add_bhakti()
+         ↓                              ↓
+    ┌────────────────────────────────────────┐
+    │       QuantumHealingResolver           │
+    │  ├── resolve(agent_id, drift)          │
+    │  │   1. Check ashrama stage            │
+    │  │   2. Get bhakti balance             │
+    │  │   3. Compute resonance              │
+    │  │   4. Return HealingStrategy         │
+    │  └── get_trust_level(agent_id) → 0-1   │
+    └────────────────────────────────────────┘
+                    ↓
+    BasicCorrectionOrchestrator.detect_and_heal(
+        strategy=RESONANCE, agent_id="..."
+    )
+```
+
+### Key Design Decisions
+
+1. **No hardcoded thresholds in resolver** - uses VedicGovernance bhakti_override_threshold
+2. **Lazy DI loading** - resolver gets governance/reactor via ServiceRegistry if not injected
+3. **Per-drift resolution** - each drift can have different strategy based on agent state
+4. **Safe fallback** - any error → DRY_RUN (safe default)
 
 ---
 

@@ -44,6 +44,7 @@ from .correction import (
     HealingResult,
     HealingStatus,
     HealingStrategy,
+    HealingStrategyResolverProtocol,
     NullCorrectionDispatcher,
     NullDriftRegistry,
     UnifiedDriftReport,
@@ -192,7 +193,7 @@ from .testable_registry import (
 )
 
 # Vedic Governance Protocol (OS-level access to taxonomy)
-from .vedic import VarnaType, VedicGovernanceProtocol
+from .vedic import AsharamaStage, VarnaType, VedicGovernanceProtocol
 
 # Note: ManifestRegistry and VibeScheduler are re-exported from .ledger module
 # The .registry and .scheduler modules exist for backwards compatibility
@@ -264,6 +265,7 @@ __all__ = [
     "SemanticUIProtocol",
     # Vedic Governance Protocol
     "VarnaType",
+    "AsharamaStage",
     "VedicGovernanceProtocol",
     # OPUS-309: Operator Cognitive Protocol
     "OperatorCognitiveProtocol",
@@ -335,6 +337,7 @@ __all__ = [
     "UnifiedDriftSeverity",
     "HealingStrategy",
     "HealingStatus",
+    "HealingStrategyResolverProtocol",
     "UnifiedDriftReport",
     "HealingResult",
     "CorrectionStats",
