@@ -615,8 +615,12 @@ class UnifiedCLI:
 
         def render_frame() -> None:
             """Render a single observation frame."""
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+            workspace = Path.cwd()
+
             # 1. Load Intent Queue (Sankalpa - The Will)
-            intent_path = Path(".opus_state/manas_intents.json")
+            intent_path = get_opus_state_path(workspace, "manas_intents.json")
             if intent_path.exists():
                 try:
                     intents = json.loads(intent_path.read_text())
@@ -626,7 +630,7 @@ class UnifiedCLI:
                 intents = []
 
             # 2. Load Memory State (Smriti - The Memory)
-            memory_path = Path(".opus_state/manas_memory.json")
+            memory_path = get_opus_state_path(workspace, "manas_memory.json")
             if memory_path.exists():
                 try:
                     memory = json.loads(memory_path.read_text())
@@ -640,7 +644,7 @@ class UnifiedCLI:
                 memory = {}
 
             # 3. Load Synaptic Weights (if exists)
-            synapse_path = Path(".opus_state/synapses.json")
+            synapse_path = get_opus_state_path(workspace, "synapses.json")
             if synapse_path.exists():
                 try:
                     synapses = json.loads(synapse_path.read_text())
@@ -654,7 +658,7 @@ class UnifiedCLI:
                 synapses = {"schema": "v1", "weights": {}}
 
             # 4. OPUS-174: Load MANAS Biorhythm Awareness (Consciousness State)
-            awareness_path = Path(".opus_state/manas_awareness.json")
+            awareness_path = get_opus_state_path(workspace, "manas_awareness.json")
             if awareness_path.exists():
                 try:
                     awareness = json.loads(awareness_path.read_text())
@@ -668,7 +672,7 @@ class UnifiedCLI:
                 awareness = {"state": "unknown", "consciousness_level": 0.0, "tick": 0}
 
             # 5. Load Session State
-            session_path = Path(".opus_state/session.json")
+            session_path = get_opus_state_path(workspace, "session.json")
             session = {}
             if session_path.exists():
                 try:
@@ -834,7 +838,9 @@ class UnifiedCLI:
         console = Console()
 
         # Load intents
-        intent_path = Path(".opus_state/manas_intents.json")
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        intent_path = get_opus_state_path(Path.cwd(), "manas_intents.json")
         if not intent_path.exists():
             console.print("[red]❌ No intent file found. MANAS has no pending thoughts.[/red]")
             return 1

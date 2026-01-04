@@ -557,7 +557,7 @@ class CognitionRenderer(BaseRenderer):
     def _render_intent_stream(self) -> list:
         """Render MANAS intent stream (OPUS-108 Debug Intelligence).
 
-        Shows pending intents from .opus_state/manas_intents.json
+        Shows pending intents from manas_intents.json state file.
         This is the "thought stream" - what MANAS is thinking about doing.
         """
         lines = [
@@ -570,8 +570,10 @@ class CognitionRenderer(BaseRenderer):
         try:
             import json
 
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
             workspace = getattr(self.kernel, "_workspace", None) or Path.cwd()
-            intents_file = workspace / ".opus_state" / "manas_intents.json"
+            intents_file = get_opus_state_path(workspace, "manas_intents.json")
 
             if not intents_file.exists():
                 lines.extend(["_No intents file found_", ""])
@@ -622,7 +624,7 @@ class CognitionRenderer(BaseRenderer):
     def _render_sankalpa_status(self) -> list:
         """Render SANKALPA strategic will status.
 
-        Shows active missions and strategies from .opus_state/sankalpa.json
+        Shows active missions and strategies from sankalpa.json state file.
         This is the "strategic layer" - MANAS's long-term goals.
         """
         lines = [
@@ -635,8 +637,10 @@ class CognitionRenderer(BaseRenderer):
         try:
             import json
 
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
             workspace = getattr(self.kernel, "_workspace", None) or Path.cwd()
-            sankalpa_file = workspace / ".opus_state" / "sankalpa.json"
+            sankalpa_file = get_opus_state_path(workspace, "sankalpa.json")
 
             if not sankalpa_file.exists():
                 lines.extend(["_No sankalpa file found_", ""])

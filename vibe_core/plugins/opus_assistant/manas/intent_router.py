@@ -133,7 +133,8 @@ except ImportError:
 logger = logging.getLogger("MANAS.IntentRouter")
 
 # OPUS-075: HIL Bridge state directory
-HIL_STATE_DIR = ".opus_state"
+# Migration: Now uses .vibe/state/plugins/opus_assistant/ via state_paths
+HIL_STATE_DIR = ".vibe/state/plugins/opus_assistant"
 PENDING_INTENTS_FILE = "pending_intents.json"
 KARMA_LOG_FILE = "karma_log.json"
 
@@ -324,11 +325,12 @@ class IntentRouter:
             Dict with mantra info if Siddhi match, None otherwise
         """
         try:
+            # Load Sanskrit Matrix from state
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
             from vibe_core.state.sanskrit_matrix import infer_layer
 
-            # Load Sanskrit Matrix from state
             state = get_state_service(self._workspace, plugin_id="opus_assistant")
-            matrix_path = self._workspace / ".opus_state" / "sanskrit_matrix.json"
+            matrix_path = get_opus_state_path(self._workspace, "sanskrit_matrix.json")
 
             if not matrix_path.exists():
                 return None

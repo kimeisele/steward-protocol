@@ -450,9 +450,10 @@ class DojoRunner:
             )
 
     def _save_metrics(self) -> None:
-        """Save training metrics to .opus_state/dojo_sessions/."""
-        metrics_dir = self._workspace / ".opus_state" / "dojo_sessions"
-        metrics_dir.mkdir(parents=True, exist_ok=True)
+        """Save training metrics to dojo_sessions/."""
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_dir
+
+        metrics_dir = get_opus_state_dir(self._workspace, "dojo_sessions")
 
         metrics_file = metrics_dir / f"{self._session.session_id}.json"
         metrics_file.write_text(json.dumps(self._session.to_dict(), indent=2))

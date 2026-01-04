@@ -308,8 +308,8 @@ class DriftDetector:
         if path.startswith("tests/") or "/tests/" in path or "/test_" in path:
             return False
 
-        # State files - regenerated
-        if path.startswith(".opus_state/") or path.startswith(".vibe/"):
+        # State files - regenerated (both legacy and new locations)
+        if path.startswith(".opus_state/") or path.startswith(".vibe/state/"):
             return False
 
         # Known hallucinated documentation references (never existed)

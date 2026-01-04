@@ -207,7 +207,9 @@ def ensure_kernel_running(config: Optional[PranaConfig] = None, background: bool
 
 def get_last_heartbeat() -> Optional[str]:
     """Get timestamp of last heartbeat from state file."""
-    state_file = Path(".opus_state/prana_heartbeat.json")
+    from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+    state_file = get_opus_state_path(Path.cwd(), "prana_heartbeat.json")
     if not state_file.exists():
         return None
 
@@ -228,8 +230,9 @@ def record_heartbeat() -> None:
     import tempfile
     from datetime import datetime
 
-    state_file = Path(".opus_state/prana_heartbeat.json")
-    state_file.parent.mkdir(parents=True, exist_ok=True)
+    from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+    state_file = get_opus_state_path(Path.cwd(), "prana_heartbeat.json")
 
     data = {
         "last_pulse": datetime.utcnow().isoformat(),

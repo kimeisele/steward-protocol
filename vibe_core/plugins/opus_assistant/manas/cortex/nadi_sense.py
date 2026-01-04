@@ -144,12 +144,14 @@ EXPECTED_EMISSIONS = {
 }
 
 # State files that should not be stale
+# NOTE: Paths support both legacy (.opus_state/) and new (.vibe/state/plugins/opus_assistant/)
 EXPECTED_STATE_FILES = {
-    ".opus_state/manas_intents.json": {
+    ".vibe/state/plugins/opus_assistant/manas_intents.json": {
         "max_age_hours": 2,  # Should update at least every 2 hours if MANAS is running
         "description": "MANAS intent buffer",
+        "legacy_path": ".opus_state/manas_intents.json",
     },
-    ".opus_state/prakriti.json": {
+    ".prakriti/prakriti.json": {
         "max_age_hours": 1,  # Should update every hour
         "description": "Prakriti state (3 layers)",
     },
@@ -435,7 +437,7 @@ class NadiSense(BaseSense):
                     ),
                     priority=IntentPriority.HIGH,
                     risk=IntentRisk.LOW,
-                    related_files=[".opus_state/manas_intents.json"],
+                    related_files=[".vibe/state/plugins/opus_assistant/manas_intents.json"],
                     related_docs=["docs/architecture/OPUS/108-AUTONOMY-LOOP.md"],
                     params={
                         "age_hours": stale.age_hours,

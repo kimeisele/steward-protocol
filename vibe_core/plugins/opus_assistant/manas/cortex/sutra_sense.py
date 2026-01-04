@@ -325,7 +325,10 @@ class SutraSense(BaseSense):
         self._intent_clusters: Dict[str, IntentCluster] = {}
         self._doc_enhancements: List[DocEnhancement] = []
         self._roadmap: List[RoadmapItem] = []
-        self._intent_history_file = self._workspace / ".opus_state" / "sutra_intent_history.json"
+        # Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        self._intent_history_file = get_opus_state_path(self._workspace, "sutra_intent_history.json")
 
         logger.info("[SUTRA_SENSE] Initialized - The Thread of Knowledge (Phase 2: Proactive Mode)")
 

@@ -155,6 +155,7 @@ class ArchitectureSpec:
         "gateway",
         "knowledge",
         ".opus_state",
+        ".vibe",
         ".git",
         ".github",
         ".venv",

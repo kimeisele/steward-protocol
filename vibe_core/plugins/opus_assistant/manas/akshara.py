@@ -293,7 +293,7 @@ PATH_VARGA_PATTERNS: Dict[Varga, List[str]] = {
         "vibe_core/vajra/",  # Vajra (thunderbolt - core power)
         "vibe_core/steward/",  # Steward (core manager)
         "vibe_core/config/",  # Core configuration
-        ".opus_state/",  # OPUS kernel state
+        ".vibe/state/",  # OPUS kernel state (migrated from .opus_state/)
         ".prakriti/",  # Prakriti (nature - core)
     ],
     # TALAVYA (COGNITION) - Decision/Flow, Intelligence
@@ -805,8 +805,10 @@ class AksharaGraph:
 
     def __init__(self, workspace: Path):
         """Initialize the Akshara graph."""
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self._workspace = workspace
-        self._graph_file = workspace / ".opus_state" / "akshara_graph.json"
+        self._graph_file = get_opus_state_path(workspace, "akshara_graph.json")
         self._nodes: Dict[str, AksharaNode] = {}
         self._edges: List[AksharaEdge] = []
 

@@ -16,7 +16,7 @@
     "can_spawn_task_kernel": true,
     "has_sovereign_state": true,
     "emergency_protocol": "presidents_rule",
-    "state_directory": ".opus_state"
+    "state_directory": ".vibe/state/plugins/opus_assistant"
   },
   "hooks": [
     "on_boot",
@@ -51,7 +51,7 @@
     ]
   },
   "state": {
-    "dir": ".opus_state",
+    "dir": ".vibe/state/plugins/opus_assistant",
     "files": {
       "observations": "observations.jsonl",
       "karma_history": "karma_history.jsonl",
@@ -69,15 +69,15 @@
   "generated_outputs": {
     "_comment": "OPUS-081/096: Use glob patterns to prevent config drift. MANAS critical files = brain memory.",
     "state_files": [
-      ".opus_state/*",
-      "vibe_core/plugins/opus_assistant/.opus_state/*"
+      ".vibe/state/plugins/opus_assistant/*",
+      ".opus_state/*"
     ],
     "_manas_critical_doc": "These files ARE the MANAS brain - if they're not committed, MANAS is lobotomized",
     "manas_critical": [
-      ".opus_state/manas_intents.json",
-      ".opus_state/manas_memory.json",
-      ".opus_state/sankalpa.json",
-      ".opus_state/sutra_intent_history.json"
+      ".vibe/state/plugins/opus_assistant/manas_intents.json",
+      ".vibe/state/plugins/opus_assistant/manas_memory.json",
+      ".vibe/state/plugins/opus_assistant/sankalpa.json",
+      ".vibe/state/plugins/opus_assistant/sutra_intent_history.json"
     ]
   },
   "circuits": [

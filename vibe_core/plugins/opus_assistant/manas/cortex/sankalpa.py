@@ -273,7 +273,7 @@ class SankalpaRegistry:
     """
     Registry of missions and strategies.
 
-    Persists to .opus_state/sankalpa.json
+    Persists to .vibe/state/plugins/opus_assistant/sankalpa.json
     Provides CRUD operations and query methods.
 
     "The registry is the scroll of vows - written in fire, bound by honor."
@@ -370,7 +370,9 @@ class SankalpaRegistry:
 
     def _get_registry_file(self) -> Path:
         """Get path to registry file."""
-        return self._workspace / ".opus_state" / "sankalpa.json"
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        return get_opus_state_path(self._workspace, "sankalpa.json")
 
     def _load(self) -> None:
         """Load missions from disk."""

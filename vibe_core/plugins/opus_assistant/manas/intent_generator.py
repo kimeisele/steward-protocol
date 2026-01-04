@@ -496,7 +496,9 @@ class IntentGenerator:
         Risk: SAFE (just deleting old logs)
         """
         try:
-            log_dir = self._workspace / ".opus_state" / "logs"
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_dir
+
+            log_dir = get_opus_state_dir(self._workspace, "logs")
             if not log_dir.exists():
                 return None
 
@@ -514,7 +516,7 @@ class IntentGenerator:
                     id=self._next_intent_id(),
                     intent_type="cleanup_old_logs",
                     title=f"Clean up {len(old_logs)} old log files",
-                    description=f"Found {len(old_logs)} log files older than 7 days in .opus_state/logs/",
+                    description=f"Found {len(old_logs)} log files older than 7 days in state/logs/",
                     reasoning="Old log files consume disk space and are rarely needed after a week.",
                     priority=IntentPriority.LOW,
                     risk=IntentRisk.SAFE,  # Safe to auto-execute

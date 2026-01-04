@@ -1118,8 +1118,10 @@ class OpusDashboardRenderer:
                 except Exception as e:
                     logger.debug(f"Failed to get existing MANAS status: {e}")
 
-            # Read persisted state from .opus_state/manas_intents.json
-            intents_path = self._root / ".opus_state" / "manas_intents.json"
+            # Read persisted state from state directory
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+            intents_path = get_opus_state_path(self._root, "manas_intents.json")
             if intents_path.exists():
                 try:
                     data = json.loads(intents_path.read_text())
@@ -1209,8 +1211,10 @@ class OpusDashboardRenderer:
                 "last_reinforcement": None,  # Legacy compat
             }
 
-            # Read synapses from .opus_state/synapses.json
-            synapses_path = self._root / ".opus_state" / "synapses.json"
+            # Read synapses from state directory
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+            synapses_path = get_opus_state_path(self._root, "synapses.json")
             if synapses_path.exists():
                 try:
                     # Get file modification time for ops transparency
@@ -1253,7 +1257,7 @@ class OpusDashboardRenderer:
                     logger.debug(f"Failed to read synapses: {e}")
 
             # Read last reinforcement tracking
-            reinforce_path = self._root / ".opus_state" / "last_reinforcement.json"
+            reinforce_path = get_opus_state_path(self._root, "last_reinforcement.json")
             if reinforce_path.exists():
                 try:
                     data = json.loads(reinforce_path.read_text())
@@ -1262,8 +1266,8 @@ class OpusDashboardRenderer:
                 except Exception:
                     pass
 
-            # Read recent Viveka decisions from .opus_state/viveka_decisions.json
-            decisions_path = self._root / ".opus_state" / "viveka_decisions.json"
+            # Read recent Viveka decisions
+            decisions_path = get_opus_state_path(self._root, "viveka_decisions.json")
             if decisions_path.exists():
                 try:
                     # Get file modification time

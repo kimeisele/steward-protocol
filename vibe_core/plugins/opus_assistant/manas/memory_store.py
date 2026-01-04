@@ -12,7 +12,9 @@ This module provides persistent memory for MANAS:
 - Avoid suggesting the same failed action repeatedly
 - Build "muscle memory" for successful patterns
 
-Storage: .opus_state/manas_memory.json (survives restarts)
+Storage: .vibe/state/plugins/opus_assistant/manas_memory.json (survives restarts)
+
+Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 """
 
 import json
@@ -57,7 +59,7 @@ class MemoryStore:
     - Implements forgetting (old memories fade)
     - Prevents repeated failures (cooldown period)
 
-    Storage location: .opus_state/manas_memory.json
+    Storage location: .vibe/state/plugins/opus_assistant/manas_memory.json
 
     Configuration: Reads from config/opus.yaml under 'memory' section.
     Falls back to defaults if config not available.
@@ -77,8 +79,10 @@ class MemoryStore:
         Args:
             workspace: Workspace root (defaults to cwd)
         """
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self._workspace = workspace or Path.cwd()
-        self._memory_file = self._workspace / ".opus_state" / "manas_memory.json"
+        self._memory_file = get_opus_state_path(self._workspace, "manas_memory.json")
         self._memories: List[MemoryEntry] = []
 
         # Load config from opus.yaml

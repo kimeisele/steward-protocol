@@ -115,12 +115,12 @@ class Mirror:
     """
 
     def __init__(self, workspace: Path):
-        self._workspace = workspace
-        self._synapses_path = workspace / ".opus_state" / "synapses.json"
-        self._inspection_history_path = workspace / ".opus_state" / "mirror" / "history.json"
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_dir, get_opus_state_path
 
-        # Initialize storage
-        self._inspection_history_path.parent.mkdir(parents=True, exist_ok=True)
+        self._workspace = workspace
+        self._synapses_path = get_opus_state_path(workspace, "synapses.json")
+        mirror_dir = get_opus_state_dir(workspace, "mirror")
+        self._inspection_history_path = mirror_dir / "history.json"
 
     def inspect(self) -> SelfInspection:
         """
