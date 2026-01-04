@@ -511,21 +511,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                     if plugin_instance:
                         self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
 
-            # OPUS-308: Register kernel-native SETTINGS.md
-            # SETTINGS.md is a kernel feature, not a plugin
-            self.manifestation.register_kernel_source(
-                output="SETTINGS.md",
-                schema="config_bidirectional",
-                data_getter=self._get_settings_manifestation_data,
-            )
-
-            # OPUS-308: Register kernel-native OPERATIONS.md
-            # OPERATIONS.md shows scheduler, agents, events - all kernel state
-            self.manifestation.register_kernel_source(
-                output="OPERATIONS.md",
-                schema="dashboard_readonly",
-                data_getter=self._get_operations_manifestation_data,
-            )
+            # OPUS-LASAGNE: SETTINGS.md and OPERATIONS.md registration moved to ManifestationService
+            # ManifestationService._register_kernel_natives() handles this automatically
         else:
             self._plugins = []
             self._plugins = []
@@ -1298,136 +1285,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             "total_credits": total_credits,
         }
 
-    def _get_settings_manifestation_data(self) -> Dict[str, Any]:
-        """
-        OPUS-308: Kernel-native data source for SETTINGS.md.
-
-        Returns data for the config_bidirectional schema sections:
-        - current: Current kernel configuration
-        - available: Available agents and their status
-        - history: Recent command execution history
-        """
-        # Current configuration
-        config = self._config or _get_config()
-        log_level = logging.getLevelName(logging.getLogger("VIBE_KERNEL").getEffectiveLevel())
-        verbose = getattr(self, "_verbose", False)
-        provider = "unknown"
-        mode = "simulation"
-
-        if config:
-            if hasattr(config, "llm"):
-                provider = getattr(config.llm, "provider", provider)
-            if hasattr(config, "runtime"):
-                mode = getattr(config.runtime, "mode", mode)
-
-        current = [
-            {"Setting": "`kernel.log_level`", "Value": f"`{log_level}`", "Description": "Logging verbosity"},
-            {"Setting": "`kernel.verbose`", "Value": f"`{verbose}`", "Description": "Verbose mode"},
-            {"Setting": "`provider`", "Value": f"`{provider}`", "Description": "LLM Provider"},
-            {"Setting": "`mode`", "Value": f"`{mode}`", "Description": "Execution Mode"},
-            {"Setting": "`agents`", "Value": f"`{len(self._agent_registry)}`", "Description": "Registered agents"},
-            {"Setting": "`plugins`", "Value": f"`{len(self._plugins)}`", "Description": "Loaded plugins"},
-        ]
-
-        # Available agents (from registry)
-        available = []
-        for agent_id in self._agent_registry.keys():
-            status = "ACTIVE"
-            # Check if paused via governance
-            if self.governance and hasattr(self.governance, "get_paused_agents"):
-                if agent_id in self.governance.get_paused_agents():
-                    status = "PAUSED"
-            available.append({"Agent": f"`{agent_id}`", "Status": status})
-
-        # History - get from ledger (last 10 events)
-        history = []
-        try:
-            events = self._ledger.get_all_events()[-10:]
-            for event in events:
-                history.append(
-                    {
-                        "Time": event.get("timestamp", "")[:19],
-                        "Type": event.get("event_type", "")[:20],
-                        "Agent": event.get("agent_id", "")[:15],
-                    }
-                )
-        except Exception as e:
-            # OPUS-312: Log ledger access failures at debug
-            logger.debug(f"Ledger event history fetch failed: {e}")
-
-        return {
-            "current": current,
-            "available": available,
-            "history": history,
-        }
-
-    def _get_operations_manifestation_data(self) -> Dict[str, Any]:
-        """
-        OPUS-308: Kernel-native data source for OPERATIONS.md.
-
-        Returns data for the dashboard_readonly schema sections:
-        - metrics: Key numbers (queue size, agent count, event count)
-        - status: Current kernel and agent states
-        - details: Scheduler queue details
-        """
-        # Metrics - key numbers
-        queue_status = self._scheduler.get_queue_status() if hasattr(self, "_scheduler") else {}
-        event_status = self._event_bus.get_status() if hasattr(self, "_event_bus") else {}
-
-        metrics = {
-            "Kernel Status": self._status.value,
-            "Agents": len(self._agent_registry),
-            "Queue Length": queue_status.get("queue_length", 0),
-            "Pending Tasks": queue_status.get("pending", 0),
-            "Total Events": event_status.get("total_emitted", 0),
-            "Plugins": len(self._plugins),
-        }
-
-        # Status - agent states
-        status = []
-        for agent_id, agent in sorted(self._agent_registry.items()):
-            name = getattr(agent, "name", agent_id)
-            domain = getattr(agent, "domain", "UNKNOWN")
-            status.append(
-                {
-                    "Agent": f"`{agent_id}`",
-                    "Name": name,
-                    "Domain": domain,
-                    "Status": "ACTIVE",
-                }
-            )
-
-        if not status:
-            status = [{"Agent": "_No agents_", "Name": "-", "Domain": "-", "Status": "-"}]
-
-        # Details - queue and events
-        details = []
-        tasks = queue_status.get("tasks", [])[:5]
-        for t in tasks:
-            details.append(
-                {
-                    "Item": f"Task: {t.get('id', '?')[:20]}",
-                    "Info": f"Priority: {t.get('priority', '?')}",
-                }
-            )
-
-        type_counts = event_status.get("type_counts", {})
-        for event_type, count in sorted(type_counts.items(), key=lambda x: -x[1])[:5]:
-            details.append(
-                {
-                    "Item": f"Event: {event_type[:20]}",
-                    "Info": f"Count: {count}",
-                }
-            )
-
-        if not details:
-            details = [{"Item": "_No activity_", "Info": "-"}]
-
-        return {
-            "metrics": metrics,
-            "status": status,
-            "details": details,
-        }
+    # OPUS-LASAGNE: _get_settings_manifestation_data and _get_operations_manifestation_data
+    # moved to ManifestationService (Phase 4 extraction)
 
     def _process_ipc_events(self) -> None:
         """OPUS-209: Delegated to ProcessIsolationPlugin."""
