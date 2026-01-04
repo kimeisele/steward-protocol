@@ -12,8 +12,10 @@ import os
 import shutil
 import sys
 
-# Add current dir to Python path
-sys.path.insert(0, "/home/user/steward-protocol")
+# Add project root to Python path (discover dynamically)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(os.path.dirname(_script_dir))  # scripts/verification -> project root
+sys.path.insert(0, _project_root)
 
 from vibe_core.cartridges.system.archivist.cartridge_main import ArchivistCartridge
 from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge

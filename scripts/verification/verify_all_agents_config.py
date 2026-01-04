@@ -5,8 +5,13 @@ Checks all 13 system agents for proper config parameter and assignment.
 """
 
 import ast
+import os
 import sys
 from pathlib import Path
+
+# Discover project root dynamically
+_script_dir = Path(__file__).resolve().parent
+_project_root = _script_dir.parent.parent  # scripts/verification -> project root
 
 # List of all 13 system agents
 AGENTS = [
@@ -28,7 +33,7 @@ AGENTS = [
 
 def verify_agent(agent_name: str) -> dict:
     """Verify a single agent has proper config integration."""
-    agent_path = Path(f"/home/user/steward-protocol/vibe_core/cartridges/system/{agent_name}/cartridge_main.py")
+    agent_path = _project_root / "vibe_core" / "cartridges" / "system" / agent_name / "cartridge_main.py"
 
     result = {
         "agent": agent_name,

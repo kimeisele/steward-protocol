@@ -124,6 +124,19 @@ class LineageChain:
 
         self.conn.commit()
 
+    def _get_project_root(self) -> Path:
+        """
+        Discover project root by walking up from this file.
+        Looks for pyproject.toml or .git as markers.
+        """
+        current = Path(__file__).resolve().parent
+        for _ in range(10):  # Max 10 levels up
+            if (current / "pyproject.toml").exists() or (current / ".git").exists():
+                return current
+            current = current.parent
+        # Fallback to cwd
+        return Path.cwd()
+
     def _create_genesis_block(self) -> LineageBlock:
         """
         🌌 CREATE THE GENESIS BLOCK 🌌
@@ -132,14 +145,38 @@ class LineageChain:
         The foundation of all agent history.
 
         The Genesis Block anchors the system to its philosophical roots:
-        - GAD-000 (The Spirit): Operator Inversion Principle
+        - GAD-000 (The Spirit): Operator Inversion Principle + 37th Amendment
         - CONSTITUTION.md (The Law): Governance Rules
 
         These are not optional. They are the bedrock.
+
+        GAD-000 v2.0 (2026-01-04): The 37th Principle
+        - Identity elevated from criterion #6 to Sovereign Center (37th)
+        - 6 operational criteria form the Field (Prakriti/Kshetra)
+        - The 37th is the Knower (Purusha/Kshetrajna)
+        - Stambha pattern: 37th manifests FROM WITHIN the 36
         """
-        # Calculate foundation hashes
-        gad_000_hash = self._hash_file("/home/user/steward-protocol/docs/architecture/GAD-0XX/GAD-000.md")
-        constitution_hash = self._hash_file("/home/user/steward-protocol/CONSTITUTION.md")
+        # Discover project root dynamically
+        project_root = self._get_project_root()
+
+        # Calculate foundation hashes with relative paths
+        gad_000_path = project_root / "docs" / "architecture" / "GAD-0XX" / "GAD-000.md"
+        constitution_path = project_root / "CONSTITUTION.md"
+
+        gad_000_hash = self._hash_file(str(gad_000_path))
+        constitution_hash = self._hash_file(str(constitution_path))
+
+        # Extract GAD-000 version from file content
+        gad_000_version = "2.0"  # Default to current
+        try:
+            if gad_000_path.exists():
+                content = gad_000_path.read_text()
+                if "v2.0" in content or "37th Principle" in content:
+                    gad_000_version = "2.0"
+                elif "v1.6" in content:
+                    gad_000_version = "1.6"
+        except Exception:
+            pass
 
         genesis = LineageBlock(
             index=0,
@@ -150,9 +187,12 @@ class LineageChain:
                 "message": "Om Tat Sat - In the beginning, there was the Kernel",
                 "anchors": {
                     "philosophy_hash": gad_000_hash,  # The Spirit (GAD-000)
+                    "philosophy_version": gad_000_version,  # GAD-000 version
                     "constitution_hash": constitution_hash,  # The Law (CONSTITUTION)
                     "kernel_version": "2.0.0",
                     "migration_phase": "5",
+                    # The 37th Principle metadata
+                    "sovereign_model": "37th" if gad_000_version == "2.0" else "linear",
                 },
                 "timestamp_utc": datetime.utcnow().isoformat(),
             },
@@ -169,7 +209,8 @@ class LineageChain:
         logger.info("🌌" + "=" * 60)
         logger.info("🌌 GENESIS BLOCK CREATED")
         logger.info(f"🌌 Hash: {genesis.hash[:32]}...")
-        logger.info(f"🌌 Philosophy (GAD-000): {gad_000_hash[:16]}...")
+        logger.info(f"🌌 Philosophy (GAD-000 v{gad_000_version}): {gad_000_hash[:16]}...")
+        logger.info(f"🌌 Sovereign Model: {genesis.data['anchors']['sovereign_model']}")
         logger.info(f"🌌 Law (CONSTITUTION): {constitution_hash[:16]}...")
         logger.info("🌌 The Parampara has begun. The lineage is eternal.")
         logger.info("🌌" + "=" * 60)
