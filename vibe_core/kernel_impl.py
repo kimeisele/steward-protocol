@@ -360,6 +360,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # This keeps the kernel CLEAN and governance SWAPPABLE
         self.governance: Optional[GovernanceProtocol] = None
 
+        # LAYER 0 SECURITY: Capability Enforcer (CANNOT be hot-swapped)
+        # Gemini Decision: "Security cannot be a plugin"
+        from vibe_core.services.capability_enforcer import CapabilityEnforcerService
+
+        self._capability_enforcer = CapabilityEnforcerService()
+
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
         # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
@@ -1849,34 +1855,17 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """
         Check if revoker_id has permission to revoke capabilities from target_id.
 
-        Permission Model:
-            - KERNEL can revoke from anyone
-            - CIVIC can revoke from anyone (governance)
-            - Agents can revoke from themselves (voluntary)
-            - NARASIMHA can revoke from anyone (kill-switch)
+        Delegates to CapabilityEnforcerService (Layer 0 Security).
         """
-        # Kernel and system have full permissions
-        if revoker_id in ["KERNEL", "NARASIMHA", "civic"]:
-            return True
-
-        # Self-revocation allowed (Principle of Least Privilege)
-        if revoker_id == target_id:
-            return True
-
-        # All other cases denied
-        return False
+        return self._capability_enforcer.can_revoke(revoker_id, target_id)
 
     def _can_grant_capability(self, granter_id: str) -> bool:
         """
         Check if granter_id has permission to grant capabilities.
 
-        Permission Model:
-            - KERNEL can grant to anyone
-            - CIVIC can grant to anyone (governance)
-            - No self-grant (prevents privilege escalation)
+        Delegates to CapabilityEnforcerService (Layer 0 Security).
         """
-        # Only kernel and civic can grant
-        return granter_id in ["KERNEL", "civic"]
+        return self._capability_enforcer.can_grant(granter_id)
 
     def submit_task(self, task: Task) -> str:
         """Submit a task to the kernel.
