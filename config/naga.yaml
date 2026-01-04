@@ -1,0 +1,27 @@
+# NAGA Federation Configuration
+# "Niemand darf es merken" - they infiltrate invisibly.
+#
+# Environment variable overrides:
+#   NAGA_TRUST_MODE=strict|permissive
+#   NAGA_STRICT=1  (alias for trust_mode=strict)
+#   NAGA_GOSSIP_ENABLED=1
+#   NAGA_TOXICITY_THRESHOLD=0.3
+
+sesha:
+  enabled: true
+  gossip_enabled: false  # Enable when federation is ready
+  block_size: 100
+  sync_interval_seconds: 60
+
+vasuki:
+  enabled: true
+  serialization_format: msgpack  # msgpack | json
+  sign_outbound: true
+  validate_schema: true
+
+takshaka:
+  enabled: true
+  trust_mode: strict  # strict | permissive
+  toxicity_threshold: 0.3
+  rate_limit_rpm: 60
+  rate_limit_window: 60.0

@@ -125,12 +125,26 @@ class UnifiedRouter:
         """
         MilkOcean gate check (pre-execution).
 
+        P0-2: Uses KaliyaFilter for real pattern matching instead of string-match.
+
         Returns gate decision - whether to allow, queue, or block.
         """
-        # GAD-000: Security Checks
-        if "DROP TABLE" in request.user_input or "sudo" in request.user_input:
-            request.gate_decision = MilkOceanGate.BLOCK
-            return MilkOceanGate.BLOCK
+        # P0-2: Use KaliyaFilter for toxicity detection
+        try:
+            from gateway.takshaka_lite import KaliyaFilter
+
+            kaliya = KaliyaFilter()
+            score, patterns = kaliya.scan(request.user_input)
+
+            if score >= 0.3:  # Toxicity threshold
+                logger.warning(f"[GATE] Blocked by Kaliya (score={score:.2f}, patterns={patterns})")
+                request.gate_decision = MilkOceanGate.BLOCK
+                return MilkOceanGate.BLOCK
+        except ImportError:
+            # Fallback to legacy string matching if Kaliya not available
+            if "DROP TABLE" in request.user_input.upper() or "sudo" in request.user_input.lower():
+                request.gate_decision = MilkOceanGate.BLOCK
+                return MilkOceanGate.BLOCK
 
         # GAJENDRA PROTOCOL: Critical Request Handling
         # If request is explicitly marked critical or contains critical keywords

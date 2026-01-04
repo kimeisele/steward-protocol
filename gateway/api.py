@@ -16,7 +16,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # --- AGENT MIGRATION PATH FIX (ABSOLUTE PATHS FOR DOCKER) ---
 # Use absolute paths to ensure imports work in Docker containers
@@ -24,6 +24,8 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # KERNEL IMPORTS (after sys.path fix for Docker)
+# NAGA Security Layer (TAKSHAKA LITE - P0 Security Fixes)
+from gateway.takshaka_lite import VerifyStatus, get_takshaka  # noqa: E402
 from vibe_core.cartridges.system.discoverer.agent import Discoverer  # noqa: E402
 from vibe_core.cartridges.system.envoy.provider import UniversalProvider  # noqa: E402
 from vibe_core.event_bus import Event, get_event_bus  # noqa: E402
@@ -122,13 +124,13 @@ class WebSocketManager:
 ws_manager = WebSocketManager()
 
 
-# --- DATA MODELS ---
+# --- DATA MODELS (P0-4: Size limits enforced via Pydantic) ---
 class SignedChatRequest(BaseModel):
-    message: str
-    agent_id: str
-    signature: str
-    public_key: str
-    timestamp: int
+    message: str = Field(..., max_length=100_000, description="Message content (max 100KB)")
+    agent_id: str = Field(..., max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", description="Agent ID")
+    signature: str = Field(..., max_length=512, description="Base64 ECDSA signature")
+    public_key: str = Field(..., max_length=2048, description="PEM public key")
+    timestamp: int = Field(..., description="Unix timestamp (seconds)")
 
 
 class VisaApplicationRequest(BaseModel):
@@ -145,7 +147,16 @@ class YagyaRequest(BaseModel):
 # --- ENDPOINT ---
 @app.post("/v1/chat")
 async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(None)):
-    # 1. Auth Check (SECURITY FIX F3-2: No hardcoded fallback key)
+    """
+    NAGA-secured chat endpoint.
+
+    P0-1: Signature verification via Takshaka BEFORE processing
+    P0-2: Toxicity scan via Kaliya filter
+    P0-4: Size limits via Pydantic model
+
+    PROMPT.md: "Identität kommt VOR dem Parsing"
+    """
+    # --- 0. API KEY CHECK ---
     api_key = os.getenv("VIBE_API_KEY")
     if not api_key:
         logger.error("VIBE_API_KEY environment variable not set!")
@@ -153,17 +164,54 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     if x_api_key != api_key:
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
-    logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
+    # --- 1. TAKSHAKA VERIFICATION (P0-1: Signature + P0-2: Toxicity) ---
+    takshaka = get_takshaka()
+    verify_result = takshaka.verify_request(
+        message=request.message,
+        agent_id=request.agent_id,
+        signature=request.signature,
+        public_key=request.public_key,
+        timestamp=request.timestamp,
+    )
+
+    if not verify_result.is_valid:
+        logger.warning(f"TAKSHAKA BITE: {verify_result.status.value} from {request.agent_id}")
+        # Record violation in ledger if kernel is available
+        if kernel:
+            try:
+                kernel.ledger.record_event(
+                    event_type="VAJRA_VIOLATION",
+                    agent_id="TAKSHAKA",
+                    details=verify_result.to_dict(),
+                    result="BLOCKED",
+                )
+            except Exception as e:
+                logger.error(f"Failed to record violation: {e}")
+
+        # Return appropriate error
+        status_map = {
+            VerifyStatus.INVALID_SIGNATURE: (401, "Invalid signature"),
+            VerifyStatus.INVALID_KEY: (401, "Invalid key"),
+            VerifyStatus.EXPIRED: (400, "Request expired"),
+            VerifyStatus.UNTRUSTED: (403, "Untrusted key"),
+            VerifyStatus.RATE_LIMITED: (429, "Rate limit exceeded"),
+            VerifyStatus.SIZE_EXCEEDED: (413, "Request too large"),
+            VerifyStatus.TOXIC: (400, f"Toxic content detected: {verify_result.toxic_patterns}"),
+        }
+        code, msg = status_map.get(verify_result.status, (400, verify_result.reason))
+        raise HTTPException(status_code=code, detail=msg)
+
+    logger.info(f"TAKSHAKA OK: {request.agent_id} ({verify_result.fingerprint})")
 
     try:
         # Create ExecutionRequest for gating
         exec_req = ExecutionRequest(user_input=request.message, source=request.agent_id)
 
-        # Gating Check (UnifiedRouter)
+        # Gating Check (UnifiedRouter uses Kaliya for toxicity)
         gate_status = unified_router.check_gate(exec_req)
 
         if gate_status == MilkOceanGate.BLOCK:
-            logger.warning(f"⛔ Request blocked: {request.agent_id}")
+            logger.warning(f"GATE BLOCKED: {request.agent_id}")
             return {
                 "status": "error",
                 "message": "Access Denied via Milk Ocean Gate",
@@ -172,7 +220,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
             }
 
         elif gate_status == MilkOceanGate.QUEUE:
-            logger.info(f"🌊 Request queued: {exec_req.request_id}")
+            logger.info(f"GATE QUEUED: {exec_req.request_id}")
             return {
                 "status": "queued",
                 "path": "lazy",
@@ -182,13 +230,11 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
             }
 
         # If ALLOW or CRITICAL, proceed to execution
-
-        # Route locally just to check confidence for "flash" vs "science" (optional optimization)
         route_decision = unified_router.route(request.message, source=request.agent_id)
 
         # Check for Science/High-Confidence -> "science" path
         if route_decision.get("confidence", 0) > 0.8:
-            logger.info(f"🔥 Routing to Science agent (High Confidence): {exec_req.request_id}")
+            logger.info(f"ROUTE: Science (High Confidence) {exec_req.request_id}")
             result = await provider.route_and_execute(request.message)
             return {
                 "status": "success",
@@ -202,7 +248,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
         return {"status": "success", "data": result, "path": "standard"}
 
     except Exception as e:
-        logger.error(f"❌ ERROR: {e}")
+        logger.error(f"ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -301,11 +347,13 @@ async def shutdown_event():
     await pulse_manager.stop()
 
 
-# --- WEBSOCKET ENDPOINT: /v1/pulse ---
+# --- WEBSOCKET ENDPOINT: /v1/pulse (P0-3: Auth enforced) ---
 @app.websocket("/v1/pulse")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
     """
     Real-time Telemetry & Event Stream via WebSocket
+
+    P0-3: Authentication via query param (ws://host/v1/pulse?token=YOUR_API_KEY)
 
     This endpoint streams:
     1. Heartbeat packets (Pulse) at regular intervals
@@ -314,6 +362,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
     The endpoint is read-only for security.
     """
+    # --- P0-3: WEBSOCKET AUTH ---
+    api_key = os.getenv("VIBE_API_KEY")
+    takshaka = get_takshaka()
+    auth_result = takshaka.check_websocket_auth(token, api_key)
+
+    if not auth_result.is_valid:
+        logger.warning(f"TAKSHAKA: WebSocket auth failed: {auth_result.reason}")
+        await websocket.close(code=4001, reason=auth_result.reason or "Unauthorized")
+        return
+
     await ws_manager.connect(websocket)
 
     try:
@@ -747,11 +805,13 @@ def get_doc(doc_name: str):
     return {"status": "success", "name": filename, "content": doc_path.read_text(), "size": doc_path.stat().st_size}
 
 
-# --- DIRECT MARKDOWN FILE SERVING ---
+# --- DIRECT MARKDOWN FILE SERVING (P0-5: Path traversal fix) ---
 @app.get("/{filepath:path}.md")
 def serve_markdown(filepath: str):
     """
     Serve ALL markdown files from repo (root + subdirectories)
+
+    P0-5: Uses relative_to() for proper path containment check.
 
     Examples:
       /INDEX.md → /INDEX.md
@@ -762,22 +822,22 @@ def serve_markdown(filepath: str):
     """
     from fastapi.responses import PlainTextResponse
 
-    # Sanitize (prevent directory traversal)
-    filepath = filepath.replace("..", "").strip("/")
+    # Strip leading/trailing slashes (no more replace which was useless)
+    filepath = filepath.strip("/")
 
-    # Build path
-    doc_path = PROJECT_ROOT / f"{filepath}.md"
+    # Build path and resolve to catch symlinks + traversal
+    doc_path = (PROJECT_ROOT / f"{filepath}.md").resolve()
+    project_root_resolved = PROJECT_ROOT.resolve()
+
+    # P0-5: Security check using relative_to() - catches /foo/bar_evil/ attack
+    try:
+        doc_path.relative_to(project_root_resolved)
+    except ValueError:
+        logger.warning(f"TAKSHAKA: Path traversal blocked: {filepath}")
+        raise HTTPException(status_code=403, detail="Access denied: path traversal detected")
 
     if not doc_path.exists():
         raise HTTPException(status_code=404, detail=f"Markdown not found: {filepath}.md")
-
-    # Security: ensure within PROJECT_ROOT
-    try:
-        doc_path = doc_path.resolve()
-        if not str(doc_path).startswith(str(PROJECT_ROOT)):
-            raise HTTPException(status_code=403, detail="Access denied")
-    except Exception:
-        raise HTTPException(status_code=403, detail="Invalid path")
 
     # Serve with UTF-8
     return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")

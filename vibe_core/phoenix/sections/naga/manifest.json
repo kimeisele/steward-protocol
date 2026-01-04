@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "naga",
+  "name": "NAGA Federation Configuration",
+  "version": "1.0.0",
+  "description": "Configuration for the NAGA Federation (Sesha/Vasuki/Takshaka)",
+
+  "entry_point": "section_main.py",
+  "entry_class": "NagaConfig",
+
+  "priority": 10,
+
+  "config_file": "config/naga.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "naga", "security", "federation"]
+}
