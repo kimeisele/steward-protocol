@@ -2,7 +2,7 @@
 
 **Project:** Steward Protocol - Autonomous AI Agent Operating System
 **Component:** RealVibeKernel (Vishnu 0 - The Foundation)
-**Status:** REFACTORING IN PROGRESS
+**Status:** PHASE 2-6 COMPLETE, PHASE 4/7 PENDING
 **Reviewer:** External Senior Architect
 **Date:** 2026-01-04
 
@@ -16,7 +16,7 @@ The **Steward Protocol** is an autonomous AI agent operating system. The **RealV
 
 ### The Problem
 
-The kernel has grown to **2218 LOC** with:
+The kernel has grown to **2125 LOC** (down from 2218) with:
 - Circular dependencies between kernel and plugins
 - `Any` type hints violating our type safety mandate
 - Tightly coupled components that can't be hot-swapped
@@ -32,11 +32,18 @@ Reduce kernel to **~1080 LOC** through:
 
 ### Current Progress
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| Phase 0 | Constitutional Break (Circular Deps) | ✅ COMPLETE |
-| Phase 1 | Type Protocols (Kill Any) | ✅ COMPLETE |
-| Phase 2-7 | Extraction & Streamlining | 🔄 PENDING |
+| Phase | Description | Status | LOC Impact |
+|-------|-------------|--------|------------|
+| Phase 0 | Constitutional Break (Circular Deps) | ✅ COMPLETE | - |
+| Phase 1 | Type Protocols (Kill Any) | ✅ COMPLETE | - |
+| Phase 2 | Service Protocols (LedgerProtocol, SchedulerProtocol) | ✅ COMPLETE | - |
+| Phase 3 | KernelFactory for EphemeralCities | ✅ COMPLETE | +94 (service) |
+| Phase 4 | Extract ManifestationData | 🔄 PENDING | -130 target |
+| Phase 5 | CapabilityEnforcerService | ✅ COMPLETE | +222 (service), kernel delegation |
+| Phase 6 | Expose EventBus directly | ✅ COMPLETE | -93 |
+| Phase 7 | Streamline __init__ | 🔄 PENDING | -140 target |
+
+**Kernel LOC:** 2218 → 2125 (-93 lines so far)
 
 ---
 
@@ -199,31 +206,34 @@ TOTAL:                    2218 LOC
 
 **Test Results:** All tests still passing
 
-### Phase 2: Service Protocols 🔄 PENDING
+### Phase 2: Service Protocols ✅ COMPLETE
 
 **Goal:** Hot-swappable core services
 
-**Plan:**
-- Add `LedgerProtocol` to existing `vibe_core/protocols/ledger.py`
-- Add `SchedulerProtocol` to existing `vibe_core/protocols/scheduler.py`
-- Wire through ServiceRegistry
+**Deliverables:**
+- `LedgerProtocol` in `vibe_core/protocols/ledger.py` (already existed)
+- `SchedulerProtocol` in `vibe_core/protocols/ledger.py` (NEW)
 
-**Note:** These files already have `VibeLedger` and `VibeScheduler` ABCs. We need to evaluate whether to convert to Protocols or keep ABCs.
+**GEMINI DECISION:** Use Protocols (structural subtyping), not ABCs.
 
-### Phase 3: Extract EphemeralCities 🔄 PENDING
+Both protocols exported from `vibe_core.protocols`.
 
-**Goal:** Remove 80 LOC from kernel
+### Phase 3: KernelFactory for EphemeralCities ✅ COMPLETE
 
-**Challenge:** `spawn_child_kernel()` creates `RealVibeKernel` directly.
+**Goal:** Enable plugins to spawn child kernels without circular imports
 
-**Solution:** Use `KernelFactoryProtocol`:
+**Deliverables:**
+- `vibe_core/services/kernel_factory.py` - KernelFactory implementation
+- Registered in `boot_orchestrator.py` via ServiceRegistry
+
+**Usage:**
 ```python
-# Plugin gets factory from ServiceRegistry
+# Plugin spawns child kernel (CORRECT - no circular import):
 factory = ServiceRegistry.get(KernelFactoryProtocol)
-child = factory.create_kernel(config)  # No direct import needed
+child = factory.create_kernel(config, parent=current_kernel)
 ```
 
-**Blocker:** Need to implement and register `KernelFactory` first.
+**GEMINI DECISION:** Keep `spawn_child_kernel()` in kernel, use factory for plugin access.
 
 ### Phase 4: Extract ManifestationData 🔄 PENDING
 
@@ -235,37 +245,56 @@ child = factory.create_kernel(config)  # No direct import needed
 
 **Risk:** Low - these are data getters, not core logic.
 
-### Phase 5: Extract Capabilities 🔄 PENDING
+### Phase 5: CapabilityEnforcerService ✅ COMPLETE
 
-**Goal:** Remove 150 LOC from kernel
+**Goal:** Extract security logic to core service (NOT plugin)
 
-**Methods to extract:**
-- `revoke_capability()`
-- `grant_capability()`
-- `get_agent_capabilities()`
-- `_can_revoke_capability()`
-- `_can_grant_capability()`
+**GEMINI DECISION:** "Security cannot be a plugin."
 
-**Decision Point:** Should this be a plugin or a core service?
+**Deliverables:**
+- `vibe_core/services/capability_enforcer.py` - Layer 0 Security Service
+- Integrated into kernel `__init__`
 
-**Recommendation (from Gemini review):** Create `CapabilityEnforcerService` - NOT a plugin. This is security-critical Layer 0 code that cannot be disabled.
-
-### Phase 6: Expose EventBus 🔄 PENDING
-
-**Goal:** Remove 100 LOC wrapper methods
-
-**Current state:** Kernel wraps EventBus methods:
-```python
-def subscribe_to_events(self, ...):
-    return self._event_bus.subscribe(...)
+**Permission Model:**
+```
+Revoke: KERNEL, CIVIC, NARASIMHA can revoke from anyone
+        Agents can self-revoke (voluntary)
+Grant:  KERNEL, CIVIC can grant to anyone
+        No self-grant (prevents privilege escalation)
 ```
 
-**Target state:** Expose EventBus directly:
+**Kernel Delegation:**
+```python
+def _can_revoke_capability(self, revoker_id, target_id):
+    return self._capability_enforcer.can_revoke(revoker_id, target_id)
+```
+
+### Phase 6: Expose EventBus ✅ COMPLETE
+
+**Goal:** Remove wrapper methods, expose EventBus directly
+
+**GEMINI DIRECTIVE:** "The wrapper methods are pure bloat. Delete them."
+
+**Deleted from kernel:**
+- `subscribe_to_events()` - 28 LOC
+- `unsubscribe_from_events()` - 9 LOC
+- `broadcast_event()` - 48 LOC
+- `get_event_history()` - 12 LOC
+- `get_event_bus_status()` - 8 LOC
+
+**Added:**
 ```python
 @property
 def event_bus(self) -> EventBusProtocol:
     return self._event_bus
 ```
+
+**Updated:**
+- `agent_interface.py` - uses `kernel.event_bus` directly
+- `semantic_syscalls.py` - uses `kernel.event_bus` directly
+- `kernel_protocol.py` - `event_bus` property added
+
+**LOC Impact:** -93 lines from kernel
 
 ### Phase 7: Streamline __init__ 🔄 PENDING
 
@@ -308,10 +337,12 @@ The kernel has special protection because it's the foundation:
 | Bank | `BankProtocol` | ✅ Done |
 | Vault | `VaultProtocol` | ✅ Done |
 | Kernel | `KernelProtocol` | ✅ Done (Phase 0) |
-| KernelFactory | `KernelFactoryProtocol` | ✅ Defined, 🔄 Not registered |
-| Ledger | `LedgerProtocol` | 🔄 Pending |
-| Scheduler | `SchedulerProtocol` | 🔄 Pending |
+| KernelFactory | `KernelFactoryProtocol` | ✅ Done + Registered (Phase 3) |
+| Ledger | `LedgerProtocol` | ✅ Done (Phase 2) |
+| Scheduler | `SchedulerProtocol` | ✅ Done (Phase 2) |
 | SignatureVerifier | `SignatureVerifierProtocol` | ✅ Done (Phase 1) |
+| EventBus | `EventBusProtocol` | ✅ Exposed (Phase 6) |
+| CapabilityEnforcer | `CapabilityEnforcerProtocol` | ✅ Done (Phase 5) |
 
 ---
 
@@ -354,17 +385,22 @@ pytest tests/test_opus209_kernel.py tests/hardening/ -v --tb=short
 
 ## OPEN QUESTIONS FOR REVIEWER
 
-1. **ABC vs Protocol:** The existing `VibeLedger` and `VibeScheduler` are ABCs (require inheritance). Should we convert to Protocols (structural subtyping) for true hot-swap, or is ABC sufficient?
+### RESOLVED (Gemini Decisions)
 
-2. **Capabilities - Service vs Plugin:** Gemini recommended `CapabilityEnforcerService` as core service, not plugin. Do you agree this is Layer 0 security-critical code?
+1. ~~**ABC vs Protocol:**~~ → **Use Protocols** (structural subtyping). ✅ Done
 
-3. **EphemeralCities Coupling:** The `spawn_child_kernel()` method creates `RealVibeKernel` instances. With `KernelFactoryProtocol` defined, should we:
-   - (a) Move this to a plugin entirely, or
-   - (b) Keep in kernel but use factory pattern?
+2. ~~**Capabilities - Service vs Plugin:**~~ → **Core Service**. "Security cannot be a plugin." ✅ Done
 
-4. **Target LOC:** Is 1080 LOC realistic for a kernel that manages agents, tasks, events, capabilities, and plugins? Or should we accept ~1500 LOC as minimum viable?
+3. ~~**EphemeralCities Coupling:**~~ → **Keep in kernel, use factory for plugins.** ✅ Done
 
-5. **ManifestationData in Prakriti:** Gemini suggested moving manifestation logic to Prakriti (state engine). This is a bigger architectural change. Worth it?
+### STILL PENDING
+
+4. **Target LOC:** Current: 2125 LOC. Target: 1080 LOC. Remaining reduction needed: ~1000 LOC.
+   - Phase 4 (ManifestationData): -130 LOC
+   - Phase 7 (__init__ streamline): -140 LOC
+   - **GAP: ~730 LOC** - Need more extraction opportunities
+
+5. **ManifestationData in Prakriti:** Gemini rejected moving to Prakriti ("too big"). Keep in ManifestationService.
 
 ---
 
@@ -383,13 +419,14 @@ pytest tests/test_opus209_kernel.py tests/hardening/ -v --tb=short
 
 ```
 vibe_core/
-├── kernel_impl.py              # THE KERNEL (2218 LOC, target: 1080)
+├── kernel_impl.py              # THE KERNEL (2125 LOC, target: 1080)
 ├── protocols/
-│   ├── kernel_protocol.py      # NEW: KernelProtocol, KernelFactoryProtocol
-│   ├── kernel_types.py         # NEW: TaskResult, AgentHealth, etc.
-│   ├── crypto.py               # NEW: SignatureVerifierProtocol
+│   ├── kernel_protocol.py      # KernelProtocol, KernelFactoryProtocol
+│   ├── kernel_types.py         # TaskResult, AgentHealth, GovernanceProtocol
+│   ├── crypto.py               # SignatureVerifierProtocol, ECDSAVerifier
 │   ├── cognition.py            # SignedOperatorInput, CognitiveResult
-│   ├── ledger.py               # VibeLedger (ABC), KernelStatus
+│   ├── ledger.py               # LedgerProtocol, SchedulerProtocol + ABCs
+│   ├── event.py                # EventBusProtocol, Event, NullEventBus
 │   ├── agent.py                # VibeAgent, AgentManifest
 │   └── ...
 ├── plugins/
@@ -399,6 +436,8 @@ vibe_core/
 │   ├── opus_assistant/         # Cognitive layer (MANAS)
 │   └── ... (50+ plugins)
 ├── services/
+│   ├── capability_enforcer.py  # NEW: Layer 0 Security Service
+│   ├── kernel_factory.py       # NEW: KernelFactoryProtocol impl
 │   ├── manifestation_service.py
 │   ├── kernel_io_service.py
 │   └── ...
@@ -408,6 +447,13 @@ vibe_core/
 ## APPENDIX B: COMMITS (This Session)
 
 ```
+3560092e feat(protocols): SchedulerProtocol + update Vishnu 0 hashes
+40a8b35b feat(services): KernelFactory for EphemeralCities
+0ebc2a89 refactor(kernel): Phase 6 - Expose EventBus directly
+bf449f05 feat(services): CapabilityEnforcerService - Layer 0 Security
+11dfad1d refactor(kernel): Apply kernel_types - kill critical Any types
+368e7b4c docs(KERNEL): restructure as senior review document
+d538db6e docs(KERNEL): update changelog with Phase 0 completion
 588de5ea refactor(kernel): Phase 0 - The Constitutional Break
 45be6c21 refactor(kernel): Phase 1 - Type Protocols for OPERATION LASAGNE
 e10a928a fix(kernel): GAD-000 v2.0 - The 37th Principle implementation
