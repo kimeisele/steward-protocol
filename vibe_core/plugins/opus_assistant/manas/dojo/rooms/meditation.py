@@ -237,8 +237,10 @@ class MeditationRoom:
             workspace: Project root path
             viveka_action: VivekaAction instance for evaluation (optional)
         """
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self.workspace = Path(workspace)
-        self.state_dir = self.workspace / ".opus_state"
+        self.state_dir = get_opus_state_path(self.workspace).parent
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
         self.viveka_action = viveka_action

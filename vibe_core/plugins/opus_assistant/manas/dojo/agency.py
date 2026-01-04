@@ -130,8 +130,10 @@ class CuriosityTracker:
     """
 
     def __init__(self, workspace: Path):
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self._workspace = workspace
-        self._state_path = workspace / ".opus_state" / "curiosity.json"
+        self._state_path = get_opus_state_path(workspace, "curiosity.json")
         self._state = self._load_state()
 
     def _load_state(self) -> CuriosityState:

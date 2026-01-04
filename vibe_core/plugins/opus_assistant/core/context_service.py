@@ -560,7 +560,7 @@ class OpusContextService:
         """
         OPUS-174: Get MANAS cognitive state for Mind-Body Alignment.
 
-        Loads from .opus_state/manas_awareness.json which is updated
+        Loads from manas_awareness.json state file which is updated
         by CognitiveKernel.tick() every ~60 seconds.
 
         This enables VAK-style dynamic prompting where the LLM's
@@ -571,7 +571,9 @@ class OpusContextService:
         """
         import json
 
-        awareness_path = self._workspace / ".opus_state" / "manas_awareness.json"
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        awareness_path = get_opus_state_path(self._workspace, "manas_awareness.json")
 
         try:
             if awareness_path.exists():
@@ -601,7 +603,7 @@ class OpusContextService:
         """
         OPUS-032: Get verification results for MANAS analyzers.
 
-        Loads from cached watchman_report.json or .opus_state/verification.json.
+        Loads from cached watchman_report.json or state files.
         Full verification is expensive, so we prefer cached results.
 
         Returns:
@@ -609,11 +611,13 @@ class OpusContextService:
         """
         import json
 
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         # Try multiple possible sources for verification results
         possible_paths = [
             self._workspace / "watchman_report.json",
-            self._workspace / ".opus_state" / "verification.json",
-            self._workspace / ".opus_state" / "harness_results.json",
+            get_opus_state_path(self._workspace, "verification.json"),
+            get_opus_state_path(self._workspace, "harness_results.json"),
         ]
 
         for report_path in possible_paths:

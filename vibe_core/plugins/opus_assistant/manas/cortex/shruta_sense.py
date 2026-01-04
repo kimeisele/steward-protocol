@@ -142,6 +142,7 @@ class ShrutaSense(BaseSense):
         ".git",
         ".pytest_cache",
         ".opus_state",
+        ".vibe",
         ".venv",
         "node_modules",
         "*.pyc",

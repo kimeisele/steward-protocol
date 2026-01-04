@@ -11,6 +11,7 @@ Components:
 - ConfigLoader: Fraktale config loading (defaults + system)
 - OpusContextService: Dynamic runtime context synthesis (Phase 2)
 - ObservationLogger: System journal for soft interaction (Phase 2.5)
+- StatePaths: Unified state path resolution (Phase 3 - Migration)
 """
 
 from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader, deep_merge
@@ -23,6 +24,18 @@ from vibe_core.plugins.opus_assistant.core.observation_logger import (
     ObservationSeverity,
 )
 from vibe_core.plugins.opus_assistant.core.opus_generator import OpusData, OpusGenerator
+from vibe_core.plugins.opus_assistant.core.state_paths import (
+    STATE_DIRS,
+    STATE_FILES,
+    append_opus_state,
+    get_legacy_path,
+    get_opus_state_dir,
+    get_opus_state_path,
+    get_opus_state_service,
+    has_legacy_state,
+    load_opus_state,
+    save_opus_state,
+)
 from vibe_core.plugins.opus_assistant.core.verification_logic import (
     HarnessResult,
     VerificationEngine,
@@ -52,4 +65,15 @@ __all__ = [
     "ObservationSeverity",
     "Observation",
     "ObservationJournal",
+    # State Paths (Phase 3 - Migration)
+    "get_opus_state_path",
+    "get_opus_state_service",
+    "get_opus_state_dir",
+    "load_opus_state",
+    "save_opus_state",
+    "append_opus_state",
+    "get_legacy_path",
+    "has_legacy_state",
+    "STATE_FILES",
+    "STATE_DIRS",
 ]

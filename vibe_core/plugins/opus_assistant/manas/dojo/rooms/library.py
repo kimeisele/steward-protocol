@@ -80,13 +80,15 @@ class Library:
     """
 
     def __init__(self, workspace: Path):
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_dir
+
         self._workspace = workspace
-        self._knowledge_path = workspace / ".opus_state" / "library" / "knowledge.json"
-        self._research_cache_path = workspace / ".opus_state" / "library" / "cache"
+        library_dir = get_opus_state_dir(workspace, "library")
+        self._knowledge_path = library_dir / "knowledge.json"
+        self._research_cache_path = library_dir / "cache"
         self._tavily_api_key = os.environ.get("TAVILY_API_KEY")
 
         # Initialize storage
-        self._knowledge_path.parent.mkdir(parents=True, exist_ok=True)
         self._research_cache_path.mkdir(parents=True, exist_ok=True)
 
     @property

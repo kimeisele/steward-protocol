@@ -841,3 +841,152 @@ return value  # String fallback
 
 - **CorrectionDispatcher:** Design complete (subagent report)
 - **GAD Standards:** 38 GADs mapped, GAD-000 = Operator Inversion
+
+---
+
+## P2: .opus_state → .vibe/state Migration
+
+### Status: PLANNED (2026-01-04)
+
+The system has **87 files** with `.opus_state` references, but proper abstraction already exists.
+
+### Architecture (Already Correct)
+
+```
+StateService (vibe_core/state/state_service.py)
+├── Agent state   → .vibe/state/agents/{agent_id}/
+├── Plugin state  → .vibe/state/plugins/{plugin_id}/
+└── Global state  → .vibe/state/
+
+OpusStateManager uses StateService:
+  get_state_service(workspace, plugin_id="opus_assistant")
+  → .vibe/state/plugins/opus_assistant/
+
+HERITAGE MIGRATION: StateService.load() auto-migrates from .opus_state on first read!
+```
+
+### The Problem: Direct Path Bypass
+
+Many files bypass StateService and hardcode `.opus_state/`:
+
+| Category | Count | Example Files |
+|----------|-------|---------------|
+| **MANAS Core** | 12 | viveka_action.py, intent_buffer.py, sankalpa.py, memory_store.py |
+| **Dojo Training** | 6 | runner.py, agency.py, mirror.py, library.py, meditation.py |
+| **Dashboard/CLI** | 8 | opus_dashboard_renderer.py, cognition.py, unified_cli.py |
+| **State/Sync** | 5 | weaver.py, runtime_state.py, sync_holon.py |
+| **Context** | 3 | context_service.py, treasury.py, prana.py |
+| **YAML/Config** | 15 | manifest.json, curricula/*.yaml, templates |
+
+### Migration Strategy: 4 Phases
+
+**Phase 1: Create Accessor Helper (LOW RISK)**
+```python
+# In vibe_core/plugins/opus_assistant/core/state_paths.py
+def get_opus_state_path(workspace: Path, filename: str) -> Path:
+    """Returns path to opus_assistant state file.
+
+    Uses StateService's plugin namespacing:
+    → .vibe/state/plugins/opus_assistant/{filename}
+
+    Heritage: Auto-migrates from .opus_state/{filename} on first read.
+    """
+    from vibe_core.state.state_service import get_state_service
+    service = get_state_service(workspace, plugin_id="opus_assistant")
+    return service.state_root / filename
+```
+
+**Phase 2: Migrate Core MANAS (HIGH VALUE)**
+Priority files (direct state access):
+1. `viveka_action.py` - decisions, karma_log, reinforcement
+2. `intent_buffer.py` - manas_intents.json
+3. `sankalpa.py` - sankalpa.json
+4. `memory_store.py` - manas_memory.json
+5. `akshara.py` - akshara_graph.json
+6. `sutra_sense.py` - sutra_intent_history.json
+7. `intent_router.py` - sanskrit_matrix.json
+8. `synaptic_seeder.py` - synapses.json
+
+**Phase 3: Migrate Readers (MEDIUM RISK)**
+Files that READ from .opus_state/ for display:
+1. `opus_dashboard_renderer.py` (4 direct reads)
+2. `cognition.py` (2 direct reads)
+3. `unified_cli.py` (5 direct reads)
+4. `context_service.py` (2 direct reads)
+
+**Phase 4: Update Patterns (LOW RISK)**
+Update exclusion/recognition patterns in:
+1. `weaver.py` - git ignore patterns
+2. `runtime_state.py` - state path matching
+3. `sync_holon.py` - state discovery
+4. `drift_detector.py` - skip patterns
+5. `dharma.py`, `shruta_sense.py`, `nadi_sense.py` - file patterns
+
+### Files by Change Type
+
+**Hardcoded Path → get_opus_state_path():**
+```
+vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py:289,1240,1658
+vibe_core/plugins/opus_assistant/manas/intent_buffer.py:136
+vibe_core/plugins/opus_assistant/manas/intent_router.py:331
+vibe_core/plugins/opus_assistant/manas/cortex/sankalpa.py:373
+vibe_core/plugins/opus_assistant/manas/cortex/sutra_sense.py:328
+vibe_core/plugins/opus_assistant/manas/memory_store.py:81
+vibe_core/plugins/opus_assistant/manas/akshara.py:809
+vibe_core/plugins/opus_assistant/manas/dojo/runner.py:454
+vibe_core/plugins/opus_assistant/manas/dojo/agency.py:134
+vibe_core/plugins/opus_assistant/manas/dojo/rooms/mirror.py:119-120
+vibe_core/plugins/opus_assistant/manas/dojo/rooms/library.py:84-85
+vibe_core/plugins/opus_assistant/manas/dojo/rooms/meditation.py:241
+vibe_core/plugins/opus_assistant/manas/dojo/synaptic_seeder.py:266
+vibe_core/plugins/opus_assistant/manas/intent_generator.py:499
+vibe_core/plugins/opus_assistant/core/treasury.py:97
+vibe_core/plugins/opus_assistant/core/context_service.py:574,615-616
+vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py:1122,1213,1256,1266
+vibe_core/plugins/interface/renderers/cognition.py:574,639
+vibe_core/cli/unified_cli.py:619,629,643,657,671,837
+vibe_core/prana.py:210,231
+```
+
+**Pattern Updates (add .vibe/state/):**
+```
+vibe_core/state/weaver.py:575
+vibe_core/state/runtime_state.py:102,144,178,236
+vibe_core/state/sync_holon.py:141,226,247,451,615
+vibe_core/plugins/opus_assistant/core/drift_detector.py:312
+vibe_core/plugins/opus_assistant/manas/cortex/dharma.py:157
+vibe_core/plugins/opus_assistant/manas/cortex/shruta_sense.py:144
+vibe_core/plugins/opus_assistant/manas/akshara.py:296
+```
+
+**Documentation/Config Updates:**
+```
+vibe_core/plugins/opus_assistant/manifest.json (state_directory, etc.)
+vibe_core/plugins/opus_assistant/manas/dojo/curricula/state_management.yaml
+vibe_core/plugins/opus_assistant/templates/panels/manas_status.md.j2
+```
+
+### Migration Safety: Heritage Auto-Migrate
+
+StateService.load() already handles migration:
+```python
+def load(self, filename: str, default: Any = None) -> Any:
+    target_path = self.state_root / filename
+
+    # 🏛️ HERITAGE MIGRATION (Restore Sovereignty)
+    if not target_path.exists():
+        legacy_root = self.workspace / ".opus_state"
+        legacy_path = legacy_root / filename
+        if legacy_path.exists():
+            logger.info(f"🏛️ Migrating heritage state: {filename}")
+            shutil.copy2(legacy_path, target_path)
+```
+
+This means: **Reads will auto-migrate. Only writes need path change.**
+
+### Estimated Scope
+
+- **Files to modify:** 25 Python files + 3 config/YAML files
+- **Lines changed:** ~200 (mostly import + path replacement)
+- **Risk:** LOW (heritage migration provides safety net)
+- **Benefit:** Unified state architecture, cleaner .gitignore, proper plugin isolation

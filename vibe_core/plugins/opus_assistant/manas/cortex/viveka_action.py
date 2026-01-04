@@ -285,8 +285,10 @@ class VivekaDecisionLogger:
     """
 
     def __init__(self, workspace: Path, max_entries: int = 1000):
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self._workspace = workspace
-        self._log_file = workspace / ".opus_state" / "viveka_decisions.json"
+        self._log_file = get_opus_state_path(workspace, "viveka_decisions.json")
         self._max_entries = max_entries
 
     def log(self, decision: VivekaDecisionLog) -> None:
@@ -1237,7 +1239,7 @@ class VivekaAction(BaseAction):
         """
         Track last reinforcement event for operational transparency.
 
-        Writes to .opus_state/last_reinforcement.json for dashboard visibility.
+        Writes to .vibe/state/plugins/opus_assistant/last_reinforcement.json for dashboard visibility.
         Uses StateService (P0) for centralized state management.
         """
         tracking_data = {
@@ -1655,7 +1657,9 @@ class VivekaAction(BaseAction):
         """Load karma log from disk."""
         import json
 
-        karma_path = self._workspace / ".opus_state" / "karma_log.json"
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        karma_path = get_opus_state_path(self._workspace, "karma_log.json")
         if karma_path.exists():
             try:
                 with open(karma_path) as f:

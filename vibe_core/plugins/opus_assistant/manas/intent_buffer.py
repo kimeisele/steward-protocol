@@ -5,13 +5,15 @@ Extracted from CognitiveKernel to reduce kernel size and improve separation
 of concerns. The IntentBuffer manages:
 
 1. Intent storage (in-memory list)
-2. Persistence (to .opus_state/manas_intents.json)
+2. Persistence (to .vibe/state/plugins/opus_assistant/manas_intents.json)
 3. Deduplication
 4. Expiry cleanup
 5. Buffer size limits
 
 The kernel orchestrates approval/rejection/execution, but the buffer
 handles the data operations.
+
+Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 """
 
 from __future__ import annotations
@@ -133,7 +135,9 @@ class IntentBuffer:
     @property
     def buffer_file(self) -> Path:
         """Get path to buffer file."""
-        return self._workspace / ".opus_state" / "manas_intents.json"
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+        return get_opus_state_path(self._workspace, "manas_intents.json")
 
     def add(self, entry: IntentBufferEntry) -> bool:
         """

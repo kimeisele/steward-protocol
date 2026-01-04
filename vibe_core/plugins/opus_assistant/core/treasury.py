@@ -89,12 +89,13 @@ class Treasury:
         Initialize Treasury.
 
         Args:
-            state_dir: Path to .opus_state/ (auto-detected if None)
+            state_dir: Path to state directory (auto-detected if None)
         """
         if state_dir is None:
-            # Auto-detect from plugin root
-            plugin_root = Path(__file__).parent.parent
-            state_dir = plugin_root / ".opus_state"
+            # Use new state path helper
+            from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
+            state_dir = get_opus_state_path(Path.cwd()).parent
 
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)

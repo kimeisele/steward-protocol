@@ -262,8 +262,10 @@ class SynapticSeeder:
     """
 
     def __init__(self, workspace: Path):
+        from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
+
         self._workspace = workspace
-        self._synapses_path = workspace / ".opus_state" / "synapses.json"
+        self._synapses_path = get_opus_state_path(workspace, "synapses.json")
 
     def seed(self, force: bool = False) -> Dict[str, Any]:
         """
