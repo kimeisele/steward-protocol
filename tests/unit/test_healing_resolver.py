@@ -491,3 +491,80 @@ class TestOrchestratorIntegration:
         # Should fall back to DRY_RUN
         assert len(results) == 1
         assert "dry_run" in results[0].message.lower()
+
+
+# =============================================================================
+# TestQuantumHealingResolver - Ledger Recording (OPUS-LZ3)
+# =============================================================================
+
+
+class TestLedgerRecording:
+    """Tests for ledger audit trail (OPUS-LZ3)."""
+
+    def test_resolve_records_to_ledger(self, sample_drift):
+        """Resolve records decision to ledger when available."""
+        from vibe_core.services.healing_resolver import ResonanceDecisionRecord
+
+        # Mock ledger
+        mock_ledger = Mock()
+        mock_ledger.record_event = Mock()
+
+        governance = MockGovernance(ashrama=AsharamaStage.GRIHASTHA, bhakti=75)
+        resolver = QuantumHealingResolver(
+            governance=governance,
+            ledger=mock_ledger,
+        )
+
+        resolver.resolve("test_agent", sample_drift)
+
+        # Should have called record_event
+        mock_ledger.record_event.assert_called_once()
+        call_args = mock_ledger.record_event.call_args
+        assert call_args.kwargs["event_type"] == "HEALING_RESONANCE"
+        assert call_args.kwargs["agent_id"] == "test_agent"
+
+        # Verify record details are typed (no Any)
+        details = call_args.kwargs["details"]
+        assert details["event"] == "RESONANCE_DECISION"
+        assert details["drift_id"] == sample_drift.id
+        assert details["strategy"] in ["dry_run", "manual", "auto"]
+        assert isinstance(details["bhakti"], int)
+        assert isinstance(details["bhakti_threshold"], int)
+
+    def test_resolve_without_ledger_does_not_fail(self, sample_drift):
+        """Resolve works without ledger (graceful degradation)."""
+        governance = MockGovernance(ashrama=AsharamaStage.GRIHASTHA, bhakti=10)
+        resolver = QuantumHealingResolver(
+            governance=governance,
+            ledger=None,  # No ledger
+        )
+
+        # Should not raise
+        result = resolver.resolve("test_agent", sample_drift)
+        assert result == HealingStrategy.DRY_RUN
+
+    def test_ledger_error_does_not_fail_resolve(self, sample_drift):
+        """Ledger errors are caught and logged, not propagated."""
+        mock_ledger = Mock()
+        mock_ledger.record_event.side_effect = Exception("Ledger write failed")
+
+        governance = MockGovernance(ashrama=AsharamaStage.GRIHASTHA, bhakti=75)
+        resolver = QuantumHealingResolver(
+            governance=governance,
+            ledger=mock_ledger,
+        )
+
+        # Should not raise despite ledger error
+        result = resolver.resolve("test_agent", sample_drift)
+        assert result == HealingStrategy.MANUAL  # High bhakti
+
+    def test_resonance_decision_record_is_typed(self):
+        """ResonanceDecisionRecord is fully typed (no Any)."""
+        from dataclasses import fields
+
+        from vibe_core.services.healing_resolver import ResonanceDecisionRecord
+
+        # All fields should have concrete types
+        for field in fields(ResonanceDecisionRecord):
+            assert field.type != "Any"
+            assert "Any" not in str(field.type)
