@@ -1125,9 +1125,445 @@ class NagaAPIProtocol(Protocol):
 
 ---
 
+---
+
+## PHASE 8.1 COMPLETE: DEEP RECONNAISSANCE FINDINGS
+
+> "Wir haben die Höhlen erkundet. Jetzt wissen wir wo der Schatz liegt."
+
+### 🐍 ENVOY RECONNAISSANCE
+
+**Location:** `vibe_core/runtime/layered_router.py` (432 lines)
+
+**4-Layer Semantic Routing:**
+```
+Layer 1: Exact Match (Instinct) → _exact_index dictionary
+Layer 2: Semantic Match (Knowledge) → regex patterns + param extraction
+Layer 3: Context Awareness (Memory) → Ephemeral + KnowledgeGraph
+Layer 3.5: Akshara Substrate (Experience) → learned synaptic weights
+Fallback: SIMPLE_QUERY at 0.3 confidence
+```
+
+**Entry Point:** `UnifiedRouter.route()` at `unified_execution_core.py:90-122`
+
+**NAGA Integration Points:**
+
+| Point | File:Line | Current | NAGA Enhancement |
+|-------|-----------|---------|------------------|
+| Pre-routing gate | `unified_execution_core.py:124` | String matching | **Takshaka.scan()** before Layer 1 |
+| Circuit scoring | `layered_router.py:269` | Ephemeral boost | **Sesha.get_circuit_health()** |
+| Param extraction | `layered_router.py:249` | Pure regex | **Takshaka.validate_params()** |
+| Akshara weights | `layered_router.py:324` | Hand-coded | **CommitWatcher pattern learning** |
+| Fallback circuit | `layered_router.py:177` | Hardcoded SIMPLE_QUERY | **Sesha.get_healthiest_circuits()** |
+
+---
+
+### 🐍 SHUDDHI RECONNAISSANCE
+
+**Location:** `vibe_core/shuddhi/engine.py` (263 lines)
+
+**Purification Flow:**
+```
+FILE PATH + RULE_ID
+    ↓ purify()
+1. LOCATE REMEDY → remedy_loader.py
+2. READ & PARSE → libcst.parse_module()
+3. TRANSFORM → CST Visitor pattern
+4. VERIFY → compile() syntax check
+5. RETURN → ShuddhiResult(PURIFIED|SKIPPED|FAILED|OUT_OF_SCOPE)
+```
+
+**Entry Point:** `ShuddhiEngine.purify()` at `engine.py:50-118`
+
+**NAGA Integration Points:**
+
+| Point | File:Line | Current | NAGA Enhancement |
+|-------|-----------|---------|------------------|
+| Contextual healing | `engine.py:73` | ShuddhiScopeError | **NAGAs inject dependencies** before healing |
+| Remedy extension | `remedy_loader.py:63` | VEDA-4 discovery | **NAGAs generate custom remedies** |
+| KG feedback | `engine.py:157-206` | heal_and_record() | **NAGAs track healing success patterns** |
+| Cross-file healing | N/A | Single file only | **NAGAs coordinate multi-file healing** |
+| Git integration | N/A | Manual | **NAGAs auto-commit after healing** |
+
+**7 Current Remedies:** `unsafe_io_write`, `subprocess_timeout`, `silent_except`, `get_instance`, `iterdir_discovery`, `path_scanning`
+
+---
+
+### 🐍 MANAS RECONNAISSANCE
+
+**Location:** `vibe_core/plugins/opus_assistant/manas/` (15+ files)
+
+**OODA Decision Loop:**
+```
+1. _perceive() → 7 Jnanendriyas → Chitta pool
+2. _orient() → Chitta.process() + Shiva sweep
+3. _decide() → Buddhi.discriminate() [CRITICAL]
+4. _act() → Narasimha gate → IntentRouter → Handlers → Cortex
+5. _persist() → Ledger + Memory + WeaverPulse
+```
+
+**Entry Point:** `ManasOracle.consult()` at `api.py:129-260`
+
+**NAGA Integration Points:**
+
+| Point | File:Line | Current | NAGA Enhancement |
+|-------|-----------|---------|------------------|
+| Risk assessment | `api.py:195` | Static mapping | **Takshaka.detect_toxicity()** |
+| Perception feeding | `cognitive_kernel.py:1598` | Local senses only | **Sesha.get_common_issue_patterns()** |
+| Pre-decide gate | `cognitive_kernel.py:1701` | Buddhi only | **Takshaka.check_all_constraints()** |
+| Post-analysis | `api.py:337` | Local memory | **Sesha.broadcast_success_pattern()** |
+| Context normalization | `weaver_bridge.py:179` | Local weaver | **Vasuki.normalize_external_context()** |
+
+---
+
+### 🐍 CORRECTIONDISPATCHER RECONNAISSANCE
+
+**Location:** `vibe_core/services/correction_dispatcher.py` (668 lines)
+
+**Drift → Healing Flow:**
+```
+DETECT → ORCHESTRATE → DISPATCH → HEAL
+  ↓         ↓            ↓         ↓
+Detectors  detect_and_heal()  dispatch()  Handlers
+(Reactor,   by DriftSource    by priority  (Shuddhi,
+ Vajra,     + strategy        100→75→50    Sesha,
+ Shuddhi)                                  Takshaka,
+                                          Vasuki)
+```
+
+**Entry Point:** `BasicCorrectionOrchestrator.detect_and_heal()` at `correction_dispatcher.py:272-520`
+
+**Current NAGA Handler Registration:**
+
+| NAGA | DriftSource | Handler ID | Priority |
+|------|-------------|------------|----------|
+| Sesha | STATE | "sesha" | 50 |
+| Takshaka | COGNITIVE | "takshaka" | 100 |
+| Vasuki | CONFIG | "vasuki" | 75 |
+
+**NAGA Enhancement Points:**
+
+| Point | Current | Enhancement |
+|-------|---------|-------------|
+| Detection | Hash/rule-based only | **Semantic analysis + pattern learning** |
+| Healing | Independent per handler | **Cross-NAGA coordination** |
+| Feedback | Result logged only | **Results → Knowledge Graph for learning** |
+| Trust | Static Bhakti/Ashrama | **Dynamic success-rate escalation** |
+
+---
+
+## PHASE 8.2: CONCRETE NAGACORTEX DESIGN
+
+> Basierend auf Reconnaissance. Konkrete Integration Points.
+
+### NagaCortex Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                              NAGA CORTEX                                 │
+│                        (The Central Nervous System)                      │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   ┌───────────────────────────────────────────────────────────────────┐ │
+│   │                         SIGNAL AGGREGATOR                         │ │
+│   │                                                                   │ │
+│   │  FloodManager ──┐                                                 │ │
+│   │  CommitWatcher ─┼──► correlate() ──► CorrelatedContext           │ │
+│   │  StateProxy ────┘                                                 │ │
+│   └───────────────────────────────────────────────────────────────────┘ │
+│                                 │                                        │
+│                                 ▼                                        │
+│   ┌───────────────────────────────────────────────────────────────────┐ │
+│   │                      INTELLIGENCE ENGINE                          │ │
+│   │                                                                   │ │
+│   │  Sesha.get_common_patterns() ─┐                                   │ │
+│   │  Takshaka.threat_analysis() ──┼──► decide() ──► Decision          │ │
+│   │  Vasuki.peer_context() ───────┘                                   │ │
+│   └───────────────────────────────────────────────────────────────────┘ │
+│                                 │                                        │
+│                                 ▼                                        │
+│   ┌───────────────────────────────────────────────────────────────────┐ │
+│   │                         DISPATCHER                                │ │
+│   │                                                                   │ │
+│   │  Decision.HEAL ────► dispatch() ──► Shuddhi.purify()              │ │
+│   │  Decision.ROUTE ───► dispatch() ──► Envoy (boost/degrade)         │ │
+│   │  Decision.CONSULT ─► dispatch() ──► Manas (feed context)          │ │
+│   │  Decision.BITE ────► dispatch() ──► Takshaka.bite()               │ │
+│   └───────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### File Structure
+
+```
+vibe_core/naga/
+├── cortex/                          # NEW: Central Nervous System
+│   ├── __init__.py
+│   ├── cortex_main.py               # NagaCortex class
+│   ├── signal_aggregator.py         # Signal collection + correlation
+│   ├── intelligence_engine.py       # Pattern analysis + decision
+│   ├── dispatcher.py                # Route to target systems
+│   └── memory.py                    # Cortex learning state
+│
+├── integrations/                    # NEW: System Integration Hooks
+│   ├── __init__.py
+│   ├── envoy_hook.py                # LayeredRouter integration
+│   ├── shuddhi_hook.py              # ShuddhiEngine integration
+│   ├── manas_hook.py                # ManasOracle integration
+│   └── correction_hook.py           # CorrectionDispatcher enhancement
+│
+├── services/                        # EXISTING: Core NAGAs
+│   ├── sesha.py
+│   ├── vasuki.py
+│   ├── takshaka.py
+│   └── ...
+```
+
+### Concrete Implementation Plan
+
+```python
+# vibe_core/naga/cortex/cortex_main.py
+
+class NagaCortex:
+    """
+    Central Nervous System of the NAGA Federation.
+
+    Responsibilities:
+    1. AGGREGATE signals from FloodManager, CommitWatcher, StateProxy
+    2. CORRELATE patterns using Sesha, Vasuki, Takshaka intelligence
+    3. DECIDE what action is needed
+    4. DISPATCH to appropriate system (Envoy, Shuddhi, Manas)
+    """
+
+    def __init__(self, naga_orchestrator: NagaOrchestrator):
+        self._orchestrator = naga_orchestrator
+        self._signal_buffer: List[Signal] = []
+        self._memory = CortexMemory()
+
+    # === AGGREGATION ===
+
+    def receive_flood_signal(self, event: Event) -> None:
+        """Called by NagaFloodController when event analyzed."""
+        self._signal_buffer.append(FloodSignal(event))
+        self._maybe_correlate()
+
+    def receive_commit_signal(self, result: CommitResult) -> None:
+        """Called by NagaCommitWatcher when pattern detected."""
+        self._signal_buffer.append(CommitSignal(result))
+        self._maybe_correlate()
+
+    def receive_state_signal(self, write: StateWrite) -> None:
+        """Called by NagaStateProxy on state change."""
+        self._signal_buffer.append(StateSignal(write))
+        self._maybe_correlate()
+
+    # === CORRELATION ===
+
+    def _maybe_correlate(self) -> None:
+        """Correlate if buffer has enough signals."""
+        if len(self._signal_buffer) < 3:
+            return
+        context = self.correlate(self._signal_buffer)
+        self._signal_buffer.clear()
+
+        decision = self.decide(context)
+        if decision.action != "NONE":
+            self.dispatch(decision)
+
+    def correlate(self, signals: List[Signal]) -> CorrelatedContext:
+        """Correlate signals into unified context."""
+        return CorrelatedContext(
+            signals=signals,
+            sesha_patterns=self._orchestrator.sesha.get_recent_patterns(),
+            takshaka_threats=self._orchestrator.takshaka.get_active_threats(),
+            vasuki_peer_state=self._orchestrator.vasuki.get_peer_health(),
+            timestamp=datetime.now(),
+        )
+
+    # === DECISION ===
+
+    def decide(self, context: CorrelatedContext) -> Decision:
+        """Determine what action is needed."""
+        # Priority: Security > Healing > Routing > Consulting
+
+        # 1. Security threats → BITE
+        if context.has_security_threat():
+            return Decision(action="BITE", target=context.threat_source)
+
+        # 2. Structural violations → HEAL
+        if context.has_healable_violation():
+            return Decision(
+                action="HEAL",
+                target=context.violation_path,
+                rule=context.violation_rule,
+            )
+
+        # 3. Routing degradation → ROUTE
+        if context.has_circuit_drift():
+            return Decision(
+                action="ROUTE",
+                target=context.degraded_circuit,
+                boost=-0.2,  # Reduce confidence
+            )
+
+        # 4. Cognitive context needed → CONSULT
+        if context.needs_cognitive_update():
+            return Decision(
+                action="CONSULT",
+                context=context.cognitive_payload,
+            )
+
+        return Decision(action="NONE")
+
+    # === DISPATCH ===
+
+    def dispatch(self, decision: Decision) -> DispatchResult:
+        """Route decision to appropriate system."""
+        if decision.action == "BITE":
+            return self._dispatch_to_takshaka(decision)
+        elif decision.action == "HEAL":
+            return self._dispatch_to_shuddhi(decision)
+        elif decision.action == "ROUTE":
+            return self._dispatch_to_envoy(decision)
+        elif decision.action == "CONSULT":
+            return self._dispatch_to_manas(decision)
+        return DispatchResult(status="NONE")
+
+    def _dispatch_to_shuddhi(self, decision: Decision) -> DispatchResult:
+        """Trigger targeted healing."""
+        shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+        if not shuddhi:
+            return DispatchResult(status="UNAVAILABLE")
+
+        result = shuddhi.purify(
+            file_path=Path(decision.target),
+            rule_id=decision.rule,
+        )
+
+        # Record to memory
+        self._memory.record_healing(decision, result)
+        return DispatchResult(status="HEALED" if result.healed else "FAILED")
+
+    def _dispatch_to_envoy(self, decision: Decision) -> DispatchResult:
+        """Adjust circuit confidence."""
+        # Integration point: layered_router.py:269
+        # NAGAs can boost/degrade circuit confidence
+        from vibe_core.runtime.layered_router import get_router_safe
+
+        router = get_router_safe()
+        if router and hasattr(router, 'adjust_circuit_confidence'):
+            router.adjust_circuit_confidence(
+                circuit_id=decision.target,
+                adjustment=decision.boost,
+                reason="naga_cortex",
+            )
+            return DispatchResult(status="ROUTED")
+        return DispatchResult(status="UNAVAILABLE")
+
+    def _dispatch_to_manas(self, decision: Decision) -> DispatchResult:
+        """Feed context to Manas."""
+        from vibe_core.plugins.opus_assistant.manas import get_manas_oracle
+
+        oracle = get_manas_oracle()
+        if oracle:
+            oracle.inject_naga_context(decision.context)
+            return DispatchResult(status="CONSULTED")
+        return DispatchResult(status="UNAVAILABLE")
+
+    def _dispatch_to_takshaka(self, decision: Decision) -> DispatchResult:
+        """Record security bite."""
+        violation = VajraViolation(
+            violation_type="CORTEX_THREAT",
+            source=decision.target,
+            details={"decision": str(decision)},
+        )
+        event_id = self._orchestrator.takshaka.bite(violation)
+        return DispatchResult(status="BITTEN", event_id=event_id)
+```
+
+### Integration Hooks (Concrete)
+
+```python
+# vibe_core/naga/integrations/envoy_hook.py
+
+def hook_envoy_routing():
+    """
+    Hook into LayeredRouter.route() for NAGA intelligence.
+
+    Integration Point: unified_execution_core.py:90-122
+    """
+    from vibe_core.runtime.unified_execution_core import UnifiedRouter
+
+    original_route = UnifiedRouter.route
+
+    def naga_enhanced_route(self, user_input, source="envoy", context=None):
+        # 1. Pre-routing Takshaka scan
+        naga = ServiceRegistry.get(NagaFederationProtocol)
+        if naga and naga.takshaka:
+            toxicity = naga.takshaka.scan_toxicity(user_input)
+            if toxicity.blocked:
+                return ExecutionRequest.blocked("Takshaka: " + toxicity.reason)
+
+        # 2. Original routing
+        result = original_route(self, user_input, source, context)
+
+        # 3. Sesha health check on selected circuit
+        if naga and naga.sesha and result.target_id:
+            health = naga.sesha.get_circuit_health(result.target_id)
+            if health and health.violations_pending > 0:
+                result.confidence *= 0.7  # Degrade confidence
+
+        return result
+
+    UnifiedRouter.route = naga_enhanced_route
+```
+
+```python
+# vibe_core/naga/integrations/manas_hook.py
+
+def hook_manas_consult():
+    """
+    Hook into ManasOracle.consult() for NAGA context injection.
+
+    Integration Point: api.py:129-260
+    """
+    from vibe_core.plugins.opus_assistant.manas.api import ManasOracle
+
+    original_consult = ManasOracle.consult
+
+    def naga_enhanced_consult(self, context):
+        # 1. Enrich context with NAGA intelligence
+        naga = ServiceRegistry.get(NagaFederationProtocol)
+        if naga:
+            context['naga_patterns'] = naga.sesha.get_recent_patterns() if naga.sesha else []
+            context['naga_threats'] = naga.takshaka.get_active_threats() if naga.takshaka else []
+            context['naga_peer_health'] = naga.vasuki.get_peer_health() if naga.vasuki else {}
+
+        # 2. Original consult
+        return original_consult(self, context)
+
+    ManasOracle.consult = naga_enhanced_consult
+```
+
+---
+
+## PHASE 8 STATUS UPDATE
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 8.1 Deep Reconnaissance | ✅ COMPLETE | Envoy, Shuddhi, Manas, CorrectionDispatcher fully mapped |
+| 8.2 Cortex Design | ✅ COMPLETE | Architecture + concrete implementation plan |
+| 8.3 Integration Hooks | 📋 DESIGNED | Envoy, Manas hooks documented |
+| 8.4 Tests | ⏳ TODO | Test plan ready |
+| 8.5 Sub-State | ⏳ TODO | .vibe/state/naga/ structure defined |
+| 8.6 API Export | ⏳ TODO | NagaAPIProtocol defined |
+
+---
+
 *Last updated: 2026-01-04*
 *Status: 179/179 Tests passing (incl. NagaStateProxy)*
 *Critical Fixes Applied: StateProxy preserved, FloodManager loop started, CommitWatcher hooked*
-*Phases Complete: 7/10 (Core + Cartridge + CLI + Integration Fixes)*
-*Next: Phase 8 - NagaCortex (Deep Reconnaissance FIRST)*
+*Phases Complete: 7.2/10 (Core + Cartridge + CLI + Integration Fixes + Reconnaissance + Cortex Design)*
+*Next: Phase 8.3 - Implement NagaCortex prototype*
 *Vision: NAGAs as AGENCY - eigener Sub-State, eigene Intelligence, DIENEN der Infrastruktur*
