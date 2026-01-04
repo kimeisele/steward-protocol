@@ -23,9 +23,13 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
 from weakref import WeakSet
 
 if TYPE_CHECKING:
+    from vibe_core.naga.cortex.signals import FloodSignal
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.protocols.event import Event
+
+# Type alias for cortex signal callback
+CortexSignalCallback = Callable[["FloodSignal"], None]
 
 logger = logging.getLogger("NAGA.FLOOD")
 
@@ -138,7 +142,15 @@ class NagaFloodController:
         self._seen_events: Set[str] = set()
         self._seen_events_max = 10000
 
+        # Cortex integration (optional, non-invasive)
+        self._cortex_callback: Optional[CortexSignalCallback] = None
+
         logger.debug("[FLOOD] Controller initialized")
+
+    def set_cortex_callback(self, callback: CortexSignalCallback) -> None:
+        """Set callback for sending signals to Cortex. Non-invasive integration."""
+        self._cortex_callback = callback
+        logger.debug("[FLOOD] Cortex callback registered")
 
     # =========================================================================
     # LIFECYCLE
@@ -320,6 +332,23 @@ class NagaFloodController:
 
             # Run toxicity scan
             toxicity = self._takshaka.scan_toxicity(content)
+
+            # --- CORTEX SIGNAL (non-invasive) ---
+            # Send observation to Cortex for correlation
+            if self._cortex_callback:
+                try:
+                    from vibe_core.naga.cortex.signals import FloodSignal
+
+                    signal = FloodSignal(
+                        source_id="flood_manager",
+                        event_type=str(getattr(event, "event_type", "unknown")),
+                        agent_id=str(getattr(event, "agent_id", None)),
+                        toxicity_score=getattr(toxicity, "score", 0.0),
+                        patterns_detected=tuple(getattr(toxicity, "patterns", [])),
+                    )
+                    self._cortex_callback(signal)
+                except Exception:
+                    pass  # Silent fail - observer must not crash
 
             if toxicity.blocked:
                 self._stats.violations_detected += 1
@@ -532,6 +561,10 @@ class NagaFloodManager:
         self._event_flood.stop()
         self._started = False
         logger.info("[FLOOD] Manager stopped")
+
+    def set_cortex_callback(self, callback: CortexSignalCallback) -> None:
+        """Set callback for sending signals to Cortex. Non-invasive integration."""
+        self._event_flood.set_cortex_callback(callback)
 
     def get_status(self) -> Dict[str, Any]:
         """Get unified flood status."""

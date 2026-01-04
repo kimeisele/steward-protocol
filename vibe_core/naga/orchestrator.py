@@ -37,6 +37,7 @@ from vibe_core.protocols.state import StateServiceProtocol
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
     from vibe_core.naga.commit_watcher import NagaCommitWatcher
+    from vibe_core.naga.cortex import NagaCortex
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
@@ -64,6 +65,7 @@ class NagaOrchestrator:
         self._flood_manager: Optional["NagaFloodManager"] = None
         self._commit_watcher: Optional["NagaCommitWatcher"] = None
         self._state_proxy: Optional["NagaStateProxy"] = None
+        self._cortex: Optional["NagaCortex"] = None
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
 
@@ -233,7 +235,40 @@ class NagaOrchestrator:
             logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
             # Non-critical - continue without watcher
 
-        # 6. Register the Federation itself for service discovery
+        # 6. CORTEX - Das Zentrale Nervensystem (Phase 8)
+        # "Das Nervensystem, nicht das Gehirn" - NAGAs observe, correlate, inform
+        if self._config.cortex.enabled:
+            try:
+                from vibe_core.naga.cortex import NagaCortex
+                from vibe_core.naga.cortex.cortex_main import CortexConfig
+
+                cortex_config = CortexConfig(
+                    enabled=self._config.cortex.enabled,
+                    signal_buffer_size=self._config.cortex.signal_buffer_size,
+                    correlation_threshold=self._config.cortex.correlation_threshold,
+                    max_signal_age_seconds=self._config.cortex.max_signal_age_seconds,
+                    auto_dispatch=self._config.cortex.auto_dispatch,
+                    log_decisions=self._config.cortex.log_decisions,
+                )
+                self._cortex = NagaCortex(self, cortex_config)
+                logger.info("🧠 NAGA Cortex initialized - Das Nervensystem aktiv")
+
+                # 6.1 Wire signal sources to Cortex (non-invasive integration)
+                # FloodManager sends FloodSignals
+                if self._flood_manager:
+                    self._flood_manager.set_cortex_callback(self._cortex.receive_signal)
+                    logger.info("🧠 Cortex <- FloodManager wired")
+
+                # CommitWatcher sends CommitSignals
+                if self._commit_watcher:
+                    self._commit_watcher.set_cortex_callback(self._cortex.receive_signal)
+                    logger.info("🧠 Cortex <- CommitWatcher wired")
+
+            except Exception as e:
+                logger.warning(f"🧠 NAGA Cortex failed to start: {e}")
+                # Non-critical - continue without cortex
+
+        # 7. Register the Federation itself for service discovery
         # This allows other components (like Prakriti) to find the CommitWatcher
         ServiceRegistry.register(NagaFederationProtocol, self)
         logger.info("🐍 NAGA Federation registered in ServiceRegistry")
@@ -254,6 +289,7 @@ class NagaOrchestrator:
             "takshaka": self._takshaka.get_status().to_dict() if self._takshaka else None,
             "flood_manager": self._flood_manager.get_status() if self._flood_manager else None,
             "commit_watcher": self._commit_watcher.get_stats() if self._commit_watcher else None,
+            "cortex": self._cortex.get_status() if self._cortex else None,
         }
 
     def is_ready(self) -> bool:
@@ -309,3 +345,8 @@ class NagaOrchestrator:
     def state_proxy(self) -> Optional["NagaStateProxy"]:
         """Get State Proxy (Der Kommissar) for Dharma-validated state writes."""
         return self._state_proxy
+
+    @property
+    def cortex(self) -> Optional["NagaCortex"]:
+        """Get Cortex (Das Nervensystem) for signal correlation and decision making."""
+        return self._cortex
