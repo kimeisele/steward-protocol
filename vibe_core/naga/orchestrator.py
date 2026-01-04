@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     from vibe_core.naga.commit_watcher import NagaCommitWatcher
     from vibe_core.naga.cortex import NagaCortex
     from vibe_core.naga.flood import NagaFloodManager
+    from vibe_core.naga.identity import NagaIdentity
+    from vibe_core.naga.ouroboros import NagaOuroboros
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.naga.services.vasuki import VasukiService
@@ -66,8 +68,14 @@ class NagaOrchestrator:
         self._commit_watcher: Optional["NagaCommitWatcher"] = None
         self._state_proxy: Optional["NagaStateProxy"] = None
         self._cortex: Optional["NagaCortex"] = None
+        self._ouroboros: Optional["NagaOuroboros"] = None
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
+
+        # GAD-000 37th Principle: Sovereign identity for signing decisions
+        from vibe_core.naga.identity import NagaIdentity
+
+        self._identity: Optional[NagaIdentity] = None
 
     @classmethod
     def bootstrap(
@@ -126,11 +134,17 @@ class NagaOrchestrator:
         2. Takshaka second (guardian)
         3. Vasuki last (bridge - needs both)
         """
+        from vibe_core.naga.identity import NagaIdentity
         from vibe_core.naga.services.sesha import SeshaService
         from vibe_core.naga.services.takshaka import TakshakaService
         from vibe_core.naga.services.vasuki import VasukiService
 
         self._config = self._get_config(config)
+
+        # 0. IDENTITY - GAD-000 37th Principle
+        # Generate sovereign identity for signing decisions
+        self._identity = NagaIdentity.generate("naga_federation")
+        logger.info(f"🔑 NAGA Identity: {self._identity.fingerprint}")
 
         # 1. SESHA - The Foundation
         if self._config.sesha.enabled:
@@ -255,6 +269,8 @@ class NagaOrchestrator:
                     log_decisions=self._config.cortex.log_decisions,
                 )
                 self._cortex = NagaCortex(self, cortex_config)
+                # Inject identity for decision signing (37th Principle)
+                self._cortex._identity = self._identity
                 logger.info("🧠 NAGA Cortex initialized - Das Nervensystem aktiv")
 
                 # 6.1 Wire signal sources to Cortex (non-invasive integration)
@@ -272,7 +288,21 @@ class NagaOrchestrator:
                 logger.warning(f"🧠 NAGA Cortex failed to start: {e}")
                 # Non-critical - continue without cortex
 
-        # 7. Register the Federation itself for service discovery
+        # 7. OUROBOROS - GAD-000 Recoverability (NAGAs watching NAGAs)
+        # "Die Schlange, die ihren eigenen Schwanz frisst" - self-healing loop
+        if self._cortex:
+            try:
+                from vibe_core.naga.ouroboros import NagaOuroboros
+
+                self._ouroboros = NagaOuroboros(orchestrator=self)
+                # Inject OUROBOROS into Cortex for correction observation
+                self._cortex._ouroboros = self._ouroboros
+                logger.info("🐍 OUROBOROS initialized - Die Schlange wacht")
+            except Exception as e:
+                logger.warning(f"🐍 OUROBOROS failed to start: {e}")
+                # Non-critical - continue without OUROBOROS
+
+        # 8. Register the Federation itself for service discovery
         # This allows other components (like Prakriti) to find the CommitWatcher
         ServiceRegistry.register(NagaFederationProtocol, self)
         logger.info("🐍 NAGA Federation registered in ServiceRegistry")
@@ -294,6 +324,7 @@ class NagaOrchestrator:
             "flood_manager": self._flood_manager.get_status() if self._flood_manager else None,
             "commit_watcher": self._commit_watcher.get_stats() if self._commit_watcher else None,
             "cortex": self._cortex.get_status() if self._cortex else None,
+            "ouroboros": self._ouroboros.get_status() if self._ouroboros else None,
         }
 
     def is_ready(self) -> bool:
@@ -354,3 +385,13 @@ class NagaOrchestrator:
     def cortex(self) -> Optional["NagaCortex"]:
         """Get Cortex (Das Nervensystem) for signal correlation and decision making."""
         return self._cortex
+
+    @property
+    def identity(self) -> Optional["NagaIdentity"]:
+        """Get Federation identity (37th Principle) for signing decisions."""
+        return self._identity
+
+    @property
+    def ouroboros(self) -> Optional["NagaOuroboros"]:
+        """Get OUROBOROS (GAD-000 Recoverability) for self-healing loop detection."""
+        return self._ouroboros

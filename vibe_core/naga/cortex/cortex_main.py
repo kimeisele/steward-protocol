@@ -23,8 +23,9 @@ Usage:
     # Cortex auto-correlates and dispatches when threshold met
 """
 
+import hashlib
 import logging
-from collections import deque
+from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -49,7 +50,9 @@ from vibe_core.naga.cortex.signals import (
 )
 
 if TYPE_CHECKING:
+    from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.orchestrator import NagaOrchestrator
+    from vibe_core.naga.ouroboros import NagaOuroboros
     from vibe_core.protocols.naga import VajraViolation
 
 logger = logging.getLogger("NAGA.CORTEX")
@@ -142,6 +145,18 @@ class NagaCortex:
         self._signal_buffer: Deque[NagaSignal] = deque(maxlen=self._config.signal_buffer_size)
         self._stats = CortexStats()
         self._decision_queue: List[CortexDecision] = []
+
+        # GAD-000 37th Principle: Identity for signing decisions
+        # Injected by orchestrator after construction
+        self._identity: Optional["NagaIdentity"] = None
+
+        # GAD-000 Recoverability: OUROBOROS for self-healing
+        # Injected by orchestrator after construction
+        self._ouroboros: Optional["NagaOuroboros"] = None
+
+        # GAD-000 Idempotency: Track dispatched decisions
+        self._dispatched: OrderedDict[str, datetime] = OrderedDict()
+        self._dispatched_max = 1000
 
         logger.info(f"[CORTEX] Initialized (threshold={self._config.correlation_threshold})")
 
@@ -395,25 +410,76 @@ class NagaCortex:
         - HEAL → Shuddhi.purify() (via ServiceRegistry)
         - ROUTE → Envoy confidence adjustment
         - CONSULT → Manas context injection
+
+        GAD-000 Compliance:
+        - 37th Principle: All decisions are signed before dispatch
+        - Idempotency: Duplicate decisions are detected and skipped
+        - Recoverability: OUROBOROS observes all corrections
         """
+        # GAD-000 Idempotency: Check for duplicate decision
+        decision_hash = self._compute_decision_hash(decision)
+        if decision_hash in self._dispatched:
+            logger.debug(f"[CORTEX] Duplicate decision {decision_hash[:8]}, skipping")
+            return DispatchResult(
+                status="ALREADY_DISPATCHED",
+                details={"decision_hash": decision_hash},
+            )
+
         self._stats.decisions_dispatched += 1
+
+        # GAD-000 37th Principle: Sign the decision
+        if self._identity and not decision.is_signed:
+            decision.sign(self._identity)
 
         # Log to ledger first (audit trail)
         if self._config.log_decisions:
             self._log_decision(decision)
 
+        # Dispatch to target
         if decision.action == DecisionAction.BITE:
-            return self._dispatch_to_takshaka(decision)
+            result = self._dispatch_to_takshaka(decision)
+            target = "takshaka"
         elif decision.action == DecisionAction.HEAL:
-            return self._dispatch_to_shuddhi(decision)
+            result = self._dispatch_to_shuddhi(decision)
+            target = "shuddhi"
         elif decision.action == DecisionAction.ROUTE:
-            return self._dispatch_to_envoy(decision)
+            result = self._dispatch_to_envoy(decision)
+            target = "envoy"
         elif decision.action == DecisionAction.CONSULT:
-            return self._dispatch_to_manas(decision)
+            result = self._dispatch_to_manas(decision)
+            target = "manas"
         elif decision.action == DecisionAction.ESCALATE:
-            return self._dispatch_escalation(decision)
+            result = self._dispatch_escalation(decision)
+            target = "human"
+        else:
+            return DispatchResult(status="NONE")
 
-        return DispatchResult(status="NONE")
+        # Track for idempotency (GAD-000)
+        self._dispatched[decision_hash] = datetime.now()
+        self._trim_dispatched()
+
+        # GAD-000 Recoverability: Report to OUROBOROS
+        if self._ouroboros and result.success:
+            try:
+                self._ouroboros.observe_correction(
+                    source="cortex",
+                    target=target,
+                    decision=decision,
+                )
+            except Exception as e:
+                logger.debug(f"[CORTEX] OUROBOROS observation failed: {e}")
+
+        return result
+
+    def _compute_decision_hash(self, decision: CortexDecision) -> str:
+        """Compute fingerprint for decision (GAD-000 Idempotency)."""
+        payload = f"{decision.action.name}:{decision.target}:{decision.rule}"
+        return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+    def _trim_dispatched(self) -> None:
+        """LRU trim of dispatched decisions."""
+        while len(self._dispatched) > self._dispatched_max:
+            self._dispatched.popitem(last=False)
 
     def _log_decision(self, decision: CortexDecision) -> None:
         """Log decision to Sesha ledger for auditability."""
