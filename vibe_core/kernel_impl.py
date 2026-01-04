@@ -283,160 +283,256 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
 
-        # Auditor (immune system) - NullAuditor fallback if no plugin
+        # Load immune system (Auditor)
+        # OPUS-209: Auditor is now accessed via ServiceRegistry
+        # If no auditor plugin loaded, use NullAuditor fallback
         from vibe_core.di import ServiceRegistry
 
         self._auditor = ServiceRegistry.get(AuditorProtocol) or NullAuditor()
-        if type(self._auditor).__name__ == "NullAuditor":
-            logger.warning("⚠️  No auditor plugin - using NullAuditor")
+        auditor_type = type(self._auditor).__name__
+        if auditor_type == "NullAuditor":
+            logger.warning("⚠️  No auditor plugin loaded - using NullAuditor")
+        else:
+            logger.info(f"🛡️  Immune system loaded (Auditor: {auditor_type})")
 
-        # Plugin-managed components (set by plugins on_boot)
-        self.process_manager = None
-        self.resource_manager = None
-        self.gateway = None
+        # Phase 2: Process Manager
+        # OPUS-209: Extracted to process_isolation plugin
+        # ProcessManager is created and registered by ProcessIsolationPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded, or kernel cannot run agents
+        self.process_manager = None  # Set by ProcessIsolationPlugin
+
+        # Phase 3: Resource Manager
+        # OPUS-209: Extracted to resource_limits plugin
+        # ResourceManager is created and registered by ResourceLimitsPlugin.on_boot()
+        # CRITICAL: Plugin MUST be loaded for quota enforcement
+        self.resource_manager = None  # Set by ResourceLimitsPlugin
+        self._last_quota_sync = 0  # Timestamp of last credit→quota sync
+        self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
+        # OPUS-303: Agent health cache (TTL 30s) to reduce OS syscalls in pulse
+        self._agent_health_cache: Dict[str, AgentHealth] = {}
+
+        # Phase 18: Network Gateway (Sangha)
+        # OPUS-209: Extracted to sangha_network plugin
+        # Gateway is created and registered by SanghaNetworkPlugin.on_boot()
+        self.gateway = None  # Set by SanghaNetworkPlugin
         self._gateway_thread = None
         self._gateway_loop = None
-        self._last_quota_sync = 0
-        self._last_pulse_time = 0
-        self._agent_health_cache: Dict[str, AgentHealth] = {}
-        self._network = None
 
-        # Parampara Lineage Chain
+        # Markdown UI Manager (Centralized UI Coordination)
+        # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
+        # logger.info("🖥️  Markdown UI Manager initialized")
+
+        # Phase 4: Network Proxy (OPUS-301: Lazy loaded)
+        self._network = None  # Lazy: created on first access
+
+        # Phase 5: Parampara Lineage Chain
         phoenix_config = _get_config()
         if phoenix_config and hasattr(phoenix_config, "paths"):
             lineage_path = str(phoenix_config.paths.system.resolve("lineage_db"))
         else:
+            # OPUS-025: Fallback with Path pattern
             from pathlib import Path
 
             lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
+
+        # OPUS-301: Lazy load LineageChain
         LazyLineageChain = lazy_class("vibe_core.lineage", "LineageChain")
         self.lineage = LazyLineageChain(db_path=lineage_path)
+        logger.info("⛓️  Parampara chain initialized (lazy)")
 
-        # Lazy-loaded subsystems
+        # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
+
+        # OPUS-200/201: Quantum Resonance Engine (Core Primitive)
+        # The reactor is the kernel's physics engine - how actions manifestation
         self._reactor = None
-        self._akasha_field = ""
+        self._akasha_field = ""  # Cumulative resonance field hash
 
-        # Inter-agent data exchange
+        # Phase 4: Data Exchange Store (Inter-Agent Communication)
+        # {agent_id: {key: value}} - Published data from agents
         self._data_store: Dict[str, AgentData] = {}
+        logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
 
-        # Governance (hot-swappable via plugins)
+        # GOVERNANCE PLUGIN SLOT
+        # Governance is handled by plugins (e.g., VedicGovernancePlugin)
+        # The plugin sets kernel.governance = self on boot
+        # This keeps the kernel CLEAN and governance SWAPPABLE
         self.governance: Optional[GovernanceProtocol] = None
 
-        # Layer 0 Security (cannot be hot-swapped)
+        # LAYER 0 SECURITY: Capability Enforcer (CANNOT be hot-swapped)
+        # Gemini Decision: "Security cannot be a plugin"
         from vibe_core.services.capability_enforcer import CapabilityEnforcerService
 
         self._capability_enforcer = CapabilityEnforcerService()
 
-        # Core services
+        # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
+        # Stores agent capabilities with support for selective revocation
+        # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
         from vibe_core.runtime.unified_trace import UnifiedTrace
-        from vibe_core.services.lifecycle_service import LifecycleService
 
-        self._lifecycle = LifecycleService(self)
         self.trace = UnifiedTrace()
 
-        # Prakriti State Engine (lazy)
+        # OPUS-009: PRAKRITI Unified State Engine
+        # OPUS-301: Lazy load Prakriti
         LazyPrakriti = lazy_class("vibe_core.state", "Prakriti")
+
         prakriti_db_path = None
         if phoenix_config and hasattr(phoenix_config, "paths"):
             try:
                 prakriti_db_path = phoenix_config.paths.data.resolve("vibe_ledger")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"⚠️  KERNEL: Could not resolve Prakriti DB path: {e}")
+
         self.prakriti = LazyPrakriti(db_path=prakriti_db_path)
 
-        # State Sync Weaver
+        # OPUS-096: State Sync Holon Weaver (MetaData Orchestration)
         from vibe_core.state.weaver import get_state_sync_weaver
 
         get_state_sync_weaver()
 
-        # Capability Registry (with blueprint for self-healing)
+        # 3. CAPABILITY REGISTRY (with blueprint)
+        # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry_blueprint = lambda: CapabilityRegistry(ledger=self.ledger)
         self.__capability_registry = CapabilityRegistry(ledger=self.ledger)
 
-        # I/O and Manifestation services
+        # I/O SERVICE: Central file operation controller
+        # IMPORTANT: Must be initialized BEFORE tool discovery
+        # Tools may inject io_service during registration via set_io_service()
+        # All file writes MUST go through this service.
+        # Plugins produce content, Kernel writes through self.io
+        # See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
         self.io = KernelIOService(self)
-        self.manifestation = ManifestationService(self)
-        self.tool_registry = None  # Set by ToolsPlugin
+        logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
-        # Narasimha kill-switch and Event Bus
+        # MANIFESTATION SERVICE: High-level Markdown rendering engine
+        # OPUS-308: The Rendering Engine of Reality
+        # Plugins declare manifestation in manifest.json, implement get_manifestation_data()
+        # This service handles: schema-based rendering, section ownership, atomic updates
+        # See: docs/architecture/OPUS/308-MARKDOWN-MANIFESTATION-PROTOCOL.md
+        self.manifestation = ManifestationService(self)
+        logger.info("📄 ManifestationService initialized (OPUS-308 Core)")
+
+        # Phase 6: Universal Tool Registry
+        # EXTRACTED TO PLUGIN: ToolsPlugin handles registry initialization
+        # Plugin sets kernel.tool_registry on boot
+        # See: vibe_core/plugins/tools/plugin_main.py
+        self.tool_registry = None  # Set by ToolsPlugin.on_boot()
+
+        # Phase 7: NARASIMHA Kill-Switch (Hypervisor Level)
+        # SECURITY FIX: Wire destruction handlers so Narasimha can actually kill agents
         self._narasimha = get_narasimha()
         self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
-        self._event_bus = get_event_bus()
+        logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
 
-        # Cognitive hook (NullCognitive fallback)
+        # Phase 2: Event Bus (Agent Communication & Reactive Patterns)
+        # Allows agents to subscribe to system-wide events
+        # Supports loose coupling between agents
+        self._event_bus = get_event_bus()
+        logger.info("🎵 Event Bus initialized (pub/sub ready)")
+
+        # OPUS-309: Cognitive Hook (Hot-Swap)
+        # Plugins can register cognitive layer via register_cognitive()
+        # Arjuna-Pattern: NullCognitive fallback if no plugin registers
         self._cognitive: OperatorCognitiveProtocol = NullCognitive()
+        logger.info("🧠 Cognitive hook initialized (NullCognitive fallback)")
 
         # Unified Execution Runtime (Router + Executor)
         # Replaces legacy PlaybookRouter and MilkOceanRouter
         self._unified_router, self._unified_executor = create_unified_runtime(self)
         self._playbook_router = self._unified_router  # Alias for backward compatibility (temporarily)
 
-        # PLUGIN SYSTEM: Load and boot all plugins
+        # PLUGIN SYSTEM (The Avatars of Vishnu)
+        # Phase 1: Load and boot all plugins
+        # Phase 6: Load Cognitive Packs (Genesis)
         self.genesis_path = None
         self._plugin_metadata = {}
-        self._init_plugins()
 
-        # VAJRA ARMOR: Seal kernel DNA (blueprints immutable after this)
-        self.vajra_seal()
+        if self._load_plugins:
+            import os
+            from pathlib import Path
 
-    def _init_plugins(self) -> None:
-        """
-        Initialize plugin system: discover, load, and boot all plugins.
+            from vibe_core.loaders.manifest_registry import ManifestRegistry
 
-        OPUS-LASAGNE: Extracted from __init__ to reduce kernel LOC.
-        """
-        if not self._load_plugins:
+            # OPUS-307 Phase F: Ensure manifests are scanned (idempotent)
+            ManifestRegistry.scan_all()
+
+            # OPUS-020 Phase 3: Support custom plugin paths via env var
+            # Usage: VIBE_PLUGIN_PATH=dist/plugins:custom/plugins python -m vibe_core.cli boot
+            custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
+            if custom_paths_env:
+                # Custom paths: Use legacy iterdir (env override)
+                scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
+                logger.info(f"🔌 Using custom plugin paths from VIBE_PLUGIN_PATH: {scan_paths}")
+                self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
+            else:
+                # OPUS-307: Use ManifestRegistry (NO iterdir!)
+                self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
+            # OPUS-FIX: Sort plugins by priority before on_boot (lower = earlier)
+            self._plugins = sorted(
+                self._plugins_map.values(),
+                key=lambda p: getattr(p, "priority", 50),
+            )
+
+            # OPUS-112: Auto-register plugin capabilities from manifest (VEDA-4)
+            for plugin_id, meta in self._plugin_metadata.items():
+                if meta.manifest:
+                    caps = meta.manifest.get("capabilities", [])
+                    if caps:
+                        self._capability_registry.register_agent(plugin_id, caps)
+                        logger.debug(f"🔐 Plugin '{plugin_id}' capabilities registered: {caps}")
+
+            # Check for Genesis Cognitive Pack
+            genesis_meta = self._plugin_metadata.get("genesis_knowledge")
+            if genesis_meta and genesis_meta.loaded_successfully:
+                # Use manifest parent dir (entry_path is None for data-only packs)
+                self.genesis_path = genesis_meta.manifest_path.parent if genesis_meta.manifest_path else None
+                logger.info(f"🧠 Genesis Knowledge Pack loaded at: {self.genesis_path}")
+                if genesis_meta.manifest.get("version"):
+                    logger.info(f"   Version: {genesis_meta.manifest.get('version')}")
+            else:
+                logger.warning(
+                    "⚠️ Genesis Knowledge Pack NOT found or failed to load - System running without base knowledge"
+                )
+
+            for plugin in self._plugins:
+                plugin.on_boot(self)
+
+            # OPUS-308: Auto-register plugins for manifestation
+            # Plugins with "manifestation" config in manifest.json get registered
+            for plugin_id, meta in self._plugin_metadata.items():
+                if meta.manifest and meta.manifest.get("manifestation"):
+                    plugin_instance = self._plugins_map.get(plugin_id)
+                    if plugin_instance:
+                        self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
+
+            # OPUS-308: Register kernel-native SETTINGS.md
+            # SETTINGS.md is a kernel feature, not a plugin
+            self.manifestation.register_kernel_source(
+                output="SETTINGS.md",
+                schema="config_bidirectional",
+                data_getter=self._get_settings_manifestation_data,
+            )
+
+            # OPUS-308: Register kernel-native OPERATIONS.md
+            # OPERATIONS.md shows scheduler, agents, events - all kernel state
+            self.manifestation.register_kernel_source(
+                output="OPERATIONS.md",
+                schema="dashboard_readonly",
+                data_getter=self._get_operations_manifestation_data,
+            )
+        else:
             self._plugins = []
-            logger.info("🛡️ Kernel booted in Safe Mode (plugins disabled)")
-            return
+            self._plugins = []
+            logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
-        import os
-        from pathlib import Path
+        # =====================================================================
 
-        from vibe_core.loaders.manifest_registry import ManifestRegistry
-
-        # Scan manifests (idempotent)
-        ManifestRegistry.scan_all()
-
-        # Load plugins from custom paths or registry
-        custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
-        if custom_paths_env:
-            scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
-            logger.info(f"🔌 Using custom plugin paths: {scan_paths}")
-            self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
-        else:
-            self._plugins_map, self._plugin_metadata = PluginLoader.discover_from_registry()
-
-        # Sort by priority (lower = earlier)
-        self._plugins = sorted(self._plugins_map.values(), key=lambda p: getattr(p, "priority", 50))
-
-        # Register plugin capabilities
-        for plugin_id, meta in self._plugin_metadata.items():
-            if meta.manifest:
-                caps = meta.manifest.get("capabilities", [])
-                if caps:
-                    self._capability_registry.register_agent(plugin_id, caps)
-
-        # Check Genesis Knowledge Pack
-        genesis_meta = self._plugin_metadata.get("genesis_knowledge")
-        if genesis_meta and genesis_meta.loaded_successfully:
-            self.genesis_path = genesis_meta.manifest_path.parent if genesis_meta.manifest_path else None
-            logger.info(f"🧠 Genesis Knowledge Pack: {self.genesis_path}")
-        else:
-            logger.warning("⚠️ Genesis Knowledge Pack not loaded")
-
-        # Boot all plugins
-        for plugin in self._plugins:
-            plugin.on_boot(self)
-
-        # Register plugins for manifestation
-        for plugin_id, meta in self._plugin_metadata.items():
-            if meta.manifest and meta.manifest.get("manifestation"):
-                plugin_instance = self._plugins_map.get(plugin_id)
-                if plugin_instance:
-                    self.manifestation.register_plugin(plugin_id, plugin_instance, meta.manifest)
+        # =====================================================================
+        # VAJRA ARMOR: Seal the kernel DNA (PUTANA BLOCKED!)
+        # After this, blueprints cannot be modified.
+        # =====================================================================
+        self.vajra_seal()
 
     # =========================================================================
     # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
@@ -971,6 +1067,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
         """
+        import time
+
         # Get queue status
         queue_status = {}
         if hasattr(self, "_scheduler") and self._scheduler:
@@ -1197,8 +1295,136 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             "total_credits": total_credits,
         }
 
-    # OPUS-LASAGNE: _get_settings_manifestation_data and _get_operations_manifestation_data
-    # moved to ManifestationService (Phase 4 extraction)
+    def _get_settings_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Kernel-native data source for SETTINGS.md.
+
+        Returns data for the config_bidirectional schema sections:
+        - current: Current kernel configuration
+        - available: Available agents and their status
+        - history: Recent command execution history
+        """
+        # Current configuration
+        config = self._config or _get_config()
+        log_level = logging.getLevelName(logging.getLogger("VIBE_KERNEL").getEffectiveLevel())
+        verbose = getattr(self, "_verbose", False)
+        provider = "unknown"
+        mode = "simulation"
+
+        if config:
+            if hasattr(config, "llm"):
+                provider = getattr(config.llm, "provider", provider)
+            if hasattr(config, "runtime"):
+                mode = getattr(config.runtime, "mode", mode)
+
+        current = [
+            {"Setting": "`kernel.log_level`", "Value": f"`{log_level}`", "Description": "Logging verbosity"},
+            {"Setting": "`kernel.verbose`", "Value": f"`{verbose}`", "Description": "Verbose mode"},
+            {"Setting": "`provider`", "Value": f"`{provider}`", "Description": "LLM Provider"},
+            {"Setting": "`mode`", "Value": f"`{mode}`", "Description": "Execution Mode"},
+            {"Setting": "`agents`", "Value": f"`{len(self._agent_registry)}`", "Description": "Registered agents"},
+            {"Setting": "`plugins`", "Value": f"`{len(self._plugins)}`", "Description": "Loaded plugins"},
+        ]
+
+        # Available agents (from registry)
+        available = []
+        for agent_id in self._agent_registry.keys():
+            status = "ACTIVE"
+            # Check if paused via governance
+            if self.governance and hasattr(self.governance, "get_paused_agents"):
+                if agent_id in self.governance.get_paused_agents():
+                    status = "PAUSED"
+            available.append({"Agent": f"`{agent_id}`", "Status": status})
+
+        # History - get from ledger (last 10 events)
+        history = []
+        try:
+            events = self._ledger.get_all_events()[-10:]
+            for event in events:
+                history.append(
+                    {
+                        "Time": event.get("timestamp", "")[:19],
+                        "Type": event.get("event_type", "")[:20],
+                        "Agent": event.get("agent_id", "")[:15],
+                    }
+                )
+        except Exception as e:
+            # OPUS-312: Log ledger access failures at debug
+            logger.debug(f"Ledger event history fetch failed: {e}")
+
+        return {
+            "current": current,
+            "available": available,
+            "history": history,
+        }
+
+    def _get_operations_manifestation_data(self) -> Dict[str, Any]:
+        """
+        OPUS-308: Kernel-native data source for OPERATIONS.md.
+
+        Returns data for the dashboard_readonly schema sections:
+        - metrics: Key numbers (queue size, agent count, event count)
+        - status: Current kernel and agent states
+        - details: Scheduler queue details
+        """
+        # Metrics - key numbers
+        queue_status = self._scheduler.get_queue_status() if hasattr(self, "_scheduler") else {}
+        event_status = self._event_bus.get_status() if hasattr(self, "_event_bus") else {}
+
+        metrics = {
+            "Kernel Status": self._status.value,
+            "Agents": len(self._agent_registry),
+            "Queue Length": queue_status.get("queue_length", 0),
+            "Pending Tasks": queue_status.get("pending", 0),
+            "Total Events": event_status.get("total_emitted", 0),
+            "Plugins": len(self._plugins),
+        }
+
+        # Status - agent states
+        status = []
+        for agent_id, agent in sorted(self._agent_registry.items()):
+            name = getattr(agent, "name", agent_id)
+            domain = getattr(agent, "domain", "UNKNOWN")
+            status.append(
+                {
+                    "Agent": f"`{agent_id}`",
+                    "Name": name,
+                    "Domain": domain,
+                    "Status": "ACTIVE",
+                }
+            )
+
+        if not status:
+            status = [{"Agent": "_No agents_", "Name": "-", "Domain": "-", "Status": "-"}]
+
+        # Details - queue and events
+        details = []
+        tasks = queue_status.get("tasks", [])[:5]
+        for t in tasks:
+            details.append(
+                {
+                    "Item": f"Task: {t.get('id', '?')[:20]}",
+                    "Info": f"Priority: {t.get('priority', '?')}",
+                }
+            )
+
+        type_counts = event_status.get("type_counts", {})
+        for event_type, count in sorted(type_counts.items(), key=lambda x: -x[1])[:5]:
+            details.append(
+                {
+                    "Item": f"Event: {event_type[:20]}",
+                    "Info": f"Count: {count}",
+                }
+            )
+
+        if not details:
+            details = [{"Item": "_No activity_", "Info": "-"}]
+
+        return {
+            "metrics": metrics,
+            "status": status,
+            "details": details,
+        }
 
     def _process_ipc_events(self) -> None:
         """OPUS-209: Delegated to ProcessIsolationPlugin."""
@@ -1616,30 +1842,284 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             loop.close()
             logger.info("🌐 Gateway Sidecar shutdown complete")
 
-    # =========================================================================
-    # LIFECYCLE METHODS - Delegated to LifecycleService
-    # =========================================================================
-
     def boot(self, boot_mode: BootMode | None = None) -> None:
-        """Boot the kernel synchronously. Delegates to LifecycleService."""
-        self._lifecycle.boot(boot_mode)
+        """
+        Boot the kernel synchronously (backward compatibility wrapper).
+
+        OPUS-203 introduced boot_async(), but 30+ callers still use sync boot().
+        This wrapper ensures backward compatibility while delegating to boot_async().
+
+        For new code, prefer boot_async() in async contexts.
+
+        Args:
+            boot_mode: Optional BootMode (FULL, HEADLESS, MINIMAL).
+                       If None, defaults to FULL for backward compatibility.
+        """
+        import asyncio
+
+        from vibe_core.boot_mode import BootMode
+
+        if boot_mode is None:
+            boot_mode = BootMode.FULL
+
+        # Check if we're already in an async context
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an async context - schedule and wait
+            import concurrent.futures
+
+            future = concurrent.futures.Future()
+
+            async def _boot_and_signal():
+                try:
+                    await self.boot_async(boot_mode)
+                    future.set_result(None)
+                except Exception as e:
+                    future.set_exception(e)
+
+            loop.create_task(_boot_and_signal())
+            # Note: This will block the current thread waiting for boot
+            # In pure async code, use boot_async() directly
+            future.result(timeout=60)
+        except RuntimeError:
+            # No running event loop - use asyncio.run()
+            asyncio.run(self.boot_async(boot_mode))
 
     async def boot_async(self, boot_mode: BootMode | None = None) -> None:
-        """Async boot. Delegates to LifecycleService."""
-        await self._lifecycle.boot_async(boot_mode)
+        """
+        🚀 ASYNC BOOT (OPUS-203)
+        Registers manifests, activates Prakriti, and starts Gateway task.
+        """
+        from vibe_core.boot_mode import BootMode
+
+        if boot_mode is None:
+            boot_mode = BootMode.FULL
+
+        self._status = KernelStatus.BOOTING
+        self._boot_time = time.time()
+        logger.info(f"⚙️  KERNEL BOOTING ASYNC... (mode: {boot_mode.value})")
+
+        # Phase 5: Record Kernel Boot in Parampara
+        self.lineage.add_block(
+            event_type=LineageEventType.KERNEL_BOOT,
+            agent_id=None,
+            data={
+                "version": "2.0.0",
+                "timestamp": datetime.utcnow().isoformat(),
+                "agents_registered": len(self._agent_registry),
+                "boot_mode": boot_mode.value,
+            },
+        )
+
+        # Register all agent manifests
+        for agent_id, agent in self._agent_registry.items():
+            try:
+                if hasattr(agent, "get_manifest"):
+                    manifest = agent.get_manifest()
+                    self._manifest_registry.register(manifest)
+                    logger.info(f"   📜 {agent_id}: {manifest.description}")
+            except Exception as e:
+                logger.warning(f"   ⚠️  Failed to register manifest for {agent_id}: {e}")
+
+        self._status = KernelStatus.RUNNING
+        logger.info("✅ KERNEL RUNNING (ASYNC)")
+
+        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
+        try:
+            self.prakriti.begin_session()
+            self.prakriti.sync_ledger_git(strategy="git_wins")
+            if self.prakriti.is_dirty:
+                self.prakriti.recover_from_crash()
+        except Exception as e:
+            logger.error(f"❌ Prakriti Boot Failure: {e}")
+
+        # 🍎 ASYNC PERSISTENCE (ADR-204)
+        try:
+            from vibe_core.state.state_service import get_state_service
+
+            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
+            ss.start_background_worker()
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to start background persistence: {e}")
+
+        # PULSE: Write initial snapshot on boot
+        await self._pulse()
+
+        # Phase 18: Gateway as Task (instead of Thread)
+        if boot_mode.should_skip_gateway():
+            logger.info("🚫 Network Gateway SKIPPED (headless mode)")
+            self._gateway_task = None
+        else:
+            self._gateway_task = asyncio.create_task(self._run_gateway_async())
+            logger.info("🌐 Network Gateway task started")
 
     async def run_forever(self) -> None:
-        """Main kernel loop. Delegates to LifecycleService."""
-        await self._lifecycle.run_forever()
+        """
+        🔄 MAIN KERNEL LOOP (OPUS-203)
+        Runs tick_async() at 100ms intervals until shutdown.
+        """
+        logger.info("🔄 Entering Unified Async Kernel loop...")
+        try:
+            while self._status == KernelStatus.RUNNING:
+                await self.tick_async()
+                await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            logger.info("🛑 Kernel loop cancelled")
+        finally:
+            if self._status == KernelStatus.RUNNING:
+                await self.shutdown_async("Loop terminated")
 
     async def tick_async(self) -> None:
-        """Async tick. Delegates to LifecycleService."""
-        await self._lifecycle.tick_async()
+        """
+        💓 ASYNC TICK (OPUS-203)
+        Drives the heartbeat, scheduler, and event emission natively.
+        """
+        self.enforce_entropy_limits()
+
+        if self._status != KernelStatus.RUNNING:
+            return
+
+        # Plugin Hook: Pre-Tick
+        for plugin in self._plugins:
+            plugin.on_tick_pre(self)
+
+        task = self._scheduler.next_task()
+
+        if not task:
+            # Idle Pulse
+            if time.time() - self._last_pulse_time >= 5.0:
+                await self._pulse()
+                self._last_pulse_time = time.time()
+        else:
+            # Get target agent
+            agent = self._agent_registry.get(task.agent_id)
+            if not agent:
+                error = f"Agent {task.agent_id} not found"
+                logger.error(f"❌ {error}")
+                self._ledger.record_failure(task, error)
+                return
+
+            # Task Execution
+            try:
+                self._ledger.record_start(task)
+
+                # Execution (Process vs In-Process)
+                has_process = (
+                    self.process_manager
+                    and task.agent_id in self.process_manager.processes
+                    and self.process_manager.processes[task.agent_id].process.is_alive()
+                )
+
+                if has_process:
+                    # Dispatch to isolated process
+                    self.process_manager.send_task(task.agent_id, task)
+                else:
+                    # Execute natively (supports async agents!)
+                    if asyncio.iscoroutinefunction(agent.process):
+                        result = await agent.process(task)
+                    else:
+                        result = agent.process(task)
+
+                    self._ledger.record_completion(task, result)
+
+                    for plugin in self._plugins:
+                        plugin.on_task_completed(self, task.task_id, result)
+
+                # Maintenance
+                await self._pulse()
+                self._check_system_health()
+                if self.process_manager:
+                    self.process_manager.check_health()
+                self._process_ipc_events()
+                self._sync_resource_quotas()
+
+                for plugin in self._plugins:
+                    plugin.on_tick_post(self)
+
+                # OPUS-308: Manifestation tick (render all registered plugin UIs)
+                self.manifestation.tick()
+
+            except Exception as e:
+                error = str(kernel_fault("task_tick_async", str(e)))
+                logger.exception(f"❌ Task {task.task_id} failed: {error}")
+                self._ledger.record_failure(task, error)
+                for plugin in self._plugins:
+                    plugin.on_task_failed(self, task.task_id, error)
+
+        # NATIVE HEARTBEAT (Direct await! Emitted every tick to drive circuits)
+        await self._event_bus.emit(
+            Event(event_type=EventType.KERNEL_TICK, agent_id="kernel", message="Kernel heartbeat tick")
+        )
+
+    async def _run_gateway_async(self) -> None:
+        """Runs the NetworkGateway as an asyncio task."""
+        if self.gateway is None:
+            logger.warning("🌐 Gateway not available (sangha_network plugin not loaded)")
+            return
+        try:
+            await self.gateway.start()
+        except Exception as e:
+            logger.error(f"🌐 Gateway task crashed: {e}")
 
     async def shutdown_async(self, reason: str = "User shutdown") -> None:
-        """Async shutdown. Delegates to LifecycleService."""
-        await self._lifecycle.shutdown_async(reason)
+        """
+        🛑 ASYNC SHUTDOWN (OPUS-203)
+        Gracefully stops gateway task and preserves Prakriti state.
+        """
+        logger.critical(f"🛑 KERNEL SHUTTING DOWN ASYNC: {reason}")
+
+        # Record shutdown
+        if hasattr(self, "lineage"):
+            self.lineage.add_block(event_type=LineageEventType.KERNEL_SHUTDOWN, agent_id=None, data={"reason": reason})
+            self.lineage.close()
+
+        # Preserve state
+        try:
+            if hasattr(self, "prakriti"):
+                self.prakriti.end_session()
+        except Exception as e:
+            logger.error(f"❌ State preservation failed: {e}")
+
+        # 🍎 ASYNC PERSISTENCE CLEANUP (ADR-204)
+        try:
+            from vibe_core.state.state_service import get_state_service
+
+            ss = get_state_service(self._workspace if hasattr(self, "_workspace") else None)
+            if ss._worker_task:
+                ss._worker_task.cancel()
+                logger.info("🛑 StateService: Background scribe stopped.")
+        except Exception as e:
+            # OPUS-312: Don't swallow shutdown failures silently
+            logger.warning(f"⚠️ KERNEL: StateService shutdown failed: {e}")
+
+        # Plugin Hook
+        for plugin in self._plugins:
+            plugin.on_shutdown(self)
+
+        self._status = KernelStatus.STOPPED
+
+        # Cancel Gateway
+        if hasattr(self, "_gateway_task") and self._gateway_task:
+            self._gateway_task.cancel()
+            try:
+                await self._gateway_task
+            except asyncio.CancelledError:
+                pass
+        # Cleanup processes
+        if self.process_manager:
+            self.process_manager.shutdown()
+        if isinstance(self._ledger, SQLiteLedger):
+            self._ledger.close()
 
     def shutdown(self, reason: str = "User shutdown") -> None:
-        """Sync shutdown. Delegates to LifecycleService."""
-        self._lifecycle.shutdown(reason)
+        """
+        🛑 SYNC SHUTDOWN (OPUS-314)
+        Synchronous wrapper for shutdown_async. For use in tests and sync code.
+        """
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.shutdown_async(reason))
+        except RuntimeError:
+            asyncio.run(self.shutdown_async(reason))

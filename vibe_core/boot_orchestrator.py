@@ -338,6 +338,15 @@ class BootOrchestrator(CognitiveCycle):
                     f"{len(correction_orchestrator.dispatcher.get_handler_ids())} handlers)"
                 )
 
+                # NAGA Federation - The Invisible Guardians
+                # Must be initialized BEFORE kernel.boot_async() in _act()
+                from vibe_core.naga import NagaOrchestrator
+
+                self._naga_orchestrator = NagaOrchestrator.bootstrap(
+                    ledger=self.kernel.ledger,
+                    correction_orchestrator=correction_orchestrator,
+                )
+
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
