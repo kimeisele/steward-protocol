@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from vibe_core.protocols.event import Event
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
@@ -834,21 +836,36 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: event_type",
             )
 
-        # Broadcast via kernel EventBus
+        # Phase 6: Direct EventBus access
         try:
             import asyncio
 
-            # Run async broadcast
-            # For syscalls, we need to run the coroutine synchronously
-            result = asyncio.run(
-                self.kernel.broadcast_event(
-                    event_type=event_type, broadcaster_id=request.requester_id, data=event_data, message=message
-                )
+            # Create event directly
+            event = Event(
+                event_type=event_type,
+                agent_id=request.requester_id,
+                message=message or f"{event_type} from {request.requester_id}",
+                details=event_data or {},
             )
 
+            # Run async emit synchronously for syscalls
+            asyncio.run(self.kernel.event_bus.emit(event))
+
+            # Get subscriber count
+            status = self.kernel.event_bus.get_status()
+            subscriber_count = status.get("subscribers", {}).get("by_type", {}).get(event_type, 0)
+            subscriber_count += status.get("subscribers", {}).get("global", 0)
+
+            result = {
+                "event_id": event.event_id,
+                "event_type": event_type,
+                "broadcaster": request.requester_id,
+                "subscribers_notified": subscriber_count,
+                "timestamp": event.timestamp,
+            }
+
             logger.info(
-                f"✅ BROADCAST_EVENT: '{event_type}' from '{request.requester_id}' "
-                f"→ {result['subscribers_notified']} subscriber(s)"
+                f"✅ BROADCAST_EVENT: '{event_type}' from '{request.requester_id}' → {subscriber_count} subscriber(s)"
             )
 
             return SyscallResult(

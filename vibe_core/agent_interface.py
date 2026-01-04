@@ -41,6 +41,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional
 
+from vibe_core.protocols.event import Event
+
 if TYPE_CHECKING:
     from vibe_core.kernel import VibeKernel
 
@@ -756,7 +758,10 @@ class AgentSystemInterface:
 
             self.system.subscribe_to_events(on_proposal_created, "proposal.created")
         """
-        return self.kernel.subscribe_to_events(callback=callback, event_type=event_type, subscriber_id=self.agent_id)
+        # Phase 6: Direct EventBus access
+        sub_id = self.kernel.event_bus.subscribe(callback, event_type)
+        logger.debug(f"📡 Agent '{self.agent_id}' subscribed to events: {event_type or 'ALL'}")
+        return sub_id
 
     def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
         """
@@ -766,7 +771,8 @@ class AgentSystemInterface:
             callback: The callback to remove
             event_type: Optional event type (must match subscribe call)
         """
-        self.kernel.unsubscribe_from_events(callback, event_type)
+        # Phase 6: Direct EventBus access
+        self.kernel.event_bus.unsubscribe(callback, event_type)
 
     async def broadcast_event(
         self, event_type: str, data: Optional[Dict[str, object]] = None, message: Optional[str] = None
@@ -789,9 +795,30 @@ class AgentSystemInterface:
                 message="Vote recorded"
             )
         """
-        return await self.kernel.broadcast_event(
-            event_type=event_type, broadcaster_id=self.agent_id, data=data, message=message
+        # Phase 6: Direct EventBus access - create Event here
+        event = Event(
+            event_type=event_type,
+            agent_id=self.agent_id,
+            message=message or f"{event_type} from {self.agent_id}",
+            details=data or {},
         )
+
+        await self.kernel.event_bus.emit(event)
+
+        # Get subscriber count for logging
+        status = self.kernel.event_bus.get_status()
+        subscriber_count = status.get("subscribers", {}).get("by_type", {}).get(event_type, 0)
+        subscriber_count += status.get("subscribers", {}).get("global", 0)
+
+        logger.info(f"📢 BROADCAST: {event_type} from {self.agent_id} → {subscriber_count} subscriber(s)")
+
+        return {
+            "event_id": event.event_id,
+            "event_type": event_type,
+            "broadcaster": self.agent_id,
+            "subscribers_notified": subscriber_count,
+            "timestamp": event.timestamp,
+        }
 
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[object]:
         """
@@ -804,4 +831,5 @@ class AgentSystemInterface:
         Returns:
             List of Event objects
         """
-        return self.kernel.get_event_history(limit=limit, event_type=event_type)
+        # Phase 6: Direct EventBus access
+        return self.kernel.event_bus.get_history(limit=limit, event_type=event_type)

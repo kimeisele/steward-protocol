@@ -43,6 +43,7 @@ from typing import (
 if TYPE_CHECKING:
     from vibe_core.protocols.agent import AgentManifest, VibeAgent
     from vibe_core.protocols.cognition import CognitiveResult, SignedOperatorInput
+    from vibe_core.protocols.event import EventBusProtocol
     from vibe_core.scheduling import Task
 
 
@@ -146,32 +147,24 @@ class KernelProtocol(Protocol):
         ...
 
     # =========================================================================
-    # EVENT SYSTEM
+    # EVENT SYSTEM (Phase 6: Direct EventBus exposure)
     # =========================================================================
 
-    def subscribe_to_events(
-        self,
-        callback: Callable,
-        event_type: Optional[str] = None,
-        subscriber_id: Optional[str] = None,
-    ) -> str:
-        """Subscribe to system events. Returns subscription ID."""
-        ...
+    @property
+    def event_bus(self) -> "EventBusProtocol":
+        """
+        Direct access to the EventBus.
 
-    def unsubscribe_from_events(
-        self, callback: Callable, event_type: Optional[str] = None
-    ) -> None:
-        """Unsubscribe from system events."""
-        ...
+        PHASE 6 OPERATION LASAGNE: No more wrapper methods.
+        Plugins use event_bus.subscribe(), event_bus.emit() directly.
 
-    async def broadcast_event(
-        self,
-        event_type: str,
-        broadcaster_id: str,
-        data: Optional[Dict[str, Any]] = None,
-        message: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Broadcast an event to all subscribers."""
+        Usage:
+            # Subscribe to events
+            kernel.event_bus.subscribe(my_callback, "agent.born")
+
+            # Emit events
+            await kernel.event_bus.emit(event)
+        """
         ...
 
     # =========================================================================

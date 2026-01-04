@@ -660,6 +660,26 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         """Get parent kernel (if ephemeral child)."""
         return self._parent
 
+    @property
+    def event_bus(self):
+        """
+        Direct access to the EventBus.
+
+        PHASE 6 OPERATION LASAGNE: No wrapper methods.
+        Plugins use event_bus.subscribe(), event_bus.emit() directly.
+
+        Usage:
+            # Subscribe to events
+            kernel.event_bus.subscribe(my_callback, "agent.born")
+
+            # Emit events
+            await kernel.event_bus.emit(event)
+
+            # Get history
+            kernel.event_bus.get_history(limit=50)
+        """
+        return self._event_bus
+
     def spawn_child_kernel(
         self,
         config: "PhoenixConfig",
@@ -1577,45 +1597,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         caps = self._capability_registry.get_capabilities(agent_id)
         return sorted(caps)
 
-    def subscribe_to_events(
-        self, callback: Callable, event_type: Optional[str] = None, subscriber_id: Optional[str] = None
-    ) -> str:
-        """
-        Subscribe to system events via EventBus.
-
-        Args:
-            callback: Function to call on event (async or sync)
-            event_type: Optional filter (None = all events)
-            subscriber_id: Optional ID for logging (usually agent_id)
-
-        Returns:
-            Subscription ID
-
-        Usage:
-            def on_agent_born(event):
-                print(f"New agent: {event.details['agent_id']}")
-
-            kernel.subscribe_to_events(on_agent_born, "agent.born")
-        """
-        sub_id = self._event_bus.subscribe(callback, event_type)
-
-        if subscriber_id:
-            logger.debug(f"📡 Agent '{subscriber_id}' subscribed to events: {event_type or 'ALL'}")
-        else:
-            logger.debug(f"📡 Subscriber registered for events: {event_type or 'ALL'}")
-
-        return sub_id
-
-    def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
-        """
-        Unsubscribe from system events.
-
-        Args:
-            callback: The callback to remove
-            event_type: Optional event type filter
-        """
-        self._event_bus.unsubscribe(callback, event_type)
-
     # =========================================================================
     # OPUS-309: Cognitive Protocol (Hot-Swap Hook)
     # =========================================================================
@@ -1762,56 +1743,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             return self._cognitive.get_capabilities()
         return []
 
-    async def broadcast_event(
-        self, event_type: str, broadcaster_id: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Broadcast an event to all subscribers via EventBus.
-
-        Args:
-            event_type: Type of event (e.g., "agent.born", "transaction.complete")
-            broadcaster_id: ID of agent/system broadcasting
-            data: Optional event data
-            message: Optional human-readable message
-
-        Returns:
-            Dictionary with event_id and subscriber count
-
-        Usage:
-            await kernel.broadcast_event(
-                event_type="agent.born",
-                broadcaster_id="KERNEL",
-                data={"agent_id": "new_agent", "capabilities": ["read", "write"]}
-            )
-        """
-        from .event_bus import Event
-
-        # Create event
-        event = Event(
-            event_type=event_type,
-            agent_id=broadcaster_id,
-            message=message or f"{event_type} from {broadcaster_id}",
-            details=data or {},
-        )
-
-        # Emit via EventBus
-        await self._event_bus.emit(event)
-
-        # Get subscriber count for this event type
-        status = self._event_bus.get_status()
-        subscriber_count = status["subscribers"].get("by_type", {}).get(event_type, 0)
-        subscriber_count += status["subscribers"]["global"]  # Add global subscribers
-
-        logger.info(f"📢 BROADCAST: {event_type} from {broadcaster_id} → {subscriber_count} subscriber(s)")
-
-        return {
-            "event_id": event.event_id,
-            "event_type": event_type,
-            "broadcaster": broadcaster_id,
-            "subscribers_notified": subscriber_count,
-            "timestamp": event.timestamp,
-        }
-
     async def execute_playbook(
         self,
         playbook_path: str,
@@ -1820,28 +1751,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     ) -> Dict[str, Any]:
         """Execute a playbook - Delegates to kernel_ops."""
         return await _execute_playbook_impl(self, playbook_path, input_data, user_input)
-
-    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
-        """
-        Get recent event history from EventBus.
-
-        Args:
-            limit: Maximum number of events to return
-            event_type: Optional filter by event type
-
-        Returns:
-            List of recent events
-        """
-        return self._event_bus.get_history(limit=limit, event_type=event_type)
-
-    def get_event_bus_status(self) -> Dict[str, Any]:
-        """
-        Get the current status of the EventBus.
-
-        Returns:
-            Dict containing event bus statistics (total events, subscribers, etc.)
-        """
-        return self._event_bus.get_status()
 
     def get_trace(self, trace_id: str) -> List[Dict[str, Any]]:
         """
