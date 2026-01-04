@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from vibe_core.di import ServiceRegistry
+    from vibe_core.vfs import VirtualFileSystem
 
 
 @dataclass
@@ -44,6 +45,7 @@ class ToolCall:
     parameters: dict[str, Any]
     call_id: str | None = None  # For tracking in logs
     caller_agent_id: str | None = None  # SECURITY: For capability verification
+    vfs: Optional["VirtualFileSystem"] = None  # VFS sandbox for this call (injected by AgentSystemInterface)
 
     def __repr__(self) -> str:
         """String representation for debugging"""

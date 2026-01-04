@@ -700,8 +700,8 @@ class AgentSystemInterface:
         """
         from vibe_core.tools import ToolCall
 
-        # Create tool call with caller identity for governance
-        call = ToolCall(tool_name=tool_name, parameters=parameters, caller_agent_id=self.agent_id)
+        # Create tool call with caller identity for governance and VFS sandbox
+        call = ToolCall(tool_name=tool_name, parameters=parameters, caller_agent_id=self.agent_id, vfs=self.vfs)
 
         # Record tool call in audit trail
         self.record_event(
