@@ -269,6 +269,13 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
                 logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
 
+                # PHASE 3: Register KernelFactory for EphemeralCities
+                from vibe_core.protocols.kernel_protocol import KernelFactoryProtocol
+                from vibe_core.services.kernel_factory import KernelFactory
+
+                ServiceRegistry.register(KernelFactoryProtocol, KernelFactory())
+                logger.info("      → KernelFactoryProtocol registered (EphemeralCities)")
+
                 # OPUS-312: Register UnifiedKnowledgeGraph (singleton)
                 # 6+ components need this: shuddhi, ouroboros, watchman, dojo, mirror
                 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph, get_knowledge_graph
