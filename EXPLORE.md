@@ -8,17 +8,31 @@
 
 ## CRITICAL RISKS (P0)
 
-### 1. VFS ORPHANED - No Sandbox
+### 1. VFS ORPHANED - No Sandbox ✅ FIXED
 ```
 File: vibe_core/vfs.py
-Status: EXISTS, IMPORTED, but NOT ENFORCED
-Risk: Agents write DIRECTLY to host filesystem
-Impact: rm -rf / has no guard
+Status: ENFORCED for agents (7/7 tests pass)
 
 FIX APPLIED (2026-01-03):
   - file_tools.py: ReadFileTool/WriteFileTool now DENY without VFS
   - Agents without VFS get "SANDBOX REQUIRED" error
   - Only allow_unrestricted=True (kernel/admin) bypasses
+  - Tests: tests/integration/p0_fixes/test_vfs_enforcement.py PASSING
+
+REMAINING GAP (P1): ✅ FIXED (2026-01-04)
+  - VFS is per-agent sandbox, only injectable at execution time
+  - task_kernel.py injects VFS at task execution ✅
+  - ToolRegistry.execute() now injects VFS from ToolCall ✅
+  - AgentSystemInterface.execute_tool() passes self.vfs ✅
+
+  FIXED VIA:
+  1. Added vfs field to ToolCall (tool_protocol.py)
+  2. AgentSystemInterface.execute_tool() passes self.vfs in ToolCall
+  3. ToolRegistry.execute() injects vfs into tool before execute
+
+  REMAINING:
+  - 10 cartridge tools still use direct Path().write_text()
+  - These need migration to use self.vfs.write_text() pattern
 ```
 
 ### 2. SettingsExecutor ORPHANED - Config is Placebo
@@ -68,7 +82,7 @@ FIX APPLIED (2026-01-03):
 | Component | Issue |
 |-----------|-------|
 | Quantum Reactor | Hardcoded TRIGGER_VARGA_MAP instead of phonetic derivation |
-| State Paths | 40+ hardcoded `.opus_state/` references |
+| State Paths | ✅ MIGRATED - now uses get_opus_state_path() |
 | Discovery | Manual dictionaries instead of protocol-based auto-discovery |
 
 ### Protocol Debt (Kernel not fully protocol-based)
@@ -122,7 +136,7 @@ PURUSHA (Identity) → Personas        → TRACKED
 ### State Locations
 ```
 INTENDED: .vibe/state/plugins/{plugin_id}/
-LEGACY:   .opus_state/ (40+ hardcoded refs)
+LEGACY:   .opus_state/ (migrated 2026-01-04, heritage auto-migration)
 DEAD:     .prakriti/ (debug snapshots)
 ```
 
@@ -562,7 +576,7 @@ SURFACE: CLI Integration
 | P1 | Audit remaining 20 silent failures | System stability |
 | P1 | Remove 6 dead registrations | Clean architecture |
 | P1 | ~~Create CorrectionDispatcher~~ | ✅ DONE (protocol + service + tests) |
-| P2 | Migrate .opus_state (274 refs, 82 files) | State hygiene |
+| ~~P2~~ | ~~Migrate .opus_state~~ | ✅ DONE 2026-01-04 |
 
 ### Battle Progress (Updated 2026-01-04)
 
@@ -635,7 +649,7 @@ phoenix/: 6 (config loading)
 
 **Next Logical Steps:**
 1. ~~P1: Create CorrectionDispatcher protocol - unified healing~~ ✅ DONE
-2. P2: .opus_state → .vibe/state migration (274 refs, 82 files)
+2. ~~P2: .opus_state → .vibe/state migration~~ ✅ DONE (2026-01-04)
 3. P2: Systematic plugin sweep (55+ remaining)
 
 ---
@@ -844,11 +858,11 @@ return value  # String fallback
 
 ---
 
-## P2: .opus_state → .vibe/state Migration
+## P2: .opus_state → .vibe/state Migration ✅ COMPLETE
 
-### Status: PLANNED (2026-01-04)
+### Status: DONE (2026-01-04)
 
-The system has **87 files** with `.opus_state` references, but proper abstraction already exists.
+Migration complete. Created `state_paths.py` helper module, migrated 30 files.
 
 ### Architecture (Already Correct)
 

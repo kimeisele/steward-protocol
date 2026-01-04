@@ -305,6 +305,12 @@ class ToolRegistry:
             logger.error(f"ToolRegistry: {error_msg} (tool={tool_name})")
             return ToolResult(success=False, error=error_msg)
 
+        # Step 3.5: 🛡️ VFS INJECTION (SANDBOX)
+        # Inject VFS from the calling agent's sandbox if provided
+        if tool_call.vfs and hasattr(tool, "vfs"):
+            tool.vfs = tool_call.vfs
+            logger.debug(f"✅ VFS injected into tool '{tool_name}'")
+
         # Step 4: Execute tool
         try:
             result = tool.execute(tool_call.parameters)
