@@ -17,9 +17,10 @@ The Three Deadly Risks Avoided:
 import asyncio
 import logging
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from weakref import WeakSet
 
 if TYPE_CHECKING:
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.phoenix.sections.naga.section_main import FloodConfig
     from vibe_core.protocols.event import Event
+    from vibe_core.protocols.naga import ToxicityReport
 
 # Type alias for cortex signal callback
 CortexSignalCallback = Callable[["FloodSignal"], None]
@@ -150,8 +152,8 @@ class NagaFloodController:
         self._analysis_queue: asyncio.Queue = asyncio.Queue(maxsize=self._max_analysis_queue)
         self._analysis_task: Optional[asyncio.Task] = None
 
-        # Seen event IDs (prevent duplicate analysis)
-        self._seen_events: Set[str] = set()
+        # Seen event IDs (prevent duplicate analysis) - proper LRU using OrderedDict
+        self._seen_events: OrderedDict[Any, None] = OrderedDict()
 
         # Cortex integration (optional, non-invasive)
         self._cortex_callback: Optional[CortexSignalCallback] = None
@@ -273,16 +275,16 @@ class NagaFloodController:
             self._stats.events_skipped_noise += 1
             return
 
-        # --- DUPLICATE CHECK ---
+        # --- DUPLICATE CHECK (LRU with OrderedDict) ---
         event_id = getattr(event, "id", None) or id(event)
         if event_id in self._seen_events:
             return
 
-        # Mark as seen (prevent re-analysis)
-        self._seen_events.add(event_id)
-        if len(self._seen_events) > self._seen_events_max:
-            # Trim oldest (simple LRU - keep most recent events)
-            self._seen_events = set(list(self._seen_events)[-self._seen_events_trim :])
+        # Mark as seen (LRU - newest at end)
+        self._seen_events[event_id] = None
+        # Trim oldest when exceeding max (proper LRU)
+        while len(self._seen_events) > self._seen_events_max:
+            self._seen_events.popitem(last=False)  # Pop oldest (FIFO)
 
         # --- ASYNC HANDOFF (Fire and Forget) ---
         try:
@@ -390,7 +392,7 @@ class NagaFloodController:
 
         return " ".join(parts)[: self._max_content_size]  # Limit size
 
-    async def _dispatch_violation(self, event: "Event", toxicity: Any) -> None:
+    async def _dispatch_violation(self, event: "Event", toxicity: "ToxicityReport") -> None:
         """
         Dispatch violation via SIDE CHANNEL (not EventBus).
 
