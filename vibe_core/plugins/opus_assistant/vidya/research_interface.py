@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("VIDYA.Research")
 
@@ -67,7 +67,7 @@ class ResearchInterface:
     Philosophy: We don't implement search. We delegate to ScienceAgent.
     """
 
-    def __init__(self, kernel: Optional["RealVibeKernel"] = None):
+    def __init__(self, kernel: Optional["KernelProtocol"] = None):
         """
         Initialize research interface.
 

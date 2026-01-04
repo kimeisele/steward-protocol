@@ -1,0 +1,111 @@
+{
+  "missions": [
+    {
+      "id": "mission_code_health",
+      "name": "Maintain Code Health",
+      "description": "Keep the codebase clean, tested, and well-documented",
+      "priority": "high",
+      "status": "active",
+      "strategies": [
+        {
+          "id": "strategy_daily_hygiene",
+          "name": "Daily Hygiene",
+          "description": "Run lint, format check, and basic tests",
+          "trigger": {
+            "trigger_type": "idle_based",
+            "hour": null,
+            "day_of_week": null,
+            "condition": null,
+            "idle_minutes": 60
+          },
+          "frequency": "daily",
+          "intent_type": "hygiene_check",
+          "intent_template": {
+            "title": "Daily Hygiene Check",
+            "actions": [
+              "lint",
+              "format",
+              "test_quick"
+            ]
+          },
+          "requires_ci_green": false,
+          "requires_no_pending_intents": true,
+          "max_executions_per_day": 1,
+          "last_executed": null,
+          "execution_count_today": 0,
+          "enabled": true
+        },
+        {
+          "id": "strategy_weekly_audit",
+          "name": "Weekly Architecture Audit",
+          "description": "Run DHARMA drift detection and report",
+          "trigger": {
+            "trigger_type": "time_based",
+            "hour": 9,
+            "day_of_week": 0,
+            "condition": null,
+            "idle_minutes": 30
+          },
+          "frequency": "weekly",
+          "intent_type": "architecture_audit",
+          "intent_template": {
+            "title": "Weekly Architecture Audit",
+            "actions": [
+              "dharma_check",
+              "report"
+            ]
+          },
+          "requires_ci_green": true,
+          "requires_no_pending_intents": true,
+          "max_executions_per_day": 1,
+          "last_executed": null,
+          "execution_count_today": 0,
+          "enabled": true
+        }
+      ],
+      "created_at": "2026-01-04T09:08:02.040864+00:00",
+      "completed_at": null,
+      "owner": "MANAS"
+    },
+    {
+      "id": "mission_self_improvement",
+      "name": "Continuous Self-Improvement",
+      "description": "Learn from past actions and improve autonomy",
+      "priority": "medium",
+      "status": "active",
+      "strategies": [
+        {
+          "id": "strategy_memory_review",
+          "name": "Memory Review",
+          "description": "Analyze recent memories and identify patterns",
+          "trigger": {
+            "trigger_type": "idle_based",
+            "hour": null,
+            "day_of_week": null,
+            "condition": null,
+            "idle_minutes": 120
+          },
+          "frequency": "daily",
+          "intent_type": "memory_review",
+          "intent_template": {
+            "title": "Review Recent Memories",
+            "actions": [
+              "analyze_patterns",
+              "update_success_rate"
+            ]
+          },
+          "requires_ci_green": false,
+          "requires_no_pending_intents": true,
+          "max_executions_per_day": 1,
+          "last_executed": null,
+          "execution_count_today": 0,
+          "enabled": true
+        }
+      ],
+      "created_at": "2026-01-04T09:08:02.040905+00:00",
+      "completed_at": null,
+      "owner": "MANAS"
+    }
+  ],
+  "updated_at": "2026-01-04T09:08:02.041002+00:00"
+}

@@ -27,7 +27,7 @@ from vibe_core.process_manager import ProcessManager
 from vibe_core.protocols.process import ProcessSupervisorProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("PROCESS_ISOLATION")
 
@@ -101,7 +101,7 @@ class ProcessIsolationPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """
@@ -127,7 +127,7 @@ class ProcessIsolationPlugin(KernelPlugin):
             logger.critical(f"❌ CRITICAL: Process Isolation Plugin failed to boot: {e}")
             return HookResult.fatal(str(e))
 
-    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+    def on_agent_registered(self, kernel: "KernelProtocol", agent_id: str) -> None:
         """
         Spawn isolated process for newly registered agent.
 
@@ -166,7 +166,7 @@ class ProcessIsolationPlugin(KernelPlugin):
             except Exception as e:
                 logger.error(f"❌ Failed to spawn process for {agent_id}: {e}")
 
-    def spawn_deferred_agents(self, kernel: "RealVibeKernel") -> int:
+    def spawn_deferred_agents(self, kernel: "KernelProtocol") -> int:
         """
         OPUS-209: Spawn processes for all registered agents without running processes.
 
@@ -199,7 +199,7 @@ class ProcessIsolationPlugin(KernelPlugin):
         logger.info(f"✅ Spawned {spawned} deferred agent processes")
         return spawned
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_shutdown(self, kernel: "KernelProtocol") -> HookResult:
         """Shutdown all agent processes on kernel shutdown."""
         if self._manager:
             try:
@@ -210,7 +210,7 @@ class ProcessIsolationPlugin(KernelPlugin):
 
         return HookResult.ok()
 
-    def process_ipc_events(self, kernel: "RealVibeKernel") -> None:
+    def process_ipc_events(self, kernel: "KernelProtocol") -> None:
         """OPUS-209: Process IPC messages from agents."""
         if not self._manager:
             return

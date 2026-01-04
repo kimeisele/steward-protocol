@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("ENVOY_PLUGIN")
 
@@ -56,7 +56,7 @@ class EnvoyPlugin(KernelPlugin):
 
     def __init__(self):
         """Initialize ENVOY state."""
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         # OPUS-174: NO Path.cwd()! Get from kernel after inject_kernel()
         self._project_root: Optional[Path] = None
 
@@ -96,7 +96,7 @@ class EnvoyPlugin(KernelPlugin):
     # KERNEL HOOKS
     # =========================================================================
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Called when kernel boots.
 
@@ -152,7 +152,7 @@ class EnvoyPlugin(KernelPlugin):
         logger.info(f"   UnifiedRouter: {'OK' if self._unified_router else 'FAIL'}")
         logger.info(f"   UnifiedExecutor: {'OK' if self._unified_executor else 'FAIL'}")
 
-    def on_tick(self, kernel: "RealVibeKernel") -> None:
+    def on_tick(self, kernel: "KernelProtocol") -> None:
         """
         Called on each kernel tick.
 
@@ -161,7 +161,7 @@ class EnvoyPlugin(KernelPlugin):
         # Process completed tasks and update request status
         self._process_completed_tasks()
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up on shutdown."""
         # Clear ephemeral storage (OPUS Phase 2: proper lifecycle management)
         if hasattr(self, "_ephemeral") and self._ephemeral:
@@ -940,7 +940,7 @@ class EnvoyPlugin(KernelPlugin):
                 if len(self._request_history) > self._max_history:
                     self._request_history = self._request_history[-self._max_history :]
 
-    def _register_envoy_agent(self, kernel: "RealVibeKernel") -> None:
+    def _register_envoy_agent(self, kernel: "KernelProtocol") -> None:
         """
         Register EnvoyCartridge as the actual agent for task execution.
 

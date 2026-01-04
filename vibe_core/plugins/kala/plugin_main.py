@@ -33,7 +33,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from .cosmic_clock import CosmicClock, SunPhase
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.prana_orchestrator import PulseTransaction
 
 logger = logging.getLogger("KALA")
@@ -58,7 +58,7 @@ class KalaPlugin(KernelPlugin):
         self._clock: Optional[CosmicClock] = None
         self._last_sun_phase: Optional[SunPhase] = None
         self._ritual_phase_triggered: Dict[str, bool] = {}
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
 
         # Track cycles
         self._pulse_count = 0
@@ -76,7 +76,7 @@ class KalaPlugin(KernelPlugin):
     def pulse_phase(self) -> PulsePhase:
         return PulsePhase.SENSORS  # Collect time data first
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Initialize the cosmic clock on kernel boot.
 
@@ -103,7 +103,7 @@ class KalaPlugin(KernelPlugin):
 
     def on_pulse(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         transaction: "PulseTransaction",
     ) -> HookResult:
         """
@@ -155,7 +155,7 @@ class KalaPlugin(KernelPlugin):
             logger.error(f"KALA pulse error: {e}")
             return HookResult.error(str(e))
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Record final time state on shutdown."""
         if self._clock:
             state = self._clock.get_current_state()

@@ -1,0 +1,29 @@
+{
+  "current_level": 0.5,
+  "threshold": 0.7,
+  "last_training": null,
+  "training_cooldown_hours": 4,
+  "is_curious_enough": false,
+  "in_cooldown": false,
+  "should_train": false,
+  "sources": [
+    {
+      "type": "gap",
+      "description": "Found 3 violations - building trust via observation",
+      "weight": 0.2,
+      "timestamp": "2026-01-04T09:54:14.276202"
+    },
+    {
+      "type": "gap",
+      "description": "Found 3 violations - building trust via observation",
+      "weight": 0.2,
+      "timestamp": "2026-01-04T09:54:14.277310"
+    },
+    {
+      "type": "gap",
+      "description": "RESONANCE healed 3 violations (trust earned!)",
+      "weight": 0.1,
+      "timestamp": "2026-01-04T09:54:14.279993"
+    }
+  ]
+}

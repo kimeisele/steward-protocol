@@ -25,7 +25,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols.network import NetworkGatewayProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("SANGHA_NETWORK")
 
@@ -85,7 +85,7 @@ class SanghaNetworkPlugin(KernelPlugin):
 
     def on_boot(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         config: Optional[Dict[str, Any]] = None,
     ) -> HookResult:
         """
@@ -113,7 +113,7 @@ class SanghaNetworkPlugin(KernelPlugin):
             logger.error(f"❌ Sangha Network Plugin failed to boot: {e}")
             return HookResult.error(str(e))
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_shutdown(self, kernel: "KernelProtocol") -> HookResult:
         """Stop the gateway on kernel shutdown."""
         if self._gateway:
             try:

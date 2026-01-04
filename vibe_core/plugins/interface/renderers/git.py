@@ -20,7 +20,7 @@ from vibe_core.io_service import DocumentType
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RENDERER_GIT")
 
@@ -681,7 +681,7 @@ class GitRenderer(BaseRenderer):
     Renders GIT.md with intelligent repository analysis.
     """
 
-    def __init__(self, kernel: "RealVibeKernel", analysis_days: int = 7, update_interval_seconds: int = 300):
+    def __init__(self, kernel: "KernelProtocol", analysis_days: int = 7, update_interval_seconds: int = 300):
         super().__init__(kernel)
         self.analysis_days = analysis_days
         self.update_interval = update_interval_seconds

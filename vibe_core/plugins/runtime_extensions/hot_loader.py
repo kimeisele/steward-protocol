@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugin_protocol import KernelPlugin
 
 logger = logging.getLogger("OUROBOROS.HotLoader")
@@ -34,7 +34,7 @@ _hot_loaded_plugins: Dict[str, "KernelPlugin"] = {}
 
 def hot_load(
     plugin_path: Path,
-    kernel: Optional["RealVibeKernel"] = None,
+    kernel: Optional["KernelProtocol"] = None,
     config: Optional[Dict[str, Any]] = None,
 ) -> Optional["KernelPlugin"]:
     """
@@ -168,7 +168,7 @@ def hot_load(
 
 def hot_unload(
     plugin_id: str,
-    kernel: Optional["RealVibeKernel"] = None,
+    kernel: Optional["KernelProtocol"] = None,
 ) -> bool:
     """
     Unload a hot-loaded plugin at runtime.

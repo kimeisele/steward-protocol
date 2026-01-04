@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("SAMSARA")
 
@@ -37,7 +37,7 @@ class SamsaraPlugin(KernelPlugin):
     STATE_DIR = Path(".vibe/state/plugins/samsara")
 
     def __init__(self):
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._rotation_count: int = 0
         self._events_dissolved: int = 0
         self._last_rotation: Optional[str] = None
@@ -67,7 +67,7 @@ class SamsaraPlugin(KernelPlugin):
             self._events_dissolved = snapshot.get("events_dissolved", 0)
             self._last_rotation = snapshot.get("last_rotation")
 
-    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
+    def on_boot(self, kernel: "KernelProtocol", config: Optional[Dict[str, Any]] = None) -> HookResult:
         self._kernel = kernel
         logger.info("🕉️ Samsara Engine initialized")
         return HookResult.ok()

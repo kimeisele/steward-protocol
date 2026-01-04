@@ -37,7 +37,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
     from vibe_core import Task
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("STEWARD_PROTOCOL")
 
@@ -67,7 +67,7 @@ class StewardProtocolPlugin(KernelPlugin):
     def __init__(self):
         """Initialize Protocol state (owned by plugin, not kernel)."""
         # Reference to kernel (set on boot)
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
 
         # Project root for file access
         self._project_root: Path = Path.cwd()
@@ -164,7 +164,7 @@ class StewardProtocolPlugin(KernelPlugin):
     # KERNEL HOOKS
     # =========================================================================
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """
         Called when kernel boots.
 
@@ -188,7 +188,7 @@ class StewardProtocolPlugin(KernelPlugin):
         if self._config:
             logger.info("   Config loaded: Layer 1.5/1.6 active")
 
-    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: Any) -> bool:
+    def on_agent_pre_register(self, kernel: "KernelProtocol", agent: Any) -> bool:
         """
         AGENT REGISTRATION GATE: Called BEFORE agent registration.
 
@@ -257,7 +257,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
         return True
 
-    def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+    def on_agent_registered(self, kernel: "KernelProtocol", agent_id: str) -> None:
         """
         Called when a new agent is registered.
 
@@ -293,7 +293,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
         logger.debug(f"📜 Agent '{agent_id}' Protocol tracking initialized")
 
-    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
+    def on_task_completed(self, kernel: "KernelProtocol", task_id: str, result: Any) -> None:
         """
         Track task completion for trust calculation.
 
@@ -312,7 +312,7 @@ class StewardProtocolPlugin(KernelPlugin):
             self._update_trust_score(agent_id)
             logger.debug(f"📜 Trust: Agent '{agent_id}' completed task, score updated")
 
-    def on_task_failed(self, kernel: "RealVibeKernel", task_id: str, error: str) -> None:
+    def on_task_failed(self, kernel: "KernelProtocol", task_id: str, error: str) -> None:
         """
         Track task failure for trust calculation.
 
@@ -326,7 +326,7 @@ class StewardProtocolPlugin(KernelPlugin):
             self._update_trust_score(agent_id)
             logger.info(f"📜 Trust: Agent '{agent_id}' failed task, score decreased")
 
-    def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
+    def on_task_submit(self, kernel: "KernelProtocol", task: "Task") -> bool:
         """
         PROTOCOL GATE: Verify task submission is valid.
 
@@ -378,11 +378,11 @@ class StewardProtocolPlugin(KernelPlugin):
 
         return True  # Allow task
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up on shutdown."""
         logger.info(f"📜 STEWARD Protocol shutting down ({len(self._manifests)} manifests tracked)")
 
-    def on_capability_check(self, kernel: "RealVibeKernel", agent_id: str, capability: str) -> Optional[bool]:
+    def on_capability_check(self, kernel: "KernelProtocol", agent_id: str, capability: str) -> Optional[bool]:
         """
         CAPABILITY GATE: Protocol enforcement for capability access.
 
@@ -796,7 +796,7 @@ class StewardProtocolPlugin(KernelPlugin):
         self._trust_scores[agent_id] = new_score
         self._persist_trust_score(agent_id, new_score, "task_completion")
 
-    def _enforce_manifest_capabilities(self, kernel: "RealVibeKernel", agent_id: str, manifest: Dict[str, Any]) -> None:
+    def _enforce_manifest_capabilities(self, kernel: "KernelProtocol", agent_id: str, manifest: Dict[str, Any]) -> None:
         """
         PROTOCOL ENFORCEMENT: Grant capabilities from vibe_core.steward.json manifest.
 

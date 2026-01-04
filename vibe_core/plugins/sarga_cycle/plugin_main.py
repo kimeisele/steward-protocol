@@ -28,7 +28,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
     from vibe_core import Task
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("SARGA_CYCLE")
 
@@ -66,7 +66,7 @@ class SargaCyclePlugin(KernelPlugin):
     def priority(self) -> int:
         return 5  # Very early - cosmic gate is fundamental
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Called when kernel boots."""
         from vibe_core.sarga import get_sarga
 
@@ -75,7 +75,7 @@ class SargaCyclePlugin(KernelPlugin):
         logger.info(f"🌌 Sarga Cycle Plugin booted (current: {cycle.value.upper()}_OF_BRAHMA)")
         logger.info("   Cosmic gate is now PLUGIN-BASED (not hardcoded in scheduler)")
 
-    def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
+    def on_task_submit(self, kernel: "KernelProtocol", task: "Task") -> bool:
         """
         COSMIC GATE: Check if task type is allowed during current cycle.
 
@@ -111,6 +111,6 @@ class SargaCyclePlugin(KernelPlugin):
 
         return True  # Allow task
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up on shutdown."""
         logger.info("🌌 Sarga Cycle Plugin shutting down")

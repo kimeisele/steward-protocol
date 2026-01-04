@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("DURVASA")
 
@@ -40,7 +40,7 @@ class DurvasaPlugin(KernelPlugin):
     STATE_DIR = Path(".vibe/state/plugins/durvasa")
 
     def __init__(self):
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._triage_history: List[Dict[str, Any]] = []
         self._total_sacrifices: int = 0
 
@@ -67,7 +67,7 @@ class DurvasaPlugin(KernelPlugin):
             self._total_sacrifices = snapshot.get("total_sacrifices", 0)
             self._triage_history = snapshot.get("triage_history", [])
 
-    def on_boot(self, kernel: "RealVibeKernel", config: Optional[Dict[str, Any]] = None) -> HookResult:
+    def on_boot(self, kernel: "KernelProtocol", config: Optional[Dict[str, Any]] = None) -> HookResult:
         """Store kernel reference for later use."""
         self._kernel = kernel
         logger.info("🔱 Durvasa Protocol armed")

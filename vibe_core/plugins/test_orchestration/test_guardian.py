@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("TEST_GUARDIAN")
 
@@ -112,7 +112,7 @@ class Guardian:
     - Logs everything to lineage
     """
 
-    def __init__(self, kernel: Optional["RealVibeKernel"] = None):
+    def __init__(self, kernel: Optional["KernelProtocol"] = None):
         self._kernel = kernel
         self._contracts: Dict[str, TestContract] = {}
         self._mutations: List[MutationEvent] = []

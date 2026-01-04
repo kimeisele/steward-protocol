@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
 
 
@@ -80,7 +80,7 @@ class BaseCortex(ABC):
     def __init__(
         self,
         workspace: Optional[Path] = None,
-        kernel: Optional["RealVibeKernel"] = None,
+        kernel: Optional["KernelProtocol"] = None,
     ):
         """
         Initialize cortex.
@@ -98,11 +98,11 @@ class BaseCortex(ABC):
         return self._workspace
 
     @property
-    def kernel(self) -> Optional["RealVibeKernel"]:
+    def kernel(self) -> Optional["KernelProtocol"]:
         """Get kernel reference (if injected)."""
         return self._kernel
 
-    def inject_kernel(self, kernel: Optional["RealVibeKernel"]) -> None:
+    def inject_kernel(self, kernel: Optional["KernelProtocol"]) -> None:
         """
         Inject kernel for ledger/state access.
 

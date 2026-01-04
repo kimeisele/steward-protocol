@@ -20,7 +20,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.plugins.interface.renderers.base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("INTERFACE_PLUGIN")
 
@@ -51,13 +51,13 @@ class InterfacePlugin(KernelPlugin):
         return PulsePhase.CLEANUP
 
     def __init__(self):
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._renderers: Dict[str, BaseRenderer] = {}
         self._interface_config: Optional[InterfaceConfig] = None
         # Track last render time per renderer for interval scheduling
         self._last_render: Dict[str, float] = {}
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Called when kernel boots."""
         self._kernel = kernel
         self._project_root = Path.cwd()
@@ -73,7 +73,7 @@ class InterfacePlugin(KernelPlugin):
         # This reduces boot time by ~14 seconds
         logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active, render deferred)")
 
-    def on_pulse(self, kernel: "RealVibeKernel", transaction: Any) -> HookResult:
+    def on_pulse(self, kernel: "KernelProtocol", transaction: Any) -> HookResult:
         """
         CLEANUP phase: Render all UI after TaskManager has executed.
 
@@ -338,7 +338,7 @@ This is a temporary placeholder. The system will retry on the next render cycle.
             except Exception as e:
                 logger.error(f"Error rendering view '{name}': {e}")
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Clean up."""
         logger.info("InterfacePlugin shutting down")
 

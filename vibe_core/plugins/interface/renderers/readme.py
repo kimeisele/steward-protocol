@@ -21,7 +21,7 @@ from vibe_core.loaders import TemplateLoader
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RENDERER_README")
 
@@ -33,7 +33,7 @@ class ReadmeRenderer(BaseRenderer):
     Template: knowledge/interface/templates/readme.md.j2
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         super().__init__(kernel)
         self._template_loader = TemplateLoader()
         self._project_data: Dict[str, Any] = {}

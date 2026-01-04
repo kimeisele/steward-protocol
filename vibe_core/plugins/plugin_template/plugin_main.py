@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Optional
 from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("PLUGIN_TEMPLATE")
 
@@ -38,13 +38,13 @@ class PluginTemplatePlugin(KernelPlugin):
 
     def __init__(self):
         """Initialize plugin state."""
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
 
-    def on_boot(self, kernel: "RealVibeKernel") -> None:
+    def on_boot(self, kernel: "KernelProtocol") -> None:
         """Called when kernel boots."""
         self._kernel = kernel
         logger.info("Plugin template booted")
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> None:
+    def on_shutdown(self, kernel: "KernelProtocol") -> None:
         """Called when kernel shuts down."""
         logger.info("Plugin template shutdown")

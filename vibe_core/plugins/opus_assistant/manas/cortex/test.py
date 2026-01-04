@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("MANAS.Cortex.Test")
 
@@ -129,14 +129,14 @@ class TestCortex:
         """
         self._workspace = workspace or Path.cwd()
         self._timeout = timeout_seconds if timeout_seconds is not None else self.DEFAULT_TIMEOUT
-        self._vibe_kernel: Optional["RealVibeKernel"] = None
+        self._vibe_kernel: Optional["KernelProtocol"] = None
         self._test_orchestration_plugin = None
 
     # =========================================================================
     # ⚡ PRAMANA: KERNEL INTEGRATION (OPUS-059)
     # =========================================================================
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "KernelProtocol") -> None:
         """
         Inject the core VibeKernel for ledger access.
 

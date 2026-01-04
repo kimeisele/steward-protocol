@@ -23,7 +23,7 @@ from vibe_core.orchestration_cycle import get_cycle_registry
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
 
 logger = logging.getLogger("RENDERER_COGNITION")
@@ -39,7 +39,7 @@ class CognitionRenderer(BaseRenderer):
 
     def __init__(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         tool_loader: Optional["ToolLoader"] = None,
         action_loader: Optional["ActionLoader"] = None,
         sense_loader: Optional["SenseLoader"] = None,

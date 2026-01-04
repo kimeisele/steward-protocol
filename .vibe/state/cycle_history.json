@@ -1,0 +1,128 @@
+{
+  "version": "1.0",
+  "saved_at": "2026-01-04T09:59:12.890430",
+  "total_cycles": 6,
+  "completed": [
+    {
+      "cycle_id": "7de95f81",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4480310352'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890460"
+    },
+    {
+      "cycle_id": "72825b5f",
+      "parent_cycle_id": null,
+      "trace_id": "8e545d47",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890472"
+    },
+    {
+      "cycle_id": "23136817",
+      "parent_cycle_id": null,
+      "trace_id": "33bdcefb",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890477"
+    },
+    {
+      "cycle_id": "81889d3e",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4579975760'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890489"
+    },
+    {
+      "cycle_id": "c9553d1b",
+      "parent_cycle_id": null,
+      "trace_id": "48415cc2",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890507"
+    },
+    {
+      "cycle_id": "c396e2a0",
+      "parent_cycle_id": null,
+      "trace_id": "6e1c5991",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 27,
+        "agents_registered": 29
+      },
+      "timestamp": "2026-01-04T09:59:12.890512"
+    }
+  ],
+  "errors": []
+}

@@ -47,7 +47,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.loaders import ActionLoader, ToolLoader
 
 from vibe_core.state.schema import ExecutionResult
@@ -174,7 +174,7 @@ class IntentRouter:
                          If None, falls back to hardcoded imports (legacy).
         """
         self._workspace = workspace or Path.cwd()
-        self._kernel: Optional["RealVibeKernel"] = None
+        self._kernel: Optional["KernelProtocol"] = None
         self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
         self._register_handlers()  # OPUS-171: Now just logs available handlers
 
@@ -233,7 +233,7 @@ class IntentRouter:
             "max_autonomous_steps": 10,
         }
 
-    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+    def inject_kernel(self, kernel: "KernelProtocol") -> None:
         """
         ⚡ VAJRA: Inject kernel for ledger access.
 
@@ -1152,7 +1152,7 @@ class IntentRouter:
 
 def create_execution_callback(
     workspace: Optional[Path] = None,
-    kernel: Optional["RealVibeKernel"] = None,
+    kernel: Optional["KernelProtocol"] = None,
     action_loader: Optional["ActionLoader"] = None,
     tool_loader: Optional["ToolLoader"] = None,
 ) -> Callable[[Intent], Dict[str, Any]]:

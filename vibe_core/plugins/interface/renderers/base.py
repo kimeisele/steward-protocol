@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from vibe_core.errors import ErrorCode, StructuredError
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.phoenix.sections.interface import (
         InterfaceConfig,
         RendererConfig,
@@ -40,7 +40,7 @@ logger = logging.getLogger("BASE_RENDERER")
 class BaseRenderer(ABC):
     """Abstract base class for Interface Renderers with section support."""
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "KernelProtocol"):
         self.kernel = kernel
         self._config: Optional["RendererConfig"] = None
         self._interface_config: Optional["InterfaceConfig"] = None
