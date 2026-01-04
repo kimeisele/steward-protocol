@@ -288,8 +288,11 @@ Examples:
             if doc_path.exists():
                 try:
                     doc_content = doc_path.read_text()[:2000]  # First 2000 chars
-                except Exception:
-                    pass
+                except Exception as e:
+                    # OPUS-312: Log doc read failures
+                    import logging
+
+                    logging.getLogger("CLI").debug(f"Doc read failed for {doc_path}: {e}")
 
         result = {
             "id": gad_id,

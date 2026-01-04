@@ -147,8 +147,11 @@ Examples:
                         try:
                             m = json.loads(manifest.read_text())
                             description = m.get("description", "")
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            # OPUS-312: Log manifest parse failures
+                            import logging
+
+                            logging.getLogger("CLI").debug(f"Manifest parse failed for {subdir}: {e}")
 
                     modules.append(
                         {
@@ -258,8 +261,11 @@ Examples:
                                 "source": str(f),
                             }
                         )
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log circuit YAML parse failures
+                        import logging
+
+                        logging.getLogger("CLI").debug(f"Circuit parse failed for {f}: {e}")
 
         if as_json:
             print(json.dumps({"circuits": circuits, "total": len(circuits)}, indent=2))

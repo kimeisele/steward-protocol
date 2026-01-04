@@ -211,8 +211,11 @@ class ToolSafetyGuard:
         """
         try:
             return str(Path(path).resolve())
-        except Exception:
-            # If path resolution fails, return as-is
+        except Exception as e:
+            # Path resolution failed - return as-is
+            import logging
+
+            logging.getLogger("SAFETY").debug(f"Path resolution failed for {path}: {e}")
             return path
 
     def _extract_file_path(self, args: dict[str, Any]) -> str | None:

@@ -270,8 +270,9 @@ class LazyCartridgeRegistry:
                         # Check if all abstract methods are implemented
                         if not inspect.isabstract(obj):
                             tool_classes.append(obj)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log abstract check failures
+                        logger.debug(f"Abstract check failed for {obj}: {e}")
 
             if not tool_classes:
                 logger.warning(f"No Tool classes found in {stub.file_path}")

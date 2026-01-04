@@ -155,8 +155,11 @@ class NoOpProvider(LLMProvider):
 
             self.logger = logging.getLogger(__name__)
             self.logger.warning("NoOpProvider initialized - running in mock mode")
-        except Exception:
-            pass
+        except Exception as e:
+            # Logging init failed - continue without logging
+            import sys
+
+            print(f"NoOpProvider: logging init failed: {e}", file=sys.stderr)
 
     def invoke(
         self,

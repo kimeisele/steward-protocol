@@ -61,8 +61,11 @@ def _get_lineage_db():
         config = get_config()
         if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
             return Path(config.paths.system.lineage_db)
-    except Exception:
-        pass
+    except Exception as e:
+        # OPUS-312: Log config resolution failures
+        import logging
+
+        logging.getLogger("CLI").debug(f"Lineage DB config failed: {e}")
     return Path("/tmp") / "vibe_os" / "kernel" / "lineage.db"
 
 
@@ -75,8 +78,11 @@ def _get_kernel_pid_file():
         if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
             pid_dir = Path(config.paths.system.runtime_root) / "kernel"
             return pid_dir / "kernel.pid"
-    except Exception:
-        pass
+    except Exception as e:
+        # OPUS-312: Log config resolution failures
+        import logging
+
+        logging.getLogger("CLI").debug(f"Kernel PID file config failed: {e}")
     return Path("/tmp") / "vibe_os" / "kernel" / "kernel.pid"
 
 

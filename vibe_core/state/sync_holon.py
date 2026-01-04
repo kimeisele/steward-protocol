@@ -301,8 +301,9 @@ class StateSyncHolon(StateSyncHolonProtocol):
                 last_modified = path.stat().st_mtime
                 if path.is_file():
                     content_hash = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-            except (OSError, PermissionError):
-                pass
+            except (OSError, PermissionError) as e:
+                # OPUS-312: Log file stat/read failures
+                logger.debug(f"File stat/read failed for {path}: {e}")
 
         last_commit = self._get_last_commit(path)
 
@@ -385,8 +386,9 @@ class StateSyncHolon(StateSyncHolonProtocol):
             # Try git check-ignore
             if hasattr(self.prakriti.git, "check_ignore"):
                 return self.prakriti.git.check_ignore(path)
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log git check-ignore failures
+            logger.debug(f"Git check-ignore failed for {path}: {e}")
 
         # Fallback: manual check
         gitignore = self.prakriti.workspace / ".gitignore"
@@ -399,8 +401,9 @@ class StateSyncHolon(StateSyncHolonProtocol):
                     if pattern and not pattern.startswith("#"):
                         if pattern in path_str or path.match(pattern):
                             return True
-            except (ValueError, OSError):
-                pass
+            except (ValueError, OSError) as e:
+                # OPUS-312: Log gitignore pattern check failures
+                logger.debug(f"Gitignore pattern check failed: {e}")
         return False
 
     def _is_readable(self, path: Path) -> bool:
@@ -598,8 +601,9 @@ class StateSyncHolon(StateSyncHolonProtocol):
                 if content:
                     path.write_bytes(content if isinstance(content, bytes) else content.encode())
                     return
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log git show recovery failures
+            logger.debug(f"Git show recovery failed for {path}: {e}")
 
         # Last resort: reset to empty
         self._create_from_template(path)

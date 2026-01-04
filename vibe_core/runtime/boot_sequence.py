@@ -93,12 +93,16 @@ class BootSequence:
                     try:
                         plugin._workspace = self.project_root
                         plugin._register_context_provider()
-                    except Exception:
-                        # Silent fail - not all plugins need context
-                        pass
-        except Exception:
+                    except Exception as e:
+                        # Not all plugins need context - debug only
+                        import logging
+
+                        logging.getLogger("BOOT").debug(f"Plugin context registration failed for {plugin_id}: {e}")
+        except Exception as e:
             # Plugin loading is optional for boot
-            pass
+            import logging
+
+            logging.getLogger("BOOT").debug(f"Plugin loading failed during boot: {e}")
 
     def run(self, user_input: str | None = None):
         """Execute the boot sequence"""

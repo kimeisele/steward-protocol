@@ -490,8 +490,11 @@ class StateSyncWeaver(StateSyncWeaverProtocol):
                         state_service = ServiceRegistry.get(StateServiceProtocol)
                         if state_service:
                             state_service.clear_dirty_flags()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # OPUS-312: Log StateService lookup failures
+                        import logging
+
+                        logging.getLogger("STATE").debug(f"StateService dirty flag clear failed: {e}")
 
                     return CommitResult(
                         success=True,

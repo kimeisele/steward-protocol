@@ -93,8 +93,11 @@ class MachineState:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute("SELECT COUNT(*) FROM machine_memory")
                 count = cursor.fetchone()[0]
-        except Exception:
-            pass
+        except Exception as e:
+            # OPUS-312: Log machine memory count failures
+            import logging
+
+            logging.getLogger("STATE").debug(f"Machine memory count failed: {e}")
 
         return {"size_bytes": size_bytes, "key_count": count}
 
