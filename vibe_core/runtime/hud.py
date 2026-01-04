@@ -59,14 +59,19 @@ class StatusBar:
                 )
                 if result.returncode == 0 and result.stdout.strip():
                     return result.stdout.strip()
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger("HUD").debug(f"Git user.name fetch failed: {e}")
 
             # Fallback to environment
             import os
 
             return os.environ.get("USER", "User")
-        except Exception:
+        except Exception as e:
+            import logging
+
+            logging.getLogger("HUD").debug(f"User name resolution failed: {e}")
             return "User"
 
     def get_operator_tone(self) -> str:
@@ -77,8 +82,10 @@ class StatusBar:
                     config = json.load(f)
                     if "preferences" in config and "operator_tone" in config["preferences"]:
                         return config["preferences"]["operator_tone"]
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger("HUD").debug(f"Steward config parse failed: {e}")
 
         # ARCH-063: Check environment variable (VIBE_OPERATOR_TONE)
         import os
@@ -133,7 +140,10 @@ class StatusBar:
             inbox_count = context.get("inbox_count", "0")
             agenda_summary = json.loads(context.get("agenda_summary", '{"total": 0}'))
             agenda_total = agenda_summary.get("total", 0)
-        except Exception:
+        except Exception as e:
+            import logging
+
+            logging.getLogger("HUD").debug(f"Context resolution failed for compact render: {e}")
             inbox_count = "0"
             agenda_total = 0
 
@@ -261,8 +271,10 @@ class HintSystem:
             if git_sync.startswith("BEHIND_BY_"):
                 return HintSystem.CONTEXT_HINTS["behind_git"]
 
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger("HUD").debug(f"Contextual hint resolution failed: {e}")
 
         return None
 

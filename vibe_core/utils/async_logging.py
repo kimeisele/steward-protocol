@@ -14,8 +14,7 @@ Usage:
 """
 
 import logging
-import os
-from logging.handlers import QueueHandler, QueueListener
+from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
 from pathlib import Path
 from queue import Queue
 
@@ -36,7 +35,13 @@ def setup_async_logging():
     root.addHandler(handler)
 
     log_file = log_dir / "system.log"
-    file_handler = logging.FileHandler(str(log_file))
+    # OPUS-LZ1: RotatingFileHandler prevents unbounded log growth
+    # maxBytes=10MB, backupCount=5 -> max 60MB total disk usage
+    file_handler = RotatingFileHandler(
+        str(log_file),
+        maxBytes=10 * 1024 * 1024,  # 10MB per file
+        backupCount=5,  # Keep 5 old files
+    )
     file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
 
     _listener = QueueListener(_log_queue, file_handler)

@@ -576,10 +576,11 @@ SURFACE: CLI Integration
 | State Layer | weaver, sync_holon, guna_classifier, etc. | 10 | ✅ COMPLETE |
 | Cartridges | watchdog, envoy, herald, watchman, forum | 5 | ✅ COMPLETE |
 | Plugins | resource_limits, doctor, event_bus | 5 | ✅ COMPLETE |
+| Runtime | boot_sequence, hud, base, tool_safety_guard | 9 | ✅ COMPLETE |
 
 **TOTALS:**
-- **Eliminated:** 65 silent killers
-- **Remaining:** ~130 (mostly plugins - low blast radius)
+- **Eliminated:** 74 silent killers
+- **Remaining:** ~121 (mostly plugins - low blast radius)
 - **Pattern Applied:** `except Exception: pass` → `logger.warning/debug(f"Context: {e}")`
 
 **Files Modified in Campaign:**
@@ -618,22 +619,53 @@ vibe_core/plugins/opus_assistant/manas/biorhythm.py (1)
 vibe_core/task_management/file_lock.py (1)
 vibe_core/vajra/scanner.py (1)
 vibe_core/event_bus.py (1)
+vibe_core/runtime/boot_sequence.py (2)
+vibe_core/runtime/hud.py (5)
+vibe_core/runtime/providers/base.py (1)
+vibe_core/runtime/tool_safety_guard.py (1)
 ```
 
 **Remaining Fronts (Low Priority):**
 ```
 plugins/: 55+ (isolated failures, low blast radius)
 cartridges/: 12+ (agent tools, graceful degradation OK)
-runtime/: 6 (execution path - could be P1)
 protocols/: 10 (interface contracts)
 phoenix/: 6 (config loading)
 ```
 
 **Next Logical Steps:**
-1. P1: Fix runtime/ silent killers (6) - execution reliability
-2. P1: Create CorrectionDispatcher protocol - unified healing
-3. P2: .opus_state → .vibe/state migration (274 refs, 82 files)
-4. P2: Systematic plugin sweep (55+ remaining)
+1. P1: Create CorrectionDispatcher protocol - unified healing
+2. P2: .opus_state → .vibe/state migration (274 refs, 82 files)
+3. P2: Systematic plugin sweep (55+ remaining)
+
+---
+
+## LOG ROTATION FIX (2026-01-04)
+
+### THE PROBLEM: 644MB system.log
+
+`.vibe/logs/system.log` grew to 644MB (6.2 million lines) over 10 days:
+- No log rotation configured
+- Many kernel startups (each logs 100s of lines)
+- Verbose loaders: VIBE_KERNEL (507k), UNIFIED.LOADER (503k), tool_registry (355k)
+
+### THE FIX
+
+```python
+# vibe_core/utils/async_logging.py
+
+# BEFORE (unbounded growth):
+file_handler = logging.FileHandler(str(log_file))
+
+# AFTER (10MB max per file, 5 backups = 60MB total):
+file_handler = RotatingFileHandler(
+    str(log_file),
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,
+)
+```
+
+**Result:** 644MB → 1.1MB (truncated to last 10k lines)
 
 ---
 
