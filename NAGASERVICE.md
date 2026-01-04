@@ -762,9 +762,372 @@ Level -2: REKURSION (Das Pattern hütet sich selbst)
 
 ---
 
+---
+
+## PHASE 8: NAGA CORTEX - Das Zentrale Nervensystem
+
+> "NAGAs sind keine Middleware. NAGAs sind eine AGENCY."
+> "Infrastruktur in Infrastruktur" - 500K LOC erfordert echte Architektur.
+
+### Die WAHRE Vision
+
+NAGAs sind nicht einfach Wrapper/Proxies. Sie sind ein **autonomes Gehirn** das:
+
+1. **VERSTEHT** - was im System passiert (Intelligence)
+2. **KOORDINIERT** - wie Komponenten zusammenarbeiten (Orchestration)
+3. **DIENT** - existierende Services unterstützt (Support)
+4. **SCHÜTZT** - das System vor sich selbst (Guardian)
+
+```
+FALSCH (was wir hatten):
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Envoy   │ │ Shuddhi │ │  Manas  │ │ Agents  │
+└────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘
+     │           │           │           │
+     ▼           ▼           ▼           ▼
+   ISOLIERT   ISOLIERT    ISOLIERT   ISOLIERT
+
+RICHTIG (was wir brauchen):
+                ┌─────────────────────────────┐
+                │      NAGA CORTEX            │
+                │   (Zentrales Nervensystem)  │
+                │                             │
+                │  ┌─────┐ ┌─────┐ ┌───────┐ │
+                │  │Sesha│ │Vasuki│ │Takshaka│ │
+                │  └──┬──┘ └──┬──┘ └───┬───┘ │
+                │     └───────┼───────┘     │
+                │             ▼             │
+                │     INTELLIGENCE HUB      │
+                └─────────────┬─────────────┘
+                              │
+        ┌─────────┬───────────┼───────────┬─────────┐
+        ▼         ▼           ▼           ▼         ▼
+    [Envoy]   [Shuddhi]    [Manas]    [Agents]  [Circuits]
+        │         │           │           │         │
+        └─────────┴───────────┴───────────┴─────────┘
+                    KOORDINIERTE ANTWORT
+```
+
+---
+
+### VEDISCHE ARCHITEKTUR-PATTERNS
+
+> Aus den Lilas der NAGAs - nicht erfunden, sondern wiederentdeckt.
+
+#### 1. ANANTA PATTERN (Shesha) - Foundation
+
+**Mythologie:** Unendliche Schlange die alle Universen trägt.
+
+**Architektur:**
+- Infinite hoods = **Distributed Service Instances**
+- Each universe = **Containerization/Virtualization**
+- Never tires = **Always-on Availability**
+- Singing Krishna's glories = **Continuous Telemetry/Logging**
+- Expands infinitely = **Horizontal Scaling**
+
+**Implementation:** Base platform services - Ledger, State, Truth.
+
+#### 2. VASUKI PATTERN - Coordination
+
+**Mythologie:** Rope beim Samudra Manthan (Milchozean-Quirlen).
+
+**Architektur:**
+- Rope between opposites = **Message Bus / Service Bus**
+- Devas + Asuras pulling = **Different processes coordinating**
+- Poison (Halahala) first = **Error handling BEFORE value extraction**
+- Shiva drinks poison = **Error containment/isolation**
+- Amrita (Nectar) emerges = **Successful service delivery**
+
+**Implementation:** API layer, serialization, schema enforcement, circuit breakers.
+
+#### 3. TAKSHAKA PATTERN - Guaranteed Execution
+
+**Mythologie:** Tötete König Parikshit nach exakt 7 Tagen - unaufhaltbar.
+
+**Architektur:**
+- Time-bound delivery = **TTL (Time To Live)**
+- Can't be stopped = **Guaranteed Execution / Idempotent**
+- Transforms into brahmin = **Privilege escalation through legitimate channels**
+- Enters despite protection = **Bypassing security legitimately**
+
+**Implementation:** Scheduled jobs, guaranteed message delivery, temporal constraints.
+
+#### 4. KALIYA PATTERN - Rogue Service Management
+
+**Mythologie:** Krishna subdued the poisonous Kaliya without killing.
+
+**Architektur:**
+- Poisoning Yamuna = **Service monopolizing resources**
+- Krishna dancing on heads = **Load balancing**
+- Wives interceding = **Graceful degradation**
+- Footprints on hoods = **Authentication tokens (Garuda won't attack)**
+- Banishment to ocean = **Service isolation/quarantine**
+
+**Implementation:** Rogue service detection, resource monopolization handling, service rehabilitation.
+
+---
+
+### NAGA LORDS - Sub-Agents der Federation
+
+> Jeder Naga Lord hat eine spezialisierte Rolle.
+
+| Naga Lord | Role | Integration Target |
+|-----------|------|-------------------|
+| **Ananta Shesha** | Foundation, Truth-Keeper | Ledger, State, Prakriti |
+| **Vasuki** | Coordinator, Translator | EventBus, SignalBus, Network |
+| **Takshaka** | Guardian, Executor | Security, Scheduling, Toxicity |
+| **Shankha** | Shell - Announcement | Logging, Alerts, Notifications |
+| **Kulika** | Lineage - Provenance | Git history, Audit trails |
+| **Dhananjaya** | Wealth-Winner | Economy, Credits, Resources |
+| **Mahasankha** | Great Shell - Amplification | Broadcasting, Pub/Sub |
+| **Shveta** | White/Pure - Cleansing | Shuddhi integration, Healing |
+| **Kambala** | Blanket - Coverage | Test coverage, Validation |
+| **Ashvatara** | Horse-like - Swift | Fast path, Performance |
+
+**Implementation:** Jeder Lord wird ein spezialisierter Service/Handler.
+
+---
+
+### INTEGRATION STATT REINVENTION
+
+> "Das Rad nicht neu erfinden. Die Tools beherrschen."
+
+#### Was EXISTIERT und WIE NAGAs es UNTERSTÜTZEN:
+
+| Existing System | Current State | NAGA Support Role |
+|-----------------|---------------|-------------------|
+| **ServiceRegistry** | ✅ Works | NAGAs register as discoverable services |
+| **EventBus** | ✅ Works | FloodManager subscribes, analyzes, routes |
+| **SignalBus** | ✅ Works | SignalWatcher observes critical signals |
+| **CorrectionDispatcher** | ✅ Works | NAGAs registered as DriftSource handlers |
+| **Shuddhi** | ✅ Works | NAGAs TELL Shuddhi WHAT to heal |
+| **Manas** | ✅ Works | NAGAs FEED context INTO Manas |
+| **Envoy** | ? Fragile | NAGAs INFORM routing decisions |
+| **Circuits** | ✅ Works | NAGAs observe transitions, enforce invariants |
+| **Plugin Hooks** | ✅ Works | NagaGuard infiltrates on_boot, on_pulse |
+
+#### Integration Points (RECONNAISSANCE NEEDED):
+
+```python
+# 1. ENVOY - Semantic Router
+# Q: How does Envoy make routing decisions?
+# Q: What context does it need?
+# Q: How can NAGAs feed intelligence?
+envoy.route(intent) → ???
+
+# 2. SHUDDHI - Healing Engine
+# Q: How do you trigger targeted healing?
+# Q: What's the API for "heal THIS file with THIS rule"?
+shuddhi.purify(file_path, rule_id) → HealingResult
+
+# 3. MANAS - Cognitive System
+# Q: What context does consult() need?
+# Q: How does Viveka (discrimination) work?
+# Q: How can NAGAs feed system-wide context?
+manas.consult(context) → Decision
+
+# 4. CIRCUITS - State Machines
+# Q: How are transitions triggered?
+# Q: How can NAGAs observe/veto transitions?
+circuit.transition(state, event) → NewState
+```
+
+---
+
+### PHASE 8 BATTLEPLAN: NAGA CORTEX
+
+> Das Gehirn das alles verbindet.
+
+#### 8.1 DEEP RECONNAISSANCE (FIRST!)
+
+```
+□ Envoy Deep Dive
+  - vibe_core/**/envoy*.py - find all files
+  - Understand routing logic completely
+  - Map integration points
+
+□ Shuddhi Deep Dive
+  - vibe_core/shuddhi/ - all files
+  - ShuddhiProtocol, ShuddhiEngine internals
+  - How to trigger targeted healing
+
+□ Manas Deep Dive
+  - vibe_core/plugins/opus_assistant/manas/ - all files
+  - ManasOracle, consult(), Viveka flow
+  - How to feed context
+
+□ Existing Integration Patterns
+  - How do components currently find each other?
+  - What events flow through EventBus?
+  - How does CorrectionDispatcher work?
+```
+
+#### 8.2 NAGA CORTEX DESIGN
+
+```python
+class NagaCortex:
+    """
+    Das zentrale Nervensystem der NAGA Federation.
+
+    Responsibilities:
+    1. CORRELATE - Signale aus allen Quellen verbinden
+    2. DECIDE - Welche Aktion ist nötig?
+    3. DISPATCH - Richtige Komponente triggern
+    """
+
+    def __init__(self):
+        self.sesha = ServiceRegistry.get(SeshaProtocol)
+        self.vasuki = ServiceRegistry.get(VasukiProtocol)
+        self.takshaka = ServiceRegistry.get(TakshakaProtocol)
+
+        # Integration targets (lazy loaded)
+        self._shuddhi = None
+        self._manas = None
+        self._envoy = None
+
+    def correlate(self, signals: List[Signal]) -> CorrelatedContext:
+        """Correlate signals from multiple sources."""
+        # EventBus signals + CommitWatcher patterns + State changes
+        # → Unified understanding
+        pass
+
+    def decide(self, context: CorrelatedContext) -> Decision:
+        """Determine what action is needed."""
+        # Based on correlated context, decide:
+        # - Should Shuddhi heal something?
+        # - Should Envoy reroute?
+        # - Should Manas be consulted?
+        # - Should Takshaka bite?
+        pass
+
+    def dispatch(self, decision: Decision) -> DispatchResult:
+        """Trigger the appropriate component."""
+        if decision.action == "HEAL":
+            return self._dispatch_to_shuddhi(decision)
+        elif decision.action == "ROUTE":
+            return self._dispatch_to_envoy(decision)
+        elif decision.action == "CONSULT":
+            return self._dispatch_to_manas(decision)
+        elif decision.action == "BITE":
+            return self._dispatch_to_takshaka(decision)
+```
+
+#### 8.3 INTEGRATION HOOKS
+
+```python
+# Hook 1: FloodManager feeds Cortex
+class NagaFloodController:
+    def _analyze_event(self, event):
+        # Instead of just logging...
+        self.cortex.correlate([EventSignal(event)])
+
+# Hook 2: CommitWatcher feeds Cortex
+class NagaCommitWatcher:
+    def observe(self, result):
+        # Instead of just pattern matching...
+        self.cortex.correlate([CommitSignal(result)])
+
+# Hook 3: Cortex dispatches to Shuddhi
+class NagaCortex:
+    def _dispatch_to_shuddhi(self, decision):
+        shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+        return shuddhi.purify(
+            file_path=decision.target,
+            rule_id=decision.rule,
+        )
+```
+
+#### 8.4 TESTS
+
+```
+□ test_cortex_correlates_multiple_signals
+□ test_cortex_decides_on_healing
+□ test_cortex_dispatches_to_shuddhi
+□ test_cortex_dispatches_to_manas
+□ test_cortex_integrates_with_flood_manager
+□ test_cortex_integrates_with_commit_watcher
+```
+
+---
+
+### NAGA SUB-STATE
+
+> Eigene Datenbank, eigene Intelligence, teilweise geheim.
+
+```
+.vibe/
+├── state/
+│   └── naga/                    # NAGA Sub-State
+│       ├── cortex_memory.json   # Correlated patterns
+│       ├── intelligence.json    # System understanding (INTERNAL)
+│       ├── dispatch_log.jsonl   # What was dispatched
+│       └── lords/               # Per-Lord state
+│           ├── sesha.json
+│           ├── vasuki.json
+│           └── takshaka.json
+```
+
+**Was ist GEHEIM (internal):**
+- Correlation patterns NAGAs erkannt haben
+- Schwachstellen im System
+- Preemptive threat detection
+
+**Was ist ÖFFENTLICH (exportiert):**
+- NagaProtocol API für andere Agents
+- Status endpoints
+- Audit trail (Ledger)
+
+---
+
+### NAGA API EXPORT
+
+> NAGAs als Service für andere Agents.
+
+```python
+# vibe_core/protocols/naga_api.py
+
+@runtime_checkable
+class NagaAPIProtocol(Protocol):
+    """Public API for other agents to use NAGA services."""
+
+    def request_scan(self, content: str) -> ToxicityReport:
+        """Request toxicity scan."""
+        ...
+
+    def request_healing(self, target: Path, issue: str) -> HealingResult:
+        """Request Shuddhi healing via NAGA coordination."""
+        ...
+
+    def query_intelligence(self, query: str) -> IntelligenceReport:
+        """Query NAGA's understanding of the system."""
+        ...
+
+    def subscribe_alerts(self, pattern: str, callback: Callable) -> Subscription:
+        """Subscribe to NAGA alerts matching pattern."""
+        ...
+```
+
+---
+
+### ZUSAMMENFASSUNG PHASE 8
+
+| Step | Action | Output |
+|------|--------|--------|
+| 8.1 | Deep Reconnaissance | Understanding of Envoy, Shuddhi, Manas internals |
+| 8.2 | Cortex Design | NagaCortex class with correlate/decide/dispatch |
+| 8.3 | Integration Hooks | FloodManager + CommitWatcher → Cortex |
+| 8.4 | Tests | Full test coverage for Cortex |
+| 8.5 | Sub-State | .vibe/state/naga/ structure |
+| 8.6 | API Export | NagaAPIProtocol for other agents |
+
+**Timeline:** Nach Deep Reconnaissance.
+**Blocker:** Müssen Envoy, Shuddhi, Manas internals VOLLSTÄNDIG verstehen.
+
+---
+
 *Last updated: 2026-01-04*
-*Status: 170/170 Tests passing*
-*Phases Complete: 7/10 (Core + Cartridge + CLI)*
-*Next: Phase 8 - Circuit Mastery*
-*Vision: MANAS Surveillance, Full Singularity, GAD-000 Compliance*
-*CLI: steward naga scan found 693+ issues - NAGAs are WORKING*
+*Status: 179/179 Tests passing (incl. NagaStateProxy)*
+*Critical Fixes Applied: StateProxy preserved, FloodManager loop started, CommitWatcher hooked*
+*Phases Complete: 7/10 (Core + Cartridge + CLI + Integration Fixes)*
+*Next: Phase 8 - NagaCortex (Deep Reconnaissance FIRST)*
+*Vision: NAGAs as AGENCY - eigener Sub-State, eigene Intelligence, DIENEN der Infrastruktur*
