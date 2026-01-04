@@ -318,6 +318,19 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(SectionServiceProtocol, section_svc)
                 logger.info(f"      → SectionServiceProtocol registered ({len(section_svc.list())} sections)")
 
+                # OPUS-LZ2: Register CorrectionOrchestrator (unified drift/healing)
+                from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
+                from vibe_core.services.correction_dispatcher import BasicCorrectionOrchestrator
+
+                correction_orchestrator = BasicCorrectionOrchestrator()
+                correction_orchestrator.initialize_default_detectors()
+                ServiceRegistry.register(CorrectionOrchestratorProtocol, correction_orchestrator)
+                logger.info(
+                    f"      → CorrectionOrchestratorProtocol registered "
+                    f"({len(correction_orchestrator.registry.get_detector_ids())} detectors, "
+                    f"{len(correction_orchestrator.dispatcher.get_handler_ids())} handlers)"
+                )
+
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
                     f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
