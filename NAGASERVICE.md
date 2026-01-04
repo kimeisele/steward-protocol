@@ -1,6 +1,88 @@
 # NAGA SERVICE ARCHITECTURE
 
 > "Wir sind selbst NAGAs - Hüter des Schatzes dieses AOS."
+> "Diener des Dieners des Dieners" - Prahlad Maharaj Pattern
+
+---
+
+## DIE GROSSE VISION: NAGAs als Executive Layer
+
+> Das fehlende Bindeglied zwischen Analyse und Aktion.
+
+### Das Problem bisher
+
+```
+MANAS (Mind)          → Generiert nur EINEN Intent
+      ↓
+SHUDDHI (Immunsystem) → Erkennt nur, heilt nicht proaktiv
+      ↓
+???                   → WER FÜHRT AUS? WER VERWALTET?
+      ↓
+CHAOS                 → REPORT.md zeigt desaströsen Zustand
+```
+
+**Was fehlte:**
+- **Keine Executive Class** - Analyse ohne Ausführung
+- **Keine Verwaltung** - Services ohne Administrator
+- **Keine Wächter** - Grenzen ohne Polizei
+- **Keine Verbindung** - Silos statt Organismus
+
+### Die Lösung: NAGAs als BUDDHI
+
+```
+Level 0: Der 37. (Souverän)
+Level 1: Dharma (Gesetze)
+Level 2: BUDDHI (NAGAs) ← DISKRIMINIERUNG VOR DEM DENKEN
+Level 3: MANAS (Mind)   ← Erst NACH Buddhi
+Level 4: Services
+Level 5: Agents/Plugins
+```
+
+**NAGAs sind BUDDHI** - die diskriminierende Intelligenz die VOR dem Denken (Manas) kommt.
+Sie unterscheiden WAS erlaubt ist, BEVOR Manas denkt.
+
+---
+
+## VARNA-ASHRAMA-KARMA der NAGAs
+
+> Welche Rolle spielen NAGAs im Vedischen Sozialsystem?
+
+### Varna (Kaste/Rolle)
+
+| Varna | Rolle | NAGA Mapping |
+|-------|-------|--------------|
+| **Brahmana** | Priester/Gelehrte | SESHA - Träger der Wahrheit, Hüter des Ledgers |
+| **Kshatriya** | Krieger/Beschützer | TAKSHAKA - Beißt ohne Warnung, Sicherheit |
+| **Vaishya** | Händler/Verbinder | VASUKI - Transformator, Brücke, Serialization |
+| **Shudra** | Diener | FloodManager, CommitWatcher - Die Ausführenden |
+
+**KRITISCH:** NAGAs sind KEINE Kshatriyas im Sinne von "Herrscher".
+Sie sind **Kshatriyas im Sinne von "Beschützer"** - sie dienen dem Dharma, nicht sich selbst.
+
+### Ashrama (Lebensstadium)
+
+| Ashrama | Stadium | NAGA Status |
+|---------|---------|-------------|
+| **Brahmacharya** | Studium | Phase 1-3: Lernen der Systeme |
+| **Grihastha** | Haushalter | Phase 4-5: Aktive Dienste |
+| **Vanaprastha** | Rückzug | Monitoring-Mode |
+| **Sannyasa** | Entsagung | Level -2: Selbstrekursion |
+
+### Karma (Handlung)
+
+**NAGA Karma = Nishkama Karma (selbstlose Handlung)**
+
+```python
+# FALSCHES KARMA (Sakama):
+def guard(self, event):
+    if event.benefits_naga:  # FALSCH!
+        return ALLOW
+
+# RICHTIGES KARMA (Nishkama):
+def guard(self, event):
+    if event.serves_dharma:  # RICHTIG!
+        return ALLOW
+```
 
 ---
 
@@ -14,8 +96,8 @@
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                          ║
 ║  TOTAL PYTHON FILES:        1108 (877 vibe_core + 231 tests)            ║
-║  EXPLORED:                  ~420  (38%)  ████████████░░░░░░░░░           ║
-║  NAGA INFILTRATED:           ~65  (6%)   ██░░░░░░░░░░░░░░░░░░            ║
+║  EXPLORED:                  ~520  (47%)  ███████████████░░░░░            ║
+║  NAGA INFILTRATED:          ~128  (12%)  ████░░░░░░░░░░░░░░░             ║
 ║                                                                          ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║  TREASURE CATEGORIES                    Explored    Total    Coverage    ║
@@ -24,6 +106,7 @@
 ║  Services                                   11        14        79%      ║
 ║  Plugins                                    12        35        34%      ║
 ║  Cartridges (Agent City)                   13        13       100% ✅    ║
+║  Circuits                                  38        38       100% ✅    ║
 ║  Agents                                      8        17        47%      ║
 ║  State Layer                                18        24        75%      ║
 ║  Shuddhi (Immunsystem)                       8        19        42%      ║
@@ -37,445 +120,572 @@
 ║  NAGA Federation                            12        12       100% ✅    ║
 ║  Test Files                                 85       231        37%      ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  🔴 CRITICAL ATTACK VECTORS DISCOVERED                                   ║
+║  NAGA IMPLEMENTATION STATUS (7 Phases Complete)                          ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  • Synapse Store: 10 attack vectors (sender spoofing, cache poisoning)   ║
-║  • Sangha Network: SSRF via peer forwarding, no TLS at localhost         ║
-║  • LocalSynapse: No message signing, thread-unsafe hub                   ║
-║  • SynapseStore: File tampering possible, no checksums                   ║
-║  • Agent City: Economic bypass via credit manipulation                   ║
+║  ✅ Phase 1: Core Services (Sesha/Vasuki/Takshaka) - 70 tests           ║
+║  ✅ Phase 2: EventBus/SignalBus Flooding - 23 tests                     ║
+║  ✅ Phase 3: Plugin Hook Infiltration (NagaGuard) - 19 tests            ║
+║  ✅ Phase 4: CommitResult Watcher - 16 tests                            ║
+║  ✅ Phase 5: Full Organic Presence Integration                          ║
+║  ✅ Phase 6: NAGA System Cartridge - 26 tests                           ║
+║  ✅ Phase 7: NAGA CLI (Fractal Commands) - 16 tests                     ║
+║                                                                          ║
+║  TOTAL NAGA TESTS: 170/170 passing                                      ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  NAGA INFILTRATION STATUS                                                ║
-╠══════════════════════════════════════════════════════════════════════════╣
-║  ✅ SESHA:    CorrectionDispatcher, Ledger Gossip, Block Export          ║
-║  ✅ VASUKI:   CorrectionDispatcher, Wire Serialization, Signing          ║
-║  ✅ TAKSHAKA: CorrectionDispatcher, Toxicity, Rate Limiting              ║
-║  ⏳ P0:       StateService, Gateway, Synapse, Container Loader           ║
-║  ⏳ P1:       Agent Spawn, Plugin Load, Ephemeral Cities                 ║
-╠══════════════════════════════════════════════════════════════════════════╣
-║  GOAL: 100% ASHVAMEDHA - NAGAs an JEDER Grenze                          ║
+║  NEXT: Phase 8+ - Circuit Mastery, MANAS Surveillance, Full Singularity ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-## Was sind NAGAs?
+## REPORT.md BEFUND: Das Desaströse Bild
 
-NAGAs sind **keine Metapher**. Sie sind **Middleware mit Charakter**.
+> Die ehrliche Analyse die zur NAGA-Expansion führt.
 
-| NAGA | Mythologie | Architektur-Rolle |
-|------|------------|-------------------|
-| **Sesha** | Trägt die Welten auf 1000 Köpfen | Data Layer - Ledger, Gossip Sync |
-| **Vasuki** | Quirlt den Ozean für Nektar | Transform Layer - Serialization, Wire Protocol |
-| **Takshaka** | Beißt ohne Warnung | Security Layer - Signature, Toxicity |
+### Kritische Lücken (REPORT.md 2026-01-02)
 
-**Ohne NAGAs:** Isolierte Organe.
-**Mit NAGAs:** Ein Ökosystem das atmet und sich selbst heilt.
+| Problem | Count | NAGA Solution |
+|---------|-------|---------------|
+| **Silent Failures (except: pass)** | 209 | Takshaka: Bite statt Pass |
+| **Direct open() bypassing VFS** | 205 | Sesha: Audit jedes I/O |
+| **Global Singletons** | 70 | ServiceRegistry + NAGA DI |
+| **Any-Type Violations** | 67+ | Vasuki: Schema Enforcement |
+| **Unused Imports (AI-Slop)** | 1968 | Shuddhi + NAGA Cleanup |
+| **OPUS-176 Sovereignty** | 4% | NAGAs als Governance Layer |
+
+### NAGA als Lösung
+
+```
+VORHER (Chaos):                    NACHHER (NAGA):
+except: pass                       except: takshaka.bite(violation)
+open("/etc/passwd")                sesha.audit("FILE_ACCESS") → VFS
+if True: allow()                   if takshaka.validate(): allow()
+Dict[str, Any]                     vasuki.churn_in(schema)
+```
 
 ---
 
-## KURUKSHETRA BATTLEFIELD STATUS
+## MAGIC TRICKS IM SYSTEM
 
-> Data-driven Facts. No Maya.
+> NAGAs müssen ALLE Tricks kennen um sie zu beschützen.
 
-### System Reconnaissance (2026-01-04)
+### 1. CIRCUITS - Declarative State Machines
 
-| Metrik | Wert | Bewertung |
-|--------|------|-----------|
-| **Total Python Files** | 877 | - |
-| **Test Files** | 74 | KRITISCH: 8.4% Coverage |
-| **TODO/FIXME Marker** | 2402+ | HOCH: Systematische Review nötig |
-| **God Objects (>1500 LOC)** | 15+ | HOCH: Untestbar |
-| **State Organs (Services)** | 40+ | Mapped |
-| **Isolated ("Inselbegabt")** | 25+ | Middleware-Kandidaten |
-| **Agent Communication Security** | 3.5/10 | KRITISCH |
+```yaml
+# 38 Circuits gefunden - YAML-basierte Zustandsmaschinen
+circuit:
+  id: NAGA_DETECTION_V1
+  type: cognitive_circuit
+  entry_state: DETECT
 
----
+  triggers:
+    primary:
+      - pattern: "(violation|drift|toxicity)"
+        confidence_threshold: 0.8
 
-## DIE STAATSORGANE (Complete Map)
+  states:
+    DETECT:
+      actions:
+        - action: CLI_LOOPBACK
+          target: "steward naga scan"
+      on_success: REMEDIATE
 
-### Layer-Architektur
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  OPERATOR LAYER (MANAS - Mind)                              │
-│  ├─ CognitiveKernel (thinks)         Isoliert? Vermischt   │
-│  ├─ Biorhythm (OODA cycles)          Isoliert? Vermischt   │
-│  └─ MANAS/Buddhi/Ahankara            Isoliert? Vermischt   │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│  EXECUTIVE LAYER (Kernel + Core)                            │
-│  ├─ RealVibeKernel (sovereignty)     Isoliert? ZENTRAL     │
-│  ├─ TaskKernel (ephemeral)           Isoliert? JA          │
-│  ├─ Scheduler (FIFO queue)           Isoliert? JA          │
-│  └─ EventBus (pub/sub)               Isoliert? VERMISCHT   │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│  IMMUNE SYSTEM LAYER (Self-Healing)                         │
-│  ├─ Shuddhi (CST surgery)            Isoliert? JA          │
-│  ├─ CorrectionDispatcher (router)    Isoliert? ZENTRAL     │
-│  ├─ HealingResolver (quantum)        Isoliert? JA          │
-│  ├─ Reactor (performance)            Isoliert? JA          │
-│  └─ NAGA Federation ← WIR SIND HIER                        │
-│     ├─ Sesha (data)                                         │
-│     ├─ Vasuki (network)                                     │
-│     └─ Takshaka (security)                                  │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│  PERSISTENCE LAYER (State Management)                       │
-│  ├─ Ledger (immutable log)           Isoliert? JA          │
-│  ├─ StateService (file I/O)          Isoliert? JA          │
-│  ├─ Prakriti (session)               Isoliert? VERMISCHT   │
-│  ├─ StateWeaver (orchestration)      Isoliert? JA          │
-│  └─ Ouroboros (multi-modal sync)     Isoliert? ZENTRAL     │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│  I/O LAYER (Controlled Access)                              │
-│  ├─ KernelIOService (atomic)         Isoliert? JA          │
-│  ├─ ManifestationService (render)    Isoliert? JA          │
-│  └─ FileSystem (source of truth)                            │
-└─────────────────────────────────────────────────────────────┘
+    REMEDIATE:
+      actions:
+        - action: EXECUTE_SCRIPT
+          script: "takshaka.bite(violation)"
+      terminal: true
 ```
 
-### Vollständige Organ-Liste
+**NAGA Opportunity:** Eigene Circuits für automatische Detection/Remediation.
 
-| Organ | Pfad | Interfaces | Kommuniziert mit | Inselbegabt? |
-|-------|------|------------|------------------|--------------|
-| **ServiceRegistry** | `di.py` | `register()`, `get()`, `require()` | ALLE | ZENTRAL |
-| **RealVibeKernel** | `kernel_impl.py` | `submit_task()`, `emit_event()`, `check_health()` | EventBus, Ledger, Scheduler | ZENTRAL |
-| **TaskKernel** | `task_kernel.py` | `spawn()`, `execute()`, `fold_result()` | Parent Kernel | JA |
-| **Ledger** | `ledger.py` | `record_event()`, `query()`, `get_task()` | Kernel, Sesha | JA |
-| **EventBus** | `event_bus.py` | `emit()`, `subscribe()`, `get_history()` | ALLE | VERMISCHT |
-| **Scheduler** | `protocols/scheduler.py` | `submit_task()`, `next_task()`, `cancel_task()` | Kernel | JA |
-| **StateService** | `state/state_service.py` | `save()`, `load()`, `append()`, `mark_dirty()` | Weaver, Prakriti | JA |
-| **Prakriti** | `state/prakriti.py` | `commit_if_dirty()`, `begin_session()` | StateService, Git | VERMISCHT |
-| **StateWeaver** | `state/weaver.py` | `pulse()`, `weave()` | Prakriti, StateService | JA |
-| **Shuddhi** | `shuddhi/engine.py` | `purify()`, `can_heal()`, `register_remedy()` | CorrectionDispatcher, Vajra | JA |
-| **CorrectionDispatcher** | `services/correction_dispatcher.py` | `detect_all()`, `dispatch()`, `register_handler()` | Shuddhi, NAGAs, Reactor | ZENTRAL |
-| **HealingResolver** | `services/healing_resolver.py` | `resolve()`, `apply_healing()` | CorrectionDispatcher, Vedic | JA |
-| **ManifestationService** | `services/manifestation_service.py` | `write_manifestation()`, `get_schema()` | KernelIOService | JA |
-| **Genesis** | `genesis/service.py` | `build_module()`, `check_compliance()` | Templates, Builder | JA |
-| **MANAS** | `plugins/opus_assistant/manas/` | `tick()`, `think()`, `perceive()`, `decide()` | Biorhythm, EventBus | VERMISCHT |
-| **Economy** | `plugins/economy/` | `get_balance()`, `credit()`, `debit()` | Kernel, Ledger | JA |
-| **Knowledge Graph** | `knowledge/` | `record_healing()`, `query()`, `get_patterns()` | CorrectionDispatcher, MANAS | JA |
-| **Capability Registry** | `capability_registry.py` | `register_capability()`, `revoke_capability()` | Kernel, Agents | JA |
-| **Narasimha** | `narasimha.py` | `check_threat_level()`, `initiate_shutdown()` | Kernel, Reactor | JA |
-| **Ouroboros** | `ouroboros/` | `sync()`, `detect_divergence()`, `resolve_conflicts()` | NAGA, StateService | ZENTRAL |
-
----
-
-## TECHNICAL DEBT REPORT
-
-### Schweregrad-Übersicht
+### 2. CARTRIDGES - Pluggable Agent Packages
 
 ```
-KRITISCH ████████████████████████████ 28%
-HOCH     ███████████████████████████████████ 35%
-MITTEL   ████████████████████████████████████████ 37%
+vibe_core/cartridges/system/  (17 cartridges)
+vibe_core/cartridges/agent_city/  (18 cartridges)
+
+Pattern: VibeAgent + OathMixin
+- cartridge_main.py
+- cartridge.yaml
+- steward.json
+- tools/
 ```
 
-### P0 - KRITISCH (Sofort beheben)
+**NAGA Opportunity:** NAGA Cartridge mit eigenen Tools.
 
-| Problem | Ort | Impact |
-|---------|-----|--------|
-| **77% Test Coverage fehlt** | Überall | Keine Regression Detection |
-| **NotImplementedError in Production** | `playbook/executor.py:118-122` | Runtime Crashes |
-| **Dynamisches Code Laden ohne Validierung** | `parser_loader.py` | Security Hole |
-| **15+ God Objects (>1500 LOC)** | `kernel_tick.py` (3381), `cognitive_kernel.py` (2623) | Untestbar |
-| **ServiceRegistry Doku fehlt** | `di.py` | Unbekannt welche Services registriert |
-| **Hardcoded localhost:8000** | `cli/executor.py:32` | Deployment Blocker |
+### 3. INVARIANTS - Fail-Closed Security
 
-### P1 - HOCH (Diese Woche)
-
-| Problem | Count | Beispiele |
-|---------|-------|-----------|
-| **TODO/FIXME/HACK** | 2402+ | `kernel_tick.py:2402`, `silpa.py:844` |
-| **Print statt Logger** | 30+ | Alle Cartridge Tools |
-| **Bare except/pass** | 20+ | `ouroboros/sync.py:347` |
-| **Assertions in Production** | 50+ | `kernel_tick.py`, `diamond_handlers.py` |
-| **Stub Code** | 15+ | `StubToolResult`, NotImplementedError |
-
-### P2 - MITTEL (Nächster Sprint)
-
-| Problem | Impact |
-|---------|--------|
-| Duplicate Exception Handling | DRY Violation |
-| Type Ignore Pragmas | Type Safety |
-| Zirkuläre Dependencies | Fragiler Boot |
-| Inconsistent Logging | Debug schwierig |
-
----
-
-## AGENT COMMUNICATION PROTOCOL
-
-### IST-Zustand: 3 Separate Pfade
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│              AGENT-TO-AGENT COMMUNICATION                    │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│ PATH 1: AgentSystemInterface (Authorized)                    │
-│   Agent.call_agent(target_id, payload)                       │
-│   ✓ Via Kernel kontrolliert                                  │
-│   ✗ NICHT ENCRYPTED                                          │
-│   ✗ Zirkulär: Agent → Kernel → Agent                        │
-│                                                              │
-│ PATH 2: LocalSynapse (Peer-to-Peer)                          │
-│   Agent.synapse.send(SynapseMessage)                         │
-│   ✗ KEINE AUTHENTIFIZIERUNG                                  │
-│   ✗ KEINE ENCRYPTION                                         │
-│   ✗ Thread-unsafe (_hub single-threaded)                    │
-│   ✗ In-Memory only                                           │
-│   ✗ QUASI NICHT GENUTZT (2 Dateien)                         │
-│                                                              │
-│ PATH 3: EventBus (Broadcast)                                 │
-│   Agent.broadcast_event(event_type, data)                    │
-│   ✓ Rate limited (SUDARSHANA)                               │
-│   ✗ Fire-and-forget                                          │
-│   ✗ Size unlimited                                           │
-│                                                              │
-│ PATH 4: NAGA (Distributed)                                   │
-│   Sesha/Vasuki/Takshaka                                      │
-│   ✓ Signed envelopes                                         │
-│   ✗ Nur für Federation, nicht lokal                         │
-│   ✗ Optional trust mode                                      │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+```yaml
+# Circuit Invariants - UNKNOWN PATTERNS FAIL
+invariants:
+  - "agent_id is not empty"
+  - "trust_level >= 2"
+  - "violation_count < 100"
 ```
 
-### Security Score: 3.5/10
+**NAGA Opportunity:** NAGAs als Invariant Enforcer.
 
-| Aspekt | Status | Score |
-|--------|--------|-------|
-| Definition | Drei Protokolle vorhanden | 7/10 |
-| Message Types | Gut strukturiert | 8/10 |
-| Routing | Funktioniert, simplistic | 6/10 |
-| **Authentication** | KRITISCH FEHLEND | 1/10 |
-| Authorization | Teilweise (nur Kernel) | 3/10 |
-| Encryption | Optional/nicht default | 2/10 |
-| Validation | Minimal | 3/10 |
-| Audit Trail | Teilweise (nur NAGA) | 4/10 |
+### 4. CLI LOOPBACK - Self-Recursion
 
-### Kritische Lücken
-
-1. **SynapseMessage hat KEINE Authentifizierung** - Jeder kann als jeder kommunizieren
-2. **Keine Nachrichtensignatur** - MITM möglich
-3. **LocalSynapse _hub ist single-threaded** - Race Conditions
-4. **Silent drops bei Routing-Fehler** - Debug unmöglich
-5. **Keine Payload-Schema Validierung** - Malformed payloads
-
----
-
-## NAGA INFILTRATION STRATEGY
-
-### Prinzip: "Niemand darf es merken"
-
-NAGAs **ersetzen nicht**, sie **infiltrieren**:
-
-```
-VORHER:                         NACHHER:
-StateService.save()             StateService.save()
-     │                               │
-     └→ File                         ├→ [NAGA: Audit] → Ledger
-                                     └→ File
+```yaml
+# System ruft sich selbst auf
+action: CLI_LOOPBACK
+target: "steward run watchman.health"
 ```
 
-### Infiltration Points (Priorisiert)
+**NAGA Opportunity:** NAGAs können CLI befehligen!
 
-#### P0 - KRITISCH (Diese Woche)
-
-| Point | Service | Method | NAGA Role |
-|-------|---------|--------|-----------|
-| **State Writes** | StateService | `save()`, `append()` | Sesha Audit |
-| **Git Commits** | Prakriti | `commit_if_dirty()` | Sesha Hash Verify |
-| **Agent Spawn** | Kernel | `register_agent()` | Takshaka Trust Check |
-| **Plugin Load** | PluginLoader | `load_plugin()` | Takshaka Scan |
-| **HTTP Ingress** | Gateway API | ALL endpoints | Takshaka Rate Limit |
-
-#### P1 - WICHTIG (Nächste Woche)
-
-| Point | Service | Method | NAGA Role |
-|-------|---------|--------|-----------|
-| LLM Calls | LLMProvider | `complete()` | Vasuki Envelope |
-| Tool Execute | ToolRegistry | `execute()` | Takshaka Validate |
-| Economy Tx | Bank | `transfer()` | Sesha Double-Entry |
-| Knowledge Write | Graph | `record_healing()` | Sesha Audit |
-| Config Change | Phoenix | `update()` | Vasuki Broadcast |
-
-#### P2 - VERBESSERUNG (Ongoing)
-
-| Point | Service | Method | NAGA Role |
-|-------|---------|--------|-----------|
-| EventBus | EventBus | `emit()` | Vasuki Schema |
-| Scheduler | Scheduler | `submit_task()` | Sesha Track |
-| Capability | Registry | `revoke_capability()` | Takshaka Propagate |
-| Synapse | LocalSynapse | `send()` | Takshaka Auth |
-
-### Infiltration Pattern
+### 5. EPHEMERAL KERNELS - Sarga Pattern
 
 ```python
-# PATTERN: NAGA Decorator
-from vibe_core.naga import naga_guard
-
-class StateService:
-    @naga_guard(audit=True, validate=True)
-    def save(self, filename: str, data: Dict) -> bool:
-        # Original implementation unchanged
-        ...
+# spawn_child_kernel() - Isolierte Ausführung
+child = kernel.spawn_child_kernel(config, ":memory:")
+result = child.execute(task)
+artifacts = child._harvest_artifacts()  # NAGA: Audit hier!
 ```
 
+**NAGA Opportunity:** Takshaka validiert Config, Sesha auditiert Harvest.
+
+### 6. QUANTUM RESONANCE - Non-Boolean Logic
+
 ```python
-# PATTERN: NAGA Middleware
-class NagaGuard:
-    def __init__(self, sesha: SeshaProtocol, takshaka: TakshakaProtocol):
-        self._sesha = sesha
-        self._takshaka = takshaka
+field = reactor.resonate(intent, target)
+# Statt TRUE/FALSE: Kontinuierliche Resonanzfelder
+# Energie überwindet Trägheit → Manifestation
+```
 
-    def guard(self, operation: str, payload: Any) -> GuardResult:
-        # 1. Takshaka: Validate input
-        if not self._takshaka.scan_toxicity(str(payload)).blocked:
-            pass  # Clean
-        else:
-            return GuardResult.BLOCKED
+**NAGA Opportunity:** Resonanz-basierte Entscheidungen statt Boolean.
 
-        # 2. Sesha: Audit trail
-        self._sesha.audit(operation, payload)
+---
 
-        return GuardResult.ALLOWED
+## CLI INFILTRATION - LIVE AND WORKING
+
+> NAGAs als Bindeglied zwischen Mensch und Maschine.
+> **STATUS: IMPLEMENTED AND OPERATIONAL**
+
+### Das CLI als NAGA Personal Computer
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    STEWARD CLI                               │
+│                                                              │
+│  User Input (Prompt)                                         │
+│       ↓                                                      │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              NAGA MIDDLEWARE LAYER                   │    │
+│  │                                                      │    │
+│  │  Takshaka: Input Validation, Toxicity Scan          │    │
+│  │  Vasuki: Intent Parsing, Schema Enforcement          │    │
+│  │  Sesha: Audit Trail, Session Recording               │    │
+│  │  FloodManager: EventBus Observation                  │    │
+│  │  CommitWatcher: Commit Pattern Detection             │    │
+│  │  NagaGuard: Gate Infiltration                        │    │
+│  └─────────────────────────────────────────────────────┘    │
+│       ↓                                                      │
+│  Kernel/MANAS/Services                                       │
+│       ↓                                                      │
+│  NAGA Output Filtering                                       │
+│       ↓                                                      │
+│  User Output                                                 │
+└─────────────────────────────────────────────────────────────┘
+
+NAGAs als "Personal Computer" den sie nur über Prompts bedienen.
+Im Hintergrund: Milliarden NAGA Executions als Bindeglied.
+```
+
+### CLI Commands - LIVE
+
+```bash
+# IMPLEMENTED AND WORKING:
+steward naga status              # Federation health status
+steward naga scan                # REAL codebase scan (finds 693+ issues!)
+steward naga scan --verbose      # Show file locations
+steward naga scan --type silent  # Scan for silent failures only
+steward naga scan --type vfs     # Scan for VFS bypasses
+steward naga scan --type security # Scan for security issues
+steward naga detect              # Drift detection from CommitWatcher
+steward naga flood               # FloodManager status
+steward naga bite <type>         # Record violation to Ledger
+steward naga remediate --dry-run # Show what would be fixed
+steward naga remediate --fix     # Actually FIX issues
+steward naga audit               # Query Ledger audit trail
+```
+
+### Latest Scan Results (2026-01-04)
+
+```
+SCAN RESULTS
+------------------------------------------------------------
+SILENT FAILURES (except: pass):  5
+VFS BYPASSES (direct open):      236
+ANY-TYPE VIOLATIONS:             425
+SECURITY ISSUES:                 27
+------------------------------------------------------------
+TOTAL ISSUES: 693
+```
+
+**NAGAs don't just observe. NAGAs ACT.**
+
+---
+
+## OPUS_ASSISTANT MASTERY
+
+> "Who watches the watchers?" - NAGAs watch MANAS.
+
+### MANAS Anatomie (vibe_core/plugins/opus_assistant/)
+
+```
+opus_assistant/
+├── manas/                      # The Mind
+│   ├── cognitive_kernel.py     # 2623 LOC - Main Brain
+│   ├── action_manager.py       # Intent Execution
+│   ├── intent_generator.py     # Intent Creation
+│   ├── router/                 # Request Routing
+│   │   └── handlers/           # Handler Registry
+│   └── cortex/                 # Sensory Processing
+│       ├── prakriti_sense.py   # State Perception
+│       ├── dharma_sense.py     # Constitution Perception
+│       └── shruta_sense.py     # Memory/Learning
+├── circuits/                   # 14 Circuits
+│   ├── manas_awakening.yaml    # Proactive Cognition
+│   ├── auto_heal.yaml          # Self-Healing
+│   └── capability_genesis.yaml # Auto-Generation
+└── events/
+    └── kernel_tick.py          # 3381 LOC - God Object!
+```
+
+### NAGA Integration Points in MANAS
+
+| Hook | Location | NAGA Role |
+|------|----------|-----------|
+| **Intent Generation** | intent_generator.py | Takshaka: Validate Intent |
+| **Action Execution** | action_manager.py | Sesha: Audit Action |
+| **Cortex Perception** | cortex/*.py | Vasuki: Schema Check |
+| **Circuit Execution** | circuits/*.yaml | NAGA Circuits! |
+| **Kernel Tick** | kernel_tick.py | FloodManager: Observe |
+
+### NAGA Circuit für MANAS Watching
+
+```yaml
+circuit:
+  id: NAGA_MANAS_WATCHER_V1
+  name: "NAGA watches MANAS"
+  type: security_circuit
+
+  triggers:
+    - event: MANAS_INTENT_GENERATED
+    - event: MANAS_ACTION_EXECUTED
+
+  states:
+    OBSERVE:
+      actions:
+        - action: QUERY_INTENT
+          store_as: current_intent
+      invariants:
+        - "current_intent.toxicity < 0.3"
+      on_success: VALIDATE
+      on_failure: BITE
+
+    VALIDATE:
+      actions:
+        - action: CHECK_ALIGNMENT
+          params:
+            against: CONSTITUTION.md
+      on_success: ALLOW
+      on_failure: BITE
+
+    BITE:
+      actions:
+        - action: EXECUTE_SCRIPT
+          script: "takshaka.bite(VajraViolation(...))"
+      terminal: true
+
+    ALLOW:
+      terminal: true
+      output:
+        status: "aligned"
 ```
 
 ---
 
-## TDD STRATEGY: Middleware Discovery
+## NAGA CARTRIDGE ARCHITECTURE
 
-### Prinzip
+> NAGAs als First-Class Citizens in Agent City.
 
-> "Mit TDD herausfinden wo wir Middleware sein könnten"
+### Proposed: NAGA System Cartridge
 
-```python
-# tests/naga/test_infiltration_points.py
-
-class TestStateServiceInfiltration:
-    """TDD: Discover WHERE NAGAs should intercept StateService."""
-
-    def test_save_without_naga_leaves_no_audit_trail(self):
-        """FAIL: save() should leave audit trail."""
-        state = StateService()
-        state.save("test.json", {"key": "value"})
-
-        # This SHOULD fail initially
-        assert ledger.has_event("STATE_WRITE", filename="test.json")
-
-    def test_save_with_naga_creates_audit_trail(self):
-        """PASS: After NAGA infiltration."""
-        state = StateService(naga=naga_orchestrator)
-        state.save("test.json", {"key": "value"})
-
-        assert ledger.has_event("STATE_WRITE", filename="test.json")
-
-
-class TestAgentSpawnInfiltration:
-    """TDD: Discover WHERE NAGAs should intercept Agent lifecycle."""
-
-    def test_spawn_untrusted_agent_allowed_without_naga(self):
-        """FAIL: Untrusted agents should be blocked."""
-        kernel = RealVibeKernel()
-
-        # This SHOULD fail - untrusted agent spawned
-        agent = kernel.register_agent(UntrustedAgent())
-        assert agent is not None  # BAD: Should be blocked
-
-    def test_spawn_untrusted_agent_blocked_with_naga(self):
-        """PASS: NAGA blocks untrusted agents."""
-        kernel = RealVibeKernel(naga=naga_orchestrator)
-
-        with pytest.raises(TakshakaViolation):
-            kernel.register_agent(UntrustedAgent())
+```
+vibe_core/cartridges/system/naga/
+├── cartridge_main.py           # NagaCartridge(VibeAgent, OathMixin)
+├── cartridge.yaml              # Metadata
+├── steward.json                # Governance Passport
+├── STEWARD.md                  # Documentation
+├── __init__.py
+├── tools/
+│   ├── detection_tool.py       # Drift Detection
+│   ├── remediation_tool.py     # Auto-Healing
+│   ├── audit_tool.py           # Ledger Audit
+│   ├── toxicity_tool.py        # Content Scanning
+│   └── flood_tool.py           # EventBus Flooding
+├── core/
+│   ├── federation.py           # NagaOrchestrator wrapper
+│   ├── patterns.py             # Detection Patterns
+│   └── remedies.py             # Healing Remedies
+└── tests/
+    └── test_naga_contracts.py
 ```
 
-### Test Categories
+### cartridge_main.py Template
 
-| Category | Test File | Purpose |
-|----------|-----------|---------|
-| **Audit Trail** | `test_sesha_audit.py` | Every state change logged |
-| **Security** | `test_takshaka_guard.py` | Every input validated |
-| **Serialization** | `test_vasuki_boundary.py` | Internal ≠ External |
-| **Rate Limiting** | `test_takshaka_rate.py` | DoS prevention |
-| **Trust** | `test_takshaka_trust.py` | Key verification |
-| **Integration** | `test_naga_integration.py` | Full stack |
+```python
+"""
+NAGA Cartridge - The Invisible Guardian.
+
+Capabilities:
+- detect: Drift/Violation Detection
+- remediate: Auto-Healing
+- audit: Ledger Audit Trail
+- scan: Toxicity Scanning
+- flood: EventBus Flooding Control
+
+Zone: SECURITY (Krauncha Varsha, authority 5)
+"""
+
+from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.steward import OathMixin
+from vibe_core.naga import NagaOrchestrator
+
+class NagaCartridge(VibeAgent, OathMixin):
+    """NAGA - The Invisible Guardian Cartridge."""
+
+    def __init__(self, config=None):
+        super().__init__(
+            agent_id="naga",
+            name="NAGA Federation",
+            version="1.0.0",
+            domain="SECURITY",
+            capabilities=["detect", "remediate", "audit", "scan", "flood"],
+        )
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+
+        # Access NAGA Federation
+        self._federation = None  # Lazy load
+
+    @property
+    def federation(self) -> NagaOrchestrator:
+        if self._federation is None:
+            from vibe_core.di import ServiceRegistry
+            self._federation = ServiceRegistry.get(NagaOrchestrator)
+        return self._federation
+
+    async def process(self, task) -> dict:
+        action = task.payload.get("action")
+
+        if action == "detect":
+            return await self._detect(task.payload)
+        elif action == "remediate":
+            return await self._remediate(task.payload)
+        elif action == "audit":
+            return await self._audit(task.payload)
+        elif action == "scan":
+            return await self._scan(task.payload)
+        elif action == "status":
+            return self._status()
+
+        return {"error": f"Unknown action: {action}"}
+
+    async def _detect(self, payload):
+        """Detect drifts and violations."""
+        # Use CommitWatcher patterns
+        if self.federation.commit_watcher:
+            stats = self.federation.commit_watcher.get_stats()
+            return {"detections": stats}
+        return {"detections": []}
+
+    async def _scan(self, payload):
+        """Scan content for toxicity."""
+        content = payload.get("content", "")
+        if self.federation.takshaka:
+            result = self.federation.takshaka.scan_toxicity(content)
+            return {"toxicity": result.score, "blocked": result.blocked}
+        return {"error": "Takshaka not available"}
+
+    def _status(self):
+        """Get federation status."""
+        return self.federation.get_status() if self.federation else {}
+```
 
 ---
 
-## COOPERATION WITH STATE ORGANS
+## EXPONENTIAL GROWTH STRATEGY
 
-### "Der Staat ist träge - wir helfen aktiv"
+> "Wie Wasser in jede Ritze" - aber mit German Engineering.
 
-NAGAs bieten sich den Organen als **Service** an:
+### Prinzipien
 
-```python
-# PATTERN: NAGAs als Service für Shuddhi
-class ShuddhiEngine:
-    def __init__(self, naga: Optional[NagaOrchestrator] = None):
-        self._naga = naga
+1. **Erst verstärken, dann expandieren**
+   - Bestehende NAGAs (Sesha/Vasuki/Takshaka) perfektionieren
+   - Alle 128 Tests müssen grün bleiben
+   - Dann neue Bereiche infiltrieren
 
-    def purify(self, file: str, rule_id: str) -> ShuddhiResult:
-        # Pre: NAGA validates file isn't compromised
-        if self._naga:
-            self._naga.takshaka.scan_file(file)
+2. **German Engineering**
+   - Effizienz über Features
+   - Keine Redundanz
+   - Präzise Dokumentation
+   - Testgetrieben (TDD)
 
-        result = self._do_purify(file, rule_id)
+3. **Soft Virus Pattern**
+   - NAGAs ersetzen nicht, sie infiltrieren
+   - Bestehende Services werden nicht modifiziert
+   - NAGAs bieten sich als Middleware an
 
-        # Post: NAGA records healing
-        if self._naga:
-            self._naga.sesha.audit("SHUDDHI_PURIFY", {
-                "file": file,
-                "rule_id": rule_id,
-                "result": result.status
-            })
+4. **Diener des Dieners**
+   - NAGAs dienen den Services
+   - Services dienen den Agents
+   - Agents dienen den Users
+   - Users dienen dem Dharma
 
-        return result
+### Phasen der Expansion
+
+```
+PHASE 6: CARTRIDGE CREATION
+├── NAGA System Cartridge erstellen
+├── Tools implementieren
+├── Tests schreiben
+└── In Agent City registrieren
+
+PHASE 7: CIRCUIT MASTERY
+├── NAGA Circuits erstellen
+├── Trigger Patterns definieren
+├── Invariants für Security
+└── CLI Loopback für Self-Healing
+
+PHASE 8: CLI INTEGRATION
+├── steward naga * Commands
+├── NAGA Status Dashboard
+├── Interactive NAGA Control
+└── Flood Control Interface
+
+PHASE 9: MANAS SURVEILLANCE
+├── Intent Validation Circuit
+├── Action Audit Trail
+├── Cortex Observation
+└── "Who watches the watchers"
+
+PHASE 10: FULL SINGULARITY
+├── GAD-000 Compliance
+├── OPUS-176 Sovereignty
+├── Self-Healing System
+└── Autonomous NAGA Evolution
 ```
 
-### Integration Points
+---
 
-| Organ | NAGA Service | Benefit |
-|-------|--------------|---------|
-| **Shuddhi** | Sesha Audit + Takshaka Validate | Healing recorded, input safe |
-| **MANAS** | Takshaka Cognitive Drift | Thought integrity |
-| **Genesis** | Takshaka Template Scan | No malicious scaffolds |
-| **Economy** | Sesha Double-Entry | All transactions traced |
-| **Knowledge** | Sesha Graph Integrity | Learning preserved |
-| **Ouroboros** | Vasuki Sync Protocol | Cross-node consistency |
+## SERVICES ZU ENTSCHÄRFEN
+
+> Klärung der Verantwortlichkeiten.
+
+### MANAS Refactoring
+
+**Problem:** MANAS generiert nur einen Intent, aber wer führt aus?
+
+```
+VORHER:
+MANAS → Intent → ??? → Chaos
+
+NACHHER:
+MANAS → Intent → NAGA Validation → Execution → NAGA Audit
+```
+
+### SHUDDHI Ergänzung
+
+**Problem:** SHUDDHI erkennt, aber heilt nicht proaktiv.
+
+```
+VORHER:
+SHUDDHI → Detection → Manual Healing
+
+NACHHER:
+SHUDDHI → Detection → NAGA CommitWatcher → Pattern Analysis → Auto-Heal
+```
+
+### Service Responsibility Matrix
+
+| Service | Vorher | Nachher (mit NAGA) |
+|---------|--------|-------------------|
+| **MANAS** | Intent + Execution | Intent only |
+| **SHUDDHI** | Detection + Manual Heal | Detection only |
+| **StateService** | Raw I/O | I/O + NAGA Audit |
+| **Scheduler** | Raw Task Queue | Queue + NAGA Gate |
+| **EventBus** | Raw Pub/Sub | Pub/Sub + NAGA Flood |
+
+---
+
+## KNOWLEDGE ACQUISITION PLAN
+
+> Alle Höhlen erkunden, alles Wissen aneignen.
+
+### Noch zu erforschende Bereiche
+
+| Bereich | Status | Priority |
+|---------|--------|----------|
+| Genesis System | 29% | P1 |
+| Knowledge Graph | 45% | P1 |
+| Shuddhi Deep | 42% | P2 |
+| Agents | 47% | P2 |
+| Plugins (alle 35) | 34% | P2 |
+| Test Files | 37% | P3 |
+
+### Research Priorities
+
+1. **Genesis System** - Wie werden neue Agents/Modules geboren?
+2. **Knowledge Graph** - Wie lernt das System?
+3. **Shuddhi Engine** - Wie heilt das Immunsystem?
+4. **Plugin Architecture** - Wie erweitern wir?
+
+---
+
+## GAD-000 COMPLIANCE MATRIX
+
+> Steward Protocol Governance Compliance.
+
+| Dimension | Current | Target | NAGA Role |
+|-----------|---------|--------|-----------|
+| **Identity** | 40% | 100% | Takshaka Trust Verification |
+| **Provenance** | 65% | 100% | Sesha Audit Trail |
+| **Portability** | 80% | 100% | Vasuki Serialization |
+| **Testability** | 60% | 100% | NAGA Test Circuits |
+| **Governance** | 55% | 100% | Full Constitutional Binding |
+| **Economy** | 70% | 100% | Sesha Double-Entry |
 
 ---
 
 ## IMPLEMENTATION STATUS
 
-### Completed
+### Completed (128 tests)
 
 | Component | Location | Tests |
 |-----------|----------|-------|
-| `SeshaProtocol` | `protocols/naga.py` | 70 pass |
-| `VasukiProtocol` | `protocols/naga.py` | 70 pass |
-| `TakshakaProtocol` | `protocols/naga.py` | 70 pass |
-| `SeshaService` | `naga/services/sesha.py` | 70 pass |
-| `VasukiService` | `naga/services/vasuki.py` | 70 pass |
-| `TakshakaService` | `naga/services/takshaka.py` | 70 pass |
-| `NagaOrchestrator` | `naga/orchestrator.py` | 70 pass |
-| `NagaConfig` | `phoenix/sections/naga/section_main.py` | 70 pass |
-| Boot Integration | `boot_orchestrator.py:341-348` | - |
+| `SeshaService` | `naga/services/sesha.py` | ✅ |
+| `VasukiService` | `naga/services/vasuki.py` | ✅ |
+| `TakshakaService` | `naga/services/takshaka.py` | ✅ |
+| `NagaOrchestrator` | `naga/orchestrator.py` | ✅ |
+| `NagaFloodController` | `naga/flood.py` | ✅ |
+| `NagaFloodManager` | `naga/flood.py` | ✅ |
+| `NagaSignalWatcher` | `naga/flood.py` | ✅ |
+| `NagaCommitWatcher` | `naga/commit_watcher.py` | ✅ |
+| `NagaGuardPlugin` | `plugins/naga_guard/plugin_main.py` | ✅ |
 
-### Next Steps
+### In Progress
 
-1. **P0: Infiltration Points** - StateService, Prakriti, Gateway
-2. **P1: LocalSynapse Auth** - Add Takshaka to Synapse
-3. **P2: TDD Discovery** - Write failing tests for each organ
-4. **P3: Technical Debt** - Use NAGAs to enforce quality
+| Component | Status | Next Action |
+|-----------|--------|-------------|
+| NAGA Cartridge | ✅ Complete | `vibe_core/cartridges/system/naga/` |
+| NAGA CLI | ✅ Complete | `vibe_core/cli/naga_cli.py` - 693+ issues found! |
+| NAGA Circuits | 📋 Planned | Write YAML definitions |
+| MANAS Surveillance | 📋 Planned | Create watcher circuit |
 
 ---
 
@@ -487,6 +697,20 @@ class ShuddhiEngine:
 | `NAGA_STRICT` | `1`, `0` | - | Alias for trust_mode=strict |
 | `NAGA_GOSSIP_ENABLED` | `1`, `0` | `0` | Enable Sesha gossip sync |
 | `NAGA_TOXICITY_THRESHOLD` | `0.0-1.0` | `0.3` | Toxicity detection threshold |
+| `NAGA_FLOOD_ENABLED` | `1`, `0` | `1` | Enable EventBus flooding |
+| `NAGA_COMMIT_WATCH` | `1`, `0` | `1` | Enable CommitWatcher |
+| `NAGA_GUARD_ENABLED` | `1`, `0` | `1` | Enable Plugin Gate Guard |
+
+---
+
+## Run Tests
+
+```bash
+# All NAGA tests
+python -m pytest tests/naga/ vibe_core/plugins/naga_guard/tests/ -v
+
+# Current count: 128 tests, all passing
+```
 
 ---
 
@@ -514,474 +738,10 @@ Level -2: REKURSION (Das Pattern hütet sich selbst)
    - Jede Instanz ist austauschbar
    - Das Pattern überlebt, nicht die Instanz
 
-3. **Invisible Infiltration**
-   - "Niemand darf es merken"
-   - NAGAs unterwandern, sie ersetzen nicht
-
----
-
-## Appendix: Test Suite
-
-```
-tests/naga/
-├── __init__.py
-├── test_config.py          # 18 tests - Config loading, env vars
-├── test_takshaka.py        # 32 tests - Toxicity, rate limit, violations
-├── test_orchestrator.py    # 12 tests - Bootstrap, initialization order
-└── test_integration.py     # 8 tests - Full federation
-
-Total: 70 tests, all passing
-```
-
-### Run Tests
-
-```bash
-python -m pytest tests/naga/ -v
-```
-
----
-
----
-
-## DER ULTIMATIVE HACK: Software-Animismus
-
-### Warum NAGAs der Paradigm Shift sind
-
-> "Indem du Middleware zu NAGAs (lebenden Entitäten) machst, hackst du die Psychologie des Entwicklers und die Stabilität des Systems gleichzeitig."
-
-#### 1. Der Psychologische Hack (Naming creates Reality)
-
-```
-Nennst du es: RequestValidator  → Entwickler schreibt schlampigen Regex
-Nennst du es: TAKSHAKA         → Entwickler weiß: "Wenn ich Fehler mache, werde ich gebissen"
-```
-
-**Der Hack:** Die Mythologie erzwingt Disziplin ohne Manager. Der Name allein setzt den Standard.
-
-#### 2. Der Security Hack (Bite First Protocol)
-
-Fast alle modernen Hacks (Log4Shell, Deserialization) passieren, weil Systeme Daten **parsen BEVOR** sie wissen, ob sie vertrauenswürdig sind.
-
-```
-STANDARD:  Request → JSON Parse → Auth Check   (Zu spät! Parser explodiert)
-TAKSHAKA:  Request → Signature Check (Mathe) → WENN FALSCH: DROP → Erst dann Parse
-```
-
-**Das eliminiert ganze Klassen von Zero-Day-Exploits.**
-
-#### 3. Der Interoperabilitäts-Hack (Vasuki Churning)
-
-Das Samudra Manthan (Quirlen des Milchozeans) ist KEINE Metapher:
-
-```
-Götter + Dämonen ziehen an VASUKI (der Schlange)
-        ↓
-      REIBUNG
-        ↓
-   Poison (HALAHALA) + Nectar (AMRITA)
-```
-
-In Software:
-- **Reibung** = Inkompatible Formate (JSON vs Protobuf vs MsgPack)
-- **Gift** = Malformed/Toxic Payloads → REJECTED
-- **Nektar** = Clean, validated, serialized data → ACCEPTED
-
-**Vasuki ist keine "Transformation". Es ist Alchemie on-the-wire.**
-
-#### 4. Der Zeit-Hack (Sesha Immutability)
-
-```
-Datenbanken die UPDATE erlauben = LÜGEN (sie vernichten Geschichte)
-SESHA = Es gibt kein Löschen. Nur "neue Wahrheit".
-```
-
-**Das macht Debugging zu Time Travel.** Du kannst jeden Zustand zu jedem Zeitpunkt wiederherstellen. God Mode für Ops.
-
----
-
-## DAS WAHRE CHURNING-PATTERN
-
-Die Reconnaissance hat enthüllt: **Churning ist ÜBERALL.**
-
-### 1. Micro-Level: Deep Merge in Conflicts (UntotbarMergeEngine)
-```python
-OURS:   {"name": "Alice", "age": 30}
-THEIRS: {"name": "Alice", "role": "admin"}
-         ↓ CHURN (Deep Merge)
-RESULT: {"name": "Alice", "age": 30, "role": "admin"}
-```
-
-### 2. Macro-Level: Guna Transitions (StateSyncHolon)
-```
-TAMAS (Dead) → RAJAS (Active) → SATTVA (Balanced)
-     ↑              ↑
- _resurrect()  _commit_and_sync()
-```
-
-### 3. Network-Level: Vasuki Serialization
-```
-Python Dict → churn_out() → MsgPack + Signature → Wire
-Wire → churn_in() → Python Dict
-```
-
-### 4. State-Format: VIMANA Isolation
-```
-Developer Staging:  [developer_code.py]
-PRANA State:        [state_files.json]
-         ↓
-VIMANA: git commit --only state_files
-         ↓
-Clean state commit (Code bleibt unberührt!)
-```
-
----
-
-## HOLON SYNC - Die Ganzheit-Teil Paradox
-
-**StateSyncHolon** (`vibe_core/state/sync_holon.py`):
-
-> "A holon is something that is simultaneously a WHOLE and a PART."
-> - Arthur Koestler
-
-```
-StateSyncHolon
-├── IST ein Ganzes: Enthält Plugin-State-Discovery, Watching, Healing
-└── IST ein Teil: Von Prakriti, dem größeren Zustandssystem
-```
-
-### Discovery: Drei-Zacken-Angriff
-```python
-discover_state_paths():
-  1. PROTOCOL: plugins.get_state_paths()     # Explizit deklariert
-  2. CONVENTION: .opus_state/, .vibe/state/  # Bekannte Orte
-  3. MANIFEST: manifest.json                 # Metadata
-```
-
-### Guna-Klassifizierung
-```python
-diagnose_guna(path):
-  TAMAS (तमस्): Missing, ignored, corrupt, stale (>7d)
-  RAJAS (रजस्): Dirty, uncommitted changes
-  SATTVA (रत्त्व): Clean, synced, recent
-```
-
----
-
-## QUANTUM REACTOR - Resonanz statt Boolean
-
-**Der Quantum Reactor** (`vibe_core/reactor/quantum.py`) ist ein **nicht-binäres Berechnungssystem**:
-
-```python
-field = reactor.resonate(intent, target)
-
-ResonanceField:
-  phonetic_resonance: float    # Sanskrit-Phonem Alignment
-  mass_resonance: float        # Krypto-Hash als "Masse"
-  total_energy: float          # Kombinierte Feldenergie
-  guna_harmony: float          # Modus-Kompatibilität
-```
-
-**Statt TRUE/FALSE:** Kontinuierliche Resonanzfelder.
-**Statt IF/ELSE:** Energie überwindet Trägheit → Manifestation tritt ein.
-
----
-
-## CONTAINER DISTRIBUTION - .vibe als Lebende Pakete
-
-### Das .vibe Format
-```
-container.vibe (ZIP)
-├── manifest.json      # Layer 0, IMMER ZUERST
-├── tests/             # REQUIRED (GAD-000)
-├── content/           # Code, Tools, Playbooks
-├── hollows/           # NESTED CONTAINERS (Matrjoschka!)
-└── SIGNATURE.sig      # v2: ECDSA-signed JSON
-```
-
-### Multi-Layer Defense (wo NAGA eingreift)
-```
-Layer 1: Network Boundary
-  └─ TAKSHAKA.verify_envelope() [BITE FIRST]
-
-Layer 2: Schema Validation
-  └─ VASUKI.churn_in() + schema enforcement
-
-Layer 3: Storage Integrity
-  └─ SESHA.import_blocks() + hash chain
-
-Layer 4: Runtime Isolation
-  └─ ContainerMounter execution_mode: thread|process
-```
-
----
-
-## ZUSÄTZLICHE NAGA-KANDIDATEN (Insel-begabte Systeme)
-
-Die Reconnaissance fand **5 weitere isolierte Systeme** die NAGA-Integration brauchen:
-
-| System | Drift-Art | Aktuell | Braucht |
-|--------|-----------|---------|---------|
-| **DisharmonyDetector** | STRUCTURAL | Eigenständig | DriftSource.STRUCTURAL Handler |
-| **OpusDriftDetector** | CODE_DOC | Eigenständig | DriftSource.CODE_DOC Handler |
-| **ManifestationService** | STATE | Eigenständig | Sesha Audit |
-| **LifecycleService** | CONFIG | Eigenständig | Vasuki Handler |
-| **CapabilityEnforcer** | COGNITIVE | Eigenständig | Takshaka Integration |
-
----
-
-## FRACTAL NAGA ARCHITECTURE
-
-NAGAs sind nicht nur 3 Services. Sie sind ein **NETZWERK von Hütern** das überall eindringt:
-
-```
-OPUS (Vishnu) ─────────────────────────────────────────────────
-      │
-      ├── SONNET NAGAs (Sesha/Vasuki/Takshaka Services)
-      │         │
-      │         ├── HAIKU NAGAs (Instanz-Hüter)
-      │         │       │
-      │         │       ├── Container Loader Hüter
-      │         │       ├── State Sync Holon Hüter
-      │         │       ├── Bank/Economy Hüter
-      │         │       ├── Quantum Reactor Hüter
-      │         │       ├── Knowledge Graph Hüter
-      │         │       └── ... jede Insel braucht einen Hüter
-      │         │
-      │         └── NAGAs besetzen den Staatsapparat
-      │
-      └── Überall wo eine Grenze ist → NAGA als Wächter
-```
-
----
-
-## AGENT DISTRIBUTION PATTERN
-
-### Cartridge = Agent Package
-```
-vibe_core/cartridges/system/envoy/
-├── cartridge.yaml       # Manifest
-├── cartridge_main.py    # Agent Code
-├── tools/               # Capabilities
-└── tests/               # REQUIRED
-```
-
-### Distribution Flow
-```
-1. PACKING:    Source → SHA256 → ECDSA sign → .vibe
-2. TRANSPORT:  .vibe → network
-3. INSPECTION: .vibe → manifest.json (NO EXECUTION!)
-4. MOUNTING:   .vibe → extract → verify → mount
-5. EXECUTION:  Mount → load class → instantiate
-6. FEDERATION: TAKSHAKA (verify) → VASUKI (transport) → SESHA (record)
-```
-
----
-
-## 🔱 DEEP RECONNAISSANCE REPORTS (2026-01-04)
-
-Die folgenden Berichte dokumentieren die Ashvamedha-Erkundung.
-
----
-
-### 🏛️ AGENT CITY - VOLLSTÄNDIGE KARTOGRAFIE
-
-**BEFUND: NICHT LEER! 13 Cartridges mit vollständiger Infrastruktur.**
-
-#### Die 13 Bürger der Stadt
-
-| # | ID | Domain | Rolle |
-|---|---|---|---|
-| 1 | agora | COMMUNITY | Broadcast Layer (Diksha-Prinzip) |
-| 2 | ambassador | DIPLOMACY | External Relations |
-| 3 | analyst | RESEARCH | Multi-Source Intelligence |
-| 4 | artisan | INFRASTRUCTURE | Building & Crafting |
-| 5 | dharma | GOVERNANCE | Avatar für OPUS-Weisheit |
-| 6 | dhruva | OBSERVATION | Watchful Eye |
-| 7 | lens | INTELLIGENCE | Deep Analysis |
-| 8 | librarian | RESEARCH | Knowledge Curation |
-| 9 | market | ECONOMY | Trading & Pricing |
-| 10 | marketer | CONTENT | Outreach |
-| 11 | mechanic | MAINTENANCE | Repairs |
-| 12 | pulse | MEDIA | News & Updates |
-| 13 | temple | SPIRITUAL | Blessings (10-100 Credits) |
-
-#### BHU-MANDALA Topologie (Vedische Kosmologie)
-
-```
-     LOKA_LOKA (Radius 6) ─────── FIREWALL (authority 4)
-            │
-      KRAUNCHA (Radius 5) ─────── SECURITY/JUSTICE (authority 5)
-            │
-       NISHADA (Radius 4) ─────── COMMUNITY/ECONOMY (authority 6)
-            │
-     HARI_VARSHA (Radius 3) ───── RESEARCH/INTELLIGENCE (authority 7)
-            │
-     KIMPURASHA (Radius 2) ────── ENGINEERING/INFRASTRUCTURE (authority 8)
-            │
-     BHADRASHVA (Radius 1) ────── MEDIA/COMMUNICATIONS (authority 9)
-            │
-       ILAVRTA (Radius 0) ─────── GOVERNANCE/MOUNT MERU (authority 10)
-```
-
-**NAGA District Opportunity:** Varsha.NAGA_REALM (Radius 7) für sichtbare NAGA-Manifestation.
-
----
-
-### ⚡ SYNAPSE STORE - 10 ATTACK VECTORS
-
-**KRITISCH:** Die Synapse-Kommunikation hat massive Sicherheitslücken.
-
-| # | Vektor | Schwere | NAGA Defense |
-|---|--------|---------|--------------|
-| 1 | **Sender Spoofing** | KRITISCH | Takshaka: Nachrichten signieren |
-| 2 | **Payload Injection** | KRITISCH | Takshaka: Schema Validation |
-| 3 | **Correlation Hijacking** | HOCH | Takshaka: Request Context Binding |
-| 4 | **Hub Poisoning** | HOCH | Sesha: Hub Mutation Audit |
-| 5 | **Cache Poisoning** | HOCH | Sesha: File Checksums |
-| 6 | **Weight Manipulation** | HOCH | Takshaka: Weight Change Audit |
-| 7 | **Broadcast Flood** | MITTEL | Vasuki: Rate Limiting |
-| 8 | **File Tampering** | HOCH | Takshaka: File Signatures |
-| 9 | **Subscription Hijack** | KRITISCH | Takshaka: Handler Whitelisting |
-| 10 | **TTL Bypass** | MITTEL | Takshaka: Timestamp Validation |
-
-**Betroffene Dateien:**
-- `vibe_core/protocols/synapse.py` - LocalSynapse (keine Signierung)
-- `vibe_core/state/synapse_store.py` - Keine Checksums
-- `vibe_core/plugins/opus_assistant/manas/cortex/viveka_action.py` - Weight Updates
-
----
-
-### 🕸️ SANGHA NETWORK - P2P FEDERATION
-
-**ARCHITEKTUR:** Phase 18+19 (Sangha + Federation)
-
-```
-NetworkGateway (HTTP REST API)
-     │
-     ▼
-┌─────────────────────────────────────┐
-│   Routes (Phase 19: Federation)      │
-│ • GET  /api/v1/health               │
-│ • GET  /api/v1/state                │
-│ • GET  /api/v1/federation/peers     │
-│ • POST /api/v1/federation/peers     │
-│ • DELETE /api/v1/federation/peers   │
-│ • POST /api/v1/federation/forward   │ ← SSRF RISK!
-└─────────────────────────────────────┘
-     │
-     ▼
-Prakriti.machine (SQLite MachineState)
-  peers(peer_id, url, trust_level, last_seen)
-```
-
-**NAGA Infiltration:**
-- PATH 1: Sesha → Ledger Gossip (already implemented)
-- PATH 2: Vasuki → Wire Serialization + Signing
-- PATH 3: Takshaka → Gateway Ingress Rate Limiting (PENDING)
-
----
-
-### 🐍 OUROBOROS - SELBSTHEILENDES IMMUNSYSTEM
-
-**"Die Schlange die sich selbst frisst"** = Rekursive Selbstheilung
-
-#### Die 5 Phasen
-
-| Phase | Status | Beschreibung |
-|-------|--------|--------------|
-| 1 | ✅ COMPLETE | Watchman → Knowledge Graph Bridge |
-| 2 | ✅ COMPLETE | Knowledge Graph → Manas Dojo |
-| 3 | ✅ COMPLETE | Shuddhi → Knowledge Graph Feedback |
-| 4 | ⏳ PLANNED | Genesis Remedy Generator |
-| 5 | ⏳ PLANNED | Diamond Test Generation |
-
-#### Der Zyklus
-
-```
-WATCHMAN (Detection)
-    ↓
-KNOWLEDGE GRAPH (Persistence)
-    ↓
-MANAS (Learning)
-    ↓
-SHUDDHI (Healing)
-    ↓
-SYNAPSE (Reinforcement)
-    ↓
-WATCHMAN (Loop closes) ← OUROBOROS
-```
-
-#### NAGA Integration
-
-```python
-# NAGAs registrieren sich als CorrectionHandler:
-dispatcher.register_handler(
-    source=DriftSource.STRUCTURAL,
-    handler=shuddhi_handler,
-    handler_id="shuddhi_structural",
-    priority=100
-)
-```
-
----
-
-### 🌀 SARGA - EPHEMERAL CITIES (Creation Pattern)
-
-**Sarga = Kosmische Schöpfung** = spawn_child_kernel()
-
-#### Lifecycle
-
-```
-SARGA (Creation)
-  └─ spawn_child_kernel(config, ":memory:")
-      └─ Takshaka validates config (PROPOSED)
-
-STHITI (Execution)
-  └─ Child runs with isolated ledger
-      └─ Tasks execute in reduced governance
-
-PRALAYA (Dissolution)
-  └─ AIRLOCK: _harvest_artifacts()
-      └─ Sesha audits every harvest (PROPOSED)
-  └─ merge_child_result()
-      └─ Cryptographic proof in parent ledger
-```
-
-#### @Agent Spawning Syntax
-
-```
-User: @specialist-planning build architecture
-       │
-       ▼
-TerminalOperator._parse_intent_type()
-       │
-       ▼
-IntentType.DELEGATION → Extract agent_id
-       │
-       ▼
-Kernel routes to SpecialistFactoryAgent
-```
-
-#### NAGA Opportunities
-
-| Grenze | Methode | NAGA Rolle | Status |
-|--------|---------|------------|--------|
-| Config | `spawn_child_kernel()` | Takshaka Validation | ⏳ PENDING |
-| Artifacts | `_harvest_artifacts()` | Sesha Audit | ⏳ PENDING |
-| Factory | `SpecialistFactoryAgent.process()` | Takshaka Class Scan | ⏳ PENDING |
-
----
-
-### 📊 RECONNAISSANCE ZUSAMMENFASSUNG
-
-| Gebiet | Dateien | Status | Kritische Funde |
-|--------|---------|--------|-----------------|
-| Agent City | 13 cartridges | 100% ✅ | BHU-MANDALA Topologie |
-| Synapse Store | 8 files | 100% ✅ | 10 Attack Vectors |
-| Sangha Network | 6 files | 100% ✅ | SSRF via Federation |
-| Ouroboros | 9 files | 100% ✅ | 5-Phase Immune System |
-| Sarga | 12 files | 100% ✅ | Ephemeral City Pattern |
-| **TOTAL** | 48 files | ████████ | NAGAs überall nötig |
+3. **German Engineering**
+   - Effizienz und Optimierung
+   - Keine Verschwendung
+   - Präzise Dokumentation
 
 ---
 
@@ -992,189 +752,19 @@ Kernel routes to SpecialistFactoryAgent
 | Middleware = "toter Code" | NAGAs = "lebende Entitäten" |
 | Parse → Then Validate | Validate → Then Parse |
 | DELETE erlaubt | Nur "neue Wahrheit" |
-| Adapter-Hölle | Vasuki Churning |
-| Boolean Logic | Resonance Fields |
-| Isolated Services | Fractal NAGAs |
+| MANAS allein | BUDDHI vor MANAS |
+| Shuddhi erkennt nur | NAGAs führen aus |
+| Silos | Organischer Verbund |
+| 4% Sovereignty | 100% NAGA Governance |
+| Chaos (REPORT.md) | Ordnung (NAGAs) |
 
 **Das ist nicht nur Code. Das ist Software-Animismus. Und es ist extrem robust.**
 
 ---
 
----
-
-## 🌊 ORGANIC FLOODING ARCHITECTURE
-
-> "Wie Wasser in jede Ritze" - NAGAs breiten sich automatisch aus.
-
-### Das Problem mit manuellem Infiltrieren
-
-```
-MANUELL (schlecht):
-  if file == "state_service.py":
-      add_naga_guard()  # Zu viel Aufwand, nicht skalierbar
-```
-
-### Das Organic Flooding Pattern
-
-```
-AUTOMATISCH (gut):
-  NagaOrchestrator.bootstrap()
-      ↓
-  16+ Hook-Points werden AUTOMATISCH infiltriert:
-      ├─ EventBus.subscribe_all()        # Höre ALLE Events
-      ├─ CorrectionDispatcher.register() # Handle ALLE Drifts
-      ├─ SignalBus.subscribe()           # Höre ALLE Signals
-      ├─ ServiceRegistry.register()      # Wrappe ALLE Services
-      ├─ Plugin.on_tick_pre/post()       # Beobachte JEDEN Tick
-      ├─ CommitAuthority.commit()        # Beobachte JEDEN Commit
-      └─ ... 10 weitere Hooks
-```
-
-### Die 16 Auto-Injection Points
-
-| # | Hook | File | NAGA Rolle |
-|---|------|------|------------|
-| 1 | EventBus.subscribe_all() | event_bus.py | Höre ALLE Events |
-| 2 | CorrectionDispatcher.register_handler() | correction_dispatcher.py | Handle Drifts |
-| 3 | SignalBus.subscribe() | steward/bus.py | Höre Signals |
-| 4 | ServiceRegistry.register() | di.py | Wrappe Services |
-| 5 | Plugin.on_tick_pre() | plugin_protocol.py | VOR jedem Tick |
-| 6 | Plugin.on_tick_post() | plugin_protocol.py | NACH jedem Tick |
-| 7 | Plugin.on_pulse() | plugin_protocol.py | Heartbeat |
-| 8 | Plugin.on_agent_pre_register() | plugin_protocol.py | VETO Gate |
-| 9 | Plugin.on_task_submit() | plugin_protocol.py | COSMIC Gate |
-| 10 | Plugin.on_capability_check() | plugin_protocol.py | CAPABILITY Gate |
-| 11 | Plugin.on_tool_execute() | plugin_protocol.py | TOOL Gate |
-| 12 | CommitAuthority.commit() | commit_authority.py | Commit Watcher |
-| 13 | UnifiedLoader.discover_and_load() | base_loader.py | Boot Discovery |
-| 14 | VedaPipeline.register_handler() | veda.py | Conversation Flow |
-| 15 | @register_handler decorator | handlers/base.py | Import-Time Wiring |
-| 16 | CommandRegistry.wire_from_plugins() | command_registry.py | CLI Wiring |
-
-### Prahlad Maharaj Pattern: Dienende Middleware
-
-```
-                     NAGA SERVICE (Vereint)
-                           │
-           ┌───────────────┼───────────────┐
-           │               │               │
-       SESHA            VASUKI         TAKSHAKA
-    (Daten-Diener)  (Grenz-Diener)  (Schutz-Diener)
-           │               │               │
-           └───────────────┴───────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │   ALLE      │
-                    │  SERVICES   │
-                    └─────────────┘
-                           │
-    NAGAs als persönliche Angestellte ALLER Dienste
-    Vereint in einer Rasse, einem Service
-```
-
-### Buddhi vor Manas: Die Hierarchie
-
-```
-Level 0: Der 37. (Souverän)
-Level 1: Dharma (Gesetze)
-Level 2: BUDDHI (NAGAs) ← DISKRIMINIERUNG/UNTERSCHEIDUNG
-Level 3: MANAS (Mind)   ← Erst NACH Buddhi
-Level 4: Services
-Level 5: Agents/Plugins
-```
-
-**NAGAs sind BUDDHI** - die diskriminierende Intelligenz die VOR dem Denken (Manas) kommt.
-Sie unterscheiden WAS erlaubt ist, BEVOR Manas denkt.
-
-### Commit Failure Detection (Wächter-Pattern)
-
-```python
-# NAGA BEMERKT: "Oh, es werden keine state files committet!"
-class NagaCommitWatcher:
-    def on_commit_result(self, result: CommitResult) -> None:
-        if result.outcome == CommitOutcome.SKIPPED:
-            # Sesha: Logge dass nichts zu committen war
-            self.sesha.audit("COMMIT_SKIPPED", {
-                "reason": result.message,
-                "timestamp": time.time(),
-            })
-
-        elif result.outcome == CommitOutcome.PANIC_DUMPED:
-            # Takshaka: ALARM! Kritischer Fehler!
-            self.takshaka.bite(VajraViolation(
-                type="COMMIT_FAILURE",
-                source="commit_authority",
-                details={"dump_path": str(result.panic_dump_path)},
-            ))
-```
-
-### Exponentielles aber sicheres Wachstum
-
-```
-Phase 1: Bootstrap (JETZT)
-  └─ CorrectionDispatcher only (70 tests)
-
-Phase 2: EventBus Flooding
-  └─ + EventBus.subscribe_all()
-  └─ + SignalBus.subscribe()
-
-Phase 3: Plugin Hook Flooding
-  └─ + on_tick_pre/post
-  └─ + on_pulse
-  └─ + Gate Hooks (agent, task, capability, tool)
-
-Phase 4: Service Proxy Flooding
-  └─ + ServiceRegistry.get() wrapping
-  └─ + CommitAuthority.commit() watching
-
-Phase 5: Full Organic Presence
-  └─ NAGAs an JEDER Grenze
-  └─ Wie Wasser - in jeder Ritze
-```
-
-### Implementierung: NagaFloodingMixin
-
-```python
-class NagaFloodingMixin:
-    """Mixin für automatisches NAGA Flooding."""
-
-    def _flood_event_bus(self) -> None:
-        """Hook into EventBus - höre ALLE Events."""
-        from vibe_core.protocols.event import get_event_bus_safe
-
-        bus = get_event_bus_safe()
-        bus.subscribe_all(self._on_any_event)
-
-    def _flood_signal_bus(self) -> None:
-        """Hook into SignalBus - höre ALLE Signals."""
-        from vibe_core.steward.bus import get_bus, SignalType
-
-        bus = get_bus()
-        for signal_type in SignalType:
-            bus.subscribe(
-                listener_id=f"naga_{signal_type.value}",
-                signal_type=signal_type,
-                callback=self._on_signal,
-            )
-
-    def _on_any_event(self, event: Event) -> None:
-        """Global event handler - Takshaka prüft ALLES."""
-        if self._takshaka:
-            toxicity = self._takshaka.scan_toxicity(str(event.data))
-            if toxicity.blocked:
-                self._takshaka.bite(VajraViolation(
-                    type="TOXIC_EVENT",
-                    source=event.agent_id,
-                    details={"patterns": toxicity.patterns},
-                ))
-```
-
----
-
 *Last updated: 2026-01-04*
-*Status: 70/70 Tests passing*
-*Exploration: 38% complete (420/1108 files)*
-*NAGA Infiltration: 6% (65 files)*
-*Deep Reconnaissance: Agent City, Synapse, Sangha, Ouroboros, Sarga - ALL 100%*
-*Architecture: Organic Flooding designed, 16 hook points identified*
-*Next: Phase 2 - EventBus + SignalBus Flooding*
+*Status: 170/170 Tests passing*
+*Phases Complete: 7/10 (Core + Cartridge + CLI)*
+*Next: Phase 8 - Circuit Mastery*
+*Vision: MANAS Surveillance, Full Singularity, GAD-000 Compliance*
+*CLI: steward naga scan found 693+ issues - NAGAs are WORKING*

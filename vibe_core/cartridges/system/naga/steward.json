@@ -1,0 +1,55 @@
+{
+  "identity": {
+    "agent_id": "naga",
+    "name": "NAGA Federation"
+  },
+  "specs": {
+    "version": "1.0.0",
+    "domain": "SECURITY",
+    "description": "The Invisible Guardian - Executive layer between analysis and action"
+  },
+  "governance": {
+    "compliance_level": 3,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2026-01-04T00:00:00.000000Z",
+    "issuer": "passport_office"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "status",
+        "description": "Get NAGA Federation health status"
+      },
+      {
+        "name": "scan",
+        "description": "Scan content for toxicity using Takshaka"
+      },
+      {
+        "name": "detect",
+        "description": "Get drift and violation detections from CommitWatcher"
+      },
+      {
+        "name": "audit",
+        "description": "Query ledger audit trail via Sesha"
+      },
+      {
+        "name": "flood",
+        "description": "Get FloodManager observation status"
+      }
+    ]
+  },
+  "varna": {
+    "role": "Kshatriya",
+    "meaning": "Protector, not Ruler",
+    "karma": "Nishkama - Selfless action serving Dharma"
+  },
+  "federation": {
+    "components": [
+      {"name": "Sesha", "role": "Brahmana", "function": "Data foundation"},
+      {"name": "Vasuki", "role": "Vaishya", "function": "Network bridge"},
+      {"name": "Takshaka", "role": "Kshatriya", "function": "Security guardian"},
+      {"name": "FloodManager", "role": "Shudra", "function": "EventBus observation"},
+      {"name": "CommitWatcher", "role": "Shudra", "function": "Pattern detection"}
+    ]
+  }
+}
