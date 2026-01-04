@@ -260,8 +260,11 @@ class FileState:
                     if any(part in self.IGNORE_DIRS for part in parts):
                         continue
                     yield item
-        except PermissionError:
-            pass
+        except PermissionError as e:
+            # OPUS-312: Log workspace iteration failures
+            import logging
+
+            logging.getLogger("STATE").debug(f"Workspace iteration permission denied: {e}")
 
     def _hash_file(self, file_path: Path) -> str:
         """Compute MD5 hash of file contents."""
