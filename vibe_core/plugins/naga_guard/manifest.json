@@ -1,20 +1,22 @@
 {
   "id": "naga_guard",
-  "name": "NAGA Guard",
-  "version": "1.0.0",
+  "name": "NAGA Federation",
+  "version": "2.0.0",
   "type": "plugin",
   "priority": 5,
-  "description": "NAGA Federation plugin hooks - Invisible infiltration at every gate",
-  "author": "NAGA Federation",
+  "description": "NAGA Federation bootstrap + gate infiltration - The invisible guardians",
+  "author": "GAD-000",
   "depends_on": [],
   "hooks": [
     "on_boot",
     "on_shutdown",
+    "on_tick_post",
     "on_agent_pre_register",
     "on_task_submit",
     "on_task_pre_assign",
     "on_tool_execute",
     "on_tool_executed"
   ],
-  "category": "security"
+  "category": "security",
+  "enabled": true
 }
