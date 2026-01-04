@@ -568,3 +568,71 @@ class TestLedgerRecording:
         for field in fields(ResonanceDecisionRecord):
             assert field.type != "Any"
             assert "Any" not in str(field.type)
+
+    def test_real_ledger_integration(self, sample_drift):
+        """Integration test with real InMemoryLedger (not mock)."""
+        from vibe_core.ledger import InMemoryLedger
+        from vibe_core.reactor.quantum import QuantumReactor
+
+        # Use real ledger
+        ledger = InMemoryLedger()
+        assert ledger.count_events() == 0
+
+        governance = MockGovernance(ashrama=AsharamaStage.GRIHASTHA, bhakti=100)
+        reactor = QuantumReactor(initial_inertia=0.01)  # Low inertia = AUTO
+
+        resolver = QuantumHealingResolver(
+            governance=governance,
+            reactor=reactor,
+            ledger=ledger,
+        )
+
+        # Resolve should record to ledger
+        result = resolver.resolve("test_agent", sample_drift)
+        assert result == HealingStrategy.AUTO
+
+        # Verify ledger has event
+        events = ledger.get_all_events()
+        assert len(events) == 1
+
+        event = events[0]
+        assert event["event_type"] == "HEALING_RESONANCE"
+        assert event["agent_id"] == "test_agent"
+
+        # Verify details structure
+        details = event["details"]
+        assert details["event"] == "RESONANCE_DECISION"
+        assert details["drift_id"] == sample_drift.id
+        assert details["strategy"] == "auto"
+        assert details["ashrama"] == "grihastha"
+        assert details["bhakti"] == 100
+        assert details["resonance_manifested"] is True
+        assert details["resonance_energy"] > details["resonance_inertia"]
+
+    def test_multiple_resolves_create_multiple_events(self, sample_drift):
+        """Each resolve creates a separate ledger event."""
+        from vibe_core.ledger import InMemoryLedger
+
+        ledger = InMemoryLedger()
+
+        # Different governance states
+        scenarios = [
+            (AsharamaStage.BRAHMACHARI, 0),
+            (AsharamaStage.GRIHASTHA, 50),
+            (AsharamaStage.GRIHASTHA, 75),
+        ]
+
+        for ashrama, bhakti in scenarios:
+            governance = MockGovernance(ashrama=ashrama, bhakti=bhakti)
+            resolver = QuantumHealingResolver(governance=governance, ledger=ledger)
+            resolver.resolve("agent", sample_drift)
+
+        # Should have 3 events
+        events = ledger.get_all_events()
+        assert len(events) == 3
+
+        # Each with different strategy
+        strategies = [e["details"]["strategy"] for e in events]
+        assert strategies[0] == "dry_run"  # BRAHMACHARI
+        assert strategies[1] in ["manual", "dry_run"]  # Depends on resonance
+        assert strategies[2] == "manual"  # High bhakti
