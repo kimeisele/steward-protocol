@@ -996,6 +996,42 @@ VedicGovernanceProtocol          QuantumReactor
 3. **Per-drift resolution** - each drift can have different strategy based on agent state
 4. **Safe fallback** - any error → DRY_RUN (safe default)
 
+### Ledger Audit Trail (OPUS-LZ3) ✅ FIXED
+
+Every resonance decision is now recorded to VibeLedger for cryptographic proof:
+
+```python
+@dataclass
+class ResonanceDecisionRecord:
+    """Typed record - no Dict[str, Any]!"""
+    event: str                           # "RESONANCE_DECISION"
+    drift_id: str
+    drift_source: str                    # DriftSource.value
+    drift_severity: str                  # DriftSeverity.value
+    drift_rule: Optional[str]
+    strategy: str                        # HealingStrategy.value
+    ashrama: str                         # AsharamaStage.value
+    bhakti: int
+    bhakti_threshold: int
+    reason: str                          # Human-readable WHY
+    timestamp: str
+    resonance_energy: Optional[float]    # Reactor energy
+    resonance_inertia: Optional[float]   # Reactor threshold
+    resonance_manifested: Optional[bool] # energy > inertia?
+```
+
+**Query Example:**
+```python
+# Find all AUTO decisions for opus_assistant
+ledger.query(
+    event_type="HEALING_RESONANCE",
+    agent_id="opus_assistant",
+    filter=lambda r: r["details"]["strategy"] == "auto"
+)
+```
+
+**Tests:** 27 unit tests in `tests/unit/test_healing_resolver.py`
+
 ---
 
 ## P2: .opus_state → .vibe/state Migration ✅ COMPLETE
