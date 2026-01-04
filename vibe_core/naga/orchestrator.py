@@ -2,12 +2,14 @@
 NAGA Federation Orchestrator.
 
 "Niemand darf es merken" - they infiltrate invisibly.
+"Wie Wasser in jede Ritze" - organic flooding into every crack.
 
 Responsibilities:
 - Create NAGAs in correct order (Sesha -> Takshaka -> Vasuki)
 - Wire dependencies
 - Register with ServiceRegistry
 - Register handlers with CorrectionDispatcher
+- Start organic flooding (EventBus, SignalBus)
 - Provide health status
 
 Usage:
@@ -28,6 +30,7 @@ from vibe_core.protocols.naga import SeshaProtocol, TakshakaProtocol, VasukiProt
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
+    from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.naga.services.vasuki import VasukiService
@@ -50,6 +53,7 @@ class NagaOrchestrator:
         self._sesha: Optional["SeshaService"] = None
         self._vasuki: Optional["VasukiService"] = None
         self._takshaka: Optional["TakshakaService"] = None
+        self._flood_manager: Optional["NagaFloodManager"] = None
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
 
@@ -163,6 +167,22 @@ class NagaOrchestrator:
                 priority=75,
             )
             logger.info("🐍 VASUKI registered - The Bridge connects")
+
+        # 4. FLOOD MANAGER - Organic Flooding (Phase 2)
+        # "Wie Wasser in jede Ritze" - with safety guards
+        try:
+            from vibe_core.naga.flood import NagaFloodManager
+
+            self._flood_manager = NagaFloodManager(
+                sesha=self._sesha,
+                takshaka=self._takshaka,
+                enabled=True,  # TODO: Add to NagaConfig
+            )
+            self._flood_manager.start()
+            logger.info("🌊 NAGA Flood Manager started - organic flooding active")
+        except Exception as e:
+            logger.warning(f"🌊 NAGA Flood Manager failed to start: {e}")
+            # Non-critical - continue without flooding
 
         self._initialized = True
         logger.info("🐍 NAGA Federation initialized")
