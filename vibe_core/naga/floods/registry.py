@@ -50,6 +50,7 @@ def is_flooded(cls: Type) -> bool:
 
 def _register_all_floods() -> None:
     """Register all known flood classes."""
+    # OUROBOROS
     try:
         from vibe_core.naga.floods.ouroboros import FloodedCISyncService
         from vibe_core.ouroboros.sync import CISyncService
@@ -58,9 +59,23 @@ def _register_all_floods() -> None:
     except ImportError as e:
         logger.debug(f"FLOOD REGISTRY: Could not register ouroboros floods: {e}")
 
-    # Future floods will be registered here:
-    # from vibe_core.naga.floods.plugin_service import FloodedPluginService
-    # register_flood(PluginService, FloodedPluginService)
+    # PluginService
+    try:
+        from vibe_core.naga.floods.plugin_service import FloodedPluginService
+        from vibe_core.plugin_service import PluginService
+
+        register_flood(PluginService, FloodedPluginService)
+    except ImportError as e:
+        logger.debug(f"FLOOD REGISTRY: Could not register plugin floods: {e}")
+
+    # TaskManager
+    try:
+        from vibe_core.naga.floods.task_manager import FloodedTaskManager
+        from vibe_core.task_management.task_manager import TaskManager
+
+        register_flood(TaskManager, FloodedTaskManager)
+    except ImportError as e:
+        logger.debug(f"FLOOD REGISTRY: Could not register task floods: {e}")
 
 
 # Auto-register on import

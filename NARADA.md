@@ -39,6 +39,8 @@ naga/floods/     → Surgical Method Overrides
 | 01-05 | Recon complete | 40% flooded |
 | 01-05 | Architektur D | Mixins + Floods |
 | 01-05 | FloodedCISyncService | isinstance ✅ |
+| 01-05 | FloodedPluginService | TAKSHAKA ✅ |
+| 01-05 | FloodedTaskManager | CHITRAGUPTA ✅ |
 
 ---
 
@@ -47,17 +49,18 @@ naga/floods/     → Surgical Method Overrides
 - Kernel: NAGA @ -1 Foundation
 - State: NagaStateProxy aktiv
 - Lords: 12/12 ACTIVE
-- **OUROBOROS/sync.py: FloodedCISyncService** ✅ NEU
+- **OUROBOROS/sync.py: FloodedCISyncService** ✅
+- **PluginService: FloodedPluginService** ✅ NEU
+- **TaskManager: FloodedTaskManager** ✅ NEU
 
 ---
 
 ## OFFEN
 
-- PluginService
-- TaskManager
-- MANAS layer
+- MANAS layer (Shiva, Jnana, CircuitEngine)
 - OUROBOROS/ingestion.py
 - OUROBOROS/loop_orchestrator.py
+- External APIs (Twitter, Reddit)
 
 ---
 
