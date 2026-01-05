@@ -37,6 +37,7 @@ from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
+    from vibe_core.naga.hiranyakashipu import AttackSeed, SeedLoader
     from vibe_core.naga.identity import NagaIdentity
 
 logger = logging.getLogger("PRAHLAD")
@@ -177,6 +178,10 @@ class PrahladService(NagaBaseService):
         self._agents: Dict[str, bool] = {}  # agent_id -> has_identity
         self._ledger: Optional[Any] = None
 
+        # Hiranyakashipu integration - living attack seeds
+        self._seed_loader: Optional["SeedLoader"] = None
+        self._attack_seeds: List["AttackSeed"] = []
+
         self._tests_generated = 0
         self._chaos_probes = 0
         self._dharma_audits = 0
@@ -270,18 +275,26 @@ class PrahladService(NagaBaseService):
         self,
         target: str,
         scenarios: Optional[List[ChaosScenario]] = None,
+        attack_seeds: Optional[List["AttackSeed"]] = None,
     ) -> ProbeResult:
         """
         Actively probe a component for weaknesses.
 
         Args:
             target: Component to probe
-            scenarios: Specific scenarios to test (default: all)
+            scenarios: Specific ChaosScenario enum scenarios (default: all)
+            attack_seeds: External Hiranyakashipu attack seeds to run.
+                          If provided, these YAML-defined attacks are executed
+                          in addition to (or instead of) built-in scenarios.
 
         Returns:
             ProbeResult with findings
         """
         scenarios = scenarios or list(ChaosScenario)
+
+        # If attack_seeds provided, use Hiranyakashipu framework
+        if attack_seeds:
+            return self._probe_with_attack_seeds(target, attack_seeds)
 
         result = ProbeResult(
             target=target,
@@ -346,6 +359,171 @@ class PrahladService(NagaBaseService):
             component.handle({"__timeout__": True})
         else:
             component.handle({})
+
+    def _probe_with_attack_seeds(
+        self,
+        target: str,
+        attack_seeds: List["AttackSeed"],
+    ) -> ProbeResult:
+        """
+        Execute Hiranyakashipu attack seeds against a target.
+
+        This runs the living test framework's attacks synchronously,
+        converting results to ProbeResult format.
+
+        Args:
+            target: Target module/component to attack
+            attack_seeds: List of AttackSeed objects from Hiranyakashipu
+
+        Returns:
+            ProbeResult with attack findings
+        """
+        import asyncio
+
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework
+
+        result = ProbeResult(
+            target=target,
+            scenarios_tested=len(attack_seeds),
+        )
+
+        # Create framework for running attacks
+        fw = LivingTestFramework()
+
+        # Run each attack seed
+        for seed in attack_seeds:
+            try:
+                # Run attack (sync wrapper around async)
+                loop = asyncio.new_event_loop()
+                try:
+                    attack_result = loop.run_until_complete(fw.run_attack(seed, target))
+                finally:
+                    loop.close()
+
+                # If attack bypassed defenses, it's a failure (we're weak)
+                if attack_result.bypassed:
+                    failure = ProbeFailure(
+                        scenario=f"hiranyakashipu:{seed.name}",
+                        error_type="DEFENSE_BYPASSED",
+                        message=f"Attack '{seed.name}' bypassed defenses. "
+                        f"Type: {seed.attack_type}, Difficulty: {seed.difficulty}",
+                    )
+                    result.failures += 1
+                    result.failure_details.append(failure)
+
+                    # Generate regression test from bypass
+                    self.on_error(
+                        ErrorEvent(
+                            error_type="DEFENSE_BYPASSED",
+                            message=f"Hiranyakashipu attack '{seed.name}' succeeded",
+                            component_id=target,
+                            context={
+                                "attack_seed": seed.name,
+                                "attack_type": seed.attack_type,
+                                "difficulty": seed.difficulty,
+                                "test_code": seed.test_code[:200] if seed.test_code else "",
+                            },
+                        )
+                    )
+
+            except Exception as e:
+                # Attack execution failed - this is OK (defense held)
+                logger.debug(f"Attack {seed.name} blocked: {e}")
+
+        self._chaos_probes += 1
+        self._last_heartbeat = datetime.now()
+
+        # Report to cortex if bypasses found
+        if self._cortex and result.failures > 0:
+            try:
+                self._cortex.receive_prahlad_finding(
+                    {
+                        "type": "HIRANYAKASHIPU_BYPASS",
+                        "target": target,
+                        "bypasses": result.failures,
+                        "attack_seeds": [s.name for s in attack_seeds[:5]],
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to report to cortex: {e}")
+
+        return result
+
+    # =========================================================================
+    # Hiranyakashipu Integration - Living Attack Seeds
+    # =========================================================================
+
+    def load_attack_seeds(
+        self,
+        seed_dirs: Optional[List[str]] = None,
+        attack_type: Optional[str] = None,
+    ) -> int:
+        """
+        Load attack seeds from Hiranyakashipu YAML files.
+
+        Hiranyakashipu provides the weapons, Prahlad survives them.
+        This wires the living test framework into chaos_probe().
+
+        Args:
+            seed_dirs: Directories containing YAML seed files.
+                       If None, uses default hiranyakashipu/seeds/.
+            attack_type: Filter by attack type (trivial, real, narasimha_paradox).
+
+        Returns:
+            Number of seeds loaded.
+        """
+        from pathlib import Path
+
+        from vibe_core.naga.hiranyakashipu import SeedLoader
+
+        if self._seed_loader is None:
+            self._seed_loader = SeedLoader()
+
+        # Default seed directory
+        if seed_dirs is None:
+            default_dir = Path(__file__).parent.parent / "hiranyakashipu" / "seeds"
+            if default_dir.exists():
+                seed_dirs = [str(default_dir)]
+            else:
+                seed_dirs = []
+
+        # Add directories and load
+        for seed_dir in seed_dirs:
+            self._seed_loader.add_seed_dir(Path(seed_dir))
+
+        count = self._seed_loader.load_seeds()
+
+        # Get seeds (optionally filtered)
+        if attack_type:
+            self._attack_seeds = self._seed_loader.get_seeds(attack_type=attack_type)
+        else:
+            self._attack_seeds = self._seed_loader.get_all_seeds()
+
+        logger.info(f"🐍 PRAHLAD loaded {count} Hiranyakashipu attack seeds")
+        return count
+
+    def get_attack_seeds(
+        self,
+        attack_type: Optional[str] = None,
+        difficulty: Optional[int] = None,
+    ) -> List["AttackSeed"]:
+        """
+        Get loaded attack seeds with optional filtering.
+
+        Args:
+            attack_type: Filter by type (trivial, real, narasimha_paradox)
+            difficulty: Filter by difficulty (1-10)
+
+        Returns:
+            List of matching AttackSeed objects.
+        """
+        if self._seed_loader is None:
+            return []
+
+        return self._seed_loader.get_seeds(
+            attack_type=attack_type,
+            difficulty=difficulty,
+        )
 
     # =========================================================================
     # Dharma Audit

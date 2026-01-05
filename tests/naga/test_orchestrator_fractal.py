@@ -287,5 +287,95 @@ class TestConfigIntegrationFractal(NagaFractalTestCase):
         assert restored.target_naga_tests == 1000
 
 
+# ============================================================================
+# HIRANYAKASHIPU INTEGRATION TESTS (via Prahlad)
+# ============================================================================
+
+
+class TestHiranyakashipuIntegration(NagaFractalTestCase):
+    """
+    Test that Hiranyakashipu attack framework is integrated via Prahlad.
+
+    ARCHITECTURE INSIGHT:
+    - Prahlad (the 7th NAGA) is the Resilience Agent
+    - PrahladService already has chaos_probe() capability
+    - Hiranyakashipu provides YAML-based attack seeds
+    - Prahlad should LOAD Hiranyakashipu seeds for chaos probing
+
+    These tests verify the integration path:
+    Orchestrator → boots Prahlad → loads Hiranyakashipu seeds → chaos_probe()
+    """
+
+    def test_prahlad_service_has_chaos_probe(self):
+        """
+        GREEN: PrahladService already has chaos_probe method.
+
+        This verifies the existing capability.
+        """
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        assert hasattr(prahlad, "chaos_probe"), "PrahladService should have chaos_probe method"
+        assert callable(prahlad.chaos_probe)
+
+    def test_prahlad_can_load_hiranyakashipu_seeds(self):
+        """
+        RED: Prahlad should be able to load Hiranyakashipu attack seeds.
+
+        This test FAILS because Prahlad doesn't know about Hiranyakashipu yet.
+        """
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        # Check if Prahlad has a method to load external attack seeds
+        assert hasattr(prahlad, "load_attack_seeds"), (
+            "PrahladService missing load_attack_seeds method!\n"
+            "Prahlad should be able to load Hiranyakashipu YAML seeds."
+        )
+
+    def test_hiranyakashipu_seeds_available(self):
+        """
+        GREEN: Hiranyakashipu module loads attack seeds from YAML.
+
+        This verifies the attack seed infrastructure works.
+        """
+        from pathlib import Path
+
+        from vibe_core.naga.hiranyakashipu import SeedLoader
+
+        loader = SeedLoader()
+        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/hiranyakashipu/seeds"
+        loader.add_seed_dir(seed_dir)
+        count = loader.load_seeds()
+
+        assert count > 0, "Should load Hiranyakashipu attack seeds from YAML"
+
+    def test_prahlad_chaos_probe_uses_external_scenarios(self):
+        """
+        RED: Prahlad.chaos_probe() should support external scenarios.
+
+        This test FAILS because chaos_probe only uses ChaosScenario enum.
+        Should also support Hiranyakashipu attack seeds.
+        """
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        # Check if chaos_probe accepts external seed scenarios
+        import inspect
+
+        sig = inspect.signature(prahlad.chaos_probe)
+        params = list(sig.parameters.keys())
+
+        # Should accept external attack seeds, not just ChaosScenario enum
+        assert "attack_seeds" in params or "external_scenarios" in params, (
+            "chaos_probe should accept external attack seeds!\n"
+            "Currently only uses hardcoded ChaosScenario enum.\n"
+            "Should integrate with Hiranyakashipu YAML seeds."
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--timeout=30"])

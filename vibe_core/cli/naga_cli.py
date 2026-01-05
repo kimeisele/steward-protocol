@@ -53,6 +53,8 @@ class NagaCLI:
                 "bite",
                 "remediate",
                 "audit",
+                "prahlad",
+                "chaos",
             ],
             tags=["naga", "security", "guardian", "fractal", "executive", "intelligence"],
         )
@@ -98,6 +100,10 @@ class NagaCLI:
             return self.cmd_remediate(args[1:])
         elif cmd == "audit":
             return self.cmd_audit(args[1:])
+        elif cmd == "prahlad":
+            return self.cmd_prahlad(args[1:])
+        elif cmd == "chaos":
+            return self.cmd_chaos(args[1:])
         elif cmd == "help" or cmd == "--help":
             self._print_usage()
             return 0
@@ -120,6 +126,8 @@ class NagaCLI:
         steward naga bite       Record a violation to Ledger
         steward naga remediate  Actually FIX detected issues
         steward naga audit      Query Ledger audit trail
+        steward naga prahlad    Prahlad resilience agent
+        steward naga chaos      Run Hiranyakashipu chaos attacks
 
     OPTIONS:
         --path <path>    Target path for scanning
@@ -127,10 +135,15 @@ class NagaCLI:
         --fix            Auto-fix issues (remediate)
         --verbose        Show detailed output
 
-    For intelligence gathering, use Tool Protocol:
-        steward tool run naga.status --action check_all
-        steward tool run naga.detect --action detect_all
-        steward tool run naga.scan --action scan --content "..."
+    PRAHLAD COMMANDS:
+        steward naga prahlad dharma     Run Dharma audit
+        steward naga prahlad coverage   Get coverage intelligence
+        steward naga prahlad verify     Run NAGA self-verification
+
+    CHAOS COMMANDS:
+        steward naga chaos list         List available attack seeds
+        steward naga chaos run <type>   Run attack seeds by type
+        steward naga chaos probe <mod>  Chaos probe a module
         """)
 
     # =========================================================================
@@ -696,3 +709,281 @@ class NagaCLI:
 
         print("\n" + "=" * 60)
         return 0
+
+    # =========================================================================
+    # PRAHLAD - Resilience Agent
+    # =========================================================================
+
+    def cmd_prahlad(self, args: List[str]) -> int:
+        """
+        Access Prahlad Resilience Agent.
+
+        Subcommands:
+            dharma   - Run Dharma audit (integrity check)
+            coverage - Get coverage intelligence
+            verify   - Run NAGA self-verification (Ouroboros)
+        """
+        if not args:
+            print("\n    PRAHLAD - The Resilience Agent")
+            print("=" * 60)
+            print("\n    Subcommands:")
+            print("        dharma   - Run Dharma audit (integrity check)")
+            print("        coverage - Get coverage intelligence")
+            print("        verify   - Run NAGA self-verification")
+            print("\n    Usage: steward naga prahlad <subcommand>")
+            print("=" * 60)
+            return 0
+
+        subcmd = args[0]
+
+        if subcmd == "dharma":
+            return self._prahlad_dharma()
+        elif subcmd == "coverage":
+            return self._prahlad_coverage()
+        elif subcmd == "verify":
+            return self._prahlad_verify()
+        else:
+            print(f"    Unknown prahlad command: {subcmd}")
+            return 1
+
+    def _prahlad_dharma(self) -> int:
+        """Run Dharma audit."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        print("\n    PRAHLAD DHARMA AUDIT")
+        print("=" * 60)
+
+        prahlad = PrahladService()
+        score = prahlad.dharma_audit()
+
+        print(f"\n    Total Score:          {score.total_score:.1f}%")
+        print(f"    Signature Compliance: {score.signature_compliance:.1f}%")
+        print(f"    Identity Coverage:    {score.identity_coverage:.1f}%")
+        print(f"    Ledger Intact:        {'YES' if score.ledger_intact else 'NO'}")
+        print(f"    Unsigned Decisions:   {score.unsigned_decisions}")
+
+        if score.total_score >= 80:
+            status = "DHARMIC"
+        elif score.total_score >= 50:
+            status = "MONITORING"
+        else:
+            status = "ADHARMIC"
+
+        print(f"\n    Status: {status}")
+        print("=" * 60)
+        return 0 if score.total_score >= 50 else 1
+
+    def _prahlad_coverage(self) -> int:
+        """Get coverage intelligence."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        print("\n    PRAHLAD COVERAGE INTELLIGENCE")
+        print("=" * 60)
+
+        prahlad = PrahladService()
+        intel = prahlad.get_coverage_intelligence()
+
+        if "error" in intel:
+            print(f"\n    Error: {intel['error']}")
+        else:
+            print(f"\n    Total Testables:  {intel.get('total_testables', 0)}")
+            print(f"    Total Tests:      {intel.get('total_tests', 0)}")
+
+            by_type = intel.get("by_type", {})
+            if by_type:
+                print("\n    By Type:")
+                for t, count in by_type.items():
+                    print(f"        {t}: {count}")
+
+            naga = intel.get("naga_coverage", {})
+            if naga:
+                print("\n    NAGA Coverage:")
+                print(f"        Testables: {naga.get('testables_covered', 0)}")
+                print(f"        Tests:     {naga.get('tests_available', 0)}")
+
+        stats = intel.get("prahlad_stats", {})
+        print("\n    Prahlad Stats:")
+        print(f"        Tests Generated:  {stats.get('tests_generated', 0)}")
+        print(f"        Chaos Probes:     {stats.get('chaos_probes', 0)}")
+        print(f"        Dharma Audits:    {stats.get('dharma_audits', 0)}")
+
+        print("=" * 60)
+        return 0
+
+    def _prahlad_verify(self) -> int:
+        """Run NAGA self-verification (Ouroboros)."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        print("\n    PRAHLAD SELF-VERIFICATION (OUROBOROS)")
+        print("=" * 60)
+        print("\n    Running NAGA test suite...")
+
+        prahlad = PrahladService()
+        passed = prahlad.verify_self_integrity(quiet=False)
+
+        if passed:
+            print("\n    NAGA IS WATERTIGHT")
+        else:
+            print("\n    NAGA COMPROMISED - Tests failed!")
+
+        print("=" * 60)
+        return 0 if passed else 1
+
+    # =========================================================================
+    # CHAOS - Hiranyakashipu Attack Framework
+    # =========================================================================
+
+    def cmd_chaos(self, args: List[str]) -> int:
+        """
+        Run Hiranyakashipu chaos attacks.
+
+        Subcommands:
+            list        - List available attack seeds
+            run <type>  - Run attacks by type (trivial, real, narasimha_paradox)
+            probe <mod> - Chaos probe a module with attack seeds
+        """
+        if not args:
+            print("\n    HIRANYAKASHIPU - The Attack Framework")
+            print("=" * 60)
+            print("\n    Subcommands:")
+            print("        list         - List available attack seeds")
+            print("        run <type>   - Run attacks by type")
+            print("        probe <mod>  - Chaos probe a module")
+            print("\n    Usage: steward naga chaos <subcommand>")
+            print("=" * 60)
+            return 0
+
+        subcmd = args[0]
+
+        if subcmd == "list":
+            return self._chaos_list()
+        elif subcmd == "run":
+            attack_type = args[1] if len(args) > 1 else None
+            return self._chaos_run(attack_type)
+        elif subcmd == "probe":
+            target = args[1] if len(args) > 1 else "vibe_core"
+            return self._chaos_probe(target, args[2:])
+        else:
+            print(f"    Unknown chaos command: {subcmd}")
+            return 1
+
+    def _chaos_list(self) -> int:
+        """List available attack seeds."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        print("\n    HIRANYAKASHIPU ATTACK SEEDS")
+        print("=" * 60)
+
+        prahlad = PrahladService()
+        count = prahlad.load_attack_seeds()
+
+        print(f"\n    Loaded: {count} attack seeds")
+
+        # Group by type
+        for attack_type in ["trivial", "real", "narasimha_paradox"]:
+            seeds = prahlad.get_attack_seeds(attack_type=attack_type)
+            if seeds:
+                print(f"\n    {attack_type.upper()} ({len(seeds)}):")
+                for seed in seeds[:5]:
+                    print(f"        - {seed.name} (difficulty: {seed.difficulty})")
+                if len(seeds) > 5:
+                    print(f"        ... and {len(seeds) - 5} more")
+
+        print("=" * 60)
+        return 0
+
+    def _chaos_run(self, attack_type: Optional[str]) -> int:
+        """Run attacks by type."""
+        import asyncio
+
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework
+
+        print("\n    HIRANYAKASHIPU ATTACK RUN")
+        print("=" * 60)
+
+        fw = LivingTestFramework()
+        seed_dir = Path(__file__).parent.parent / "naga" / "hiranyakashipu" / "seeds"
+        if seed_dir.exists():
+            fw.add_seed_dir(seed_dir)
+        count = fw.load_seeds()
+
+        print(f"\n    Seeds loaded: {count}")
+
+        if attack_type:
+            seeds = fw.get_seeds(attack_type=attack_type)
+            print(f"    Running {len(seeds)} {attack_type} attacks...")
+        else:
+            seeds = fw.get_seeds()
+            print(f"    Running all {len(seeds)} attacks...")
+
+        # Run attacks
+        bypassed = 0
+        held = 0
+
+        for seed in seeds:
+            try:
+                loop = asyncio.new_event_loop()
+                try:
+                    result = loop.run_until_complete(fw.run_attack(seed, "test_target"))
+                finally:
+                    loop.close()
+
+                if result.bypassed:
+                    bypassed += 1
+                    print(f"      BYPASSED: {seed.name}")
+                else:
+                    held += 1
+
+            except Exception as e:
+                print(f"      ERROR: {seed.name}: {e}")
+
+        print("\n    Results:")
+        print(f"        Attacks held:    {held}")
+        print(f"        Attacks bypassed: {bypassed}")
+
+        if bypassed > 0:
+            print(f"\n    WARNING: {bypassed} attacks bypassed defenses!")
+
+        print("=" * 60)
+        return 0 if bypassed == 0 else 1
+
+    def _chaos_probe(self, target: str, extra_args: List[str]) -> int:
+        """Chaos probe a module with Hiranyakashipu seeds."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        print("\n    CHAOS PROBE")
+        print("=" * 60)
+        print(f"\n    Target: {target}")
+
+        prahlad = PrahladService()
+        count = prahlad.load_attack_seeds()
+        print(f"    Attack seeds loaded: {count}")
+
+        # Get attack type filter
+        attack_type = None
+        for i, arg in enumerate(extra_args):
+            if arg == "--type" and i + 1 < len(extra_args):
+                attack_type = extra_args[i + 1]
+
+        seeds = prahlad.get_attack_seeds(attack_type=attack_type)
+        if not seeds:
+            print("    No attack seeds available.")
+            return 1
+
+        print(f"    Running {len(seeds)} attacks...")
+
+        result = prahlad.chaos_probe(target, attack_seeds=seeds)
+
+        print(f"\n    Scenarios tested: {result.scenarios_tested}")
+        print(f"    Failures (bypasses): {result.failures}")
+
+        if result.failure_details:
+            print("\n    Bypass Details:")
+            for failure in result.failure_details[:10]:
+                print(f"        - {failure.scenario}: {failure.message[:60]}")
+
+        status = "VULNERABLE" if result.failures > 0 else "RESILIENT"
+        print(f"\n    Status: {status}")
+
+        print("=" * 60)
+        return 0 if result.failures == 0 else 1

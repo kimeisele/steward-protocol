@@ -20,13 +20,13 @@
       "action:report_to_operator": 0.9
     },
     "trigger:maintenance": {
-      "action:maintenance": 0.55
+      "action:maintenance": 0.8500000000000003
     }
   },
   "triggers": [],
   "meta": {
     "created": "2026-01-03T22:16:51.585643Z",
-    "last_updated": "2026-01-03T22:16:51.591236Z",
-    "updates_count": 1
+    "last_updated": "2026-01-05T16:29:44.343641Z",
+    "updates_count": 7
   }
 }
