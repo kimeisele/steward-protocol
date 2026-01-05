@@ -25,6 +25,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.di import ServiceRegistry
+from vibe_core.naga.scanner import NaradaScanner
 from vibe_core.protocols.correction import DriftSource
 from vibe_core.protocols.naga import (
     ChitraguptaProtocol,
@@ -98,6 +99,9 @@ class NagaOrchestrator:
         from vibe_core.naga.identity import NagaIdentity
 
         self._identity: Optional[NagaIdentity] = None
+
+        # Narada Scanner for auto-discovery and validation
+        self._scanner: Optional[NaradaScanner] = None
 
     @classmethod
     def bootstrap(
@@ -177,6 +181,12 @@ class NagaOrchestrator:
         from vibe_core.naga.services.vasuki import VasukiService
 
         self._config = self._get_config(config)
+
+        # -1. NARADA SCANNER - Auto-discover available NAGAs
+        # "Narada unterrichtete Prahlad im Mutterleib" - discovery before birth
+        self._scanner = NaradaScanner()
+        discovered = self._scanner.scan()
+        logger.info(f"🔍 Narada discovered {len(discovered)} NAGA services")
 
         # 0. IDENTITY - GAD-000 37th Principle
         # Generate sovereign identity for signing decisions
@@ -427,6 +437,23 @@ class NagaOrchestrator:
         logger.info("🐍 NAGA Federation registered in ServiceRegistry")
 
         self._initialized = True
+
+        # Register created instances with scanner for status reporting
+        if self._sesha:
+            self._scanner.set_instance("sesha", self._sesha)
+        if self._takshaka:
+            self._scanner.set_instance("takshaka", self._takshaka)
+        if self._vasuki:
+            self._scanner.set_instance("vasuki", self._vasuki)
+        if self._kaliya:
+            self._scanner.set_instance("kaliya", self._kaliya)
+        if self._narada:
+            self._scanner.set_instance("narada", self._narada)
+        if self._chitragupta:
+            self._scanner.set_instance("chitragupta", self._chitragupta)
+        if self._prahlad:
+            self._scanner.set_instance("prahlad", self._prahlad)
+
         logger.info("🐍 NAGA Federation initialized")
 
     # =========================================================================
@@ -551,3 +578,8 @@ class NagaOrchestrator:
     def ouroboros(self) -> Optional["NagaOuroboros"]:
         """Get OUROBOROS (GAD-000 Recoverability) for self-healing loop detection."""
         return self._ouroboros
+
+    @property
+    def scanner(self) -> Optional[NaradaScanner]:
+        """Get Narada Scanner for auto-discovery metadata and reports."""
+        return self._scanner
