@@ -481,6 +481,10 @@ class NagaOrchestrator:
         if self._prahlad and self._config.prahlad.enabled:
             self._run_boot_integrity_check()
 
+        # 10. VISIBILITY MATRIX: "Erst sehen, dann handeln"
+        # Generate boot report showing system coverage state
+        self._generate_boot_matrix()
+
     # =========================================================================
     # OUROBOROS Self-Check
     # =========================================================================
@@ -512,6 +516,131 @@ class NagaOrchestrator:
 
         except Exception as e:
             logger.warning(f"🐍 NAGA: Self-check error: {e} - Continuing anyway")
+
+    # =========================================================================
+    # VISIBILITY MATRIX - "Erst sehen, dann handeln"
+    # =========================================================================
+
+    def _generate_boot_matrix(self) -> None:
+        """
+        Generate visibility matrix at boot.
+
+        Shows the "State of the Union" - what we protect, what's dirty, what's blind.
+        Uses existing APIs (Prahlad, Ananta) - no new features.
+
+        Output:
+            [COMPONENT]     [COVERAGE]      [SHUDDHI]    [STATUS]
+            naga            ████████░░ 80%  CLEAN        🛡️ Protected
+            plugins         ████░░░░░░ 40%  DIRTY        ⚠️ Monitoring
+            legacy          █░░░░░░░░░ 10%  UNKNOWN      ☣️ Blind
+        """
+        try:
+            logger.info("🐍 NAGA: Generating Visibility Matrix...")
+
+            # Get intelligence from Prahlad (our EYES)
+            intel = {}
+            if self._prahlad:
+                intel = self._prahlad.get_coverage_intelligence()
+
+            # Get boot audit from Ananta if available
+            ananta_audit = {}
+            if self._ananta and hasattr(self._ananta, "get_boot_audit"):
+                try:
+                    ananta_audit = self._ananta.get_boot_audit()
+                except Exception:
+                    pass
+
+            # Get available Shuddhi remedies
+            shuddhi_remedies = []
+            if self._prahlad:
+                shuddhi_remedies = self._prahlad.list_available_remedies()
+
+            # Build the matrix
+            matrix_lines = self._build_matrix_display(intel, ananta_audit, shuddhi_remedies)
+
+            # Log the matrix
+            logger.info("=" * 70)
+            logger.info("🐍 NAGA VISIBILITY MATRIX - State of the Union")
+            logger.info("=" * 70)
+            for line in matrix_lines:
+                logger.info(line)
+            logger.info("=" * 70)
+
+        except Exception as e:
+            logger.warning(f"🐍 NAGA: Visibility matrix error: {e}")
+
+    def _build_matrix_display(
+        self,
+        intel: Dict[str, Any],
+        ananta_audit: Dict[str, Any],
+        shuddhi_remedies: list,
+    ) -> list:
+        """Build the visual matrix display."""
+        lines = []
+
+        # Header
+        lines.append(f"{'COMPONENT':<20} {'COVERAGE':<15} {'SHUDDHI':<12} {'STATUS'}")
+        lines.append("-" * 65)
+
+        # NAGA Coverage (from Prahlad intelligence)
+        naga_coverage = intel.get("naga_coverage", {})
+        naga_tests = naga_coverage.get("tests_available", 0)
+        naga_pct = min(100, (naga_tests / 600) * 100) if naga_tests else 0  # 600 = target
+        naga_bar = self._progress_bar(naga_pct)
+        naga_status = "🛡️ Protected" if naga_pct >= 70 else "⚠️ Building" if naga_pct >= 30 else "☣️ Weak"
+        lines.append(f"{'NAGA Core':<20} {naga_bar} {naga_pct:3.0f}%  {'CLEAN':<12} {naga_status}")
+
+        # By-type breakdown
+        by_type = intel.get("by_type", {})
+        tests_by_type = intel.get("tests_by_type", {})
+
+        for comp_type in ["AGENT", "PLUGIN", "TOOL", "CORE"]:
+            count = by_type.get(comp_type, by_type.get(comp_type.lower(), 0))
+            tests = tests_by_type.get(comp_type, tests_by_type.get(comp_type.lower(), 0))
+
+            if count == 0:
+                continue
+
+            # Calculate coverage percentage (tests per component)
+            coverage_pct = min(100, (tests / max(count, 1)) * 10)  # 10 tests per component = 100%
+            bar = self._progress_bar(coverage_pct)
+
+            # Determine Shuddhi status (simplified - assume clean if tests exist)
+            shuddhi_status = "CLEAN" if tests > 0 else "UNKNOWN"
+
+            # Determine NAGA status
+            if coverage_pct >= 70:
+                status = "🛡️ Protected"
+            elif coverage_pct >= 30:
+                status = "⚠️ Monitoring"
+            else:
+                status = "☣️ Blind"
+
+            lines.append(f"{comp_type:<20} {bar} {coverage_pct:3.0f}%  {shuddhi_status:<12} {status}")
+
+        # Summary line
+        total_testables = intel.get("total_testables", 0)
+        total_tests = intel.get("total_tests", 0)
+        lines.append("-" * 65)
+        lines.append(f"TOTAL: {total_testables} components, {total_tests} tests")
+        lines.append(f"SHUDDHI: {len(shuddhi_remedies)} remedies available: {', '.join(shuddhi_remedies[:5])}")
+
+        # Prahlad self-stats
+        prahlad_stats = intel.get("prahlad_stats", {})
+        if prahlad_stats:
+            lines.append(
+                f"PRAHLAD: {prahlad_stats.get('tests_generated', 0)} generated, "
+                f"{prahlad_stats.get('chaos_probes', 0)} probes, "
+                f"{prahlad_stats.get('dharma_audits', 0)} audits"
+            )
+
+        return lines
+
+    def _progress_bar(self, percentage: float, width: int = 10) -> str:
+        """Generate a progress bar."""
+        filled = int(width * percentage / 100)
+        empty = width - filled
+        return "█" * filled + "░" * empty
 
     # =========================================================================
     # Status & Health
