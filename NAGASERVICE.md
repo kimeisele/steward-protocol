@@ -1597,12 +1597,16 @@ Level 2 EXISTIEREND (PROMPT.md):    Level 2 ERWEITERT (NSA):
 🐍 SESHA    (Data/Truth)            🐍 SESHA      + Records Agency
 🐍 VASUKI   (Network/Binding)       🐍 VASUKI     + Communications Agency
 🐍 TAKSHAKA (Security/Defense)      🐍 TAKSHAKA   + Enforcement Agency
-                                    🐍 NARADA     (Spy - NEU)
                                     🐍 KALIYA     (Quarantine - NEU)
-                                    🐍 CHITRAGUPTA (Profiler - NEU)
+                                    ───────────────────────────────
+                                    PERSONNEL (Not Nagas by race):
+                                    🎵 NARADA     (Messenger - Deva-Rishi)
+                                    📜 CHITRAGUPTA (Accountant - Yama's)
+                                    👑 PRAHLAD    (Governor - Daitya)
 ```
 
-**Die 3 Ur-NAGAs bleiben. Die 3 neuen NAGAs ergänzen.**
+**Die 4 Nagas (Sesha, Vasuki, Takshaka, Kaliya) sind INFRASTRUCTURE.**
+**Die 3 Personnel (Narada, Chitragupta, Prahlad) sind GOVERNANCE.**
 
 ---
 
@@ -1661,49 +1665,62 @@ Alle NAGA-Operationen strahlen VOM 37. aus, nicht ZU ihm hin.
 
 ---
 
-### DIE ERWEITERUNG: Von 3 auf 6 NAGAs
+### DIE ERWEITERUNG: Von 3 Nagas zur 7-köpfigen Agency
+
+> **Mythologische Korrektheit:** Nicht alle Mitglieder sind Nagas!
+> "NAGA Service Agency" = Name des DIENSTES, nicht die RASSE aller Mitglieder.
 
 ```
-EXISTIEREND (PROMPT.md Level 2):       ERWEITERUNG (NSA Phase 9):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INFRASTRUCTURE LAYER - Die echten Nagas (🐍 Schlangen-Rasse):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🐍 SESHA (शेष)                         Bleibt: Truth-Keeper, Ledger
+🐍 SESHA (शेष)                         Truth-Keeper, Ledger
    "Truth is purely additive"          + Agency: Records Intelligence
-   vibe_core/ledger.py                 + Neue Methode: pattern_analysis()
+   Ananta Shesha - Vishnus Bett        Der Ur-Naga, trägt die Welten
 
-🐍 VASUKI (वासुकि)                     Bleibt: Network Binding
+🐍 VASUKI (वासुकि)                     Network Binding, Transform
    "Memory is not Network"             + Agency: Communications Intel
-   vibe_core/network_proxy.py          + Neue Methode: intercept_transform()
+   Samudra Manthan Seil                Transformation durch Churning
 
-🐍 TAKSHAKA (तक्षक)                    Bleibt: Bite first, ask later
+🐍 TAKSHAKA (तक्षक)                    Security, Enforcement
    "Identity before Parsing"           + Agency: Enforcement Intel
-   vibe_core/security.py               + Neue Methode: threat_correlation()
+   König der Nagas                     Beißt erst, fragt später
 
-🐍 NARADA (नारद) - NEU                 Der Spion
-   "Narada reist überall"              Decorator-based Interception
-   vibe_core/naga/agents/narada.py     @narada.spy - Observe without modify
-
-🐍 KALIYA (कालिय) - NEU                Die Quarantäne
+🐍 KALIYA (कालिय) - NEU                Quarantine, Isolation
    "Krishna verbannte, tötete nicht"   Isolation Protocol
-   vibe_core/naga/agents/kaliya.py     quarantine() - Isolate, don't kill
+   Von Krishna bezwungen               Isoliert, tötet nicht
 
-🐍 CHITRAGUPTA (चित्रगुप्त) - NEU      Der Profiler
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GOVERNANCE LAYER - Personnel (KEINE Nagas von Rasse):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👑 PRAHLAD (प्रह्लाद) - GOVERNOR       Resilience, Antifragility
+   "Macht uns unzerstörbar"            Post-Hiranyakashipu: KÖNIG
+   Daitya-Prinz, kein Naga             Herrscht über die Nagas
+
+🎵 NARADA (नारद) - MESSENGER           Spy, Interception
+   "Narada reist überall"              Decorator-based Observation
+   Deva-Rishi, kein Naga               Verbindet Vishnu mit allen Ebenen
+
+📜 CHITRAGUPTA (चित्रगुप्त) - ACCOUNTANT  Profiler, Behavioral
    "Führt Buch über alle Karmas"       Behavioral Analysis
-   vibe_core/naga/agents/chitragupta.py detect_anomaly() - Profile deviation
+   Yamas Assistent, kein Naga          Himmlischer Buchhalter
 ```
 
 ---
 
 ### NSA AGENT ROSTER
 
-| Agent | Sanskrit | Role | Domain |
-|-------|----------|------|--------|
-| **Sesha** | शेष (Remainder) | Records, Truth-Keeper | Ledger, State, Audit |
-| **Vasuki** | वासुकि (Divine) | Communications, Transform | Network, Serialization |
-| **Takshaka** | तक्षक (Carpenter) | Enforcement, Security | Violations, Trust |
-| **Narada** | नारद (Messenger) | Spy, Interception | Decorator-based observation |
-| **Kaliya** | कालिय (Black) | Quarantine, Isolation | Misbehaving components |
-| **Chitragupta** | चित्रगुप्त (Hidden Picture) | Profiler, Behavioral | Anomaly detection |
+| Symbol | Agent | Sanskrit | Race/Type | Role | Domain |
+|--------|-------|----------|-----------|------|--------|
+| 🐍 | **Sesha** | शेष (Remainder) | Naga | Records, Truth-Keeper | Ledger, State, Audit |
+| 🐍 | **Vasuki** | वासुकि (Divine) | Naga | Communications, Transform | Network, Serialization |
+| 🐍 | **Takshaka** | तक्षक (Carpenter) | Naga | Enforcement, Security | Violations, Trust |
+| 🐍 | **Kaliya** | कालिय (Black) | Naga | Quarantine, Isolation | Misbehaving components |
+| 👑 | **Prahlad** | प्रह्लाद (Delight) | Daitya | Governor, Resilience | Antifragility, Tests |
+| 🎵 | **Narada** | नारद (Giver of Wisdom) | Deva-Rishi | Messenger, Spy | Decorator-based observation |
+| 📜 | **Chitragupta** | चित्रगुप्त (Hidden Picture) | Celestial | Accountant, Profiler | Behavioral, Anomaly detection |
 
 ---
 
@@ -2601,30 +2618,52 @@ ANTIFRAGIL: Jeder Fehler macht uns stärker
 
 ---
 
-### DIE 7 NAGAs - KOMPLETT
+### NAGA SERVICE AGENCY - VOLLSTÄNDIG
+
+> "NAGA Service Agency" ist der NAME des Dienstes, nicht die RASSE aller Mitglieder.
+> Post-Hiranyakashipu: Prahlad wird KÖNIG, die Nagas DIENEN ihm.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DIE 7 NAGAs                              │
+│                  NAGA SERVICE AGENCY                        │
+│            "AGENTS AS INFRASTRUCTURE"                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ORIGINAL 3 (PROMPT.md Level 2):                           │
-│  ─────────────────────────────────                         │
+│  🔺 GOVERNANCE LAYER (Personnel - NOT Nagas by race):      │
+│  ─────────────────────────────────────────────────────────  │
+│  👑 PRAHLAD    - Governor         "Herrscht über die Nagas" │
+│     (Daitya-Prinz, nach Hiranyakashipu wird er König)       │
+│                                                             │
+│  🎵 NARADA     - Messenger        "Verbindet alle Ebenen"  │
+│     (Deva-Rishi, kein Naga - reist zwischen den Welten)     │
+│                                                             │
+│  📜 CHITRAGUPTA- Accountant       "Führt Buch über Karma"  │
+│     (Yamas Assistent, kein Naga - himmlischer Buchhalter)   │
+│                                                             │
+│  🐍 INFRASTRUCTURE LAYER (Real Nagas - Serpent Race):      │
+│  ─────────────────────────────────────────────────────────  │
 │  🐍 SESHA      - Data/Truth       "Die Wahrheit trägt"     │
+│     (Ananta Shesha - Vishnus Bett, Ur-Naga)                 │
+│                                                             │
 │  🐍 VASUKI     - Network/Boundary "Serialisieren & Senden" │
+│     (Samudra Manthan Seil - Transformation)                 │
+│                                                             │
 │  🐍 TAKSHAKA   - Security/Guard   "Erst beißen, dann fragen"│
+│     (König der Nagas - tödlich, kein Pardon)                │
 │                                                             │
-│  PHASE 9 EXTENSION (NSA):                                  │
-│  ─────────────────────────────────                         │
-│  🐍 NARADA     - Spy/Observer     "Sieht alles"            │
 │  🐍 KALIYA     - Quarantine       "Isoliert Probleme"      │
-│  🐍 CHITRAGUPTA- Profiler         "Misst Verhalten"        │
+│     (Von Krishna bezwungen - Isolation, nicht Tod)          │
 │                                                             │
-│  PHASE 10 (ANTIFRAGILITY):                                 │
-│  ─────────────────────────────────                         │
-│  🐍 PRAHLAD    - Resilience       "Macht uns unzerstörbar" │
+│  HIERARCHIE (Srimad Bhagavatam Canto 7):                   │
+│  ─────────────────────────────────────────────────────────  │
+│  Vishnu (Intent) → Narada (Messenger) → Prahlad (Governor) │
+│       └─────────────────────────────────────────────────────┤
+│                            ↓                                │
+│       Nagas (Sesha, Vasuki, Takshaka, Kaliya) = Infra      │
+│       Chitragupta = Records/Audit                           │
 │                                                             │
-│  7 = Vedisch komplett (Chakras, Swaras, Rishis)            │
+│  7 Mitglieder = Vedisch komplett (Chakras, Swaras, Rishis) │
+│  4 Nagas + 3 Personnel = Vollständige Agency               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -2635,3 +2674,4 @@ ANTIFRAGIL: Jeder Fehler macht uns stärker
 *Prahlad - 24 tests passing*
 *Total NAGA Tests: 314*
 *Compliance: GAD-000 + VEDA-4 + AGENTIC MIDDLEWARE + ANTIFRAGILITY*
+*Mythological Accuracy: ✅ CORRECTED*
