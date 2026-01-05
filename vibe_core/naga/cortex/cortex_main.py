@@ -158,6 +158,12 @@ class NagaCortex:
         self._dispatched: OrderedDict[str, datetime] = OrderedDict()
         self._dispatched_max = 1000
 
+        # PHOENIX: Lazy-loaded StateService for crash recovery
+        self._state_service_instance = None
+
+        # PHOENIX: Restore state from previous session (if exists)
+        self._restore_state()
+
         logger.info(f"[CORTEX] Initialized (threshold={self._config.correlation_threshold})")
 
     # =========================================================================
@@ -468,6 +474,9 @@ class NagaCortex:
                 )
             except Exception as e:
                 logger.debug(f"[CORTEX] OUROBOROS observation failed: {e}")
+
+        # PHOENIX: Persist state after dispatch
+        self._save_state()
 
         return result
 
@@ -802,6 +811,9 @@ class NagaCortex:
             f"(NAGA context used: {feedback.naga_context_used}, signed: {feedback.is_signed})"
         )
 
+        # PHOENIX: Persist state after feedback
+        self._save_state()
+
     def is_available(self) -> bool:
         """Check if Cortex is active and ready."""
         return self._config.enabled
@@ -809,3 +821,92 @@ class NagaCortex:
     def get_stats(self) -> Dict[str, Any]:
         """Get Cortex statistics (alias for get_status for protocol compliance)."""
         return self.get_status()
+
+    # =========================================================================
+    # PHOENIX: CRASH RECOVERY (GAD-000 THREE BODIES)
+    # =========================================================================
+
+    @property
+    def _state_service(self):
+        """Lazy-load StateService with naga_cortex namespace."""
+        if self._state_service_instance is None:
+            from vibe_core.state.state_service import get_state_service
+
+            self._state_service_instance = get_state_service(plugin_id="naga_cortex")
+        return self._state_service_instance
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """
+        PHOENIX: Snapshot current state for crash recovery.
+
+        Returns:
+            Dict containing recoverable state (stats, dispatched decisions)
+        """
+        return {
+            "version": 1,
+            "stats": {
+                "signals_received": self._stats.signals_received,
+                "signals_discarded_age": self._stats.signals_discarded_age,
+                "signals_discarded_overflow": self._stats.signals_discarded_overflow,
+                "correlations_performed": self._stats.correlations_performed,
+                "decisions_made": self._stats.decisions_made,
+                "decisions_dispatched": self._stats.decisions_dispatched,
+                "decisions_by_action": dict(self._stats.decisions_by_action),
+            },
+            "dispatched": {k: v.isoformat() for k, v in self._dispatched.items()},
+            "config": self._config.to_dict(),
+            "snapshot_at": datetime.now().isoformat(),
+        }
+
+    def _restore_state(self) -> None:
+        """
+        PHOENIX: Restore state from previous session.
+
+        Called on init to recover from crashes.
+        """
+        try:
+            snapshot = self._state_service.load("cortex_state.json", default=None)
+            if snapshot is None:
+                logger.debug("[CORTEX] No previous state to restore")
+                return
+
+            if snapshot.get("version") != 1:
+                logger.warning("[CORTEX] Unknown state version, skipping restore")
+                return
+
+            # Restore stats (preserving current started_at)
+            if "stats" in snapshot:
+                stats = snapshot["stats"]
+                self._stats.signals_received = stats.get("signals_received", 0)
+                self._stats.signals_discarded_age = stats.get("signals_discarded_age", 0)
+                self._stats.signals_discarded_overflow = stats.get("signals_discarded_overflow", 0)
+                self._stats.correlations_performed = stats.get("correlations_performed", 0)
+                self._stats.decisions_made = stats.get("decisions_made", 0)
+                self._stats.decisions_dispatched = stats.get("decisions_dispatched", 0)
+                self._stats.decisions_by_action = stats.get("decisions_by_action", {})
+
+            # Restore dispatched decisions (for idempotency)
+            if "dispatched" in snapshot:
+                for k, v in snapshot["dispatched"].items():
+                    try:
+                        self._dispatched[k] = datetime.fromisoformat(v)
+                    except (ValueError, TypeError):
+                        pass
+
+            logger.info(f"[CORTEX] PHOENIX: Restored state (decisions_made={self._stats.decisions_made})")
+
+        except Exception as e:
+            logger.debug(f"[CORTEX] State restore failed (fresh start): {e}")
+
+    def _save_state(self) -> None:
+        """
+        PHOENIX: Persist current state for crash recovery.
+
+        Called after significant state changes.
+        """
+        try:
+            snapshot = self.snapshot_state()
+            self._state_service.save("cortex_state.json", snapshot)
+            logger.debug("[CORTEX] PHOENIX: State persisted")
+        except Exception as e:
+            logger.debug(f"[CORTEX] State save failed: {e}")
