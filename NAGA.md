@@ -9,7 +9,9 @@
 
 **Objective:** NAGAs infiltrate every byte. Living infrastructure.
 
-**Status:** 7/11 Lords ACTIVE, 4 PLANNED
+**Status:** 12/12 Lords ACTIVE
+
+**Architecture:** 8 Infrastructure + 4 Governance = 12 Lords
 
 ---
 
@@ -54,7 +56,7 @@ For each discovered target, classify:
 
 ## CONQUERED TERRITORY
 
-### FLOODED (with NAGA protocols)
+### INFRASTRUCTURE LAYER (8 Real Nagas) - ACTIVE
 
 | Domain | NAGA | Protocol | DriftSource |
 |--------|------|----------|-------------|
@@ -62,9 +64,19 @@ For each discovered target, classify:
 | Security | TAKSHAKA | TakshakaProtocol | cognitive |
 | Network | VASUKI | VasukiProtocol | config |
 | Isolation | KALIYA | KaliyaProtocol | reliability |
-| Observation | NARADA | NaradaProtocol | - |
-| Profiling | CHITRAGUPTA | ChitraguptaProtocol | performance |
-| Resilience | PRAHLAD | PrahladProtocol | structural |
+| Crypto/Secrets | KARKOTAKA | KarkotakaProtocol | - |
+| Schema/Order | KULIKA | KulikaProtocol | - |
+| Cache/Treasury | PADMA | PadmaProtocol | - |
+| Broadcast/Pubsub | SHANKHA | ShankhaProtocol | - |
+
+### GOVERNANCE LAYER (4 Personnel) - ACTIVE
+
+| Domain | NAGA | Protocol | Status |
+|--------|------|----------|--------|
+| Observation | NARADA | NaradaProtocol | ACTIVE |
+| Profiling | CHITRAGUPTA | ChitraguptaProtocol | ACTIVE |
+| Resilience | PRAHLAD | PrahladProtocol | ACTIVE |
+| Gene Splicer | ANANTA | AnantaProtocol | ACTIVE |
 
 ### KNOWN REBELS (25+ identified)
 
@@ -83,15 +95,6 @@ For each discovered target, classify:
 | OpusStateManager | plugins/opus_assistant/ | Sesha |
 | ActionManager | plugins/opus_assistant/ | Chitragupta |
 | SenseManager | plugins/opus_assistant/ | Takshaka |
-
-### LORDS IN TRAINING
-
-| Lord | Purpose | Status |
-|------|---------|--------|
-| KARKOTAKA | Crypto/Secrets | PLANNED |
-| PADMA | Cache/Treasury | PLANNED |
-| SHANKHA | Broadcast/Pubsub | PLANNED |
-| KULIKA | Schema Service | Registry exists, service needed |
 
 ---
 
@@ -114,28 +117,76 @@ For each discovered target, classify:
 - [ ] Protocol-first: define interface, then implement
 - [ ] No config in code
 
-### Phase 4: Complete the Lords
-- [ ] KULIKA service (promote registry)
-- [ ] KARKOTAKA, PADMA, SHANKHA
+### Phase 4: Complete Infrastructure Lords (COMPLETE)
+- [x] KULIKA service (Schema Registry)
+- [x] KARKOTAKA (Crypto/Secrets)
+- [x] PADMA (Cache/Treasury)
+- [x] SHANKHA (Broadcast/Pubsub)
+
+### Phase 5: Ananta - The Gene Splicer (COMPLETE)
+- [x] Define AnantaProtocol (interface first)
+- [x] Define FloodProposal and VetoDecision types
+- [x] Integrate with PrahladProtocol (Veto mechanism)
+- [x] Write RED tests (TDD)
+- [x] Implement AnantaService (make tests GREEN)
+- [ ] Wire into NagaOrchestrator
 
 ---
 
-## BALARAMA PATTERN (NagaProxy)
+## FLOODING PATTERNS
 
-Universal wrapper for any service - transforms dynamically based on behavior:
+### Hard Flood (Balarama/Proxy) - BREAKS isinstance
 
 ```python
 from vibe_core.naga import NagaProxy
 
-# At DI/instantiation point, not source modification
+# PROBLEM: Wraps at runtime with __getattr__ intercept
 wrapped = NagaProxy(real_service)
-wrapped.tick()  # Observed by Narada, timed by Chitragupta
+
+# BREAKS:
+isinstance(wrapped, OriginalService)  # FALSE!
+pickle.dumps(wrapped)  # May fail
+wrapped._internal_state  # Intercepted
 ```
 
-Routes to NAGAs based on BEHAVIOR:
-- All calls → Narada (observation)
-- Exceptions → Kaliya (isolation)
-- Timing → Chitragupta (profiling)
+Use cases: Quick observation, debugging, temporary wrapping
+
+### Soft Flood (Ananta/Mixin) - PRESERVES isinstance
+
+```python
+# SOLUTION: DNA injection via Mixin inheritance
+class FloodedService(SeshaMixin, TakshakaMixin, OriginalService):
+    pass
+
+# PRESERVES:
+isinstance(instance, OriginalService)  # TRUE!
+pickle.dumps(instance)  # Works
+instance._internal_state  # Direct access
+```
+
+Use cases: Production flooding, permanent NAGA integration
+
+### The Gene Splicer (Ananta)
+
+Ananta creates flooded classes automatically:
+
+```python
+from vibe_core.naga import AnantaService
+
+ananta = AnantaService()
+
+# 1. Analyze service
+proposal = ananta.analyze_service(MyRebelService)
+
+# 2. Get Prahlad's approval (Check and Balance)
+decision = ananta.request_approval(proposal)
+
+# 3. Create flooded class (if approved)
+if decision.approved:
+    FloodedClass = ananta.create_flooded_class(MyRebelService, decision)
+```
+
+**Critical:** Ananta cannot flood without Prahlad's consent.
 
 ---
 
@@ -163,4 +214,4 @@ ASHVAMEDHA PROTOCOL:
 
 ---
 
-*Phase 2 complete. 25+ REBELS identified. Coverage: 15%. Ready for Phase 3: Systematic Flooding.*
+*12/12 Lords ACTIVE. Ananta (Gene Splicer) implements Soft Flood with Prahlad's Veto. ASHVAMEDHA continues.*
