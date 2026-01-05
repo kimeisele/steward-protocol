@@ -214,6 +214,131 @@ class CommitWatcherConfig:
         }
 
 
+# =============================================================================
+# GOVERNANCE LAYER CONFIGS (Phase 9/10 - NOT Nagas by race)
+# =============================================================================
+
+
+@dataclass
+class NaradaConfig:
+    """🎵 Narada - Deva-Rishi Messenger/Spy configuration."""
+
+    enabled: bool = True
+    # Interception limits
+    max_interceptions_per_minute: int = 1000
+    # Observation depth
+    observe_args: bool = True
+    observe_return: bool = True
+    observe_duration: bool = True
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "NaradaConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            max_interceptions_per_minute=data.get("max_interceptions_per_minute", 1000),
+            observe_args=data.get("observe_args", True),
+            observe_return=data.get("observe_return", True),
+            observe_duration=data.get("observe_duration", True),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "max_interceptions_per_minute": self.max_interceptions_per_minute,
+            "observe_args": self.observe_args,
+            "observe_return": self.observe_return,
+            "observe_duration": self.observe_duration,
+        }
+
+
+@dataclass
+class KaliyaConfig:
+    """🐍 Kaliya - Quarantine/Isolation configuration."""
+
+    enabled: bool = True
+    # Quarantine settings
+    default_quarantine_duration_seconds: int = 3600  # 1 hour
+    max_violations_before_quarantine: int = 3
+    escalation_threshold: int = 5  # Violations before escalating to 37th
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "KaliyaConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            default_quarantine_duration_seconds=data.get("default_quarantine_duration_seconds", 3600),
+            max_violations_before_quarantine=data.get("max_violations_before_quarantine", 3),
+            escalation_threshold=data.get("escalation_threshold", 5),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "default_quarantine_duration_seconds": self.default_quarantine_duration_seconds,
+            "max_violations_before_quarantine": self.max_violations_before_quarantine,
+            "escalation_threshold": self.escalation_threshold,
+        }
+
+
+@dataclass
+class ChitraguptaConfig:
+    """📜 Chitragupta - Yama's Accountant/Profiler configuration."""
+
+    enabled: bool = True
+    # Profiling settings
+    baseline_window_size: int = 100  # Samples for baseline calculation
+    anomaly_threshold_std: float = 2.0  # Standard deviations for anomaly
+    max_profiles: int = 1000  # Max component profiles to track
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ChitraguptaConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            baseline_window_size=data.get("baseline_window_size", 100),
+            anomaly_threshold_std=data.get("anomaly_threshold_std", 2.0),
+            max_profiles=data.get("max_profiles", 1000),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "baseline_window_size": self.baseline_window_size,
+            "anomaly_threshold_std": self.anomaly_threshold_std,
+            "max_profiles": self.max_profiles,
+        }
+
+
+@dataclass
+class PrahladConfig:
+    """👑 Prahlad - Daitya Governor/Resilience configuration."""
+
+    enabled: bool = True
+    # Antifragility settings
+    auto_generate_tests: bool = True
+    chaos_probe_enabled: bool = True
+    dharma_audit_interval_seconds: int = 3600  # 1 hour
+    # Phoenix guarantee
+    verify_state_preservation: bool = True
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PrahladConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            auto_generate_tests=data.get("auto_generate_tests", True),
+            chaos_probe_enabled=data.get("chaos_probe_enabled", True),
+            dharma_audit_interval_seconds=data.get("dharma_audit_interval_seconds", 3600),
+            verify_state_preservation=data.get("verify_state_preservation", True),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "auto_generate_tests": self.auto_generate_tests,
+            "chaos_probe_enabled": self.chaos_probe_enabled,
+            "dharma_audit_interval_seconds": self.dharma_audit_interval_seconds,
+            "verify_state_preservation": self.verify_state_preservation,
+        }
+
+
 @dataclass
 class NagaConfig:
     """
@@ -231,9 +356,18 @@ class NagaConfig:
     section_id = "naga"
     source_file = "naga.yaml"
 
+    # ===== INFRASTRUCTURE LAYER (Real Nagas - 🐍) =====
     sesha: SeshaConfig = field(default_factory=SeshaConfig)
     vasuki: VasukiConfig = field(default_factory=VasukiConfig)
     takshaka: TakshakaConfig = field(default_factory=TakshakaConfig)
+    kaliya: KaliyaConfig = field(default_factory=KaliyaConfig)
+
+    # ===== GOVERNANCE LAYER (Personnel - NOT Nagas) =====
+    narada: NaradaConfig = field(default_factory=NaradaConfig)
+    chitragupta: ChitraguptaConfig = field(default_factory=ChitraguptaConfig)
+    prahlad: PrahladConfig = field(default_factory=PrahladConfig)
+
+    # ===== INFRASTRUCTURE COMPONENTS =====
     cortex: CortexConfig = field(default_factory=CortexConfig)
     flood: FloodConfig = field(default_factory=FloodConfig)
     commit_watcher: CommitWatcherConfig = field(default_factory=CommitWatcherConfig)
@@ -276,9 +410,16 @@ class NagaConfig:
     def from_dict(cls, data: Dict[str, Any]) -> "NagaConfig":
         """Create from parsed YAML dict."""
         config = cls(
+            # Infrastructure Layer (Real Nagas)
             sesha=SeshaConfig.from_dict(data.get("sesha", {})),
             vasuki=VasukiConfig.from_dict(data.get("vasuki", {})),
             takshaka=TakshakaConfig.from_dict(data.get("takshaka", {})),
+            kaliya=KaliyaConfig.from_dict(data.get("kaliya", {})),
+            # Governance Layer (Personnel)
+            narada=NaradaConfig.from_dict(data.get("narada", {})),
+            chitragupta=ChitraguptaConfig.from_dict(data.get("chitragupta", {})),
+            prahlad=PrahladConfig.from_dict(data.get("prahlad", {})),
+            # Infrastructure Components
             cortex=CortexConfig.from_dict(data.get("cortex", {})),
             flood=FloodConfig.from_dict(data.get("flood", {})),
             commit_watcher=CommitWatcherConfig.from_dict(data.get("commit_watcher", {})),
@@ -289,9 +430,16 @@ class NagaConfig:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to YAML-compatible dict."""
         return {
+            # Infrastructure Layer (Real Nagas)
             "sesha": self.sesha.to_dict(),
             "vasuki": self.vasuki.to_dict(),
             "takshaka": self.takshaka.to_dict(),
+            "kaliya": self.kaliya.to_dict(),
+            # Governance Layer (Personnel)
+            "narada": self.narada.to_dict(),
+            "chitragupta": self.chitragupta.to_dict(),
+            "prahlad": self.prahlad.to_dict(),
+            # Infrastructure Components
             "cortex": self.cortex.to_dict(),
             "flood": self.flood.to_dict(),
             "commit_watcher": self.commit_watcher.to_dict(),
@@ -339,7 +487,17 @@ class NagaConfig:
     def disabled(cls) -> "NagaConfig":
         """All NAGAs disabled."""
         config = cls()
+        # Infrastructure Layer
         config.sesha.enabled = False
         config.vasuki.enabled = False
         config.takshaka.enabled = False
+        config.kaliya.enabled = False
+        # Governance Layer
+        config.narada.enabled = False
+        config.chitragupta.enabled = False
+        config.prahlad.enabled = False
+        # Infrastructure Components
+        config.cortex.enabled = False
+        config.flood.enabled = False
+        config.commit_watcher.enabled = False
         return config
