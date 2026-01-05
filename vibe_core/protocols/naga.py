@@ -52,11 +52,17 @@ from vibe_core.protocols.correction import (
 
 
 class NagaType(str, Enum):
-    """The three NAGAs of the system."""
+    """The NAGAs of the system (NSA - NAGA Service Agency)."""
 
+    # Original 3 (PROMPT.md Level 2)
     SESHA = "sesha"  # Data/Truth - Der Träger
     VASUKI = "vasuki"  # Network/Boundary - Der Transformator
     TAKSHAKA = "takshaka"  # Security/Guard - Der Krieger
+
+    # NSA Extension (Phase 9)
+    NARADA = "narada"  # Spy - Der Journalist
+    KALIYA = "kaliya"  # Quarantine - Die Isolation
+    CHITRAGUPTA = "chitragupta"  # Profiler - Der Buchhalter
 
 
 @dataclass
@@ -69,6 +75,7 @@ class NagaStatus:
     events_processed: int = 0
     errors: int = 0
     message: str = ""
+    details: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -78,6 +85,7 @@ class NagaStatus:
             "events_processed": self.events_processed,
             "errors": self.errors,
             "message": self.message,
+            "details": self.details,
         }
 
 
