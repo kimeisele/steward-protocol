@@ -1252,27 +1252,34 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # 🐍 NAGA CORTEX INTEGRATION (Phase 3B)
     # =========================================================================
 
-    def _get_naga_context(self) -> Optional[Dict[str, Any]]:
+    def _merge_naga_context(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Get NAGA intelligence for cognitive decisions.
+        Merge NAGA intelligence into cognitive context.
 
         PULL-BASED: MANAS asks NAGA when it needs context.
         NAGAs INFORM, they don't CONTROL.
 
+        Args:
+            context: Existing context dict (or None)
+
         Returns:
-            Dict with NAGA context, or None if unavailable
+            Context dict with NAGA context merged in (creates new if None)
         """
+        result = context or {}
         try:
             from vibe_core.protocols.naga import NagaCortexProtocol
 
             cortex = ServiceRegistry.get(NagaCortexProtocol)
             if cortex and cortex.is_available():
                 naga_context = cortex.get_context_for_manas()
-                return naga_context.to_dict()
+                result["naga"] = naga_context.to_dict()
+                threats = result["naga"].get("active_threats", [])
+                if threats:
+                    logger.debug(f"🐍 NAGA: {len(threats)} active threats in context")
         except Exception as e:
             logger.debug(f"🐍 NAGA: Context unavailable: {e}")
 
-        return None
+        return result
 
     def _send_naga_feedback(
         self,
@@ -1974,33 +1981,18 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             logger.info("🪞 MANAS: Chill. Das warst du selbst.")
             return []
 
-        # OPUS-300: DHARMA GENERATION - Autonomous Duty-Based Intent Creation
-        # When idle, system generates maintenance intents based on system health
-        idle_minutes = self.get_idle_minutes()
-        dharma_intents = []
-        if idle_minutes >= self._config.idle_threshold_minutes:
-            dharma_intents = self._generate_dharma_intents(idle_minutes)
-            if dharma_intents:
-                logger.info(f"🧘 DHARMA GENERATION: Created {len(dharma_intents)} auto-maintenance intents")
-                for intent in dharma_intents:
-                    logger.info(f"   • {intent.intent_type}: {intent.title}")
-                # If Dharma intents were generated, return them immediately (don't run full orchestrate)
-                self._last_thought_time = datetime.utcnow()
-                return dharma_intents
+        # OPUS-300: Dharma shortcut - if idle, return maintenance intents
+        dharma = self._try_dharma_shortcut()
+        if dharma:
+            return dharma
 
         self._last_thought_time = datetime.utcnow()
+        context = self._merge_naga_context(context)  # 🐍 NAGA intelligence (Phase 3B)
+        return self._run_orchestrate_sync()
 
-        # 🐍 NAGA CORTEX: Pull intelligence for cognitive decisions (Phase 3B)
-        naga_context = self._get_naga_context()
-        if naga_context:
-            context = context or {}
-            context["naga"] = naga_context
-            if naga_context.get("active_threats"):
-                logger.debug(f"🐍 NAGA: {len(naga_context['active_threats'])} active threats in context")
-
+    def _run_orchestrate_sync(self) -> List[Intent]:
+        """Execute orchestrate() synchronously and process results."""
         try:
-            # OPUS-097: Use get_event_loop() pattern instead of asyncio.run()
-            # asyncio.run() fails when called from already running event loop
             try:
                 loop = asyncio.get_event_loop()
             except RuntimeError:
@@ -2011,13 +2003,10 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 added = ctx.results.get("added_intents", [])
                 if added:
                     logger.info(f"MANAS: Generated {len(added)} new intents")
-
-                # GURUKULA: Check if MANAS wants to train
                 dojo_intent = self._check_training_desire()
                 if dojo_intent:
                     added.append(dojo_intent)
                     logger.info("🥋 MANAS: Curiosity triggered - adding enter_dojo intent")
-
                 return added
         except Exception as e:
             logger.error(f"MANAS: Error in orchestrate(): {e}")
@@ -2053,6 +2042,27 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             logger.debug(f"MANAS: Training desire check failed: {e}")
 
         return None
+
+    def _try_dharma_shortcut(self) -> Optional[List[Intent]]:
+        """
+        OPUS-300: Check if idle and return Dharma intents as shortcut.
+
+        Returns:
+            List of Dharma intents if idle, None otherwise
+        """
+        idle_minutes = self.get_idle_minutes()
+        if idle_minutes < self._config.idle_threshold_minutes:
+            return None
+
+        intents = self._generate_dharma_intents(idle_minutes)
+        if not intents:
+            return None
+
+        logger.info(f"🧘 DHARMA GENERATION: Created {len(intents)} auto-maintenance intents")
+        for intent in intents:
+            logger.info(f"   • {intent.intent_type}: {intent.title}")
+        self._last_thought_time = datetime.utcnow()
+        return intents
 
     def _generate_dharma_intents(self, idle_minutes: int) -> List[Intent]:
         """
