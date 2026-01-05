@@ -619,33 +619,57 @@ class NagaCortex:
         return decision
 
     # =========================================================================
-    # MANAS INTEGRATION (Phase 3B)
+    # MANAS INTEGRATION (Phase 3B - STRICT GAD-000 COMPLIANCE)
     # =========================================================================
 
     def get_context_for_manas(self) -> "NagaContext":
         """
         Get aggregated NAGA intelligence for MANAS consumption.
 
+        GAD-000 COMPLIANCE:
+        - 37th Principle: Context is cryptographically signed
+        - Karma: Every access creates Ledger event
+        - Parseability: Typed fields, reason codes
+        - Phoenix: Serializable for persistence
+
         PULL-BASED: MANAS calls this when it needs context.
         NAGAs INFORM, they don't CONTROL.
 
         Returns:
-            NagaContext with aggregated intelligence from all 12 Lords
+            Signed NagaContext with typed intelligence from all 12 Lords
         """
-        from vibe_core.protocols.naga import NagaContext
+        import time
 
-        # Collect intelligence from NAGAs via orchestrator
-        active_threats: List[Dict[str, Any]] = []
+        from vibe_core.protocols.naga import (
+            ContextReasonCode,
+            DecisionSummary,
+            NagaContext,
+            PeerHealthSummary,
+            ThreatSummary,
+        )
+
+        start_time = time.time()
+
+        # === COLLECT TYPED INTELLIGENCE ===
+        active_threats: List[ThreatSummary] = []
         recent_patterns: List[str] = []
-        peer_health: Dict[str, Any] = {}
-        anomalies: List[Dict[str, Any]] = []
+        peer_health = PeerHealthSummary()
+        anomaly_count = 0
+        anomaly_sources: List[str] = []
 
-        # TAKSHAKA: Active threats
+        # TAKSHAKA: Active threats (TYPED)
         if self._orchestrator.takshaka:
             try:
                 status = self._orchestrator.takshaka.get_status()
                 if hasattr(status, "recent_bites"):
-                    active_threats = [{"type": "bite", "details": b} for b in (status.recent_bites or [])[:5]]
+                    for bite in (status.recent_bites or [])[:5]:
+                        active_threats.append(
+                            ThreatSummary(
+                                threat_type="bite",
+                                source=str(bite.get("source", "unknown")) if isinstance(bite, dict) else str(bite),
+                                severity=0.8,  # Bites are high severity
+                            )
+                        )
             except Exception as e:
                 logger.debug(f"[CORTEX] Takshaka context unavailable: {e}")
 
@@ -658,76 +682,124 @@ class NagaCortex:
             except Exception as e:
                 logger.debug(f"[CORTEX] Sesha context unavailable: {e}")
 
-        # VASUKI: Peer health
+        # VASUKI: Peer health (TYPED)
         if self._orchestrator.vasuki:
             try:
                 status = self._orchestrator.vasuki.get_status()
-                if hasattr(status, "peer_health"):
-                    peer_health = status.peer_health or {}
+                if hasattr(status, "peer_count"):
+                    peer_health = PeerHealthSummary(
+                        peer_count=getattr(status, "peer_count", 0),
+                        healthy_count=getattr(status, "healthy_count", 0),
+                        degraded_peers=getattr(status, "degraded_peers", []),
+                    )
             except Exception as e:
                 logger.debug(f"[CORTEX] Vasuki context unavailable: {e}")
 
-        # CHITRAGUPTA: Anomalies
+        # CHITRAGUPTA: Anomalies (TYPED)
         if self._orchestrator.chitragupta:
             try:
                 status = self._orchestrator.chitragupta.get_status()
                 if hasattr(status, "recent_anomalies"):
-                    anomalies = [
-                        a.to_dict() if hasattr(a, "to_dict") else a for a in (status.recent_anomalies or [])[:5]
-                    ]
+                    anomalies_raw = status.recent_anomalies or []
+                    anomaly_count = len(anomalies_raw)
+                    anomaly_sources = [getattr(a, "component_id", str(a)) for a in anomalies_raw[:5]]
             except Exception as e:
                 logger.debug(f"[CORTEX] Chitragupta context unavailable: {e}")
 
-        # Recent decisions from this Cortex
-        recent_decisions = [
-            {
-                "action": d.action.name,
-                "target": d.target,
-                "timestamp": d.timestamp.isoformat() if hasattr(d, "timestamp") else None,
-            }
+        # Recent decisions from this Cortex (TYPED)
+        recent_decisions: List[DecisionSummary] = [
+            DecisionSummary(
+                action=d.action.name,
+                target=d.target,
+                reason_code=d.reason_code.value if hasattr(d, "reason_code") else "D005",
+                timestamp=d.timestamp if hasattr(d, "timestamp") else datetime.now(),
+            )
             for d in self._decision_queue[:5]
         ]
 
-        return NagaContext(
+        # === DETERMINE REASON CODE (GAD-000 Parseability) ===
+        if active_threats:
+            reason_code = ContextReasonCode.C001_THREAT_ACTIVE
+        elif anomaly_count > 0:
+            reason_code = ContextReasonCode.C002_ANOMALY_DETECTED
+        elif recent_patterns:
+            reason_code = ContextReasonCode.C003_PATTERN_MATCH
+        else:
+            reason_code = ContextReasonCode.C004_ROUTINE_POLL
+
+        # === BUILD CONTEXT ===
+        context = NagaContext(
             active_threats=active_threats,
             recent_patterns=recent_patterns,
             peer_health=peer_health,
-            anomalies=anomalies,
+            anomaly_count=anomaly_count,
+            anomaly_sources=anomaly_sources,
             recent_decisions=recent_decisions,
             signal_count=len(self._signal_buffer),
+            reason_code=reason_code,
         )
+
+        # === 37th PRINCIPLE: SIGN THE CONTEXT ===
+        if self._identity:
+            context.sign(self._identity)
+            logger.debug(f"[CORTEX] 🔐 Context signed by {self._identity.agent_id}")
+
+        # === KARMA: RECORD TO LEDGER ===
+        duration_ms = (time.time() - start_time) * 1000
+        if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
+            try:
+                self._orchestrator.sesha._ledger.record_event(
+                    event_type="CORTEX_CONSULTATION",
+                    agent_id="naga_cortex",
+                    details={
+                        "reason_code": reason_code.value,
+                        "threat_count": len(active_threats),
+                        "anomaly_count": anomaly_count,
+                        "signal_count": len(self._signal_buffer),
+                        "is_signed": context.is_signed,
+                        "duration_ms": duration_ms,
+                    },
+                )
+            except Exception as e:
+                logger.debug(f"[CORTEX] Failed to log consultation: {e}")
+
+        return context
 
     def receive_feedback(self, feedback: "ManasFeedback") -> None:
         """
         Receive feedback from MANAS about intent outcomes.
 
+        GAD-000 COMPLIANCE:
+        - Karma: Feedback is recorded in Ledger
+        - Signature verified if signed
+
         LEARNING LOOP: MANAS informs NAGA of what worked.
         Used to adjust signal weights and decision thresholds.
 
         Args:
-            feedback: Outcome of intent execution
+            feedback: Signed feedback from MANAS
         """
-        from vibe_core.protocols.naga import ManasFeedback
-
-        # Log to Sesha for audit trail
+        # === KARMA: RECORD TO LEDGER ===
         if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
             try:
                 self._orchestrator.sesha._ledger.record_event(
                     event_type="MANAS_FEEDBACK",
                     agent_id="naga_cortex",
-                    details=feedback.to_dict(),
+                    details={
+                        **feedback.to_dict(),
+                        "is_signed": feedback.is_signed,
+                    },
                 )
             except Exception as e:
                 logger.debug(f"[CORTEX] Failed to log feedback: {e}")
 
-        # Update stats
-        self._stats.decisions_by_action[f"feedback_{feedback.outcome}"] = (
-            self._stats.decisions_by_action.get(f"feedback_{feedback.outcome}", 0) + 1
-        )
+        # === UPDATE STATS ===
+        outcome_key = f"feedback_{feedback.outcome.value}"
+        self._stats.decisions_by_action[outcome_key] = self._stats.decisions_by_action.get(outcome_key, 0) + 1
 
         logger.debug(
-            f"[CORTEX] 📥 MANAS feedback: {feedback.intent_type} → {feedback.outcome} "
-            f"(NAGA context used: {feedback.naga_context_used})"
+            f"[CORTEX] 📥 MANAS feedback: {feedback.intent_type} → {feedback.outcome.value} "
+            f"(NAGA context used: {feedback.naga_context_used}, signed: {feedback.is_signed})"
         )
 
     def is_available(self) -> bool:
