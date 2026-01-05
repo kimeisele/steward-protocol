@@ -138,5 +138,88 @@ The pillar is the boundary between binary states. Resonance lives there.
 
 ---
 
+## SIDEQUEST: CLI Unification (Priority: HIGH)
+
+### The Paradox
+
+```
+Backend:  ~160 CLI commands exist in services
+Frontend: No unified way to access them
+Agent:    Can't grep own intelligence
+```
+
+**We are an intelligence agency that can't access its own intelligence.**
+
+### Evidence
+
+```bash
+# This exists but is scattered:
+vibe_core/naga/services/*/  # Each has commands
+steward tool list           # Shows some
+steward verify              # Some visibility
+
+# What's MISSING:
+steward naga status         # Overview of all 7 NAGAs
+steward prakriti attacks    # Run attack framework
+steward intel grep <term>   # Search all intelligence
+steward drift detect        # Run CorrectionDispatcher
+```
+
+### The ~160 Commands (to be inventoried)
+
+| Service | Commands | Status |
+|---------|----------|--------|
+| Sesha | ledger, gossip, truth | ❓ Unknown |
+| Vasuki | serialize, network | ❓ Unknown |
+| Takshaka | toxicity, signatures | ❓ Unknown |
+| Prahlad | coverage, heal | ❓ Unknown |
+| Chitragupta | audit, metrics | ❓ Unknown |
+| Narada | messages, broadcast | ❓ Unknown |
+| Kaliya | isolate, quarantine | ❓ Unknown |
+| **Prakriti** | attacks, evolve | 🆕 NEW (not exposed) |
+
+### What We Need
+
+1. **Unified CLI Router** - Single entry point for all NAGA commands
+2. **Fractal Command Structure** - `steward naga <service> <command>`
+3. **Intelligence Dashboard** - `steward intel` for INTEL.md-style reports
+4. **Real-time Status** - See what's running, what's drifting
+
+### Related Files to Check
+
+```
+vibe_core/cartridges/system/steward/  # CLI entry point?
+vibe_core/naga/orchestrator.py        # Has boot matrix
+scripts/                              # CLI scripts?
+```
+
+### This is a SIDEQUEST because:
+- Current work (Prakriti hardening) is complete enough to pause
+- CLI unification is a separate concern
+- We don't fully know the terrain yet
+- Safe to bookmark and continue later
+
+---
+
+## Session Summary (2026-01-05)
+
+### Completed
+1. ✅ Prakriti Living Test Framework (YAML seeds, hot-swap)
+2. ✅ Hiranyakashipu Attack Framework (13 pass, 5 RED)
+3. ✅ Diamond Protocol tests
+4. ✅ Wiring to protocols (RESONANCE strategy)
+5. ✅ INTEL.md documentation
+
+### Still RED (intentionally)
+- 5 attacks bypass defense (syntax_error, division_zero, wrong_import, system_module, flaky)
+- These stay RED until we build smarter defense
+
+### Next Session Options
+1. **Harden Defense** - Make the 5 RED tests pass
+2. **CLI Unification** - The sidequest above
+3. **Check NAGA folder** - User mentioned "vllt noch mehr geschlampt"
+
+---
+
 *Last updated: 2026-01-05*
 *Author: NAGA Development Team*
