@@ -22,7 +22,15 @@ from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
 from vibe_core.di import ServiceRegistry
+
+# NAGA CLI HookChain - Level -1 Fractal Infrastructure
+from vibe_core.naga.cli_hook_chain import CLIHookChain, get_hook_chain
 from vibe_core.protocols import PrakritiProtocol
+from vibe_core.protocols.cli_execution import (
+    CLICapabilityToken,
+    CLIExecutionContext,
+    CLIExecutionPhase,
+)
 
 # Import Legacy CLI for fallback/system commands
 # Suppress deprecation warning during import if we add it later
@@ -85,6 +93,10 @@ class UnifiedCLI:
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
 
+        # NAGA CLI HookChain - Level -1 Fractal Infrastructure
+        self._hook_chain: Optional[CLIHookChain] = None
+        self._hooks_enabled: bool = True
+
         # OPUS-307 Phase E+: Protocol-based CLI handlers are discovered via CLIRegistry
         # No more hardcoded instances - handlers register themselves via @register_cli
         # Registered CLIs: tool, circuit, run, knowledge, standards, remedies
@@ -128,6 +140,148 @@ class UnifiedCLI:
             "execute": self.cmd_execute,
         }
 
+    # =========================================================================
+    # NAGA CLI HOOKCHAIN - Level -1 Fractal Infrastructure
+    # =========================================================================
+
+    def initialize_hooks(self, secret_key: Optional[bytes] = None) -> None:
+        """
+        Initialize NAGA CLI hooks CONNECTED to LIVING NAGA services.
+
+        OUROBOROS: Hooks connect to real NAGAs via ServiceRegistry.
+        This is not dead infrastructure - it's the snake eating its tail.
+
+        Args:
+            secret_key: Optional secret for capability token verification
+        """
+        try:
+            from vibe_core.naga.hooks import (
+                CapabilityCLIHook,
+                ChitraguptaCLIHook,
+                SeshaCLIHook,
+                TakshakaCLIHook,
+            )
+            from vibe_core.protocols.naga import (
+                ChitraguptaProtocol,
+                SeshaProtocol,
+                TakshakaProtocol,
+            )
+
+            self._hook_chain = get_hook_chain()
+
+            # === INJECT LIVING NAGAs from ServiceRegistry ===
+            # This is the OUROBOROS connection - hooks observe, NAGAs act
+            takshaka = ServiceRegistry.get(TakshakaProtocol)
+            chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+            sesha = ServiceRegistry.get(SeshaProtocol)
+
+            # Register hooks with REAL services injected
+            self._hook_chain.register(
+                TakshakaCLIHook(
+                    takshaka=takshaka,
+                    hard_mode=False,  # Soft flooding initially
+                )
+            )
+            self._hook_chain.register(
+                CapabilityCLIHook(
+                    secret_key=secret_key,
+                    enforce=False,  # Observation mode
+                )
+            )
+            self._hook_chain.register(
+                ChitraguptaCLIHook(
+                    chitragupta_service=chitragupta,
+                )
+            )
+            self._hook_chain.register(
+                SeshaCLIHook(
+                    sesha_service=sesha,
+                )
+            )
+
+            # Log connection status
+            connected = []
+            if takshaka:
+                connected.append("Takshaka")
+            if chitragupta:
+                connected.append("Chitragupta")
+            if sesha:
+                connected.append("Sesha")
+
+            if connected:
+                logger.info(f"NAGA CLI hooks ALIVE - connected to: {', '.join(connected)}")
+            else:
+                logger.info("NAGA CLI hooks initialized (standalone mode - no live NAGAs)")
+
+        except ImportError as e:
+            logger.debug(f"NAGA hooks not available: {e}")
+            self._hook_chain = None
+
+    def _create_execution_context(
+        self,
+        command_name: str,
+        args: List[str],
+        namespace: str = "cli",
+    ) -> CLIExecutionContext:
+        """Create execution context for hook chain."""
+        # Create anonymous token for now (can be upgraded with kernel)
+        token = CLICapabilityToken.create_anonymous()
+
+        return CLIExecutionContext(
+            command_name=command_name,
+            namespace=namespace,
+            args=args,
+            capability_token=token,
+        )
+
+    def _run_with_hooks(
+        self,
+        command_name: str,
+        args: List[str],
+        handler_fn,
+        namespace: str = "cli",
+    ) -> int:
+        """
+        Execute command through hook chain.
+
+        Flow:
+        1. Create execution context
+        2. Run pre-phases (PRE_VALIDATE, POST_VALIDATE, PRE_EXECUTE)
+        3. If allowed, execute handler
+        4. Run post-phases (POST_EXECUTE or ON_ERROR)
+        """
+        if not self._hooks_enabled or self._hook_chain is None:
+            # No hooks - execute directly
+            return handler_fn()
+
+        context = self._create_execution_context(command_name, args, namespace)
+
+        try:
+            # Run pre-phases
+            if not self._hook_chain.run_pre_phases(context):
+                # Blocked by hook
+                print(f"Command blocked by {context.blocked_by}: {context.blocked_reason}")
+                return 1
+
+            # Execute handler
+            exit_code = handler_fn()
+
+            # Mark timing
+            import time
+
+            context.end_time = time.time()
+
+            # Run post-phases
+            self._hook_chain.run_post_phases(context)
+
+            return exit_code
+
+        except Exception as e:
+            # Run error phase
+            context.end_time = __import__("time").time()
+            self._hook_chain.run_error_phase(context)
+            raise
+
     def run(self, args: List[str]) -> int:
         """
         Execute CLI command.
@@ -155,10 +309,16 @@ class UnifiedCLI:
         # 2. OPUS-307 Phase E+: Protocol-based CLI handlers via CLIRegistry
         # GAD-000 COMPLIANT: No hardcoding, dynamic discovery
         # PROMPT.md: "Protocol statt konkrete Klassen"
-        # Handles: tool, circuit, run, knowledge, standards, remedies
+        # Handles: tool, circuit, run, knowledge, standards, remedies, naga
+        # NAGA HookChain wraps execution for observation/governance
         cli_handler = CLIRegistry.get(command_name)
         if cli_handler is not None:
-            return cli_handler.run(remaining_args)
+            return self._run_with_hooks(
+                command_name=command_name,
+                args=remaining_args,
+                handler_fn=lambda: cli_handler.run(remaining_args),
+                namespace="cli.registry",
+            )
 
         # 3. Check Plugin Commands
         commands = self._loader.discover_commands()
