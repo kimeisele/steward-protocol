@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-01-05 | ACTIVE GENES DEPLOYED
+
+### Die Lebenden Pferde (Ashvamedha Complete)
+
+| Gene | Pattern | Auto-Intercepts | Tests |
+|------|---------|-----------------|-------|
+| ActiveSeshaMixin | save/write/delete/create | → Ledger | 19 |
+| ActiveTakshakaMixin | execute/process/query | → Validate | 20 |
+| ActiveVasukiMixin | send/broadcast/sync | → Sign | 16 |
+
+**Metaclass Chain:** `Sesha → Takshaka → Vasuki`
+- Alle drei kombinierbar in einer Klasse
+- Graceful degradation ohne Services
+- Cortex wird gefüttert → OUROBOROS lebt
+
+### INTEL.md erstellt
+
+```
+vibe_core/naga/INTEL.md
+├── Territory Map (40 files, 14 services)
+├── External Hooks (3 entry points)
+├── Intelligence Gaps (was wir noch NICHT sehen)
+├── Expansion Targets (nächste Ziele)
+└── Doctrine ("Wir mischen uns nicht ein")
+```
+
+### Nächste Aktion: Einschlängeln
+
+**Prio 1:** Ledger wrappen (Sesha als Torwächter)
+**Prio 2:** Plugin-Loads auditieren (Ananta)
+**Prio 3:** Agent-Aktivität beobachten (Chitragupta)
+
+---
+
 ## 2026-01-05 | ASHVAMEDHA Phase 3A
 
 ### ARCHITEKTUR-ENTSCHEIDUNG: Option D (Chirurgisch)
@@ -102,9 +136,19 @@ TIER-1 (MANAS):   Context Injection = Wisdom (NEXT)
 - [x] Feedback Loop (MANAS → NAGA learning)
 - [ ] Synapse Integration (naga_coordination map) - LATER
 
-**Später:**
-- External APIs (Twitter, Reddit) via VASUKI
-- Boundary Hardening
+**Phase 4: ASHVAMEDHA ACTIVE GENES: ✅ COMPLETE**
+- [x] ActiveSeshaMixin (save/write/delete/create → Ledger)
+- [x] ActiveTakshakaMixin (execute/process/query → Validate)
+- [x] ActiveVasukiMixin (send/broadcast/sync → Sign)
+- [x] Metaclass chain for combining all three
+- [x] 55 new tests, 576 total NAGA tests
+
+**EXPANSION TARGETS:**
+- [ ] Wrap vibe_core/ledger/ (Direct access bypasses Sesha)
+- [ ] Wrap vibe_core/plugins/ (Load without Ananta audit)
+- [ ] Wrap vibe_core/agents/ (Operate outside NAGA)
+- [ ] HTTP endpoint border control (Vasuki)
+- [ ] File I/O recording (Sesha)
 
 ---
 
