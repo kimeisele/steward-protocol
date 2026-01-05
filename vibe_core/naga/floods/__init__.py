@@ -20,7 +20,11 @@ Usage:
 """
 
 from .ouroboros import FloodedCISyncService
+from .plugin_service import FloodedPluginService
+from .task_manager import FloodedTaskManager
 
 __all__ = [
     "FloodedCISyncService",
+    "FloodedPluginService",
+    "FloodedTaskManager",
 ]
