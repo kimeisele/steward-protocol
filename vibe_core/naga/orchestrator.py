@@ -578,6 +578,13 @@ class NagaOrchestrator:
         """Build the visual matrix display."""
         lines = []
 
+        # Get thresholds from config (no hardcoded values!)
+        vis_config = getattr(self._config, "visibility", None)
+        target_tests = vis_config.target_naga_tests if vis_config else 600
+        tests_per_comp = vis_config.tests_per_component if vis_config else 10
+        protected_thresh = vis_config.protected_threshold if vis_config else 70.0
+        monitoring_thresh = vis_config.monitoring_threshold if vis_config else 30.0
+
         # Header
         lines.append(f"{'COMPONENT':<20} {'COVERAGE':<15} {'SHUDDHI':<12} {'STATUS'}")
         lines.append("-" * 65)
@@ -585,9 +592,9 @@ class NagaOrchestrator:
         # NAGA Coverage (from Prahlad intelligence)
         naga_coverage = intel.get("naga_coverage", {})
         naga_tests = naga_coverage.get("tests_available", 0)
-        naga_pct = min(100, (naga_tests / 600) * 100) if naga_tests else 0  # 600 = target
+        naga_pct = min(100, (naga_tests / target_tests) * 100) if naga_tests else 0
         naga_bar = self._progress_bar(naga_pct)
-        naga_status = "🛡️ Protected" if naga_pct >= 70 else "⚠️ Building" if naga_pct >= 30 else "☣️ Weak"
+        naga_status = self._get_status_emoji(naga_pct, protected_thresh, monitoring_thresh)
         lines.append(f"{'NAGA Core':<20} {naga_bar} {naga_pct:3.0f}%  {'CLEAN':<12} {naga_status}")
 
         # By-type breakdown
@@ -601,20 +608,15 @@ class NagaOrchestrator:
             if count == 0:
                 continue
 
-            # Calculate coverage percentage (tests per component)
-            coverage_pct = min(100, (tests / max(count, 1)) * 10)  # 10 tests per component = 100%
+            # Calculate coverage percentage (configurable tests_per_component)
+            coverage_pct = min(100, (tests / max(count, 1)) * tests_per_comp)
             bar = self._progress_bar(coverage_pct)
 
             # Determine Shuddhi status (simplified - assume clean if tests exist)
             shuddhi_status = "CLEAN" if tests > 0 else "UNKNOWN"
 
-            # Determine NAGA status
-            if coverage_pct >= 70:
-                status = "🛡️ Protected"
-            elif coverage_pct >= 30:
-                status = "⚠️ Monitoring"
-            else:
-                status = "☣️ Blind"
+            # Determine NAGA status (using configurable thresholds)
+            status = self._get_status_emoji(coverage_pct, protected_thresh, monitoring_thresh)
 
             lines.append(f"{comp_type:<20} {bar} {coverage_pct:3.0f}%  {shuddhi_status:<12} {status}")
 
@@ -641,6 +643,20 @@ class NagaOrchestrator:
         filled = int(width * percentage / 100)
         empty = width - filled
         return "█" * filled + "░" * empty
+
+    def _get_status_emoji(
+        self,
+        percentage: float,
+        protected_threshold: float,
+        monitoring_threshold: float,
+    ) -> str:
+        """Get status emoji based on configurable thresholds."""
+        if percentage >= protected_threshold:
+            return "🛡️ Protected"
+        elif percentage >= monitoring_threshold:
+            return "⚠️ Monitoring"
+        else:
+            return "☣️ Blind"
 
     # =========================================================================
     # Status & Health
