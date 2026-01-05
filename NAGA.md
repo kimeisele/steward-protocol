@@ -66,15 +66,23 @@ For each discovered target, classify:
 | Profiling | CHITRAGUPTA | ChitraguptaProtocol | performance |
 | Resilience | PRAHLAD | PrahladProtocol | structural |
 
-### KNOWN REBELS (manual targets)
+### KNOWN REBELS (25+ identified)
 
-| Target | Location | Needs | Priority |
-|--------|----------|-------|----------|
-| ManifestationService | services/ | Narada | HIGH |
-| CapabilityEnforcer | services/ | Takshaka | HIGH |
-| LearningLoop | services/ | Chitragupta | MEDIUM |
-| LifecycleService | services/ | Prahlad | MEDIUM |
-| Manas Cortex | plugins/opus_assistant/ | Full integration | HIGH |
+> Full list: [NAGA_RECON.md](NAGA_RECON.md)
+
+**TIER 1 - Immediate:**
+| Target | Location | Needs |
+|--------|----------|-------|
+| StateService | state/ | Sesha |
+| ManifestationService | services/ | Narada |
+| CapabilityEnforcer | services/ | Takshaka |
+
+**TIER 2 - Short-term:**
+| Target | Location | Needs |
+|--------|----------|-------|
+| OpusStateManager | plugins/opus_assistant/ | Sesha |
+| ActionManager | plugins/opus_assistant/ | Chitragupta |
+| SenseManager | plugins/opus_assistant/ | Takshaka |
 
 ### LORDS IN TRAINING
 
@@ -95,10 +103,11 @@ For each discovered target, classify:
 - [x] NaradaScanner auto-discovery
 - [x] Orchestrator integration
 
-### Phase 2: Active Recon (CURRENT)
-- [ ] Run TARGET ACQUISITION scan
-- [ ] Classify all services as FLOODED/REBEL/CIVILIAN
-- [ ] Update KNOWN REBELS dynamically
+### Phase 2: Active Recon (COMPLETE)
+- [x] Run TARGET ACQUISITION scan
+- [x] Classify all services as FLOODED/REBEL/CIVILIAN
+- [x] Update KNOWN REBELS dynamically
+- **See:** [NAGA_RECON.md](NAGA_RECON.md) for full intel
 
 ### Phase 3: Systematic Flooding
 - [ ] Flood REBELS by priority (HIGH first)
@@ -134,4 +143,4 @@ ASHVAMEDHA PROTOCOL:
 
 ---
 
-*Phase 1 complete. Phase 2: Active Recon initiated.*
+*Phase 2 complete. 25+ REBELS identified. Coverage: 15%. Ready for Phase 3: Systematic Flooding.*
