@@ -39,6 +39,7 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    TypedDict,
     TypeVar,
     runtime_checkable,
 )
@@ -122,9 +123,35 @@ class NagaType(str, Enum):
         return [cls.NARADA, cls.CHITRAGUPTA, cls.PRAHLAD]
 
 
+class StatusDetails(TypedDict, total=False):
+    """
+    Typed status details - STAMBHA (The Pillar).
+
+    Replaces Dict[str, Any] in NagaStatus to prevent status poisoning.
+    Prahlad's DNA: Explicit metrics, no surprises.
+    """
+
+    # Performance metrics (bounded integers)
+    queue_size: int
+    processing_rate: float  # events/second
+    latency_ms: float  # average latency
+
+    # Health indicators
+    last_error: str  # Max 200 chars
+    degraded_reason: str  # Why degraded (if any)
+
+    # Resource usage
+    memory_mb: float
+    connections: int
+
+
 @dataclass
 class NagaStatus:
-    """Status of a NAGA service."""
+    """
+    Status of a NAGA service.
+
+    HALAHALA HARDENED: Uses StatusDetails TypedDict instead of Dict[str, Any].
+    """
 
     naga_type: NagaType
     healthy: bool = True
@@ -132,9 +159,10 @@ class NagaStatus:
     events_processed: int = 0
     errors: int = 0
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: StatusDetails = field(default_factory=lambda: StatusDetails())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
+        """Serialize to dict. Returns Dict[str, object] not Dict[str, Any]."""
         return {
             "type": self.naga_type.value,
             "healthy": self.healthy,
@@ -142,7 +170,7 @@ class NagaStatus:
             "events_processed": self.events_processed,
             "errors": self.errors,
             "message": self.message,
-            "details": self.details,
+            "details": dict(self.details),
         }
 
 
@@ -545,21 +573,55 @@ class ToxicityReport:
         return self.score >= 0.3
 
 
+class ViolationDetails(TypedDict, total=False):
+    """
+    Typed violation details - STAMBHA (The Pillar).
+
+    Replaces Dict[str, Any] to prevent Halahala poison:
+    - SQL injection in arbitrary keys
+    - Memory bombs in arbitrary values
+    - Null byte attacks
+    - Type confusion
+
+    Prahlad's DNA: Explicit fields, no surprises.
+    """
+
+    # Core violation info
+    event_type: str  # What event triggered the violation
+    toxicity_score: float  # 0.0-1.0 from Takshaka
+    matched_patterns: List[str]  # What patterns were detected
+
+    # Context (bounded strings, not arbitrary)
+    agent_id: str  # Max 64 chars enforced by creator
+    operation: str  # What operation was attempted
+    error_message: str  # Max 500 chars enforced by creator
+
+    # Forensics (bounded)
+    sample_hash: str  # SHA256 of raw payload, not the payload itself
+    sample_size: int  # Size in bytes of original payload
+
+
 @dataclass
 class VajraViolation:
-    """Record of a security violation (for ledger)."""
+    """
+    Record of a security violation (for ledger).
+
+    HALAHALA HARDENED: Uses ViolationDetails TypedDict instead of Dict[str, Any].
+    This is Prahlad's gift - the type safety DNA that prevents poison injection.
+    """
 
     violation_type: str  # NO_SIGNATURE, INVALID_SIGNATURE, TOXIC, etc.
     source: str  # IP, agent_id, etc.
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: ViolationDetails = field(default_factory=lambda: ViolationDetails())
     timestamp: datetime = field(default_factory=datetime.now)
     raw_sample: Optional[bytes] = None  # First N bytes for forensics
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
+        """Serialize to dict. Returns Dict[str, object] not Dict[str, Any]."""
         return {
             "type": self.violation_type,
             "source": self.source,
-            "details": self.details,
+            "details": dict(self.details),
             "timestamp": self.timestamp.isoformat(),
         }
 
