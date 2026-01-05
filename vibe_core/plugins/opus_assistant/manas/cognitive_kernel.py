@@ -1249,6 +1249,75 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         return self._weaver_bridge.get_cognitive_diagnosis()
 
     # =========================================================================
+    # 🐍 NAGA CORTEX INTEGRATION (Phase 3B)
+    # =========================================================================
+
+    def _get_naga_context(self) -> Optional[Dict[str, Any]]:
+        """
+        Get NAGA intelligence for cognitive decisions.
+
+        PULL-BASED: MANAS asks NAGA when it needs context.
+        NAGAs INFORM, they don't CONTROL.
+
+        Returns:
+            Dict with NAGA context, or None if unavailable
+        """
+        try:
+            from vibe_core.protocols.naga import NagaCortexProtocol
+
+            cortex = ServiceRegistry.get(NagaCortexProtocol)
+            if cortex and cortex.is_available():
+                naga_context = cortex.get_context_for_manas()
+                return naga_context.to_dict()
+        except Exception as e:
+            logger.debug(f"🐍 NAGA: Context unavailable: {e}")
+
+        return None
+
+    def _send_naga_feedback(
+        self,
+        intent_id: str,
+        intent_type: str,
+        outcome: str,
+        confidence_used: float,
+        execution_ms: float,
+        naga_context_used: bool,
+        error_message: Optional[str] = None,
+    ) -> None:
+        """
+        Send feedback to NAGA Cortex about intent execution.
+
+        LEARNING LOOP: MANAS informs NAGA of what worked.
+
+        Args:
+            intent_id: The intent that was executed
+            intent_type: Type of intent
+            outcome: "success", "failed", "partial", "rejected"
+            confidence_used: Confidence level when executed
+            execution_ms: Execution time
+            naga_context_used: Whether NAGA context was consulted
+            error_message: Optional error details
+        """
+        try:
+            from vibe_core.protocols.naga import ManasFeedback, NagaCortexProtocol
+
+            cortex = ServiceRegistry.get(NagaCortexProtocol)
+            if cortex and cortex.is_available():
+                feedback = ManasFeedback(
+                    intent_id=intent_id,
+                    intent_type=intent_type,
+                    outcome=outcome,
+                    confidence_used=confidence_used,
+                    naga_context_used=naga_context_used,
+                    execution_ms=execution_ms,
+                    error_message=error_message,
+                )
+                cortex.receive_feedback(feedback)
+                logger.debug(f"🐍 NAGA: Feedback sent for {intent_type} → {outcome}")
+        except Exception as e:
+            logger.debug(f"🐍 NAGA: Feedback failed: {e}")
+
+    # =========================================================================
     # 🌙 SANKALPA: STRATEGIC WILL (OPUS-089)
     # =========================================================================
 
@@ -1920,6 +1989,15 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
                 return dharma_intents
 
         self._last_thought_time = datetime.utcnow()
+
+        # 🐍 NAGA CORTEX: Pull intelligence for cognitive decisions (Phase 3B)
+        naga_context = self._get_naga_context()
+        if naga_context:
+            context = context or {}
+            context["naga"] = naga_context
+            if naga_context.get("active_threats"):
+                logger.debug(f"🐍 NAGA: {len(naga_context['active_threats'])} active threats in context")
+
         try:
             # OPUS-097: Use get_event_loop() pattern instead of asyncio.run()
             # asyncio.run() fails when called from already running event loop

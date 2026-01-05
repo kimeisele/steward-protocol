@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.orchestrator import NagaOrchestrator
     from vibe_core.naga.ouroboros import NagaOuroboros
-    from vibe_core.protocols.naga import VajraViolation
+    from vibe_core.protocols.naga import ManasFeedback, NagaContext, VajraViolation
 
 logger = logging.getLogger("NAGA.CORTEX")
 
@@ -617,3 +617,123 @@ class NagaCortex:
             self.dispatch(decision)
 
         return decision
+
+    # =========================================================================
+    # MANAS INTEGRATION (Phase 3B)
+    # =========================================================================
+
+    def get_context_for_manas(self) -> "NagaContext":
+        """
+        Get aggregated NAGA intelligence for MANAS consumption.
+
+        PULL-BASED: MANAS calls this when it needs context.
+        NAGAs INFORM, they don't CONTROL.
+
+        Returns:
+            NagaContext with aggregated intelligence from all 12 Lords
+        """
+        from vibe_core.protocols.naga import NagaContext
+
+        # Collect intelligence from NAGAs via orchestrator
+        active_threats: List[Dict[str, Any]] = []
+        recent_patterns: List[str] = []
+        peer_health: Dict[str, Any] = {}
+        anomalies: List[Dict[str, Any]] = []
+
+        # TAKSHAKA: Active threats
+        if self._orchestrator.takshaka:
+            try:
+                status = self._orchestrator.takshaka.get_status()
+                if hasattr(status, "recent_bites"):
+                    active_threats = [{"type": "bite", "details": b} for b in (status.recent_bites or [])[:5]]
+            except Exception as e:
+                logger.debug(f"[CORTEX] Takshaka context unavailable: {e}")
+
+        # SESHA: Recent patterns from ledger
+        if self._orchestrator.sesha:
+            try:
+                status = self._orchestrator.sesha.get_status()
+                if hasattr(status, "recent_patterns"):
+                    recent_patterns = status.recent_patterns or []
+            except Exception as e:
+                logger.debug(f"[CORTEX] Sesha context unavailable: {e}")
+
+        # VASUKI: Peer health
+        if self._orchestrator.vasuki:
+            try:
+                status = self._orchestrator.vasuki.get_status()
+                if hasattr(status, "peer_health"):
+                    peer_health = status.peer_health or {}
+            except Exception as e:
+                logger.debug(f"[CORTEX] Vasuki context unavailable: {e}")
+
+        # CHITRAGUPTA: Anomalies
+        if self._orchestrator.chitragupta:
+            try:
+                status = self._orchestrator.chitragupta.get_status()
+                if hasattr(status, "recent_anomalies"):
+                    anomalies = [
+                        a.to_dict() if hasattr(a, "to_dict") else a for a in (status.recent_anomalies or [])[:5]
+                    ]
+            except Exception as e:
+                logger.debug(f"[CORTEX] Chitragupta context unavailable: {e}")
+
+        # Recent decisions from this Cortex
+        recent_decisions = [
+            {
+                "action": d.action.name,
+                "target": d.target,
+                "timestamp": d.timestamp.isoformat() if hasattr(d, "timestamp") else None,
+            }
+            for d in self._decision_queue[:5]
+        ]
+
+        return NagaContext(
+            active_threats=active_threats,
+            recent_patterns=recent_patterns,
+            peer_health=peer_health,
+            anomalies=anomalies,
+            recent_decisions=recent_decisions,
+            signal_count=len(self._signal_buffer),
+        )
+
+    def receive_feedback(self, feedback: "ManasFeedback") -> None:
+        """
+        Receive feedback from MANAS about intent outcomes.
+
+        LEARNING LOOP: MANAS informs NAGA of what worked.
+        Used to adjust signal weights and decision thresholds.
+
+        Args:
+            feedback: Outcome of intent execution
+        """
+        from vibe_core.protocols.naga import ManasFeedback
+
+        # Log to Sesha for audit trail
+        if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
+            try:
+                self._orchestrator.sesha._ledger.record_event(
+                    event_type="MANAS_FEEDBACK",
+                    agent_id="naga_cortex",
+                    details=feedback.to_dict(),
+                )
+            except Exception as e:
+                logger.debug(f"[CORTEX] Failed to log feedback: {e}")
+
+        # Update stats
+        self._stats.decisions_by_action[f"feedback_{feedback.outcome}"] = (
+            self._stats.decisions_by_action.get(f"feedback_{feedback.outcome}", 0) + 1
+        )
+
+        logger.debug(
+            f"[CORTEX] 📥 MANAS feedback: {feedback.intent_type} → {feedback.outcome} "
+            f"(NAGA context used: {feedback.naga_context_used})"
+        )
+
+    def is_available(self) -> bool:
+        """Check if Cortex is active and ready."""
+        return self._config.enabled
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get Cortex statistics (alias for get_status for protocol compliance)."""
+        return self.get_status()

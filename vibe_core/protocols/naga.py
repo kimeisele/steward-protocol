@@ -1017,6 +1017,157 @@ class NagaFederationProtocol(Protocol):
 
 
 # =============================================================================
+# NAGA CORTEX - Das Nervensystem (Signal Aggregation Protocol)
+# =============================================================================
+
+
+@dataclass
+class NagaContext:
+    """
+    Aggregated NAGA intelligence for MANAS consumption.
+
+    PULL-BASED: MANAS queries this, NAGA doesn't push.
+    """
+
+    # Active threats from Takshaka
+    active_threats: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Recent patterns from Sesha
+    recent_patterns: List[str] = field(default_factory=list)
+
+    # Peer health from Vasuki
+    peer_health: Dict[str, Any] = field(default_factory=dict)
+
+    # Anomaly reports from Chitragupta
+    anomalies: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Recent decisions by Cortex
+    recent_decisions: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Signal buffer state
+    signal_count: int = 0
+
+    # Timestamp
+    generated_at: datetime = field(default_factory=datetime.utcnow)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for MANAS consumption."""
+        return {
+            "active_threats": self.active_threats,
+            "recent_patterns": self.recent_patterns,
+            "peer_health": self.peer_health,
+            "anomalies": self.anomalies,
+            "recent_decisions": self.recent_decisions,
+            "signal_count": self.signal_count,
+            "generated_at": self.generated_at.isoformat(),
+        }
+
+
+@dataclass
+class ManasFeedback:
+    """
+    Feedback from MANAS to NAGA Cortex for learning.
+
+    Sent after intent execution to inform NAGA of outcomes.
+    """
+
+    intent_id: str
+    intent_type: str
+    outcome: str  # "success", "failed", "partial", "rejected"
+    confidence_used: float
+    naga_context_used: bool  # Was NAGA context consulted?
+    execution_ms: float
+    error_message: Optional[str] = None
+    timestamp: datetime = field(default_factory=datetime.utcnow)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "intent_id": self.intent_id,
+            "intent_type": self.intent_type,
+            "outcome": self.outcome,
+            "confidence_used": self.confidence_used,
+            "naga_context_used": self.naga_context_used,
+            "execution_ms": self.execution_ms,
+            "error_message": self.error_message,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+
+@runtime_checkable
+class NagaCortexProtocol(Protocol):
+    """
+    NAGA Cortex - Das Nervensystem, nicht das Gehirn.
+
+    The Cortex is the INTELLIGENCE HUB that:
+    1. AGGREGATES signals from FloodManager, CommitWatcher, StateProxy
+    2. CORRELATES patterns across multiple signal sources
+    3. PROVIDES context to MANAS (pull-based, not push)
+    4. LEARNS from MANAS feedback
+
+    CRITICAL PRINCIPLE: NAGAs INFORM, they don't CONTROL.
+    - MANAS decides WHEN to query NAGA context
+    - NAGA is DIENEND (Shesha), nicht BESTIMMEND
+    - Loose coupling via ServiceRegistry
+    - Optional: If no NAGA, MANAS works anyway
+
+    Integration:
+        # In CognitiveKernel
+        cortex = ServiceRegistry.get(NagaCortexProtocol)
+        if cortex:
+            context = cortex.get_context_for_manas()
+            # Use in think() cycle
+    """
+
+    def get_context_for_manas(self) -> NagaContext:
+        """
+        Get aggregated NAGA intelligence for MANAS consumption.
+
+        PULL-BASED: MANAS calls this when it needs context.
+        Returns current state of all NAGA observations.
+
+        Returns:
+            NagaContext with aggregated intelligence
+        """
+        ...
+
+    def receive_feedback(self, feedback: ManasFeedback) -> None:
+        """
+        Receive feedback from MANAS about intent outcomes.
+
+        LEARNING LOOP: MANAS informs NAGA of what worked.
+        Used to adjust signal weights and decision thresholds.
+
+        Args:
+            feedback: Outcome of intent execution
+        """
+        ...
+
+    def is_available(self) -> bool:
+        """Check if Cortex is active and ready."""
+        ...
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get Cortex statistics."""
+        ...
+
+
+class NullNagaCortex:
+    """No-op NagaCortex for when Cortex is unavailable."""
+
+    def get_context_for_manas(self) -> NagaContext:
+        return NagaContext()
+
+    def receive_feedback(self, feedback: ManasFeedback) -> None:
+        pass  # Silently ignore
+
+    def is_available(self) -> bool:
+        return False
+
+    def get_stats(self) -> Dict[str, Any]:
+        return {"available": False, "reason": "NagaCortex not initialized"}
+
+
+# =============================================================================
 # PADMA - Der Schatzmeister (Cache/Treasury Protocol)
 # =============================================================================
 
@@ -2454,4 +2605,9 @@ __all__ = [
     "NullAnanta",
     # Federation
     "NagaFederationProtocol",
+    # Cortex (MANAS Integration)
+    "NagaCortexProtocol",
+    "NagaContext",
+    "ManasFeedback",
+    "NullNagaCortex",
 ]
