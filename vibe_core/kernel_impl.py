@@ -425,6 +425,36 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
         logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
 
+        # =====================================================================
+        # NAGA FEDERATION: The Invisible Guardians (-1 Foundation)
+        # =====================================================================
+        # NAGAs live IN the kernel, not beside it. They are middleware that
+        # validates ALL state writes against the 4 Dharma Principles.
+        # "Ein Agent darf physisch nicht in der Lage sein, seine Governance zu verletzen."
+        self._naga_orchestrator = None
+        self._correction_orchestrator = None
+
+        if not self._test_mode:
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.naga import NagaOrchestrator
+                from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
+                from vibe_core.services.correction_dispatcher import BasicCorrectionOrchestrator
+
+                # Bootstrap Correction Orchestrator first (NAGAs need it)
+                self._correction_orchestrator = BasicCorrectionOrchestrator()
+                self._correction_orchestrator.initialize_default_detectors()
+                ServiceRegistry.register(CorrectionOrchestratorProtocol, self._correction_orchestrator)
+
+                # Bootstrap NAGA Federation (12 Lords)
+                self._naga_orchestrator = NagaOrchestrator.bootstrap(
+                    ledger=self.ledger,
+                    correction_orchestrator=self._correction_orchestrator,
+                )
+                logger.info("🐍 NAGA Federation bootstrapped (12 Lords ACTIVE)")
+            except Exception as e:
+                logger.warning(f"⚠️ NAGA bootstrap deferred: {e}")
+
         # Phase 2: Event Bus (Agent Communication & Reactive Patterns)
         # Allows agents to subscribe to system-wide events
         # Supports loose coupling between agents
@@ -679,6 +709,18 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             kernel.event_bus.get_history(limit=50)
         """
         return self._event_bus
+
+    @property
+    def naga(self):
+        """
+        NAGA Federation Orchestrator (-1 Foundation).
+
+        The Invisible Guardians that validate ALL state operations against
+        the 4 Dharma Principles (Daya, Satyam, Tapas, Saucam).
+
+        Returns None in test mode or if NAGA bootstrap was deferred.
+        """
+        return self._naga_orchestrator
 
     def spawn_child_kernel(
         self,
