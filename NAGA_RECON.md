@@ -1,153 +1,203 @@
-# NAGA RECON REPORT - Phase 2 Active Reconnaissance
+# NAGA RECON REPORT - Phase 3 Systematic Flooding
 
-> ASHVAMEDHA: The Horse has wandered. Here is what it found.
+> **NARADA SPEAKS:** "Ich wandere durch alle Reiche. Hier ist was ich fand."
+> **Date:** 2026-01-05
+> **Status:** ASHVAMEDHA AKTIV
 
 ---
 
 ## CLASSIFICATION SUMMARY
 
-| Category | Count | Action |
-|----------|-------|--------|
-| FLOODED | 7 | Controlled |
-| PARTIALLY FLOODED | 3 | Need full integration |
-| REBEL | 25+ | Priority targets |
-| CIVILIAN | ~10 | Monitor only |
+| Category | Count | Change | Action |
+|----------|-------|--------|--------|
+| **FLOODED** | 18 | +11 | Controlled |
+| **PARTIALLY FLOODED** | 5 | +2 | Need full integration |
+| **REBEL** | 20+ | -5 | Priority targets |
+| **CIVILIAN** | ~10 | = | Monitor only |
+
+**Coverage:** ~40% FLOODED (was 15%)
 
 ---
 
 ## FLOODED (Conquered Territory)
 
-All 7 NAGA services with @naga_service decorator:
+### NAGA Federation (12 Lords) - ALL ACTIVE
 
-| Service | Location | Protocol |
-|---------|----------|----------|
-| SeshaService | naga/services/sesha.py | SeshaProtocol |
-| TakshakaService | naga/services/takshaka.py | TakshakaProtocol |
-| VasukiService | naga/services/vasuki.py | VasukiProtocol |
-| KaliyaService | naga/services/kaliya.py | KaliyaProtocol |
-| NaradaService | naga/services/narada.py | NaradaProtocol |
-| ChitraguptaService | naga/services/chitragupta.py | ChitraguptaProtocol |
-| PrahladService | naga/services/prahlad.py | PrahladProtocol |
+| Lord | Service | Location | Protocol | Domain |
+|------|---------|----------|----------|--------|
+| SESHA | SeshaService | naga/services/sesha.py | SeshaProtocol | Truth/Ledger |
+| TAKSHAKA | TakshakaService | naga/services/takshaka.py | TakshakaProtocol | Security |
+| VASUKI | VasukiService | naga/services/vasuki.py | VasukiProtocol | Network |
+| KALIYA | KaliyaService | naga/services/kaliya.py | KaliyaProtocol | Isolation |
+| KARKOTAKA | KarkotakaService | naga/services/karkotaka.py | KarkotakaProtocol | Crypto |
+| KULIKA | KulikaService | naga/services/kulika.py | KulikaProtocol | Schema |
+| PADMA | PadmaService | naga/services/padma.py | PadmaProtocol | Cache |
+| SHANKHA | ShankhaService | naga/services/shankha.py | ShankhaProtocol | Broadcast |
+| NARADA | NaradaService | naga/services/narada.py | NaradaProtocol | Observation |
+| CHITRAGUPTA | ChitraguptaService | naga/services/chitragupta.py | ChitraguptaProtocol | Profiling |
+| PRAHLAD | PrahladService | naga/services/prahlad.py | PrahladProtocol | Resilience |
+| ANANTA | AnantaService | naga/services/ananta.py | AnantaProtocol | Gene Splicer |
+
+### Kernel Level Integration - ACTIVE
+
+| Component | Location | NAGA Integration |
+|-----------|----------|------------------|
+| **RealVibeKernel** | kernel_impl.py | NagaOrchestrator at -1 Foundation |
+| **StateService** | state/state_service.py | Returns NagaStateProxy (Der Kommissar) |
+| **NagaStateProxy** | services/naga/state_proxy.py | Dharma Validation (4 Principles) |
 
 ---
 
-## PARTIALLY FLOODED (Uses ServiceRegistry, no @naga_service)
+## CRITICAL REBELS (SOFORT FLOODEN)
 
-| Service | Location | Has | Needs |
-|---------|----------|-----|-------|
-| CorrectionOrchestrator | services/correction_dispatcher.py | ServiceRegistry | Full NAGA protocol |
-| QuantumHealingResolver | services/healing_resolver.py | ServiceRegistry | Chitragupta profiling |
-| NagaStateProxy | services/naga/state_proxy.py | TakshakaProtocol | Already NAGA-aware |
+> **WARNUNG:** Diese Services sind VERWUNDBAR und gefährden das System.
 
----
+### TIER 0: THE PARADOX (Heiler heilt sich nicht)
 
-## REBELS (Active Targets)
+| Service | Location | Problem | Needs | Priority |
+|---------|----------|---------|-------|----------|
+| **OuroborosSync** | ouroboros/sync.py | SELF-HEALING ohne Schutz! | SESHA + TAKSHAKA | **KRITISCH** |
+| **PluginService** | plugin_service.py | Plugin-Loading ungeschützt | TAKSHAKA | **KRITISCH** |
+| **TaskManager** | task_management/task_manager.py | Task-Execution ungeschützt | CHITRAGUPTA | **KRITISCH** |
 
-### TIER 1: Core Services (HIGH PRIORITY)
+### TIER 1: COGNITIVE LAYER (Das Denken ist nackt)
 
-| Service | Location | Indicators | Needs |
-|---------|----------|------------|-------|
-| **ManifestationService** | services/manifestation_service.py | State mutation, file writes | Narada observation |
-| **CapabilityEnforcerService** | services/capability_enforcer.py | Security/permission logic | Takshaka validation |
-| **LifecycleService** | services/lifecycle_service.py | Boot/shutdown, resilience | Prahlad resilience |
-| **StateService** | state/state_service.py | Core state mutations | Sesha ledger |
-| **PersonaManager** | state/persona.py | Identity state | Sesha + Takshaka |
+| Service | Location | Indicators | Needs | Priority |
+|---------|----------|------------|-------|----------|
+| **Shiva** | plugins/opus_assistant/manas/shiva.py | Lifecycle Manager | PRAHLAD | HIGH |
+| **Jnana** | plugins/opus_assistant/manas/cortex/jnana.py | Knowledge Engine | NARADA | HIGH |
+| **SamvadaHandler** | plugins/opus_assistant/manas/cortex/samvada_handler.py | Dialog Handler | TAKSHAKA | HIGH |
+| **CircuitEngine** | cortex/engines/circuit_engine.py | Cognitive Circuits | NARADA | HIGH |
 
-### TIER 2: Opus Assistant (MEDIUM-HIGH)
-
-| Service | Location | Indicators | Needs |
-|---------|----------|------------|-------|
-| **OpusStateManager** | plugins/opus_assistant/core/state_manager.py | State mutations | Sesha |
-| **OpusContextService** | plugins/opus_assistant/core/context_service.py | Context/session | Narada observation |
-| **ShivaLifecycleManager** | plugins/opus_assistant/manas/shiva.py | Lifecycle | Prahlad |
-| **ActionManager** | plugins/opus_assistant/manas/action_manager.py | Action dispatch | Chitragupta |
-| **SenseManager** | plugins/opus_assistant/manas/sense_manager.py | Input processing | Takshaka |
-| **KernelTickHandler** | plugins/opus_assistant/events/kernel_tick.py | Event handling | Narada |
-
-### TIER 3: Router Handlers (MEDIUM)
+### TIER 2: Core Services
 
 | Service | Location | Needs |
 |---------|----------|-------|
-| SystemHandler | manas/router/handlers/system_handler.py | Takshaka |
-| ResearchHandler | manas/router/handlers/research_handler.py | Narada |
-| ShellHandler | manas/router/handlers/shell_handler.py | Takshaka + Kaliya |
-| HarnessHandler | manas/router/handlers/harness_handler.py | Chitragupta |
-| SutraHandler | manas/router/handlers/sutra_handler.py | Sesha |
-| DharmaHandler | manas/router/handlers/audit_handler.py | Prahlad |
+| **ManifestationService** | services/manifestation_service.py | NARADA |
+| **CapabilityEnforcerService** | services/capability_enforcer.py | TAKSHAKA |
+| **LifecycleService** | services/lifecycle_service.py | PRAHLAD |
+| **SectionService** | section_service.py | SESHA |
+| **DependencyManager** | dependency_manager.py | KULIKA |
+| **Pulse** | pulse.py | CHITRAGUPTA |
 
-### TIER 4: Cartridge Services (MEDIUM)
-
-| Service | Location | Indicators | Needs |
-|---------|----------|------------|-------|
-| ActionHandlerRegistry | cartridges/system/envoy/action_handlers.py | Central registry | Kulika schema |
-| TwitterService | cartridges/system/herald/services/twitter.py | External API | Vasuki |
-| RedditService | cartridges/system/herald/services/reddit.py | External API | Vasuki |
-| LifecycleManager | cartridges/system/civic/tools/lifecycle_manager.py | Agent lifecycle | Prahlad |
-
-### TIER 5: Other Plugins (LOW-MEDIUM)
+### TIER 3: External Boundaries
 
 | Service | Location | Needs |
 |---------|----------|-------|
-| VedicStateManager | plugins/vedic_governance/state_manager.py | Sesha |
-| TaskManagerPlugin | plugins/task_manager/plugin_main.py | Narada observation |
+| **TwitterService** | cartridges/system/herald/services/twitter.py | VASUKI |
+| **RedditService** | cartridges/system/herald/services/reddit.py | VASUKI |
+| **ActionHandlerRegistry** | cartridges/system/envoy/action_handlers.py | KULIKA |
+| **LifecycleManager** | cartridges/system/civic/tools/lifecycle_manager.py | PRAHLAD |
 
 ---
 
-## CIVILIAN (Non-Targets)
+## WATERTIGHT ANALYSIS
 
-These are utilities or base classes - no infrastructure integration needed:
+```
+LAYER -1 (Kernel Foundation)
+├── Kernel NAGA:        [##########] 100% FLOODED
+├── State Management:   [##########] 100% FLOODED
+└── Ledger:             [##########] 100% FLOODED
 
-- `BaseHandler` - Abstract base class (template only)
-- `NullTaskManager` - Null pattern implementation
-- `CoreManagerAdapter` - Adapter pattern
-- `ServiceType` (Enum) - Just an enum
+LAYER 0 (Core Services)
+├── OUROBOROS:          [          ]   0% REBEL <<<
+├── Plugin Loading:     [          ]   0% REBEL <<<
+├── Task Execution:     [          ]   0% REBEL <<<
+└── Dependencies:       [          ]   0% REBEL
+
+LAYER 1 (Cognitive)
+├── MANAS/Shiva:        [          ]   0% REBEL <<<
+├── MANAS/Jnana:        [          ]   0% REBEL
+├── CircuitEngine:      [          ]   0% REBEL
+└── Handlers:           [##        ]  20% PARTIAL
+
+LAYER 2 (Cartridges)
+├── Envoy:              [#         ]  10% PARTIAL
+├── Herald:             [          ]   0% REBEL
+├── Civic:              [          ]   0% REBEL
+└── Temple:             [#         ]  10% PARTIAL
+
+OVERALL: ~40% FLOODED | 60% EXPOSED
+```
 
 ---
 
-## INFILTRATION PRIORITY
+## INFILTRATION STRATEGIE
 
-Based on Detection Criteria and impact:
+### Phase 3A: Paradox Resolution (Der Heiler)
+> "Wer heilt den Heiler?"
 
-### IMMEDIATE (Next Sprint)
-1. **StateService** - Core state, everything flows through here
-2. **ManifestationService** - Doc generation, high visibility
-3. **CapabilityEnforcerService** - Security surface
+1. **OUROBOROS flooden** - Das Self-Healing System MUSS selbst geschützt sein
+2. **PluginService flooden** - Code-Loading ist Angriffsfläche #1
+3. **TaskManager flooden** - Jede Execution durch CHITRAGUPTA
 
-### SHORT-TERM
-4. **OpusStateManager** - Plugin state
-5. **ActionManager** - Action dispatch hub
-6. **SenseManager** - Input validation point
+### Phase 3B: Cognitive Armor
+> "Gedanken ohne Takshaka sind gefährlich"
 
-### MEDIUM-TERM
-7. Router Handlers (bulk operation - shared BaseHandler pattern)
-8. Cartridge services
-9. Other plugins
+4. **Shiva flooden** - Lifecycle des Denkens
+5. **Jnana flooden** - Wissens-Engine
+6. **CircuitEngine flooden** - Cognitive Patterns
+
+### Phase 3C: Boundary Hardening
+> "Vasuki an allen Grenzen"
+
+7. External APIs (Twitter, Reddit)
+8. Action Handlers
+9. Cartridge boundaries
 
 ---
 
 ## ATTACK VECTORS
 
-### Vector A: Protocol Injection
-Add NAGA protocol imports + ServiceRegistry.get() for needed services.
+### Vector A: Soft Flood (Ananta Gene Splicer)
+```python
+# Für Services die isinstance() brauchen
+flooded = ananta.create_flooded_class(RebelService, mixins=[SeshaMixin, TakshakaMixin])
+```
 
-### Vector B: Decorator Addition
-Where appropriate, add @naga_service for auto-discovery.
+### Vector B: Hard Flood (NagaProxy)
+```python
+# Für schnelles Wrapping
+protected = NagaProxy(rebel_service, protocols=[SESHA, TAKSHAKA])
+```
 
-### Vector C: Cortex Wiring
-Connect to NagaCortex for observation/profiling.
+### Vector C: Decorator Injection
+```python
+@naga_service(protocols=[NaradaProtocol, ChitraguptaProtocol])
+class NewService:
+    pass
+```
 
-### Vector D: CorrectionHandler
-Register as drift handler where service can heal.
+### Vector D: Protocol Registration
+```python
+ServiceRegistry.register(TakshakaProtocol, takshaka)
+# Dann lazy inject via ServiceRegistry.get()
+```
 
 ---
 
 ## METRICS
 
-- **Total Services Discovered:** 45+
-- **FLOODED:** 7 (15%)
-- **REBEL:** 25+ (55%)
-- **Coverage Gap:** ~40% needs infiltration
+| Metric | Value | Target |
+|--------|-------|--------|
+| Total Services | 45+ | - |
+| FLOODED | 18 (40%) | 100% |
+| REBEL | 20+ (45%) | 0% |
+| Coverage Gap | 60% | 0% |
+| Critical Exposed | 6 | 0 |
 
 ---
 
-*Recon complete. Awaiting orders for Phase 3: Systematic Flooding.*
+## NEXT ORDERS
+
+**NARADA recommends:**
+
+1. **SOFORT:** OUROBOROS, PluginService, TaskManager (3 services)
+2. **DANN:** MANAS layer (4 services)
+3. **DANN:** External boundaries (4 services)
+
+**Estimated campaigns:** 3 phases, 11 services total for WATERTIGHT.
+
+---
+
+*NARADA has spoken. The horse continues to wander. ASHVAMEDHA.*
