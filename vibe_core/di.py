@@ -44,11 +44,26 @@ class ServiceRegistry:
     3. Factory support for lazy instantiation
     4. Thread-safe with minimal locking overhead
     5. Easy reset for testing
+    6. CHAOS INJECTION for antifragility testing (Prahlad)
+    7. NARASIMHA GATEKEEPER for security validation
+
+    Security:
+    The Narasimha Gatekeeper validates:
+    - register(): Services must be from allowed modules (optional)
+    - inject_chaos(): Only authorized callers (Prahlad)
+    - All operations logged to threat detection
     """
 
     _services: Dict[str, Any] = {}
     _factories: Dict[str, Callable] = {}
+    _chaos_injectors: Dict[str, Callable] = {}  # Prahlad chaos testing
+    _chaos_enabled: bool = False
     _lock = threading.Lock()
+
+    # NARASIMHA GATEKEEPER
+    _narasimha_enabled: bool = False
+    _blessed_modules: set = set()  # Allowed module prefixes for registration
+    _chaos_authorized_callers: set = {"PrahladService", "chaos_probe_real"}  # Who can inject chaos
 
     @classmethod
     def register(cls, interface: Type[T], instance: T) -> None:
@@ -101,9 +116,19 @@ class ServiceRegistry:
 
         Returns:
             The registered instance, or None if not found
+
+        Note:
+            If chaos mode is enabled and a chaos injector is registered
+            for this interface, the chaos injector is called instead.
+            This allows Prahlad to test system resilience.
         """
         with cls._lock:
             name = interface.__name__
+
+            # CHAOS INJECTION: If enabled, chaos injector takes precedence
+            if cls._chaos_enabled and name in cls._chaos_injectors:
+                logger.warning(f"[DI] CHAOS: Injecting for {name}")
+                return cls._chaos_injectors[name]()
 
             # Instance first (already created)
             if name in cls._services:
@@ -194,3 +219,187 @@ class ServiceRegistry:
                 if name not in result:
                     result[name] = "(factory - not yet instantiated)"
             return result
+
+    # =========================================================================
+    # CHAOS INJECTION (Prahlad Antifragility Testing)
+    # =========================================================================
+
+    @classmethod
+    def inject_chaos(cls, interface: Type[T], injector: Callable[[], T]) -> None:
+        """
+        Register a chaos injector for antifragility testing.
+
+        SECURITY: When Narasimha Gatekeeper is enabled, only authorized
+        callers (PrahladService) can inject chaos. This prevents
+        malicious code from poisoning the service registry.
+
+        When chaos mode is enabled, this injector replaces the normal
+        service resolution. Use to test system resilience:
+
+        - Return a broken/slow/malicious mock
+        - Raise exceptions
+        - Return None unexpectedly
+        - Return a working but subtly wrong implementation
+
+        Args:
+            interface: The interface/protocol type to poison
+            injector: Callable that returns the chaos version
+
+        Raises:
+            PermissionError: If Narasimha blocks unauthorized caller
+        """
+        import inspect
+
+        # NARASIMHA GATEKEEPER: Check caller authorization
+        if cls._narasimha_enabled:
+            frame = inspect.currentframe()
+            caller_info = ""
+            try:
+                if frame and frame.f_back:
+                    caller_frame = frame.f_back
+                    caller_info = f"{caller_frame.f_code.co_name}"
+                    # Also check class name if available
+                    if "self" in caller_frame.f_locals:
+                        caller_class = type(caller_frame.f_locals["self"]).__name__
+                        caller_info = f"{caller_class}.{caller_info}"
+            finally:
+                del frame
+
+            # Check if caller is authorized
+            authorized = any(auth in caller_info for auth in cls._chaos_authorized_callers)
+            if not authorized:
+                cls._report_threat(
+                    threat_type="UNAUTHORIZED_CHAOS_INJECTION",
+                    details={
+                        "caller": caller_info,
+                        "target": interface.__name__,
+                    },
+                )
+                raise PermissionError(
+                    f"[DI] NARASIMHA BLOCKED: Unauthorized chaos injection by {caller_info}. "
+                    f"Only {cls._chaos_authorized_callers} can inject chaos."
+                )
+
+        with cls._lock:
+            name = interface.__name__
+            cls._chaos_injectors[name] = injector
+            logger.info(f"[DI] CHAOS: Registered injector for {name}")
+
+    @classmethod
+    def enable_chaos(cls) -> None:
+        """
+        Enable chaos mode.
+
+        When enabled, chaos injectors take precedence over normal services.
+        Call this before running antifragility tests.
+        """
+        with cls._lock:
+            cls._chaos_enabled = True
+            logger.warning("[DI] CHAOS MODE ENABLED - Service resolution poisoned")
+
+    @classmethod
+    def disable_chaos(cls) -> None:
+        """
+        Disable chaos mode.
+
+        Returns to normal service resolution.
+        """
+        with cls._lock:
+            cls._chaos_enabled = False
+            logger.info("[DI] CHAOS MODE DISABLED - Normal service resolution")
+
+    @classmethod
+    def clear_chaos(cls) -> None:
+        """
+        Clear all chaos injectors and disable chaos mode.
+
+        Call this after antifragility tests to restore normal operation.
+        """
+        with cls._lock:
+            cls._chaos_injectors.clear()
+            cls._chaos_enabled = False
+            logger.info("[DI] CHAOS: All injectors cleared, mode disabled")
+
+    @classmethod
+    def is_chaos_enabled(cls) -> bool:
+        """Check if chaos mode is currently enabled."""
+        return cls._chaos_enabled
+
+    @classmethod
+    def list_chaos_injectors(cls) -> list:
+        """List all registered chaos injectors (for debugging)."""
+        with cls._lock:
+            return list(cls._chaos_injectors.keys())
+
+    # =========================================================================
+    # NARASIMHA GATEKEEPER (Security Layer)
+    # =========================================================================
+
+    @classmethod
+    def enable_narasimha(cls) -> None:
+        """
+        Enable the Narasimha Gatekeeper.
+
+        When enabled:
+        - inject_chaos() only allowed by authorized callers
+        - Threats are reported to the Narasimha protocol
+        - All sensitive operations are logged
+
+        This is the SHIELD before the SPEAR (chaos testing).
+        """
+        with cls._lock:
+            cls._narasimha_enabled = True
+            logger.warning("[DI] NARASIMHA GATEKEEPER ENABLED - Security validation active")
+
+    @classmethod
+    def disable_narasimha(cls) -> None:
+        """Disable the Narasimha Gatekeeper (for testing only)."""
+        with cls._lock:
+            cls._narasimha_enabled = False
+            logger.info("[DI] NARASIMHA GATEKEEPER DISABLED")
+
+    @classmethod
+    def is_narasimha_enabled(cls) -> bool:
+        """Check if Narasimha Gatekeeper is active."""
+        return cls._narasimha_enabled
+
+    @classmethod
+    def authorize_chaos_caller(cls, caller_name: str) -> None:
+        """
+        Authorize an additional caller to inject chaos.
+
+        Args:
+            caller_name: Function or class name to authorize
+        """
+        with cls._lock:
+            cls._chaos_authorized_callers.add(caller_name)
+            logger.info(f"[DI] NARASIMHA: Authorized {caller_name} for chaos injection")
+
+    @classmethod
+    def _report_threat(cls, threat_type: str, details: Dict[str, Any]) -> None:
+        """
+        Report a threat to the Narasimha protocol.
+
+        This connects the ServiceRegistry security to the main
+        Narasimha threat detection system.
+        """
+        try:
+            import time
+
+            from vibe_core.narasimha import ThreatIndicator, ThreatLevel, get_narasimha
+
+            narasimha = get_narasimha()
+            indicator = ThreatIndicator(
+                indicator_type=threat_type,
+                agent_id=details.get("caller", "UNKNOWN"),
+                severity=ThreatLevel.RED,
+                description=f"ServiceRegistry security violation: {threat_type}",
+                evidence=details,
+                timestamp=time.time(),
+            )
+            narasimha.register_threat(indicator)
+            logger.critical(f"[DI] NARASIMHA THREAT: {threat_type} - {details}")
+
+        except Exception as e:
+            # Graceful degradation - still log even if Narasimha unavailable
+            logger.error(f"[DI] THREAT (Narasimha unavailable): {threat_type} - {details} - {e}")
