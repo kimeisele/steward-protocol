@@ -31,6 +31,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.correction import (
     DriftSeverity,
     DriftSource,
@@ -63,13 +64,15 @@ logger = logging.getLogger("TAKSHAKA")
     capabilities=[NagaCapability.SECURITY],
     protocol_class="vibe_core.protocols.naga.TakshakaProtocol",
 )
-class TakshakaService(TakshakaProtocol):
+class TakshakaService(NagaBaseService, TakshakaProtocol):
     """
     Takshaka - Bite First, Ask Never.
 
     The aggressive guardian at the boundary.
     Verifies identity BEFORE parsing.
     Records all attacks in the ledger.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(
@@ -88,6 +91,7 @@ class TakshakaService(TakshakaProtocol):
             toxicity_threshold: Score threshold for blocking (0.0-1.0)
             rate_limit_rpm: Requests per minute limit per sender
         """
+        super().__init__(service_name="Takshaka")
         self._ledger = ledger
         self._trust_mode = trust_mode
         self._toxicity_threshold = toxicity_threshold
@@ -265,6 +269,7 @@ class TakshakaService(TakshakaProtocol):
     # Toxicity Detection (Kaliya Filter)
     # =========================================================================
 
+    @naga_governed(operation="scan_toxicity")
     def scan_toxicity(self, content: str) -> ToxicityReport:
         """Scan content for toxic patterns."""
         score = 0.0
@@ -342,6 +347,7 @@ class TakshakaService(TakshakaProtocol):
         payload = f"{violation.violation_type}:{violation.source}"
         return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
+    @naga_governed(operation="bite", log_args=True)
     def bite(self, violation: VajraViolation) -> str:
         """
         Record a security violation in the ledger.

@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.ananta import AnantaService
     from vibe_core.naga.services.chitragupta import ChitraguptaService
     from vibe_core.naga.services.kaliya import KaliyaService
 
@@ -84,6 +85,7 @@ class NagaOrchestrator:
         self._narada: Optional["NaradaService"] = None
         self._chitragupta: Optional["ChitraguptaService"] = None
         self._prahlad: Optional["PrahladService"] = None
+        self._ananta: Optional["AnantaService"] = None  # Gene Splicer + Loader Governor
 
         # ===== INFRASTRUCTURE COMPONENTS =====
         self._flood_manager: Optional["NagaFloodManager"] = None
@@ -326,6 +328,25 @@ class NagaOrchestrator:
             )
             logger.info("👑 PRAHLAD registered - Governor oversees all")
 
+        # 8. ANANTA - The Gene Splicer + Loader Governor
+        # "The Infinite Remainder" - wraps loaders for audit
+        if self._config.ananta.enabled:
+            try:
+                from vibe_core.naga.services.ananta import AnantaService
+
+                self._ananta = AnantaService(ledger=ledger)
+
+                # Wrap ManifestRegistry for loader governance
+                self._ananta.wrap_manifest_registry()
+
+                # Register with scanner for status
+                self._scanner.set_instance("ananta", self._ananta)
+
+                logger.info("♾️ ANANTA registered - Gene Splicer + Loader Governor active")
+            except Exception as e:
+                logger.warning(f"♾️ ANANTA failed to initialize: {e}")
+                # Non-critical - continue without Ananta
+
         # =========================================================================
         # INFRASTRUCTURE COMPONENTS
         # =========================================================================
@@ -456,12 +477,48 @@ class NagaOrchestrator:
 
         logger.info("🐍 NAGA Federation initialized")
 
+        # 9. OUROBOROS Self-Check: Prahlad verifies NAGA integrity at boot
+        if self._prahlad and self._config.prahlad.enabled:
+            self._run_boot_integrity_check()
+
+    # =========================================================================
+    # OUROBOROS Self-Check
+    # =========================================================================
+
+    def _run_boot_integrity_check(self) -> None:
+        """
+        Run Prahlad's self-verification at boot.
+
+        OUROBOROS: NAGA checks itself before checking others.
+        "Physician, heal thyself."
+
+        Logs warning but continues if check fails (graceful degradation).
+        """
+        try:
+            # Only run if explicitly enabled (avoid slowing down boot in prod)
+            if not getattr(self._config, "verify_on_boot", True):
+                logger.debug("NAGA: Boot integrity check disabled")
+                return
+
+            logger.info("🐍 NAGA: Running OUROBOROS self-check...")
+
+            # Run in quiet mode to avoid cluttering boot logs
+            is_healthy = self._prahlad.verify_self_integrity(quiet=True)
+
+            if is_healthy:
+                logger.info("🐍 NAGA: Self-check PASSED - Watertight")
+            else:
+                logger.warning("🐍 NAGA: Self-check FAILED - Operating in degraded mode")
+
+        except Exception as e:
+            logger.warning(f"🐍 NAGA: Self-check error: {e} - Continuing anyway")
+
     # =========================================================================
     # Status & Health
     # =========================================================================
 
     def get_status(self) -> Dict[str, Any]:
-        """Get federation health status - all 7 members + infrastructure."""
+        """Get federation health status - all 8 members + infrastructure."""
         return {
             "initialized": self._initialized,
             # Infrastructure Layer (Real Nagas 🐍)
@@ -473,6 +530,7 @@ class NagaOrchestrator:
             "narada": self._narada.get_status().to_dict() if self._narada else None,
             "chitragupta": self._chitragupta.get_status().to_dict() if self._chitragupta else None,
             "prahlad": self._prahlad.get_status().to_dict() if self._prahlad else None,
+            "ananta": self._ananta.get_status().to_dict() if self._ananta else None,
             # Infrastructure Components
             "flood_manager": self._flood_manager.get_status() if self._flood_manager else None,
             "commit_watcher": self._commit_watcher.get_stats() if self._commit_watcher else None,
@@ -543,6 +601,11 @@ class NagaOrchestrator:
     def prahlad(self) -> Optional["PrahladService"]:
         """Get Prahlad service - 👑 Daitya Governor/Resilience (or None if disabled)."""
         return self._prahlad
+
+    @property
+    def ananta(self) -> Optional["AnantaService"]:
+        """Get Ananta service - ♾️ Gene Splicer + Loader Governor (or None if disabled)."""
+        return self._ananta
 
     @property
     def config(self) -> Optional["NagaConfig"]:

@@ -184,6 +184,7 @@ class ChitraguptaService(NagaBaseService):
             },
         )
 
+    @naga_governed(operation="record_metric")
     def record(self, component_id: str, metric: str, value: float) -> None:
         """
         Record a metric value for a component.
@@ -215,6 +216,7 @@ class ChitraguptaService(NagaBaseService):
         """Get profile for component."""
         return self._profiles.get(component_id)
 
+    @naga_governed(operation="detect_anomaly")
     def detect_anomaly(self, component_id: str) -> Optional[Anomaly]:
         """
         Check if component is behaving anomalously.

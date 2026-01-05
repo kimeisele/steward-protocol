@@ -92,9 +92,10 @@ class TestNagaFederationIntegration:
         )
         event_id = naga.takshaka.bite(violation)
 
-        # Should have recorded to ledger
-        assert len(mock_ledger._recorded) == 1
-        assert mock_ledger._recorded[0]["event_type"] == "VAJRA_VIOLATION"
+        # Should have recorded to ledger (includes OUROBOROS NAGA_OPERATION events)
+        violation_events = [e for e in mock_ledger._recorded if e["event_type"] == "VAJRA_VIOLATION"]
+        assert len(violation_events) == 1
+        assert violation_events[0]["event_type"] == "VAJRA_VIOLATION"
 
     def test_vasuki_churn_round_trip(self, mock_ledger, correction_orchestrator):
         """Test Vasuki can churn_out and churn_in."""

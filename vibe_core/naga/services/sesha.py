@@ -26,6 +26,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.correction import (
     DriftSeverity,
     DriftSource,
@@ -58,12 +59,14 @@ logger = logging.getLogger("SESHA")
     capabilities=[NagaCapability.LEDGER],
     protocol_class="vibe_core.protocols.naga.SeshaProtocol",
 )
-class SeshaService(SeshaProtocol):
+class SeshaService(NagaBaseService, SeshaProtocol):
     """
     Ananta Sesha - Trägt die Welten.
 
     Wraps the existing SQLiteLedger for gossip sync.
     Does NOT replace the ledger - extends it invisibly.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(
@@ -78,6 +81,7 @@ class SeshaService(SeshaProtocol):
             ledger: The SQLiteLedger to wrap. If None, operates in degraded mode.
             block_size: Number of events per block for sync.
         """
+        super().__init__(service_name="Sesha")
         self._ledger = ledger
         self._block_size = block_size
         self._events_processed = 0
@@ -134,6 +138,7 @@ class SeshaService(SeshaProtocol):
     # Gossip Sync Protocol
     # =========================================================================
 
+    @naga_governed(operation="export_blocks")
     def export_blocks(self, since: int = 0, limit: int = 100) -> List[LedgerBlock]:
         """Export blocks for gossip to peers."""
         if not self._ledger:
@@ -176,6 +181,7 @@ class SeshaService(SeshaProtocol):
             self._errors += 1
             return []
 
+    @naga_governed(operation="import_blocks")
     def import_blocks(self, blocks: List[LedgerBlock]) -> ImportResult:
         """Import blocks received from a peer."""
         if not self._ledger:
@@ -331,6 +337,7 @@ class SeshaService(SeshaProtocol):
 
         return handler
 
+    @naga_governed(operation="detect_drift")
     def detect_drift(self) -> List[UnifiedDriftReport]:
         """Detect STATE drift via ledger integrity check."""
         if not self._ledger:

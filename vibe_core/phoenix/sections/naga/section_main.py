@@ -340,6 +340,31 @@ class PrahladConfig:
 
 
 @dataclass
+class AnantaConfig:
+    """♾️ Ananta - Gene Splicer + Loader Governor configuration."""
+
+    enabled: bool = True
+    # Loader governance settings
+    wrap_manifest_registry: bool = True
+    max_load_events: int = 10000  # LRU limit for load event tracking
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AnantaConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            wrap_manifest_registry=data.get("wrap_manifest_registry", True),
+            max_load_events=data.get("max_load_events", 10000),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "wrap_manifest_registry": self.wrap_manifest_registry,
+            "max_load_events": self.max_load_events,
+        }
+
+
+@dataclass
 class NagaConfig:
     """
     NAGA Federation Configuration.
@@ -366,11 +391,15 @@ class NagaConfig:
     narada: NaradaConfig = field(default_factory=NaradaConfig)
     chitragupta: ChitraguptaConfig = field(default_factory=ChitraguptaConfig)
     prahlad: PrahladConfig = field(default_factory=PrahladConfig)
+    ananta: AnantaConfig = field(default_factory=AnantaConfig)
 
     # ===== INFRASTRUCTURE COMPONENTS =====
     cortex: CortexConfig = field(default_factory=CortexConfig)
     flood: FloodConfig = field(default_factory=FloodConfig)
     commit_watcher: CommitWatcherConfig = field(default_factory=CommitWatcherConfig)
+
+    # ===== OUROBOROS SELF-GOVERNANCE =====
+    verify_on_boot: bool = True  # Run Prahlad self-check at boot
 
     # Track if loaded from YAML vs defaults
     _loaded_from_yaml: bool = field(default=False, repr=False)
