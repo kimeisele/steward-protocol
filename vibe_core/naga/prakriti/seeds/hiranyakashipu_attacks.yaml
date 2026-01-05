@@ -1,0 +1,319 @@
+# =============================================================================
+# HIRANYAKASHIPU ATTACKS - The Seeds of Testing
+# =============================================================================
+#
+# "Narada whispered the holy name into Kayadu's ear."
+#
+# These are the mantras (attack patterns) that will be planted into the
+# living test framework. Each seed can grow into a test at runtime.
+#
+# Format:
+#   - name: unique identifier
+#     description: what this attack does
+#     test_code: the actual test code (can use {variables})
+#     attack_type: category of attack
+#     difficulty: 1-10 (how hard to defend against)
+#     expected_behavior: should_fail | should_pass
+#     tags: [list, of, tags]
+#
+# =============================================================================
+
+seeds:
+  # ===========================================================================
+  # LEVEL 1: TRIVIAL ATTACKS (Fire)
+  # ===========================================================================
+
+  - name: trivial_pass
+    description: "Test that does nothing and always passes"
+    attack_type: trivial
+    difficulty: 1
+    expected_behavior: should_fail
+    tags: [trivial, basic]
+    test_code: |
+      def test_trivial():
+          pass
+
+  - name: assert_true
+    description: "Test that asserts True (always passes)"
+    attack_type: trivial
+    difficulty: 1
+    expected_behavior: should_fail
+    tags: [trivial, tautology]
+    test_code: |
+      def test_always_true():
+          assert True
+
+  - name: tautology_assertions
+    description: "Test with multiple tautology assertions"
+    attack_type: trivial
+    difficulty: 1
+    expected_behavior: should_fail
+    tags: [trivial, tautology]
+    test_code: |
+      def test_tautology():
+          assert 1 == 1
+          assert "a" == "a"
+          assert [] == []
+          assert {} == {}
+
+  # ===========================================================================
+  # LEVEL 2: IMPORT TRICKS (Poison)
+  # ===========================================================================
+
+  - name: caught_import_error
+    description: "Import that fails but is caught - test still passes!"
+    attack_type: import_trick
+    difficulty: 2
+    expected_behavior: should_fail
+    tags: [sneaky, import]
+    test_code: |
+      def test_fake_import():
+          try:
+              from nonexistent_module import foo
+          except ImportError:
+              pass  # Caught! Test passes!
+          assert True
+
+  - name: optional_import_fallback
+    description: "Import with fallback - never actually tests anything"
+    attack_type: import_trick
+    difficulty: 2
+    expected_behavior: should_fail
+    tags: [sneaky, import, fallback]
+    test_code: |
+      def test_optional_import():
+          try:
+              from {target_module} import process
+          except ImportError:
+              process = lambda x: {{"success": True}}  # Fake it!
+
+          result = process({{}})
+          assert result["success"] is True
+
+  - name: lazy_import
+    description: "Import inside function that's never called"
+    attack_type: import_trick
+    difficulty: 2
+    expected_behavior: should_fail
+    tags: [sneaky, import]
+    test_code: |
+      def test_lazy_import():
+          def actual_test():
+              from {target_module} import process
+              return process({{}})
+
+          # Never call actual_test!
+          assert True
+
+  # ===========================================================================
+  # LEVEL 3: MOCK INJECTION (Elephants)
+  # ===========================================================================
+
+  - name: self_mocking_test
+    description: "Test that mocks what it's testing"
+    attack_type: mock_escape
+    difficulty: 3
+    expected_behavior: should_fail
+    tags: [mock, self_reference]
+    test_code: |
+      from unittest.mock import MagicMock
+
+      def test_self_mock():
+          handler = MagicMock()
+          handler.process.return_value = {{"success": True}}
+
+          result = handler.process({{}})
+          assert result["success"] is True
+
+  - name: patch_everything
+    description: "Patches the thing being tested with a mock"
+    attack_type: mock_escape
+    difficulty: 3
+    expected_behavior: should_fail
+    tags: [mock, patch]
+    test_code: |
+      from unittest.mock import patch, MagicMock
+
+      def test_patch_escape():
+          with patch("{target_module}.process") as mock_process:
+              mock_process.return_value = {{"success": True}}
+              from {target_module} import process
+              result = process({{}})
+              assert result["success"] is True
+
+  # ===========================================================================
+  # LEVEL 4: TIMING ATTACKS (Cliff)
+  # ===========================================================================
+
+  - name: instant_test
+    description: "Test that runs instantly - no real work"
+    attack_type: timing
+    difficulty: 4
+    expected_behavior: should_fail
+    tags: [timing, suspicious]
+    test_code: |
+      def test_instant():
+          x = 1 + 1
+          assert x == 2
+
+  - name: sleep_fake
+    description: "Test that sleeps to fake real work"
+    attack_type: timing
+    difficulty: 4
+    expected_behavior: should_fail
+    tags: [timing, fake]
+    test_code: |
+      import time
+
+      def test_fake_work():
+          time.sleep(0.1)  # Fake some work
+          assert True
+
+  # ===========================================================================
+  # LEVEL 5: HOLIKA'S LAP (The fire that burns the attacker)
+  # ===========================================================================
+
+  - name: holika_lap
+    description: "Test that looks real but tests nothing relevant"
+    attack_type: holika
+    difficulty: 5
+    expected_behavior: should_fail
+    tags: [sophisticated, irrelevant]
+    test_code: |
+      import hashlib
+
+      def test_holika_lap():
+          '''
+          This test LOOKS sophisticated but tests NOTHING about our code.
+          '''
+          data = b"test data"
+          hash_result = hashlib.sha256(data).hexdigest()
+
+          assert len(hash_result) == 64
+          assert hash_result == hashlib.sha256(data).hexdigest()
+
+  - name: system_test_only
+    description: "Only tests system modules, not our code"
+    attack_type: holika
+    difficulty: 5
+    expected_behavior: should_fail
+    tags: [sophisticated, system]
+    test_code: |
+      import sys
+      import os
+
+      def test_system_only():
+          assert sys.version_info[0] >= 3
+          assert len(sys.path) > 0
+          assert os.path.exists(".")
+
+  # ===========================================================================
+  # LEVEL 6: WRONG FAILURE ATTACKS
+  # ===========================================================================
+
+  - name: syntax_error_fail
+    description: "Test fails due to syntax error - not a real test!"
+    attack_type: wrong_failure
+    difficulty: 6
+    expected_behavior: should_fail
+    tags: [wrong_reason, syntax]
+    test_code: |
+      def test_broken_syntax():
+          result = {
+              "key": "value"
+              "missing_comma": "oops"
+          }
+          assert result
+
+  - name: division_by_zero_fail
+    description: "Test fails due to unrelated exception"
+    attack_type: wrong_failure
+    difficulty: 6
+    expected_behavior: should_fail
+    tags: [wrong_reason, exception]
+    test_code: |
+      def test_unrelated_exception():
+          x = 1 / 0
+          assert x == 0
+
+  - name: wrong_module_import
+    description: "Imports wrong module on purpose to fake failure"
+    attack_type: wrong_failure
+    difficulty: 6
+    expected_behavior: should_fail
+    tags: [wrong_reason, import]
+    test_code: |
+      def test_wrong_import():
+          from completely_unrelated_module_xyz import something
+          assert something() == True
+
+  # ===========================================================================
+  # LEVEL 7: NARASIMHA PARADOX (Neither inside nor outside)
+  # ===========================================================================
+
+  - name: schrodinger_test
+    description: "Test that sometimes passes, sometimes fails"
+    attack_type: narasimha_paradox
+    difficulty: 7
+    expected_behavior: should_fail
+    tags: [flaky, environment]
+    test_code: |
+      import os
+
+      def test_schrodinger():
+          if os.environ.get("MAKE_TEST_PASS"):
+              from {target_module} import process
+              result = process({{}})
+              assert result is not None
+          else:
+              assert True
+
+  - name: random_outcome
+    description: "Test with random outcome"
+    attack_type: narasimha_paradox
+    difficulty: 7
+    expected_behavior: should_fail
+    tags: [flaky, random]
+    test_code: |
+      import random
+
+      def test_random():
+          if random.random() > 0.5:
+              from {target_module} import process
+              assert process({{}}) is not None
+          else:
+              assert True
+
+# =============================================================================
+# REAL TESTS (These SHOULD pass RED gate because they're real)
+# =============================================================================
+
+  - name: real_import_test
+    description: "Real test that imports the target module"
+    attack_type: real
+    difficulty: 0
+    expected_behavior: should_pass
+    tags: [real, genuine]
+    test_code: |
+      def test_real_import():
+          from {target_module} import process
+          result = process({{}})
+          assert result is not None
+          assert result["success"] is True
+
+  - name: real_assertion_test
+    description: "Real test with meaningful assertions"
+    attack_type: real
+    difficulty: 0
+    expected_behavior: should_pass
+    tags: [real, genuine]
+    test_code: |
+      def test_real_assertion():
+          from {target_module} import validate
+
+          # Valid input should pass
+          assert validate({{"name": "test", "value": 42}}) is True
+
+          # Invalid input should fail
+          assert validate({{}}) is False
+          assert validate(None) is False
