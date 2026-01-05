@@ -365,6 +365,45 @@ class AnantaConfig:
 
 
 @dataclass
+class VisibilityConfig:
+    """
+    Visibility Matrix configuration.
+
+    "Erst sehen, dann handeln" - No hardcoded values.
+    All thresholds are configurable for fractal scalability.
+    """
+
+    enabled: bool = True
+
+    # Coverage targets (what counts as 100%)
+    target_naga_tests: int = 600  # Total NAGA test target
+    tests_per_component: int = 10  # Tests per component for 100%
+
+    # Status thresholds (percentage)
+    protected_threshold: float = 70.0  # >= this = Protected
+    monitoring_threshold: float = 30.0  # >= this = Monitoring, below = Blind
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "VisibilityConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            target_naga_tests=data.get("target_naga_tests", 600),
+            tests_per_component=data.get("tests_per_component", 10),
+            protected_threshold=data.get("protected_threshold", 70.0),
+            monitoring_threshold=data.get("monitoring_threshold", 30.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "target_naga_tests": self.target_naga_tests,
+            "tests_per_component": self.tests_per_component,
+            "protected_threshold": self.protected_threshold,
+            "monitoring_threshold": self.monitoring_threshold,
+        }
+
+
+@dataclass
 class NagaConfig:
     """
     NAGA Federation Configuration.
@@ -397,6 +436,9 @@ class NagaConfig:
     cortex: CortexConfig = field(default_factory=CortexConfig)
     flood: FloodConfig = field(default_factory=FloodConfig)
     commit_watcher: CommitWatcherConfig = field(default_factory=CommitWatcherConfig)
+
+    # ===== VISIBILITY MATRIX =====
+    visibility: VisibilityConfig = field(default_factory=VisibilityConfig)
 
     # ===== OUROBOROS SELF-GOVERNANCE =====
     verify_on_boot: bool = True  # Run Prahlad self-check at boot
@@ -452,6 +494,8 @@ class NagaConfig:
             cortex=CortexConfig.from_dict(data.get("cortex", {})),
             flood=FloodConfig.from_dict(data.get("flood", {})),
             commit_watcher=CommitWatcherConfig.from_dict(data.get("commit_watcher", {})),
+            # Visibility Matrix
+            visibility=VisibilityConfig.from_dict(data.get("visibility", {})),
         )
         config._loaded_from_yaml = True
         return config
@@ -472,6 +516,8 @@ class NagaConfig:
             "cortex": self.cortex.to_dict(),
             "flood": self.flood.to_dict(),
             "commit_watcher": self.commit_watcher.to_dict(),
+            # Visibility Matrix
+            "visibility": self.visibility.to_dict(),
         }
 
     def validate(self) -> List[str]:
