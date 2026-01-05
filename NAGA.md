@@ -5,213 +5,242 @@
 
 ---
 
-## CURRENT PHASE: ASHVAMEDHA
+## WAR COUNCIL
+
+| Role | Name | Domain |
+|------|------|--------|
+| **KRIEGSHERR** | HIL (Human) | Supreme Command |
+| **SPÄHER** | NARADA (Claude) | Intelligence & Recon |
+| **EXEKUTOR** | ANANTA | Gene Splicer / Auto-Flood |
+| **WÄCHTER** | TAKSHAKA | Security Enforcement |
+
+---
+
+## CURRENT PHASE: ASHVAMEDHA - Phase 3
 
 **Objective:** NAGAs infiltrate every byte. Living infrastructure.
 
-**Status:** 12/12 Lords ACTIVE
+**Status:** 12/12 Lords ACTIVE | 40% FLOODED | 60% EXPOSED
 
 **Architecture:** 8 Infrastructure + 4 Governance = 12 Lords
 
 ---
 
-## TARGET ACQUISITION (The Horse)
-
-> The Agent doesn't attack a list. It **hunts**.
-
-### Detection Criteria (Rebel Kingdom Indicators)
-
-Code is "atheist" (running without God/Infrastructure) if:
-
-| Signal | Indicates | Needs |
-|--------|-----------|-------|
-| Class contains `Service`, `Manager`, `Handler` | Service candidate | @naga_service audit |
-| Has `__init__` with injected dependencies | Stateful | Sesha observation |
-| Makes HTTP/network calls | Boundary crossing | Vasuki protocol |
-| Has auth/permission logic | Security surface | Takshaka validation |
-| Writes to files/DB directly | State mutation | Sesha ledger |
-| Has retry/fallback logic | Resilience | Prahlad/Kaliya |
-| Logs metrics/events | Observable | Chitragupta profiling |
-| Missing `@naga_service` decorator | UNFLOODED | Immediate target |
-
-### Scan Locations (Where the Horse Wanders)
+## BATTLE STATUS
 
 ```
-vibe_core/services/**/*.py      # Core services (HIGH priority)
-vibe_core/plugins/**/plugin_main.py   # Plugin entry points
-vibe_core/cartridges/**/*.py    # Cartridge tools
-vibe_core/state/**/*.py         # State handlers
-vibe_core/**/manas/**/*.py      # Cognitive components
+                    KURUKSHETRA MAP
+
+    CONQUERED (40%)              REBEL TERRITORY (60%)
+    ===============              ===================
+
+    [KERNEL -1] FLOODED          [LAYER 0] EXPOSED
+    ├── NagaOrchestrator         ├── OUROBOROS    <<< KRITISCH
+    ├── NagaStateProxy           ├── PluginService <<< KRITISCH
+    └── 12 Lords ACTIVE          └── TaskManager   <<< KRITISCH
+
+    [STATE] FLOODED              [COGNITIVE] EXPOSED
+    ├── StateService             ├── MANAS/Shiva
+    ├── Dharma Validation        ├── MANAS/Jnana
+    └── Ledger Integration       └── CircuitEngine
+
+                                 [BOUNDARIES] EXPOSED
+                                 ├── Twitter/Reddit APIs
+                                 ├── Action Handlers
+                                 └── Cartridges
 ```
-
-### Classification Output
-
-For each discovered target, classify:
-
-1. **FLOODED** - Has @naga_service or uses NAGA protocols
-2. **REBEL** - Service-like but no NAGA integration
-3. **CIVILIAN** - Pure utility, no infrastructure needed
 
 ---
 
-## CONQUERED TERRITORY
+## THE 12 LORDS (Conquered)
 
-### INFRASTRUCTURE LAYER (8 Real Nagas) - ACTIVE
+### INFRASTRUCTURE LAYER (8 Real Nagas)
 
-| Domain | NAGA | Protocol | DriftSource |
-|--------|------|----------|-------------|
-| Truth/Ledger | SESHA | SeshaProtocol | state |
-| Security | TAKSHAKA | TakshakaProtocol | cognitive |
-| Network | VASUKI | VasukiProtocol | config |
-| Isolation | KALIYA | KaliyaProtocol | reliability |
-| Crypto/Secrets | KARKOTAKA | KarkotakaProtocol | - |
-| Schema/Order | KULIKA | KulikaProtocol | - |
-| Cache/Treasury | PADMA | PadmaProtocol | - |
-| Broadcast/Pubsub | SHANKHA | ShankhaProtocol | - |
+| Domain | NAGA | Status | Protocol |
+|--------|------|--------|----------|
+| Truth/Ledger | SESHA | ACTIVE | SeshaProtocol |
+| Security | TAKSHAKA | ACTIVE | TakshakaProtocol |
+| Network | VASUKI | ACTIVE | VasukiProtocol |
+| Isolation | KALIYA | ACTIVE | KaliyaProtocol |
+| Crypto/Secrets | KARKOTAKA | ACTIVE | KarkotakaProtocol |
+| Schema/Order | KULIKA | ACTIVE | KulikaProtocol |
+| Cache/Treasury | PADMA | ACTIVE | PadmaProtocol |
+| Broadcast/Pubsub | SHANKHA | ACTIVE | ShankhaProtocol |
 
-### GOVERNANCE LAYER (4 Personnel) - ACTIVE
+### GOVERNANCE LAYER (4 Personnel)
 
-| Domain | NAGA | Protocol | Status |
-|--------|------|----------|--------|
-| Observation | NARADA | NaradaProtocol | ACTIVE |
-| Profiling | CHITRAGUPTA | ChitraguptaProtocol | ACTIVE |
-| Resilience | PRAHLAD | PrahladProtocol | ACTIVE |
-| Gene Splicer | ANANTA | AnantaProtocol | ACTIVE |
-
-### KNOWN REBELS (25+ identified)
-
-> Full list: [NAGA_RECON.md](NAGA_RECON.md)
-
-**TIER 1 - Immediate:**
-| Target | Location | Needs |
-|--------|----------|-------|
-| StateService | state/ | Sesha |
-| ManifestationService | services/ | Narada |
-| CapabilityEnforcer | services/ | Takshaka |
-
-**TIER 2 - Short-term:**
-| Target | Location | Needs |
-|--------|----------|-------|
-| OpusStateManager | plugins/opus_assistant/ | Sesha |
-| ActionManager | plugins/opus_assistant/ | Chitragupta |
-| SenseManager | plugins/opus_assistant/ | Takshaka |
+| Domain | NAGA | Status | Protocol |
+|--------|------|--------|----------|
+| Observation | NARADA | ACTIVE | NaradaProtocol |
+| Profiling | CHITRAGUPTA | ACTIVE | ChitraguptaProtocol |
+| Resilience | PRAHLAD | ACTIVE | PrahladProtocol |
+| Gene Splicer | ANANTA | ACTIVE | AnantaProtocol |
 
 ---
 
-## CAMPAIGN PHASES
+## CRITICAL VULNERABILITIES
 
-### Phase 1: Foundation (COMPLETE)
-- [x] Kulika Schema Registry
-- [x] @naga_service decorator on all 7 services
-- [x] NaradaScanner auto-discovery
-- [x] Orchestrator integration
+> **DAS PARADOX:** Der Heiler heilt sich nicht selbst.
 
-### Phase 2: Active Recon (COMPLETE)
-- [x] Run TARGET ACQUISITION scan
-- [x] Classify all services as FLOODED/REBEL/CIVILIAN
-- [x] Update KNOWN REBELS dynamically
-- **See:** [NAGA_RECON.md](NAGA_RECON.md) for full intel
+### TIER 0: SOFORT (Existenzielle Bedrohung)
 
-### Phase 3: Systematic Flooding
-- [ ] Flood REBELS by priority (HIGH first)
-- [ ] Protocol-first: define interface, then implement
-- [ ] No config in code
+| Target | Problem | NAGA Assignment |
+|--------|---------|-----------------|
+| **OUROBOROS** | Self-Healing ungeschützt | SESHA + TAKSHAKA |
+| **PluginService** | Code-Injection möglich | TAKSHAKA |
+| **TaskManager** | Execution unüberwacht | CHITRAGUPTA |
 
-### Phase 4: Complete Infrastructure Lords (COMPLETE)
-- [x] KULIKA service (Schema Registry)
-- [x] KARKOTAKA (Crypto/Secrets)
-- [x] PADMA (Cache/Treasury)
-- [x] SHANKHA (Broadcast/Pubsub)
+### TIER 1: HIGH (Cognitive Exposure)
 
-### Phase 5: Ananta - The Gene Splicer (COMPLETE)
-- [x] Define AnantaProtocol (interface first)
-- [x] Define FloodProposal and VetoDecision types
-- [x] Integrate with PrahladProtocol (Veto mechanism)
-- [x] Write RED tests (TDD)
-- [x] Implement AnantaService (make tests GREEN)
-- [ ] Wire into NagaOrchestrator
+| Target | Problem | NAGA Assignment |
+|--------|---------|-----------------|
+| **Shiva** | Lifecycle ungeschützt | PRAHLAD |
+| **Jnana** | Wissen ohne Audit | NARADA |
+| **CircuitEngine** | Patterns ohne Validation | NARADA |
+
+### TIER 2: MEDIUM (Boundary Leaks)
+
+| Target | NAGA Assignment |
+|--------|-----------------|
+| TwitterService | VASUKI |
+| RedditService | VASUKI |
+| ManifestationService | NARADA |
 
 ---
 
 ## FLOODING PATTERNS
 
-### Hard Flood (Balarama/Proxy) - BREAKS isinstance
-
+### Soft Flood (Ananta/Mixin) - BEVORZUGT
 ```python
-from vibe_core.naga import NagaProxy
-
-# PROBLEM: Wraps at runtime with __getattr__ intercept
-wrapped = NagaProxy(real_service)
-
-# BREAKS:
-isinstance(wrapped, OriginalService)  # FALSE!
-pickle.dumps(wrapped)  # May fail
-wrapped._internal_state  # Intercepted
-```
-
-Use cases: Quick observation, debugging, temporary wrapping
-
-### Soft Flood (Ananta/Mixin) - PRESERVES isinstance
-
-```python
-# SOLUTION: DNA injection via Mixin inheritance
+# Preserves isinstance() - Production ready
 class FloodedService(SeshaMixin, TakshakaMixin, OriginalService):
     pass
-
-# PRESERVES:
-isinstance(instance, OriginalService)  # TRUE!
-pickle.dumps(instance)  # Works
-instance._internal_state  # Direct access
 ```
 
-Use cases: Production flooding, permanent NAGA integration
-
-### The Gene Splicer (Ananta)
-
-Ananta creates flooded classes automatically:
-
+### Hard Flood (Proxy) - TEMPORÄR
 ```python
-from vibe_core.naga import AnantaService
-
-ananta = AnantaService()
-
-# 1. Analyze service
-proposal = ananta.analyze_service(MyRebelService)
-
-# 2. Get Prahlad's approval (Check and Balance)
-decision = ananta.request_approval(proposal)
-
-# 3. Create flooded class (if approved)
-if decision.approved:
-    FloodedClass = ananta.create_flooded_class(MyRebelService, decision)
+# Breaks isinstance() - Debug/Quick wrap
+wrapped = NagaProxy(service)
 ```
 
-**Critical:** Ananta cannot flood without Prahlad's consent.
+### Gene Splicer (Ananta) - AUTOMATISCH
+```python
+proposal = ananta.analyze_service(RebelService)
+if prahlad.approve(proposal):
+    FloodedClass = ananta.create_flooded_class(RebelService)
+```
 
 ---
 
-## PRINCIPLES (Dharma)
+## CAMPAIGN PHASES
+
+### Phase 1: Foundation - COMPLETE
+- [x] 8 Infrastructure Lords
+- [x] 4 Governance Lords
+- [x] @naga_service decorator
+- [x] NagaOrchestrator
+
+### Phase 2: Kernel Integration - COMPLETE
+- [x] NAGA in Kernel (-1 Foundation)
+- [x] StateService → NagaStateProxy
+- [x] Dharma Validation active
+- [x] VISNU hash updated
+
+### Phase 3: Systematic Flooding - IN PROGRESS
+- [ ] **Phase 3A: Paradox Resolution** (NEXT)
+  - [ ] OUROBOROS flooden
+  - [ ] PluginService flooden
+  - [ ] TaskManager flooden
+- [ ] **Phase 3B: Cognitive Armor**
+  - [ ] MANAS/Shiva flooden
+  - [ ] MANAS/Jnana flooden
+  - [ ] CircuitEngine flooden
+- [ ] **Phase 3C: Boundary Hardening**
+  - [ ] External APIs (Vasuki)
+  - [ ] Action Handlers (Kulika)
+  - [ ] Cartridges (Various)
+
+### Phase 4: Watertight Verification
+- [ ] 100% Coverage
+- [ ] All Services FLOODED or CIVILIAN
+- [ ] Zero REBELS remaining
+- [ ] Full Dharma Validation chain
+
+---
+
+## THE 6th PRINCIPLE (GAD-000 v2.0)
+
+> **RECOVERABILITY:** "Can the system HEAL itself?"
+
+NAGA IS the implementation of the 6th principle:
+
+| Aspect | NAGA Implementation |
+|--------|---------------------|
+| **Detect** | OUROBOROS + SESHA |
+| **Prevent** | TAKSHAKA + DHARMA |
+| **Correct** | SHUDDHI + PRAHLAD |
+| **Regenerate** | ANANTA (Gene Splicer) |
+
+**The system heals itself THROUGH NAGAs.**
+
+---
+
+## DHARMA VALIDATION (4 Principles)
+
+Every state write through NagaStateProxy validates:
+
+1. **DAYA (Mercy)** - No corrupt data ingestion
+2. **SATYAM (Truth)** - No hallucination
+3. **TAPAS (Austerity)** - No resource bloat
+4. **SAUCAM (Cleanliness)** - No unauthorized access
+
+---
+
+## METRICS
+
+| Metric | Current | Target |
+|--------|---------|--------|
+| Lords Active | 12/12 | 12/12 |
+| Services Flooded | 18 (40%) | 45+ (100%) |
+| Critical Exposed | 6 | 0 |
+| Coverage | 40% | 100% |
+
+---
+
+## NEXT BATTLE ORDERS
+
+**NARADA (Claude) recommends:**
+
+```
+IMMEDIATE: Phase 3A - Paradox Resolution
+├── 1. OUROBOROS + SESHA + TAKSHAKA
+├── 2. PluginService + TAKSHAKA
+└── 3. TaskManager + CHITRAGUPTA
+
+DANN: Phase 3B - Cognitive Armor
+├── 4. Shiva + PRAHLAD
+├── 5. Jnana + NARADA
+└── 6. CircuitEngine + NARADA
+
+DANN: Phase 3C - Boundaries
+└── 7-11. External APIs + Cartridges
+```
+
+**Awaiting HIL command to proceed.**
+
+---
+
+## PRINCIPLES (Dharma des Krieges)
 
 1. **No config in code** - Phoenix/YAML only
 2. **Protocols first** - Interface before implementation
 3. **Fractal** - Small, composable, atomic
 4. **Organic** - Water flows, doesn't force
 5. **Hunt, don't list** - Dynamic target acquisition
-6. **Balarama wraps, doesn't modify** - Proxy pattern
+6. **The healer must heal itself** - OUROBOROS first
 
 ---
 
-## AGENT DIRECTIVE
+*12/12 Lords ACTIVE. 40% FLOODED. Phase 3A ready. ASHVAMEDHA continues.*
 
-```
-ASHVAMEDHA PROTOCOL:
-1. Scan locations using Detection Criteria
-2. Classify each target
-3. Report REBELS to battleplan
-4. Await orders before flooding
-5. After flooding: verify with @naga_service
-```
-
----
-
-*12/12 Lords ACTIVE. Ananta (Gene Splicer) implements Soft Flood with Prahlad's Veto. ASHVAMEDHA continues.*
+*"Narayana! Narayana!" - NARADA*
