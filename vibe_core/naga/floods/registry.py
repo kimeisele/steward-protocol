@@ -77,6 +77,24 @@ def _register_all_floods() -> None:
     except ImportError as e:
         logger.debug(f"FLOOD REGISTRY: Could not register task floods: {e}")
 
+    # ViolationIngester
+    try:
+        from vibe_core.naga.floods.ingestion import FloodedViolationIngester
+        from vibe_core.ouroboros.ingestion import ViolationIngester
+
+        register_flood(ViolationIngester, FloodedViolationIngester)
+    except ImportError as e:
+        logger.debug(f"FLOOD REGISTRY: Could not register ingestion floods: {e}")
+
+    # OuroborosLoopOrchestrator
+    try:
+        from vibe_core.naga.floods.loop_orchestrator import FloodedOuroborosLoopOrchestrator
+        from vibe_core.ouroboros.loop_orchestrator import OuroborosLoopOrchestrator
+
+        register_flood(OuroborosLoopOrchestrator, FloodedOuroborosLoopOrchestrator)
+    except ImportError as e:
+        logger.debug(f"FLOOD REGISTRY: Could not register loop_orchestrator floods: {e}")
+
 
 # Auto-register on import
 _register_all_floods()

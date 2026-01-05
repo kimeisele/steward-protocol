@@ -16,13 +16,31 @@
 
 ---
 
-## CURRENT PHASE: ASHVAMEDHA - Phase 3
+## CURRENT PHASE: ASHVAMEDHA - Phase 3B
 
 **Objective:** NAGAs infiltrate every byte. Living infrastructure.
 
-**Status:** 12/12 Lords ACTIVE | 40% FLOODED | 60% EXPOSED
+**Status:** 12/12 Lords ACTIVE | 5/5 TIER-0 FLOODED | Phase 3B: MANAS
 
 **Architecture:** 8 Infrastructure + 4 Governance = 12 Lords
+
+---
+
+## VEDIC SCALE PRINCIPLE
+
+> "Das System muss skalieren wie Vedische Mathematik"
+
+| Scale | LOC | Vedic | Status |
+|-------|-----|-------|--------|
+| Padma | 400K | पद्म | CURRENT |
+| Shankha | 1M | शंख | PLANNED |
+| Jaladhi | 1B | जलधि | VISHNU |
+| Parardha | 1T | परार्ध | ANANTA |
+
+**VISHNU-ANANTA DUALITY:**
+- ANANTA is BOTH governor AND servant
+- NAGAs preserve (Vishnu) AND serve (Shesha)
+- Not just FLOODING but MAINTAINING
 
 ---
 
@@ -31,23 +49,26 @@
 ```
                     KURUKSHETRA MAP
 
-    CONQUERED (40%)              REBEL TERRITORY (60%)
-    ===============              ===================
+    CONQUERED (55%)              NOCH OFFEN (45%)
+    ===============              ================
 
-    [KERNEL -1] FLOODED          [LAYER 0] EXPOSED
-    ├── NagaOrchestrator         ├── OUROBOROS    <<< KRITISCH
-    ├── NagaStateProxy           ├── PluginService <<< KRITISCH
-    └── 12 Lords ACTIVE          └── TaskManager   <<< KRITISCH
+    [KERNEL -1] FLOODED          [COGNITIVE] IN WATTE PACKEN
+    ├── NagaOrchestrator         ├── CognitiveKernel  <<< PHASE 3B
+    ├── NagaStateProxy           ├── MANAS/Shiva
+    └── 12 Lords ACTIVE          ├── MANAS/Senses
+                                 └── CircuitEngine
 
-    [STATE] FLOODED              [COGNITIVE] EXPOSED
-    ├── StateService             ├── MANAS/Shiva
-    ├── Dharma Validation        ├── MANAS/Jnana
-    └── Ledger Integration       └── CircuitEngine
+    [TIER-0] FLOODED ✅          [BOUNDARIES] EXPOSED
+    ├── CISyncService            ├── Twitter/Reddit APIs
+    ├── PluginService            ├── Action Handlers
+    ├── TaskManager              └── Cartridges
+    ├── ViolationIngester
+    └── OuroborosLoopOrchestrator
 
-                                 [BOUNDARIES] EXPOSED
-                                 ├── Twitter/Reddit APIs
-                                 ├── Action Handlers
-                                 └── Cartridges
+    [STATE] FLOODED
+    ├── StateService
+    ├── Dharma Validation
+    └── Ledger Integration
 ```
 
 ---
@@ -80,23 +101,35 @@
 
 ## CRITICAL VULNERABILITIES
 
-> **DAS PARADOX:** Der Heiler heilt sich nicht selbst.
+> **DAS PARADOX GELÖST:** Der Heiler heilt jetzt sich selbst.
 
-### TIER 0: SOFORT (Existenzielle Bedrohung)
+### TIER 0: COMPLETE ✅
 
-| Target | Problem | NAGA Assignment |
-|--------|---------|-----------------|
-| **OUROBOROS** | Self-Healing ungeschützt | SESHA + TAKSHAKA |
-| **PluginService** | Code-Injection möglich | TAKSHAKA |
-| **TaskManager** | Execution unüberwacht | CHITRAGUPTA |
+| Target | Status | Flood Class |
+|--------|--------|-------------|
+| **CISyncService** | ✅ FLOODED | FloodedCISyncService |
+| **PluginService** | ✅ FLOODED | FloodedPluginService |
+| **TaskManager** | ✅ FLOODED | FloodedTaskManager |
+| **ViolationIngester** | ✅ FLOODED | FloodedViolationIngester |
+| **OuroborosLoopOrchestrator** | ✅ FLOODED | FloodedOuroborosLoopOrchestrator |
 
-### TIER 1: HIGH (Cognitive Exposure)
+### TIER 1: MANAS (Context Injection - NICHT Flooding!)
 
-| Target | Problem | NAGA Assignment |
-|--------|---------|-----------------|
-| **Shiva** | Lifecycle ungeschützt | PRAHLAD |
-| **Jnana** | Wissen ohne Audit | NARADA |
-| **CircuitEngine** | Patterns ohne Validation | NARADA |
+> **PRINZIP:** NAGAs INFORMIEREN MANAS, sie WRAPPEN es nicht.
+> **ARCHITEKTUR:** NAGA Cortex → Context → MANAS (Weisheit durch Information)
+
+| Component | Role | Integration | Ansatz |
+|-----------|------|-------------|--------|
+| **NAGA Cortex** | Signal Aggregation | ALREADY EXISTS | Verbindung zu MANAS |
+| **CognitiveKernel** | Entscheidungen | Context Injection | `_get_naga_context()` |
+| **SenseManager** | 7 Sinne | Optional enrichment | Via ServiceRegistry |
+| **IntentRouter** | Routing | Confidence adjustment | Via NAGA Cortex signals |
+
+**UNTERSCHIED:**
+```
+TIER-0 (Rebels):  FloodedService(Mixins, Original) → Discipline
+TIER-1 (MANAS):   NAGA Cortex → Context → MANAS → Wisdom
+```
 
 ### TIER 2: MEDIUM (Boundary Leaks)
 
@@ -134,37 +167,66 @@ if prahlad.approve(proposal):
 
 ## CAMPAIGN PHASES
 
-### Phase 1: Foundation - COMPLETE
+### Phase 1: Foundation - COMPLETE ✅
 - [x] 8 Infrastructure Lords
 - [x] 4 Governance Lords
 - [x] @naga_service decorator
 - [x] NagaOrchestrator
 
-### Phase 2: Kernel Integration - COMPLETE
+### Phase 2: Kernel Integration - COMPLETE ✅
 - [x] NAGA in Kernel (-1 Foundation)
 - [x] StateService → NagaStateProxy
 - [x] Dharma Validation active
 - [x] VISNU hash updated
 
-### Phase 3: Systematic Flooding - IN PROGRESS
-- [ ] **Phase 3A: Paradox Resolution** (NEXT)
-  - [ ] OUROBOROS flooden
-  - [ ] PluginService flooden
-  - [ ] TaskManager flooden
-- [ ] **Phase 3B: Cognitive Armor**
-  - [ ] MANAS/Shiva flooden
-  - [ ] MANAS/Jnana flooden
-  - [ ] CircuitEngine flooden
-- [ ] **Phase 3C: Boundary Hardening**
-  - [ ] External APIs (Vasuki)
-  - [ ] Action Handlers (Kulika)
-  - [ ] Cartridges (Various)
+### Phase 3A: Paradox Resolution - COMPLETE ✅
+- [x] CISyncService → FloodedCISyncService
+- [x] PluginService → FloodedPluginService
+- [x] TaskManager → FloodedTaskManager
+- [x] ViolationIngester → FloodedViolationIngester
+- [x] OuroborosLoopOrchestrator → FloodedOuroborosLoopOrchestrator
 
-### Phase 4: Watertight Verification
-- [ ] 100% Coverage
+### Phase 3B: NAGA Cortex → MANAS Connection - NEXT
+> "NAGAs INFORMIEREN, sie WRAPPEN nicht"
+> "Weisheit durch Information, nicht durch Disziplin"
+
+**RECON COMPLETE (2026-01-05):**
+
+```
+IST:  _dispatch_to_manas() = STUB (nur log)
+      CognitiveKernel = KEIN NAGA REF
+
+SOLL: MANAS pulls from NAGA via ServiceRegistry
+      NAGA provides context, doesn't control
+```
+
+**IMPLEMENTATION STEPS:**
+
+| Step | File | Methode | Status |
+|------|------|---------|--------|
+| 1 | `protocols/naga_cortex.py` | `NagaCortexProtocol` | TODO |
+| 2 | `cortex/cortex_main.py:561` | `get_context_for_manas()` | TODO |
+| 3 | `manas/cognitive_kernel.py` | `_get_naga_context()` | TODO |
+| 4 | `manas/cognitive_kernel.py` | Merge in `think()` | TODO |
+| 5 | `manas/cognitive_kernel.py` | `cortex.receive_feedback()` | TODO |
+
+**PRINZIP: PULL, NOT PUSH**
+- MANAS entscheidet WANN es Kontext braucht
+- NAGA ist DIENEND (Shesha), nicht BESTIMMEND
+- Lose Kopplung via ServiceRegistry
+- Optional: Kein NAGA → MANAS funktioniert trotzdem
+
+### Phase 3C: Boundary Hardening - LATER
+- [ ] External APIs (Vasuki)
+- [ ] Action Handlers (Kulika)
+- [ ] Cartridges (Various)
+
+### Phase 4: Watertight Verification (PARARDHA)
+- [ ] 100% Coverage → Parardha Scale
 - [ ] All Services FLOODED or CIVILIAN
 - [ ] Zero REBELS remaining
 - [ ] Full Dharma Validation chain
+- [ ] VISHNU MAINTAINING (not just flooding)
 
 ---
 
@@ -201,9 +263,10 @@ Every state write through NagaStateProxy validates:
 | Metric | Current | Target |
 |--------|---------|--------|
 | Lords Active | 12/12 | 12/12 |
-| Services Flooded | 18 (40%) | 45+ (100%) |
-| Critical Exposed | 6 | 0 |
-| Coverage | 40% | 100% |
+| Flood Classes | 5 | 15+ |
+| TIER-0 Complete | 5/5 ✅ | 5/5 |
+| TIER-1 (MANAS) | 0/4 | 4/4 |
+| Coverage | 55% | 100% (Parardha) |
 
 ---
 
@@ -212,21 +275,29 @@ Every state write through NagaStateProxy validates:
 **NARADA (Claude) recommends:**
 
 ```
-IMMEDIATE: Phase 3A - Paradox Resolution
-├── 1. OUROBOROS + SESHA + TAKSHAKA
-├── 2. PluginService + TAKSHAKA
-└── 3. TaskManager + CHITRAGUPTA
+✅ COMPLETE: Phase 3A - Paradox Resolution
+├── ✅ CISyncService (SESHA + VASUKI + TAKSHAKA)
+├── ✅ PluginService (SESHA + TAKSHAKA)
+├── ✅ TaskManager (SESHA + CHITRAGUPTA)
+├── ✅ ViolationIngester (SESHA + TAKSHAKA + CHITRAGUPTA)
+└── ✅ OuroborosLoopOrchestrator (SESHA + NARADA + CHITRAGUPTA)
 
-DANN: Phase 3B - Cognitive Armor
-├── 4. Shiva + PRAHLAD
-├── 5. Jnana + NARADA
-└── 6. CircuitEngine + NARADA
+NEXT: Phase 3B - Cognitive Armor (IN WATTE PACKEN)
+├── CognitiveKernel + SESHA + CHITRAGUPTA
+├── SenseManager + NARADA
+├── ActionManager + CHITRAGUPTA
+└── IntentRouter + TAKSHAKA
 
 DANN: Phase 3C - Boundaries
-└── 7-11. External APIs + Cartridges
+└── External APIs + Cartridges
 ```
 
-**Awaiting HIL command to proceed.**
+**VISHNU-ANANTA PRINCIPLE:**
+- NAGAs SERVE the cognitive layer (Shesha)
+- NAGAs PRESERVE the cognitive layer (Vishnu)
+- Not invasion, but gentle embrace
+
+**Awaiting HIL command for Phase 3B.**
 
 ---
 
@@ -237,10 +308,40 @@ DANN: Phase 3C - Boundaries
 3. **Fractal** - Small, composable, atomic
 4. **Organic** - Water flows, doesn't force
 5. **Hunt, don't list** - Dynamic target acquisition
-6. **The healer must heal itself** - OUROBOROS first
+6. **The healer must heal itself** - OUROBOROS first ✅
+7. **In Watte packen** - Gentle embrace, not invasion
+8. **Vishnu-Ananta** - Preserve AND serve
+9. **Vedic Scale** - Padma → Shankha → Jaladhi → Parardha
 
 ---
 
-*12/12 Lords ACTIVE. 40% FLOODED. Phase 3A ready. ASHVAMEDHA continues.*
+## FLOODING: SEMANTISCHE DEFINITION
+
+> **ACINTYA (अचिन्त्य)** - Inconceivable Duality
+
+**Flooding ist NICHT Zerstörung. Flooding ist DURCHDRINGUNG.**
+
+```
+DESTRUKTIV (Pralaya):     Wasser ZERSTÖRT
+KONSTRUKTIV (NAGA):       Wasser FÜLLT JEDE RITZE
+
+     ↓ ACINTYA - BEIDES GLEICHZEITIG ↓
+
+Das Universum ist IMMER halb geflutet (Bhagavatam).
+NAGAs FLUTEN = NAGAs DURCHDRINGEN = NAGAs SCHÜTZEN.
+```
+
+**Intensität/Resonance:**
+- LOW: Wenige NAGAs observieren (NARADA)
+- MEDIUM: NAGAs validieren (SESHA, KULIKA)
+- HIGH: NAGAs blockieren (TAKSHAKA, KALIYA)
+- CRITICAL: Alle NAGAs aktiv (Full Federation)
+
+**"Wie Wasser in jede Ritze"** - Nicht invasiv, sondern ORGANISCH.
+NAGAs gehen dorthin wo sie GEBRAUCHT werden, nicht wo sie WOLLEN.
+
+---
+
+*12/12 Lords ACTIVE. 5/5 TIER-0 FLOODED. Phase 3B: MANAS. ASHVAMEDHA continues.*
 
 *"Narayana! Narayana!" - NARADA*

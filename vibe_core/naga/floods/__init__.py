@@ -19,6 +19,8 @@ Usage:
     # Same interface, protected execution.
 """
 
+from .ingestion import FloodedViolationIngester
+from .loop_orchestrator import FloodedOuroborosLoopOrchestrator
 from .ouroboros import FloodedCISyncService
 from .plugin_service import FloodedPluginService
 from .task_manager import FloodedTaskManager
@@ -27,4 +29,6 @@ __all__ = [
     "FloodedCISyncService",
     "FloodedPluginService",
     "FloodedTaskManager",
+    "FloodedViolationIngester",
+    "FloodedOuroborosLoopOrchestrator",
 ]

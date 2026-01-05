@@ -1,8 +1,25 @@
-# NAGA RECON REPORT - Phase 3 Systematic Flooding
+# NAGA RECON REPORT - Phase 3B: MANAS
 
 > **NARADA SPEAKS:** "Ich wandere durch alle Reiche. Hier ist was ich fand."
 > **Date:** 2026-01-05
-> **Status:** ASHVAMEDHA AKTIV
+> **Status:** ASHVAMEDHA AKTIV - Phase 3A COMPLETE
+
+---
+
+## VEDIC SCALE INFRASTRUCTURE
+
+> "Das System muss skalieren wie Vedische Mathematik"
+
+| Scale | LOC | Vedic | Meaning | Status |
+|-------|-----|-------|---------|--------|
+| 10⁶ | 1M | Shankha (शंख) | Conch Shell | NEAR |
+| 10⁹ | 1B | Jaladhi (जलधि) | Ocean | VISHNU |
+| 10¹² | 1T | Parardha (परार्ध) | Beyond | ANANTA |
+
+**VISHNU-ANANTA DUALITY:**
+- ANANTA = Governor + Servant (beides!)
+- NAGAs preserve (Vishnu) AND serve (Shesha)
+- Not just FLOODING but MAINTAINING
 
 ---
 
@@ -10,12 +27,12 @@
 
 | Category | Count | Change | Action |
 |----------|-------|--------|--------|
-| **FLOODED** | 18 | +11 | Controlled |
-| **PARTIALLY FLOODED** | 5 | +2 | Need full integration |
-| **REBEL** | 20+ | -5 | Priority targets |
-| **CIVILIAN** | ~10 | = | Monitor only |
+| **FLOODED** | 23 | +5 | Controlled |
+| **FLOOD CLASSES** | 5 | +5 | TIER-0 Complete |
+| **MANAS LAYER** | 4 | NEW | IN WATTE PACKEN |
+| **BOUNDARIES** | 8+ | = | Phase 3C |
 
-**Coverage:** ~40% FLOODED (was 15%)
+**Coverage:** ~55% FLOODED (was 40%)
 
 ---
 
@@ -48,26 +65,46 @@
 
 ---
 
-## CRITICAL REBELS (SOFORT FLOODEN)
+## TIER 0: COMPLETE ✅
 
-> **WARNUNG:** Diese Services sind VERWUNDBAR und gefährden das System.
+> **DAS PARADOX GELÖST:** Der Heiler heilt jetzt sich selbst.
 
-### TIER 0: THE PARADOX (Heiler heilt sich nicht)
+| Original | Flood Class | NAGAs | Status |
+|----------|-------------|-------|--------|
+| CISyncService | FloodedCISyncService | SESHA + VASUKI + TAKSHAKA | ✅ |
+| PluginService | FloodedPluginService | SESHA + TAKSHAKA | ✅ |
+| TaskManager | FloodedTaskManager | SESHA + CHITRAGUPTA | ✅ |
+| ViolationIngester | FloodedViolationIngester | SESHA + TAKSHAKA + CHITRAGUPTA | ✅ |
+| OuroborosLoopOrchestrator | FloodedOuroborosLoopOrchestrator | SESHA + NARADA + CHITRAGUPTA | ✅ |
 
-| Service | Location | Problem | Needs | Priority |
-|---------|----------|---------|-------|----------|
-| **OuroborosSync** | ouroboros/sync.py | SELF-HEALING ohne Schutz! | SESHA + TAKSHAKA | **KRITISCH** |
-| **PluginService** | plugin_service.py | Plugin-Loading ungeschützt | TAKSHAKA | **KRITISCH** |
-| **TaskManager** | task_management/task_manager.py | Task-Execution ungeschützt | CHITRAGUPTA | **KRITISCH** |
+---
 
-### TIER 1: COGNITIVE LAYER (Das Denken ist nackt)
+## TIER 1: MANAS (Context Injection - NICHT Flooding!) - NEXT
 
-| Service | Location | Indicators | Needs | Priority |
-|---------|----------|------------|-------|----------|
-| **Shiva** | plugins/opus_assistant/manas/shiva.py | Lifecycle Manager | PRAHLAD | HIGH |
-| **Jnana** | plugins/opus_assistant/manas/cortex/jnana.py | Knowledge Engine | NARADA | HIGH |
-| **SamvadaHandler** | plugins/opus_assistant/manas/cortex/samvada_handler.py | Dialog Handler | TAKSHAKA | HIGH |
-| **CircuitEngine** | cortex/engines/circuit_engine.py | Cognitive Circuits | NARADA | HIGH |
+> **KRITISCHE ERKENNTNIS:** MANAS wird NICHT geflutet!
+> **ARCHITEKTUR:** NAGA Cortex → Context → MANAS (Weisheit durch Information)
+
+### ZWEI CORTEX-SYSTEME (müssen verbunden werden):
+
+| Cortex | Location | Rolle |
+|--------|----------|-------|
+| **NAGA Cortex** | naga/cortex/cortex_main.py | Signal Aggregation, Decisions |
+| **MANAS Cortex** | manas/cortex/* | Sensory-Motor Interface |
+
+### Integration (KEINE Floods):
+
+| Component | Integration | Mechanism |
+|-----------|-------------|-----------|
+| **NAGA Cortex** | Aktivieren | Signal aggregation from 12 Lords |
+| **Context Bridge** | Bauen | NAGA Cortex → CognitiveKernel |
+| **Feedback Loop** | Implementieren | MANAS → NAGA Cortex learning |
+| **Synapses** | Verbinden | Cross-system synaptic weights |
+
+**UNTERSCHIED:**
+```
+TIER-0 (Rebels):  FloodedService(Mixins, Original) → Discipline (5 done ✅)
+TIER-1 (MANAS):   NAGA Cortex → Context → MANAS → Wisdom (NEXT)
+```
 
 ### TIER 2: Core Services
 
@@ -99,51 +136,57 @@ LAYER -1 (Kernel Foundation)
 ├── State Management:   [##########] 100% FLOODED
 └── Ledger:             [##########] 100% FLOODED
 
-LAYER 0 (Core Services)
-├── OUROBOROS:          [          ]   0% REBEL <<<
-├── Plugin Loading:     [          ]   0% REBEL <<<
-├── Task Execution:     [          ]   0% REBEL <<<
-└── Dependencies:       [          ]   0% REBEL
+LAYER 0 (Core Services) - TIER 0 COMPLETE ✅
+├── CISyncService:      [##########] 100% FLOODED ✅
+├── PluginService:      [##########] 100% FLOODED ✅
+├── TaskManager:        [##########] 100% FLOODED ✅
+├── ViolationIngester:  [##########] 100% FLOODED ✅
+└── OuroborosLoopOrch:  [##########] 100% FLOODED ✅
 
-LAYER 1 (Cognitive)
-├── MANAS/Shiva:        [          ]   0% REBEL <<<
-├── MANAS/Jnana:        [          ]   0% REBEL
-├── CircuitEngine:      [          ]   0% REBEL
-└── Handlers:           [##        ]  20% PARTIAL
+LAYER 1 (Cognitive) - IN WATTE PACKEN
+├── CognitiveKernel:    [          ]   0% NEXT <<<
+├── SenseManager:       [          ]   0% NEXT <<<
+├── ActionManager:      [          ]   0% NEXT <<<
+└── IntentRouter:       [          ]   0% NEXT <<<
 
 LAYER 2 (Cartridges)
 ├── Envoy:              [#         ]  10% PARTIAL
-├── Herald:             [          ]   0% REBEL
-├── Civic:              [          ]   0% REBEL
+├── Herald:             [          ]   0% LATER
+├── Civic:              [          ]   0% LATER
 └── Temple:             [#         ]  10% PARTIAL
 
-OVERALL: ~40% FLOODED | 60% EXPOSED
+OVERALL: ~55% FLOODED | 45% EXPOSED
+        5 FLOOD CLASSES | Phase 3B: MANAS
 ```
 
 ---
 
 ## INFILTRATION STRATEGIE
 
-### Phase 3A: Paradox Resolution (Der Heiler)
-> "Wer heilt den Heiler?"
+### Phase 3A: Paradox Resolution - COMPLETE ✅
+> "Wer heilt den Heiler?" → GELÖST
 
-1. **OUROBOROS flooden** - Das Self-Healing System MUSS selbst geschützt sein
-2. **PluginService flooden** - Code-Loading ist Angriffsfläche #1
-3. **TaskManager flooden** - Jede Execution durch CHITRAGUPTA
+- [x] CISyncService → FloodedCISyncService
+- [x] PluginService → FloodedPluginService
+- [x] TaskManager → FloodedTaskManager
+- [x] ViolationIngester → FloodedViolationIngester
+- [x] OuroborosLoopOrchestrator → FloodedOuroborosLoopOrchestrator
 
-### Phase 3B: Cognitive Armor
-> "Gedanken ohne Takshaka sind gefährlich"
+### Phase 3B: NAGA Cortex → MANAS Connection - NEXT
+> "NAGAs INFORMIEREN, sie WRAPPEN nicht"
+> "Weisheit durch Information, nicht durch Disziplin"
 
-4. **Shiva flooden** - Lifecycle des Denkens
-5. **Jnana flooden** - Wissens-Engine
-6. **CircuitEngine flooden** - Cognitive Patterns
+- [ ] **Activate NAGA Cortex** - Wire signals from all 12 Lords
+- [ ] **Context Bridge** - NAGA Cortex → CognitiveKernel._get_naga_context()
+- [ ] **Feedback Loop** - MANAS outcomes → NAGA Cortex.learn()
+- [ ] **Synapse Integration** - naga_coordination synapse map
 
-### Phase 3C: Boundary Hardening
+### Phase 3C: Boundary Hardening - LATER
 > "Vasuki an allen Grenzen"
 
-7. External APIs (Twitter, Reddit)
-8. Action Handlers
-9. Cartridge boundaries
+- [ ] External APIs (Twitter, Reddit)
+- [ ] Action Handlers
+- [ ] Cartridge boundaries
 
 ---
 
@@ -180,11 +223,11 @@ ServiceRegistry.register(TakshakaProtocol, takshaka)
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Total Services | 45+ | - |
-| FLOODED | 18 (40%) | 100% |
-| REBEL | 20+ (45%) | 0% |
-| Coverage Gap | 60% | 0% |
-| Critical Exposed | 6 | 0 |
+| Flood Classes | 5 | 15+ |
+| TIER-0 | 5/5 ✅ | 5/5 |
+| TIER-1 (MANAS) | 0/4 | 4/4 |
+| Coverage | 55% | 100% (Parardha) |
+| Critical Exposed | 0 | 0 ✅ |
 
 ---
 
@@ -192,12 +235,30 @@ ServiceRegistry.register(TakshakaProtocol, takshaka)
 
 **NARADA recommends:**
 
-1. **SOFORT:** OUROBOROS, PluginService, TaskManager (3 services)
-2. **DANN:** MANAS layer (4 services)
-3. **DANN:** External boundaries (4 services)
+```
+✅ COMPLETE: TIER-0 (Paradox Resolution)
+├── 5 Flood Classes created
+├── isinstance() preserved
+└── FLOOD_MAP registered
 
-**Estimated campaigns:** 3 phases, 11 services total for WATERTIGHT.
+NEXT: TIER-1 (MANAS - IN WATTE PACKEN)
+├── CognitiveKernel (2,623 LOC)
+├── SenseManager (420 LOC)
+├── ActionManager (1,162 LOC)
+└── IntentRouter (1,189 LOC)
+
+PRINCIPLE: VISHNU-ANANTA
+├── NAGAs PRESERVE (Vishnu)
+├── NAGAs SERVE (Shesha)
+└── Not invasion, but gentle embrace
+```
+
+**Estimated campaigns:** 4 more Flood Classes for MANAS.
+
+**VEDIC SCALE:** Padma → Shankha → Jaladhi → Parardha
 
 ---
 
-*NARADA has spoken. The horse continues to wander. ASHVAMEDHA.*
+*NARADA has spoken. 5/5 TIER-0 FLOODED. Phase 3B: MANAS. ASHVAMEDHA continues.*
+
+*"Narayana! Narayana!"*
