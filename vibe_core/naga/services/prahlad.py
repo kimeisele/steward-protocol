@@ -450,6 +450,191 @@ class PrahladService(NagaBaseService):
         return result
 
     # =========================================================================
+    # PARASITIC CHAOS PROBE (REAL Antifragility Testing)
+    # =========================================================================
+
+    @naga_governed(operation="chaos_probe_real")
+    def chaos_probe_real(
+        self,
+        target_protocol: type,
+        chaos_scenario: str = "unavailable",
+        trigger_operation: Optional[Callable] = None,
+    ) -> Dict[str, Any]:
+        """
+        REAL parasitic chaos probe - injects into running system.
+
+        This is NOT the phantom chaos_probe() that calls component.handle().
+        This ACTUALLY poisons the ServiceRegistry and checks if Sesha detects it.
+
+        The Ouroboros Pattern:
+        1. Inject chaos into ServiceRegistry
+        2. Trigger a real operation (kernel.tick, service call, etc.)
+        3. Check if Sesha recorded the anomaly
+        4. Return whether the system is resilient
+
+        Args:
+            target_protocol: The protocol type to poison (e.g., SeshaProtocol)
+            chaos_scenario: Type of chaos to inject:
+                - "unavailable": Service returns None
+                - "timeout": Service raises TimeoutError
+                - "corrupt": Service returns malformed data
+                - "slow": Service delays response
+            trigger_operation: Callable that triggers the system.
+                If None, we don't trigger (just inject).
+
+        Returns:
+            Dict with:
+                - chaos_id: Unique ID for this chaos injection
+                - scenario: The chaos scenario used
+                - detected: Whether Sesha recorded an anomaly
+                - system_resilient: True if detected OR gracefully handled
+                - ledger_events: List of related Sesha events
+
+        Example:
+            from vibe_core.protocols.naga import TakshakaProtocol
+
+            # Test what happens when Takshaka is unavailable
+            result = prahlad.chaos_probe_real(
+                target_protocol=TakshakaProtocol,
+                chaos_scenario="unavailable",
+                trigger_operation=lambda: kernel.tick()
+            )
+
+            if not result["system_resilient"]:
+                print("VULNERABILITY: System crashes without Takshaka!")
+        """
+        import uuid
+
+        from vibe_core.di import ServiceRegistry
+
+        chaos_id = uuid.uuid4().hex[:8]
+        result = {
+            "chaos_id": chaos_id,
+            "target": target_protocol.__name__,
+            "scenario": chaos_scenario,
+            "detected": False,
+            "system_resilient": False,
+            "exception_raised": None,
+            "ledger_events": [],
+        }
+
+        # Create chaos injector based on scenario
+        def create_injector():
+            if chaos_scenario == "unavailable":
+                return lambda: None
+            elif chaos_scenario == "timeout":
+
+                def timeout_chaos():
+                    raise TimeoutError(f"CHAOS[{chaos_id}]: {target_protocol.__name__} timed out")
+
+                return timeout_chaos
+            elif chaos_scenario == "corrupt":
+
+                class CorruptService:
+                    def __getattr__(self, name):
+                        return lambda *a, **k: {"__CORRUPTED__": chaos_id}
+
+                return lambda: CorruptService()
+            elif chaos_scenario == "slow":
+                import time
+
+                original = ServiceRegistry.get(target_protocol)
+
+                class SlowProxy:
+                    def __init__(self):
+                        self._original = original
+
+                    def __getattr__(self, name):
+                        def slow_method(*args, **kwargs):
+                            time.sleep(0.5)  # 500ms delay
+                            if self._original:
+                                return getattr(self._original, name)(*args, **kwargs)
+                            return None
+
+                        return slow_method
+
+                return lambda: SlowProxy()
+            else:
+                return lambda: None
+
+        try:
+            # 1. INJECT CHAOS
+            ServiceRegistry.inject_chaos(target_protocol, create_injector())
+            ServiceRegistry.enable_chaos()
+            logger.warning(f"🐍 PRAHLAD CHAOS[{chaos_id}]: Poisoning {target_protocol.__name__} with {chaos_scenario}")
+
+            # 2. TRIGGER OPERATION (if provided)
+            if trigger_operation:
+                try:
+                    trigger_operation()
+                except Exception as e:
+                    result["exception_raised"] = str(e)
+                    # Exception is expected in some scenarios
+                    if chaos_scenario in ["timeout"]:
+                        result["system_resilient"] = True  # System correctly raised
+
+            # 3. CHECK SESHA LEDGER
+            try:
+                from vibe_core.protocols.naga import SeshaProtocol
+
+                # Temporarily disable chaos to get real Sesha
+                ServiceRegistry.disable_chaos()
+                sesha = ServiceRegistry.get(SeshaProtocol)
+                if sesha and hasattr(sesha, "_ledger"):
+                    # Look for anomaly events
+                    recent = sesha._ledger.get_recent_events(limit=20)
+                    for event in recent:
+                        e = event.to_dict() if hasattr(event, "to_dict") else event
+                        # Check if this event relates to our chaos
+                        if (
+                            chaos_id in str(e.get("details", {}))
+                            or "CHAOS" in e.get("event_type", "")
+                            or "error" in str(e.get("details", {})).lower()
+                        ):
+                            result["ledger_events"].append(e)
+                            result["detected"] = True
+
+            except Exception as e:
+                logger.debug(f"Ledger check failed: {e}")
+
+            # 4. DETERMINE RESILIENCE
+            # System is resilient if:
+            # - Chaos was detected (logged to Sesha), OR
+            # - System gracefully handled it (no crash, exception caught)
+            if result["detected"]:
+                result["system_resilient"] = True
+            elif result["exception_raised"] and chaos_scenario == "timeout":
+                result["system_resilient"] = True  # Expected exception
+            elif trigger_operation is None:
+                result["system_resilient"] = True  # No trigger = injection only test
+
+        finally:
+            # 5. CLEANUP
+            ServiceRegistry.clear_chaos()
+            logger.info(f"🐍 PRAHLAD CHAOS[{chaos_id}]: Cleanup complete")
+
+        # Record this probe to our stats
+        self._chaos_probes += 1
+        self._last_heartbeat = datetime.now()
+
+        # Generate regression test if NOT resilient
+        if not result["system_resilient"]:
+            self.on_error(
+                ErrorEvent(
+                    error_type="CHAOS_VULNERABILITY",
+                    message=f"System vulnerable to {chaos_scenario} on {target_protocol.__name__}",
+                    component_id=target_protocol.__name__,
+                    context={
+                        "chaos_id": chaos_id,
+                        "scenario": chaos_scenario,
+                        "detected": result["detected"],
+                    },
+                )
+            )
+
+        return result
+
+    # =========================================================================
     # Hiranyakashipu Integration - Living Attack Seeds
     # =========================================================================
 

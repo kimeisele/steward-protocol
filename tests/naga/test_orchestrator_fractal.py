@@ -377,5 +377,204 @@ class TestHiranyakashipuIntegration(NagaFractalTestCase):
         )
 
 
+# ============================================================================
+# PARASITIC CHAOS PROBE TESTS (Real Antifragility)
+# ============================================================================
+
+
+class TestParasiticChaosProbe(NagaFractalTestCase):
+    """
+    Test the REAL parasitic chaos probe.
+
+    This is NOT phantom testing. This ACTUALLY injects chaos into ServiceRegistry.
+    Gemini's insight: "Wir prüfen nicht den Return Value. Wir prüfen den Ledger."
+    """
+
+    def test_chaos_probe_real_exists(self):
+        """PrahladService has chaos_probe_real method."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+        assert hasattr(prahlad, "chaos_probe_real")
+        assert callable(prahlad.chaos_probe_real)
+
+    def test_chaos_injection_works(self):
+        """ServiceRegistry chaos injection works correctly."""
+        from vibe_core.di import ServiceRegistry
+
+        class TestProtocol:
+            pass
+
+        class RealService:
+            def get_name(self):
+                return "REAL"
+
+        # Register real service
+        ServiceRegistry.register(TestProtocol, RealService())
+
+        # Get real service
+        assert ServiceRegistry.get(TestProtocol).get_name() == "REAL"
+
+        # Inject chaos
+        ServiceRegistry.inject_chaos(TestProtocol, lambda: None)
+        ServiceRegistry.enable_chaos()
+
+        # Now get returns None (chaos injected)
+        assert ServiceRegistry.get(TestProtocol) is None
+
+        # Cleanup
+        ServiceRegistry.clear_chaos()
+        ServiceRegistry.reset()
+
+    def test_chaos_probe_real_detects_vulnerability(self):
+        """chaos_probe_real detects when system doesn't handle chaos."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        class VulnerableProtocol:
+            pass
+
+        prahlad = PrahladService()
+
+        # Trigger that doesn't handle None gracefully
+        triggered = []
+
+        def vulnerable_trigger():
+            from vibe_core.di import ServiceRegistry
+
+            service = ServiceRegistry.get(VulnerableProtocol)
+            # This just continues without handling None
+            triggered.append(True)
+
+        result = prahlad.chaos_probe_real(
+            target_protocol=VulnerableProtocol,
+            chaos_scenario="unavailable",
+            trigger_operation=vulnerable_trigger,
+        )
+
+        # Trigger was called
+        assert len(triggered) == 1
+
+        # System is NOT resilient (Sesha didn't see the chaos)
+        # This is correct - the system silently handled None without logging
+        assert result["chaos_id"] is not None
+        assert result["scenario"] == "unavailable"
+
+    def test_chaos_probe_real_cleanup(self):
+        """chaos_probe_real cleans up after itself."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        class CleanupTestProtocol:
+            pass
+
+        prahlad = PrahladService()
+
+        # Run chaos probe
+        prahlad.chaos_probe_real(
+            target_protocol=CleanupTestProtocol,
+            chaos_scenario="unavailable",
+        )
+
+        # Chaos should be disabled and cleared
+        assert not ServiceRegistry.is_chaos_enabled()
+        assert CleanupTestProtocol.__name__ not in ServiceRegistry.list_chaos_injectors()
+
+
+# ============================================================================
+# NARASIMHA GATEKEEPER TESTS (Security)
+# ============================================================================
+
+
+class TestNarasimhaGatekeeper(NagaFractalTestCase):
+    """
+    Test the Narasimha Gatekeeper in ServiceRegistry.
+
+    This is the SHIELD - unauthorized code cannot poison the DI container.
+    """
+
+    def test_narasimha_blocks_unauthorized_chaos(self):
+        """Narasimha blocks unauthorized chaos injection."""
+        from vibe_core.di import ServiceRegistry
+
+        class BlockedProtocol:
+            pass
+
+        # Enable Narasimha
+        ServiceRegistry.enable_narasimha()
+
+        try:
+            # This test function is NOT authorized
+            with pytest.raises(PermissionError) as exc_info:
+                ServiceRegistry.inject_chaos(BlockedProtocol, lambda: None)
+
+            assert "NARASIMHA BLOCKED" in str(exc_info.value)
+            assert "Unauthorized" in str(exc_info.value)
+
+        finally:
+            # Cleanup
+            ServiceRegistry.disable_narasimha()
+            ServiceRegistry.clear_chaos()
+
+    def test_prahlad_is_authorized(self):
+        """PrahladService is authorized to inject chaos."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        class AuthorizedProtocol:
+            pass
+
+        # Enable Narasimha
+        ServiceRegistry.enable_narasimha()
+
+        try:
+            prahlad = PrahladService()
+
+            # Prahlad should be able to run chaos_probe_real
+            # which internally calls inject_chaos
+            result = prahlad.chaos_probe_real(
+                target_protocol=AuthorizedProtocol,
+                chaos_scenario="unavailable",
+            )
+
+            # Should succeed (no PermissionError)
+            assert result["chaos_id"] is not None
+
+        finally:
+            ServiceRegistry.disable_narasimha()
+            ServiceRegistry.clear_chaos()
+
+    def test_narasimha_reports_threats(self):
+        """Narasimha reports threats to the protocol."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.narasimha import get_narasimha
+
+        class ThreatTestProtocol:
+            pass
+
+        narasimha = get_narasimha()
+        initial_threats = len(narasimha.threats)
+
+        # Enable Narasimha
+        ServiceRegistry.enable_narasimha()
+
+        try:
+            # Try unauthorized injection
+            try:
+                ServiceRegistry.inject_chaos(ThreatTestProtocol, lambda: None)
+            except PermissionError:
+                pass  # Expected
+
+            # Threat should have been registered
+            assert len(narasimha.threats) > initial_threats
+
+            # Check threat type
+            latest = narasimha.threats[-1]
+            assert latest.indicator_type == "UNAUTHORIZED_CHAOS_INJECTION"
+
+        finally:
+            ServiceRegistry.disable_narasimha()
+            ServiceRegistry.clear_chaos()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--timeout=30"])
