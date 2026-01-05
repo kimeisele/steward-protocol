@@ -274,3 +274,74 @@ class ChitraguptaService:
 
         payload = f"{anomaly.component_id}:{anomaly.metric}:{anomaly.timestamp.isoformat()}"
         return self._identity.sign(payload.encode())
+
+    # =========================================================================
+    # CorrectionHandler Interface
+    # =========================================================================
+
+    def as_handler(self):
+        """Get this NAGA as a CorrectionHandler for DriftSource.PERFORMANCE."""
+        from vibe_core.protocols.correction import (
+            DriftSource,
+            HealingResult,
+            HealingStatus,
+            HealingStrategy,
+            UnifiedDriftReport,
+        )
+
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
+            self._last_heartbeat = datetime.now()
+
+            if drift.source != DriftSource.PERFORMANCE:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.SKIPPED,
+                    handler_id="chitragupta",
+                    message=f"Not a PERFORMANCE drift: {drift.source}",
+                )
+
+            # Extract component from drift context
+            component_id = drift.context.get("component_id", drift.id)
+
+            if strategy == HealingStrategy.DRY_RUN:
+                anomaly = self.detect_anomaly(component_id)
+                if anomaly:
+                    return HealingResult(
+                        drift_id=drift.id,
+                        status=HealingStatus.DEFERRED,
+                        handler_id="chitragupta",
+                        message=f"Detected anomaly in {component_id}: {anomaly.metric} (DRY_RUN)",
+                    )
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.SKIPPED,
+                    handler_id="chitragupta",
+                    message=f"No anomaly detected for {component_id}",
+                )
+
+            # Actual anomaly detection and flagging
+            try:
+                anomaly = self.detect_anomaly(component_id)
+                if anomaly:
+                    self._anomalies_detected += 1
+                    return HealingResult(
+                        drift_id=drift.id,
+                        status=HealingStatus.HEALED,
+                        handler_id="chitragupta",
+                        message=f"Flagged anomaly: {component_id}.{anomaly.metric}",
+                    )
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.SKIPPED,
+                    handler_id="chitragupta",
+                    message=f"No anomaly in {component_id}",
+                )
+            except Exception as e:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.FAILED,
+                    handler_id="chitragupta",
+                    message=f"Anomaly detection failed: {e}",
+                )
+
+        return handler
