@@ -1,27 +1,43 @@
 """
-ANANTA SERVICE - The Gene Splicer (12th Lord).
+ANANTA SERVICE - The Gene Splicer + Loader Governor (12th Lord).
 
 Ananta - The Infinite One, cosmic form of Sesha who holds all worlds.
+Also: "The Infinite Remainder" - what survives when everything crashes.
 
 From mythology: Ananta Shesha is the infinite serpent upon whom
 Vishnu rests. He holds the entire universe on his thousand hoods.
+When the universe is destroyed, Shesha remains - the substrate.
 
 Responsibilities:
 - Analyze services for NAGA needs (Detection Criteria)
 - Propose flooding with appropriate Mixins
 - Request Prahlad's approval (Check and Balance)
 - Create flooded classes via DNA injection (Soft Flood)
+- **NEW: Loading Governance** - Wraps VEDA-4 loaders for audit
+- **NEW: Boot Audit Trail** - Records every manifest/module load
+
+This is the OUROBOROS made explicit:
+    ManifestRegistry.scan_all() -> Ananta records -> Chitragupta persists
+    UnifiedLoader.discover_and_load() -> Ananta records -> Ledger audit
 
 Integration:
 - Works with Narada (discovery) → Ananta (proposal) → Prahlad (veto)
 - Uses Mixin pattern, NOT Proxy pattern (preserves isinstance)
+- Wraps ManifestRegistry and UnifiedLoader for governance
 """
 
 import ast
 import inspect
 import logging
+import time
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Type, TypeVar
+
+if TYPE_CHECKING:
+    from vibe_core.ledger import SQLiteLedger
+
+T = TypeVar("T")
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -53,6 +69,27 @@ RETRY_PATTERNS = {"retry", "fallback", "recover", "heal", "resilient"}
 METRIC_PATTERNS = {"log", "metric", "trace", "profile", "measure", "record"}
 
 
+# =============================================================================
+# Loading Governance (OUROBOROS on Loaders)
+# =============================================================================
+
+
+@dataclass
+class LoadEvent:
+    """A recorded loading operation for audit trail."""
+
+    event_id: str
+    loader_type: str  # "manifest_registry", "unified_loader", etc.
+    operation: str  # "scan", "discover", "load", "instantiate"
+    item_type: str  # "plugin", "cartridge", "section", etc.
+    item_id: Optional[str] = None
+    success: bool = True
+    error: Optional[str] = None
+    duration_ms: float = 0.0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: float = field(default_factory=time.time)
+
+
 @naga_service(
     name="Ananta",
     lord=NagaLord.ANANTA,
@@ -76,18 +113,32 @@ class AnantaService(NagaBaseService, AnantaProtocol):
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, ledger: Optional["SQLiteLedger"] = None) -> None:
         """Initialize Ananta."""
         super().__init__(service_name="Ananta")
 
+        self._ledger = ledger
         self._flood_history: List[VetoDecision] = []
         self._available_mixins: Dict[str, Type] = {}
         self._last_heartbeat = datetime.now()
 
+        # Loading Governance (OUROBOROS on Loaders)
+        self._load_events: List[LoadEvent] = []
+        self._load_by_loader: Dict[str, List[LoadEvent]] = {}
+        self._load_by_item: Dict[str, List[LoadEvent]] = {}
+        self._total_loads = 0
+        self._failed_loads = 0
+        self._total_duration_ms = 0.0
+        self._max_events = 10000  # LRU limit
+
+        # Wrapper state
+        self._original_scan_all: Optional[Callable] = None
+        self._wrapped = False
+
         # Register available Mixins (will be expanded)
         self._register_mixins()
 
-        logger.info("ANANTA initialized - Gene Splicer ready")
+        logger.info("ANANTA initialized - Gene Splicer + Loader Governor ready")
 
     def _register_mixins(self) -> None:
         """Register available NAGA Mixins."""
@@ -358,15 +409,265 @@ class AnantaService(NagaBaseService, AnantaProtocol):
         """Get history of all flood decisions."""
         return list(self._flood_history)
 
+    # =========================================================================
+    # Loading Governance (OUROBOROS on Loaders)
+    # =========================================================================
+
+    def inject_ledger(self, ledger: "SQLiteLedger") -> None:
+        """Inject ledger after construction."""
+        self._ledger = ledger
+
+    @naga_governed(operation="record_load")
+    def record_load(
+        self,
+        loader_type: str,
+        operation: str,
+        item_type: str,
+        item_id: Optional[str] = None,
+        success: bool = True,
+        error: Optional[str] = None,
+        duration_ms: float = 0.0,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Record a loading operation.
+
+        This is the core governance function - every load goes through here.
+
+        Returns:
+            Event ID for the recorded event
+        """
+        self._last_heartbeat = datetime.now()
+        self._total_loads += 1
+        if not success:
+            self._failed_loads += 1
+        self._total_duration_ms += duration_ms
+
+        event_id = f"load_{self._total_loads}_{int(time.time() * 1000) % 10000}"
+
+        event = LoadEvent(
+            event_id=event_id,
+            loader_type=loader_type,
+            operation=operation,
+            item_type=item_type,
+            item_id=item_id,
+            success=success,
+            error=error,
+            duration_ms=duration_ms,
+            metadata=metadata or {},
+        )
+
+        # Store in memory
+        self._load_events.append(event)
+        if loader_type not in self._load_by_loader:
+            self._load_by_loader[loader_type] = []
+        self._load_by_loader[loader_type].append(event)
+        if item_id:
+            if item_id not in self._load_by_item:
+                self._load_by_item[item_id] = []
+            self._load_by_item[item_id].append(event)
+
+        # LRU eviction
+        while len(self._load_events) > self._max_events:
+            oldest = self._load_events.pop(0)
+            if oldest.loader_type in self._load_by_loader:
+                try:
+                    self._load_by_loader[oldest.loader_type].remove(oldest)
+                except ValueError:
+                    pass
+            if oldest.item_id and oldest.item_id in self._load_by_item:
+                try:
+                    self._load_by_item[oldest.item_id].remove(oldest)
+                except ValueError:
+                    pass
+
+        # Persist to ledger
+        if self._ledger:
+            try:
+                self._ledger.record_event(
+                    event_type="ANANTA_LOAD",
+                    agent_id="ANANTA",
+                    details={
+                        "loader_type": loader_type,
+                        "operation": operation,
+                        "item_type": item_type,
+                        "item_id": item_id,
+                        "success": success,
+                        "error": error,
+                        "duration_ms": duration_ms,
+                    },
+                    result="OK" if success else "FAILED",
+                )
+            except Exception as e:
+                logger.warning(f"ANANTA: Failed to persist load event: {e}")
+
+        log_level = logging.DEBUG if success else logging.WARNING
+        logger.log(
+            log_level,
+            f"ANANTA: {operation} {item_type}"
+            + (f":{item_id}" if item_id else "")
+            + (f" FAILED: {error}" if error else f" ({duration_ms:.1f}ms)"),
+        )
+
+        return event_id
+
+    def wrap_manifest_registry(self) -> None:
+        """
+        Wrap ManifestRegistry.scan_all for governance.
+
+        Makes manifest scanning auditable via NAGA.
+        """
+        if self._wrapped:
+            return
+
+        try:
+            from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+            # Store reference to self for closure
+            ananta = self
+            original_scan = ManifestRegistry.scan_all
+
+            @classmethod
+            def governed_scan_all(cls, force: bool = False) -> int:
+                start_time = time.time()
+
+                try:
+                    result = original_scan.__func__(cls, force)
+                    duration_ms = (time.time() - start_time) * 1000
+
+                    ananta.record_load(
+                        loader_type="manifest_registry",
+                        operation="scan_all",
+                        item_type="all",
+                        success=True,
+                        duration_ms=duration_ms,
+                        metadata={"manifests_found": result, "forced": force},
+                    )
+
+                    return result
+
+                except Exception as e:
+                    duration_ms = (time.time() - start_time) * 1000
+
+                    ananta.record_load(
+                        loader_type="manifest_registry",
+                        operation="scan_all",
+                        item_type="all",
+                        success=False,
+                        error=str(e),
+                        duration_ms=duration_ms,
+                    )
+
+                    raise
+
+            ManifestRegistry.scan_all = governed_scan_all
+            self._original_scan_all = original_scan
+            self._wrapped = True
+
+            logger.info("ANANTA: ManifestRegistry wrapped for governance")
+
+        except ImportError:
+            logger.warning("ANANTA: ManifestRegistry not available")
+
+    def unwrap(self) -> None:
+        """Restore original loader functions (for testing)."""
+        if not self._wrapped:
+            return
+
+        try:
+            from vibe_core.loaders.manifest_registry import ManifestRegistry
+
+            if self._original_scan_all:
+                ManifestRegistry.scan_all = self._original_scan_all
+                self._original_scan_all = None
+
+            self._wrapped = False
+            logger.info("ANANTA: Loaders unwrapped")
+
+        except ImportError:
+            pass
+
+    def get_load_events(
+        self,
+        loader_type: Optional[str] = None,
+        item_id: Optional[str] = None,
+        success_only: bool = False,
+        limit: int = 100,
+    ) -> List[LoadEvent]:
+        """Get recorded load events with optional filters."""
+        self._last_heartbeat = datetime.now()
+
+        events = self._load_events
+        if loader_type:
+            events = self._load_by_loader.get(loader_type, [])
+        elif item_id:
+            events = self._load_by_item.get(item_id, [])
+
+        if success_only:
+            events = [e for e in events if e.success]
+
+        return events[-limit:]
+
+    def get_failed_loads(self, limit: int = 50) -> List[LoadEvent]:
+        """Get failed load events for debugging."""
+        return [e for e in self._load_events if not e.success][-limit:]
+
+    def get_load_stats(self) -> Dict[str, Any]:
+        """Get loading statistics."""
+        return {
+            "total_loads": self._total_loads,
+            "failed_loads": self._failed_loads,
+            "success_rate": (self._total_loads - self._failed_loads) / max(self._total_loads, 1),
+            "total_duration_ms": self._total_duration_ms,
+            "avg_duration_ms": self._total_duration_ms / max(self._total_loads, 1),
+            "events_in_memory": len(self._load_events),
+            "loaders_tracked": list(self._load_by_loader.keys()),
+            "wrapped": self._wrapped,
+        }
+
+    def get_boot_audit(self) -> Dict[str, Any]:
+        """
+        Get complete boot audit trail.
+
+        This is the OUROBOROS output - what exactly was loaded and when.
+        """
+        return {
+            "stats": self.get_load_stats(),
+            "by_loader": {lt: len(events) for lt, events in self._load_by_loader.items()},
+            "failures": [
+                {
+                    "event_id": e.event_id,
+                    "loader": e.loader_type,
+                    "item": f"{e.item_type}:{e.item_id}",
+                    "error": e.error,
+                }
+                for e in self.get_failed_loads()
+            ],
+            "timeline": [
+                {
+                    "event_id": e.event_id,
+                    "operation": f"{e.loader_type}.{e.operation}",
+                    "item": f"{e.item_type}:{e.item_id}" if e.item_id else e.item_type,
+                    "success": e.success,
+                    "duration_ms": e.duration_ms,
+                }
+                for e in self._load_events[-20:]
+            ],
+        }
+
+    # =========================================================================
+    # Status
+    # =========================================================================
+
     def get_status(self) -> NagaStatus:
         """Get NAGA health status."""
         return NagaStatus(
-            naga_type=NagaType.SESHA,  # No ANANTA in NagaType yet
-            healthy=True,
+            naga_type=NagaType.SESHA,  # Ananta IS Shesha (the Infinite)
+            healthy=self._failed_loads < 10,
             last_heartbeat=self._last_heartbeat,
-            events_processed=len(self._flood_history),
-            errors=0,
-            message=f"decisions={len(self._flood_history)}, mixins={len(self._available_mixins)}",
+            events_processed=len(self._flood_history) + self._total_loads,
+            errors=self._failed_loads,
+            message=f"floods={len(self._flood_history)}, loads={self._total_loads}, wrapped={self._wrapped}",
         )
 
 

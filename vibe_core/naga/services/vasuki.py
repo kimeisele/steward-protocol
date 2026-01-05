@@ -31,6 +31,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.correction import (
     DriftSource,
     HealingResult,
@@ -76,12 +77,14 @@ INTERNAL_EVENT_TYPES = frozenset(
     capabilities=[NagaCapability.NETWORK],
     protocol_class="vibe_core.protocols.naga.VasukiProtocol",
 )
-class VasukiService(VasukiProtocol):
+class VasukiService(NagaBaseService, VasukiProtocol):
     """
     Vasuki - Das Quirlen des Ozeans.
 
     Transforms internal events <-> wire-ready envelopes.
     IS the boundary between internal and external.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(
@@ -98,8 +101,9 @@ class VasukiService(VasukiProtocol):
             takshaka: Takshaka for signing/verification
             sign_outbound: Whether to sign outbound messages
         """
-        self._sesha = sesha
-        self._takshaka = takshaka
+        super().__init__(service_name="Vasuki")
+        self._sesha_ref = sesha  # Renamed to avoid conflict with NagaBaseService._sesha
+        self._takshaka_ref = takshaka  # Renamed to avoid conflict with NagaBaseService._takshaka
         self._sign_outbound = sign_outbound
         self._peers: List[NodeAddress] = []
         self._peer_urls: Dict[NodeAddress, str] = {}  # peer -> URL mapping
@@ -134,14 +138,15 @@ class VasukiService(VasukiProtocol):
     ) -> None:
         """Inject dependencies after construction."""
         if sesha:
-            self._sesha = sesha
+            self._sesha_ref = sesha
         if takshaka:
-            self._takshaka = takshaka
+            self._takshaka_ref = takshaka
 
     # =========================================================================
     # Serialization (Das Quirlen)
     # =========================================================================
 
+    @naga_governed(operation="churn_out")
     def churn_out(self, event: Dict[str, Any]) -> SignedEnvelope:
         """Transform internal event -> signed wire-ready envelope."""
         try:
@@ -178,6 +183,7 @@ class VasukiService(VasukiProtocol):
             self._errors += 1
             raise
 
+    @naga_governed(operation="churn_in")
     def churn_in(self, envelope: SignedEnvelope) -> Dict[str, Any]:
         """Transform wire envelope -> internal event."""
         try:

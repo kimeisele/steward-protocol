@@ -208,6 +208,7 @@ class NaradaService(NagaBaseService):
         payload = f"{observation.function_name}:{observation.timestamp.isoformat()}"
         return self._identity.sign(payload.encode())
 
+    @naga_governed(operation="export_observations")
     def export_observations(self) -> List[NaradaObservation]:
         """Export and clear observation buffer."""
         observations = list(self._observation_buffer)

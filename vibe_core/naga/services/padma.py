@@ -73,6 +73,7 @@ class PadmaService(NagaBaseService, PadmaProtocol):
             max_size: Maximum number of entries (LRU eviction after)
             default_ttl: Default TTL in seconds (None = no expiry)
         """
+        super().__init__(service_name="Padma")
         self._max_size = max_size
         self._default_ttl = default_ttl
 
@@ -93,6 +94,7 @@ class PadmaService(NagaBaseService, PadmaProtocol):
     # Basic Cache Operations
     # =========================================================================
 
+    @naga_governed(operation="cache_get")
     def get(self, key: str) -> Optional[bytes]:
         """Get a value from cache."""
         self._last_heartbeat = datetime.now()
@@ -130,6 +132,7 @@ class PadmaService(NagaBaseService, PadmaProtocol):
         except json.JSONDecodeError:
             return None
 
+    @naga_governed(operation="cache_set")
     def set(self, key: str, value: bytes, ttl: Optional[float] = None) -> None:
         """Store bytes in cache."""
         self._last_heartbeat = datetime.now()

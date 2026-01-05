@@ -194,6 +194,7 @@ class KaliyaService(NagaBaseService):
 
         return True
 
+    @naga_governed(operation="release")
     def release(self, component_id: str) -> None:
         """
         Release component from quarantine.
@@ -212,6 +213,7 @@ class KaliyaService(NagaBaseService):
 
         logger.info(f"🐍 KALIYA released {component_id}")
 
+    @naga_governed(operation="record_violation", log_args=True)
     def record_violation(self, component_id: str) -> None:
         """
         Record a violation for a component.

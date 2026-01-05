@@ -79,6 +79,7 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
         Args:
             vault_dir: Optional custom vault directory. Uses default if None.
         """
+        super().__init__(service_name="Karkotaka")
         self._vault_dir = vault_dir or VAULT_DIR
         self._secrets_file = self._vault_dir / "secrets.enc"
         self._revoked_file = self._vault_dir / "revoked_keys.json"
@@ -140,6 +141,7 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
     # Signing (37th Principle)
     # =========================================================================
 
+    @naga_governed(operation="sign")
     def sign(self, content: str) -> SignedContent:
         """Sign content with the node's private key."""
         self._last_heartbeat = datetime.now()
@@ -174,6 +176,7 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
                 timestamp=time.time(),
             )
 
+    @naga_governed(operation="verify")
     def verify(self, signed: SignedContent) -> bool:
         """Verify a signed content - checks signature AND trust."""
         self._last_heartbeat = datetime.now()
@@ -219,6 +222,7 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
     # Encryption (Secrets Protection)
     # =========================================================================
 
+    @naga_governed(operation="encrypt")
     def encrypt(self, plaintext: bytes, key_id: Optional[str] = None) -> EncryptedPayload:
         """Encrypt data using AES-256-GCM."""
         self._last_heartbeat = datetime.now()

@@ -36,6 +36,7 @@ from vibe_core.naga.kulika import (
     get_kulika,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import (
     KulikaProtocol,
     NagaStatus,
@@ -53,7 +54,7 @@ logger = logging.getLogger("KULIKA")
     capabilities=[NagaCapability.SCHEMA],
     protocol_class="vibe_core.protocols.naga.KulikaProtocol",
 )
-class KulikaService(KulikaProtocol):
+class KulikaService(NagaBaseService, KulikaProtocol):
     """
     Kulika - The Schema Lord.
 
@@ -61,6 +62,8 @@ class KulikaService(KulikaProtocol):
     Provides validation API and runtime service lookups.
 
     The 8th Naga Lord maintains ORDER so that Narada can DISCOVER.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(self, registry: Optional[KulikaRegistry] = None) -> None:
@@ -70,6 +73,7 @@ class KulikaService(KulikaProtocol):
         Args:
             registry: Optional pre-existing registry. Uses singleton if None.
         """
+        super().__init__(service_name="Kulika")
         self._registry = registry if registry is not None else get_kulika()
         self._validation_count = 0
         self._registration_count = 0
@@ -87,6 +91,7 @@ class KulikaService(KulikaProtocol):
     # Validation API
     # =========================================================================
 
+    @naga_governed(operation="validate_manifest")
     def validate_manifest(self, manifest: Any) -> List[str]:
         """
         Validate a NagaManifest against schema requirements.
@@ -181,6 +186,7 @@ class KulikaService(KulikaProtocol):
     # Registration API
     # =========================================================================
 
+    @naga_governed(operation="register_service")
     def register_service(self, cls: Type, instance: Optional[Any] = None) -> bool:
         """
         Register a NAGA service after validation.

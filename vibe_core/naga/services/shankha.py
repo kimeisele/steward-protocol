@@ -86,6 +86,7 @@ class ShankhaService(NagaBaseService, ShankhaProtocol):
             max_pending_per_subscriber: Max pending messages per offline subscriber
             sender_id: Identifier for this node as message sender
         """
+        super().__init__(service_name="Shankha")
         self._max_pending = max_pending_per_subscriber
         self._sender_id = sender_id or f"shankha-{uuid.uuid4().hex[:8]}"
 
@@ -111,6 +112,7 @@ class ShankhaService(NagaBaseService, ShankhaProtocol):
     # Publish
     # =========================================================================
 
+    @naga_governed(operation="publish")
     def publish(self, topic: str, payload: bytes) -> str:
         """Publish a message to a topic."""
         self._last_heartbeat = datetime.now()
@@ -185,6 +187,7 @@ class ShankhaService(NagaBaseService, ShankhaProtocol):
     # Subscribe
     # =========================================================================
 
+    @naga_governed(operation="subscribe")
     def subscribe(
         self,
         topic_pattern: str,
