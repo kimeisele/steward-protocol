@@ -11,6 +11,9 @@ Responsibilities:
 - Track violations per component
 - Auto-quarantine on threshold
 - Escalate to sovereign (37th) after repeated quarantines
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import logging
@@ -18,6 +21,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -45,6 +53,14 @@ class QuarantineRecord:
         return elapsed >= self.duration_seconds
 
 
+@naga_service(
+    name="Kaliya",
+    lord=NagaLord.KALIYA,
+    drift_source="reliability",
+    priority=80,
+    capabilities=[NagaCapability.ISOLATION],
+    protocol_class="vibe_core.protocols.naga.KaliyaProtocol",
+)
 class KaliyaService:
     """
     Kaliya - The Quarantine Agent.

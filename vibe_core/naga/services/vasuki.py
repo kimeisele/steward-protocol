@@ -14,6 +14,9 @@ Responsibilities:
 
 The "churning" metaphor from Samudra Manthan:
 Raw Python objects become transportable nectar.
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import asyncio
@@ -23,6 +26,11 @@ from collections import deque
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Deque, Dict, List, Optional
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.correction import (
     DriftSource,
     HealingResult,
@@ -60,6 +68,14 @@ INTERNAL_EVENT_TYPES = frozenset(
 )
 
 
+@naga_service(
+    name="Vasuki",
+    lord=NagaLord.VASUKI,
+    drift_source="config",
+    priority=75,
+    capabilities=[NagaCapability.NETWORK],
+    protocol_class="vibe_core.protocols.naga.VasukiProtocol",
+)
 class VasukiService(VasukiProtocol):
     """
     Vasuki - Das Quirlen des Ozeans.

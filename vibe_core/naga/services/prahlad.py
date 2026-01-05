@@ -15,6 +15,9 @@ Purpose: Make the system ANTIFRAGILE.
 
 "Was mich nicht tötet, macht mich stärker."
 Vedisch: "Weil ich in Wahrheit verankert bin, kann mich nichts töten."
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import hashlib
@@ -24,6 +27,11 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -129,6 +137,14 @@ class PhoenixResult:
 # =============================================================================
 
 
+@naga_service(
+    name="Prahlad",
+    lord=NagaLord.PRAHLAD,
+    drift_source="structural",
+    priority=90,
+    capabilities=[NagaCapability.RESILIENCE, NagaCapability.AUDIT],
+    protocol_class="vibe_core.protocols.naga.PrahladProtocol",
+)
 class PrahladService:
     """
     Prahlad Maharaj - The Resilience Agent.
