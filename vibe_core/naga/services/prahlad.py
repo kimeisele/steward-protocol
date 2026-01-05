@@ -25,7 +25,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol, TypedDict
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -41,6 +41,37 @@ if TYPE_CHECKING:
     from vibe_core.naga.identity import NagaIdentity
 
 logger = logging.getLogger("PRAHLAD")
+
+
+# =============================================================================
+# Type Definitions (Military Grade - No Any where avoidable)
+# =============================================================================
+
+
+class ChaosProbeResult(TypedDict):
+    """Type-safe result from chaos_probe_real()."""
+
+    chaos_id: str
+    target: str
+    scenario: str
+    detected: bool
+    system_resilient: bool
+    exception_raised: Optional[str]
+    ledger_events: List[Dict[str, str]]  # Simplified from Any
+
+
+class LedgerLike(Protocol):
+    """Protocol for ledger-like objects."""
+
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, str]) -> str: ...
+
+    def get_recent_events(self, limit: int = 10) -> List[object]: ...
+
+
+class ChaosTarget(Protocol):
+    """Protocol for components that can be chaos-tested."""
+
+    def handle(self, data: object) -> object: ...
 
 
 # =============================================================================
@@ -174,9 +205,9 @@ class PrahladService(NagaBaseService):
 
         self._hardening_suite: List[TestCase] = []
         self._seen_fingerprints: set = set()
-        self._components: Dict[str, Any] = {}
+        self._components: Dict[str, ChaosTarget] = {}
         self._agents: Dict[str, bool] = {}  # agent_id -> has_identity
-        self._ledger: Optional[Any] = None
+        self._ledger: Optional[LedgerLike] = None
 
         # Hiranyakashipu integration - living attack seeds
         self._seed_loader: Optional["SeedLoader"] = None
@@ -458,8 +489,8 @@ class PrahladService(NagaBaseService):
         self,
         target_protocol: type,
         chaos_scenario: str = "unavailable",
-        trigger_operation: Optional[Callable] = None,
-    ) -> Dict[str, Any]:
+        trigger_operation: Optional[Callable[[], None]] = None,
+    ) -> ChaosProbeResult:
         """
         REAL parasitic chaos probe - injects into running system.
 
@@ -508,7 +539,7 @@ class PrahladService(NagaBaseService):
         from vibe_core.di import ServiceRegistry
 
         chaos_id = uuid.uuid4().hex[:8]
-        result = {
+        result: ChaosProbeResult = {
             "chaos_id": chaos_id,
             "target": target_protocol.__name__,
             "scenario": chaos_scenario,
