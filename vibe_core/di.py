@@ -26,10 +26,35 @@ Usage:
 
 import logging
 import threading
-from typing import Any, Callable, Dict, Optional, Type, TypeVar
+from typing import Callable, Dict, Optional, Protocol, Type, TypeVar, runtime_checkable
 
 logger = logging.getLogger("DI")
 T = TypeVar("T")
+
+
+@runtime_checkable
+class ServiceInstance(Protocol):
+    """Protocol for any service that can be registered in the DI container."""
+
+    pass  # Marker protocol - any object qualifies
+
+
+class ThreatDetails:
+    """Type-safe threat details for Narasimha reporting."""
+
+    __slots__ = ("caller", "target", "extra")
+
+    def __init__(self, caller: str, target: str, **extra: str) -> None:
+        self.caller = caller
+        self.target = target
+        self.extra = extra
+
+    def get(self, key: str, default: str = "UNKNOWN") -> str:
+        if key == "caller":
+            return self.caller
+        if key == "target":
+            return self.target
+        return self.extra.get(key, default)
 
 
 class ServiceRegistry:
@@ -54,16 +79,16 @@ class ServiceRegistry:
     - All operations logged to threat detection
     """
 
-    _services: Dict[str, Any] = {}
-    _factories: Dict[str, Callable] = {}
-    _chaos_injectors: Dict[str, Callable] = {}  # Prahlad chaos testing
+    _services: Dict[str, object] = {}  # object not Any - heterogeneous but typed
+    _factories: Dict[str, Callable[[], object]] = {}
+    _chaos_injectors: Dict[str, Callable[[], object]] = {}  # Prahlad chaos testing
     _chaos_enabled: bool = False
     _lock = threading.Lock()
 
     # NARASIMHA GATEKEEPER
     _narasimha_enabled: bool = False
-    _blessed_modules: set = set()  # Allowed module prefixes for registration
-    _chaos_authorized_callers: set = {"PrahladService", "chaos_probe_real"}  # Who can inject chaos
+    _blessed_modules: set[str] = set()  # Allowed module prefixes for registration
+    _chaos_authorized_callers: set[str] = {"PrahladService", "chaos_probe_real"}  # Who can inject chaos
 
     @classmethod
     def register(cls, interface: Type[T], instance: T) -> None:
@@ -270,10 +295,10 @@ class ServiceRegistry:
             if not authorized:
                 cls._report_threat(
                     threat_type="UNAUTHORIZED_CHAOS_INJECTION",
-                    details={
-                        "caller": caller_info,
-                        "target": interface.__name__,
-                    },
+                    details=ThreatDetails(
+                        caller=caller_info,
+                        target=interface.__name__,
+                    ),
                 )
                 raise PermissionError(
                     f"[DI] NARASIMHA BLOCKED: Unauthorized chaos injection by {caller_info}. "
@@ -376,12 +401,16 @@ class ServiceRegistry:
             logger.info(f"[DI] NARASIMHA: Authorized {caller_name} for chaos injection")
 
     @classmethod
-    def _report_threat(cls, threat_type: str, details: Dict[str, Any]) -> None:
+    def _report_threat(cls, threat_type: str, details: ThreatDetails) -> None:
         """
         Report a threat to the Narasimha protocol.
 
         This connects the ServiceRegistry security to the main
         Narasimha threat detection system.
+
+        Args:
+            threat_type: Type of threat (e.g., UNAUTHORIZED_CHAOS_INJECTION)
+            details: ThreatDetails with caller and target info
         """
         try:
             import time
@@ -391,15 +420,15 @@ class ServiceRegistry:
             narasimha = get_narasimha()
             indicator = ThreatIndicator(
                 indicator_type=threat_type,
-                agent_id=details.get("caller", "UNKNOWN"),
+                agent_id=details.caller,
                 severity=ThreatLevel.RED,
                 description=f"ServiceRegistry security violation: {threat_type}",
-                evidence=details,
+                evidence={"caller": details.caller, "target": details.target, **details.extra},
                 timestamp=time.time(),
             )
             narasimha.register_threat(indicator)
-            logger.critical(f"[DI] NARASIMHA THREAT: {threat_type} - {details}")
+            logger.critical(f"[DI] NARASIMHA THREAT: {threat_type} - caller={details.caller}, target={details.target}")
 
         except Exception as e:
             # Graceful degradation - still log even if Narasimha unavailable
-            logger.error(f"[DI] THREAT (Narasimha unavailable): {threat_type} - {details} - {e}")
+            logger.error(f"[DI] THREAT (Narasimha unavailable): {threat_type} - {details.caller} - {e}")
