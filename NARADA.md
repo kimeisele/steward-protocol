@@ -44,6 +44,8 @@ naga/floods/     → Surgical Method Overrides
 | 01-05 | OODA auf MANAS | MANAS ≠ REBEL |
 | 01-05 | FloodedViolationIngester | TAKSHAKA ✅ |
 | 01-05 | FloodedOuroborosLoopOrchestrator | NARADA ✅ |
+| 01-05 | Phase 3B COMPLETE | NagaCortexProtocol ✅ |
+| 01-05 | MANAS Integration | PULL-BASED ✅ |
 
 ---
 
@@ -94,11 +96,11 @@ TIER-1 (MANAS):   Context Injection = Wisdom (NEXT)
 **TIER-0 COMPLETE:**
 - ✅ 5/5 Flood Classes (CISyncService, PluginService, TaskManager, ViolationIngester, OuroborosLoopOrchestrator)
 
-**Phase 3B: NAGA Cortex → MANAS Connection:**
-- [ ] NAGA Cortex aktivieren (Signal aggregation)
-- [ ] Context Bridge bauen (NAGA → MANAS)
-- [ ] Feedback Loop (MANAS → NAGA learning)
-- [ ] Synapse Integration (naga_coordination map)
+**Phase 3B: NAGA Cortex → MANAS Connection: ✅ COMPLETE**
+- [x] NAGA Cortex aktivieren (Signal aggregation)
+- [x] Context Bridge bauen (NAGA → MANAS via ServiceRegistry)
+- [x] Feedback Loop (MANAS → NAGA learning)
+- [ ] Synapse Integration (naga_coordination map) - LATER
 
 **Später:**
 - External APIs (Twitter, Reddit) via VASUKI
