@@ -251,3 +251,85 @@ class TestStatus:
 
         naga = NagaOrchestrator()
         assert naga.is_ready() is False
+
+
+class TestVisibilityMatrix:
+    """Test the Visibility Matrix - NAGA's eyes at boot."""
+
+    def test_progress_bar(self):
+        """Progress bar generates correctly."""
+        from vibe_core.naga.orchestrator import NagaOrchestrator
+
+        naga = NagaOrchestrator()
+
+        # 50% = 5 filled, 5 empty
+        assert naga._progress_bar(50) == "█████░░░░░"
+        # 0% = all empty
+        assert naga._progress_bar(0) == "░░░░░░░░░░"
+        # 100% = all filled
+        assert naga._progress_bar(100) == "██████████"
+        # 80% = 8 filled
+        assert naga._progress_bar(80) == "████████░░"
+
+    def test_build_matrix_display_with_empty_intel(self):
+        """Matrix builds even with empty intelligence."""
+        from vibe_core.naga.orchestrator import NagaOrchestrator
+
+        naga = NagaOrchestrator()
+        lines = naga._build_matrix_display({}, {}, [])
+
+        # Should have header and at least summary
+        assert len(lines) >= 3
+        assert "COMPONENT" in lines[0]
+        assert "COVERAGE" in lines[0]
+
+    def test_build_matrix_display_with_intel(self):
+        """Matrix shows coverage data correctly."""
+        from vibe_core.naga.orchestrator import NagaOrchestrator
+
+        naga = NagaOrchestrator()
+
+        intel = {
+            "total_testables": 50,
+            "total_tests": 200,
+            "by_type": {"AGENT": 10, "PLUGIN": 5},
+            "tests_by_type": {"AGENT": 80, "PLUGIN": 30},
+            "naga_coverage": {"tests_available": 420},
+            "prahlad_stats": {
+                "tests_generated": 5,
+                "chaos_probes": 3,
+                "dharma_audits": 2,
+            },
+        }
+
+        lines = naga._build_matrix_display(intel, {}, ["silent_except", "path_scanning"])
+
+        # Convert to string for easier assertion
+        output = "\n".join(lines)
+
+        # Should show NAGA Core
+        assert "NAGA Core" in output
+        # Should show component types
+        assert "AGENT" in output
+        assert "PLUGIN" in output
+        # Should show totals
+        assert "50 components" in output
+        assert "200 tests" in output
+        # Should show Shuddhi remedies
+        assert "remedies available" in output
+        # Should show Prahlad stats
+        assert "PRAHLAD" in output
+
+    def test_generate_boot_matrix_does_not_crash(self):
+        """Boot matrix generation is resilient."""
+        from unittest.mock import MagicMock
+
+        from vibe_core.naga.orchestrator import NagaOrchestrator
+
+        naga = NagaOrchestrator()
+        # Should not crash even without Prahlad
+        naga._prahlad = None
+        naga._ananta = None
+
+        # Should complete without exception
+        naga._generate_boot_matrix()
