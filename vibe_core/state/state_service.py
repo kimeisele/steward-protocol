@@ -720,9 +720,12 @@ _instance_lock = threading.Lock()
 
 def get_state_service(
     workspace: Optional[Path] = None, agent_id: Optional[str] = None, plugin_id: Optional[str] = None
-) -> StateService:
+) -> StateServiceProtocol:
     """
     Get a namespaced StateService instance.
+
+    If NAGAs are active, returns NagaStateProxy (Der Kommissar) which wraps
+    the StateService with Dharma validation. Otherwise returns raw StateService.
 
     Args:
         workspace: Project root
@@ -730,7 +733,7 @@ def get_state_service(
         plugin_id: Optional plugin ID for namespacing
 
     Returns:
-        StateService instance
+        StateServiceProtocol instance (may be NagaStateProxy if NAGAs active)
     """
     global _instances
 
@@ -742,6 +745,17 @@ def get_state_service(
     else:
         key = "global"
 
+    # NAGA Integration: For global StateService, prefer NAGA-wrapped version
+    # NagaOrchestrator registers NagaStateProxy as StateServiceProtocol
+    if key == "global":
+        try:
+            naga_proxy = ServiceRegistry.get(StateServiceProtocol)
+            if naga_proxy is not None and hasattr(naga_proxy, "_state"):
+                # This is NagaStateProxy (has _state attribute wrapping real StateService)
+                return naga_proxy
+        except Exception:
+            pass  # Fall through to raw StateService
+
     with _instance_lock:
         if key not in _instances:
             if workspace is None:
@@ -750,8 +764,11 @@ def get_state_service(
             _instances[key] = instance
 
             # Register global instance in DI for protocol-based discovery
+            # (Only if NAGA hasn't already registered a proxy)
             if key == "global":
-                ServiceRegistry.register(StateServiceProtocol, instance)
+                existing = ServiceRegistry.get(StateServiceProtocol)
+                if existing is None:
+                    ServiceRegistry.register(StateServiceProtocol, instance)
 
         return _instances[key]
 

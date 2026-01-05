@@ -325,27 +325,14 @@ class BootOrchestrator(CognitiveCycle):
                 ServiceRegistry.register(SectionServiceProtocol, section_svc)
                 logger.info(f"      → SectionServiceProtocol registered ({len(section_svc.list())} sections)")
 
-                # OPUS-LZ2: Register CorrectionOrchestrator (unified drift/healing)
-                from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
-                from vibe_core.services.correction_dispatcher import BasicCorrectionOrchestrator
-
-                correction_orchestrator = BasicCorrectionOrchestrator()
-                correction_orchestrator.initialize_default_detectors()
-                ServiceRegistry.register(CorrectionOrchestratorProtocol, correction_orchestrator)
-                logger.info(
-                    f"      → CorrectionOrchestratorProtocol registered "
-                    f"({len(correction_orchestrator.registry.get_detector_ids())} detectors, "
-                    f"{len(correction_orchestrator.dispatcher.get_handler_ids())} handlers)"
-                )
-
                 # NAGA Federation - The Invisible Guardians
-                # Must be initialized BEFORE kernel.boot_async() in _act()
-                from vibe_core.naga import NagaOrchestrator
-
-                self._naga_orchestrator = NagaOrchestrator.bootstrap(
-                    ledger=self.kernel.ledger,
-                    correction_orchestrator=correction_orchestrator,
-                )
+                # Now lives IN the kernel (-1 Foundation)
+                # "Wie Wasser in jede Ritze" - organic flooding into every byte
+                self._naga_orchestrator = self.kernel.naga
+                if self._naga_orchestrator:
+                    logger.info("      → NAGA Federation active (kernel.naga)")
+                else:
+                    logger.warning("      → NAGA Federation not available (test mode?)")
 
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(

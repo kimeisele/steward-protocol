@@ -92,7 +92,7 @@ class TestSpec:
 
     agent_id: str
     test_name: str
-    test_func: Callable[["RealVibeKernel", Any], bool]
+    test_func: Callable[["KernelProtocol", Any], bool]
     timeout_ms: int = 5000
     description: str = ""
 

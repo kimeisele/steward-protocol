@@ -54,7 +54,6 @@ from vibe_core.plugin_protocol import KernelPlugin
 from vibe_core.protocols import OpusAssistantProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
     from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
@@ -63,6 +62,7 @@ if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
     from vibe_core.plugins.opus_assistant.events.kernel_tick import KernelTickHandler
     from vibe_core.plugins.opus_assistant.events.syscall_listener import SyscallListener
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("OPUS_ASSISTANT")
 

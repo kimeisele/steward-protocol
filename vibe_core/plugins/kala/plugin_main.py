@@ -33,8 +33,8 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from .cosmic_clock import CosmicClock, SunPhase
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.prana_orchestrator import PulseTransaction
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("KALA")
 

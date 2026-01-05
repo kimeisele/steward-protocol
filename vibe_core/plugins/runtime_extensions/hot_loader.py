@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugin_protocol import KernelPlugin
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("OUROBOROS.HotLoader")
 

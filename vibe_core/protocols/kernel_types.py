@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 @dataclass
 class TaskResult:
     """Replaces Dict[str, Any] for task results in _completed_tasks."""
+
     status: str  # "COMPLETED" | "FAILED" | "PENDING"
     task_id: str
     output: Optional[str] = None
@@ -26,6 +27,7 @@ class TaskResult:
 @dataclass
 class AgentHealth:
     """Replaces Dict[str, Dict[str, Any]] for _agent_health_cache."""
+
     agent_id: str
     alive: bool
     memory_mb: float = 0.0
@@ -36,6 +38,7 @@ class AgentHealth:
 @dataclass
 class AgentData:
     """Replaces Dict[str, Dict[str, Any]] for _data_store."""
+
     agent_id: str
     data: Dict[str, str] = field(default_factory=dict)
 
@@ -47,6 +50,7 @@ class GovernanceProtocol(Protocol):
 
     Governance plugins (e.g., VedicGovernancePlugin) implement this.
     """
+
     def get_paused_agents(self) -> List[str]:
         """Get list of currently paused agent IDs."""
         ...
@@ -68,6 +72,7 @@ class PluginProtocol(Protocol):
     All plugins must implement these hooks.
     See: vibe_core/plugin_base.py for base class.
     """
+
     plugin_id: str
     priority: int
 

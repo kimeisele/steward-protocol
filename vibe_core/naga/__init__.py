@@ -38,10 +38,19 @@ from vibe_core.naga.orchestrator import NagaOrchestrator
 # Lazy imports for optional components
 __all__ = [
     "NagaOrchestrator",
-    # Services
+    # Services (Infrastructure Layer - 8)
     "SeshaService",
     "VasukiService",
     "TakshakaService",
+    "KaliyaService",
+    "KarkotakaService",
+    "KulikaService",
+    "PadmaService",
+    "ShankhaService",
+    # Services (Governance Layer - 3)
+    "NaradaService",
+    "ChitraguptaService",
+    "PrahladService",
     # State Proxy (Der Kommissar)
     "NagaStateProxy",
     # Balarama Pattern (Universal Wrapper)
@@ -74,6 +83,38 @@ def __getattr__(name: str):
         from vibe_core.naga.services.takshaka import TakshakaService
 
         return TakshakaService
+    elif name == "KulikaService":
+        from vibe_core.naga.services.kulika import KulikaService
+
+        return KulikaService
+    elif name == "KarkotakaService":
+        from vibe_core.naga.services.karkotaka import KarkotakaService
+
+        return KarkotakaService
+    elif name == "PadmaService":
+        from vibe_core.naga.services.padma import PadmaService
+
+        return PadmaService
+    elif name == "ShankhaService":
+        from vibe_core.naga.services.shankha import ShankhaService
+
+        return ShankhaService
+    elif name == "KaliyaService":
+        from vibe_core.naga.services.kaliya import KaliyaService
+
+        return KaliyaService
+    elif name == "NaradaService":
+        from vibe_core.naga.services.narada import NaradaService
+
+        return NaradaService
+    elif name == "ChitraguptaService":
+        from vibe_core.naga.services.chitragupta import ChitraguptaService
+
+        return ChitraguptaService
+    elif name == "PrahladService":
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        return PrahladService
     elif name == "NagaFloodManager":
         from vibe_core.naga.flood import NagaFloodManager
 

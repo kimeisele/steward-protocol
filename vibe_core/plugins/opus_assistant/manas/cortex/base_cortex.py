@@ -37,8 +37,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 
 class BaseCortex(ABC):

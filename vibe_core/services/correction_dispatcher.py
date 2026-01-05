@@ -422,9 +422,11 @@ class BasicCorrectionOrchestrator:
     def _wire_vajra_detector(self) -> None:
         """Wire VajraEnforcer as a config drift detector."""
         try:
+            from vibe_core.phoenix import get_config
             from vibe_core.vajra.enforcement import VajraEnforcer
 
-            enforcer = VajraEnforcer()
+            config = get_config()
+            enforcer = VajraEnforcer(config)
 
             def vajra_detector() -> List[UnifiedDriftReport]:
                 # VajraEnforcer.detect_drift needs runtime state
@@ -437,8 +439,8 @@ class BasicCorrectionOrchestrator:
                 "vajra_config",
             )
 
-        except ImportError:
-            logger.debug("VajraEnforcer not available, skipping")
+        except (ImportError, TypeError, Exception) as e:
+            logger.debug(f"VajraEnforcer not available: {e}")
 
     def detect_and_report(
         self,

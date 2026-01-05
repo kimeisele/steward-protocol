@@ -28,6 +28,7 @@ The 8 Naga Lords (from SB 5.24.31):
         - NARADA      - Event Bus/Injector
         - CHITRAGUPTA - Auditor/Profiler
         - PRAHLAD     - Governor/Resilience
+        - ANANTA      - Gene Splicer/Auto-Flood
 
 Usage:
     from vibe_core.naga.kulika import naga_service, NagaDomain, NagaLord
@@ -94,6 +95,7 @@ class NagaLord(str, Enum):
     NARADA = "narada"  # Event Bus/Injector
     CHITRAGUPTA = "chitragupta"  # Auditor/Profiler
     PRAHLAD = "prahlad"  # Governor/Resilience
+    ANANTA = "ananta"  # Gene Splicer/Auto-Flood
 
     @property
     def is_infrastructure(self) -> bool:
@@ -116,6 +118,7 @@ class NagaLord(str, Enum):
             NagaLord.NARADA,
             NagaLord.CHITRAGUPTA,
             NagaLord.PRAHLAD,
+            NagaLord.ANANTA,
         )
 
     @property
@@ -148,6 +151,7 @@ class NagaCapability(str, Enum):
     PROFILING = "profiling"  # Can profile behavior
     AUDIT = "audit"  # Can audit compliance
     RESILIENCE = "resilience"  # Can test/harden
+    FLOOD = "flood"  # Can inject DNA/Mixins (Soft Flood)
 
 
 # =============================================================================

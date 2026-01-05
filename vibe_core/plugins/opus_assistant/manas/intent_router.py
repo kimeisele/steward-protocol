@@ -47,8 +47,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.loaders import ActionLoader, ToolLoader
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 from vibe_core.state.schema import ExecutionResult
 

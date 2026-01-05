@@ -561,6 +561,7 @@ class ManifestationService:
         if config is None:
             try:
                 from vibe_core.phoenix.config import get_config
+
                 config = get_config()
             except Exception:
                 config = None

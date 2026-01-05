@@ -6,8 +6,8 @@ from .action_handlers import (
     validate_test_files,
 )
 from .fixtures import (
-    TestAgents,
     IsolatedTestContext,
+    TestAgents,
     TestContextState,
     TestKernel,
     TestPlugins,
@@ -15,7 +15,7 @@ from .fixtures import (
 )
 from .playbook_executor import DeterministicPlaybookExecutor, PlaybookResult, execute_playbook
 from .plugin_main import OrchestrationPlugin
-from .test_guardian import MutationEvent, TestContract, Guardian
+from .test_guardian import Guardian, MutationEvent, TestContract
 from .test_validation_tool import TestValidationTool, create_test_validation_tool
 
 __all__ = [
