@@ -435,6 +435,81 @@ class TestAntifragility:
         assert "memory" in str(test.reproduction_context).lower()
 
 
+class TestCoverageIntelligence:
+    """Test NAGA's eyes - Coverage Intelligence via TestableRegistry."""
+
+    def test_get_coverage_intelligence_returns_structure(self):
+        """Coverage intelligence returns expected structure."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+        intel = prahlad.get_coverage_intelligence()
+
+        # Should have prahlad_stats at minimum
+        assert "prahlad_stats" in intel
+        assert "tests_generated" in intel["prahlad_stats"]
+        assert "chaos_probes" in intel["prahlad_stats"]
+
+    def test_get_coverage_intelligence_includes_self_stats(self):
+        """Coverage intelligence includes Prahlad's own stats."""
+        from vibe_core.naga.services.prahlad import ErrorEvent, PrahladService
+
+        prahlad = PrahladService()
+
+        # Generate some activity
+        prahlad.on_error(ErrorEvent("E", "m", "c", {}))
+        prahlad.dharma_audit()
+
+        intel = prahlad.get_coverage_intelligence()
+
+        assert intel["prahlad_stats"]["tests_generated"] >= 1
+        assert intel["prahlad_stats"]["dharma_audits"] >= 1
+
+    def test_list_available_remedies(self):
+        """Can list available Shuddhi remedies."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        # May be empty if Shuddhi not registered, but shouldn't fail
+        remedies = prahlad.list_available_remedies()
+        assert isinstance(remedies, list)
+
+    def test_request_shuddhi_heal_graceful_without_service(self):
+        """Shuddhi heal request fails gracefully if service unavailable."""
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        result = prahlad.request_shuddhi_heal(
+            file_path="/nonexistent/file.py",
+            rule_id="test_rule",
+        )
+
+        # Should return error, not raise
+        assert "error" in result or "status" in result
+
+
+class TestAgencyIntegration:
+    """Test NAGA as agency - using existing APIs."""
+
+    def test_prahlad_uses_existing_infrastructure(self):
+        """
+        Prahlad uses TestableRegistry and Shuddhi, not rebuilding.
+        'Jeder Dienst stellt auch Dienst zur Verfügung.'
+        """
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        prahlad = PrahladService()
+
+        # Has coverage intelligence (uses TestableRegistry)
+        assert hasattr(prahlad, "get_coverage_intelligence")
+
+        # Has Shuddhi integration (uses Shuddhi API)
+        assert hasattr(prahlad, "request_shuddhi_heal")
+        assert hasattr(prahlad, "list_available_remedies")
+
+
 # Run standalone
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

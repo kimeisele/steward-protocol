@@ -640,6 +640,190 @@ class PrahladService(NagaBaseService):
         return self._identity.sign(payload.encode())
 
     # =========================================================================
+    # Coverage Intelligence (Agency API Integration)
+    # =========================================================================
+
+    def get_coverage_intelligence(self, kernel: Optional[Any] = None) -> Dict[str, Any]:
+        """
+        Get coverage intelligence from TestableRegistry.
+
+        This is NAGA's EYES - visibility into what we actually protect.
+        Uses existing TestOrchestration infrastructure instead of rebuilding.
+
+        "Jeder Dienst stellt auch Dienst zur Verfügung."
+
+        Args:
+            kernel: Optional kernel for discovery. If None, uses global registry.
+
+        Returns:
+            Coverage report with:
+            - total_testables: Components we can test
+            - total_tests: Test cases available
+            - by_type: Breakdown by component type
+            - tests_by_type: Tests per type
+            - naga_coverage: What NAGA specifically covers
+        """
+        try:
+            from vibe_core.protocols.testable_registry import (
+                TestableRegistry,
+                get_global_registry,
+            )
+
+            # Use global registry or create new one
+            registry = get_global_registry()
+
+            # Discover from kernel if provided
+            if kernel:
+                discovery_counts = registry.discover_from_kernel(kernel)
+                logger.info(f"PRAHLAD: Discovered {sum(discovery_counts.values())} components")
+
+            # Get summary from existing infrastructure
+            summary = registry.get_summary()
+
+            # Add NAGA-specific coverage
+            naga_coverage = self._calculate_naga_coverage(registry)
+
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "source": "prahlad.get_coverage_intelligence",
+                # From TestableRegistry
+                "total_testables": summary["total_testables"],
+                "total_tests": summary["total_tests"],
+                "by_type": summary["by_type"],
+                "tests_by_type": summary["tests_by_type"],
+                # NAGA-specific
+                "naga_coverage": naga_coverage,
+                # Self-stats
+                "prahlad_stats": {
+                    "tests_generated": self._tests_generated,
+                    "chaos_probes": self._chaos_probes,
+                    "dharma_audits": self._dharma_audits,
+                    "hardening_suite_size": len(self._hardening_suite),
+                },
+            }
+
+        except ImportError as e:
+            logger.warning(f"PRAHLAD: TestableRegistry not available: {e}")
+            return {
+                "error": "TestableRegistry not available",
+                "prahlad_stats": {
+                    "tests_generated": self._tests_generated,
+                    "chaos_probes": self._chaos_probes,
+                    "dharma_audits": self._dharma_audits,
+                },
+            }
+
+    def _calculate_naga_coverage(self, registry: Any) -> Dict[str, Any]:
+        """Calculate what NAGA specifically covers."""
+        try:
+            from vibe_core.protocols.testable import TestableType
+
+            # Get NAGA-related testables
+            naga_testables = []
+            for testable in registry.testables:
+                testable_id = testable.testable_id.lower()
+                if any(kw in testable_id for kw in ["naga", "sesha", "vasuki", "takshaka", "prahlad", "cortex"]):
+                    naga_testables.append(testable)
+
+            # Count NAGA tests
+            naga_tests = 0
+            for testable in naga_testables:
+                try:
+                    naga_tests += len(testable.get_test_cases())
+                except Exception:
+                    pass
+
+            return {
+                "testables_covered": len(naga_testables),
+                "tests_available": naga_tests,
+                "services": [t.testable_id for t in naga_testables],
+            }
+        except Exception as e:
+            logger.warning(f"PRAHLAD: NAGA coverage calculation failed: {e}")
+            return {"error": str(e)}
+
+    def request_shuddhi_heal(
+        self,
+        file_path: str,
+        rule_id: str,
+        dry_run: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Request healing from Shuddhi Engine.
+
+        NAGA as AGENCY: We use Shuddhi's API, not rebuild.
+        "Gift zu Medizin" - Shuddhi transforms violations into fixes.
+
+        Args:
+            file_path: File to heal
+            rule_id: Which remedy to apply
+            dry_run: If True, just show diff without writing
+
+        Returns:
+            Shuddhi result
+        """
+        try:
+            from pathlib import Path
+
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiStatus
+
+            shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+            if not shuddhi:
+                return {"error": "Shuddhi not available", "status": "UNAVAILABLE"}
+
+            # Request purification
+            path = Path(file_path)
+            result = shuddhi.purify(path, rule_id)
+
+            response = {
+                "status": result.status.value if hasattr(result.status, "value") else str(result.status),
+                "file": str(result.file_path),
+                "rule": result.rule_id,
+                "message": result.message,
+            }
+
+            # Include diff if available
+            if hasattr(result, "diff") and result.diff:
+                response["diff"] = result.diff
+
+            # Write if not dry_run and successful
+            if (
+                not dry_run
+                and result.status == ShuddhiStatus.PURIFIED
+                and hasattr(result, "purified_code")
+                and result.purified_code
+            ):
+                path.write_text(result.purified_code)
+                response["written"] = True
+                logger.info(f"PRAHLAD: Shuddhi healed {file_path} with {rule_id}")
+
+            return response
+
+        except Exception as e:
+            logger.error(f"PRAHLAD: Shuddhi request failed: {e}")
+            return {"error": str(e), "status": "FAILED"}
+
+    def list_available_remedies(self) -> List[str]:
+        """
+        List available Shuddhi remedies.
+
+        Returns:
+            List of rule_ids that Shuddhi can apply
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.shuddhi import ShuddhiProtocol
+
+            shuddhi = ServiceRegistry.get(ShuddhiProtocol)
+            if not shuddhi:
+                return []
+
+            return shuddhi.list_remedies()
+        except Exception:
+            return []
+
+    # =========================================================================
     # CorrectionHandler Interface
     # =========================================================================
 
