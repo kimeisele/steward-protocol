@@ -32,6 +32,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import (
     CacheStats,
     NagaStatus,
@@ -50,13 +51,15 @@ logger = logging.getLogger("PADMA")
     capabilities=[NagaCapability.CACHE],
     protocol_class="vibe_core.protocols.naga.PadmaProtocol",
 )
-class PadmaService(PadmaProtocol):
+class PadmaService(NagaBaseService, PadmaProtocol):
     """
     Padma - The Treasury Guardian.
 
     LRU cache with TTL support and statistics tracking.
     Thread-safe for concurrent access.
-    """
+
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
 
     def __init__(
         self,

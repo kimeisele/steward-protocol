@@ -34,6 +34,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import (
     BroadcastMessage,
     NagaStatus,
@@ -63,13 +64,15 @@ class Subscription:
     capabilities=[NagaCapability.BROADCAST],
     protocol_class="vibe_core.protocols.naga.ShankhaProtocol",
 )
-class ShankhaService(ShankhaProtocol):
+class ShankhaService(NagaBaseService, ShankhaProtocol):
     """
     Shankha - The Herald.
 
     Topic-based pubsub with pattern matching and message queuing.
     Thread-safe for concurrent publish/subscribe.
-    """
+
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
 
     def __init__(
         self,

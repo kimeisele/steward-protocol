@@ -28,6 +28,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import (
     AnantaProtocol,
     FloodProposal,
@@ -60,7 +61,7 @@ METRIC_PATTERNS = {"log", "metric", "trace", "profile", "measure", "record"}
     capabilities=[NagaCapability.FLOOD],
     protocol_class="vibe_core.protocols.naga.AnantaProtocol",
 )
-class AnantaService(AnantaProtocol):
+class AnantaService(NagaBaseService, AnantaProtocol):
     """
     Ananta - The Gene Splicer.
 
@@ -71,10 +72,14 @@ class AnantaService(AnantaProtocol):
     - isinstance checks
     - pickle compatibility
     - internal state access
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(self) -> None:
         """Initialize Ananta."""
+        super().__init__(service_name="Ananta")
+
         self._flood_history: List[VetoDecision] = []
         self._available_mixins: Dict[str, Type] = {}
         self._last_heartbeat = datetime.now()
@@ -106,6 +111,7 @@ class AnantaService(AnantaProtocol):
     # Service Analysis
     # =========================================================================
 
+    @naga_governed(operation="analyze_service")
     def analyze_service(self, service_class: Type) -> FloodProposal:
         """Analyze a service and propose which NAGAs it needs."""
         self._last_heartbeat = datetime.now()
@@ -240,6 +246,7 @@ class AnantaService(AnantaProtocol):
     # Prahlad's Veto (Check and Balance)
     # =========================================================================
 
+    @naga_governed(operation="request_approval")
     def request_approval(self, proposal: FloodProposal) -> VetoDecision:
         """Request Prahlad's approval for a flood proposal."""
         self._last_heartbeat = datetime.now()
@@ -286,6 +293,7 @@ class AnantaService(AnantaProtocol):
     # Soft Flood (DNA Injection)
     # =========================================================================
 
+    @naga_governed(operation="create_flooded_class")
     def create_flooded_class(
         self,
         original_class: Type,
