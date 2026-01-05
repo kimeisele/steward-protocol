@@ -12,15 +12,20 @@ Components:
 - Takshaka: Security guardian, toxicity detection, rate limiting
 - NagaFloodManager: EventBus/SignalBus organic flooding
 - NagaCommitWatcher: Commit pattern detection and alerting
+- NagaProxy: Universal wrapper (Balarama Pattern)
 
 Usage:
-    from vibe_core.naga import NagaOrchestrator
+    from vibe_core.naga import NagaOrchestrator, NagaProxy
 
     # During boot
     naga = NagaOrchestrator.bootstrap(
         ledger=kernel.ledger,
         correction_orchestrator=correction_orchestrator,
     )
+
+    # Wrap any service with observation (Balarama Pattern)
+    wrapped = NagaProxy(real_service)
+    wrapped.tick()  # Observed by Narada, timed by Chitragupta
 
     # Access components
     naga.sesha.get_top_hash()
@@ -39,6 +44,9 @@ __all__ = [
     "TakshakaService",
     # State Proxy (Der Kommissar)
     "NagaStateProxy",
+    # Balarama Pattern (Universal Wrapper)
+    "NagaProxy",
+    "wrap_service",
     # Flooding
     "NagaFloodManager",
     "NagaFloodController",
@@ -82,4 +90,12 @@ def __getattr__(name: str):
         from vibe_core.naga.commit_watcher import CommitAlert
 
         return CommitAlert
+    elif name == "NagaProxy":
+        from vibe_core.naga.proxy import NagaProxy
+
+        return NagaProxy
+    elif name == "wrap_service":
+        from vibe_core.naga.proxy import wrap_service
+
+        return wrap_service
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
