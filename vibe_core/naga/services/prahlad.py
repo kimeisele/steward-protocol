@@ -32,6 +32,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -145,11 +146,13 @@ class PhoenixResult:
     capabilities=[NagaCapability.RESILIENCE, NagaCapability.AUDIT],
     protocol_class="vibe_core.protocols.naga.PrahladProtocol",
 )
-class PrahladService:
+class PrahladService(NagaBaseService):
     """
     Prahlad Maharaj - The Resilience Agent.
 
     Makes the system antifragile: every failure makes it stronger.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(
@@ -164,6 +167,7 @@ class PrahladService:
             cortex: NagaCortex for reporting findings
             identity: NagaIdentity for signing findings
         """
+        super().__init__(service_name="Prahlad")
         self._cortex = cortex
         self._identity = identity
 
@@ -261,6 +265,7 @@ class PrahladService:
         """Register a component for chaos testing."""
         self._components[name] = component
 
+    @naga_governed(operation="chaos_probe")
     def chaos_probe(
         self,
         target: str,
@@ -354,6 +359,7 @@ class PrahladService:
         """Register an agent for identity coverage tracking."""
         self._agents[agent_id] = has_identity
 
+    @naga_governed(operation="dharma_audit")
     def dharma_audit(self) -> DharmaScore:
         """
         Audit the system for Dharma compliance.
@@ -492,6 +498,94 @@ class PrahladService:
             result.state_preserved = False
 
         return result
+
+    # =========================================================================
+    # OUROBOROS Self-Verification
+    # =========================================================================
+
+    def verify_self_integrity(self, quiet: bool = True) -> bool:
+        """
+        OUROBOROS SELF-CHECK: Prahlad runs the NAGA test suite.
+
+        "Bevor wir über andere richten, prüfen wir uns selbst."
+
+        This is the IMMUNE RESPONSE - NAGA checks its own health
+        before checking others. True self-governance.
+
+        Args:
+            quiet: If True, minimal output. If False, verbose.
+
+        Returns:
+            bool: True if NAGA is healthy (Watertight), False if compromised.
+        """
+        import os
+        import sys
+
+        self._last_heartbeat = datetime.now()
+
+        # Find the test directory (tests/naga/ from repo root)
+        naga_dir = os.path.dirname(os.path.dirname(__file__))  # vibe_core/naga
+        vibe_core_dir = os.path.dirname(naga_dir)  # vibe_core
+        repo_root = os.path.dirname(vibe_core_dir)  # repo root
+        test_dir = os.path.join(repo_root, "tests", "naga")
+
+        if not os.path.exists(test_dir):
+            logger.warning(f"PRAHLAD: Test chamber not found at {test_dir}")
+            return False
+
+        logger.info("PRAHLAD: Initiating Self-Diagnostic (Ouroboros Scan)...")
+
+        try:
+            import pytest
+
+            # Run tests
+            args = [test_dir, "-q", "--tb=line"]
+            if quiet:
+                args.append("--no-header")
+
+            ret_code = pytest.main(args)
+
+            if ret_code == 0:
+                logger.info("PRAHLAD: Self-Check PASSED. NAGA is Watertight.")
+                self._record_integrity_event(passed=True, exit_code=ret_code)
+                return True
+            else:
+                logger.error(f"PRAHLAD: Self-Check FAILED (Code {ret_code}). NAGA compromised!")
+                self._record_integrity_event(passed=False, exit_code=ret_code)
+                return False
+
+        except ImportError:
+            logger.warning("PRAHLAD: pytest not available for self-check")
+            return False
+        except Exception as e:
+            logger.error(f"PRAHLAD: Self-check error: {e}")
+            self._record_integrity_event(passed=False, error=str(e))
+            return False
+
+    def _record_integrity_event(
+        self,
+        passed: bool,
+        exit_code: int = 0,
+        error: str = "",
+    ) -> None:
+        """Record integrity check result to Sesha if available."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import SeshaProtocol
+
+            sesha = ServiceRegistry.get(SeshaProtocol)
+            if sesha:
+                sesha.record_event(
+                    event_type="NAGA_INTEGRITY_CHECK",
+                    source="prahlad.verify_self_integrity",
+                    details={
+                        "passed": passed,
+                        "exit_code": exit_code,
+                        "error": error,
+                    },
+                )
+        except Exception:
+            pass  # Graceful degradation
 
     # =========================================================================
     # Hardening Suite Export
