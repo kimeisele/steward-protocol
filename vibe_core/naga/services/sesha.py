@@ -13,6 +13,7 @@ Responsibilities:
 
 Integration:
 - Registers as CorrectionHandler for DriftSource.STATE
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import hashlib
@@ -20,6 +21,11 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.correction import (
     DriftSeverity,
     DriftSource,
@@ -44,6 +50,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger("SESHA")
 
 
+@naga_service(
+    name="Sesha",
+    lord=NagaLord.SESHA,
+    drift_source="state",
+    priority=85,
+    capabilities=[NagaCapability.LEDGER],
+    protocol_class="vibe_core.protocols.naga.SeshaProtocol",
+)
 class SeshaService(SeshaProtocol):
     """
     Ananta Sesha - Trägt die Welten.

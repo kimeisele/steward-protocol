@@ -10,6 +10,10 @@ Responsibilities:
 - Observe without modifying (pure observation)
 - Report to Cortex for pattern analysis
 - Sign all observations (37th Principle)
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
+- NOTE: Narada is GOVERNANCE, not a real Naga (no CorrectionHandler)
 """
 
 import asyncio
@@ -21,6 +25,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -45,6 +54,13 @@ class NaradaObservation:
     signature: Optional[bytes] = None
 
 
+@naga_service(
+    name="Narada",
+    lord=NagaLord.NARADA,
+    # NOTE: No drift_source - Narada is pure observer (no CorrectionHandler)
+    capabilities=[NagaCapability.OBSERVATION],
+    protocol_class="vibe_core.protocols.naga.NaradaProtocol",
+)
 class NaradaService:
     """
     Narada - The Cosmic Journalist.

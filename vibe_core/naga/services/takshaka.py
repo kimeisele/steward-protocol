@@ -13,6 +13,9 @@ Responsibilities:
 
 "Ein Paket ohne valide kryptografische Signatur wird verworfen,
 BEVOR der Payload deserialisiert wird"
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import hashlib
@@ -23,6 +26,11 @@ from collections import OrderedDict
 from datetime import datetime
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.correction import (
     DriftSeverity,
     DriftSource,
@@ -47,6 +55,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger("TAKSHAKA")
 
 
+@naga_service(
+    name="Takshaka",
+    lord=NagaLord.TAKSHAKA,
+    drift_source="cognitive",
+    priority=90,
+    capabilities=[NagaCapability.SECURITY],
+    protocol_class="vibe_core.protocols.naga.TakshakaProtocol",
+)
 class TakshakaService(TakshakaProtocol):
     """
     Takshaka - Bite First, Ask Never.

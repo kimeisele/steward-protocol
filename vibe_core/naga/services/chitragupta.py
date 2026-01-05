@@ -10,6 +10,9 @@ Responsibilities:
 - Calculate baselines (mean, stddev)
 - Detect anomalies (deviation from baseline)
 - Sign anomaly reports (37th Principle)
+
+Integration:
+- Auto-discovered by Narada via @naga_service decorator
 """
 
 import logging
@@ -18,6 +21,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
+from vibe_core.naga.kulika import (
+    NagaCapability,
+    NagaLord,
+    naga_service,
+)
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -109,6 +117,14 @@ class KarmaEntry:
     timestamp: datetime = field(default_factory=datetime.now)
 
 
+@naga_service(
+    name="Chitragupta",
+    lord=NagaLord.CHITRAGUPTA,
+    drift_source="performance",
+    priority=60,
+    capabilities=[NagaCapability.PROFILING, NagaCapability.AUDIT],
+    protocol_class="vibe_core.protocols.naga.ChitraguptaProtocol",
+)
 class ChitraguptaService:
     """
     Chitragupta - The Karma Accountant.
