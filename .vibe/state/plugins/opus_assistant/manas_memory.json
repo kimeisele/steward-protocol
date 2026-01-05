@@ -1,0 +1,23 @@
+{
+  "memories": [
+    {
+      "intent_type": "recent_test",
+      "intent_description": "First",
+      "timestamp": "2026-01-05T13:52:58.687377",
+      "outcome": "failed",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": null
+    },
+    {
+      "intent_type": "recent_test",
+      "intent_description": "Second",
+      "timestamp": "2026-01-05T13:52:58.688407",
+      "outcome": "success",
+      "context": {},
+      "feedback": null,
+      "execution_time_ms": null
+    }
+  ],
+  "updated_at": "2026-01-05T13:52:58.688531"
+}

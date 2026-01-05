@@ -1,5 +1,5 @@
 """
-PRAKRITI LIVING TESTS - Test the Living Test Framework.
+HIRANYAKASHIPU LIVING TESTS - Test the Living Test Framework.
 
 "Das Lebende testet das Lebende."
 
@@ -24,17 +24,17 @@ class TestSeedLoader:
 
     def test_creates_empty(self):
         """SeedLoader initializes empty."""
-        from vibe_core.naga.prakriti import SeedLoader
+        from vibe_core.naga.hiranyakashipu import SeedLoader
 
         loader = SeedLoader()
         assert loader.get_all_seeds() == []
 
     def test_loads_yaml_seeds(self):
         """SeedLoader loads seeds from YAML."""
-        from vibe_core.naga.prakriti import SeedLoader
+        from vibe_core.naga.hiranyakashipu import SeedLoader
 
         loader = SeedLoader()
-        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/prakriti/seeds"
+        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/hiranyakashipu/seeds"
         loader.add_seed_dir(seed_dir)
 
         count = loader.load_seeds()
@@ -45,10 +45,10 @@ class TestSeedLoader:
 
     def test_filters_by_type(self):
         """SeedLoader filters seeds by attack type."""
-        from vibe_core.naga.prakriti import SeedLoader
+        from vibe_core.naga.hiranyakashipu import SeedLoader
 
         loader = SeedLoader()
-        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/prakriti/seeds"
+        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/hiranyakashipu/seeds"
         loader.add_seed_dir(seed_dir)
         loader.load_seeds()
 
@@ -58,10 +58,10 @@ class TestSeedLoader:
 
     def test_filters_by_difficulty(self):
         """SeedLoader filters seeds by difficulty."""
-        from vibe_core.naga.prakriti import SeedLoader
+        from vibe_core.naga.hiranyakashipu import SeedLoader
 
         loader = SeedLoader()
-        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/prakriti/seeds"
+        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/hiranyakashipu/seeds"
         loader.add_seed_dir(seed_dir)
         loader.load_seeds()
 
@@ -71,7 +71,7 @@ class TestSeedLoader:
 
     def test_seed_rendering(self):
         """Seeds render variables correctly."""
-        from vibe_core.naga.prakriti import AttackSeed
+        from vibe_core.naga.hiranyakashipu import AttackSeed
 
         seed = AttackSeed(
             name="test_seed",
@@ -90,16 +90,16 @@ class TestLivingTestFramework:
     @pytest.fixture
     def framework(self):
         """Create framework with seeds loaded."""
-        from vibe_core.naga.prakriti import LivingTestFramework
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework
 
         fw = LivingTestFramework()
-        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/prakriti/seeds"
+        seed_dir = Path(__file__).parent.parent.parent / "vibe_core/naga/hiranyakashipu/seeds"
         fw.add_seed_dir(seed_dir)
         return fw
 
     def test_creates_framework(self):
         """Framework initializes correctly."""
-        from vibe_core.naga.prakriti import LivingTestFramework
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework
 
         fw = LivingTestFramework()
         assert fw is not None
@@ -195,7 +195,7 @@ class TestEvolution:
 
     def test_evolution_tracks_generations(self):
         """TestEvolution tracks generations."""
-        from vibe_core.naga.prakriti.living_tests import TestEvolution
+        from vibe_core.naga.hiranyakashipu.living_tests import TestEvolution
 
         evo = TestEvolution()
         assert evo.generation == 0
@@ -205,7 +205,7 @@ class TestEvolution:
 
     def test_evolution_records_mutations(self):
         """TestEvolution records mutation attempts."""
-        from vibe_core.naga.prakriti.living_tests import TestEvolution
+        from vibe_core.naga.hiranyakashipu.living_tests import TestEvolution
 
         evo = TestEvolution()
 
@@ -229,7 +229,7 @@ class TestMetaOuroboros:
     @pytest.mark.asyncio
     async def test_framework_can_test_itself(self):
         """The framework can generate tests for itself."""
-        from vibe_core.naga.prakriti import AttackSeed, LivingTestFramework
+        from vibe_core.naga.hiranyakashipu import AttackSeed, LivingTestFramework
 
         fw = LivingTestFramework()
 
@@ -239,7 +239,7 @@ class TestMetaOuroboros:
             description="Test that the framework exists",
             test_code="""
 def test_framework_exists():
-    from vibe_core.naga.prakriti import LivingTestFramework
+    from vibe_core.naga.hiranyakashipu import LivingTestFramework
     fw = LivingTestFramework()
     assert fw is not None
     assert hasattr(fw, 'run_attack')
@@ -264,7 +264,7 @@ class TestPrakritiWiring:
 
     def test_adapters_exist(self):
         """Wiring adapters are importable."""
-        from vibe_core.naga.prakriti import (
+        from vibe_core.naga.hiranyakashipu import (
             adapt_test_result_to_drift,
             adapt_test_result_to_reactor,
         )
@@ -276,8 +276,8 @@ class TestPrakritiWiring:
         """TestResult adapts to UnifiedDriftReport."""
         from datetime import datetime
 
-        from vibe_core.naga.prakriti import AttackSeed, adapt_test_result_to_drift
-        from vibe_core.naga.prakriti.living_tests import TestResult
+        from vibe_core.naga.hiranyakashipu import AttackSeed, adapt_test_result_to_drift
+        from vibe_core.naga.hiranyakashipu.living_tests import TestResult
         from vibe_core.protocols.correction import DriftSource
 
         # Create test result
@@ -312,8 +312,8 @@ class TestPrakritiWiring:
 
     def test_adapt_result_to_reactor(self):
         """TestResult adapts to ReactorProtocol DriftEvent."""
-        from vibe_core.naga.prakriti import AttackSeed, adapt_test_result_to_reactor
-        from vibe_core.naga.prakriti.living_tests import TestResult
+        from vibe_core.naga.hiranyakashipu import AttackSeed, adapt_test_result_to_reactor
+        from vibe_core.naga.hiranyakashipu.living_tests import TestResult
         from vibe_core.protocols.reactor import DriftType
 
         result = TestResult(
@@ -343,7 +343,7 @@ class TestPrakritiWiring:
 
     def test_detector_is_callable(self):
         """PrakritiDriftDetector is a valid detector."""
-        from vibe_core.naga.prakriti import LivingTestFramework, PrakritiDriftDetector
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework, PrakritiDriftDetector
 
         fw = LivingTestFramework()
         detector = PrakritiDriftDetector(fw, "test_module")
@@ -353,7 +353,7 @@ class TestPrakritiWiring:
 
     def test_handler_uses_resonance_strategy(self):
         """PrakritiCorrectionHandler handles RESONANCE strategy."""
-        from vibe_core.naga.prakriti import PrakritiCorrectionHandler
+        from vibe_core.naga.hiranyakashipu import PrakritiCorrectionHandler
         from vibe_core.protocols.correction import (
             DriftSeverity,
             DriftSource,
@@ -385,7 +385,7 @@ class TestPrakritiWiring:
 
     def test_wire_function_returns_components(self):
         """wire_prakriti_to_protocols returns wiring dict."""
-        from vibe_core.naga.prakriti import LivingTestFramework, wire_prakriti_to_protocols
+        from vibe_core.naga.hiranyakashipu import LivingTestFramework, wire_prakriti_to_protocols
 
         fw = LivingTestFramework()
         wiring = wire_prakriti_to_protocols(fw, "test_module")
@@ -396,8 +396,8 @@ class TestPrakritiWiring:
 
     def test_reactor_integration_records_metrics(self):
         """PrakritiReactorIntegration records to reactor."""
-        from vibe_core.naga.prakriti import AttackSeed, PrakritiReactorIntegration
-        from vibe_core.naga.prakriti.living_tests import TestResult
+        from vibe_core.naga.hiranyakashipu import AttackSeed, PrakritiReactorIntegration
+        from vibe_core.naga.hiranyakashipu.living_tests import TestResult
 
         integration = PrakritiReactorIntegration()
 

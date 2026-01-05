@@ -1,9 +1,13 @@
 """
-PRAKRITI WIRING - Connect Living Tests to Protocol Truth.
+HIRANYAKASHIPU WIRING - Connect Living Tests to Protocol Truth.
 
 "Don't implement what's already defined. WIRE IT."
 
-This module connects Prakriti (Living Test Framework) to:
+Hiranyakashipu = The Attack Framework (named after Prahlad's demon father)
+- Prahlad survived all attacks because he was anchored in truth
+- We use attacks to strengthen the system (antifragility)
+
+This module connects the Living Test Framework to:
 1. CorrectionDispatcher (HealingStrategy.RESONANCE)
 2. ReactorProtocol (DriftEvent tracking)
 3. Sesha (Ledger persistence)
@@ -43,11 +47,11 @@ from .seed_loader import AttackSeed
 if TYPE_CHECKING:
     from vibe_core.protocols.naga import SeshaProtocol
 
-logger = logging.getLogger("NAGA.Prakriti.Wiring")
+logger = logging.getLogger("NAGA.Hiranyakashipu.Wiring")
 
 
 # =============================================================================
-# ADAPTERS: Prakriti → Protocols
+# ADAPTERS: Hiranyakashipu → Protocols
 # =============================================================================
 
 
@@ -137,15 +141,16 @@ def adapt_test_result_to_reactor(
 
 
 # =============================================================================
-# PRAKRITI DRIFT DETECTOR (for DriftRegistry)
+# HIRANYAKASHIPU DRIFT DETECTOR (for DriftRegistry)
 # =============================================================================
 
 
-class PrakritiDriftDetector:
+class HiranyakashipuDriftDetector:
     """
-    Prakriti as a DriftDetector for DriftRegistry.
+    Hiranyakashipu as a DriftDetector for DriftRegistry.
 
     Runs all attack seeds and reports bypassed attacks as drift.
+    The attacks are named after Hiranyakashipu's attempts on Prahlad's life.
     """
 
     def __init__(
@@ -187,13 +192,13 @@ class PrakritiDriftDetector:
 
 
 # =============================================================================
-# PRAKRITI CORRECTION HANDLER (for CorrectionDispatcher)
+# HIRANYAKASHIPU CORRECTION HANDLER (for CorrectionDispatcher)
 # =============================================================================
 
 
-class PrakritiCorrectionHandler:
+class HiranyakashipuCorrectionHandler:
     """
-    Handler for Prakriti-detected drifts.
+    Handler for Hiranyakashipu-detected drifts.
 
     When an attack bypasses defense, this handler:
     1. Records to Sesha ledger
@@ -290,9 +295,9 @@ class PrakritiCorrectionHandler:
 # =============================================================================
 
 
-class PrakritiReactorIntegration:
+class HiranyakashipuReactorIntegration:
     """
-    Integrates Prakriti with ReactorProtocol for drift tracking.
+    Integrates Hiranyakashipu attacks with ReactorProtocol for drift tracking.
 
     Updates reactor metrics based on attack results.
     """
@@ -322,12 +327,12 @@ class PrakritiReactorIntegration:
 # =============================================================================
 
 
-def wire_prakriti_to_protocols(
+def wire_hiranyakashipu_to_protocols(
     framework: LivingTestFramework,
     target_module: str = "test_module",
 ) -> Dict[str, Any]:
     """
-    Wire Prakriti to all relevant protocols.
+    Wire Hiranyakashipu attack framework to all relevant protocols.
 
     Returns dict of wired components for inspection.
 
@@ -335,9 +340,9 @@ def wire_prakriti_to_protocols(
         framework = LivingTestFramework()
         framework.add_seed_dir(Path("seeds/"))
 
-        wiring = wire_prakriti_to_protocols(framework, "my_module")
+        wiring = wire_hiranyakashipu_to_protocols(framework, "my_module")
 
-        # Now Prakriti is connected to:
+        # Now Hiranyakashipu is connected to:
         # - DriftRegistry (as detector)
         # - CorrectionDispatcher (as handler)
         # - Reactor (for metrics)
@@ -345,15 +350,15 @@ def wire_prakriti_to_protocols(
     wiring = {}
 
     # 1. Create detector
-    detector = PrakritiDriftDetector(framework, target_module)
+    detector = HiranyakashipuDriftDetector(framework, target_module)
     wiring["detector"] = detector
 
     # 2. Create handler
-    handler = PrakritiCorrectionHandler()
+    handler = HiranyakashipuCorrectionHandler()
     wiring["handler"] = handler
 
     # 3. Create reactor integration
-    reactor_integration = PrakritiReactorIntegration()
+    reactor_integration = HiranyakashipuReactorIntegration()
     wiring["reactor"] = reactor_integration
 
     # 4. Wire callbacks
@@ -373,9 +378,9 @@ def wire_prakriti_to_protocols(
             registry.register_detector(
                 source=DriftSource.STRUCTURAL,
                 detector=detector,
-                detector_id="prakriti_living_tests",
+                detector_id="hiranyakashipu_attacks",
             )
-            logger.info("✅ Prakriti registered with DriftRegistry")
+            logger.info("✅ Hiranyakashipu registered with DriftRegistry")
             wiring["registry_registered"] = True
     except Exception as e:
         logger.debug(f"DriftRegistry not available: {e}")
@@ -391,16 +396,16 @@ def wire_prakriti_to_protocols(
             dispatcher.register_handler(
                 source=DriftSource.STRUCTURAL,
                 handler=handler,
-                handler_id="prakriti_handler",
+                handler_id="hiranyakashipu_handler",
                 priority=10,  # Higher priority for security
             )
-            logger.info("✅ Prakriti handler registered with CorrectionDispatcher")
+            logger.info("✅ Hiranyakashipu handler registered with CorrectionDispatcher")
             wiring["dispatcher_registered"] = True
     except Exception as e:
         logger.debug(f"CorrectionDispatcher not available: {e}")
         wiring["dispatcher_registered"] = False
 
-    logger.info(f"🔌 Prakriti wiring complete: {wiring}")
+    logger.info(f"🔌 Hiranyakashipu wiring complete: {wiring}")
     return wiring
 
 
@@ -413,9 +418,20 @@ __all__ = [
     "adapt_test_result_to_drift",
     "adapt_test_result_to_reactor",
     # Components
+    "HiranyakashipuDriftDetector",
+    "HiranyakashipuCorrectionHandler",
+    "HiranyakashipuReactorIntegration",
+    # Helper
+    "wire_hiranyakashipu_to_protocols",
+    # Backward compatibility aliases
     "PrakritiDriftDetector",
     "PrakritiCorrectionHandler",
     "PrakritiReactorIntegration",
-    # Helper
     "wire_prakriti_to_protocols",
 ]
+
+# Backward compatibility aliases
+PrakritiDriftDetector = HiranyakashipuDriftDetector
+PrakritiCorrectionHandler = HiranyakashipuCorrectionHandler
+PrakritiReactorIntegration = HiranyakashipuReactorIntegration
+wire_prakriti_to_protocols = wire_hiranyakashipu_to_protocols

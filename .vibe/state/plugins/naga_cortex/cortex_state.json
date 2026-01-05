@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "stats": {
+    "signals_received": 0,
+    "signals_discarded_age": 0,
+    "signals_discarded_overflow": 0,
+    "correlations_performed": 0,
+    "decisions_made": 0,
+    "decisions_dispatched": 1,
+    "decisions_by_action": {}
+  },
+  "dispatched": {
+    "5ea9636cd79cf6eb": "2026-01-05T20:12:18.094307"
+  },
+  "config": {
+    "enabled": true,
+    "signal_buffer_size": 10,
+    "correlation_threshold": 3,
+    "max_signal_age_seconds": 300.0,
+    "auto_dispatch": false,
+    "log_decisions": true
+  },
+  "snapshot_at": "2026-01-05T20:12:18.094332"
+}

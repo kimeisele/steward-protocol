@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "saved_at": "2026-01-04T09:59:12.890430",
-  "total_cycles": 6,
+  "saved_at": "2026-01-05T17:38:44.771211",
+  "total_cycles": 28,
   "completed": [
     {
       "cycle_id": "7de95f81",
@@ -22,7 +22,7 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890460"
+      "timestamp": "2026-01-05T17:38:44.771237"
     },
     {
       "cycle_id": "72825b5f",
@@ -43,7 +43,7 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890472"
+      "timestamp": "2026-01-05T17:38:44.771249"
     },
     {
       "cycle_id": "23136817",
@@ -64,7 +64,7 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890477"
+      "timestamp": "2026-01-05T17:38:44.771291"
     },
     {
       "cycle_id": "81889d3e",
@@ -83,7 +83,7 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890489"
+      "timestamp": "2026-01-05T17:38:44.771297"
     },
     {
       "cycle_id": "c9553d1b",
@@ -102,7 +102,7 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890507"
+      "timestamp": "2026-01-05T17:38:44.771302"
     },
     {
       "cycle_id": "c396e2a0",
@@ -121,7 +121,385 @@
         "agents_discovered": 27,
         "agents_registered": 29
       },
-      "timestamp": "2026-01-04T09:59:12.890512"
+      "timestamp": "2026-01-05T17:38:44.771307"
+    },
+    {
+      "cycle_id": "bdffa0b0",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4496004304'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771312"
+    },
+    {
+      "cycle_id": "d8b326d4",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4566482640'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771316"
+    },
+    {
+      "cycle_id": "c7626d8a",
+      "parent_cycle_id": null,
+      "trace_id": "734d7b88",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771321"
+    },
+    {
+      "cycle_id": "6f9a1ca4",
+      "parent_cycle_id": null,
+      "trace_id": "10c080a9",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771326"
+    },
+    {
+      "cycle_id": "d087cd52",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4512716112'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771330"
+    },
+    {
+      "cycle_id": "66f6e894",
+      "parent_cycle_id": null,
+      "trace_id": "bdcb10e9",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771334"
+    },
+    {
+      "cycle_id": "9041e995",
+      "parent_cycle_id": null,
+      "trace_id": "c195c965",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771339"
+    },
+    {
+      "cycle_id": "33f96d46",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4480238736'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771343"
+    },
+    {
+      "cycle_id": "ff10c9b1",
+      "parent_cycle_id": null,
+      "trace_id": "6b11b138",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771347"
+    },
+    {
+      "cycle_id": "60bffadc",
+      "parent_cycle_id": null,
+      "trace_id": "23302736",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "error": "VajraEnforcer.__init__() missing 1 required positional argument: 'phoenix_config'",
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771352"
+    },
+    {
+      "cycle_id": "374b4b7d",
+      "parent_cycle_id": null,
+      "trace_id": "e9569a5b",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771356"
+    },
+    {
+      "cycle_id": "5d74ec3e",
+      "parent_cycle_id": null,
+      "trace_id": "e2af11f6",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771361"
+    },
+    {
+      "cycle_id": "7dad0fea",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4560527568'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771365"
+    },
+    {
+      "cycle_id": "a1b0a827",
+      "parent_cycle_id": null,
+      "trace_id": "b8043257",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771369"
+    },
+    {
+      "cycle_id": "02c925c3",
+      "parent_cycle_id": null,
+      "trace_id": "e9772adf",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771374"
+    },
+    {
+      "cycle_id": "17cd97b0",
+      "parent_cycle_id": null,
+      "trace_id": "7c650c3d",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771377"
+    },
+    {
+      "cycle_id": "7624892e",
+      "parent_cycle_id": null,
+      "trace_id": "037d7c44",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771381"
+    },
+    {
+      "cycle_id": "9429ab4e",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4420722128'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771386"
+    },
+    {
+      "cycle_id": "c96bb471",
+      "parent_cycle_id": null,
+      "trace_id": "1dca5251",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771392"
+    },
+    {
+      "cycle_id": "c2e41307",
+      "parent_cycle_id": null,
+      "trace_id": "f1388615",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 1,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "nodes_in_graph": 79,
+        "agents_discovered": 28,
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-05T17:38:44.771400"
+    },
+    {
+      "cycle_id": "2350cb35",
+      "parent_cycle_id": null,
+      "trace_id": "5b858568",
+      "cycle_name": "test",
+      "phase": "persist",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771406"
+    },
+    {
+      "cycle_id": "90e22248",
+      "parent_cycle_id": null,
+      "trace_id": "db1facc4",
+      "cycle_name": "test_orchestration",
+      "phase": "persist",
+      "observations_count": 2,
+      "orientations_count": 1,
+      "decisions_count": 2,
+      "actions_count": 0,
+      "errors": {},
+      "timestamp": "2026-01-05T17:38:44.771412"
     }
   ],
   "errors": []
