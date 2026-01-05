@@ -64,6 +64,9 @@ class NagaType(str, Enum):
     KALIYA = "kaliya"  # Quarantine - Die Isolation
     CHITRAGUPTA = "chitragupta"  # Profiler - Der Buchhalter
 
+    # Phase 10: The 7th NAGA
+    PRAHLAD = "prahlad"  # Resilience - Der Unzerstörbare
+
 
 @dataclass
 class NagaStatus:
