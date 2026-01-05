@@ -1,19 +1,27 @@
 """
-NAGA Mixins - Capability Providers.
+NAGA Mixins - Capability Providers + Active Genes.
 
-Mixins provide LAZY access to NAGA services via ServiceRegistry.
-They are the "Werkzeugkasten" - the toolbox.
+TWO TYPES OF MIXINS:
 
-The Flood Classes (in naga/floods/) inherit these Mixins and
-perform SURGICAL method overrides.
+1. CAPABILITY MIXINS (Passive - in base.py):
+   - Provide lazy property access to NAGA services
+   - SeshaMixin, VasukiMixin, etc.
+   - Used by Flood Classes for manual surgical overrides
 
-Architecture:
-    Mixin = Capability (self.sesha, self.vasuki, etc.)
-    Flood = Behavior (explicit method overrides)
+2. ACTIVE MIXINS (Living Genes):
+   - AUTOMATICALLY intercept methods
+   - ActiveSeshaMixin: Auto-records state mutations to Ledger
+   - ActiveTakshakaMixin: Auto-validates inputs before execution
+   - ActiveVasukiMixin: Auto-signs outbound network calls
 
-"Das Wasser gibt die Werkzeuge. Der Chirurg wählt das Skalpell."
+The Ashvamedha Strategy:
+    Active Mixins are the "living horses" that claim territory.
+    Wherever they go, NAGA sovereignty follows.
+
+"Das Wasser gibt die Werkzeuge. Die Gene bringen das Leben."
 """
 
+# Passive Capability Mixins (legacy, for manual flooding)
 from .base import (
     ChitraguptaMixin,
     KaliyaMixin,
@@ -29,7 +37,13 @@ from .base import (
     VasukiMixin,
 )
 
+# Active Gene Mixins (auto-interception)
+from .sesha import ActiveSeshaMixin, SeshaScribeMixin
+from .takshaka import ActiveTakshakaMixin, TakshakaGuardMixin, ToxicInputError
+from .vasuki import ActiveVasukiMixin, VasukiBorderMixin
+
 __all__ = [
+    # Passive Capability Mixins
     "NagaCapabilityMixin",
     "SeshaMixin",
     "VasukiMixin",
@@ -42,4 +56,12 @@ __all__ = [
     "NaradaMixin",
     "ChitraguptaMixin",
     "PrahladMixin",
+    # Active Gene Mixins
+    "ActiveSeshaMixin",
+    "SeshaScribeMixin",
+    "ActiveTakshakaMixin",
+    "TakshakaGuardMixin",
+    "ToxicInputError",
+    "ActiveVasukiMixin",
+    "VasukiBorderMixin",
 ]

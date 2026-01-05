@@ -111,6 +111,33 @@ class StateSignal(NagaSignal):
 
 
 @dataclass
+class StateChangeSignal(NagaSignal):
+    """
+    Signal from ActiveSeshaMixin - State mutation observation.
+
+    Emitted when a flooded class performs a state-changing operation.
+    This feeds the Ouroboros loop: Action → Ledger → Cortex → Analysis.
+
+    Event Types:
+    - STATE_MUTATION: save, write, update, modify
+    - STATE_DELETION: delete, remove, clear
+    - STATE_CREATION: create, add, insert
+    """
+
+    source: str = ""  # Class name
+    event_type: str = ""  # STATE_MUTATION, etc.
+    method: str = ""  # Method that triggered this
+    duration_ms: float = 0.0
+    success: bool = True
+
+    def __post_init__(self):
+        self.signal_type = SignalType.STATE
+        # Set source_id from source if not already set
+        if not self.source_id and self.source:
+            self.source_id = f"mixin.sesha.{self.source}"
+
+
+@dataclass
 class CorrelatedContext:
     """
     Correlated context from multiple signals.
