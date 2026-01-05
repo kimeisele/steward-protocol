@@ -120,6 +120,25 @@ For each discovered target, classify:
 
 ---
 
+## BALARAMA PATTERN (NagaProxy)
+
+Universal wrapper for any service - transforms dynamically based on behavior:
+
+```python
+from vibe_core.naga import NagaProxy
+
+# At DI/instantiation point, not source modification
+wrapped = NagaProxy(real_service)
+wrapped.tick()  # Observed by Narada, timed by Chitragupta
+```
+
+Routes to NAGAs based on BEHAVIOR:
+- All calls → Narada (observation)
+- Exceptions → Kaliya (isolation)
+- Timing → Chitragupta (profiling)
+
+---
+
 ## PRINCIPLES (Dharma)
 
 1. **No config in code** - Phoenix/YAML only
@@ -127,6 +146,7 @@ For each discovered target, classify:
 3. **Fractal** - Small, composable, atomic
 4. **Organic** - Water flows, doesn't force
 5. **Hunt, don't list** - Dynamic target acquisition
+6. **Balarama wraps, doesn't modify** - Proxy pattern
 
 ---
 
