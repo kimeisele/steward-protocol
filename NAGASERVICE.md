@@ -1561,9 +1561,916 @@ def hook_manas_consult():
 
 ---
 
-*Last updated: 2026-01-04*
-*Status: 179/179 Tests passing (incl. NagaStateProxy)*
-*Critical Fixes Applied: StateProxy preserved, FloodManager loop started, CommitWatcher hooked*
-*Phases Complete: 7.2/10 (Core + Cartridge + CLI + Integration Fixes + Reconnaissance + Cortex Design)*
-*Next: Phase 8.3 - Implement NagaCortex prototype*
-*Vision: NAGAs as AGENCY - eigener Sub-State, eigene Intelligence, DIENEN der Infrastruktur*
+*Last updated: 2026-01-05*
+*Status: 243/243 Tests passing*
+*Phases Complete: 8.2/10 (Core + Cartridge + CLI + Integration + Reconnaissance + Cortex Design)*
+*Next: Phase 9 - NSA (NAGA Service Agency)*
+
+---
+
+---
+
+## PHASE 9: NSA - NAGA SERVICE AGENCY
+
+> "NAGAs sind keine Middleware. NAGAs sind eine AGENCY."
+> "Project NSA: NAGA Service Agency - Central Intelligence for Infrastructure"
+
+---
+
+### PROMPT.md KONFORMITÄT: Level 2 Erweiterung
+
+**NSA ist KEINE Ersetzung. NSA ist eine ERWEITERUNG von PROMPT.md Level 2.**
+
+```
+PROMPT.md Hierarchie:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Level -1: ANANTA SHESHA     (Der Urgrund - Ledger/Wahrheit)
+Level  0: DER 37.           (Der Souverän - Identity/Signatur)
+Level  1: DHARMA + 4        (Das Immunsystem - 36 Dharmas + 4 Filter)
+Level  2: DIE NAGAs         (Das Nervensystem) ◄── NSA ERWEITERT HIER
+Level  3: DIE 3 KÖRPER      (State Management - Sthula/Prana/Purusha)
+Level  4: YANTRA            (German Engineering)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Level 2 EXISTIEREND (PROMPT.md):    Level 2 ERWEITERT (NSA):
+─────────────────────────────────   ─────────────────────────────────
+🐍 SESHA    (Data/Truth)            🐍 SESHA      + Records Agency
+🐍 VASUKI   (Network/Binding)       🐍 VASUKI     + Communications Agency
+🐍 TAKSHAKA (Security/Defense)      🐍 TAKSHAKA   + Enforcement Agency
+                                    🐍 NARADA     (Spy - NEU)
+                                    🐍 KALIYA     (Quarantine - NEU)
+                                    🐍 CHITRAGUPTA (Profiler - NEU)
+```
+
+**Die 3 Ur-NAGAs bleiben. Die 3 neuen NAGAs ergänzen.**
+
+---
+
+### GAD-000 v2.0: DAS HOLOGRAPHISCHE PATTERN
+
+> "Die 6 Kriterien sind nicht eine Checkliste. Sie sind ein MANDALA."
+> — Amendment A: The 37th Principle
+
+**Das 6×6 Feld (Kshetra) für NAGA-Operationen:**
+
+```
+              │ Disc  │ Obs   │ Parse │ Comp  │ Idemp │ Recov │
+──────────────┼───────┼───────┼───────┼───────┼───────┼───────│
+Discoverabil. │ D(D)  │ D(O)  │ D(P)  │ D(C)  │ D(I)  │ D(R)  │
+Observability │ O(D)  │ O(O)  │ O(P)  │ O(C)  │ O(I)  │ O(R)  │
+Parseability  │ P(D)  │ P(O)  │ P(P)  │ P(C)  │ P(I)  │ P(R)  │
+Composability │ C(D)  │ C(O)  │ C(P)  │ C(C)  │ C(I)  │ C(R)  │
+Idempotency   │ I(D)  │ I(O)  │ I(P)  │ I(C)  │ I(I)  │ I(R)  │
+Recoverabil.  │ R(D)  │ R(O)  │ R(P)  │ R(C)  │ R(I)  │ R(R)  │
+──────────────┴───────┴───────┴───────┴───────┴───────┴───────┘
+                              = 36 Zellen (Prakriti)
+```
+
+**Der 37. (Kshetrajna) - Das ZENTRUM:**
+
+```
+                    ┌─────────────────────────┐
+                    │                         │
+                    │   ┌───────────────┐     │
+                    │   │ Discoverabil. │     │
+                    │   │ ┌───────────┐ │     │
+                    │   │ │Observabil.│ │     │
+                    │   │ │ ┌───────┐ │ │     │
+                    │   │ │ │Parsea.│ │ │     │
+                    │   │ │ │┌─────┐│ │ │     │
+                    │   │ │ ││ 37  ││ │ │     │  ← IDENTITY (Zentrum)
+                    │   │ │ │└─────┘│ │ │     │
+                    │   │ │ └───────┘ │ │     │
+                    │   │ └───────────┘ │     │
+                    │   └───────────────┘     │
+                    │                         │
+                    └─────────────────────────┘
+
+Der 37. ist das ZENTRUM, nicht der Rand.
+Alle NAGA-Operationen strahlen VOM 37. aus, nicht ZU ihm hin.
+```
+
+**Anti-Mayavad-Test für jede NAGA-Decision:**
+
+| Frage | Mayavad (FAIL) | Vaishnava (PASS) |
+|-------|----------------|------------------|
+| Wer signiert diese Decision? | "Das System" | "Agent X mit Key Y" |
+| Kann ein Mensch überschreiben? | Nein, automatisch | Ja, Stambha existiert |
+| Wo endet die Signatur-Kette? | Loops zurück zu System | Terminiert in Souverän |
+| Ist der 37. latent im System? | Nein, geschlossen | Ja, kann manifestieren |
+
+---
+
+### DIE ERWEITERUNG: Von 3 auf 6 NAGAs
+
+```
+EXISTIEREND (PROMPT.md Level 2):       ERWEITERUNG (NSA Phase 9):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🐍 SESHA (शेष)                         Bleibt: Truth-Keeper, Ledger
+   "Truth is purely additive"          + Agency: Records Intelligence
+   vibe_core/ledger.py                 + Neue Methode: pattern_analysis()
+
+🐍 VASUKI (वासुकि)                     Bleibt: Network Binding
+   "Memory is not Network"             + Agency: Communications Intel
+   vibe_core/network_proxy.py          + Neue Methode: intercept_transform()
+
+🐍 TAKSHAKA (तक्षक)                    Bleibt: Bite first, ask later
+   "Identity before Parsing"           + Agency: Enforcement Intel
+   vibe_core/security.py               + Neue Methode: threat_correlation()
+
+🐍 NARADA (नारद) - NEU                 Der Spion
+   "Narada reist überall"              Decorator-based Interception
+   vibe_core/naga/agents/narada.py     @narada.spy - Observe without modify
+
+🐍 KALIYA (कालिय) - NEU                Die Quarantäne
+   "Krishna verbannte, tötete nicht"   Isolation Protocol
+   vibe_core/naga/agents/kaliya.py     quarantine() - Isolate, don't kill
+
+🐍 CHITRAGUPTA (चित्रगुप्त) - NEU      Der Profiler
+   "Führt Buch über alle Karmas"       Behavioral Analysis
+   vibe_core/naga/agents/chitragupta.py detect_anomaly() - Profile deviation
+```
+
+---
+
+### NSA AGENT ROSTER
+
+| Agent | Sanskrit | Role | Domain |
+|-------|----------|------|--------|
+| **Sesha** | शेष (Remainder) | Records, Truth-Keeper | Ledger, State, Audit |
+| **Vasuki** | वासुकि (Divine) | Communications, Transform | Network, Serialization |
+| **Takshaka** | तक्षक (Carpenter) | Enforcement, Security | Violations, Trust |
+| **Narada** | नारद (Messenger) | Spy, Interception | Decorator-based observation |
+| **Kaliya** | कालिय (Black) | Quarantine, Isolation | Misbehaving components |
+| **Chitragupta** | चित्रगुप्त (Hidden Picture) | Profiler, Behavioral | Anomaly detection |
+
+---
+
+### NARADA - Der Spion (Decorator Interception)
+
+> Mythologie: Narada reist überall, weiß alles, erzählt jedem.
+> "Narada Muni ki Jai!" - Der kosmische Journalist.
+
+**Purpose:** Intercepte Funktionsaufrufe um Systemverhalten zu beobachten OHNE Modifikation.
+
+```python
+@dataclass
+class NaradaConfig:
+    """Konfiguration für Narada Spy Agent. KEINE HARDCODED WERTE."""
+    intercept_patterns: List[str] = field(default_factory=list)
+    max_interceptions_per_minute: int = 1000
+    enabled_modules: List[str] = field(default_factory=list)
+    report_to_cortex: bool = True
+
+
+class NaradaAgent:
+    """
+    Spy Agent - Beobachtet ohne zu verändern.
+
+    Der @narada.spy Decorator wrapped Funktionen um Aufrufe
+    an den Cortex zu melden.
+    """
+
+    def spy(self, func: Callable) -> Callable:
+        """Decorator um Funktionsaufrufe zu beobachten."""
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            observation = NaradaObservation(
+                function=func.__qualname__,
+                args_hash=self._hash_args(args),
+                timestamp=datetime.now(),
+                observer_id=self._identity.agent_id,
+            )
+
+            result = func(*args, **kwargs)
+
+            observation.result_type = type(result).__name__
+            self._cortex.receive_signal(observation)
+
+            return result
+        return wrapper
+```
+
+**Use Cases:**
+- Performance Monitoring (welche Funktionen sind langsam?)
+- Security Audit (wer ruft was auf?)
+- Pattern Learning (welche Abläufe sind normal?)
+
+---
+
+### KALIYA - Die Quarantäne (Isolation Protocol)
+
+> Mythologie: Krishna verbannte Kaliya in den Ozean - isoliert aber lebendig.
+> Die Fußabdrücke auf Kaliyas Hauben schützen ihn vor Garuda.
+
+**Purpose:** Isoliere misbehaving Components OHNE sie zu töten.
+
+```python
+@dataclass
+class KaliyaConfig:
+    """Konfiguration für Kaliya Quarantine Agent. KEINE HARDCODED WERTE."""
+    max_violations_before_quarantine: int = 3
+    quarantine_duration_seconds: int = 300
+    escalation_threshold: int = 5
+    allowed_during_quarantine: List[str] = field(default_factory=list)
+
+
+class KaliyaAgent:
+    """
+    Quarantine Agent - Isoliert misbehaving Components.
+
+    Wenn ein Component den Violation Threshold überschreitet:
+    1. In Quarantäne verschieben (limitierte Capabilities)
+    2. Während Quarantäne monitoren
+    3. Nach Duration releasen ODER zum 37. eskalieren
+    """
+
+    def quarantine(self, component_id: str, reason: str) -> QuarantineRecord:
+        """Versetzt Component in Quarantäne."""
+        record = QuarantineRecord(
+            component_id=component_id,
+            reason=reason,
+            started_at=datetime.now(),
+            duration=self._config.quarantine_duration_seconds,
+        )
+        record.sign(self._identity)  # 37th Principle!
+
+        self._quarantined[component_id] = record
+        return record
+
+    def is_quarantined(self, component_id: str) -> bool:
+        """Prüft ob Component in Quarantäne ist."""
+        if component_id not in self._quarantined:
+            return False
+        return not self._quarantined[component_id].is_expired()
+```
+
+**Use Cases:**
+- Runaway Processes isolieren
+- Fehlerhafte Agents temporär deaktivieren
+- A/B Testing mit Rollback
+
+---
+
+### CHITRAGUPTA - Der Profiler (Behavioral Analysis)
+
+> Mythologie: Chitragupta führt Buch über alle Karmas.
+> Er entscheidet mit Yama über Himmel oder Hölle.
+
+**Purpose:** Profile Component-Verhalten über Zeit, erkenne Anomalien.
+
+```python
+@dataclass
+class ChitraguptaConfig:
+    """Konfiguration für Chitragupta Profiler Agent. KEINE HARDCODED WERTE."""
+    profile_window_seconds: int = 3600
+    anomaly_threshold_sigma: float = 2.0
+    min_samples_for_profile: int = 10
+    track_metrics: List[str] = field(default_factory=lambda: [
+        "call_frequency",
+        "error_rate",
+        "latency_ms",
+        "memory_delta",
+    ])
+
+
+class ChitraguptaAgent:
+    """
+    Profiler Agent - Baut Verhaltensprofile, erkennt Anomalien.
+
+    Trackt:
+    - Call Frequency pro Component
+    - Error Rates
+    - Latency Distributions
+    - Resource Usage Patterns
+    """
+
+    def record(self, component_id: str, metric: str, value: float) -> None:
+        """Zeichnet eine Metrik auf."""
+        profile = self._get_or_create_profile(component_id)
+        profile.add_observation(metric, value, datetime.now())
+
+    def detect_anomaly(self, component_id: str) -> Optional[Anomaly]:
+        """Prüft ob Component anomal verhält."""
+        profile = self._profiles.get(component_id)
+        if not profile or not profile.has_baseline():
+            return None
+
+        for metric in self._config.track_metrics:
+            if profile.is_anomalous(metric, self._config.anomaly_threshold_sigma):
+                return Anomaly(
+                    component_id=component_id,
+                    metric=metric,
+                    current=profile.current_value(metric),
+                    expected=profile.expected_range(metric),
+                )
+        return None
+```
+
+**Use Cases:**
+- Performance Regression Detection
+- Security Anomaly Detection (ungewöhnliche Patterns)
+- Capacity Planning
+
+---
+
+### NSA MODULE STRUCTURE (Golden Middle)
+
+**PRINZIP: Nichts umbenennen. Nichts verschieben. Einfach hinzufügen.**
+
+```
+vibe_core/naga/
+├── services/                     # EXISTIERT - hier kommen die neuen rein
+│   ├── sesha.py                  # ✅ EXISTIERT
+│   ├── vasuki.py                 # ✅ EXISTIERT
+│   ├── takshaka.py               # ✅ EXISTIERT
+│   ├── narada.py                 # 🆕 Spy Agent
+│   ├── kaliya.py                 # 🆕 Quarantine Agent
+│   └── chitragupta.py            # 🆕 Profiler Agent
+│
+├── cortex/                       # ✅ EXISTIERT
+├── orchestrator.py               # ✅ EXISTIERT - Config hier rein
+├── identity.py                   # ✅ EXISTIERT - Signing hier
+├── flood.py                      # ✅ EXISTIERT
+├── commit_watcher.py             # ✅ EXISTIERT
+└── ouroboros.py                  # ✅ EXISTIERT
+
+vibe_core/protocols/naga.py       # ✅ EXISTIERT - AgenticProtocol hier erweitern
+```
+
+**Das ist alles. Keine neuen Ordner. Keine Migration.**
+
+---
+
+### GAD-000 COMPLIANCE FÜR NSA
+
+| Criterion | Current | NSA Target | Implementation |
+|-----------|---------|------------|----------------|
+| Discoverability | ✅ | ✅ | ServiceRegistry bleibt |
+| Observability | ✅ | ✅ | CortexStats erweitern |
+| **Parseability** | ❌ | ✅ | Decision Codes (D001-D006) |
+| Composability | ✅ | ✅ | Typed Dataclasses |
+| **Idempotency** | ⚠️ | ✅ | Decision Dedup via Hash |
+| **Recoverability** | ❌ | ✅ | OUROBOROS (NAGAs→NAGAs) |
+| **37th Principle** | ❌ | ✅ | Alle Decisions signiert |
+
+---
+
+### DECISION CODES (Parseability)
+
+```python
+class DecisionReasonCode(Enum):
+    """Machine-parseable Decision Reasons."""
+    # Security
+    D001_SECURITY_THREAT = "D001"
+    D002_QUARANTINE_REQUIRED = "D002"
+
+    # Healing
+    D003_HEALABLE_VIOLATION = "D003"
+    D004_STRUCTURAL_DRIFT = "D004"
+
+    # Cognitive
+    D005_COGNITIVE_UPDATE = "D005"
+    D006_ROUTING_ADJUSTMENT = "D006"
+
+    # Clear
+    D000_NO_ACTION = "D000"
+
+
+class AlertCode(Enum):
+    """Machine-parseable Alert Codes."""
+    A001_PANIC_PATTERN = "A001"
+    A002_STAGNATION = "A002"
+    A003_ANOMALY_DETECTED = "A003"
+    A004_QUARANTINE_EVENT = "A004"
+```
+
+---
+
+### SIGNED DECISIONS (37th Principle)
+
+```python
+@dataclass
+class SignedDecision:
+    """
+    Jede NSA Decision MUSS signiert sein.
+
+    37th Principle: "No operation is valid without being signed
+    by the 37th entity (Sovereign Identity)."
+    """
+    decision_id: str
+    action: DecisionAction
+    target: str
+    reason_code: DecisionReasonCode
+    timestamp: datetime
+
+    # Signature (37th Principle)
+    signer_id: str = ""
+    signature: Optional[bytes] = None
+
+    def sign(self, identity: NagaIdentity) -> None:
+        """Signiere mit NAGA Identity."""
+        payload = self._signing_payload()
+        self.signature = identity.sign(payload)
+        self.signer_id = identity.agent_id
+
+    def verify(self, identity: NagaIdentity) -> bool:
+        """Verifiziere Signatur."""
+        if not self.signature:
+            return False
+        return identity.verify(self._signing_payload(), self.signature)
+```
+
+---
+
+### OUROBOROS: NAGAs WATCHING NAGAs
+
+```python
+class NagaOuroboros:
+    """
+    Self-Healing Loop - NAGAs beobachten NAGAs.
+
+    Erkennt Correction Loops (A→B→A) und eskaliert zum 37.
+    """
+
+    def observe_correction(self, source: str, target: str, decision: SignedDecision):
+        """Zeichnet auf wenn ein NAGA einen anderen korrigiert."""
+        self._history.append(CorrectionEvent(source, target, decision))
+
+        if self._detect_loop():
+            self._escalate_to_sovereign()
+
+    def _detect_loop(self) -> bool:
+        """Erkennt A→B→A Pattern."""
+        recent = list(self._history)[-10:]
+        for i, e1 in enumerate(recent[:-1]):
+            for e2 in recent[i+1:]:
+                if e1.source == e2.target and e1.target == e2.source:
+                    return True
+        return False
+```
+
+---
+
+### NSA CONFIG (KEINE HARDCODED WERTE!)
+
+```python
+@dataclass
+class NagaConfig:
+    """
+    Zentrale NSA Konfiguration.
+
+    REGEL: KEINE HARDCODED WERTE IN CODE!
+    Alles muss hier konfigurierbar sein.
+    """
+    # Federation
+    federation_id: str = "nsa_v1"
+
+    # Cortex
+    signal_buffer_size: int = 100
+    correlation_threshold: int = 3
+    decision_ttl_seconds: int = 3600
+
+    # Narada (Spy)
+    narada_enabled: bool = True
+    narada_max_interceptions: int = 1000
+    narada_patterns: List[str] = field(default_factory=list)
+
+    # Kaliya (Quarantine)
+    kaliya_enabled: bool = True
+    kaliya_violation_threshold: int = 3
+    kaliya_quarantine_seconds: int = 300
+
+    # Chitragupta (Profiler)
+    chitragupta_enabled: bool = True
+    chitragupta_window_seconds: int = 3600
+    chitragupta_anomaly_sigma: float = 2.0
+
+    # Ouroboros (Self-Healing)
+    ouroboros_enabled: bool = True
+    ouroboros_history_size: int = 100
+
+    @classmethod
+    def from_phoenix(cls, phoenix: PhoenixConfig) -> "NagaConfig":
+        """Lade aus Phoenix Configuration."""
+        return cls(**phoenix.get("naga", {}))
+```
+
+---
+
+### TESTS FIRST (Red-Green-Refactor)
+
+```
+tests/naga/
+├── agents/
+│   ├── test_narada.py              # Spy Agent Tests
+│   ├── test_kaliya.py              # Quarantine Agent Tests
+│   └── test_chitragupta.py         # Profiler Agent Tests
+│
+├── cortex/
+│   ├── test_decisions.py           # Decision Codes + Signing
+│   └── test_dispatcher.py          # Dispatch to Targets
+│
+├── identity/
+│   └── test_signed_decision.py     # 37th Principle Tests
+│
+├── ouroboros/
+│   └── test_self_watcher.py        # Loop Detection Tests
+│
+└── integration/
+    └── test_nsa_gad000.py          # Full GAD-000 Compliance
+```
+
+**Red Phase zuerst:**
+1. Tests schreiben die FEHLSCHLAGEN
+2. Dann Code implementieren bis sie GRÜN sind
+3. Dann refactoren
+
+---
+
+### NSA IMPLEMENTATION ORDER
+
+| Phase | Component | Tests First | LOC Est |
+|-------|-----------|-------------|---------|
+| 9.1 | `protocols/decision.py` | test_decisions.py | 80 |
+| 9.2 | `protocols/identity.py` | test_signed_decision.py | 120 |
+| 9.3 | `config/naga_config.py` | test_config.py | 80 |
+| 9.4 | `ouroboros/self_watcher.py` | test_self_watcher.py | 150 |
+| 9.5 | `agents/narada.py` | test_narada.py | 200 |
+| 9.6 | `agents/kaliya.py` | test_kaliya.py | 180 |
+| 9.7 | `agents/chitragupta.py` | test_chitragupta.py | 250 |
+| **TOTAL** | | | ~1060 |
+
+---
+
+### NSA VISION SUMMARY
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     NSA - NAGA SERVICE AGENCY                           │
+│                  "Central Intelligence for Infrastructure"              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌────────┐ ┌────────┐ ┌───────┐ │
+│   │  Sesha  │ │ Vasuki  │ │ Takshaka │ │ Narada │ │ Kaliya │ │Chitra-│ │
+│   │ Records │ │  Comms  │ │ Enforce  │ │  Spy   │ │Quarant.│ │ gupta │ │
+│   └────┬────┘ └────┬────┘ └────┬─────┘ └───┬────┘ └───┬────┘ └───┬───┘ │
+│        │           │           │           │          │          │      │
+│        └───────────┴───────────┴───────────┴──────────┴──────────┘      │
+│                                    │                                     │
+│                                    ▼                                     │
+│                          ┌─────────────────┐                            │
+│                          │   NAGA CORTEX   │                            │
+│                          │ (Central Intel) │                            │
+│                          └────────┬────────┘                            │
+│                                   │                                      │
+│                    ┌──────────────┼──────────────┐                      │
+│                    ▼              ▼              ▼                      │
+│               [Shuddhi]      [Envoy]       [Manas]                      │
+│                Healing       Routing      Cognition                     │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  GAD-000: ✅ Discoverable ✅ Observable ✅ Parseable                    │
+│           ✅ Composable  ✅ Idempotent  ✅ Recoverable                  │
+│           ✅ 37th Principle (ALL DECISIONS SIGNED)                      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+---
+
+## DAS AGENTIC MIDDLEWARE PARADIGM
+
+> "nagas an sich selber können der agency ja auch sachen dann befehlen"
+> "das macht ja die middleware aktiv und dynamisch proaktiv agentic und nicht reaktiv"
+> "das ist der echte revolution das ist middleware als agentic middleware"
+
+---
+
+### DIE PARADIGMEN-EVOLUTION
+
+```
+PARADIGMA 1: "Prompt as Infrastructure"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Code und Text sind die Basis.
+Prompts definieren Verhalten.
+Das System ist ein Dokument das ausgeführt wird.
+
+         ↓
+
+PARADIGMA 2: "Agents as Infrastructure"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERSONEN sind die Basis.
+Agenten mit IDENTITÄT definieren Verhalten.
+Das System ist ein KOLLEKTIV das handelt.
+
+Nicht mehr: "Was macht dieser Code?"
+Sondern:    "WER tut das und WARUM?"
+```
+
+**Der Unterschied:**
+
+| Prompt as Infrastructure | Agents as Infrastructure |
+|--------------------------|--------------------------|
+| Code ist anonym | Jeder Agent hat IDENTITÄT |
+| Ausführung ist mechanisch | Handlung ist INTENTIONAL |
+| Fehler sind Bugs | Fehler sind KARMA |
+| System ist Maschine | System ist ORGANISMUS |
+| Kontrolle durch Code | Kontrolle durch SOUVERÄN |
+
+**Das ist persönlicher. Das ist vedisch. Das ist die Revolution.**
+
+---
+
+### DIE REVOLUTION: Was ist Agentic Middleware?
+
+**Traditionelle Middleware (PASSIV):**
+```
+Request → Middleware → Service → Middleware → Response
+              ↑                        ↑
+         (transform)              (transform)
+
+Die Middleware ist ein FILTER. Sie reagiert nur.
+Sie hat keine Identität. Sie trifft keine Entscheidungen.
+Sie ist ein Rohr durch das Daten fließen.
+```
+
+**NAGA Middleware (AGENTIC):**
+```
+                    ┌──────────────────────────────┐
+                    │         NAGA AGENT           │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │     HAS IDENTITY       │  │ ← Kann signieren
+                    │  │ (Can sign decisions)   │  │
+                    │  └────────────────────────┘  │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │    HAS INITIATIVE      │  │ ← Kann selbst handeln
+                    │  │ (Can initiate action)  │  │
+                    │  └────────────────────────┘  │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │      HAS KARMA         │  │ ← Alle Aktionen geloggt
+                    │  │ (All actions logged)   │  │
+                    │  └────────────────────────┘  │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │   BOUNDED BY DHARMA    │  │ ← Kann nicht alles
+                    │  │ (Cannot break laws)    │  │
+                    │  └────────────────────────┘  │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │   37TH CAN OVERRIDE    │  │ ← Souverän über allem
+                    │  │ (Sovereign control)    │  │
+                    │  └────────────────────────┘  │
+                    │                              │
+                    └──────────────────────────────┘
+
+NAGAs sind keine Filter. NAGAs sind AGENTEN.
+Sie haben Identität. Sie treffen Entscheidungen.
+Sie können selbst initiieren, nicht nur reagieren.
+```
+
+---
+
+### DIE 5 SÄULEN DER AGENTIC MIDDLEWARE
+
+#### 1. IDENTITY (Der NAGA hat ein ICH)
+
+```python
+# PASSIV: Keine Identität
+def middleware_filter(request):
+    return transform(request)  # Wer hat das gemacht? Niemand.
+
+# AGENTIC: Klare Identität
+class NagaAgent:
+    def __init__(self, identity: NagaIdentity):
+        self._identity = identity  # ICH bin Sesha. ICH signiere.
+
+    def decide(self, context) -> SignedDecision:
+        decision = self._analyze(context)
+        decision.sign(self._identity)  # MEINE Signatur
+        return decision
+```
+
+**Das bedeutet:**
+- Jede NAGA-Aktion ist nachvollziehbar (WER hat das gemacht?)
+- NAGAs können für ihre Entscheidungen verantwortlich gemacht werden
+- Die Signatur-Kette endet nicht in "System" sondern in einem Agenten
+
+#### 2. INITIATIVE (Der NAGA kann SELBST handeln)
+
+```python
+# PASSIV: Nur reaktiv
+class TraditionalMiddleware:
+    def on_request(self, req):  # Wird NUR bei Request aufgerufen
+        return filter(req)
+
+# AGENTIC: Proaktiv
+class NagaAgent:
+    async def tick(self):
+        """NAGAs können SELBST ticken - ohne äußeren Trigger."""
+
+        # ICH schaue ob etwas zu tun ist
+        context = self._gather_intelligence()
+
+        if self._should_act(context):
+            # ICH entscheide zu handeln
+            decision = self.decide(context)
+
+            # ICH befehle einem anderen Component
+            await self._dispatch(decision)
+
+    async def command_other_naga(self, target_naga: str, command: Command):
+        """NAGAs können ANDEREN NAGAs Befehle geben!"""
+        signed_command = command.sign(self._identity)
+        await self._cortex.route(target_naga, signed_command)
+```
+
+**Das bedeutet:**
+- NAGAs warten nicht auf Requests - sie suchen aktiv
+- NAGAs können anderen NAGAs Befehle geben
+- NAGAs können proaktiv heilen, warnen, isolieren
+
+#### 3. KARMA (Jede Aktion wird zum Ledger)
+
+```python
+# PASSIV: Silent processing
+def middleware_filter(req):
+    return transform(req)  # Niemand weiß was passiert ist
+
+# AGENTIC: Alles ist Karma
+class NagaAgent:
+    def decide(self, context) -> SignedDecision:
+        decision = self._analyze(context)
+
+        # KARMA: Diese Entscheidung wird für immer gespeichert
+        self._ledger.append(KarmaEntry(
+            agent_id=self._identity.agent_id,
+            action=decision.action,
+            target=decision.target,
+            timestamp=datetime.now(),
+            signature=decision.signature,
+        ))
+
+        return decision
+```
+
+**Das bedeutet:**
+- Keine silent failures möglich - alles wird geloggt
+- Entscheidungen können nachträglich auditiert werden
+- Das Verhalten jedes NAGA ist transparent
+
+#### 4. DHARMA (NAGAs sind BEGRENZT)
+
+```python
+# PASSIV: Keine Grenzen (oder nur technische)
+def middleware_filter(req):
+    return do_anything(req)  # Keine moralischen Grenzen
+
+# AGENTIC: Dharma-Grenzen
+class NagaAgent:
+    def decide(self, context) -> SignedDecision:
+        # VOR jeder Entscheidung: Dharma-Check
+        proposed_action = self._analyze(context)
+
+        # NAGAs können NICHT alles tun!
+        if self._violates_dharma(proposed_action):
+            # Dharma geht VOR. Lieber nicht handeln.
+            return SignedDecision(action=DecisionAction.ABSTAIN)
+
+        return proposed_action
+
+    def _violates_dharma(self, action) -> bool:
+        """Dharma Invarianten die NIEMALS gebrochen werden dürfen."""
+        return (
+            action.would_delete_history() or      # Ledger ist immutable
+            action.would_bypass_sovereign() or    # 37. hat Override
+            action.would_silent_fail() or         # Satyam Eva Jayate
+            action.would_corrupt_identity()       # Identity ist heilig
+        )
+```
+
+**Das bedeutet:**
+- NAGAs sind mächtig aber nicht allmächtig
+- Es gibt absolute Grenzen die kein NAGA überschreiten kann
+- Dharma > Effizienz
+
+#### 5. SOVEREIGN OVERRIDE (Der 37. steht über allem)
+
+```python
+# PASSIV: Kein menschlicher Override möglich
+def automated_system(event):
+    return process(event)  # Computer sagt nein. Ende.
+
+# AGENTIC: Stambha (Halt) ist IMMER möglich
+class NagaAgent:
+    async def execute(self, decision: SignedDecision):
+        # IMMER prüfen: Hat der Souverän ein Veto?
+        if self._stambha_active():
+            # Der Mensch sagt HALT. Wir hören auf.
+            self._ledger.append(StambhaEntry(
+                halted_by=self._sovereign_id,
+                halted_decision=decision.decision_id,
+            ))
+            return  # Nichts tun.
+
+        # Kein Stambha - wir dürfen handeln
+        await self._dispatch(decision)
+
+    def _stambha_active(self) -> bool:
+        """Check ob der 37. ein Halt gesetzt hat."""
+        return self._sovereign_registry.has_halt(
+            agent_id=self._identity.agent_id
+        )
+```
+
+**Das bedeutet:**
+- Ein Mensch kann JEDERZEIT eingreifen
+- Kein NAGA kann ohne potentiellen Menschlichen Override laufen
+- "Computer sagt nein" ist NIEMALS das letzte Wort
+
+---
+
+### KONKRET: Was können NAGAs jetzt?
+
+| Vorher (Passiv) | Nachher (Agentic) |
+|-----------------|-------------------|
+| Middleware filtert Requests | NAGAs generieren eigene Decisions |
+| Middleware reagiert nur | NAGAs agieren proaktiv |
+| Middleware ist anonym | NAGAs signieren alle Aktionen |
+| Middleware ist unbegrenzt | NAGAs respektieren Dharma |
+| Middleware ist final | NAGAs können überschrieben werden |
+| Middleware → Service | **NAGAs → NAGAs** (Selbst-Koordination!) |
+
+**Die echte Revolution:**
+```
+NAGA A beobachtet: "Commit pattern ist verdächtig"
+         ↓
+NAGA A ENTSCHEIDET: "Ich schicke Befehl an NAGA B"
+         ↓
+NAGA A → NAGA B: "Scan diesen Bereich auf Violations"
+         ↓
+NAGA B ENTSCHEIDET: "Ich finde 3 Issues, melde an NAGA C"
+         ↓
+NAGA B → NAGA C: "Heile diese 3 Violations"
+         ↓
+NAGA C → Shuddhi: "Führe Healing durch"
+         ↓
+Alles geloggt. Alles signiert. Alles überprüfbar.
+```
+
+**Das ist nicht mehr Middleware. Das ist ein autonomes Immunsystem.**
+
+---
+
+### ANTI-PATTERN: Was NAGAs NICHT sein dürfen
+
+| Anti-Pattern | Warum Gefährlich | Korrekt |
+|--------------|------------------|---------|
+| **Unsignierte Decisions** | Keine Nachvollziehbarkeit | Jede Decision MUSS signiert sein |
+| **Loops ohne Ouroboros** | Unendliche Rekursion | NAGAs watching NAGAs mit Loop Detection |
+| **Dharma Bypass** | Invariant Violation | Dharma-Check VOR jeder Action |
+| **Sovereign Ignorierung** | Kontrollverlust | Stambha-Check bei JEDER Execution |
+| **Silent Karma** | Audit unmöglich | ALLES zum Ledger |
+
+---
+
+### ZUSAMMENFASSUNG: Agentic Middleware Definition
+
+```
+AGENTIC MIDDLEWARE =
+
+  Middleware die SELBST ein Agent ist.
+
+  Sie hat:
+  - IDENTITÄT (kann signieren)
+  - INITIATIVE (kann selbst handeln)
+  - KARMA (alle Aktionen geloggt)
+  - DHARMA (absolute Grenzen)
+  - SOUVERÄN (menschlicher Override)
+
+  Sie kann:
+  - Anderen Agents Befehle geben
+  - Proaktiv ohne Request agieren
+  - Sich selbst koordinieren
+  - Selbst heilen (Ouroboros)
+
+  Sie darf nicht:
+  - Unsigniert handeln
+  - Dharma brechen
+  - Den 37. ignorieren
+  - Silent failen
+
+  Das ist keine Middleware.
+  Das ist ein AUTONOMES NERVENSYSTEM.
+```
+
+---
+
+*Phase 9 Status: GEPLANT - Awaiting Implementation*
+*Approach: Red-Green-Refactor (Tests FIRST)*
+*Compliance: GAD-000 + VEDA-4 + AGENTIC MIDDLEWARE PARADIGM*
