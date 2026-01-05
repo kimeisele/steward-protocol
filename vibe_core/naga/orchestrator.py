@@ -41,6 +41,14 @@ if TYPE_CHECKING:
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.chitragupta import ChitraguptaService
+    from vibe_core.naga.services.kaliya import KaliyaService
+
+    # Governance Layer (NOT Nagas by race)
+    from vibe_core.naga.services.narada import NaradaService
+    from vibe_core.naga.services.prahlad import PrahladService
+
+    # Infrastructure Layer (Real Nagas)
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.naga.services.vasuki import VasukiService
@@ -61,14 +69,24 @@ class NagaOrchestrator:
 
     def __init__(self):
         """Initialize without config - use bootstrap() instead."""
+        # ===== INFRASTRUCTURE LAYER (Real Nagas - 🐍) =====
         self._sesha: Optional["SeshaService"] = None
         self._vasuki: Optional["VasukiService"] = None
         self._takshaka: Optional["TakshakaService"] = None
+        self._kaliya: Optional["KaliyaService"] = None
+
+        # ===== GOVERNANCE LAYER (Personnel - NOT Nagas) =====
+        self._narada: Optional["NaradaService"] = None
+        self._chitragupta: Optional["ChitraguptaService"] = None
+        self._prahlad: Optional["PrahladService"] = None
+
+        # ===== INFRASTRUCTURE COMPONENTS =====
         self._flood_manager: Optional["NagaFloodManager"] = None
         self._commit_watcher: Optional["NagaCommitWatcher"] = None
         self._state_proxy: Optional["NagaStateProxy"] = None
         self._cortex: Optional["NagaCortex"] = None
         self._ouroboros: Optional["NagaOuroboros"] = None
+
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
 
@@ -130,11 +148,26 @@ class NagaOrchestrator:
         """
         Internal initialization - order matters!
 
-        1. Sesha first (foundation)
-        2. Takshaka second (guardian)
-        3. Vasuki last (bridge - needs both)
+        INFRASTRUCTURE LAYER (Real Nagas 🐍):
+        1. Sesha first (foundation - Data/Truth)
+        2. Takshaka second (guardian - Security)
+        3. Vasuki third (bridge - Network)
+        4. Kaliya fourth (quarantine - Isolation)
+
+        GOVERNANCE LAYER (Personnel - NOT Nagas):
+        5. Narada (spy - Observation)
+        6. Chitragupta (profiler - Behavioral)
+        7. Prahlad (governor - Resilience) - LAST, oversees all
         """
         from vibe_core.naga.identity import NagaIdentity
+        from vibe_core.naga.services.chitragupta import ChitraguptaService
+        from vibe_core.naga.services.kaliya import KaliyaService
+
+        # Governance Layer
+        from vibe_core.naga.services.narada import NaradaService
+        from vibe_core.naga.services.prahlad import PrahladService
+
+        # Infrastructure Layer
         from vibe_core.naga.services.sesha import SeshaService
         from vibe_core.naga.services.takshaka import TakshakaService
         from vibe_core.naga.services.vasuki import VasukiService
@@ -218,7 +251,48 @@ class NagaOrchestrator:
             )
             logger.info("🐍 VASUKI registered - The Bridge connects")
 
-        # 4. FLOOD MANAGER - Organic Flooding (Phase 2)
+        # 4. KALIYA - The Quarantine (Isolation Protocol)
+        if self._config.kaliya.enabled:
+            self._kaliya = KaliyaService(
+                cortex=None,  # Will be wired after cortex creation
+                identity=self._identity,
+            )
+            logger.info("🐍 KALIYA registered - Isolation Protocol active")
+
+        # =========================================================================
+        # GOVERNANCE LAYER (Personnel - NOT Nagas by race)
+        # =========================================================================
+
+        # 5. NARADA - The Messenger/Spy (Decorator-based Observation)
+        if self._config.narada.enabled:
+            self._narada = NaradaService(
+                cortex=None,  # Will be wired after cortex creation
+                identity=self._identity,
+            )
+            logger.info("🎵 NARADA registered - Messenger observes all")
+
+        # 6. CHITRAGUPTA - The Accountant/Profiler (Behavioral Analysis)
+        if self._config.chitragupta.enabled:
+            self._chitragupta = ChitraguptaService(
+                cortex=None,  # Will be wired after cortex creation
+                identity=self._identity,
+            )
+            logger.info("📜 CHITRAGUPTA registered - Karma is being recorded")
+
+        # 7. PRAHLAD - The Governor (Resilience & Antifragility)
+        # LAST in governance - oversees all NAGAs
+        if self._config.prahlad.enabled:
+            self._prahlad = PrahladService(
+                cortex=None,  # Will be wired after cortex creation
+                identity=self._identity,
+            )
+            logger.info("👑 PRAHLAD registered - Governor oversees all")
+
+        # =========================================================================
+        # INFRASTRUCTURE COMPONENTS
+        # =========================================================================
+
+        # 8. FLOOD MANAGER - Organic Flooding (Phase 2)
         # "Wie Wasser in jede Ritze" - with safety guards
         if self._config.flood.enabled:
             try:
@@ -284,6 +358,23 @@ class NagaOrchestrator:
                     self._commit_watcher.set_cortex_callback(self._cortex.receive_signal)
                     logger.info("🧠 Cortex <- CommitWatcher wired")
 
+                # Wire Cortex to Governance Layer services
+                if self._kaliya:
+                    self._kaliya._cortex = self._cortex
+                    logger.info("🧠 Cortex -> Kaliya wired")
+
+                if self._narada:
+                    self._narada._cortex = self._cortex
+                    logger.info("🧠 Cortex -> Narada wired")
+
+                if self._chitragupta:
+                    self._chitragupta._cortex = self._cortex
+                    logger.info("🧠 Cortex -> Chitragupta wired")
+
+                if self._prahlad:
+                    self._prahlad._cortex = self._cortex
+                    logger.info("🧠 Cortex -> Prahlad wired")
+
             except Exception as e:
                 logger.warning(f"🧠 NAGA Cortex failed to start: {e}")
                 # Non-critical - continue without cortex
@@ -315,12 +406,19 @@ class NagaOrchestrator:
     # =========================================================================
 
     def get_status(self) -> Dict[str, Any]:
-        """Get federation health status."""
+        """Get federation health status - all 7 members + infrastructure."""
         return {
             "initialized": self._initialized,
+            # Infrastructure Layer (Real Nagas 🐍)
             "sesha": self._sesha.get_status().to_dict() if self._sesha else None,
             "vasuki": self._vasuki.get_status().to_dict() if self._vasuki else None,
             "takshaka": self._takshaka.get_status().to_dict() if self._takshaka else None,
+            "kaliya": self._kaliya.get_status().to_dict() if self._kaliya else None,
+            # Governance Layer (Personnel)
+            "narada": self._narada.get_status().to_dict() if self._narada else None,
+            "chitragupta": self._chitragupta.get_status().to_dict() if self._chitragupta else None,
+            "prahlad": self._prahlad.get_status().to_dict() if self._prahlad else None,
+            # Infrastructure Components
             "flood_manager": self._flood_manager.get_status() if self._flood_manager else None,
             "commit_watcher": self._commit_watcher.get_stats() if self._commit_watcher else None,
             "cortex": self._cortex.get_status() if self._cortex else None,
@@ -332,12 +430,22 @@ class NagaOrchestrator:
         if not self._initialized:
             return False
 
-        # Check each enabled NAGA
+        # Infrastructure Layer
         if self._config.sesha.enabled and (not self._sesha or not self._sesha.get_status().healthy):
             return False
         if self._config.takshaka.enabled and (not self._takshaka or not self._takshaka.get_status().healthy):
             return False
         if self._config.vasuki.enabled and (not self._vasuki or not self._vasuki.get_status().healthy):
+            return False
+        if self._config.kaliya.enabled and (not self._kaliya or not self._kaliya.get_status().healthy):
+            return False
+
+        # Governance Layer
+        if self._config.narada.enabled and (not self._narada or not self._narada.get_status().healthy):
+            return False
+        if self._config.chitragupta.enabled and (not self._chitragupta or not self._chitragupta.get_status().healthy):
+            return False
+        if self._config.prahlad.enabled and (not self._prahlad or not self._prahlad.get_status().healthy):
             return False
 
         return True
@@ -360,6 +468,26 @@ class NagaOrchestrator:
     def takshaka(self) -> Optional["TakshakaService"]:
         """Get Takshaka service (or None if disabled)."""
         return self._takshaka
+
+    @property
+    def kaliya(self) -> Optional["KaliyaService"]:
+        """Get Kaliya service - 🐍 Quarantine/Isolation (or None if disabled)."""
+        return self._kaliya
+
+    @property
+    def narada(self) -> Optional["NaradaService"]:
+        """Get Narada service - 🎵 Deva-Rishi Messenger/Spy (or None if disabled)."""
+        return self._narada
+
+    @property
+    def chitragupta(self) -> Optional["ChitraguptaService"]:
+        """Get Chitragupta service - 📜 Yama's Accountant/Profiler (or None if disabled)."""
+        return self._chitragupta
+
+    @property
+    def prahlad(self) -> Optional["PrahladService"]:
+        """Get Prahlad service - 👑 Daitya Governor/Resilience (or None if disabled)."""
+        return self._prahlad
 
     @property
     def config(self) -> Optional["NagaConfig"]:
