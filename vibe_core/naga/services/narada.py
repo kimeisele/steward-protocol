@@ -30,6 +30,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -61,12 +62,14 @@ class NaradaObservation:
     capabilities=[NagaCapability.OBSERVATION],
     protocol_class="vibe_core.protocols.naga.NaradaProtocol",
 )
-class NaradaService:
+class NaradaService(NagaBaseService):
     """
     Narada - The Cosmic Journalist.
 
     Observes function calls without modifying behavior.
     Reports patterns to NagaCortex for analysis.
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
     def __init__(
@@ -83,6 +86,8 @@ class NaradaService:
             identity: NagaIdentity for signing observations
             max_buffer_size: Maximum observations to buffer
         """
+        super().__init__(service_name="Narada")
+
         self._cortex = cortex
         self._identity = identity
         self._max_buffer_size = max_buffer_size

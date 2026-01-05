@@ -26,6 +26,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -61,13 +62,15 @@ class QuarantineRecord:
     capabilities=[NagaCapability.ISOLATION],
     protocol_class="vibe_core.protocols.naga.KaliyaProtocol",
 )
-class KaliyaService:
+class KaliyaService(NagaBaseService):
     """
     Kaliya - The Quarantine Agent.
 
     Isolates misbehaving components without killing them.
     Tracks violations and escalates after threshold.
-    """
+
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
 
     def __init__(
         self,
@@ -87,6 +90,8 @@ class KaliyaService:
             violation_threshold: Violations before auto-quarantine
             escalation_threshold: Quarantine cycles before escalation
         """
+        super().__init__(service_name="Kaliya")
+
         self._cortex = cortex
         self._identity = identity
         self._default_duration = default_duration_seconds

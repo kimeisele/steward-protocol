@@ -26,6 +26,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
 
 if TYPE_CHECKING:
@@ -125,12 +126,14 @@ class KarmaEntry:
     capabilities=[NagaCapability.PROFILING, NagaCapability.AUDIT],
     protocol_class="vibe_core.protocols.naga.ChitraguptaProtocol",
 )
-class ChitraguptaService:
+class ChitraguptaService(NagaBaseService):
     """
     Chitragupta - The Karma Accountant.
 
     Profiles component behavior and detects anomalies.
-    """
+
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
 
     def __init__(
         self,
@@ -150,6 +153,8 @@ class ChitraguptaService:
             anomaly_threshold_sigma: Standard deviations for anomaly
             profile_window_seconds: Time window for baseline (None = all time)
         """
+        super().__init__(service_name="Chitragupta")
+
         self._cortex = cortex
         self._identity = identity
         self._min_samples = min_samples_for_baseline

@@ -37,6 +37,7 @@ from vibe_core.naga.kulika import (
     NagaLord,
     naga_service,
 )
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import (
     EncryptedPayload,
     KarkotakaProtocol,
@@ -61,13 +62,15 @@ REVOKED_KEYS_FILE = VAULT_DIR / "revoked_keys.json"
     capabilities=[NagaCapability.CRYPTO],
     protocol_class="vibe_core.protocols.naga.KarkotakaProtocol",
 )
-class KarkotakaService(KarkotakaProtocol):
+class KarkotakaService(NagaBaseService, KarkotakaProtocol):
     """
     Karkotaka - The Magic Cloak.
 
     Centralizes all cryptographic operations for the NAGA infrastructure.
     Wraps the existing steward.crypto module and adds encryption capabilities.
-    """
+
+
+    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
 
     def __init__(self, vault_dir: Optional[Path] = None) -> None:
         """

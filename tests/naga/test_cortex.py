@@ -62,7 +62,11 @@ def cortex(mock_orchestrator):
         correlation_threshold=3,
         auto_dispatch=False,  # Don't auto-dispatch for testing
     )
-    return NagaCortex(mock_orchestrator, config)
+    c = NagaCortex(mock_orchestrator, config)
+    # Clear any persisted state for fresh test
+    c._dispatched.clear()
+    c._stats.decisions_dispatched = 0
+    return c
 
 
 # =============================================================================
