@@ -52,20 +52,67 @@ from vibe_core.protocols.correction import (
 
 
 class NagaType(str, Enum):
-    """The NAGAs of the system (NSA - NAGA Service Agency)."""
+    """
+    The NAGA Service Agency (NSA) - 7 Members.
+
+    WICHTIG: "NAGA Service Agency" ist der NAME des Dienstes, nicht die RASSE.
+    4 echte Nagas (🐍 Schlangen-Rasse) + 3 Personnel (andere Wesen).
+
+    Mythological Hierarchy (Srimad Bhagavatam Canto 7):
+    - Vishnu (Intent) → Narada (Messenger) → Prahlad (Governor)
+    - Prahlad herrscht über die Nagas (post-Hiranyakashipu)
+    """
+
+    # ===== INFRASTRUCTURE LAYER - Echte Nagas (🐍 Schlangen-Rasse) =====
 
     # Original 3 (PROMPT.md Level 2)
-    SESHA = "sesha"  # Data/Truth - Der Träger
-    VASUKI = "vasuki"  # Network/Boundary - Der Transformator
-    TAKSHAKA = "takshaka"  # Security/Guard - Der Krieger
+    SESHA = "sesha"  # 🐍 Ananta Shesha - Vishnus Bett, trägt die Welten
+    VASUKI = "vasuki"  # 🐍 Samudra Manthan Seil - Transformation
+    TAKSHAKA = "takshaka"  # 🐍 König der Nagas - beißt erst, fragt später
 
-    # NSA Extension (Phase 9)
-    NARADA = "narada"  # Spy - Der Journalist
-    KALIYA = "kaliya"  # Quarantine - Die Isolation
-    CHITRAGUPTA = "chitragupta"  # Profiler - Der Buchhalter
+    # Phase 9 Addition
+    KALIYA = "kaliya"  # 🐍 Von Krishna bezwungen - Isolation, nicht Tod
 
-    # Phase 10: The 7th NAGA
-    PRAHLAD = "prahlad"  # Resilience - Der Unzerstörbare
+    # ===== GOVERNANCE LAYER - Personnel (KEINE Nagas von Rasse) =====
+
+    # Phase 9 Additions
+    NARADA = "narada"  # 🎵 Deva-Rishi - Messenger zwischen Welten
+    CHITRAGUPTA = "chitragupta"  # 📜 Yamas Assistent - himmlischer Buchhalter
+
+    # Phase 10: Governor
+    PRAHLAD = "prahlad"  # 👑 Daitya-Prinz - herrscht über die Nagas
+
+    @property
+    def is_infrastructure(self) -> bool:
+        """True if this is a real Naga (serpent race) - infrastructure layer."""
+        return self in (NagaType.SESHA, NagaType.VASUKI, NagaType.TAKSHAKA, NagaType.KALIYA)
+
+    @property
+    def is_governance(self) -> bool:
+        """True if this is personnel (not a Naga by race) - governance layer."""
+        return self in (NagaType.NARADA, NagaType.CHITRAGUPTA, NagaType.PRAHLAD)
+
+    @property
+    def symbol(self) -> str:
+        """Get the appropriate emoji for this member."""
+        if self == NagaType.PRAHLAD:
+            return "👑"
+        elif self == NagaType.NARADA:
+            return "🎵"
+        elif self == NagaType.CHITRAGUPTA:
+            return "📜"
+        else:
+            return "🐍"
+
+    @classmethod
+    def infrastructure_members(cls) -> list["NagaType"]:
+        """Get all infrastructure layer members (real Nagas)."""
+        return [cls.SESHA, cls.VASUKI, cls.TAKSHAKA, cls.KALIYA]
+
+    @classmethod
+    def governance_members(cls) -> list["NagaType"]:
+        """Get all governance layer members (personnel)."""
+        return [cls.NARADA, cls.CHITRAGUPTA, cls.PRAHLAD]
 
 
 @dataclass
