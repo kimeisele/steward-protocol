@@ -73,8 +73,11 @@ class TestBootstrap:
             correction_orchestrator=mock_correction_orchestrator,
         )
 
-        # Should register 3 handlers
-        assert mock_correction_orchestrator.dispatcher.register_handler.call_count == 3
+        # Should register 6 handlers:
+        # Infrastructure: Sesha (STATE), Takshaka (COGNITIVE), Vasuki (CONFIG), Kaliya (RELIABILITY)
+        # Governance: Chitragupta (PERFORMANCE), Prahlad (STRUCTURAL)
+        # NOTE: Narada is pure observer - no CorrectionHandler
+        assert mock_correction_orchestrator.dispatcher.register_handler.call_count == 6
 
     def test_bootstrap_with_custom_config(self, mock_ledger, mock_correction_orchestrator):
         """Bootstrap should respect custom config."""

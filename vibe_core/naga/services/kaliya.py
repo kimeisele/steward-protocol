@@ -240,3 +240,61 @@ class KaliyaService:
 
         payload = f"{record.component_id}:{record.reason}:{record.started_at.isoformat()}"
         return self._identity.sign(payload.encode())
+
+    # =========================================================================
+    # CorrectionHandler Interface
+    # =========================================================================
+
+    def as_handler(self):
+        """Get this NAGA as a CorrectionHandler for DriftSource.RELIABILITY."""
+        from typing import Callable
+
+        from vibe_core.protocols.correction import (
+            DriftSource,
+            HealingResult,
+            HealingStatus,
+            HealingStrategy,
+            UnifiedDriftReport,
+        )
+
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
+            self._last_heartbeat = datetime.now()
+
+            if drift.source != DriftSource.RELIABILITY:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.SKIPPED,
+                    handler_id="kaliya",
+                    message=f"Not a RELIABILITY drift: {drift.source}",
+                )
+
+            # Extract component from drift context
+            component_id = drift.context.get("component_id", drift.id)
+
+            if strategy == HealingStrategy.DRY_RUN:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.DEFERRED,
+                    handler_id="kaliya",
+                    message=f"Would quarantine {component_id} (DRY_RUN)",
+                )
+
+            # Actual quarantine
+            try:
+                self.quarantine(component_id, f"RELIABILITY drift: {drift.message}")
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.HEALED,
+                    handler_id="kaliya",
+                    message=f"Quarantined {component_id}",
+                )
+            except Exception as e:
+                self._errors += 1
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.FAILED,
+                    handler_id="kaliya",
+                    message=f"Quarantine failed: {e}",
+                )
+
+        return handler

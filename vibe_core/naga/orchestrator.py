@@ -27,7 +27,11 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols.correction import DriftSource
 from vibe_core.protocols.naga import (
+    ChitraguptaProtocol,
+    KaliyaProtocol,
     NagaFederationProtocol,
+    NaradaProtocol,
+    PrahladProtocol,
     SeshaProtocol,
     TakshakaProtocol,
     VasukiProtocol,
@@ -257,6 +261,13 @@ class NagaOrchestrator:
                 cortex=None,  # Will be wired after cortex creation
                 identity=self._identity,
             )
+            ServiceRegistry.register(KaliyaProtocol, self._kaliya)
+            correction_orchestrator.dispatcher.register_handler(
+                DriftSource.RELIABILITY,
+                self._kaliya.as_handler(),
+                handler_id="kaliya",
+                priority=80,  # High priority for isolation
+            )
             logger.info("🐍 KALIYA registered - Isolation Protocol active")
 
         # =========================================================================
@@ -264,11 +275,14 @@ class NagaOrchestrator:
         # =========================================================================
 
         # 5. NARADA - The Messenger/Spy (Decorator-based Observation)
+        # NOTE: Narada is pure observer - does NOT register CorrectionHandler
         if self._config.narada.enabled:
             self._narada = NaradaService(
                 cortex=None,  # Will be wired after cortex creation
                 identity=self._identity,
             )
+            ServiceRegistry.register(NaradaProtocol, self._narada)
+            # Narada observes only - no CorrectionHandler registration
             logger.info("🎵 NARADA registered - Messenger observes all")
 
         # 6. CHITRAGUPTA - The Accountant/Profiler (Behavioral Analysis)
@@ -276,6 +290,13 @@ class NagaOrchestrator:
             self._chitragupta = ChitraguptaService(
                 cortex=None,  # Will be wired after cortex creation
                 identity=self._identity,
+            )
+            ServiceRegistry.register(ChitraguptaProtocol, self._chitragupta)
+            correction_orchestrator.dispatcher.register_handler(
+                DriftSource.PERFORMANCE,
+                self._chitragupta.as_handler(),
+                handler_id="chitragupta",
+                priority=60,  # Medium priority for profiling
             )
             logger.info("📜 CHITRAGUPTA registered - Karma is being recorded")
 
@@ -285,6 +306,13 @@ class NagaOrchestrator:
             self._prahlad = PrahladService(
                 cortex=None,  # Will be wired after cortex creation
                 identity=self._identity,
+            )
+            ServiceRegistry.register(PrahladProtocol, self._prahlad)
+            correction_orchestrator.dispatcher.register_handler(
+                DriftSource.STRUCTURAL,
+                self._prahlad.as_handler(),
+                handler_id="prahlad",
+                priority=90,  # Very high - structural integrity
             )
             logger.info("👑 PRAHLAD registered - Governor oversees all")
 

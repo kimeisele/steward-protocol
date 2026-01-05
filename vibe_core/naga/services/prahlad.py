@@ -528,3 +528,66 @@ class PrahladService:
             return b""
         payload = f"dharma:{score.total_score}:{score.timestamp.isoformat()}"
         return self._identity.sign(payload.encode())
+
+    # =========================================================================
+    # CorrectionHandler Interface
+    # =========================================================================
+
+    def as_handler(self):
+        """Get this NAGA as a CorrectionHandler for DriftSource.STRUCTURAL."""
+        from vibe_core.protocols.correction import (
+            DriftSource,
+            HealingResult,
+            HealingStatus,
+            HealingStrategy,
+            UnifiedDriftReport,
+        )
+
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
+            self._last_heartbeat = datetime.now()
+
+            if drift.source != DriftSource.STRUCTURAL:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.SKIPPED,
+                    handler_id="prahlad",
+                    message=f"Not a STRUCTURAL drift: {drift.source}",
+                )
+
+            if strategy == HealingStrategy.DRY_RUN:
+                score = self.dharma_audit()
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.DEFERRED,
+                    handler_id="prahlad",
+                    message=f"Dharma score: {score.total_score:.1f}% (DRY_RUN)",
+                )
+
+            # Actual healing: generate test from error
+            try:
+                component_id = drift.context.get("component_id", "unknown")
+                error_type = drift.context.get("error_type", "UnknownError")
+
+                error_event = ErrorEvent(
+                    error_type=error_type,
+                    message=drift.message,
+                    component_id=component_id,
+                    context=drift.context,
+                )
+                test_case = self.on_error(error_event)
+
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.HEALED,
+                    handler_id="prahlad",
+                    message=f"Generated regression test for {component_id}: {error_type}",
+                )
+            except Exception as e:
+                return HealingResult(
+                    drift_id=drift.id,
+                    status=HealingStatus.FAILED,
+                    handler_id="prahlad",
+                    message=f"Test generation failed: {e}",
+                )
+
+        return handler

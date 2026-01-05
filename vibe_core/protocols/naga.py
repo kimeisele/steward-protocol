@@ -676,6 +676,268 @@ class TakshakaProtocol(Protocol):
 
 
 # =============================================================================
+# KALIYA - Die Quarantäne (Isolation Protocol)
+# =============================================================================
+
+
+@dataclass
+class QuarantineStatus:
+    """Status of a quarantine operation."""
+
+    component_id: str
+    is_quarantined: bool
+    duration_seconds: float = 0.0
+    violation_count: int = 0
+    is_escalated: bool = False
+    signed_by: Optional[str] = None
+
+
+@runtime_checkable
+class KaliyaProtocol(Protocol):
+    """
+    Kaliya - Die Quarantäne. Von Krishna gebändigt, nicht getötet.
+
+    PROMPT.md: Isolation without destruction.
+
+    Responsibilities:
+    - Isolate misbehaving components WITHOUT killing them
+    - Track violations per component
+    - Auto-quarantine on threshold
+    - Escalate to sovereign (37th) after repeated quarantines
+
+    Integration:
+    - Registers as handler for DriftSource.RELIABILITY
+    - Detects reliability drift (component misbehavior)
+    - Heals by isolating unreliable components
+
+    Usage:
+        kaliya = ServiceRegistry.get(KaliyaProtocol)
+        kaliya.quarantine(component_id, reason)
+        if kaliya.is_quarantined(component_id):
+            # Component is isolated
+    """
+
+    def quarantine(
+        self,
+        component_id: str,
+        reason: str,
+        duration_seconds: Optional[float] = None,
+    ) -> QuarantineStatus:
+        """Put a component in quarantine."""
+        ...
+
+    def is_quarantined(self, component_id: str) -> bool:
+        """Check if component is currently quarantined."""
+        ...
+
+    def release(self, component_id: str) -> None:
+        """Release component from quarantine (fails if escalated)."""
+        ...
+
+    def record_violation(self, component_id: str) -> None:
+        """Record a violation, may trigger auto-quarantine."""
+        ...
+
+    def get_violation_count(self, component_id: str) -> int:
+        """Get current violation count for component."""
+        ...
+
+    def is_escalated(self, component_id: str) -> bool:
+        """Check if component has been escalated to sovereign."""
+        ...
+
+    def as_handler(self) -> CorrectionHandler:
+        """Get this NAGA as a CorrectionHandler for DriftSource.RELIABILITY."""
+        ...
+
+    def get_status(self) -> NagaStatus:
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# NARADA - Der Spion (Observer Protocol)
+# =============================================================================
+
+
+@runtime_checkable
+class NaradaProtocol(Protocol):
+    """
+    Narada - Der kosmische Journalist. Reist überall, weiß alles.
+
+    "Narada Muni ki Jai!" - The Messenger of the Gods.
+
+    Responsibilities:
+    - Intercept function calls via @spy decorator
+    - Observe without modifying (pure observation)
+    - Report to Cortex for pattern analysis
+    - Sign all observations (37th Principle)
+
+    Integration:
+    - Does NOT register as CorrectionHandler (pure observer)
+    - Reports patterns to other NAGAs
+    - Enables proactive drift detection
+
+    Usage:
+        narada = ServiceRegistry.get(NaradaProtocol)
+        @narada.spy
+        def my_function(x, y):
+            return x + y
+    """
+
+    def spy(self, func: Any) -> Any:
+        """Decorator to observe function calls."""
+        ...
+
+    def export_observations(self) -> List[Dict[str, Any]]:
+        """Export and clear observation buffer."""
+        ...
+
+    def get_status(self) -> NagaStatus:
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# CHITRAGUPTA - Der Profiler (Behavioral Protocol)
+# =============================================================================
+
+
+@dataclass
+class AnomalyReport:
+    """Report of a behavioral anomaly."""
+
+    component_id: str
+    metric: str
+    current_value: float
+    expected_min: float
+    expected_max: float
+    deviation_sigma: float
+    signed_by: Optional[str] = None
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@runtime_checkable
+class ChitraguptaProtocol(Protocol):
+    """
+    Chitragupta - Der Karma-Buchhalter. Führt Buch über alle Taten.
+
+    "Er entscheidet mit Yama über Himmel oder Hölle."
+
+    Responsibilities:
+    - Profile component behavior over time
+    - Calculate baselines (mean, stddev)
+    - Detect anomalies (deviation from baseline)
+    - Sign anomaly reports (37th Principle)
+
+    Integration:
+    - Registers as handler for DriftSource.PERFORMANCE
+    - Detects performance drift via behavioral analysis
+    - Heals by flagging anomalous components
+
+    Usage:
+        chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+        chitragupta.record(component_id, "latency_ms", 45.2)
+        anomaly = chitragupta.detect_anomaly(component_id)
+    """
+
+    def record(self, component_id: str, metric: str, value: float) -> None:
+        """Record a metric value for a component."""
+        ...
+
+    def detect_anomaly(self, component_id: str) -> Optional[AnomalyReport]:
+        """Check if component is behaving anomalously."""
+        ...
+
+    def get_baseline_mean(self, component_id: str, metric: str) -> float:
+        """Get baseline mean for a metric."""
+        ...
+
+    def get_baseline_stddev(self, component_id: str, metric: str) -> float:
+        """Get baseline standard deviation for a metric."""
+        ...
+
+    def as_handler(self) -> CorrectionHandler:
+        """Get this NAGA as a CorrectionHandler for DriftSource.PERFORMANCE."""
+        ...
+
+    def get_status(self) -> NagaStatus:
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# PRAHLAD - Der Resilience Agent (Antifragility Protocol)
+# =============================================================================
+
+
+@dataclass
+class DharmaScore:
+    """Result of a Dharma (integrity) audit."""
+
+    total_score: float  # 0-100
+    signature_compliance: float  # % of signed decisions
+    ledger_intact: bool
+    identity_coverage: float  # % of agents with identity
+    auditor_id: Optional[str] = None
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@runtime_checkable
+class PrahladProtocol(Protocol):
+    """
+    Prahlad Maharaj - Der unzerstörbare Devotee.
+
+    "Was mich nicht tötet, macht mich stärker."
+    Vedisch: "Weil ich in Wahrheit verankert bin, kann mich nichts töten."
+
+    Responsibilities:
+    - Error → Regression Test (learn from suffering)
+    - Chaos Probing (actively seek weakness)
+    - Dharma Audit (verify integrity)
+    - Phoenix Guarantee (crash-restart-resume)
+
+    Integration:
+    - Registers as handler for DriftSource.STRUCTURAL
+    - Detects structural drift (integrity violations)
+    - Heals by generating hardening tests
+
+    Usage:
+        prahlad = ServiceRegistry.get(PrahladProtocol)
+        test = prahlad.on_error(error_event)
+        score = prahlad.dharma_audit()
+    """
+
+    def on_error(self, error_type: str, message: str, component_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Learn from an error by generating a regression test."""
+        ...
+
+    def chaos_probe(self, target: str) -> Dict[str, Any]:
+        """Actively probe a component for weaknesses."""
+        ...
+
+    def dharma_audit(self) -> DharmaScore:
+        """Audit the system for Dharma (integrity) compliance."""
+        ...
+
+    def verify_phoenix_guarantee(self, target: str) -> bool:
+        """Verify crash-restart-resume for a component."""
+        ...
+
+    def export_hardening_suite(self) -> List[Dict[str, Any]]:
+        """Export the hardening test suite."""
+        ...
+
+    def as_handler(self) -> CorrectionHandler:
+        """Get this NAGA as a CorrectionHandler for DriftSource.STRUCTURAL."""
+        ...
+
+    def get_status(self) -> NagaStatus:
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
 # NAGA Federation - The Three Working Together
 # =============================================================================
 
@@ -871,6 +1133,123 @@ class NullTakshaka:
         return NagaStatus(naga_type=NagaType.TAKSHAKA, healthy=False, message="DISABLED - DANGEROUS")
 
 
+class NullKaliya:
+    """No-op Kaliya for when quarantine is unavailable."""
+
+    def quarantine(
+        self,
+        component_id: str,
+        reason: str,
+        duration_seconds: Optional[float] = None,
+    ) -> QuarantineStatus:
+        return QuarantineStatus(component_id=component_id, is_quarantined=False)
+
+    def is_quarantined(self, component_id: str) -> bool:
+        return False
+
+    def release(self, component_id: str) -> None:
+        pass
+
+    def record_violation(self, component_id: str) -> None:
+        pass
+
+    def get_violation_count(self, component_id: str) -> int:
+        return 0
+
+    def is_escalated(self, component_id: str) -> bool:
+        return False
+
+    def as_handler(self) -> CorrectionHandler:
+        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+            return HealingResult(
+                drift_id=drift.id,
+                status=HealingStatus.SKIPPED,
+                handler_id="null_kaliya",
+                message="Kaliya not available",
+            )
+
+        return handler
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.KALIYA, healthy=False, message="Not initialized")
+
+
+class NullNarada:
+    """No-op Narada for when observation is unavailable."""
+
+    def spy(self, func: Any) -> Any:
+        return func  # Pass-through decorator
+
+    def export_observations(self) -> List[Dict[str, Any]]:
+        return []
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.NARADA, healthy=False, message="Not initialized")
+
+
+class NullChitragupta:
+    """No-op Chitragupta for when profiling is unavailable."""
+
+    def record(self, component_id: str, metric: str, value: float) -> None:
+        pass
+
+    def detect_anomaly(self, component_id: str) -> Optional[AnomalyReport]:
+        return None
+
+    def get_baseline_mean(self, component_id: str, metric: str) -> float:
+        return 0.0
+
+    def get_baseline_stddev(self, component_id: str, metric: str) -> float:
+        return 0.0
+
+    def as_handler(self) -> CorrectionHandler:
+        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+            return HealingResult(
+                drift_id=drift.id,
+                status=HealingStatus.SKIPPED,
+                handler_id="null_chitragupta",
+                message="Chitragupta not available",
+            )
+
+        return handler
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.CHITRAGUPTA, healthy=False, message="Not initialized")
+
+
+class NullPrahlad:
+    """No-op Prahlad for when resilience testing is unavailable."""
+
+    def on_error(self, error_type: str, message: str, component_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        return {}
+
+    def chaos_probe(self, target: str) -> Dict[str, Any]:
+        return {"target": target, "scenarios_tested": 0, "failures": 0}
+
+    def dharma_audit(self) -> "DharmaScore":
+        return DharmaScore(total_score=0.0, signature_compliance=0.0, ledger_intact=False, identity_coverage=0.0)
+
+    def verify_phoenix_guarantee(self, target: str) -> bool:
+        return False
+
+    def export_hardening_suite(self) -> List[Dict[str, Any]]:
+        return []
+
+    def as_handler(self) -> CorrectionHandler:
+        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+            return HealingResult(
+                drift_id=drift.id,
+                status=HealingStatus.SKIPPED,
+                handler_id="null_prahlad",
+                message="Prahlad not available",
+            )
+
+        return handler
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.PRAHLAD, healthy=False, message="Not initialized")
+
+
 # =============================================================================
 # Public API
 # =============================================================================
@@ -900,6 +1279,21 @@ __all__ = [
     "ToxicityReport",
     "VajraViolation",
     "NullTakshaka",
+    # Kaliya
+    "KaliyaProtocol",
+    "QuarantineStatus",
+    "NullKaliya",
+    # Narada
+    "NaradaProtocol",
+    "NullNarada",
+    # Chitragupta
+    "ChitraguptaProtocol",
+    "AnomalyReport",
+    "NullChitragupta",
+    # Prahlad
+    "PrahladProtocol",
+    "DharmaScore",
+    "NullPrahlad",
     # Federation
     "NagaFederationProtocol",
 ]
