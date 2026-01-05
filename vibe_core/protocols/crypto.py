@@ -58,8 +58,10 @@ class ECDSAVerifier:
 
     def verify(self, message: str, signature: str, public_key: str) -> bool:
         from vibe_core.steward.crypto import verify_signature
+
         return verify_signature(message, signature, public_key)
 
     def sign(self, message: str, private_key: str) -> str:
         from vibe_core.steward.crypto import sign_content
+
         return sign_content(message, private_key)

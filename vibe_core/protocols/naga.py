@@ -31,11 +31,14 @@ from enum import Enum
 from typing import (
     Any,
     AsyncIterator,
+    Callable,
     Dict,
+    Generic,
     List,
     Optional,
     Protocol,
     Tuple,
+    TypeVar,
     runtime_checkable,
 )
 
@@ -1014,8 +1017,950 @@ class NagaFederationProtocol(Protocol):
 
 
 # =============================================================================
+# PADMA - Der Schatzmeister (Cache/Treasury Protocol)
+# =============================================================================
+
+
+# TypeVar for cached values - No Any!
+CacheValue = TypeVar("CacheValue")
+
+
+@dataclass
+class CacheEntry(Generic[CacheValue]):
+    """A cached value with metadata."""
+
+    key: str
+    value: CacheValue
+    created_at: float
+    expires_at: Optional[float] = None
+    hits: int = 0
+
+
+@dataclass
+class CacheStats:
+    """Cache statistics."""
+
+    total_entries: int
+    hits: int
+    misses: int
+    evictions: int
+    hit_rate: float
+    memory_bytes: int = 0
+
+
+@runtime_checkable
+class PadmaProtocol(Protocol):
+    """
+    Padma - Der Schatzmeister. Guardian of the Treasury.
+
+    From mythology: Padma (Lotus) is associated with wealth and purity.
+    The Naga Padma guards treasures in the underworld.
+
+    Responsibilities:
+    - In-memory cache with TTL
+    - LRU eviction policy
+    - Treasury for expensive computations
+    - Cache warming and invalidation
+    - Statistics and monitoring
+
+    Integration:
+    - Does NOT register as CorrectionHandler (pure cache)
+    - All NAGAs can use for performance optimization
+    - Chitragupta monitors cache performance
+
+    Usage:
+        padma = ServiceRegistry.get(PadmaProtocol)
+        padma.set("key", expensive_value, ttl=300)
+        value = padma.get("key")
+
+    Note: Cache stores bytes/str/int/float/dict/list - serializable types.
+    Complex objects should be serialized before caching.
+    """
+
+    # === Basic Cache Operations ===
+
+    def get(self, key: str) -> Optional[bytes]:
+        """
+        Get a value from cache.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            Cached bytes or None if not found/expired
+        """
+        ...
+
+    def get_str(self, key: str) -> Optional[str]:
+        """Get a string value from cache."""
+        ...
+
+    def get_json(self, key: str) -> Optional[Dict[str, object]]:
+        """Get a JSON-deserializable value from cache."""
+        ...
+
+    def set(self, key: str, value: bytes, ttl: Optional[float] = None) -> None:
+        """
+        Store bytes in cache.
+
+        Args:
+            key: Cache key
+            value: Bytes to cache
+            ttl: Time-to-live in seconds (None = no expiry)
+        """
+        ...
+
+    def set_str(self, key: str, value: str, ttl: Optional[float] = None) -> None:
+        """Store a string in cache."""
+        ...
+
+    def set_json(self, key: str, value: Dict[str, object], ttl: Optional[float] = None) -> None:
+        """Store a JSON-serializable dict in cache."""
+        ...
+
+    def delete(self, key: str) -> bool:
+        """
+        Delete a value from cache.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            True if deleted, False if not found
+        """
+        ...
+
+    def exists(self, key: str) -> bool:
+        """Check if key exists and is not expired."""
+        ...
+
+    def clear(self) -> int:
+        """
+        Clear all cache entries.
+
+        Returns:
+            Number of entries cleared
+        """
+        ...
+
+    # === Treasury (Memoization) ===
+
+    def get_or_compute(
+        self,
+        key: str,
+        compute_fn: Callable[[], bytes],
+        ttl: Optional[float] = None,
+    ) -> bytes:
+        """
+        Get from cache or compute and store.
+
+        The Treasury pattern - cache expensive computations.
+
+        Args:
+            key: Cache key
+            compute_fn: Function to compute bytes if not cached
+            ttl: Time-to-live in seconds
+
+        Returns:
+            Cached or computed bytes
+        """
+        ...
+
+    # === Bulk Operations ===
+
+    def get_many(self, keys: List[str]) -> Dict[str, bytes]:
+        """
+        Get multiple values at once.
+
+        Args:
+            keys: List of cache keys
+
+        Returns:
+            Dict of key -> bytes (only found keys)
+        """
+        ...
+
+    def set_many(self, items: Dict[str, bytes], ttl: Optional[float] = None) -> None:
+        """
+        Store multiple values at once.
+
+        Args:
+            items: Dict of key -> bytes
+            ttl: TTL for all items
+        """
+        ...
+
+    def delete_many(self, keys: List[str]) -> int:
+        """
+        Delete multiple keys.
+
+        Args:
+            keys: List of cache keys
+
+        Returns:
+            Number of keys deleted
+        """
+        ...
+
+    # === Pattern Operations ===
+
+    def keys(self, pattern: Optional[str] = None) -> List[str]:
+        """
+        Get all keys matching pattern.
+
+        Args:
+            pattern: Glob pattern (None = all keys)
+
+        Returns:
+            List of matching keys
+        """
+        ...
+
+    def delete_pattern(self, pattern: str) -> int:
+        """
+        Delete all keys matching pattern.
+
+        Args:
+            pattern: Glob pattern
+
+        Returns:
+            Number of keys deleted
+        """
+        ...
+
+    # === Statistics ===
+
+    def get_stats(self) -> CacheStats:
+        """Get cache statistics."""
+        ...
+
+    def get_status(self) -> "NagaStatus":
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# SHANKHA - Der Herold (Broadcast/Pubsub Protocol)
+# =============================================================================
+
+
+@dataclass
+class BroadcastMessage:
+    """A message for broadcasting."""
+
+    topic: str
+    payload: bytes  # Serialized payload - caller must serialize
+    sender_id: str
+    timestamp: float
+    message_id: str = ""
+    content_type: str = "application/json"  # Hint for deserialization
+
+
+@runtime_checkable
+class ShankhaProtocol(Protocol):
+    """
+    Shankha - Der Herold. The Conch Shell that announces.
+
+    From mythology: The Shankha (conch) is blown to announce important
+    events. Its sound travels far and wide, reaching all who listen.
+
+    Responsibilities:
+    - Topic-based publish/subscribe
+    - Event broadcasting to all listeners
+    - Message queuing for offline subscribers
+    - Integration with existing EventBus
+
+    Integration:
+    - Does NOT register as CorrectionHandler (pure messaging)
+    - NagaFloodManager uses Shankha for event distribution
+    - All NAGAs can publish/subscribe
+
+    Usage:
+        shankha = ServiceRegistry.get(ShankhaProtocol)
+        shankha.subscribe("drift.*", handler)
+        shankha.publish("drift.detected", payload)
+    """
+
+    # === Publish ===
+
+    def publish(self, topic: str, payload: bytes) -> str:
+        """
+        Publish a message to a topic.
+
+        Args:
+            topic: Topic name (supports wildcards in subscribers)
+            payload: Serialized message payload (bytes)
+
+        Returns:
+            Message ID
+        """
+        ...
+
+    def publish_json(self, topic: str, payload: Dict[str, object]) -> str:
+        """
+        Publish a JSON message to a topic.
+
+        Args:
+            topic: Topic name
+            payload: Dict to be JSON-serialized
+
+        Returns:
+            Message ID
+        """
+        ...
+
+    def broadcast(self, payload: bytes) -> str:
+        """
+        Broadcast to ALL subscribers regardless of topic.
+
+        Args:
+            payload: Serialized message payload (bytes)
+
+        Returns:
+            Message ID
+        """
+        ...
+
+    # === Subscribe ===
+
+    def subscribe(
+        self,
+        topic_pattern: str,
+        handler: Callable[[BroadcastMessage], None],
+        subscriber_id: Optional[str] = None,
+    ) -> str:
+        """
+        Subscribe to topics matching pattern.
+
+        Args:
+            topic_pattern: Topic pattern (supports * and ** wildcards)
+            handler: Callback function for messages
+            subscriber_id: Optional subscriber identifier
+
+        Returns:
+            Subscription ID
+        """
+        ...
+
+    def unsubscribe(self, subscription_id: str) -> bool:
+        """
+        Unsubscribe from a subscription.
+
+        Args:
+            subscription_id: The subscription ID returned from subscribe()
+
+        Returns:
+            True if unsubscribed, False if not found
+        """
+        ...
+
+    def unsubscribe_all(self, subscriber_id: str) -> int:
+        """
+        Unsubscribe all subscriptions for a subscriber.
+
+        Args:
+            subscriber_id: The subscriber identifier
+
+        Returns:
+            Number of subscriptions removed
+        """
+        ...
+
+    # === Topics ===
+
+    def list_topics(self) -> List[str]:
+        """Get all active topics."""
+        ...
+
+    def get_subscribers(self, topic: str) -> List[str]:
+        """Get subscriber IDs for a topic."""
+        ...
+
+    def get_subscriber_count(self, topic: str) -> int:
+        """Get number of subscribers for a topic."""
+        ...
+
+    # === Queue (for offline subscribers) ===
+
+    def get_pending_messages(self, subscriber_id: str, limit: int = 100) -> List[BroadcastMessage]:
+        """
+        Get pending messages for an offline subscriber.
+
+        Args:
+            subscriber_id: The subscriber identifier
+            limit: Maximum messages to return
+
+        Returns:
+            List of pending messages
+        """
+        ...
+
+    def acknowledge(self, subscriber_id: str, message_ids: List[str]) -> int:
+        """
+        Acknowledge messages as processed.
+
+        Args:
+            subscriber_id: The subscriber identifier
+            message_ids: List of message IDs to acknowledge
+
+        Returns:
+            Number of messages acknowledged
+        """
+        ...
+
+    # === Statistics ===
+
+    def get_stats(self) -> Dict[str, int]:
+        """
+        Get messaging statistics.
+
+        Returns:
+            Dict with keys: messages_published, messages_delivered,
+            subscribers_count, topics_count, pending_messages
+        """
+        ...
+
+    def get_status(self) -> "NagaStatus":
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# KARKOTAKA - Der Zauberer (Crypto/Secrets Protocol)
+# =============================================================================
+
+
+@dataclass
+class SignedContent:
+    """Content with cryptographic signature."""
+
+    content: str
+    signature: str  # Base64 encoded
+    signer_fingerprint: str
+    timestamp: float
+
+
+@dataclass
+class EncryptedPayload:
+    """Encrypted data with metadata."""
+
+    ciphertext: bytes
+    nonce: bytes
+    key_id: str  # Which key was used
+    algorithm: str = "AES-256-GCM"
+
+
+@runtime_checkable
+class KarkotakaProtocol(Protocol):
+    """
+    Karkotaka - Der Zauberer. Magic through cryptography.
+
+    From mythology: Karkotaka gave Nala a magical cloak that made him
+    unrecognizable. This is the power of obfuscation and transformation.
+
+    PROMPT.md: "37th Principle - Sign everything."
+
+    Responsibilities:
+    - Centralized signing/verification API
+    - Encryption/decryption for secrets
+    - Secrets vault (store/retrieve credentials)
+    - Key management (rotation, revocation)
+    - Obfuscation (transform data to hide patterns)
+
+    Integration:
+    - Does NOT register as CorrectionHandler (pure crypto)
+    - Vasuki uses Karkotaka for signing outbound
+    - Takshaka uses Karkotaka for verification
+    - All NAGAs can use for sensitive data
+
+    Usage:
+        karkotaka = ServiceRegistry.get(KarkotakaProtocol)
+        signed = karkotaka.sign("content")
+        is_valid = karkotaka.verify(signed)
+        encrypted = karkotaka.encrypt(b"secret")
+        plain = karkotaka.decrypt(encrypted)
+    """
+
+    # === Signing (37th Principle) ===
+
+    def sign(self, content: str) -> SignedContent:
+        """
+        Sign content with the node's private key.
+
+        Args:
+            content: The string content to sign
+
+        Returns:
+            SignedContent with signature and metadata
+        """
+        ...
+
+    def verify(self, signed: SignedContent) -> bool:
+        """
+        Verify a signed content.
+
+        Args:
+            signed: The SignedContent to verify
+
+        Returns:
+            True if signature is valid AND signer is trusted
+        """
+        ...
+
+    def verify_with_key(self, signed: SignedContent, public_key: str) -> bool:
+        """
+        Verify signature against a specific public key.
+
+        Args:
+            signed: The SignedContent to verify
+            public_key: PEM-encoded public key
+
+        Returns:
+            True if signature matches this key
+        """
+        ...
+
+    # === Encryption (Secrets Protection) ===
+
+    def encrypt(self, plaintext: bytes, key_id: Optional[str] = None) -> EncryptedPayload:
+        """
+        Encrypt data using AES-256-GCM.
+
+        Args:
+            plaintext: Data to encrypt
+            key_id: Optional specific key to use (default: current key)
+
+        Returns:
+            EncryptedPayload with ciphertext and metadata
+        """
+        ...
+
+    def decrypt(self, payload: EncryptedPayload) -> bytes:
+        """
+        Decrypt an encrypted payload.
+
+        Args:
+            payload: The EncryptedPayload to decrypt
+
+        Returns:
+            Decrypted plaintext bytes
+
+        Raises:
+            ValueError: If decryption fails (wrong key, tampered data)
+        """
+        ...
+
+    # === Secrets Vault ===
+
+    def store_secret(self, name: str, value: str) -> bool:
+        """
+        Store a secret in the encrypted vault.
+
+        Args:
+            name: Secret identifier (e.g., "API_KEY", "DB_PASSWORD")
+            value: The secret value
+
+        Returns:
+            True if stored successfully
+        """
+        ...
+
+    def get_secret(self, name: str) -> Optional[str]:
+        """
+        Retrieve a secret from the vault.
+
+        Args:
+            name: Secret identifier
+
+        Returns:
+            The secret value, or None if not found
+        """
+        ...
+
+    def delete_secret(self, name: str) -> bool:
+        """
+        Delete a secret from the vault.
+
+        Args:
+            name: Secret identifier
+
+        Returns:
+            True if deleted, False if not found
+        """
+        ...
+
+    def list_secrets(self) -> List[str]:
+        """
+        List all secret names (not values).
+
+        Returns:
+            List of secret identifiers
+        """
+        ...
+
+    # === Key Management ===
+
+    def get_public_key(self) -> str:
+        """Get this node's public key (PEM format)."""
+        ...
+
+    def get_fingerprint(self) -> str:
+        """Get this node's key fingerprint."""
+        ...
+
+    def is_key_trusted(self, fingerprint: str) -> bool:
+        """Check if a key fingerprint is in the trusted keyring."""
+        ...
+
+    def trust_key(self, public_key: str, label: str) -> str:
+        """
+        Add a public key to the trusted keyring.
+
+        Args:
+            public_key: PEM-encoded public key
+            label: Human-readable label for the key
+
+        Returns:
+            The key's fingerprint
+        """
+        ...
+
+    def revoke_key(self, fingerprint: str) -> bool:
+        """
+        Revoke a key (remove from trusted, add to blacklist).
+
+        Args:
+            fingerprint: Key fingerprint to revoke
+
+        Returns:
+            True if revoked successfully
+        """
+        ...
+
+    # === Obfuscation (The Magic Cloak) ===
+
+    def obfuscate(self, data: str) -> str:
+        """
+        Obfuscate data to hide patterns.
+
+        Not encryption - reversible transformation that
+        makes data unrecognizable but not secure.
+
+        Args:
+            data: String to obfuscate
+
+        Returns:
+            Obfuscated string
+        """
+        ...
+
+    def deobfuscate(self, data: str) -> str:
+        """
+        Reverse obfuscation.
+
+        Args:
+            data: Obfuscated string
+
+        Returns:
+            Original string
+        """
+        ...
+
+    # === Status ===
+
+    def get_status(self) -> "NagaStatus":
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# KULIKA - Der Ordnungshüter (Schema Registry Protocol)
+# =============================================================================
+
+
+@runtime_checkable
+class KulikaProtocol(Protocol):
+    """
+    Kulika - Der Ordnungshüter. Kula = Familie/Ordnung.
+
+    PROMPT.md: "Kulika FIRST - You can't auto-discover without knowing what you're looking for."
+
+    Responsibilities:
+    - Maintain schema definitions for all NAGA services
+    - Validate manifests against expected structure
+    - Provide runtime API for schema queries
+    - Single Source of Truth for service metadata
+
+    Integration:
+    - Does NOT register as CorrectionHandler (pure registry)
+    - Narada DISCOVERS, Kulika VALIDATES
+    - All services MUST register with Kulika
+
+    Usage:
+        kulika = ServiceRegistry.get(KulikaProtocol)
+        errors = kulika.validate_manifest(manifest)
+        service_class = kulika.get_service_class("sesha")
+    """
+
+    def validate_manifest(self, manifest: Any) -> List[str]:
+        """
+        Validate a NagaManifest against schema requirements.
+
+        Returns list of validation errors (empty = valid).
+        """
+        ...
+
+    def validate_service(self, cls: type) -> List[str]:
+        """
+        Validate a service class for NAGA compliance.
+
+        Checks:
+        - Has @naga_service decorator
+        - Has required methods (get_status)
+        - If has drift_source, has as_handler()
+
+        Returns list of validation errors (empty = valid).
+        """
+        ...
+
+    def register_service(self, cls: type, instance: Optional[Any] = None) -> bool:
+        """
+        Register a NAGA service.
+
+        Args:
+            cls: The service class (must have _naga_manifest)
+            instance: Optional instance (if already created)
+
+        Returns:
+            True if registered successfully
+        """
+        ...
+
+    def get_service_class(self, name: str) -> Optional[type]:
+        """Get a registered service class by name."""
+        ...
+
+    def get_service_instance(self, name: str) -> Optional[Any]:
+        """Get a registered service instance by name."""
+        ...
+
+    def get_all_manifests(self) -> List[Any]:
+        """Get all registered NagaManifests."""
+        ...
+
+    def get_services_by_capability(self, capability: str) -> List[Any]:
+        """Get all services with a specific capability."""
+        ...
+
+    def is_registered(self, name: str) -> bool:
+        """Check if a service is registered."""
+        ...
+
+    def get_status(self) -> "NagaStatus":
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
+# ANANTA - The Infinite Flood (Gene Splicer)
+# =============================================================================
+
+
+class ServiceClassification(str, Enum):
+    """Classification for flooding decision."""
+
+    REBEL = "rebel"  # Service-like but no NAGA integration - FLOOD
+    CIVILIAN = "civilian"  # Pure utility - VETO (overhead not justified)
+    FLOODED = "flooded"  # Already has @naga_service - SKIP
+
+
+@dataclass
+class FloodProposal:
+    """
+    Ananta's proposal to flood a service with NAGA capabilities.
+
+    Sent to Prahlad for approval/veto.
+    """
+
+    service_name: str
+    service_path: str
+    classification: ServiceClassification
+    proposed_nagas: List[str]  # e.g., ["sesha", "takshaka", "chitragupta"]
+    proposed_mixins: List[str]  # e.g., ["SeshaMixin", "TakshakaMixin"]
+    reason: str
+    overhead_estimate: str  # "low", "medium", "high"
+    risk_level: str  # "low", "medium", "high"
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class VetoDecision:
+    """
+    Prahlad's decision on a FloodProposal.
+
+    Check and Balance: Ananta cannot flood without Prahlad's consent.
+    """
+
+    proposal: FloodProposal
+    approved: bool
+    reason: str
+    override_nagas: Optional[List[str]] = None  # Prahlad can modify the list
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@runtime_checkable
+class AnantaProtocol(Protocol):
+    """
+    Ananta - The Infinite Flood (Gene Splicer).
+
+    "Ananta = endless - cosmic form of Sesha who holds all worlds."
+
+    NOT a Wrapper Factory (Hard Flood / Proxy).
+    IS a Gene Splicer (Soft Flood / Mixin).
+
+    Hard Flood (WRONG):
+        service = NagaProxy(service)  # Breaks isinstance!
+
+    Soft Flood (RIGHT):
+        class FloodedService(SeshaMixin, TakshakaMixin, OriginalService):
+            pass  # Preserves isinstance, adds NAGA genes
+
+    Workflow:
+        NARADA discovers → ANANTA proposes → PRAHLAD vetoes/approves → CHITRAGUPTA monitors
+
+    Critical Constraint:
+        Ananta cannot flood without Prahlad's consent (Check and Balance).
+    """
+
+    def analyze_service(self, service_class: type) -> FloodProposal:
+        """
+        Analyze a service and propose which NAGAs it needs.
+
+        Uses detection criteria from NAGA.md:
+        - Has Service/Manager/Handler in name → @naga_service audit
+        - Has __init__ with dependencies → Sesha observation
+        - Makes HTTP/network calls → Vasuki protocol
+        - Has auth/permission logic → Takshaka validation
+        - Writes to files/DB → Sesha ledger
+        - Has retry/fallback logic → Prahlad/Kaliya
+        - Logs metrics/events → Chitragupta profiling
+
+        Args:
+            service_class: The class to analyze
+
+        Returns:
+            FloodProposal with recommended NAGAs and Mixins
+        """
+        ...
+
+    def request_approval(self, proposal: FloodProposal) -> VetoDecision:
+        """
+        Request Prahlad's approval for a flood proposal.
+
+        Prahlad evaluates:
+        - Classification (REBEL → approve, CIVILIAN → veto)
+        - Overhead vs value tradeoff
+        - Risk assessment
+
+        Args:
+            proposal: The FloodProposal to evaluate
+
+        Returns:
+            VetoDecision with approval status and reason
+        """
+        ...
+
+    def create_flooded_class(
+        self,
+        original_class: type,
+        decision: VetoDecision,
+    ) -> type:
+        """
+        Create a new class with NAGA genes injected (Soft Flood).
+
+        This is the DNA approach - the returned class:
+        - IS the original class (isinstance works)
+        - HAS NAGA capabilities via Mixins
+        - DOES NOT break pickling, internal state, etc.
+
+        Args:
+            original_class: The class to flood
+            decision: Approved VetoDecision (must be approved=True)
+
+        Returns:
+            New class with Mixin inheritance
+
+        Raises:
+            ValueError: If decision.approved is False
+        """
+        ...
+
+    def get_mixin_for_naga(self, naga_name: str) -> Optional[type]:
+        """
+        Get the Mixin class for a NAGA.
+
+        Args:
+            naga_name: e.g., "sesha", "takshaka"
+
+        Returns:
+            The Mixin class, or None if not available
+        """
+        ...
+
+    def list_available_mixins(self) -> List[str]:
+        """List all available NAGA Mixins."""
+        ...
+
+    def get_flood_history(self) -> List[VetoDecision]:
+        """Get history of all flood decisions."""
+        ...
+
+    def get_status(self) -> "NagaStatus":
+        """Get NAGA health status."""
+        ...
+
+
+# =============================================================================
 # Null Implementations (Arjuna Pattern)
 # =============================================================================
+
+
+class NullAnanta:
+    """No-op Ananta - does not flood anything."""
+
+    def analyze_service(self, service_class: type) -> FloodProposal:
+        return FloodProposal(
+            service_name=service_class.__name__,
+            service_path="",
+            classification=ServiceClassification.CIVILIAN,
+            proposed_nagas=[],
+            proposed_mixins=[],
+            reason="Ananta not available",
+            overhead_estimate="unknown",
+            risk_level="unknown",
+        )
+
+    def request_approval(self, proposal: FloodProposal) -> VetoDecision:
+        return VetoDecision(
+            proposal=proposal,
+            approved=False,
+            reason="Ananta not available - auto-veto",
+        )
+
+    def create_flooded_class(self, original_class: type, decision: VetoDecision) -> type:
+        return original_class  # Return unchanged
+
+    def get_mixin_for_naga(self, naga_name: str) -> Optional[type]:
+        return None
+
+    def list_available_mixins(self) -> List[str]:
+        return []
+
+    def get_flood_history(self) -> List[VetoDecision]:
+        return []
+
+    def get_status(self) -> "NagaStatus":
+        return NagaStatus(naga_type=NagaType.SESHA, healthy=False, message="Ananta not initialized")
 
 
 class NullSesha:
@@ -1250,6 +2195,195 @@ class NullPrahlad:
         return NagaStatus(naga_type=NagaType.PRAHLAD, healthy=False, message="Not initialized")
 
 
+class NullKulika:
+    """No-op Kulika for when schema registry is unavailable."""
+
+    def validate_manifest(self, manifest: Any) -> List[str]:
+        return ["Kulika not available"]
+
+    def validate_service(self, cls: type) -> List[str]:
+        return ["Kulika not available"]
+
+    def register_service(self, cls: type, instance: Optional[Any] = None) -> bool:
+        return False
+
+    def get_service_class(self, name: str) -> Optional[type]:
+        return None
+
+    def get_service_instance(self, name: str) -> Optional[Any]:
+        return None
+
+    def get_all_manifests(self) -> List[Any]:
+        return []
+
+    def get_services_by_capability(self, capability: str) -> List[Any]:
+        return []
+
+    def is_registered(self, name: str) -> bool:
+        return False
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.SESHA, healthy=False, message="Not initialized")
+
+
+class NullPadma:
+    """No-op Padma for when cache is unavailable."""
+
+    def get(self, key: str) -> Optional[bytes]:
+        return None
+
+    def get_str(self, key: str) -> Optional[str]:
+        return None
+
+    def get_json(self, key: str) -> Optional[Dict[str, object]]:
+        return None
+
+    def set(self, key: str, value: bytes, ttl: Optional[float] = None) -> None:
+        pass
+
+    def set_str(self, key: str, value: str, ttl: Optional[float] = None) -> None:
+        pass
+
+    def set_json(self, key: str, value: Dict[str, object], ttl: Optional[float] = None) -> None:
+        pass
+
+    def delete(self, key: str) -> bool:
+        return False
+
+    def exists(self, key: str) -> bool:
+        return False
+
+    def clear(self) -> int:
+        return 0
+
+    def get_or_compute(self, key: str, compute_fn: Callable[[], bytes], ttl: Optional[float] = None) -> bytes:
+        return compute_fn()
+
+    def get_many(self, keys: List[str]) -> Dict[str, bytes]:
+        return {}
+
+    def set_many(self, items: Dict[str, bytes], ttl: Optional[float] = None) -> None:
+        pass
+
+    def delete_many(self, keys: List[str]) -> int:
+        return 0
+
+    def keys(self, pattern: Optional[str] = None) -> List[str]:
+        return []
+
+    def delete_pattern(self, pattern: str) -> int:
+        return 0
+
+    def get_stats(self) -> "CacheStats":
+        return CacheStats(total_entries=0, hits=0, misses=0, evictions=0, hit_rate=0.0)
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.SESHA, healthy=False, message="Cache not available")
+
+
+class NullShankha:
+    """No-op Shankha for when pubsub is unavailable."""
+
+    def publish(self, topic: str, payload: bytes) -> str:
+        return ""
+
+    def publish_json(self, topic: str, payload: Dict[str, object]) -> str:
+        return ""
+
+    def broadcast(self, payload: bytes) -> str:
+        return ""
+
+    def subscribe(
+        self,
+        topic_pattern: str,
+        handler: Callable[["BroadcastMessage"], None],
+        subscriber_id: Optional[str] = None,
+    ) -> str:
+        return ""
+
+    def unsubscribe(self, subscription_id: str) -> bool:
+        return False
+
+    def unsubscribe_all(self, subscriber_id: str) -> int:
+        return 0
+
+    def list_topics(self) -> List[str]:
+        return []
+
+    def get_subscribers(self, topic: str) -> List[str]:
+        return []
+
+    def get_subscriber_count(self, topic: str) -> int:
+        return 0
+
+    def get_pending_messages(self, subscriber_id: str, limit: int = 100) -> List["BroadcastMessage"]:
+        return []
+
+    def acknowledge(self, subscriber_id: str, message_ids: List[str]) -> int:
+        return 0
+
+    def get_stats(self) -> Dict[str, int]:
+        return {"messages_published": 0, "subscribers_count": 0}
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.SESHA, healthy=False, message="Pubsub not available")
+
+
+class NullKarkotaka:
+    """No-op Karkotaka for when crypto is unavailable."""
+
+    def sign(self, content: str) -> "SignedContent":
+        return SignedContent(content=content, signature="", signer_fingerprint="", timestamp=0)
+
+    def verify(self, signed: "SignedContent") -> bool:
+        return False
+
+    def verify_with_key(self, signed: "SignedContent", public_key: str) -> bool:
+        return False
+
+    def encrypt(self, plaintext: bytes, key_id: Optional[str] = None) -> "EncryptedPayload":
+        return EncryptedPayload(ciphertext=b"", nonce=b"", key_id="")
+
+    def decrypt(self, payload: "EncryptedPayload") -> bytes:
+        raise ValueError("Karkotaka not available")
+
+    def store_secret(self, name: str, value: str) -> bool:
+        return False
+
+    def get_secret(self, name: str) -> Optional[str]:
+        return None
+
+    def delete_secret(self, name: str) -> bool:
+        return False
+
+    def list_secrets(self) -> List[str]:
+        return []
+
+    def get_public_key(self) -> str:
+        return ""
+
+    def get_fingerprint(self) -> str:
+        return ""
+
+    def is_key_trusted(self, fingerprint: str) -> bool:
+        return False
+
+    def trust_key(self, public_key: str, label: str) -> str:
+        return ""
+
+    def revoke_key(self, fingerprint: str) -> bool:
+        return False
+
+    def obfuscate(self, data: str) -> str:
+        return data
+
+    def deobfuscate(self, data: str) -> str:
+        return data
+
+    def get_status(self) -> NagaStatus:
+        return NagaStatus(naga_type=NagaType.SESHA, healthy=False, message="Crypto not available")
+
+
 # =============================================================================
 # Public API
 # =============================================================================
@@ -1294,6 +2428,30 @@ __all__ = [
     "PrahladProtocol",
     "DharmaScore",
     "NullPrahlad",
+    # Kulika
+    "KulikaProtocol",
+    "NullKulika",
+    # Padma
+    "PadmaProtocol",
+    "CacheEntry",
+    "CacheStats",
+    "CacheValue",
+    "NullPadma",
+    # Shankha
+    "ShankhaProtocol",
+    "BroadcastMessage",
+    "NullShankha",
+    # Karkotaka
+    "KarkotakaProtocol",
+    "SignedContent",
+    "EncryptedPayload",
+    "NullKarkotaka",
+    # Ananta (Gene Splicer)
+    "AnantaProtocol",
+    "FloodProposal",
+    "VetoDecision",
+    "ServiceClassification",
+    "NullAnanta",
     # Federation
     "NagaFederationProtocol",
 ]

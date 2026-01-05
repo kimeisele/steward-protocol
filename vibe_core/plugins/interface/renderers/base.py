@@ -27,12 +27,12 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from vibe_core.errors import ErrorCode, StructuredError
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.phoenix.sections.interface import (
         InterfaceConfig,
         RendererConfig,
         SectionConfig,
     )
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("BASE_RENDERER")
 

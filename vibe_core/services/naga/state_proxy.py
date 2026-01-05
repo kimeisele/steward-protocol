@@ -465,6 +465,24 @@ class NagaStateProxy:
     def cleanup_backups(self) -> int:
         return self._state.cleanup_backups()
 
+    # =========================================================================
+    # Async Worker Delegation (ADR-204)
+    # =========================================================================
+
+    def start_background_worker(self) -> None:
+        """Start async background worker (delegated to wrapped StateService)."""
+        return self._state.start_background_worker()
+
+    @property
+    def _worker_task(self):
+        """Access underlying worker task."""
+        return self._state._worker_task
+
+    @property
+    def _commit_event(self):
+        """Access underlying commit event."""
+        return self._state._commit_event
+
 
 # =============================================================================
 # FACTORY FUNCTION

@@ -23,8 +23,8 @@ from vibe_core.orchestration_cycle import get_cycle_registry
 from .base import BaseRenderer
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.loaders import ActionLoader, AnalyzerLoader, SenseLoader, ToolLoader
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("RENDERER_COGNITION")
 

@@ -31,8 +31,8 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.state.node_state import NodeState
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.prana_orchestrator import PulseTransaction
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("NODE_PULSE")
 
