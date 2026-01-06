@@ -18,7 +18,7 @@ Integration:
 
 from typing import Callable, Dict, List, ParamSpec, Protocol, TypeVar, runtime_checkable
 
-from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
+from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType, ObservationDict
 
 # ParamSpec for proper decorator typing (eliminates Any)
 P = ParamSpec("P")
@@ -54,6 +54,20 @@ class NaradaProtocol(Protocol):
         """Decorator to observe function calls."""
         ...
 
+    def receive_proxy_observation(self, observation: ObservationDict) -> None:
+        """
+        Receive a proxy observation.
+
+        This is the ONE entry point from NagaProxy.
+        Narada routes internally to:
+        - Chitragupta (timing/profiling)
+        - Sesha (audit trail)
+        - Kaliya (if exception_type set)
+
+        NagaProxy doesn't know about these - fractal separation.
+        """
+        ...
+
     def export_observations(self) -> List[EventDict]:
         """Export and clear observation buffer."""
         ...
@@ -73,6 +87,9 @@ class NullNarada:
 
     def spy(self, func: Callable[P, R]) -> Callable[P, R]:
         return func  # Pass-through decorator
+
+    def receive_proxy_observation(self, observation: ObservationDict) -> None:
+        pass  # Silent drop - no observation target
 
     def export_observations(self) -> List[EventDict]:
         return []

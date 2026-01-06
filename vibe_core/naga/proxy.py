@@ -49,6 +49,8 @@ from typing import (
     cast,
 )
 
+from vibe_core.protocols.naga.types import ObservationDict
+
 if TYPE_CHECKING:
     from vibe_core.naga.services.chitragupta import ChitraguptaService
     from vibe_core.naga.services.kaliya import KaliyaService
@@ -275,10 +277,6 @@ class NagaProxy(Generic[T]):
 
             except Exception as e:
                 exception_type = type(e).__name__
-
-                # Route to Kaliya for isolation
-                proxy_self._report_to_kaliya(name, e)
-
                 # Re-raise - no silent failures (DHARMA)
                 raise
 
@@ -300,118 +298,56 @@ class NagaProxy(Generic[T]):
                     exception_type=exception_type,
                 )
 
-                # Report to Narada (observation)
-                proxy_self._report_to_narada(observation)
-
-                # Report to Chitragupta (profiling)
-                proxy_self._report_to_chitragupta(name, duration_ms)
-
-                # Report to Sesha (audit trail)
-                proxy_self._report_to_sesha(observation)
+                # ONE call to Narada - Narada routes internally (fractal)
+                proxy_self._report_observation(observation)
 
         return wrapper
 
-    def _report_to_narada(self, observation: ProxyObservation) -> None:
+    def _report_observation(self, observation: ProxyObservation) -> None:
         """
         Report observation to Narada.
 
-        Args:
-            observation: The observation to report
+        This is the ONE entry point. Narada routes internally to:
+        - Chitragupta (profiling)
+        - Sesha (audit)
+        - Kaliya (if exception)
+
+        NagaProxy doesn't know about other NAGAs - fractal separation.
         """
         try:
-            # Buffer observations for batch processing (always, even without Narada)
+            # Buffer observations for local queries (always)
             buffer = object.__getattribute__(self, "_observation_buffer")
             buffer.append(observation)
 
-            # Log for now - Narada will process
-            logger.debug(
-                f"NARADA observes: {observation.service_type}.{observation.method_name} "
-                f"({observation.duration_ms:.2f}ms)"
-            )
+            # Convert to ObservationDict for Narada
+            obs_dict: ObservationDict = {
+                "service_type": observation.service_type,
+                "method_name": observation.method_name,
+                "args_count": observation.args_count,
+                "kwargs_keys": observation.kwargs_keys,
+                "duration_ms": observation.duration_ms,
+                "result_type": observation.result_type or "",
+                "exception_type": observation.exception_type or "",
+                "timestamp": observation.timestamp.isoformat(),
+            }
 
-        except Exception as e:
-            # Non-critical - don't fail the actual method
-            logger.warning(f"Narada report failed: {e}")
-
-    def _report_to_chitragupta(self, method_name: str, duration_ms: float) -> None:
-        """
-        Report timing to Chitragupta for profiling.
-
-        Args:
-            method_name: Name of the method
-            duration_ms: Execution duration in milliseconds
-        """
-        chitragupta = object.__getattribute__(self, "_chitragupta")
-        if chitragupta is None:
-            return
-
-        try:
-            # Record metric for profiling
-            service_name = object.__getattribute__(self, "_service_name")
-            component_id = f"{service_name}.{method_name}"
-            chitragupta.record(component_id, "duration_ms", duration_ms)
-
-        except Exception as e:
-            # Non-critical
-            logger.warning(f"Chitragupta report failed: {e}")
-
-    def _report_to_kaliya(self, method_name: str, exception: Exception) -> None:
-        """
-        Report exception to Kaliya for isolation decision.
-
-        Args:
-            method_name: Name of the method that raised
-            exception: The exception that was raised
-        """
-        kaliya = object.__getattribute__(self, "_kaliya")
-        if kaliya is None:
-            # Still log even without Kaliya
-            service_name = object.__getattribute__(self, "_service_name")
-            logger.warning(f"KALIYA (offline): {service_name}.{method_name} raised {type(exception).__name__}")
-            return
-
-        try:
-            service_name = object.__getattribute__(self, "_service_name")
-            component_id = f"{service_name}.{method_name}"
-            # Kaliya decides if component should be quarantined
-            logger.warning(f"KALIYA notified: {component_id} raised {type(exception).__name__}")
-
-        except Exception as e:
-            # Non-critical
-            logger.warning(f"Kaliya report failed: {e}")
-
-    def _report_to_sesha(self, observation: ProxyObservation) -> None:
-        """
-        Record observation to Sesha ledger for audit trail.
-
-        Args:
-            observation: The observation to record
-        """
-        audit_enabled = object.__getattribute__(self, "_audit_enabled")
-        if not audit_enabled:
-            return
-
-        sesha = object.__getattribute__(self, "_sesha")
-        if sesha is None:
-            return
-
-        try:
-            # Record to ledger via Sesha
-            if hasattr(sesha, "_ledger") and sesha._ledger:
-                sesha._ledger.record_event(
-                    event_type="PROXY_OBSERVATION",
-                    agent_id=f"proxy.{observation.service_type}",
-                    details={
-                        "method": observation.method_name,
-                        "duration_ms": observation.duration_ms,
-                        "args_count": observation.args_count,
-                        "result_type": observation.result_type or "None",
-                        "exception_type": observation.exception_type or "",
-                    },
+            # ONE call to Narada - Narada routes internally
+            narada = object.__getattribute__(self, "_narada")
+            if narada and hasattr(narada, "receive_proxy_observation"):
+                narada.receive_proxy_observation(obs_dict)
+            else:
+                # Fallback: log only
+                logger.debug(
+                    f"NARADA observes: {observation.service_type}.{observation.method_name} "
+                    f"({observation.duration_ms:.2f}ms)"
                 )
+
         except Exception as e:
             # Non-critical - don't fail the actual method
-            logger.debug(f"Sesha audit failed: {e}")
+            logger.warning(f"Observation report failed: {e}")
+
+    # OLD methods removed - Narada routes internally now (fractal)
+    # _report_to_chitragupta, _report_to_kaliya, _report_to_sesha DELETED
 
     def get_observations(self) -> List[ProxyObservation]:
         """
