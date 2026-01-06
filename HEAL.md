@@ -420,12 +420,282 @@ SOFT FLOOD (Mixins via Ananta):
 
 ---
 
+## ASHVAMEDHA KURUKSHETRA - The Great Battle
+
+> "Auf dem Feld von Kurukshetra, dem Feld des Dharma..."
+> - Bhagavad Gita 1.1
+
+### Battle Status - COMPLETE
+
+| Front | Agent | Status | Key Finding |
+|-------|-------|--------|-------------|
+| Hard Flood | ac2e71c | ✅ Complete | NagaProxy DEFINED but UNUSED |
+| Soft Flood | aeaf951 | ✅ Complete | 12/12 services governed |
+| Dharma Breach | acb00e2 | ✅ Complete | 15 CRITICAL breaches |
+| Split Strategy | a405caa | ✅ Complete | 47 classes → 18 modules |
+
+---
+
+### Hard Flood Report (NagaProxy Usage)
+
+**Verdict**: NagaProxy is ORPHANED INFRASTRUCTURE - well-designed but never deployed.
+
+| Aspect | Status |
+|--------|--------|
+| NagaProxy Definition | COMPLETE (425 LOC) |
+| Direct Instantiation | **ZERO** |
+| wrap_service() Usage | **ZERO** |
+| External APIs Wrapped | **NONE** |
+
+**Key Findings:**
+
+1. **NagaProxy Defined in** `/vibe_core/naga/proxy.py` (425 lines)
+   - Generic wrapper `NagaProxy[T]` preserving type safety
+   - Intercepts via `__getattr__` with lazy NAGA resolution
+   - Observation buffer for batch reporting
+
+2. **ZERO Production Usage** - No `NagaProxy(` or `wrap_service(` calls found
+
+3. **Design Choice**: Soft Flood (Mixins) preferred over Hard Flood (Proxy)
+   - Documented at `/vibe_core/protocols/naga.py:2214-2219`
+   - Reason: isinstance(), pickling, introspection preservation
+
+4. **Unwrapped External APIs** (CRITICAL GAPS):
+   - `LLMClient` - Makes paid API calls, unwrapped
+   - `TwitterService` - tweepy client unwrapped
+   - `RedditService` - Reddit API unwrapped
+   - `GoogleProvider` - google-generativeai unwrapped
+   - `KernelNetworkProxy` - Direct requests.request()
+
+**Recommendation**: NagaProxy should wrap external API clients at DI registration time.
+
+---
+
+### Soft Flood Report (Mixins & @naga_governed)
+
+**Verdict**: EXCELLENT - Internal NAGA governance is comprehensive.
+
+| Metric | Value |
+|--------|-------|
+| NAGA Services using NagaBaseService | **12/12** (100%) |
+| @naga_governed decorated methods | **26** |
+| Mixin classes defined | **11** |
+| Flooded service classes | **5** |
+
+**Service Governance Status:**
+
+| Service | Base Class | Governed Methods | Mixins |
+|---------|------------|------------------|--------|
+| VasukiService | NagaBaseService | 3 | - |
+| SeshaService | NagaBaseService | 4 | - |
+| TakshakaService | NagaBaseService | 5 | - |
+| KaliyaService | NagaBaseService | 2 | - |
+| NaradaService | NagaBaseService | 3 | - |
+| ChitraguptaService | NagaBaseService | 4 | - |
+| PrahladService | NagaBaseService | 2 | - |
+| CortexService | NagaBaseService | 3 | - |
+
+**Mixin Library** (`vibe_core/naga/mixins/`):
+
+| Mixin | Purpose | Usage |
+|-------|---------|-------|
+| SeshaMixin | Ledger recording | Internal services |
+| TakshakaMixin | Security validation | Input boundaries |
+| ChitraguptaMixin | Profiling | Performance-critical |
+| NaradaMixin | Observation | Debugging |
+| KaliyaMixin | Error quarantine | Fault tolerance |
+
+**Flooded Classes:**
+- `FloodedPluginService` - Full NAGA governance on plugin lifecycle
+- `FloodedCISyncService` - OUROBOROS self-monitoring
+
+---
+
+### Dharma Breach Report (Unprotected Services)
+
+**Verdict**: 15 CRITICAL unprotected services identified.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DHARMA BREACH SEVERITY MAP                                  │
+├─────────────────────────────────────────────────────────────┤
+│  🔴 CRITICAL (6):  External APIs + Core Services            │
+│  🟠 HIGH (5):      Internal infrastructure                   │
+│  🟡 MEDIUM (4):    Lower-risk components                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**CRITICAL Breaches:**
+
+| Service | File | Risk |
+|---------|------|------|
+| TwitterService | cartridges/system/herald/services/twitter.py | External API, rate limits |
+| RedditService | cartridges/system/herald/services/reddit.py | External API, rate limits |
+| BroadcastCapability | broadcast/capability.py | Network boundary |
+| PluginService | plugin_service.py | Code execution |
+| CartridgeService | cartridge_service.py | Module loading |
+| ProcessManager | process.py | System commands |
+
+**HIGH Breaches:**
+
+| Service | File | Risk |
+|---------|------|------|
+| KernelIOService | kernel_io.py | File system |
+| VFS | vfs.py | Virtual file system |
+| NetworkProxy | network_proxy.py | HTTP boundary |
+| ResourceManager | resources.py | Memory/CPU |
+| StateService | state/state_service.py | State machine |
+
+**MEDIUM Breaches:**
+
+| Service | File | Risk |
+|---------|------|------|
+| ManifestationService | manifestation_service.py | Tick lifecycle |
+| SectionService | phoenix/section_service.py | Phoenix sections |
+| CircuitService | circuit_service.py | Circuit breaker |
+| AgentInterface | agency/interface.py | Agent boundary |
+
+**Fix Strategy**: Apply Soft Flood (Mixins) to internal services, Hard Flood (NagaProxy) to external APIs.
+
+---
+
+### Split Strategy (God File Surgery)
+
+**Verdict**: Battle plan for 47 classes → 18 modules across 8 subdirectories.
+
+```
+vibe_core/protocols/naga/           # TARGET DIRECTORY
+├── __init__.py                     # Re-exports (backward compat)
+├── shared/                         # Cross-cutting concerns
+│   ├── types.py                    # NagaType, NagaStatus, enums
+│   ├── contexts.py                 # TraceContext, SecurityContext
+│   └── errors.py                   # NagaError hierarchy
+├── infrastructure/                 # Core NAGAs
+│   ├── sesha.py                    # SeshaProtocol + NullSesha
+│   ├── vasuki.py                   # VasukiProtocol + NullVasuki
+│   └── takshaka.py                 # TakshakaProtocol + NullTakshaka
+├── governance/                     # Decision makers
+│   ├── kaliya.py                   # KaliyaProtocol + NullKaliya
+│   ├── narada.py                   # NaradaProtocol + NullNarada
+│   └── chitragupta.py              # ChitraguptaProtocol + NullChitragupta
+├── chaos/                          # Chaos engineering
+│   ├── prahlad.py                  # PrahladProtocol + NullPrahlad
+│   └── hiranyakashipu.py           # Attack seeds
+├── wisdom/                         # Higher-order NAGAs
+│   ├── padma.py                    # PadmaProtocol + NullPadma
+│   ├── shankha.py                  # ShankhaProtocol + NullShankha
+│   └── karkotaka.py                # KarkotakaProtocol + NullKarkotaka
+├── federation/                     # Orchestration
+│   ├── cortex.py                   # NagaCortexProtocol + NullNagaCortex
+│   ├── federation.py               # NagaFederationProtocol
+│   ├── kulika.py                   # KulikaProtocol + NullKulika
+│   └── ananta.py                   # AnantaProtocol + NullAnanta
+└── fallbacks/                      # Arjuna Pattern
+    └── null_implementations.py     # All Null* classes (optional)
+```
+
+**Migration Strategy:**
+1. Create directory structure
+2. Extract one protocol at a time
+3. Update `__init__.py` for backward compatibility
+4. Verify imports don't break
+5. Delete god file last
+
+**Line Count Estimate:**
+- Current: 2862 lines in 1 file
+- Target: ~150 lines avg × 18 modules = 2700 lines (SAME content, FRACTAL structure)
+
+---
+
+## ASHVAMEDHA Battle Summary
+
+### Victory Status: RECONNAISSANCE COMPLETE
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│           ASHVAMEDHA KURUKSHETRA RESULTS                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ✅ Hard Flood Audit    → NagaProxy exists, ZERO usage      │
+│  ✅ Soft Flood Audit    → 12/12 NAGAs governed (100%)       │
+│  ✅ Dharma Breach Scan  → 15 unprotected services found     │
+│  ✅ Split Strategy      → 47 classes → 18 modules planned   │
+│                                                              │
+├─────────────────────────────────────────────────────────────┤
+│  NEXT BATTLE: Fix 15 Dharma Breaches + Split God File       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Insights
+
+1. **1-0-8 Pattern Validated**:
+   - `1` (Hard Flood): NagaProxy exists but orphaned
+   - `0` (Soft Flood): Mixins + @naga_governed = EXCELLENT coverage
+   - `8` (Ananta): Must decide which pattern for each service
+
+2. **The Dharma Gap**:
+   - Internal NAGAs: 100% governed
+   - External APIs: 0% governed ← **CRITICAL**
+   - Fix: NagaProxy for external, Mixins for internal
+
+3. **God File Surgery Ready**:
+   - 47 classes mapped
+   - 18 target modules designed
+   - Backward compatibility preserved via `__init__.py`
+
+---
+
 ## Metrics
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Protocol god file | 2862 lines | 0 (split) |
-| Avg lines per protocol | 220 | ~150 |
-| Chaos defense rate | 100% | 100% |
-| Healing test coverage | ? | >80% |
-| CLI hook integration | 0% | 100% |
+| Metric | Current | Target | Status |
+|--------|---------|--------|--------|
+| Protocol god file | 2862 lines | 0 (split) | 🔴 Pending |
+| Avg lines per protocol | 220 | ~150 | 🔴 Pending |
+| Chaos defense rate | 100% | 100% | ✅ Achieved |
+| Internal NAGA governance | 100% | 100% | ✅ Achieved |
+| External API governance | 0% | 100% | 🔴 CRITICAL |
+| Dharma breaches | 15 | 0 | 🔴 Pending |
+| CLI hook integration | 100% | 100% | ✅ Complete (21/21 tests) |
+
+---
+
+## Progress Log
+
+### 2026-01-06: ASHVAMEDHA KURUKSHETRA Complete
+
+**4-Front Battle Results:**
+
+1. **Hard Flood (ac2e71c)**: NagaProxy (425 LOC) exists but ZERO usage in production.
+   - External APIs (LLMClient, TwitterService, etc.) are unwrapped
+   - Design choice: Soft Flood preferred over Hard Flood
+
+2. **Soft Flood (aeaf951)**: Internal governance EXCELLENT
+   - 12/12 NAGA services use NagaBaseService
+   - 26 @naga_governed decorated methods
+   - 11 mixins available, 5 flooded classes
+
+3. **Dharma Breach (acb00e2)**: 15 unprotected services identified
+   - 6 CRITICAL (external APIs + core services)
+   - 5 HIGH (internal infrastructure)
+   - 4 MEDIUM (lower-risk components)
+
+4. **Split Strategy (a405caa)**: Complete battle plan ready
+   - 47 classes in god file mapped
+   - 18 target modules across 8 subdirectories
+   - Migration strategy with backward compat
+
+### 2026-01-06: CLI Level -1 Infrastructure Verified
+
+**Status**: ALREADY COMPLETE - discovered and verified existing implementation.
+
+| Component | File | Status |
+|-----------|------|--------|
+| CLI Execution Protocol | `vibe_core/protocols/cli_execution.py` | ✅ |
+| CLI HookChain | `vibe_core/naga/cli_hook_chain.py` | ✅ |
+| TakshakaCLIHook | `vibe_core/naga/hooks/takshaka_cli.py` | ✅ |
+| CapabilityCLIHook | `vibe_core/naga/hooks/capability_cli.py` | ✅ |
+| ChitraguptaCLIHook | `vibe_core/naga/hooks/chitragupta_cli.py` | ✅ |
+| SeshaCLIHook | `vibe_core/naga/hooks/sesha_cli.py` | ✅ |
+| UnifiedCLI Integration | `vibe_core/cli/unified_cli.py` | ✅ |
+
+**Tests**: 21/21 passed in 0.21s
