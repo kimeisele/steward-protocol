@@ -336,23 +336,24 @@ class NaradaService(NagaBaseService, ObserveProtocol):
             logger.debug(f"Chitragupta routing failed: {e}")
 
     def _route_to_sesha(self, observation: ObservationDict) -> None:
-        """Route to Sesha for audit trail."""
+        """Route to Sesha for audit trail (via PUBLIC API)."""
         try:
             from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.naga import SeshaProtocol
+            from vibe_core.protocols.naga import EventRecord, SeshaProtocol
 
             sesha = ServiceRegistry.get(SeshaProtocol)
-            if sesha and hasattr(sesha, "_ledger") and sesha._ledger:
-                sesha._ledger.record_event(
-                    event_type="PROXY_OBSERVATION",
-                    agent_id=f"proxy.{observation.get('service_type', 'unknown')}",
-                    details={
+            if sesha:
+                event: EventRecord = {
+                    "event_type": "PROXY_OBSERVATION",
+                    "agent_id": f"proxy.{observation.get('service_type', 'unknown')}",
+                    "details": {
                         "method": observation.get("method_name", ""),
                         "duration_ms": observation.get("duration_ms", 0.0),
                         "args_count": observation.get("args_count", 0),
                         "result_type": observation.get("result_type") or "None",
                         "exception_type": observation.get("exception_type") or "",
                     },
-                )
+                }
+                sesha.record_event(event)
         except Exception as e:
             logger.debug(f"Sesha routing failed: {e}")

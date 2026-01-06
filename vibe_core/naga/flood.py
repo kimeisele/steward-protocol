@@ -499,19 +499,21 @@ class NagaSignalWatcher:
                 signal_type = getattr(signal, "signal_type", "unknown")
                 source = getattr(signal, "source_agent", "unknown")
 
-                # Sesha audit (side channel)
-                if hasattr(self._sesha, "_ledger") and self._sesha._ledger:
-                    self._sesha._ledger.record_event(
-                        event_type="NAGA_SIGNAL_WATCH",
-                        agent_id="naga_watcher",
-                        details={
-                            "signal_type": str(signal_type),
-                            "source": source,
-                            "priority": getattr(signal, "priority", 0),
-                        },
-                    )
+                # Sesha audit (via PUBLIC API)
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "NAGA_SIGNAL_WATCH",
+                    "agent_id": "naga_watcher",
+                    "details": {
+                        "signal_type": str(signal_type),
+                        "source": source,
+                        "priority": getattr(signal, "priority", 0),
+                    },
+                }
+                self._sesha.record_event(event)
             except Exception:
-                pass  # Silent fail
+                pass  # Non-critical
 
     def get_stats(self) -> Dict[str, object]:
         """Get signal watcher statistics."""

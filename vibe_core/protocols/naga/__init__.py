@@ -171,6 +171,7 @@ from vibe_core.protocols.naga.tuv import (
     TÜVReport,
 )
 from vibe_core.protocols.naga.types import (
+    EventRecord,
     NagaServiceProtocol,
     NagaStatus,
     NagaType,
@@ -197,6 +198,7 @@ __all__ = [
     "NagaStatus",
     "NagaServiceProtocol",  # Common DNA - discovered from 14+ protocols
     "StatusDetails",
+    "EventRecord",  # YAMARAJA: Typed event for Sesha.record_event()
     # Sesha
     "SeshaProtocol",
     "SyncStatus",

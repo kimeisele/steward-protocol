@@ -22,7 +22,20 @@ Usage:
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+import sys
+from typing import TYPE_CHECKING, Optional, TypedDict
+
+
+# YAMARAJA: TypedDict statt Dict[str, Any]
+class HiranyakashipuWiring(TypedDict, total=False):
+    """Typed wiring status for Hiranyakashipu attack framework."""
+
+    detector: object  # DriftDetector instance
+    handler: object  # CorrectionHandler instance
+    reactor: object  # Reactor instance
+    seeds_loaded: int
+    wired: bool
+
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.naga.scanner import NaradaScanner
@@ -101,7 +114,7 @@ class NagaOrchestrator:
 
         # ===== HIRANYAKASHIPU (Attack Framework) =====
         self._living_framework: Optional["LivingTestFramework"] = None
-        self._hiranyakashipu_wiring: Dict[str, Any] = {}
+        self._hiranyakashipu_wiring: HiranyakashipuWiring = {}
 
         # GAD-000 37th Principle: Sovereign identity for signing decisions
         from vibe_core.naga.identity import NagaIdentity
@@ -254,11 +267,18 @@ class NagaOrchestrator:
             ServiceRegistry.register(StateServiceProtocol, self._state_proxy)
             logger.info("🐍 NAGA STATE PROXY registered - Der Kommissar wacht")
         except Exception as e:
-            logger.warning(f"🐍 NAGA State Proxy failed to initialize: {e}")
+            # YAMARAJA: No silent failures - emergency log
+            sys.stderr.write(f"!!! NAGA State Proxy failed to initialize: {e}\n")
             # Non-critical - continue without proxy
 
         # 3. VASUKI - The Bridge (needs Sesha and Takshaka)
         if self._config.vasuki.enabled:
+            # YAMARAJA: Vasuki without Sesha = Agent ohne Gedächtnis = Shell-Skript
+            if self._sesha is None:
+                sys.stderr.write("!!! YAMARAJA: Vasuki enabled but Sesha failed - ABBRUCH\n")
+                sys.stderr.write("!!! Ein Agent ohne Gedächtnis ist kein Agent.\n")
+                raise SystemExit(1)
+
             self._vasuki = VasukiService(
                 sesha=self._sesha,
                 takshaka=self._takshaka,
@@ -350,7 +370,8 @@ class NagaOrchestrator:
 
                 logger.info("♾️ ANANTA registered - Gene Splicer + Loader Governor active")
             except Exception as e:
-                logger.warning(f"♾️ ANANTA failed to initialize: {e}")
+                # YAMARAJA: No silent failures - emergency log
+                sys.stderr.write(f"!!! ANANTA failed to initialize: {e}\n")
                 # Non-critical - continue without Ananta
 
         # =========================================================================
@@ -359,7 +380,7 @@ class NagaOrchestrator:
         # "The demons churn the ocean, Vishnu controls the outcome"
         # Wire living tests to DriftRegistry, CorrectionDispatcher, Reactor
 
-        self._hiranyakashipu_wiring: Dict[str, Any] = {}
+        self._hiranyakashipu_wiring: HiranyakashipuWiring = {}
         if self._config.prahlad.enabled and self._config.prahlad.chaos_probe_enabled:
             try:
                 from pathlib import Path
@@ -395,7 +416,8 @@ class NagaOrchestrator:
 
                 logger.info("🔥 HIRANYAKASHIPU wired - Attack Framework active")
             except Exception as e:
-                logger.warning(f"🔥 HIRANYAKASHIPU failed to wire: {e}")
+                # YAMARAJA: No silent failures - emergency log
+                sys.stderr.write(f"!!! HIRANYAKASHIPU failed to wire: {e}\n")
                 # Non-critical - continue without attack framework
 
         # =========================================================================
@@ -405,6 +427,12 @@ class NagaOrchestrator:
         # 8. FLOOD MANAGER - Organic Flooding (Phase 2)
         # "Wie Wasser in jede Ritze" - with safety guards
         if self._config.flood.enabled:
+            # YAMARAJA: FloodManager without Sesha = flooding without audit = dangerous
+            if self._sesha is None:
+                sys.stderr.write("!!! YAMARAJA: FloodManager enabled but Sesha failed - ABBRUCH\n")
+                sys.stderr.write("!!! Flooding without audit trail is unacceptable.\n")
+                raise SystemExit(1)
+
             try:
                 from vibe_core.naga.flood import NagaFloodManager
 
@@ -417,12 +445,18 @@ class NagaOrchestrator:
                 self._flood_manager.start()
                 logger.info("🌊 NAGA Flood Manager started - organic flooding active")
             except Exception as e:
-                logger.warning(f"🌊 NAGA Flood Manager failed to start: {e}")
-            # Non-critical - continue without flooding
+                sys.stderr.write(f"!!! NAGA Flood Manager failed to start: {e}\n")
+                # Non-critical after validation - continue without flooding
 
         # 5. COMMIT WATCHER - Der Wächter-Pattern (Phase 4)
         # "NAGAs notice when things go wrong"
         if self._config.commit_watcher.enabled:
+            # YAMARAJA: CommitWatcher without Sesha = watching without recording = useless
+            if self._sesha is None:
+                sys.stderr.write("!!! YAMARAJA: CommitWatcher enabled but Sesha failed - ABBRUCH\n")
+                sys.stderr.write("!!! Watching without recording is theater.\n")
+                raise SystemExit(1)
+
             try:
                 from vibe_core.naga.commit_watcher import NagaCommitWatcher
 
@@ -434,8 +468,8 @@ class NagaOrchestrator:
                 )
                 logger.info("👁️ NAGA Commit Watcher initialized - Der Wächter observes")
             except Exception as e:
-                logger.warning(f"👁️ NAGA Commit Watcher failed to start: {e}")
-            # Non-critical - continue without watcher
+                sys.stderr.write(f"!!! NAGA Commit Watcher failed to start: {e}\n")
+                # Non-critical after validation - continue without watcher
 
         # 6. CORTEX - Das Zentrale Nervensystem (Phase 8)
         # "Das Nervensystem, nicht das Gehirn" - NAGAs observe, correlate, inform
@@ -488,7 +522,8 @@ class NagaOrchestrator:
                     logger.info("🧠 Cortex -> Prahlad wired")
 
             except Exception as e:
-                logger.warning(f"🧠 NAGA Cortex failed to start: {e}")
+                # YAMARAJA: No silent failures - emergency log
+                sys.stderr.write(f"!!! NAGA Cortex failed to start: {e}\n")
                 # Non-critical - continue without cortex
 
         # 7. OUROBOROS - GAD-000 Recoverability (NAGAs watching NAGAs)
@@ -502,7 +537,8 @@ class NagaOrchestrator:
                 self._cortex._ouroboros = self._ouroboros
                 logger.info("🐍 OUROBOROS initialized - Die Schlange wacht")
             except Exception as e:
-                logger.warning(f"🐍 OUROBOROS failed to start: {e}")
+                # YAMARAJA: No silent failures - emergency log
+                sys.stderr.write(f"!!! OUROBOROS failed to start: {e}\n")
                 # Non-critical - continue without OUROBOROS
 
         # 8. Register the Federation itself for service discovery
@@ -624,10 +660,10 @@ class NagaOrchestrator:
 
     def _build_matrix_display(
         self,
-        intel: Dict[str, Any],
-        ananta_audit: Dict[str, Any],
-        shuddhi_remedies: list,
-    ) -> list:
+        intel: dict[str, object],
+        ananta_audit: dict[str, object],
+        shuddhi_remedies: list[str],
+    ) -> list[str]:
         """Build the visual matrix display."""
         lines = []
 
@@ -715,7 +751,7 @@ class NagaOrchestrator:
     # Status & Health
     # =========================================================================
 
-    def get_status(self) -> Dict[str, object]:
+    def get_status(self) -> dict[str, object]:
         """Get federation health status - all 8 members + infrastructure."""
         return {
             "initialized": self._initialized,
@@ -851,6 +887,6 @@ class NagaOrchestrator:
         return self._living_framework
 
     @property
-    def hiranyakashipu_wiring(self) -> Dict[str, Any]:
+    def hiranyakashipu_wiring(self) -> HiranyakashipuWiring:
         """Get Hiranyakashipu wiring status (detector, handler, reactor)."""
         return self._hiranyakashipu_wiring

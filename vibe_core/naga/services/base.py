@@ -27,6 +27,7 @@ from vibe_core.di import ServiceRegistry
 if TYPE_CHECKING:
     from vibe_core.protocols.naga import (
         ChitraguptaProtocol,
+        EventRecord,
         SeshaProtocol,
         TakshakaProtocol,
     )
@@ -175,20 +176,23 @@ def cli_governed(
                         # YAMARAJA: Emergency log, not silent
                         sys.stderr.write(f"!!! CHITRAGUPTA FAILED: {e}\n")
 
-                # === SESHA AUDIT TRAIL ===
-                if sesha and hasattr(sesha, "_ledger"):
+                # === SESHA AUDIT TRAIL (via PUBLIC API) ===
+                if sesha:
                     try:
-                        sesha._ledger.record_event(
-                            event_type="CLI_COMMAND_EXECUTED",
-                            agent_id=cap_token.subject if cap_token else "anonymous",
-                            details={
+                        from vibe_core.protocols.naga import EventRecord
+
+                        event: EventRecord = {
+                            "event_type": "CLI_COMMAND_EXECUTED",
+                            "agent_id": cap_token.subject if cap_token else "anonymous",
+                            "details": {
                                 "operation": op_name,
                                 "duration_ms": str(round(duration_ms, 2)),
                                 "success": str(error_msg is None),
                                 "service": service_name,
                                 "error": (error_msg or "")[:200],
                             },
-                        )
+                        }
+                        sesha.record_event(event)
                     except Exception as e:
                         # YAMARAJA: Emergency log, not silent
                         sys.stderr.write(f"!!! SESHA AUDIT FAILED: {e}\n")
@@ -300,9 +304,11 @@ def naga_governed(
                         # YAMARAJA: Emergency log, not silent
                         sys.stderr.write(f"!!! CHITRAGUPTA PROFILING FAILED [{service_name}]: {e}\n")
 
-                # === SESHA KARMA RECORDING ===
-                if self._sesha and hasattr(self._sesha, "_ledger"):
+                # === SESHA KARMA RECORDING (via PUBLIC API) ===
+                if self._sesha:
                     try:
+                        from vibe_core.protocols.naga import EventRecord
+
                         details: dict[str, object] = {
                             "operation": op_name,
                             "duration_ms": round(duration_ms, 2),
@@ -313,11 +319,12 @@ def naga_governed(
                         if log_args and args:
                             details["args_count"] = len(args)
 
-                        self._sesha._ledger.record_event(
-                            event_type="NAGA_OPERATION",
-                            agent_id=service_name.lower(),
-                            details=details,
-                        )
+                        event: EventRecord = {
+                            "event_type": "NAGA_OPERATION",
+                            "agent_id": service_name.lower(),
+                            "details": details,
+                        }
+                        self._sesha.record_event(event)
                     except Exception as e:
                         # YAMARAJA: Emergency log, not silent
                         sys.stderr.write(f"!!! SESHA KARMA FAILED [{service_name}]: {e}\n")
@@ -430,14 +437,18 @@ class NagaBaseService:
         Record event to Sesha ledger (Karma tracking).
 
         Convenience method for explicit logging.
+        Uses public Sesha.record_event() API - no _ledger access!
         """
-        if self._sesha and hasattr(self._sesha, "_ledger"):
+        if self._sesha:
             try:
-                self._sesha._ledger.record_event(
-                    event_type=event_type,
-                    agent_id=self._service_name.lower(),
-                    details=details,
-                )
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": event_type,
+                    "agent_id": self._service_name.lower(),
+                    "details": details,
+                }
+                self._sesha.record_event(event)
             except Exception as e:
                 # YAMARAJA: Emergency log, not just debug
                 sys.stderr.write(f"!!! [{self._service_name}] KARMA RECORDING FAILED: {e}\n")

@@ -429,15 +429,17 @@ class NagaCommitWatcher:
             return
 
         try:
-            if hasattr(self._sesha, "_ledger") and self._sesha._ledger:
-                details = data if isinstance(data, dict) else {"result": str(data)}
-                self._sesha._ledger.record_event(
-                    event_type=f"NAGA_{event_type}",
-                    agent_id="commit_watcher",
-                    details=details,
-                )
+            from vibe_core.protocols.naga import EventRecord
+
+            details = data if isinstance(data, dict) else {"result": str(data)}
+            event: EventRecord = {
+                "event_type": f"NAGA_{event_type}",
+                "agent_id": "commit_watcher",
+                "details": details,
+            }
+            self._sesha.record_event(event)
         except Exception:
-            pass  # Silent fail
+            pass  # Non-critical
 
     # =========================================================================
     # STATUS

@@ -419,14 +419,16 @@ class NagaOuroboros:
             return
 
         try:
+            from vibe_core.protocols.naga import EventRecord
+
             sesha = self._orchestrator.sesha
-            if hasattr(sesha, "_ledger") and sesha._ledger:
-                sesha._ledger.record_event(
-                    event_type=f"NAGA_LOOP_{alert.loop_code.name}",
-                    agent_id="ouroboros",
-                    details=alert.to_dict(),
-                    result="DETECTED",
-                )
+            event: EventRecord = {
+                "event_type": f"NAGA_LOOP_{alert.loop_code.name}",
+                "agent_id": "ouroboros",
+                "details": alert.to_dict(),
+                "result": "DETECTED",
+            }
+            sesha.record_event(event)
         except Exception as e:
             logger.debug(f"[OUROBOROS] Ledger record failed: {e}")
 

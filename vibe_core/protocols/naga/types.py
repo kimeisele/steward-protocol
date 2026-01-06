@@ -173,7 +173,7 @@ class NagaServiceProtocol(Protocol):
 
 class EventDict(TypedDict, total=False):
     """
-    Typed event structure for Sesha and Vasuki.
+    Typed event structure for Sesha and Vasuki (READ operations).
     Replaces Dict[str, Any].
     """
 
@@ -184,6 +184,32 @@ class EventDict(TypedDict, total=False):
     signature: Optional[str]
     sequence: int
     hash: str
+
+
+class EventRecord(TypedDict, total=False):
+    """
+    Typed event record for Sesha.record_event() (WRITE operations).
+
+    YAMARAJA: This is the PUBLIC API contract for recording events.
+    No more accessing _ledger directly!
+
+    Required fields:
+        event_type: Type of event (e.g., "NAGA_OPERATION", "CLI_COMMAND")
+        agent_id: ID of the agent/service recording the event
+
+    Optional fields:
+        details: Structured event data (Dict[str, object], NOT Any!)
+        result: Result string (max 1000 chars)
+        task_id: Associated task ID
+        error: Error message (max 500 chars)
+    """
+
+    event_type: str  # Required
+    agent_id: str  # Required
+    details: Dict[str, object]  # Optional - typed, no Any!
+    result: str  # Optional
+    task_id: str  # Optional
+    error: str  # Optional
 
 
 class ObservationDict(TypedDict, total=False):
