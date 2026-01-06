@@ -87,6 +87,15 @@ from .ledger import (
     VibeLedger,
     VibeScheduler,
 )
+
+# SPEED.md: Lineage Protocol (Fast Boot via Merkle Checkpointing)
+from .lineage import (
+    BlockData,
+    CheckpointData,
+    LineageProtocol,
+    NullLineageChain,
+    VerificationResult,
+)
 from .llm import LLMProtocol
 
 # OPUS-308: Manifestation Protocol
@@ -269,6 +278,12 @@ __all__ = [
     "VarnaType",
     "AsharamaStage",
     "VedicGovernanceProtocol",
+    # SPEED.md: Lineage Protocol (Fast Boot)
+    "LineageProtocol",
+    "CheckpointData",
+    "VerificationResult",
+    "BlockData",
+    "NullLineageChain",
     # OPUS-309: Operator Cognitive Protocol
     "OperatorCognitiveProtocol",
     "CognitiveResult",

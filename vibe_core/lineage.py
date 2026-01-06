@@ -19,12 +19,19 @@ import hashlib
 import json
 import logging
 import sqlite3
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.lineage import CheckpointData, VerificationResult
 
 logger = logging.getLogger("PARAMPARA")
+
+# SPEED.md: Checkpoint file for fast boot (Merkle Checkpointing)
+CHECKPOINT_FILENAME = "lineage_checkpoint.json"
 
 
 @dataclass
@@ -40,7 +47,7 @@ class LineageBlock:
     timestamp: str  # ISO 8601 timestamp
     event_type: str  # GENESIS, AGENT_REGISTERED, OATH_SWORN, etc.
     agent_id: Optional[str]  # Agent involved (None for system events)
-    data: Dict[str, Any]  # Event-specific data
+    data: Dict[str, str]  # Event-specific data (stringified)
     previous_hash: str  # Hash of previous block
     hash: str  # Hash of this block (SHA-256)
 
@@ -94,12 +101,25 @@ class LineageChain:
         if self.get_chain_length() == 0:
             self._create_genesis_block()
         else:
-            logger.info(f"⛓️  Parampara chain loaded ({self.get_chain_length()} blocks)")
+            chain_length = self.get_chain_length()
+            logger.info(f"⛓️  Parampara chain loaded ({chain_length} blocks)")
 
-            # Verify chain integrity on load
-            if not self.verify_chain():
+            # SPEED.md: Fast verification with checkpoint support
+            result = self.verify_chain_fast()
+            if not result["valid"]:
                 logger.critical("💥 CHAIN INTEGRITY VIOLATED - SYSTEM COMPROMISED")
                 raise RuntimeError("Parampara chain verification failed")
+
+            # Log verification method used
+            method = result["method"]
+            duration = result["duration_ms"]
+            verified = result["blocks_verified"]
+            if method == "checkpoint":
+                logger.info(f"⚡ Fast boot: checkpoint match ({duration:.1f}ms)")
+            elif method == "delta":
+                logger.info(f"⚡ Fast boot: delta verified {verified} blocks ({duration:.1f}ms)")
+            else:
+                logger.info(f"⛓️  Full verification: {verified} blocks ({duration:.1f}ms)")
 
     def _init_db(self) -> None:
         """Initialize the database schema"""
@@ -217,7 +237,7 @@ class LineageChain:
 
         return genesis
 
-    def add_block(self, event_type: str, agent_id: Optional[str], data: Dict[str, Any]) -> LineageBlock:
+    def add_block(self, event_type: str, agent_id: Optional[str], data: Dict[str, str]) -> LineageBlock:
         """
         ⛓️  ADD A NEW BLOCK TO THE CHAIN ⛓️
 
@@ -353,6 +373,238 @@ class LineageChain:
                     return False
 
         logger.info(f"✅ Parampara chain verified ({len(blocks)} blocks)")
+        return True
+
+    # =========================================================================
+    # SPEED.md: Fast Boot Methods (Merkle Checkpointing)
+    # =========================================================================
+
+    def get_tip_hash(self) -> str:
+        """
+        Get hash of latest block (single query).
+
+        O(1) vs O(n) for get_all_blocks().
+        Used for checkpoint comparison.
+
+        Returns:
+            SHA-256 hash of tip block, or empty string if chain empty
+        """
+        cur = self.conn.cursor()
+        cur.execute("SELECT hash FROM blocks ORDER BY idx DESC LIMIT 1")
+        row = cur.fetchone()
+        return row[0] if row else ""
+
+    def get_tip_index(self) -> int:
+        """
+        Get index of latest block.
+
+        Returns:
+            Index of tip block, or -1 if chain empty
+        """
+        cur = self.conn.cursor()
+        cur.execute("SELECT idx FROM blocks ORDER BY idx DESC LIMIT 1")
+        row = cur.fetchone()
+        return row[0] if row else -1
+
+    def _get_checkpoint_path(self) -> Path:
+        """Get path to checkpoint file (.vibe/lineage_checkpoint.json)."""
+        # Store checkpoint next to the DB file
+        vibe_dir = self.db_path.parent.parent / ".vibe"
+        if not vibe_dir.exists():
+            # Fallback to project root
+            vibe_dir = self._get_project_root() / ".vibe"
+        vibe_dir.mkdir(parents=True, exist_ok=True)
+        return vibe_dir / CHECKPOINT_FILENAME
+
+    def save_checkpoint(self) -> bool:
+        """
+        Save verification checkpoint after successful verification.
+
+        Returns:
+            True if saved successfully
+        """
+        try:
+            checkpoint_path = self._get_checkpoint_path()
+            tip_hash = self.get_tip_hash()
+            tip_index = self.get_tip_index()
+
+            checkpoint = {
+                "verified_tip_hash": tip_hash,
+                "verified_index": tip_index,
+                "verified_at": datetime.utcnow().isoformat(),
+                "chain_db_path": str(self.db_path),
+            }
+
+            checkpoint_path.write_text(json.dumps(checkpoint, indent=2))
+            logger.debug(f"⚡ Checkpoint saved: {tip_hash[:16]}... (idx={tip_index})")
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to save checkpoint: {e}")
+            return False
+
+    def load_checkpoint(self) -> Optional[Dict[str, str]]:
+        """
+        Load verification checkpoint.
+
+        Returns:
+            Checkpoint dict if exists and valid, None otherwise
+        """
+        try:
+            checkpoint_path = self._get_checkpoint_path()
+            if not checkpoint_path.exists():
+                return None
+
+            data = json.loads(checkpoint_path.read_text())
+
+            # Validate checkpoint has required fields
+            required = ["verified_tip_hash", "verified_index", "chain_db_path"]
+            if not all(k in data for k in required):
+                logger.warning("⚠️  Invalid checkpoint format")
+                return None
+
+            # Invalidate if DB path changed
+            if data["chain_db_path"] != str(self.db_path):
+                logger.warning("⚠️  Checkpoint DB path mismatch - invalidating")
+                return None
+
+            return data
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to load checkpoint: {e}")
+            return None
+
+    def clear_checkpoint(self) -> bool:
+        """
+        Clear checkpoint (force full verification on next boot).
+
+        Returns:
+            True if cleared successfully
+        """
+        try:
+            checkpoint_path = self._get_checkpoint_path()
+            if checkpoint_path.exists():
+                checkpoint_path.unlink()
+                logger.info("🗑️  Checkpoint cleared")
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to clear checkpoint: {e}")
+            return False
+
+    def verify_chain_fast(self) -> Dict[str, object]:
+        """
+        Fast chain verification with checkpoint support.
+
+        SPEED.md Algorithm:
+        1. Load checkpoint
+        2. Compare checkpoint.tip_hash with current tip
+        3. If match: Skip verification (instant boot)
+        4. If mismatch: Verify only delta (new blocks)
+        5. If no checkpoint: Full verification (fallback)
+
+        Returns:
+            Dict with: valid, method, blocks_verified, duration_ms, tip_hash, tip_index
+        """
+        start_time = time.time()
+        current_tip_hash = self.get_tip_hash()
+        current_tip_index = self.get_tip_index()
+
+        if not current_tip_hash:
+            # Empty chain
+            return {
+                "valid": False,
+                "method": "empty",
+                "blocks_verified": 0,
+                "duration_ms": (time.time() - start_time) * 1000,
+                "tip_hash": "",
+                "tip_index": -1,
+            }
+
+        # Try checkpoint
+        checkpoint = self.load_checkpoint()
+
+        if checkpoint and checkpoint["verified_tip_hash"] == current_tip_hash:
+            # Checkpoint matches - skip verification!
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(f"⚡ Parampara fast-verified via checkpoint ({duration_ms:.1f}ms)")
+            return {
+                "valid": True,
+                "method": "checkpoint",
+                "blocks_verified": 0,
+                "duration_ms": duration_ms,
+                "tip_hash": current_tip_hash,
+                "tip_index": current_tip_index,
+            }
+
+        if checkpoint and checkpoint["verified_index"] < current_tip_index:
+            # Checkpoint exists but chain grew - verify delta
+            delta_start = checkpoint["verified_index"] + 1
+            valid = self._verify_delta(delta_start)
+            duration_ms = (time.time() - start_time) * 1000
+            blocks_verified = current_tip_index - checkpoint["verified_index"]
+
+            if valid:
+                self.save_checkpoint()
+                logger.info(f"⚡ Parampara delta-verified ({blocks_verified} new blocks, {duration_ms:.1f}ms)")
+
+            return {
+                "valid": valid,
+                "method": "delta",
+                "blocks_verified": blocks_verified,
+                "duration_ms": duration_ms,
+                "tip_hash": current_tip_hash,
+                "tip_index": current_tip_index,
+            }
+
+        # No valid checkpoint - full verification
+        valid = self.verify_chain()
+        duration_ms = (time.time() - start_time) * 1000
+
+        if valid:
+            self.save_checkpoint()
+
+        return {
+            "valid": valid,
+            "method": "full",
+            "blocks_verified": current_tip_index + 1,
+            "duration_ms": duration_ms,
+            "tip_hash": current_tip_hash,
+            "tip_index": current_tip_index,
+        }
+
+    def _verify_delta(self, start_index: int) -> bool:
+        """
+        Verify only blocks from start_index to tip.
+
+        Used for delta verification when checkpoint exists.
+        """
+        cur = self.conn.cursor()
+        cur.execute("SELECT * FROM blocks WHERE idx >= ? ORDER BY idx", (start_index,))
+        new_blocks = [self._row_to_block(row) for row in cur.fetchall()]
+
+        if not new_blocks:
+            return True
+
+        # Get previous block for linkage check
+        cur.execute("SELECT * FROM blocks WHERE idx = ?", (start_index - 1,))
+        prev_row = cur.fetchone()
+        prev_block = self._row_to_block(prev_row) if prev_row else None
+
+        for i, block in enumerate(new_blocks):
+            # Verify hash
+            calculated_hash = self._calculate_hash(block)
+            if block.hash != calculated_hash:
+                logger.critical(f"💥 DELTA: Hash mismatch at index {block.index}!")
+                return False
+
+            # Verify linkage
+            if i == 0 and prev_block:
+                if block.previous_hash != prev_block.hash:
+                    logger.critical(f"💥 DELTA: Link broken at index {block.index}!")
+                    return False
+            elif i > 0:
+                if block.previous_hash != new_blocks[i - 1].hash:
+                    logger.critical(f"💥 DELTA: Link broken at index {block.index}!")
+                    return False
+
         return True
 
     def get_chain_length(self) -> int:
