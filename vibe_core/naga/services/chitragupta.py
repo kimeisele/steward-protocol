@@ -28,6 +28,7 @@ from vibe_core.naga.kulika import (
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
+from vibe_core.protocols.naga.groups import Observation, ObserveProtocol
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
@@ -126,14 +127,16 @@ class KarmaEntry:
     capabilities=[NagaCapability.PROFILING, NagaCapability.AUDIT],
     protocol_class="vibe_core.protocols.naga.ChitraguptaProtocol",
 )
-class ChitraguptaService(NagaBaseService):
+class ChitraguptaService(NagaBaseService, ObserveProtocol):
     """
     Chitragupta - The Karma Accountant.
 
     Profiles component behavior and detects anomalies.
 
-
-    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
+    INTERFACE GROUP: ObserveProtocol (observe, get_observations, get_observation_count)
+    SEVA: Chitragupta FÜHRT BUCH FÜR Prahlad - er entscheidet über Karma!
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
+    """
 
     def __init__(
         self,
@@ -368,3 +371,68 @@ class ChitraguptaService(NagaBaseService):
                 )
 
         return handler
+
+    # =========================================================================
+    # ObserveProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def observe(self, event_type: str, source: str, data: str) -> Observation:
+        """
+        Observe an event (ObserveProtocol).
+
+        SEVA: Chitragupta records karma FÜR Prahlad's judgment.
+
+        Args:
+            event_type: Type of event being observed
+            source: Source of the event
+            data: Serialized event data
+
+        Returns:
+            Observation record
+        """
+        observation = Observation(
+            event_type=event_type,
+            source=source,
+            timestamp=datetime.now(),
+            data=data,
+        )
+
+        # Also log as karma entry
+        self._karma_log.append(
+            KarmaEntry(
+                action=f"OBSERVE:{event_type}",
+                component_id=source,
+            )
+        )
+        self._last_heartbeat = datetime.now()
+
+        return observation
+
+    def get_observations(self, since: Optional[datetime] = None) -> List[Observation]:
+        """
+        Get recorded observations (ObserveProtocol).
+
+        SEVA: Returns karma log FÜR Prahlad's governance.
+
+        Args:
+            since: Only return observations after this time
+
+        Returns:
+            List of Observation records (converted from karma log)
+        """
+        result: List[Observation] = []
+        for entry in self._karma_log:
+            if since is None or entry.timestamp >= since:
+                result.append(
+                    Observation(
+                        event_type=f"karma:{entry.action}",
+                        source=entry.component_id,
+                        timestamp=entry.timestamp,
+                        data=f"metric={entry.metric}" if entry.metric else "",
+                    )
+                )
+        return result
+
+    def get_observation_count(self) -> int:
+        """Get total observation count (ObserveProtocol)."""
+        return len(self._karma_log)
