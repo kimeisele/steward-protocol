@@ -1,5 +1,5 @@
 """
-ANANTA SERVICE - The Gene Splicer + Loader Governor (12th Lord).
+ANANTA SERVICE - The Substrate Host + Gene Splicer (12th Lord).
 
 Ananta - The Infinite One, cosmic form of Sesha who holds all worlds.
 Also: "The Infinite Remainder" - what survives when everything crashes.
@@ -8,22 +8,30 @@ From mythology: Ananta Shesha is the infinite serpent upon whom
 Vishnu rests. He holds the entire universe on his thousand hoods.
 When the universe is destroyed, Shesha remains - the substrate.
 
+SUBSTRATE ARCHITECTURE (Phase 3):
+    Ananta implements IGeneHost from substrate.py (Layer -1).
+    He is the HOST (the table), not the FOOD (the genes).
+    Genes bind TO him, he doesn't absorb them (Vaishnava, not Mayavadi).
+
+    Flow:
+    1. Ananta creates flooded class with Mixin genes
+    2. Flooded instance is created
+    3. Ananta.bind_genes(instance) - injects himself as host
+    4. Genes now have access to host capabilities
+
 Responsibilities:
 - Analyze services for NAGA needs (Detection Criteria)
 - Propose flooding with appropriate Mixins
 - Request Prahlad's approval (Check and Balance)
 - Create flooded classes via DNA injection (Soft Flood)
-- **NEW: Loading Governance** - Wraps VEDA-4 loaders for audit
-- **NEW: Boot Audit Trail** - Records every manifest/module load
-
-This is the OUROBOROS made explicit:
-    ManifestRegistry.scan_all() -> Ananta records -> Chitragupta persists
-    UnifiedLoader.discover_and_load() -> Ananta records -> Ledger audit
+- **IGeneHost**: Provide capabilities to bound genes
+- **Loading Governance** - Wraps VEDA-4 loaders for audit
+- **Boot Audit Trail** - Records every manifest/module load
 
 Integration:
 - Works with Narada (discovery) → Ananta (proposal) → Prahlad (veto)
 - Uses Mixin pattern, NOT Proxy pattern (preserves isinstance)
-- Wraps ManifestRegistry and UnifiedLoader for governance
+- Implements IGeneHost for top-down dependency injection
 """
 
 import ast
@@ -38,6 +46,17 @@ if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
 
 T = TypeVar("T")
+
+# Substrate Protocol imports (Layer -1)
+from vibe_core.protocols.substrate import (
+    GeneActivationState,
+    GeneManifest,
+    GeneStatus,
+    IGene,
+    IGeneHost,
+    SubstrateHealth,
+    SubstrateStatus,
+)
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -100,15 +119,17 @@ class LoadEvent:
 )
 class AnantaService(NagaBaseService, AnantaProtocol):
     """
-    Ananta - The Gene Splicer.
+    Ananta - The Substrate Host + Gene Splicer.
 
-    Creates flooded classes via Mixin inheritance (Soft Flood).
-    NOT via Proxy wrapping (Hard Flood).
+    SUBSTRATE ROLE (IGeneHost):
+    - The HOST (the table), not the FOOD (the genes)
+    - Genes bind TO him via top-down injection
+    - Provides capabilities to bound genes via get_capability()
 
-    Soft Flood preserves:
-    - isinstance checks
-    - pickle compatibility
-    - internal state access
+    SPLICER ROLE (AnantaProtocol):
+    - Creates flooded classes via Mixin inheritance (Soft Flood)
+    - NOT via Proxy wrapping (Hard Flood)
+    - Preserves isinstance, pickle, internal state access
 
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
@@ -121,6 +142,13 @@ class AnantaService(NagaBaseService, AnantaProtocol):
         self._flood_history: List[VetoDecision] = []
         self._available_mixins: Dict[str, Type] = {}
         self._last_heartbeat = datetime.now()
+        self._boot_time = datetime.now()
+
+        # IGeneHost state (Substrate Layer -1)
+        self._genes: Dict[str, IGene] = {}
+        self._gene_statuses: Dict[str, GeneStatus] = {}
+        self._capability_providers: Dict[str, str] = {}  # capability -> gene_name
+        self._event_listeners: Dict[str, List[str]] = {}  # event_type -> gene_names
 
         # Loading Governance (OUROBOROS on Loaders)
         self._load_events: List[LoadEvent] = []
@@ -138,25 +166,74 @@ class AnantaService(NagaBaseService, AnantaProtocol):
         # Register available Mixins (will be expanded)
         self._register_mixins()
 
-        logger.info("ANANTA initialized - Gene Splicer + Loader Governor ready")
+        logger.info("ANANTA initialized - Substrate Host + Gene Splicer ready")
 
     def _register_mixins(self) -> None:
-        """Register available NAGA Mixins."""
-        # TODO: Import actual Mixin classes when created
-        # For now, we track names only
-        self._mixin_names = {
-            "sesha": "SeshaMixin",
-            "vasuki": "VasukiMixin",
-            "takshaka": "TakshakaMixin",
-            "kaliya": "KaliyaMixin",
-            "karkotaka": "KarkotakaMixin",
-            "kulika": "KulikaMixin",
-            "padma": "PadmaMixin",
-            "shankha": "ShankhaMixin",
-            "narada": "NaradaMixin",
-            "chitragupta": "ChitraguptaMixin",
-            "prahlad": "PrahladMixin",
-        }
+        """Register available NAGA Mixins from the Gene Pool."""
+        # Import actual Mixin classes (Phase 3 - Real Genes)
+        try:
+            from vibe_core.naga.mixins.base import (
+                ChitraguptaMixin,
+                KaliyaMixin,
+                KarkotakaMixin,
+                KulikaMixin,
+                NaradaMixin,
+                PadmaMixin,
+                PrahladMixin,
+                SeshaMixin,
+                ShankhaMixin,
+                TakshakaMixin,
+                VasukiMixin,
+            )
+
+            # Map names to actual Mixin classes
+            self._mixin_names = {
+                "sesha": "SeshaMixin",
+                "vasuki": "VasukiMixin",
+                "takshaka": "TakshakaMixin",
+                "kaliya": "KaliyaMixin",
+                "karkotaka": "KarkotakaMixin",
+                "kulika": "KulikaMixin",
+                "padma": "PadmaMixin",
+                "shankha": "ShankhaMixin",
+                "narada": "NaradaMixin",
+                "chitragupta": "ChitraguptaMixin",
+                "prahlad": "PrahladMixin",
+            }
+
+            # Register actual Mixin classes (WE import THEM, not vice versa)
+            self._available_mixins = {
+                "sesha": SeshaMixin,
+                "vasuki": VasukiMixin,
+                "takshaka": TakshakaMixin,
+                "kaliya": KaliyaMixin,
+                "karkotaka": KarkotakaMixin,
+                "kulika": KulikaMixin,
+                "padma": PadmaMixin,
+                "shankha": ShankhaMixin,
+                "narada": NaradaMixin,
+                "chitragupta": ChitraguptaMixin,
+                "prahlad": PrahladMixin,
+            }
+
+            logger.debug(f"ANANTA: Registered {len(self._available_mixins)} real Mixin genes")
+
+        except ImportError as e:
+            # Fallback if Mixins not yet available
+            logger.warning(f"ANANTA: Could not import Mixins: {e}")
+            self._mixin_names = {
+                "sesha": "SeshaMixin",
+                "vasuki": "VasukiMixin",
+                "takshaka": "TakshakaMixin",
+                "kaliya": "KaliyaMixin",
+                "karkotaka": "KarkotakaMixin",
+                "kulika": "KulikaMixin",
+                "padma": "PadmaMixin",
+                "shankha": "ShankhaMixin",
+                "narada": "NaradaMixin",
+                "chitragupta": "ChitraguptaMixin",
+                "prahlad": "PrahladMixin",
+            }
 
     # =========================================================================
     # Service Analysis
@@ -668,6 +745,159 @@ class AnantaService(NagaBaseService, AnantaProtocol):
             events_processed=len(self._flood_history) + self._total_loads,
             errors=self._failed_loads,
             message=f"floods={len(self._flood_history)}, loads={self._total_loads}, wrapped={self._wrapped}",
+        )
+
+    # =========================================================================
+    # IGeneHost Implementation (Substrate Layer -1)
+    # =========================================================================
+    #
+    # Ananta implements IGeneHost to be the HOST that genes bind to.
+    # Energy flows TOP-DOWN: Ananta → Genes (Avatara pattern)
+    # Genes do NOT import AnantaService - they only know IGeneHost.
+    # =========================================================================
+
+    def get_gene(self, name: str) -> Optional[IGene]:
+        """
+        Get a gene by name.
+
+        IGeneHost protocol implementation.
+        Genes call this to access sibling genes without circular imports.
+        """
+        return self._genes.get(name)
+
+    def has_gene(self, name: str) -> bool:
+        """Check if a gene is registered."""
+        return name in self._genes
+
+    def get_capability(self, capability: str) -> Optional[Any]:
+        """
+        Get a capability from any gene that provides it.
+
+        This is the KEY IGeneHost method - genes ask for capabilities
+        by name, not by importing service classes directly.
+
+        Example: gene.get_capability("ledger") → SeshaMixin's ledger
+
+        Args:
+            capability: Name of capability (e.g., "ledger", "validation")
+
+        Returns:
+            The capability provider or None if not available
+        """
+        # Check which gene provides this capability
+        provider_name = self._capability_providers.get(capability)
+        if provider_name is None:
+            return None
+
+        provider_gene = self._genes.get(provider_name)
+        if provider_gene is None:
+            return None
+
+        # Return the capability from the gene
+        # Genes expose capabilities via their manifest
+        return provider_gene
+
+    def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        """
+        Emit an event to all listening genes.
+
+        This is the SHANKHA (broadcast) capability at the substrate level.
+        Genes register for events and Ananta dispatches to all listeners.
+        """
+        listener_names = self._event_listeners.get(event_type, [])
+        for name in listener_names:
+            gene = self._genes.get(name)
+            if gene and hasattr(gene, "on_event"):
+                try:
+                    gene.on_event(event_type, data)  # type: ignore
+                except Exception as e:
+                    logger.warning(f"ANANTA: Gene {name} failed to handle {event_type}: {e}")
+
+    def register_gene(self, gene: IGene) -> bool:
+        """
+        Register a gene with the substrate.
+
+        IAnantaBridge protocol implementation.
+        The gene is registered but NOT yet bound or activated.
+        """
+        name = gene.manifest.name
+        if name in self._genes:
+            logger.warning(f"ANANTA: Gene {name} already registered")
+            return False
+
+        self._genes[name] = gene
+        self._gene_statuses[name] = GeneStatus(
+            manifest=gene.manifest,
+            state=GeneActivationState.DORMANT,
+        )
+
+        # Register capabilities this gene provides
+        for cap in gene.manifest.capabilities:
+            if cap not in self._capability_providers:
+                self._capability_providers[cap] = name
+
+        logger.debug(f"ANANTA: Registered gene {name} with capabilities {gene.manifest.capabilities}")
+        return True
+
+    def bind_genes(self, instance: Any) -> None:
+        """
+        Bind all genes on an instance to this host.
+
+        TOP-DOWN INJECTION (Avatara pattern):
+        - Ananta (host) calls gene.bind(self)
+        - Gene stores reference to host
+        - Gene does NOT import AnantaService
+        - Dependency Inversion Principle
+
+        Args:
+            instance: A flooded instance whose Mixin genes need binding
+        """
+        bound_count = 0
+        for naga_name in getattr(instance, "_naga_genes", []):
+            mixin_class = self._available_mixins.get(naga_name)
+            if mixin_class and isinstance(instance, mixin_class):
+                # The instance IS the gene (via Mixin inheritance)
+                if hasattr(instance, "bind"):
+                    try:
+                        instance.bind(self)  # TOP-DOWN injection
+                        bound_count += 1
+                        logger.debug(f"ANANTA: Bound gene {naga_name} to host")
+                    except Exception as e:
+                        logger.warning(f"ANANTA: Failed to bind gene {naga_name}: {e}")
+
+        if bound_count > 0:
+            logger.info(f"ANANTA: Bound {bound_count} genes on {type(instance).__name__}")
+
+    def get_substrate_status(self) -> SubstrateStatus:
+        """
+        Get overall substrate health status.
+
+        IAnantaBridge protocol implementation.
+        """
+        genes_active = sum(1 for g in self._genes.values() if g.state == GeneActivationState.ACTIVE)
+        genes_dormant = sum(1 for g in self._genes.values() if g.state == GeneActivationState.DORMANT)
+        genes_failed = sum(1 for s in self._gene_statuses.values() if s.error is not None)
+
+        uptime = (datetime.now() - self._boot_time).total_seconds()
+
+        if genes_failed > len(self._genes) / 2:
+            health = SubstrateHealth.CRITICAL
+        elif genes_failed > 0:
+            health = SubstrateHealth.DEGRADED
+        elif genes_active == len(self._genes):
+            health = SubstrateHealth.PRISTINE
+        else:
+            health = SubstrateHealth.HEALTHY
+
+        return SubstrateStatus(
+            health=health,
+            genes_total=len(self._genes),
+            genes_active=genes_active,
+            genes_dormant=genes_dormant,
+            genes_failed=genes_failed,
+            uptime_seconds=uptime,
+            last_heartbeat=self._last_heartbeat,
+            message=f"caps={len(self._capability_providers)}, mixins={len(self._available_mixins)}",
         )
 
 

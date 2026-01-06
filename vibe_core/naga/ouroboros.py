@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
     from vibe_core.naga.cortex.decisions import CortexDecision
     from vibe_core.naga.orchestrator import NagaOrchestrator
+    from vibe_core.ouroboros.ananta_shesha import AnantaShesha
 
 logger = logging.getLogger("NAGA.OUROBOROS")
 
@@ -147,6 +148,7 @@ class NagaOuroboros:
         loop_window_seconds: float = DEFAULT_LOOP_WINDOW_SECONDS,
         rapid_fire_threshold: int = DEFAULT_RAPID_FIRE_THRESHOLD,
         rapid_fire_window: float = DEFAULT_RAPID_FIRE_WINDOW,
+        system_anchor: Optional["AnantaShesha"] = None,
     ):
         """
         Initialize OUROBOROS.
@@ -156,11 +158,13 @@ class NagaOuroboros:
             loop_window_seconds: Time window for loop detection
             rapid_fire_threshold: Max corrections per source in window
             rapid_fire_window: Time window for rapid fire detection
+            system_anchor: AnantaShesha bridge for system-level escalation
         """
         self._orchestrator = orchestrator
         self._loop_window = loop_window_seconds
         self._rapid_fire_threshold = rapid_fire_threshold
         self._rapid_fire_window = rapid_fire_window
+        self._system_anchor = system_anchor
 
         # Rolling history of corrections
         self._history: Deque[CorrectionEvent] = deque(maxlen=self.DEFAULT_WINDOW_SIZE)
@@ -399,6 +403,9 @@ class NagaOuroboros:
         if alert.severity == "CRITICAL" and self._orchestrator:
             self._bite(alert)
 
+        # BRIDGE UP: Notify System AnantaShesha (Staat ← Bundesland)
+        self._notify_system_anchor(alert)
+
         # Call handlers
         for handler in self._alert_handlers:
             try:
@@ -439,6 +446,41 @@ class NagaOuroboros:
             self._orchestrator.takshaka.bite(violation)
         except Exception as e:
             logger.debug(f"[OUROBOROS] Bite failed: {e}")
+
+    def _notify_system_anchor(self, alert: LoopAlert) -> None:
+        """
+        Notify System AnantaShesha about loop detection.
+
+        BRIDGE UP: Bundesland → Staat
+        This enables system-level awareness of NAGA correction loops.
+        """
+        # Try injected anchor first
+        anchor = self._system_anchor
+
+        # Fall back to global singleton
+        if anchor is None:
+            try:
+                from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+                anchor = get_system_anchor()
+            except ImportError:
+                return
+
+        try:
+            anchor.notify_loop_detected({
+                "loop_code": alert.loop_code.value,
+                "severity": alert.severity,
+                "message": alert.message,
+                "participants": alert.participants,
+                "source": "naga_ouroboros",
+            })
+            logger.debug(f"[OUROBOROS] Notified AnantaShesha: {alert.loop_code.value}")
+        except Exception as e:
+            logger.debug(f"[OUROBOROS] System anchor notify failed: {e}")
+
+    def set_system_anchor(self, anchor: "AnantaShesha") -> None:
+        """Set the system anchor for bridging (late binding)."""
+        self._system_anchor = anchor
+        logger.info("[OUROBOROS] System anchor (AnantaShesha) connected")
 
     # =========================================================================
     # HELPERS

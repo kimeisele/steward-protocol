@@ -21,6 +21,9 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Protocol, Type, runtime_checkable
 
+# Import capability types for NAGA CLI hook integration
+from vibe_core.protocols.cli_execution import CLIPermissionLevel
+
 
 @dataclass
 class CLIResult:
@@ -45,6 +48,7 @@ class CLIMeta:
     Metadata for CLI command discovery.
 
     GAD-000: All commands must be discoverable.
+    NAGA CLI Hooks: Capability declarations for Level -2 governance.
     """
 
     command: str  # The CLI command name (e.g., "knowledge", "standards")
@@ -57,6 +61,14 @@ class CLIMeta:
     # For categorization
     domain: str = "system"  # e.g., "knowledge", "operations", "governance"
     tags: List[str] = field(default_factory=list)
+
+    # NAGA CLI Hook Integration (Phase 4)
+    # Permission level required to execute this command
+    permission_level: CLIPermissionLevel = CLIPermissionLevel.PUBLIC
+
+    # Specific capabilities required (e.g., ["cli.naga.status", "cli.tool.execute"])
+    # These are checked by CapabilityCLIHook against the caller's token
+    capabilities_required: List[str] = field(default_factory=list)
 
     def __repr__(self) -> str:
         return f"<CLI:{self.command}>"

@@ -33,7 +33,8 @@ Usage:
     naga.commit_watcher.observe(commit_result)
 """
 
-from vibe_core.naga.orchestrator import NagaOrchestrator
+# HOLON UPGRADE: ALL imports are lazy to prevent import cycles
+# NagaOrchestrator is loaded on first access via __getattr__
 
 # Lazy imports for optional components
 __all__ = [
@@ -66,8 +67,12 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Lazy import for optional components."""
-    if name == "NagaStateProxy":
+    """Lazy import for all components - HOLON PATTERN."""
+    if name == "NagaOrchestrator":
+        from vibe_core.naga.orchestrator import NagaOrchestrator
+
+        return NagaOrchestrator
+    elif name == "NagaStateProxy":
         from vibe_core.services.naga.state_proxy import NagaStateProxy
 
         return NagaStateProxy

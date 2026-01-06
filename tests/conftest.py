@@ -339,3 +339,79 @@ def test_task():
     from vibe_core.plugins.test_orchestration.fixtures import TestTasks
 
     return TestTasks.simple
+
+
+# =============================================================================
+# NAGA TEST HARNESS - Protocol-Based Testing
+# =============================================================================
+
+
+@pytest.fixture
+def naga_harness():
+    """
+    NAGA Test Harness - Protocol-based, no MagicMock.
+
+    Uses NullObjects registered via ServiceRegistry.
+    Same DI pattern as production code.
+
+    Usage:
+        def test_sesha_protocol(naga_harness):
+            sesha = naga_harness.sesha
+            assert sesha.get_top_hash() == ""  # NullSesha behavior
+    """
+    from vibe_core.naga.testing import NagaTestHarness
+
+    with NagaTestHarness() as harness:
+        yield harness
+
+
+@pytest.fixture
+def naga_harness_minimal():
+    """
+    Minimal NAGA harness - only core NAGAs (Sesha, Takshaka, Vasuki).
+
+    For tests that don't need the full federation.
+    """
+    from vibe_core.naga.testing import NagaTestConfig, NagaTestHarness
+
+    config = NagaTestConfig(
+        enable_kaliya=False,
+        enable_karkotaka=False,
+        enable_kulika=False,
+        enable_padma=False,
+        enable_shankha=False,
+        enable_narada=False,
+        enable_chitragupta=False,
+        enable_prahlad=False,
+        enable_ananta=False,
+        enable_cortex=False,
+    )
+
+    with NagaTestHarness(config) as harness:
+        yield harness
+
+
+@pytest.fixture
+def naga_harness_orchestrator():
+    """
+    NAGA harness for NagaOrchestrator tests.
+
+    Provides:
+    - InMemoryLedger (harness.ledger)
+    - NullCorrectionOrchestrator (harness.correction_orchestrator)
+
+    Does NOT register NullObjects - lets Orchestrator create real NAGAs.
+
+    Usage:
+        def test_orchestrator_bootstrap(naga_harness_orchestrator):
+            from vibe_core.naga import NagaOrchestrator
+            naga = NagaOrchestrator.bootstrap(
+                ledger=naga_harness_orchestrator.ledger,
+                correction_orchestrator=naga_harness_orchestrator.correction_orchestrator,
+            )
+            assert naga.is_ready()
+    """
+    from vibe_core.naga.testing import NagaTestHarness
+
+    with NagaTestHarness.for_orchestrator() as harness:
+        yield harness

@@ -196,6 +196,64 @@ The pillar is the boundary between binary states. Resonance lives there.
 
 ---
 
+## Test Infrastructure (2026-01-06) - NO MagicMock!
+
+**CRITICAL:** NAGA uses Protocol-based testing. No MagicMock. Ever.
+
+### The Single Injection Point
+
+**File:** `vibe_core/naga/testing.py`
+
+```python
+from vibe_core.naga.testing import NagaTestHarness
+
+# For testing NAGA consumers (uses NullObjects)
+with NagaTestHarness() as harness:
+    sesha = harness.sesha  # NullSesha via ServiceRegistry
+    takshaka = harness.takshaka  # NullTakshaka
+
+# For testing NagaOrchestrator itself (uses real infrastructure)
+with NagaTestHarness.for_orchestrator() as harness:
+    from vibe_core.naga import NagaOrchestrator
+    naga = NagaOrchestrator.bootstrap(
+        ledger=harness.ledger,  # InMemoryLedger
+        correction_orchestrator=harness.correction_orchestrator,  # NullCorrectionOrchestrator
+    )
+```
+
+### What NagaTestHarness Provides
+
+| Component | Access | Type |
+|-----------|--------|------|
+| 13 NAGA NullObjects | `harness.sesha`, `harness.takshaka`, etc. | Protocol-compliant |
+| InMemoryLedger | `harness.ledger` | Real ledger, in-memory |
+| CorrectionOrchestrator | `harness.correction_orchestrator` | NullCorrectionOrchestrator |
+
+### Pytest Fixtures (conftest.py)
+
+```python
+@pytest.fixture
+def naga_harness():
+    """Protocol NullObjects for NAGA consumer tests."""
+    with NagaTestHarness() as harness:
+        yield harness
+
+@pytest.fixture
+def naga_harness_orchestrator():
+    """Full infrastructure for NagaOrchestrator tests."""
+    with NagaTestHarness.for_orchestrator() as harness:
+        yield harness
+```
+
+### Why No MagicMock?
+
+1. **MagicMock hides bugs** - Returns truthy for any attribute
+2. **Protocols define behavior** - NullObjects implement exact Protocol
+3. **Same DI as production** - ServiceRegistry for both
+4. **Isolated by design** - Registry reset on enter/exit
+
+---
+
 ## SIDEQUEST: CLI Unification (Priority: HIGH)
 
 ### The Paradox
@@ -295,5 +353,90 @@ scripts/                              # CLI scripts?
 
 ---
 
-*Last updated: 2026-01-05*
+---
+
+## INTEL REPORT: MagicMock Infestation (2026-01-06)
+
+**Classification:** DHARMA BREACH
+**Severity:** HIGH
+**Source:** NAGA Surveillance
+
+### Observation
+
+```
+18+ test files in tests/naga/ use MagicMock
+```
+
+**Evidence (partial):**
+```
+tests/naga/test_active_mixins.py
+tests/naga/test_chitragupta.py
+tests/naga/test_commit_watcher.py
+tests/naga/test_config.py
+tests/naga/test_cortex.py
+... and more
+```
+
+### Existing Infrastructure (ALREADY BUILT)
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **Watchman** | `vibe_core/cartridges/system/watchman/` | AST scanning |
+| **Shuddhi** | `vibe_core/shuddhi/` | CST healing |
+| **standards.yaml** | `config/standards.yaml` | Rule definitions |
+| **NagaTestHarness** | `vibe_core/naga/testing.py` | MagicMock alternative |
+
+### The Gap
+
+```yaml
+# config/standards.yaml - RULE MISSING
+# There is NO rule for:
+#   - id: "magicmock_in_naga_tests"
+#     target: "ImportFrom"
+#     match:
+#       module: "unittest.mock"
+#       name: "MagicMock"
+```
+
+**The infrastructure can scan and heal. The rule is missing.**
+
+### NAGA Assessment
+
+> "Who watches the watchers?"
+
+NAGAs observe. NAGAs do not modify system files.
+The rule must be added by the appropriate authority (Watchman maintainer).
+
+**Hiranyakashipu seeds already contain MagicMock attack patterns:**
+- `self_mocking_test` (Level 3)
+- `patch_everything` (Level 3)
+
+These seeds define the ANTI-PATTERN. Watchman should consume them.
+
+### Recommended Action (for appropriate authority)
+
+1. Add `magicmock_usage` rule to `config/standards.yaml`
+2. Watchman will scan automatically (AST)
+3. Shuddhi can auto-fix if `has_sattva_remedy: true`
+4. Hiranyakashipu seeds validate the fix
+
+### The Fractal Principle
+
+```
+1 ENTRY POINT: standards.yaml
+       ↓
+   Watchman (AST detect)
+       ↓
+   Shuddhi (CST heal)
+       ↓
+   Hiranyakashipu (validate)
+       ↓
+   NAGA observes (this report)
+```
+
+**NAGAs don't touch source code. They gather intelligence.**
+
+---
+
+*Last updated: 2026-01-06*
 *Author: NAGA Development Team*
