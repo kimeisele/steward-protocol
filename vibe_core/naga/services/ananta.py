@@ -48,16 +48,6 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 # Substrate Protocol imports (Layer -1)
-from vibe_core.protocols.substrate import (
-    GeneActivationState,
-    GeneManifest,
-    GeneStatus,
-    IGene,
-    IGeneHost,
-    SubstrateHealth,
-    SubstrateStatus,
-)
-
 from vibe_core.naga.kulika import (
     NagaCapability,
     NagaLord,
@@ -71,6 +61,16 @@ from vibe_core.protocols.naga import (
     NagaType,
     ServiceClassification,
     VetoDecision,
+)
+from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
+from vibe_core.protocols.substrate import (
+    GeneActivationState,
+    GeneManifest,
+    GeneStatus,
+    IGene,
+    IGeneHost,
+    SubstrateHealth,
+    SubstrateStatus,
 )
 
 logger = logging.getLogger("ANANTA")
@@ -117,7 +117,7 @@ class LoadEvent:
     capabilities=[NagaCapability.FLOOD],
     protocol_class="vibe_core.protocols.naga.AnantaProtocol",
 )
-class AnantaService(NagaBaseService, AnantaProtocol):
+class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
     """
     Ananta - The Substrate Host + Gene Splicer.
 
@@ -131,6 +131,8 @@ class AnantaService(NagaBaseService, AnantaProtocol):
     - NOT via Proxy wrapping (Hard Flood)
     - Preserves isinstance, pickle, internal state access
 
+    INTERFACE GROUP: TransformProtocol (analyze, can_transform, transform)
+    SEVA: Ananta TRANSFORMIERT FÜR Prahlad - DNA Injection ist Transformation!
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
@@ -898,6 +900,158 @@ class AnantaService(NagaBaseService, AnantaProtocol):
             uptime_seconds=uptime,
             last_heartbeat=self._last_heartbeat,
             message=f"caps={len(self._capability_providers)}, mixins={len(self._available_mixins)}",
+        )
+
+    # =========================================================================
+    # TransformProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def analyze(self, target: str) -> Analysis:
+        """
+        Analyze a target for transformation (TransformProtocol).
+
+        SEVA: Ananta analyzes classes FÜR Prahlad to decide if they need genes.
+        This wraps analyze_service() for the Interface Group.
+
+        Args:
+            target: Class name or module path to analyze
+
+        Returns:
+            Analysis with findings and suggested action
+        """
+        findings: List[str] = []
+        suggested_action = "none"
+        confidence = 0.0
+
+        # Try to get the class
+        try:
+            # Import module if target is a path
+            if "." in target:
+                module_path, class_name = target.rsplit(".", 1)
+                import importlib
+
+                module = importlib.import_module(module_path)
+                cls = getattr(module, class_name)
+            else:
+                # Assume it's in local context (won't work, just for demo)
+                findings.append(f"Cannot resolve {target} without module path")
+                return Analysis(target=target, findings=findings, suggested_action="none", confidence=0.0)
+
+            # Use analyze_service
+            proposal = self.analyze_service(cls)
+
+            if proposal.classification == ServiceClassification.FLOODED:
+                findings.append("Already FLOODED with NAGA genes")
+                suggested_action = "none"
+                confidence = 1.0
+            elif proposal.classification == ServiceClassification.CIVILIAN:
+                findings.append("CIVILIAN class - no transformation needed")
+                suggested_action = "skip"
+                confidence = 0.9
+            else:
+                findings.append(f"REBEL class needs flooding: {proposal.proposed_nagas}")
+                findings.append(f"Overhead estimate: {proposal.overhead_estimate}")
+                suggested_action = "flood"
+                confidence = 0.8
+
+        except Exception as e:
+            findings.append(f"Analysis failed: {e}")
+            suggested_action = "error"
+            confidence = 0.0
+
+        return Analysis(
+            target=target,
+            findings=findings,
+            suggested_action=suggested_action,
+            confidence=confidence,
+        )
+
+    def can_transform(self, target: str) -> bool:
+        """Check if transformation is possible (TransformProtocol)."""
+        # Can transform if we have mixins available
+        return len(self._available_mixins) > 0
+
+    def transform(self, target: str, strategy: str) -> TransformResult:
+        """
+        Transform a target using strategy (TransformProtocol).
+
+        SEVA: Ananta transforms classes FÜR Prahlad - DNA injection.
+
+        Strategies:
+        - "flood": Create flooded class with NAGA genes
+        - "analyze": Just analyze without creating
+
+        Args:
+            target: Class path to transform
+            strategy: Transformation strategy
+
+        Returns:
+            TransformResult with before/after hashes
+        """
+        import hashlib
+
+        before_hash = hashlib.sha256(target.encode()).hexdigest()[:16]
+        changes: List[str] = []
+
+        if strategy == "analyze":
+            analysis = self.analyze(target)
+            changes.append(f"Analyzed {target}")
+            changes.extend(analysis.findings)
+            return TransformResult(
+                success=True,
+                before_hash=before_hash,
+                after_hash=before_hash,  # No actual change
+                changes=changes,
+            )
+
+        if strategy == "flood":
+            try:
+                # Import and analyze
+                module_path, class_name = target.rsplit(".", 1)
+                import importlib
+
+                module = importlib.import_module(module_path)
+                cls = getattr(module, class_name)
+
+                proposal = self.analyze_service(cls)
+                decision = self.request_approval(proposal)
+
+                if decision.approved:
+                    flooded = self.create_flooded_class(cls, decision)
+                    after_hash = hashlib.sha256(flooded.__name__.encode()).hexdigest()[:16]
+                    changes.append(f"Created {flooded.__name__}")
+                    changes.append(f"Injected genes: {decision.override_nagas or proposal.proposed_nagas}")
+                    return TransformResult(
+                        success=True,
+                        before_hash=before_hash,
+                        after_hash=after_hash,
+                        changes=changes,
+                    )
+                else:
+                    changes.append(f"Transformation denied: {decision.reason}")
+                    return TransformResult(
+                        success=False,
+                        before_hash=before_hash,
+                        after_hash=before_hash,
+                        changes=changes,
+                    )
+
+            except Exception as e:
+                changes.append(f"Transformation failed: {e}")
+                return TransformResult(
+                    success=False,
+                    before_hash=before_hash,
+                    after_hash=before_hash,
+                    changes=changes,
+                )
+
+        # Unknown strategy
+        changes.append(f"Unknown strategy: {strategy}")
+        return TransformResult(
+            success=False,
+            before_hash=before_hash,
+            after_hash=before_hash,
+            changes=changes,
         )
 
 
