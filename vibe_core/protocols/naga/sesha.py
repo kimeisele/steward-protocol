@@ -108,7 +108,23 @@ class SeshaProtocol(Protocol):
 
     # === Event Recording (PUBLIC API) ===
 
-    def record_event(self, event: EventRecord) -> bool:
+    def record_event(self, event: EventRecord) -> Optional[str]:
+        """
+        Record an event to the ledger.
+
+        YAMARAJA: This is the ONE entry point for writing to the ledger.
+        No more accessing _ledger directly!
+
+        Args:
+            event: Typed event record (EventRecord TypedDict)
+
+        Returns:
+            Event ID if recorded successfully, None otherwise
+
+        Raises:
+            ValueError: If event_type or agent_id is missing
+        """
+        ...
         """
         Record an event to the ledger.
 
@@ -246,9 +262,9 @@ class SeshaProtocol(Protocol):
 class NullSesha:
     """No-op Sesha for when ledger is unavailable."""
 
-    def record_event(self, event: EventRecord) -> bool:
-        """No-op - returns False (no ledger available)."""
-        return False
+    def record_event(self, event: EventRecord) -> Optional[str]:
+        """No-op - returns None (no ledger available)."""
+        return None
 
     def get_recent_events(self, limit: int = 10) -> List[EventDict]:
         """No-op - returns empty list (no ledger available)."""

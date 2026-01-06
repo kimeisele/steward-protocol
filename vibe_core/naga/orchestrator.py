@@ -21,7 +21,12 @@ Usage:
     )
 """
 
+import sys
+
+sys.stderr.write(">>> IMPORTING NAGA ORCHESTRATOR\n")
+
 import logging
+import os
 import sys
 from typing import TYPE_CHECKING, Optional, TypedDict
 
@@ -144,8 +149,13 @@ class NagaOrchestrator:
         Returns:
             Initialized NagaOrchestrator
         """
+        import sys
+
+        sys.stderr.write(">>> BOOTSTRAP: Starting...\n")
         orchestrator = cls()
+        sys.stderr.write(">>> BOOTSTRAP: Orchestrator created, initializing...\n")
         orchestrator._initialize(ledger, correction_orchestrator, config)
+        sys.stderr.write(">>> BOOTSTRAP: Initialization complete.\n")
         return orchestrator
 
     def _get_config(self, config: Optional["NagaConfig"] = None) -> "NagaConfig":
@@ -205,17 +215,21 @@ class NagaOrchestrator:
 
         # -1. NARADA SCANNER - Auto-discover available NAGAs
         # "Narada unterrichtete Prahlad im Mutterleib" - discovery before birth
+        sys.stderr.write(">>> BOOTSTRAP: Scanning...\n")
         self._scanner = NaradaScanner()
         discovered = self._scanner.scan()
         logger.info(f"🔍 Narada discovered {len(discovered)} NAGA services")
+        sys.stderr.write(f">>> BOOTSTRAP: Scanned {len(discovered)} services.\n")
 
         # 0. IDENTITY - GAD-000 37th Principle
         # Generate sovereign identity for signing decisions
+        sys.stderr.write(">>> BOOTSTRAP: Generating Identity...\n")
         self._identity = NagaIdentity.generate("naga_federation")
         logger.info(f"🔑 NAGA Identity: {self._identity.fingerprint}")
 
         # 1. SESHA - The Foundation
         if self._config.sesha.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Sesha...\n")
             self._sesha = SeshaService(
                 ledger=ledger,
                 block_size=self._config.sesha.block_size,
@@ -231,7 +245,9 @@ class NagaOrchestrator:
 
         # 2. TAKSHAKA - The Guardian
         if self._config.takshaka.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Takshaka...\n")
             self._takshaka = TakshakaService(
+                sesha=self._sesha,
                 ledger=ledger,
                 trust_mode=self._config.takshaka.trust_mode,
                 toxicity_threshold=self._config.takshaka.toxicity_threshold,
@@ -249,6 +265,7 @@ class NagaOrchestrator:
         # 2.5 NAGA STATE PROXY - Der Politische Kommissar
         # Wraps StateService with Dharma validation (4 principles)
         try:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing State Proxy...\n")
             from vibe_core.services.naga.state_proxy import NagaStateProxy
             from vibe_core.state.state_service import get_state_service
 
@@ -273,6 +290,7 @@ class NagaOrchestrator:
 
         # 3. VASUKI - The Bridge (needs Sesha and Takshaka)
         if self._config.vasuki.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Vasuki...\n")
             # YAMARAJA: Vasuki without Sesha = Agent ohne Gedächtnis = Shell-Skript
             if self._sesha is None:
                 sys.stderr.write("!!! YAMARAJA: Vasuki enabled but Sesha failed - ABBRUCH\n")
@@ -451,6 +469,7 @@ class NagaOrchestrator:
         # 5. COMMIT WATCHER - Der Wächter-Pattern (Phase 4)
         # "NAGAs notice when things go wrong"
         if self._config.commit_watcher.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Commit Watcher...\n")
             # YAMARAJA: CommitWatcher without Sesha = watching without recording = useless
             if self._sesha is None:
                 sys.stderr.write("!!! YAMARAJA: CommitWatcher enabled but Sesha failed - ABBRUCH\n")
@@ -475,6 +494,7 @@ class NagaOrchestrator:
         # "Das Nervensystem, nicht das Gehirn" - NAGAs observe, correlate, inform
         if self._config.cortex.enabled:
             try:
+                sys.stderr.write(">>> BOOTSTRAP: Initializing Cortex...\n")
                 from vibe_core.naga.cortex import NagaCortex
                 from vibe_core.naga.cortex.cortex_main import CortexConfig
 
@@ -530,6 +550,7 @@ class NagaOrchestrator:
         # "Die Schlange, die ihren eigenen Schwanz frisst" - self-healing loop
         if self._cortex:
             try:
+                sys.stderr.write(">>> BOOTSTRAP: Initializing Ouroboros...\n")
                 from vibe_core.naga.ouroboros import NagaOuroboros
 
                 self._ouroboros = NagaOuroboros(orchestrator=self)
@@ -586,8 +607,18 @@ class NagaOrchestrator:
         "Physician, heal thyself."
 
         Logs warning but continues if check fails (graceful degradation).
+
+        MOHINI GUARD: Skip when already inside pytest to prevent infinite recursion.
+        pytest.main() in verify_self_integrity() would trigger more bootstrap() calls.
         """
         try:
+            # MOHINI OUROBOROS GUARD: Prevent pytest recursion!
+            # When running tests, pytest sets PYTEST_CURRENT_TEST env var.
+            # If set, skip the self-check to avoid pytest calling pytest calling pytest...
+            if os.environ.get("PYTEST_CURRENT_TEST"):
+                logger.debug("NAGA: Skipping boot integrity check (inside pytest)")
+                return
+
             # Only run if explicitly enabled (avoid slowing down boot in prod)
             if not getattr(self._config, "verify_on_boot", True):
                 logger.debug("NAGA: Boot integrity check disabled")

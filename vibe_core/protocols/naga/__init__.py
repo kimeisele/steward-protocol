@@ -75,6 +75,12 @@ from vibe_core.protocols.naga.federation import (
     NagaFederationProtocol,
 )
 
+# Garuda (Recursion Guard)
+from vibe_core.protocols.naga.garuda import (
+    GarudaProtocol,
+    NullGaruda,
+)
+
 # Kaliya
 from vibe_core.protocols.naga.kaliya import (
     KaliyaProtocol,
@@ -262,6 +268,9 @@ __all__ = [
     "NullAnanta",
     # Federation
     "NagaFederationProtocol",
+    # Garuda
+    "GarudaProtocol",
+    "NullGaruda",
     # Cortex (MANAS Integration)
     "NagaCortexProtocol",
     "NagaContext",

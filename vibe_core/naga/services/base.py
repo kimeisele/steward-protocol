@@ -23,6 +23,7 @@ import time
 from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, Protocol, TypeVar
 
 from vibe_core.di import ServiceRegistry
+from vibe_core.naga.garuda import garuda  # The Controller of Nagas
 
 if TYPE_CHECKING:
     from vibe_core.protocols.naga import (
@@ -265,69 +266,76 @@ def naga_governed(
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
         def wrapper(self: "NagaBaseService", *args: P.args, **kwargs: P.kwargs) -> R:
-            op_name = operation or func.__name__
-            service_name = getattr(self, "_service_name", self.__class__.__name__)
-
-            # === START PROFILING (nanoseconds for precision) ===
-            start_time_ns = time.perf_counter_ns()
-
-            # === TAKSHAKA VALIDATION (optional) ===
-            if validate_input and self._takshaka:
-                try:
-                    _validate_naga_args(self._takshaka, args, service_name, op_name)
-                except ValueError:
-                    raise
-                except Exception as e:
-                    # YAMARAJA: Security failure = log + continue (not silent)
-                    sys.stderr.write(f"!!! TAKSHAKA VALIDATION FAILED: {e}\n")
-
-            # === EXECUTE ===
-            error_msg: Optional[str] = None
-            try:
+            # GARUDA GUARD: Check if already flying (recursion detected)
+            if garuda.is_flying:
+                # Garuda is flying -> Nagas hide -> Execute RAW function
                 return func(self, *args, **kwargs)
-            except Exception as e:
-                error_msg = str(e)
-                raise
-            finally:
-                duration_ms = (time.perf_counter_ns() - start_time_ns) / 1_000_000
 
-                # === CHITRAGUPTA PROFILING ===
-                if self._chitragupta:
+            # SPREAD WINGS: Enter governed state
+            with garuda.fly():
+                op_name = operation or func.__name__
+                service_name = getattr(self, "_service_name", self.__class__.__name__)
+
+                # === START PROFILING (nanoseconds for precision) ===
+                start_time_ns = time.perf_counter_ns()
+
+                # === TAKSHAKA VALIDATION (optional) ===
+                if validate_input and self._takshaka:
                     try:
-                        self._chitragupta.record_operation(
-                            service=service_name,
-                            operation=op_name,
-                            duration_ms=duration_ms,
-                            success=error_msg is None,
-                        )
+                        _validate_naga_args(self._takshaka, args, service_name, op_name)
+                    except ValueError:
+                        raise
                     except Exception as e:
-                        # YAMARAJA: Emergency log, not silent
-                        sys.stderr.write(f"!!! CHITRAGUPTA PROFILING FAILED [{service_name}]: {e}\n")
+                        # YAMARAJA: Security failure = log + continue (not silent)
+                        sys.stderr.write(f"!!! TAKSHAKA VALIDATION FAILED: {e}\n")
 
-                # === SESHA KARMA RECORDING (via PUBLIC API) ===
-                if self._sesha:
-                    try:
-                        from vibe_core.protocols.naga import EventRecord
+                # === EXECUTE ===
+                error_msg: Optional[str] = None
+                try:
+                    return func(self, *args, **kwargs)
+                except Exception as e:
+                    error_msg = str(e)
+                    raise
+                finally:
+                    duration_ms = (time.perf_counter_ns() - start_time_ns) / 1_000_000
 
-                        details: dict[str, object] = {
-                            "operation": op_name,
-                            "duration_ms": round(duration_ms, 2),
-                            "success": error_msg is None,
-                        }
-                        if error_msg:
-                            details["error"] = error_msg[:200]
-                        if log_args and args:
-                            details["args_count"] = len(args)
+                    # === CHITRAGUPTA PROFILING ===
+                    if self._chitragupta:
+                        try:
+                            self._chitragupta.record_operation(
+                                service=service_name,
+                                operation=op_name,
+                                duration_ms=duration_ms,
+                                success=error_msg is None,
+                            )
+                        except Exception as e:
+                            # YAMARAJA: Emergency log, not silent
+                            sys.stderr.write(f"!!! CHITRAGUPTA PROFILING FAILED [{service_name}]: {e}\n")
 
-                        event: EventRecord = {
-                            "event_type": "NAGA_OPERATION",
-                            "agent_id": service_name.lower(),
-                            "details": details,
-                        }
-                        self._sesha.record_event(event)
-                    except Exception as e:
-                        # YAMARAJA: Emergency log, not silent
-                        sys.stderr.write(f"!!! SESHA KARMA FAILED [{service_name}]: {e}\n")
+                    # === SESHA KARMA RECORDING (via PUBLIC API) ===
+                    if self._sesha:
+                        try:
+                            from vibe_core.protocols.naga import EventRecord
+
+                            details: dict[str, object] = {
+                                "operation": op_name,
+                                "duration_ms": round(duration_ms, 2),
+                                "success": error_msg is None,
+                            }
+                            if error_msg:
+                                details["error"] = error_msg[:200]
+                            if log_args and args:
+                                details["args_count"] = len(args)
+
+                            event: EventRecord = {
+                                "event_type": "NAGA_OPERATION",
+                                "agent_id": service_name.lower(),
+                                "details": details,
+                            }
+                            self._sesha.record_event(event)
+                        except Exception as e:
+                            # YAMARAJA: Emergency log, not silent
+                            sys.stderr.write(f"!!! SESHA KARMA FAILED [{service_name}]: {e}\n")
 
         return wrapper  # type: ignore[return-value]
 

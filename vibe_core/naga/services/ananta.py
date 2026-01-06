@@ -149,11 +149,11 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         self._last_heartbeat = datetime.now()
         self._boot_time = datetime.now()
 
-        # IGeneHost state (Substrate Layer -1)
-        self._genes: Dict[str, IGene] = {}
-        self._gene_statuses: Dict[str, GeneStatus] = {}
-        self._capability_providers: Dict[str, str] = {}  # capability -> gene_name
-        self._event_listeners: Dict[str, List[str]] = {}  # event_type -> gene_names
+        # 1 ENTRY POINT: Delegate to THE substrate (AnantaShesha singleton)
+        # NO LOCAL GENE STORAGE - that's MAYAVADA (two truths)!
+        from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+        self._substrate = get_system_anchor()
 
         # Loading Governance (OUROBOROS on Loaders)
         self._load_events: List[LoadEvent] = []
@@ -753,56 +753,25 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         )
 
     # =========================================================================
-    # IGeneHost Implementation (Substrate Layer -1)
+    # IGeneHost Implementation - DELEGATED TO SUBSTRATE (1 ENTRY POINT)
     # =========================================================================
     #
-    # Ananta implements IGeneHost to be the HOST that genes bind to.
-    # Energy flows TOP-DOWN: Ananta → Genes (Avatara pattern)
-    # Genes do NOT import AnantaService - they only know IGeneHost.
+    # Ananta DELEGATES to AnantaShesha (THE substrate singleton).
+    # NO LOCAL GENE STORAGE - that's MAYAVADA (two truth sources)!
+    # Energy flows: Ananta → AnantaShesha → Genes
     # =========================================================================
 
     def get_gene(self, name: str) -> Optional[IGene]:
-        """
-        Get a gene by name.
-
-        IGeneHost protocol implementation.
-        Genes call this to access sibling genes without circular imports.
-        """
-        return self._genes.get(name)
+        """Delegate to THE substrate."""
+        return self._substrate.get_gene(name)
 
     def has_gene(self, name: str) -> bool:
-        """Check if a gene is registered."""
-        return name in self._genes
+        """Delegate to THE substrate."""
+        return self._substrate.has_gene(name)
 
     def get_capability(self, capability: str) -> Optional[object]:
-        """
-        Get a capability from any gene that provides it.
-
-        This is the KEY IGeneHost method - genes ask for capabilities
-        by name, not by importing service classes directly.
-
-        Example: gene.get_capability("ledger") → SeshaMixin's ledger
-
-        Args:
-            capability: Name of capability (e.g., "ledger", "validation")
-
-        Returns:
-            The capability provider or None if not available
-
-        WATERTIGHT: Returns object not Any - caller must cast.
-        """
-        # Check which gene provides this capability
-        provider_name = self._capability_providers.get(capability)
-        if provider_name is None:
-            return None
-
-        provider_gene = self._genes.get(provider_name)
-        if provider_gene is None:
-            return None
-
-        # Return the capability from the gene
-        # Genes expose capabilities via their manifest
-        return provider_gene
+        """Delegate to THE substrate."""
+        return self._substrate.get_capability(capability)
 
     def emit_event(
         self,
@@ -810,70 +779,26 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         data: SubstrateEventData,
         caller_id: str = "anonymous",
     ) -> None:
-        """
-        Emit an event to all listening genes.
-
-        This is the SHANKHA (broadcast) capability at the substrate level.
-        Genes register for events and Ananta dispatches to all listeners.
-
-        WATERTIGHT: data is SubstrateEventData TypedDict, not Dict[str, Any].
-        caller_id enables event tracing and accountability.
-        """
-        listener_names = self._event_listeners.get(event_type, [])
-        for name in listener_names:
-            gene = self._genes.get(name)
-            if gene and hasattr(gene, "on_event"):
-                try:
-                    gene.on_event(event_type, data)  # type: ignore
-                except Exception as e:
-                    logger.warning(f"ANANTA: Gene {name} failed to handle {event_type} from {caller_id}: {e}")
+        """Delegate to THE substrate."""
+        # AnantaShesha.emit_event has different signature (Dict[str, Any])
+        # Convert SubstrateEventData to dict for compatibility
+        self._substrate.emit_event(event_type, dict(data))
 
     def register_gene(
         self,
         gene: IGene,
         certificate: Optional[RegistrationCertificate] = None,
     ) -> bool:
-        """
-        Register a gene with the substrate.
-
-        IAnantaBridge protocol implementation.
-        The gene is registered but NOT yet bound or activated.
-
-        ANTI-MAYAVADI: Certificate proves WHO is registering and WHY.
-        Without certificate = legacy/unverified mode.
-        With certificate = gene has proven HERITAGE (Erbgut).
-        """
-        name = gene.manifest.name
-        if name in self._genes:
-            logger.warning(f"ANANTA: Gene {name} already registered")
-            return False
-
-        # Log certificate status for audit
-        registrar = certificate.get("registrar_id", "anonymous") if certificate else "anonymous"
-
-        self._genes[name] = gene
-        self._gene_statuses[name] = GeneStatus(
-            manifest=gene.manifest,
-            state=GeneActivationState.DORMANT,
-        )
-
-        # Register capabilities this gene provides
-        for cap in gene.manifest.capabilities:
-            if cap not in self._capability_providers:
-                self._capability_providers[cap] = name
-
-        logger.debug(f"ANANTA: Registered gene {name} (by {registrar}) with capabilities {gene.manifest.capabilities}")
-        return True
+        """Delegate to THE substrate."""
+        return self._substrate.register_gene(gene)
 
     def bind_genes(self, instance: Any) -> None:
         """
-        Bind all genes on an instance to this host.
+        Bind all genes on an instance to THE SUBSTRATE.
 
         TOP-DOWN INJECTION (Avatara pattern):
-        - Ananta (host) calls gene.bind(self)
-        - Gene stores reference to host
-        - Gene does NOT import AnantaService
-        - Dependency Inversion Principle
+        - Genes bind to AnantaShesha (THE ONE substrate)
+        - NOT to AnantaService (that would be MAYAVADA)
 
         Args:
             instance: A flooded instance whose Mixin genes need binding
@@ -885,9 +810,10 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
                 # The instance IS the gene (via Mixin inheritance)
                 if hasattr(instance, "bind"):
                     try:
-                        instance.bind(self)  # TOP-DOWN injection
+                        # Bind to THE substrate, not to self!
+                        instance.bind(self._substrate)
                         bound_count += 1
-                        logger.debug(f"ANANTA: Bound gene {naga_name} to host")
+                        logger.debug(f"ANANTA: Bound gene {naga_name} to substrate")
                     except Exception as e:
                         logger.warning(f"ANANTA: Failed to bind gene {naga_name}: {e}")
 
@@ -895,36 +821,8 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
             logger.info(f"ANANTA: Bound {bound_count} genes on {type(instance).__name__}")
 
     def get_substrate_status(self) -> SubstrateStatus:
-        """
-        Get overall substrate health status.
-
-        IAnantaBridge protocol implementation.
-        """
-        genes_active = sum(1 for g in self._genes.values() if g.state == GeneActivationState.ACTIVE)
-        genes_dormant = sum(1 for g in self._genes.values() if g.state == GeneActivationState.DORMANT)
-        genes_failed = sum(1 for s in self._gene_statuses.values() if s.error is not None)
-
-        uptime = (datetime.now() - self._boot_time).total_seconds()
-
-        if genes_failed > len(self._genes) / 2:
-            health = SubstrateHealth.CRITICAL
-        elif genes_failed > 0:
-            health = SubstrateHealth.DEGRADED
-        elif genes_active == len(self._genes):
-            health = SubstrateHealth.PRISTINE
-        else:
-            health = SubstrateHealth.HEALTHY
-
-        return SubstrateStatus(
-            health=health,
-            genes_total=len(self._genes),
-            genes_active=genes_active,
-            genes_dormant=genes_dormant,
-            genes_failed=genes_failed,
-            uptime_seconds=uptime,
-            last_heartbeat=self._last_heartbeat,
-            message=f"caps={len(self._capability_providers)}, mixins={len(self._available_mixins)}",
-        )
+        """Delegate to THE substrate."""
+        return self._substrate.get_status()
 
     # =========================================================================
     # TransformProtocol Implementation (Interface Group - Seva for Prahlad)
