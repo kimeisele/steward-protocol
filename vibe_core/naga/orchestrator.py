@@ -30,6 +30,7 @@ from vibe_core.protocols.correction import DriftSource
 from vibe_core.protocols.naga import (
     ChitraguptaProtocol,
     KaliyaProtocol,
+    NagaCortexProtocol,
     NagaFederationProtocol,
     NaradaProtocol,
     PrahladProtocol,
@@ -454,7 +455,9 @@ class NagaOrchestrator:
                 self._cortex = NagaCortex(self, cortex_config)
                 # Inject identity for decision signing (37th Principle)
                 self._cortex._identity = self._identity
-                logger.info("🧠 NAGA Cortex initialized - Das Nervensystem aktiv")
+                # Register with ServiceRegistry so MANAS can find it
+                ServiceRegistry.register(NagaCortexProtocol, self._cortex)
+                logger.info("🧠 NAGA Cortex initialized + registered - Das Nervensystem aktiv")
 
                 # 6.1 Wire signal sources to Cortex (non-invasive integration)
                 # FloodManager sends FloodSignals

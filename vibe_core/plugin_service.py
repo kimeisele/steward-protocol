@@ -5,18 +5,28 @@ Unified plugin management service.
 Wraps PluginLoader + ManifestRegistry into single source of truth.
 
 GAD-000: Single service, accessed via ServiceRegistry.
+
+NAGA HARDENING (Gemini Prescription):
+    PluginService is the entry point for ALL plugin code.
+    If a malicious plugin gets loaded, the entire system is compromised.
+
+    Solution: Inherit from NagaBaseService + @naga_governed
+    - Sesha: Records every scan/load operation (audit trail)
+    - Chitragupta: Profiles execution time (anomaly detection)
+    - Takshaka: Validates plugin paths (path traversal protection)
 """
 
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.plugin import PluginInfo, PluginServiceProtocol
 
 logger = logging.getLogger("PLUGIN_SERVICE")
 
 
-class PluginService(PluginServiceProtocol):
+class PluginService(NagaBaseService, PluginServiceProtocol):
     """
     Unified plugin management.
 
@@ -30,6 +40,7 @@ class PluginService(PluginServiceProtocol):
     _instance: Optional["PluginService"] = None
 
     def __init__(self, workspace: Optional[Path] = None):
+        super().__init__(service_name="PluginService")
         self._workspace = workspace or Path.cwd()
         self._plugins: Dict[str, PluginInfo] = {}
         self._instances: Dict[str, Any] = {}
@@ -47,8 +58,9 @@ class PluginService(PluginServiceProtocol):
         """Reset singleton (for testing)."""
         cls._instance = None
 
+    @naga_governed(operation="plugin_scan", log_args=True)
     def scan(self, force: bool = False) -> int:
-        """Scan for plugin manifests."""
+        """Scan for plugin manifests. NAGA-GOVERNED: Recorded by Sesha, profiled by Chitragupta."""
         if self._scanned and not force:
             return len(self._plugins)
 
@@ -101,8 +113,9 @@ class PluginService(PluginServiceProtocol):
         # Sort by priority (lower = earlier boot)
         return sorted(self._plugins.values(), key=lambda p: p.priority)
 
+    @naga_governed(operation="plugin_load", log_args=True, validate_input=True)
     def load(self, plugin_id: str) -> Optional[Any]:
-        """Load a single plugin instance (lazy)."""
+        """Load a single plugin instance (lazy). NAGA-GOVERNED: Validated by Takshaka, recorded by Sesha."""
         if plugin_id in self._instances:
             return self._instances[plugin_id]
 
@@ -121,9 +134,10 @@ class PluginService(PluginServiceProtocol):
 
         return instance
 
+    @naga_governed(operation="plugin_load_all", log_args=True)
     def load_all(self) -> List[Any]:
         """
-        Load all enabled plugins.
+        Load all enabled plugins. NAGA-GOVERNED: Recorded by Sesha, profiled by Chitragupta.
 
         Uses PluginLoader.discover_from_registry() for proper
         dependency resolution and priority ordering.
