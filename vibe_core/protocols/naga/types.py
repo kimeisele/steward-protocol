@@ -17,7 +17,10 @@ PROMPT.md: "Protocol statt konkrete Klassen"
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
+
+if TYPE_CHECKING:
+    pass  # Forward refs if needed
 
 
 class NagaType(str, Enum):
@@ -133,6 +136,34 @@ class NagaStatus:
             "message": self.message,
             "details": dict(self.details),
         }
+
+
+# =============================================================================
+# NAGA SERVICE PROTOCOL - The Common DNA
+# =============================================================================
+
+
+@runtime_checkable
+class NagaServiceProtocol(Protocol):
+    """
+    Base protocol for ALL NAGA services.
+
+    DISCOVERED PATTERN: 14+ protocols all define get_status() -> NagaStatus.
+    This protocol captures that common DNA.
+
+    STRUCTURAL TYPING: No manual inheritance needed!
+    Any class with get_status() -> NagaStatus automatically satisfies this.
+
+    Usage:
+        def process_naga(naga: NagaServiceProtocol) -> None:
+            status = naga.get_status()
+            if not status.healthy:
+                alert(status)
+    """
+
+    def get_status(self) -> "NagaStatus":
+        """Get service health status. Every NAGA must report."""
+        ...
 
 
 # =============================================================================

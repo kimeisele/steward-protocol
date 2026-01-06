@@ -171,6 +171,7 @@ from vibe_core.protocols.naga.tuv import (
     TÜVReport,
 )
 from vibe_core.protocols.naga.types import (
+    NagaServiceProtocol,
     NagaStatus,
     NagaType,
     StatusDetails,
@@ -194,6 +195,7 @@ __all__ = [
     # Types
     "NagaType",
     "NagaStatus",
+    "NagaServiceProtocol",  # Common DNA - discovered from 14+ protocols
     "StatusDetails",
     # Sesha
     "SeshaProtocol",
