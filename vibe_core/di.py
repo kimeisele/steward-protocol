@@ -10,6 +10,16 @@ Replaces: 5 different singleton patterns scattered across codebase:
 - CycleRegistry: Global variable
 - SynapseStore: Class dict `_instances`
 
+NAGA LOKA INTEGRATION:
+    The ServiceRegistry is the POINT OF INCEPTION - where services enter existence.
+    Every service must receive NAGA blessing before entering the realm.
+
+    Blessing Check (Hybrid Mode):
+    1. Priority A: Check if instance inherits from NagaBaseService
+    2. Priority B: Check for _naga_flooded marker (Soft Flood via Mixins)
+    3. Priority C: Check if wrapped in NagaProxy (Hard Flood)
+    4. If unblessed: Log DHARMA_BREACH, enforce for critical services
+
 Usage:
     # Register a service
     ServiceRegistry.register(VibeLedger, SQLiteLedger(path))
@@ -90,10 +100,25 @@ class ServiceRegistry:
     _blessed_modules: set[str] = set()  # Allowed module prefixes for registration
     _chaos_authorized_callers: set[str] = {"PrahladService", "chaos_probe_real"}  # Who can inject chaos
 
+    # NAGA LOKA - Blessing Enforcement (Point of Inception)
+    _naga_blessing_enabled: bool = False
+    _naga_strict_mode: bool = False  # If True, reject unblessed critical services
+    _naga_critical_services: set[str] = {
+        # Services that MUST be NAGA-blessed (security critical)
+        "PluginServiceProtocol",
+        "PluginService",
+        "TaskManager",
+        "VibeLedger",
+        "CISyncService",
+    }
+    _naga_blessing_violations: list[str] = []  # Track DHARMA breaches for audit
+
     @classmethod
     def register(cls, interface: Type[T], instance: T) -> None:
         """
         Register a concrete instance for an interface.
+
+        NAGA LOKA: Point of Inception - every service receives blessing check.
 
         Args:
             interface: The interface/protocol type (e.g., VibeLedger)
@@ -101,9 +126,32 @@ class ServiceRegistry:
 
         Example:
             ServiceRegistry.register(VibeLedger, SQLiteLedger("/path/to/db"))
+
+        Raises:
+            DharmaViolation: If strict mode and critical service is unblessed
         """
         with cls._lock:
             name = interface.__name__
+
+            # === NAGA LOKA: Blessing Check (Point of Inception) ===
+            if cls._naga_blessing_enabled:
+                is_blessed = cls._check_naga_blessing(instance)
+
+                if not is_blessed:
+                    instance_type = type(instance).__name__
+                    violation = f"{name} ({instance_type})"
+                    cls._naga_blessing_violations.append(violation)
+
+                    # Log DHARMA BREACH (Narada observes)
+                    logger.warning(f"[DI] DHARMA BREACH: {violation} registered without NAGA blessing")
+
+                    # Strict mode: Reject unblessed critical services
+                    if cls._naga_strict_mode and name in cls._naga_critical_services:
+                        raise RuntimeError(
+                            f"[DI] DHARMA VIOLATION: Critical service {name} must be NAGA-blessed. "
+                            f"Use NagaBaseService inheritance or apply Soft Flood."
+                        )
+
             cls._services[name] = instance
             logger.debug(f"[DI] Registered: {name}")
 
@@ -432,3 +480,125 @@ class ServiceRegistry:
         except Exception as e:
             # Graceful degradation - still log even if Narasimha unavailable
             logger.error(f"[DI] THREAT (Narasimha unavailable): {threat_type} - {details.caller} - {e}")
+
+    # =========================================================================
+    # NAGA LOKA - Blessing Enforcement (Point of Inception)
+    # =========================================================================
+
+    @classmethod
+    def _check_naga_blessing(cls, instance: object) -> bool:
+        """
+        Check if a service instance is NAGA-blessed.
+
+        A service is blessed if it has NAGA infrastructure integration:
+        1. Inherits from NagaBaseService (self-monitoring)
+        2. Has _naga_flooded marker (Soft Flood via Mixins)
+        3. Is wrapped in NagaProxy (Hard Flood)
+
+        Args:
+            instance: The service instance to check
+
+        Returns:
+            True if blessed, False if naked/unprotected
+        """
+        instance_type = type(instance)
+
+        # Priority A: Check NagaBaseService inheritance
+        try:
+            from vibe_core.naga.services.base import NagaBaseService
+
+            if isinstance(instance, NagaBaseService):
+                return True
+        except ImportError:
+            pass  # NAGAs not available - graceful degradation
+
+        # Priority B: Check _naga_flooded marker (Soft Flood via Mixins)
+        if getattr(instance_type, "_naga_flooded", False):
+            return True
+
+        # Priority C: Check NagaProxy wrapping (Hard Flood)
+        try:
+            from vibe_core.naga.proxy import NagaProxy
+
+            if isinstance(instance, NagaProxy):
+                return True
+        except ImportError:
+            pass
+
+        # Priority D: Check NagaCapabilityMixin inheritance
+        try:
+            from vibe_core.naga.mixins import NagaCapabilityMixin
+
+            if isinstance(instance, NagaCapabilityMixin):
+                return True
+        except ImportError:
+            pass
+
+        return False
+
+    @classmethod
+    def enable_naga_blessing(cls, strict: bool = False) -> None:
+        """
+        Enable NAGA blessing enforcement.
+
+        When enabled, all service registrations are checked for NAGA blessing.
+        Unblessed services trigger DHARMA_BREACH warnings.
+
+        Args:
+            strict: If True, reject unblessed critical services (default: False)
+        """
+        with cls._lock:
+            cls._naga_blessing_enabled = True
+            cls._naga_strict_mode = strict
+            cls._naga_blessing_violations.clear()
+            mode = "STRICT" if strict else "WARNING"
+            logger.warning(f"[DI] NAGA LOKA ENABLED - Blessing enforcement active ({mode} mode)")
+
+    @classmethod
+    def disable_naga_blessing(cls) -> None:
+        """Disable NAGA blessing enforcement (for testing)."""
+        with cls._lock:
+            cls._naga_blessing_enabled = False
+            cls._naga_strict_mode = False
+            logger.info("[DI] NAGA LOKA DISABLED")
+
+    @classmethod
+    def is_naga_blessing_enabled(cls) -> bool:
+        """Check if NAGA blessing enforcement is active."""
+        return cls._naga_blessing_enabled
+
+    @classmethod
+    def get_blessing_violations(cls) -> list:
+        """
+        Get list of DHARMA breaches (unblessed service registrations).
+
+        Returns:
+            List of "{interface} ({instance_type})" strings
+        """
+        with cls._lock:
+            return list(cls._naga_blessing_violations)
+
+    @classmethod
+    def add_critical_service(cls, service_name: str) -> None:
+        """
+        Add a service to the critical list (requires blessing in strict mode).
+
+        Args:
+            service_name: Interface name to mark as critical
+        """
+        with cls._lock:
+            cls._naga_critical_services.add(service_name)
+            logger.debug(f"[DI] Added critical service: {service_name}")
+
+    @classmethod
+    def clear_blessing_violations(cls) -> int:
+        """
+        Clear the violation log.
+
+        Returns:
+            Number of violations cleared
+        """
+        with cls._lock:
+            count = len(cls._naga_blessing_violations)
+            cls._naga_blessing_violations.clear()
+            return count

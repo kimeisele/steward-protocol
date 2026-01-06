@@ -59,14 +59,16 @@ def _register_all_floods() -> None:
     except ImportError as e:
         logger.debug(f"FLOOD REGISTRY: Could not register ouroboros floods: {e}")
 
-    # PluginService
-    try:
-        from vibe_core.naga.floods.plugin_service import FloodedPluginService
-        from vibe_core.plugin_service import PluginService
-
-        register_flood(PluginService, FloodedPluginService)
-    except ImportError as e:
-        logger.debug(f"FLOOD REGISTRY: Could not register plugin floods: {e}")
+    # PluginService - DEPRECATED: PluginService now self-hardened via NagaBaseService
+    # See vibe_core/plugin_service.py - inherits from NagaBaseService with @naga_governed
+    # FloodedPluginService kept for reference but no longer registered
+    # try:
+    #     from vibe_core.naga.floods.plugin_service import FloodedPluginService
+    #     from vibe_core.plugin_service import PluginService
+    #
+    #     register_flood(PluginService, FloodedPluginService)
+    # except ImportError as e:
+    #     logger.debug(f"FLOOD REGISTRY: Could not register plugin floods: {e}")
 
     # TaskManager
     try:
