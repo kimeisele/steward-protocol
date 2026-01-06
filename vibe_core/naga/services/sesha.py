@@ -106,8 +106,8 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
     # Event Recording (PUBLIC API - YAMARAJA Compliant)
     # =========================================================================
 
-    @naga_governed(operation="record_event")
-    def record_event(self, event: EventRecord) -> bool:
+    # @naga_governed removed to prevent recursion (Sesha cannot record its own recording)
+    def record_event(self, event: EventRecord) -> Optional[str]:
         """
         Record an event to the ledger.
 
@@ -118,7 +118,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
             event: Typed event record (EventRecord TypedDict)
 
         Returns:
-            True if recorded successfully, False otherwise
+            Event ID if recorded successfully, None otherwise
 
         Raises:
             ValueError: If event_type or agent_id is missing
@@ -135,11 +135,11 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         # Check ledger availability
         if not self._ledger:
             sys.stderr.write("!!! SESHA: record_event called but no ledger available\n")
-            return False
+            return None
 
         try:
             # Delegate to internal ledger
-            self._ledger.record_event(
+            event_id = self._ledger.record_event(
                 event_type=event_type,
                 agent_id=agent_id,
                 details=event.get("details", {}),
@@ -149,13 +149,13 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
             )
             self._events_processed += 1
             self._last_heartbeat = datetime.now()
-            return True
+            return event_id
 
         except Exception as e:
             # YAMARAJA: No silent failures
             sys.stderr.write(f"!!! SESHA: record_event failed: {e}\n")
             self._errors += 1
-            return False
+            return None
 
     # =========================================================================
     # Ledger Wrapper Methods
