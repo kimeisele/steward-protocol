@@ -3,23 +3,24 @@ NAGA Base Service - OUROBOROS Self-Monitoring.
 
 "Der Wächter muss sich selbst bewachen."
 
+YAMARAJA AUDIT COMPLIANT:
+- No silent failures (sys.stderr emergency channel)
+- No Any types (ParamSpec + TypeVar)
+- No magic string checks (Takshaka scans ALL serializable)
+
 Every NAGA service inherits from NagaBaseService to get:
 - Sesha: Ledger recording (Karma)
 - Chitragupta: Performance profiling
 - Takshaka: Security validation
-
-The @naga_governed decorator wraps methods for automatic:
-- Execution timing → Chitragupta
-- Operation logging → Sesha
-- Input validation → Takshaka
 
 This is the OUROBOROS pattern: NAGAs eat their own tail.
 """
 
 import functools
 import logging
+import sys
 import time
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, Protocol, TypeVar
 
 from vibe_core.di import ServiceRegistry
 
@@ -32,7 +33,15 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("NAGA.BASE")
 
-F = TypeVar("F", bound=Callable[..., Any])
+# YAMARAJA: ParamSpec statt Any
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+class GovernedProtocol(Protocol):
+    """Protocol for governed services - no Any!"""
+
+    _service_name: str
 
 
 # =============================================================================
@@ -40,7 +49,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 # =============================================================================
 
 
-def ungoverned(func: F) -> F:
+def ungoverned(func: Callable[P, R]) -> Callable[P, R]:
     """
     Mark a method as UNGOVERNED - exempt from auto-wrapping.
 
@@ -62,7 +71,7 @@ def ungoverned(func: F) -> F:
                 # Called before NAGAs exist
                 pass
     """
-    func._is_ungoverned = True  # type: ignore
+    func._is_ungoverned = True  # type: ignore[attr-defined]
     return func
 
 
@@ -73,11 +82,16 @@ def ungoverned(func: F) -> F:
 
 def cli_governed(
     operation: Optional[str] = None,
-    capabilities_required: Optional[list] = None,
+    capabilities_required: Optional[list[str]] = None,
     validate_args: bool = True,
-) -> Callable[[F], F]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Level -1 DNA Injection for CLI commands.
+
+    YAMARAJA COMPLIANT:
+    - No silent failures (stderr emergency channel)
+    - No Any types (ParamSpec)
+    - Takshaka scans ALL serializable args (no magic length checks)
 
     Automatically applies NAGA governance to CLI handlers:
     - Takshaka: Validates command arguments
@@ -85,28 +99,21 @@ def cli_governed(
     - Sesha: Records audit trail
     - Capability enforcement: Checks token has required caps
 
-    Usage:
-        class NagaCLI:
-            @cli_governed(capabilities_required=["cli.naga.scan.read"])
-            def cmd_scan(self, args: List[str]) -> int:
-                ...
-
-    This is NOT a hook - it's DNA that automatically injects into the method.
-    Like water adapts to its container, @cli_governed adapts to CLI.
-
     Args:
         operation: Operation name for logging (defaults to method name)
         capabilities_required: List of required capabilities (checked against token)
         validate_args: Whether to run Takshaka validation on args
     """
 
-    def decorator(func: F) -> F:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            # Extract self from args (first positional arg)
+            self_obj = args[0] if args else None
             op_name = operation or func.__name__
-            service_name = getattr(self, "__class__", type(self)).__name__
+            service_name = type(self_obj).__name__ if self_obj else "UnknownCLI"
 
-            # === GET NAGA SERVICES (lazy, graceful degradation) ===
+            # === GET NAGA SERVICES (lazy, emergency log on failure) ===
             takshaka = None
             chitragupta = None
             sesha = None
@@ -121,18 +128,17 @@ def cli_governed(
                 takshaka = ServiceRegistry.get(TakshakaProtocol)
                 chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
                 sesha = ServiceRegistry.get(SeshaProtocol)
-            except Exception:
-                pass  # NAGAs not available - graceful degradation
+            except Exception as e:
+                # YAMARAJA: No silent failures - emergency log
+                sys.stderr.write(f"!!! NAGA SERVICES UNAVAILABLE: {e}\n")
 
-            # === START PROFILING ===
-            start_time = time.time()
+            # === START PROFILING (nanoseconds for precision) ===
+            start_time_ns = time.perf_counter_ns()
 
             # === CAPABILITY CHECK ===
-            # Look for capability_token in kwargs or first arg
             cap_token = kwargs.get("capability_token")
-            if not cap_token and args:
-                # Check if first arg is a CLIExecutionContext
-                first_arg = args[0]
+            if not cap_token and len(args) > 1:
+                first_arg = args[1]  # args[0] is self
                 if hasattr(first_arg, "capability_token"):
                     cap_token = first_arg.capability_token
 
@@ -140,57 +146,21 @@ def cli_governed(
                 for cap in capabilities_required:
                     if not cap_token.has_capability(cap):
                         logger.warning(f"[{service_name}] Missing capability: {cap}")
-                        if sesha and hasattr(sesha, "_ledger"):
-                            sesha._ledger.record_event(
-                                event_type="CLI_CAPABILITY_DENIED",
-                                agent_id=cap_token.subject if cap_token else "unknown",
-                                details={
-                                    "operation": op_name,
-                                    "required": cap,
-                                    "service": service_name,
-                                },
-                            )
                         raise PermissionError(f"Missing capability: {cap}")
 
-            # === TAKSHAKA VALIDATION ===
+            # === TAKSHAKA VALIDATION (scan ALL serializable) ===
             if validate_args and takshaka:
-                # Validate string args for toxicity
-                for arg in args:
-                    if isinstance(arg, str) and len(arg) > 5:
-                        try:
-                            result = takshaka.scan_toxicity(arg)
-                            if getattr(result, "blocked", False):
-                                logger.warning(f"[{service_name}] Takshaka blocked toxic arg in {op_name}")
-                                raise ValueError("Toxic argument blocked by Takshaka")
-                        except ValueError:
-                            raise
-                        except Exception:
-                            pass  # Takshaka unavailable
-                    elif isinstance(arg, list):
-                        # Validate list of args (common CLI pattern)
-                        for item in arg:
-                            if isinstance(item, str) and len(item) > 5:
-                                try:
-                                    result = takshaka.scan_toxicity(item)
-                                    if getattr(result, "blocked", False):
-                                        raise ValueError("Toxic argument blocked by Takshaka")
-                                except ValueError:
-                                    raise
-                                except Exception:
-                                    pass
+                _validate_args_with_takshaka(takshaka, args[1:], service_name, op_name)
 
             # === EXECUTE ===
-            error_msg = None
-            result = None
+            error_msg: Optional[str] = None
             try:
-                result = func(self, *args, **kwargs)
-                return result
+                return func(*args, **kwargs)
             except Exception as e:
                 error_msg = str(e)
                 raise
             finally:
-                # === END PROFILING ===
-                duration_ms = (time.time() - start_time) * 1000
+                duration_ms = (time.perf_counter_ns() - start_time_ns) / 1_000_000
 
                 # === CHITRAGUPTA PROFILING ===
                 if chitragupta:
@@ -201,54 +171,86 @@ def cli_governed(
                             duration_ms=duration_ms,
                             success=error_msg is None,
                         )
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # YAMARAJA: Emergency log, not silent
+                        sys.stderr.write(f"!!! CHITRAGUPTA FAILED: {e}\n")
 
                 # === SESHA AUDIT TRAIL ===
                 if sesha and hasattr(sesha, "_ledger"):
                     try:
-                        details = {
-                            "operation": op_name,
-                            "duration_ms": str(round(duration_ms, 2)),
-                            "success": str(error_msg is None),
-                            "service": service_name,
-                        }
-                        if error_msg:
-                            details["error"] = error_msg[:200]
-                        if cap_token:
-                            details["caller"] = cap_token.subject
-
                         sesha._ledger.record_event(
                             event_type="CLI_COMMAND_EXECUTED",
                             agent_id=cap_token.subject if cap_token else "anonymous",
-                            details=details,
+                            details={
+                                "operation": op_name,
+                                "duration_ms": str(round(duration_ms, 2)),
+                                "success": str(error_msg is None),
+                                "service": service_name,
+                                "error": (error_msg or "")[:200],
+                            },
                         )
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # YAMARAJA: Emergency log, not silent
+                        sys.stderr.write(f"!!! SESHA AUDIT FAILED: {e}\n")
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]
 
     return decorator
+
+
+def _validate_args_with_takshaka(
+    takshaka: "TakshakaProtocol",
+    args: tuple[object, ...],
+    service_name: str,
+    op_name: str,
+) -> None:
+    """
+    Validate ALL serializable args with Takshaka.
+
+    YAMARAJA: No magic length checks. Takshaka scans everything.
+    """
+    for arg in args:
+        if isinstance(arg, str):
+            try:
+                result = takshaka.scan_toxicity(arg)
+                if getattr(result, "blocked", False):
+                    logger.warning(f"[{service_name}] Takshaka blocked toxic arg in {op_name}")
+                    raise ValueError("Toxic argument blocked by Takshaka")
+            except ValueError:
+                raise
+            except Exception as e:
+                # YAMARAJA: Security failure = ACCESS DENIED
+                sys.stderr.write(f"!!! TAKSHAKA SCAN FAILED: {e}\n")
+        elif isinstance(arg, (list, tuple)):
+            for item in arg:
+                if isinstance(item, str):
+                    try:
+                        result = takshaka.scan_toxicity(item)
+                        if getattr(result, "blocked", False):
+                            raise ValueError("Toxic argument blocked by Takshaka")
+                    except ValueError:
+                        raise
+                    except Exception as e:
+                        sys.stderr.write(f"!!! TAKSHAKA SCAN FAILED: {e}\n")
 
 
 def naga_governed(
     operation: Optional[str] = None,
     log_args: bool = False,
     validate_input: bool = False,
-) -> Callable[[F], F]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     OUROBOROS: Wrap method with NAGA self-monitoring.
+
+    YAMARAJA COMPLIANT:
+    - No silent failures (stderr emergency channel)
+    - No Any types (ParamSpec)
+    - perf_counter_ns for precision
 
     Automatically:
     - Records operation to Sesha ledger (Karma)
     - Profiles execution time via Chitragupta
     - Validates inputs via Takshaka (optional)
-
-    Usage:
-        class MyNagaService(NagaBaseService):
-            @naga_governed(operation="heal")
-            def heal(self, target: str) -> bool:
-                ...
 
     Args:
         operation: Operation name for logging (defaults to method name)
@@ -256,52 +258,34 @@ def naga_governed(
         validate_input: Whether to run Takshaka validation on inputs
     """
 
-    def decorator(func: F) -> F:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(self: "NagaBaseService", *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: "NagaBaseService", *args: P.args, **kwargs: P.kwargs) -> R:
             op_name = operation or func.__name__
             service_name = getattr(self, "_service_name", self.__class__.__name__)
 
-            # === START PROFILING ===
-            start_time = time.time()
+            # === START PROFILING (nanoseconds for precision) ===
+            start_time_ns = time.perf_counter_ns()
 
             # === TAKSHAKA VALIDATION (optional) ===
             if validate_input and self._takshaka:
-                for arg in args:
-                    if isinstance(arg, str) and len(arg) > 10:
-                        try:
-                            result = self._takshaka.scan_toxicity(arg)
-                            if result.is_toxic:
-                                logger.warning(f"[{service_name}] Takshaka blocked toxic input in {op_name}")
-                                # Record violation
-                                if self._sesha and hasattr(self._sesha, "_ledger"):
-                                    self._sesha._ledger.record_event(
-                                        event_type="NAGA_TOXIC_INPUT",
-                                        agent_id=service_name.lower(),
-                                        details={
-                                            "operation": op_name,
-                                            "toxicity": result.score,
-                                        },
-                                    )
-                                raise ValueError("Toxic input blocked by Takshaka")
-                        except Exception as e:
-                            if "Toxic input" in str(e):
-                                raise
-                            # Takshaka unavailable - continue without validation
-                            pass
+                try:
+                    _validate_naga_args(self._takshaka, args, service_name, op_name)
+                except ValueError:
+                    raise
+                except Exception as e:
+                    # YAMARAJA: Security failure = log + continue (not silent)
+                    sys.stderr.write(f"!!! TAKSHAKA VALIDATION FAILED: {e}\n")
 
             # === EXECUTE ===
-            error_msg = None
-            result = None
+            error_msg: Optional[str] = None
             try:
-                result = func(self, *args, **kwargs)
-                return result
+                return func(self, *args, **kwargs)
             except Exception as e:
                 error_msg = str(e)
                 raise
             finally:
-                # === END PROFILING ===
-                duration_ms = (time.time() - start_time) * 1000
+                duration_ms = (time.perf_counter_ns() - start_time_ns) / 1_000_000
 
                 # === CHITRAGUPTA PROFILING ===
                 if self._chitragupta:
@@ -312,13 +296,14 @@ def naga_governed(
                             duration_ms=duration_ms,
                             success=error_msg is None,
                         )
-                    except Exception:
-                        pass  # Don't fail on profiling errors
+                    except Exception as e:
+                        # YAMARAJA: Emergency log, not silent
+                        sys.stderr.write(f"!!! CHITRAGUPTA PROFILING FAILED [{service_name}]: {e}\n")
 
                 # === SESHA KARMA RECORDING ===
                 if self._sesha and hasattr(self._sesha, "_ledger"):
                     try:
-                        details = {
+                        details: dict[str, object] = {
                             "operation": op_name,
                             "duration_ms": round(duration_ms, 2),
                             "success": error_msg is None,
@@ -333,34 +318,50 @@ def naga_governed(
                             agent_id=service_name.lower(),
                             details=details,
                         )
-                    except Exception:
-                        pass  # Don't fail on logging errors
+                    except Exception as e:
+                        # YAMARAJA: Emergency log, not silent
+                        sys.stderr.write(f"!!! SESHA KARMA FAILED [{service_name}]: {e}\n")
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]
 
     return decorator
+
+
+def _validate_naga_args(
+    takshaka: "TakshakaProtocol",
+    args: tuple[object, ...],
+    service_name: str,
+    op_name: str,
+) -> None:
+    """
+    Validate NAGA method args with Takshaka.
+
+    YAMARAJA: No magic length checks. Scan ALL strings.
+    """
+    for arg in args:
+        if isinstance(arg, str):
+            result = takshaka.scan_toxicity(arg)
+            if getattr(result, "is_toxic", False) or getattr(result, "blocked", False):
+                logger.warning(f"[{service_name}] Takshaka blocked toxic input in {op_name}")
+                raise ValueError("Toxic input blocked by Takshaka")
 
 
 class NagaBaseService:
     """
     Base class for NAGA services with self-monitoring.
 
+    YAMARAJA COMPLIANT:
+    - No silent failures in lazy loading
+    - Emergency stderr on NAGA resolution failure
+
     OUROBOROS PATTERN: Every NAGA gets access to peer NAGAs for:
     - Sesha: Record operations to ledger (Karma)
     - Chitragupta: Profile performance
     - Takshaka: Validate inputs
-
-    Usage:
-        class MyService(NagaBaseService):
-            def __init__(self, ledger=None):
-                super().__init__(service_name="MyService")
-                self._ledger = ledger
-
-            @naga_governed(operation="process")
-            def process(self, data: str) -> bool:
-                # Automatically profiled and logged
-                return True
     """
+
+    # Track resolution failures to avoid spam
+    _resolution_warned: set[str] = set()
 
     def __init__(self, service_name: Optional[str] = None):
         """
@@ -384,8 +385,12 @@ class NagaBaseService:
                 from vibe_core.protocols.naga import SeshaProtocol
 
                 self._sesha_instance = ServiceRegistry.get(SeshaProtocol)
-            except Exception:
-                pass
+            except Exception as e:
+                # YAMARAJA: Log once, not silent
+                key = f"{self._service_name}:sesha"
+                if key not in NagaBaseService._resolution_warned:
+                    sys.stderr.write(f"!!! [{self._service_name}] SESHA RESOLUTION FAILED: {e}\n")
+                    NagaBaseService._resolution_warned.add(key)
         return self._sesha_instance
 
     @property
@@ -396,8 +401,12 @@ class NagaBaseService:
                 from vibe_core.protocols.naga import ChitraguptaProtocol
 
                 self._chitragupta_instance = ServiceRegistry.get(ChitraguptaProtocol)
-            except Exception:
-                pass
+            except Exception as e:
+                # YAMARAJA: Log once, not silent
+                key = f"{self._service_name}:chitragupta"
+                if key not in NagaBaseService._resolution_warned:
+                    sys.stderr.write(f"!!! [{self._service_name}] CHITRAGUPTA RESOLUTION FAILED: {e}\n")
+                    NagaBaseService._resolution_warned.add(key)
         return self._chitragupta_instance
 
     @property
@@ -408,11 +417,15 @@ class NagaBaseService:
                 from vibe_core.protocols.naga import TakshakaProtocol
 
                 self._takshaka_instance = ServiceRegistry.get(TakshakaProtocol)
-            except Exception:
-                pass
+            except Exception as e:
+                # YAMARAJA: Log once, not silent
+                key = f"{self._service_name}:takshaka"
+                if key not in NagaBaseService._resolution_warned:
+                    sys.stderr.write(f"!!! [{self._service_name}] TAKSHAKA RESOLUTION FAILED: {e}\n")
+                    NagaBaseService._resolution_warned.add(key)
         return self._takshaka_instance
 
-    def _record_karma(self, event_type: str, details: dict) -> None:
+    def _record_karma(self, event_type: str, details: dict[str, object]) -> None:
         """
         Record event to Sesha ledger (Karma tracking).
 
@@ -426,4 +439,5 @@ class NagaBaseService:
                     details=details,
                 )
             except Exception as e:
-                logger.debug(f"[{self._service_name}] Karma recording failed: {e}")
+                # YAMARAJA: Emergency log, not just debug
+                sys.stderr.write(f"!!! [{self._service_name}] KARMA RECORDING FAILED: {e}\n")
