@@ -454,15 +454,9 @@ class TÜVConfig:
     )
 
     # Known critical gaps to always check for
-    critical_gaps: List[CriticalGap] = field(
-        default_factory=lambda: [
-            CriticalGap(
-                name="StewardProtocol",
-                description="Namesake protocol missing!",
-                suggested_location="protocols/steward.py",
-            ),
-        ]
-    )
+    # NOTE: Only add gaps here when there are EXISTING implementations to unify
+    # Don't invent protocols - discover them from existing patterns
+    critical_gaps: List[CriticalGap] = field(default_factory=list)
 
     # Scan settings
     skip_pycache: bool = True
@@ -472,7 +466,7 @@ class TÜVConfig:
     def from_dict(cls, data: Dict[str, Any]) -> "TÜVConfig":
         # Parse critical gaps
         gaps_data = data.get("critical_gaps", [])
-        critical_gaps = [CriticalGap.from_dict(g) for g in gaps_data] if gaps_data else None
+        critical_gaps = [CriticalGap.from_dict(g) for g in gaps_data]
 
         return cls(
             enabled=data.get("enabled", True),
@@ -491,14 +485,7 @@ class TÜVConfig:
                     "Identity",
                 ],
             ),
-            critical_gaps=critical_gaps
-            or [
-                CriticalGap(
-                    name="StewardProtocol",
-                    description="Namesake protocol missing!",
-                    suggested_location="protocols/steward.py",
-                ),
-            ],
+            critical_gaps=critical_gaps,
             skip_pycache=data.get("skip_pycache", True),
             skip_type_checking_blocks=data.get("skip_type_checking_blocks", True),
         )
