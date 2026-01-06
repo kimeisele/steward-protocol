@@ -44,6 +44,7 @@ from vibe_core.protocols.naga import (
     SyncRequest,
     SyncStatus,
 )
+from vibe_core.protocols.naga.groups import DataProtocol
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
@@ -59,12 +60,16 @@ logger = logging.getLogger("SESHA")
     capabilities=[NagaCapability.LEDGER],
     protocol_class="vibe_core.protocols.naga.SeshaProtocol",
 )
-class SeshaService(NagaBaseService, SeshaProtocol):
+class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
     """
     Ananta Sesha - Trägt die Welten.
 
     Wraps the existing SQLiteLedger for gossip sync.
     Does NOT replace the ledger - extends it invisibly.
+
+    INTERFACE GROUPS:
+    - SeshaProtocol (domain-specific: ledger, blocks, sync)
+    - DataProtocol (generic: get_hash, get_sequence, is_synced)
 
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
@@ -121,7 +126,29 @@ class SeshaService(NagaBaseService, SeshaProtocol):
             self._errors += 1
             return 0
 
-    def get_events_since(self, sequence: int) -> List[Dict[str, Any]]:
+    # =========================================================================
+    # DataProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def get_hash(self) -> str:
+        """Get current state hash (DataProtocol - Foundation for Prahlad)."""
+        return self.get_top_hash()
+
+    def is_synced(self) -> bool:
+        """Check if data is synchronized (DataProtocol)."""
+        if not self._ledger:
+            return False
+        try:
+            # Synced if ledger exists and has no errors
+            return self._errors == 0 and self.get_sequence() > 0
+        except Exception:
+            return False
+
+    # =========================================================================
+    # Events API
+    # =========================================================================
+
+    def get_events_since(self, sequence: int) -> List[Dict[str, str]]:
         """Get all events since a sequence number."""
         if not self._ledger:
             return []

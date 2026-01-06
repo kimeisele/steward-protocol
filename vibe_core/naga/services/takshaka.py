@@ -49,6 +49,7 @@ from vibe_core.protocols.naga import (
     VerifyResult,
     VerifyStatus,
 )
+from vibe_core.protocols.naga.groups import SecurityProtocol, Subject, Verdict
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
@@ -64,7 +65,7 @@ logger = logging.getLogger("TAKSHAKA")
     capabilities=[NagaCapability.SECURITY],
     protocol_class="vibe_core.protocols.naga.TakshakaProtocol",
 )
-class TakshakaService(NagaBaseService, TakshakaProtocol):
+class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
     """
     Takshaka - Bite First, Ask Never.
 
@@ -72,6 +73,11 @@ class TakshakaService(NagaBaseService, TakshakaProtocol):
     Verifies identity BEFORE parsing.
     Records all attacks in the ledger.
 
+    INTERFACE GROUPS:
+    - TakshakaProtocol (domain-specific: verify, toxicity, rate limit)
+    - SecurityProtocol (generic: intercept, bite, quarantine)
+
+    SEVA: Beißt FÜR Prahlad, nicht weil er muss.
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
@@ -394,6 +400,69 @@ class TakshakaService(NagaBaseService, TakshakaProtocol):
             logger.error(f"TAKSHAKA: Failed to record bite: {e}")
             self._errors += 1
             return ""
+
+    # =========================================================================
+    # SecurityProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def intercept(self, subject: Subject) -> Verdict:
+        """
+        Judge a subject - ALLOW, DENY, ESCALATE, QUARANTINE (SecurityProtocol).
+
+        SEVA: Intercepts threats FÜR Prahlad, not because protocol says so.
+        """
+        # Check if already quarantined
+        if self.is_quarantined(subject.identifier):
+            return Verdict.QUARANTINE
+
+        # Check rate limit
+        allowed, _ = self.check_rate_limit(subject.identifier)
+        if not allowed:
+            return Verdict.DENY
+
+        # Scan for toxicity if context provided
+        if subject.context:
+            report = self.scan_toxicity(subject.context)
+            if report.blocked:
+                # Create violation and bite
+                from vibe_core.protocols.naga import ViolationDetails
+
+                violation = VajraViolation(
+                    violation_type="TOXIC_SUBJECT",
+                    source=subject.identifier,
+                    details=ViolationDetails(
+                        event_type="intercept",
+                        toxicity_score=report.score,
+                        matched_patterns=report.patterns,
+                    ),
+                )
+                self.bite(violation)
+                return Verdict.DENY
+
+        return Verdict.ALLOW
+
+    def bite_subject(self, subject: Subject, reason: str) -> None:
+        """
+        Record a violation for a subject (SecurityProtocol adapter).
+
+        Note: Named bite_subject to not conflict with existing bite(VajraViolation).
+        """
+        from vibe_core.protocols.naga import ViolationDetails
+
+        violation = VajraViolation(
+            violation_type="SECURITY_BITE",
+            source=subject.identifier,
+            details=ViolationDetails(
+                event_type=subject.subject_type,
+                error_message=reason[:500],
+            ),
+        )
+        self.bite(violation)
+
+    def is_quarantined(self, identifier: str) -> bool:
+        """Check if target is in quarantine (SecurityProtocol)."""
+        # Check if key is revoked (our quarantine list)
+        return identifier in self._revoked_keys
 
     # =========================================================================
     # Trust Management
