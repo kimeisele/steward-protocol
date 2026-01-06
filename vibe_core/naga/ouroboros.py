@@ -461,18 +461,21 @@ class NagaOuroboros:
         if anchor is None:
             try:
                 from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
                 anchor = get_system_anchor()
             except ImportError:
                 return
 
         try:
-            anchor.notify_loop_detected({
-                "loop_code": alert.loop_code.value,
-                "severity": alert.severity,
-                "message": alert.message,
-                "participants": alert.participants,
-                "source": "naga_ouroboros",
-            })
+            anchor.notify_loop_detected(
+                {
+                    "loop_code": alert.loop_code.value,
+                    "severity": alert.severity,
+                    "message": alert.message,
+                    "participants": alert.participants,
+                    "source": "naga_ouroboros",
+                }
+            )
             logger.debug(f"[OUROBOROS] Notified AnantaShesha: {alert.loop_code.value}")
         except Exception as e:
             logger.debug(f"[OUROBOROS] System anchor notify failed: {e}")
@@ -529,7 +532,7 @@ class NagaOuroboros:
     # STATUS
     # =========================================================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, object]:
         """Get OUROBOROS status for observability."""
         now = time.time()
         return {

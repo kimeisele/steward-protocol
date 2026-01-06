@@ -715,7 +715,7 @@ class NagaOrchestrator:
     # Status & Health
     # =========================================================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, object]:
         """Get federation health status - all 8 members + infrastructure."""
         return {
             "initialized": self._initialized,

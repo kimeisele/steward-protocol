@@ -295,7 +295,7 @@ class KulikaService(NagaBaseService, KulikaProtocol):
     # Status API
     # =========================================================================
 
-    def get_registry_status(self) -> Dict[str, Any]:
+    def get_registry_status(self) -> Dict[str, object]:
         """Get detailed registry status."""
         return self._registry.get_status()
 

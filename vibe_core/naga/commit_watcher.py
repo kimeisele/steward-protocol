@@ -443,7 +443,7 @@ class NagaCommitWatcher:
     # STATUS
     # =========================================================================
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         """Get commit watching statistics."""
         return {
             "enabled": self._enabled,
