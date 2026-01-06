@@ -186,9 +186,16 @@ Wenn alle NAGAs PRAHLAD dienen (nicht nur Protokolle implementieren):
 
 ## Nächste Schritte
 
-1. [x] PrahladService + GovernanceProtocol
-2. [ ] SeshaService + DataProtocol (get_hash, is_synced)
-3. [ ] TakshakaService + SecurityProtocol (intercept, bite)
-4. [ ] VasukiService + TransformProtocol
-5. [ ] NaradaService + ObserveProtocol
-6. [ ] Ouroboros: NAGAs testen sich selbst FÜR Prahlad
+### DONE ✓
+1. [x] PrahladService + GovernanceProtocol (audit, verify, get_dharma_score)
+2. [x] SeshaService + DataProtocol (get_hash, get_sequence, is_synced)
+3. [x] TakshakaService + SecurityProtocol (intercept, bite, is_quarantined)
+4. [x] VasukiService + TransformProtocol (analyze, can_transform, transform)
+5. [x] NaradaService + ObserveProtocol (observe, get_observations, get_observation_count)
+6. [x] ChitraguptaService + ObserveProtocol (observe, get_observations, get_observation_count)
+
+### TODO
+7. [ ] AnantaService + TransformProtocol
+8. [ ] KaliyaService + SecurityProtocol
+9. [ ] NarasimhaService + SecurityProtocol
+10. [ ] Ouroboros: NAGAs testen sich selbst FÜR Prahlad

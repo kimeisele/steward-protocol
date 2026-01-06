@@ -32,6 +32,7 @@ from vibe_core.naga.kulika import (
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
+from vibe_core.protocols.naga.groups import Observation, ObserveProtocol
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
@@ -62,13 +63,15 @@ class NaradaObservation:
     capabilities=[NagaCapability.OBSERVATION],
     protocol_class="vibe_core.protocols.naga.NaradaProtocol",
 )
-class NaradaService(NagaBaseService):
+class NaradaService(NagaBaseService, ObserveProtocol):
     """
     Narada - The Cosmic Journalist.
 
     Observes function calls without modifying behavior.
     Reports patterns to NagaCortex for analysis.
 
+    INTERFACE GROUP: ObserveProtocol (observe, get_observations, get_observation_count)
+    SEVA: Narada BEOBACHTET FÜR Prahlad - er injizierte Wissen in Prahlad im Mutterleib!
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
@@ -214,3 +217,71 @@ class NaradaService(NagaBaseService):
         observations = list(self._observation_buffer)
         self._observation_buffer.clear()
         return observations
+
+    # =========================================================================
+    # ObserveProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def observe(self, event_type: str, source: str, data: str) -> Observation:
+        """
+        Observe an event (ObserveProtocol).
+
+        SEVA: Narada observes FÜR Prahlad - reporting what needs attention.
+        This is the generic observation method for the Interface Group.
+
+        Args:
+            event_type: Type of event being observed
+            source: Source of the event
+            data: Serialized event data (string, not Dict!)
+
+        Returns:
+            Observation record
+        """
+        observation = Observation(
+            event_type=event_type,
+            source=source,
+            timestamp=datetime.now(),
+            data=data,
+        )
+
+        # Also record as NaradaObservation for internal tracking
+        internal_obs = NaradaObservation(
+            function_name=f"observe:{event_type}",
+            args_count=1,
+            kwargs_keys=["source", "data"],
+            result_type="Observation",
+            observer_id=self._identity.agent_id if self._identity else "",
+        )
+        self._record_observation(internal_obs)
+
+        return observation
+
+    def get_observations(self, since: Optional[datetime] = None) -> List[Observation]:
+        """
+        Get recorded observations (ObserveProtocol).
+
+        SEVA: Returns what Narada has seen FÜR Prahlad's governance.
+
+        Args:
+            since: Only return observations after this time (optional)
+
+        Returns:
+            List of Observation records
+        """
+        result: List[Observation] = []
+        for obs in self._observation_buffer:
+            if since is None or obs.timestamp >= since:
+                # Convert NaradaObservation to generic Observation
+                result.append(
+                    Observation(
+                        event_type=f"spy:{obs.function_name}",
+                        source="narada",
+                        timestamp=obs.timestamp,
+                        data=f"args={obs.args_count},kwargs={obs.kwargs_keys},result={obs.result_type}",
+                    )
+                )
+        return result
+
+    def get_observation_count(self) -> int:
+        """Get total observation count (ObserveProtocol)."""
+        return self._observations_count
