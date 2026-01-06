@@ -11,9 +11,55 @@ Tests:
 - Config loading
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
+
+from vibe_core.protocols.correction import (
+    CorrectionDispatcherProtocol,
+    CorrectionOrchestratorProtocol,
+    DriftSource,
+    HealingResult,
+    HealingStatus,
+    HealingStrategy,
+    UnifiedDriftReport,
+)
+from vibe_core.protocols.naga import NagaStatus, NagaType
+from vibe_core.protocols.naga.sesha import NullSesha
+
+
+class StubLedger:
+    """Stub ledger following SQLiteLedger protocol (minimal)."""
+
+    def get_top_hash(self) -> str:
+        return "abc123"
+
+    def count_events(self) -> int:
+        return 100
+
+    def record_event(self, **kwargs) -> str:
+        return "event_123"
+
+    def get_events(self, **kwargs):
+        return []
+
+    def verify_chain_integrity(self):
+        return {"corrupted": False}
+
+
+class StubCorrectionOrchestrator:
+    """Stub correction orchestrator."""
+
+    def __init__(self):
+        self.dispatcher = StubDispatcher()
+
+
+class StubDispatcher:
+    """Stub dispatcher tracking registrations."""
+
+    def __init__(self):
+        self.register_handler_calls = 0
+
+    def register_handler(self, source, handler, handler_id=None, priority=0):
+        self.register_handler_calls += 1
 
 
 class TestBootstrap:
@@ -21,20 +67,13 @@ class TestBootstrap:
 
     @pytest.fixture
     def mock_ledger(self):
-        """Create a mock ledger."""
-        ledger = MagicMock()
-        ledger.get_top_hash.return_value = "abc123"
-        ledger.count_events.return_value = 100
-        ledger.record_event.return_value = "event_123"
-        return ledger
+        """Create a stub ledger."""
+        return StubLedger()
 
     @pytest.fixture
     def mock_correction_orchestrator(self):
-        """Create a mock correction orchestrator."""
-        orchestrator = MagicMock()
-        orchestrator.dispatcher = MagicMock()
-        orchestrator.dispatcher.register_handler = MagicMock()
-        return orchestrator
+        """Create a stub correction orchestrator."""
+        return StubCorrectionOrchestrator()
 
     def test_bootstrap_returns_orchestrator(self, mock_ledger, mock_correction_orchestrator):
         """Bootstrap should return a NagaOrchestrator instance."""
@@ -77,7 +116,7 @@ class TestBootstrap:
         # Infrastructure: Sesha (STATE), Takshaka (COGNITIVE), Vasuki (CONFIG), Kaliya (RELIABILITY)
         # Governance: Chitragupta (PERFORMANCE), Prahlad (STRUCTURAL)
         # NOTE: Narada is pure observer - no CorrectionHandler
-        assert mock_correction_orchestrator.dispatcher.register_handler.call_count == 6
+        assert mock_correction_orchestrator.dispatcher.register_handler_calls == 6
 
     def test_bootstrap_with_custom_config(self, mock_ledger, mock_correction_orchestrator):
         """Bootstrap should respect custom config."""
@@ -99,17 +138,11 @@ class TestInitializationOrder:
 
     @pytest.fixture
     def mock_ledger(self):
-        ledger = MagicMock()
-        ledger.get_top_hash.return_value = "abc123"
-        ledger.count_events.return_value = 100
-        return ledger
+        return StubLedger()
 
     @pytest.fixture
     def mock_correction_orchestrator(self):
-        orchestrator = MagicMock()
-        orchestrator.dispatcher = MagicMock()
-        orchestrator.dispatcher.register_handler = MagicMock()
-        return orchestrator
+        return StubCorrectionOrchestrator()
 
     def test_sesha_before_vasuki(self, mock_ledger, mock_correction_orchestrator):
         """Sesha must be initialized before Vasuki (Vasuki depends on Sesha)."""
@@ -141,14 +174,11 @@ class TestDisabledNagas:
 
     @pytest.fixture
     def mock_ledger(self):
-        ledger = MagicMock()
-        return ledger
+        return StubLedger()
 
     @pytest.fixture
     def mock_correction_orchestrator(self):
-        orchestrator = MagicMock()
-        orchestrator.dispatcher = MagicMock()
-        return orchestrator
+        return StubCorrectionOrchestrator()
 
     def test_disabled_sesha(self, mock_ledger, mock_correction_orchestrator):
         """Disabled Sesha should be None."""
@@ -206,16 +236,11 @@ class TestStatus:
 
     @pytest.fixture
     def mock_ledger(self):
-        ledger = MagicMock()
-        ledger.get_top_hash.return_value = "abc123"
-        ledger.count_events.return_value = 100
-        return ledger
+        return StubLedger()
 
     @pytest.fixture
     def mock_correction_orchestrator(self):
-        orchestrator = MagicMock()
-        orchestrator.dispatcher = MagicMock()
-        return orchestrator
+        return StubCorrectionOrchestrator()
 
     def test_get_status(self, mock_ledger, mock_correction_orchestrator):
         """get_status() should return status dict."""

@@ -54,6 +54,7 @@ from vibe_core.protocols.naga.types import EventDict  # WATERTIGHT: No Dict[str,
 if TYPE_CHECKING:
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
+    from vibe_core.protocols.naga import TakshakaProtocol
 
 logger = logging.getLogger("VASUKI")
 
@@ -97,7 +98,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
     def __init__(
         self,
         sesha: Optional["SeshaService"] = None,
-        takshaka: Optional["TakshakaService"] = None,
+        takshaka: Optional["TakshakaProtocol"] = None,
         sign_outbound: bool = True,
     ):
         """
@@ -109,8 +110,21 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
             sign_outbound: Whether to sign outbound messages
         """
         super().__init__(service_name="Vasuki")
-        self._sesha_ref = sesha  # Renamed to avoid conflict with NagaBaseService._sesha
-        self._takshaka_ref = takshaka  # Renamed to avoid conflict with NagaBaseService._takshaka
+
+        # YAMARAJA: Fail at BOOT, not at USE
+        if sesha is None:
+            import sys
+
+            sys.stderr.write("!!! VASUKI: sesha is REQUIRED\n")
+            raise SystemExit(1)
+        if takshaka is None:
+            import sys
+
+            sys.stderr.write("!!! VASUKI: takshaka is REQUIRED\n")
+            raise SystemExit(1)
+
+        self._sesha_instance = sesha  # YAMARAJA: Use base class instance variable
+        self._takshaka_instance = takshaka  # YAMARAJA: Use base class instance variable
         self._sign_outbound = sign_outbound
         self._peers: List[NodeAddress] = []
         self._peer_urls: Dict[NodeAddress, str] = {}  # peer -> URL mapping
@@ -141,13 +155,13 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
     def inject_dependencies(
         self,
         sesha: Optional["SeshaService"] = None,
-        takshaka: Optional["TakshakaService"] = None,
+        takshaka: Optional["TakshakaProtocol"] = None,
     ) -> None:
         """Inject dependencies after construction."""
         if sesha:
-            self._sesha_ref = sesha
+            self._sesha_instance = sesha
         if takshaka:
-            self._takshaka_ref = takshaka
+            self._takshaka_instance = takshaka
 
     # =========================================================================
     # Serialization (Das Quirlen)
@@ -162,7 +176,14 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
             payload = msgpack.packb(event, use_bin_type=True)
 
             signature = b""
-            if self._sign_outbound and self._private_key:
+            if self._sign_outbound:
+                if not self._private_key:
+                    # YAMARAJA FAIL-CLOSED: No key = No message
+                    import sys
+
+                    sys.stderr.write("!!! VASUKI FATAL: CANNOT SIGN MESSAGE - NO PRIVATE KEY.\n")
+                    raise RuntimeError("Missing private key for mandatory signing")
+
                 try:
                     import base64
 
@@ -171,7 +192,11 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
                     sig_str = sign_content(payload.hex(), self._private_key)
                     signature = base64.b64decode(sig_str)
                 except Exception as e:
-                    logger.warning(f"VASUKI: Signing failed: {e}")
+                    # YAMARAJA FAIL-CLOSED: Signing failure = No message
+                    import sys
+
+                    sys.stderr.write(f"!!! VASUKI FATAL: SIGNING FAILED: {e}\n")
+                    raise RuntimeError(f"Message signing failed: {e}")
 
             envelope = SignedEnvelope(
                 payload=payload,
@@ -192,13 +217,47 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
 
     @naga_governed(operation="churn_in")
     def churn_in(self, envelope: SignedEnvelope) -> EventDict:
-        """Transform wire envelope -> internal event."""
+        """
+        Transform wire envelope -> internal event.
+
+        YAMARAJA: VERIFY BEFORE PROCESS.
+        Takshaka MUST verify the signature BEFORE msgpack.unpackb().
+        """
         try:
+            import base64
+
             import msgpack
 
             if envelope.content_type != "msgpack":
                 raise ValueError(f"Unsupported content type: {envelope.content_type}")
 
+            # 1. VERIFY BEFORE PROCESS (Takshaka)
+            if self._takshaka:
+                # Re-construct raw envelope for Takshaka if needed,
+                # but SignedEnvelope is already structured.
+                # However, Takshaka.verify_envelope expects raw bytes.
+                raw_envelope = msgpack.packb(
+                    {
+                        "payload": envelope.payload,
+                        "signature": envelope.signature,
+                        "sender_key": envelope.sender_key,
+                        "timestamp": envelope.timestamp,
+                        "content_type": envelope.content_type,
+                    }
+                )
+
+                from vibe_core.protocols.naga import VerifyStatus
+
+                result = self._takshaka.verify_envelope(raw_envelope)
+
+                if result.status != VerifyStatus.VALID:
+                    # YAMARAJA FAIL-CLOSED: Invalid signature = Refuse to process
+                    import sys
+
+                    sys.stderr.write(f"!!! VASUKI SECURITY: BLOCKED INVALID ENVELOPE: {result.reason}\n")
+                    raise RuntimeError(f"Security validation failed: {result.reason}")
+
+            # 2. PROCESS ONLY AFTER VERIFICATION
             event = msgpack.unpackb(envelope.payload, raw=False)
 
             self._events_processed += 1
@@ -312,6 +371,9 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
             True if queued, False if queue is full
         """
         if len(self._receive_queue) >= 1000:
+            import sys
+
+            sys.stderr.write("!!! VASUKI WARNING: RECEIVE QUEUE FULL - DROPPING ENVELOPE.\n")
             logger.warning("VASUKI: Receive queue full, dropping envelope")
             self._errors += 1
             return False

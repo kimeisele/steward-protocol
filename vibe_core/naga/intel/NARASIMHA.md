@@ -10,10 +10,10 @@
 
 ### A. FAIL-OPEN (KRITISCH)
 
-| Line | Code | Problem | Fix |
-|------|------|---------|-----|
-| 376-378 | `if not self._ledger: return ""` | Bite returns empty on no ledger | Return violation ID or raise |
-| 398-402 | `except: return ""` | Exception → empty string | sys.stderr + generate ID |
+| Line | Code | Problem |
+|------|------|---------|
+| 376-378 | `if not self._ledger: return ""` | Bite returns empty on no ledger |
+| 398-402 | `except: return ""` | Exception → empty string |
 
 ```python
 # CURRENT (FAIL-OPEN - GEFÄHRLICH!)
@@ -271,10 +271,10 @@ def some_method(self, ...):
 
 ```python
 # AnantaService (VORHER - FALSCH!)
-self._genes = {}              # ← DUPLICATE!
-self._gene_statuses = {}      # ← DUPLICATE!
-self._capability_providers = {} # ← DUPLICATE!
-self._event_listeners = {}    # ← DUPLICATE!
+self._genes = {}
+self._gene_statuses = {}
+self._capability_providers = {}
+self._event_listeners = {}
 
 # AnantaShesha (THE Substrate)
 self._genes = {}              # ← THE truth
@@ -311,8 +311,10 @@ class AnantaService(NagaBaseService, AnantaProtocol):
 - [x] **MOHINI OUROBOROS FIX** - pytest recursion guard
 - [x] **SUBSTRATE FIX** - AnantaService delegates to AnantaShesha
 - [x] **GARUDA AUDIT** - Architecture correct
-- [ ] Takshaka FAIL-CLOSED fix
-- [ ] Takshaka Sesha encapsulation
-- [ ] Vasuki REFUSE UNSIGNED
-- [ ] Vasuki TAKSHAKA GATE
-- [ ] Dependency injection hardening
+- [x] Takshaka FAIL-CLOSED fix
+- [x] Takshaka Sesha encapsulation
+- [x] Vasuki REFUSE UNSIGNED
+- [x] Vasuki TAKSHAKA GATE
+- [x] Dependency injection hardening
+
+```

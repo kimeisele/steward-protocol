@@ -41,13 +41,16 @@ from vibe_core.protocols.correction import (
     UnifiedDriftReport,
 )
 from vibe_core.protocols.naga import (
+    EventRecord,
     NagaStatus,
     NagaType,
+    SeshaProtocol,
     TakshakaProtocol,
     ToxicityReport,
     VajraViolation,
     VerifyResult,
     VerifyStatus,
+    ViolationDetails,
 )
 from vibe_core.protocols.naga.groups import SecurityProtocol, Subject, Verdict
 
@@ -83,6 +86,7 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
 
     def __init__(
         self,
+        sesha: Optional[SeshaProtocol] = None,
         ledger: Optional["SQLiteLedger"] = None,
         trust_mode: str = "strict",
         toxicity_threshold: float = 0.3,
@@ -92,13 +96,29 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
         Initialize Takshaka.
 
         Args:
-            ledger: Ledger for recording violations
+            sesha: SeshaProtocol for recording violations (YAMARAJA)
+            ledger: Legacy support (deprecated)
             trust_mode: "strict" (require trusted keys) or "permissive"
             toxicity_threshold: Score threshold for blocking (0.0-1.0)
             rate_limit_rpm: Requests per minute limit per sender
         """
         super().__init__(service_name="Takshaka")
-        self._ledger = ledger
+
+        # YAMARAJA: Use SeshaProtocol (REQUIRED)
+        if sesha:
+            self._sesha_instance = sesha
+        elif ledger:
+            # Legacy fallback: wrap ledger in SeshaService
+            from vibe_core.naga.services.sesha import SeshaService
+
+            self._sesha_instance = SeshaService(ledger=ledger)
+        else:
+            # YAMARAJA: Fail at BOOT, not at USE
+            import sys
+
+            sys.stderr.write("!!! TAKSHAKA: sesha (or ledger) is REQUIRED\n")
+            raise SystemExit(1)
+
         self._trust_mode = trust_mode
         self._toxicity_threshold = toxicity_threshold
         self._rate_limit_rpm = rate_limit_rpm
@@ -159,8 +179,10 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
         ]
 
     def inject_ledger(self, ledger: "SQLiteLedger") -> None:
-        """Inject ledger after construction."""
-        self._ledger = ledger
+        """Inject ledger after construction (Legacy)."""
+        from vibe_core.naga.services.sesha import SeshaService
+
+        self._sesha_instance = SeshaService(ledger=ledger)
 
     # =========================================================================
     # Pre-Parse Security (Bite First)
@@ -360,6 +382,10 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
 
         GAD-000 Idempotency: Duplicate violations are detected and the
         existing event_id is returned instead of creating a new entry.
+
+        YAMARAJA FAIL-CLOSED:
+        If recording fails, we MUST return an ID so the caller knows
+        action was taken (even if not persisted).
         """
         self._last_heartbeat = datetime.now()
 
@@ -373,20 +399,33 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
         self._bites += 1
         logger.warning(f"TAKSHAKA BITE: {violation.violation_type} from {violation.source}")
 
-        if not self._ledger:
-            logger.error("TAKSHAKA: No ledger to record bite")
-            return ""
+        if not self._sesha:
+            # YAMARAJA FAIL-CLOSED: Emergency log + fallback ID
+            import sys
+            import time
+
+            sys.stderr.write("!!! TAKSHAKA FATAL: SESHA MISSING. ATTACK DETECTED BUT NOT RECORDED.\n")
+            return f"FATAL_NO_SESHA_{time.time()}"
 
         try:
-            event_id = self._ledger.record_event(
+            event_record = EventRecord(
                 event_type="VAJRA_VIOLATION",
                 agent_id="TAKSHAKA",
                 details={
                     **violation.to_dict(),
-                    "violation_hash": violation_hash,  # GAD-000 Parseability
+                    "violation_hash": violation_hash,
                 },
                 result="BITTEN",
             )
+
+            event_id = self._sesha.record_event(event_record)
+
+            if not event_id:
+                # Sesha failed (should have logged to stderr)
+                import time
+
+                sys.stderr.write("!!! TAKSHAKA FATAL: RECORDING FAILED. ATTACK NOT PERSISTED.\n")
+                return f"FATAL_RECORD_FAIL_{time.time()}"
 
             # Track for deduplication
             self._seen_violations[violation_hash] = event_id
@@ -397,9 +436,13 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
 
             return event_id
         except Exception as e:
-            logger.error(f"TAKSHAKA: Failed to record bite: {e}")
+            # YAMARAJA FAIL-CLOSED: Exception safety
+            import sys
+            import time
+
+            sys.stderr.write(f"!!! TAKSHAKA FATAL: BITE EXCEPTION: {e}\n")
             self._errors += 1
-            return ""
+            return f"FATAL_EXCEPTION_{time.time()}"
 
     # =========================================================================
     # SecurityProtocol Implementation (Interface Group - Seva for Prahlad)
@@ -425,8 +468,6 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
             report = self.scan_toxicity(subject.context)
             if report.blocked:
                 # Create violation and bite
-                from vibe_core.protocols.naga import ViolationDetails
-
                 violation = VajraViolation(
                     violation_type="TOXIC_SUBJECT",
                     source=subject.identifier,
@@ -447,8 +488,6 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
 
         Note: Named bite_subject to not conflict with existing bite(VajraViolation).
         """
-        from vibe_core.protocols.naga import ViolationDetails
-
         violation = VajraViolation(
             violation_type="SECURITY_BITE",
             source=subject.identifier,
@@ -482,13 +521,15 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
         self._revoked_keys.add(fingerprint)
         logger.warning(f"TAKSHAKA: Key revoked: {fingerprint} ({reason})")
 
-        if self._ledger:
+        if self._sesha:
             try:
-                self._ledger.record_event(
-                    event_type="KEY_REVOKED",
-                    agent_id="TAKSHAKA",
-                    details={"fingerprint": fingerprint, "reason": reason},
-                    result="REVOKED",
+                self._sesha.record_event(
+                    EventRecord(
+                        event_type="KEY_REVOKED",
+                        agent_id="TAKSHAKA",
+                        details={"fingerprint": fingerprint, "reason": reason},
+                        result="REVOKED",
+                    )
                 )
             except Exception as e:
                 logger.error(f"TAKSHAKA: Failed to record revocation: {e}")
@@ -516,7 +557,12 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
             violation = VajraViolation(
                 violation_type="COGNITIVE_THREAT",
                 source=drift.component or "unknown",
-                details=drift.raw_data,
+                details=ViolationDetails(
+                    event_type="COGNITIVE_DRIFT",
+                    error_message=drift.message[:500],
+                    # Wrap raw_data in metadata to satisfy ViolationDetails
+                    metadata=drift.raw_data if isinstance(drift.raw_data, dict) else {"raw": str(drift.raw_data)},
+                ),
             )
             event_id = self.bite(violation)
 

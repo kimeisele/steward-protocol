@@ -16,7 +16,10 @@ class TestVasukiBasics:
 
     @pytest.fixture
     def vasuki(self):
-        return VasukiService(sesha=None, takshaka=None, sign_outbound=False)
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        return VasukiService(sesha=harness.sesha, takshaka=harness.takshaka, sign_outbound=False)
 
     def test_initialization(self, vasuki):
         assert vasuki._events_processed == 0
@@ -36,7 +39,10 @@ class TestChurnOperations:
 
     @pytest.fixture
     def vasuki(self):
-        return VasukiService(sign_outbound=False)
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        return VasukiService(sesha=harness.sesha, takshaka=harness.takshaka, sign_outbound=False)
 
     def test_churn_out_creates_envelope(self, vasuki):
         event = {"type": "test", "data": {"key": "value"}}
@@ -71,11 +77,12 @@ class TestChurnOperations:
 
 
 class TestPeerManagement:
-    """Test peer add/remove operations."""
-
     @pytest.fixture
     def vasuki(self):
-        return VasukiService()
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        return VasukiService(sesha=harness.sesha, takshaka=harness.takshaka)
 
     def test_add_peer_without_url(self, vasuki):
         vasuki.add_peer("peer1")
@@ -107,7 +114,10 @@ class TestNetworkSend:
 
     @pytest.fixture
     def vasuki(self):
-        v = VasukiService(sign_outbound=False)
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        v = VasukiService(sesha=harness.sesha, takshaka=harness.takshaka, sign_outbound=False)
         v.add_peer("remote_node", url="http://192.168.1.100:8000")
         return v
 
@@ -141,7 +151,10 @@ class TestReceiveQueue:
 
     @pytest.fixture
     def vasuki(self):
-        return VasukiService()
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        return VasukiService(sesha=harness.sesha, takshaka=harness.takshaka)
 
     def test_push_received(self, vasuki):
         envelope = SignedEnvelope(
@@ -211,7 +224,10 @@ class TestBoundaryEnforcement:
 
     @pytest.fixture
     def vasuki(self):
-        return VasukiService()
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        return VasukiService(sesha=harness.sesha, takshaka=harness.takshaka)
 
     def test_is_internal_by_type(self, vasuki):
         assert vasuki.is_internal({"event_type": "DEBUG"}) is True
@@ -232,7 +248,10 @@ class TestCorrectionHandler:
 
     @pytest.fixture
     def vasuki(self):
-        v = VasukiService()
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        v = VasukiService(sesha=harness.sesha, takshaka=harness.takshaka)
         v.add_peer("peer1", "http://localhost:8001")
         return v
 
@@ -258,7 +277,11 @@ class TestCorrectionHandler:
         assert "Not a CONFIG drift" in result.message
 
     def test_skips_when_no_peers(self):
-        vasuki = VasukiService()  # No peers
+        from vibe_core.naga.testing import NagaTestHarness
+
+        harness = NagaTestHarness()
+        vasuki = VasukiService(sesha=harness.sesha, takshaka=harness.takshaka)  # No peers
+
         from vibe_core.protocols.correction import (
             DriftSeverity,
             DriftSource,

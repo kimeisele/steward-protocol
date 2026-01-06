@@ -187,6 +187,27 @@ class ChitraguptaService(NagaBaseService, ObserveProtocol):
             },
         )
 
+    @naga_governed(operation="record_operation")
+    def record_operation(
+        self,
+        service: str,
+        operation: str,
+        duration_ms: float,
+        success: bool,
+    ) -> None:
+        """
+        Record an operation execution (NagaBaseService/ChitraguptaProtocol).
+
+        Args:
+            service: Service name (e.g., "Sesha")
+            operation: Operation name (e.g., "get_top_hash")
+            duration_ms: Execution time in milliseconds
+            success: Whether the operation succeeded
+        """
+        self.record(service, f"{operation}_latency", duration_ms)
+        if not success:
+            self.record(service, f"{operation}_errors", 1.0)
+
     @naga_governed(operation="record_metric")
     def record(self, component_id: str, metric: str, value: float) -> None:
         """

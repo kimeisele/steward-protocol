@@ -19,7 +19,7 @@ Integration:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -27,6 +27,7 @@ from vibe_core.naga.kulika import (
     naga_service,
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
+from vibe_core.protocols import StateServiceProtocol
 from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.groups import SecurityProtocol, Subject, Verdict
 
@@ -54,6 +55,32 @@ class QuarantineRecord:
         elapsed = (datetime.now() - self.started_at).total_seconds()
         return elapsed >= self.duration_seconds
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to dict."""
+        return {
+            "component_id": self.component_id,
+            "reason": self.reason,
+            "started_at": self.started_at.isoformat(),
+            "duration_seconds": self.duration_seconds,
+            "violation_count": self.violation_count,
+            "signer_id": self.signer_id,
+            # signature is bytes, encode to hex or base64 if present
+            "signature": self.signature.hex() if self.signature else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "QuarantineRecord":
+        """Deserialize from dict."""
+        return cls(
+            component_id=data["component_id"],
+            reason=data["reason"],
+            started_at=datetime.fromisoformat(data["started_at"]),
+            duration_seconds=data["duration_seconds"],
+            violation_count=data["violation_count"],
+            signer_id=data.get("signer_id", ""),
+            signature=bytes.fromhex(data["signature"]) if data.get("signature") else None,
+        )
+
 
 @naga_service(
     name="Kaliya",
@@ -79,6 +106,7 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         self,
         cortex: Optional["NagaCortex"] = None,
         identity: Optional["NagaIdentity"] = None,
+        state_service: Optional[StateServiceProtocol] = None,
         default_duration_seconds: float = 300.0,
         violation_threshold: int = 3,
         escalation_threshold: int = 3,
@@ -89,6 +117,7 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         Args:
             cortex: NagaCortex for event reporting
             identity: NagaIdentity for signing records
+            state_service: StateService for persistence (YAMARAJA)
             default_duration_seconds: Default quarantine duration
             violation_threshold: Violations before auto-quarantine
             escalation_threshold: Quarantine cycles before escalation
@@ -101,6 +130,14 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         self._violation_threshold = violation_threshold
         self._escalation_threshold = escalation_threshold
 
+        # YAMARAJA: State Service via DI
+        if state_service:
+            self._state = state_service
+        else:
+            from vibe_core.state.state_service import get_state_service
+
+            self._state = get_state_service()
+
         self._quarantine_registry: Dict[str, QuarantineRecord] = {}
         self._violation_counts: Dict[str, int] = {}
         self._quarantine_cycles: Dict[str, int] = {}
@@ -110,7 +147,48 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         self._errors = 0
         self._last_heartbeat = datetime.now()
 
+        # Restore state (Persistence)
+        self._load_state()
+
         logger.info("🐍 KALIYA initialized - The Quarantine watches")
+
+    def _save_state(self) -> None:
+        """Persist quarantine state."""
+        try:
+            state = {
+                "registry": {k: v.to_dict() for k, v in self._quarantine_registry.items()},
+                "violations": self._violation_counts,
+                "cycles": self._quarantine_cycles,
+                "escalated": list(self._escalated),
+            }
+            self._state.save("kaliya_registry.json", state)
+        except Exception as e:
+            logger.warning(f"Failed to save state: {e}")
+
+    def _load_state(self) -> None:
+        """Restore quarantine state."""
+        try:
+            state = self._state.load("kaliya_registry.json", default={})
+            if not state:
+                return
+
+            if "registry" in state:
+                for k, v in state["registry"].items():
+                    self._quarantine_registry[k] = QuarantineRecord.from_dict(v)
+
+            if "violations" in state:
+                self._violation_counts = state["violations"]
+
+            if "cycles" in state:
+                self._quarantine_cycles = state["cycles"]
+
+            if "escalated" in state:
+                self._escalated = set(state["escalated"])
+
+            self._quarantined_count = len(self._quarantine_registry)
+            logger.info(f"🐍 KALIYA restored state: {self._quarantined_count} quarantined")
+        except Exception as e:
+            logger.warning(f"Failed to load state: {e}")
 
     def get_status(self) -> NagaStatus:
         """Get current status."""
@@ -168,6 +246,8 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         if self._quarantine_cycles[component_id] >= self._escalation_threshold:
             self._escalate(component_id)
 
+        self._save_state()
+
         # Notify cortex
         if self._cortex:
             try:
@@ -214,6 +294,8 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         # Reset violation count on release
         self._violation_counts[component_id] = 0
 
+        self._save_state()
+
         logger.info(f"🐍 KALIYA released {component_id}")
 
     @naga_governed(operation="record_violation", log_args=True)
@@ -224,6 +306,7 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
         Auto-quarantines if threshold reached.
         """
         self._violation_counts[component_id] = self._violation_counts.get(component_id, 0) + 1
+        self._save_state()
         self._last_heartbeat = datetime.now()
 
         if self._violation_counts[component_id] >= self._violation_threshold:
@@ -243,6 +326,7 @@ class KaliyaService(NagaBaseService, SecurityProtocol):
     def _escalate(self, component_id: str) -> None:
         """Escalate component to sovereign (37th)."""
         self._escalated.add(component_id)
+        self._save_state()
 
         logger.warning(f"🐍 KALIYA ESCALATED {component_id} to sovereign!")
 
