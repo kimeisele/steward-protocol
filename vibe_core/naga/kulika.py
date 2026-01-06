@@ -102,7 +102,8 @@ class NagaLord(str, Enum):
     CHITRAGUPTA = "chitragupta"  # Auditor/Profiler
     PRAHLAD = "prahlad"  # Governor/Resilience
     ANANTA = "ananta"  # Gene Splicer/Auto-Flood
-    TÜV = "tuv"  # Type Audit Intelligence
+    # NOTE: TÜV removed - it's an INSTITUTION not a PERSON
+    # TÜVService exists as a tool under Chitragupta's governance
 
     @property
     def is_infrastructure(self) -> bool:
@@ -126,7 +127,6 @@ class NagaLord(str, Enum):
             NagaLord.CHITRAGUPTA,
             NagaLord.PRAHLAD,
             NagaLord.ANANTA,
-            NagaLord.TÜV,
         )
 
     @property
