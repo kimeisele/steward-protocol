@@ -784,8 +784,63 @@ Phase 4: VALIDATE (Hiranyakashipu attacks)
 
 ---
 
-*Last updated: 2026-01-06*
+*Last updated: 2026-01-06 (Sesha/Takshaka integration)*
 *Author: NARADA whispered, Claude listened*
+
+---
+
+## 2026-01-06 - NagaProxy Watertight Update
+
+**Changes Made:**
+```python
+# proxy.py now resolves 5 NAGAs (was 3):
+_resolve_nagas():
+    - Narada (observation)     ✅ existing
+    - Chitragupta (profiling)  ✅ existing
+    - Kaliya (exceptions)      ✅ existing
+    - Sesha (audit trail)      ✅ NEW
+    - Takshaka (validation)    ✅ NEW
+
+# New audit trail method:
+_report_to_sesha(observation):
+    sesha._ledger.record_event(
+        event_type="PROXY_OBSERVATION",
+        agent_id=f"proxy.{service}",
+        details={method, duration_ms, ...}
+    )
+
+# New parameter:
+NagaProxy(service, audit_enabled=True)  # opt-out with False
+```
+
+**Test Results:**
+```
+14 passed (test_proxy.py)
+- test_wrap_service
+- test_method_passthrough
+- test_observations_buffered
+- test_duration_tracked
+- test_exception_reraised
+- ...
+```
+
+**Next Step: DEPLOY**
+
+The proxy is ready. It just needs to be USED:
+
+```python
+# At service creation (herald/__init__.py)
+twitter = NagaProxy(TwitterService())
+
+# Or at DI registration (di.py)
+ServiceRegistry.register(TwitterProtocol, NagaProxy(twitter), wrap=True)
+```
+
+**Where to Deploy First:**
+1. TwitterService (external API)
+2. RedditService (external API)
+3. LLMClient (paid API calls)
+4. KernelNetworkProxy (all HTTP)
 
 ---
 
@@ -936,6 +991,179 @@ _naga_critical_services: set[str] = {
 **The Lesson:**
 > "Beweisen, nicht hoffen."
 > "Wir haben uns den Arsch gerettet."
+
+---
+
+### 2026-01-06 - FOCUS: NagaProxy Watertight Analysis
+
+**Status: ZERO DEPLOYMENTS**
+
+The proxy.py exists (426 lines, well-designed) but is NEVER instantiated.
+
+**What NagaProxy Does (Good):**
+```python
+# proxy.py - The Balarama Pattern
+class NagaProxy(Generic[T]):
+    # Intercepts ALL method calls via __getattr__
+    # Routes to: Narada (observe), Chitragupta (profile), Kaliya (exception)
+    # Lazy resolves NAGAs from ServiceRegistry
+    # Buffers observations in _observation_buffer
+    # No silent failures (re-raises exceptions)
+```
+
+**What's Missing (Gaps) - UPDATED 2026-01-06:**
+
+| Gap | Location | Status |
+|-----|----------|--------|
+| No Takshaka | `_resolve_nagas()` | ✅ RESOLVED (lazy loaded) |
+| No Sesha | `_report_to_sesha()` | ✅ FIXED (audit to ledger) |
+| No Vasuki | N/A | ✅ RESOLVED (see below) |
+| Buffer orphaned | `_observation_buffer` | ✅ USED (sent to Sesha) |
+| `Any` in signature | Line 200, 242 | ⚠️ LEGITIMATE (wrapper pattern) |
+| Auto-wrap enforcement | `di.py` | ✅ FIXED (enable_auto_flood) |
+
+**Recent Fixes (2026-01-06):**
+- Added `_sesha` and `_takshaka` to lazy resolution
+- Added `_report_to_sesha()` - every observation now written to ledger
+- Added `audit_enabled` flag for opt-out
+- Added `enable_auto_flood()` to ServiceRegistry - ONE injection point!
+
+**Vasuki Integration (Architectural Decision):**
+```
+NagaProxy and Vasuki operate at DIFFERENT LEVELS:
+
+┌───────────────────────────────────────────────────────────────┐
+│ NagaProxy: Wraps method calls on services                     │
+│            Reports to → Narada → Chitragupta → Sesha          │
+│            Level: INTERNAL method interception                │
+└───────────────────────────────────────────────────────────────┘
+                          ↓ (via Narada/EventBus)
+┌───────────────────────────────────────────────────────────────┐
+│ Vasuki: Transforms events for NETWORK transport               │
+│         churn_out → SignedEnvelope                            │
+│         churn_in  → EventDict                                 │
+│         Level: NETWORK boundary                               │
+└───────────────────────────────────────────────────────────────┘
+
+The integration is NOT in proxy.py - it's via Narada forwarding.
+Narada observes proxy events → routes relevant ones to Vasuki.
+This keeps both thin and focused (Single Responsibility).
+```
+
+**Why Not Deployed (Root Cause):**
+
+```python
+# orchestrator.py - HOW IT BOOTS NOW
+def _initialize_services(self):
+    self._sesha = SeshaService(...)      # NOT wrapped!
+    self._takshaka = TakshakaService(...)  # NOT wrapped!
+    # Every service self-instantiates
+
+# WHAT IT SHOULD BE
+def _initialize_services(self):
+    self._sesha = NagaProxy(SeshaService(...))  # Wrapped!
+```
+
+**The Chicken-Egg Problem:**
+```
+NagaProxy needs Narada → Narada needs ServiceRegistry → ServiceRegistry needs NagaProxy?
+```
+
+**Solution: Lazy Resolution (Already Implemented!)**
+```python
+# proxy.py line 168-198
+def _resolve_nagas(self) -> None:
+    """Called on FIRST method interception."""
+    if self._nagas_resolved:
+        return
+    # Resolve from ServiceRegistry LAZILY
+```
+
+**So Why Not Deployed? (HISTORICAL - NOW RESOLVED)**
+1. FEAR: "What if it breaks isinstance()?" → It does. Use Soft Flood for internal services.
+2. FORGOTTEN: Architecture documentation said "use Mixins instead"
+3. ~~NO ENFORCEMENT: ServiceRegistry doesn't auto-wrap~~ → ✅ FIXED: `enable_auto_flood()`
+
+**NOW: ONE Injection Point (Fractal Architecture)**
+```python
+# vibe_core/di.py - THE ONE INJECTION POINT
+ServiceRegistry.enable_naga_blessing()  # Detect unblessed
+ServiceRegistry.enable_auto_flood()      # Auto-wrap them!
+
+# Now ANY unblessed service gets wrapped automatically
+ServiceRegistry.register(ITwitter, TwitterService())  # → NagaProxy(TwitterService())
+```
+
+**The Hard vs Soft Flood Decision (RESOLVED):**
+
+```python
+# Hard Flood (NagaProxy) - BREAKS isinstance
+service = NagaProxy(MyService())
+isinstance(service, MyService)  # FALSE!
+
+# Soft Flood (Mixins) - PRESERVES isinstance
+class FloodedService(SeshaMixin, MyService):
+    pass
+isinstance(FloodedService(), MyService)  # TRUE!
+```
+
+**When to Use Each:**
+
+| Pattern | Use For | Example |
+|---------|---------|---------|
+| **Hard Flood (NagaProxy)** | External APIs | LLMClient, TwitterService |
+| **Soft Flood (Mixins)** | Core services | StateService, PluginService |
+
+**External APIs Don't Need isinstance() - They're Terminal Points!**
+
+---
+
+### ACTIONABLE: Deploy NagaProxy for External APIs
+
+**Target Services (From Dharma Breach Audit):**
+
+| Service | File | Why |
+|---------|------|-----|
+| TwitterService | herald/services/twitter.py | External API, no isinstance needed |
+| RedditService | herald/services/reddit.py | External API |
+| LLMClient | runtime/llm_client.py | Paid API calls, need profiling |
+| KernelNetworkProxy | network_proxy.py | All HTTP goes through |
+
+**Implementation:**
+
+```python
+# vibe_core/cartridges/system/herald/__init__.py
+from vibe_core.naga import NagaProxy
+
+# At service creation point
+_twitter = None
+def get_twitter_service():
+    global _twitter
+    if _twitter is None:
+        from .services.twitter import TwitterService
+        _twitter = NagaProxy(TwitterService())
+    return _twitter
+```
+
+**Or at DI Level (Better) - ✅ NOW IMPLEMENTED:**
+
+```python
+# vibe_core/di.py - enable_auto_flood() does this automatically!
+# No manual wrapping needed anymore.
+
+# At kernel boot:
+ServiceRegistry.enable_naga_blessing()  # Enable blessing detection
+ServiceRegistry.enable_auto_flood()      # Enable automatic NagaProxy wrapping
+
+# Now ANY unblessed service registered gets wrapped:
+ServiceRegistry.register(TwitterProtocol, TwitterService())
+# → Automatically becomes NagaProxy(TwitterService())
+# → All methods now observed by Narada/Chitragupta/Sesha
+
+# To check what was auto-flooded:
+flooded = ServiceRegistry.get_auto_flooded_services()
+# → ['TwitterProtocol (TwitterService)', ...]
+```
 
 ---
 

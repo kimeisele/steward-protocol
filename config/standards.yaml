@@ -25,6 +25,7 @@ rules:
     severity: "CRITICAL"
     message: "Raw write-access detected. Bypasses VFS and KernelIO audit."
     fix_suggestion: "Use self.system.write_file() or kernel.io.write_document()"
+    has_sattva_remedy: true
 
   # TODSÜNDE #2: Unsandboxed IO
   - id: "unsafe_shutil"
