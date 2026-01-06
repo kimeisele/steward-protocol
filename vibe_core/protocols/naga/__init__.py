@@ -146,6 +146,19 @@ from vibe_core.protocols.naga.takshaka import (
     VerifyStatus,
     ViolationDetails,
 )
+
+# TÜV (Type Audit Intelligence)
+from vibe_core.protocols.naga.tuv import (
+    ChurnEntry,
+    Leak,
+    LeakPattern,
+    LeakSeverity,
+    LeakStatus,
+    NullTÜV,
+    ProtocolAudit,
+    TÜVProtocol,
+    TÜVReport,
+)
 from vibe_core.protocols.naga.types import (
     NagaStatus,
     NagaType,
@@ -245,4 +258,14 @@ __all__ = [
     "DecisionSummary",
     "PeerHealthSummary",
     "FeedbackOutcome",
+    # TÜV (Type Audit Intelligence)
+    "TÜVProtocol",
+    "NullTÜV",
+    "Leak",
+    "LeakPattern",
+    "LeakSeverity",
+    "LeakStatus",
+    "ProtocolAudit",
+    "TÜVReport",
+    "ChurnEntry",
 ]
