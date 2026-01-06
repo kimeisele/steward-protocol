@@ -102,6 +102,7 @@ class NagaLord(str, Enum):
     CHITRAGUPTA = "chitragupta"  # Auditor/Profiler
     PRAHLAD = "prahlad"  # Governor/Resilience
     ANANTA = "ananta"  # Gene Splicer/Auto-Flood
+    TÜV = "tuv"  # Type Audit Intelligence
 
     @property
     def is_infrastructure(self) -> bool:
@@ -125,6 +126,7 @@ class NagaLord(str, Enum):
             NagaLord.CHITRAGUPTA,
             NagaLord.PRAHLAD,
             NagaLord.ANANTA,
+            NagaLord.TÜV,
         )
 
     @property
@@ -158,6 +160,7 @@ class NagaCapability(str, Enum):
     AUDIT = "audit"  # Can audit compliance
     RESILIENCE = "resilience"  # Can test/harden
     FLOOD = "flood"  # Can inject DNA/Mixins (Soft Flood)
+    TYPE_AUDIT = "type_audit"  # Can audit type system integrity
 
 
 # =============================================================================
