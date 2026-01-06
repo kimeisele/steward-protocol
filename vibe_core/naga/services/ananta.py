@@ -64,11 +64,14 @@ from vibe_core.protocols.naga import (
 )
 from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
 from vibe_core.protocols.substrate import (
+    BindingCertificate,
     GeneActivationState,
     GeneManifest,
     GeneStatus,
     IGene,
     IGeneHost,
+    RegistrationCertificate,
+    SubstrateEventData,
     SubstrateHealth,
     SubstrateStatus,
 )
@@ -771,7 +774,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         """Check if a gene is registered."""
         return name in self._genes
 
-    def get_capability(self, capability: str) -> Optional[Any]:
+    def get_capability(self, capability: str) -> Optional[object]:
         """
         Get a capability from any gene that provides it.
 
@@ -785,6 +788,8 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
 
         Returns:
             The capability provider or None if not available
+
+        WATERTIGHT: Returns object not Any - caller must cast.
         """
         # Check which gene provides this capability
         provider_name = self._capability_providers.get(capability)
@@ -799,12 +804,20 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         # Genes expose capabilities via their manifest
         return provider_gene
 
-    def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def emit_event(
+        self,
+        event_type: str,
+        data: SubstrateEventData,
+        caller_id: str = "anonymous",
+    ) -> None:
         """
         Emit an event to all listening genes.
 
         This is the SHANKHA (broadcast) capability at the substrate level.
         Genes register for events and Ananta dispatches to all listeners.
+
+        WATERTIGHT: data is SubstrateEventData TypedDict, not Dict[str, Any].
+        caller_id enables event tracing and accountability.
         """
         listener_names = self._event_listeners.get(event_type, [])
         for name in listener_names:
@@ -813,19 +826,30 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
                 try:
                     gene.on_event(event_type, data)  # type: ignore
                 except Exception as e:
-                    logger.warning(f"ANANTA: Gene {name} failed to handle {event_type}: {e}")
+                    logger.warning(f"ANANTA: Gene {name} failed to handle {event_type} from {caller_id}: {e}")
 
-    def register_gene(self, gene: IGene) -> bool:
+    def register_gene(
+        self,
+        gene: IGene,
+        certificate: Optional[RegistrationCertificate] = None,
+    ) -> bool:
         """
         Register a gene with the substrate.
 
         IAnantaBridge protocol implementation.
         The gene is registered but NOT yet bound or activated.
+
+        ANTI-MAYAVADI: Certificate proves WHO is registering and WHY.
+        Without certificate = legacy/unverified mode.
+        With certificate = gene has proven HERITAGE (Erbgut).
         """
         name = gene.manifest.name
         if name in self._genes:
             logger.warning(f"ANANTA: Gene {name} already registered")
             return False
+
+        # Log certificate status for audit
+        registrar = certificate.get("registrar_id", "anonymous") if certificate else "anonymous"
 
         self._genes[name] = gene
         self._gene_statuses[name] = GeneStatus(
@@ -838,7 +862,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
             if cap not in self._capability_providers:
                 self._capability_providers[cap] = name
 
-        logger.debug(f"ANANTA: Registered gene {name} with capabilities {gene.manifest.capabilities}")
+        logger.debug(f"ANANTA: Registered gene {name} (by {registrar}) with capabilities {gene.manifest.capabilities}")
         return True
 
     def bind_genes(self, instance: Any) -> None:

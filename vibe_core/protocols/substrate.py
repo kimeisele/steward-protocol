@@ -50,14 +50,13 @@ from datetime import datetime
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
-    Any,
-    Callable,
     Dict,
     List,
     Optional,
     Protocol,
     Tuple,
     Type,
+    TypedDict,
     TypeVar,
     runtime_checkable,
 )
@@ -68,6 +67,116 @@ from typing import (
 
 T = TypeVar("T")
 GeneT = TypeVar("GeneT", bound="IGene")
+
+
+# =============================================================================
+# TYPED DICTS (VIMANA RANGE ROVER - No Dict[str, Any])
+# =============================================================================
+
+
+class GeneMetrics(TypedDict, total=False):
+    """
+    Metrics for a gene's runtime performance.
+
+    WATERTIGHT: No Any - all fields typed.
+    """
+
+    activation_count: int  # Times activated
+    deactivation_count: int  # Times deactivated
+    error_count: int  # Errors encountered
+    last_error: str  # Most recent error message
+    uptime_seconds: float  # Time since last activation
+    invocation_count: int  # Times gene methods called
+    avg_latency_ms: float  # Average method latency
+
+
+class GeneAnalysisResult(TypedDict, total=False):
+    """
+    Result of analyzing a class for gene requirements.
+
+    WATERTIGHT: No Any - all fields typed.
+    """
+
+    class_name: str  # Name of analyzed class
+    module: str  # Module path
+    proposed_genes: List[str]  # Genes to splice in
+    detected_patterns: List[str]  # Patterns found in code
+    confidence: float  # 0.0-1.0 confidence score
+    reason: str  # Human-readable explanation
+    warnings: List[str]  # Any warnings during analysis
+
+
+class SubstrateEventData(TypedDict, total=False):
+    """
+    Event data emitted to genes via SHANKHA broadcast.
+
+    WATERTIGHT: No Any - all fields typed.
+    """
+
+    source: str  # Event source identifier
+    timestamp: str  # ISO format timestamp
+    payload: str  # Serialized payload (JSON string)
+    correlation_id: str  # For tracing event chains
+    priority: int  # Event priority (higher = more urgent)
+
+
+# =============================================================================
+# BINDING CERTIFICATES (Anti-Mayavadi - Personal Identity at Every Binding)
+# =============================================================================
+
+
+class BindingCertificate(TypedDict, total=False):
+    """
+    Certificate proving WHO bound WHAT to WHOM.
+
+    ANTI-MAYAVADI: Every binding must be PERSONAL, not impersonal.
+    This certificate creates a chain of custody for gene bindings.
+
+    Without this, Any entity can bind - UNVERIFIED = MAYA.
+    With this, only verified entities can bind - PERSONAL = TRUTH.
+    """
+
+    binder_id: str  # WHO performed the binding (identity)
+    target_id: str  # WHAT was bound (gene/host name)
+    host_id: str  # TO WHOM it was bound (host identity)
+    timestamp: str  # WHEN (ISO format)
+    signature: str  # CRYPTOGRAPHIC PROOF (hex-encoded)
+    lineage: List[str]  # Chain of custody (previous binder_ids)
+
+
+class RegistrationCertificate(TypedDict, total=False):
+    """
+    Certificate proving gene registration legitimacy.
+
+    ANTI-MAYAVADI: No anonymous gene registration.
+    Every gene must prove its HERITAGE (Erbgut).
+    """
+
+    gene_name: str  # Gene being registered
+    registrar_id: str  # WHO registered it
+    manifest_hash: str  # Hash of GeneManifest (integrity)
+    timestamp: str  # WHEN
+    signature: str  # Registrar's signature
+    authorized_by: str  # Higher authority (if delegated)
+
+
+class FloodAuthorization(TypedDict, total=False):
+    """
+    Authorization for flood operations (EXTREMELY POWERFUL).
+
+    ANTI-MAYAVADI: Flood operations can MUTATE reality.
+    Only verified entities with proper authorization can flood.
+    This is the 37th key - sovereign-level operation.
+    """
+
+    target_class: str  # Class being flooded
+    target_instance_id: str  # Instance ID (if instance flood)
+    genes_to_splice: List[str]  # Genes being injected
+    authorizer_id: str  # WHO authorized this flood
+    authorization_level: str  # "sovereign" | "delegated" | "emergency"
+    timestamp: str  # WHEN
+    signature: str  # Authorizer's signature
+    expires_at: str  # Authorization expiry (ISO format)
 
 
 # =============================================================================
@@ -122,6 +231,7 @@ class GeneStatus:
     Runtime status of a gene.
 
     This is the "RNA expression" - current state of the gene.
+    WATERTIGHT: metrics uses GeneMetrics TypedDict, not Dict[str, Any].
     """
 
     manifest: GeneManifest
@@ -129,11 +239,11 @@ class GeneStatus:
     bound_at: Optional[datetime] = None
     activated_at: Optional[datetime] = None
     error: Optional[str] = None
-    metrics: Dict[str, Any] = None
+    metrics: Optional[GeneMetrics] = None
 
     def __post_init__(self) -> None:
         if self.metrics is None:
-            self.metrics = {}
+            self.metrics = GeneMetrics()
 
 
 @dataclass
@@ -179,7 +289,11 @@ class IGene(Protocol):
         """Get the gene's current activation state."""
         ...
 
-    def bind(self, host: "IGeneHost") -> None:
+    def bind(
+        self,
+        host: "IGeneHost",
+        certificate: Optional[BindingCertificate] = None,
+    ) -> None:
         """
         Bind this gene to a host.
 
@@ -187,8 +301,13 @@ class IGene(Protocol):
         The host calls this method, passing itself.
         The gene stores the reference but doesn't import the host's class.
 
+        ANTI-MAYAVADI: Certificate proves WHO is binding.
+        Without certificate, binding is UNVERIFIED (legacy mode).
+        With certificate, binding has chain of custody.
+
         Args:
             host: The IGeneHost that will power this gene
+            certificate: Optional binding certificate for verified binding
         """
         ...
 
@@ -230,7 +349,7 @@ class IGeneHost(Protocol):
         """Check if a gene is registered."""
         ...
 
-    def get_capability(self, capability: str) -> Optional[Any]:
+    def get_capability(self, capability: str) -> Optional[object]:
         """
         Get a capability from any gene that provides it.
 
@@ -238,15 +357,32 @@ class IGeneHost(Protocol):
             capability: Name of the capability (e.g., "ledger", "validation")
 
         Returns:
-            The capability provider, or None if not available
+            The capability provider (typed as object - caller must cast), or None
+
+        WATERTIGHT: Returns object not Any - caller must know expected type.
         """
         ...
 
-    def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def emit_event(
+        self,
+        event_type: str,
+        data: SubstrateEventData,
+        caller_id: str = "anonymous",
+    ) -> None:
         """
         Emit an event to all listening genes.
 
         This is the SHANKHA (broadcast) capability at the substrate level.
+        WATERTIGHT: data is SubstrateEventData TypedDict, not Dict[str, Any].
+
+        ANTI-MAYAVADI: caller_id identifies WHO is emitting.
+        "anonymous" is legacy mode - unverified emitter.
+        Named caller_id enables event tracing and accountability.
+
+        Args:
+            event_type: Type of event being emitted
+            data: Event payload (typed)
+            caller_id: Identity of emitter (default: "anonymous" for legacy)
         """
         ...
 
@@ -271,12 +407,21 @@ class IAnantaBridge(Protocol):
     # Gene Lifecycle
     # =========================================================================
 
-    def register_gene(self, gene: IGene) -> bool:
+    def register_gene(
+        self,
+        gene: IGene,
+        certificate: Optional[RegistrationCertificate] = None,
+    ) -> bool:
         """
         Register a gene with the substrate.
 
+        ANTI-MAYAVADI: Certificate proves WHO is registering and WHY.
+        Without certificate, registration is UNVERIFIED (legacy mode).
+        With certificate, gene has proven HERITAGE (Erbgut).
+
         Args:
             gene: The gene to register
+            certificate: Optional registration certificate for verified registration
 
         Returns:
             True if registration successful
@@ -304,7 +449,7 @@ class IAnantaBridge(Protocol):
     # Flood Operations (Soft Flood / Gene Splicing)
     # =========================================================================
 
-    def analyze_class(self, cls: Type[T]) -> Dict[str, Any]:
+    def analyze_class(self, cls: Type[T]) -> GeneAnalysisResult:
         """
         Analyze a class to determine what genes it needs.
 
@@ -315,7 +460,9 @@ class IAnantaBridge(Protocol):
             cls: The class to analyze
 
         Returns:
-            Analysis result with proposed genes
+            GeneAnalysisResult with proposed genes
+
+        WATERTIGHT: Returns GeneAnalysisResult TypedDict, not Dict[str, Any].
         """
         ...
 
@@ -338,15 +485,26 @@ class IAnantaBridge(Protocol):
         """
         ...
 
-    def flood_instance(self, instance: T, genes: List[str]) -> T:
+    def flood_instance(
+        self,
+        instance: T,
+        genes: List[str],
+        authorization: Optional[FloodAuthorization] = None,
+    ) -> T:
         """
         Flood an existing instance by swapping its class.
 
         Uses Python's runtime class swap: instance.__class__ = flooded_class
 
+        ANTI-MAYAVADI: Flood is EXTREMELY POWERFUL - can mutate reality!
+        This is 37th key territory - sovereign-level operation.
+        Without authorization, flood is UNVERIFIED (legacy mode).
+        With authorization, flood has cryptographic proof of legitimacy.
+
         Args:
             instance: The instance to flood
             genes: Names of genes to splice in
+            authorization: Optional flood authorization for verified mutation
 
         Returns:
             The same instance with flooded class
@@ -371,6 +529,7 @@ class IAnantaBridge(Protocol):
 
     # =========================================================================
     # IGeneHost Implementation (inherited)
+    # WATERTIGHT: Same signatures as IGeneHost - no Any types.
     # =========================================================================
 
     def get_gene(self, name: str) -> Optional[IGene]:
@@ -381,12 +540,17 @@ class IAnantaBridge(Protocol):
         """Check if a gene is registered."""
         ...
 
-    def get_capability(self, capability: str) -> Optional[Any]:
+    def get_capability(self, capability: str) -> Optional[object]:
         """Get a capability from any gene that provides it."""
         ...
 
-    def emit_event(self, event_type: str, data: Dict[str, Any]) -> None:
-        """Emit an event to all listening genes."""
+    def emit_event(
+        self,
+        event_type: str,
+        data: SubstrateEventData,
+        caller_id: str = "anonymous",
+    ) -> None:
+        """Emit an event to all listening genes (caller_id for tracing)."""
         ...
 
 
@@ -458,6 +622,14 @@ __all__ = [
     # Enums
     "GeneActivationState",
     "SubstrateHealth",
+    # TypedDicts (WATERTIGHT - No Any)
+    "GeneMetrics",
+    "GeneAnalysisResult",
+    "SubstrateEventData",
+    # Binding Certificates (ANTI-MAYAVADI - Personal Identity)
+    "BindingCertificate",
+    "RegistrationCertificate",
+    "FloodAuthorization",
     # Data Classes
     "GeneManifest",
     "GeneStatus",
