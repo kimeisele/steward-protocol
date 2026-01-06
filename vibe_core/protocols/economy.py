@@ -11,7 +11,21 @@ The kernel uses these protocols via ServiceRegistry.
 Concrete implementations live in the economy plugin.
 """
 
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, TypedDict, runtime_checkable
+
+# =============================================================================
+# TYPED DICTS - VIMANA RANGE ROVER (replaces Dict[str, Any])
+# =============================================================================
+
+
+class BankSystemStats(TypedDict, total=False):
+    """System-wide bank statistics - replaces Dict[str, Any]."""
+
+    total_credits: int
+    total_agents: int
+    total_transactions: int
+    credits_in_circulation: int
+    average_balance: float
 
 
 @runtime_checkable
@@ -38,7 +52,7 @@ class BankProtocol(Protocol):
         """Transfer credits between agents."""
         ...
 
-    def get_system_stats(self) -> Dict[str, Any]:
+    def get_system_stats(self) -> BankSystemStats:
         """Get system-wide statistics."""
         ...
 

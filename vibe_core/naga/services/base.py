@@ -35,6 +35,202 @@ logger = logging.getLogger("NAGA.BASE")
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+# =============================================================================
+# UNGOVERNED ESCAPE HATCH - For methods that must NOT be wrapped
+# =============================================================================
+
+
+def ungoverned(func: F) -> F:
+    """
+    Mark a method as UNGOVERNED - exempt from auto-wrapping.
+
+    HALAHALA PRINCIPLE: Some poison must surface.
+    Use sparingly for:
+    - Bootstrap methods (called before NAGAs exist)
+    - Pure getters (no side effects)
+    - Hot-path methods where overhead is unacceptable
+
+    Usage:
+        class MyNagaService(NagaBaseService):
+            @ungoverned
+            def get_cached_value(self) -> str:
+                # Pure getter, no side effects
+                return self._cache
+
+            @ungoverned
+            def _bootstrap(self) -> None:
+                # Called before NAGAs exist
+                pass
+    """
+    func._is_ungoverned = True  # type: ignore
+    return func
+
+
+# =============================================================================
+# CLI GOVERNED DECORATOR - Level -1 DNA Injection for CLI
+# =============================================================================
+
+
+def cli_governed(
+    operation: Optional[str] = None,
+    capabilities_required: Optional[list] = None,
+    validate_args: bool = True,
+) -> Callable[[F], F]:
+    """
+    Level -1 DNA Injection for CLI commands.
+
+    Automatically applies NAGA governance to CLI handlers:
+    - Takshaka: Validates command arguments
+    - Chitragupta: Profiles execution time
+    - Sesha: Records audit trail
+    - Capability enforcement: Checks token has required caps
+
+    Usage:
+        class NagaCLI:
+            @cli_governed(capabilities_required=["cli.naga.scan.read"])
+            def cmd_scan(self, args: List[str]) -> int:
+                ...
+
+    This is NOT a hook - it's DNA that automatically injects into the method.
+    Like water adapts to its container, @cli_governed adapts to CLI.
+
+    Args:
+        operation: Operation name for logging (defaults to method name)
+        capabilities_required: List of required capabilities (checked against token)
+        validate_args: Whether to run Takshaka validation on args
+    """
+
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            op_name = operation or func.__name__
+            service_name = getattr(self, "__class__", type(self)).__name__
+
+            # === GET NAGA SERVICES (lazy, graceful degradation) ===
+            takshaka = None
+            chitragupta = None
+            sesha = None
+
+            try:
+                from vibe_core.protocols.naga import (
+                    ChitraguptaProtocol,
+                    SeshaProtocol,
+                    TakshakaProtocol,
+                )
+
+                takshaka = ServiceRegistry.get(TakshakaProtocol)
+                chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+                sesha = ServiceRegistry.get(SeshaProtocol)
+            except Exception:
+                pass  # NAGAs not available - graceful degradation
+
+            # === START PROFILING ===
+            start_time = time.time()
+
+            # === CAPABILITY CHECK ===
+            # Look for capability_token in kwargs or first arg
+            cap_token = kwargs.get("capability_token")
+            if not cap_token and args:
+                # Check if first arg is a CLIExecutionContext
+                first_arg = args[0]
+                if hasattr(first_arg, "capability_token"):
+                    cap_token = first_arg.capability_token
+
+            if capabilities_required and cap_token:
+                for cap in capabilities_required:
+                    if not cap_token.has_capability(cap):
+                        logger.warning(f"[{service_name}] Missing capability: {cap}")
+                        if sesha and hasattr(sesha, "_ledger"):
+                            sesha._ledger.record_event(
+                                event_type="CLI_CAPABILITY_DENIED",
+                                agent_id=cap_token.subject if cap_token else "unknown",
+                                details={
+                                    "operation": op_name,
+                                    "required": cap,
+                                    "service": service_name,
+                                },
+                            )
+                        raise PermissionError(f"Missing capability: {cap}")
+
+            # === TAKSHAKA VALIDATION ===
+            if validate_args and takshaka:
+                # Validate string args for toxicity
+                for arg in args:
+                    if isinstance(arg, str) and len(arg) > 5:
+                        try:
+                            result = takshaka.scan_toxicity(arg)
+                            if getattr(result, "blocked", False):
+                                logger.warning(f"[{service_name}] Takshaka blocked toxic arg in {op_name}")
+                                raise ValueError("Toxic argument blocked by Takshaka")
+                        except ValueError:
+                            raise
+                        except Exception:
+                            pass  # Takshaka unavailable
+                    elif isinstance(arg, list):
+                        # Validate list of args (common CLI pattern)
+                        for item in arg:
+                            if isinstance(item, str) and len(item) > 5:
+                                try:
+                                    result = takshaka.scan_toxicity(item)
+                                    if getattr(result, "blocked", False):
+                                        raise ValueError("Toxic argument blocked by Takshaka")
+                                except ValueError:
+                                    raise
+                                except Exception:
+                                    pass
+
+            # === EXECUTE ===
+            error_msg = None
+            result = None
+            try:
+                result = func(self, *args, **kwargs)
+                return result
+            except Exception as e:
+                error_msg = str(e)
+                raise
+            finally:
+                # === END PROFILING ===
+                duration_ms = (time.time() - start_time) * 1000
+
+                # === CHITRAGUPTA PROFILING ===
+                if chitragupta:
+                    try:
+                        chitragupta.record_operation(
+                            service=f"CLI.{service_name}",
+                            operation=op_name,
+                            duration_ms=duration_ms,
+                            success=error_msg is None,
+                        )
+                    except Exception:
+                        pass
+
+                # === SESHA AUDIT TRAIL ===
+                if sesha and hasattr(sesha, "_ledger"):
+                    try:
+                        details = {
+                            "operation": op_name,
+                            "duration_ms": str(round(duration_ms, 2)),
+                            "success": str(error_msg is None),
+                            "service": service_name,
+                        }
+                        if error_msg:
+                            details["error"] = error_msg[:200]
+                        if cap_token:
+                            details["caller"] = cap_token.subject
+
+                        sesha._ledger.record_event(
+                            event_type="CLI_COMMAND_EXECUTED",
+                            agent_id=cap_token.subject if cap_token else "anonymous",
+                            details=details,
+                        )
+                    except Exception:
+                        pass
+
+        return wrapper  # type: ignore
+
+    return decorator
+
+
 def naga_governed(
     operation: Optional[str] = None,
     log_args: bool = False,

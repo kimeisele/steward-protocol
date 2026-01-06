@@ -172,12 +172,251 @@ vibe_core/protocols/naga/           # DIRECTORY not FILE
 - Mapped healing capabilities across 5 layers
 - Chaos probe: 58/58 attacks defended (100%)
 
-### Next Steps
-1. Split `protocols/naga.py` into `protocols/naga/` directory
-2. Verify imports don't break
-3. Add protocol-level tests
-4. Wire CLI hook chain
-5. Measure healing coverage
+### 2026-01-06: NARADA REPORT (Before Surgery!)
+
+**VEDA-4 Pattern Check:**
+```
+LOADERS: ✅ UnifiedLoader base + VEDA-4 flow
+         SHABDA → ARTHA → PRATYAYA → KARMA
+         ONE pattern, ALL inherit
+
+PROTOCOLS: ❌ NO unified pattern!
+           73 Protocol classes scattered
+           No manifest.json
+           No VEDA-4 flow
+           Raw ABCs/Protocols only
+```
+
+**Key Insight - NAGAS als Agentic Middleware:**
+- Protocols = Interface definitions (static)
+- Loaders = Discovery + instantiation (VEDA-4)
+- **NAGAs = Middleware that WRAPS protocols** (dynamic)
+
+NAGAs are NOT just protocols - they are ACTIVE CONNECTIVE TISSUE:
+- Observe protocol calls (Narada)
+- Profile execution (Chitragupta)
+- Validate inputs (Takshaka)
+- Record events (Sesha)
+- Quarantine failures (Kaliya)
+
+**The Federation Pattern:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   NagaFederationProtocol                    │
+│              (Wrapper/Orchestrator - Vasuki Rope)           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────┐    ┌─────────┐    ┌─────────┐               │
+│   │ Sesha   │←──→│ Vasuki  │←──→│Takshaka │               │
+│   │(Ledger) │    │(Network)│    │(Security│               │
+│   └────┬────┘    └────┬────┘    └────┬────┘               │
+│        │              │              │                      │
+│        └──────────────┼──────────────┘                      │
+│                       │                                     │
+│   ┌─────────┐    ┌────┴────┐    ┌─────────┐               │
+│   │ Narada  │←──→│ Cortex  │←──→│Prahlad  │               │
+│   │ (Spy)   │    │(Brain)  │    │(Chaos)  │               │
+│   └─────────┘    └─────────┘    └─────────┘               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Problem with current god file:**
+- All 13 protocols in ONE file = can't test/import independently
+- No VEDA-4 discovery pattern for protocols themselves
+- Federation exists but not VEDA-4 compliant
+
+### Next Steps (CORRECTED after NARADA)
+1. **DON'T** just split naga.py into files (insufficient!)
+2. **DO** create NagaMiddleware wrapper pattern
+3. **DO** ensure Federation orchestrates ALL protocol interactions
+4. **DO** apply VEDA-4 pattern to protocol discovery
+5. **DO** add manifest.json for each protocol module
+
+---
+
+## ARCHITECT'S MANDATE: THE NAGA PROXY PATTERN
+
+### DHARMA BLOCKERS Identified
+
+| Blocker | Current State | Violation | Mandate |
+|---------|---------------|-----------|---------|
+| Dead Protocol | `SeshaProtocol` = dead text | Interface doesn't enforce | NAGAs must be PROXIES |
+| Middleware Gap | Layers coded manually | Not DRY, error-prone | AUTOMATIC interception |
+| VEDA-4 Violation | Hardcoded imports | No SHABDA→KARMA flow | Capability discovery |
+
+### The Ontological Shift
+
+```
+BEFORE (Static Library):
+  Protocol → Implementation → Hope developer adds checks
+
+AFTER (Living Organism):
+  Protocol → NagaInterceptor → Implementation
+                   ↓
+            Automatic Wrapping:
+            1. Narada observes (Input)
+            2. Takshaka validates (Security)
+            3. Chitragupta starts timer (Metrics)
+            4. [METHOD EXECUTES]
+            5. Sesha records (Ledger)
+            6. Kaliya catches exceptions (Healing)
+```
+
+### Target Folder Structure
+
+```
+vibe_core/protocols/naga/
+├── __init__.py           # Exports only
+├── federation.py         # THE WEAVER (Factory) - returns NagaGoverned[T]
+├── middleware.py         # THE INTERCEPTORS (Dynamic Wrappers)
+├── governance.py         # @governed decorator
+└── definitions/          # PURE INTERFACES (Shabda)
+    ├── __init__.py
+    ├── sesha.py          # SeshaProtocol ABC only
+    ├── vasuki.py         # VasukiProtocol ABC only
+    ├── takshaka.py       # TakshakaProtocol ABC only
+    └── ...
+```
+
+### The NagaInterceptor Pattern
+
+```python
+class NagaInterceptor:
+    """
+    PRATYAYA Layer - The Binding/Process Layer.
+
+    Wraps EVERY protocol method with automatic governance.
+    Zero boilerplate. 100% compliance.
+    """
+
+    def __init__(self, target: T, context: TraceContext):
+        self._target = target
+        self._context = context
+
+    def __getattr__(self, name: str):
+        method = getattr(self._target, name)
+        if not callable(method):
+            return method
+        return self._wrap(method, name)
+
+    def _wrap(self, method, name):
+        @functools.wraps(method)
+        def governed_call(*args, **kwargs):
+            # 1. Narada: Observe input
+            self._narada.observe(name, args, self._context)
+
+            # 2. Takshaka: Validate security
+            self._takshaka.validate(args, self._context.security_token)
+
+            # 3. Chitragupta: Start profiling
+            start = time.perf_counter()
+
+            try:
+                # 4. KARMA: Execute actual method
+                result = method(*args, **kwargs)
+
+                # 5. Sesha: Record success
+                self._sesha.record(name, "success", self._context)
+
+                return result
+
+            except Exception as e:
+                # 6. Kaliya: Quarantine failure
+                self._kaliya.quarantine(e, self._context)
+                raise
+
+            finally:
+                # 7. Chitragupta: Record metrics
+                duration = time.perf_counter() - start
+                self._chitragupta.record(name, duration)
+
+        return governed_call
+```
+
+### Federation as Active Weaver
+
+```python
+class NagaFederation:
+    """
+    THE WEAVER - Never returns raw objects.
+
+    WRONG: return SeshaService()
+    RIGHT: return NagaGoverned[SeshaService]
+    """
+
+    def get_sesha(self, context: TraceContext) -> NagaGoverned[SeshaProtocol]:
+        raw = self._services["sesha"]
+        return NagaInterceptor(raw, context)
+```
+
+### Execution Order
+
+1. **Phase 1**: Build `NagaInterceptor` middleware
+2. **Phase 2**: Refactor Federation to use interceptor
+3. **Phase 3**: Extract definitions/ (pure interfaces)
+4. **Phase 4**: Delete god file (only after Weaver works)
+5. **Phase 5**: Add manifest.json per protocol module
+
+**Key Insight**: Build middleware FIRST → heals ALL protocols automatically → THEN split
+
+---
+
+## NARADA CORRECTION: MIDDLEWARE ALREADY EXISTS!
+
+### Discovery (2026-01-06)
+
+After reading `naga/proxy.py` and `naga/services/base.py`:
+
+**THE INFRASTRUCTURE IS ALREADY THERE:**
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| NagaProxy | `vibe_core/naga/proxy.py` | Hard Flood (runtime wrap) |
+| @naga_governed | `vibe_core/naga/services/base.py` | Method decoration |
+| @cli_governed | `vibe_core/naga/services/base.py` | CLI Level -1 DNA |
+| NagaBaseService | `vibe_core/naga/services/base.py` | Lazy peer discovery |
+| Mixins | `vibe_core/naga/mixins/*.py` | Soft Flood (inheritance) |
+
+### The TWO Flood Patterns
+
+```
+HARD FLOOD (NagaProxy):
+  service = NagaProxy(real_service)
+  ├── Runtime wrapping via __getattr__
+  ├── BREAKS isinstance!
+  └── Use for: External services we can't modify
+
+SOFT FLOOD (Mixins via Ananta):
+  class FloodedService(SeshaMixin, TakshakaMixin, OriginalService):
+      pass
+  ├── Class inheritance
+  ├── PRESERVES isinstance
+  └── Use for: Our own services (preferred)
+```
+
+### Corrected Assessment
+
+| What I Thought | Reality |
+|----------------|---------|
+| Need to BUILD NagaInterceptor | Already exists as NagaProxy |
+| Need to BUILD @governed decorator | Already exists as @naga_governed |
+| Need Federation to wrap | Ananta decides Hard vs Soft Flood |
+
+### What ACTUALLY Needs Work
+
+1. **The god file** (2862 lines) - still a testing/import problem
+2. **Verify all services USE the patterns** - are they actually wrapped?
+3. **Split protocols/naga.py** - but DON'T break existing patterns
+4. **Add manifest.json** - VEDA-4 compliance for protocols
+
+### Revised Execution Order
+
+1. ~~Phase 1: Build NagaInterceptor~~ **SKIP - exists!**
+2. ~~Phase 2: Refactor Federation~~ **VERIFY - may already work**
+3. **Phase 3**: Audit which services use NagaProxy/Mixins
+4. **Phase 4**: Split god file into modules
+5. **Phase 5**: Add manifest.json per protocol module
 
 ---
 

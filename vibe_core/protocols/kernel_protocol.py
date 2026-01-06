@@ -31,8 +31,6 @@ Usage in Plugins:
 
 from typing import (
     TYPE_CHECKING,
-    Any,
-    Callable,
     Dict,
     List,
     Optional,
@@ -40,10 +38,30 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.protocols.kernel_types import (
+    CapabilitiesReport,
+    CapabilityResult,
+    KernelStatus,
+    KernelStatusReport,
+    SystemStatusReport,
+    TaskResult,
+)
+
 if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
+    from vibe_core.lineage import LineageChain
+    from vibe_core.phoenix.config import PhoenixConfig
     from vibe_core.protocols.agent import AgentManifest, VibeAgent
-    from vibe_core.protocols.cognition import CognitiveResult, SignedOperatorInput
+    from vibe_core.protocols.cognition import (
+        CognitiveKernelProtocol,
+        CognitiveResult,
+        SignedOperatorInput,
+    )
+    from vibe_core.protocols.economy import BankProtocol, VaultProtocol
     from vibe_core.protocols.event import EventBusProtocol
+    from vibe_core.protocols.ledger import VibeLedger
+    from vibe_core.protocols.manifestation import ManifestationProtocol
+    from vibe_core.protocols.state import PrakritiProtocol
     from vibe_core.scheduling import Task
 
 
@@ -68,17 +86,17 @@ class KernelProtocol(Protocol):
         ...
 
     @property
-    def status(self) -> Any:  # KernelStatus enum
-        """Get kernel status (STOPPED, BOOTING, RUNNING, HALTED)."""
+    def status(self) -> KernelStatus:
+        """Get kernel status (STOPPED, BOOTING, RUNNING, HALTED, SHUTTING_DOWN)."""
         ...
 
     @property
-    def config(self) -> Any:  # PhoenixConfig
+    def config(self) -> "PhoenixConfig":
         """Get kernel configuration."""
         ...
 
     @property
-    def ledger(self) -> Any:  # VibeLedger
+    def ledger(self) -> "VibeLedger":
         """Get the immutable event ledger."""
         ...
 
@@ -114,7 +132,7 @@ class KernelProtocol(Protocol):
         """Submit a task to the scheduler. Returns task_id."""
         ...
 
-    def get_task_result(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_result(self, task_id: str) -> Optional[TaskResult]:
         """Get result of a completed task."""
         ...
 
@@ -132,7 +150,7 @@ class KernelProtocol(Protocol):
         capabilities: List[str],
         revoker_id: str,
         reason: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> CapabilityResult:
         """Revoke capabilities from an agent."""
         ...
 
@@ -142,7 +160,7 @@ class KernelProtocol(Protocol):
         capabilities: List[str],
         granter_id: str,
         reason: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> CapabilityResult:
         """Grant capabilities to an agent."""
         ...
 
@@ -171,7 +189,7 @@ class KernelProtocol(Protocol):
     # COGNITIVE LAYER (OPUS-309)
     # =========================================================================
 
-    def register_cognitive(self, cognitive: Any) -> None:
+    def register_cognitive(self, cognitive: "CognitiveKernelProtocol") -> None:
         """Register a cognitive plugin for operator input processing."""
         ...
 
@@ -192,15 +210,15 @@ class KernelProtocol(Protocol):
     # STATE & OBSERVABILITY (GAD-000)
     # =========================================================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> KernelStatusReport:
         """Get full kernel status."""
         ...
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> SystemStatusReport:
         """GAD-000: AI-readable system state."""
         ...
 
-    def get_capabilities(self) -> Dict[str, Any]:
+    def get_capabilities(self) -> CapabilitiesReport:
         """GAD-000: Machine-readable capability discovery."""
         ...
 
@@ -213,22 +231,22 @@ class KernelProtocol(Protocol):
     # =========================================================================
 
     @property
-    def io(self) -> Any:  # KernelIOService
+    def io(self) -> "KernelIOService":
         """Get the I/O service for file operations."""
         ...
 
     @property
-    def manifestation(self) -> Any:  # ManifestationService
+    def manifestation(self) -> "ManifestationProtocol":
         """Get the manifestation service for Markdown rendering."""
         ...
 
     @property
-    def prakriti(self) -> Any:  # Prakriti state engine
+    def prakriti(self) -> "PrakritiProtocol":
         """Get the Prakriti state engine."""
         ...
 
     @property
-    def lineage(self) -> Any:  # LineageChain
+    def lineage(self) -> "LineageChain":
         """Get the Parampara lineage chain."""
         ...
 
@@ -236,11 +254,11 @@ class KernelProtocol(Protocol):
     # ECONOMY (ServiceRegistry Access)
     # =========================================================================
 
-    def get_bank(self) -> Any:  # BankProtocol
+    def get_bank(self) -> "BankProtocol":
         """Get CivicBank via ServiceRegistry."""
         ...
 
-    def get_vault(self) -> Any:  # VaultProtocol
+    def get_vault(self) -> "VaultProtocol":
         """Get CivicVault via ServiceRegistry."""
         ...
 
@@ -265,7 +283,7 @@ class KernelFactoryProtocol(Protocol):
 
     def create_kernel(
         self,
-        config: Any,  # PhoenixConfig
+        config: "PhoenixConfig",
         ledger_path: str = ":memory:",
         parent: Optional[KernelProtocol] = None,
         load_plugins: bool = True,

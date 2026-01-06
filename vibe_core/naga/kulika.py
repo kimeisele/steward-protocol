@@ -43,6 +43,7 @@ Usage:
         ...
 """
 
+import inspect
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -50,6 +51,11 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Type, runtime_checkable
 
 logger = logging.getLogger("NAGA.KULIKA")
+
+# Excluded method prefixes - pure getters and status methods don't need governance
+# Note: as_handler methods ARE governed (they perform corrections)
+_EXCLUDED_PREFIXES = ("get_", "is_", "has_", "list_", "can_", "should_")
+_EXCLUDED_NAMES = {"status", "health", "info", "capabilities", "metadata", "to_dict", "from_dict"}
 
 
 # =============================================================================
@@ -275,9 +281,17 @@ def naga_service(
     output_file: Optional[str] = None,
     schema: str = "naga_standard",
     version: str = "1.0",
+    auto_govern: bool = True,
 ) -> Callable[[Type], Type]:
     """
-    Mark a class as a NAGA service.
+    Mark a class as a NAGA service with ANANTA auto-governance.
+
+    ANANTA PATTERN (SB 5.24.31): Automatic governance by default.
+    All public methods are wrapped with @naga_governed unless:
+    - Method starts with _ (private)
+    - Method is a pure getter (get_, is_, has_, list_, can_, should_)
+    - Method has @ungoverned decorator
+    - Method is already @naga_governed
 
     This is the signal for Narada (Scanner) to discover this service.
 
@@ -289,7 +303,12 @@ def naga_service(
             capabilities=[NagaCapability.LEDGER],
         )
         class SeshaService:
-            ...
+            def export_blocks(self):  # Auto-wrapped
+                ...
+
+            @ungoverned
+            def get_cached_value(self):  # Not wrapped
+                ...
 
     Args:
         name: Human-readable name
@@ -302,9 +321,10 @@ def naga_service(
         output_file: Manifestation output file
         schema: Manifestation schema
         version: Service version
+        auto_govern: Enable ANANTA auto-governance (default: True)
 
     Returns:
-        Decorated class with _naga_manifest attribute
+        Decorated class with _naga_manifest attribute and governed methods
     """
 
     def decorator(cls: Type) -> Type:
@@ -335,6 +355,64 @@ def naga_service(
                 return self._naga_manifest
 
             cls.get_manifest = get_manifest
+
+        # =====================================================================
+        # ANANTA AUTO-GOVERNANCE: Wrap all public methods with @naga_governed
+        # =====================================================================
+        if auto_govern:
+            # Late import to avoid circular dependency
+            from vibe_core.naga.services.base import naga_governed
+
+            wrapped_count = 0
+
+            # Get all attributes defined directly on this class
+            for attr_name in list(cls.__dict__.keys()):
+                # Skip private methods
+                if attr_name.startswith("_"):
+                    continue
+
+                # Skip excluded names
+                if attr_name in _EXCLUDED_NAMES:
+                    continue
+
+                # Skip pure getters
+                if any(attr_name.startswith(prefix) for prefix in _EXCLUDED_PREFIXES):
+                    continue
+
+                attr_value = cls.__dict__[attr_name]
+
+                # Skip non-callables (properties, class attributes)
+                if not callable(attr_value):
+                    continue
+
+                # Skip class methods and static methods
+                if isinstance(attr_value, (classmethod, staticmethod)):
+                    continue
+
+                # Skip already governed methods (has __wrapped__ from functools.wraps)
+                if hasattr(attr_value, "__wrapped__"):
+                    continue
+
+                # Skip methods explicitly marked as governed
+                if getattr(attr_value, "_is_naga_governed", False):
+                    continue
+
+                # Skip methods marked with @ungoverned
+                if getattr(attr_value, "_is_ungoverned", False):
+                    continue
+
+                # Skip property descriptors
+                if isinstance(inspect.getattr_static(cls, attr_name, None), property):
+                    continue
+
+                # THE CHURNING: Wrap with @naga_governed
+                governed_method = naga_governed(operation=f"{name}.{attr_name}")(attr_value)
+                governed_method._is_naga_governed = True  # Mark to prevent re-wrapping
+                setattr(cls, attr_name, governed_method)
+                wrapped_count += 1
+
+            if wrapped_count > 0:
+                logger.debug(f"[ANANTA] {name}: Auto-governed {wrapped_count} methods")
 
         logger.debug(f"Marked as NAGA: {name} ({lord.value})")
         return cls
@@ -563,9 +641,20 @@ __all__ = [
     "NagaManifest",
     # Protocol
     "NagaServiceProtocol",
-    # Decorator
+    # Decorators
     "naga_service",
+    # "ungoverned" - available via __getattr__ lazy import, not in __all__ (ruff F822)
     # Registry
     "KulikaRegistry",
     "get_kulika",
 ]
+
+
+# Re-export ungoverned for convenience
+def __getattr__(name: str) -> Any:
+    """Lazy import ungoverned from base to avoid circular import."""
+    if name == "ungoverned":
+        from vibe_core.naga.services.base import ungoverned
+
+        return ungoverned
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

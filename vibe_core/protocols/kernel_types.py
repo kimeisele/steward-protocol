@@ -3,11 +3,81 @@ Kernel Type Protocols - Phase 1 of OPERATION LASAGNE
 
 PROMPT.md: "Any ist verboten. Wenn du Any schreibst, hast du das Datenmodell nicht verstanden."
 
-These types replace Dict[str, Any] patterns in kernel_impl.py.
+These types replace Dict[str, Any] patterns in kernel_impl.py and kernel_protocol.py.
+
+VIMANA RANGE ROVER: Military-grade type safety for the Kernel heart.
 """
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, runtime_checkable
+from datetime import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
+
+# =============================================================================
+# KERNEL STATUS ENUM (replaces Any for kernel.status)
+# =============================================================================
+
+
+class KernelStatus(str, Enum):
+    """Kernel lifecycle states - replaces Any."""
+
+    STOPPED = "STOPPED"
+    BOOTING = "BOOTING"
+    RUNNING = "RUNNING"
+    HALTED = "HALTED"
+    SHUTTING_DOWN = "SHUTTING_DOWN"
+
+
+# =============================================================================
+# TYPED DICTS FOR KERNEL METHODS (replaces Dict[str, Any])
+# =============================================================================
+
+
+class CapabilityResult(TypedDict, total=False):
+    """Result of capability grant/revoke operations."""
+
+    success: bool
+    agent_id: str
+    capabilities: List[str]
+    action: str  # "granted" | "revoked"
+    reason: str
+    granter_id: str
+    timestamp: str
+
+
+class KernelStatusReport(TypedDict, total=False):
+    """Kernel status report - replaces get_status() -> Dict[str, Any]."""
+
+    status: str  # KernelStatus value
+    agents_registered: int
+    agents_alive: int
+    tasks_completed: int
+    tasks_pending: int
+    uptime_seconds: float
+    ledger_hash: str
+
+
+class SystemStatusReport(TypedDict, total=False):
+    """GAD-000 compliant system status - replaces get_system_status() -> Dict[str, Any]."""
+
+    kernel_status: str
+    version: str
+    agents: Dict[str, str]  # agent_id -> status
+    plugins: List[str]
+    capabilities: List[str]
+    ledger_entries: int
+    memory_mb: float
+    timestamp: str
+
+
+class CapabilitiesReport(TypedDict, total=False):
+    """Capability discovery report - replaces get_capabilities() -> Dict[str, Any]."""
+
+    available: List[str]
+    agents: Dict[str, List[str]]  # agent_id -> capabilities
+    plugins: List[str]
+    tools: List[str]
+
 
 if TYPE_CHECKING:
     from vibe_core.scheduling import Task
