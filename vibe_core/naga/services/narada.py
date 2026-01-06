@@ -33,6 +33,7 @@ from vibe_core.naga.kulika import (
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.groups import Observation, ObserveProtocol
+from vibe_core.protocols.naga.types import ObservationDict
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
@@ -285,3 +286,73 @@ class NaradaService(NagaBaseService, ObserveProtocol):
     def get_observation_count(self) -> int:
         """Get total observation count (ObserveProtocol)."""
         return self._observations_count
+
+    # =========================================================================
+    # NaradaProtocol - Fractal Entry Point for NagaProxy
+    # =========================================================================
+
+    @naga_governed(operation="receive_proxy_observation")
+    def receive_proxy_observation(self, observation: ObservationDict) -> None:
+        """
+        Receive observation from NagaProxy.
+
+        This is the ONE entry point. Narada routes internally:
+        - Records to internal buffer (always)
+        - Routes to Chitragupta (profiling)
+        - Routes to Sesha (audit)
+        - Reports to Cortex (patterns)
+
+        NagaProxy doesn't know about other NAGAs - fractal separation.
+        """
+        # Record as NaradaObservation
+        internal_obs = NaradaObservation(
+            function_name=f"{observation.get('service_type', 'unknown')}.{observation.get('method_name', 'unknown')}",
+            args_count=observation.get("args_count", 0),
+            kwargs_keys=observation.get("kwargs_keys", []),
+            result_type=observation.get("result_type"),
+            exception_type=observation.get("exception_type"),
+            duration_ms=observation.get("duration_ms", 0.0),
+            observer_id=self._identity.agent_id if self._identity else "",
+        )
+        self._record_observation(internal_obs)
+
+        # Route to Chitragupta (profiling)
+        self._route_to_chitragupta(observation)
+
+        # Route to Sesha (audit)
+        self._route_to_sesha(observation)
+
+    def _route_to_chitragupta(self, observation: ObservationDict) -> None:
+        """Route timing to Chitragupta for profiling."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import ChitraguptaProtocol
+
+            chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+            if chitragupta:
+                component_id = f"{observation.get('service_type', '')}.{observation.get('method_name', '')}"
+                chitragupta.record(component_id, "duration_ms", observation.get("duration_ms", 0.0))
+        except Exception as e:
+            logger.debug(f"Chitragupta routing failed: {e}")
+
+    def _route_to_sesha(self, observation: ObservationDict) -> None:
+        """Route to Sesha for audit trail."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import SeshaProtocol
+
+            sesha = ServiceRegistry.get(SeshaProtocol)
+            if sesha and hasattr(sesha, "_ledger") and sesha._ledger:
+                sesha._ledger.record_event(
+                    event_type="PROXY_OBSERVATION",
+                    agent_id=f"proxy.{observation.get('service_type', 'unknown')}",
+                    details={
+                        "method": observation.get("method_name", ""),
+                        "duration_ms": observation.get("duration_ms", 0.0),
+                        "args_count": observation.get("args_count", 0),
+                        "result_type": observation.get("result_type") or "None",
+                        "exception_type": observation.get("exception_type") or "",
+                    },
+                )
+        except Exception as e:
+            logger.debug(f"Sesha routing failed: {e}")

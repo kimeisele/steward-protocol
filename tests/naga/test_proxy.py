@@ -186,19 +186,20 @@ class TestNagaProxyPrivateMethods:
 class TestNagaProxyIntegration:
     """Integration with NAGA services tests."""
 
-    def test_chitragupta_integration(self):
-        """Test integration with Chitragupta."""
+    def test_narada_integration(self):
+        """Test integration with Narada (fractal routing)."""
         service = MockService()
-        chitragupta = MagicMock()
-        proxy = NagaProxy(service, chitragupta=chitragupta)
+        narada = MagicMock()
+        proxy = NagaProxy(service, narada=narada)
 
         proxy.do_something(1, 2)
 
-        # Chitragupta.record should be called
-        chitragupta.record.assert_called_once()
-        args = chitragupta.record.call_args[0]
-        assert "MockService.do_something" in args[0]
-        assert args[1] == "duration_ms"
+        # Narada.receive_proxy_observation should be called (ONE entry point)
+        narada.receive_proxy_observation.assert_called_once()
+        obs_dict = narada.receive_proxy_observation.call_args[0][0]
+        assert obs_dict["service_type"] == "MockService"
+        assert obs_dict["method_name"] == "do_something"
+        assert "duration_ms" in obs_dict
 
 
 class TestConvenienceFunctions:

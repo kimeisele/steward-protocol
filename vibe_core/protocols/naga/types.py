@@ -186,6 +186,24 @@ class EventDict(TypedDict, total=False):
     hash: str
 
 
+class ObservationDict(TypedDict, total=False):
+    """
+    Typed observation from NagaProxy.
+
+    This is the ONE type that flows from proxy to Narada.
+    Narada routes internally - proxy doesn't know about other NAGAs.
+    """
+
+    service_type: str
+    method_name: str
+    args_count: int
+    kwargs_keys: List[str]
+    duration_ms: float
+    result_type: str
+    exception_type: str
+    timestamp: str
+
+
 class ErrorContext(TypedDict, total=False):
     """
     Typed error context for Prahlad.
