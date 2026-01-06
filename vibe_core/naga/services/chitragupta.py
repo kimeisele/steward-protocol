@@ -219,6 +219,42 @@ class ChitraguptaService(NagaBaseService, ObserveProtocol):
         """Get profile for component."""
         return self._profiles.get(component_id)
 
+    def get_baseline_mean(self, component_id: str, metric: str) -> float:
+        """
+        Get baseline mean for a component's metric.
+
+        TÜV-GEPRÜFT: Matches ChitraguptaProtocol signature.
+
+        Args:
+            component_id: Component to query
+            metric: Metric name
+
+        Returns:
+            Mean value, or 0.0 if no data
+        """
+        profile = self._profiles.get(component_id)
+        if not profile or metric not in profile.metrics:
+            return 0.0
+        return profile.get_baseline_mean(metric, self._window_seconds)
+
+    def get_baseline_stddev(self, component_id: str, metric: str) -> float:
+        """
+        Get baseline standard deviation for a component's metric.
+
+        TÜV-GEPRÜFT: Matches ChitraguptaProtocol signature.
+
+        Args:
+            component_id: Component to query
+            metric: Metric name
+
+        Returns:
+            Standard deviation, or 0.0 if insufficient data
+        """
+        profile = self._profiles.get(component_id)
+        if not profile or metric not in profile.metrics:
+            return 0.0
+        return profile.get_baseline_stddev(metric, self._window_seconds)
+
     @naga_governed(operation="detect_anomaly")
     def detect_anomaly(self, component_id: str) -> Optional[Anomaly]:
         """
