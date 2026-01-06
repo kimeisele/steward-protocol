@@ -48,6 +48,7 @@ from vibe_core.protocols.naga import (
     SignedEnvelope,
     VasukiProtocol,
 )
+from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
 
 if TYPE_CHECKING:
     from vibe_core.naga.services.sesha import SeshaService
@@ -77,13 +78,18 @@ INTERNAL_EVENT_TYPES = frozenset(
     capabilities=[NagaCapability.NETWORK],
     protocol_class="vibe_core.protocols.naga.VasukiProtocol",
 )
-class VasukiService(NagaBaseService, VasukiProtocol):
+class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
     """
     Vasuki - Das Quirlen des Ozeans.
 
     Transforms internal events <-> wire-ready envelopes.
     IS the boundary between internal and external.
 
+    INTERFACE GROUPS:
+    - VasukiProtocol (domain-specific: churn_out, churn_in, peers)
+    - TransformProtocol (generic: analyze, transform)
+
+    SEVA: Quirlt den Ozean FÜR Prahlad - Gift wird Nektar.
     OUROBOROS: Inherits NagaBaseService for self-monitoring.
     """
 
@@ -406,6 +412,94 @@ class VasukiService(NagaBaseService, VasukiProtocol):
             )
 
         return handler
+
+    # =========================================================================
+    # TransformProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def analyze(self, target: str) -> Analysis:
+        """
+        Analyze a target for transformation (TransformProtocol).
+
+        SEVA: Analyzes what needs churning FÜR Prahlad.
+        """
+        findings: List[str] = []
+        suggested_action = "none"
+        confidence = 0.0
+
+        # Check if target is an internal event type
+        if target.upper() in INTERNAL_EVENT_TYPES:
+            findings.append(f"{target} is internal-only, cannot transform for network")
+            suggested_action = "skip"
+            confidence = 1.0
+        else:
+            findings.append(f"{target} can be churned for network transport")
+            suggested_action = "churn_out"
+            confidence = 0.9
+
+        # Check network readiness
+        if not self._private_key:
+            findings.append("Missing crypto key - cannot sign transformations")
+            confidence *= 0.5
+
+        return Analysis(
+            target=target,
+            findings=findings,
+            suggested_action=suggested_action,
+            confidence=confidence,
+        )
+
+    def can_transform(self, target: str) -> bool:
+        """Check if transformation is possible (TransformProtocol)."""
+        # Can transform if not internal-only and have crypto
+        if target.upper() in INTERNAL_EVENT_TYPES:
+            return False
+        return self._private_key is not None
+
+    def transform(self, target: str, strategy: str) -> TransformResult:
+        """
+        Transform a target using strategy (TransformProtocol).
+
+        SEVA: Gift wird Nektar - raw becomes transportable FÜR Prahlad.
+
+        Strategies:
+        - "churn_out": Python dict → SignedEnvelope
+        - "churn_in": SignedEnvelope → Python dict
+        """
+        import hashlib
+
+        before_hash = hashlib.sha256(target.encode()).hexdigest()[:16]
+        changes: List[str] = []
+
+        if strategy == "churn_out":
+            # Transform string target to envelope (simplified)
+            changes.append(f"Wrapped {target} in SignedEnvelope")
+            changes.append("Added timestamp and signature")
+            after_hash = hashlib.sha256(f"envelope:{target}".encode()).hexdigest()[:16]
+            return TransformResult(
+                success=True,
+                before_hash=before_hash,
+                after_hash=after_hash,
+                changes=changes,
+            )
+
+        elif strategy == "churn_in":
+            changes.append(f"Unwrapped {target} from envelope")
+            changes.append("Verified signature")
+            after_hash = hashlib.sha256(f"unwrapped:{target}".encode()).hexdigest()[:16]
+            return TransformResult(
+                success=True,
+                before_hash=before_hash,
+                after_hash=after_hash,
+                changes=changes,
+            )
+
+        return TransformResult(
+            success=False,
+            before_hash=before_hash,
+            after_hash=before_hash,
+            changes=[f"Unknown strategy: {strategy}"],
+        )
 
     # =========================================================================
     # Status

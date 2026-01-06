@@ -29,7 +29,7 @@ from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, Deque, Dict, List, Optional, TypedDict
 
 from vibe_core.naga.cortex.decisions import (
     CortexDecision,
@@ -58,6 +58,81 @@ if TYPE_CHECKING:
 logger = logging.getLogger("NAGA.CORTEX")
 
 
+# =============================================================================
+# TYPE DEFINITIONS (Military Grade - No Dict[str, Any])
+# =============================================================================
+
+
+class ConfigData(TypedDict, total=False):
+    """Typed dict for CortexConfig serialization."""
+
+    enabled: bool
+    signal_buffer_size: int
+    correlation_threshold: int
+    max_signal_age_seconds: float
+    auto_dispatch: bool
+    log_decisions: bool
+
+
+class StatsData(TypedDict, total=False):
+    """Typed dict for CortexStats serialization."""
+
+    signals_received: int
+    signals_discarded_age: int
+    signals_discarded_overflow: int
+    correlations_performed: int
+    decisions_made: int
+    decisions_dispatched: int
+    decisions_by_action: Dict[str, int]
+    uptime_seconds: float
+
+
+class FloodRawData(TypedDict, total=False):
+    """Raw data from flood signal - replaces Dict[str, Any]."""
+
+    event_id: str
+    source: str
+    payload_hash: str
+    timestamp: str
+
+
+class ThreatData(TypedDict, total=False):
+    """Threat summary data from Takshaka."""
+
+    threat_type: str
+    source: str
+    severity: float
+    timestamp: str
+
+
+class PeerHealthData(TypedDict, total=False):
+    """Peer health data from Vasuki."""
+
+    peer_count: int
+    healthy_count: int
+    degraded_peers: List[str]
+
+
+class CortexStatusData(TypedDict, total=False):
+    """Status data returned by get_status()."""
+
+    enabled: bool
+    signal_buffer_size: int
+    decision_queue_size: int
+    config: ConfigData
+    stats: StatsData
+
+
+class SnapshotData(TypedDict, total=False):
+    """Phoenix snapshot state data."""
+
+    version: int
+    stats: StatsData
+    dispatched: Dict[str, str]
+    config: ConfigData
+    snapshot_at: str
+
+
 @dataclass
 class CortexConfig:
     """Configuration for NagaCortex behavior."""
@@ -70,7 +145,7 @@ class CortexConfig:
     log_decisions: bool = True  # Log decisions to Sesha ledger
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "CortexConfig":
+    def from_dict(cls, data: ConfigData) -> "CortexConfig":
         return cls(
             enabled=data.get("enabled", True),
             signal_buffer_size=data.get("signal_buffer_size", 100),
@@ -80,15 +155,15 @@ class CortexConfig:
             log_decisions=data.get("log_decisions", True),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "enabled": self.enabled,
-            "signal_buffer_size": self.signal_buffer_size,
-            "correlation_threshold": self.correlation_threshold,
-            "max_signal_age_seconds": self.max_signal_age_seconds,
-            "auto_dispatch": self.auto_dispatch,
-            "log_decisions": self.log_decisions,
-        }
+    def to_dict(self) -> ConfigData:
+        return ConfigData(
+            enabled=self.enabled,
+            signal_buffer_size=self.signal_buffer_size,
+            correlation_threshold=self.correlation_threshold,
+            max_signal_age_seconds=self.max_signal_age_seconds,
+            auto_dispatch=self.auto_dispatch,
+            log_decisions=self.log_decisions,
+        )
 
 
 @dataclass
@@ -104,18 +179,18 @@ class CortexStats:
     decisions_by_action: Dict[str, int] = field(default_factory=dict)
     started_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> StatsData:
         uptime = (datetime.now() - self.started_at).total_seconds()
-        return {
-            "signals_received": self.signals_received,
-            "signals_discarded_age": self.signals_discarded_age,
-            "signals_discarded_overflow": self.signals_discarded_overflow,
-            "correlations_performed": self.correlations_performed,
-            "decisions_made": self.decisions_made,
-            "decisions_dispatched": self.decisions_dispatched,
-            "decisions_by_action": self.decisions_by_action,
-            "uptime_seconds": uptime,
-        }
+        return StatsData(
+            signals_received=self.signals_received,
+            signals_discarded_age=self.signals_discarded_age,
+            signals_discarded_overflow=self.signals_discarded_overflow,
+            correlations_performed=self.correlations_performed,
+            decisions_made=self.decisions_made,
+            decisions_dispatched=self.decisions_dispatched,
+            decisions_by_action=self.decisions_by_action,
+            uptime_seconds=uptime,
+        )
 
 
 class NagaCortex:
@@ -204,7 +279,7 @@ class NagaCortex:
         agent_id: Optional[str] = None,
         toxicity_score: float = 0.0,
         patterns: List[str] = None,
-        raw_data: Dict[str, Any] = None,
+        raw_data: Optional[FloodRawData] = None,
     ) -> None:
         """Convenience method for FloodManager."""
         signal = FloodSignal(
@@ -310,8 +385,8 @@ class NagaCortex:
         """
         # Get NAGA intelligence
         sesha_patterns: List[str] = []
-        takshaka_threats: List[Dict[str, Any]] = []
-        vasuki_peer_health: Dict[str, Any] = {}
+        takshaka_threats: List[ThreatData] = []
+        vasuki_peer_health: PeerHealthData = PeerHealthData()
 
         if self._orchestrator.sesha:
             # Get recent patterns from Sesha
@@ -588,15 +663,15 @@ class NagaCortex:
     # API / STATUS
     # =========================================================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> CortexStatusData:
         """Get Cortex status and statistics."""
-        return {
-            "enabled": self._config.enabled,
-            "signal_buffer_size": len(self._signal_buffer),
-            "decision_queue_size": len(self._decision_queue),
-            "config": self._config.to_dict(),
-            "stats": self._stats.to_dict(),
-        }
+        return CortexStatusData(
+            enabled=self._config.enabled,
+            signal_buffer_size=len(self._signal_buffer),
+            decision_queue_size=len(self._decision_queue),
+            config=self._config.to_dict(),
+            stats=self._stats.to_dict(),
+        )
 
     def get_queued_decisions(self) -> List[CortexDecision]:
         """Get decisions waiting for manual dispatch."""
@@ -818,7 +893,7 @@ class NagaCortex:
         """Check if Cortex is active and ready."""
         return self._config.enabled
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> CortexStatusData:
         """Get Cortex statistics (alias for get_status for protocol compliance)."""
         return self.get_status()
 
@@ -835,28 +910,28 @@ class NagaCortex:
             self._state_service_instance = get_state_service(plugin_id="naga_cortex")
         return self._state_service_instance
 
-    def snapshot_state(self) -> Dict[str, Any]:
+    def snapshot_state(self) -> SnapshotData:
         """
         PHOENIX: Snapshot current state for crash recovery.
 
         Returns:
             Dict containing recoverable state (stats, dispatched decisions)
         """
-        return {
-            "version": 1,
-            "stats": {
-                "signals_received": self._stats.signals_received,
-                "signals_discarded_age": self._stats.signals_discarded_age,
-                "signals_discarded_overflow": self._stats.signals_discarded_overflow,
-                "correlations_performed": self._stats.correlations_performed,
-                "decisions_made": self._stats.decisions_made,
-                "decisions_dispatched": self._stats.decisions_dispatched,
-                "decisions_by_action": dict(self._stats.decisions_by_action),
-            },
-            "dispatched": {k: v.isoformat() for k, v in self._dispatched.items()},
-            "config": self._config.to_dict(),
-            "snapshot_at": datetime.now().isoformat(),
-        }
+        return SnapshotData(
+            version=1,
+            stats=StatsData(
+                signals_received=self._stats.signals_received,
+                signals_discarded_age=self._stats.signals_discarded_age,
+                signals_discarded_overflow=self._stats.signals_discarded_overflow,
+                correlations_performed=self._stats.correlations_performed,
+                decisions_made=self._stats.decisions_made,
+                decisions_dispatched=self._stats.decisions_dispatched,
+                decisions_by_action=dict(self._stats.decisions_by_action),
+            ),
+            dispatched={k: v.isoformat() for k, v in self._dispatched.items()},
+            config=self._config.to_dict(),
+            snapshot_at=datetime.now().isoformat(),
+        )
 
     def _restore_state(self) -> None:
         """
