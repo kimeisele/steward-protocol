@@ -113,11 +113,12 @@ from vibe_core.protocols.naga.padma import (
 
 # Prahlad
 from vibe_core.protocols.naga.prahlad import (
-    DharmaScore,
     NullPrahlad,
     PrahladProtocol,
 )
 
+# NOTE: DharmaScore moved to vibe_core.naga.services.prahlad.types (source of truth)
+# Import directly from there if needed to avoid circular dependency
 # Sesha
 from vibe_core.protocols.naga.sesha import (
     ImportResult,
@@ -205,8 +206,8 @@ __all__ = [
     "NullChitragupta",
     # Prahlad
     "PrahladProtocol",
-    "DharmaScore",
     "NullPrahlad",
+    # NOTE: DharmaScore now in vibe_core.naga.services.prahlad.types
     # Kulika
     "KulikaProtocol",
     "NullKulika",
