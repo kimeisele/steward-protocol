@@ -19,6 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
+from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
 from vibe_core.naga.services.base import NagaBaseService
 from vibe_core.protocols.naga.tuv import (
     ChurnEntry,
@@ -40,11 +41,20 @@ logger = logging.getLogger("NAGA.TÜV")
 TÜV_REGISTRY_PATH = Path(".vibe/state/tuv_registry.json")
 
 
+@naga_service(
+    name="TÜV",
+    lord=NagaLord.TÜV,
+    drift_source=None,  # Pure audit, no drift handling
+    priority=70,  # After infrastructure, before governance actions
+    capabilities=[NagaCapability.TYPE_AUDIT, NagaCapability.AUDIT],
+    protocol_class="vibe_core.protocols.naga.TÜVProtocol",
+)
 class TÜVService(NagaBaseService):
     """
     TÜV Audit Intelligence Service.
 
     Implements TÜVProtocol - not documentation, CODE.
+    Auto-discovered by Narada via @naga_service decorator.
     """
 
     def __init__(
