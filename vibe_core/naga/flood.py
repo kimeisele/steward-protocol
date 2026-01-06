@@ -421,7 +421,7 @@ class NagaFloodController:
     # STATUS
     # =========================================================================
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         """Get flood statistics."""
         return {
             "enabled": self._enabled,
@@ -513,7 +513,7 @@ class NagaSignalWatcher:
             except Exception:
                 pass  # Silent fail
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         """Get signal watcher statistics."""
         return {
             "subscribed": self._subscribed,
@@ -584,7 +584,7 @@ class NagaFloodManager:
         """Set callback for sending signals to Cortex. Non-invasive integration."""
         self._event_flood.set_cortex_callback(callback)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, object]:
         """Get unified flood status."""
         return {
             "enabled": self._enabled,

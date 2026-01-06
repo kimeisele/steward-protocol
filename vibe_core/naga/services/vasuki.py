@@ -24,7 +24,7 @@ import logging
 import time
 from collections import deque
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, AsyncIterator, Callable, Deque, Dict, List, Optional
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -49,6 +49,7 @@ from vibe_core.protocols.naga import (
     VasukiProtocol,
 )
 from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
+from vibe_core.protocols.naga.types import EventDict  # WATERTIGHT: No Dict[str, Any]
 
 if TYPE_CHECKING:
     from vibe_core.naga.services.sesha import SeshaService
@@ -153,7 +154,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
     # =========================================================================
 
     @naga_governed(operation="churn_out")
-    def churn_out(self, event: Dict[str, Any]) -> SignedEnvelope:
+    def churn_out(self, event: EventDict) -> SignedEnvelope:
         """Transform internal event -> signed wire-ready envelope."""
         try:
             import msgpack
@@ -190,7 +191,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
             raise
 
     @naga_governed(operation="churn_in")
-    def churn_in(self, envelope: SignedEnvelope) -> Dict[str, Any]:
+    def churn_in(self, envelope: SignedEnvelope) -> EventDict:
         """Transform wire envelope -> internal event."""
         try:
             import msgpack
@@ -331,7 +332,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
     # Boundary Enforcement
     # =========================================================================
 
-    def is_internal(self, event: Dict[str, Any]) -> bool:
+    def is_internal(self, event: EventDict) -> bool:
         """Check if event should stay internal (not sent to network)."""
         event_type = event.get("event_type", "")
 

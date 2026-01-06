@@ -600,7 +600,7 @@ class KulikaRegistry:
 
         return errors
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> Dict[str, object]:
         """Get registry status for manifestation."""
         return {
             "total_services": len(self._services),

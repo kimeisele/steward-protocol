@@ -108,7 +108,7 @@ class LoadEvent:
     success: bool = True
     error: Optional[str] = None
     duration_ms: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, object] = field(default_factory=dict)  # object > Any
     timestamp: float = field(default_factory=time.time)
 
 
@@ -509,7 +509,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         success: bool = True,
         error: Optional[str] = None,
         duration_ms: float = 0.0,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, object]] = None,
     ) -> str:
         """
         Record a loading operation.
@@ -694,7 +694,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
         """Get failed load events for debugging."""
         return [e for e in self._load_events if not e.success][-limit:]
 
-    def get_load_stats(self) -> Dict[str, Any]:
+    def get_load_stats(self) -> Dict[str, object]:
         """Get loading statistics."""
         return {
             "total_loads": self._total_loads,
@@ -707,7 +707,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
             "wrapped": self._wrapped,
         }
 
-    def get_boot_audit(self) -> Dict[str, Any]:
+    def get_boot_audit(self) -> Dict[str, object]:
         """
         Get complete boot audit trail.
 
