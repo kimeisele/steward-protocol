@@ -18,8 +18,9 @@ Integration:
 
 import hashlib
 import logging
+import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 from vibe_core.naga.kulika import (
     NagaCapability,
@@ -36,6 +37,7 @@ from vibe_core.protocols.correction import (
     UnifiedDriftReport,
 )
 from vibe_core.protocols.naga import (
+    EventRecord,
     ImportResult,
     LedgerBlock,
     NagaStatus,
@@ -101,6 +103,61 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         logger.debug("SESHA: Ledger injected")
 
     # =========================================================================
+    # Event Recording (PUBLIC API - YAMARAJA Compliant)
+    # =========================================================================
+
+    @naga_governed(operation="record_event")
+    def record_event(self, event: EventRecord) -> bool:
+        """
+        Record an event to the ledger.
+
+        YAMARAJA: This is the ONE entry point for writing to the ledger.
+        No more accessing _ledger directly!
+
+        Args:
+            event: Typed event record (EventRecord TypedDict)
+
+        Returns:
+            True if recorded successfully, False otherwise
+
+        Raises:
+            ValueError: If event_type or agent_id is missing
+        """
+        # YAMARAJA: Validate required fields
+        event_type = event.get("event_type")
+        agent_id = event.get("agent_id")
+
+        if not event_type:
+            raise ValueError("EventRecord.event_type is required")
+        if not agent_id:
+            raise ValueError("EventRecord.agent_id is required")
+
+        # Check ledger availability
+        if not self._ledger:
+            sys.stderr.write("!!! SESHA: record_event called but no ledger available\n")
+            return False
+
+        try:
+            # Delegate to internal ledger
+            self._ledger.record_event(
+                event_type=event_type,
+                agent_id=agent_id,
+                details=event.get("details", {}),
+                result=event.get("result"),
+                task_id=event.get("task_id"),
+                error=event.get("error"),
+            )
+            self._events_processed += 1
+            self._last_heartbeat = datetime.now()
+            return True
+
+        except Exception as e:
+            # YAMARAJA: No silent failures
+            sys.stderr.write(f"!!! SESHA: record_event failed: {e}\n")
+            self._errors += 1
+            return False
+
+    # =========================================================================
     # Ledger Wrapper Methods
     # =========================================================================
 
@@ -158,6 +215,65 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
             return events
         except Exception as e:
             logger.error(f"SESHA: get_events_since failed: {e}")
+            self._errors += 1
+            return []
+
+    # =========================================================================
+    # Event Reading (PUBLIC API - YAMARAJA Compliant)
+    # =========================================================================
+
+    @naga_governed(operation="get_recent_events")
+    def get_recent_events(self, limit: int = 10) -> List[Dict[str, object]]:
+        """
+        Get recent events from the ledger.
+
+        YAMARAJA: This is the ONE entry point for reading recent events.
+        No more accessing _ledger directly!
+
+        Args:
+            limit: Maximum number of events to return (default 10)
+
+        Returns:
+            List of recent events (newest first)
+        """
+        if not self._ledger:
+            sys.stderr.write("!!! SESHA: get_recent_events called but no ledger available\n")
+            return []
+
+        try:
+            events = self._ledger.get_events(limit=limit)
+            self._last_heartbeat = datetime.now()
+            return events
+        except Exception as e:
+            sys.stderr.write(f"!!! SESHA: get_recent_events failed: {e}\n")
+            self._errors += 1
+            return []
+
+    @naga_governed(operation="get_events_by_type")
+    def get_events_by_type(self, event_type: str, limit: int = 100) -> List[Dict[str, object]]:
+        """
+        Get events of a specific type from the ledger.
+
+        YAMARAJA: This is the ONE entry point for filtered reading.
+        No more accessing _ledger directly!
+
+        Args:
+            event_type: Type of events to retrieve
+            limit: Maximum number of events to return (default 100)
+
+        Returns:
+            List of matching events (newest first)
+        """
+        if not self._ledger:
+            sys.stderr.write("!!! SESHA: get_events_by_type called but no ledger available\n")
+            return []
+
+        try:
+            events = self._ledger.get_events(event_type=event_type, limit=limit)
+            self._last_heartbeat = datetime.now()
+            return events
+        except Exception as e:
+            sys.stderr.write(f"!!! SESHA: get_events_by_type failed: {e}\n")
             self._errors += 1
             return []
 

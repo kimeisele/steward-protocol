@@ -567,12 +567,14 @@ class NagaCortex:
 
     def _log_decision(self, decision: CortexDecision) -> None:
         """Log decision to Sesha ledger for auditability."""
-        if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
+        if self._orchestrator.sesha:
             try:
-                self._orchestrator.sesha._ledger.record_event(
-                    event_type="NAGA_CORTEX_DECISION",
-                    agent_id="naga_cortex",
-                    details={
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "NAGA_CORTEX_DECISION",
+                    "agent_id": "naga_cortex",
+                    "details": {
                         "action": decision.action.name,
                         "target": decision.target,
                         "rule": decision.rule,
@@ -580,7 +582,8 @@ class NagaCortex:
                         "confidence": decision.confidence,
                         "source_signals": decision.source_signals,
                     },
-                )
+                }
+                self._orchestrator.sesha.record_event(event)
             except Exception as e:
                 logger.debug(f"[CORTEX] Failed to log decision: {e}")
 
@@ -828,14 +831,16 @@ class NagaCortex:
             context.sign(self._identity)
             logger.debug(f"[CORTEX] 🔐 Context signed by {self._identity.agent_id}")
 
-        # === KARMA: RECORD TO LEDGER ===
+        # === KARMA: RECORD TO LEDGER (via PUBLIC API) ===
         duration_ms = (time.time() - start_time) * 1000
-        if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
+        if self._orchestrator.sesha:
             try:
-                self._orchestrator.sesha._ledger.record_event(
-                    event_type="CORTEX_CONSULTATION",
-                    agent_id="naga_cortex",
-                    details={
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "CORTEX_CONSULTATION",
+                    "agent_id": "naga_cortex",
+                    "details": {
                         "reason_code": reason_code.value,
                         "threat_count": len(active_threats),
                         "anomaly_count": anomaly_count,
@@ -843,7 +848,8 @@ class NagaCortex:
                         "is_signed": context.is_signed,
                         "duration_ms": duration_ms,
                     },
-                )
+                }
+                self._orchestrator.sesha.record_event(event)
             except Exception as e:
                 logger.debug(f"[CORTEX] Failed to log consultation: {e}")
 
@@ -863,17 +869,20 @@ class NagaCortex:
         Args:
             feedback: Signed feedback from MANAS
         """
-        # === KARMA: RECORD TO LEDGER ===
-        if self._orchestrator.sesha and hasattr(self._orchestrator.sesha, "_ledger"):
+        # === KARMA: RECORD TO LEDGER (via PUBLIC API) ===
+        if self._orchestrator.sesha:
             try:
-                self._orchestrator.sesha._ledger.record_event(
-                    event_type="MANAS_FEEDBACK",
-                    agent_id="naga_cortex",
-                    details={
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "MANAS_FEEDBACK",
+                    "agent_id": "naga_cortex",
+                    "details": {
                         **feedback.to_dict(),
                         "is_signed": feedback.is_signed,
                     },
-                )
+                }
+                self._orchestrator.sesha.record_event(event)
             except Exception as e:
                 logger.debug(f"[CORTEX] Failed to log feedback: {e}")
 

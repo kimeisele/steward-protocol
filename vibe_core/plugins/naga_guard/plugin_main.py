@@ -559,15 +559,17 @@ class NagaGuardPlugin(KernelPlugin):
             return
 
         try:
-            # Use Sesha's ledger access if available
-            if hasattr(self._sesha, "_ledger") and self._sesha._ledger:
-                self._sesha._ledger.record_event(
-                    event_type=f"NAGA_GUARD_{event_type}",
-                    agent_id=agent_id,
-                    details=details,
-                )
+            # Use Sesha's PUBLIC API
+            from vibe_core.protocols.naga import EventRecord
+
+            event: EventRecord = {
+                "event_type": f"NAGA_GUARD_{event_type}",
+                "agent_id": agent_id,
+                "details": details,
+            }
+            self._sesha.record_event(event)
         except Exception:
-            pass  # Silent fail - observer must not crash
+            pass  # Non-critical - observer must not crash
 
     # =========================================================================
     # API

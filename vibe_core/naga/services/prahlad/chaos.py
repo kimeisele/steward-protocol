@@ -306,14 +306,15 @@ class ChaosProbingMixin:
                     if chaos_scenario in ["timeout"]:
                         result["system_resilient"] = True
 
-            # 3. CHECK SESHA LEDGER
+            # 3. CHECK SESHA LEDGER (via PUBLIC API - YAMARAJA)
             try:
                 from vibe_core.protocols.naga import SeshaProtocol
 
                 ServiceRegistry.disable_chaos()
                 sesha = ServiceRegistry.get(SeshaProtocol)
-                if sesha and hasattr(sesha, "_ledger"):
-                    recent = sesha._ledger.get_recent_events(limit=20)
+                if sesha:
+                    # YAMARAJA: Use PUBLIC Sesha API, not _ledger directly
+                    recent = sesha.get_recent_events(limit=20)
                     for event in recent:
                         e = event.to_dict() if hasattr(event, "to_dict") else event
                         if (

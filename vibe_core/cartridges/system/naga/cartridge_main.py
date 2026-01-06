@@ -217,16 +217,16 @@ class NagaCartridge(VibeAgent, OathMixin):
             event_type = payload.get("event_type")
             limit = payload.get("limit", 10)
 
-            # Use Sesha's ledger if available
-            if hasattr(self.federation.sesha, "_ledger"):
-                ledger = self.federation.sesha._ledger
-                if event_type:
-                    events = ledger.get_events_by_type(event_type, limit=limit)
-                else:
-                    events = ledger.get_recent_events(limit=limit)
-                return {"events": [e.to_dict() for e in events], "count": len(events)}
+            # YAMARAJA: Use PUBLIC Sesha API, not _ledger directly
+            sesha = self.federation.sesha
+            if event_type:
+                events = sesha.get_events_by_type(event_type, limit=limit)
+            else:
+                events = sesha.get_recent_events(limit=limit)
 
-            return {"events": [], "count": 0, "note": "Direct ledger access unavailable"}
+            # Events are already dicts from Sesha API
+            event_list = [e.to_dict() if hasattr(e, "to_dict") else e for e in events]
+            return {"events": event_list, "count": len(events)}
         except Exception as e:
             logger.error(f"Audit query failed: {e}")
             return {"error": str(e), "events": []}

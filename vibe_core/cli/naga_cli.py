@@ -318,20 +318,23 @@ class NagaCLI:
         print("-" * 60)
         print(f"    TOTAL ISSUES: {total_issues}")
 
-        # Record to Ledger if federation available
+        # Record to Ledger if federation available (via PUBLIC API)
         federation = self._get_federation()
-        if federation and federation.sesha and hasattr(federation.sesha, "_ledger"):
+        if federation and federation.sesha:
             try:
-                federation.sesha._ledger.record_event(
-                    event_type="NAGA_SCAN_COMPLETE",
-                    agent_id="naga_cli",
-                    details={
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "NAGA_SCAN_COMPLETE",
+                    "agent_id": "naga_cli",
+                    "details": {
                         "path": str(target_path),
                         "files_scanned": len(py_files),
                         "total_issues": total_issues,
                         "breakdown": {k: len(v) for k, v in results.items()},
                     },
-                )
+                }
+                federation.sesha.record_event(event)
                 print("    (Recorded to Ledger)")
             except Exception:
                 pass
@@ -690,19 +693,18 @@ class NagaCLI:
                 event_type = args[i + 1]
 
         try:
-            if hasattr(federation.sesha, "_ledger"):
-                ledger = federation.sesha._ledger
+            # YAMARAJA: Use PUBLIC Sesha API, not _ledger directly
+            sesha = federation.sesha
+            if event_type:
+                events = sesha.get_events_by_type(event_type, limit=limit)
+            else:
+                events = sesha.get_recent_events(limit=limit)
 
-                if event_type:
-                    events = ledger.get_events_by_type(event_type, limit=limit)
-                else:
-                    events = ledger.get_recent_events(limit=limit)
-
-                print(f"\n    Recent Events (limit={limit}):")
-                for event in events:
-                    e = event.to_dict() if hasattr(event, "to_dict") else event
-                    print(f"      [{e.get('event_type', 'UNKNOWN')}] {e.get('timestamp', '')}")
-                    print(f"        Agent: {e.get('agent_id', 'unknown')}")
+            print(f"\n    Recent Events (limit={limit}):")
+            for event in events:
+                e = event.to_dict() if hasattr(event, "to_dict") else event
+                print(f"      [{e.get('event_type', 'UNKNOWN')}] {e.get('timestamp', '')}")
+                print(f"        Agent: {e.get('agent_id', 'unknown')}")
 
         except Exception as e:
             print(f"\n    Audit query failed: {e}")

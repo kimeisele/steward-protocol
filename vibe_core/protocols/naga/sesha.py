@@ -28,7 +28,7 @@ from vibe_core.protocols.correction import (
     HealingStrategy,
     UnifiedDriftReport,
 )
-from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
+from vibe_core.protocols.naga.types import EventDict, EventRecord, NagaStatus, NagaType
 
 
 class SyncStatus(str, Enum):
@@ -105,6 +105,59 @@ class SeshaProtocol(Protocol):
         blocks = sesha.export_blocks(since=100)
         result = peer.sesha.import_blocks(blocks)
     """
+
+    # === Event Recording (PUBLIC API) ===
+
+    def record_event(self, event: EventRecord) -> bool:
+        """
+        Record an event to the ledger.
+
+        YAMARAJA: This is the ONE entry point for writing to the ledger.
+        No more accessing _ledger directly!
+
+        Args:
+            event: Typed event record (EventRecord TypedDict)
+
+        Returns:
+            True if recorded successfully, False otherwise
+
+        Raises:
+            ValueError: If event_type or agent_id is missing
+        """
+        ...
+
+    # === Event Reading (PUBLIC API) ===
+
+    def get_recent_events(self, limit: int = 10) -> List[EventDict]:
+        """
+        Get recent events from the ledger.
+
+        YAMARAJA: This is the ONE entry point for reading recent events.
+        No more accessing _ledger directly!
+
+        Args:
+            limit: Maximum number of events to return (default 10)
+
+        Returns:
+            List of recent events (newest first)
+        """
+        ...
+
+    def get_events_by_type(self, event_type: str, limit: int = 100) -> List[EventDict]:
+        """
+        Get events of a specific type from the ledger.
+
+        YAMARAJA: This is the ONE entry point for filtered reading.
+        No more accessing _ledger directly!
+
+        Args:
+            event_type: Type of events to retrieve
+            limit: Maximum number of events to return (default 100)
+
+        Returns:
+            List of matching events (newest first)
+        """
+        ...
 
     # === Ledger Wrapper ===
 
@@ -192,6 +245,18 @@ class SeshaProtocol(Protocol):
 
 class NullSesha:
     """No-op Sesha for when ledger is unavailable."""
+
+    def record_event(self, event: EventRecord) -> bool:
+        """No-op - returns False (no ledger available)."""
+        return False
+
+    def get_recent_events(self, limit: int = 10) -> List[EventDict]:
+        """No-op - returns empty list (no ledger available)."""
+        return []
+
+    def get_events_by_type(self, event_type: str, limit: int = 100) -> List[EventDict]:
+        """No-op - returns empty list (no ledger available)."""
+        return []
 
     def get_top_hash(self) -> str:
         return ""

@@ -160,25 +160,26 @@ class SeshaCLIHook(CLIHookProtocol):
         if self._log_file:
             self._write_to_file(entry)
 
-        # Send to LIVING Sesha service - OUROBOROS connection to ledger
+        # Send to LIVING Sesha service via PUBLIC API
         if self._sesha:
             try:
-                # SeshaService wraps SQLiteLedger - use _ledger.record_event()
-                if hasattr(self._sesha, "_ledger") and self._sesha._ledger:
-                    self._sesha._ledger.record_event(
-                        event_type="CLI_COMMAND_EXECUTED",
-                        agent_id=entry.caller_id,
-                        details={
-                            "command": f"{entry.namespace}.{entry.command}",
-                            "args": entry.args[:5] if entry.args else [],  # Truncate for safety
-                            "success": entry.success,
-                            "blocked": entry.blocked,
-                            "blocked_by": entry.blocked_by,
-                            "duration_ms": round(entry.duration_ms, 2),
-                        },
-                        result="SUCCESS" if entry.success else "FAILED",
-                    )
-                    logger.debug(f"[SESHA-CLI] Recorded to living ledger: {entry.command}")
+                from vibe_core.protocols.naga import EventRecord
+
+                event: EventRecord = {
+                    "event_type": "CLI_COMMAND_EXECUTED",
+                    "agent_id": entry.caller_id,
+                    "details": {
+                        "command": f"{entry.namespace}.{entry.command}",
+                        "args": entry.args[:5] if entry.args else [],  # Truncate for safety
+                        "success": entry.success,
+                        "blocked": entry.blocked,
+                        "blocked_by": entry.blocked_by,
+                        "duration_ms": round(entry.duration_ms, 2),
+                    },
+                    "result": "SUCCESS" if entry.success else "FAILED",
+                }
+                self._sesha.record_event(event)
+                logger.debug(f"[SESHA-CLI] Recorded to living ledger: {entry.command}")
             except Exception as e:
                 logger.debug(f"Sesha integration: {e}")
 
