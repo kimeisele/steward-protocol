@@ -193,9 +193,9 @@ Wenn alle NAGAs PRAHLAD dienen (nicht nur Protokolle implementieren):
 4. [x] VasukiService + TransformProtocol (analyze, can_transform, transform)
 5. [x] NaradaService + ObserveProtocol (observe, get_observations, get_observation_count)
 6. [x] ChitraguptaService + ObserveProtocol (observe, get_observations, get_observation_count)
+7. [x] AnantaService + TransformProtocol (analyze, can_transform, transform)
+8. [x] KaliyaService + SecurityProtocol (intercept, bite, is_quarantined)
 
 ### TODO
-7. [ ] AnantaService + TransformProtocol
-8. [ ] KaliyaService + SecurityProtocol
-9. [ ] NarasimhaService + SecurityProtocol
+9. [ ] NarasimhaService + SecurityProtocol (Gatekeeper exists but no service file)
 10. [ ] Ouroboros: NAGAs testen sich selbst FÜR Prahlad
