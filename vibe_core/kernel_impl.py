@@ -210,6 +210,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # =====================================================================
         VajraGuarded.__init__(self)
 
+        # =====================================================================
+        # NARASIMHA GATEKEEPER: Birth the 37th (Kshetrajna)
+        # Without Identity, the 36 fields are dead mechanism.
+        # The Gatekeeper validates all chaos injection and DI access.
+        # =====================================================================
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.enable_narasimha()
+
         # 4D Hypercube: Store config and parent reference
         self._config = config
         self._parent = parent
