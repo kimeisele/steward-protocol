@@ -93,6 +93,37 @@ AFTER:  Prahlad.chaos_probe() uses Hiranyakashipu seeds
 |-----------|-------|-----|-------|
 | `test_hiranyakashipu_living.py` | 23 | 0 | 23 |
 | `test_orchestrator_fractal.py` | 11 | 2 | 13 |
+| `test_harness.py` | 19 | 0 | 19 |
+
+---
+
+## Test Infrastructure (2026-01-06)
+
+**SINGLE INJECTION POINT:** `vibe_core/naga/testing.py`
+
+```
+NagaTestHarness
+├── 13 Protocol NullObjects via ServiceRegistry
+├── InMemoryLedger (enable_ledger=True)
+├── NullCorrectionOrchestrator (enable_correction_orchestrator=True)
+└── for_orchestrator() → Ready for NagaOrchestrator.bootstrap()
+```
+
+**NO MagicMock. Ever.**
+
+Usage:
+```python
+# For NAGA consumers
+with NagaTestHarness() as harness:
+    sesha = harness.sesha  # NullSesha
+
+# For NagaOrchestrator tests
+with NagaTestHarness.for_orchestrator() as harness:
+    naga = NagaOrchestrator.bootstrap(
+        ledger=harness.ledger,
+        correction_orchestrator=harness.correction_orchestrator,
+    )
+```
 
 ---
 

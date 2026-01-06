@@ -29,6 +29,10 @@ GAD-000 Compliance:
     - Composability: Loaders and validators work together seamlessly
 """
 
+# Substrate Bridge (Layer -1)
+from .ananta_shesha import AnantaShesha, SystemEvent, get_system_anchor, reset_system_anchor
+
+# Violation Processing
 from .ingestion import ViolationIngester, ViolationRecord, ViolationSource
 from .parser_loader import (
     ViolationParserLoader,
@@ -54,6 +58,11 @@ from .verification import (
 )
 
 __all__ = [
+    # Substrate Bridge
+    "AnantaShesha",
+    "SystemEvent",
+    "get_system_anchor",
+    "reset_system_anchor",
     # Core
     "ViolationIngester",
     "ViolationRecord",

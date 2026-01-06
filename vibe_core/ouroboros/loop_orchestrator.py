@@ -202,12 +202,41 @@ class OuroborosLoopOrchestrator:
             ingested = self.ingester.ingest(all_violations)
             result.ingested_count = ingested
             logger.info(f"🐍 OUROBOROS: Ingested {ingested} violations from {result.sources_parsed} sources")
+
+            # Step 4: BRIDGE DOWN - Notify AnantaShesha (System → NAGA)
+            self._notify_violations_to_naga(all_violations, ingested)
+
         except Exception as e:
             result.errors.append(f"Ingestion error: {e}")
             logger.warning(f"🐍 OUROBOROS: Ingestion failed: {e}")
 
         self._last_result = result
         return result
+
+    def _notify_violations_to_naga(
+        self,
+        violations: List[ViolationRecord],
+        ingested_count: int,
+    ) -> None:
+        """
+        Notify AnantaShesha about ingested violations.
+
+        BRIDGE DOWN: System Ouroboros → NAGA
+        This enables NAGA to be aware of system-level violations.
+        """
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+            anchor = get_system_anchor()
+            anchor.notify_violation({
+                "count": ingested_count,
+                "source": "system_ouroboros",
+                "rule_ids": list(set(v.rule_id for v in violations if v.rule_id)),
+                "files": list(set(str(v.file_path) for v in violations[:10])),  # First 10
+            })
+            logger.debug(f"🐍 OUROBOROS: Notified AnantaShesha of {ingested_count} violations")
+        except Exception as e:
+            logger.debug(f"🐍 OUROBOROS: AnantaShesha notify failed: {e}")
 
     def get_status(self) -> Dict[str, Any]:
         """Get orchestrator status for observability."""
