@@ -235,12 +235,13 @@ class TestNagaGovernanceCoverage:
 
         print(f"{'=' * 60}")
 
-        # The 108 principle: Not all methods need governance
-        # But coverage should be reasonable
-        MIN_COVERAGE = 30.0  # Start low, increase as we churn
+        # ANANTA PATTERN: 100% coverage via auto-governance
+        # All operational methods must be governed (pure getters excluded)
+        MIN_COVERAGE = 90.0  # ANANTA achieves 100%, allow 10% margin for edge cases
         assert coverage >= MIN_COVERAGE or total_methods == 0, (
             f"NAGA self-governance coverage {coverage:.1f}% below {MIN_COVERAGE}%!\n"
-            f"The snake is not eating its own tail."
+            f"The snake is not eating its own tail.\n"
+            f"Check that all NAGA services use @naga_service decorator."
         )
 
 

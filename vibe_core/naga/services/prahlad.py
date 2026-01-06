@@ -411,15 +411,25 @@ class PrahladService(NagaBaseService):
         """
         import asyncio
 
+        from vibe_core.di import ServiceRegistry
         from vibe_core.naga.hiranyakashipu import LivingTestFramework
+        from vibe_core.protocols.naga import NagaFederationProtocol
 
         result = ProbeResult(
             target=target,
             scenarios_tested=len(attack_seeds),
         )
 
-        # Create framework for running attacks
-        fw = LivingTestFramework()
+        # Use WIRED framework from orchestrator if available (SAMUDRA MANTHAN)
+        # This connects attacks to DriftRegistry, CorrectionDispatcher, Reactor
+        fw = None
+        federation = ServiceRegistry.get(NagaFederationProtocol)
+        if federation and hasattr(federation, "living_framework"):
+            fw = federation.living_framework
+
+        # Fallback to new instance if not wired
+        if fw is None:
+            fw = LivingTestFramework()
 
         # Run each attack seed
         for seed in attack_seeds:

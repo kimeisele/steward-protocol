@@ -10,10 +10,55 @@ This stub allows cartridges to be type-checked and developed standalone.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 
 from .agent import AgentManifest, VibeAgent
 from .registry import ManifestRegistry
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.kernel_types import KernelStatusReport, PluginProtocol
+    from vibe_core.scheduling import Task
+
+
+# =============================================================================
+# TYPED DICTS - VIMANA RANGE ROVER (replaces Dict[str, Any])
+# =============================================================================
+
+
+class QueueStatus(TypedDict, total=False):
+    """Scheduler queue statistics - replaces Dict[str, Any]."""
+
+    queue_length: int
+    pending_count: int
+    processing_count: int
+    completed_count: int
+    failed_count: int
+    oldest_pending_age_ms: float
+
+
+class TaskEvent(TypedDict, total=False):
+    """Task event record - replaces Dict[str, Any] for task queries."""
+
+    task_id: str
+    event_type: str  # "TASK_STARTED", "TASK_COMPLETED", "TASK_FAILED"
+    agent_id: str
+    status: str
+    result: str
+    error: str
+    duration_ms: float
+    timestamp: str
+
+
+class LedgerEvent(TypedDict, total=False):
+    """Generic ledger event - replaces Dict[str, Any]."""
+
+    event_id: str
+    event_type: str
+    agent_id: str
+    timestamp: str
+    details: Dict[str, str]  # Nested dict still typed (str keys/values)
+    prev_hash: str
+    hash: str
 
 
 class KernelStatus(str, Enum):
@@ -29,17 +74,17 @@ class VibeScheduler(ABC):
     """Task scheduler interface"""
 
     @abstractmethod
-    def submit_task(self, task: Any) -> str:
+    def submit_task(self, task: "Task") -> str:
         """Submit a task to the queue, return task_id"""
         pass
 
     @abstractmethod
-    def next_task(self) -> Optional[Any]:
+    def next_task(self) -> Optional["Task"]:
         """Pop next task from queue"""
         pass
 
     @abstractmethod
-    def get_queue_status(self) -> Dict[str, Any]:
+    def get_queue_status(self) -> QueueStatus:
         """Get queue statistics"""
         pass
 
@@ -48,13 +93,13 @@ class VibeLedger(ABC):
     """Immutable event ledger interface"""
 
     @abstractmethod
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, str]) -> str:
         """Record a generic event (used by agents for governance actions)
 
         Args:
             event_type: Type of event (e.g., "proposal_created", "vote_cast", "credit_transfer")
             agent_id: ID of agent recording the event
-            details: Event-specific details
+            details: Event-specific details (typed as Dict[str, str])
 
         Returns:
             event_id: Unique identifier for this event
@@ -62,22 +107,22 @@ class VibeLedger(ABC):
         pass
 
     @abstractmethod
-    def record_start(self, task: Any) -> None:
+    def record_start(self, task: "Task") -> None:
         """Record task start"""
         pass
 
     @abstractmethod
-    def record_completion(self, task: Any, result: Any, duration_ms: Optional[float] = None) -> None:
+    def record_completion(self, task: "Task", result: str, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         pass
 
     @abstractmethod
-    def record_failure(self, task: Any, error: str, duration_ms: Optional[float] = None) -> None:
+    def record_failure(self, task: "Task", error: str, duration_ms: Optional[float] = None) -> None:
         """Record task failure"""
         pass
 
     @abstractmethod
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Optional[TaskEvent]:
         """Query task result"""
         pass
 
@@ -133,7 +178,7 @@ class VibeKernel(ABC):
 
     @property
     @abstractmethod
-    def plugins(self) -> List[Any]:
+    def plugins(self) -> List["PluginProtocol"]:
         """Get list of loaded plugins"""
         pass
 
@@ -143,7 +188,7 @@ class VibeKernel(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> "KernelStatusReport":
         """Get full kernel status"""
         pass
 
@@ -184,7 +229,7 @@ class SchedulerProtocol(Protocol):
         task_id = scheduler.submit_task(task)
     """
 
-    def submit_task(self, task: Any) -> str:
+    def submit_task(self, task: "Task") -> str:
         """
         Submit a task to the queue.
 
@@ -196,7 +241,7 @@ class SchedulerProtocol(Protocol):
         """
         ...
 
-    def next_task(self) -> Optional[Any]:
+    def next_task(self) -> Optional["Task"]:
         """
         Pop next task from queue.
 
@@ -205,12 +250,12 @@ class SchedulerProtocol(Protocol):
         """
         ...
 
-    def get_queue_status(self) -> Dict[str, Any]:
+    def get_queue_status(self) -> QueueStatus:
         """
         Get queue statistics.
 
         Returns:
-            Dict with queue_length, pending_count, etc.
+            QueueStatus with queue_length, pending_count, etc.
         """
         ...
 
@@ -250,21 +295,21 @@ class LedgerProtocol(Protocol):
         event_id = ledger.record_event("AGENT_BORN", "herald", {"role": "announcer"})
     """
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, str]) -> str:
         """
         Record an immutable event.
 
         Args:
             event_type: Type of event (e.g., "AGENT_BORN", "TASK_COMPLETED")
             agent_id: ID of agent this event belongs to
-            details: Event payload
+            details: Event payload (typed Dict[str, str])
 
         Returns:
             event_id: Unique identifier for this event
         """
         ...
 
-    def get_all_events(self) -> List[Dict[str, Any]]:
+    def get_all_events(self) -> List[LedgerEvent]:
         """Get all events in chronological order."""
         ...
 
@@ -276,19 +321,19 @@ class LedgerProtocol(Protocol):
         """Get hash of latest event (blockchain-style)."""
         ...
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Optional[TaskEvent]:
         """Get task event by task_id."""
         ...
 
-    def record_start(self, task) -> None:
+    def record_start(self, task: "Task") -> None:
         """Record task start event."""
         ...
 
-    def record_completion(self, task, result) -> None:
+    def record_completion(self, task: "Task", result: str) -> None:
         """Record task completion event."""
         ...
 
-    def record_failure(self, task, error: str) -> None:
+    def record_failure(self, task: "Task", error: str) -> None:
         """Record task failure event."""
         ...
 
@@ -296,6 +341,6 @@ class LedgerProtocol(Protocol):
         """Close any open resources (e.g., database connections)."""
         ...
 
-    def get_all_entries(self) -> List[Dict[str, Any]]:
+    def get_all_entries(self) -> List[LedgerEvent]:
         """Alias for get_all_events (backward compatibility)."""
         ...

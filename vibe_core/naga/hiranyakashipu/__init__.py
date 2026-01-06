@@ -27,6 +27,7 @@ Our mapping:
 """
 
 from .living_tests import LivingTestFramework, TestEvolution
+from .seed_generator import NaradaSeedGenerator, inject_seeds_from_narada
 from .seed_loader import AttackSeed, SeedLoader
 from .wiring import (
     # New names
@@ -50,6 +51,9 @@ __all__ = [
     "AttackSeed",
     "LivingTestFramework",
     "TestEvolution",
+    # Seed Generation (Narada Injection)
+    "NaradaSeedGenerator",
+    "inject_seeds_from_narada",
     # Wiring (Protocol Integration) - New names
     "wire_hiranyakashipu_to_protocols",
     "HiranyakashipuDriftDetector",

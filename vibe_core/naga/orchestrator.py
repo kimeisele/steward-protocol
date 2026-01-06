@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.commit_watcher import NagaCommitWatcher
     from vibe_core.naga.cortex import NagaCortex
     from vibe_core.naga.flood import NagaFloodManager
+    from vibe_core.naga.hiranyakashipu import LivingTestFramework
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.ouroboros import NagaOuroboros
     from vibe_core.naga.services.ananta import AnantaService
@@ -96,6 +97,10 @@ class NagaOrchestrator:
 
         self._initialized = False
         self._config: Optional["NagaConfig"] = None
+
+        # ===== HIRANYAKASHIPU (Attack Framework) =====
+        self._living_framework: Optional["LivingTestFramework"] = None
+        self._hiranyakashipu_wiring: Dict[str, Any] = {}
 
         # GAD-000 37th Principle: Sovereign identity for signing decisions
         from vibe_core.naga.identity import NagaIdentity
@@ -346,6 +351,51 @@ class NagaOrchestrator:
             except Exception as e:
                 logger.warning(f"♾️ ANANTA failed to initialize: {e}")
                 # Non-critical - continue without Ananta
+
+        # =========================================================================
+        # HIRANYAKASHIPU - Attack Framework Wiring (Samudra Manthan)
+        # =========================================================================
+        # "The demons churn the ocean, Vishnu controls the outcome"
+        # Wire living tests to DriftRegistry, CorrectionDispatcher, Reactor
+
+        self._hiranyakashipu_wiring: Dict[str, Any] = {}
+        if self._config.prahlad.enabled and self._config.prahlad.chaos_probe_enabled:
+            try:
+                from pathlib import Path
+
+                from vibe_core.naga.hiranyakashipu import (
+                    LivingTestFramework,
+                    wire_hiranyakashipu_to_protocols,
+                )
+
+                # Create the LIVING framework
+                self._living_framework = LivingTestFramework()
+
+                # Load seeds from the package
+                seed_dir = Path(__file__).parent / "hiranyakashipu" / "seeds"
+                if seed_dir.exists():
+                    self._living_framework.add_seed_dir(seed_dir)
+                    seed_count = self._living_framework.load_seeds()
+                    logger.info(f"🔥 Loaded {seed_count} Hiranyakashipu attack seeds")
+
+                # Wire to protocols (DriftRegistry, CorrectionDispatcher, Reactor)
+                self._hiranyakashipu_wiring = wire_hiranyakashipu_to_protocols(self._living_framework, "vibe_core")
+
+                # NARADA INJECTION: Generate dynamic seeds from discovered services
+                # "Narada unterrichtete Prahlad im Mutterleib"
+                try:
+                    from vibe_core.naga.hiranyakashipu import inject_seeds_from_narada
+
+                    if self._scanner and hasattr(self._scanner, "_discovered"):
+                        injected = inject_seeds_from_narada(self._scanner, self._living_framework)
+                        logger.info(f"💉 Narada injected {injected} dynamic seeds from discoveries")
+                except Exception as e:
+                    logger.debug(f"Narada seed injection skipped: {e}")
+
+                logger.info("🔥 HIRANYAKASHIPU wired - Attack Framework active")
+            except Exception as e:
+                logger.warning(f"🔥 HIRANYAKASHIPU failed to wire: {e}")
+                # Non-critical - continue without attack framework
 
         # =========================================================================
         # INFRASTRUCTURE COMPONENTS
@@ -791,3 +841,13 @@ class NagaOrchestrator:
     def scanner(self) -> Optional[NaradaScanner]:
         """Get Narada Scanner for auto-discovery metadata and reports."""
         return self._scanner
+
+    @property
+    def living_framework(self) -> Optional["LivingTestFramework"]:
+        """Get Hiranyakashipu LivingTestFramework for attack-based testing."""
+        return self._living_framework
+
+    @property
+    def hiranyakashipu_wiring(self) -> Dict[str, Any]:
+        """Get Hiranyakashipu wiring status (detector, handler, reactor)."""
+        return self._hiranyakashipu_wiring

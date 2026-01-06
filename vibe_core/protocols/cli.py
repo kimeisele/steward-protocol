@@ -176,6 +176,16 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
     """
     Decorator to register a CLI handler.
 
+    ANANTA PATTERN: Registration = Automatic Governance
+
+    Like water flowing into every crevice, @register_cli automatically
+    wraps ALL cmd_* and _cmd_* methods with @cli_governed.
+
+    This eliminates manual decoration and ensures:
+    - No command can escape NAGA observation
+    - New commands are automatically governed
+    - Self-healing infrastructure (GAD-000 Principle 6)
+
     Usage:
         @register_cli
         class KnowledgeCLI:
@@ -185,6 +195,24 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
 
             def run(self, args: List[str]) -> int:
                 ...
+
+            def cmd_list(self, args): ...  # AUTO-GOVERNED!
+            def cmd_show(self, args): ...  # AUTO-GOVERNED!
     """
+    # === ANANTA: Auto-wrap all cmd_* methods with cli_governed ===
+    try:
+        from vibe_core.naga.services.base import cli_governed
+
+        for name in dir(cls):
+            if name.startswith(("cmd_", "_cmd_")):
+                method = getattr(cls, name)
+                # Only wrap if callable and not already wrapped
+                if callable(method) and not hasattr(method, "__wrapped__"):
+                    wrapped = cli_governed()(method)
+                    setattr(cls, name, wrapped)
+    except ImportError:
+        # Graceful degradation if NAGA not available
+        pass
+
     CLIRegistry.register(cls)
     return cls
