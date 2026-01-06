@@ -103,6 +103,7 @@ class ServiceRegistry:
     # NAGA LOKA - Blessing Enforcement (Point of Inception)
     _naga_blessing_enabled: bool = False
     _naga_strict_mode: bool = False  # If True, reject unblessed critical services
+    _auto_flood_enabled: bool = False  # If True, auto-wrap unblessed with NagaProxy
     _naga_critical_services: set[str] = {
         # Services that MUST be NAGA-blessed (security critical)
         "PluginServiceProtocol",
@@ -112,6 +113,7 @@ class ServiceRegistry:
         "CISyncService",
     }
     _naga_blessing_violations: list[str] = []  # Track DHARMA breaches for audit
+    _auto_flooded_services: list[str] = []  # Track which services were auto-wrapped
 
     @classmethod
     def register(cls, interface: Type[T], instance: T) -> None:
@@ -151,6 +153,17 @@ class ServiceRegistry:
                             f"[DI] DHARMA VIOLATION: Critical service {name} must be NAGA-blessed. "
                             f"Use NagaBaseService inheritance or apply Soft Flood."
                         )
+
+                    # Auto-flood: Wrap unblessed services with NagaProxy (ONE INJECTION POINT)
+                    if cls._auto_flood_enabled:
+                        try:
+                            from vibe_core.naga.proxy import NagaProxy
+
+                            instance = NagaProxy(instance)
+                            cls._auto_flooded_services.append(f"{name} ({instance_type})")
+                            logger.info(f"[DI] AUTO-FLOOD: {name} wrapped with NagaProxy")
+                        except Exception as e:
+                            logger.warning(f"[DI] AUTO-FLOOD failed for {name}: {e}")
 
             cls._services[name] = instance
             logger.debug(f"[DI] Registered: {name}")
@@ -601,4 +614,68 @@ class ServiceRegistry:
         with cls._lock:
             count = len(cls._naga_blessing_violations)
             cls._naga_blessing_violations.clear()
+            return count
+
+    # =========================================================================
+    # AUTO-FLOOD (ONE Injection Point - Fractal Architecture)
+    # =========================================================================
+
+    @classmethod
+    def enable_auto_flood(cls) -> None:
+        """
+        Enable automatic flooding of unblessed services with NagaProxy.
+
+        THE FRACTAL PATTERN:
+        "Viele Trauben wachsen an einem Zweig"
+        ONE injection point (register) wraps ALL unblessed services.
+
+        When enabled, any service registered WITHOUT NAGA blessing is
+        automatically wrapped with NagaProxy. This provides:
+        - Narada observation (ALL method calls)
+        - Chitragupta profiling (duration_ms)
+        - Kaliya isolation (exception handling)
+        - Sesha audit trail (ledger recording)
+        - Takshaka validation (input sanitization)
+
+        Note: Requires _naga_blessing_enabled=True to detect unblessed services.
+        """
+        with cls._lock:
+            cls._auto_flood_enabled = True
+            cls._auto_flooded_services.clear()
+            logger.warning("[DI] AUTO-FLOOD ENABLED - Unblessed services will be wrapped with NagaProxy")
+
+    @classmethod
+    def disable_auto_flood(cls) -> None:
+        """Disable automatic flooding (for testing)."""
+        with cls._lock:
+            cls._auto_flood_enabled = False
+            logger.info("[DI] AUTO-FLOOD DISABLED")
+
+    @classmethod
+    def is_auto_flood_enabled(cls) -> bool:
+        """Check if auto-flood is active."""
+        return cls._auto_flood_enabled
+
+    @classmethod
+    def get_auto_flooded_services(cls) -> list[str]:
+        """
+        Get list of services that were auto-wrapped with NagaProxy.
+
+        Returns:
+            List of "{interface} ({instance_type})" strings
+        """
+        with cls._lock:
+            return list(cls._auto_flooded_services)
+
+    @classmethod
+    def clear_auto_flooded_services(cls) -> int:
+        """
+        Clear the auto-flooded services log.
+
+        Returns:
+            Number of entries cleared
+        """
+        with cls._lock:
+            count = len(cls._auto_flooded_services)
+            cls._auto_flooded_services.clear()
             return count

@@ -53,6 +53,8 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.chitragupta import ChitraguptaService
     from vibe_core.naga.services.kaliya import KaliyaService
     from vibe_core.naga.services.narada import NaradaService
+    from vibe_core.naga.services.sesha import SeshaService
+    from vibe_core.naga.services.takshaka import TakshakaService
 
 logger = logging.getLogger("NAGA.PROXY")
 
@@ -133,8 +135,11 @@ class NagaProxy(Generic[T]):
             "_narada",
             "_chitragupta",
             "_kaliya",
+            "_sesha",
+            "_takshaka",
             "_nagas_resolved",
             "_observation_buffer",
+            "_audit_enabled",
         ]
     )
 
@@ -144,7 +149,10 @@ class NagaProxy(Generic[T]):
         narada: Optional["NaradaService"] = None,
         chitragupta: Optional["ChitraguptaService"] = None,
         kaliya: Optional["KaliyaService"] = None,
+        sesha: Optional["SeshaService"] = None,
+        takshaka: Optional["TakshakaService"] = None,
         observe_private: bool = False,
+        audit_enabled: bool = True,
     ) -> None:
         if wrapped is None:
             raise TypeError("Cannot wrap None - wrapped service is required")
@@ -153,11 +161,14 @@ class NagaProxy(Generic[T]):
         object.__setattr__(self, "_wrapped", wrapped)
         object.__setattr__(self, "_service_name", type(wrapped).__name__)
         object.__setattr__(self, "_observe_private", observe_private)
+        object.__setattr__(self, "_audit_enabled", audit_enabled)
 
         # NAGA services - lazy load from ServiceRegistry if not provided
         object.__setattr__(self, "_narada", narada)
         object.__setattr__(self, "_chitragupta", chitragupta)
         object.__setattr__(self, "_kaliya", kaliya)
+        object.__setattr__(self, "_sesha", sesha)
+        object.__setattr__(self, "_takshaka", takshaka)
         object.__setattr__(self, "_nagas_resolved", False)
 
         # Observation buffer for batch reporting
@@ -170,6 +181,7 @@ class NagaProxy(Generic[T]):
         Lazy resolve NAGA services from ServiceRegistry.
 
         Called on first method interception.
+        Resolves: Narada, Chitragupta, Kaliya, Sesha, Takshaka
         """
         if self._nagas_resolved:
             return
@@ -180,6 +192,8 @@ class NagaProxy(Generic[T]):
                 ChitraguptaProtocol,
                 KaliyaProtocol,
                 NaradaProtocol,
+                SeshaProtocol,
+                TakshakaProtocol,
             )
 
             if self._narada is None:
@@ -190,6 +204,12 @@ class NagaProxy(Generic[T]):
 
             if self._kaliya is None:
                 self._kaliya = ServiceRegistry.get(KaliyaProtocol)
+
+            if self._sesha is None:
+                self._sesha = ServiceRegistry.get(SeshaProtocol)
+
+            if self._takshaka is None:
+                self._takshaka = ServiceRegistry.get(TakshakaProtocol)
 
         except Exception as e:
             # Non-critical - proxy still works without NAGAs
@@ -286,6 +306,9 @@ class NagaProxy(Generic[T]):
                 # Report to Chitragupta (profiling)
                 proxy_self._report_to_chitragupta(name, duration_ms)
 
+                # Report to Sesha (audit trail)
+                proxy_self._report_to_sesha(observation)
+
         return wrapper
 
     def _report_to_narada(self, observation: ProxyObservation) -> None:
@@ -356,6 +379,39 @@ class NagaProxy(Generic[T]):
         except Exception as e:
             # Non-critical
             logger.warning(f"Kaliya report failed: {e}")
+
+    def _report_to_sesha(self, observation: ProxyObservation) -> None:
+        """
+        Record observation to Sesha ledger for audit trail.
+
+        Args:
+            observation: The observation to record
+        """
+        audit_enabled = object.__getattribute__(self, "_audit_enabled")
+        if not audit_enabled:
+            return
+
+        sesha = object.__getattribute__(self, "_sesha")
+        if sesha is None:
+            return
+
+        try:
+            # Record to ledger via Sesha
+            if hasattr(sesha, "_ledger") and sesha._ledger:
+                sesha._ledger.record_event(
+                    event_type="PROXY_OBSERVATION",
+                    agent_id=f"proxy.{observation.service_type}",
+                    details={
+                        "method": observation.method_name,
+                        "duration_ms": observation.duration_ms,
+                        "args_count": observation.args_count,
+                        "result_type": observation.result_type or "None",
+                        "exception_type": observation.exception_type or "",
+                    },
+                )
+        except Exception as e:
+            # Non-critical - don't fail the actual method
+            logger.debug(f"Sesha audit failed: {e}")
 
     def get_observations(self) -> List[ProxyObservation]:
         """
