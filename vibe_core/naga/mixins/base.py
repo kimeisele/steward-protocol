@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 # Import from SUBSTRATE (Layer -1) - NO circular dependency possible
 from vibe_core.protocols.substrate import (
+    BindingCertificate,
     GeneActivationState,
     GeneManifest,
     IGene,
@@ -111,7 +112,14 @@ class NagaCapabilityMixin:
         """Get the gene's current activation state."""
         return self._gene_state
 
-    def bind(self, host: IGeneHost) -> None:
+    # Store binding certificate for chain of custody
+    _binding_certificate: Optional[BindingCertificate] = None
+
+    def bind(
+        self,
+        host: IGeneHost,
+        certificate: Optional[BindingCertificate] = None,
+    ) -> None:
         """
         Bind this gene to a host.
 
@@ -119,12 +127,18 @@ class NagaCapabilityMixin:
         The host calls this method, passing itself.
         The gene stores the reference for capability access.
 
+        ANTI-MAYAVADI: Certificate proves WHO is binding.
+        Without certificate, binding is UNVERIFIED (legacy mode).
+        With certificate, binding has chain of custody.
+
         Args:
             host: The IGeneHost that will power this gene
+            certificate: Optional binding certificate for verified binding
         """
         self._gene_host = host
         self._gene_state = GeneActivationState.BOUND
         self._gene_bound_at = datetime.now()
+        self._binding_certificate = certificate
 
     def activate(self) -> bool:
         """
@@ -152,6 +166,7 @@ class NagaCapabilityMixin:
         self._gene_state = GeneActivationState.DORMANT
         self._gene_bound_at = None
         self._gene_activated_at = None
+        self._binding_certificate = None
 
     # =========================================================================
     # Host Access (with ServiceRegistry Fallback)
@@ -189,10 +204,9 @@ class NagaCapabilityMixin:
 
         # Try 2: Fall back to ServiceRegistry (backward compat)
         try:
-            from vibe_core.di import ServiceRegistry
-
             # Dynamic protocol lookup
             from vibe_core import protocols
+            from vibe_core.di import ServiceRegistry
 
             protocol_module = getattr(protocols, "naga", None)
             if protocol_module:

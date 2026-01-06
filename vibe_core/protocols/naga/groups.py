@@ -21,7 +21,6 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Protocol, runtime_checkable
 
-
 # =============================================================================
 # SHARED TYPES (Used across groups)
 # =============================================================================
@@ -29,6 +28,7 @@ from typing import List, Optional, Protocol, runtime_checkable
 
 class Verdict(str, Enum):
     """Security verdict - used by SECURITY group."""
+
     ALLOW = "allow"
     DENY = "deny"
     ESCALATE = "escalate"
@@ -38,6 +38,7 @@ class Verdict(str, Enum):
 @dataclass
 class Subject:
     """What is being judged - used by SECURITY group."""
+
     subject_type: str  # "service", "agent", "request", "code"
     identifier: str
     context: str = ""
@@ -46,6 +47,7 @@ class Subject:
 @dataclass
 class AuditResult:
     """Result of governance audit - used by GOVERNANCE group."""
+
     passed: bool
     score: float  # 0.0 - 1.0
     violations: List[str]
@@ -55,6 +57,7 @@ class AuditResult:
 @dataclass
 class Observation:
     """What was observed - used by OBSERVE group."""
+
     event_type: str
     source: str
     timestamp: datetime
@@ -64,6 +67,7 @@ class Observation:
 @dataclass
 class Analysis:
     """Result of analysis - used by TRANSFORM group."""
+
     target: str
     findings: List[str]
     suggested_action: str
@@ -73,6 +77,7 @@ class Analysis:
 @dataclass
 class TransformResult:
     """Result of transformation - used by TRANSFORM group."""
+
     success: bool
     before_hash: str
     after_hash: str
