@@ -131,7 +131,7 @@ class TestEncryption:
             algorithm=payload.algorithm,
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(RuntimeError):
             karkotaka.decrypt(bad_payload)
 
     def test_encrypt_empty_data(self, karkotaka):

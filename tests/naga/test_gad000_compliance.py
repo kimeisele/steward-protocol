@@ -124,9 +124,11 @@ class TestViolationFingerprinting:
 
     def test_compute_violation_hash(self):
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
         from vibe_core.protocols.naga import VajraViolation
 
-        takshaka = TakshakaService()
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
 
         v1 = VajraViolation(
             violation_type="SQL_INJECTION",
@@ -149,9 +151,11 @@ class TestViolationFingerprinting:
 
     def test_different_violations_different_hashes(self):
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
         from vibe_core.protocols.naga import VajraViolation
 
-        takshaka = TakshakaService()
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
 
         v1 = VajraViolation(
             violation_type="SQL_INJECTION",
@@ -178,7 +182,7 @@ class TestViolationIdempotency:
 
         # Mock ledger
         mock_ledger = MagicMock()
-        mock_ledger.record_event = MagicMock(return_value="event_123")
+        mock_ledger.record_event = MagicMock(side_effect=lambda **kwargs: f"event_{time.time()}")
 
         takshaka = TakshakaService(ledger=mock_ledger)
 
@@ -189,14 +193,59 @@ class TestViolationIdempotency:
 
         # First call
         id1 = takshaka.bite(violation)
-        assert id1 == "event_123"
-        assert mock_ledger.record_event.call_count == 1
 
-        # Second call with same violation - should return existing ID
+        # Verify VAJRA_VIOLATION was recorded
+        calls = mock_ledger.record_event.call_args_list
+        vajra_calls = [
+            c
+            for c in calls
+            if c.kwargs.get("event_type") == "VAJRA_VIOLATION"
+            or (c.args and c.args[0] == "VAJRA_VIOLATION")
+            or
+            # Handle EventRecord object (used by SeshaService) - wait, mock_ledger receives args from SeshaService
+            # SeshaService usually passes through.
+            # Takshaka uses SeshaProtocol.record_event(EventRecord)
+            # If using legacy ledger wrapper, SeshaService unpacks or passes?
+            # Let's assume SeshaService passes distinct args to ledger.
+            # But Takshaka calls sesha.record_event(EventRecord).
+            # If SeshaService is real, it calls ledger.record_event(type, agent, details, ...)
+            True
+        ]
+
+        # Filter strictly for violation type
+        violation_calls = []
+        for call in calls:
+            # Check kwargs
+            if call.kwargs.get("event_type") == "VAJRA_VIOLATION":
+                violation_calls.append(call)
+                continue
+            # Check args
+            if call.args and call.args[0] == "VAJRA_VIOLATION":
+                violation_calls.append(call)
+                continue
+            # Check EventRecord object in args (if passed directly)
+            # Takshaka passes EventRecord to Sesha. Sesha unpacks for SQLiteLedger?
+            # Vibe Core Ledger record_event signature: (event_type, agent_id, details, ...)
+
+        assert len(violation_calls) == 1
+
+        # Second call with same violation
         id2 = takshaka.bite(violation)
-        assert id2 == "event_123"
-        # Should NOT have called record_event again
-        assert mock_ledger.record_event.call_count == 1
+
+        # ID should be same (deduplicated)
+        assert id2 == id1
+
+        # Should NOT have recorded VAJRA_VIOLATION again
+        # (But NAGA_OPERATION will be recorded again)
+        calls_after = mock_ledger.record_event.call_args_list
+        violation_calls_after = []
+        for call in calls_after:
+            if call.kwargs.get("event_type") == "VAJRA_VIOLATION":
+                violation_calls_after.append(call)
+            elif call.args and call.args[0] == "VAJRA_VIOLATION":
+                violation_calls_after.append(call)
+
+        assert len(violation_calls_after) == 1
 
     def test_violation_hash_stored_in_details(self):
         from vibe_core.naga.services.takshaka import TakshakaService
@@ -214,11 +263,19 @@ class TestViolationIdempotency:
 
         takshaka.bite(violation)
 
-        # Check that violation_hash was included in details
-        call_args = mock_ledger.record_event.call_args
-        details = call_args.kwargs.get("details", {})
-        assert "violation_hash" in details
-        assert len(details["violation_hash"]) == 16
+        # Check that violation_hash was included in details of the VAJRA_VIOLATION event
+        calls = mock_ledger.record_event.call_args_list
+        found = False
+        for call in calls:
+            # Check for VAJRA_VIOLATION
+            if call.kwargs.get("event_type") == "VAJRA_VIOLATION" or (call.args and call.args[0] == "VAJRA_VIOLATION"):
+                details = call.kwargs.get("details") or (call.args[2] if len(call.args) > 2 else {})
+                if "violation_hash" in details:
+                    found = True
+                    assert len(details["violation_hash"]) == 16
+                    break
+
+        assert found, "violation_hash not found in VAJRA_VIOLATION event"
 
 
 # =============================================================================
@@ -539,11 +596,8 @@ class TestOuroborosOrchestatorIntegration:
         from vibe_core.naga.ouroboros import NagaOuroboros
 
         # Mock orchestrator with sesha
-        mock_ledger = MagicMock()
-        mock_ledger.record_event = MagicMock()
-
         mock_sesha = MagicMock()
-        mock_sesha._ledger = mock_ledger
+        mock_sesha.record_event = MagicMock()
 
         mock_orchestrator = MagicMock()
         mock_orchestrator.sesha = mock_sesha
@@ -557,10 +611,26 @@ class TestOuroborosOrchestatorIntegration:
         ouroboros.observe_correction("A", "B", decision)
         ouroboros.observe_correction("B", "A", decision)
 
-        # Should have recorded to ledger
-        assert mock_ledger.record_event.called
-        call_args = mock_ledger.record_event.call_args
-        assert "NAGA_LOOP" in call_args.kwargs.get("event_type", "")
+        # Should have recorded to ledger via sesha
+        assert mock_sesha.record_event.called
+
+        # Verify event type in args or kwargs
+        call_args = mock_sesha.record_event.call_args
+        # NagaOuroboros passes EventRecord dict or object?
+        # It likely passes an EventRecord object.
+        # Let's check args
+        if call_args.args:
+            event = call_args.args[0]
+            if isinstance(event, dict):
+                assert "NAGA_LOOP" in event.get("event_type", "")
+            else:
+                # Assuming EventRecord object or similar
+                assert "NAGA_LOOP" in getattr(event, "event_type", "")
+        else:
+            # Check kwargs
+            assert "NAGA_LOOP" in call_args.kwargs.get("event_type", "") or "NAGA_LOOP" in getattr(
+                call_args.kwargs.get("event", {}), "event_type", ""
+            )
 
     def test_critical_loop_triggers_takshaka_bite(self):
         """Test that critical loops are recorded as violations."""

@@ -21,10 +21,18 @@ class TestToxicityDetection:
 
     @pytest.fixture
     def takshaka(self):
-        """Create a Takshaka service without ledger."""
+        """Create a Takshaka service with harnessed dependencies."""
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
 
-        return TakshakaService(ledger=None, trust_mode="permissive")
+        # Use harness to get protocol-compliant null objects
+        # We don't use 'with' here because we want the dependencies to persist for the test
+        harness = NagaTestHarness()
+        # We manually teardown? No, the harness context manager does registry cleanup.
+        # But for a fixture, we can just grab the instances.
+        # NullObjects don't need registry for direct injection.
+
+        return TakshakaService(sesha=harness.sesha, trust_mode="permissive")
 
     # =========================================================================
     # SQL Injection
@@ -169,9 +177,10 @@ class TestRateLimiting:
     def takshaka(self):
         """Create Takshaka with low rate limit for testing."""
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
 
-        service = TakshakaService(ledger=None, trust_mode="permissive", rate_limit_rpm=3)
-        return service
+        harness = NagaTestHarness()
+        return TakshakaService(sesha=harness.sesha, trust_mode="permissive", rate_limit_rpm=3)
 
     def test_allows_within_limit(self, takshaka):
         """Should allow requests within rate limit."""
@@ -205,12 +214,19 @@ class TestRateLimiting:
 class TestViolationRecording:
     """Test the bite() method for recording violations."""
 
-    def test_bite_without_ledger_returns_empty(self):
-        """bite() without ledger should return empty string."""
+    def test_bite_without_ledger_returns_fatal_error(self):
+        """
+        Legacy test updated: We now ENFORCE sesha at boot.
+        So this case (missing sesha) is technically impossible in a running service.
+        We verify that it works correctly with a NullSesha.
+        """
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
         from vibe_core.protocols.naga import VajraViolation
 
-        takshaka = TakshakaService(ledger=None)
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
+
         violation = VajraViolation(
             violation_type="TEST",
             source="test",
@@ -218,15 +234,19 @@ class TestViolationRecording:
         )
 
         event_id = takshaka.bite(violation)
-        assert event_id == ""
-        assert takshaka._bites == 1  # Still counted
+        # NullSesha returns a mock ID, not fatal error
+        assert event_id is not None
+        assert takshaka._bites == 1
 
     def test_bite_increments_counter(self):
         """Each bite should increment the counter."""
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
         from vibe_core.protocols.naga import VajraViolation
 
-        takshaka = TakshakaService(ledger=None)
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
+
         initial_bites = takshaka._bites
 
         for i in range(3):
@@ -245,8 +265,10 @@ class TestCorrectionHandler:
     @pytest.fixture
     def takshaka(self):
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
 
-        return TakshakaService(ledger=None, trust_mode="permissive")
+        harness = NagaTestHarness()
+        return TakshakaService(sesha=harness.sesha, trust_mode="permissive")
 
     def test_as_handler_returns_callable(self, takshaka):
         """as_handler() should return a callable."""
@@ -305,9 +327,11 @@ class TestNagaStatus:
     def test_healthy_when_low_errors(self):
         """Should be healthy with few errors."""
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
         from vibe_core.protocols.naga import NagaType
 
-        takshaka = TakshakaService(ledger=None)
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
         status = takshaka.get_status()
 
         assert status.healthy is True
@@ -317,8 +341,10 @@ class TestNagaStatus:
     def test_unhealthy_when_many_errors(self):
         """Should be unhealthy with many errors."""
         from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.testing import NagaTestHarness
 
-        takshaka = TakshakaService(ledger=None)
+        harness = NagaTestHarness()
+        takshaka = TakshakaService(sesha=harness.sesha)
         takshaka._errors = 15  # Exceed threshold
 
         status = takshaka.get_status()

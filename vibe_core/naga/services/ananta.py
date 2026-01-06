@@ -581,7 +581,10 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
                     result="OK" if success else "FAILED",
                 )
             except Exception as e:
-                logger.warning(f"ANANTA: Failed to persist load event: {e}")
+                import sys
+
+                sys.stderr.write(f"!!! ANANTA FATAL: Failed to persist load event: {e}\n")
+                raise RuntimeError(f"Ananta load audit failed: {e}") from e
 
         log_level = logging.DEBUG if success else logging.WARNING
         logger.log(

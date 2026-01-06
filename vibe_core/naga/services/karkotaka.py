@@ -131,10 +131,14 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
             else:
                 self._encryption_key = os.urandom(32)  # 256-bit key
                 key_file.write_text(base64.b64encode(self._encryption_key).decode())
-                key_file.chmod(0o600)
                 logger.debug("KARKOTAKA: Generated new vault encryption key")
+
+            # YAMARAJA: Always enforce strict permissions
+            key_file.chmod(0o600)
         except Exception as e:
-            logger.warning(f"KARKOTAKA: Failed to load encryption key: {e}")
+            import sys
+
+            sys.stderr.write(f"!!! KARKOTAKA: Failed to load encryption key: {e}\n")
             self._errors += 1
 
     # =========================================================================
@@ -148,13 +152,10 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
         self._operations_count += 1
 
         if not self._private_key:
-            logger.warning("KARKOTAKA: No private key available for signing")
-            return SignedContent(
-                content=content,
-                signature="",
-                signer_fingerprint="",
-                timestamp=time.time(),
-            )
+            import sys
+
+            sys.stderr.write("!!! KARKOTAKA: No private key available for signing\n")
+            raise RuntimeError("Karkotaka: Signing unavailable - no private key")
 
         try:
             from vibe_core.steward.crypto import sign_content
@@ -167,14 +168,11 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
                 timestamp=time.time(),
             )
         except Exception as e:
-            logger.error(f"KARKOTAKA: Signing failed: {e}")
+            import sys
+
+            sys.stderr.write(f"!!! KARKOTAKA: Signing failed: {e}\n")
             self._errors += 1
-            return SignedContent(
-                content=content,
-                signature="",
-                signer_fingerprint="",
-                timestamp=time.time(),
-            )
+            raise RuntimeError(f"Karkotaka: Signing failed: {e}") from e
 
     @naga_governed(operation="verify")
     def verify(self, signed: SignedContent) -> bool:
@@ -245,15 +243,10 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
                 algorithm="AES-256-GCM",
             )
         except ImportError:
-            # Fallback: simple XOR obfuscation (NOT secure, just for testing)
-            logger.warning("KARKOTAKA: cryptography not installed, using fallback")
-            xored = bytes(b ^ self._encryption_key[i % 32] for i, b in enumerate(plaintext))
-            return EncryptedPayload(
-                ciphertext=xored,
-                nonce=b"",
-                key_id=key_id or self._fingerprint,
-                algorithm="XOR-FALLBACK",
-            )
+            import sys
+
+            sys.stderr.write("!!! KARKOTAKA: 'cryptography' library missing. Encryption unavailable.\n")
+            raise RuntimeError("Karkotaka: cryptography library required for encryption")
 
     def decrypt(self, payload: EncryptedPayload) -> bytes:
         """Decrypt an encrypted payload."""
@@ -264,17 +257,16 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
             raise ValueError("No encryption key available")
 
         try:
-            if payload.algorithm == "XOR-FALLBACK":
-                return bytes(b ^ self._encryption_key[i % 32] for i, b in enumerate(payload.ciphertext))
-
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
             aesgcm = AESGCM(self._encryption_key)
             return aesgcm.decrypt(payload.nonce, payload.ciphertext, None)
         except Exception as e:
-            logger.error(f"KARKOTAKA: Decryption failed: {e}")
+            import sys
+
+            sys.stderr.write(f"!!! KARKOTAKA: Decryption failed: {e}\n")
             self._errors += 1
-            raise ValueError(f"Decryption failed: {e}")
+            raise RuntimeError(f"Karkotaka: Decryption failed: {e}") from e
 
     # =========================================================================
     # Secrets Vault
@@ -299,8 +291,10 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
             decrypted = self.decrypt(payload)
             return json.loads(decrypted.decode())
         except Exception as e:
-            logger.error(f"KARKOTAKA: Failed to load vault: {e}")
-            return {}
+            import sys
+
+            sys.stderr.write(f"!!! KARKOTAKA: Failed to load vault: {e}\n")
+            raise RuntimeError(f"Karkotaka vault load failure: {e}") from e
 
     def _save_vault(self, secrets: Dict[str, str]) -> bool:
         """Save secrets to encrypted vault."""
@@ -308,9 +302,13 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
             plaintext = json.dumps(secrets).encode()
             payload = self.encrypt(plaintext)
             self._secrets_file.write_bytes(payload.nonce + payload.ciphertext)
+            # YAMARAJA: Always enforce strict permissions
+            self._secrets_file.chmod(0o600)
             return True
         except Exception as e:
-            logger.error(f"KARKOTAKA: Failed to save vault: {e}")
+            import sys
+
+            sys.stderr.write(f"!!! KARKOTAKA: Failed to save vault: {e}\n")
             self._errors += 1
             return False
 

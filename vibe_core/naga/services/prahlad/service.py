@@ -210,6 +210,9 @@ class PrahladService(
                 if hasattr(self._ledger, "verify_chain"):
                     score.ledger_intact = self._ledger.verify_chain()
             except Exception as e:
+                import sys
+
+                sys.stderr.write(f"!!! PRAHLAD: Audit ledger check failed: {e}\n")
                 logger.warning(f"Error checking ledger: {e}")
                 score.ledger_intact = False
 
@@ -353,13 +356,19 @@ class PrahladService(
         logger.info("PRAHLAD: Initiating Self-Diagnostic (Ouroboros Scan)...")
 
         try:
-            import pytest
+            import subprocess
+            import sys
 
-            args = [test_dir, "-q", "--tb=line"]
+            # YAMARAJA: Use SUBPROCESS instead of in-process pytest.main
+            # Prevents Mohini Ouroboros recursion and allows TIMEOUT.
+            cmd = [sys.executable, "-m", "pytest", test_dir, "-q", "--tb=line"]
             if quiet:
-                args.append("--no-header")
+                cmd.append("--no-header")
 
-            ret_code = pytest.main(args)
+            # 120s Timeout - enough for 700+ tests but prevents infinite hang
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            ret_code = result.returncode
 
             if ret_code == 0:
                 logger.info("PRAHLAD: Self-Check PASSED. NAGA is Watertight.")
@@ -367,14 +376,22 @@ class PrahladService(
                 return True
             else:
                 logger.error(f"PRAHLAD: Self-Check FAILED (Code {ret_code}). NAGA compromised!")
-                self._record_integrity_event(passed=False, exit_code=ret_code)
+                # Log stderr if it failed
+                if result.stderr:
+                    logger.debug(f"PRAHLAD Stderr: {result.stderr}")
+                self._record_integrity_event(passed=False, exit_code=ret_code, error=result.stdout[-500:])
                 return False
 
-        except ImportError:
-            logger.warning("PRAHLAD: pytest not available for self-check")
+        except subprocess.TimeoutExpired:
+            import sys
+
+            sys.stderr.write("!!! PRAHLAD CRITICAL: Integrity check TIMED OUT (120s). Chain compromised?\n")
+            self._record_integrity_event(passed=False, error="TIMEOUT")
             return False
         except Exception as e:
-            logger.error(f"PRAHLAD: Self-check error: {e}")
+            import sys
+
+            sys.stderr.write(f"!!! PRAHLAD CRITICAL: Self-check error: {e}\n")
             self._record_integrity_event(passed=False, error=str(e))
             return False
 
@@ -387,12 +404,24 @@ class PrahladService(
             sesha = ServiceRegistry.get(SeshaProtocol)
             if sesha:
                 sesha.record_event(
-                    event_type="NAGA_INTEGRITY_CHECK",
-                    source="prahlad.verify_self_integrity",
-                    details={"passed": passed, "exit_code": exit_code, "error": error},
+                    {
+                        "event_type": "NAGA_INTEGRITY_CHECK",
+                        "agent_id": "PRAHLAD",
+                        "details": {
+                            "passed": passed,
+                            "exit_code": exit_code,
+                            "error": error,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                        "result": "PASSED" if passed else "FAILED",
+                    }
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+
+            sys.stderr.write(f"!!! PRAHLAD: Failed to record integrity event: {e}\n")
+            # We don't raise here to avoid infinite loop if Sesha is what's failing,
+            # but we ensured it's visible.
 
     # =========================================================================
     # Hardening Suite Export

@@ -313,9 +313,15 @@ class NagaOrchestrator:
 
         # 4. KALIYA - The Quarantine (Isolation Protocol)
         if self._config.kaliya.enabled:
+            # Get StateService for persistence
+            from vibe_core.state.state_service import get_state_service
+
+            state_service = get_state_service()
+
             self._kaliya = KaliyaService(
                 cortex=None,  # Will be wired after cortex creation
                 identity=self._identity,
+                state_service=state_service,
             )
             ServiceRegistry.register(KaliyaProtocol, self._kaliya)
             correction_orchestrator.dispatcher.register_handler(

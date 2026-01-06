@@ -95,7 +95,20 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         self._errors = 0
         self._last_heartbeat = datetime.now()
 
-        logger.info("🐍 SESHA initialized - The Foundation holds")
+        if self._ledger:
+            # YAMARAJA: Boot Integrity Check (Fail-Closed)
+            # Verify we can read the head hash. If this fails, the ledger is broken.
+            try:
+                # Call underlying ledger directly to bypass wrapper error suppression
+                head_hash = self._ledger.get_top_hash()
+                logger.info(f"🐍 SESHA initialized - The Foundation holds (Head: {head_hash[:8]}...)")
+            except Exception as e:
+                import sys
+
+                sys.stderr.write(f"!!! SESHA CRITICAL: Boot integrity check failed: {e}\n")
+                raise RuntimeError(f"Sesha boot failed: {e}") from e
+        else:
+            logger.warning("🐍 SESHA initialized in DEGRADED mode (No Ledger)")
 
     def inject_ledger(self, ledger: "SQLiteLedger") -> None:
         """Inject ledger after construction (for lazy init)."""
@@ -235,10 +248,13 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
 
         Returns:
             List of recent events (newest first)
+
+        Raises:
+            RuntimeError: If ledger is unavailable or read fails (Fail-Closed)
         """
         if not self._ledger:
             sys.stderr.write("!!! SESHA: get_recent_events called but no ledger available\n")
-            return []
+            raise RuntimeError("Sesha: No ledger available")
 
         try:
             events = self._ledger.get_events(limit=limit)
@@ -247,7 +263,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         except Exception as e:
             sys.stderr.write(f"!!! SESHA: get_recent_events failed: {e}\n")
             self._errors += 1
-            return []
+            raise RuntimeError(f"Sesha read failure: {e}") from e
 
     @naga_governed(operation="get_events_by_type")
     def get_events_by_type(self, event_type: str, limit: int = 100) -> List[Dict[str, object]]:
@@ -263,10 +279,13 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
 
         Returns:
             List of matching events (newest first)
+
+        Raises:
+            RuntimeError: If ledger is unavailable or read fails (Fail-Closed)
         """
         if not self._ledger:
             sys.stderr.write("!!! SESHA: get_events_by_type called but no ledger available\n")
-            return []
+            raise RuntimeError("Sesha: No ledger available")
 
         try:
             events = self._ledger.get_events(event_type=event_type, limit=limit)
@@ -275,7 +294,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         except Exception as e:
             sys.stderr.write(f"!!! SESHA: get_events_by_type failed: {e}\n")
             self._errors += 1
-            return []
+            raise RuntimeError(f"Sesha read failure: {e}") from e
 
     # =========================================================================
     # Gossip Sync Protocol
