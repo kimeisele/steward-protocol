@@ -8,6 +8,9 @@ This service implements TÜVProtocol:
 - Audits protocol/implementation alignment
 - Persists leak registry to JSON
 - Tracks churning (value creation)
+
+SCALABILITY: Patterns and critical gaps are loaded from Phoenix config.
+To add a new pattern: edit naga.yaml or NagaConfig.tuv.implementation_patterns
 """
 
 import ast
@@ -17,24 +20,30 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
 from vibe_core.naga.services.base import NagaBaseService
 from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.tuv import (
     ChurnEntry,
+    FindingRegistry,
     Leak,
     LeakPattern,
     LeakSeverity,
     LeakStatus,
     ProtocolAudit,
+    ProtocolCoverageReport,
+    ProtocolGap,
+    ProtocolGapSeverity,
+    ProtocolGapStatus,
     TÜVProtocol,
     TÜVReport,
 )
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
+    from vibe_core.phoenix.sections.naga.section_main import TÜVConfig
 
 logger = logging.getLogger("NAGA.TÜV")
 
@@ -65,16 +74,18 @@ class TÜVService(NagaBaseService):
         self,
         cortex: Optional["NagaCortex"] = None,
         registry_path: Optional[Path] = None,
+        config: Optional["TÜVConfig"] = None,
     ):
         """Initialize TÜV service."""
         super().__init__(service_name="TÜV")
         self._cortex = cortex
         self._registry_path = registry_path or TÜV_REGISTRY_PATH
+        self._config = config  # Will be loaded from Phoenix if None
 
-        # In-memory state (loaded from disk)
-        self._leaks: Dict[str, Leak] = {}
+        # In-memory state - GENERIC REGISTRIES (protocol-first!)
+        self._leaks: FindingRegistry[Leak] = FindingRegistry(Leak, "LEAK")
+        self._gaps: FindingRegistry[ProtocolGap] = FindingRegistry(ProtocolGap, "GAP")
         self._churns: List[ChurnEntry] = []
-        self._next_id = 1
         self._last_heartbeat = datetime.now()
         self._scans_performed = 0
 
@@ -83,18 +94,55 @@ class TÜVService(NagaBaseService):
 
         logger.info("🔍 TÜV initialized - Type Audit Intelligence active")
 
+    def _get_config(self) -> "TÜVConfig":
+        """Get TÜV config, loading from Phoenix if needed."""
+        if self._config is not None:
+            return self._config
+
+        # Lazy load from Phoenix to avoid circular imports
+        try:
+            from vibe_core.phoenix.sections.naga.section_main import TÜVConfig
+
+            # Try to get from Phoenix loader
+            try:
+                from vibe_core.phoenix import get_config
+
+                phoenix_config = get_config()
+                if hasattr(phoenix_config, "naga") and hasattr(phoenix_config.naga, "tuv"):
+                    self._config = phoenix_config.naga.tuv
+                    return self._config
+            except Exception:
+                pass
+
+            # Fall back to defaults
+            self._config = TÜVConfig()
+            return self._config
+
+        except ImportError:
+            # Phoenix not available, create minimal config
+            from vibe_core.phoenix.sections.naga.section_main import TÜVConfig
+
+            self._config = TÜVConfig()
+            return self._config
+
     def get_status(self) -> NagaStatus:
         """Get current status - required for NAGA discovery."""
+        # Using TÜVRegistry.count() - generic filtering!
+        open_leaks = self._leaks.count(status=LeakStatus.OPEN)
+        open_gaps = len(self._gaps.all()) - self._gaps.count(status=ProtocolGapStatus.CLOSED)
+
         return NagaStatus(
             naga_type=NagaType.CHITRAGUPTA,  # Closest type (auditor)
             healthy=True,
             events_processed=self._scans_performed,
-            errors=len([l for l in self._leaks.values() if l.status == LeakStatus.OPEN]),
+            errors=open_leaks + open_gaps,
             last_heartbeat=self._last_heartbeat,
             details={
-                "leaks_total": len(self._leaks),
-                "leaks_open": len([l for l in self._leaks.values() if l.status == LeakStatus.OPEN]),
-                "leaks_healed": len([l for l in self._leaks.values() if l.status == LeakStatus.HEALED]),
+                "leaks_total": len(self._leaks.all()),
+                "leaks_open": open_leaks,
+                "leaks_healed": self._leaks.count(status=LeakStatus.HEALED),
+                "gaps_total": len(self._gaps.all()),
+                "gaps_open": open_gaps,
                 "churns": len(self._churns),
             },
         )
@@ -104,7 +152,7 @@ class TÜVService(NagaBaseService):
     # =========================================================================
 
     def _load_registry(self) -> None:
-        """Load registry from disk."""
+        """Load registry from disk - uses TÜVRegistry.load_list()."""
         if not self._registry_path.exists():
             return
 
@@ -112,20 +160,11 @@ class TÜVService(NagaBaseService):
             with open(self._registry_path) as f:
                 data = json.load(f)
 
-            for leak_data in data.get("leaks", []):
-                leak = Leak(
-                    id=leak_data["id"],
-                    location=leak_data["location"],
-                    pattern=LeakPattern(leak_data["pattern"]),
-                    severity=LeakSeverity(leak_data["severity"]),
-                    status=LeakStatus(leak_data["status"]),
-                    description=leak_data["description"],
-                    antidote=leak_data["antidote"],
-                    detected_at=datetime.fromisoformat(leak_data["detected_at"]),
-                    healed_at=(datetime.fromisoformat(leak_data["healed_at"]) if leak_data.get("healed_at") else None),
-                )
-                self._leaks[leak.id] = leak
+            # Generic loading via TÜVRegistry - NO manual wiring!
+            self._leaks.load_list(data.get("leaks", []))
+            self._gaps.load_list(data.get("gaps", []))
 
+            # Churns are simple, keep manual
             for churn_data in data.get("churns", []):
                 self._churns.append(
                     ChurnEntry(
@@ -137,20 +176,20 @@ class TÜVService(NagaBaseService):
                     )
                 )
 
-            self._next_id = data.get("next_id", len(self._leaks) + 1)
-
-            logger.debug(f"TÜV: Loaded {len(self._leaks)} leaks from registry")
+            logger.debug(f"TÜV: Loaded {len(self._leaks.all())} leaks, {len(self._gaps.all())} gaps")
 
         except Exception as e:
             logger.warning(f"TÜV: Could not load registry: {e}")
 
     def _save_registry(self) -> None:
-        """Save registry to disk."""
+        """Save registry to disk - uses TÜVRegistry.to_list()."""
         try:
             self._registry_path.parent.mkdir(parents=True, exist_ok=True)
 
+            # Generic serialization via TÜVRegistry - NO manual wiring!
             data = {
-                "leaks": [leak.to_dict() for leak in self._leaks.values()],
+                "leaks": self._leaks.to_list(),
+                "gaps": self._gaps.to_list(),
                 "churns": [
                     {
                         "date": c.date,
@@ -161,7 +200,6 @@ class TÜVService(NagaBaseService):
                     }
                     for c in self._churns
                 ],
-                "next_id": self._next_id,
                 "updated_at": datetime.now().isoformat(),
             }
 
@@ -177,15 +215,10 @@ class TÜVService(NagaBaseService):
 
     def register_leak(self, leak: Leak) -> str:
         """Register a new leak. Returns leak ID."""
-        if not leak.id:
-            leak.id = f"LEAK-{self._next_id:03d}"
-            self._next_id += 1
-
-        self._leaks[leak.id] = leak
+        leak_id = self._leaks.register(leak)
         self._save_registry()
-
-        logger.info(f"TÜV: Registered {leak.id} at {leak.location}")
-        return leak.id
+        logger.info(f"TÜV: Registered {leak_id} at {leak.location}")
+        return leak_id
 
     def get_leak(self, leak_id: str) -> Optional[Leak]:
         """Get leak by ID."""
@@ -197,17 +230,8 @@ class TÜVService(NagaBaseService):
         severity: Optional[LeakSeverity] = None,
         pattern: Optional[LeakPattern] = None,
     ) -> List[Leak]:
-        """Query leaks with optional filters."""
-        result = list(self._leaks.values())
-
-        if status:
-            result = [l for l in result if l.status == status]
-        if severity:
-            result = [l for l in result if l.severity == severity]
-        if pattern:
-            result = [l for l in result if l.pattern == pattern]
-
-        return result
+        """Query leaks with optional filters - uses generic TÜVRegistry.filter()."""
+        return self._leaks.filter(status=status, severity=severity, pattern=pattern)
 
     def heal_leak(self, leak_id: str, commit_hash: str = "") -> bool:
         """Mark a leak as healed."""
@@ -386,23 +410,170 @@ class TÜVService(NagaBaseService):
         return audit
 
     # =========================================================================
+    # Protocol Coverage (REPRODUCIBLE INTELLIGENCE)
+    # =========================================================================
+
+    def scan_protocol_coverage(self, base_path: str = "vibe_core") -> ProtocolCoverageReport:
+        """
+        Scan codebase for protocol gaps.
+
+        REPRODUCIBLE intelligence:
+        1. Find all Protocol classes
+        2. Find all services/implementations
+        3. Identify implementations WITHOUT protocols
+        4. Detect scattered implementations (same name pattern, no unified protocol)
+        """
+        path = Path(base_path)
+        if not path.exists():
+            return ProtocolCoverageReport(
+                timestamp=datetime.now(),
+                protocols_found=0,
+                gaps_total=0,
+                gaps_critical=0,
+                gaps_high=0,
+                coverage_percent=0.0,
+                gaps=[],
+            )
+
+        protocols_found: List[str] = []
+        implementations: Dict[str, List[str]] = {}  # pattern -> [locations]
+
+        # Scan for Protocol classes
+        for py_file in path.rglob("*.py"):
+            if "__pycache__" in str(py_file):
+                continue
+
+            try:
+                content = py_file.read_text()
+                tree = ast.parse(content)
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        # Check if it's a Protocol
+                        for base in node.bases:
+                            if isinstance(base, ast.Name) and base.id == "Protocol":
+                                protocols_found.append(node.name)
+                            elif isinstance(base, ast.Attribute) and base.attr == "Protocol":
+                                protocols_found.append(node.name)
+
+                        # Track implementations by pattern
+                        name = node.name
+                        for pattern in self._implementation_patterns():
+                            if name.endswith(pattern):
+                                base_name = name[: -len(pattern)] if pattern else name
+                                if base_name not in implementations:
+                                    implementations[base_name] = []
+                                implementations[base_name].append(f"{py_file}:{name}")
+
+            except Exception:
+                continue
+
+        # Detect gaps
+        gaps: List[ProtocolGap] = []
+
+        # Check for scattered implementations (same base name, multiple classes)
+        for base_name, locations in implementations.items():
+            if len(locations) > 2:  # Multiple implementations
+                protocol_name = f"{base_name}Protocol"
+                if protocol_name not in protocols_found:
+                    gaps.append(
+                        ProtocolGap(
+                            id="",
+                            name=protocol_name,
+                            severity=ProtocolGapSeverity.HIGH,
+                            status=ProtocolGapStatus.IDENTIFIED,
+                            description=f"{len(locations)} scattered implementations without protocol",
+                            existing_implementations=locations[:5],  # First 5
+                            suggested_location=f"protocols/{base_name.lower()}.py",
+                        )
+                    )
+
+        # Check for known critical gaps (loaded from Phoenix config)
+        config = self._get_config()
+        for critical_gap in config.critical_gaps:
+            if critical_gap.name not in protocols_found:
+                gaps.append(
+                    ProtocolGap(
+                        id="",
+                        name=critical_gap.name,
+                        severity=ProtocolGapSeverity.CRITICAL,
+                        status=ProtocolGapStatus.IDENTIFIED,
+                        description=critical_gap.description,
+                        existing_implementations=[],
+                        suggested_location=critical_gap.suggested_location,
+                    )
+                )
+
+        # Calculate coverage
+        total = len(protocols_found) + len(gaps)
+        coverage = (len(protocols_found) / total * 100) if total > 0 else 0.0
+
+        return ProtocolCoverageReport(
+            timestamp=datetime.now(),
+            protocols_found=len(protocols_found),
+            gaps_total=len(gaps),
+            gaps_critical=len([g for g in gaps if g.severity == ProtocolGapSeverity.CRITICAL]),
+            gaps_high=len([g for g in gaps if g.severity == ProtocolGapSeverity.HIGH]),
+            coverage_percent=coverage,
+            gaps=gaps,
+        )
+
+    def _implementation_patterns(self) -> List[str]:
+        """Patterns that indicate an implementation (not a protocol).
+
+        SCALABILITY: Loaded from Phoenix config. Add new patterns via:
+        - naga.yaml: tuv.implementation_patterns: [...]
+        - NagaConfig.tuv.implementation_patterns
+        """
+        return self._get_config().implementation_patterns
+
+    def register_gap(self, gap: ProtocolGap) -> str:
+        """Register a protocol gap. Returns gap ID."""
+        gap_id = self._gaps.register(gap)
+        self._save_registry()
+        logger.info(f"TÜV: Registered {gap_id} - {gap.name}")
+        return gap_id
+
+    def get_gap(self, gap_id: str) -> Optional[ProtocolGap]:
+        """Get gap by ID."""
+        return self._gaps.get(gap_id)
+
+    def get_gaps(
+        self,
+        status: Optional[ProtocolGapStatus] = None,
+        severity: Optional[ProtocolGapSeverity] = None,
+    ) -> List[ProtocolGap]:
+        """Query gaps with optional filters - uses generic TÜVRegistry.filter()."""
+        return self._gaps.filter(status=status, severity=severity)
+
+    def close_gap(self, gap_id: str, protocol_location: str = "") -> bool:
+        """Mark a gap as closed (protocol created)."""
+        gap = self._gaps.get(gap_id)
+        if not gap:
+            return False
+
+        gap.status = ProtocolGapStatus.CLOSED
+        gap.closed_at = datetime.now()
+
+        self._save_registry()
+        logger.info(f"TÜV: Closed {gap_id} - protocol at {protocol_location}")
+        return True
+
+    # =========================================================================
     # Reporting
     # =========================================================================
 
     def get_report(self) -> TÜVReport:
-        """Get full TÜV report."""
-        leaks = list(self._leaks.values())
-        open_leaks = [l for l in leaks if l.status == LeakStatus.OPEN]
-        healed_leaks = [l for l in leaks if l.status == LeakStatus.HEALED]
-
+        """Get full TÜV report - uses TÜVRegistry."""
+        all_leaks = self._leaks.all()
         return TÜVReport(
             timestamp=datetime.now(),
             protocols_checked=0,  # Updated when audits run
             protocols_passed=0,
-            leaks_total=len(leaks),
-            leaks_open=len(open_leaks),
-            leaks_healed=len(healed_leaks),
-            leaks=leaks,
+            leaks_total=len(all_leaks),
+            leaks_open=self._leaks.count(status=LeakStatus.OPEN),
+            leaks_healed=self._leaks.count(status=LeakStatus.HEALED),
+            leaks=all_leaks,
             audits=[],
             churns=self._churns,
         )
@@ -413,13 +584,15 @@ class TÜVService(NagaBaseService):
         self._save_registry()
 
     def get_summary(self) -> Dict[str, int]:
-        """Get summary counts."""
-        leaks = list(self._leaks.values())
+        """Get summary counts - uses TÜVRegistry.count() - NO manual filtering!"""
         return {
-            "leaks_total": len(leaks),
-            "leaks_open": len([l for l in leaks if l.status == LeakStatus.OPEN]),
-            "leaks_workaround": len([l for l in leaks if l.status == LeakStatus.WORKAROUND]),
-            "leaks_healed": len([l for l in leaks if l.status == LeakStatus.HEALED]),
+            "leaks_total": len(self._leaks.all()),
+            "leaks_open": self._leaks.count(status=LeakStatus.OPEN),
+            "leaks_workaround": self._leaks.count(status=LeakStatus.WORKAROUND),
+            "leaks_healed": self._leaks.count(status=LeakStatus.HEALED),
+            "gaps_total": len(self._gaps.all()),
+            "gaps_open": len(self._gaps.all()) - self._gaps.count(status=ProtocolGapStatus.CLOSED),
+            "gaps_critical": self._gaps.count(severity=ProtocolGapSeverity.CRITICAL),
             "churns": len(self._churns),
         }
 
@@ -435,7 +608,7 @@ class TÜVService(NagaBaseService):
         leaks = self.scan_module(base_path)
 
         # Register new leaks (avoid duplicates by location)
-        existing_locations = {l.location for l in self._leaks.values()}
+        existing_locations = {l.location for l in self._leaks.all()}
         new_count = 0
 
         for leak in leaks:

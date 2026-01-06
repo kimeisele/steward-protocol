@@ -150,13 +150,24 @@ from vibe_core.protocols.naga.takshaka import (
 # TÜV (Type Audit Intelligence)
 from vibe_core.protocols.naga.tuv import (
     ChurnEntry,
+    # Findings (Protocol-First)
+    FindableProtocol,
+    FindingRegistry,
     Leak,
+    LeakDict,
     LeakPattern,
     LeakSeverity,
     LeakStatus,
     NullTÜV,
     ProtocolAudit,
+    ProtocolCoverageReport,
+    ProtocolGap,
+    ProtocolGapDict,
+    ProtocolGapSeverity,
+    ProtocolGapStatus,
+    SerializedFinding,
     TÜVProtocol,
+    TÜVRegistry,  # Backward compat alias for FindingRegistry
     TÜVReport,
 )
 from vibe_core.protocols.naga.types import (
@@ -261,11 +272,25 @@ __all__ = [
     # TÜV (Type Audit Intelligence)
     "TÜVProtocol",
     "NullTÜV",
+    "TÜVReport",
+    "ProtocolAudit",
+    "ChurnEntry",
+    # Findings (Protocol-First - reusable by any auditor)
+    "FindableProtocol",
+    "FindingRegistry",
+    "SerializedFinding",
+    # Leak types
     "Leak",
+    "LeakDict",
     "LeakPattern",
     "LeakSeverity",
     "LeakStatus",
-    "ProtocolAudit",
-    "TÜVReport",
-    "ChurnEntry",
+    # Protocol Gap types
+    "ProtocolGap",
+    "ProtocolGapDict",
+    "ProtocolGapSeverity",
+    "ProtocolGapStatus",
+    "ProtocolCoverageReport",
+    # Backward compat
+    "TÜVRegistry",
 ]

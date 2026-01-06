@@ -404,6 +404,116 @@ class VisibilityConfig:
 
 
 @dataclass
+class CriticalGap:
+    """A known critical protocol gap to detect."""
+
+    name: str  # Protocol name to check
+    description: str  # Why it's critical
+    suggested_location: str  # Where it should live
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "CriticalGap":
+        return cls(
+            name=data.get("name", ""),
+            description=data.get("description", ""),
+            suggested_location=data.get("suggested_location", ""),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "suggested_location": self.suggested_location,
+        }
+
+
+@dataclass
+class TÜVConfig:
+    """
+    🔍 TÜV - Type Audit Intelligence configuration.
+
+    Scalability: Add patterns/gaps here, NOT in TÜVService code.
+    """
+
+    enabled: bool = True
+
+    # Patterns that indicate implementations (vs protocols)
+    implementation_patterns: List[str] = field(
+        default_factory=lambda: [
+            "Service",
+            "Handler",
+            "Manager",
+            "Controller",
+            "Provider",
+            "Adapter",
+            "Implementation",
+            "Impl",
+            "Tool",
+            "Identity",
+        ]
+    )
+
+    # Known critical gaps to always check for
+    critical_gaps: List[CriticalGap] = field(
+        default_factory=lambda: [
+            CriticalGap(
+                name="StewardProtocol",
+                description="Namesake protocol missing!",
+                suggested_location="protocols/steward.py",
+            ),
+        ]
+    )
+
+    # Scan settings
+    skip_pycache: bool = True
+    skip_type_checking_blocks: bool = True
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TÜVConfig":
+        # Parse critical gaps
+        gaps_data = data.get("critical_gaps", [])
+        critical_gaps = [CriticalGap.from_dict(g) for g in gaps_data] if gaps_data else None
+
+        return cls(
+            enabled=data.get("enabled", True),
+            implementation_patterns=data.get(
+                "implementation_patterns",
+                [
+                    "Service",
+                    "Handler",
+                    "Manager",
+                    "Controller",
+                    "Provider",
+                    "Adapter",
+                    "Implementation",
+                    "Impl",
+                    "Tool",
+                    "Identity",
+                ],
+            ),
+            critical_gaps=critical_gaps
+            or [
+                CriticalGap(
+                    name="StewardProtocol",
+                    description="Namesake protocol missing!",
+                    suggested_location="protocols/steward.py",
+                ),
+            ],
+            skip_pycache=data.get("skip_pycache", True),
+            skip_type_checking_blocks=data.get("skip_type_checking_blocks", True),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "implementation_patterns": self.implementation_patterns,
+            "critical_gaps": [g.to_dict() for g in self.critical_gaps],
+            "skip_pycache": self.skip_pycache,
+            "skip_type_checking_blocks": self.skip_type_checking_blocks,
+        }
+
+
+@dataclass
 class NagaConfig:
     """
     NAGA Federation Configuration.
@@ -439,6 +549,9 @@ class NagaConfig:
 
     # ===== VISIBILITY MATRIX =====
     visibility: VisibilityConfig = field(default_factory=VisibilityConfig)
+
+    # ===== AUDIT TOOLS =====
+    tuv: TÜVConfig = field(default_factory=TÜVConfig)
 
     # ===== OUROBOROS SELF-GOVERNANCE =====
     verify_on_boot: bool = True  # Run Prahlad self-check at boot
@@ -490,12 +603,15 @@ class NagaConfig:
             narada=NaradaConfig.from_dict(data.get("narada", {})),
             chitragupta=ChitraguptaConfig.from_dict(data.get("chitragupta", {})),
             prahlad=PrahladConfig.from_dict(data.get("prahlad", {})),
+            ananta=AnantaConfig.from_dict(data.get("ananta", {})),
             # Infrastructure Components
             cortex=CortexConfig.from_dict(data.get("cortex", {})),
             flood=FloodConfig.from_dict(data.get("flood", {})),
             commit_watcher=CommitWatcherConfig.from_dict(data.get("commit_watcher", {})),
             # Visibility Matrix
             visibility=VisibilityConfig.from_dict(data.get("visibility", {})),
+            # Audit Tools
+            tuv=TÜVConfig.from_dict(data.get("tuv", {})),
         )
         config._loaded_from_yaml = True
         return config
@@ -512,12 +628,15 @@ class NagaConfig:
             "narada": self.narada.to_dict(),
             "chitragupta": self.chitragupta.to_dict(),
             "prahlad": self.prahlad.to_dict(),
+            "ananta": self.ananta.to_dict(),
             # Infrastructure Components
             "cortex": self.cortex.to_dict(),
             "flood": self.flood.to_dict(),
             "commit_watcher": self.commit_watcher.to_dict(),
             # Visibility Matrix
             "visibility": self.visibility.to_dict(),
+            # Audit Tools
+            "tuv": self.tuv.to_dict(),
         }
 
     def validate(self) -> List[str]:
