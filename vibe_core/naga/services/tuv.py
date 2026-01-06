@@ -44,9 +44,9 @@ TÜV_REGISTRY_PATH = Path(".vibe/state/tuv_registry.json")
 
 @naga_service(
     name="TÜV",
-    lord=NagaLord.TÜV,
+    lord=NagaLord.CHITRAGUPTA,  # Tool under Chitragupta (the Auditor)
     drift_source=None,  # Pure audit, no drift handling
-    priority=70,  # After infrastructure, before governance actions
+    priority=65,  # Below Chitragupta (60), tool for the auditor
     capabilities=[NagaCapability.TYPE_AUDIT, NagaCapability.AUDIT],
     protocol_class="vibe_core.protocols.naga.TÜVProtocol",
 )
@@ -56,6 +56,9 @@ class TÜVService(NagaBaseService):
 
     Implements TÜVProtocol - not documentation, CODE.
     Auto-discovered by Narada via @naga_service decorator.
+
+    HIERARCHY: Prahlad → Chitragupta → TÜV
+    TÜV is an INSTITUTION (tool), not a PERSON (lord).
     """
 
     def __init__(
