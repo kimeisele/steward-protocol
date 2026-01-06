@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
 from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
 from vibe_core.naga.services.base import NagaBaseService
+from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.tuv import (
     ChurnEntry,
     Leak,
@@ -71,11 +72,29 @@ class TÜVService(NagaBaseService):
         self._leaks: Dict[str, Leak] = {}
         self._churns: List[ChurnEntry] = []
         self._next_id = 1
+        self._last_heartbeat = datetime.now()
+        self._scans_performed = 0
 
         # Load existing registry
         self._load_registry()
 
         logger.info("🔍 TÜV initialized - Type Audit Intelligence active")
+
+    def get_status(self) -> NagaStatus:
+        """Get current status - required for NAGA discovery."""
+        return NagaStatus(
+            naga_type=NagaType.CHITRAGUPTA,  # Closest type (auditor)
+            healthy=True,
+            events_processed=self._scans_performed,
+            errors=len([l for l in self._leaks.values() if l.status == LeakStatus.OPEN]),
+            last_heartbeat=self._last_heartbeat,
+            details={
+                "leaks_total": len(self._leaks),
+                "leaks_open": len([l for l in self._leaks.values() if l.status == LeakStatus.OPEN]),
+                "leaks_healed": len([l for l in self._leaks.values() if l.status == LeakStatus.HEALED]),
+                "churns": len(self._churns),
+            },
+        )
 
     # =========================================================================
     # Persistence
