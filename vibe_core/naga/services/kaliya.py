@@ -28,6 +28,7 @@ from vibe_core.naga.kulika import (
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
 from vibe_core.protocols.naga import NagaStatus, NagaType
+from vibe_core.protocols.naga.groups import SecurityProtocol, Subject, Verdict
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
@@ -62,15 +63,17 @@ class QuarantineRecord:
     capabilities=[NagaCapability.ISOLATION],
     protocol_class="vibe_core.protocols.naga.KaliyaProtocol",
 )
-class KaliyaService(NagaBaseService):
+class KaliyaService(NagaBaseService, SecurityProtocol):
     """
     Kaliya - The Quarantine Agent.
 
     Isolates misbehaving components without killing them.
     Tracks violations and escalates after threshold.
 
-
-    OUROBOROS: Inherits NagaBaseService for self-monitoring."""
+    INTERFACE GROUP: SecurityProtocol (intercept, bite, is_quarantined)
+    SEVA: Kaliya ISOLIERT FÜR Prahlad - Krishna verbannte ihn, tötete ihn nicht!
+    OUROBOROS: Inherits NagaBaseService for self-monitoring.
+    """
 
     def __init__(
         self,
@@ -321,3 +324,54 @@ class KaliyaService(NagaBaseService):
                 )
 
         return handler
+
+    # =========================================================================
+    # SecurityProtocol Implementation (Interface Group - Seva for Prahlad)
+    # =========================================================================
+
+    def intercept(self, subject: Subject) -> Verdict:
+        """
+        Judge a subject (SecurityProtocol).
+
+        SEVA: Kaliya intercepts FÜR Prahlad - isolation not death.
+        Krishna didn't kill Kaliya, he banished him to the ocean.
+
+        Args:
+            subject: The subject to judge
+
+        Returns:
+            Verdict: QUARANTINE if isolated, ALLOW otherwise
+        """
+        if self.is_quarantined(subject.identifier):
+            return Verdict.QUARANTINE
+
+        if self.is_escalated(subject.identifier):
+            return Verdict.DENY  # Escalated = blocked until sovereign approval
+
+        # Check violation count
+        violations = self.get_violation_count(subject.identifier)
+        if violations >= self._violation_threshold:
+            return Verdict.QUARANTINE
+
+        return Verdict.ALLOW
+
+    def bite(self, subject: Subject, reason: str) -> None:
+        """
+        Record a violation (SecurityProtocol).
+
+        SEVA: Kaliya "bites" by recording violation FÜR Prahlad.
+        Unlike Takshaka's lethal bite, Kaliya's bite leads to isolation.
+
+        Args:
+            subject: The subject that violated
+            reason: Why they violated
+        """
+        self.record_violation(subject.identifier)
+
+        # If threshold reached, quarantine happens automatically in record_violation
+        # But we also want to record the reason
+        if self.is_quarantined(subject.identifier):
+            record = self._quarantine_registry.get(subject.identifier)
+            if record and not record.reason.startswith("Auto-quarantine"):
+                # Update reason if it was auto-quarantined
+                pass  # Already has reason from quarantine() call
