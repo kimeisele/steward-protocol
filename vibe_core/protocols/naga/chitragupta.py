@@ -18,12 +18,13 @@ Integration:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
@@ -113,7 +114,7 @@ class NullChitragupta:
         return 0.0
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

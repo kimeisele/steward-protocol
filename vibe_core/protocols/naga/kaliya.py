@@ -12,12 +12,13 @@ Responsibilities:
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
@@ -130,7 +131,7 @@ class NullKaliya:
         return False
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

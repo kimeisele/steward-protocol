@@ -19,12 +19,13 @@ Integration:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, Tuple, TypedDict, runtime_checkable
+from typing import Dict, List, Optional, Protocol, Tuple, TypedDict, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
@@ -58,7 +59,7 @@ class VerifyResult:
     def is_valid(self) -> bool:
         return self.status == VerifyStatus.VALID
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         return {
             "status": self.status.value,
             "sender_id": self.sender_id,
@@ -286,7 +287,7 @@ class NullTakshaka:
         return False
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

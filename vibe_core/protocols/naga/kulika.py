@@ -15,9 +15,11 @@ Integration:
 - All services MUST register with Kulika
 """
 
-from typing import Any, List, Optional, Protocol, runtime_checkable
+from typing import List, Optional, Protocol, runtime_checkable
 
-from vibe_core.protocols.naga.types import NagaStatus, NagaType
+# Import types for ANY-elimination
+from vibe_core.protocols.agent import AgentManifest  # Existing type
+from vibe_core.protocols.naga.types import ManifestDict, NagaStatus, NagaType
 
 
 @runtime_checkable
@@ -31,7 +33,7 @@ class KulikaProtocol(Protocol):
         service_class = kulika.get_service_class("sesha")
     """
 
-    def validate_manifest(self, manifest: Any) -> List[str]:
+    def validate_manifest(self, manifest: AgentManifest) -> List[str]:
         """Validate a NagaManifest against schema requirements."""
         ...
 
@@ -39,7 +41,7 @@ class KulikaProtocol(Protocol):
         """Validate a service class for NAGA compliance."""
         ...
 
-    def register_service(self, cls: type, instance: Optional[Any] = None) -> bool:
+    def register_service(self, cls: type, instance: Optional[object] = None) -> bool:
         """Register a NAGA service."""
         ...
 
@@ -47,15 +49,15 @@ class KulikaProtocol(Protocol):
         """Get a registered service class by name."""
         ...
 
-    def get_service_instance(self, name: str) -> Optional[Any]:
+    def get_service_instance(self, name: str) -> Optional[object]:
         """Get a registered service instance by name."""
         ...
 
-    def get_all_manifests(self) -> List[Any]:
+    def get_all_manifests(self) -> List[ManifestDict]:
         """Get all registered NagaManifests."""
         ...
 
-    def get_services_by_capability(self, capability: str) -> List[Any]:
+    def get_services_by_capability(self, capability: str) -> List[object]:
         """Get all services with a specific capability."""
         ...
 
@@ -76,25 +78,25 @@ class KulikaProtocol(Protocol):
 class NullKulika:
     """No-op Kulika for when schema registry is unavailable."""
 
-    def validate_manifest(self, manifest: Any) -> List[str]:
+    def validate_manifest(self, manifest: AgentManifest) -> List[str]:
         return ["Kulika not available"]
 
     def validate_service(self, cls: type) -> List[str]:
         return ["Kulika not available"]
 
-    def register_service(self, cls: type, instance: Optional[Any] = None) -> bool:
+    def register_service(self, cls: type, instance: Optional[object] = None) -> bool:
         return False
 
     def get_service_class(self, name: str) -> Optional[type]:
         return None
 
-    def get_service_instance(self, name: str) -> Optional[Any]:
+    def get_service_instance(self, name: str) -> Optional[object]:
         return None
 
-    def get_all_manifests(self) -> List[Any]:
+    def get_all_manifests(self) -> List[ManifestDict]:
         return []
 
-    def get_services_by_capability(self, capability: str) -> List[Any]:
+    def get_services_by_capability(self, capability: str) -> List[object]:
         return []
 
     def is_registered(self, name: str) -> bool:
