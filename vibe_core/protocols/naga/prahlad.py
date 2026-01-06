@@ -19,15 +19,21 @@ Integration:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
-from vibe_core.protocols.naga.types import NagaStatus, NagaType
+from vibe_core.protocols.naga.types import (
+    ErrorContext,
+    EventDict,
+    NagaStatus,
+    NagaType,
+)
 
 
 @dataclass
@@ -67,11 +73,17 @@ class PrahladProtocol(Protocol):
         score = prahlad.dharma_audit()
     """
 
-    def on_error(self, error_type: str, message: str, component_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    def on_error(
+        self,
+        error_type: str,
+        message: str,
+        component_id: str,
+        context: ErrorContext,
+    ) -> Dict[str, object]:
         """Learn from an error by generating a regression test."""
         ...
 
-    def chaos_probe(self, target: str) -> Dict[str, Any]:
+    def chaos_probe(self, target: str) -> Dict[str, object]:
         """Actively probe a component for weaknesses."""
         ...
 
@@ -83,7 +95,7 @@ class PrahladProtocol(Protocol):
         """Verify crash-restart-resume for a component."""
         ...
 
-    def export_hardening_suite(self) -> List[Dict[str, Any]]:
+    def export_hardening_suite(self) -> List[EventDict]:
         """Export the hardening test suite."""
         ...
 
@@ -104,10 +116,16 @@ class PrahladProtocol(Protocol):
 class NullPrahlad:
     """No-op Prahlad for when resilience testing is unavailable."""
 
-    def on_error(self, error_type: str, message: str, component_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    def on_error(
+        self,
+        error_type: str,
+        message: str,
+        component_id: str,
+        context: ErrorContext,
+    ) -> Dict[str, object]:
         return {}
 
-    def chaos_probe(self, target: str) -> Dict[str, Any]:
+    def chaos_probe(self, target: str) -> Dict[str, object]:
         return {"target": target, "scenarios_tested": 0, "failures": 0}
 
     def dharma_audit(self) -> DharmaScore:
@@ -116,11 +134,11 @@ class NullPrahlad:
     def verify_phoenix_guarantee(self, target: str) -> bool:
         return False
 
-    def export_hardening_suite(self) -> List[Dict[str, Any]]:
+    def export_hardening_suite(self) -> List[EventDict]:
         return []
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

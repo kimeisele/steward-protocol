@@ -19,15 +19,16 @@ Integration:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
-from vibe_core.protocols.naga.types import NagaStatus, NagaType
+from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
 
 
 class SyncStatus(str, Enum):
@@ -44,12 +45,12 @@ class LedgerBlock:
     """A chunk of ledger events for gossip sync."""
 
     sequence: int
-    events: List[Dict[str, Any]]
+    events: List[EventDict]
     hash: str
     prev_hash: str
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         return {
             "sequence": self.sequence,
             "events": self.events,
@@ -115,7 +116,7 @@ class SeshaProtocol(Protocol):
         """Get the current sequence number."""
         ...
 
-    def get_events_since(self, sequence: int) -> List[Dict[str, Any]]:
+    def get_events_since(self, sequence: int) -> List[EventDict]:
         """Get all events since a sequence number."""
         ...
 
@@ -198,7 +199,7 @@ class NullSesha:
     def get_sequence(self) -> int:
         return 0
 
-    def get_events_since(self, sequence: int) -> List[Dict[str, Any]]:
+    def get_events_since(self, sequence: int) -> List[EventDict]:
         return []
 
     def export_blocks(self, since: int = 0, limit: int = 100) -> List[LedgerBlock]:
@@ -211,7 +212,7 @@ class NullSesha:
         return SyncRequest(my_hash="", my_sequence=0, status=SyncStatus.ERROR)
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

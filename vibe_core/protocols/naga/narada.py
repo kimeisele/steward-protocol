@@ -16,9 +16,13 @@ Integration:
 - Enables proactive drift detection
 """
 
-from typing import Any, Dict, List, Protocol, runtime_checkable
+from typing import Callable, Dict, List, ParamSpec, Protocol, TypeVar, runtime_checkable
 
-from vibe_core.protocols.naga.types import NagaStatus, NagaType
+from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
+
+# ParamSpec for proper decorator typing (eliminates Any)
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 @runtime_checkable
@@ -46,11 +50,11 @@ class NaradaProtocol(Protocol):
             return x + y
     """
 
-    def spy(self, func: Any) -> Any:
+    def spy(self, func: Callable[P, R]) -> Callable[P, R]:
         """Decorator to observe function calls."""
         ...
 
-    def export_observations(self) -> List[Dict[str, Any]]:
+    def export_observations(self) -> List[EventDict]:
         """Export and clear observation buffer."""
         ...
 
@@ -67,10 +71,10 @@ class NaradaProtocol(Protocol):
 class NullNarada:
     """No-op Narada for when observation is unavailable."""
 
-    def spy(self, func: Any) -> Any:
+    def spy(self, func: Callable[P, R]) -> Callable[P, R]:
         return func  # Pass-through decorator
 
-    def export_observations(self) -> List[Dict[str, Any]]:
+    def export_observations(self) -> List[EventDict]:
         return []
 
     def get_status(self) -> NagaStatus:

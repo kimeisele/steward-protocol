@@ -7,6 +7,9 @@ Contains:
 - NagaType: The 7 members of NAGA Service Agency
 - StatusDetails: Typed status metrics (no Dict[str, Any])
 - NagaStatus: Service health status
+- EventDict: Typed event structure (Sesha/Vasuki)
+- ErrorContext: Typed error context (Prahlad)
+- ManifestDict: Typed manifest structure (Kulika)
 
 PROMPT.md: "Protocol statt konkrete Klassen"
 """
@@ -14,7 +17,7 @@ PROMPT.md: "Protocol statt konkrete Klassen"
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 
 class NagaType(str, Enum):
@@ -130,3 +133,54 @@ class NagaStatus:
             "message": self.message,
             "details": dict(self.details),
         }
+
+
+# =============================================================================
+# KURUKSHETRA WEAPONS (TypedDicts to replace Any)
+# =============================================================================
+
+
+class EventDict(TypedDict, total=False):
+    """
+    Typed event structure for Sesha and Vasuki.
+    Replaces Dict[str, Any].
+    """
+
+    event_type: str
+    agent_id: str
+    timestamp: str
+    details: Dict[str, object]
+    signature: Optional[str]
+    sequence: int
+    hash: str
+
+
+class ErrorContext(TypedDict, total=False):
+    """
+    Typed error context for Prahlad.
+    Replaces Dict[str, Any].
+    """
+
+    traceback: str
+    locals: Dict[str, str]
+    input_data: str
+    user_id: str
+    component: str
+    severity: str
+
+
+class ManifestDict(TypedDict, total=False):
+    """
+    Typed manifest structure for Kulika.
+    Replaces Dict[str, Any].
+    """
+
+    name: str
+    version: str
+    author: str
+    description: str
+    capabilities: List[str]
+    dependencies: List[str]
+    config: Dict[str, object]
+    varna: str
+    ashrama: str

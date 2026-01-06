@@ -19,15 +19,16 @@ Integration:
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, AsyncIterator, Dict, List, Optional, Protocol, runtime_checkable
+from typing import AsyncIterator, List, Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.correction import (
     CorrectionHandler,
     HealingResult,
     HealingStatus,
+    HealingStrategy,
     UnifiedDriftReport,
 )
-from vibe_core.protocols.naga.types import NagaStatus, NagaType
+from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
 
 
 @dataclass
@@ -133,7 +134,7 @@ class VasukiProtocol(Protocol):
 
     # === Serialization (Das Quirlen) ===
 
-    def churn_out(self, event: Dict[str, Any]) -> SignedEnvelope:
+    def churn_out(self, event: EventDict) -> SignedEnvelope:
         """
         Transform internal event → signed wire-ready envelope.
 
@@ -148,7 +149,7 @@ class VasukiProtocol(Protocol):
         """
         ...
 
-    def churn_in(self, envelope: SignedEnvelope) -> Dict[str, Any]:
+    def churn_in(self, envelope: SignedEnvelope) -> EventDict:
         """
         Transform wire envelope → internal event.
 
@@ -189,7 +190,7 @@ class VasukiProtocol(Protocol):
 
     # === Boundary Enforcement ===
 
-    def is_internal(self, event: Dict[str, Any]) -> bool:
+    def is_internal(self, event: EventDict) -> bool:
         """Check if event should stay internal (not sent to network)."""
         ...
 
@@ -216,11 +217,11 @@ class VasukiProtocol(Protocol):
 class NullVasuki:
     """No-op Vasuki for when network is unavailable."""
 
-    def churn_out(self, event: Dict[str, Any]) -> SignedEnvelope:
+    def churn_out(self, event: EventDict) -> SignedEnvelope:
         return SignedEnvelope(payload=b"", signature=b"", sender_key="", timestamp=0)
 
-    def churn_in(self, envelope: SignedEnvelope) -> Dict[str, Any]:
-        return {}
+    def churn_in(self, envelope: SignedEnvelope) -> EventDict:
+        return EventDict(event_type="null", agent_id="null", timestamp="0", details={})
 
     async def send(self, target: NodeAddress, envelope: SignedEnvelope) -> SendResult:
         return SendResult(status=SendStatus.FAILED, message="Vasuki not available")
@@ -229,14 +230,14 @@ class NullVasuki:
         return
         yield  # Make it a generator
 
-    def is_internal(self, event: Dict[str, Any]) -> bool:
+    def is_internal(self, event: EventDict) -> bool:
         return True
 
     def get_peers(self) -> List[NodeAddress]:
         return []
 
     def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: Any) -> HealingResult:
+        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
             return HealingResult(
                 drift_id=drift.id,
                 status=HealingStatus.SKIPPED,

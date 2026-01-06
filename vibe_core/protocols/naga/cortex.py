@@ -23,7 +23,7 @@ GAD-000 COMPLIANCE:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from vibe_core.naga.identity import NagaIdentity
@@ -48,7 +48,7 @@ class ThreatSummary:
     severity: float  # 0.0 (low) to 1.0 (critical)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         return {
             "threat_type": self.threat_type,
             "source": self.source,
@@ -66,7 +66,7 @@ class DecisionSummary:
     reason_code: str  # D001, D002, etc.
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         return {
             "action": self.action,
             "target": self.target,
@@ -83,7 +83,7 @@ class PeerHealthSummary:
     healthy_count: int = 0
     degraded_peers: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         return {
             "peer_count": self.peer_count,
             "healthy_count": self.healthy_count,
@@ -157,7 +157,7 @@ class NagaContext:
         """Check if this context has been signed."""
         return self.signature is not None and self.signer_id != ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """Serialize for MANAS consumption."""
         import base64
 
@@ -237,7 +237,7 @@ class ManasFeedback:
     def is_signed(self) -> bool:
         return self.signature is not None and self.signer_id != ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         import base64
 
         return {
@@ -308,7 +308,7 @@ class NagaCortexProtocol(Protocol):
         """Check if Cortex is active and ready."""
         ...
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         """Get Cortex statistics."""
         ...
 
@@ -330,5 +330,5 @@ class NullNagaCortex:
     def is_available(self) -> bool:
         return False
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         return {"available": False, "reason": "NagaCortex not initialized"}
