@@ -24,9 +24,38 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, TypedDict, Union
 
 logger = logging.getLogger("NAGA.Prakriti.Seed")
+
+# Type alias for template variables (stringifiable values)
+TemplateValue = Union[str, int, float, bool]
+
+
+class AttackSeedDict(TypedDict, total=False):
+    """Typed structure for AttackSeed serialization."""
+
+    name: str
+    description: str
+    test_code: str
+    attack_type: str
+    difficulty: int
+    expected_behavior: str
+    discovered_by: str
+    tags: List[str]
+    variables: Dict[str, TemplateValue]
+
+
+class SeedLoaderStats(TypedDict):
+    """Typed statistics from SeedLoader."""
+
+    total_seeds: int
+    by_type: Dict[str, int]
+    by_difficulty: Dict[int, int]
+    total_executions: int
+    total_bypasses: int
+    global_bypass_rate: float
+    seed_dirs: List[str]
 
 
 @dataclass
@@ -59,7 +88,7 @@ class AttackSeed:
     tags: List[str] = field(default_factory=list)
 
     # Variables for template expansion
-    variables: Dict[str, Any] = field(default_factory=dict)
+    variables: Dict[str, TemplateValue] = field(default_factory=dict)
 
     def render(self, **kwargs) -> str:
         """Render test_code with variables."""
@@ -76,22 +105,22 @@ class AttackSeed:
             return 0.0
         return self.times_bypassed / self.times_executed
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> AttackSeedDict:
         """Convert to dictionary for YAML serialization."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "test_code": self.test_code,
-            "attack_type": self.attack_type,
-            "difficulty": self.difficulty,
-            "expected_behavior": self.expected_behavior,
-            "discovered_by": self.discovered_by,
-            "tags": self.tags,
-            "variables": self.variables,
-        }
+        return AttackSeedDict(
+            name=self.name,
+            description=self.description,
+            test_code=self.test_code,
+            attack_type=self.attack_type,
+            difficulty=self.difficulty,
+            expected_behavior=self.expected_behavior,
+            discovered_by=self.discovered_by,
+            tags=self.tags,
+            variables=self.variables,
+        )
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AttackSeed":
+    def from_dict(cls, data: AttackSeedDict) -> "AttackSeed":
         """Create from dictionary (YAML loaded)."""
         return cls(
             name=data["name"],
@@ -310,7 +339,7 @@ class SeedLoader:
             if bypassed:
                 self._seeds[seed_name].times_bypassed += 1
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> SeedLoaderStats:
         """Get statistics about loaded seeds."""
         self.load_seeds()
 

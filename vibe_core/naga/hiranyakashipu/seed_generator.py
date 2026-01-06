@@ -23,12 +23,15 @@ import inspect
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Type
 
 from .seed_loader import AttackSeed
 
 if TYPE_CHECKING:
     from vibe_core.naga.kulika import NagaManifest
+    from vibe_core.naga.scanner import NaradaScanner
+
+    from .living_tests import LivingTestFramework
 
 logger = logging.getLogger("NAGA.NARADA.SEED_GENERATOR")
 
@@ -165,7 +168,7 @@ class NaradaSeedGenerator:
 
         return analyses
 
-    def _analyze_method(self, name: str, method: Any) -> Optional[MethodAnalysis]:
+    def _analyze_method(self, name: str, method: Callable[..., object]) -> Optional[MethodAnalysis]:
         """Analyze a single method."""
         try:
             sig = inspect.signature(method)
@@ -396,8 +399,8 @@ def test_{service_name}_{analysis.name}_mock_escape():
 
 
 def inject_seeds_from_narada(
-    scanner: Any,  # NaradaScanner
-    framework: Any,  # LivingTestFramework
+    scanner: "NaradaScanner",
+    framework: "LivingTestFramework",
 ) -> int:
     """
     Inject dynamically generated seeds from Narada's discoveries.

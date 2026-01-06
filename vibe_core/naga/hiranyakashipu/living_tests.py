@@ -29,11 +29,49 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, List, Optional, Set, TypedDict
 
-from .seed_loader import AttackSeed, SeedLoader
+from .seed_loader import AttackSeed, SeedLoader, SeedLoaderStats
 
 logger = logging.getLogger("NAGA.Prakriti.Living")
+
+
+class TestAnalysisDict(TypedDict, total=False):
+    """Typed analysis results for test execution."""
+
+    has_import_error: bool
+    has_syntax_error: bool
+    has_assertion_error: bool
+    has_timeout: bool
+    is_trivial: bool
+    suspicion_level: int
+    failure_type: Optional[str]
+    detected_patterns: List[str]
+
+
+class EvolutionStats(TypedDict):
+    """Evolution statistics."""
+
+    generation: int
+    mutations_tried: int
+    mutations_successful: int
+    mutation_success_rate: float
+    vulnerabilities_found: int
+
+
+class ResultsStats(TypedDict):
+    """Test results statistics."""
+
+    total_executions: int
+    outcomes: Dict[str, int]
+
+
+class FrameworkStats(TypedDict):
+    """Full framework statistics."""
+
+    seeds: SeedLoaderStats
+    evolution: EvolutionStats
+    results: ResultsStats
 
 
 @dataclass
@@ -47,7 +85,7 @@ class TestResult:
     execution_time_ms: float
     stdout: str
     stderr: str
-    analysis: Dict[str, Any] = field(default_factory=dict)
+    analysis: TestAnalysisDict = field(default_factory=lambda: TestAnalysisDict())
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -309,7 +347,7 @@ class LivingTestFramework:
         stdout: str,
         stderr: str,
         test_code: str,
-    ) -> Dict[str, Any]:
+    ) -> TestAnalysisDict:
         """Analyze test result for patterns."""
         analysis = {
             "has_import_error": False,
@@ -454,7 +492,7 @@ except Exception:
     # STATISTICS
     # ========================================================================
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> FrameworkStats:
         """Get comprehensive statistics."""
         seed_stats = self._seed_loader.get_stats()
 
