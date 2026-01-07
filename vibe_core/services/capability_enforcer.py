@@ -212,30 +212,59 @@ class CapabilityEnforcerService(EnforceProtocol):
 
     def enforce(self, action: str, context: EnforceContext) -> Verdict:
         """
-        Enforce permissions via Atomic Protocol (SAMKHYA).
+        Enforce permissions via Atomic Protocol (SAMKHYA: YAMARAJA MODE).
 
-        Maps generic 'action' to specific permission checks.
+        NRISIMHA UPGRADE:
+        - Strict Anti-Mayavad Check: No Sovereign = No Service.
+        - Identity Binding: Caller ID must match Sovereign ID.
         """
-        allowed = False
-
-        if action == "revoke":
-            # context.resource is the target agent ID
-            # context.caller_id is the revoker
-            allowed = self.can_revoke(context.caller_id, context.resource)
-
-        elif action == "grant":
-            # context.caller_id is the granter
-            allowed = self.can_grant(context.caller_id)
-
-        elif action == "access":
-            # context.resource is the capability ID
-            allowed = self.can_access(context.caller_id, context.resource)
-
-        else:
-            logger.warning(f"❌ Unknown action for enforcement: {action}")
+        # 1. ANTI-MAYAVAD CHECK (The 37th Principle)
+        if not context.sovereign:
+            logger.critical(
+                f"🛑 ANTI-MAYAVAD VIOLATION: Anonymous enforcement attempt. Action: {action}, Caller: {context.caller_id}"
+            )
             return Verdict.DENY
 
-        return Verdict.ALLOW if allowed else Verdict.DENY
+        # 2. IDENTITY BINDING (Satyam)
+        # Wenn der Caller behauptet "Alice" zu sein, muss der Sovereign Key zu "Alice" gehören.
+        if context.caller_id != context.sovereign.identity_id:
+            logger.critical(
+                f"⚠️ IDENTITY MISMATCH: Caller '{context.caller_id}' claims Sovereign '{context.sovereign.identity_id}'"
+            )
+            return Verdict.DENY
+
+        # 3. EXECUTE LOGIC
+        allowed = False
+
+        try:
+            if action == "revoke":
+                # context.resource is the target agent ID
+                allowed = self.can_revoke(context.caller_id, context.resource)
+
+            elif action == "grant":
+                # context.caller_id is the granter
+                allowed = self.can_grant(context.caller_id)
+
+            elif action == "access":
+                # context.resource is the capability ID
+                allowed = self.can_access(context.caller_id, context.resource)
+
+            else:
+                logger.warning(f"❌ Unknown action for enforcement: {action}")
+                return Verdict.DENY
+
+        except Exception as e:
+            logger.error(f"🔥 Enforcer Exception: {str(e)}")
+            return Verdict.ESCALATE  # Fehler im Gesetz -> Eskalation an Mensch/Admin
+
+        # 4. VERDICT & LOGGING (Chitragupta)
+        verdict = Verdict.ALLOW if allowed else Verdict.DENY
+
+        # Log critical denials for audit
+        if verdict == Verdict.DENY:
+            logger.warning(f"🛡️ DENIED: {context.caller_id} -> {action} {context.resource}")
+
+        return verdict
 
     def check(self, action: str) -> bool:
         """
