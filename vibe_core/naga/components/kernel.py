@@ -17,13 +17,13 @@ if TYPE_CHECKING:
     from vibe_core.naga.commit_watcher import NagaCommitWatcher as CommitWatcher
     from vibe_core.naga.cortex.cortex_main import NagaCortex
     from vibe_core.naga.flood import NagaFloodManager
-    from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.kulika import KulikaRegistry
     from vibe_core.naga.ouroboros import NagaOuroboros
     from vibe_core.naga.services.karkotaka import KarkotakaService
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.naga.services.vasuki import VasukiService
+    from vibe_core.protocols.identity import IdentityProtocol
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ class NagaKernel:
     """
 
     # Identity (Atman)
-    identity: "NagaIdentity"
+    identity: "IdentityProtocol"
 
     # Core Infrastructure
     registry: "KulikaRegistry"

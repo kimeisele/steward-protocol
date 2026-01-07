@@ -36,29 +36,30 @@ class TestTrimurti:
         with pytest.raises(FrozenInstanceError):
             kernel.vasuki = MagicMock()
 
-    def test_brahma_bootloader_creation(self):
+    def test_brahma_bootloader_creation(self, tmp_path):
         """Verify NagaBootloader creates a valid Kernel."""
         # Mock load_or_generate_keys and NagaIdentity.from_keys to avoid disk I/O
-        with (
-            patch("vibe_core.naga.components.bootloader.load_or_generate_keys") as mock_keys,
-            patch("vibe_core.naga.components.bootloader.NagaIdentity") as mock_naga_identity_cls,
-            patch("vibe_core.naga.scanner.NaradaScanner"),
-        ):
-            mock_keys.return_value = (b"priv", b"pub")
-            mock_identity = MagicMock()
-            mock_naga_identity_cls.from_keys.return_value = mock_identity
+        config = NagaConfig()
+        # Disable most services for speed/mocking simplicity
+        config.sesha.enabled = False
+        config.vasuki.enabled = False
+        config.takshaka.enabled = False
+        config.cortex.enabled = False
 
-            config = NagaConfig()
-            # Disable most services for speed/mocking simplicity
-            config.sesha.enabled = False
-            config.vasuki.enabled = False
-            config.takshaka.enabled = False
-            config.cortex.enabled = False
+        # Prepare KeyStore in tmp_path (Infrastructure Test)
+        from vibe_core.steward.keystore import FileKeyStore
 
-            kernel = NagaBootloader.boot(config)
+        keystore = FileKeyStore(key_dir=str(tmp_path))
 
-            assert isinstance(kernel, NagaKernel)
-            assert kernel.identity == mock_identity
+        with patch("vibe_core.naga.scanner.NaradaScanner"):
+            kernel = NagaBootloader.boot(config=config, correction_orchestrator=None, key_store=keystore)
+
+            # Verify keys were generated on disk (Real I/O)
+            # Note: naga_federation maps to private.pem/public.pem for legacy compat (FileKeyStore logic)
+            assert (tmp_path / "private.pem").exists()
+            assert (tmp_path / "public.pem").exists()
+
+            assert kernel.identity.fingerprint is not None
             assert kernel.registry is not None
             # Sesha disabled
             assert kernel.sesha is None
