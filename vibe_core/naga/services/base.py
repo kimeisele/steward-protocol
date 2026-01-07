@@ -164,9 +164,13 @@ def cli_governed(
 
                 steward = ServiceRegistry.get(StewardProtocol)
             except Exception:
-                # If Steward is missing, we proceed (Passive Mode)
-                # Fail-open for migration safety
-                pass
+                # FAIL-CLOSED: Sovereign Lockdown (IMPL-218)
+                # If Steward is missing, we engage the Emergency Airbag.
+                from vibe_core.steward.emergency import NullSteward
+
+                steward = NullSteward()
+                # We do NOT log loudly here to avoid spamming stdout on simple commands,
+                # but the NullSteward will block dangerous Ops.
 
             if steward:
                 # Context for the decision
