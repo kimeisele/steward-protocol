@@ -36,7 +36,7 @@ Usage:
 
 import logging
 import threading
-from typing import Callable, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable
+from typing import Any, Callable, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable
 
 logger = logging.getLogger("DI")
 T = TypeVar("T")
@@ -91,6 +91,7 @@ class ServiceRegistry:
 
     _services: Dict[str, object] = {}  # object not Any - heterogeneous but typed
     _factories: Dict[str, Callable[[], object]] = {}
+    _protocols: Dict[Any, List[object]] = {}  # O(1) protocol lookup
     _chaos_injectors: Dict[str, Callable[[], object]] = {}  # Prahlad chaos testing
     _chaos_enabled: bool = False
     _lock = threading.Lock()
@@ -116,7 +117,7 @@ class ServiceRegistry:
     _auto_flooded_services: list[str] = []  # Track which services were auto-wrapped
 
     @classmethod
-    def register(cls, interface: Type[T], instance: T) -> None:
+    def register(cls, interface: Type[T], instance: T, protocols: Optional[List[Any]] = None) -> None:
         """
         Register a concrete instance for an interface.
 
@@ -125,9 +126,14 @@ class ServiceRegistry:
         Args:
             interface: The interface/protocol type (e.g., VibeLedger)
             instance: The concrete implementation (e.g., SQLiteLedger)
+            protocols: Optional list of protocols this service implements (for O(1) matching)
 
         Example:
-            ServiceRegistry.register(VibeLedger, SQLiteLedger("/path/to/db"))
+            ServiceRegistry.register(
+                VibeLedger,
+                SQLiteLedger("/path/to/db"),
+                protocols=[ReadWriteProtocol, SyncProtocol]
+            )
 
         Raises:
             DharmaViolation: If strict mode and critical service is unblessed
@@ -166,6 +172,14 @@ class ServiceRegistry:
                             logger.warning(f"[DI] AUTO-FLOOD failed for {name}: {e}")
 
             cls._services[name] = instance
+
+            # Map Protocols O(1)
+            if protocols:
+                for proto in protocols:
+                    if proto not in cls._protocols:
+                        cls._protocols[proto] = []
+                    cls._protocols[proto].append(instance)
+
             logger.debug(f"[DI] Registered: {name}")
 
     @classmethod
@@ -236,6 +250,7 @@ class ServiceRegistry:
 
         SAMKHYA ARCHITECTURE:
         This is the "Act = Plan" enabler. It finds all "Verbs" available.
+        Uses O(1) protocol map if registered explicitly, O(n) scan otherwise.
 
         Examples:
             # Get all things that can be read/written
@@ -249,16 +264,15 @@ class ServiceRegistry:
 
         Returns:
             List of service instances implementing the interface
-
-        Note:
-            This currently only searches INSTANTIATED services in `_services`.
-            It does NOT force instantiation of factories to avoid side effects.
-            If a service is only a factory, it won't be returned until accessed once.
         """
         with cls._lock:
-            matches = []
+            # 1. Fast Path: Pre-registered protocols
+            if interface in cls._protocols:
+                return [s for s in cls._protocols[interface]]
 
-            # Check instantiated services
+            # 2. Slow Path: Runtime Type Check (O(n))
+            # Fallback for services registered without explicit 'protocols=[]'
+            matches = []
             for service in cls._services.values():
                 if isinstance(service, interface):
                     matches.append(service)
@@ -296,6 +310,7 @@ class ServiceRegistry:
         """
         with cls._lock:
             cls._services.clear()
+            cls._protocols.clear()
             logger.warning("[DI] Registry reset (test mode)")
 
     @classmethod
@@ -307,6 +322,7 @@ class ServiceRegistry:
         """
         with cls._lock:
             cls._services.clear()
+            cls._protocols.clear()
             cls._factories.clear()
             logger.warning("[DI] Registry fully reset (test mode)")
 

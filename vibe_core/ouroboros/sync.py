@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vibe_core.protocols.universal import SyncProtocol, SyncResult, SyncStatus
+from vibe_core.protocols.universal.types import SovereignContext
 
 from .ingestion import ViolationIngester, ViolationRecord, ViolationSource
 
@@ -345,7 +346,7 @@ class CISyncService(SyncProtocol):
     # SYNC PROTOCOL IMPLEMENTATION (SAMKHYA)
     # =========================================================================
 
-    def sync(self) -> SyncResult:
+    def sync(self, context: Optional[SovereignContext] = None) -> SyncResult:
         """Perform synchronization (Protocol Implementation)."""
         res_dict = self.sync_latest()
 
@@ -358,7 +359,7 @@ class CISyncService(SyncProtocol):
             timestamp=datetime.now(),
         )
 
-    def get_sync_status(self) -> SyncStatus:
+    def get_sync_status(self, context: Optional[SovereignContext] = None) -> SyncStatus:
         """Get current sync status (Protocol Implementation)."""
         status_dict = self.get_sync_status_legacy()
 
@@ -374,7 +375,7 @@ class CISyncService(SyncProtocol):
             details=status_dict,
         )
 
-    def is_synced(self) -> bool:
+    def is_synced(self, context: Optional[SovereignContext] = None) -> bool:
         """Check if synchronized."""
         return self._last_sync is not None
 
