@@ -36,7 +36,7 @@ Usage:
 
 import logging
 import threading
-from typing import Callable, Dict, Optional, Protocol, Type, TypeVar, runtime_checkable
+from typing import Callable, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable
 
 logger = logging.getLogger("DI")
 T = TypeVar("T")
@@ -228,6 +228,42 @@ class ServiceRegistry:
                 return instance
 
             return None
+
+    @classmethod
+    def get_all(cls, interface: Type[T]) -> List[T]:
+        """
+        Get all services that implement the given interface/protocol.
+
+        SAMKHYA ARCHITECTURE:
+        This is the "Act = Plan" enabler. It finds all "Verbs" available.
+
+        Examples:
+            # Get all things that can be read/written
+            configs = ServiceRegistry.get_all(ReadWriteProtocol)
+
+            # Get all things that enforce rules
+            guardians = ServiceRegistry.get_all(EnforceProtocol)
+
+        Args:
+            interface: The protocol or base class to match against
+
+        Returns:
+            List of service instances implementing the interface
+
+        Note:
+            This currently only searches INSTANTIATED services in `_services`.
+            It does NOT force instantiation of factories to avoid side effects.
+            If a service is only a factory, it won't be returned until accessed once.
+        """
+        with cls._lock:
+            matches = []
+
+            # Check instantiated services
+            for service in cls._services.values():
+                if isinstance(service, interface):
+                    matches.append(service)
+
+            return matches
 
     @classmethod
     def require(cls, interface: Type[T]) -> T:
