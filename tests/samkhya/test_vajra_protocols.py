@@ -56,15 +56,21 @@ class TestVajraHardening:
 
     def test_read_write_gad_000(self):
         """Verify ReadWrite Protocol supports GAD-000 patterns."""
+        from vibe_core.protocols.universal import ReadResult
+        from vibe_core.protocols.universal.types import AccessDeniedError, KeyNotFoundError
 
         # Test Reference Implementation
         class SovereignStorage:
-            def read(self, key: str, context: Optional[SovereignContext] = None) -> Any:
-                return "authorized_content"
+            def read(self, key: str, context: Optional[SovereignContext] = None) -> ReadResult:
+                if key == "missing":
+                    raise KeyNotFoundError(f"Key {key} not found")
+
+                # REPAIR: Return Envelope
+                return ReadResult(value="authorized_content", writer=context)
 
             def write(self, key: str, value: Any, context: Optional[SovereignContext] = None) -> None:
                 if not context:
-                    raise PermissionError("Mayavad: No signature")
+                    raise AccessDeniedError("Mayavad: No signature")
 
             def exists(self, key: str, context: Optional[SovereignContext] = None) -> bool:
                 return True
@@ -73,8 +79,19 @@ class TestVajraHardening:
         assert isinstance(storage, ReadWriteProtocol)
 
         # Test Mayavad Rejection (Simulation)
-        with pytest.raises(PermissionError):
+        with pytest.raises(AccessDeniedError):
             storage.write("key", "value", context=None)
+
+        # Test Read Envelope
+        result = storage.read("key")
+        assert isinstance(result, ReadResult)
+        assert result.value == "authorized_content"
+        # Since we passed None as context reader, and mock just returns it as writer (for test)
+        assert result.writer is None
+
+        # Test Not Found
+        with pytest.raises(KeyNotFoundError):
+            storage.read("missing")
 
     def test_protocol_type_safety(self):
         """Verify that classes WITHOUT the correct signature FAIL static checks (spiritually)."""
