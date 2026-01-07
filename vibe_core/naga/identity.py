@@ -20,6 +20,9 @@ from typing import Optional
 logger = logging.getLogger("NAGA.IDENTITY")
 
 
+from vibe_core.protocols.identity import IdentityProtocol
+
+
 @dataclass
 class NagaIdentity:
     """
@@ -33,6 +36,11 @@ class NagaIdentity:
     public_key: str  # PEM format
     private_key: str  # PEM format
     fingerprint: str  # SHA256 of public key
+
+    @property
+    def public_key_pem(self) -> str:
+        """Protocol-compliant alias for public_key."""
+        return self.public_key
 
     @classmethod
     def generate(cls, agent_id: str) -> "NagaIdentity":

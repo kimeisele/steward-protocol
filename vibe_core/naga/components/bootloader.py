@@ -33,7 +33,9 @@ from vibe_core.naga.services.takshaka import TakshakaService
 from vibe_core.naga.services.vasuki import VasukiService
 from vibe_core.phoenix.sections.naga.section_main import NagaConfig
 from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
-from vibe_core.steward.crypto import load_or_generate_keys
+from vibe_core.protocols.identity import IdentityProtocol, KeyStoreProtocol
+from vibe_core.steward.crypto import generate_keys
+from vibe_core.steward.keystore import FileKeyStore
 
 logger = logging.getLogger("NAGA.BRAHMA")
 
@@ -45,7 +47,10 @@ class NagaBootloader:
 
     @classmethod
     def boot(
-        cls, config: Optional[NagaConfig], correction_orchestrator: "CorrectionOrchestratorProtocol" = None
+        cls,
+        config: Optional[NagaConfig],
+        correction_orchestrator: "CorrectionOrchestratorProtocol" = None,
+        key_store: Optional[KeyStoreProtocol] = None,
     ) -> "NagaKernel":
         """
         The Act of Creation.
@@ -61,9 +66,23 @@ class NagaBootloader:
         discovered = scanner.scan()
         logger.info(f"🔍 Narada discovered {len(discovered)} NAGA services")
 
-        # 0. Identity (Atman) - IMPL-214 Persistence
-        priv, pub = load_or_generate_keys()
-        identity = NagaIdentity.from_keys(agent_id="naga_federation", private_key=priv, public_key=pub)
+        # 0. Identity (Atman) - IMPL-214 Persistence (Ashvamedha Refactoring)
+        if key_store is None:
+            key_store = FileKeyStore()
+
+        keys = key_store.load("naga_federation")
+
+        if keys:
+            priv_bytes, pub_bytes = keys
+            priv_pem = priv_bytes.decode("utf-8")
+            pub_pem = pub_bytes.decode("utf-8")
+        else:
+            # Generate new keys (if L1 Missing)
+            logger.info("Generating new keys for naga_federation")
+            priv_pem, pub_pem = generate_keys()
+            key_store.save("naga_federation", priv_pem.encode("utf-8"), pub_pem.encode("utf-8"))
+
+        identity = NagaIdentity.from_keys(agent_id="naga_federation", private_key=priv_pem, public_key=pub_pem)
         logger.info(f"Identity loaded: {identity.fingerprint}")
 
         # 1. Registry
