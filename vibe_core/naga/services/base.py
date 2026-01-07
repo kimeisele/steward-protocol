@@ -46,6 +46,12 @@ class GovernedProtocol(Protocol):
     _service_name: str
 
 
+class SovereignInterrupt(PermissionError):
+    """GAD-000: The 37th Principle intervened. Operation blocked by Steward."""
+
+    pass
+
+
 # =============================================================================
 # UNGOVERNED ESCAPE HATCH - For methods that must NOT be wrapped
 # =============================================================================
@@ -149,6 +155,53 @@ def cli_governed(
                     if not cap_token.has_capability(cap):
                         logger.warning(f"[{service_name}] Missing capability: {cap}")
                         raise PermissionError(f"Missing capability: {cap}")
+
+            # === STAMBHA: SOVEREIGN INTERRUPT ===
+            # The 37th Principle checks alignment BEFORE execution
+            steward = None
+            try:
+                from vibe_core.protocols.steward import StewardProtocol
+
+                steward = ServiceRegistry.get(StewardProtocol)
+            except Exception:
+                # If Steward is missing, we proceed (Passive Mode)
+                # Fail-open for migration safety
+                pass
+
+            if steward:
+                # Context for the decision
+                context = {
+                    "args": str(args[1:])
+                    if len(args) > 1
+                    else [],  # Convert to string for safety/readability in context
+                    "kwargs": kwargs,
+                    "service": service_name,
+                    "capability": cap_token.fingerprint if cap_token else "anonymous",
+                }
+
+                if not steward.sign_off(op_name, context):
+                    msg = f"⛔ SOVEREIGN INTERRUPT: Steward rejected '{op_name}' via {steward.config.role}"
+                    sys.stderr.write(f"{msg}\n")
+                    logger.critical(msg)
+
+                    # Audit the rejection via Sesha
+                    if sesha:
+                        # Avoid circular import issues by using the instance already resolved
+                        try:
+                            sesha.record_event(
+                                {
+                                    "event_type": "SOVEREIGN_INTERRUPT",
+                                    "agent_id": steward.identity.fingerprint,
+                                    "details": {
+                                        "operation": op_name,
+                                        "reason": "Policy Violation",
+                                    },
+                                }
+                            )
+                        except Exception:
+                            pass
+
+                    raise SovereignInterrupt(msg)
 
             # === TAKSHAKA VALIDATION (scan ALL serializable) ===
             if validate_args and takshaka:
