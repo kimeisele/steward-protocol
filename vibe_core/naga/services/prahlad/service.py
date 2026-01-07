@@ -337,6 +337,105 @@ class PrahladService(
         return result
 
     # =========================================================================
+    # Red Gate (Active Hardening via Hiranyakashipu)
+    # =========================================================================
+
+    @naga_governed(operation="run_red_gate")
+    async def run_red_gate(self, target_module: str = "vibe_core.naga") -> dict:
+        """
+        Run Hiranyakashipu attacks using LivingTestFramework.
+
+        This is the RED GATE.
+        Prahlad invites the attacks to prove the system is Watertight.
+
+        The Lila: Prahlad doesn't fight - he endures and proves.
+        This method invokes the demon (LivingTestFramework) so all can witness
+        that Narasimha (Steward/Kernel) protects.
+        """
+        # Lazy import to avoid circular dependency
+        try:
+            from vibe_core.naga.hiranyakashipu import LivingTestFramework
+        except ImportError as e:
+            import sys
+
+            sys.stderr.write(f"!!! PRAHLAD: Hiranyakashipu framework missing: {e}\n")
+            return {"error": "framework_missing", "status": "ABORTED"}
+
+        logger.info(f"🐍 PRAHLAD: Opening Red Gate against {target_module}...")
+
+        # 1. Instantiate the Demon (Test Framework)
+        framework = LivingTestFramework()
+
+        # 2. Load the Weapons (Seeds) via HiranyakashipuMixin
+        if not self._attack_seeds:
+            self.load_attack_seeds()
+
+        # Feed seeds to framework
+        count = 0
+        for seed in self._attack_seeds:
+            framework.add_seed(seed)
+            count += 1
+
+        if count == 0:
+            logger.warning("PRAHLAD: No attack seeds loaded!")
+            return {"error": "no_seeds", "status": "ABORTED"}
+
+        logger.debug(f"Loaded {count} seeds into LivingTestFramework")
+
+        # 3. Execute Attacks (The Ordeal)
+        results = await framework.run_all_attacks(target_module)
+
+        # 4. Analyze Survival
+        total = len(results)
+        # "Passed" means the DEFENSE held (attack failed or was caught)
+        survived = sum(1 for r in results if r.passed)
+        # "Bypassed" means the ATTACK succeeded (defense failed)
+        breached = sum(1 for r in results if r.bypassed)
+
+        # 5. Record to Sesha (The Legend)
+        self._record_red_gate_results(results, total, survived, breached)
+
+        status = "INVINCIBLE" if breached == 0 else "VULNERABLE"
+        logger.info(f"🐍 PRAHLAD Red Gate Result: {status} ({survived}/{total} attacks blocked)")
+
+        self._last_heartbeat = datetime.now()
+
+        return {
+            "status": status,
+            "total_attacks": total,
+            "blocked": survived,
+            "breached": breached,
+            "breached_seeds": [r.seed_name for r in results if r.bypassed],
+        }
+
+    def _record_red_gate_results(self, results: list, total: int, survived: int, breached: int) -> None:
+        """Record the outcome of the Red Gate ordeal to Sesha."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import SeshaProtocol
+
+            sesha = ServiceRegistry.get(SeshaProtocol)
+            if sesha:
+                sesha.record_event(
+                    {
+                        "event_type": "PRAHLAD_RED_GATE",
+                        "agent_id": "PRAHLAD",
+                        "details": {
+                            "total": total,
+                            "blocked": survived,
+                            "breached": breached,
+                            "breached_seeds": [r.seed_name for r in results if r.bypassed],
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                        "result": "PASSED" if breached == 0 else "FAILED",
+                    }
+                )
+        except Exception as e:
+            import sys
+
+            sys.stderr.write(f"!!! PRAHLAD: Failed to record Red Gate results: {e}\n")
+
+    # =========================================================================
     # OUROBOROS Self-Verification
     # =========================================================================
 
