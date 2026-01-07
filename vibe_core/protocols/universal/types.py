@@ -1,7 +1,24 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+
+# --- GAD-000 IDENTITY TYPES ---
+
+
+@dataclass
+class SovereignContext:
+    """
+    The 37th Principle: Identity Context for all operations.
+    Passing this proves the operation is not 'Mayavad' (Illusion).
+    """
+
+    identity_id: str  # Who is acting? (Purusha)
+    signature: str  # Cryptographic proof (Satyam)
+    timestamp: float = field(default_factory=datetime.now().timestamp)
+    intent_id: Optional[str] = None  # Traceability to Sankalpa (Will)
+    roles: List[str] = field(default_factory=list)  # Claims (e.g. ['admin', 'naga'])
+
 
 # --- SYNC TYPES ---
 
@@ -39,6 +56,7 @@ class EnforceContext:
     action: str
     timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    sovereign: Optional["SovereignContext"] = None  # The Identity claiming rights
 
 
 @dataclass
@@ -58,6 +76,7 @@ class InferenceInput:
     content: str
     context: Dict[str, Any] = field(default_factory=dict)
     source: Optional[str] = None
+    sovereign: Optional["SovereignContext"] = None
 
 
 @dataclass
@@ -72,7 +91,9 @@ class Inference:
 class ClassifyInput:
     content: str
     categories: List[str]
+    # Semantic context for classification
     context: Dict[str, Any] = field(default_factory=dict)
+    sovereign: Optional["SovereignContext"] = None
 
 
 @dataclass
