@@ -439,32 +439,27 @@ class BiorhythmProcessor:
         OUROBOROS WIRE: Sync CI/CD failures from GitHub Actions to local KG.
 
         This closes the feedback loop:
-        CI Failures (remote) → CISyncService → KG → Training
+        CI Failures (remote) → SyncProtocol → KG → Training
 
         Called every 30 ticks (~90s) during Sattva state.
-        Uses gh CLI to fetch failures, so requires authentication.
         """
         try:
-            from vibe_core.ouroboros.sync import CISyncService
+            from vibe_core.protocols.universal import SyncProtocol
 
-            sync = CISyncService()
-
-            # Check if gh CLI is available (no point syncing without it)
-            if not sync._check_gh_cli():
-                logger.debug("[OUROBOROS] gh CLI not available, skipping CI sync")
+            # OPUS-LZ3 Refactor: Use Registry (The Bond) instead of concrete class
+            sync = ServiceRegistry.get(SyncProtocol)
+            if not sync:
+                logger.debug("[OUROBOROS] SyncProtocol not registered, skipping CI sync")
                 return
 
-            result = sync.sync_latest()
+            # Note: We rely on sync() to handle environment checks internally
+            result = sync.sync()
 
-            if result.get("violations_ingested", 0) > 0:
-                logger.info(
-                    f"🔄 OUROBOROS: Synced {result['violations_ingested']} "
-                    f"CI violations from {result.get('run_id', 'unknown')}"
-                )
-            elif result.get("errors"):
-                logger.debug(f"[OUROBOROS] CI sync errors: {result['errors']}")
-        except ImportError:
-            logger.debug("CISyncService not available, skipping CI sync")
+            if result.success and result.items_synced > 0:
+                # Map 'items_synced' back to log format if needed, or just log generically
+                logger.info(f"🔄 OUROBOROS: Synced {result.items_synced} items via SyncProtocol")
+            elif result.error:
+                logger.debug(f"[OUROBOROS] CI sync errors: {result.error}")
         except Exception as e:
             logger.debug(f"CI sync failed: {e}")
 
