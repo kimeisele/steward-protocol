@@ -24,6 +24,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+if TYPE_CHECKING:
+    from vibe_core.protocols.universal import ReadResult, SovereignContext
+
 import yaml
 
 from .section_loader import SectionLoader, SectionMeta
@@ -88,6 +91,123 @@ class PhoenixConfig:
         if "_sections" in self.__dict__ and name in self._sections:
             return self._sections[name]
         raise AttributeError(f"'{type(self).__name__}' has no section '{name}'")
+
+    # =========================================================================
+    # READ/WRITE PROTOCOL (GAD-000 IMPL)
+    # =========================================================================
+
+    def read(self, key: str, context: Optional["SovereignContext"] = None) -> "ReadResult":
+        """
+        Read value by dotted key path (e.g., 'kernel.features.live_fire').
+        Returns ENVELOPE (Value + Provenance).
+        """
+        from datetime import datetime
+
+        from vibe_core.protocols.universal import KeyNotFoundError, ReadResult
+
+        try:
+            value = self._resolve_path(key)
+            # PhoenixConfig is currently file-backed (Sthula), so provenance is "System"
+            # In future, if we track hot-writes, we could store writer metadata sidecar.
+            return ReadResult(value=value, writer=None, timestamp=datetime.now())
+        except (AttributeError, KeyError) as e:
+            raise KeyNotFoundError(f"Config key '{key}' not found: {e}")
+
+    def write(self, key: str, value: Any, context: Optional["SovereignContext"] = None) -> None:
+        """
+        Write value by dotted key path.
+        Enforces Anti-Mayavad: Must be signed by Sovereign.
+        """
+        if not context:
+            from vibe_core.protocols.universal import AccessDeniedError
+
+            raise AccessDeniedError("MAYAVAD: Config mutation requires Sovereign Signature.")
+
+        try:
+            # 1. Resolve Parent
+            parts = key.split(".")
+            if len(parts) < 2:
+                raise KeyError(f"Invalid config key '{key}'. Must be 'section.field'")
+
+            section_id = parts[0]
+            field_path = parts[1:]
+
+            # Get Section
+            if section_id not in self._sections:
+                raise KeyError(f"Section '{section_id}' not found")
+
+            obj = self._sections[section_id]
+
+            # Traverse to leaf parent
+            for part in field_path[:-1]:
+                if hasattr(obj, part):
+                    obj = getattr(obj, part)
+                elif isinstance(obj, dict) and part in obj:
+                    obj = obj[part]
+                else:
+                    raise KeyError(f"Path segment '{part}' not found in '{key}'")
+
+            # 2. Set Value (Leaf)
+            leaf = field_path[-1]
+            old_value = None
+
+            if hasattr(obj, leaf):
+                old_value = getattr(obj, leaf)
+                setattr(obj, leaf, value)
+            elif isinstance(obj, dict):
+                old_value = obj.get(leaf)
+                obj[leaf] = value
+            else:
+                # Try dynamic setter if possible, or fail
+                setattr(obj, leaf, value)
+
+            # 3. Audit Log (Karma)
+            logger.info(f"📝 CONFIG CHANGE [Sovereign: {context.identity_id}]: {key} = {value} (was: {old_value})")
+
+            # 4. Save (Persistence)
+            # Note: In a high-throughput system, we might debounce this.
+            # For now, we save immediately to ensure Sthula (Persistence) matches Prana (Memory).
+            self.save()
+
+        except Exception as e:
+            from vibe_core.protocols.universal import ProtocolError
+
+            raise ProtocolError(f"Failed to write config '{key}': {e}")
+
+    def exists(self, key: str, context: Optional["SovereignContext"] = None) -> bool:
+        """Check if key exists."""
+        try:
+            self._resolve_path(key)
+            return True
+        except (KeyError, AttributeError):
+            return False
+
+    def _resolve_path(self, key: str) -> Any:
+        """
+        Helper: Resolve dotted path to value.
+        Does NOT use eval(). Safe traversal.
+        """
+        parts = key.split(".")
+        if not parts:
+            raise KeyError("Empty key")
+
+        # 1. Section Level
+        section_id = parts[0]
+        if section_id not in self._sections:
+            raise KeyError(f"Section '{section_id}' not found")
+
+        current = self._sections[section_id]
+
+        # 2. Deep Traversal
+        for part in parts[1:]:
+            if hasattr(current, part):
+                current = getattr(current, part)
+            elif isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                raise KeyError(f"Path '{part}' not found in '{key}'")
+
+        return current
 
     # =========================================================================
     # Type-hinted properties for IDE support (optional, for core sections only)
