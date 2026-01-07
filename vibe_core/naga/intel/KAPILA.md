@@ -142,3 +142,155 @@ The system is functional but **not observable** when errors occur in Karkotaka/T
 *   **Auditor**: Lord Kapila (Sankhya Avatar)
 *   **Operator**: SS
 *   **Status**: MOSTLY WATERTIGHT (Tamas Remains)
+
+---
+
+# VISHWAKARMA: ARCHITECTURAL ANALYSIS (THE DIVINE ENGINEER)
+
+> *"A palace with one weak pillar falls entirely."*
+
+## STRUCTURAL COHERENCE AUDIT
+
+### 1. DEPENDENCY INJECTION CHAIN ✅
+**Bootloader → Kernel → Services**
+
+| Layer | Injection Method | Status |
+|---|---|---|
+| Identity | `NagaBootloader.boot()` → `FileKeyStore` | ✅ CLEAN |
+| Steward | `NagaBootloader.boot()` → `DigitalSteward` | ✅ CLEAN |
+| Services | `NagaBootloader.boot()` → `KulikaRegistry` | ⚠️ WARNING |
+
+**Issue**: `KulikaRegistry` is separate from `ServiceRegistry`. Services registered in Kulika are NOT automatically in ServiceRegistry.
+
+### 2. PROTOCOL COMPLIANCE ✅
+All core components implement their protocols:
+- `NagaIdentity` → `IdentityProtocol` ✅
+- `DigitalSteward` → `StewardProtocol` ✅
+- `FileKeyStore` → `KeyStoreProtocol` ✅
+
+### 3. LIFECYCLE MANAGEMENT ✅
+**Trimurti Pattern Active**:
+- Brahma (Create) → Vishnu (Preserve) → Shiva (Destroy)
+- `NagaDestructor.destroy()` handles graceful shutdown
+
+---
+
+# CHANAKYA: SECURITY ANALYSIS (THE STRATEGIST)
+
+> *"The enemy of my enemy is my friend. The friend who bypasses my guard is my enemy."*
+
+## ATTACK SURFACE AUDIT
+
+### 🔴 CRITICAL: STEWARD BYPASS (INTERNAL CALLS)
+
+**Finding**: `naga_governed` does NOT consult the Steward!
+
+```python
+# cli_governed (line 159-207) - HAS Steward check ✅
+steward = ServiceRegistry.get(StewardProtocol)
+if not steward.sign_off(op_name, context):
+    raise SovereignInterrupt(msg)
+
+# naga_governed (line 299-399) - NO Steward check ❌
+# Goes straight to Takshaka validation and execution
+```
+
+**Attack Vector**:
+1. Attacker compromises `ServiceA` (any NAGA service)
+2. `ServiceA` calls `ServiceB.dangerous_method()`
+3. `naga_governed` wraps the call but NEVER asks Steward
+4. Steward is bypassed. Sovereignty is violated.
+
+**Severity**: 🔴 CRITICAL
+
+**Recommendation (IMPL-220)**:
+Add Steward check to `naga_governed` OR create explicit trust boundaries between services.
+
+---
+
+### 🟡 WARNING: REGISTRY SCHIZOPHRENIA
+
+**Finding**: Two registries exist in parallel:
+1. `ServiceRegistry` (Global DI) - Used by `base.py` for Steward lookup
+2. `KulikaRegistry` (NAGA Internal) - Used by Bootloader for service wiring
+
+**Attack Vector**:
+- A plugin registers a malicious `SeshaService` in `ServiceRegistry`
+- The real `SeshaService` is in `KulikaRegistry`
+- Depending on which registry is queried, different services respond
+
+**Severity**: 🟡 MEDIUM
+
+**Recommendation (IMPL-221)**:
+`KulikaRegistry` should be a facade over `ServiceRegistry`, not a separate store.
+
+---
+
+### 🟢 DOCUMENTED: UNGOVERNED ESCAPE HATCH
+
+**Finding**: `@ungoverned` decorator exists (line 60-83)
+
+**Purpose**: Bootstrap methods that run before NAGAs exist.
+
+**Status**: ACCEPTABLE. This is a documented escape hatch with clear semantics.
+Methods marked `@ungoverned` are pure getters or bootstrap code.
+
+---
+
+## TRUST BOUNDARY MAP
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    USER (Human)                      │
+│                         │                            │
+│                    ┌────▼────┐                       │
+│                    │ Steward │ ◀── Sovereign         │
+│                    └────┬────┘                       │
+│                         │ sign_off()                 │
+│     ════════════════════╪═══════════════════════     │
+│                    TRUST BOUNDARY                    │
+│     ════════════════════╪═══════════════════════     │
+│                         ▼                            │
+│   ┌─────────────────────────────────────────────┐   │
+│   │              cli_governed                    │   │
+│   │         (External Entry Point)               │   │
+│   │            ✅ STEWARD CHECKED                │   │
+│   └─────────────────┬───────────────────────────┘   │
+│                     │                                │
+│                     ▼                                │
+│   ┌─────────────────────────────────────────────┐   │
+│   │             naga_governed                    │   │
+│   │         (Internal NAGA Calls)                │   │
+│   │            ❌ NO STEWARD CHECK               │   │
+│   └─────────────────────────────────────────────┘   │
+│                                                      │
+│   Sesha ◀───▶ Takshaka ◀───▶ Karkotaka              │
+│   (Ledger)    (Safety)       (Secrets)              │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## FINAL VERDICT (CHANAKYA)
+
+| Attack Vector | Severity | Status |
+|---|---|---|
+| Steward Bypass (Internal) | 🔴 CRITICAL | OPEN |
+| Registry Split-Brain | 🟡 MEDIUM | OPEN |
+| Silent Failures (Tamas) | 🟡 MEDIUM | OPEN |
+| Ungoverned Escape | 🟢 LOW | DOCUMENTED |
+| Key Rotation | 🟡 MEDIUM | MANUAL |
+
+**OVERALL**: 🟡 **CONDITIONALLY WATERTIGHT**
+
+The external boundary (CLI) is secure.
+The internal boundary (NAGA-to-NAGA) is UNGUARDED.
+
+**Chanakya says**: *"A fortress with open internal doors is a trap for its own defenders."*
+
+---
+
+**SIGNED:**
+*   **Auditor**: Lord Kapila (Sankhya), Vishwakarma (Architect), Chanakya (Strategist)
+*   **Operator**: SS
+*   **Status**: EXTERNAL WATERTIGHT / INTERNAL GAP
