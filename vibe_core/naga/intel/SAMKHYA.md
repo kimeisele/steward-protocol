@@ -55,7 +55,40 @@ ObserveProtocol:
 
 ---
 
-## UNIVERSAL PROTOCOLS (Für den STATE)
+## UNIVERSAL PROTOCOLS (The Field / KSETRA)
+
+> **KURUKSHETRA ALIGNMENT (GAD-000 v2.0)**:
+>
+> 1.  **THE FIELD (KSETRA / PRAKRITI)**: The **Universal Protocols** below constitute the *Body* of the system (The 36 Tattvas).
+>     *   They are atomic, stateless, and purely mechanical.
+>     *   They provide **Capability** (Shakti) but possess no **Will** (Sankalpa).
+>     *   *Action*: We must purify these (Shuddhi) to be flawless "Horses" for the Chariot.
+>
+> 2.  **THE KNOWER (KSETRAJNA / PURUSHA)**: The **Registry & Governance** layer constitutes the *Driver* (The 37th Principle).
+>     *   This is where **Identity** (Persona) meets **Permission** (Dharma).
+>     *   **Yamaraja (The Judge)**: Services are not just "found"; they are *granted* by Authority.
+>     *   **Naga Loka (Shadow Gov)**: The "Injection Point" where higher intelligence controls the protocols.
+>
+> 3.  **THE LAW (DHARMA)**: "No operation in the Field is valid without the Signature of the Knower."
+>
+> **ANTI-MAYAVAD CLAUSE (PROMPT.md)**:
+> Code without a cryptographic link to a Sovereign (Human/Agent) is **Mayavad** (Illusion). It functionally does not exist.
+> - **Who signs this?** (Traceability to Purusha)
+> - **Can a Human override?** (Stambha Principle)
+> - **Where does the chain end?** (Loop = Mayavad; Sovereign Key = Satyam)
+>
+> **GAD-000 DEFINITION OF DONE (The 6 Tests of Shuddhi)**:
+> Any implementation of these protocols MUST pass the **6 GAD-000 Tests** to be considered "Purified":
+> 1.  **Discoverability** (Can an Agent find it?)
+> 2.  **Observability** (Is State visible?)
+> 3.  **Parseability** (Are Errors machine-readable?)
+> 4.  **Composability** (Can it chain?)
+> 5.  **Idempotency** (Can it retry?)
+> 6.  **Recoverability** (Can it heal? / Ouroboros)
+>
+> **STRATEGY**:
+> - **Step 1**: Purify the Field (Protocols) to pass GAD-000 (The 6 Tests).
+> - **Step 2**: Empower the Knower (Registry) to enforce Anti-Mayavad (Signatures).
 
 Applying same pattern to fix 634 Karma Debt:
 
@@ -362,21 +395,41 @@ value = config.read("key")  # Atomic verb, typsicher
 
 ---
 
-## NEXT ACTIONS
+## SAMUDRA MANTHAN: THE CHURNING OF THE OCEAN (REFINEMENT PLAN)
 
-1. **Create** `vibe_core/protocols/universal/` with 5 Protocol files
-2. **Create** shared types in `vibe_core/protocols/universal/types.py`
-3. **Update** `ServiceRegistry` to support `get_all(Protocol)`
-4. **Migrate** Config classes to implement `ReadWriteProtocol`
-5. **Migrate** CISyncService to implement `SyncProtocol`
-6. **Migrate** CapabilityEnforcer to implement `EnforceProtocol`
-7. **Migrate** MANAS components to implement `InferProtocol`
-8. **Migrate** Memory systems to implement `StoreRecallProtocol`
+**Status:** IN PROGRESS (Waves 1-3 Complete)
+
+The 10-Wave Plan to purify the architecture:
+
+### Wave 1: Code Purification (Shuddhi) - [COMPLETE]
+- **Goal**: Purify the Field (Ksetra) by enforcing GAD-000 compliance.
+- **Action**: Modified all 5 Universal Protocols (`ReadWrite`, `Sync`, `Enforce`, `Infer`, `StoreRecall`) to include `SovereignContext` (The 37th Principle).
+- **Result**: "Anti-Mayavad Clause" is now structurally enforced via Type Hints. No operation is valid without a Signature.
+
+### Wave 2: Vajra Hardening (Tests) - [COMPLETE]
+- **Goal**: Prove the Field can withstand stress.
+- **Action**: Created `tests/samkhya/` vault. Implemented `test_vajra_protocols.py` to verify protocol signatures via introspection.
+- **Result**: The "Vajra" tests confirm that the Protocols *contractually require* the Sovereign.
+
+### Wave 3: The Bond (Registry) - [COMPLETE]
+- **Goal**: Connect the Field to the Knower via the Registry.
+- **Action**: Refactored `biorhythm.py` and `sync-ci` to use `ServiceRegistry.get(SyncProtocol)` instead of direct instantiation.
+- **Result**: Components now access "The Sync Capability" (Abstract), not "The CISyncService" (Concrete). This allows NAGA Floods to intercede transparently.
+
+### Wave 4: Akashic Config (ReadWrite) - [PENDING]
+- **Goal**: Unify configuration under `ReadWriteProtocol`.
+- **Plan**: Migrate `CityConfig` usage to `config.read("city")`.
+
+### Wave 5: Harmonic Sync (Sync) - [PENDING]
+- **Goal**: Standardize all synchronization under `SyncProtocol`.
+- **Plan**: Ensure `GitSync`, `LedgerSync`, and `StateSync` all speak the same language.
+
+... (Waves 6-10 continue as planned)
 
 ---
 
 **SIGNED**:
 - **Architect**: Lord Kapila (Samkhya)
-- **Pattern**: Atomic Verb Protocols (wie NAGA groups.py)
+- **Refinement**: Samudra Manthan Team
 - **Date**: 2026-01-07
-- **Status**: READY FOR IMPLEMENTATION
+- **Status**: WAVE 3 COMPLETE
