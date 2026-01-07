@@ -18,11 +18,12 @@ import inspect
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
+from vibe_core.naga.mixins.tuv import TuvBadge
 from vibe_core.naga.services.base import NagaBaseService
 from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.tuv import (
@@ -619,3 +620,30 @@ class TÜVService(NagaBaseService):
         logger.info(f"TÜV: Scan complete. {new_count} new leaks registered.")
 
         return self.get_report()
+
+    # =========================================================================
+    # Badging (Runtime Certification)
+    # =========================================================================
+
+    def issue_badge(self, target: str) -> TuvBadge:
+        """Issue a runtime badge for a component."""
+        now = datetime.now()
+        expires = now + timedelta(hours=24)  # Default 24h validity
+
+        # Calculate score (Mock logic for now, could use audit results)
+        score = 1.0
+
+        return TuvBadge(
+            entity_id=target,
+            issued_at=now,
+            expires_at=expires,
+            score=score,
+            signature="signed_by_tuv_service",  # TODO: Use Karkotaka
+        )
+
+    def verify_badge(self, badge: TuvBadge) -> bool:
+        """Verify a badge is valid and authentic."""
+        if datetime.now() > badge.expires_at:
+            return False
+        # TODO: verify signature
+        return True
