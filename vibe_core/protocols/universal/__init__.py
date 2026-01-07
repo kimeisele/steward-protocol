@@ -15,6 +15,7 @@ from .types import (
     Inference,
     InferenceInput,
     KeyNotFoundError,
+    MantraInstruction,
     MemoryValue,
     ProtocolError,
     ReadResult,
