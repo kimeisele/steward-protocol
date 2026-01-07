@@ -1,0 +1,8 @@
+{
+    "chain_id": "vibes-mainnet-local",
+    "active_genesis": "GEN-001-HOLOGRAPHIC",
+    "blocks": {
+        "GEN-000": "genesis_block.json",
+        "GEN-001-HOLOGRAPHIC": "genesis_v2_holographic.json"
+    }
+}
