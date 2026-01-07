@@ -54,3 +54,14 @@ class DigitalSteward(StewardProtocol):
                 return False
 
         return True
+
+    def check_limits(self, operation: str) -> bool:
+        """
+        FAST PATH for Internal Calls.
+
+        For now: Pass-through (return True).
+        Future: Implement token-bucket rate limiting based on CognitivePolicy.
+        """
+        # TODO: Implement rate limiting based on self.config.cognitive_policy
+        # For now, we trust internal calls if the parent was validated
+        return True

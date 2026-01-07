@@ -55,3 +55,18 @@ class StewardProtocol(Protocol):
             details: Context arguments and state (args, kwargs, service, capability)
         """
         ...
+
+    def check_limits(self, operation: str) -> bool:
+        """
+        FAST PATH for Internal Calls (Garuda Flying).
+
+        Checks only budget/rate limits, NOT full intent validation.
+        Used when Garuda is flying (internal NAGA-to-NAGA calls).
+
+        Args:
+            operation: Name of the operation
+
+        Returns:
+            True if within limits, False if budget/rate exceeded.
+        """
+        ...

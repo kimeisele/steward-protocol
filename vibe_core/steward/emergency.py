@@ -73,3 +73,12 @@ class NullSteward(StewardProtocol):
         # We perform no logic. We just say NO.
         # This is the "Dead Man's Switch".
         return False
+
+    def check_limits(self, operation: str) -> bool:
+        """
+        LOCKDOWN: Block ALL internal calls.
+
+        If the real Steward is missing, internal calls are also blocked.
+        """
+        # No Steward = No Trust = Block Everything
+        return False

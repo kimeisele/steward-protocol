@@ -325,7 +325,29 @@ def naga_governed(
         def wrapper(self: "NagaBaseService", *args: P.args, **kwargs: P.kwargs) -> R:
             # GARUDA GUARD: Check if already flying (recursion detected)
             if garuda.is_flying:
-                # Garuda is flying -> Nagas hide -> Execute RAW function
+                # INTERNAL CONTEXT (Fast Path) - IMPL-219
+                # We trust the parent call validated intent, but check limits.
+                op_name = operation or func.__name__
+                service_name = getattr(self, "_service_name", self.__class__.__name__)
+
+                # Resolve Steward (Fail-Closed)
+                steward = None
+                try:
+                    from vibe_core.protocols.steward import StewardProtocol
+
+                    steward = ServiceRegistry.get(StewardProtocol)
+                except Exception:
+                    from vibe_core.steward.emergency import NullSteward
+
+                    steward = NullSteward()
+
+                # FAST CHECK (Budget/Rate Only)
+                if not steward.check_limits(op_name):
+                    msg = f"⛔ INTERNAL LIMIT: Steward blocked internal call '{op_name}'"
+                    sys.stderr.write(f"{msg}\n")
+                    raise SovereignInterrupt(msg)
+
+                # Execute (Trusted Internal)
                 return func(self, *args, **kwargs)
 
             # SPREAD WINGS: Enter governed state
