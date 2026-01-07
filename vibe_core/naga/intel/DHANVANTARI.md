@@ -78,13 +78,11 @@ Future Architects, beware of these lingering debts:
     *   Keys live in `.steward/keys/`.
     *   There is currently NO automated rotation logic. If a key is compromised, it must be deleted manually to trigger regeneration.
 
-2.  **Registry Dualism**:
-    *   `ServiceRegistry` (Global DI) vs `KulikaRegistry` (Naga Internal).
-    *   We currently sync them manually in Bootloader. A unified Registry is the next logical step (ADVAITA).
-
-3.  **The Fail-Open Default**:
-    *   In `naga/services/base.py`, if the Steward cannot be loaded, the system *proceeds* (Passive Mode).
-    *   **Goal**: Eventually move to "Fail-Closed" once Steward deployment is 100% stable.
+2.  **SYSTEM LOCKDOWN (Active Feature)**:
+    *   **Architecture**: FAIL-CLOSED.
+    *   **Behavior**: If `steward.yaml` is missing or corrupt, `base.py` engages `NullSteward`.
+    *   **Consequence**: The system enters **Safe Mode**. All write operations are BLOCKED. Only `status` and `help` work.
+    *   **Fix**: Restore valid configuration to unlock the system.
 
 ---
 
