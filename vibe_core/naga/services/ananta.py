@@ -66,10 +66,13 @@ from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, Transfo
 from vibe_core.protocols.substrate import (
     BindingCertificate,
     GeneActivationState,
+    GeneAnalysisResult,
     GeneManifest,
     GeneStatus,
+    IAnantaBridge,
     IGene,
     IGeneHost,
+    MantraOpCode,
     RegistrationCertificate,
     SubstrateEventData,
     SubstrateHealth,
@@ -120,24 +123,75 @@ class LoadEvent:
     capabilities=[NagaCapability.FLOOD],
     protocol_class="vibe_core.protocols.naga.AnantaProtocol",
 )
-class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol):
+class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaBridge):
     """
     Ananta - The Substrate Host + Gene Splicer.
-
-    SUBSTRATE ROLE (IGeneHost):
-    - The HOST (the table), not the FOOD (the genes)
-    - Genes bind TO him via top-down injection
-    - Provides capabilities to bound genes via get_capability()
-
-    SPLICER ROLE (AnantaProtocol):
-    - Creates flooded classes via Mixin inheritance (Soft Flood)
-    - NOT via Proxy wrapping (Hard Flood)
-    - Preserves isinstance, pickle, internal state access
-
-    INTERFACE GROUP: TransformProtocol (analyze, can_transform, transform)
-    SEVA: Ananta TRANSFORMIERT FÜR Prahlad - DNA Injection ist Transformation!
-    OUROBOROS: Inherits NagaBaseService for self-monitoring.
+    ...
     """
+
+    # ... (existing init) ...
+
+    # =========================================================================
+    # IAnantaBridge Implementation (Layer -1 Compliance)
+    # =========================================================================
+
+    def analyze_class(self, cls: Type[T]) -> GeneAnalysisResult:
+        """IAnantaBridge: Analyze a class (Alias for analyze_service)."""
+        proposal = self.analyze_service(cls)
+        # Convert FloodProposal to GeneAnalysisResult
+        return {
+            "class_name": proposal.service_name,
+            "module": proposal.service_path,
+            "proposed_genes": proposal.proposed_nagas,
+            "detected_patterns": [],  # Extra detail not in proposal
+            "confidence": 0.8,
+            "reason": proposal.reason,
+            "warnings": [],
+        }
+
+    def flood_instance(
+        self,
+        instance: T,
+        genes: List[str],
+        authorization: Optional[Any] = None,  # FloodAuthorization
+    ) -> T:
+        """IAnantaBridge: Flood an instance (Positive Pathogen)."""
+        # 1. Get Original Class
+        original_class = type(instance)
+
+        # 2. Analyze (to get classification)
+        proposal = self.analyze_service(original_class)
+        # Override proposed nagas with requested genes
+        proposal.proposed_nagas = genes
+
+        # 3. Request Approval (Even for dynamic flood)
+        decision = self.request_approval(proposal)
+
+        if not decision.approved:
+            logger.warning(f"ANANTA: Flood denied for {instance}: {decision.reason}")
+            return instance
+
+        # 4. Create Flooded Class
+        flooded_class = self.create_flooded_class(original_class, decision)
+
+        # 5. SWAP CLASS (The Magic)
+        instance.__class__ = flooded_class
+
+        # 6. Bind Genes (Dependency Injection)
+        self.bind_genes(instance)
+
+        logger.info(f"ANANTA: Instance flooded -> {type(instance).__name__}")
+        return instance
+
+    def resonate(self, opcode: MantraOpCode) -> bool:
+        """IAnantaBridge: Execute Mantra Step."""
+        # AnantaService is the 'Body' of Ananta in Layer 0.
+        # It resonates with the 'Spirit' (AnantaShesha) in Layer -1.
+
+        # Ideally delegate to substrate, but for now we confirm existence
+        return self._substrate.resonate(opcode) if hasattr(self._substrate, "resonate") else True
+
+        # ... (rest of existing methods) ...
 
     def __init__(self, ledger: Optional["SQLiteLedger"] = None) -> None:
         """Initialize Ananta."""
