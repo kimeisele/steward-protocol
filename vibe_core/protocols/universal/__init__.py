@@ -28,6 +28,7 @@ from .types import (
     SyncStatus,
     Verdict,
 )
+from .union import EntityStatus, UnionProtocol
 
 # NOTE: MantraInstruction has been replaced by MantraOpCode from substrate.py
 # Use MantraOpCode (from .mantra or directly from vibe_core.protocols.substrate)
