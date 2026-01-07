@@ -1,0 +1,201 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.3, pytest-8.4.1, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/ss/Downloads/steward-protocol
+configfile: pyproject.toml
+plugins: anyio-4.9.0, asyncio-1.1.0, timeout-2.4.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+timeout: 120.0s
+timeout method: signal
+timeout func_only: False
+collecting ... collected 1 item
+
+tests/naga/test_orchestrator.py::TestDisabledNagas::test_disabled_sesha FAILED [100%]
+
+=================================== FAILURES ===================================
+____________________ TestDisabledNagas.test_disabled_sesha _____________________
+
+self = <tests.naga.test_orchestrator.TestDisabledNagas object at 0x1123ef9d0>
+mock_ledger = <tests.naga.test_orchestrator.StubLedger object at 0x11240b620>
+mock_correction_orchestrator = <tests.naga.test_orchestrator.StubCorrectionOrchestrator object at 0x112500ad0>
+
+    def test_disabled_sesha(self, mock_ledger, mock_correction_orchestrator):
+        """Disabled Sesha should be None."""
+        from vibe_core.naga import NagaOrchestrator
+        from vibe_core.phoenix.sections.naga.section_main import NagaConfig
+    
+        config = NagaConfig()
+        config.sesha.enabled = False
+    
+>       naga = NagaOrchestrator.bootstrap(
+            ledger=mock_ledger,
+            correction_orchestrator=mock_correction_orchestrator,
+            config=config,
+        )
+
+tests/naga/test_orchestrator.py:191: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/naga/orchestrator.py:160: in bootstrap
+    orchestrator._initialize(ledger, correction_orchestrator, config)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.naga.orchestrator.NagaOrchestrator object at 0x112503e00>
+ledger = <tests.naga.test_orchestrator.StubLedger object at 0x11240b620>
+correction_orchestrator = <tests.naga.test_orchestrator.StubCorrectionOrchestrator object at 0x112500ad0>
+config = NagaConfig(sesha=SeshaConfig(enabled=False, gossip_enabled=False, block_size=100, sync_interval_seconds=60), vasuki=Va...'Impl', 'Tool', 'Identity'], critical_gaps=[], skip_pycache=True, skip_type_checking_blocks=True), verify_on_boot=True)
+
+    def _initialize(
+        self,
+        ledger: "SQLiteLedger",
+        correction_orchestrator: "CorrectionOrchestratorProtocol",
+        config: Optional["NagaConfig"] = None,
+    ) -> None:
+        """
+        Internal initialization - order matters!
+    
+        INFRASTRUCTURE LAYER (Real Nagas 🐍):
+        1. Sesha first (foundation - Data/Truth)
+        2. Takshaka second (guardian - Security)
+        3. Vasuki third (bridge - Network)
+        4. Kaliya fourth (quarantine - Isolation)
+    
+        GOVERNANCE LAYER (Personnel - NOT Nagas):
+        5. Narada (spy - Observation)
+        6. Chitragupta (profiler - Behavioral)
+        7. Prahlad (governor - Resilience) - LAST, oversees all
+        """
+        from vibe_core.naga.identity import NagaIdentity
+        from vibe_core.naga.services.chitragupta import ChitraguptaService
+        from vibe_core.naga.services.kaliya import KaliyaService
+    
+        # Governance Layer
+        from vibe_core.naga.services.narada import NaradaService
+        from vibe_core.naga.services.prahlad import PrahladService
+    
+        # Infrastructure Layer
+        from vibe_core.naga.services.sesha import SeshaService
+        from vibe_core.naga.services.takshaka import TakshakaService
+        from vibe_core.naga.services.vasuki import VasukiService
+        from vibe_core.naga.services.karkotaka import KarkotakaService
+    
+        self._config = self._get_config(config)
+    
+        # -1. NARADA SCANNER - Auto-discover available NAGAs
+        # "Narada unterrichtete Prahlad im Mutterleib" - discovery before birth
+        sys.stderr.write(">>> BOOTSTRAP: Scanning...\n")
+        self._scanner = NaradaScanner()
+        discovered = self._scanner.scan()
+        logger.info(f"🔍 Narada discovered {len(discovered)} NAGA services")
+        sys.stderr.write(f">>> BOOTSTRAP: Scanned {len(discovered)} services.\n")
+    
+        # 0. IDENTITY - GAD-000 37th Principle
+        # Generate sovereign identity for signing decisions
+        sys.stderr.write(">>> BOOTSTRAP: Loading Identity (Persistent)...\n")
+    
+        # FIX: Load persistent keys to match Karkotaka (prevent identity amnesia)
+        from vibe_core.steward.crypto import load_or_generate_keys
+        priv, pub = load_or_generate_keys()
+    
+        self._identity = NagaIdentity.from_keys(
+            agent_id="naga_federation",
+            private_key=priv,
+            public_key=pub
+        )
+        logger.info(f"🔒 NAGA Federation Identity loaded (PERSISTENT): {self._identity.fingerprint}")
+    
+        # 1. SESHA - The Foundation
+        if self._config.sesha.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Sesha...\n")
+            self._sesha = SeshaService(
+                ledger=ledger,
+                block_size=self._config.sesha.block_size,
+            )
+            ServiceRegistry.register(SeshaProtocol, self._sesha)
+            correction_orchestrator.dispatcher.register_handler(
+                DriftSource.STATE,
+                self._sesha.as_handler(),
+                handler_id="sesha",
+                priority=50,
+            )
+            logger.info("🐍 SESHA registered - The Foundation holds")
+    
+        # 1.5 KARKOTAKA - The Magic Cloak (Keys)
+        # Needs to be early for crypto operations
+        if self._config.karkotaka.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Karkotaka...\n")
+            self._karkotaka = KarkotakaService()
+            ServiceRegistry.register(KarkotakaProtocol, self._karkotaka)
+            logger.info("🐍 KARKOTAKA registered - The Magic protects")
+    
+        # 2. TAKSHAKA - The Guardian
+        if self._config.takshaka.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Takshaka...\n")
+            self._takshaka = TakshakaService(
+                sesha=self._sesha,
+                ledger=ledger,
+                trust_mode=self._config.takshaka.trust_mode,
+                toxicity_threshold=self._config.takshaka.toxicity_threshold,
+                rate_limit_rpm=self._config.takshaka.rate_limit_rpm,
+            )
+            ServiceRegistry.register(TakshakaProtocol, self._takshaka)
+            correction_orchestrator.dispatcher.register_handler(
+                DriftSource.COGNITIVE,
+                self._takshaka.as_handler(),
+                handler_id="takshaka",
+                priority=100,  # Highest priority for security
+            )
+            logger.info(f"🐍 TAKSHAKA registered - trust_mode={self._config.takshaka.trust_mode}")
+    
+        # 2.5 NAGA STATE PROXY - Der Politische Kommissar
+        # Wraps StateService with Dharma validation (4 principles)
+        try:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing State Proxy...\n")
+            from vibe_core.services.naga.state_proxy import NagaStateProxy
+            from vibe_core.state.state_service import get_state_service
+    
+            # Get the real StateService
+            real_state = get_state_service()
+    
+            # Wrap it with NAGA protection
+            self._state_proxy = NagaStateProxy(
+                state_service=real_state,
+                takshaka=self._takshaka,
+                strict_mode=True,  # Raise on violations
+            )
+    
+            # Register the proxy as the StateServiceProtocol
+            # Now all callers get NAGA-protected StateService!
+            ServiceRegistry.register(StateServiceProtocol, self._state_proxy)
+            logger.info("🐍 NAGA STATE PROXY registered - Der Kommissar wacht")
+        except Exception as e:
+            # YAMARAJA: No silent failures - emergency log
+            sys.stderr.write(f"!!! NAGA State Proxy failed to initialize: {e}\n")
+            # Non-critical - continue without proxy
+    
+        # 3. VASUKI - The Bridge (needs Sesha and Takshaka)
+        if self._config.vasuki.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Vasuki...\n")
+            # YAMARAJA: Vasuki without Sesha = Agent ohne Gedächtnis = Shell-Skript
+            if self._sesha is None:
+                sys.stderr.write("!!! YAMARAJA: Vasuki enabled but Sesha failed - ABBRUCH\n")
+                sys.stderr.write("!!! Ein Agent ohne Gedächtnis ist kein Agent.\n")
+>               raise SystemExit(1)
+E               SystemExit: 1
+
+vibe_core/naga/orchestrator.py:319: SystemExit
+----------------------------- Captured stderr call -----------------------------
+>>> IMPORTING NAGA ORCHESTRATOR
+>>> BOOTSTRAP: Starting...
+>>> BOOTSTRAP: Orchestrator created, initializing...
+>>> BOOTSTRAP: Scanning...
+>>> BOOTSTRAP: Scanned 12 services.
+>>> BOOTSTRAP: Loading Identity (Persistent)...
+>>> BOOTSTRAP: Initializing Karkotaka...
+>>> BOOTSTRAP: Initializing Takshaka...
+>>> BOOTSTRAP: Initializing State Proxy...
+>>> BOOTSTRAP: Initializing Vasuki...
+!!! YAMARAJA: Vasuki enabled but Sesha failed - ABBRUCH
+!!! Ein Agent ohne Gedächtnis ist kein Agent.
+=========================== short test summary info ============================
+FAILED tests/naga/test_orchestrator.py::TestDisabledNagas::test_disabled_sesha
+============================== 1 failed in 0.72s ===============================

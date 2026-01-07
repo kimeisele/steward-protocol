@@ -1,0 +1,32 @@
+{
+  "registry": {
+    "bad_agent_001": {
+      "component_id": "bad_agent_001",
+      "reason": "Excessive violations",
+      "started_at": "2026-01-07T08:48:04.750247",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "test_component": {
+      "component_id": "test_component",
+      "reason": "testing",
+      "started_at": "2026-01-07T08:48:04.796446",
+      "duration_seconds": 0.1,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    }
+  },
+  "violations": {
+    "test_component": 0
+  },
+  "cycles": {
+    "bad_agent_001": 1,
+    "test_component": 3
+  },
+  "escalated": [
+    "test_component"
+  ]
+}

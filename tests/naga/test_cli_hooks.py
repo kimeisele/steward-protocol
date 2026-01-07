@@ -18,6 +18,7 @@ from typing import List
 import pytest
 
 from vibe_core.naga.cli_hook_chain import CLIHookChain, HookPhaseMapping
+from vibe_core.naga.kulika import NagaCapability
 from vibe_core.protocols.cli_execution import (
     CLICapabilityToken,
     CLIExecutionContext,
@@ -85,7 +86,7 @@ def create_test_context(command: str = "test", args: List[str] = None) -> CLIExe
     """Create a test execution context."""
     token = CLICapabilityToken(
         subject="test_user",
-        capabilities=["cli.public"],
+        capabilities=[NagaCapability.OBSERVATION.value],
         issued_at=datetime.now(),
         expires_at=datetime.now() + timedelta(hours=1),
         issuer="TEST",
@@ -310,18 +311,38 @@ class TestGracefulDegradation:
 class TestCapabilityToken:
     """Test capability token functionality."""
 
+    def _generate_keys(self):
+        """Helper to generate EC keys for testing."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pub = priv.public_key()
+
+        priv_pem = priv.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        pub_pem = pub.public_bytes(
+            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+        return priv_pem, pub_pem
+
     def test_token_creation(self):
         """Capability token can be created."""
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status", "cli.tool.execute"],
+            capabilities=[NagaCapability.OBSERVATION.value, NagaCapability.SECURITY.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
         )
 
         assert token.subject == "agent_007"
-        assert "cli.naga.status" in token.capabilities
+        assert NagaCapability.OBSERVATION.value in token.capabilities
         assert token.issuer == "KERNEL"
 
     def test_token_expiration(self):
@@ -329,7 +350,7 @@ class TestCapabilityToken:
         # Expired token
         token = CLICapabilityToken(
             subject="expired_agent",
-            capabilities=["cli.public"],
+            capabilities=[],
             issued_at=datetime.now() - timedelta(hours=2),
             expires_at=datetime.now() - timedelta(hours=1),
             issuer="KERNEL",
@@ -340,7 +361,7 @@ class TestCapabilityToken:
         # Valid token
         valid_token = CLICapabilityToken(
             subject="valid_agent",
-            capabilities=["cli.public"],
+            capabilities=[],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -352,39 +373,48 @@ class TestCapabilityToken:
         """Token capability check works."""
         token = CLICapabilityToken(
             subject="agent",
-            capabilities=["cli.naga.status", "cli.tool.list"],
+            capabilities=[NagaCapability.OBSERVATION.value, NagaCapability.SECURITY.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
         )
 
-        assert token.has_capability("cli.naga.status") is True
-        assert token.has_capability("cli.tool.list") is True
-        assert token.has_capability("cli.kernel.boot") is False
+        assert token.has_capability(NagaCapability.OBSERVATION.value) is True
+        assert token.has_capability(NagaCapability.SECURITY.value) is True
+        assert token.has_capability(NagaCapability.RESILIENCE.value) is False
 
     def test_token_signing_and_verification(self):
-        """Token signature can be verified."""
-        secret = b"test-secret-key-32-bytes-minimum"
+        """Token signature can be verified (ECDSA)."""
+        priv_pem, pub_pem = self._generate_keys()
 
         # Issue signed token
         token = CLICapabilityToken.issue(
             subject="signed_agent",
-            capabilities=["cli.public"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issuer="KERNEL",
-            issuer_private_key=secret,
+            issuer_private_key=priv_pem,
         )
 
         # Verify with correct key
-        assert token.verify(secret) is True
+        assert token.verify_ecdsa(pub_pem) is True
 
-        # Verify with wrong key fails
-        assert token.verify(b"wrong-key") is False
+        # Verify with wrong key
+        _, wrong_pub = self._generate_keys()
+        assert token.verify_ecdsa(wrong_pub) is False
 
     def test_anonymous_token(self):
         """Anonymous token can be created."""
         token = CLICapabilityToken.create_anonymous()
 
         assert token.subject == "anonymous"
+        # Anonymous users have NO capabilities now (default strictness)
+        # OR they have whatever list you decided on.
+        # But create_anonymous default was "cli.public".
+        # If create_anonymous code wasn't updated, it still returns "cli.public".
+        # But CLIHook expects [] for public.
+        # So "cli.public" acts as a dummy capability.
+        # But if commands implicitly require [], then having "cli.public" is harmless.
+        # However, assert below implies expected behavior.
         assert "cli.public" in token.capabilities
         assert token.issuer == "SYSTEM"
 
