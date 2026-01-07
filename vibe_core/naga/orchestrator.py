@@ -204,6 +204,7 @@ class NagaOrchestrator:
         from vibe_core.naga.identity import NagaIdentity
         from vibe_core.naga.services.chitragupta import ChitraguptaService
         from vibe_core.naga.services.kaliya import KaliyaService
+        from vibe_core.naga.services.karkotaka import KarkotakaService
 
         # Governance Layer
         from vibe_core.naga.services.narada import NaradaService
@@ -213,7 +214,6 @@ class NagaOrchestrator:
         from vibe_core.naga.services.sesha import SeshaService
         from vibe_core.naga.services.takshaka import TakshakaService
         from vibe_core.naga.services.vasuki import VasukiService
-        from vibe_core.naga.services.karkotaka import KarkotakaService
 
         self._config = self._get_config(config)
 
@@ -227,9 +227,15 @@ class NagaOrchestrator:
 
         # 0. IDENTITY - GAD-000 37th Principle
         # Generate sovereign identity for signing decisions
-        sys.stderr.write(">>> BOOTSTRAP: Generating Identity...\n")
-        self._identity = NagaIdentity.generate("naga_federation")
-        logger.info(f"🔑 NAGA Identity: {self._identity.fingerprint}")
+        sys.stderr.write(">>> BOOTSTRAP: Loading Identity (Persistent)...\n")
+
+        # FIX: Load persistent keys to match Karkotaka (prevent identity amnesia)
+        from vibe_core.steward.crypto import load_or_generate_keys
+
+        priv, pub = load_or_generate_keys()
+
+        self._identity = NagaIdentity.from_keys(agent_id="naga_federation", private_key=priv, public_key=pub)
+        logger.info(f"🔒 NAGA Federation Identity loaded (PERSISTENT): {self._identity.fingerprint}")
 
         # 1. SESHA - The Foundation
         if self._config.sesha.enabled:

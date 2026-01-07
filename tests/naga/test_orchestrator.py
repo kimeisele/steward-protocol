@@ -187,6 +187,9 @@ class TestDisabledNagas:
 
         config = NagaConfig()
         config.sesha.enabled = False
+        config.vasuki.enabled = False  # Vasuki depends on Sesha
+        config.flood.enabled = False  # Flood depends on Sesha
+        config.commit_watcher.enabled = False  # CommitWatcher depends on Sesha
 
         naga = NagaOrchestrator.bootstrap(
             ledger=mock_ledger,
@@ -203,6 +206,7 @@ class TestDisabledNagas:
 
         config = NagaConfig()
         config.takshaka.enabled = False
+        config.vasuki.enabled = False  # Vasuki often depends on Takshaka
 
         naga = NagaOrchestrator.bootstrap(
             ledger=mock_ledger,
