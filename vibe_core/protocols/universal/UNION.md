@@ -1,139 +1,136 @@
-# UNION.md - State of the Universal Protocols
+# UNION.md - Protocol Compliance Audit
 
-> "Ekam Sat Vipra Bahudha Vadanti" - Truth is One, the wise call it by many names.
-
----
-
-## The Hierarchy
-
-```
-Layer -1: SUBSTRATE (substrate.py)
-    └── IGeneHost, MantraOpCode, MAHAMANTRA_SEQUENCE
-           │
-Layer 1:  UNIVERSAL PROTOCOLS
-           │
-    ┌──────┴──────────────────────────────────────────────┐
-    │                    OM PROTOCOL                       │
-    │   (The Complete Holon - Implements ALL 8 below)      │
-    └──────────────────────────────────────────────────────┘
-           │
-    ┌──────┼──────┬──────┬──────┬──────┬──────┬──────┐
-    │      │      │      │      │      │      │      │
-  Krishna Rama  Mantra Infer Enforce RW    SR   Sync
-   WHO   WHAT   WHEN   WHY    HOW   WHERE WHENCE WHITHER
-```
+**Layer:** 1 (Universal)
+**Status:** YAMARAJA AUDIT
+**Precedence:** Constitution → GAD-000 → This
 
 ---
 
-## Protocol Summary
+## GAD-000 COMPLIANCE MATRIX
 
-| Protocol | File | Purpose | Key Methods |
-|----------|------|---------|-------------|
-| **OmProtocol** | om.py | UNIFIES ALL | (inherits all) |
-| **KrishnaProtocol** | krishna.py | Identity + Genes | `sovereign_context`, `bind_genes()` |
-| **RamaProtocol** | rama.py | Action/Work | `perform_dharma()` async |
-| **MantraProtocol** | mantra.py | Time/Clock | `chant_mahamantra()`, `surrender()` |
-| **InferProtocol** | infer.py | Thought/Cognition | `infer()`, `classify()`, `evaluate()` |
-| **EnforceProtocol** | enforce.py | Law/Policy | `enforce()`, `check()`, `get_rules()` |
-| **ReadWriteProtocol** | read_write.py | State/Config | `read()`, `write()`, `exists()` |
-| **StoreRecallProtocol** | store_recall.py | Memory | `store()`, `recall()`, `forget()` |
-| **SyncProtocol** | sync.py | Synchronization | `sync()`, `is_synced()` |
-| **UnionProtocol** | union.py | Entity Report | `get_living_entities()` |
+| Protocol | D | O | P | C | I | R | VERDICT |
+|----------|:---:|:---:|:---:|:---:|:---:|:---:|:-------:|
+| **OmProtocol** | ✅ | ✅ | ✅ | ✅ | ❓ | ❓ | ⚠️ |
+| KrishnaProtocol | ✅ | ❌ | ✅ | ✅ | ✅ | ❓ | 🔴 |
+| RamaProtocol | ✅ | ❌ | ✅ | ✅ | ❌ | ❓ | 🔴 |
+| MantraProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| InferProtocol | ✅ | ✅ | ✅ | ✅ | ❓ | ❌ | 🔴 |
+| EnforceProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ |
+| ReadWriteProtocol | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ⚠️ |
+| StoreRecallProtocol | ✅ | ❌ | ✅ | ✅ | ✅ | ❓ | 🔴 |
+| SyncProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| UnionProtocol | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 🔴 |
 
----
-
-## Type Definitions (types.py)
-
-| Type | Purpose |
-|------|---------|
-| `SovereignContext` | 37th Principle Identity (WHO) |
-| `AlignmentScore` | Drift measurement (0.0 - 1.0) |
-| `Resonance` | Heartbeat signal |
-| `DriftContext` | Drift state snapshot |
-| `ReadResult` | Read envelope with provenance |
-| `SyncResult` / `SyncStatus` | Sync state |
-| `Verdict` | ALLOW/DENY/ESCALATE/AUDIT |
-| `EnforceContext` / `Rule` | Policy context |
-| `Inference` / `Classification` | Cognition outputs |
-| `MemoryValue` | Memory envelope |
+**Legend:**
+- D = Discoverability (introspection)
+- O = Observability (status/metrics)
+- P = Parseability (typed errors)
+- C = Composability (pipeable)
+- I = Idempotency (safe retry)
+- R = Recoverability (fallback defined)
 
 ---
 
-## The 8 W's Mapping
+## RED TESTS (Failing)
 
-```
-WHO     → KrishnaProtocol (sovereign_context)
-WHAT    → RamaProtocol (perform_dharma)
-WHEN    → MantraProtocol (chant_mahamantra)
-WHY     → InferProtocol (infer, classify)
-HOW     → EnforceProtocol (enforce, check)
-WHERE   → ReadWriteProtocol (read, write)
-WHENCE  → StoreRecallProtocol (store, recall)
-WHITHER → SyncProtocol (sync, is_synced)
-```
+### 🔴 RED-001: KrishnaProtocol missing `get_status()`
+**Requirement:** GAD-000 Observability
+**File:** `krishna.py`
+**Problem:** No way to observe identity state.
+**Fix:** Add `def get_identity_status(self) -> IdentityStatus`
 
----
+### 🔴 RED-002: RamaProtocol `perform_dharma` not idempotent
+**Requirement:** GAD-000 Idempotency  
+**File:** `rama.py`
+**Problem:** No `idempotency_key` parameter.
+**Fix:** Add `idempotency_key: Optional[str] = None`
 
-## Flows
+### 🔴 RED-003: RamaProtocol missing observability
+**Requirement:** GAD-000 Observability
+**File:** `rama.py`
+**Problem:** No way to see pending/running dharmas.
+**Fix:** Add `def list_pending_dharmas(self) -> List[DharmaStatus]`
 
-### 1. Identity Flow (Pratyabhijna)
-```
-SovereignContext → KrishnaProtocol.bind_genes() → IGeneHost
-```
+### 🔴 RED-004: InferProtocol no fallback defined
+**Requirement:** GAD-000 Recoverability
+**File:** `infer.py`
+**Problem:** What happens if inference fails?
+**Fix:** Add `fallback: Optional[Inference] = None` param
 
-### 2. Work Flow (Karma)
-```
-SovereignContext → RamaProtocol.perform_dharma() → DharmaResult
-```
+### 🔴 RED-005: StoreRecallProtocol missing observability
+**Requirement:** GAD-000 Observability
+**File:** `store_recall.py`
+**Problem:** No `list_keys()` or memory stats.
+**Fix:** Add `def get_memory_stats(self) -> MemoryStats`
 
-### 3. Clock Flow (Kala)
-```
-MantraOpCode → MantraProtocol.chant_mahamantra() → AlignmentScore
-```
+### 🔴 RED-006: UnionProtocol not composable
+**Requirement:** GAD-000 Composability
+**File:** `union.py`
+**Problem:** `get_living_entities()` returns list, not iterator.
+**Fix:** Return `Iterator[EntityStatus]` for streaming.
 
-### 4. Decision Flow (Buddhi)
-```
-InferenceInput → InferProtocol.infer() → Inference
-```
-
-### 5. Policy Flow (Dharma)
-```
-EnforceContext → EnforceProtocol.enforce() → Verdict
-```
-
----
-
-## Dependencies
-
-```
-substrate.py (Layer -1)
-    ↑
-    │ imports: IGeneHost, MantraOpCode, MAHAMANTRA_SEQUENCE
-    │
-krishna.py, mantra.py
-    ↑
-    │ composes into
-    │
-om.py (UNIFIES ALL)
-```
+### 🔴 RED-007: UnionProtocol no recoverability
+**Requirement:** GAD-000 Recoverability
+**File:** `union.py`
+**Problem:** What if entity scan fails mid-way?
+**Fix:** Add `timeout` + partial result handling.
 
 ---
 
-## Errors Found
+## YELLOW WARNINGS
 
-**NONE** - All files import correctly. Clean architecture.
+### ⚠️ WARN-001: OmProtocol idempotency unclear
+**Question:** Is `chant_mahamantra()` safe to retry?
+**Action:** Document retry semantics.
+
+### ⚠️ WARN-002: EnforceProtocol fallback ambiguous
+**Question:** What's the default verdict on error?
+**Action:** Document `DENY` as fail-closed default.
+
+### ⚠️ WARN-003: ReadWriteProtocol observability weak
+**Question:** No `list_keys()` method.
+**Action:** Consider adding for discoverability.
 
 ---
 
-## Who Manages What
+## GREEN (Passing)
 
-| Manager | Responsibility |
-|---------|----------------|
-| `substrate.py` | Foundation DNA (MantraOpCode, IGeneHost) |
-| `types.py` | All TypedDefs + Dataclasses |
-| `om.py` | Unification of all protocols |
-| `__init__.py` | Export surface |
+| Check | Status |
+|-------|:------:|
+| All protocols have `@runtime_checkable` | ✅ |
+| All return typed dataclasses | ✅ |
+| All accept `SovereignContext` | ✅ |
+| MantraOpCode has 16 members | ✅ |
+| MAHAMANTRA_SEQUENCE is 16 steps | ✅ |
+| No `Any` in public signatures | ✅ |
+| All imports resolve | ✅ |
 
 ---
 
-*Last updated: 2026-01-08 00:55*
+## CONSTITUTION COMPLIANCE
+
+| Artikel | Requirement | Status |
+|---------|-------------|:------:|
+| I: Identität | SovereignContext everywhere | ✅ |
+| II: Rechenschaft | Audit trail possible | ⚠️ |
+| III: Governance | Typed constraints | ✅ |
+| IV: Transparenz | Observable state | 🔴 |
+| V: Zustimmung | Context=consent | ✅ |
+| VI: Interop | Protocols standard | ✅ |
+
+---
+
+## NEXT ACTIONS
+
+1. [ ] Fix RED-001: Add `get_identity_status()` to KrishnaProtocol
+2. [ ] Fix RED-002: Add `idempotency_key` to RamaProtocol
+3. [ ] Fix RED-003: Add `list_pending_dharmas()`
+4. [ ] Fix RED-004: Add fallback param to InferProtocol
+5. [ ] Fix RED-005: Add `get_memory_stats()`
+6. [ ] Fix RED-006: Make UnionProtocol streaming
+7. [ ] Fix RED-007: Add timeout + partial handling
+
+---
+
+*Audited: 2026-01-08 00:58*
+*Auditor: YAMARAJA*
