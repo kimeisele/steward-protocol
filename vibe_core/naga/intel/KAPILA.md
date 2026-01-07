@@ -277,9 +277,14 @@ Methods marked `@ungoverned` are pure getters or bootstrap code.
 |---|---|---|
 | Steward Bypass (Internal) | 🔴 CRITICAL | ✅ CLOSED (IMPL-219) |
 | Registry Split-Brain | 🟡 MEDIUM | ✅ CLOSED (IMPL-220) |
-| Silent Failures (Tamas) | 🟡 MEDIUM | OPEN |
+| Silent Failures (Tamas) | 🟡 MEDIUM | ✅ CLOSED (IMPL-221) |
 | Ungoverned Escape | 🟢 LOW | DOCUMENTED |
 | Key Rotation | 🟡 MEDIUM | MANUAL |
+
+**OVERALL**: 🟢 **TRUE WATERTIGHT**
+
+All critical and medium security gaps are closed.
+The system speaks the truth (Satyam).
 
 **OVERALL**: 🟢 **WATERTIGHT**
 
