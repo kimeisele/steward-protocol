@@ -159,3 +159,35 @@ class MemoryValue:
     timestamp: datetime
     ttl: Optional[int] = None
     embedding: Optional[List[float]] = None
+
+
+# --- MANTRA TYPES (THE 634 FIX) ---
+
+
+@dataclass
+class Resonance:
+    """The 16-Bit Instruction Set Signal (Heartbeat)."""
+
+    frequency: float  # The Japa frequency (Hz)
+    amplitude: float  # Signal strength (Alignment)
+    signature: str  # Sovereign Hash
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class DriftContext:
+    """Snapshot of Agentic Drift state."""
+
+    drift_magnitude: float  # Error vector magnitude
+    last_anchor_timestamp: float  # Last confirmed Sovereign interaction
+    hallucination_index: float  # Mayavad likelihood (0.0 - 1.0)
+    process_tree_depth: int  # Recursion depth (Samsara check)
+
+
+@dataclass
+class AlignmentScore:
+    """The measure of alignment with Sovereign Will."""
+
+    score: float  # 1.0 = Perfect Alignment, 0.0 = Mayavad
+    status: str  # "ALIGNED", "DRIFTING", "LOST"
+    corrections_applied: int
