@@ -104,7 +104,7 @@ class ServiceRegistry:
     # NAGA LOKA - Blessing Enforcement (Point of Inception)
     _naga_blessing_enabled: bool = False
     _naga_strict_mode: bool = False  # If True, reject unblessed critical services
-    _auto_flood_enabled: bool = False  # If True, auto-wrap unblessed with NagaProxy
+    _auto_flood_enabled: bool = True  # 🙏 HARE KRISHNA! Auto-wrap ALL services with NagaProxy
     _naga_critical_services: set[str] = {
         # Services that MUST be NAGA-blessed (security critical)
         "PluginServiceProtocol",
