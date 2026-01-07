@@ -202,8 +202,9 @@ def cli_governed(
                                     },
                                 }
                             )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            # SURYA (IMPL-221): No silent failures in security auditing
+                            sys.stderr.write(f"!!! [SESHA] AUDIT LOG FAILED: {e}\n")
 
                     raise SovereignInterrupt(msg)
 
