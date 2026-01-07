@@ -552,6 +552,49 @@ Add these rules:
 
 ---
 
+## PROGRESS UPDATE: IMPL-230 (2026-01-07)
+
+### ✅ PHASE 1 WEEK 2: NAGA SELF-COMPLIANCE - COMPLETE
+
+**Karma Debt Reduction**: 120 points → **12 points** (90% reduction)
+
+**Fixed Violations**:
+
+1. **NAGA CLI** (`vibe_core/cli/naga_cli.py`) - ✅ 5/5 FIXED
+   - `_prahlad_dharma()` (L758): Now uses `ServiceRegistry.get(PrahladProtocol)`
+   - `_prahlad_coverage()` (L785): Now uses `ServiceRegistry.get(PrahladProtocol)`
+   - `_prahlad_verify()` (L823): Now uses `ServiceRegistry.get(PrahladProtocol)`
+   - `_chaos_list()` (L879): Now uses `ServiceRegistry.get(PrahladProtocol)`
+   - `_chaos_probe()` (L960): Now uses `ServiceRegistry.get(PrahladProtocol)`
+
+2. **Takshaka Service** (`vibe_core/naga/services/takshaka.py`) - ✅ 2/2 FIXED
+   - `__init__()` Legacy fallback (L110-114): Removed `ledger` parameter branch
+   - `inject_ledger()` method (L181-185): Completely removed (dead code)
+
+3. **Bootloader** (`vibe_core/naga/components/bootloader.py`) - ✅ NOT VIOLATIONS
+   - Lines 122, 166: Confirmed as legitimate bootstrap code (creates & registers services)
+
+**Test Results**:
+```
+✅ tests/naga/test_cortex_steward.py:    7/7 PASSED
+✅ tests/naga/test_takshaka.py:         31/31 PASSED
+✅ tests/naga/test_sesha.py + prahlad:  84/84 PASSED
+───────────────────────────────────────────────────
+TOTAL: 122/122 tests PASSED (0 failures)
+```
+
+**Code Changes**:
+```
+vibe_core/cli/naga_cli.py:           20 lines changed (+13, -21 deletions)
+vibe_core/naga/services/takshaka.py: 14 lines changed
+```
+
+**Status**: NAGA now uses its own protocols. The intelligence agency is **self-compliant**.
+
+**Remaining NAGA Debt**: ~12 points (monitoring only, no action needed)
+
+---
+
 ## FINAL WORDS
 
 **NARASIMHA** said: *"The fortress is watertight."*

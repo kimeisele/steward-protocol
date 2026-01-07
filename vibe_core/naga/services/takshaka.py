@@ -107,16 +107,12 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
         # YAMARAJA: Use SeshaProtocol (REQUIRED)
         if sesha:
             self._sesha_instance = sesha
-        elif ledger:
-            # Legacy fallback: wrap ledger in SeshaService
-            from vibe_core.naga.services.sesha import SeshaService
-
-            self._sesha_instance = SeshaService(ledger=ledger)
         else:
+            # IMPL-230: Legacy 'ledger' parameter removed - always use SeshaProtocol
             # YAMARAJA: Fail at BOOT, not at USE
             import sys
 
-            sys.stderr.write("!!! TAKSHAKA: sesha (or ledger) is REQUIRED\n")
+            sys.stderr.write("!!! TAKSHAKA: sesha parameter is REQUIRED\n")
             raise SystemExit(1)
 
         self._trust_mode = trust_mode
@@ -178,11 +174,7 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
             re.compile(r"%2e%2e[/\\]"),
         ]
 
-    def inject_ledger(self, ledger: "SQLiteLedger") -> None:
-        """Inject ledger after construction (Legacy)."""
-        from vibe_core.naga.services.sesha import SeshaService
-
-        self._sesha_instance = SeshaService(ledger=ledger)
+    # IMPL-230: inject_ledger() removed - use constructor with sesha parameter
 
     # =========================================================================
     # Pre-Parse Security (Bite First)
