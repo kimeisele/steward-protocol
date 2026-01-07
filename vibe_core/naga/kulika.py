@@ -471,6 +471,7 @@ class KulikaRegistry:
         self,
         cls: Type,
         instance: Optional[Any] = None,
+        force: bool = False,
     ) -> bool:
         """
         Register a NAGA service.
@@ -480,9 +481,13 @@ class KulikaRegistry:
         Args:
             cls: The service class (must have _naga_manifest)
             instance: Optional instance (if already created)
+            force: Allow overwriting existing registration
 
         Returns:
             True if registered successfully
+
+        Raises:
+            ValueError: If service already registered and force=False
         """
         if not hasattr(cls, "_naga_manifest"):
             logger.warning(f"Cannot register {cls.__name__}: no _naga_manifest")
@@ -492,6 +497,13 @@ class KulikaRegistry:
         manifest.registered_at = datetime.now()
 
         name = manifest.name.lower()
+
+        # check for overwrite
+        if name in self._services and not force:
+            raise ValueError(f"Service '{manifest.name}' already registered (use force=True to overwrite)")
+
+        if name in self._services and force:
+            logger.warning(f"Overwriting existing NAGA service: {manifest.name}")
 
         # Store
         self._services[name] = manifest

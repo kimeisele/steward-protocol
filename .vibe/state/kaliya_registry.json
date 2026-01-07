@@ -1,0 +1,66 @@
+{
+  "registry": {
+    "bad_agent_001": {
+      "component_id": "bad_agent_001",
+      "reason": "Excessive violations",
+      "started_at": "2026-01-07T08:48:04.750247",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "test_component": {
+      "component_id": "test_component",
+      "reason": "testing",
+      "started_at": "2026-01-07T08:48:04.796446",
+      "duration_seconds": 0.1,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "comp_123": {
+      "component_id": "comp_123",
+      "reason": "bad behavior",
+      "started_at": "2026-01-07T08:48:04.973716",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "comp_001": {
+      "component_id": "comp_001",
+      "reason": "Auto-quarantine: 8 violations",
+      "started_at": "2026-01-07T08:48:06.061463",
+      "duration_seconds": 300.0,
+      "violation_count": 8,
+      "signer_id": "",
+      "signature": null
+    },
+    "bad_comp": {
+      "component_id": "bad_comp",
+      "reason": "Auto-quarantine: 2 violations",
+      "started_at": "2026-01-07T08:48:05.698868",
+      "duration_seconds": 300.0,
+      "violation_count": 2,
+      "signer_id": "",
+      "signature": null
+    }
+  },
+  "violations": {
+    "test_component": 0,
+    "comp_001": 8,
+    "bad_comp": 2
+  },
+  "cycles": {
+    "bad_agent_001": 1,
+    "test_component": 3,
+    "comp_123": 1,
+    "comp_001": 8,
+    "bad_comp": 4
+  },
+  "escalated": [
+    "test_component",
+    "bad_comp",
+    "comp_001"
+  ]
+}

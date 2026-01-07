@@ -28,6 +28,7 @@ from vibe_core.protocols.cli_execution import (
 
 logger = logging.getLogger("CAPABILITY_CLI")
 
+from vibe_core.naga.kulika import NagaCapability
 
 # =============================================================================
 # CAPABILITY DEFINITIONS - Granular Permissions
@@ -36,26 +37,30 @@ logger = logging.getLogger("CAPABILITY_CLI")
 # Command -> Required Capabilities mapping
 COMMAND_CAPABILITIES: dict[str, List[str]] = {
     # NAGA commands
-    "naga.status": ["cli.naga.status"],
-    "naga.scan": ["cli.naga.scan.read"],
-    "naga.chaos": ["cli.naga.chaos.run"],
+    "naga.status": [NagaCapability.OBSERVATION.value],
+    "naga.scan": [NagaCapability.OBSERVATION.value],
+    "naga.chaos": [NagaCapability.RESILIENCE.value],
     # Tool commands
-    "tool.run": ["cli.tool.execute"],
-    "tool.list": ["cli.public"],
+    "tool.run": [NagaCapability.SECURITY.value],  # Running tools is privileged
+    "tool.list": [NagaCapability.OBSERVATION.value],
     # Kernel commands
-    "kernel.boot": ["cli.kernel.boot"],
-    "kernel.stop": ["cli.kernel.stop"],
+    "kernel.boot": [NagaCapability.SECURITY.value],
+    "kernel.stop": [NagaCapability.SECURITY.value],
     # Default public
-    "help": ["cli.public"],
-    "version": ["cli.public"],
+    "help": [],  # No capability required
+    "version": [],
 }
 
 # Permission level -> minimum capabilities
 PERMISSION_LEVEL_CAPS: dict[CLIPermissionLevel, List[str]] = {
-    CLIPermissionLevel.PUBLIC: ["cli.public"],
-    CLIPermissionLevel.AUTHENTICATED: ["cli.auth"],
-    CLIPermissionLevel.PRIVILEGED: ["cli.privileged"],
-    CLIPermissionLevel.KERNEL: ["cli.kernel"],
+    CLIPermissionLevel.PUBLIC: [],  # No baseline requirement
+    CLIPermissionLevel.AUTHENTICATED: [NagaCapability.OBSERVATION.value],
+    CLIPermissionLevel.PRIVILEGED: [NagaCapability.SECURITY.value, NagaCapability.LEDGER.value],
+    CLIPermissionLevel.KERNEL: [
+        NagaCapability.SECURITY.value,
+        NagaCapability.CRYPTO.value,
+        NagaCapability.SCHEMA.value,
+    ],
 }
 
 
@@ -74,17 +79,17 @@ class CapabilityCLIHook(CLIHookProtocol):
 
     def __init__(
         self,
-        secret_key: Optional[bytes] = None,
+        trusted_keys: Optional[List[str]] = None,
         enforce: bool = True,
     ) -> None:
         """
         Initialize capability hook.
 
         Args:
-            secret_key: Shared secret for HMAC verification (32+ bytes)
+            trusted_keys: List of trusted public keys (PEM format)
             enforce: If True, block invalid tokens. If False, log only.
         """
-        self._secret_key = secret_key or b"dev-secret-replace-in-production"
+        self._trusted_keys = trusted_keys or []
         self._enforce = enforce
 
     @property
@@ -104,11 +109,27 @@ class CapabilityCLIHook(CLIHookProtocol):
 
         token = context.capability_token
 
-        # 1. Check token signature
-        if not token.verify(self._secret_key):
+        # 1. Check token signature (Loop through trusted keys)
+        # GAD-000: "Notariell beglaubigt" - Signature must match ONE trusted issuer
+        is_valid = False
+
+        # Bypass for anonymous tokens if strictly public?
+        # NO. "Zero Trust". Even anonymous access is a capability granted by the system.
+        # However, for bootstrapping, we might need a fallback if no keys are trusted?
+        # No, if no keys are trusted, everything fails (Secure Default).
+
+        if not self._trusted_keys:
+            return self._handle_invalid(context, "No trusted keys configured - cannot verify token")
+
+        for pub_key in self._trusted_keys:
+            if token.verify_ecdsa(pub_key):
+                is_valid = True
+                break
+
+        if not is_valid:
             return self._handle_invalid(
                 context,
-                "Invalid token signature - possible forgery",
+                "Invalid token signature - possible forgery or untrusted issuer",
             )
 
         # 2. Check expiration
@@ -153,7 +174,7 @@ class CapabilityCLIHook(CLIHookProtocol):
 
         # Combine (deduplicated)
         all_caps = list(set(cmd_caps + level_caps))
-        return all_caps if all_caps else ["cli.public"]
+        return all_caps
 
     def _handle_invalid(
         self,
@@ -177,14 +198,15 @@ class CapabilityCLIHook(CLIHookProtocol):
             logger.info(f"Capability (dev mode): Would block - {reason}")
             return CLIHookResult(allow=True)
 
-    def set_secret_key(self, key: bytes) -> None:
+    def add_trusted_key(self, key_pem: str) -> None:
         """
-        Set the secret key for HMAC verification.
+        Add a trusted public key (PEM).
 
-        Should be called by Kernel at boot with production secret.
+        Should be called by Kernel / NagaOrchestrator at boot.
         """
-        self._secret_key = key
-        logger.info("Capability hook secret key updated")
+        if key_pem not in self._trusted_keys:
+            self._trusted_keys.append(key_pem)
+            logger.info("Capability hook: Added trusted public key")
 
     def set_enforce(self, enabled: bool) -> None:
         """Toggle enforcement mode."""

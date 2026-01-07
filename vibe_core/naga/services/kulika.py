@@ -187,13 +187,19 @@ class KulikaService(NagaBaseService, KulikaProtocol):
     # =========================================================================
 
     @naga_governed(operation="register_service")
-    def register_service(self, cls: Type, instance: Optional[Any] = None) -> bool:
+    def register_service(
+        self,
+        cls: Type,
+        instance: Optional[Any] = None,
+        force: bool = False,
+    ) -> bool:
         """
         Register a NAGA service after validation.
 
         Args:
             cls: The service class (must have _naga_manifest)
             instance: Optional instance (if already created)
+            force: Allow overwriting existing registration
 
         Returns:
             True if registered successfully
@@ -207,12 +213,15 @@ class KulikaService(NagaBaseService, KulikaProtocol):
             return False
 
         # Delegate registration
-        success = self._registry.register(cls, instance)
-        if success:
-            self._registration_count += 1
-            logger.debug(f"KULIKA: Registered {cls.__name__}")
-
-        return success
+        try:
+            success = self._registry.register(cls, instance, force=force)
+            if success:
+                self._registration_count += 1
+                logger.debug(f"KULIKA: Registered {cls.__name__}")
+            return success
+        except ValueError as e:
+            logger.warning(f"KULIKA: Registration failed: {e}")
+            return False
 
     def unregister_service(self, name: str) -> bool:
         """

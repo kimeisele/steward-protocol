@@ -176,19 +176,17 @@ class CLICapabilityToken:
         subject: str,
         capabilities: List[str],
         issuer: str,
-        issuer_private_key: bytes,
+        issuer_private_key: str,  # PEM string
         ttl_seconds: int = 3600,
     ) -> "CLICapabilityToken":
         """
-        Issue a signed capability token.
-
-        Only Kernel/Civic should call this - they hold the private key.
+        Issue a signed capability token (ECDSA).
 
         Args:
             subject: Caller identity
             capabilities: List of granted capabilities
             issuer: "KERNEL" or "CIVIC"
-            issuer_private_key: ed25519 private key bytes
+            issuer_private_key: ECDSA private key (PEM format)
             ttl_seconds: Token lifetime (default 1 hour)
 
         Returns:
@@ -204,32 +202,38 @@ class CLICapabilityToken:
         )
 
         # Sign the claims
-        token.signature = token._sign(issuer_private_key)
+        token.signature = token.sign_ecdsa(issuer_private_key)
         return token
 
-    def _sign(self, secret_key: bytes) -> bytes:
+    def sign_ecdsa(self, private_key_pem: str) -> bytes:
         """
-        Sign token claims with HMAC-SHA256.
-
-        Uses HMAC with shared secret for simplicity.
-        Ed25519 can be added later for asymmetric signing if needed.
+        Sign token claims with ECDSA (NIST P-256 / SHA256).
 
         Args:
-            secret_key: Shared secret key (at least 32 bytes recommended)
+            private_key_pem: Private key in PEM format
         """
-        import hmac
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
 
         claims_bytes = self._claims_to_bytes()
-        return hmac.new(secret_key, claims_bytes, hashlib.sha256).digest()
 
-    def verify(self, secret_key: bytes) -> bool:
+        # Load private key
+        if isinstance(private_key_pem, str):
+            private_key_bytes = private_key_pem.encode()
+        else:
+            private_key_bytes = private_key_pem
+
+        private_key = serialization.load_pem_private_key(private_key_bytes, password=None)
+
+        signature = private_key.sign(claims_bytes, ec.ECDSA(hashes.SHA256()))
+        return signature
+
+    def verify_ecdsa(self, public_key_pem: str) -> bool:
         """
-        Verify signature is valid.
-
-        MUST call this before trusting any claims!
+        Verify signature is valid using ECDSA public key.
 
         Args:
-            secret_key: Same shared secret used for signing
+            public_key_pem: Public key in PEM format
 
         Returns:
             True if signature valid, False otherwise
@@ -237,13 +241,24 @@ class CLICapabilityToken:
         if not self.signature:
             return False
 
-        import hmac
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
 
         try:
             claims_bytes = self._claims_to_bytes()
-            expected = hmac.new(secret_key, claims_bytes, hashlib.sha256).digest()
-            return hmac.compare_digest(self.signature, expected)
-        except Exception:
+
+            # Load public key
+            if isinstance(public_key_pem, str):
+                public_key_bytes = public_key_pem.encode()
+            else:
+                public_key_bytes = public_key_pem
+
+            public_key = serialization.load_pem_public_key(public_key_bytes)
+
+            public_key.verify(self.signature, claims_bytes, ec.ECDSA(hashes.SHA256()))
+            return True
+        except (InvalidSignature, ValueError):
             return False
 
     def _claims_to_bytes(self) -> bytes:

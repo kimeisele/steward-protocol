@@ -11,8 +11,9 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from vibe_core.naga.kulika import NagaCapability
 from vibe_core.naga.services.base import cli_governed
-from vibe_core.protocols.cli_execution import CLICapabilityToken
+from vibe_core.protocols.cli_execution import CLICapabilityToken, CLIExecutionContext
 
 # =============================================================================
 # CLICapabilityToken Tests
@@ -22,18 +23,38 @@ from vibe_core.protocols.cli_execution import CLICapabilityToken
 class TestCLICapabilityToken:
     """Test the signed capability token (not handwritten Zettel!)."""
 
+    def _generate_keys(self):
+        """Helper to generate EC keys for testing."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pub = priv.public_key()
+
+        priv_pem = priv.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        pub_pem = pub.public_bytes(
+            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+        return priv_pem, pub_pem
+
     def test_create_token_basic(self):
         """Token can be created with capabilities."""
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status", "cli.naga.scan.read"],
+            capabilities=[NagaCapability.OBSERVATION.value, NagaCapability.SCHEMA.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
         )
 
         assert token.subject == "agent_007"
-        assert "cli.naga.status" in token.capabilities
+        assert NagaCapability.OBSERVATION.value in token.capabilities
         assert token.issuer == "KERNEL"
         assert token.token_id  # Auto-generated
 
@@ -41,21 +62,21 @@ class TestCLICapabilityToken:
         """Token correctly reports capability presence."""
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
         )
 
-        assert token.has_capability("cli.naga.status") is True
-        assert token.has_capability("cli.naga.chaos.run") is False
+        assert token.has_capability(NagaCapability.OBSERVATION.value) is True
+        assert token.has_capability(NagaCapability.RESILIENCE.value) is False
 
     def test_token_expiry(self):
         """Expired tokens are detected."""
         # Create expired token
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now() - timedelta(hours=2),
             expires_at=datetime.now() - timedelta(hours=1),  # Already expired
             issuer="KERNEL",
@@ -66,7 +87,7 @@ class TestCLICapabilityToken:
         # Create valid token
         valid_token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -78,7 +99,7 @@ class TestCLICapabilityToken:
         """Token serializes to claims dict."""
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -87,7 +108,7 @@ class TestCLICapabilityToken:
         claims = token.to_claims()
 
         assert claims["sub"] == "agent_007"
-        assert claims["caps"] == ["cli.naga.status"]
+        assert claims["caps"] == [NagaCapability.OBSERVATION.value]
         assert claims["iss"] == "KERNEL"
         assert "iat" in claims
         assert "exp" in claims
@@ -97,21 +118,22 @@ class TestCLICapabilityToken:
         token = CLICapabilityToken.create_anonymous()
 
         assert token.subject == "anonymous"
-        assert token.has_capability("cli.public") is True
-        assert token.has_capability("cli.naga.chaos.run") is False
+        # Assuming create_anonymous defaults to "cli.public" or similar mechanism
+        # For now we assert "cli.public" is present as we haven't changed create_anonymous
+        assert "cli.public" in token.capabilities
+        assert token.has_capability(NagaCapability.RESILIENCE.value) is False
         assert token.issuer == "SYSTEM"
 
-    def test_token_signing_and_verification_hmac(self):
-        """Token can be signed and verified (HMAC fallback)."""
-        # Use a secret key (HMAC fallback when nacl not available)
-        secret_key = b"test_secret_key_32_bytes_long!!!"
+    def test_token_signing_and_verification_ecdsa(self):
+        """Token can be signed and verified (ECDSA)."""
+        priv_pem, pub_pem = self._generate_keys()
 
         # Issue signed token
         token = CLICapabilityToken.issue(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issuer="KERNEL",
-            issuer_private_key=secret_key,
+            issuer_private_key=priv_pem,
             ttl_seconds=3600,
         )
 
@@ -120,32 +142,32 @@ class TestCLICapabilityToken:
         assert len(token.signature) > 0
 
         # Verify with correct key
-        assert token.verify(secret_key) is True
+        assert token.verify_ecdsa(pub_pem) is True
 
         # Verify fails with wrong key
-        wrong_key = b"wrong_key_32_bytes_long_wrong!!!"
-        assert token.verify(wrong_key) is False
+        _, wrong_pub = self._generate_keys()
+        assert token.verify_ecdsa(wrong_pub) is False
 
     def test_token_tampering_detected(self):
         """Tampering with token claims invalidates signature."""
-        secret_key = b"test_secret_key_32_bytes_long!!!"
+        priv_pem, pub_pem = self._generate_keys()
 
         # Issue signed token
         token = CLICapabilityToken.issue(
             subject="agent_007",
-            capabilities=["cli.naga.status"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issuer="KERNEL",
-            issuer_private_key=secret_key,
+            issuer_private_key=priv_pem,
         )
 
         # Verify original
-        assert token.verify(secret_key) is True
+        assert token.verify_ecdsa(pub_pem) is True
 
         # Tamper with capabilities
-        token.capabilities.append("cli.naga.chaos.run")
+        token.capabilities.append(NagaCapability.RESILIENCE.value)
 
         # Verification should now fail (claims changed)
-        assert token.verify(secret_key) is False
+        assert token.verify_ecdsa(pub_pem) is False
 
 
 # =============================================================================
@@ -199,7 +221,7 @@ class TestCLIGovernedDecorator:
         """Decorator enforces required capabilities."""
 
         class MockCLI:
-            @cli_governed(capabilities_required=["cli.naga.chaos.run"])
+            @cli_governed(capabilities_required=[NagaCapability.RESILIENCE.value])
             def cmd_chaos(self, args: list, capability_token=None) -> int:
                 return 0
 
@@ -208,7 +230,7 @@ class TestCLIGovernedDecorator:
         # Token without required capability
         token_without_cap = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.status"],  # Missing cli.naga.chaos.run
+            capabilities=[NagaCapability.OBSERVATION.value],  # Missing RESILIENCE
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -220,7 +242,7 @@ class TestCLIGovernedDecorator:
         # Token with required capability
         token_with_cap = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.naga.chaos.run"],
+            capabilities=[NagaCapability.RESILIENCE.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -237,7 +259,7 @@ class TestCLIGovernedDecorator:
                 self.capability_token = token
 
         class MockCLI:
-            @cli_governed(capabilities_required=["cli.test"])
+            @cli_governed(capabilities_required=[NagaCapability.OBSERVATION.value])
             def cmd_test(self, context) -> int:
                 return 0
 
@@ -246,7 +268,7 @@ class TestCLIGovernedDecorator:
         # Token in context object
         token = CLICapabilityToken(
             subject="agent_007",
-            capabilities=["cli.test"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now(),
             expires_at=datetime.now() + timedelta(hours=1),
             issuer="KERNEL",
@@ -279,25 +301,45 @@ class TestCLIGovernedDecorator:
 class TestCLIGovernedIntegration:
     """Integration tests for token + decorator working together."""
 
+    def _generate_keys(self):
+        """Helper to generate EC keys."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pub = priv.public_key()
+
+        priv_pem = priv.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        pub_pem = pub.public_bytes(
+            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+        return priv_pem, pub_pem
+
     def test_full_capability_flow(self):
         """Full flow: issue token, use decorator, enforce caps."""
-        secret_key = b"integration_test_key_32_bytes!!"
+        priv_pem, pub_pem = self._generate_keys()
 
         # 1. Kernel issues token with specific capabilities
         token = CLICapabilityToken.issue(
             subject="integration_agent",
-            capabilities=["cli.naga.status", "cli.naga.scan.read"],
+            capabilities=[NagaCapability.OBSERVATION.value, NagaCapability.SCHEMA.value],
             issuer="KERNEL",
-            issuer_private_key=secret_key,
+            issuer_private_key=priv_pem,
         )
 
         # 2. Token is valid
-        assert token.verify(secret_key) is True
+        assert token.verify_ecdsa(pub_pem) is True
         assert not token.is_expired()
 
         # 3. CLI command requires capability that token has
         class IntegrationCLI:
-            @cli_governed(capabilities_required=["cli.naga.scan.read"])
+            @cli_governed(capabilities_required=[NagaCapability.OBSERVATION.value])
             def cmd_scan(self, args: list, capability_token=None) -> str:
                 return f"Scanned {len(args)} files"
 
@@ -307,7 +349,7 @@ class TestCLIGovernedIntegration:
 
         # 4. Command requiring cap that token DOESN'T have
         class RestrictedCLI:
-            @cli_governed(capabilities_required=["cli.naga.chaos.run"])
+            @cli_governed(capabilities_required=[NagaCapability.RESILIENCE.value])
             def cmd_chaos(self, args: list, capability_token=None) -> str:
                 return "Chaos!"
 
@@ -323,7 +365,7 @@ class TestCLIGovernedIntegration:
         # Create expired token
         token = CLICapabilityToken(
             subject="expired_agent",
-            capabilities=["cli.test"],
+            capabilities=[NagaCapability.OBSERVATION.value],
             issued_at=datetime.now() - timedelta(hours=2),
             expires_at=datetime.now() - timedelta(hours=1),
             issuer="KERNEL",
@@ -332,7 +374,7 @@ class TestCLIGovernedIntegration:
         assert token.is_expired() is True
 
         class MockCLI:
-            @cli_governed(capabilities_required=["cli.test"])
+            @cli_governed(capabilities_required=[NagaCapability.OBSERVATION.value])
             def cmd_test(self, args: list, capability_token=None) -> int:
                 return 0
 
