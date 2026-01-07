@@ -511,8 +511,15 @@ class KulikaRegistry:
         self._services[name] = manifest
         self._classes[name] = cls
         # ADVAITA: Store instance in ServiceRegistry (single source of truth)
+        # 🙏 HARE KRISHNA! Wrap with NagaProxy for universal observation
         if instance:
-            ServiceRegistry.register(manifest.protocol_class or name, instance)
+            from vibe_core.naga.proxy import NagaProxy
+
+            wrapped = NagaProxy(instance)
+            # Use cls as interface (ServiceRegistry needs Type, not string)
+            interface = cls
+            ServiceRegistry.register(interface, wrapped)
+            logger.info(f"🐍 BALARAMA: Wrapped {manifest.name} with NagaProxy")
 
         # Index
         self._by_lord[manifest.lord].append(name)
