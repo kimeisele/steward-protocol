@@ -56,8 +56,10 @@ class SyncCICommand(BaseCommand):
     async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
         """Execute CI sync."""
         import json as json_lib
+        from dataclasses import asdict
 
-        from vibe_core.ouroboros.sync import CISyncService
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.universal import SyncProtocol
 
         # Parse args
         workflow = "steward-ci.yml"
@@ -68,55 +70,65 @@ class SyncCICommand(BaseCommand):
             if arg == "--workflow" and i + 1 < len(args):
                 workflow = args[i + 1]
 
-        sync = CISyncService()
+        # Use Registry (The Bond) - Get the active Sync implementation
+        sync = ServiceRegistry.get(SyncProtocol)
+        if not sync:
+            return CommandResult.error("SyncProtocol service not available")
 
         if show_status:
             status = sync.get_sync_status()
+
+            # Access details from legacy dict if present
+            details = getattr(status, "details", {})
+            repo = details.get("repo", "unknown")
+            last_sync = status.last_sync
+            gh_cli_available = details.get("gh_cli_available", False)
+
             if as_json:
-                return CommandResult.success(json_lib.dumps(status, indent=2))
+                return CommandResult.success(json_lib.dumps(asdict(status), indent=2, default=str))
 
             lines = [
                 "🐍 OUROBOROS CI Sync Status",
                 "=" * 40,
-                f"Repository: {status['repo']}",
-                f"Last sync: {status['last_sync'] or 'Never'}",
-                f"GitHub CLI: {'✅ Available' if status['gh_cli_available'] else '❌ Not available'}",
+                f"Repository: {repo}",
+                f"Last sync: {last_sync or 'Never'}",
+                f"GitHub CLI: {'✅ Available' if gh_cli_available else '❌ Not available'}",
             ]
 
-            if not status["gh_cli_available"]:
+            if not gh_cli_available:
                 lines.append("")
                 lines.append("⚠️  Install gh CLI: brew install gh && gh auth login")
 
             return CommandResult.success("\n".join(lines))
 
         # Perform sync
-        result = sync.sync_latest(workflow=workflow)
+        # Note: Protocol uses sync(), not sync_latest()
+        result = sync.sync()
 
         if as_json:
-            return CommandResult.success(json_lib.dumps(result, indent=2))
+            return CommandResult.success(json_lib.dumps(asdict(result), indent=2, default=str))
 
         # Format human-readable output
         lines = [
             "🐍 OUROBOROS CI Sync",
             "=" * 40,
-            f"Workflow: {result['workflow']}",
-            f"Run ID: {result.get('run_id', 'N/A')}",
-            f"Status: {result.get('run_conclusion', 'N/A')}",
+            f"Result: {'Success' if result.success else 'Failed'}",
+            f"Items Synced: {result.items_synced}",
             "",
         ]
 
-        if result["violations_ingested"] > 0:
-            lines.append(f"✅ Ingested {result['violations_ingested']} violations to Knowledge Graph")
+        if result.items_synced > 0:
+            lines.append(f"✅ Ingested {result.items_synced} violations to Knowledge Graph")
             lines.append("   The system will learn from these failures.")
-        elif result.get("run_conclusion") == "success":
-            lines.append("✅ CI passed - no violations to ingest")
+        elif result.success:
+            lines.append("✅ CI sync completed - no new violations to ingest")
         else:
-            lines.append("⚠️  No violations extracted")
+            lines.append("⚠️  Sync failed")
 
-        if result["errors"]:
+        if result.errors:
             lines.append("")
             lines.append("Errors:")
-            for err in result["errors"]:
+            for err in result.errors:
                 lines.append(f"  ❌ {err}")
 
         return CommandResult.success("\n".join(lines))
