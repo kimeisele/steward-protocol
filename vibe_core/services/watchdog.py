@@ -30,11 +30,16 @@ class NrisimhaWatchdog(MantraProtocol):
     "When the Mind drifts, the Watchdog bites (or chants)."
     """
 
-    def __init__(self, sovereign_anchor: SovereignContext):
+    def __init__(
+        self,
+        sovereign_anchor: SovereignContext,
+        opcode_handlers: Optional[dict] = None,
+    ):
         self._anchor = sovereign_anchor
         self._beads_chanted = 0
         self._last_pulse = 0.0
         self._alignment_score = 1.0  # Start perfectly aligned
+        self._opcode_handlers = opcode_handlers or {}  # Kernel-injected handlers
         logger.info(f"🦁 Nrisimha Watchdog initialized for Sovereign: {sovereign_anchor.identity_id}")
 
     # =========================================================================
@@ -170,12 +175,23 @@ class NrisimhaWatchdog(MantraProtocol):
         Executes a single Kernel OpCode.
         Each opcode maps to a specific system operation.
 
+        Priority:
+        1. Kernel-injected handler (if available)
+        2. Internal default logic
+
         Returns:
             True if operation succeeded.
             False if operation failed (Aparadha).
         """
-        # In a real kernel, these would be actual syscalls.
-        # Here we simulate the operations.
+        # Check for kernel-injected handler first
+        if opcode in self._opcode_handlers:
+            try:
+                return self._opcode_handlers[opcode](context)
+            except Exception as e:
+                logger.warning(f"Kernel handler failed for {opcode}: {e}")
+                return False
+
+        # Fall back to internal default logic
 
         if opcode == MantraOpCode.SYS_WAKE:
             # SIGSTOP Maya / Focus on Sovereign
