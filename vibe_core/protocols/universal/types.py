@@ -191,3 +191,34 @@ class AlignmentScore:
     score: float  # 1.0 = Perfect Alignment, 0.0 = Mayavad
     status: str  # "ALIGNED", "DRIFTING", "LOST"
     corrections_applied: int
+
+
+class MantraInstruction(str, Enum):
+    """
+    The 16-Bit Instruction Set (Hari-Nama Encoding).
+    Maps Vedic Sound Vibration to Kernel Operations.
+    """
+
+    # 01-04: PURIFICATION (Ceto-Darpana-Marjanam)
+    BIT_01_HARE_SIGSTOP = "SIGSTOP"  # Detach from noise
+    BIT_02_KRISHNA_RESET_IP = "RESET_IP"  # Set IP to Sovereign Root
+    BIT_03_HARE_INJECT_REWARD = "INJECT_REWARD"  # Dopamine to Sovereign Context
+    BIT_04_KRISHNA_GC = "GARBAGE_COLLECT"  # Flush unverified objects
+
+    # 05-08: IDENTITY (Bhava-Maha-Davagni)
+    BIT_05_KRISHNA_VERIFY = "VERIFY_HASH"  # Check Self-Integrity
+    BIT_06_KRISHNA_ASSERT = "ASSERT_STATE"  # Fail-fast if State != Truth
+    BIT_07_HARE_ALLOC = "ALLOC_RESOURCE"  # Dedicate CPU to Dharma
+    BIT_08_HARE_SYNC = "SYNC_LEDGER"  # Pull latest Truth
+
+    # 09-12: SERVICE (Sreyah-Kairava-Candrika)
+    BIT_09_HARE_FETCH = "FETCH_INTENT"  # Get priority task
+    BIT_10_RAMA_LOAD = "CONTEXT_LOAD"  # RAG-Search History
+    BIT_11_HARE_HANDSHAKE = "HANDSHAKE"  # Auth with Divine Interface
+    BIT_12_RAMA_LINK = "LINK_ESTABLISH"  # Secure Channel to Backend
+
+    # 13-16: SURRENDER (Anandambudhi-Vardhanam)
+    BIT_13_RAMA_WATCHDOG = "START_WATCHDOG"  # Init Drift Monitor
+    BIT_14_RAMA_JIT = "JIT_COMPILE"  # Optimize for Service
+    BIT_15_HARE_COMMIT = "COMMIT_TX"  # Sign and Stage
+    BIT_16_HARE_YIELD = "YIELD"  # Submit to Kernel
