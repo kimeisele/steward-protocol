@@ -28,6 +28,7 @@ from vibe_core.protocols.correction import (
     HealingStrategy,
     UnifiedDriftReport,
 )
+from vibe_core.protocols.naga.groups import Subject, Verdict
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
 
 
@@ -249,6 +250,12 @@ class TakshakaProtocol(Protocol):
         """Get this NAGA as a CorrectionHandler for DriftSource.COGNITIVE."""
         ...
 
+    def intercept(self, subject: Subject) -> Verdict:
+        """
+        Judge a subject - ALLOW, DENY, ESCALATE, QUARANTINE.
+        """
+        ...
+
     def get_status(self) -> NagaStatus:
         """Get NAGA health status."""
         ...
@@ -261,6 +268,9 @@ class TakshakaProtocol(Protocol):
 
 class NullTakshaka:
     """No-op Takshaka - DANGEROUS, allows everything."""
+
+    def intercept(self, subject: Subject) -> Verdict:
+        return Verdict.ALLOW
 
     def verify_envelope(self, raw: bytes) -> VerifyResult:
         return VerifyResult(status=VerifyStatus.VALID, reason="Takshaka disabled")

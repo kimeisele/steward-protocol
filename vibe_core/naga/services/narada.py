@@ -157,6 +157,7 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 except Exception as e:
                     # NARADA SAFETY: Observation failure must NEVER kill the application
                     import sys
+
                     sys.stderr.write(f"!!! NARADA SPY FAILURE: Could not record observation: {e}\n")
 
         return wrapper
@@ -188,6 +189,7 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 except Exception as e:
                     # NARADA SAFETY: Observation failure must NEVER kill the application
                     import sys
+
                     sys.stderr.write(f"!!! NARADA SPY FAILURE: Could not record observation: {e}\n")
 
         return wrapper
@@ -310,6 +312,7 @@ class NaradaService(NagaBaseService, ObserveProtocol):
         - Records to internal buffer (always)
         - Routes to Chitragupta (profiling)
         - Routes to Sesha (audit)
+        - Routes to Kaliya (reliability/exceptions)
         - Reports to Cortex (patterns)
 
         NagaProxy doesn't know about other NAGAs - fractal separation.
@@ -332,6 +335,10 @@ class NaradaService(NagaBaseService, ObserveProtocol):
         # Route to Sesha (audit)
         self._route_to_sesha(observation)
 
+        # Route to Kaliya (reliability) - UNLOCKING NAGA INTELLIGENCE
+        if observation.get("exception_type"):
+            self._route_to_kaliya(observation)
+
     def _route_to_chitragupta(self, observation: ObservationDict) -> None:
         """Route timing to Chitragupta for profiling."""
         try:
@@ -344,6 +351,21 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 chitragupta.record(component_id, "duration_ms", observation.get("duration_ms", 0.0))
         except Exception as e:
             logger.debug(f"Chitragupta routing failed: {e}")
+
+    def _route_to_kaliya(self, observation: ObservationDict) -> None:
+        """Route exceptions to Kaliya for reliability tracking."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import KaliyaProtocol
+
+            kaliya = ServiceRegistry.get(KaliyaProtocol)
+            if kaliya:
+                # Use service type as component ID for quarantine scope
+                component_id = observation.get("service_type", "unknown_service")
+                kaliya.record_violation(component_id)
+                logger.info(f"Reported violation to Kaliya for {component_id}")
+        except Exception as e:
+            logger.debug(f"Kaliya routing failed: {e}")
 
     def _route_to_sesha(self, observation: ObservationDict) -> None:
         """Route to Sesha for audit trail (via PUBLIC API)."""

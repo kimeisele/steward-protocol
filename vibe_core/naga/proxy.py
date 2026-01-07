@@ -44,11 +44,13 @@ from typing import (
     Generic,
     List,
     Optional,
+    ParamSpec,
     Protocol,
     TypeVar,
     cast,
 )
 
+from vibe_core.protocols.naga.groups import Subject, Verdict
 from vibe_core.protocols.naga.types import ObservationDict
 
 if TYPE_CHECKING:
@@ -60,8 +62,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("NAGA.PROXY")
 
-# TypeVar for the wrapped service - No Any!
+# TypeVar for the wrapped service
 T = TypeVar("T")
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 @dataclass
@@ -246,7 +250,7 @@ class NagaProxy(Generic[T]):
         # Wrap callable methods with observation
         return self._wrap_method(name, attr)
 
-    def _wrap_method(self, name: str, method: Callable) -> Callable:
+    def _wrap_method(self, name: str, method: Callable[P, R]) -> Callable[P, R]:
         """
         Wrap a method with NAGA observation.
 
@@ -261,9 +265,24 @@ class NagaProxy(Generic[T]):
         proxy_self = self
 
         @functools.wraps(method)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Lazy resolve NAGAs on first call
             proxy_self._resolve_nagas()
+
+            # SECURITY CHECK (Takshaka) - Bite First
+            takshaka = object.__getattribute__(proxy_self, "_takshaka")
+            if takshaka:
+                service_name = object.__getattribute__(proxy_self, "_service_name")
+                subject = Subject(
+                    subject_type="method_call", identifier=f"{service_name}.{name}", context=f"args={len(args)}"
+                )
+                try:
+                    verdict = takshaka.intercept(subject)
+                    if verdict in (Verdict.DENY, Verdict.QUARANTINE, Verdict.ESCALATE):
+                        raise PermissionError(f"Takshaka denied access to {service_name}.{name}: {verdict.value}")
+                except AttributeError:
+                    # Takshaka implementation might be partial during boot
+                    pass
 
             # Track timing for Chitragupta
             start_time = time.perf_counter()
