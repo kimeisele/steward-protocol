@@ -476,3 +476,70 @@ The 10-Wave Plan to purify the architecture:
 - **Refinement**: Samudra Manthan Team
 - **Date**: 2026-01-07
 - **Status**: WAVE 3 COMPLETE
+
+---
+
+## MIGRATION STRATEGY: THE WRAPPER (KURUKSHETRA PATTERN)
+
+**Context:** The system has 700k+ LOC of legacy code ("The Adharmic Host").
+**Problem:** Rewriting everything at once is impossible.
+**Solution:** The **Kurukshetra Wrapper Pattern** (Strangler Fig).
+
+We do not rewrite logic immediately. We **wrap** it in Universal Protocols to enforce:
+1.  **Gita 6.34 (Mantra):** Heartbeat check.
+2.  **Anti-Mayavad (Signatures):** Provenance check.
+3.  **GAD-000 (Observability):** Typed returns.
+
+### The Bridge Pattern (Setu)
+
+Every legacy service gets a Bridge Adapter:
+
+```python
+# vibe_core/bridges/legacy_config.py
+from vibe_core.protocols.universal import ReadWriteProtocol
+
+class LegacyConfigAdapter(ReadWriteProtocol):
+    """
+    Wraps the old 700k-LOC config service.
+    Acts as 'Arjuna' - fighting on the side of Dharma, using the weapons of the System.
+    """
+    def __init__(self, old_service):
+        self._old = old_service
+
+    def read(self, key: str) -> ReadResult:
+        # 1. CALL OLD LOGIC (Sthula)
+        try:
+            raw_value = self._old.get_value_unsafe(key) 
+        except Exception as e:
+            # 2. SANITIZE ERROR (Shuddhi)
+            raise KeyNotFoundError(str(e))
+
+        # 3. ENFORCE PROTOCOL (Dharma)
+        return ReadResult(value=raw_value, writer=SovereignContext.system())
+
+    def write(self, key: str, value: object, context: SovereignContext) -> None:
+        # 1. VERIFY SIGNATURE (Anti-Mayavad)
+        if not context.is_valid():
+            raise AccessDeniedError("Unsigned Write Attempt")
+
+        # 2. EXECUTE LEGACY WRITE
+        self._old.set_data(key, value)
+        
+        # 3. MANTRA CHECK (Pulse)
+        MantraProtocol.pulse()
+```
+
+### The Bootloader Swap (Yuga Change)
+
+In `kernel.py`:
+
+```python
+# OLD (Kali Yuga):
+# registry.register("config", OldConfigService())
+
+# NEW (Satya Yuga):
+# registry.register(ReadWriteProtocol, LegacyConfigAdapter(OldConfigService()))
+```
+
+**Result:** The user gets GAD-000 compliance *today*, while the internal logic is refactored *tomorrow*.
+
