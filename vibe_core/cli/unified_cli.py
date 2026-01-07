@@ -62,7 +62,7 @@ import vibe_core.cli.tool_cli  # noqa: F401 - registers "tool"
 
 # OPUS-307: Register dynamic cartridge CLI bridges (lazy loading)
 from vibe_core.cli.cartridge_bridge import register_cartridge_bridges
-from vibe_core.protocols.cli import CLIRegistry
+from vibe_core.protocols.cli import CLIHandler, CLIRegistry
 
 register_cartridge_bridges()
 
@@ -156,12 +156,14 @@ class UnifiedCLI:
         """
         try:
             from vibe_core.naga.hooks import (
+                AnantaCLIHook,
                 CapabilityCLIHook,
                 ChitraguptaCLIHook,
                 SeshaCLIHook,
                 TakshakaCLIHook,
             )
             from vibe_core.protocols.naga import (
+                AnantaProtocol,
                 ChitraguptaProtocol,
                 SeshaProtocol,
                 TakshakaProtocol,
@@ -174,6 +176,7 @@ class UnifiedCLI:
             takshaka = ServiceRegistry.get(TakshakaProtocol)
             chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
             sesha = ServiceRegistry.get(SeshaProtocol)
+            ananta = ServiceRegistry.get(AnantaProtocol)
 
             # Register hooks with REAL services injected
             self._hook_chain.register(
@@ -188,6 +191,8 @@ class UnifiedCLI:
                     enforce=False,  # Observation mode
                 )
             )
+            if ananta:
+                self._hook_chain.register(AnantaCLIHook(ananta=ananta))
             self._hook_chain.register(
                 ChitraguptaCLIHook(
                     chitragupta_service=chitragupta,
@@ -207,6 +212,8 @@ class UnifiedCLI:
                 connected.append("Chitragupta")
             if sesha:
                 connected.append("Sesha")
+            if ananta:
+                connected.append("Ananta")
 
             if connected:
                 logger.info(f"NAGA CLI hooks ALIVE - connected to: {', '.join(connected)}")
@@ -222,6 +229,7 @@ class UnifiedCLI:
         command_name: str,
         args: List[str],
         namespace: str = "cli",
+        handler_instance: Optional[CLIHandler] = None,
     ) -> CLIExecutionContext:
         """Create execution context for hook chain."""
         # Create anonymous token for now (can be upgraded with kernel)
@@ -232,6 +240,7 @@ class UnifiedCLI:
             namespace=namespace,
             args=args,
             capability_token=token,
+            handler=handler_instance,
         )
 
     def _run_with_hooks(
@@ -240,6 +249,7 @@ class UnifiedCLI:
         args: List[str],
         handler_fn,
         namespace: str = "cli",
+        handler_instance: Optional[CLIHandler] = None,
     ) -> int:
         """
         Execute command through hook chain.
@@ -254,7 +264,7 @@ class UnifiedCLI:
             # No hooks - execute directly
             return handler_fn()
 
-        context = self._create_execution_context(command_name, args, namespace)
+        context = self._create_execution_context(command_name, args, namespace, handler_instance)
 
         try:
             # Run pre-phases
@@ -318,6 +328,7 @@ class UnifiedCLI:
                 args=remaining_args,
                 handler_fn=lambda: cli_handler.run(remaining_args),
                 namespace="cli.registry",
+                handler_instance=cli_handler,
             )
 
         # 3. Check Plugin Commands
