@@ -7,12 +7,13 @@ from typing import Optional
 
 from aiohttp import web
 
+from vibe_core.protocols.network import NetworkGatewayProtocol
 from vibe_core.state.prakriti import Prakriti
 
 logger = logging.getLogger("NETWORK_GATEWAY")
 
 
-class NetworkGateway:
+class NetworkGateway(NetworkGatewayProtocol):
     """
     Phase 18: The Network (Sangha)
     Provides HTTP REST API for VibeOS.
@@ -30,6 +31,7 @@ class NetworkGateway:
         self.app.router.add_get("/", self.handle_index)
         self.app.router.add_get("/api/v1/health", self.handle_health)
         self.app.router.add_get("/api/v1/state", self.handle_state)
+        self.app.router.add_get("/api/v1/union", self.handle_union_report)
 
         # Static files (if directory exists)
         static_dir = Path(__file__).parent / "static"
@@ -77,11 +79,21 @@ class NetworkGateway:
         return web.json_response({"status": "alive", "phase": "18 (Sangha)", "system": "VibeOS"})
 
     async def handle_state(self, request):
-        """Return system state from Prakriti."""
+        """Return system state from Prakriti + Union Report."""
         try:
-            # Offload blocking sync call (Git/IO) to thread pool
+            # 1. Body: Base State from Prakriti
             loop = asyncio.get_event_loop()
             status = await loop.run_in_executor(None, self.prakriti.get_system_status)
+
+            # 2. Conscience: Union Report from Universal Protocol
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.universal import UnionProtocol
+
+            union = ServiceRegistry.get(UnionProtocol)
+            if union:
+                status["union"] = union.get_union_summary()
+            else:
+                status["union"] = {"status": "NOT_AVAILABLE", "message": "UnionProtocol not found"}
 
             # Convert non-serializable objects (like sets) to lists
             return web.json_response(status, dumps=lambda x: json.dumps(x, default=str))
@@ -135,6 +147,26 @@ class NetworkGateway:
                 return web.json_response({"status": "removed", "peer_id": peer_id})
             else:
                 return web.json_response({"error": "Failed to remove peer"}, status=500)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_union_report(self, request):
+        """GET /api/v1/union - Detailed State of the Union report."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.universal import UnionProtocol
+
+            union = ServiceRegistry.get(UnionProtocol)
+            if not union:
+                return web.json_response({"error": "UnionProtocol not available"}, status=503)
+
+            entities = union.get_living_entities()
+            # Convert dataclasses to dicts for JSON
+            from dataclasses import asdict
+
+            data = [asdict(e) for e in entities]
+
+            return web.json_response({"entities": data, "count": len(data)}, dumps=lambda x: json.dumps(x, default=str))
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
