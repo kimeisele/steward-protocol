@@ -750,12 +750,12 @@ class NagaCLI:
 
     def _prahlad_dharma(self) -> int:
         """Run Dharma audit."""
-        from vibe_core.naga.services.prahlad import PrahladService
+        from vibe_core.protocols.naga import PrahladProtocol
 
         print("\n    PRAHLAD DHARMA AUDIT")
         print("=" * 60)
 
-        prahlad = PrahladService()
+        prahlad = ServiceRegistry.get(PrahladProtocol)
         score = prahlad.dharma_audit()
 
         print(f"\n    Total Score:          {score.total_score:.1f}%")
@@ -777,12 +777,12 @@ class NagaCLI:
 
     def _prahlad_coverage(self) -> int:
         """Get coverage intelligence."""
-        from vibe_core.naga.services.prahlad import PrahladService
+        from vibe_core.protocols.naga import PrahladProtocol
 
         print("\n    PRAHLAD COVERAGE INTELLIGENCE")
         print("=" * 60)
 
-        prahlad = PrahladService()
+        prahlad = ServiceRegistry.get(PrahladProtocol)
         intel = prahlad.get_coverage_intelligence()
 
         if "error" in intel:
@@ -814,13 +814,13 @@ class NagaCLI:
 
     def _prahlad_verify(self) -> int:
         """Run NAGA self-verification (Ouroboros)."""
-        from vibe_core.naga.services.prahlad import PrahladService
+        from vibe_core.protocols.naga import PrahladProtocol
 
         print("\n    PRAHLAD SELF-VERIFICATION (OUROBOROS)")
         print("=" * 60)
         print("\n    Running NAGA test suite...")
 
-        prahlad = PrahladService()
+        prahlad = ServiceRegistry.get(PrahladProtocol)
         passed = prahlad.verify_self_integrity(quiet=False)
 
         if passed:
@@ -871,12 +871,12 @@ class NagaCLI:
 
     def _chaos_list(self) -> int:
         """List available attack seeds."""
-        from vibe_core.naga.services.prahlad import PrahladService
+        from vibe_core.protocols.naga import PrahladProtocol
 
         print("\n    HIRANYAKASHIPU ATTACK SEEDS")
         print("=" * 60)
 
-        prahlad = PrahladService()
+        prahlad = ServiceRegistry.get(PrahladProtocol)
         count = prahlad.load_attack_seeds()
 
         print(f"\n    Loaded: {count} attack seeds")
@@ -951,13 +951,13 @@ class NagaCLI:
 
     def _chaos_probe(self, target: str, extra_args: List[str]) -> int:
         """Chaos probe a module with Hiranyakashipu seeds."""
-        from vibe_core.naga.services.prahlad import PrahladService
+        from vibe_core.protocols.naga import PrahladProtocol
 
         print("\n    CHAOS PROBE")
         print("=" * 60)
         print(f"\n    Target: {target}")
 
-        prahlad = PrahladService()
+        prahlad = ServiceRegistry.get(PrahladProtocol)
         count = prahlad.load_attack_seeds()
         print(f"    Attack seeds loaded: {count}")
 
