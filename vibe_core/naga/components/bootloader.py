@@ -85,8 +85,27 @@ class NagaBootloader:
         identity = NagaIdentity.from_keys(agent_id="naga_federation", private_key=priv_pem, public_key=pub_pem)
         logger.info(f"Identity loaded: {identity.fingerprint}")
 
+        # 0.5 Steward (The Sovereign) - IMPL-217 Operation Narasimha Phase 2
+        from vibe_core.phoenix.section_loader import load_section
+        from vibe_core.phoenix.sections.steward.section_main import StewardConfig
+        from vibe_core.protocols.steward import StewardProtocol
+        from vibe_core.steward.manager import DigitalSteward
+
+        # Load "Persona" from config/steward.yaml
+        steward_config = load_section(StewardConfig)
+        if not steward_config:
+            logger.warning("No steward.yaml found - creating default Steward Config")
+            steward_config = StewardConfig()  # Default empty persona
+
+        # Create Active Steward (Hand + Stift)
+        steward = DigitalSteward(identity=identity, config=steward_config)
+        logger.info(f"Steward activated: Role='{steward.config.user_context.default_user.role}'")
+
         # 1. Registry
         registry = KulikaRegistry()
+
+        # Register Steward (The 37th Entity)
+        registry.register(steward, force=True)
 
         # 2. Base Services (Kings)
         # ------------------------
