@@ -1,6 +1,6 @@
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
-from .mantra import MantraProtocol
+from .mantra import MAHAMANTRA_SEQUENCE, MantraOpCode, MantraProtocol
 from .read_write import ReadWriteProtocol
 from .store_recall import StoreRecallProtocol
 from .sync import SyncProtocol
@@ -15,7 +15,6 @@ from .types import (
     Inference,
     InferenceInput,
     KeyNotFoundError,
-    MantraInstruction,
     MemoryValue,
     ProtocolError,
     ReadResult,
@@ -26,3 +25,6 @@ from .types import (
     SyncStatus,
     Verdict,
 )
+
+# NOTE: MantraInstruction has been replaced by MantraOpCode from substrate.py
+# Use MantraOpCode (from .mantra or directly from vibe_core.protocols.substrate)
