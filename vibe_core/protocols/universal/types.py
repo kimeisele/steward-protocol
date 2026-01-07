@@ -15,9 +15,46 @@ class SovereignContext:
 
     identity_id: str  # Who is acting? (Purusha)
     signature: str  # Cryptographic proof (Satyam)
-    timestamp: float = field(default_factory=datetime.now().timestamp)
+    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     intent_id: Optional[str] = None  # Traceability to Sankalpa (Will)
     roles: List[str] = field(default_factory=list)  # Claims (e.g. ['admin', 'naga'])
+
+
+# --- EXCEPTIONS (THE LAW) ---
+
+
+class ProtocolError(Exception):
+    """Base class for protocol violations."""
+
+    pass
+
+
+class KeyNotFoundError(ProtocolError):
+    """The requested key does not exist in the field."""
+
+    pass
+
+
+class AccessDeniedError(ProtocolError):
+    """The Sovereign lacks the Dharma (permission) for this action."""
+
+    pass
+
+
+# --- READ/WRITE TYPES ---
+
+
+@dataclass
+class ReadResult:
+    """
+    Envelope for read operations.
+    Preserves the Chain of Custody (Provenance).
+    """
+
+    value: Any
+    timestamp: datetime = field(default_factory=datetime.now)
+    writer: Optional["SovereignContext"] = None  # Who wrote this? (Provenance)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 # --- SYNC TYPES ---
