@@ -513,6 +513,34 @@ class NagaCortex:
                 details={"decision_hash": decision_hash},
             )
 
+        # IMPL-223: Cortex-Steward Alignment
+        # Consult Steward BEFORE dispatching to prevent wasted Prana
+        # If Steward rejects, decision never enters the pipeline
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.steward import StewardProtocol
+
+            steward = ServiceRegistry.get(StewardProtocol)
+            if steward:
+                operation = f"cortex_dispatch_{decision.action.value}"
+                context = {
+                    "decision_type": decision.action.value,
+                    "target": decision.target if hasattr(decision, "target") else "unknown",
+                    "reason": decision.reason,
+                }
+                if not steward.sign_off(operation, context):
+                    logger.warning(f"[CORTEX] Steward blocked decision: {decision.action.value}")
+                    return DispatchResult(
+                        status="BLOCKED_BY_STEWARD",
+                        details={"reason": "Steward policy violation", "operation": operation},
+                    )
+        except Exception as e:
+            # Fail-open for Cortex (it's advisory, not blocking)
+            # But log the failure for visibility
+            import sys
+
+            sys.stderr.write(f"!!! [CORTEX] Steward check failed: {e}\n")
+
         self._stats.decisions_dispatched += 1
 
         # GAD-000 37th Principle: Sign the decision
