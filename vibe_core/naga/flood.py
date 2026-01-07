@@ -209,26 +209,43 @@ class NagaFloodController:
 
     def _start_analysis_loop_background(self) -> None:
         """Start the analysis loop in the background."""
+        import threading
+
         try:
             loop = asyncio.get_running_loop()
             self._analysis_task = loop.create_task(self.start_analysis_loop())
-            logger.info("[FLOOD] 🔬 Analysis loop task started")
+            logger.info("[FLOOD] 🔬 Analysis loop task started (AsyncIO)")
         except RuntimeError:
-            # No running loop - try to get or create one
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    self._analysis_task = loop.create_task(self.start_analysis_loop())
-                    logger.info("[FLOOD] 🔬 Analysis loop task started (existing loop)")
-                else:
-                    logger.warning("[FLOOD] No running event loop - analysis loop deferred")
-            except Exception as e:
-                logger.warning(f"[FLOOD] Could not start analysis loop: {e}")
+            # No running loop - fallback to threading
+            logger.warning("[FLOOD] No running event loop - falling back to Threading")
+            self._thread_stop_event = threading.Event()
+            self._analysis_thread = threading.Thread(target=self._run_audit_thread, name="NagaFloodAudit", daemon=True)
+            self._analysis_thread.start()
+
+    def _run_audit_thread(self) -> None:
+        """Thread-based audit worker for sync environments."""
+        import asyncio
+
+        # Create a new loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            # Run the async analysis loop in this thread's loop
+            loop.run_until_complete(self.start_analysis_loop())
+        except Exception as e:
+            logger.error(f"[FLOOD] Thread audit crashed: {e}")
+        finally:
+            loop.close()
 
     def stop(self) -> None:
         """Stop the flood controller."""
         if self._analysis_task and not self._analysis_task.done():
             self._analysis_task.cancel()
+
+        if hasattr(self, "_thread_stop_event"):
+            self._thread_stop_event.set()
+            # We rely on daemon thread to die, or we could join if we change the loop logic
 
         self._subscribed = False
         logger.info("[FLOOD] Controller stopped")
@@ -302,6 +319,8 @@ class NagaFloodController:
         logger.info("[FLOOD] 🔬 Analysis loop starting")
 
         while True:
+            if hasattr(self, "_thread_stop_event") and self._thread_stop_event.is_set():
+                break
             try:
                 # Wait for event from queue
                 event = await asyncio.wait_for(

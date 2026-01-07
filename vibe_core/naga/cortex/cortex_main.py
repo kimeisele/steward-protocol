@@ -219,7 +219,7 @@ class NagaCortex:
         self._config = config or CortexConfig()
         self._signal_buffer: Deque[NagaSignal] = deque(maxlen=self._config.signal_buffer_size)
         self._stats = CortexStats()
-        self._decision_queue: List[CortexDecision] = []
+        self._decision_queue: Deque[CortexDecision] = deque(maxlen=1000)
 
         # GAD-000 37th Principle: Identity for signing decisions
         # Injected by orchestrator after construction
@@ -362,6 +362,8 @@ class NagaCortex:
             if self._config.auto_dispatch:
                 self.dispatch(decision)
             else:
+                if len(self._decision_queue) == self._decision_queue.maxlen:
+                    logger.warning("[CORTEX] Decision queue full! Dropping oldest decision to prevent memory leak.")
                 self._decision_queue.append(decision)
 
     def _prune_old_signals(self) -> None:
@@ -684,7 +686,7 @@ class NagaCortex:
         """Dispatch all queued decisions."""
         results = []
         while self._decision_queue:
-            decision = self._decision_queue.pop(0)
+            decision = self._decision_queue.popleft()
             result = self.dispatch(decision)
             results.append(result)
         return results

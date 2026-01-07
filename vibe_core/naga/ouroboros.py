@@ -32,7 +32,7 @@ from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.ledger import SQLiteLedger
@@ -117,6 +117,19 @@ class LoopAlert:
 AlertHandler = Callable[[LoopAlert], None]
 
 
+# =============================================================================
+# GAD-000 PERSISTENCE SCHEMA (Protocol)
+# =============================================================================
+
+
+class OuroborosPersistentState(TypedDict):
+    """Protocol for persisted Ouroboros state."""
+
+    version: int
+    paused_sources: Dict[str, float]
+    last_modified: str
+
+
 class NagaOuroboros:
     """
     OUROBOROS - NAGAs Watching NAGAs.
@@ -136,7 +149,6 @@ class NagaOuroboros:
     4. Potentially pause the looping NAGAs (circuit breaker)
     """
 
-    # Configuration
     DEFAULT_WINDOW_SIZE = 100
     DEFAULT_LOOP_WINDOW_SECONDS = 30.0
     DEFAULT_RAPID_FIRE_THRESHOLD = 5  # Corrections in window
@@ -188,7 +200,58 @@ class NagaOuroboros:
         self._paused_sources: Dict[str, float] = {}  # source -> pause_until
         self._pause_duration = 60.0  # 1 minute default
 
+        # CORE SERVICE: StateService for persistence (Protocol Enforcement)
+        # Late import to prevent circular dependency
+        from vibe_core.state.state_service import get_state_service
+
+        self._state_service = get_state_service(plugin_id="naga")
+
+        # Load state immediately (Restore memory)
+        self._load_state()
+
         logger.info("[OUROBOROS] Initialized - Die Schlange wacht")
+
+    # =========================================================================
+    # PERSISTENCE (Memory)
+    # =========================================================================
+
+    def _load_state(self) -> None:
+        """Load state with STRICT SCHEMA VALIDATION."""
+        try:
+            # 1. Ask the State (StateService)
+            raw = self._state_service.load("ouroboros_state.json", default=None)
+            if not raw:
+                return
+
+            # 2. Validate Schema (Standard check)
+            if not isinstance(raw, dict) or "paused_sources" not in raw:
+                logger.warning("[OUROBOROS] State corrupted (invalid schema), ignoring.")
+                return
+
+            # 3. Clean & Prune (Logic check)
+            now = time.time()
+            # Only import pauses that are still in the future
+            loaded_pauses = {k: v for k, v in raw["paused_sources"].items() if isinstance(v, (int, float)) and v > now}
+
+            self._paused_sources = loaded_pauses
+
+            if self._paused_sources:
+                logger.info(f"[OUROBOROS] Restored {len(self._paused_sources)} active blocks from state.")
+
+        except Exception as e:
+            logger.error(f"[OUROBOROS] Failed to load state: {e}")
+
+    def _save_state(self) -> None:
+        """Save current state to persistent storage."""
+        try:
+            state: OuroborosPersistentState = {
+                "version": 1,
+                "paused_sources": self._paused_sources,
+                "last_modified": datetime.now().isoformat(),
+            }
+            self._state_service.save("ouroboros_state.json", state)
+        except Exception as e:
+            logger.error(f"[OUROBOROS] Failed to save state: {e}")
 
     # =========================================================================
     # MAIN API
@@ -368,6 +431,7 @@ class NagaOuroboros:
 
             # Pause this source (circuit breaker)
             self._paused_sources[source] = now + self._pause_duration
+            self._save_state()  # PERSIST IMMEDIATELY
             logger.warning(f"[OUROBOROS] Pausing '{source}' for {self._pause_duration}s")
 
             return LoopAlert(
@@ -513,12 +577,14 @@ class NagaOuroboros:
     def pause_source(self, source: str, duration: float = 60.0) -> None:
         """Manually pause a NAGA source."""
         self._paused_sources[source] = time.time() + duration
+        self._save_state()
         logger.warning(f"[OUROBOROS] Manually paused '{source}' for {duration}s")
 
     def unpause_source(self, source: str) -> None:
         """Manually unpause a NAGA source."""
         if source in self._paused_sources:
             del self._paused_sources[source]
+            self._save_state()
             logger.info(f"[OUROBOROS] Manually unpaused '{source}'")
 
     def is_paused(self, source: str) -> bool:
