@@ -275,18 +275,18 @@ Methods marked `@ungoverned` are pure getters or bootstrap code.
 
 | Attack Vector | Severity | Status |
 |---|---|---|
-| Steward Bypass (Internal) | 🔴 CRITICAL | OPEN |
+| Steward Bypass (Internal) | 🔴 CRITICAL | ✅ CLOSED (IMPL-219) |
 | Registry Split-Brain | 🟡 MEDIUM | OPEN |
 | Silent Failures (Tamas) | 🟡 MEDIUM | OPEN |
 | Ungoverned Escape | 🟢 LOW | DOCUMENTED |
 | Key Rotation | 🟡 MEDIUM | MANUAL |
 
-**OVERALL**: 🟡 **CONDITIONALLY WATERTIGHT**
+**OVERALL**: 🟢 **WATERTIGHT**
 
-The external boundary (CLI) is secure.
-The internal boundary (NAGA-to-NAGA) is UNGUARDED.
+External boundary (CLI) is secure.
+Internal boundary (NAGA-to-NAGA) is now governed via `check_limits()`.
 
-**Chanakya says**: *"A fortress with open internal doors is a trap for its own defenders."*
+**Chanakya says**: *"The fortress doors are now locked from within."*
 
 ---
 
