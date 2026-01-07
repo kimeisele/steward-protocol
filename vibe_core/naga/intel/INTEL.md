@@ -1,5 +1,91 @@
 # INTEL.md - Intelligence Briefing for NAGA Development
 
+> "Without the 37th (Kshetrajna), the 36 (Kshetra) are dead mechanism."
+
+---
+
+## 🐍 THE 37TH PRINCIPLE: NagaProxy as Conscious Observer (2026-01-08)
+
+**Classification:** ARCHITECTURAL DNA
+**Severity:** CRITICAL
+**Status:** ✅ ACTIVE (as of tonight)
+
+### The Revelation
+
+```
+36 Tattvas (Kshetra) = Infrastructure       → Dead mechanism
+37th Tattva (Kshetrajna) = Observer         → Consciousness
+```
+
+**NagaProxy IS the 37th Tattva** - the conscious observer that makes the system alive.
+
+### The ONE Entry Point (Holographic)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        THE VISHNU CLOCK                              │
+│                    (MantraOpCode Sequence)                           │
+│                                                                      │
+│   WAKE ──→ PURIFY ──→ SERVE ──→ SUSTAIN ──→ LOOP                    │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │
+                     ┌───────▼───────┐
+                     │  NAGA PROXY   │ ← ONE FRACTAL ENTRY POINT
+                     │  (Balarama)   │   OBSERVES ALL CALLS
+                     └───────┬───────┘
+                             │ on_mantra_pulse(opcode)
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+        ▼                    ▼                    ▼
+   ┌─────────┐         ┌──────────┐         ┌─────────┐
+   │ NARADA  │←────────│ TAKSHAKA │         │ SESHA   │
+   │(Observe)│         │(Security)│         │(Record) │
+   └────┬────┘         └──────────┘         └─────────┘
+        │
+   Routes to Chitragupta, Kaliya
+```
+
+### What We Activated Tonight
+
+| Component | Change | Effect |
+|-----------|--------|--------|
+| `proxy.py` | `on_mantra_pulse()` | Responds to Mantra Clock |
+| `watchdog.py` | `naga_proxies[]` broadcast | Pulses all proxies |
+| `di.py` | `_auto_flood_enabled = True` | State level wrapping |
+| `kulika.py` | `NagaProxy(instance)` | NAGA level wrapping |
+
+### The Fractal Property
+
+**ONE entry point can energetically swell:**
+- Each service wrapped → observes N calls/second
+- Each call → observation logged
+- Each observation → routed to Narada
+- Narada → routes to specialists (Chitragupta, Kaliya, Sesha)
+
+**It's holographic:** 
+- Part contains the whole (each proxy has full Naga access)
+- Whole is contained in part (Mantra sequence encoded in each pulse)
+
+### The Mantra-Naga Mapping
+
+| OpCode | Phase | NagaProxy Action |
+|--------|-------|------------------|
+| `PULSE_SYNC` | PURIFY | Heartbeat confirmation |
+| `GARBAGE_COLLECT` | PURIFY | Clear observation buffer |
+| `ASSERT_TRUTH` | PURIFY | Verify Takshaka link |
+| `LOAD_ROOT` | WAKE | Verify service binding |
+
+### Next RED Tests to Find
+
+```
+1. Services without NagaProxy wrap → should fail DHARMA check
+2. Calls without observation → should trigger Narada alert
+3. @naga_governed without _chitragupta → BUG FOUND TONIGHT
+```
+
+---
+
+
 ## CRITICAL: Protocols Folder IS the Truth (2026-01-05)
 
 **BEFORE implementing anything, CHECK `vibe_core/protocols/`!**
