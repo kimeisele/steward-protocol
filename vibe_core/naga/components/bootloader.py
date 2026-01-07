@@ -14,6 +14,7 @@ import logging
 import sys
 from typing import Optional
 
+from vibe_core.di import ServiceRegistry
 from vibe_core.naga.commit_watcher import NagaCommitWatcher as CommitWatcher
 from vibe_core.naga.components.destructor import NagaDestructor
 from vibe_core.naga.components.kernel import NagaKernel
@@ -86,15 +87,17 @@ class NagaBootloader:
         logger.info(f"Identity loaded: {identity.fingerprint}")
 
         # 0.5 Steward (The Sovereign) - IMPL-217 Operation Narasimha Phase 2
-        from vibe_core.phoenix.section_loader import load_section
+        from vibe_core.phoenix.section_loader import SectionLoader
         from vibe_core.phoenix.sections.steward.section_main import StewardConfig
         from vibe_core.protocols.steward import StewardProtocol
         from vibe_core.steward.manager import DigitalSteward
 
-        # Load "Persona" from config/steward.yaml
-        steward_config = load_section(StewardConfig)
-        if not steward_config:
-            logger.warning("No steward.yaml found - creating default Steward Config")
+        # Load "Persona" from config/steward.yaml via SectionLoader
+        try:
+            sections, _ = SectionLoader.discover()
+            steward_config = sections.get("steward", StewardConfig())
+        except Exception:
+            logger.warning("SectionLoader failed - creating default Steward Config")
             steward_config = StewardConfig()  # Default empty persona
 
         # Create Active Steward (Hand + Stift)
@@ -104,8 +107,9 @@ class NagaBootloader:
         # 1. Registry
         registry = KulikaRegistry()
 
-        # Register Steward (The 37th Entity)
-        registry.register(steward, force=True)
+        # Register Steward in ServiceRegistry (Global DI, NOT KulikaRegistry)
+        # Steward is accessed via ServiceRegistry.get(StewardProtocol)
+        ServiceRegistry.register(StewardProtocol, steward)
 
         # 2. Base Services (Kings)
         # ------------------------
