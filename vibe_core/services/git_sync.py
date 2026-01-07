@@ -33,6 +33,13 @@ class GitSyncService(SyncProtocol):
 
         Returns a robust SyncResult that doesn't crash on merge conflicts.
         """
+        # ANTI-MAYAVAD ENFORCEMENT
+        if context is None:
+            logger.critical(
+                "🚨 ANTI-MAYAVAD VIOLATION: Anonymous GitSync Attempted! (Graceful degradation: Allowing but logging threat)"
+            )
+            # In Strict Mode this would raise AccessDeniedError
+
         if not (self.repo_path / ".git").exists():
             return SyncResult(success=False, items_synced=0, errors=["Not a git repository"], timestamp=datetime.now())
 
