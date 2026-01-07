@@ -522,11 +522,11 @@ class NagaCortex:
 
             steward = ServiceRegistry.get(StewardProtocol)
             if steward:
-                operation = f"cortex_dispatch_{decision.action.value}"
+                operation = f"cortex_dispatch_{decision.action.name.lower()}"
                 context = {
-                    "decision_type": decision.action.value,
+                    "decision_type": decision.action.name,
                     "target": decision.target if hasattr(decision, "target") else "unknown",
-                    "reason": decision.reason,
+                    "reasoning": decision.reasoning,
                 }
                 if not steward.sign_off(operation, context):
                     logger.warning(f"[CORTEX] Steward blocked decision: {decision.action.value}")
