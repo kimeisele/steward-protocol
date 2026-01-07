@@ -50,6 +50,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Type, runtime_checkable
 
+from vibe_core.di import ServiceRegistry
+
 logger = logging.getLogger("NAGA.KULIKA")
 
 # Excluded method prefixes - pure getters and status methods don't need governance
@@ -459,7 +461,7 @@ class KulikaRegistry:
 
         self._services: Dict[str, NagaManifest] = {}
         self._classes: Dict[str, Type] = {}
-        self._instances: Dict[str, Any] = {}
+        # ADVAITA: No _instances - ServiceRegistry is the single source of truth
         self._by_lord: Dict[NagaLord, List[str]] = {lord: [] for lord in NagaLord}
         self._by_domain: Dict[NagaDomain, List[str]] = {domain: [] for domain in NagaDomain}
         self._by_drift_source: Dict[str, List[str]] = {}
@@ -505,11 +507,12 @@ class KulikaRegistry:
         if name in self._services and force:
             logger.warning(f"Overwriting existing NAGA service: {manifest.name}")
 
-        # Store
+        # Store manifest and class locally (for validation/indexing)
         self._services[name] = manifest
         self._classes[name] = cls
+        # ADVAITA: Store instance in ServiceRegistry (single source of truth)
         if instance:
-            self._instances[name] = instance
+            ServiceRegistry.register(manifest.protocol_class or name, instance)
 
         # Index
         self._by_lord[manifest.lord].append(name)
@@ -542,7 +545,7 @@ class KulikaRegistry:
         # Remove from stores
         del self._services[name]
         del self._classes[name]
-        self._instances.pop(name, None)
+        # ADVAITA: ServiceRegistry cleanup would require protocol class ref
 
         logger.info(f"Unregistered NAGA: {name}")
         return True
@@ -556,12 +559,25 @@ class KulikaRegistry:
         return self._classes.get(name.lower())
 
     def get_instance(self, name: str) -> Optional[Any]:
-        """Get a NAGA instance by name."""
-        return self._instances.get(name.lower())
+        """Get a NAGA instance by name (ADVAITA: delegates to ServiceRegistry)."""
+        # First check if we have a manifest with protocol_class
+        manifest = self._services.get(name.lower())
+        if manifest and manifest.protocol_class:
+            try:
+                return ServiceRegistry.get(manifest.protocol_class)
+            except Exception:
+                pass
+        # Fallback: try by name directly
+        try:
+            return ServiceRegistry.get(name)
+        except Exception:
+            return None
 
     def set_instance(self, name: str, instance: Any) -> None:
-        """Set a NAGA instance."""
-        self._instances[name.lower()] = instance
+        """Set a NAGA instance (ADVAITA: writes to ServiceRegistry)."""
+        manifest = self._services.get(name.lower())
+        protocol_key = manifest.protocol_class if manifest else name
+        ServiceRegistry.register(protocol_key, instance)
 
     def by_lord(self, lord: NagaLord) -> List[NagaManifest]:
         """Get all NAGAs of a specific lord type."""
