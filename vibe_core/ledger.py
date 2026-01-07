@@ -161,6 +161,42 @@ class InMemoryLedger(VibeLedger):
         """Return all ledger events"""
         return self.events.copy()
 
+    def get_events(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        event_type: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        task_id: Optional[str] = None,
+        include_archives: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """Unified Ledger Query for InMemoryLedger."""
+        # 1. Filter
+        results = []
+        for event in self.events:
+            if event_type and event.get("event_type") != event_type:
+                continue
+            if agent_id and event.get("agent_id") != agent_id:
+                continue
+            if task_id and event.get("task_id") != task_id:
+                continue
+            if start_date and event.get("timestamp") < start_date:
+                continue
+            if end_date and event.get("timestamp") > end_date:
+                continue
+            results.append(event)
+
+        # 2. Sort (Newest first, like SQLiteLedger)
+        results.reverse()
+
+        # 3. Limit/Offset
+        if limit > 0:
+            return results[offset : offset + limit]
+
+        return results[offset:]
+
     def count_events(self) -> int:
         """Return total number of events."""
         return len(self.events)

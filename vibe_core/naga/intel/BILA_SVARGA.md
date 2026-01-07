@@ -15,7 +15,7 @@ Dieses Dokument beschreibt den Härtungsgrad der NAGA-Middleware (Layer 0 und da
 | **Karkotaka** | Keys / Secrets | ✅ HARDENED | - | Fail-Closed Sign/Enc & Permissions |
 | **Ananta** | Gene-Splicer | ✅ HARDENED | - | Fail-Closed Loading (No Shadow Load) |
 | **Kaliya** | Quarantine | ✅ HARDENED | - | Persistent State via StateService |
-| **Narada** | Messenger | ❓ UNKNOWN | MITTEL | Discovery & Observation |
+| **Narada** | Messenger | ✅ HARDENED | - | Fail-Safe Spy (Observer doesn't kill) |
 | **Chitragupta**| Profiler / Metrics | ❓ UNKNOWN | NIEDRIG | Karma Recording |
 
 ## II. PRIORISIERUNG (PHASE IV)

@@ -151,8 +151,13 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 observation.exception_type = type(e).__name__
                 raise
             finally:
-                observation.duration_ms = (time.perf_counter() - start_time) * 1000
-                self._record_observation(observation)
+                try:
+                    observation.duration_ms = (time.perf_counter() - start_time) * 1000
+                    self._record_observation(observation)
+                except Exception as e:
+                    # NARADA SAFETY: Observation failure must NEVER kill the application
+                    import sys
+                    sys.stderr.write(f"!!! NARADA SPY FAILURE: Could not record observation: {e}\n")
 
         return wrapper
 
@@ -177,8 +182,13 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 observation.exception_type = type(e).__name__
                 raise
             finally:
-                observation.duration_ms = (time.perf_counter() - start_time) * 1000
-                self._record_observation(observation)
+                try:
+                    observation.duration_ms = (time.perf_counter() - start_time) * 1000
+                    self._record_observation(observation)
+                except Exception as e:
+                    # NARADA SAFETY: Observation failure must NEVER kill the application
+                    import sys
+                    sys.stderr.write(f"!!! NARADA SPY FAILURE: Could not record observation: {e}\n")
 
         return wrapper
 

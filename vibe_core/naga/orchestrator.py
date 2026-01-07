@@ -48,6 +48,7 @@ from vibe_core.protocols.correction import DriftSource
 from vibe_core.protocols.naga import (
     ChitraguptaProtocol,
     KaliyaProtocol,
+    KarkotakaProtocol,
     NagaCortexProtocol,
     NagaFederationProtocol,
     NaradaProtocol,
@@ -69,6 +70,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.ananta import AnantaService
     from vibe_core.naga.services.chitragupta import ChitraguptaService
     from vibe_core.naga.services.kaliya import KaliyaService
+    from vibe_core.naga.services.karkotaka import KarkotakaService
 
     # Governance Layer (NOT Nagas by race)
     from vibe_core.naga.services.narada import NaradaService
@@ -97,6 +99,7 @@ class NagaOrchestrator:
         """Initialize without config - use bootstrap() instead."""
         # ===== INFRASTRUCTURE LAYER (Real Nagas - 🐍) =====
         self._sesha: Optional["SeshaService"] = None
+        self._karkotaka: Optional["KarkotakaService"] = None
         self._vasuki: Optional["VasukiService"] = None
         self._takshaka: Optional["TakshakaService"] = None
         self._kaliya: Optional["KaliyaService"] = None
@@ -210,6 +213,7 @@ class NagaOrchestrator:
         from vibe_core.naga.services.sesha import SeshaService
         from vibe_core.naga.services.takshaka import TakshakaService
         from vibe_core.naga.services.vasuki import VasukiService
+        from vibe_core.naga.services.karkotaka import KarkotakaService
 
         self._config = self._get_config(config)
 
@@ -242,6 +246,14 @@ class NagaOrchestrator:
                 priority=50,
             )
             logger.info("🐍 SESHA registered - The Foundation holds")
+
+        # 1.5 KARKOTAKA - The Magic Cloak (Keys)
+        # Needs to be early for crypto operations
+        if self._config.karkotaka.enabled:
+            sys.stderr.write(">>> BOOTSTRAP: Initializing Karkotaka...\n")
+            self._karkotaka = KarkotakaService()
+            ServiceRegistry.register(KarkotakaProtocol, self._karkotaka)
+            logger.info("🐍 KARKOTAKA registered - The Magic protects")
 
         # 2. TAKSHAKA - The Guardian
         if self._config.takshaka.enabled:
@@ -797,6 +809,7 @@ class NagaOrchestrator:
             "vasuki": self._vasuki.get_status().to_dict() if self._vasuki else None,
             "takshaka": self._takshaka.get_status().to_dict() if self._takshaka else None,
             "kaliya": self._kaliya.get_status().to_dict() if self._kaliya else None,
+            "karkotaka": self._karkotaka.get_status().to_dict() if self._karkotaka else None,
             # Governance Layer (Personnel)
             "narada": self._narada.get_status().to_dict() if self._narada else None,
             "chitragupta": self._chitragupta.get_status().to_dict() if self._chitragupta else None,
@@ -822,6 +835,8 @@ class NagaOrchestrator:
         if self._config.vasuki.enabled and (not self._vasuki or not self._vasuki.get_status().healthy):
             return False
         if self._config.kaliya.enabled and (not self._kaliya or not self._kaliya.get_status().healthy):
+            return False
+        if self._config.karkotaka.enabled and (not self._karkotaka or not self._karkotaka.get_status().healthy):
             return False
 
         # Governance Layer
