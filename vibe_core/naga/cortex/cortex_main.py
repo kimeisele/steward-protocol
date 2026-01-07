@@ -241,6 +241,11 @@ class NagaCortex:
 
         logger.info(f"[CORTEX] Initialized (threshold={self._config.correlation_threshold})")
 
+    def set_ouroboros(self, ouroboros: "NagaOuroboros") -> None:
+        """Inject Ouroboros reference (Cyclic dependency)."""
+        self._ouroboros = ouroboros
+        logger.debug("[CORTEX] Ouroboros wired")
+
     # =========================================================================
     # SIGNAL RECEPTION
     # =========================================================================
