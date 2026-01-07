@@ -22,7 +22,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
+from vibe_core.loaders.manifest_registry import ManifestRegistry
+from vibe_core.naga.kulika import NagaCapability, NagaLord, get_kulika, naga_service
 from vibe_core.naga.mixins.tuv import TuvBadge
 from vibe_core.naga.services.base import NagaBaseService
 from vibe_core.protocols.naga import NagaStatus, NagaType
@@ -41,14 +42,18 @@ from vibe_core.protocols.naga.tuv import (
     TÜVProtocol,
     TÜVReport,
 )
+from vibe_core.protocols.universal import EntityStatus, UnionProtocol
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
     from vibe_core.phoenix.sections.naga.section_main import TÜVConfig
 
+
 logger = logging.getLogger("NAGA.TÜV")
 
+
 # Registry file location
+
 TÜV_REGISTRY_PATH = Path(".vibe/state/tuv_registry.json")
 
 
@@ -60,15 +65,23 @@ TÜV_REGISTRY_PATH = Path(".vibe/state/tuv_registry.json")
     capabilities=[NagaCapability.TYPE_AUDIT, NagaCapability.AUDIT],
     protocol_class="vibe_core.protocols.naga.TÜVProtocol",
 )
-class TÜVService(NagaBaseService):
+class TÜVService(NagaBaseService, UnionProtocol):
     """
+
     TÜV Audit Intelligence Service.
 
+
+
     Implements TÜVProtocol - not documentation, CODE.
+
     Auto-discovered by Narada via @naga_service decorator.
 
+
+
     HIERARCHY: Prahlad → Chitragupta → TÜV
+
     TÜV is an INSTITUTION (tool), not a PERSON (lord).
+
     """
 
     def __init__(
@@ -78,22 +91,108 @@ class TÜVService(NagaBaseService):
         config: Optional["TÜVConfig"] = None,
     ):
         """Initialize TÜV service."""
+
         super().__init__(service_name="TÜV")
+
         self._cortex = cortex
+
         self._registry_path = registry_path or TÜV_REGISTRY_PATH
+
         self._config = config  # Will be loaded from Phoenix if None
 
         # In-memory state - GENERIC REGISTRIES (protocol-first!)
+
         self._leaks: FindingRegistry[Leak] = FindingRegistry(Leak, "LEAK")
+
         self._gaps: FindingRegistry[ProtocolGap] = FindingRegistry(ProtocolGap, "GAP")
+
         self._churns: List[ChurnEntry] = []
+
         self._last_heartbeat = datetime.now()
+
         self._scans_performed = 0
 
         # Load existing registry
+
         self._load_registry()
 
         logger.info("🔍 TÜV initialized - Type Audit Intelligence active")
+
+    # =========================================================================
+
+    # UnionProtocol Implementation (The State of the Union)
+
+    # =========================================================================
+
+    def get_living_entities(self) -> List[EntityStatus]:
+        """
+
+        List all active entities and their protocol heritage.
+
+        """
+
+        entities: List[EntityStatus] = []
+
+        # 1. Get Nagas from Kulika
+
+        kulika = get_kulika()
+
+        for name in kulika.all_names():
+            manifest = kulika.get(name)
+
+            if manifest:
+                entities.append(
+                    EntityStatus(
+                        id=manifest.name,
+                        type="naga",
+                        status="ACTIVE",
+                        protocol=manifest.protocol_class,
+                        is_living=True,  # Nagas are persistent in memory
+                        tuv_score=1.0,  # TODO: actual check
+                        last_heartbeat=datetime.now(),
+                    )
+                )
+
+        # 2. Get Agents from ManifestRegistry
+
+        for entry in ManifestRegistry.all():
+            entities.append(
+                EntityStatus(
+                    id=entry.id,
+                    type=entry.type,
+                    status="ACTIVE" if entry.enabled else "DORMANT",
+                    protocol=entry.manifest.get("protocol_class"),
+                    is_living=entry.enabled,
+                    tuv_score=0.8,  # TODO: actual check
+                    last_heartbeat=datetime.now(),
+                )
+            )
+
+        return entities
+
+    def get_union_summary(self) -> Dict[str, object]:
+        """
+
+        Get high-level summary of the Union.
+
+        """
+
+        entities = self.get_living_entities()
+
+        types: Dict[str, int] = {}
+
+        for e in entities:
+            types[e.type] = types.get(e.type, 0) + 1
+
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "population": len(entities),
+            "by_type": types,
+            "compliance": {
+                "leaks_open": self._leaks.count(status=LeakStatus.OPEN),
+                "gaps_open": self._gaps.count(status=ProtocolGapStatus.IDENTIFIED),
+            },
+        }
 
     def _get_config(self) -> "TÜVConfig":
         """Get TÜV config, loading from Phoenix if needed."""
