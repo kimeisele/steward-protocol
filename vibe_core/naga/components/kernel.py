@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.kulika import KulikaRegistry
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.chitragupta import ChitraguptaService
+    from vibe_core.naga.services.kaliya import KaliyaService
     from vibe_core.naga.services.karkotaka import KarkotakaService
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
@@ -46,6 +48,8 @@ class NagaKernel:
     vasuki: Optional["VasukiService"] = None
     takshaka: Optional["TakshakaService"] = None
     karkotaka: Optional["KarkotakaService"] = None
+    kaliya: Optional["KaliyaService"] = None
+    chitragupta: Optional["ChitraguptaService"] = None
 
     # Governance & Intelligence
     cortex: Optional["NagaCortex"] = None
@@ -62,6 +66,8 @@ class NagaKernel:
             "vasuki": self._get_service_status(self.vasuki),
             "takshaka": self._get_service_status(self.takshaka),
             "karkotaka": self._get_service_status(self.karkotaka),
+            "kaliya": self._get_service_status(self.kaliya),
+            "chitragupta": self._get_service_status(self.chitragupta),
             "cortex": self._get_service_status(self.cortex),
             "ouroboros": self._get_service_status(self.ouroboros),
             "flood_manager": self._get_service_status(self.flood_manager),

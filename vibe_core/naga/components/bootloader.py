@@ -246,6 +246,8 @@ class NagaBootloader:
             vasuki=vasuki,
             takshaka=takshaka,
             karkotaka=karkotaka,
+            kaliya=kaliya,
+            chitragupta=chitragupta,
             cortex=cortex,
             ouroboros=ouroboros,
             flood_manager=flood,
