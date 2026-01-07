@@ -14,12 +14,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from vibe_core.protocols.universal import SyncProtocol, SyncResult, SyncStatus
+
 from .ingestion import ViolationIngester, ViolationRecord, ViolationSource
 
 logger = logging.getLogger("OUROBOROS")
 
 
-class CISyncService:
+class CISyncService(SyncProtocol):
     """
     Syncs CI/CD violations from GitHub Actions to local Knowledge Graph.
 
@@ -327,14 +329,6 @@ class CISyncService:
 
         return violations
 
-    def get_sync_status(self) -> Dict[str, Any]:
-        """Get current sync status."""
-        return {
-            "repo": self.repo,
-            "last_sync": self._last_sync.isoformat() if self._last_sync else None,
-            "gh_cli_available": self._check_gh_cli(),
-        }
-
     def _check_gh_cli(self) -> bool:
         """Check if gh CLI is available and authenticated."""
         try:
@@ -346,3 +340,49 @@ class CISyncService:
             return result.returncode == 0
         except Exception:
             return False
+
+    # =========================================================================
+    # SYNC PROTOCOL IMPLEMENTATION (SAMKHYA)
+    # =========================================================================
+
+    def sync(self) -> SyncResult:
+        """Perform synchronization (Protocol Implementation)."""
+        res_dict = self.sync_latest()
+
+        # Adapt dict to SyncResult
+        errors = res_dict.get("errors", [])
+        return SyncResult(
+            success=len(errors) == 0,
+            items_synced=res_dict.get("violations_ingested", 0),
+            errors=errors,
+            timestamp=datetime.now(),
+        )
+
+    def get_sync_status(self) -> SyncStatus:
+        """Get current sync status (Protocol Implementation)."""
+        status_dict = self.get_sync_status_legacy()
+
+        is_synced = self._last_sync is not None
+        # Ouroboros is always "pending" something from the future, but for now
+        # let's say pending if we haven't synced in a while?
+        # Keeping it simple:
+
+        return SyncStatus(
+            is_synced=is_synced,
+            last_sync=self._last_sync,
+            pending_items=0,  # Unknown without check
+            details=status_dict,
+        )
+
+    def is_synced(self) -> bool:
+        """Check if synchronized."""
+        return self._last_sync is not None
+
+    # Rename original get_sync_status to avoid conflict or just usage legacy inside
+    def get_sync_status_legacy(self) -> Dict[str, Any]:
+        """Get current sync status (Original Dict)."""
+        return {
+            "repo": self.repo,
+            "last_sync": self._last_sync.isoformat() if self._last_sync else None,
+            "gh_cli_available": self._check_gh_cli(),
+        }

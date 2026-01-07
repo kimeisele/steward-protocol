@@ -35,6 +35,8 @@ Usage:
 import logging
 from typing import List, Optional, Protocol, Set, runtime_checkable
 
+from vibe_core.protocols.universal import EnforceContext, EnforceProtocol, Rule, Verdict
+
 logger = logging.getLogger("CAPABILITY_ENFORCER")
 
 
@@ -67,7 +69,7 @@ class CapabilityEnforcerProtocol(Protocol):
         ...
 
 
-class CapabilityEnforcerService:
+class CapabilityEnforcerService(EnforceProtocol):
     """
     Layer 0 Security Service - Capability Permission Enforcement.
 
@@ -196,13 +198,6 @@ class CapabilityEnforcerService:
         logger.warning(f"⚠️ Adding system identity: {identity} (security modification)")
         self._system_identities.add(identity)
 
-    def get_status(self) -> dict:
-        """
-        Get enforcer status for observability.
-
-        Returns:
-            Dict with current configuration
-        """
         return {
             "service": "CapabilityEnforcerService",
             "layer": 0,
@@ -210,3 +205,71 @@ class CapabilityEnforcerService:
             "granters": sorted(self._granters),
             "system_identities": sorted(self._system_identities),
         }
+
+    # =========================================================================
+    # ENFORCE PROTOCOL IMPLEMENTATION (SAMKHYA)
+    # =========================================================================
+
+    def enforce(self, action: str, context: EnforceContext) -> Verdict:
+        """
+        Enforce permissions via Atomic Protocol (SAMKHYA).
+
+        Maps generic 'action' to specific permission checks.
+        """
+        allowed = False
+
+        if action == "revoke":
+            # context.resource is the target agent ID
+            # context.caller_id is the revoker
+            allowed = self.can_revoke(context.caller_id, context.resource)
+
+        elif action == "grant":
+            # context.caller_id is the granter
+            allowed = self.can_grant(context.caller_id)
+
+        elif action == "access":
+            # context.resource is the capability ID
+            allowed = self.can_access(context.caller_id, context.resource)
+
+        else:
+            logger.warning(f"❌ Unknown action for enforcement: {action}")
+            return Verdict.DENY
+
+        return Verdict.ALLOW if allowed else Verdict.DENY
+
+    def check(self, action: str) -> bool:
+        """
+        Quick check if action type is supported.
+        Note: Cannot check permission without context (caller).
+        """
+        return action in {"revoke", "grant", "access"}
+
+    def get_rules(self) -> List[Rule]:
+        """Get active rules (Static Policy)."""
+        rules = []
+
+        # System identities rule
+        for identity in self._system_identities:
+            rules.append(
+                Rule(
+                    id=f"system-{identity}",
+                    pattern="*",
+                    verdict=Verdict.ALLOW,
+                    priority=100,
+                    description=f"{identity} has full permissions",
+                )
+            )
+
+        # Granters rule
+        for granter in self._granters:
+            rules.append(
+                Rule(
+                    id=f"granter-{granter}",
+                    pattern="grant",
+                    verdict=Verdict.ALLOW,
+                    priority=90,
+                    description=f"{granter} can grant capabilities",
+                )
+            )
+
+        return rules
