@@ -276,7 +276,7 @@ Methods marked `@ungoverned` are pure getters or bootstrap code.
 | Attack Vector | Severity | Status |
 |---|---|---|
 | Steward Bypass (Internal) | 🔴 CRITICAL | ✅ CLOSED (IMPL-219) |
-| Registry Split-Brain | 🟡 MEDIUM | OPEN |
+| Registry Split-Brain | 🟡 MEDIUM | ✅ CLOSED (IMPL-220) |
 | Silent Failures (Tamas) | 🟡 MEDIUM | OPEN |
 | Ungoverned Escape | 🟢 LOW | DOCUMENTED |
 | Key Rotation | 🟡 MEDIUM | MANUAL |
