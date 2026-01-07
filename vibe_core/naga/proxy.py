@@ -59,6 +59,8 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.narada import NaradaService
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
+    from vibe_core.protocols.substrate import MantraOpCode
+
 
 logger = logging.getLogger("NAGA.PROXY")
 
@@ -389,6 +391,49 @@ class NagaProxy(Generic[T]):
         count = len(buffer)
         buffer.clear()
         return count
+
+    # =========================================================================
+    # MANTRA INTEGRATION (The Balarama Heartbeat)
+    # =========================================================================
+
+    def on_mantra_pulse(self, opcode: "MantraOpCode") -> None:
+        """
+        The Balarama Heartbeat.
+        Receives the signal from the Vishnu Clock (Watchdog/MantraProtocol).
+
+        Design Principle:
+            - The Proxy is the Body (Balarama).
+            - The Mantra is the Time/Will (Vishnu).
+            - The Body moves according to Time.
+        """
+        from vibe_core.protocols.substrate import MantraOpCode
+
+        # Lazy resolve to ensure connections exist
+        self._resolve_nagas()
+
+        # 1. PULSE_SYNC (Hare): The Heartbeat -> Confirm Narada alive
+        if opcode == MantraOpCode.PULSE_SYNC:
+            narada = object.__getattribute__(self, "_narada")
+            if narada:
+                logger.debug(f"💓 PULSE: {self._service_name} alive")
+
+        # 2. GARBAGE_COLLECT (Hare): Cleaning -> Clear old buffers
+        elif opcode == MantraOpCode.GARBAGE_COLLECT:
+            cleared = self.clear_observations()
+            if cleared > 0:
+                logger.debug(f"🗑️ MANTRA GC: Cleared {cleared} stale observations")
+
+        # 3. ASSERT_TRUTH (Krishna): Integrity -> Verify Takshaka Link
+        elif opcode == MantraOpCode.ASSERT_TRUTH:
+            takshaka = object.__getattribute__(self, "_takshaka")
+            if not takshaka:
+                logger.warning(f"⚠️ MANTRA: Takshaka missing in {self._service_name}")
+
+        # 4. LOAD_ROOT (Krishna): Identity -> Verify Service Binding
+        elif opcode == MantraOpCode.LOAD_ROOT:
+            wrapped = object.__getattribute__(self, "_wrapped")
+            if wrapped is None:
+                logger.error("💀 MANTRA CRITICAL: Proxy wrapping NOTHING (Mayavad)")
 
     @property
     def unwrap(self) -> T:

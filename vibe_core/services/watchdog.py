@@ -34,12 +34,14 @@ class NrisimhaWatchdog(MantraProtocol):
         self,
         sovereign_anchor: SovereignContext,
         opcode_handlers: Optional[dict] = None,
+        naga_proxies: Optional[list] = None,
     ):
         self._anchor = sovereign_anchor
         self._beads_chanted = 0
         self._last_pulse = 0.0
         self._alignment_score = 1.0  # Start perfectly aligned
         self._opcode_handlers = opcode_handlers or {}  # Kernel-injected handlers
+        self._naga_proxies = naga_proxies or []  # NagaProxy instances to broadcast to
         logger.info(f"🦁 Nrisimha Watchdog initialized for Sovereign: {sovereign_anchor.identity_id}")
 
     # =========================================================================
@@ -177,7 +179,8 @@ class NrisimhaWatchdog(MantraProtocol):
 
         Priority:
         1. Kernel-injected handler (if available)
-        2. Internal default logic
+        2. Broadcast to NagaProxies (Balarama Heartbeat)
+        3. Internal default logic
 
         Returns:
             True if operation succeeded.
@@ -190,6 +193,14 @@ class NrisimhaWatchdog(MantraProtocol):
             except Exception as e:
                 logger.warning(f"Kernel handler failed for {opcode}: {e}")
                 return False
+
+        # Broadcast to all registered NagaProxies (The Balarama Heartbeat)
+        for proxy in self._naga_proxies:
+            try:
+                if hasattr(proxy, "on_mantra_pulse"):
+                    proxy.on_mantra_pulse(opcode)
+            except Exception as e:
+                logger.debug(f"Proxy pulse failed: {e}")
 
         # Fall back to internal default logic
 
