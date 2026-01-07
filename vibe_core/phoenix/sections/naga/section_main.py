@@ -280,6 +280,27 @@ class KaliyaConfig:
 
 
 @dataclass
+class KarkotakaConfig:
+    """🐍 Karkotaka - Keys/Secrets configuration."""
+
+    enabled: bool = True
+    vault_dir: str = ".steward/vault"
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "KarkotakaConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            vault_dir=data.get("vault_dir", ".steward/vault"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "vault_dir": self.vault_dir,
+        }
+
+
+@dataclass
 class ChitraguptaConfig:
     """📜 Chitragupta - Yama's Accountant/Profiler configuration."""
 
@@ -522,6 +543,7 @@ class NagaConfig:
     vasuki: VasukiConfig = field(default_factory=VasukiConfig)
     takshaka: TakshakaConfig = field(default_factory=TakshakaConfig)
     kaliya: KaliyaConfig = field(default_factory=KaliyaConfig)
+    karkotaka: KarkotakaConfig = field(default_factory=KarkotakaConfig)
 
     # ===== GOVERNANCE LAYER (Personnel - NOT Nagas) =====
     narada: NaradaConfig = field(default_factory=NaradaConfig)
@@ -586,6 +608,7 @@ class NagaConfig:
             vasuki=VasukiConfig.from_dict(data.get("vasuki", {})),
             takshaka=TakshakaConfig.from_dict(data.get("takshaka", {})),
             kaliya=KaliyaConfig.from_dict(data.get("kaliya", {})),
+            karkotaka=KarkotakaConfig.from_dict(data.get("karkotaka", {})),
             # Governance Layer (Personnel)
             narada=NaradaConfig.from_dict(data.get("narada", {})),
             chitragupta=ChitraguptaConfig.from_dict(data.get("chitragupta", {})),
@@ -611,6 +634,7 @@ class NagaConfig:
             "vasuki": self.vasuki.to_dict(),
             "takshaka": self.takshaka.to_dict(),
             "kaliya": self.kaliya.to_dict(),
+            "karkotaka": self.karkotaka.to_dict(),
             # Governance Layer (Personnel)
             "narada": self.narada.to_dict(),
             "chitragupta": self.chitragupta.to_dict(),
