@@ -30,8 +30,10 @@ class LedgerSyncWrapper(SyncProtocol):
         Force flush/checkpoint of the ledger.
         """
         try:
-            # Anti-Mayavad: Enforce Context?
-            # if not context: raise AccessDeniedError... (Loose for now)
+            # ANTI-MAYAVAD ENFORCEMENT
+            if context is None:
+                logger.critical("🚨 ANTI-MAYAVAD VIOLATION: Anonymous LedgerSync Attempted!")
+                # raise AccessDeniedError("Unsigned Sync Attempt") - Future Strict Mode
 
             # 1. Force Checkpoint (if SQLite)
             if hasattr(self._ledger, "connection"):
