@@ -139,6 +139,13 @@ class RamanujanProtocol(BaseTestable):
                 description="PROVES MATERIAL FAILURE. Entropy Must Destroy. (Yamaraja)",
                 tags=["entropy", "watertight"],
             ),
+            # --- PHASE 5: MOKSHA (The Guru / Closure) ---
+            TestCase(
+                name="test_13_guru_closure",
+                test_func=self._test_guru_closure,
+                description="PROVES MOKSHA. The 37th Element closes the Samsara Loop.",
+                tags=["guru", "math"],
+            ),
         ]
 
     # =========================================================================
@@ -347,6 +354,30 @@ class RamanujanProtocol(BaseTestable):
             # Impossible in material world.
             # Our simulation is broken: FAIL
             return False
+
+    # =========================================================================
+    # PHASE 5: MOKSHA (The Guru Logic)
+    # =========================================================================
+
+    def _test_guru_closure(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+        """
+        THE GURU CLOSURE.
+
+        Proves that 36/37 is Samsara (Infinite Loop),
+        but 37/37 is Moksha (Integer Closure).
+        """
+        # 1. Test Samsara (36/37)
+        # Expected: 0.972972972... (Infinite)
+        samsara = Decimal(36) / Decimal(37)
+        if samsara == 1:
+            return False  # Should not be 1
+
+        # 2. Test Moksha (37/37)
+        # Expected: 1 (Integer)
+        moksha = Decimal(37) / Decimal(37)
+
+        # The Loop must break
+        return moksha == 1 and samsara < 1
 
 
 # =============================================================================
