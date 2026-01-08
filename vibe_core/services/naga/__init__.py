@@ -12,7 +12,6 @@ The NAGAs are MIDDLEWARE that integrate into existing infrastructure.
 """
 
 from vibe_core.services.naga.state_proxy import (
-    DharmaPrinciple,
     DharmaVerdict,
     NagaStateProxy,
     StateCorruptionAttempt,
@@ -22,7 +21,6 @@ from vibe_core.services.naga.state_proxy import (
 __all__ = [
     "NagaStateProxy",
     "DharmaVerdict",
-    "DharmaPrinciple",
     "StateCorruptionAttempt",
     "get_naga_state_proxy",
 ]
