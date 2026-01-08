@@ -2,6 +2,7 @@ from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, HolyName, MantraO
 
 from .autobahn import AutobahnProtocol, GermanAutobahn, Lane, VajraPacket
 from .bhagavan import Bhaga, BhagaTestResult, BhagavanProtocol
+from .dharma import DharmaGuard, DharmaVerdict, UniversalDharma
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
 from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
@@ -23,6 +24,7 @@ from .resonance import (
     create_substance,
     get_quality_from_vector,
 )
+from .steward import StewardProtocol, VedicSteward
 from .store_recall import StoreRecallProtocol
 from .sync import SyncProtocol
 from .types import (
@@ -44,10 +46,12 @@ from .types import (
     SovereignContext,
     SyncResult,
     SyncStatus,
-    Verdict,
+)
+from .types import (
+    Verdict as TypeVerdict,
 )
 from .union import EntityStatus, UnionProtocol
-from .yamaraja import DharmaVerdict, YamarajaProtocol
+from .yamaraja import Judgment, Verdict, YamarajaGate
 
 # NOTE: MantraInstruction has been replaced by MantraOpCode from substrate.py
 # Use MantraOpCode (directly from vibe_core.protocols.substrate)
