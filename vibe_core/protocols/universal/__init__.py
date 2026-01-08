@@ -1,6 +1,6 @@
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
-from .krishna import KrishnaProtocol
+from .krishna import IdentityStatus, KrishnaProtocol
 from .mantra import MAHAMANTRA_SEQUENCE, MantraOpCode, MantraProtocol
 from .om import OmProtocol
 from .rama import RamaProtocol
