@@ -5,6 +5,7 @@ from .enforce import EnforceProtocol
 from .infer import InferProtocol
 from .krishna import IdentityStatus, KrishnaProtocol
 from .om import OmProtocol
+from .prabhupada import PRABHUPADA, PrabhupadaVani, SrilaPrabhupada, VaniInstruction
 from .rama import RamaProtocol
 from .ramanujan import RamanujanProtocol
 from .read_write import ReadWriteProtocol
