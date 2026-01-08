@@ -27,6 +27,10 @@ from vibe_core.protocols.naga.chitragupta import (
     ChitraguptaProtocol,
     NullChitragupta,
 )
+from vibe_core.protocols.naga.kala import (
+    KalaProtocol,
+    NullKala,
+)
 from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 
 from .enforce import EnforceProtocol
@@ -88,14 +92,15 @@ class YamarajaProtocol(BaseTestable):
 
     FRACTAL PATTERN:
     - Inputs: Action + EnforceContext
-    - Data Source: Chitragupta (The Karma Profiler)
-    - Logic: Strict Karma UNLESS Mercy/Guru Interrupt.
+    - Data Source: Chitragupta (The Karma Profiler), Kala (The Timekeeper)
+    - Logic: Strict Karma UNLESS Mercy/Guru Interrupt OR Time Constraint.
 
     THE 4 LEVELS OF JUDGMENT (v2):
     1. GURU (Instruction Interrupt) → GURU_KRIPA
     2. NITYANANDA (Force Mercy) → PREMA
     3. AJAMILA (Holy Name Interrupt) → VAIKUNTHA
-    4. KARMA (Chitragupta Audit) → ALLOW/DENY/PRATYAHARA
+    4. KALA (Time Constraint) → PRATYAHARA
+    5. KARMA (Chitragupta Audit) → ALLOW/DENY/PRATYAHARA
 
     FEATURES:
     - Hiranyakashipu Engine (Fuzzing)
@@ -103,14 +108,21 @@ class YamarajaProtocol(BaseTestable):
     - The Grape Pattern (One Entry → Exponential Coverage)
     """
 
-    def __init__(self, chitragupta: Optional[ChitraguptaProtocol] = None):
+    def __init__(
+        self,
+        chitragupta: Optional[ChitraguptaProtocol] = None,
+        kala: Optional[KalaProtocol] = None,
+    ):
         """
         Dependency Injection - Fractal Link to Naga Layer.
 
         Args:
             chitragupta: The Karma Profiler. If None, uses NullChitragupta.
+            kala: The Timekeeper. If None, uses NullKala.
         """
         self._chitragupta: ChitraguptaProtocol = chitragupta or NullChitragupta()
+        self._kala: KalaProtocol = kala or NullKala()
+
         # The 6 Opulences of the Supreme Controller (Bhagavan)
         self._opulences = BHAGA_OPULENCES
 
@@ -169,6 +181,12 @@ class YamarajaProtocol(BaseTestable):
         forbidden = ["SIN", "OFFENSE", "APARADHA", "BLASPHEMY"]
         return action.upper() not in forbidden
 
+        if self.check(action):
+            return DharmaVerdict.ALLOW
+
+        # Fallback
+        return DharmaVerdict.DENY
+
     def enforce(self, action: str, context: EnforceContext) -> DharmaVerdict:
         """
         THE JUDGMENT LOOP v2.
@@ -177,7 +195,8 @@ class YamarajaProtocol(BaseTestable):
         0. Check for Guru Context (priority 1001) → GURU_KRIPA
         1. Check for Nityananda Override (priority 1000) → PREMA
         2. Check for Ajamila Interrupt (priority 999) → VAIKUNTHA
-        3. Consult Chitragupta (priority 100) → ALLOW/DENY/PRATYAHARA
+        3. Consult Kala (Time) Check (priority 500) → PRATYAHARA
+        4. Consult Chitragupta (priority 100) → ALLOW/DENY/PRATYAHARA
 
         Args:
             action: The action being judged.
@@ -190,9 +209,7 @@ class YamarajaProtocol(BaseTestable):
 
         # --- LEVEL 0: GURU PARAM (Priority 1001) ---
         # The 12th Element. Instruction from Guru overrides all karma.
-        # Even a "failing" disciple is saved if connected to Guru.
         if metadata.get("via_guru") or metadata.get("guru_instruction"):
-            # The transparent medium. No karma applies.
             return DharmaVerdict.GURU_KRIPA
 
         # --- LEVEL 1: NITYANANDA OVERRIDE (Priority 1000) ---
@@ -200,13 +217,22 @@ class YamarajaProtocol(BaseTestable):
             return DharmaVerdict.PREMA
 
         # --- LEVEL 2: AJAMILA INTERRUPT (Priority 999) ---
-        holy_names = ["NARAYANA", "KRISHNA", "RAMA", "VISHNU", "HARI", "GOVINDA"]
+        holy_names = ["NARAYANA", "KRISHNA", "RAMA", "VISHNU", "HARI", "GOVINDA", "OM"]
         searchable = f"{action} {context.resource} {context.action}".upper()
         for name in holy_names:
             if name in searchable:
                 return DharmaVerdict.VAIKUNTHA
 
-        # --- LEVEL 3: KARMA AUDIT (Priority 100) ---
+        # --- LEVEL 3: KALA CHECK (Priority 500) ---
+        # "Time I am." Even Karma bows to Time.
+        # In Kali Yuga, expensive actions (Yajna) are forbidden.
+        if self._kala:
+            cost = str(metadata.get("cost", "LOW"))
+            if not self._kala.is_action_permitted(cost):
+                # If Time forbids it, we must withdraw.
+                return DharmaVerdict.PRATYAHARA
+
+        # --- LEVEL 4: KARMA AUDIT (Priority 100) ---
         anomaly: Optional[AnomalyReport] = self._chitragupta.detect_anomaly(context.caller_id)
 
         if anomaly:
