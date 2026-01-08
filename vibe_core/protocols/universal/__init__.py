@@ -4,6 +4,7 @@ from .krishna import IdentityStatus, KrishnaProtocol
 from .mantra import MAHAMANTRA_SEQUENCE, MantraOpCode, MantraProtocol
 from .om import OmProtocol
 from .rama import RamaProtocol
+from .ramanujan import RamanujanProtocol
 from .read_write import ReadWriteProtocol
 from .store_recall import StoreRecallProtocol
 from .sync import SyncProtocol
