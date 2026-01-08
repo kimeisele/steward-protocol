@@ -146,3 +146,40 @@ class BalaramaProxy:
     def get_target(self) -> Any:
         """Unwrap the Jiva (for internal inspection)."""
         return self._target
+
+    # =========================================================================
+    # MANTRA RECEPTION (THE HEARTBEAT)
+    # =========================================================================
+
+    def on_mantra_pulse(self, opcode: MantraOpCode) -> None:
+        """
+        Der 1728-Takt-Empfänger.
+        Hier trifft die Zeit (Kala) auf die Materie (Code).
+
+        PHASES:
+        1. HARE (Energy/Wake): Cleanliness (Garbage Collect).
+        2. KRISHNA (Identity/Truth): Security (Takshaka/Yamaraja Check).
+        3. RAMA (Service/Strength): Persistence (Sesha Push).
+        """
+        # --- PHASE 1: HARE (WAKE/CLEAN) ---
+        if opcode in [MantraOpCode.SYS_WAKE, MantraOpCode.GARBAGE_COLLECT]:
+            # "Hare" calls the energy to wake up and clean
+            # Simulating internal cleanup (e.g. flushing buffers if target supports it)
+            if hasattr(self._target, "cleanup") and callable(self._target.cleanup):
+                self._target.cleanup()
+
+        # --- PHASE 2: KRISHNA (TRUTH/IDENTITY) ---
+        elif opcode in [MantraOpCode.ASSERT_TRUTH, MantraOpCode.BIND_CTX]:
+            # "Krishna" demands Truth. Are we who we say we are?
+            # Audit self with Yamaraja
+            ctx = EnforceContext(caller_id=self._name, resource="identity", action="exist", metadata={"opcode": opcode})
+            verdict = self._yamaraja.enforce("heartbeat_check", ctx)
+            if verdict == DharmaVerdict.DENY:
+                self._chitragupta.record(self._name, "identity_lost", 1.0)
+                raise MayaError(f"KRISHNA: Identity check failed for {self._name}")
+
+        # --- PHASE 3: RAMA (SERVICE/STRENGTH) ---
+        elif opcode in [MantraOpCode.EXEC_SERVICE, MantraOpCode.COMMIT_LOG]:
+            # "Rama" is action. Report strength/service status.
+            # Report liveness to Chitragupta
+            self._chitragupta.record(self._name, "pulse_ack", 1.0)
