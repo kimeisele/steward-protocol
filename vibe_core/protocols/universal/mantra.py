@@ -87,7 +87,7 @@ class MantraProtocol(Protocol):
     def chant_round(self, beads: int = 108) -> AlignmentScore:
         """
         Performs a full Japa Round (108 cycles).
-        Each bead is a state-check: 'Am I still me?'
+        Each bead is one complete chant_mahamantra cycle.
         """
         ...
 
