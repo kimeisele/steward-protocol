@@ -23,7 +23,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 from vibe_core.protocols.naga.base import NagaBase
-from vibe_core.protocols.universal.yamaraja import DharmaVerdict
 
 # Define Garuda's specific manifest capabilities
 GARUDA_CAPS = ("fetch", "push", "connect")
