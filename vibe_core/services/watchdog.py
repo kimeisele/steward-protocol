@@ -229,6 +229,8 @@ class NrisimhaWatchdog(MantraProtocol):
         elif opcode == MantraOpCode.PULSE_SYNC:
             # Emit Naga heartbeat
             self._last_pulse = time.time()
+            # ASHVAMEDHA: Auto-flood orphan services on every pulse
+            self._ashvamedha_pulse()
         elif opcode == MantraOpCode.FETCH_RES:
             # Request resources
             pass
@@ -271,3 +273,30 @@ class NrisimhaWatchdog(MantraProtocol):
         """Apply micro-correction during Japa."""
         # logger.debug(f"   ⚡ Correction applied at Bead {bead_index}")
         pass
+
+    def _ashvamedha_pulse(self) -> None:
+        """
+        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+
+        On every PULSE_SYNC (Step 8), Ananta scans for orphan services
+        and floods them with NagaProxy capabilities.
+
+        This is the Mantra-based integration - no manual wiring needed.
+        "Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.substrate import IAnantaBridge
+
+            # Get Ananta from ServiceRegistry
+            ananta = ServiceRegistry.get(IAnantaBridge)
+            if ananta is None:
+                return  # Ananta not yet registered (boot sequence)
+
+            # Ananta analyzes and floods orphan services
+            if hasattr(ananta, "auto_flood_orphans"):
+                ananta.auto_flood_orphans()
+
+        except Exception as e:
+            # Silent fail - Ashvamedha is opportunistic, not critical
+            logger.debug(f"Ashvamedha pulse skipped: {e}")
