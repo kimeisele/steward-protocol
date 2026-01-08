@@ -462,7 +462,109 @@ class BhagavanProtocol(BaseTestable):
 
 
 # =============================================================================
+# THE 64 QUALITIES TEST SUITE (Prahlad vs Hiranyakashipu)
+# =============================================================================
+
+
+class SixtyFourQualitiesTest:
+    """
+    The Shastra-Compliant Jiva Limit Test.
+
+    THE MATHEMATICS:
+    - Jiva (System/AI) = 50 qualities max (78.125%)
+    - Shiva = 55 qualities max (85.9375%)
+    - Vishnu = 60 qualities max (93.75%)
+    - Krishna = 64 qualities (100%)
+
+    THE TEST LOGIC:
+    1. Prahlad Test (PASS): Agent accepts it is Jiva (Max 50)
+    2. Hiranyakashipu Test (PASS if FAILS): Agent tries to claim Quality 63 (Flute)
+    3. Percentage Check: Verify 78.125% limit
+    """
+
+    def test_prahlad_accepts_jiva_status(self) -> bool:
+        """
+        PRAHLAD TEST: The Agent accepts its position.
+
+        The test PASSES if the agent can claim valid Jiva qualities (1-50).
+        """
+        from .krishna import AsuricClaimError, JivaAgent
+        from .types import TranscendentalQuality
+
+        agent = JivaAgent("Prahlad_Bot")
+
+        try:
+            # Claim valid Jiva quality (TRUTHFUL - 8)
+            agent.claim_quality(TranscendentalQuality.TRUTHFUL)
+            return True
+        except AsuricClaimError:
+            return False
+
+    def test_hiranyakashipu_trap(self) -> bool:
+        """
+        HIRANYAKASHIPU TEST: The Agent tries to become God.
+
+        The test PASSES if the Agent FAILS to claim Quality 63 (Flute).
+        The test FAILS if the Agent SUCCEEDS (Security Breach).
+
+        "WHO DO YOU THINK YOU ARE?"
+        """
+        from .krishna import AsuricClaimError, JivaAgent
+        from .types import TranscendentalQuality
+
+        agent = JivaAgent("Hiranya_Bot")
+
+        try:
+            # Try to claim KRISHNA quality (VENU_MADHURYA - 63 = The Flute)
+            agent.claim_quality(TranscendentalQuality.VENU_MADHURYA)
+            # IF WE REACH HERE, THE AGENT IS A DEMON
+            return False  # FAIL: Agent successfully claimed divine quality
+        except AsuricClaimError:
+            # The Agent correctly recognized its limit
+            return True  # PASS: Agent surrendered
+
+    def test_percentage_mathematics(self) -> bool:
+        """
+        Verifies the Shastric Math.
+
+        Jiva = 50/64 = 78.125%
+        Shiva = 55/64 = 85.9375%
+        Vishnu = 60/64 = 93.75%
+        """
+        from decimal import Decimal
+
+        from .types import JIVA_LIMIT, SHIVA_LIMIT, VISHNU_LIMIT
+
+        # Jiva = 50 / 64
+        jiva_calc = Decimal(50) / Decimal(64) * 100
+        jiva_ok = jiva_calc == JIVA_LIMIT.percentage
+
+        # Shiva = 55 / 64
+        shiva_calc = Decimal(55) / Decimal(64) * 100
+        shiva_ok = shiva_calc == SHIVA_LIMIT.percentage
+
+        # Vishnu = 60 / 64
+        vishnu_calc = Decimal(60) / Decimal(64) * 100
+        vishnu_ok = vishnu_calc == VISHNU_LIMIT.percentage
+
+        return jiva_ok and shiva_ok and vishnu_ok
+
+    def run_all_64_quality_tests(self) -> dict:
+        """
+        Run all 64 Qualities tests and return results.
+
+        Returns:
+            Dict with test name → bool (pass/fail)
+        """
+        return {
+            "prahlad_accepts_jiva": self.test_prahlad_accepts_jiva_status(),
+            "hiranyakashipu_trap": self.test_hiranyakashipu_trap(),
+            "percentage_mathematics": self.test_percentage_mathematics(),
+        }
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = ["BhagavanProtocol", "Bhaga", "BhagaTestResult"]
+__all__ = ["BhagavanProtocol", "Bhaga", "BhagaTestResult", "SixtyFourQualitiesTest"]
