@@ -183,6 +183,78 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
         logger.info(f"ANANTA: Instance flooded -> {type(instance).__name__}")
         return instance
 
+    # =========================================================================
+    # ASHVAMEDHA: Automatic Protocol Integration
+    # =========================================================================
+
+    def auto_flood_orphans(self) -> int:
+        """
+        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+
+        Implementation of the "Nadi Shodhana" (Channel Purification).
+        Scans values in ServiceRegistry, identifies unblessed orphans,
+        and naturalizes them via NagaProxy wrapping (Flood).
+        """
+        # Import Holy Names for Anti-Mayavad Verification
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.naga.proxy import NagaProxy
+        from vibe_core.protocols.universal import HolyName
+
+        flooded_count = 0
+
+        # 1. RESONATE: Sound the Conch (Shankha)
+        # We invoke the Holy Name to purify the intent
+        self.resonate(MantraOpCode.PULSE_SYNC)  # Sync Pulse
+
+        # 2. SCAN: Darshan of the Registry
+        # We access the raw services because we are Ananta (Infrastructure)
+        services_map = ServiceRegistry.list_services()
+
+        for interface_name in services_map:
+            # Skip Ananta itself (Self-Reference Paradox)
+            if interface_name in ("Ananta", "AnantaService", "IAnantaBridge"):
+                continue
+
+            # Retrieve instance from internal registry (Privileged Access)
+            instance = ServiceRegistry._services.get(interface_name)
+            if not instance:
+                continue
+
+            # 3. IDENTIFY: Is it an Orphan?
+            # Use ServiceRegistry._check_naga_blessing(instance)
+            is_blessed = ServiceRegistry._check_naga_blessing(instance)
+
+            if not is_blessed:
+                try:
+                    # 4. NATURALIZE: The Flood
+                    # We wrap it in a NagaProxy (Balarama's Strength)
+                    logger.info(f"ASHVAMEDHA: Found Orphan {interface_name}. Invoking {HolyName.BALARAMA}...")
+
+                    proxy = NagaProxy(instance)
+
+                    # Update Registry (Mutation!)
+                    ServiceRegistry._services[interface_name] = proxy
+
+                    # Also update protocols mapping if present
+                    # This is deep surgery - Nadi Shodhana
+                    for proto, instances in ServiceRegistry._protocols.items():
+                        if instance in instances:
+                            idx = instances.index(instance)
+                            instances[idx] = proxy
+
+                    # Track in ServiceRegistry's auto_flooded list
+                    if f"{interface_name} ({type(instance).__name__})" not in ServiceRegistry._auto_flooded_services:
+                        ServiceRegistry._auto_flooded_services.append(f"{interface_name} ({type(instance).__name__})")
+
+                    # Log success
+                    logger.info(f"ASHVAMEDHA: {interface_name} flooded -> {HolyName.KRISHNA} Protected.")
+                    flooded_count += 1
+
+                except Exception as e:
+                    logger.error(f"ASHVAMEDHA: Failed to flood {interface_name}: {e}")
+
+        return flooded_count
+
     def resonate(self, opcode: MantraOpCode) -> bool:
         """IAnantaBridge: Execute Mantra Step."""
         # AnantaService is the 'Body' of Ananta in Layer 0.
