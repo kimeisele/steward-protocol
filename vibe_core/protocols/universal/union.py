@@ -95,3 +95,18 @@ class UnionProtocol(Protocol):
         Includes population counts and average compliance scores.
         """
         ...
+
+    def get_registry_slots(self) -> List[Optional[EntityStatus]]:
+        """
+        THE 37 SLOTS.
+
+        Returns a fixed-size list of length 37 (REGISTRY_SIZE).
+        Slot 0: The Sovereign (Guru).
+        Slots 1-36: The Field (Kshetra).
+        """
+        ...
+
+    @property
+    def divine_hash(self) -> str:
+        """The 1972 Standard Hash."""
+        ...
