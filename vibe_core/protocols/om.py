@@ -324,10 +324,10 @@ class OM(BaseTestable):
 # =============================================================================
 
 # Re-export for backward compatibility
+from .substrate import MantraProtocol
 from .universal.enforce import EnforceProtocol
 from .universal.infer import InferProtocol
 from .universal.krishna import KrishnaProtocol
-from .universal.mantra import MantraProtocol
 
 # The unified OmProtocol interface (for structural typing)
 from .universal.om import OmProtocol

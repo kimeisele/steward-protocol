@@ -10,16 +10,16 @@
 
 | Protocol | D | O | P | C | I | R | VERDICT |
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|:-------:|
-| **OmProtocol** | ✅ | ✅ | ✅ | ✅ | ❓ | ❓ | ⚠️ |
-| KrishnaProtocol | ✅ | ❌ | ✅ | ✅ | ✅ | ❓ | 🔴 |
-| RamaProtocol | ✅ | ❌ | ✅ | ✅ | ❌ | ❓ | 🔴 |
+| **OmProtocol** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| KrishnaProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| RamaProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | MantraProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| InferProtocol | ✅ | ✅ | ✅ | ✅ | ❓ | ❌ | 🔴 |
-| EnforceProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ |
-| ReadWriteProtocol | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ⚠️ |
-| StoreRecallProtocol | ✅ | ❌ | ✅ | ✅ | ✅ | ❓ | 🔴 |
+| InferProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| EnforceProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ReadWriteProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| StoreRecallProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | SyncProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| UnionProtocol | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | 🔴 |
+| UnionProtocol | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Legend:**
 - D = Discoverability (introspection)
@@ -31,49 +31,14 @@
 
 ---
 
-## RED TESTS (Failing)
-
-### 🔴 RED-001: KrishnaProtocol missing `get_status()`
-**Requirement:** GAD-000 Observability
-**File:** `krishna.py`
-**Problem:** No way to observe identity state.
-**Fix:** Add `def get_identity_status(self) -> IdentityStatus`
-
-### 🔴 RED-002: RamaProtocol `perform_dharma` not idempotent
-**Requirement:** GAD-000 Idempotency  
-**File:** `rama.py`
-**Problem:** No `idempotency_key` parameter.
-**Fix:** Add `idempotency_key: Optional[str] = None`
-
-### 🔴 RED-003: RamaProtocol missing observability
-**Requirement:** GAD-000 Observability
-**File:** `rama.py`
-**Problem:** No way to see pending/running dharmas.
-**Fix:** Add `def list_pending_dharmas(self) -> List[DharmaStatus]`
-
-### 🔴 RED-004: InferProtocol no fallback defined
-**Requirement:** GAD-000 Recoverability
-**File:** `infer.py`
-**Problem:** What happens if inference fails?
-**Fix:** Add `fallback: Optional[Inference] = None` param
-
-### 🔴 RED-005: StoreRecallProtocol missing observability
-**Requirement:** GAD-000 Observability
-**File:** `store_recall.py`
-**Problem:** No `list_keys()` or memory stats.
-**Fix:** Add `def get_memory_stats(self) -> MemoryStats`
-
-### 🔴 RED-006: UnionProtocol not composable
-**Requirement:** GAD-000 Composability
-**File:** `union.py`
-**Problem:** `get_living_entities()` returns list, not iterator.
-**Fix:** Return `Iterator[EntityStatus]` for streaming.
-
-### 🔴 RED-007: UnionProtocol no recoverability
-**Requirement:** GAD-000 Recoverability
-**File:** `union.py`
-**Problem:** What if entity scan fails mid-way?
-**Fix:** Add `timeout` + partial result handling.
+## GREEN (Fixed)
+### ✅ RED-001: KrishnaProtocol `get_identity_status()` (FIXED)
+### ✅ RED-002: RamaProtocol Idempotency (FIXED)
+### ✅ RED-003: RamaProtocol Observability (FIXED)
+### ✅ RED-004: InferProtocol Recoverability (FIXED)
+### ✅ RED-005: StoreRecallProtocol Observability (FIXED)
+### ✅ RED-006: UnionProtocol streaming (FIXED)
+### ✅ RED-007: UnionProtocol recoverability (FIXED)
 
 ---
 

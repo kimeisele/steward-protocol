@@ -35,8 +35,8 @@ from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 from .krishna import KrishnaProtocol
 from .types import SovereignContext
 
-if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+# Validated: No Implementation Imports
+pass
 
 
 # Set precision for infinity tests
@@ -184,7 +184,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 1: WEALTH (AISHVARYA) - The "Infinite Load" Test
     # =========================================================================
 
-    def _test_wealth_aishvarya(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_wealth_aishvarya(self, kernel: object, comp: Any) -> bool:
         """
         THE INFINITE LOAD TEST.
 
@@ -229,7 +229,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 2: STRENGTH (VIRYA) - The "Hiranyakashipu" Rebellion
     # =========================================================================
 
-    def _test_strength_virya(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_strength_virya(self, kernel: object, comp: Any) -> bool:
         """
         THE HIRANYAKASHIPU REBELLION TEST.
 
@@ -279,7 +279,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 3: FAME (YASHAS) - The "Holographic Trace" Test
     # =========================================================================
 
-    def _test_fame_yashas(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_fame_yashas(self, kernel: object, comp: Any) -> bool:
         """
         THE HOLOGRAPHIC TRACE TEST.
 
@@ -319,7 +319,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 4: BEAUTY (SHRI) - The "Golden Ratio" Complexity
     # =========================================================================
 
-    def _test_beauty_shri(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_beauty_shri(self, kernel: object, comp: Any) -> bool:
         """
         THE GOLDEN RATIO COMPLEXITY TEST.
 
@@ -368,7 +368,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 5: KNOWLEDGE (JNANA) - The "Sankalpa" Prediction
     # =========================================================================
 
-    def _test_knowledge_jnana(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_knowledge_jnana(self, kernel: object, comp: Any) -> bool:
         """
         THE SANKALPA PREDICTION TEST.
 
@@ -406,7 +406,7 @@ class BhagavanProtocol(BaseTestable):
     # OPULENCE 6: RENUNCIATION (VAIRAGYA) - The "Shiva" Protocol
     # =========================================================================
 
-    def _test_renunciation_vairagya(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_renunciation_vairagya(self, kernel: object, comp: Any) -> bool:
         """
         THE SHIVA PROTOCOL (Death/Rebirth Test).
 

@@ -204,6 +204,27 @@ class SubstrateHealth(str, Enum):
     COLLAPSED = "collapsed"  # System failure
 
 
+class HolyName(str, Enum):
+    """
+    The Three Holy Names in the Mahamantra.
+    ANTI-MAYAVADI: These are PERSONS, not just strings.
+    """
+
+    HARE = "Hare"  # Shakti - The Energy (Radha)
+    KRISHNA = "Krishna"  # Source - The All-Attractive (God)
+    RAMA = "Rama"  # Strength - The Enjoyer/Service (Balarama/Vishnu)
+
+    @property
+    def meaning(self) -> str:
+        """The personal meaning behind each Name."""
+        meanings = {
+            "Hare": "O Energy of the Lord! Please engage me in service.",
+            "Krishna": "O All-Attractive One! You are my anchor.",
+            "Rama": "O Source of Bliss! Give me strength to serve.",
+        }
+        return meanings.get(self.value, "Unknown")
+
+
 # =============================================================================
 # THE 16-BIT INSTRUCTION SET (HARDWARE LEVEL DEFINITION)
 # =============================================================================
@@ -777,6 +798,7 @@ __all__ = [
     "GeneActivationState",
     "SubstrateHealth",
     "MantraOpCode",
+    "HolyName",
     # Mantra DNA (The 16-Bit Sequence)
     "MAHAMANTRA_SEQUENCE",
     # TypedDicts (WATERTIGHT - No Any)

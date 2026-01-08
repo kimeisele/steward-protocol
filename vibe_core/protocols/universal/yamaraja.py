@@ -36,8 +36,8 @@ from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 from .enforce import EnforceProtocol
 from .types import EnforceContext, Rule, Verdict
 
-if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+# Validated: No Implementation Imports
+pass
 
 
 # =============================================================================
@@ -343,7 +343,7 @@ class YamarajaProtocol(BaseTestable):
             ),
         ]
 
-    def _test_karma_deny(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_karma_deny(self, kernel: object, comp: Any) -> bool:
         """Sin should be denied."""
         ctx = EnforceContext(
             caller_id="sinner",
@@ -354,7 +354,7 @@ class YamarajaProtocol(BaseTestable):
         verdict = self.enforce("SIN", ctx)
         return verdict == DharmaVerdict.DENY
 
-    def _test_karma_allow(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_karma_allow(self, kernel: object, comp: Any) -> bool:
         """Good action should be allowed."""
         ctx = EnforceContext(
             caller_id="devotee",
@@ -365,7 +365,7 @@ class YamarajaProtocol(BaseTestable):
         verdict = self.enforce("SEVA", ctx)
         return verdict == DharmaVerdict.ALLOW
 
-    def _test_ajamila(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_ajamila(self, kernel: object, comp: Any) -> bool:
         """The 6th Canto Proof - Holy Name saves."""
         ctx = EnforceContext(
             caller_id="Ajamila",
@@ -376,7 +376,7 @@ class YamarajaProtocol(BaseTestable):
         verdict = self.enforce("DEATH_PROCESS", ctx)
         return verdict == DharmaVerdict.VAIKUNTHA
 
-    def _test_nityananda(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_nityananda(self, kernel: object, comp: Any) -> bool:
         """Jagai/Madhai - Love > Law."""
         ctx = EnforceContext(
             caller_id="Jagai",
@@ -387,7 +387,7 @@ class YamarajaProtocol(BaseTestable):
         verdict = self.enforce("OFFENSE", ctx)
         return verdict == DharmaVerdict.PREMA
 
-    def _test_priority(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_priority(self, kernel: object, comp: Any) -> bool:
         """Verify priority order."""
         rules = self.get_rules()
         priorities = {r.id: r.priority for r in rules}
@@ -397,7 +397,7 @@ class YamarajaProtocol(BaseTestable):
     # THE 12TH TEST - GURU LINK (Level 2)
     # =========================================================================
 
-    def _test_guru_liberation(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_guru_liberation(self, kernel: object, comp: Any) -> bool:
         """
         The 12th Test.
 
@@ -417,7 +417,7 @@ class YamarajaProtocol(BaseTestable):
         verdict = self.enforce("ERROR", ctx)
         return verdict == DharmaVerdict.GURU_KRIPA
 
-    def _test_guru_priority(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_guru_priority(self, kernel: object, comp: Any) -> bool:
         """GURU_PARAM (1001) must be higher than all other rules."""
         rules = self.get_rules()
         priorities = {r.id: r.priority for r in rules}
@@ -431,7 +431,7 @@ class YamarajaProtocol(BaseTestable):
     # HIRANYAKASHIPU ENGINE (Level 3 - Fuzzing)
     # =========================================================================
 
-    def _test_hiranyakashipu_stress(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_hiranyakashipu_stress(self, kernel: object, comp: Any) -> bool:
         """
         The Hiranyakashipu Engine.
 
@@ -493,7 +493,7 @@ class YamarajaProtocol(BaseTestable):
         We verify the system acknowledges/honors each opulence.
         """
 
-        def verifier(kernel: "RealVibeKernel", comp: Any) -> bool:
+        def verifier(kernel: object, comp: Any) -> bool:
             # The system must recognize all 6 opulences
             return opulence in BHAGA_OPULENCES
 

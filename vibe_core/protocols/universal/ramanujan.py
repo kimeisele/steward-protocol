@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING, Any, List
 
 from ..testable import BaseTestable, TestableType, TestCase
 
-if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+# Validated: No Implementation Imports
+pass
 
 # Set Krishna Precision (108 digits)
 getcontext().prec = 108
@@ -152,7 +152,7 @@ class RamanujanProtocol(BaseTestable):
     # PHASE 1: HERITAGE (Sambandha)
     # =========================================================================
 
-    def _test_principles(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_principles(self, kernel: object, comp: Any) -> bool:
         """
         4 Regulating Principles:
         1. No meat eating (Ahimsa)
@@ -163,13 +163,13 @@ class RamanujanProtocol(BaseTestable):
         principles = ["NO_MEAT", "NO_INTOXICATION", "NO_ILLICIT_SEX", "NO_GAMBLING"]
         return len(principles) == 4
 
-    def _test_observer(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_observer(self, kernel: object, comp: Any) -> bool:
         """37 = 36 Elements (Kshetra) + 1 Observer (Kshetrajna/Guru)."""
         kshetra = 36  # Material elements
         kshetrajna = 1  # The observer (Prabhupada)
         return (kshetra + kshetrajna) == 37
 
-    def _test_krishna_constant(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_krishna_constant(self, kernel: object, comp: Any) -> bool:
         """
         4/37 = 0.108108108...
 
@@ -180,7 +180,7 @@ class RamanujanProtocol(BaseTestable):
         decimal_part = result_str.split(".")[1] if "." in result_str else ""
         return decimal_part.startswith("108108")
 
-    def _test_1729_polymorphism(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_1729_polymorphism(self, kernel: object, comp: Any) -> bool:
         """
         1729 = 1³ + 12³ = 9³ + 10³
 
@@ -194,13 +194,13 @@ class RamanujanProtocol(BaseTestable):
     # PHASE 2: CAPACITY (Abhidheya)
     # =========================================================================
 
-    def _test_capacity(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_capacity(self, kernel: object, comp: Any) -> bool:
         """4 Rules × 16 Rounds = 64 (Full Capacity)."""
         rules = 4
         rounds = 16
         return (rules * rounds) == 64
 
-    def _test_transformation(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_transformation(self, kernel: object, comp: Any) -> bool:
         """
         64/37 = 1.729729729...
 
@@ -211,7 +211,7 @@ class RamanujanProtocol(BaseTestable):
         decimal_part = result_str.split(".")[1] if "." in result_str else ""
         return decimal_part.startswith("729729")
 
-    def _test_sadhu_limit(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_sadhu_limit(self, kernel: object, comp: Any) -> bool:
         """
         1 < Sadhu < 2
 
@@ -220,7 +220,7 @@ class RamanujanProtocol(BaseTestable):
         sadhu = Decimal(64) / Decimal(37)
         return Decimal(1) < sadhu < Decimal(2)
 
-    def _test_redundancy(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_redundancy(self, kernel: object, comp: Any) -> bool:
         """
         Ramanujan Redundancy: Data survives via 2 representations.
 
@@ -241,7 +241,7 @@ class RamanujanProtocol(BaseTestable):
     # PHASE 3: SPECTRUM (Prayojana)
     # =========================================================================
 
-    def _test_spectrum_static(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_spectrum_static(self, kernel: object, comp: Any) -> bool:
         """
         THE NAKSHATRA SPECTRUM:
 
@@ -272,7 +272,7 @@ class RamanujanProtocol(BaseTestable):
 
         return True
 
-    def _test_spectrum_stress(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_spectrum_stress(self, kernel: object, comp: Any) -> bool:
         """Dynamic Fuzzing: Large random integers still produce valid decimals."""
         for _ in range(50):
             n = random.randint(1000, 999999)
@@ -286,7 +286,7 @@ class RamanujanProtocol(BaseTestable):
                 return False
         return True
 
-    def _test_holographic(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_holographic(self, kernel: object, comp: Any) -> bool:
         """
         Fractal Self-Similarity: Pattern holds at any scale.
 
@@ -313,7 +313,7 @@ class RamanujanProtocol(BaseTestable):
     # PHASE 4: KALA / ENTROPY (The 12th Test - Yamaraja)
     # =========================================================================
 
-    def _test_entropy_inevitability(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_entropy_inevitability(self, kernel: object, comp: Any) -> bool:
         """
         THE 12TH TEST (YAMARAJA - The Judge/Death).
 
@@ -359,7 +359,7 @@ class RamanujanProtocol(BaseTestable):
     # PHASE 5: MOKSHA (The Guru Logic)
     # =========================================================================
 
-    def _test_guru_closure(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_guru_closure(self, kernel: object, comp: Any) -> bool:
         """
         THE GURU CLOSURE.
 
