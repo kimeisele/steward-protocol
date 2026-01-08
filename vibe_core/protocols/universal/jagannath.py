@@ -20,9 +20,12 @@ GAD-000 COMPLIANCE:
 - Accessibility (Ratha Yatra): Bringing the state to the public.
 """
 
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 from vibe_core.protocols.universal.union import UnionScanResult
+
+T_Request = TypeVar("T_Request")
+T_Result = TypeVar("T_Result")
 
 
 @runtime_checkable
@@ -47,9 +50,9 @@ class JagannathProtocol(Protocol):
         """
         ...
 
-    def prasadam(self, request: Any) -> Any:
+    def prasadam(self, request: T_Request) -> T_Result:
         """
-        The Mercy (Graceful Execution).
+        The Mercy (Execution).
 
         "Even if the offering is imperfect, He accepts it."
 
