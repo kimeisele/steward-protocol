@@ -1,97 +1,107 @@
 """
 BRIDGE PROTOCOL - Setu Bandha (The Connector).
 
-"Build the bridge to Lanka (Universal Layer) so the army can cross."
+"Build the bridge with stones that float (Truth), not with sand (Any)."
 
-This module bridges the gap between:
-1. Legacy Command System (CommandContext) - The Old World.
-2. Naga CLI Logic (CLICapabilityToken) - The Cryptographic Defense.
-3. Universal Kernel (SovereignContext) - The Divine Goal.
-
-SetuBandha transforms worldly credentials into Sovereign Contexts.
+STRICT TYPING ENFORCEMENT:
+- Input MUST be 'CommandContext' (Legacy) OR 'CLICapabilityToken' (Naga).
+- Anything else raises 'MayavadError'.
+- NO 'Any'. NO 'unknown_wanderer'.
 """
 
-from typing import Any, Union
+from dataclasses import dataclass
+from typing import Union, no_type_check
 
+# IMPORT SOURCES (Strict Dependencies)
 from vibe_core.protocols.cli_execution import CLICapabilityToken
 from vibe_core.protocols.command import CommandContext
 
-from .types import SovereignContext, TranscendentalQuality
+# IMPORT TARGET (Universal Truth)
+from .types import ProtocolError, SovereignContext, TranscendentalQuality
+
+
+class MayavadError(ProtocolError):
+    """Raised when an object tries to cross the bridge without form (Type)."""
+
+    pass
 
 
 class SetuBandha:
     """
     The Bridge Builder.
-    Converts diverse inputs into SovereignContext.
+    Hardened. No Any.
     """
 
     @staticmethod
-    def cross_bridge(input_obj: Union[CommandContext, CLICapabilityToken, Any]) -> SovereignContext:
+    def cross_bridge(
+        input_obj: Union[CommandContext, CLICapabilityToken],
+    ) -> SovereignContext:
         """
-        Takes a legacy or naga object and returns a SovereignContext.
-        """
+        The Checkpoint.
 
-        # 1. Handle Naga Token (Cryptographic)
+        Strictly typed. If you pass an 'int' or 'dict' here, static analysis fails.
+        If you force it at runtime, the 'else' block kills it.
+        """
+        # 1. THE NAGA PATH (Cryptographic & Strong)
         if isinstance(input_obj, CLICapabilityToken):
             return SetuBandha._from_token(input_obj)
 
-        # 2. Handle Legacy Context (Mayavad)
-        if isinstance(input_obj, CommandContext):
+        # 2. THE LEGACY PATH (Structural & Weak)
+        elif isinstance(input_obj, CommandContext):
             return SetuBandha._from_legacy(input_obj)
 
-        # 3. Handle Unknown (Neti Neti)
-        return SovereignContext(
-            identity_id="unknown_wanderer",
-            signature="",
-            tattva_level=TranscendentalQuality.EXISTENCE,  # Lowest Jiva
-        )
+        # 3. THE VOID (Defense against dynamic stupidity)
+        else:
+            obj_type = type(input_obj).__name__
+            raise MayavadError(
+                f"Bridge Breach: Object of type '{obj_type}' attempted to cross. "
+                "Only 'CommandContext' and 'CLICapabilityToken' are permitted."
+            )
 
     @staticmethod
     def _from_token(token: CLICapabilityToken) -> SovereignContext:
         """
         Transforms Naga Token -> SovereignContext.
         """
-        # Mapping Identity
+        # Extract Identity
         identity = token.subject
 
-        # Mapping Signature (Bytes -> Hex)
+        # Extract Signature (Binary Proof)
+        # We ensure it's a hex string for the Universal Layer
         sig = token.signature.hex() if isinstance(token.signature, bytes) else str(token.signature)
 
-        # Mapping Tattva (Qualities)
-        # Naga tokens have 'capabilities'.
-        # We derive Tattva Level from Issuer and Subject.
+        # Calculate Tattva (Ontological Level)
+        level = TranscendentalQuality.EXISTENCE  # Base Jiva
 
-        level = TranscendentalQuality.EXISTENCE  # Default Jiva
-
+        # ELEVATION LOGIC (Specific & Hardcoded)
         if token.issuer == "KERNEL":
-            # Kernel-issued tokens are trusted permissions.
-            # Does NOT make you God, but gives you authority.
-            # We map this to 50 (Perfect Jiva).
-            level = TranscendentalQuality.TRUTHFULNESS  # Just a placeholder high Jiva level
+            # Kernel-signed tokens are trusted administrative acts
+            level = TranscendentalQuality.TRUTHFULNESS  # Quality 8
 
         if token.subject == "Jagannath":
-            # The Lord gets his status restored.
-            level = TranscendentalQuality.SOURCE_OF_INCARNATIONS  # 58+
+            # Divinity Exception (The Lord)
+            level = TranscendentalQuality.SOURCE_OF_INCARNATIONS  # Quality 58
 
-        return SovereignContext(identity_id=identity, signature=sig, tattva_level=level)
+        return SovereignContext(
+            identity_id=identity,
+            signature=sig,
+            tattva_level=level,
+        )
 
     @staticmethod
     def _from_legacy(ctx: CommandContext) -> SovereignContext:
         """
-        Transforms CommandContext -> SovereignContext.
+        Transforms Legacy Context -> SovereignContext.
         """
-        # Warning: CommandContext has NO signature. It is 'Dirty'.
-        # We allow it passage but mark it as Lowest Tattva.
+        # CRITICAL: Legacy Contexts have NO cryptographic signature.
+        # They are inherently "Dirty" (Saucam Failure).
 
-        identity = ctx.caller
-        if not identity:
-            identity = "anonymous_legacy"
+        identity = ctx.caller or "anonymous_legacy"
 
-        # Check Metadata for Pretenders (Asuras)
-        # If someone writes "I am God" in metadata, ignore it.
-
+        # We mark this explicitly as LOWEST QUALITY.
+        # The 'Dharma' protocol will likely reject this for high-value targets.
         return SovereignContext(
             identity_id=identity,
-            signature="",  # No signature = Dirty Context (Saucam Fail in future)
-            tattva_level=TranscendentalQuality.EXISTENCE,
+            signature="",  # EMPTY SIGNATURE = UNVERIFIED
+            tattva_level=TranscendentalQuality.EXISTENCE,  # Lowest Level (1)
         )
