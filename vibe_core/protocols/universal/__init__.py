@@ -2,7 +2,7 @@ from .bhagavan import Bhaga, BhagaTestResult, BhagavanProtocol
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
 from .krishna import IdentityStatus, KrishnaProtocol
-from .mantra import MAHAMANTRA_SEQUENCE, MantraOpCode, MantraProtocol
+from .mantra import MAHAMANTRA_SEQUENCE, HolyName, MantraOpCode, MantraProtocol
 from .om import OmProtocol
 from .rama import RamaProtocol
 from .ramanujan import RamanujanProtocol
