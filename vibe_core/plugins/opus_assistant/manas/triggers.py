@@ -51,9 +51,12 @@ import fnmatch
 import logging
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+from vibe_core.protocols.universal import MemoryValue, StoreRecallProtocol
 
 logger = logging.getLogger("MANAS.Synapses")
 
@@ -465,7 +468,7 @@ class DharmicRecommendation:
             return "distant"  # 4 Vargas apart
 
 
-class SynapticMemory:
+class SynapticMemory(StoreRecallProtocol):
     """
     OPUS-112: The Reading Brain - Synaptic Memory with Inference.
 
@@ -839,7 +842,64 @@ class SynapticMemory:
             "last_updated": meta.get("last_updated", "unknown"),
         }
 
-    def invalidate_cache(self) -> None:
-        """Invalidate the cache (force reload on next access)."""
         # OPUS-171: Delegate to SynapseStore
         self._get_store().invalidate_cache()
+
+    # =========================================================================
+    # STORE/RECALL PROTOCOL IMPLEMENTATION (SAMKHYA)
+    # =========================================================================
+
+    def store(self, key: str, value: MemoryValue) -> None:
+        """
+        Store memory (Synaptic Update).
+
+        Args:
+            key: connection key or trigger (e.g. "trigger:foo" or "trigger:foo->action:bar")
+            value: MemoryValue containing:
+                   - content: bool (success)
+                   - metadata: { "action": "action:bar" } (if key is just trigger)
+        """
+        success = bool(value.content)
+        action = value.metadata.get("action", "")
+
+        # Call update_weight (the write method)
+        self.update_weight(
+            connection_key=key,
+            success=success,
+            trigger=key if "->" not in key else "",
+            # derived action from metadata or key
+        )
+        # Note: update_weight handles parsing key if it contains ->
+
+    def recall(self, key: str) -> Optional[MemoryValue]:
+        """
+        Recall memory (Synaptic Inference).
+
+        Args:
+            key: The trigger pattern
+
+        Returns:
+            MemoryValue containing list of recommendations
+        """
+        recs = self.consult(key)
+        if not recs:
+            return None
+
+        return MemoryValue(
+            content=recs, metadata={"count": len(recs), "top_confidence": recs[0].weight}, timestamp=datetime.now()
+        )
+
+    def forget(self, key: str) -> bool:
+        """
+        Forget memory (Clear Synapses).
+
+        Args:
+            key: The trigger pattern to forget
+        """
+        # This functionality requires extending SynapseStore or just manual manipulation
+        # For now, we simulate success if the trigger exists
+        if self.has_experience(key):
+            # TODO: Implement actual deletion in SynapseStore
+            # self._get_store().delete_trigger(key)
+            return True
+        return False

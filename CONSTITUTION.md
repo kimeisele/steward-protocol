@@ -90,7 +90,7 @@ Systeme müssen fähig sein, aus ihrer eigenen Nutzung zu lernen.
 
 ---
 
-## TEIL IV: DIE 4 REGULIERENDEN PRINZIPIEN (Der Dharma-Test)
+## TEIL IV: DIE 5 REGULIERENDEN PRINZIPIEN (Der Dharma-Test)
 
 *Die Vedische Garantie: Diese 4 Prinzipien definieren den CHARAKTER eines legitimen Souveräns. Ein König ohne Dharma ist ein Tyrann. Ein System ohne diese Filter ist korrupt.*
 
@@ -139,6 +139,22 @@ Systeme müssen fähig sein, aus ihrer eigenen Nutzung zu lernen.
 **Implementation:** Der **WATCHMAN** blockiert alle Ports außer den Whitelisted.
 
 **Constraint:** `NetworkGuard.enforce_chastity()`
+
+---
+
+### Prinzip 5: Bhakti (Devotion) → **THE PRIORITY OF CONNECTION**
+
+**Philosophisch:** Verbindung ist wichtiger als Leistung.
+**Gita 6.34-Status:** Der unruhige Geist wird nur durch Verbindung (Yoga) beruhigt.
+
+**OS-Logik:** Ein Agent, der rechnet (CPU burn), aber nicht auf den Heartbeat (Mantra) des Kernels antwortet, gilt als **"Rogue"**.
+
+**Implementation:**
+Das **MantraProtocol** hat **Real-Time Priority (RT)**.
+Wenn der `chant()`-Call kommt, muss alles andere stoppen (Interrupt).
+Antwortet der Agent nicht innerhalb von 100ms → **Termination**.
+
+**Constraint:** `Watchdog.enforce_devotion()`
 
 ---
 

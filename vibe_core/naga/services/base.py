@@ -360,9 +360,11 @@ def naga_governed(
                 start_time_ns = time.perf_counter_ns()
 
                 # === TAKSHAKA VALIDATION (optional) ===
-                if validate_input and self._takshaka:
+                # Guard: Class may not inherit from NagaBaseService
+                takshaka = getattr(self, "_takshaka", None) if hasattr(self, "_takshaka") else None
+                if validate_input and takshaka:
                     try:
-                        _validate_naga_args(self._takshaka, args, service_name, op_name)
+                        _validate_naga_args(takshaka, args, service_name, op_name)
                     except ValueError:
                         raise
                     except Exception as e:
@@ -380,9 +382,11 @@ def naga_governed(
                     duration_ms = (time.perf_counter_ns() - start_time_ns) / 1_000_000
 
                     # === CHITRAGUPTA PROFILING ===
-                    if self._chitragupta:
+                    # Guard: Class may not inherit from NagaBaseService
+                    chitragupta = getattr(self, "_chitragupta", None) if hasattr(self, "_chitragupta") else None
+                    if chitragupta:
                         try:
-                            self._chitragupta.record_operation(
+                            chitragupta.record_operation(
                                 service=service_name,
                                 operation=op_name,
                                 duration_ms=duration_ms,
@@ -393,7 +397,9 @@ def naga_governed(
                             sys.stderr.write(f"!!! CHITRAGUPTA PROFILING FAILED [{service_name}]: {e}\n")
 
                     # === SESHA KARMA RECORDING (via PUBLIC API) ===
-                    if self._sesha:
+                    # Guard: Class may not inherit from NagaBaseService
+                    sesha = getattr(self, "_sesha", None) if hasattr(self, "_sesha") else None
+                    if sesha:
                         try:
                             from vibe_core.protocols.naga import EventRecord
 
@@ -412,7 +418,7 @@ def naga_governed(
                                 "agent_id": service_name.lower(),
                                 "details": details,
                             }
-                            self._sesha.record_event(event)
+                            sesha.record_event(event)
                         except Exception as e:
                             # YAMARAJA: Emergency log, not silent
                             sys.stderr.write(f"!!! SESHA KARMA FAILED [{service_name}]: {e}\n")

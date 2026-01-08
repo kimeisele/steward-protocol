@@ -231,6 +231,17 @@ class ProtocolCoverageReport:
 
 
 @dataclass
+class TuvBadge:
+    """The TÜV Certificate."""
+
+    entity_id: str
+    issued_at: datetime
+    expires_at: datetime
+    score: float
+    signature: str  # Signed by TÜV/Chitragupta
+
+
+@dataclass
 class TÜVReport:
     """Full TÜV audit report."""
 
@@ -473,6 +484,18 @@ class TÜVProtocol(Protocol):
         """Get summary counts."""
         ...
 
+    # =========================================================================
+    # Badging (Runtime Certification)
+    # =========================================================================
+
+    def issue_badge(self, target: str) -> TuvBadge:
+        """Issue a runtime badge for a component."""
+        ...
+
+    def verify_badge(self, badge: TuvBadge) -> bool:
+        """Verify a badge is valid and authentic."""
+        ...
+
 
 # =============================================================================
 # NULL IMPLEMENTATION
@@ -559,3 +582,15 @@ class NullTÜV:
 
     def get_summary(self) -> Dict[str, int]:
         return {"protocols": 0, "leaks_open": 0, "leaks_healed": 0}
+
+    def issue_badge(self, target: str) -> TuvBadge:
+        return TuvBadge(
+            entity_id=target,
+            issued_at=datetime.now(),
+            expires_at=datetime.now(),
+            score=0.0,
+            signature="null",
+        )
+
+    def verify_badge(self, badge: TuvBadge) -> bool:
+        return False

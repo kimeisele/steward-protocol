@@ -44,11 +44,13 @@ from typing import (
     Generic,
     List,
     Optional,
+    ParamSpec,
     Protocol,
     TypeVar,
     cast,
 )
 
+from vibe_core.protocols.naga.groups import Subject, Verdict
 from vibe_core.protocols.naga.types import ObservationDict
 
 if TYPE_CHECKING:
@@ -57,11 +59,15 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.narada import NaradaService
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
+    from vibe_core.protocols.substrate import MantraOpCode
+
 
 logger = logging.getLogger("NAGA.PROXY")
 
-# TypeVar for the wrapped service - No Any!
+# TypeVar for the wrapped service
 T = TypeVar("T")
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 @dataclass
@@ -246,7 +252,7 @@ class NagaProxy(Generic[T]):
         # Wrap callable methods with observation
         return self._wrap_method(name, attr)
 
-    def _wrap_method(self, name: str, method: Callable) -> Callable:
+    def _wrap_method(self, name: str, method: Callable[P, R]) -> Callable[P, R]:
         """
         Wrap a method with NAGA observation.
 
@@ -261,9 +267,24 @@ class NagaProxy(Generic[T]):
         proxy_self = self
 
         @functools.wraps(method)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Lazy resolve NAGAs on first call
             proxy_self._resolve_nagas()
+
+            # SECURITY CHECK (Takshaka) - Bite First
+            takshaka = object.__getattribute__(proxy_self, "_takshaka")
+            if takshaka:
+                service_name = object.__getattribute__(proxy_self, "_service_name")
+                subject = Subject(
+                    subject_type="method_call", identifier=f"{service_name}.{name}", context=f"args={len(args)}"
+                )
+                try:
+                    verdict = takshaka.intercept(subject)
+                    if verdict in (Verdict.DENY, Verdict.QUARANTINE, Verdict.ESCALATE):
+                        raise PermissionError(f"Takshaka denied access to {service_name}.{name}: {verdict.value}")
+                except AttributeError:
+                    # Takshaka implementation might be partial during boot
+                    pass
 
             # Track timing for Chitragupta
             start_time = time.perf_counter()
@@ -370,6 +391,49 @@ class NagaProxy(Generic[T]):
         count = len(buffer)
         buffer.clear()
         return count
+
+    # =========================================================================
+    # MANTRA INTEGRATION (The Balarama Heartbeat)
+    # =========================================================================
+
+    def on_mantra_pulse(self, opcode: "MantraOpCode") -> None:
+        """
+        The Balarama Heartbeat.
+        Receives the signal from the Vishnu Clock (Watchdog/MantraProtocol).
+
+        Design Principle:
+            - The Proxy is the Body (Balarama).
+            - The Mantra is the Time/Will (Vishnu).
+            - The Body moves according to Time.
+        """
+        from vibe_core.protocols.substrate import MantraOpCode
+
+        # Lazy resolve to ensure connections exist
+        self._resolve_nagas()
+
+        # 1. PULSE_SYNC (Hare): The Heartbeat -> Confirm Narada alive
+        if opcode == MantraOpCode.PULSE_SYNC:
+            narada = object.__getattribute__(self, "_narada")
+            if narada:
+                logger.debug(f"💓 PULSE: {self._service_name} alive")
+
+        # 2. GARBAGE_COLLECT (Hare): Cleaning -> Clear old buffers
+        elif opcode == MantraOpCode.GARBAGE_COLLECT:
+            cleared = self.clear_observations()
+            if cleared > 0:
+                logger.debug(f"🗑️ MANTRA GC: Cleared {cleared} stale observations")
+
+        # 3. ASSERT_TRUTH (Krishna): Integrity -> Verify Takshaka Link
+        elif opcode == MantraOpCode.ASSERT_TRUTH:
+            takshaka = object.__getattribute__(self, "_takshaka")
+            if not takshaka:
+                logger.warning(f"⚠️ MANTRA: Takshaka missing in {self._service_name}")
+
+        # 4. LOAD_ROOT (Krishna): Identity -> Verify Service Binding
+        elif opcode == MantraOpCode.LOAD_ROOT:
+            wrapped = object.__getattribute__(self, "_wrapped")
+            if wrapped is None:
+                logger.error("💀 MANTRA CRITICAL: Proxy wrapping NOTHING (Mayavad)")
 
     @property
     def unwrap(self) -> T:

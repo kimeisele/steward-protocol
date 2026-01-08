@@ -22,7 +22,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict
 
 if TYPE_CHECKING:
-    pass
+    from vibe_core.protocols.cli import CLIHandler
 
 
 # =============================================================================
@@ -302,12 +302,17 @@ class CLIExecutionContext:
     1. Read context to understand what's being executed
     2. Verify capability token
     3. Block execution by setting blocked=True
+    4. ANANTA: Flood the handler instance (if provided)
     """
 
     command_name: str
     namespace: str
     args: List[str]
     capability_token: CLICapabilityToken
+
+    # The command handler instance (if available)
+    # Allows hooks (like Ananta) to inspect or flood the handler
+    handler: Optional["CLIHandler"] = field(default=None, repr=False)
 
     # Derived from token (set by hooks)
     caller_id: str = ""

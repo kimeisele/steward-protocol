@@ -50,6 +50,14 @@ if TYPE_CHECKING:
     from vibe_core.loaders import ActionLoader, ToolLoader
     from vibe_core.protocols.kernel_protocol import KernelProtocol
 
+from vibe_core.protocols.universal import (
+    Classification,
+    ClassifyInput,
+    Evaluation,
+    Inference,
+    InferenceInput,
+    InferProtocol,
+)
 from vibe_core.state.schema import ExecutionResult
 
 
@@ -139,7 +147,7 @@ PENDING_INTENTS_FILE = "pending_intents.json"
 KARMA_LOG_FILE = "karma_log.json"
 
 
-class IntentRouter:
+class IntentRouter(InferProtocol):
     """
     Routes intents to appropriate cortex modules for execution.
 
@@ -1148,6 +1156,101 @@ class IntentRouter:
                 result={},
                 error=str(e),
             )
+
+    # =========================================================================
+    # INFER PROTOCOL IMPLEMENTATION (SAMKHYA)
+    # =========================================================================
+
+    def infer(self, input: InferenceInput) -> Inference:
+        """
+        Infer/Execute intent via Atomic Protocol.
+        """
+        # Context must contain 'intent' object, or we build it from content
+        intent = input.context.get("intent")
+        if not intent:
+            # Fallback: Create generic intent from content
+            from .intent_generator import Intent
+
+            intent = Intent(
+                id=f"infer-{datetime.now().timestamp()}",
+                intent_type="inference",
+                title=input.content,
+                description=input.content,
+                params=input.context,
+            )
+
+        # We need async execution, but protocol is sync-ish?
+        # Actually protocol definitions didn't specify async/sync, but Python
+        # doesn't enforce async in Protocol types rigorously.
+        # However, 'route' is async. We might need to run it synchronously here
+        # or change protocol to async.
+        # Given this is a core architectural limit, we'll wrap it if needed.
+        # For now, let's assume we can run it or it's being called from async context.
+        # BUT 'infer' is not defined as async in our protocol definition.
+        # We will use a synchronous wrapper if possible, or just call the async method
+        # and expect the caller to handle the coroutine if they know it returns one?
+        # No, that breaks type hints.
+        # For this refactor, let's just return a placeholder that we *would* route it.
+        # Or, we make 'route' synchronous?
+        # 'route' executes actions which might be async.
+
+        # PROVISIONAL: We return a "Promise" like inference or just run loop?
+        # The prompt is "Implementing Universal Protocols".
+        # Let's check `InferProtocol` definition again.
+        # It is: def infer(self, input: InferenceInput) -> Inference: ...
+        # It returns 'Inference' dataclass immediately.
+
+        # So 'infer' here is likely "Understanding" the intent, not necessarily executing it fully?
+        # "Infer" = "To deduce".
+        # So maybe 'infer' -> "What handler would handle this?" (Routing Check)
+        # And 'route' is the actual execution.
+
+        # Let's map 'infer' to "Predict Routing Outcome" (Simulation)
+        # That aligns with "Inference".
+
+        handler = get_handler_for_intent(intent.intent_type, workspace=self._workspace)
+        handler_name = handler.name if handler else "none"
+
+        return Inference(
+            result=f"Route: {handler_name}",
+            confidence=getattr(intent, "confidence", 0.5),
+            alternatives=[],
+            metadata={"intent_id": intent.id},
+        )
+
+    def classify(self, input: ClassifyInput) -> Classification:
+        """Classify input text into an intent type/handler."""
+        # Simple heuristic mapping for now
+        # Could use NLP classifier here in future
+        content = input.content.lower()
+        label = "unknown"
+
+        if "test" in content:
+            label = "test_handler"
+        elif "git" in content:
+            label = "shell_handler"
+        elif "audit" in content:
+            label = "audit_handler"
+
+        return Classification(label=label, confidence=0.6, distribution={})
+
+    def evaluate(self, claim: str) -> Evaluation:
+        """Evaluate if an intent (claim=ID) should proceed (Gate Check)."""
+        # claim is assumed to be intent_id or description
+        # We need an Intent object to gate properly.
+        # If passed ID, try to find it?
+        intent = self._get_intent_by_id(claim)
+        if not intent:
+            # Try treating claim as content
+            return Evaluation(valid=False, score=0.0, reasoning="Intent not found or unable to parse claim")
+
+        gate_res = self.gate(intent)
+        status = gate_res.get("status")
+
+        valid = status == "execute"
+        score = gate_res.get("confidence", 0.0)
+
+        return Evaluation(valid=valid, score=score, reasoning=f"Gate status: {status} ({gate_res.get('reason')})")
 
 
 def create_execution_callback(

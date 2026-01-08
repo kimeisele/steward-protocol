@@ -10,12 +10,60 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from vibe_core.protocols.universal import ReadWriteProtocol
+
+# ============================================================================
+# DHARMA CONFIG MIXIN (SAMKHYA COMPLIANCE)
+# ============================================================================
+
+
+class DharmaConfigMixin:
+    """
+    Implements ReadWriteProtocol for Pydantic Models.
+    Enables 'Act = Plan' via Atomic Verbs.
+    Supports dot-notation for nested access (e.g. 'governance.voting_threshold').
+    """
+
+    def read(self, key: str) -> Any:
+        """Read config value by point-separated key."""
+        try:
+            current = self
+            for part in key.split("."):
+                current = getattr(current, part)
+            return current
+        except AttributeError:
+            return None
+
+    def write(self, key: str, value: Any) -> None:
+        """Write config value by point-separated key."""
+        parts = key.split(".")
+        target = self
+        # Navigate to parent of target
+        for part in parts[:-1]:
+            target = getattr(target, part)
+
+        # Set value on parent
+        setattr(target, parts[-1], value)
+
+    def exists(self, key: str) -> bool:
+        """Check if key exists."""
+        try:
+            current = self
+            for part in key.split("."):
+                if not hasattr(current, part):
+                    return False
+                current = getattr(current, part)
+            return True
+        except AttributeError:
+            return False
+
+
 # ============================================================================
 # GOVERNANCE LAYER
 # ============================================================================
 
 
-class GovernanceConfig(BaseModel):
+class GovernanceConfig(BaseModel, DharmaConfigMixin):
     """Constitutional Parameters for the City"""
 
     voting_threshold: float = Field(
@@ -43,7 +91,7 @@ class GovernanceConfig(BaseModel):
 # ============================================================================
 
 
-class EconomyConfig(BaseModel):
+class EconomyConfig(BaseModel, DharmaConfigMixin):
     """Credit System Parameters"""
 
     initial_credits: float = Field(default=100, ge=0, description="Starting credits for each agent")
@@ -72,7 +120,7 @@ class EconomyConfig(BaseModel):
 # ============================================================================
 
 
-class HeraldConfig(BaseModel):
+class HeraldConfig(BaseModel, DharmaConfigMixin):
     """Media Agent Parameters"""
 
     content_style: str = Field(default="cyberpunk_professional")
@@ -89,7 +137,7 @@ class HeraldConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class ScienceConfig(BaseModel):
+class ScienceConfig(BaseModel, DharmaConfigMixin):
     """Research Agent Parameters"""
 
     search_provider: str = Field(default="tavily")
@@ -105,7 +153,7 @@ class ScienceConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class ForumConfig(BaseModel):
+class ForumConfig(BaseModel, DharmaConfigMixin):
     """Democracy Agent Parameters"""
 
     proposal_min_length: int = Field(default=50, ge=1)
@@ -118,7 +166,7 @@ class ForumConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class CivicConfig(BaseModel):
+class CivicConfig(BaseModel, DharmaConfigMixin):
     """Authority Agent Parameters"""
 
     auto_register_new_agents: bool = Field(default=True)
@@ -131,7 +179,7 @@ class CivicConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class AgentParametersConfig(BaseModel):
+class AgentParametersConfig(BaseModel, DharmaConfigMixin):
     """All Agent Configuration Parameters"""
 
     herald: HeraldConfig = Field(default_factory=HeraldConfig)
@@ -147,7 +195,7 @@ class AgentParametersConfig(BaseModel):
 # ============================================================================
 
 
-class MonitoringConfig(BaseModel):
+class MonitoringConfig(BaseModel, DharmaConfigMixin):
     """System Monitoring & Audit Parameters"""
 
     health_check_interval_minutes: int = Field(default=5, ge=1)
@@ -165,7 +213,7 @@ class MonitoringConfig(BaseModel):
 # ============================================================================
 
 
-class SecurityConfig(BaseModel):
+class SecurityConfig(BaseModel, DharmaConfigMixin):
     """Security Parameters"""
 
     require_signatures: bool = Field(default=True)
@@ -183,7 +231,7 @@ class SecurityConfig(BaseModel):
 # ============================================================================
 
 
-class TavilyConfig(BaseModel):
+class TavilyConfig(BaseModel, DharmaConfigMixin):
     """Tavily Integration Parameters"""
 
     enabled: bool = Field(default=True)
@@ -193,7 +241,7 @@ class TavilyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class TwitterConfig(BaseModel):
+class TwitterConfig(BaseModel, DharmaConfigMixin):
     """Twitter Integration Parameters"""
 
     enabled: bool = Field(default=True)
@@ -203,7 +251,7 @@ class TwitterConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class RedditConfig(BaseModel):
+class RedditConfig(BaseModel, DharmaConfigMixin):
     """Reddit Integration Parameters"""
 
     enabled: bool = Field(default=True)
@@ -213,7 +261,7 @@ class RedditConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class DatabaseConfig(BaseModel):
+class DatabaseConfig(BaseModel, DharmaConfigMixin):
     """Database Configuration"""
 
     path: str = Field(default="data/registry/")
@@ -223,7 +271,7 @@ class DatabaseConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class IntegrationsConfig(BaseModel):
+class IntegrationsConfig(BaseModel, DharmaConfigMixin):
     """External Integration Parameters"""
 
     tavily: TavilyConfig = Field(default_factory=TavilyConfig)
@@ -239,7 +287,7 @@ class IntegrationsConfig(BaseModel):
 # ============================================================================
 
 
-class CityConfig(BaseModel):
+class CityConfig(BaseModel, DharmaConfigMixin):
     """
     THE DHARMA: Complete Configuration Schema for Agent City
 
