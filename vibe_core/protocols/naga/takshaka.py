@@ -312,3 +312,6 @@ class NullTakshaka:
 
     def get_status(self) -> NagaStatus:
         return NagaStatus(naga_type=NagaType.TAKSHAKA, healthy=False, message="DISABLED - DANGEROUS")
+
+
+TakshakaProtocol = Takshaka

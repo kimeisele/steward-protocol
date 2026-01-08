@@ -26,12 +26,10 @@ from vibe_core.di import ServiceRegistry
 from vibe_core.naga.garuda import garuda  # The Controller of Nagas
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.naga import (
-        ChitraguptaProtocol,
-        EventRecord,
-        SeshaProtocol,
-        TakshakaProtocol,
-    )
+    from vibe_core.protocols.naga.chitragupta import ChitraguptaProtocol
+    from vibe_core.protocols.naga.sesha import SeshaProtocol
+    from vibe_core.protocols.naga.takshaka import TakshakaProtocol
+    from vibe_core.protocols.naga.types import EventRecord
 
 logger = logging.getLogger("NAGA.BASE")
 
@@ -483,7 +481,7 @@ class NagaBaseService:
         """Lazy-load Sesha from ServiceRegistry."""
         if self._sesha_instance is None:
             try:
-                from vibe_core.protocols.naga import SeshaProtocol
+                from vibe_core.protocols.naga.sesha import SeshaProtocol
 
                 self._sesha_instance = ServiceRegistry.get(SeshaProtocol)
             except Exception as e:
@@ -499,7 +497,7 @@ class NagaBaseService:
         """Lazy-load Chitragupta from ServiceRegistry."""
         if self._chitragupta_instance is None:
             try:
-                from vibe_core.protocols.naga import ChitraguptaProtocol
+                from vibe_core.protocols.naga.chitragupta import ChitraguptaProtocol
 
                 self._chitragupta_instance = ServiceRegistry.get(ChitraguptaProtocol)
             except Exception as e:
@@ -515,7 +513,7 @@ class NagaBaseService:
         """Lazy-load Takshaka from ServiceRegistry."""
         if self._takshaka_instance is None:
             try:
-                from vibe_core.protocols.naga import TakshakaProtocol
+                from vibe_core.protocols.naga.takshaka import TakshakaProtocol
 
                 self._takshaka_instance = ServiceRegistry.get(TakshakaProtocol)
             except Exception as e:

@@ -139,3 +139,6 @@ class Garuda(NagaBase):
             return False
         except Exception:
             return False
+
+
+GarudaProtocol = Garuda

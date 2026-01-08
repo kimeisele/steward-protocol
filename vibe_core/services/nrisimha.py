@@ -278,27 +278,39 @@ class NrisimhaWatchdog(MantraProtocol):
 
     def _ashvamedha_pulse(self) -> None:
         """
-        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+        ASHVAMEDHA VIA RATHA YATRA:
+        The Watchdog signals Jagannath (The Seer) to start the procession.
+        Jagannath then signals Ananta (The Substrate) to flood the orphans.
 
-        On every PULSE_SYNC (Step 8), Ananta scans for orphan services
-        and floods them with NagaProxy capabilities.
-
-        This is the Mantra-based integration - no manual wiring needed.
-        "Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
+        "The Dog barks, the Chariot moves, the Snake bites."
         """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.lila.jagannath import IJagannath
+
+            # Get Jagannath (The Lord of the Universe)
+            jagannath = ServiceRegistry.get(IJagannath)
+            if jagannath is None:
+                # Fallback: If Jagannath not awake, wake Ananta directly (Legacy/Boot)
+                # This prevents "Universe Collapsing" during early boot
+                self._legacy_ashvamedha()
+                return
+
+            # The Festival Begins
+            jagannath.start_ratha_yatra()
+
+        except Exception as e:
+            # Silent fail - Lila continues
+            logger.debug(f"Ratha Yatra pulse skipped: {e}")
+
+    def _legacy_ashvamedha(self) -> None:
+        """Fallback for boot sequence (Direct Ananta Access)."""
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.substrate import IAnantaBridge
 
-            # Get Ananta from ServiceRegistry
             ananta = ServiceRegistry.get(IAnantaBridge)
-            if ananta is None:
-                return  # Ananta not yet registered (boot sequence)
-
-            # Ananta analyzes and floods orphan services
-            if hasattr(ananta, "auto_flood_orphans"):
+            if ananta and hasattr(ananta, "auto_flood_orphans"):
                 ananta.auto_flood_orphans()
-
-        except Exception as e:
-            # Silent fail - Ashvamedha is opportunistic, not critical
-            logger.debug(f"Ashvamedha pulse skipped: {e}")
+        except:
+            pass
