@@ -22,8 +22,7 @@ import traceback
 from typing import Any, Callable, Optional, TypeVar
 
 from vibe_core.protocols.naga.chitragupta import ChitraguptaProtocol, NullChitragupta
-from vibe_core.protocols.substrate import MantraOpCode
-from vibe_core.protocols.universal.mantra import MantraProtocol
+from vibe_core.protocols.substrate import MantraOpCode, MantraProtocol
 from vibe_core.protocols.universal.types import EnforceContext, Verdict
 
 if False:  # TYPE_CHECKING hack to avoid import cycle for Mypy logic but not runtime
