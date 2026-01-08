@@ -75,77 +75,15 @@ from vibe_core.protocols.naga.federation import (
     NagaFederationProtocol,
 )
 
-# Garuda (Recursion Guard)
-from vibe_core.protocols.naga.garuda import (
-    GarudaProtocol,
-    NullGaruda,
-)
+# Garuda (The Carrier)
+from vibe_core.protocols.naga.garuda import Garuda
 
-# Kaliya
-from vibe_core.protocols.naga.kaliya import (
-    KaliyaProtocol,
-    NullKaliya,
-    QuarantineStatus,
-)
+# Sesha (The Bed)
+from vibe_core.protocols.naga.sesha import Sesha
 
-# Karkotaka (Crypto)
-from vibe_core.protocols.naga.karkotaka import (
-    EncryptedPayload,
-    KarkotakaProtocol,
-    NullKarkotaka,
-    SignedContent,
-)
-
-# Kulika (Schema Registry)
-from vibe_core.protocols.naga.kulika import (
-    KulikaProtocol,
-    NullKulika,
-)
-
-# Narada
-from vibe_core.protocols.naga.narada import (
-    NaradaProtocol,
-    NullNarada,
-)
-
-# Padma (Cache)
-from vibe_core.protocols.naga.padma import (
-    CacheEntry,
-    CacheStats,
-    CacheValue,
-    NullPadma,
-    PadmaProtocol,
-)
-
-# Prahlad
-from vibe_core.protocols.naga.prahlad import (
-    NullPrahlad,
-    PrahladProtocol,
-)
-
-# NOTE: DharmaScore moved to vibe_core.naga.services.prahlad.types (source of truth)
-# Import directly from there if needed to avoid circular dependency
-# Sesha
-from vibe_core.protocols.naga.sesha import (
-    ImportResult,
-    LedgerBlock,
-    NullSesha,
-    SeshaProtocol,
-    SyncRequest,
-    SyncStatus,
-)
-
-# Shankha (Broadcast)
-from vibe_core.protocols.naga.shankha import (
-    BroadcastMessage,
-    NullShankha,
-    ShankhaProtocol,
-)
-
-# Takshaka
+# Takshaka (The Architect)
 from vibe_core.protocols.naga.takshaka import (
-    NullTakshaka,
-    TakshakaProtocol,
+    Takshaka,
     ToxicityReport,
     VajraViolation,
     VerifyResult,
@@ -153,45 +91,9 @@ from vibe_core.protocols.naga.takshaka import (
     ViolationDetails,
 )
 
-# TÜV (Type Audit Intelligence)
-from vibe_core.protocols.naga.tuv import (
-    ChurnEntry,
-    # Findings (Protocol-First)
-    FindableProtocol,
-    FindingRegistry,
-    Leak,
-    LeakDict,
-    LeakPattern,
-    LeakSeverity,
-    LeakStatus,
-    NullTÜV,
-    ProtocolAudit,
-    ProtocolCoverageReport,
-    ProtocolGap,
-    ProtocolGapDict,
-    ProtocolGapSeverity,
-    ProtocolGapStatus,
-    SerializedFinding,
-    TÜVProtocol,
-    TÜVRegistry,  # Backward compat alias for FindingRegistry
-    TÜVReport,
-)
-from vibe_core.protocols.naga.types import (
-    EventRecord,
-    NagaServiceProtocol,
-    NagaStatus,
-    NagaType,
-    StatusDetails,
-)
-
-# Vasuki
+# Vasuki (The Rope)
 from vibe_core.protocols.naga.vasuki import (
-    NodeAddress,
-    NullVasuki,
-    SendResult,
-    SendStatus,
-    SignedEnvelope,
-    VasukiProtocol,
+    Vasuki,
 )
 
 # =============================================================================
@@ -206,27 +108,24 @@ __all__ = [
     "StatusDetails",
     "EventRecord",  # YAMARAJA: Typed event for Sesha.record_event()
     # Sesha
-    "SeshaProtocol",
+    "Sesha",
     "SyncStatus",
     "SyncRequest",
     "LedgerBlock",
     "ImportResult",
-    "NullSesha",
     # Vasuki
-    "VasukiProtocol",
+    "Vasuki",
     "SignedEnvelope",
     "SendStatus",
     "SendResult",
     "NodeAddress",
-    "NullVasuki",
     # Takshaka
-    "TakshakaProtocol",
+    "Takshaka",
     "VerifyStatus",
     "VerifyResult",
     "ToxicityReport",
     "VajraViolation",
     "ViolationDetails",
-    "NullTakshaka",
     # Kaliya
     "KaliyaProtocol",
     "QuarantineStatus",
@@ -269,8 +168,7 @@ __all__ = [
     # Federation
     "NagaFederationProtocol",
     # Garuda
-    "GarudaProtocol",
-    "NullGaruda",
+    "Garuda",
     # Cortex (MANAS Integration)
     "NagaCortexProtocol",
     "NagaContext",
@@ -291,7 +189,6 @@ __all__ = [
     # Findings (Protocol-First - reusable by any auditor)
     "FindableProtocol",
     "FindingRegistry",
-    "SerializedFinding",
     # Leak types
     "Leak",
     "LeakDict",

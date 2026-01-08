@@ -19,13 +19,95 @@ STATUS: DEVOTEE / ACTIVE SERVICE
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
 
 from vibe_core.protocols.naga.base import NagaBase
 
 # Re-export existing types for compatibility
 from vibe_core.protocols.naga.groups import Subject, Verdict
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
+
+# =============================================================================
+# TYPES (Restored for Compatibility)
+# =============================================================================
+
+
+class VerifyStatus(str, Enum):
+    VALID = "valid"
+    INVALID_SIGNATURE = "invalid_signature"
+    INVALID_KEY = "invalid_key"
+    EXPIRED = "expired"
+    UNTRUSTED = "untrusted"
+    REVOKED = "revoked"
+    RATE_LIMITED = "rate_limited"
+    TOXIC = "toxic"
+
+
+@dataclass
+class VerifyResult:
+    status: VerifyStatus
+    sender_id: Optional[str] = None
+    fingerprint: Optional[str] = None
+    reason: Optional[str] = None
+    toxic_patterns: List[str] = field(default_factory=list)
+    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
+
+    @property
+    def is_valid(self) -> bool:
+        return self.status == VerifyStatus.VALID
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "status": self.status.value,
+            "sender_id": self.sender_id,
+            "fingerprint": self.fingerprint,
+            "reason": self.reason,
+            "toxic_patterns": self.toxic_patterns,
+            "timestamp": self.timestamp,
+        }
+
+
+@dataclass
+class ToxicityReport:
+    score: float
+    patterns: List[str]
+    blocked: bool = False
+
+    @property
+    def is_toxic(self) -> bool:
+        return self.score >= 0.3
+
+
+class ViolationDetails(TypedDict, total=False):
+    event_type: str
+    toxicity_score: float
+    matched_patterns: List[str]
+    agent_id: str
+    operation: str
+    error_message: str
+    sample_hash: str
+    sample_size: int
+
+
+@dataclass
+class VajraViolation:
+    violation_type: str
+    source: str
+    details: ViolationDetails = field(default_factory=lambda: ViolationDetails())
+    timestamp: datetime = field(default_factory=datetime.now)
+    raw_sample: Optional[bytes] = None
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "type": self.violation_type,
+            "source": self.source,
+            "details": dict(self.details),
+            "timestamp": self.timestamp.isoformat(),
+        }
+
 
 # Define Takshaka's specific manifest capabilities
 TAKSHAKA_CAPS = ("log", "reduce", "architect")
