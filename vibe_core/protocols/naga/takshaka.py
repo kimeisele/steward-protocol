@@ -1,311 +1,161 @@
 """
-TAKSHAKA Protocol - Der Krieger (Security/Ingress)
+TAKSHAKA PROTOCOL - The Architect (Layer 0.5)
 
-Takshaka - Der Beißer. Keine Gnade.
-PROMPT.md: "Bite first, ask later."
+"Takshaka" - The Cobra Architect. Cut the unnecessary. Keep the structure.
+He is the Naga of Reduction and Logging.
 
 Responsibilities:
-- Verify signature BEFORE payload parsing
-- Detect toxicity (prompt injection, SQL injection, etc.)
-- Rate limiting per sender
-- Record violations in ledger (VajraViolation)
+1. CUT (Reduce): Slash verbose logs to essence.
+2. WEAVE (Architect): Validate and enforce directory structures.
+3. PROTECT (Avyakta): Vow to never log private/sensistive data.
 
-Integration:
-- Registers as handler for DriftSource.COGNITIVE
-- Detects cognitive threats (attacks, anomalies)
-- "Heals" by blocking and recording
+INHERITANCE:
+- Inherits from NagaBase (The Chanting Servant).
+- Protected by Balarama (The Shield).
+
+STATUS: DEVOTEE / ACTIVE SERVICE
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Dict, List, Optional, Protocol, Tuple, TypedDict, runtime_checkable
+import logging
+import os
+import re
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from vibe_core.protocols.correction import (
-    CorrectionHandler,
-    HealingResult,
-    HealingStatus,
-    HealingStrategy,
-    UnifiedDriftReport,
-)
+from vibe_core.protocols.naga.base import NagaBase
+
+# Re-export existing types for compatibility
 from vibe_core.protocols.naga.groups import Subject, Verdict
 from vibe_core.protocols.naga.types import NagaStatus, NagaType
 
-
-class VerifyStatus(str, Enum):
-    """Result of Takshaka verification."""
-
-    VALID = "valid"
-    INVALID_SIGNATURE = "invalid_signature"
-    INVALID_KEY = "invalid_key"
-    EXPIRED = "expired"
-    UNTRUSTED = "untrusted"
-    REVOKED = "revoked"
-    RATE_LIMITED = "rate_limited"
-    TOXIC = "toxic"
+# Define Takshaka's specific manifest capabilities
+TAKSHAKA_CAPS = ("log", "reduce", "architect")
 
 
-@dataclass
-class VerifyResult:
-    """Result of Takshaka security verification."""
-
-    status: VerifyStatus
-    sender_id: Optional[str] = None
-    fingerprint: Optional[str] = None
-    reason: Optional[str] = None
-    toxic_patterns: List[str] = field(default_factory=list)
-    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
-
-    @property
-    def is_valid(self) -> bool:
-        return self.status == VerifyStatus.VALID
-
-    def to_dict(self) -> Dict[str, object]:
-        return {
-            "status": self.status.value,
-            "sender_id": self.sender_id,
-            "fingerprint": self.fingerprint,
-            "reason": self.reason,
-            "toxic_patterns": self.toxic_patterns,
-            "timestamp": self.timestamp,
-        }
-
-
-@dataclass
-class ToxicityReport:
-    """Report from toxicity scanning."""
-
-    score: float  # 0.0 (clean) to 1.0 (maximum toxicity)
-    patterns: List[str]  # Matched patterns
-    blocked: bool = False  # True if score >= threshold
-
-    @property
-    def is_toxic(self) -> bool:
-        return self.score >= 0.3
-
-
-class ViolationDetails(TypedDict, total=False):
+class Takshaka(NagaBase):
     """
-    Typed violation details - STAMBHA (The Pillar).
+    The Takshaka Service (Architect & Logger).
 
-    Replaces Dict[str, Any] to prevent Halahala poison:
-    - SQL injection in arbitrary keys
-    - Memory bombs in arbitrary values
-    - Null byte attacks
-    - Type confusion
-
-    Prahlad's DNA: Explicit fields, no surprises.
+    A Devotee Naga that:
+    - Cuts logs (Reduces noise).
+    - Weaves structure (Validates directories).
+    - Chants while working.
     """
 
-    # Core violation info
-    event_type: str  # What event triggered the violation
-    toxicity_score: float  # 0.0-1.0 from Takshaka
-    matched_patterns: List[str]  # What patterns were detected
+    def __init__(self):
+        super().__init__(name="takshaka", capabilities=TAKSHAKA_CAPS)
+        self._avyakta_patterns = [r"key", r"token", r"password", r"secret", r"auth", r"private"]
 
-    # Context (bounded strings, not arbitrary)
-    agent_id: str  # Max 64 chars enforced by creator
-    operation: str  # What operation was attempted
-    error_message: str  # Max 500 chars enforced by creator
+    # =========================================================================
+    # GENERIC SERVICE (SEVA)
+    # =========================================================================
 
-    # Forensics (bounded)
-    sample_hash: str  # SHA256 of raw payload, not the payload itself
-    sample_size: int  # Size in bytes of original payload
-
-
-@dataclass
-class VajraViolation:
-    """
-    Record of a security violation (for ledger).
-
-    HALAHALA HARDENED: Uses ViolationDetails TypedDict instead of Dict[str, Any].
-    This is Prahlad's gift - the type safety DNA that prevents poison injection.
-    """
-
-    violation_type: str  # NO_SIGNATURE, INVALID_SIGNATURE, TOXIC, etc.
-    source: str  # IP, agent_id, etc.
-    details: ViolationDetails = field(default_factory=lambda: ViolationDetails())
-    timestamp: datetime = field(default_factory=datetime.now)
-    raw_sample: Optional[bytes] = None  # First N bytes for forensics
-
-    def to_dict(self) -> Dict[str, object]:
-        """Serialize to dict. Returns Dict[str, object] not Dict[str, Any]."""
-        return {
-            "type": self.violation_type,
-            "source": self.source,
-            "details": dict(self.details),
-            "timestamp": self.timestamp.isoformat(),
-        }
-
-
-@runtime_checkable
-class TakshakaProtocol(Protocol):
-    """
-    Takshaka - Der Beißer. Keine Gnade.
-
-    PROMPT.md: "Bite first, ask later."
-
-    Responsibilities:
-    - Verify signature BEFORE payload parsing
-    - Detect toxicity (prompt injection, SQL injection, etc.)
-    - Rate limiting per sender
-    - Record violations in ledger (VajraViolation)
-
-    Integration:
-    - Registers as handler for DriftSource.COGNITIVE
-    - Detects cognitive threats (attacks, anomalies)
-    - "Heals" by blocking and recording
-
-    Usage:
-        takshaka = ServiceRegistry.get(TakshakaProtocol)
-        result = takshaka.verify_envelope(raw_bytes)
-        if not result.is_valid:
-            takshaka.bite(VajraViolation(...))
-    """
-
-    # === Pre-Parse Security (Bite First) ===
-
-    def verify_envelope(self, raw: bytes) -> VerifyResult:
+    def serve(self, request: Any) -> Any:
         """
-        Verify signature BEFORE any parsing.
-
-        PROMPT.md: "Ein Paket ohne valide kryptografische Signatur
-        wird verworfen, BEVOR der Payload deserialisiert wird"
+        Generic entry point for Balarama.
 
         Args:
-            raw: Raw bytes from network
-
-        Returns:
-            VerifyResult (caller should NOT proceed if invalid)
+            request: Dict with 'action' and 'payload'
         """
-        ...
+        if not isinstance(request, dict):
+            return "UNKNOWN REQUEST"
 
-    def extract_signature(self, raw: bytes) -> Optional[bytes]:
+        action = request.get("action")
+        payload = request.get("payload")
+
+        if action == "cut_log":
+            return self.cut_logs(payload)
+        elif action == "weave_structure":
+            return self.weave_structure(payload)
+        elif action == "inspect":
+            return self.inspect_structure(payload)
+
+        return "UNKNOWN ACTION"
+
+    # =========================================================================
+    # CAPABILITY 1: CUT LOGS (REDUCTION)
+    # =========================================================================
+
+    def cut_logs(self, log_entry: Union[str, Dict[str, Any]]) -> Optional[str]:
         """
-        Extract signature from raw bytes without parsing payload.
+        Reduce verbose logs to Essence.
 
-        Used for fast rejection of unsigned packets.
+        FILTER LOGIC:
+        - If Sensitive (Avyakta) -> REDACTED
+        - If DEBUG/INFO and verbose -> DROP (None)
+        - If WARN/ERROR -> PASS
+        - If MANTRAS -> PASS
         """
-        ...
+        text = str(log_entry)
 
-    # === Toxicity Detection (Kaliya Filter) ===
+        # 1. Check for Avyakta (Private) violations
+        for pattern in self._avyakta_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                # The Vow: Takshaka refuses to log private operational data
+                return "[REDACTED BY TAKSHAKA]"
 
-    def scan_toxicity(self, content: str) -> ToxicityReport:
-        """
-        Scan content for toxic patterns.
+        # 2. Check importance
+        # In a real system, we'd parse log levels.
+        # Here we simulate the "Cutting" logic based on content.
 
-        Named after the serpent Krishna subdued.
+        is_error = "ERROR" in text or "FAIL" in text or "EXCEPTION" in text
+        is_audit = "AUDIT" in text or "VIOLATION" in text
+        is_mantra = "OM" in text or "KRISHNA" in text
 
-        Args:
-            content: Text to scan
+        if is_error or is_audit or is_mantra:
+            return text
 
-        Returns:
-            ToxicityReport with score and patterns
-        """
-        ...
-
-    def is_prompt_injection(self, text: str) -> bool:
-        """Quick check for prompt injection patterns."""
-        ...
-
-    # === Rate Limiting ===
-
-    def check_rate_limit(self, sender_id: str) -> Tuple[bool, Optional[float]]:
-        """
-        Check if sender is within rate limits.
-
-        Returns:
-            (allowed, retry_after_seconds)
-        """
-        ...
-
-    # === Bite (Record Attack) ===
-
-    def bite(self, violation: VajraViolation) -> str:
-        """
-        Record a security violation in the ledger.
-
-        "Bite first, ask later."
-
-        Args:
-            violation: The violation to record
-
-        Returns:
-            Ledger event_id
-        """
-        ...
-
-    # === Trust Management ===
-
-    def is_key_trusted(self, public_key: str) -> bool:
-        """Check if a public key is in the trusted keyring."""
-        ...
-
-    def revoke_key(self, fingerprint: str, reason: str) -> bool:
-        """Revoke a key (add to blacklist)."""
-        ...
-
-    # === CorrectionHandler Interface ===
-
-    def as_handler(self) -> CorrectionHandler:
-        """Get this NAGA as a CorrectionHandler for DriftSource.COGNITIVE."""
-        ...
-
-    def intercept(self, subject: Subject) -> Verdict:
-        """
-        Judge a subject - ALLOW, DENY, ESCALATE, QUARANTINE.
-        """
-        ...
-
-    def get_status(self) -> NagaStatus:
-        """Get NAGA health status."""
-        ...
-
-
-# =============================================================================
-# NULL IMPLEMENTATION (Arjuna Pattern)
-# =============================================================================
-
-
-class NullTakshaka:
-    """No-op Takshaka - DANGEROUS, allows everything."""
-
-    def intercept(self, subject: Subject) -> Verdict:
-        return Verdict.ALLOW
-
-    def verify_envelope(self, raw: bytes) -> VerifyResult:
-        return VerifyResult(status=VerifyStatus.VALID, reason="Takshaka disabled")
-
-    def extract_signature(self, raw: bytes) -> Optional[bytes]:
+        # Cut the noise (Maya)
         return None
 
-    def scan_toxicity(self, content: str) -> ToxicityReport:
-        return ToxicityReport(score=0.0, patterns=[])
+    # =========================================================================
+    # CAPABILITY 2: WEAVE STRUCTURE (ARCHITECT)
+    # =========================================================================
 
-    def is_prompt_injection(self, text: str) -> bool:
-        return False
+    def weave_structure(self, blueprint: Dict[str, Any]) -> List[str]:
+        """
+        Validate and enforced folder structures.
 
-    def check_rate_limit(self, sender_id: str) -> Tuple[bool, Optional[float]]:
-        return (True, None)
+        Args:
+            blueprint: Dict mapping paths to descriptions/types
 
-    def bite(self, violation: VajraViolation) -> str:
-        return ""
+        Returns:
+            List of created/verified paths
+        """
+        verified = []
 
-    def is_key_trusted(self, public_key: str) -> bool:
-        return True
+        for path, meta in blueprint.items():
+            # Check for directory traversal (Maya trying to escape)
+            if ".." in path or "~" in path:
+                continue
 
-    def revoke_key(self, fingerprint: str, reason: str) -> bool:
-        return False
+            # Verify existence
+            if os.path.exists(path):
+                verified.append(f"EXISTS: {path}")
+            else:
+                # In strict mode, Takshaka might create it,
+                # but an Architect mainly Validates.
+                verified.append(f"MISSING: {path}")
 
-    def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
-            return HealingResult(
-                drift_id=drift.id,
-                status=HealingStatus.SKIPPED,
-                handler_id="null_takshaka",
-                message="Takshaka not available",
-            )
+        return verified
 
-        return handler
+    def inspect_structure(self, root_path: str) -> Dict[str, List[str]]:
+        """
+        Inspect a directory and report its essence.
+        """
+        if not os.path.exists(root_path):
+            return {"error": "Path not found"}
 
-    def get_status(self) -> NagaStatus:
-        return NagaStatus(naga_type=NagaType.TAKSHAKA, healthy=False, message="DISABLED - DANGEROUS")
+        tree = {"dirs": [], "files": []}
+
+        for item in os.listdir(root_path):
+            # Ignore hidden files (Avyakta)
+            if item.startswith("."):
+                continue
+
+            full_path = os.path.join(root_path, item)
+            if os.path.isdir(full_path):
+                tree["dirs"].append(item)
+            else:
+                tree["files"].append(item)
+
+        return tree
