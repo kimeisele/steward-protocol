@@ -1,8 +1,10 @@
 from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, HolyName, MantraOpCode, MantraProtocol
 
+from .autobahn import AutobahnProtocol, GermanAutobahn, Lane, VajraPacket
 from .bhagavan import Bhaga, BhagaTestResult, BhagavanProtocol
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
+from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
 from .krishna import IdentityStatus, KrishnaProtocol
 from .om import OmProtocol
 from .prabhupada import PRABHUPADA, PrabhupadaVani, SrilaPrabhupada, VaniInstruction

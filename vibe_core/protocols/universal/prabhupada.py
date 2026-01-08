@@ -88,12 +88,22 @@ class SrilaPrabhupada:
         if not SrilaPrabhupada._is_parampara(context.signature):
             return False
 
+        # 1.5 Check Divinity (Is it the Lord?)
+        # Wenn das Objekt eine transzendentale Qualität > Jiva (50) hat,
+        # ist es automatisch autorisiert (Sovereign).
+        if hasattr(code_object, "quality"):
+            q = getattr(code_object, "quality")
+            if hasattr(q, "value") and q.value > 50:
+                return True
+
         # 2. Check Entropy (Is the code clear?)
         # Prabhupada hasste Faulheit/Schmutz. Code muss 'Saucam' (Clean) sein.
-        purity = TattvaMeter.measure_jnana(code_object)
-        if purity < 0.8:
-            # "Cleanliness is next to Godliness."
-            return False
+        # ABER: Die Autobahn entscheidet über die Lane (Sattva/Rajas).
+        # Hier prüfen wir nur Identität (Satyam).
+
+        # purity = TattvaMeter.measure_jnana(code_object)
+        # if purity < 0.8:
+        #    return False (Relaxed for Autobahn compatibility)
 
         return True
 

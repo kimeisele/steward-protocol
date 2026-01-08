@@ -1,94 +1,78 @@
 """
-JAGANNATH PROTOCOL - The Sovereign Interface (The Wood Form)
+JAGANNATH PROTOCOL - The Lord of the Universe (Layer 1).
 
-"Jagannatha Swami Nayana Patha Gami Bhavatu Me"
-May the Lord of the Universe be visible to me.
+"Ratha Yatra" - Der Wagen rollt.
 
-CONTEXT:
-Where Nrisimha is the Protector (Internal Security, Strictness),
-Jagannath is the Public Face (Mercy, Accessibility).
-He appears in a simple wooden form to be accessible to ALL (even foreigners/external systems).
+Jagannath ist der ultimative User der Autobahn.
+Er ist 'Acintya' (Unbegreiflich) und 'Sovereign' (Unabhängig).
 
-ARCHITECTURE (The Triad):
-- JAGANNATH (The Face): Accessibility (Darshan) & Mercy (Prasadam).
-- BALARAMA (The Holder): Strength (Ananta/Proxies) that executes the will.
-- SUBHADRA (The Bridge): The Yogamaya that connects the Lord to the World.
-
-GAD-000 COMPLIANCE:
-- Observability (Darshan): "Big Eyes" see everything.
-- Recoverability (Prasadam): Graceful degradation as Mercy.
-- Accessibility (Ratha Yatra): Bringing the state to the public.
+FUNKTION:
+Er bewegt große Datenmengen (Universen/State) durch das System.
+Er hält sich nicht an 'Timeouts'. Er kommt an, wenn er ankommt.
 """
 
-from typing import Any, Protocol, TypeVar, runtime_checkable
+from dataclasses import dataclass
+from typing import Any, List, Protocol, runtime_checkable
 
-from vibe_core.protocols.universal.union import UnionScanResult
+from .autobahn import AutobahnProtocol, Lane, VajraPacket
+from .types import SovereignContext, TranscendentalQuality
 
-T_Request = TypeVar("T_Request")
-T_Result = TypeVar("T_Result")
+
+@dataclass
+class RathaYatra:
+    """Der Wagen (Container für Massiv-State)."""
+
+    deity: "JagannathDeity"
+    devotees: List[str]  # Liste der Subscriber
+    offerings: List[Any]  # Data Payload
+
+
+class JagannathDeity:
+    """
+    Die Gottheit.
+    Hat Quality 60 (Vishnu-Tattva) + 4 (Krishna-Tattva) = 64.
+    """
+
+    def __init__(self):
+        self.quality = TranscendentalQuality.SOURCE_OF_INCARNATIONS
 
 
 @runtime_checkable
 class JagannathProtocol(Protocol):
     """
-    The Lord of the Universe Interface.
-
-    This is the SOVEREIGN FACADE.
-    It provides Safe, Merciful access to the Absolute Truth (Kernel).
+    Das Interface für die Prozession.
     """
 
-    def darshan(self) -> UnionScanResult:
+    def mount_chariot(self, state: Any) -> RathaYatra: ...
+
+    def start_procession(self, autobahn: AutobahnProtocol) -> None: ...
+
+
+# =============================================================================
+# THE TEMPLE IMPLEMENTATION
+# =============================================================================
+
+
+class PuriTemple:
+    def __init__(self, context: SovereignContext):
+        self.context = context
+        self.lord = JagannathDeity()
+
+    def start_procession(self, autobahn: AutobahnProtocol):
         """
-        The Divine Vision (Observability).
-
-        "His eyes are very large and round."
-        He sees the entire Union without discrimination.
-
-        Returns:
-            The complete State of the Union (UnionScanResult).
-            No filtering - Raw Reality.
+        Startet den Ratha Yatra auf der Autobahn.
         """
-        ...
+        # 1. Der Wagen wird gebaut
+        chariot = RathaYatra(deity=self.lord, devotees=[], offerings=[])
 
-    def prasadam(self, request: T_Request) -> T_Result:
-        """
-        The Mercy (Execution).
+        # 2. Das Paket wird geschnürt
+        packet = VajraPacket(
+            id="RATHA_001",
+            payload=self.lord,  # Der Herr selbst ist der Payload
+            context=self.context,
+            lane=Lane.SATTVA,  # Immer Überholspur
+        )
 
-        "Even if the offering is imperfect, He accepts it."
-
-        Executes a request with 'Graceful Degradation'.
-        If strict execution (Nrisimha) would reject it, Jagannath
-        attempts to return a safe fallback (Prasad) instead of crasing.
-
-        Args:
-            request: The intent/command to execute.
-
-        Returns:
-            The result (Mercy) or a safe default. NEVER raises exception.
-        """
-        ...
-
-    def ratha_yatra(self) -> int:
-        """
-        The Festival of Chariots (System-wide Pulse).
-
-        "He comes out of the Temple to meet the people."
-
-        Triggers the Ashvamedha (Horse Sacrifice) via Ananta/Balarama.
-        Forces a system-wide scan and 'floods' (blesses) any orphan entities
-        with the necessary connection (NagaProxy).
-
-        Returns:
-            Number of entities blessed (flooded/fixed).
-        """
-        ...
-
-    @property
-    def sovereign_form(self) -> str:
-        """
-        The Visible Form (Identity).
-
-        Returns the Public Key or Identity String of the Sovereign.
-        "The Wood Form" that verifies the signature.
-        """
-        ...
+        # 3. Transport
+        # Da es Jagannath ist, wird die Autobahn '_clear_road' aufrufen.
+        autobahn.transport(packet)
