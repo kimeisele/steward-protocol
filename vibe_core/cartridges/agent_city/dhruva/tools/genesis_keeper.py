@@ -45,7 +45,30 @@ class GenesisKeeper:
         logger.info("🧭 Genesis Keeper initialized - Dhruva point established")
 
     def get_genesis_state(self) -> Dict[str, Any]:
-        """Retrieve the current genesis block state."""
+        """
+        Retrieve the current genesis block state.
+        Supports Hard Fork Logic via chain.json.
+        """
+        chain_file = self.genesis_dir / "chain.json"
+
+        # 1. Chain Logic (V2+ / Holographic)
+        if chain_file.exists():
+            try:
+                with open(chain_file, "r") as f:
+                    chain = json.load(f)
+                    active_id = chain.get("active_genesis")
+                    block_file = chain.get("blocks", {}).get(active_id)
+
+                    if block_file:
+                        target_path = self.genesis_dir / block_file
+                        logger.info(f"🌊 VEDIC BOOT: Loading Active Genesis {active_id} from {block_file}")
+                        with open(target_path, "r") as gf:
+                            return json.load(gf)
+            except Exception as e:
+                logger.error(f"Error loading chain.json: {str(e)}")
+                # Fallthrough to legacy
+
+        # 2. Legacy Logic (GEN-000)
         if not self.genesis_file.exists():
             return {}
 

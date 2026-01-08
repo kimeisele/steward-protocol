@@ -205,6 +205,73 @@ class SubstrateHealth(str, Enum):
 
 
 # =============================================================================
+# THE 16-BIT INSTRUCTION SET (HARDWARE LEVEL DEFINITION)
+# =============================================================================
+
+
+class MantraOpCode(str, Enum):
+    """
+    The Atomic Instruction Set of the Ananta Processor.
+    Defined at Layer -1 because Time (Kala) precedes Logic.
+
+    RELATION TO ANANTA (BALARAMA):
+    - HARE:    Addressing the Energy (Shakti/Interrupt) -> "Wake Up"
+    - KRISHNA: Addressing the Sovereign (Identity/Root) -> "Remember Who You Are"
+    - RAMA:    Addressing the Support (Strength/Service) -> "Do The Work"
+    """
+
+    # --- PHASE 1: WAKE (HARE KRISHNA HARE KRISHNA) ---
+    SYS_WAKE = "sys_wake"  # HARE    : SIGSTOP Maya / Focus
+    LOAD_ROOT = "load_root"  # KRISHNA : Load Sovereign Identity
+    ALLOC_MEM = "alloc_mem"  # HARE    : Allocate Clean Heap
+    BIND_CTX = "bind_ctx"  # KRISHNA : Bind Identity to Heap
+
+    # --- PHASE 2: PURIFY (KRISHNA KRISHNA HARE HARE) ---
+    ASSERT_TRUTH = "assert_truth"  # KRISHNA : Verify Ledger Integrity
+    RESOLVE_REQ = "resolve_req"  # KRISHNA : Parse Intent
+    GARBAGE_COLLECT = "garbage_collect"  # HARE    : Flush Unsigned Objects
+    PULSE_SYNC = "pulse_sync"  # HARE    : Emit Naga Heartbeat
+
+    # --- PHASE 3: SERVE (HARE RAMA HARE RAMA) - THE ANANTA PHASE ---
+    FETCH_RES = "fetch_res"  # HARE    : Request Resources
+    EXEC_SERVICE = "exec_service"  # RAMA    : Ananta executes Work
+    CHECK_DHARMA = "check_dharma"  # HARE    : Validate against Rules
+    COMMIT_LOG = "commit_log"  # RAMA    : Write to Immutable Stone
+
+    # --- PHASE 4: SUSTAIN (RAMA RAMA HARE HARE) ---
+    CACHE_STATE = "cache_state"  # RAMA    : Store Reward/Memory
+    OPTIMIZE = "optimize"  # RAMA    : Improve Path (JIT)
+    YIELD_CPU = "yield_cpu"  # HARE    : Surrender Control
+    RESET_IP = "reset_ip"  # HARE    : Loop (Eternity)
+
+
+# THE GENETIC SEQUENCE (IMMUTABLE DNA)
+# This tuple IS the "Binding Strip" for the Turing Machine.
+MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
+    ("Hare", MantraOpCode.SYS_WAKE),
+    ("Krishna", MantraOpCode.LOAD_ROOT),
+    ("Hare", MantraOpCode.ALLOC_MEM),
+    ("Krishna", MantraOpCode.BIND_CTX),
+    # Quarter 1 Complete (Hare Krishna Hare Krishna)
+    ("Krishna", MantraOpCode.ASSERT_TRUTH),
+    ("Krishna", MantraOpCode.RESOLVE_REQ),
+    ("Hare", MantraOpCode.GARBAGE_COLLECT),
+    ("Hare", MantraOpCode.PULSE_SYNC),
+    # Quarter 2 Complete (Krishna Krishna Hare Hare)
+    ("Hare", MantraOpCode.FETCH_RES),
+    ("Rama", MantraOpCode.EXEC_SERVICE),
+    ("Hare", MantraOpCode.CHECK_DHARMA),
+    ("Rama", MantraOpCode.COMMIT_LOG),
+    # Quarter 3 Complete (Hare Rama Hare Rama)
+    ("Rama", MantraOpCode.CACHE_STATE),
+    ("Rama", MantraOpCode.OPTIMIZE),
+    ("Hare", MantraOpCode.YIELD_CPU),
+    ("Hare", MantraOpCode.RESET_IP),
+    # Quarter 4 Complete (Rama Rama Hare Hare)
+]
+
+
+# =============================================================================
 # DATA CLASSES (Pure Data, No Behavior)
 # =============================================================================
 
@@ -553,6 +620,21 @@ class IAnantaBridge(Protocol):
         """Emit an event to all listening genes (caller_id for tracing)."""
         ...
 
+    # =========================================================================
+    # Mantra Operations (The Vishnu Clock)
+    # =========================================================================
+
+    def resonate(self, opcode: MantraOpCode) -> bool:
+        """
+        Executes a low-level acoustic operation (Mantra Step).
+        Used by the Watchdog to verify if the Substrate is still holding.
+
+        Returns:
+            True if opcode executed successfully.
+            False if substrate is unstable (triggers surrender).
+        """
+        ...
+
 
 # =============================================================================
 # FACTORY PROTOCOL (For External/Hybrid Mode - Future)
@@ -622,6 +704,9 @@ __all__ = [
     # Enums
     "GeneActivationState",
     "SubstrateHealth",
+    "MantraOpCode",
+    # Mantra DNA (The 16-Bit Sequence)
+    "MAHAMANTRA_SEQUENCE",
     # TypedDicts (WATERTIGHT - No Any)
     "GeneMetrics",
     "GeneAnalysisResult",

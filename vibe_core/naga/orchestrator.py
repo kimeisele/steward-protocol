@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.chitragupta import ChitraguptaService
+    from vibe_core.naga.services.kaliya import KaliyaService
     from vibe_core.naga.services.karkotaka import KarkotakaService
 
     # Type aliases for properties
@@ -116,6 +118,14 @@ class NagaOrchestrator:
         return self._kernel.karkotaka if self._kernel else None
 
     @property
+    def _kaliya(self) -> Optional["KaliyaService"]:
+        return self._kernel.kaliya if self._kernel else None
+
+    @property
+    def _chitragupta(self) -> Optional["ChitraguptaService"]:
+        return self._kernel.chitragupta if self._kernel else None
+
+    @property
     def _cortex(self) -> Optional["NagaCortex"]:
         return self._kernel.cortex if self._kernel else None
 
@@ -181,6 +191,14 @@ class NagaOrchestrator:
     @property
     def karkotaka(self) -> Optional[Any]:
         return self._karkotaka
+
+    @property
+    def kaliya(self) -> Optional["KaliyaService"]:
+        return self._kaliya
+
+    @property
+    def chitragupta(self) -> Optional["ChitraguptaService"]:
+        return self._chitragupta
 
     @property
     def cortex(self) -> Optional[Any]:

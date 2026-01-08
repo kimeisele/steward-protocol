@@ -195,11 +195,12 @@ from typing import Any, Dict, Optional
 
 from vibe_core import Task, VibeAgent
 from vibe_core.steward import OathMixin
+from vibe_core.naga.mixins.tuv import TuvMixin
 
 logger = logging.getLogger("AGENT.$id_upper")
 
 
-class ${class_name}Cartridge(VibeAgent, OathMixin):
+class ${class_name}Cartridge(VibeAgent, OathMixin, TuvMixin):
     """
     $name Agent.
 
@@ -230,6 +231,7 @@ class ${class_name}Cartridge(VibeAgent, OathMixin):
         return {
             "agent_id": self.agent_id,
             "status": "operational",
+            "tuv_score": self.tuv_score,
         }
 ''',
             ),
