@@ -2,7 +2,8 @@ from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, HolyName, MantraO
 
 from .autobahn import AutobahnProtocol, GermanAutobahn, Lane, VajraPacket
 from .bhagavan import Bhaga, BhagaTestResult, BhagavanProtocol
-from .bridge import SetuBandha
+from .bridge import MayavadError, SetuBandha
+from .cli import AnantaResponse, AnantaShesha, ShellProtocol
 from .dharma import DharmaGuard, DharmaVerdict, UniversalDharma
 from .enforce import EnforceProtocol
 from .infer import InferProtocol
