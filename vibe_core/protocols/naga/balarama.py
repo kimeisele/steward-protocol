@@ -25,7 +25,9 @@ from vibe_core.protocols.naga.chitragupta import ChitraguptaProtocol, NullChitra
 from vibe_core.protocols.substrate import MantraOpCode
 from vibe_core.protocols.universal.mantra import MantraProtocol
 from vibe_core.protocols.universal.types import EnforceContext, Verdict
-from vibe_core.protocols.universal.yamaraja import DharmaVerdict, YamarajaProtocol
+
+if False:  # TYPE_CHECKING hack to avoid import cycle for Mypy logic but not runtime
+    from vibe_core.protocols.universal.yamaraja import DharmaVerdict, YamarajaProtocol
 
 T = TypeVar("T")
 
@@ -49,8 +51,8 @@ class BalaramaProxy:
         self,
         target: Any,
         name: str,
-        yamaraja: Optional[YamarajaProtocol] = None,
-        chitragupta: Optional[ChitraguptaProtocol] = None,
+        yamaraja: Optional["YamarajaProtocol"] = None,
+        chitragupta: Optional["ChitraguptaProtocol"] = None,
         mantra_handler: Optional[Callable[[str], None]] = None,
     ):
         """
@@ -63,6 +65,8 @@ class BalaramaProxy:
             chitragupta: The Recorder (Karma)
             mantra_handler: Optional callback for chanting
         """
+        from vibe_core.protocols.universal.yamaraja import YamarajaProtocol
+
         self._target = target
         self._name = name
         self._yamaraja = yamaraja or YamarajaProtocol()
@@ -106,6 +110,8 @@ class BalaramaProxy:
             )
 
             # We treat the method execution request as the "ACTION"
+            from vibe_core.protocols.universal.yamaraja import DharmaVerdict
+
             verdict = self._yamaraja.enforce(method_name, ctx)
 
             if verdict == DharmaVerdict.DENY:
@@ -135,6 +141,8 @@ class BalaramaProxy:
                 # Ideally Balarama could return a fallback.
 
                 # Check if Yamaraja allows mercy (PREMA/GURU_KRIPA)
+                from vibe_core.protocols.universal.yamaraja import DharmaVerdict
+
                 if verdict in [DharmaVerdict.PREMA, DharmaVerdict.GURU_KRIPA]:
                     # Mercy Logic: Return None instead of crashing
                     return None
@@ -172,6 +180,8 @@ class BalaramaProxy:
         elif opcode in [MantraOpCode.ASSERT_TRUTH, MantraOpCode.BIND_CTX]:
             # "Krishna" demands Truth. Are we who we say we are?
             # Audit self with Yamaraja
+            from vibe_core.protocols.universal.yamaraja import DharmaVerdict
+
             ctx = EnforceContext(caller_id=self._name, resource="identity", action="exist", metadata={"opcode": opcode})
             verdict = self._yamaraja.enforce("heartbeat_check", ctx)
             if verdict == DharmaVerdict.DENY:

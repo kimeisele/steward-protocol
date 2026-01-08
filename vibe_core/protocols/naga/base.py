@@ -21,7 +21,6 @@ from vibe_core.protocols.substrate import (
     IGene,
     MantraOpCode,
 )
-from vibe_core.protocols.universal.yamaraja import YamarajaProtocol
 
 from .balarama import BalaramaProxy
 
@@ -63,6 +62,9 @@ class NagaBase(IGene, ABC):
         THIS IS WHERE BALARAMA INTERVENES.
         We do NOT return 'self'. We return a BalaramaProxy wrapping 'self'.
         """
+        # LAZY IMPORT to avoid circular dependency (Naga -> Base -> Yamaraja -> Naga)
+        from vibe_core.protocols.universal.yamaraja import YamarajaProtocol
+
         self._host = host
 
         # Create the Shield
