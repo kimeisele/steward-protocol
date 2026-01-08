@@ -10,7 +10,7 @@ STRICT TYPING ENFORCEMENT:
 """
 
 from dataclasses import dataclass
-from typing import Union, no_type_check
+from typing import Union
 
 # IMPORT SOURCES (Strict Dependencies)
 from vibe_core.protocols.cli_execution import CLICapabilityToken
