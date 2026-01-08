@@ -36,8 +36,8 @@ from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 from .types import EnforceContext, SovereignContext
 from .yamaraja import DharmaVerdict, YamarajaProtocol
 
-if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+# Validated: No Implementation Imports
+pass
 
 
 # =============================================================================
@@ -406,7 +406,7 @@ class KurukshetraProtocol(BaseTestable):
     # SELF-VERIFICATION TESTS
     # =========================================================================
 
-    def _test_isolation(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_isolation(self, kernel: object, comp: Any) -> bool:
         """Engine survives failing warriors."""
 
         class FailingGene:
@@ -434,7 +434,7 @@ class KurukshetraProtocol(BaseTestable):
 
         return engine_alive
 
-    def _test_reincarnation(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_reincarnation(self, kernel: object, comp: Any) -> bool:
         """Warriors can die and be reborn."""
         manifest = GeneManifest(
             name="mortal_gene",
@@ -457,7 +457,7 @@ class KurukshetraProtocol(BaseTestable):
 
         return self._warriors["mortal_gene"].status == WarriorStatus.ALIVE
 
-    def _test_liberation(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_liberation(self, kernel: object, comp: Any) -> bool:
         """Survivors with good karma reach Vaikuntha."""
         manifest = GeneManifest(
             name="devotee_gene",
@@ -473,7 +473,7 @@ class KurukshetraProtocol(BaseTestable):
 
         return self._warriors["devotee_gene"].status == WarriorStatus.VAIKUNTHA
 
-    def _test_karma(self, kernel: "RealVibeKernel", comp: Any) -> bool:
+    def _test_karma(self, kernel: object, comp: Any) -> bool:
         """Good deeds increase karma."""
         manifest = GeneManifest(
             name="karma_test_gene",
