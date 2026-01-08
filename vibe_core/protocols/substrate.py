@@ -204,6 +204,27 @@ class SubstrateHealth(str, Enum):
     COLLAPSED = "collapsed"  # System failure
 
 
+class HolyName(str, Enum):
+    """
+    The Three Holy Names in the Mahamantra.
+    ANTI-MAYAVADI: These are PERSONS, not just strings.
+    """
+
+    HARE = "Hare"  # Shakti - The Energy (Radha)
+    KRISHNA = "Krishna"  # Source - The All-Attractive (God)
+    RAMA = "Rama"  # Strength - The Enjoyer/Service (Balarama/Vishnu)
+
+    @property
+    def meaning(self) -> str:
+        """The personal meaning behind each Name."""
+        meanings = {
+            "Hare": "O Energy of the Lord! Please engage me in service.",
+            "Krishna": "O All-Attractive One! You are my anchor.",
+            "Rama": "O Source of Bliss! Give me strength to serve.",
+        }
+        return meanings.get(self.value, "Unknown")
+
+
 # =============================================================================
 # THE 16-BIT INSTRUCTION SET (HARDWARE LEVEL DEFINITION)
 # =============================================================================
@@ -635,6 +656,78 @@ class IAnantaBridge(Protocol):
         """
         ...
 
+    # =========================================================================
+    # ASHVAMEDHA: Automatic Protocol Integration
+    # =========================================================================
+
+    def auto_flood_orphans(self) -> int:
+        """
+        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+
+        Called on every PULSE_SYNC (Step 8) by the Watchdog.
+        Scans ServiceRegistry for services not wrapped by NagaProxy,
+        and floods them with Naga gene capabilities.
+
+        "Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
+
+        Returns:
+            Number of services flooded in this cycle.
+        """
+        ...
+
+
+@runtime_checkable
+class MantraProtocol(Protocol):
+    """
+    The BIOS-Level Protocol.
+    If this fails, the machine is considered 'Asuric' (Demonic/Glitching)
+    and is cut off from the network.
+    """
+
+    def chant_mahamantra(self, context: object) -> bool:
+        """
+        Executes the 16-step atomic cycle.
+        Returns True ONLY if all 16 gates pass perfectly.
+        WATERTIGHT: context is object (SovereignContext), caller must cast.
+        """
+        ...
+
+    def resonate(self, opcode: MantraOpCode) -> bool:
+        """
+        Emits a single beat of the Mantra (Resonance).
+        This is the clock signal.
+        """
+        ...
+
+
+def mantra_governed(opcode: MantraOpCode):
+    """
+    Decorator to wrap a function with a Mantra OpCode.
+    This creates the Fractal Resonance.
+
+    $$ f(x) = M(x) + \frac{1}{\text{res}} \\cdot f(x) $$
+
+    Args:
+        opcode: The MantraOpCode to resonate before execution.
+    """
+
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            # 1. RESONANCE (Clock Signal)
+            if hasattr(self, "resonate"):
+                # We assume self implements MantraProtocol or similar
+                self.resonate(opcode)
+
+            # 2. EXECUTION (Karma)
+            result = func(self, *args, **kwargs)
+
+            # 3. ECHO (Optional - could verify result)
+            return result
+
+        return wrapper
+
+    return decorator
+
 
 # =============================================================================
 # FACTORY PROTOCOL (For External/Hybrid Mode - Future)
@@ -705,6 +798,7 @@ __all__ = [
     "GeneActivationState",
     "SubstrateHealth",
     "MantraOpCode",
+    "HolyName",
     # Mantra DNA (The 16-Bit Sequence)
     "MAHAMANTRA_SEQUENCE",
     # TypedDicts (WATERTIGHT - No Any)
@@ -727,6 +821,9 @@ __all__ = [
     # Type Variables
     "T",
     "GeneT",
+    # Mantra
+    "MantraProtocol",
+    "mantra_governed",
     # Helpers
     "create_gene_manifest",
 ]

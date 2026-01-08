@@ -5,7 +5,7 @@ import pytest
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols.substrate import MantraOpCode
 from vibe_core.protocols.universal import SovereignContext
-from vibe_core.services.watchdog import NrisimhaWatchdog
+from vibe_core.services.nrisimha import NrisimhaWatchdog
 
 
 @pytest.mark.asyncio

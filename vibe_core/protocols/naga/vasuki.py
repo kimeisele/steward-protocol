@@ -1,251 +1,138 @@
 """
-VASUKI Protocol - Der Transformator (Network/Serialization)
+VASUKI PROTOCOL - The Binding Rope (Layer 0.8)
 
-Vasuki - König der Schlangen, Grenze zwischen Welten.
-PROMPT.md: "Memory is not Network."
+"Vasuki" - The Serpent Rope used in Samudra Manthan.
+He binds the data (Encryption/Hashing) so it can be churned.
 
 Responsibilities:
-- Serialize events for network (churn_out)
-- Deserialize events from network (churn_in)
-- Sign before sending
-- Validate schema on receive
-- Maintain internal/external boundary
+1. HASH: Reduce arbitrary data to a digest (Poison).
+2. SIGN: Bind identity to data.
+3. VERIFY: Detect corruption (Venom).
 
-Integration:
-- Registers as handler for DriftSource.CONFIG
-- Detects config drift between nodes
-- Heals by propagating correct config
+INHERITANCE:
+- Inherits from NagaBase (Devotee).
+- Protected by Balarama (Shield).
+
+STATUS: DEVOTEE / ACTIVE BINDER
 """
 
-from dataclasses import dataclass
-from enum import Enum
-from typing import AsyncIterator, List, Optional, Protocol, runtime_checkable
+import hashlib
+import hmac
+import json
+from typing import Any, Dict, Optional, Tuple, Union
 
-from vibe_core.protocols.correction import (
-    CorrectionHandler,
-    HealingResult,
-    HealingStatus,
-    HealingStrategy,
-    UnifiedDriftReport,
-)
-from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType
+from vibe_core.protocols.naga.base import NagaBase
+
+# Re-export types
+from vibe_core.protocols.naga.types import NagaStatus, NagaType
+
+# Vasuki Capabilities
+VASUKI_CAPS = ("hash", "sign", "verify")
 
 
-@dataclass
-class SignedEnvelope:
+class IntegrityError(Exception):
+    """Vasuki bites: The data is corrupted or unsigned."""
+
+    pass
+
+
+class Vasuki(NagaBase):
     """
-    A signed, serialized payload ready for network transfer.
+    The Vasuki Service (Cryptographer).
 
-    Vasuki produces these when "churning out" (serializing).
-    Vasuki consumes these when "churning in" (deserializing).
-    """
-
-    payload: bytes  # MsgPack/Protobuf serialized
-    signature: bytes  # ECDSA signature
-    sender_key: str  # PEM public key
-    timestamp: float  # Unix timestamp
-    content_type: str = "msgpack"  # Serialization format
-
-    def to_bytes(self) -> bytes:
-        """Serialize the entire envelope for wire transfer."""
-        import msgpack
-
-        return msgpack.packb(
-            {
-                "payload": self.payload,
-                "signature": self.signature,
-                "sender_key": self.sender_key,
-                "timestamp": self.timestamp,
-                "content_type": self.content_type,
-            }
-        )
-
-    @classmethod
-    def from_bytes(cls, data: bytes) -> "SignedEnvelope":
-        """Deserialize from wire format."""
-        import msgpack
-
-        d = msgpack.unpackb(data)
-        return cls(
-            payload=d["payload"],
-            signature=d["signature"],
-            sender_key=d["sender_key"],
-            timestamp=d["timestamp"],
-            content_type=d.get("content_type", "msgpack"),
-        )
-
-
-class SendStatus(str, Enum):
-    """Result of sending via Vasuki."""
-
-    SENT = "sent"
-    QUEUED = "queued"
-    FAILED = "failed"
-    BLOCKED = "blocked"  # Takshaka rejected
-
-
-@dataclass
-class SendResult:
-    """Result of a Vasuki send operation."""
-
-    status: SendStatus
-    envelope_hash: str = ""
-    message: str = ""
-    retry_after: Optional[float] = None
-
-
-@dataclass
-class NodeAddress:
-    """Address of a peer node."""
-
-    host: str
-    port: int
-    public_key: Optional[str] = None
-    node_id: Optional[str] = None
-
-    def __str__(self) -> str:
-        return f"{self.host}:{self.port}"
-
-
-@runtime_checkable
-class VasukiProtocol(Protocol):
-    """
-    Vasuki - König der Schlangen, Grenze zwischen Welten.
-
-    PROMPT.md: "Memory is not Network."
-
-    Responsibilities:
-    - Serialize events for network (churn_out)
-    - Deserialize events from network (churn_in)
-    - Sign before sending
-    - Validate schema on receive
-    - Maintain internal/external boundary
-
-    Integration:
-    - Registers as handler for DriftSource.CONFIG
-    - Detects config drift between nodes
-    - Heals by propagating correct config
-
-    Usage:
-        vasuki = ServiceRegistry.get(VasukiProtocol)
-        envelope = vasuki.churn_out(event)
-        result = vasuki.send(peer_address, envelope)
+    A Devotee Naga that:
+    - Hashes (Reduces to Essence).
+    - Signs (Binds to Identity).
+    - Verifies (Rejects Corruption).
     """
 
-    # === Serialization (Das Quirlen) ===
+    def __init__(self, secret_key: str = "sovereign_mock_key"):
+        super().__init__(name="vasuki", capabilities=VASUKI_CAPS)
+        self._secret_key = secret_key.encode("utf-8")
 
-    def churn_out(self, event: EventDict) -> SignedEnvelope:
+    # =========================================================================
+    # GENERIC SERVICE (SEVA)
+    # =========================================================================
+
+    def serve(self, request: Any) -> Any:
         """
-        Transform internal event → signed wire-ready envelope.
-
-        The "churning" metaphor from Samudra Manthan:
-        Raw Python dict becomes transportable nectar.
-
-        Args:
-            event: Internal event dict
-
-        Returns:
-            SignedEnvelope ready for network
+        Generic entry point.
         """
-        ...
+        if not isinstance(request, dict):
+            return "UNKNOWN REQUEST"
 
-    def churn_in(self, envelope: SignedEnvelope) -> EventDict:
+        action = request.get("action")
+        data = request.get("data")
+        signature = request.get("signature")
+
+        if action == "hash":
+            return self.hash_data(data)
+        elif action == "sign":
+            return self.sign_data(data)
+        elif action == "verify":
+            # Might raise IntegrityError
+            self.verify_data(data, signature)
+            return "VERIFIED"
+
+        return "UNKNOWN ACTION"
+
+    # =========================================================================
+    # CAPABILITY 1: HASH (THE POISON)
+    # =========================================================================
+
+    def hash_data(self, data: Any) -> str:
         """
-        Transform wire envelope → internal event.
-
-        NOTE: Takshaka must verify BEFORE calling this!
-        This method trusts the envelope is authentic.
-
-        Args:
-            envelope: Verified SignedEnvelope
-
-        Returns:
-            Internal event dict
+        Reduce data to SHA-256 digest.
         """
-        ...
+        serialized = self._serialize(data)
+        return hashlib.sha256(serialized).hexdigest()
 
-    # === Network Operations ===
+    # =========================================================================
+    # CAPABILITY 2: SIGN (THE BIND)
+    # =========================================================================
 
-    async def send(self, target: NodeAddress, envelope: SignedEnvelope) -> SendResult:
+    def sign_data(self, data: Any) -> str:
         """
-        Send envelope to a peer node.
+        Sign data using HMAC-SHA256 (Mock Key).
 
-        Args:
-            target: Destination node
-            envelope: Signed payload
-
-        Returns:
-            SendResult with status
+        This represents binding the data to the Sovereign Identity.
         """
-        ...
+        serialized = self._serialize(data)
+        signature = hmac.new(self._secret_key, serialized, hashlib.sha256).hexdigest()
+        return signature
 
-    async def receive(self) -> AsyncIterator[SignedEnvelope]:
+    # =========================================================================
+    # CAPABILITY 3: VERIFY (THE VENOM)
+    # =========================================================================
+
+    def verify_data(self, data: Any, signature: str) -> bool:
         """
-        Receive envelopes from the network.
+        Verify data integrity.
 
-        Yields:
-            SignedEnvelopes as they arrive
+        If invalid, Vasuki BITES (Raises IntegrityError).
+        He does not tolerate corruption.
         """
-        ...
+        if not signature:
+            raise IntegrityError("NO SIGNATURE: Data is unbound.")
 
-    # === Boundary Enforcement ===
+        expected = self.sign_data(data)
 
-    def is_internal(self, event: EventDict) -> bool:
-        """Check if event should stay internal (not sent to network)."""
-        ...
+        # Constant time comparison to avoid timing attacks
+        if not hmac.compare_digest(expected, signature):
+            raise IntegrityError("INVALID SIGNATURE: Data is corrupted.")
 
-    def get_peers(self) -> List[NodeAddress]:
-        """Get known peer nodes."""
-        ...
-
-    # === CorrectionHandler Interface ===
-
-    def as_handler(self) -> CorrectionHandler:
-        """Get this NAGA as a CorrectionHandler for DriftSource.CONFIG."""
-        ...
-
-    def get_status(self) -> NagaStatus:
-        """Get NAGA health status."""
-        ...
-
-
-# =============================================================================
-# NULL IMPLEMENTATION (Arjuna Pattern)
-# =============================================================================
-
-
-class NullVasuki:
-    """No-op Vasuki for when network is unavailable."""
-
-    def churn_out(self, event: EventDict) -> SignedEnvelope:
-        return SignedEnvelope(payload=b"", signature=b"", sender_key="", timestamp=0)
-
-    def churn_in(self, envelope: SignedEnvelope) -> EventDict:
-        return EventDict(event_type="null", agent_id="null", timestamp="0", details={})
-
-    async def send(self, target: NodeAddress, envelope: SignedEnvelope) -> SendResult:
-        return SendResult(status=SendStatus.FAILED, message="Vasuki not available")
-
-    async def receive(self) -> AsyncIterator[SignedEnvelope]:
-        return
-        yield  # Make it a generator
-
-    def is_internal(self, event: EventDict) -> bool:
         return True
 
-    def get_peers(self) -> List[NodeAddress]:
-        return []
+    # =========================================================================
+    # HELPER
+    # =========================================================================
 
-    def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
-            return HealingResult(
-                drift_id=drift.id,
-                status=HealingStatus.SKIPPED,
-                handler_id="null_vasuki",
-                message="Vasuki not available",
-            )
+    def _serialize(self, data: Any) -> bytes:
+        """Canonical serialization."""
+        if isinstance(data, bytes):
+            return data
+        if isinstance(data, str):
+            return data.encode("utf-8")
 
-        return handler
-
-    def get_status(self) -> NagaStatus:
-        return NagaStatus(naga_type=NagaType.VASUKI, healthy=False, message="Not initialized")
+        # JSON canonical sort keys
+        return json.dumps(data, sort_keys=True).encode("utf-8")

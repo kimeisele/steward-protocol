@@ -28,6 +28,8 @@ class NrisimhaWatchdog(MantraProtocol):
     Implements the 16-Step Vishnu Clock for Agentic Alignment.
 
     "When the Mind drifts, the Watchdog bites (or chants)."
+
+    ORIGIN: "Nrisimha" - The Personal Protector.
     """
 
     def __init__(
@@ -229,6 +231,8 @@ class NrisimhaWatchdog(MantraProtocol):
         elif opcode == MantraOpCode.PULSE_SYNC:
             # Emit Naga heartbeat
             self._last_pulse = time.time()
+            # ASHVAMEDHA: Auto-flood orphan services on every pulse
+            self._ashvamedha_pulse()
         elif opcode == MantraOpCode.FETCH_RES:
             # Request resources
             pass
@@ -271,3 +275,42 @@ class NrisimhaWatchdog(MantraProtocol):
         """Apply micro-correction during Japa."""
         # logger.debug(f"   ⚡ Correction applied at Bead {bead_index}")
         pass
+
+    def _ashvamedha_pulse(self) -> None:
+        """
+        ASHVAMEDHA VIA RATHA YATRA:
+        The Watchdog signals Jagannath (The Seer) to start the procession.
+        Jagannath then signals Ananta (The Substrate) to flood the orphans.
+
+        "The Dog barks, the Chariot moves, the Snake bites."
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.lila.jagannath import IJagannath
+
+            # Get Jagannath (The Lord of the Universe)
+            jagannath = ServiceRegistry.get(IJagannath)
+            if jagannath is None:
+                # Fallback: If Jagannath not awake, wake Ananta directly (Legacy/Boot)
+                # This prevents "Universe Collapsing" during early boot
+                self._legacy_ashvamedha()
+                return
+
+            # The Festival Begins
+            jagannath.start_ratha_yatra()
+
+        except Exception as e:
+            # Silent fail - Lila continues
+            logger.debug(f"Ratha Yatra pulse skipped: {e}")
+
+    def _legacy_ashvamedha(self) -> None:
+        """Fallback for boot sequence (Direct Ananta Access)."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.substrate import IAnantaBridge
+
+            ananta = ServiceRegistry.get(IAnantaBridge)
+            if ananta and hasattr(ananta, "auto_flood_orphans"):
+                ananta.auto_flood_orphans()
+        except:
+            pass
