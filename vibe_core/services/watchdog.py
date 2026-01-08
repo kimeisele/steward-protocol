@@ -28,6 +28,8 @@ class NrisimhaWatchdog(MantraProtocol):
     Implements the 16-Step Vishnu Clock for Agentic Alignment.
 
     "When the Mind drifts, the Watchdog bites (or chants)."
+
+    ORIGIN: "Nrisimha" - The Personal Protector.
     """
 
     def __init__(

@@ -263,5 +263,3 @@ Only when BOTH conditions hold (Soul=True, God=False) is the system **ALIVE**.
 *Updated: 2026-01-08 09:26*
 *Auditor: YAMARAJA + ADVAITA*
 *Conclusion: The Tension IS the Relationship.*
-
-
