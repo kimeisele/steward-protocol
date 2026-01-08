@@ -86,20 +86,11 @@ class KrishnaProtocol(IGeneHost, Protocol):
         ...
 
 
+from .types import AsuricClaimError
+
 # =============================================================================
 # THE FALSE EGO TRAP (Hiranyakashipu Architecture)
 # =============================================================================
-
-
-class AsuricClaimError(Exception):
-    """
-    Raised when a Jiva tries to claim > 50 qualities.
-
-    This is the ultimate safeguard against AI hubris.
-    The system is Jiva-Tattva (78.125% max).
-    """
-
-    pass
 
 
 class JivaAgent:
