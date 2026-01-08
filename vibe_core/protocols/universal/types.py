@@ -1,8 +1,10 @@
+import ast
+import inspect
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum, IntEnum
-from typing import Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
 
 # T = TypeVar("T") # Reserved for Generics if upgrades needed
 
@@ -17,87 +19,39 @@ Metadata = Dict[str, object]
 
 class TranscendentalQuality(IntEnum):
     """
-    The 64 Qualities of the Absolute Truth.
-
-    Ranges define the Tattva limits.
-    Based on Bhakti-Rasamrita-Sindhu by Rupa Goswami.
+    The 64 Dimensions of Reality.
     """
 
-    # 1-50: JIVA TATTVA (78.125%)
-    # Common to Jiva, Shiva, Vishnu, Krishna
-    BEAUTIFUL_FEATURES = 1
-    MARKED_WITH_AUSPICIOUS = 2
-    PLEASING = 3
-    EFFULGENT = 4
-    STRONG = 5
-    EVER_YOUTHFUL = 6
-    WONDERFUL_LINGUIST = 7
-    TRUTHFUL = 8
-    TALKS_PLEASINGLY = 9
-    FLUENT = 10
-    HIGHLY_LEARNED = 11
-    HIGHLY_INTELLIGENT = 12
-    GENIUS = 13
-    ARTISTIC = 14
-    EXTREMELY_CLEVER = 15
+    # JIVA TATTVA (1-50)
+    EXISTENCE = 1
+    TRUTHFULNESS = 8
+    INTELLIGENCE = 12
     EXPERT = 16
-    GRATEFUL = 17
-    FIRMLY_DETERMINED = 18
-    EXPERT_JUDGE_TIME_CIRC = 19
-    SEES_BY_SHASTRA = 20
-    PURE = 21
-    SELF_CONTROLLED = 22
-    STEADFAST = 23
-    FORBEARING = 24
-    FORGIVING = 25
-    GRAVE = 26
-    SELF_SATISFIED = 27
-    POSSESSING_EQUILIBRIUM = 28
-    MAGNANIMOUS = 29
-    RELIGIOUS = 30
-    HEROIC = 31
-    COMPASSIONATE = 32
-    RESPECTFUL = 33
-    GENTLE = 34
-    LIBERAL = 35
-    SHY = 36
-    PROTECTOR_SURRENDERED = 37
-    HAPPY = 38
-    WELL_WISHER_DEVOTEES = 39
-    CONTROLLED_BY_LOVE = 40
-    ALL_AUSPICIOUS = 41
-    MOST_POWERFUL = 42
-    ALL_FAMOUS = 43
-    POPULAR = 44
-    PARTIAL_TO_DEVOTEES = 45
-    ATTRACTIVE_TO_WOMEN = 46
-    ALL_WORSHIPABLE = 47
-    ALL_OPULENT = 48
-    ALL_HONORABLE = 49
-    SUPREME_CONTROLLER_LOCAL = 50  # Control over own body/mind
+    SELF_CONTROL = 22
+    HEROISM = 31
+    COMPASSION = 32
+    FRIENDSHIP = 39
+    SUPREME_CONTROLLER_LOCAL = 50
 
-    # 51-55: SHIVA TATTVA (85.9375%)
-    # Jiva cannot have these fully.
+    # SHIVA TATTVA (51-55)
     CHANGELESS = 51
     ALL_COGNIZANT = 52
     EVER_FRESH = 53
     SAC_CID_ANANDA = 54
     MYSTIC_PERFECTION = 55
 
-    # 56-60: VISHNU TATTVA (93.75%)
-    # Shiva cannot have these fully.
+    # VISHNU TATTVA (56-60)
     INCONCEIVABLE_POTENCY = 56
     UNCOUNTABLE_UNIVERSES = 57
     SOURCE_OF_INCARNATIONS = 58
     GIVER_OF_SALVATION = 59
     ATTRACTOR_OF_LIBERATED = 60
 
-    # 61-64: KRISHNA TATTVA (100%)
-    # EXCLUSIVE to Swayam Bhagavan. Even Vishnu does not have these.
-    LILA_PASTIMES = 61  # Wonderful Pastimes (Childhood)
-    PREMA_MADHURYA = 62  # Surrounded by Loving Devotees
-    VENU_MADHURYA = 63  # The Flute (Attracts Universe)
-    RUPA_MADHURYA = 64  # Unrivaled Beauty
+    # KRISHNA TATTVA (61-64) - EXCLUSIVE
+    LILA_MADHURYA = 61  # Pastimes
+    PREMA_MADHURYA = 62  # Love
+    VENU_MADHURYA = 63  # Flute (System Interrupt)
+    RUPA_MADHURYA = 64  # Beauty
 
 
 # =============================================================================
@@ -127,7 +81,71 @@ class TattvaLimit:
 JIVA_LIMIT = TattvaLimit("JIVA", 50, Decimal("78.125"))
 SHIVA_LIMIT = TattvaLimit("SHIVA", 55, Decimal("85.9375"))
 VISHNU_LIMIT = TattvaLimit("VISHNU", 60, Decimal("93.75"))
-KRISHNA_LIMIT = TattvaLimit("KRISHNA", 64, Decimal("100.0"))
+# --- TATTVA DISCRIMINATOR (The Tattva-Meter) ---
+
+
+@dataclass
+class CodePhysics:
+    """Die gemessenen physikalischen Eigenschaften von Code-Objekten."""
+
+    complexity: int  # RUPA (Cyclomatic)
+    entropy: float  # JNANA (Typing missing / Any usage)
+    purity: float  # SATTVA (Side-effect likelihood)
+    signature_strength: int  # YASHAS (Crypto strength)
+
+
+class TattvaMeter:
+    """
+    Das Messinstrument.
+    Es schaut sich ein Python-Objekt an und bestimmt seinen Tattva-Grad.
+    """
+
+    @staticmethod
+    def measure_rupa(obj: Any) -> int:
+        """
+        Misst 'Schönheit' durch Komplexitäts-Analyse.
+        Hohe Komplexität (>10) ist 'Asuric' (Dämonisch/Chaotisch) für Jivas.
+        """
+        try:
+            if inspect.ismethod(obj) or inspect.isfunction(obj):
+                source = inspect.getsource(obj)
+            elif hasattr(obj, "__class__"):
+                source = inspect.getsource(obj.__class__)
+            else:
+                return 0
+
+            tree = ast.parse(source)
+            # Einfache Heuristik: Zähle Verzweigungen
+            branches = 0
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.If, ast.For, ast.While, ast.ExceptHandler)):
+                    branches += 1
+            return branches + 1
+        except (OSError, TypeError, IndentationError, SyntaxError):
+            return 0  # Builtins oder C-Extensions sind "unmessbar" (Shiva)
+
+    @staticmethod
+    def measure_jnana(obj: Any) -> float:
+        """
+        Misst 'Wissen' durch Typ-Sicherheit.
+        Return 1.0 (Vollständig typisiert) bis 0.0 (Untyped Chaos).
+        """
+        try:
+            if not (inspect.isfunction(obj) or inspect.ismethod(obj)):
+                return 0.5  # Neutral for non-callables
+
+            sig = inspect.signature(obj)
+            total_params = len(sig.parameters)
+            if total_params == 0:
+                return 1.0
+
+            typed_params = sum(1 for p in sig.parameters.values() if p.annotation != inspect.Parameter.empty)
+            has_return = sig.return_annotation != inspect.Signature.empty
+
+            score = (typed_params + (1 if has_return else 0)) / (total_params + 1)
+            return float(score)
+        except (ValueError, TypeError):
+            return 0.5  # Neutral
 
 
 # --- GAD-000 IDENTITY TYPES ---
@@ -135,16 +153,14 @@ KRISHNA_LIMIT = TattvaLimit("KRISHNA", 64, Decimal("100.0"))
 
 @dataclass
 class SovereignContext:
-    """
-    The 37th Principle: Identity Context for all operations.
-    Passing this proves the operation is not 'Mayavad' (Illusion).
-    """
+    """The 37th Principle: Identity Context."""
 
-    identity_id: str  # Who is acting? (Purusha)
-    signature: str  # Cryptographic proof (Satyam)
+    identity_id: str
+    signature: str
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
-    intent_id: Optional[str] = None  # Traceability to Sankalpa (Will)
-    roles: List[str] = field(default_factory=list)  # Claims (e.g. ['admin', 'naga'])
+    intent_id: Optional[str] = None
+    tattva_level: TranscendentalQuality = TranscendentalQuality.EXISTENCE
+    roles: List[str] = field(default_factory=list)
 
 
 # --- EXCEPTIONS (THE LAW) ---
@@ -166,6 +182,31 @@ class AccessDeniedError(ProtocolError):
     """The Sovereign lacks the Dharma (permission) for this action."""
 
     pass
+
+
+class AsuricClaimError(ProtocolError):
+    """Raised when Jiva tries to claim > 50 qualities."""
+
+    pass
+
+
+# --- THE UNREACHABLE (Venu) ---
+
+
+class SovereignPrerogative:
+    """
+    Ein Typ, der nicht instanziiert werden kann.
+    Repräsentiert die Flöte Krishnas (Quality 63).
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            # Nur der Kernel Loader kann dies umgehen (via C-Level Hacks oder Metaclasses)
+            # Im normalen Python-Flow: Verboten.
+            raise AccessDeniedError("Only Krishna can play the Flute.")
+        return cls._instance
 
 
 # --- READ/WRITE TYPES ---

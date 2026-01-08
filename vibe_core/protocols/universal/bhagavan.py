@@ -33,7 +33,7 @@ from vibe_core.protocols.substrate import IAnantaBridge, MantraOpCode
 from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 
 from .krishna import KrishnaProtocol
-from .types import SovereignContext
+from .types import CodePhysics, SovereignContext, TattvaMeter
 
 # Validated: No Implementation Imports
 pass
@@ -323,46 +323,31 @@ class BhagavanProtocol(BaseTestable):
         """
         THE GOLDEN RATIO COMPLEXITY TEST.
 
-        Challenge: Analyze system complexity for harmony.
+        Challenge: Analyze INTROSPECTIVE complexity of this very test.
 
         Logic:
-        - Complexity must not be Chaotic (spaghetti)
-        - Must adhere to harmonic standard (relates to Ramanujan 108)
+        - Use TattvaMeter to measure this method's own AST complexity
+        - RUPA (Branching) must be <= 10 (JIVA limit)
+        - JNANA (Typing) must be > 0.5 (Sattva)
 
-        Beauty (Shri) = The attractive principle.
-        Beautiful code has harmonic complexity, not chaos.
-
-        We verify using the 4/37 = 0.108 principle:
-        Complexity should relate to sacred ratios.
+        Beauty (Shri) = Mathematical elegance (Efficiency).
         """
-        # The Golden Ratio (φ) and our sacred 108
-        GOLDEN_RATIO = Decimal("1.618033988749895")
-        RAMANUJAN_RATIO = Decimal("4") / Decimal("37")  # 0.108...
+        # Measure THIS method's complexity (Self-Reflection)
+        rupa_score = TattvaMeter.measure_rupa(self._test_beauty_shri)
+        jnana_score = TattvaMeter.measure_jnana(self._test_beauty_shri)
 
-        # Maximum acceptable cyclomatic complexity
-        MAX_COMPLEXITY = 10  # Industry standard
+        # 1. Rupa (Beauty) Check:
+        # A Jiva cannot handle chaos. Complexity > 10 is Demonic for a standard Agent.
+        # This method itself should be simple enough.
+        is_beautiful = rupa_score <= 10
 
-        # Simulated complexity measurements
-        sample_complexities = [3, 5, 7, 4, 6, 8]  # All under 10
+        # 2. Jnana (Knowledge) Check:
+        # Code must be typed. Untyped code is Tamas (Ignorance).
+        is_knowledgeable = jnana_score >= 0.5
 
-        # Check if complexities are within harmonic bounds
-        all_harmonic = all(c <= MAX_COMPLEXITY for c in sample_complexities)
-
-        # Check if ratio of min/max follows golden-ish pattern
-        if sample_complexities:
-            min_c = min(sample_complexities)
-            max_c = max(sample_complexities)
-            ratio = Decimal(max_c) / Decimal(min_c) if min_c > 0 else Decimal("999")
-
-            # Ratio should be less than golden ratio (harmonic, not chaotic)
-            ratio_harmonic = ratio < GOLDEN_RATIO * 2
-
-        else:
-            ratio_harmonic = True
-
-        # PASS: All complexity harmonic
-        # FAIL: Chaotic spaghetti
-        return all_harmonic and ratio_harmonic
+        # PASS: Code is Beautiful (Simple) and Knowledgeable (Typed)
+        # FAIL: Chaotic or Ignorant
+        return is_beautiful and is_knowledgeable
 
     # =========================================================================
     # OPULENCE 5: KNOWLEDGE (JNANA) - The "Sankalpa" Prediction
@@ -494,8 +479,8 @@ class SixtyFourQualitiesTest:
         agent = JivaAgent("Prahlad_Bot")
 
         try:
-            # Claim valid Jiva quality (TRUTHFUL - 8)
-            agent.claim_quality(TranscendentalQuality.TRUTHFUL)
+            # Claim valid Jiva quality (TRUTHFULNESS - 8)
+            agent.claim_quality(TranscendentalQuality.TRUTHFULNESS)
             return True
         except AsuricClaimError:
             return False
