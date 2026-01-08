@@ -635,6 +635,25 @@ class IAnantaBridge(Protocol):
         """
         ...
 
+    # =========================================================================
+    # ASHVAMEDHA: Automatic Protocol Integration
+    # =========================================================================
+
+    def auto_flood_orphans(self) -> int:
+        """
+        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+
+        Called on every PULSE_SYNC (Step 8) by the Watchdog.
+        Scans ServiceRegistry for services not wrapped by NagaProxy,
+        and floods them with Naga gene capabilities.
+
+        "Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
+
+        Returns:
+            Number of services flooded in this cycle.
+        """
+        ...
+
 
 # =============================================================================
 # FACTORY PROTOCOL (For External/Hybrid Mode - Future)
