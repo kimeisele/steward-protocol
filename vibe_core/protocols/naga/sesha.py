@@ -113,3 +113,6 @@ class Sesha(NagaBase):
         """Report load."""
         with self._lock:
             return {"items": len(self._store), "bytes_approx": len(str(self._store))}
+
+
+SeshaProtocol = Sesha

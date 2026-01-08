@@ -76,7 +76,7 @@ from vibe_core.protocols.naga.federation import (
 )
 
 # Garuda (The Carrier)
-from vibe_core.protocols.naga.garuda import Garuda
+from vibe_core.protocols.naga.garuda import Garuda, GarudaProtocol
 
 # Sesha (The Bed)
 from vibe_core.protocols.naga.sesha import Sesha
@@ -169,6 +169,7 @@ __all__ = [
     "NagaFederationProtocol",
     # Garuda
     "Garuda",
+    "GarudaProtocol",
     # Cortex (MANAS Integration)
     "NagaCortexProtocol",
     "NagaContext",

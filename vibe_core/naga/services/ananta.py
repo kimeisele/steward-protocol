@@ -54,15 +54,17 @@ from vibe_core.naga.kulika import (
     naga_service,
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
-from vibe_core.protocols.naga import (
+from vibe_core.protocols.naga.ananta import (
     AnantaProtocol,
     FloodProposal,
-    NagaStatus,
-    NagaType,
     ServiceClassification,
     VetoDecision,
 )
 from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
+from vibe_core.protocols.naga.types import (
+    NagaStatus,
+    NagaType,
+)
 from vibe_core.protocols.substrate import (
     BindingCertificate,
     GeneActivationState,
