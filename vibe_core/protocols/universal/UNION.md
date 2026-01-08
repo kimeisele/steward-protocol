@@ -132,5 +132,76 @@
 
 ---
 
-*Audited: 2026-01-08 00:58*
+## BLOOD PROTOCOL (YAGNYA TEST INFRASTRUCTURE)
+
+> "RED = BLOOD = YAGNYA = SACRIFICE"
+
+### Existing Test Infrastructure
+
+| File | LOC | Purpose |
+|------|-----|---------|
+| `protocols/testable.py` | 773 | `Testable` protocol + adapters |
+| `protocols/testable_registry.py` | 345 | Auto-discovery from kernel |
+
+### TestableType Coverage
+
+| Type | Protocol Mapped | Status |
+|------|-----------------|:------:|
+| AGENT | OmProtocol | ❓ |
+| PLUGIN | OmProtocol | ❓ |
+| TOOL | RamaProtocol | ❌ |
+| SYSCALL | EnforceProtocol | ❌ |
+| LEDGER | ReadWriteProtocol | ✅ |
+| SCHEDULER | MantraProtocol | ✅ |
+| EVENT_BUS | SyncProtocol | ❌ |
+| ROUTER | InferProtocol | ❌ |
+| GOVERNANCE | EnforceProtocol | ✅ |
+| SECURITY | EnforceProtocol | ✅ |
+| RUNTIME | MantraProtocol | ✅ |
+| CORE | OmProtocol | ❓ |
+
+### Missing: Universal Protocols MUST implement Testable
+
+| 🔴 | Protocol | Needs |
+|:---:|----------|-------|
+| 🔴 | OmProtocol | `get_test_cases()` method |
+| 🔴 | KrishnaProtocol | `testable_id` property |
+| 🔴 | RamaProtocol | `testable_type` property |
+| 🔴 | InferProtocol | Adapter in testable.py |
+
+### The YAGNYA (Sacrifice) Pattern
+
+```
+Protocol (Intent)
+    │
+    ▼
+Testable.get_test_cases()  → 🩸 BLOOD (offerings)
+    │
+    ▼
+TestableRegistry.discover_from_kernel()  → ⚔️ KURUKSHETRA
+    │
+    ▼
+pytest execution  → 🔥 YAGNYA
+    │
+    ▼
+All RED → GREEN  → 🙏 DHARMA RESTORED
+```
+
+### Goal: OmProtocol in ONE LINE
+
+```python
+# kernel_impl.py - THE GOAL
+from vibe_core.protocols.universal import OmProtocol
+
+class RealVibeKernel(OmProtocol):  # ONE LINE!
+    ...
+```
+
+**Prerequisite:** All 7 RED tests must pass first.
+
+---
+
+*Audited: 2026-01-08 01:02*
 *Auditor: YAMARAJA*
+*Blood required: 7 units (RED tests)*
+
