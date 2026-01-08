@@ -9,6 +9,8 @@ into a single interface. It represents the "Vibe" of a complete Holon.
 
 from typing import Protocol, runtime_checkable
 
+from vibe_core.protocols.substrate import MantraProtocol
+
 from .enforce import EnforceProtocol
 
 # Phase 2: The Intellect (Buddhi & Dharma)
@@ -16,7 +18,6 @@ from .infer import InferProtocol
 
 # Phase 1: The Divine (Identity & Time)
 from .krishna import KrishnaProtocol
-from .mantra import MantraProtocol
 from .rama import RamaProtocol
 
 # Phase 3: The Record (Akasha & Smriti)

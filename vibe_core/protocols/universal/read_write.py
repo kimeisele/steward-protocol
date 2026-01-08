@@ -1,4 +1,4 @@
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 from .types import ReadResult, SovereignContext
 
@@ -28,7 +28,7 @@ class ReadWriteProtocol(Protocol):
         """
         ...
 
-    def write(self, key: str, value: Any, context: Optional[SovereignContext] = None) -> None:
+    def write(self, key: str, value: object, context: Optional[SovereignContext] = None) -> None:
         """
         Write value by key.
         Args:

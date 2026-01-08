@@ -8,7 +8,7 @@ import pytest
 
 from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, MantraOpCode
 from vibe_core.protocols.universal import DriftContext, SovereignContext
-from vibe_core.services.watchdog import NrisimhaWatchdog
+from vibe_core.services.nrisimha import NrisimhaWatchdog
 
 
 class TestMantraWatchdog:

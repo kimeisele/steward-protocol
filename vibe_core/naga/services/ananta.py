@@ -54,15 +54,17 @@ from vibe_core.naga.kulika import (
     naga_service,
 )
 from vibe_core.naga.services.base import NagaBaseService, naga_governed
-from vibe_core.protocols.naga import (
+from vibe_core.protocols.naga.ananta import (
     AnantaProtocol,
     FloodProposal,
-    NagaStatus,
-    NagaType,
     ServiceClassification,
     VetoDecision,
 )
 from vibe_core.protocols.naga.groups import Analysis, TransformProtocol, TransformResult
+from vibe_core.protocols.naga.types import (
+    NagaStatus,
+    NagaType,
+)
 from vibe_core.protocols.substrate import (
     BindingCertificate,
     GeneActivationState,
@@ -182,6 +184,127 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
 
         logger.info(f"ANANTA: Instance flooded -> {type(instance).__name__}")
         return instance
+
+    # =========================================================================
+    # ASHVAMEDHA: Automatic Protocol Integration
+    # =========================================================================
+
+    # =========================================================================
+    # ASHVAMEDHA: Automatic Protocol Integration (Strict Mode)
+    # =========================================================================
+
+    def auto_flood_orphans(self) -> int:
+        """
+        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
+
+        Implementation of the "Nadi Shodhana" (Channel Purification).
+        Scans values in ServiceRegistry, identifies unblessed orphans,
+        and naturalizes them via Ashvamedha wrapper injection.
+        """
+        # Import Wrappers dynamically to avoid circular imports at module level
+        # Import strict typing items
+        from typing import cast
+
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.naga.wrappers import (
+            AshvamedhaReadWrite,
+            AshvamedhaSync,
+            # Add others as they are implemented
+        )
+        from vibe_core.protocols.universal import ReadWriteProtocol, SyncProtocol
+
+        flooded_count = 0
+
+        # 1. RESONATE: Sound the Conch
+        self.resonate(MantraOpCode.PULSE_SYNC)
+
+        # 2. SCAN: Darshan of the Registry
+        # We access the raw services because we are Ananta (Infrastructure)
+        services_map = ServiceRegistry.list_services()
+
+        for interface_name in services_map:
+            # Skip Ananta itself
+            if interface_name in ("Ananta", "AnantaService", "IAnantaBridge"):
+                continue
+
+            instance = ServiceRegistry._services.get(interface_name)
+            if not instance:
+                continue
+
+            # 3. IDENTIFY: Is it an Orphan?
+            # Check if it has "Mantra" in its type name (MantraBase)
+            if "Mantra" in type(instance).__name__ or hasattr(instance, "_mantra_governed"):
+                continue  # Already blessed
+
+            # 4. ANALYZE SHAPE (Duck Typing for Protocol Matching)
+            shapes = self._analyze_shape(instance)
+
+            if not shapes:
+                continue
+
+            try:
+                # 5. NATURALIZE: The Flood (Wrap based on Shape)
+                proxy = instance
+                wrapped = False
+
+                # Apply wrappers onion-style
+                if "ReadWriteProtocol" in shapes:
+                    proxy = AshvamedhaReadWrite(proxy)
+                    wrapped = True
+
+                if "SyncProtocol" in shapes:
+                    proxy = AshvamedhaSync(proxy)
+                    wrapped = True
+
+                if wrapped:
+                    logger.info(f"ASHVAMEDHA: Found Orphan {interface_name} with potential {shapes}. Wrapping...")
+
+                    # Update Registry (Mutation!)
+                    ServiceRegistry._services[interface_name] = proxy
+
+                    # Also update protocols mapping if present
+                    with ServiceRegistry._lock:
+                        for proto, instances in ServiceRegistry._protocols.items():
+                            if instance in instances:
+                                idx = instances.index(instance)
+                                instances[idx] = proxy
+
+                    # Track
+                    if f"{interface_name}" not in ServiceRegistry._auto_flooded_services:
+                        ServiceRegistry._auto_flooded_services.append(f"{interface_name}")
+
+                    logger.info(f"ASHVAMEDHA: {interface_name} flooded -> Protected.")
+                    flooded_count += 1
+
+            except Exception as e:
+                logger.error(f"ASHVAMEDHA: Failed to flood {interface_name}: {e}")
+
+        return flooded_count
+
+    def _analyze_shape(self, instance: object) -> List[str]:
+        """Returns a list of Protocol Candidates based on methods present."""
+        try:
+            methods = {m for m in dir(instance) if not m.startswith("_")}
+        except Exception:
+            return []
+
+        candidates = []
+
+        # 1. READ/WRITE
+        # Interface: read, write, exists
+        if {"read", "write", "exists"}.issubset(methods):
+            candidates.append("ReadWriteProtocol")
+
+        # 2. SYNC
+        # Interface: sync_state, get_sync_status
+        if {"sync_state", "get_sync_status"}.issubset(methods):
+            candidates.append("SyncProtocol")
+
+        # 3. ENFORCE
+        if {"enforce", "check"}.issubset(methods):
+            candidates.append("EnforceProtocol")
+
+        return candidates
 
     def resonate(self, opcode: MantraOpCode) -> bool:
         """IAnantaBridge: Execute Mantra Step."""

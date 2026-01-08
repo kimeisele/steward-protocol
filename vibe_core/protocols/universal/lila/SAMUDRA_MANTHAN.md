@@ -1,0 +1,1 @@
+what kind of protocol should this translate to and how will it be codified in python? implications etc? pls think deeply before you perform any quatsch!!! you lil rascal!!! just kidding no seriously!!!! 
