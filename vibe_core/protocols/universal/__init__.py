@@ -30,6 +30,7 @@ from .types import (
     Verdict,
 )
 from .union import EntityStatus, UnionProtocol
+from .yamaraja import DharmaVerdict, YamarajaProtocol
 
 # NOTE: MantraInstruction has been replaced by MantraOpCode from substrate.py
 # Use MantraOpCode (from .mantra or directly from vibe_core.protocols.substrate)
