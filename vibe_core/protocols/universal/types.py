@@ -1,7 +1,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
+
+# T = TypeVar("T") # Reserved for Generics if upgrades needed
+
+# Strict Metadata Type (No Any)
+Metadata = Dict[str, object]
 
 # --- GAD-000 IDENTITY TYPES ---
 
@@ -51,10 +56,10 @@ class ReadResult:
     Preserves the Chain of Custody (Provenance).
     """
 
-    value: Any
+    value: object
     timestamp: datetime = field(default_factory=datetime.now)
     writer: Optional["SovereignContext"] = None  # Who wrote this? (Provenance)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Metadata = field(default_factory=dict)
 
 
 # --- SYNC TYPES ---
@@ -73,7 +78,7 @@ class SyncStatus:
     is_synced: bool
     last_sync: Optional[datetime]
     pending_items: int
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: Metadata = field(default_factory=dict)
 
 
 # --- ENFORCE TYPES ---
@@ -92,7 +97,7 @@ class EnforceContext:
     resource: str
     action: str
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Metadata = field(default_factory=dict)
     sovereign: Optional["SovereignContext"] = None  # The Identity claiming rights
 
 
@@ -111,7 +116,7 @@ class Rule:
 @dataclass
 class InferenceInput:
     content: str
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: Metadata = field(default_factory=dict)
     source: Optional[str] = None
     sovereign: Optional["SovereignContext"] = None
 
@@ -121,7 +126,7 @@ class Inference:
     conclusion: str
     confidence: float
     reasoning: List[str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Metadata = field(default_factory=dict)
 
 
 @dataclass
@@ -129,7 +134,7 @@ class ClassifyInput:
     content: str
     categories: List[str]
     # Semantic context for classification
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: Metadata = field(default_factory=dict)
     sovereign: Optional["SovereignContext"] = None
 
 
@@ -138,7 +143,7 @@ class Classification:
     category: str
     confidence: float
     alternatives: List[str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Metadata = field(default_factory=dict)
 
 
 @dataclass
@@ -155,7 +160,7 @@ class Evaluation:
 @dataclass
 class MemoryValue:
     content: str
-    metadata: Dict[str, Any]
+    metadata: Metadata
     timestamp: datetime
     ttl: Optional[int] = None
     embedding: Optional[List[float]] = None
