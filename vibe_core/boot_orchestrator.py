@@ -285,9 +285,14 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             
             # THE FIX: No hardcoded class instantiation here
             # Use get_kernel (Singleton Access)
-            self.kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
+            raw_kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
             
-            logger.info(f"      → Kernel space allocated (ledger: {self.ledger_path})")
+            # PHASE 6.1: WRAP IN ENTROPY SHELL (The Kurukshetra Field)
+            # "The Field of Time surrounds the Immutable Core"
+            from vibe_core.runtime.entropy_shell import EntropyShell
+            self.kernel = EntropyShell(raw_kernel)
+            
+            logger.info(f"      → Kernel space allocated & wrapped in EntropyShell (ledger: {self.ledger_path})")
 
             # VAYU: Air - Establish communication channels
             logger.info("⚡ OPUS-095: Establishing communication (VAYU)")
