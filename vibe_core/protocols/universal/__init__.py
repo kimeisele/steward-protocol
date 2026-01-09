@@ -17,7 +17,7 @@ from .enforce import EnforceProtocol
 from .infer import InferProtocol
 from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
 from .krishna import IdentityStatus, KrishnaProtocol
-from .mantra import MANTRA_KERNEL_MAP, MantraGate, SudarshanaMantra
+from .mantra import MantraOpCode, MantraProtocol
 from .om import OmProtocol
 from .prabhupada import PRABHUPADA, PrabhupadaVani, SrilaPrabhupada, VaniInstruction
 from .rama import RamaProtocol
