@@ -179,10 +179,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     _reactor = None
     _akasha_field = ""
     
-    # Divine Potencies
-    nrisimha: NrisimhaWatchdog
-    chaitanya: NrisimhaWatchdog
-    watchdog: NrisimhaWatchdog  # Parampara Alias
+    # Vishnu Clock (Class attributes for discovery)
+    watchdog: NrisimhaWatchdog = None
+    chaitanya: NrisimhaWatchdog = None
 
     def __init__(
         self,
