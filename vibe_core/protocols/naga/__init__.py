@@ -64,8 +64,7 @@ from vibe_core.protocols.naga.narada import (
 
 # Prahlad
 from vibe_core.protocols.naga.prahlad import (
-    NullPrahlad,
-    PrahladProtocol,
+    PrahladMemory,
 )
 
 # Kulika
@@ -234,8 +233,7 @@ __all__ = [
     "AnomalyReport",
     "NullChitragupta",
     # Prahlad
-    "PrahladProtocol",
-    "NullPrahlad",
+    "PrahladMemory",
     # NOTE: DharmaScore now in vibe_core.naga.services.prahlad.types
     # Kulika
     "KulikaProtocol",

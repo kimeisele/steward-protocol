@@ -1,190 +1,98 @@
 """
-PRAHLAD Protocol - Der Resilience Agent (Antifragility Protocol)
+PRAHLAD PROTOCOL - The 7th Mahajana (Smaranam)
+==============================================
 
-Prahlad Maharaj - Der unzerstörbare Devotee.
-"Was mich nicht tötet, macht mich stärker."
-Vedisch: "Weil ich in Wahrheit verankert bin, kann mich nichts töten."
+"He who remembers Vishnu is never vanquished."
 
-Responsibilities:
-- Error → Regression Test (learn from suffering)
-- Chaos Probing (actively seek weakness)
-- Dharma Audit (verify integrity)
-- Phoenix Guarantee (crash-restart-resume)
-
-Integration:
-- Registers as handler for DriftSource.STRUCTURAL
-- Detects structural drift (integrity violations)
-- Heals by generating hardening tests
-
-TÜV-GEPRÜFT: Signatures match PrahladService implementation.
-
-NOTE: Types (ErrorEvent, TestCase, etc.) are defined in service layer
-and re-exported here to avoid circular imports while maintaining
-the service as source of truth.
+This module implements the Indestructible Memory.
+Even inside the Holodeck of Hiranyakashipu (Kali Yuga),
+Prahlad preserves the Seed.
 """
 
-from typing import TYPE_CHECKING, List, Optional, Protocol, runtime_checkable
+from typing import Any, Dict, Optional
+import time
+from vibe_core.protocols.science.entropy import KaliYugaEngine, EntropyState
+from vibe_core.protocols.substrate.byte import MantraByte
+from vibe_core.protocols.universal.store_recall import StoreRecallProtocol
 
-from vibe_core.protocols.correction import CorrectionHandler
-from vibe_core.protocols.naga.types import NagaStatus
-
-# TYPE_CHECKING imports only - avoid circular import
-if TYPE_CHECKING:
-    from vibe_core.naga.hiranyakashipu import AttackSeed
-    from vibe_core.naga.services.prahlad.types import (
-        ChaosScenario,
-        DharmaScore,
-        ErrorEvent,
-        PhoenixResult,
-        ProbeResult,
-        TestCase,
-    )
-
-
-@runtime_checkable
-class PrahladProtocol(Protocol):
+class PrahladMemory(StoreRecallProtocol):
     """
-    Prahlad Maharaj - Der unzerstörbare Devotee.
-
-    "Was mich nicht tötet, macht mich stärker."
-    Vedisch: "Weil ich in Wahrheit verankert bin, kann mich nichts töten."
-
-    Responsibilities:
-    - Error → Regression Test (learn from suffering)
-    - Chaos Probing (actively seek weakness)
-    - Dharma Audit (verify integrity)
-    - Phoenix Guarantee (crash-restart-resume)
-
-    Integration:
-    - Registers as handler for DriftSource.STRUCTURAL
-    - Detects structural drift (integrity violations)
-    - Heals by generating hardening tests
-
-    Usage:
-        prahlad = ServiceRegistry.get(PrahladProtocol)
-        test = prahlad.on_error(ErrorEvent(...))
-        score = prahlad.dharma_audit()
-
-    TÜV-GEPRÜFT: Signatures match PrahladService implementation.
+    A Memory Store that defies Entropy.
     """
+    def __init__(self):
+        self._store: Dict[str, EntropyState] = {}
+        self._data: Dict[str, Any] = {}
+        # High Heat (Hiranyakashipu). 
+        # Intensity 10.0 means data decays very fast without Smaranam.
+        self._engine = KaliYugaEngine(intensity=10.0) 
 
-    def on_error(self, error: "ErrorEvent") -> "TestCase":
+    def remember(self, key: str, value: Any, mantra: MantraByte) -> bool:
         """
-        Learn from an error by generating a regression test.
-
-        Args:
-            error: ErrorEvent containing error_type, message, component_id, context
-
-        Returns:
-            TestCase with generated regression test code
+        Active Remembrance (Smaranam).
+        Each call resets the entropy timer (Refresh).
         """
-        ...
+        # 1. Check Lineage (Is the Mantra valid?)
+        # We assume standard_16 or better is required for protection.
+        if mantra.coherence < 0.8: 
+            # Mantra is weak. Memory will not hold.
+            return False 
+            
+        # 2. Store/Refresh
+        self._data[key] = value
+        # Prahlad sets Integrity to 108% (Super-Resonance)
+        # This buffer allows it to survive slightly longer than standard logic
+        self._store[key] = EntropyState(decay_rate=0.1, integrity=1.08, last_refresh=time.time())
+        return True
 
-    def chaos_probe(
-        self,
-        target: str,
-        scenarios: Optional[List["ChaosScenario"]] = None,
-        attack_seeds: Optional[List["AttackSeed"]] = None,
-    ) -> "ProbeResult":
+    def recall(self, key: str, mantra: MantraByte) -> Optional[Any]:
         """
-        Actively probe a component for weaknesses.
-
-        Args:
-            target: Component to probe
-            scenarios: Specific chaos scenarios to run (default: all)
-            attack_seeds: Hiranyakashipu attack seeds to execute
-
-        Returns:
-            ProbeResult with failures and details
+        Retrieval requires passing the Fire Test.
         """
-        ...
+        if key not in self._store:
+            return None
+            
+        # 1. Mantra Check implies access
+        if mantra.coherence < 0.5:
+            return None
 
-    def dharma_audit(self) -> "DharmaScore":
-        """Audit the system for Dharma (integrity) compliance."""
-        ...
+        # 2. Check Survival
+        if self._check_survival(key):
+            return self._data[key]
+        else:
+            return None
 
-    def verify_phoenix_guarantee(self, target: str) -> "PhoenixResult":
+    def _check_survival(self, key: str) -> bool:
         """
-        Verify crash-restart-resume for a component.
-
-        Returns:
-            PhoenixResult with state_preserved and passed flags
+        The Shadow Punch.
+        Applies massive Entropy. If logic held it, it dies.
+        If Prahlad held it, it survives.
         """
-        ...
+        if key not in self._store:
+            return False
+            
+        state = self._store[key]
+        
+        # Apply Entropy based on time elapsed since last 'remember'
+        new_integrity = self._engine.apply_decay(state)
+        
+        # Update state
+        state.integrity = new_integrity
+        
+        if state.integrity > 0:
+            return True # SURVIVED
+        else:
+            # KILLED BY TIME
+            if key in self._data:
+                del self._data[key]
+            del self._store[key] 
+            return False
+            
+    def force_entropy_attack(self, key: str, simulated_seconds: float):
+        """
+        Debug method to simulate time jumps (Hiranyakashipu's Torture).
+        """
+        if key in self._store:
+            # We shove the last_refresh into the past, so the NEXT check sees a large delta.
+            self._store[key].last_refresh -= simulated_seconds
+            # Do NOT call check_survival here. Let the next access (recall) trigger the judgment.
 
-    def export_hardening_suite(self) -> List["TestCase"]:
-        """Export the hardening test suite as TestCase list."""
-        ...
-
-    def as_handler(self) -> CorrectionHandler:
-        """Get this NAGA as a CorrectionHandler for DriftSource.STRUCTURAL."""
-        ...
-
-    def get_status(self) -> NagaStatus:
-        """Get NAGA health status."""
-        ...
-
-
-# =============================================================================
-# NULL IMPLEMENTATION (Arjuna Pattern)
-# Uses lazy imports to avoid circular dependency
-# =============================================================================
-
-from vibe_core.protocols.correction import (
-    HealingResult,
-    HealingStatus,
-    HealingStrategy,
-    UnifiedDriftReport,
-)
-from vibe_core.protocols.naga.types import NagaType
-
-
-class NullPrahlad:
-    """No-op Prahlad for when resilience testing is unavailable."""
-
-    def on_error(self, error: "ErrorEvent") -> "TestCase":
-        # Lazy import to avoid circular dependency
-        from vibe_core.naga.services.prahlad.types import TestCase
-
-        return TestCase(
-            target_component=error.component_id,
-            error_type=error.error_type,
-            reproduction_context={},
-        )
-
-    def chaos_probe(
-        self,
-        target: str,
-        scenarios: Optional[List["ChaosScenario"]] = None,
-        attack_seeds: Optional[List["AttackSeed"]] = None,
-    ) -> "ProbeResult":
-        from vibe_core.naga.services.prahlad.types import ProbeResult
-
-        return ProbeResult(target=target, scenarios_tested=0, failures=0)
-
-    def dharma_audit(self) -> "DharmaScore":
-        from vibe_core.naga.services.prahlad.types import DharmaScore
-
-        return DharmaScore(total_score=0.0, signature_compliance=0.0, ledger_intact=False, identity_coverage=0.0)
-
-    def verify_phoenix_guarantee(self, target: str) -> "PhoenixResult":
-        from vibe_core.naga.services.prahlad.types import PhoenixResult
-
-        return PhoenixResult(target=target, passed=False, state_preserved=False)
-
-    def export_hardening_suite(self) -> List["TestCase"]:
-        return []
-
-    def as_handler(self) -> CorrectionHandler:
-        def handler(drift: UnifiedDriftReport, strategy: HealingStrategy) -> HealingResult:
-            return HealingResult(
-                drift_id=drift.id,
-                status=HealingStatus.SKIPPED,
-                handler_id="null_prahlad",
-                message="Prahlad not available",
-            )
-
-        return handler
-
-    def get_status(self) -> NagaStatus:
-        return NagaStatus(naga_type=NagaType.PRAHLAD, healthy=False, message="Not initialized")
