@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import dataclass, field
-from typing import List, Any
+from typing import List, Optional
 from vibe_core.protocols.testable import Testable, TestableType, TestCase
 from vibe_core.protocols.governance.dwarapala import DwarapalaGatekeeper, CommitIntent
 
@@ -21,12 +21,12 @@ class MockComponent(Testable):
             return []
         
         tags = ["fast"]
-        def mock_test(kernel: Any, target: Any) -> bool:
+        def mock_test(kernel: Optional[object], target: Testable) -> bool:
             return self.pass_test
 
         return [TestCase(name="mock_check", description="Mock", tags=tags, test_func=mock_test)]
 
-    def evaluate_life(self, result: Any, gene: Any) -> str:
+    def evaluate_life(self, result: object, gene: object) -> str:
         return "GREEN"
 
 

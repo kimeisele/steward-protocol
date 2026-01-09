@@ -21,9 +21,7 @@ from typing import TypeVar, ParamSpec, Callable, cast, Set, Optional, Dict, Any
 # But 'vibe_core.protocols.dharma' implies a package structure. 
 # We'll use relative imports assuming we are in vibe_core.protocols.governance
 
-# We need access to UniversalDharma which was in universal/dharma.py
-# Let's import from absolut path for safety
-from vibe_core.protocols.universal.dharma import UniversalDharma, DharmaVerdict
+# from vibe_core.protocols.universal.dharma import UniversalDharma, DharmaVerdict
 from vibe_core.protocols.universal.types import SovereignContext, TranscendentalQuality
 
 # --- STRICT TYPING PRIMITIVES ---
@@ -116,6 +114,7 @@ class YamarajaGate:
     The Governance Implementation.
     """
     def __init__(self):
+        from vibe_core.protocols.universal.dharma import UniversalDharma
         self.dharma = UniversalDharma()
         # self.shesha = AnantaShesha() # Removing assuming AnantaShesha not implemented yet
         self.ugra_karma: Set[str] = {"delete", "destroy", "kill", "wipe", "narasimha"}
