@@ -41,6 +41,85 @@ Module Structure (15 modules):
 # =============================================================================
 
 # Types
+from vibe_core.protocols.naga.types import (
+    EventRecord,
+    NagaServiceProtocol,
+    NagaStatus,
+    NagaType,
+    StatusDetails,
+)
+
+# Kaliya
+from vibe_core.protocols.naga.kaliya import (
+    KaliyaProtocol,
+    NullKaliya,
+    QuarantineStatus,
+)
+
+# Narada
+from vibe_core.protocols.naga.narada import (
+    NaradaProtocol,
+    NullNarada,
+)
+
+# Prahlad
+from vibe_core.protocols.naga.prahlad import (
+    NullPrahlad,
+    PrahladProtocol,
+)
+
+# Kulika
+from vibe_core.protocols.naga.kulika import (
+    KulikaProtocol,
+    NullKulika,
+)
+
+# Padma
+from vibe_core.protocols.naga.padma import (
+    CacheEntry,
+    CacheStats,
+    CacheValue,
+    NullPadma,
+    PadmaProtocol,
+)
+
+# Shankha
+from vibe_core.protocols.naga.shankha import (
+    BroadcastMessage,
+    NullShankha,
+    ShankhaProtocol,
+)
+
+# Karkotaka
+from vibe_core.protocols.naga.karkotaka import (
+    EncryptedPayload,
+    KarkotakaProtocol,
+    NullKarkotaka,
+    SignedContent,
+)
+
+# TÜV
+from vibe_core.protocols.naga.tuv import (
+    ChurnEntry,
+    FindableProtocol,
+    FindingRegistry,
+    Leak,
+    LeakDict,
+    LeakPattern,
+    LeakSeverity,
+    LeakStatus,
+    NullTÜV,
+    ProtocolAudit,
+    ProtocolCoverageReport,
+    ProtocolGap,
+    ProtocolGapDict,
+    ProtocolGapSeverity,
+    ProtocolGapStatus,
+    TÜVProtocol,
+    TÜVRegistry,
+    TÜVReport,
+)
+
 # Ananta (Gene Splicer)
 from vibe_core.protocols.naga.ananta import (
     AnantaProtocol,
@@ -79,7 +158,13 @@ from vibe_core.protocols.naga.federation import (
 from vibe_core.protocols.naga.garuda import Garuda, GarudaProtocol
 
 # Sesha (The Bed)
-from vibe_core.protocols.naga.sesha import Sesha
+from vibe_core.protocols.naga.sesha import (
+    ImportResult,
+    LedgerBlock,
+    Sesha,
+    SyncRequest,
+    SyncStatus,
+)
 
 # Takshaka (The Architect)
 from vibe_core.protocols.naga.takshaka import (
@@ -93,6 +178,10 @@ from vibe_core.protocols.naga.takshaka import (
 
 # Vasuki (The Rope)
 from vibe_core.protocols.naga.vasuki import (
+    NodeAddress,
+    SendResult,
+    SendStatus,
+    SignedEnvelope,
     Vasuki,
 )
 

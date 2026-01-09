@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Frontend Test</title>
+</head>
+
+<body>
+    <h1>Testing localStorage Flow</h1>
+    <div id="output"></div>
+    <script>
+        const output = document.getElementById('output');
+
+        // Test 1: Clear localStorage
+        localStorage.clear();
+        output.innerHTML += '<p>✅ Test 1: localStorage cleared</p>';
+
+        // Test 2: Check initial values
+        let apiUrl = localStorage.getItem('steward_api_url') || '';
+        let apiKey = localStorage.getItem('steward_api_key') || '';
+        output.innerHTML += `<p>Initial apiUrl: "${apiUrl}" (empty: ${!apiUrl})</p>`;
+        output.innerHTML += `<p>Initial apiKey: "${apiKey}" (empty: ${!apiKey})</p>`;
+
+        // Test 3: Set values
+        apiUrl = 'https://steward-gateway.onrender.com';
+        apiKey = 'hare.krishna.108';
+        localStorage.setItem('steward_api_url', apiUrl);
+        localStorage.setItem('steward_api_key', apiKey);
+        output.innerHTML += '<p>✅ Test 3: Values set in localStorage</p>';
+
+        // Test 4: Read back
+        const readUrl = localStorage.getItem('steward_api_url');
+        const readKey = localStorage.getItem('steward_api_key');
+        output.innerHTML += `<p>Read apiUrl: "${readUrl}" (empty: ${!readUrl})</p>`;
+        output.innerHTML += `<p>Read apiKey: "${readKey}" (empty: ${!readKey})</p>`;
+
+        // Test 5: Validation check
+        if (!readUrl || !readKey) {
+            output.innerHTML += '<p>❌ FAIL: Validation would reject!</p>';
+        } else {
+            output.innerHTML += '<p>✅ PASS: Validation would accept!</p>';
+        }
+    </script>
+</body>
+
+</html>

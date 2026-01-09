@@ -17,7 +17,7 @@ STATUS: DEVOTEE / ACTIVE STORAGE
 """
 
 import threading
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, TypedDict, List
 
 from vibe_core.protocols.naga.base import NagaBase
 
@@ -26,6 +26,35 @@ from vibe_core.protocols.naga.types import NagaStatus, NagaType
 from vibe_core.protocols.naga.vasuki import IntegrityError, Vasuki
 
 SESHA_CAPS = ("store", "recall", "persist")
+
+
+class SyncStatus(TypedDict):
+    """Status of synchronization."""
+    synced: bool
+    last_block: int
+    pending_blocks: int
+
+
+class SyncRequest(TypedDict):
+    """Request to sync ledger."""
+    start_block: int
+    max_blocks: int
+
+
+class LedgerBlock(TypedDict):
+    """A block in the ledger."""
+    index: int
+    timestamp: str
+    events: List[Dict[str, Any]]
+    hash: str
+    prev_hash: str
+
+
+class ImportResult(TypedDict):
+    """Result of importing a block."""
+    success: bool
+    blocks_imported: int
+    error: Optional[str]
 
 
 class Sesha(NagaBase):
