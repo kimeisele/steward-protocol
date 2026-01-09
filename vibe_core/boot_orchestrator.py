@@ -549,7 +549,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
     async def boot_orchestrated(
         self, parent_cycle_id: Optional[str] = None, force: bool = False
-    ) -> Optional[RealVibeKernel]:
+    ) -> Optional[KernelProtocol]:
         """
         Execute the unified boot sequence via CognitiveCycle orchestrate().
 
@@ -560,13 +560,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             force: Bypass rate limits
 
         Returns:
-            RealVibeKernel if successful
+            KernelProtocol if successful
         """
         self._parent_cycle_id = parent_cycle_id
         await self.orchestrate(force=force)
         return self.kernel
 
-    def boot(self) -> RealVibeKernel:
+    def boot(self) -> KernelProtocol:
         """Thin wrapper: Execute boot sequence via orchestrate()."""
         try:
             kernel = asyncio.run(self.boot_orchestrated(force=True))
@@ -576,12 +576,12 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         except Exception as e:
             raise RuntimeError(f"Boot sequence failed: {e}")
 
-    def get_kernel(self) -> Optional[RealVibeKernel]:
+    def get_kernel(self) -> Optional[KernelProtocol]:
         """
         Get the booted kernel instance.
 
         Returns:
-            RealVibeKernel or None if not yet booted
+            KernelProtocol or None if not yet booted
         """
         return self.kernel
 
