@@ -33,6 +33,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
     from vibe_core.protocols.kernel_protocol import KernelProtocol
+    from vibe_core.protocols.event import Event, EventBusProtocol
 
 logger = logging.getLogger("LIFECYCLE")
 
@@ -309,12 +310,16 @@ class LifecyclePlugin(KernelPlugin):
         if hasattr(self._kernel, "_event_bus") and self._kernel._event_bus:
             try:
                 # EventBus uses emit() not publish()
-                from vibe_core.protocols.event import Event
+                if TYPE_CHECKING:
+                    from vibe_core.protocols.event import Event
+                else:
+                    from vibe_core.event_bus import Event
 
                 event = Event(
                     event_type="system.life.birth",
-                    data={"agent_id": agent_id, "name": spec.get("name", agent_id)},
-                    source="lifecycle",
+                    agent_id=str(self.plugin_id),  # Use plugin_id as agent_id
+                    message=f"Birth of {agent_id}",
+                    details={"agent_id": agent_id, "name": spec.get("name", agent_id)},
                 )
                 # emit is async, but we're in sync context - just log success
                 logger.info(f"✅ Gate 5 (Herald): Birth event prepared for '{agent_id}'")

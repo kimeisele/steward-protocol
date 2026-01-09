@@ -22,13 +22,19 @@ import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
-from vibe_core.event_bus import EventBus, EventType
+if TYPE_CHECKING:
+    from vibe_core.event_bus import EventBus, EventType
+    from vibe_core.protocols.event import EventBusProtocol
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
+else:
+    EventBus = Any
+    EventType = Any
+    EventBusProtocol = Any
+    KernelProtocol = Any
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
-if TYPE_CHECKING:
-    from vibe_core.protocols.event import EventBusProtocol
-    from vibe_core.protocols.kernel_protocol import KernelProtocol
+
 
 logger = logging.getLogger("PRANA_ORCHESTRATOR")
 
@@ -209,9 +215,9 @@ class PranaOrchestrator(CognitiveCycle):
         plugin_loader: Any = None,
         ledger: Any = None,
         trace: Optional[UnifiedTrace] = None,
-        event_bus: "Optional[EventBusProtocol]" = None,
+        event_bus: Optional["EventBusProtocol"] = None,
         *,
-        kernel: "Optional[KernelProtocol]" = None,  # Backward compatibility for tests
+        kernel: Optional["KernelProtocol"] = None,  # Backward compatibility for tests
     ):
         """
         Initialize Prana Orchestrator.

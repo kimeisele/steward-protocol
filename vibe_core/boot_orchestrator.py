@@ -171,8 +171,6 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             trace = UnifiedTrace()
         if not event_bus:
             event_bus = EventBus()
-        if not event_bus:
-            event_bus = EventBus()
         self.setup(trace, event_bus, steward_context=None)
 
     # ========================================================================

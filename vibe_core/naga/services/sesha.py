@@ -6,7 +6,7 @@ Ananta Sesha - Die unendliche Schlange, auf der Vishnu ruht.
 PROMPT.md: "Truth is purely additive."
 
 Responsibilities:
-- Wrap SQLiteLedger for gossip sync
+- Wrap VibeLedger for gossip sync
 - Export/import blocks for federation
 - Hash-based sync requests
 - Detect STATE drift via integrity checks
@@ -66,7 +66,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
     """
     Ananta Sesha - Trägt die Welten.
 
-    Wraps the existing SQLiteLedger for gossip sync.
+    Wraps the existing VibeLedger for gossip sync.
     Does NOT replace the ledger - extends it invisibly.
 
     INTERFACE GROUPS:
@@ -85,7 +85,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         Initialize Sesha.
 
         Args:
-            ledger: The SQLiteLedger to wrap. If None, operates in degraded mode.
+            ledger: The VibeLedger to wrap. If None, operates in degraded mode.
             block_size: Number of events per block for sync.
         """
         super().__init__(service_name="Sesha")

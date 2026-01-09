@@ -74,29 +74,21 @@ def test_genesis_byte_logic():
     """Verify GenesisByte validation logic."""
     from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
     
-    # 1. Empty Genesis
-    g = GenesisByte(signature="", resonance=MantraBit.NONE)
+    # 1. Empty Genesis (No Resonance)
+    g = GenesisByte(signature="", resonance=MantraBit(0))
     assert not g.is_valid
     
-    # 2. Valid Genesis (requires valid signature and FULL resonance ideally, 
-    # but strictly checks structure)
-    # Note: validation logic in GenesisByte might require actual signature verification
-    # if implemented. Based on reading byte.py earlier, check simple fields.
+    # 2. Valid Genesis (requires valid signature and FULL resonance - 0xFFFF)
+    # The Protocol defines Full Resonance as the key to the Gate.
     
     g_valid = GenesisByte(
         signature="valid_sig_123",
-        resonance=MantraBit.OM | MantraBit.SHABDA | MantraBit.AKASHA | 
-                  MantraBit.VAYU | MantraBit.AGNI | MantraBit.JALA | MantraBit.PRITHVI,
+        resonance=MantraBit.full_resonance(),
         timestamp=123456789.0
     )
-    # Assuming is_valid checks signature presence
-    # Check byte.py logic: 
-    # @property
-    # def is_valid(self) -> bool:
-    #     return bool(self.signature and self.resonance.value > 0)
     
     assert g_valid.is_valid
-    assert g_valid.resonance & MantraBit.OM
+    assert g_valid.resonance & MantraBit.HARE_1 # Should have at least the first bit
 
 
 # =============================================================================

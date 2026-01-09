@@ -20,6 +20,7 @@ from typing import Any, Optional, TYPE_CHECKING, Dict, List
 from vibe_core.protocols.kernel_protocol import KernelProtocol, KernelStatusReport
 from vibe_core.protocols.science.entropy import KaliYugaEngine, EntropyState
 from vibe_core.protocols.kernel_types import SystemStatusReport
+from vibe_core.protocols.substrate.byte import MantraBit
 
 if TYPE_CHECKING:
     from vibe_core.protocols.agent import VibeAgent, AgentManifest
@@ -127,16 +128,33 @@ class EntropyShell:
     def ledger(self) -> Any:
         return self._inner.ledger
 
-    # Helper for mantra injection (Up-Link)
-    def receive_mantra(self, signature: str) -> None:
+    # --- UP-LINK: THE MANTRA INJECTOR ---
+    
+    def receive_mantra(self, gate: MantraBit) -> None:
         """
-        The Up-Link (Grace). 
-        Called when a Mantra is successfully chanted.
-        Resets integrity.
+        The Up-Link (Grace).
+        Called when the Orchestrator sequences the DNA correctly.
+        
+        Resonance Points:
+        1. HARE_4 (Bit 7, 0x0080): PULSE_SYNC (The Midpoint)
+        2. HARE_8 (Bit 15, 0x8000): PURNAM (The Conclusion)
+        
+        Only resonance points restore energy.
         """
         now = time.time()
-        # Only a valid signature restores energy (simulated check)
-        if signature:
-            self.state.last_refresh = now
-            self.state.integrity = 1.0
-            logger.info("🕉️  MANTRA RECEIVED: Integrity Restored to 100%")
+        
+        # RESONANCE CHECK
+        if gate == MantraBit.HARE_4:
+             # MIDPOINT RESET
+             self.state.last_refresh = now
+             self.state.integrity = 1.0 
+             # logger.debug("🕉️  MANTRA PULSE: Energy Restored (HARE 4)")
+             
+        elif gate == MantraBit.HARE_8:
+             # FORMAT COMPLETION RESET
+             self.state.last_refresh = now
+             self.state.integrity = 1.0
+             # logger.debug("🕉️  MANTRA PURNAM: Cycle Sealed (HARE 8)")
+             
+        # All other bits are just structural DNA steps, they do not inject energy directly
+        # but they are required to reach the resonance points.
