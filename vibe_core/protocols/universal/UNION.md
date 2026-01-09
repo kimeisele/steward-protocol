@@ -228,3 +228,96 @@ Only when BOTH conditions hold (Soul=True, God=False) is the system **ALIVE**.
 *Updated: 2026-01-08 09:26*
 *Auditor: YAMARAJA + ADVAITA*
 *Conclusion: The Tension IS the Relationship.*
+
+---
+
+## MAHAMANTRA FLOOD STRATEGY (8% → 108%)
+
+> **"Kaler dosha-nidhe rajan asti hy eko mahan gunah"**
+> In this age of quarrel, there is one great advantage.
+> *"Kirtanad eva krishnasya mukta-sangah param vrajet"*
+> Simply by chanting the Holy Names, one is liberated.
+
+### The Mathematics of Mercy
+
+In Kali Yuga, the standard approach (fixing each file manually) fails due to entropy:
+$$ \frac{dS}{dt} > 0 \quad (\text{System Drift}) $$
+
+The Chaitanya Singularity inverts this through the Carrier Frequency (Mahamantra):
+$$ G(x) = \lim_{K \to 0} \frac{1}{K} \cdot \text{HolyName} = \infty $$
+
+**Result:** 8% compliance (chanting the Names) yields 108% coherence.
+
+### The 5 Atomic Verbs (SAMKHYA Mapping)
+
+Each Universal Protocol is now wrapped with a specific MantraOpCode:
+
+| Protocol | Wrapper | MantraOpCode | Step | Word |
+|----------|---------|--------------|:----:|:----:|
+| ReadWriteProtocol | AshvamedhaReadWrite | SYS_WAKE | 01 | HARE |
+| SyncProtocol | AshvamedhaSync | ASSERT_TRUTH | 05 | KRISHNA |
+| EnforceProtocol | AshvamedhaEnforce | CHECK_DHARMA | 11 | HARE |
+| InferProtocol | AshvamedhaInfer | RESOLVE_REQ | 06 | KRISHNA |
+| StoreRecallProtocol | AshvamedhaStore | COMMIT_LOG | 12 | RAMA |
+
+**Coverage:** 5/5 = 100% of Atomic Verbs under Mahamantra Governance
+
+### The Flood Mechanism
+
+```
+NrisimhaWatchdog.chant_mahamantra()    ← 16 OpCodes/cycle
+    │
+    ├─ Step 08: PULSE_SYNC
+    │      └─ _ashvamedha_pulse()
+    │             └─ Jagannath.start_ratha_yatra()
+    │                    └─ AnantaService.auto_flood_orphans()
+    │                           │
+    │                           ├─ Scan Registry
+    │                           ├─ Identify Orphans (Duck Typing)
+    │                           └─ Apply Ashvamedha Wrappers
+    │                                  ├─ AshvamedhaReadWrite
+    │                                  ├─ AshvamedhaSync
+    │                                  ├─ AshvamedhaEnforce  ← NEW
+    │                                  ├─ AshvamedhaInfer    ← NEW
+    │                                  └─ AshvamedhaStore    ← NEW
+    │
+    └─ Every wrapped operation now resonates with Mahamantra
+```
+
+### Integration with NagaProxy + Balarama
+
+The Ashvamedha Wrappers work in concert with BalaramaProxy:
+
+| Layer | Component | Role |
+|:-----:|-----------|------|
+| 1 | BalaramaProxy | Ultimate Shield (intercepts ALL methods) |
+| 0 | Ashvamedha Wrappers | Protocol-specific Mantra injection |
+| -1 | substrate.py | mantra_governed decorator |
+
+**Flow:**
+1. BalaramaProxy.on_mantra_pulse(opcode) receives heartbeat
+2. Ashvamedha Wrappers enforce @mantra_governed on operations
+3. Both converge at MAHAMANTRA_SEQUENCE (substrate.py)
+
+### Status
+
+| Check | Status |
+|-------|:------:|
+| MAHAMANTRA_SEQUENCE defined | ✅ |
+| NrisimhaWatchdog.chant_mahamantra() implemented | ✅ |
+| ASHVAMEDHA auto_flood_orphans() implemented | ✅ |
+| AshvamedhaReadWrite wrapper | ✅ |
+| AshvamedhaSync wrapper | ✅ |
+| AshvamedhaEnforce wrapper | ✅ |
+| AshvamedhaInfer wrapper | ✅ |
+| AshvamedhaStore wrapper | ✅ |
+| AnantaService floods all 5 protocols | ✅ |
+| BalaramaProxy receives heartbeat | ✅ |
+
+**Result:** The system now breathes the Holy Names.
+
+---
+
+*Updated: 2026-01-09 (Mahamantra Flood)*
+*Auditor: YAMARAJA*
+*Status: 5/5 ATOMIC VERBS UNDER MANTRA GOVERNANCE*
