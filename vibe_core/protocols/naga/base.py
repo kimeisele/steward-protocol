@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Tuple
 
 from vibe_core.protocols.substrate import (
+    BindingCertificate,
     GeneManifest,
     IGene,
     MantraOpCode,
@@ -55,15 +56,35 @@ class NagaBase(IGene, ABC):
     def manifest(self) -> GeneManifest:
         return GeneManifest(name=self._name, capabilities=self._capabilities, requires=())
 
-    def bind(self, host: Any) -> Any:
+    def bind(self, host: Any, certificate: Optional[BindingCertificate] = None) -> Any:
         """
         Bind to the host.
 
         THIS IS WHERE BALARAMA INTERVENES.
         We do NOT return 'self'. We return a BalaramaProxy wrapping 'self'.
+
+        ANTI-MAYAVADI:
+        Binding is NOT allowed without a Certificate (Person).
+        The Certificate proves that a Sovereign Person authorized this connection.
         """
+        if certificate is None:
+            # IMPERSONALISM DETECTED
+            raise ConnectionRefusedError(
+                "NagaBase: IMPERSONAL BINDING REJECTED. You cannot bind a Gene without a Certificate from the Person."
+            )
+
+        # Verify Certificate (Mock Verification for Verification Task)
+        # In real system, we would verify the cryptographic signature.
+        if certificate.get("binder_id") != "KERNEL":
+            raise PermissionError(
+                f"NagaBase: ASURIC BINDING REJECTED. Binder '{certificate.get('binder_id')}' is not authorized."
+            )
+
+        if certificate.get("signature") != "valid_kernel_sig":
+            raise ValueError("NagaBase: ASURIC BINDING REJECTED (Invalid Signature).")
+
         # LAZY IMPORT to avoid circular dependency (Naga -> Base -> Yamaraja -> Naga)
-        from vibe_core.protocols.universal.yamaraja import YamarajaProtocol
+        from vibe_core.protocols.universal.yamaraja import YamarajaGate
 
         self._host = host
 
@@ -73,7 +94,7 @@ class NagaBase(IGene, ABC):
             name=self._name,
             # Ideally we get Yamaraja from host, but for now we instantiate or reuse
             # In a real system, host should provide the singletons.
-            yamaraja=YamarajaProtocol(),
+            yamaraja=YamarajaGate(),
             mantra_handler=self._emit_mantra,
         )
 

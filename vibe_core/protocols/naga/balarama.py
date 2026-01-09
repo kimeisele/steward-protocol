@@ -23,10 +23,10 @@ from typing import Any, Callable, Optional, TypeVar
 
 from vibe_core.protocols.naga.chitragupta import ChitraguptaProtocol, NullChitragupta
 from vibe_core.protocols.substrate import MantraOpCode, MantraProtocol
-from vibe_core.protocols.universal.types import EnforceContext, Verdict
+from vibe_core.protocols.universal.types import SovereignContext, Verdict
 
 if False:  # TYPE_CHECKING hack to avoid import cycle for Mypy logic but not runtime
-    from vibe_core.protocols.universal.yamaraja import DharmaVerdict, YamarajaProtocol
+    from vibe_core.protocols.universal.yamaraja import Judgment, YamarajaGate
 
 T = TypeVar("T")
 
@@ -50,7 +50,7 @@ class BalaramaProxy:
         self,
         target: Any,
         name: str,
-        yamaraja: Optional["YamarajaProtocol"] = None,
+        yamaraja: Optional["YamarajaGate"] = None,
         chitragupta: Optional["ChitraguptaProtocol"] = None,
         mantra_handler: Optional[Callable[[str], None]] = None,
     ):
@@ -64,11 +64,11 @@ class BalaramaProxy:
             chitragupta: The Recorder (Karma)
             mantra_handler: Optional callback for chanting
         """
-        from vibe_core.protocols.universal.yamaraja import YamarajaProtocol
+        from vibe_core.protocols.universal.yamaraja import YamarajaGate
 
         self._target = target
         self._name = name
-        self._yamaraja = yamaraja or YamarajaProtocol()
+        self._yamaraja = yamaraja or YamarajaGate()
         self._chitragupta = chitragupta or NullChitragupta()
         self._mantra_handler = mantra_handler
 
@@ -101,22 +101,19 @@ class BalaramaProxy:
 
             # --- STEP 2: AUDIT (YAMARAJA) ---
             # "Is this action authorized?"
-            ctx = EnforceContext(
-                caller_id=self._name,
-                resource=self._name,
-                action=method_name,
-                metadata={"args": str(args)[:100]},  # Brief sample
+            ctx = SovereignContext(
+                identity_id=self._name,
+                roles=["naga_service"],
+                intent_id=method_name,
             )
 
             # We treat the method execution request as the "ACTION"
-            from vibe_core.protocols.universal.yamaraja import DharmaVerdict
+            judgment = self._yamaraja.judge_action(ctx, method_name, str(args)[:100])
 
-            verdict = self._yamaraja.enforce(method_name, ctx)
-
-            if verdict == DharmaVerdict.DENY:
+            if judgment.verdict == Verdict.DENY:
                 # BLOCKED BY LAW. Balarama says NO.
                 self._chitragupta.record(self._name, "security_violation", 1.0)
-                raise MayaError(f"Yamaraja DENIED action: {method_name}")
+                raise MayaError(f"Yamaraja DENIED action: {method_name}. Reason: {judgment.reason}")
 
             # --- STEP 3: EXECUTION (SEVA) ---
             try:
@@ -133,16 +130,8 @@ class BalaramaProxy:
                 # The Service failed. Balarama absorbs the shock.
                 self._chitragupta.record(self._name, "error_count", 1.0)
 
-                # Log full trace to Chitragupta (if supported) or print
-                # In strict mode, we might re-raise or return a SafeResult.
-                # For now, we behave like a Shield: We log and re-raise,
-                # but the container (Kurukshetra) handles the restart.
-                # Ideally Balarama could return a fallback.
-
-                # Check if Yamaraja allows mercy (PREMA/GURU_KRIPA)
-                from vibe_core.protocols.universal.yamaraja import DharmaVerdict
-
-                if verdict in [DharmaVerdict.PREMA, DharmaVerdict.GURU_KRIPA]:
+                # Check if Yamaraja allows mercy (Grace-Plus)
+                if judgment.verdict == Verdict.ELEVATED:
                     # Mercy Logic: Return None instead of crashing
                     return None
 
@@ -179,11 +168,9 @@ class BalaramaProxy:
         elif opcode in [MantraOpCode.ASSERT_TRUTH, MantraOpCode.BIND_CTX]:
             # "Krishna" demands Truth. Are we who we say we are?
             # Audit self with Yamaraja
-            from vibe_core.protocols.universal.yamaraja import DharmaVerdict
-
-            ctx = EnforceContext(caller_id=self._name, resource="identity", action="exist", metadata={"opcode": opcode})
-            verdict = self._yamaraja.enforce("heartbeat_check", ctx)
-            if verdict == DharmaVerdict.DENY:
+            ctx = SovereignContext(identity_id=self._name, roles=["naga_service"], intent_id="heartbeat_check")
+            judgment = self._yamaraja.judge_action(ctx, "heartbeat_check", {"opcode": opcode})
+            if judgment.verdict == Verdict.DENY:
                 self._chitragupta.record(self._name, "identity_lost", 1.0)
                 raise MayaError(f"KRISHNA: Identity check failed for {self._name}")
 

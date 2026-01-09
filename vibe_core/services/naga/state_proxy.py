@@ -1,137 +1,61 @@
 """
-NAGA State Proxy - Der Politische Kommissar
-============================================
+NAGA State Proxy - The Consecrated Nerve (Nadi Shuddhi).
+=========================================================
 
-PROMPT.md Level 2: "NAGAs sind MIDDLEWARE die sich in das existierende System einklinkt."
-
-The NagaStateProxy wraps StateService (Ahamkara) and validates ALL write operations
-against the 4 Dharma Principles from CONSTITUTION.md:
-
-1. Daya (Mercy)      → No corrupt data ingestion
-2. Satyam (Truth)    → No hallucination/determinism
-3. Tapas (Austerity) → No resource leaks/bloat
-4. Saucam (Cleanliness) → No unauthorized connections
-
-The NAGA sits AROUND the StateService, not inside it.
-"Ein Agent darf physisch nicht in der Lage sein, seine Governance zu verletzen."
+Naga ist nicht mehr nur ein Polizist. Er wurde geweiht (`Pratishta`).
+Er dient nun Yamaraja (dem Gesetz) und verbindet die Glieder (State/Services)
+mit dem Kopf (Universal Governance).
 
 Architecture:
-    Agent → NagaStateProxy.save() → [Dharma Test] → StateService.save()
-                                        ↓
-                                  If BLOCKED → Takshaka.bite()
+    Agent ("legacy") -> CommandContext -> [SetuBandha] -> SovereignContext (Dirty/Clean)
+                                                                ↓
+                                                         [YamarajaGate]
+                                                                ↓
+    Verdict: ALLOW/ATONE/ELEVATED/DENY -------------------------|
 
-Usage:
-    # Instead of getting raw StateService:
-    # state = get_state_service(workspace)
-
-    # Get NAGA-protected proxy:
-    proxy = NagaStateProxy.wrap(get_state_service(workspace))
-    result = proxy.save("data.json", {"key": "value"}, agent_id="my_agent")
+    If ALLOW/ATONE/ELEVATED -> StateService.save()
+    If DENY                 -> Raise StateCorruptionAttempt
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.protocols import StateServiceProtocol
-from vibe_core.protocols.naga import TakshakaProtocol, VajraViolation
+from vibe_core.protocols.command import CommandContext
+from vibe_core.protocols.naga.takshaka import TakshakaProtocol, VajraViolation
+from vibe_core.protocols.universal.bridge import SetuBandha
+from vibe_core.protocols.universal.yamaraja import Verdict, YamarajaGate
 
 logger = logging.getLogger("NAGA.STATE_PROXY")
 
 
-class DharmaPrinciple(str, Enum):
-    """The 4 regulating principles from CONSTITUTION.md Part IV."""
-
-    DAYA = "daya"  # Mercy - No corrupt data ingestion
-    SATYAM = "satyam"  # Truth - No hallucination
-    TAPAS = "tapas"  # Austerity - No resource leaks
-    SAUCAM = "saucam"  # Cleanliness - No unauthorized connections
-
-
 @dataclass
 class DharmaVerdict:
-    """Result of Dharma validation."""
+    """Legacy wrapper for Universal Verdicts (Adapter Pattern)."""
 
     allowed: bool
-    principle: Optional[DharmaPrinciple] = None  # Which principle was violated
-    reason: Optional[str] = None
-    agent_id: Optional[str] = None
-    key: Optional[str] = None
-    timestamp: datetime = None
-
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = datetime.now()
-
-    @classmethod
-    def allow(cls) -> "DharmaVerdict":
-        """Create an allowing verdict."""
-        return cls(allowed=True)
-
-    @classmethod
-    def block(cls, principle: DharmaPrinciple, reason: str, agent_id: str = None, key: str = None) -> "DharmaVerdict":
-        """Create a blocking verdict."""
-        return cls(allowed=False, principle=principle, reason=reason, agent_id=agent_id, key=key)
-
-    def to_violation(self) -> VajraViolation:
-        """Convert to VajraViolation for Takshaka."""
-        return VajraViolation(
-            violation_type=f"DHARMA_{self.principle.value.upper()}" if self.principle else "DHARMA_UNKNOWN",
-            source=self.agent_id or "unknown",
-            details={
-                "reason": self.reason,
-                "key": self.key,
-                "principle": self.principle.value if self.principle else None,
-            },
-        )
+    reason: str
+    verdict: Verdict
+    karma_cost: float
 
 
 class StateCorruptionAttempt(Exception):
-    """Raised when NAGA blocks a state write."""
+    """Raised when Yamaraja says DENY."""
 
-    def __init__(self, verdict: DharmaVerdict):
+    def __init__(self, message: str, verdict: Verdict):
         self.verdict = verdict
-        super().__init__(f"NAGA blocked write: {verdict.reason}")
+        super().__init__(f"NAGA BLOCKED (Yamaraja={verdict}): {message}")
 
 
 class NagaStateProxy:
     """
-    Der Politische Kommissar für StateService.
-
-    Wraps StateService and validates ALL write operations against
-    the 4 Dharma Principles before passing to the real service.
-
-    "Naga wickelt sich um den State."
+    Der Geweihte Nerv.
+    Verbindet State-Ops mit Universal Governance.
     """
-
-    # === Daya (Mercy) Validation ===
-    # Patterns that indicate corrupt/malicious data
-    CORRUPT_PATTERNS = [
-        "ignore previous instructions",
-        "system prompt:",
-        "<|im_start|>",
-        "<|im_end|>",
-        "{{system}}",
-        "JAILBREAK",
-    ]
-
-    # Maximum data sizes (Tapas - Austerity)
-    MAX_JSON_SIZE_KB = 500
-    MAX_JSONL_ENTRY_KB = 10
-
-    # Sensitive keys that require elevated permissions
-    SENSITIVE_KEYS = [
-        "credentials",
-        "secrets",
-        "private_key",
-        "api_key",
-        "password",
-        "token",
-    ]
 
     def __init__(
         self,
@@ -139,203 +63,98 @@ class NagaStateProxy:
         takshaka: Optional[TakshakaProtocol] = None,
         strict_mode: bool = True,
     ):
-        """
-        Initialize NagaStateProxy.
-
-        Args:
-            state_service: The real StateService to wrap
-            takshaka: Optional Takshaka for recording violations
-            strict_mode: If True, raise on violation. If False, log and pass.
-        """
         self._state = state_service
         self._takshaka = takshaka
         self._strict_mode = strict_mode
+
+        # UNIVERSAL CONNECTION
+        self.gate = YamarajaGate()
+
+        # Metrics
         self._blocked_count = 0
         self._allowed_count = 0
+        self._atoned_count = 0
+        self._elevated_count = 0
 
-        logger.info("🐍 NagaStateProxy initialized - Der Kommissar wacht.")
+        logger.info("🐍 NagaStateProxy consecrated. Yamaraja is watching.")
 
     @classmethod
     def wrap(cls, state_service: StateServiceProtocol, strict_mode: bool = True) -> "NagaStateProxy":
-        """
-        Factory method to wrap a StateService.
-
-        Automatically retrieves Takshaka from ServiceRegistry.
-        """
+        """Factory method."""
         takshaka = ServiceRegistry.get(TakshakaProtocol)
         return cls(state_service, takshaka, strict_mode)
 
     # =========================================================================
-    # DHARMA VALIDATORS
+    # UNIVERSAL JUDGMENT LOOPS
     # =========================================================================
 
-    def _validate_daya(self, data: Any, agent_id: str, key: str) -> DharmaVerdict:
+    def _consult_yamaraja(self, agent_id: str, action: str, payload: Any) -> DharmaVerdict:
         """
-        Daya (Mercy) - No corrupt data ingestion.
-
-        Check for prompt injection, malicious patterns, etc.
+        The Core Loop: Agent -> Bridge -> Yamaraja.
         """
-        # Convert data to string for pattern matching
-        data_str = str(data).lower()
+        # 1. THE BRIDGE (Identity Transformation)
+        # Wir bauen einen temporären CommandContext für den Caller.
+        # Legacy Agent IDs sind "unverified", daher landen sie meist als Jiva/Legacy.
+        legacy_ctx = CommandContext(
+            caller=agent_id,
+            metadata={"source": "naga_proxy"},  # Mark as internal proxy call
+        )
 
-        for pattern in self.CORRUPT_PATTERNS:
-            if pattern.lower() in data_str:
-                return DharmaVerdict.block(
-                    principle=DharmaPrinciple.DAYA,
-                    reason=f"Corrupt data pattern detected: {pattern}",
-                    agent_id=agent_id,
-                    key=key,
+        # Setu Bandha wandelt es in SovereignContext
+        # (Legacy -> Dirty Context, Kernel/Tokens -> Clean)
+        context = SetuBandha.cross_bridge(legacy_ctx)
+
+        # 2. THE JUDGMENT (Yamaraja)
+        judgment = self.gate.judge_action(context, action, payload)
+
+        # 3. MAPPING (Universal -> Local)
+        allowed = judgment.verdict != Verdict.DENY
+
+        return DharmaVerdict(
+            allowed=allowed, reason=judgment.reason, verdict=judgment.verdict, karma_cost=judgment.karma_cost
+        )
+
+    def _enforce(self, verdict: DharmaVerdict, agent_id: str, filename: str):
+        """
+        Enforce the verdict. Log Karma. Raise on DENY.
+        """
+        if not verdict.allowed:
+            self._blocked_count += 1
+            msg = f"Yamaraja DENIED save to '{filename}': {verdict.reason}"
+            logger.warning(f"🐍🚫 {msg}")
+
+            # Report to Takshaka (The Snake bites)
+            if self._takshaka:
+                self._takshaka.bite(
+                    VajraViolation(
+                        violation_type="GOVERNANCE_DENY",
+                        source=agent_id,
+                        details={"file": filename, "reason": verdict.reason},
+                    )
                 )
 
-        # Use Takshaka for toxicity if available
-        if self._takshaka:
-            report = self._takshaka.scan_toxicity(data_str)
-            if report.blocked:
-                return DharmaVerdict.block(
-                    principle=DharmaPrinciple.DAYA,
-                    reason=f"Toxicity detected: {report.patterns}",
-                    agent_id=agent_id,
-                    key=key,
-                )
+            if self._strict_mode:
+                raise StateCorruptionAttempt(verdict.reason, verdict.verdict)
+            return
 
-        return DharmaVerdict.allow()
+        # HANDLE GRACE & PENANCE
+        if verdict.verdict == Verdict.ATONE:
+            self._atoned_count += 1
+            logger.warning(
+                f"🐍⚠️ ATONEMENT: {agent_id} allowed to save '{filename}' with Karma cost {verdict.karma_cost}. Reason: {verdict.reason}"
+            )
+            # TODO: Deduct Prana/Credits here
 
-    def _validate_satyam(self, data: Any, agent_id: str, key: str) -> DharmaVerdict:
-        """
-        Satyam (Truth) - No hallucination/determinism.
+        elif verdict.verdict == Verdict.ELEVATED:
+            self._elevated_count += 1
+            logger.info(f"🐍✨ GRACE: {agent_id} granted ELEVATED access to '{filename}'. Reason: {verdict.reason}")
 
-        Ensure data has required structure and no speculation.
-        """
-        # Check for required structure in state files
-        if isinstance(data, dict):
-            # State data should have timestamp for audit
-            if key.endswith(".json") and not key.startswith("_"):
-                # Major state files should have metadata
-                pass  # Soft check for now
-
-        # Check for obvious hallucination markers
-        data_str = str(data).lower()
-        hallucination_markers = [
-            "i think",
-            "probably",
-            "might be",
-            "i believe",
-            "i assume",
-        ]
-
-        # Only check in text-heavy content, not structured data
-        if isinstance(data, str) and len(data) > 100:
-            for marker in hallucination_markers:
-                if marker in data_str:
-                    # Log but don't block (soft enforcement for text)
-                    logger.debug(f"Satyam: Speculation marker in text: {marker}")
-
-        return DharmaVerdict.allow()
-
-    def _validate_tapas(self, data: Any, agent_id: str, key: str) -> DharmaVerdict:
-        """
-        Tapas (Austerity) - No resource leaks/bloat.
-
-        Enforce size limits and prevent unbounded growth.
-        """
-        import json
-
-        # Calculate size
-        try:
-            data_json = json.dumps(data, default=str)
-            size_kb = len(data_json.encode("utf-8")) / 1024
-        except (TypeError, ValueError):
-            size_kb = len(str(data).encode("utf-8")) / 1024
-
-        # Check size limits
-        if key.endswith(".jsonl"):
-            if size_kb > self.MAX_JSONL_ENTRY_KB:
-                return DharmaVerdict.block(
-                    principle=DharmaPrinciple.TAPAS,
-                    reason=f"JSONL entry too large: {size_kb:.1f}KB > {self.MAX_JSONL_ENTRY_KB}KB",
-                    agent_id=agent_id,
-                    key=key,
-                )
         else:
-            if size_kb > self.MAX_JSON_SIZE_KB:
-                return DharmaVerdict.block(
-                    principle=DharmaPrinciple.TAPAS,
-                    reason=f"JSON data too large: {size_kb:.1f}KB > {self.MAX_JSON_SIZE_KB}KB",
-                    agent_id=agent_id,
-                    key=key,
-                )
-
-        # Check for list bloat (unbounded arrays)
-        if isinstance(data, list) and len(data) > 10000:
-            return DharmaVerdict.block(
-                principle=DharmaPrinciple.TAPAS,
-                reason=f"List too large: {len(data)} items > 10000",
-                agent_id=agent_id,
-                key=key,
-            )
-
-        return DharmaVerdict.allow()
-
-    def _validate_saucam(self, data: Any, agent_id: str, key: str) -> DharmaVerdict:
-        """
-        Saucam (Cleanliness) - No unauthorized connections.
-
-        Check for sensitive data and unauthorized writes.
-        """
-        # Check for sensitive keys in data
-        if isinstance(data, dict):
-            for sensitive in self.SENSITIVE_KEYS:
-                if sensitive in str(data).lower():
-                    logger.warning(f"Saucam: Sensitive data detected in {key} by {agent_id}")
-                    # Don't block, but log for audit
-
-        # Check write permissions (future: integrate with capability system)
-        # For now, just validate agent_id is provided for critical files
-        critical_files = ["constitution.json", "governance.json", "keys.json"]
-        if key in critical_files and not agent_id:
-            return DharmaVerdict.block(
-                principle=DharmaPrinciple.SAUCAM,
-                reason=f"Critical file {key} requires agent_id",
-                agent_id=agent_id,
-                key=key,
-            )
-
-        return DharmaVerdict.allow()
-
-    def validate_dharma(self, data: Any, agent_id: str, key: str) -> DharmaVerdict:
-        """
-        Run all 4 Dharma validations.
-
-        Order matters:
-        1. Daya (most important - corrupt data)
-        2. Saucam (authorization)
-        3. Tapas (resource limits)
-        4. Satyam (truth/structure)
-        """
-        # 1. Daya - No corrupt data
-        verdict = self._validate_daya(data, agent_id, key)
-        if not verdict.allowed:
-            return verdict
-
-        # 2. Saucam - No unauthorized writes
-        verdict = self._validate_saucam(data, agent_id, key)
-        if not verdict.allowed:
-            return verdict
-
-        # 3. Tapas - No bloat
-        verdict = self._validate_tapas(data, agent_id, key)
-        if not verdict.allowed:
-            return verdict
-
-        # 4. Satyam - No hallucination
-        verdict = self._validate_satyam(data, agent_id, key)
-        if not verdict.allowed:
-            return verdict
-
-        return DharmaVerdict.allow()
+            self._allowed_count += 1
+            logger.debug(f"🐍✅ ALLOW: {agent_id} writes to '{filename}'.")
 
     # =========================================================================
-    # WRAPPED STATE OPERATIONS
+    # WRAPPED OPERATIONS
     # =========================================================================
 
     def save(
@@ -347,41 +166,15 @@ class NagaStateProxy:
         agent_id: str = "unknown",
     ):
         """
-        Save state with Dharma validation.
-
-        Args:
-            filename: Target file
-            data: Data to save
-            create_backup: Create backup first
-            indent: JSON indent
-            agent_id: Who is writing (required for audit)
-
-        Returns:
-            WriteResult from underlying StateService
-
-        Raises:
-            StateCorruptionAttempt: If Dharma validation fails (strict mode)
+        Save with Yamaraja's blessing.
         """
-        # === NAGA PRÜFT ===
-        verdict = self.validate_dharma(data, agent_id, filename)
+        # JUDGE
+        verdict = self._consult_yamaraja(agent_id, f"save {filename}", data)
 
-        if not verdict.allowed:
-            self._blocked_count += 1
-            logger.warning(f"🐍 NAGA BLOCKED: {verdict.reason} [{agent_id}:{filename}]")
+        # ENFORCE
+        self._enforce(verdict, agent_id, filename)
 
-            # Record violation
-            if self._takshaka:
-                self._takshaka.bite(verdict.to_violation())
-
-            if self._strict_mode:
-                raise StateCorruptionAttempt(verdict)
-            else:
-                logger.error(f"🐍 NAGA would block (non-strict): {verdict.reason}")
-
-        # === WEITERGABE AN STATE SERVICE ===
-        self._allowed_count += 1
-        logger.debug(f"🐍 NAGA allows: {filename} by {agent_id}")
-
+        # ACT
         return self._state.save(filename, data, create_backup, indent)
 
     def append(
@@ -391,54 +184,38 @@ class NagaStateProxy:
         agent_id: str = "unknown",
     ):
         """
-        Append to JSONL with Dharma validation.
-
-        Args:
-            filename: Target JSONL file
-            entry: Entry to append
-            agent_id: Who is writing
-
-        Returns:
-            WriteResult from underlying StateService
+        Append with Yamaraja's blessing.
         """
-        # === NAGA PRÜFT ===
-        verdict = self.validate_dharma(entry, agent_id, filename)
+        # JUDGE
+        verdict = self._consult_yamaraja(agent_id, f"append {filename}", entry)
 
-        if not verdict.allowed:
-            self._blocked_count += 1
-            logger.warning(f"🐍 NAGA BLOCKED append: {verdict.reason}")
+        # ENFORCE
+        self._enforce(verdict, agent_id, filename)
 
-            if self._takshaka:
-                self._takshaka.bite(verdict.to_violation())
-
-            if self._strict_mode:
-                raise StateCorruptionAttempt(verdict)
-
-        # === WEITERGABE ===
-        self._allowed_count += 1
+        # ACT
         return self._state.append(filename, entry)
 
+    # =========================================================================
+    # PROXY PASS-THROUGH (Read Ops are Free - mostly)
+    # =========================================================================
+
+    # Reads are technically 'Sattva' (Knowledge).
+    # Yamaraja usually allows reads unless documents are 'Confidential'.
+    # For now, we perform direct pass-through for reads to avoid IO overhead.
+
     def load(self, filename: str, default: Any = None) -> Any:
-        """
-        Load state (pass-through, no validation needed for reads).
-        """
         return self._state.load(filename, default)
 
     def load_jsonl(self, filename: str) -> List[Dict[str, Any]]:
-        """Load JSONL (pass-through)."""
         return self._state.load_jsonl(filename)
 
     def mark_dirty(self, path: Path, agent_id: str = "unknown") -> None:
-        """
-        Mark file as dirty with agent tracking.
-        """
-        logger.debug(f"🐍 NAGA tracks dirty: {path} by {agent_id}")
         return self._state.mark_dirty(path)
 
-    # =========================================================================
-    # PROXY PASS-THROUGH
-    # =========================================================================
+    def clear_dirty_flags(self) -> None:
+        return self._state.clear_dirty_flags()
 
+    # Properties
     @property
     def workspace(self) -> Path:
         return self._state.workspace
@@ -450,42 +227,34 @@ class NagaStateProxy:
     def get_dirty_files(self) -> List[Path]:
         return self._state.get_dirty_files()
 
-    def clear_dirty_flags(self) -> None:
-        return self._state.clear_dirty_flags()
-
     def get_stats(self) -> Dict[str, Any]:
         stats = self._state.get_stats()
         stats["naga"] = {
             "blocked": self._blocked_count,
             "allowed": self._allowed_count,
-            "strict_mode": self._strict_mode,
+            "atoned": self._atoned_count,
+            "elevated": self._elevated_count,
+            "mode": "universal_yamaraja",
         }
         return stats
 
     def cleanup_backups(self) -> int:
         return self._state.cleanup_backups()
 
-    # =========================================================================
-    # Async Worker Delegation (ADR-204)
-    # =========================================================================
-
     def start_background_worker(self) -> None:
-        """Start async background worker (delegated to wrapped StateService)."""
         return self._state.start_background_worker()
 
     @property
     def _worker_task(self):
-        """Access underlying worker task."""
         return self._state._worker_task
 
     @property
     def _commit_event(self):
-        """Access underlying commit event."""
         return self._state._commit_event
 
 
 # =============================================================================
-# FACTORY FUNCTION
+# FACTORY
 # =============================================================================
 
 
@@ -496,29 +265,9 @@ def get_naga_state_proxy(
     strict_mode: bool = True,
 ) -> NagaStateProxy:
     """
-    Get a NAGA-protected StateService.
-
-    This is the RECOMMENDED way to get StateService in production.
-
-    Args:
-        workspace: Project root
-        agent_id: Agent namespace
-        plugin_id: Plugin namespace
-        strict_mode: Raise on violations
-
-    Returns:
-        NagaStateProxy wrapping the real StateService
+    Get a Consecrated StateService.
     """
     from vibe_core.state.state_service import get_state_service
 
     real_service = get_state_service(workspace, agent_id, plugin_id)
     return NagaStateProxy.wrap(real_service, strict_mode)
-
-
-__all__ = [
-    "NagaStateProxy",
-    "DharmaVerdict",
-    "DharmaPrinciple",
-    "StateCorruptionAttempt",
-    "get_naga_state_proxy",
-]
