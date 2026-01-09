@@ -6,14 +6,6 @@ from decimal import Decimal
 from enum import Enum, IntEnum
 from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
 
-from ..substrate import (
-    AlignmentScore,
-    DriftContext,
-    HolyName,
-    MantraOpCode,
-    Resonance,
-)
-
 # T = TypeVar("T") # Reserved for Generics if upgrades needed
 
 # Strict Metadata Type (No Any)
