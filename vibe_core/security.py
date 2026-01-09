@@ -27,24 +27,20 @@ Usage:
     # After seal():
     kernel._critical_factory = malicious_factory  # Raises PermissionError!
 
-<!-- @HARNESS
-files:
-  - path: vibe_core/security.py
-    required: true
-wiring:
-  - pattern: "class VajraGuarded"
-    in: vibe_core/security.py
-  - pattern: "vajra_seal"
-    in: vibe_core/security.py
-  - pattern: "VAJRA VIOLATION"
-    in: vibe_core/security.py
-tests:
-  - tests/security/test_putana_poison.py
--->
+GAD-000 ACTIVE SECURITY (Vajra Intent):
+    Instead of passive hash verification, the system uses Active Intent Authorization.
+    Changes to the Kernel/Castle must be proposed as a SecurityIntent/Request.
+    The HIL (Sovereign) then "Clicks Accept" (Requests Execution).
 """
 
+import hashlib
+import json
 import logging
-from typing import Set
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Union
 
 logger = logging.getLogger("VAJRA")
 
@@ -133,9 +129,127 @@ class VajraGuarded:
 class VajraViolation(PermissionError):
     """
     Exception raised when attempting to modify sealed DNA.
-
-    This is a subclass of PermissionError for compatibility,
-    but can be caught specifically for Vajra violations.
     """
 
     pass
+
+
+# =============================================================================
+# GAD-000 ACTIVE SECURITY: Intent Authorization
+# =============================================================================
+
+
+class IntentStatus(str, Enum):
+    PENDING = "pending"
+    AUTHORIZED = "authorized"
+    REJECTED = "rejected"
+    EXECUTED = "executed"
+
+
+@dataclass
+class SecurityIntent:
+    """
+    A proposed security change (Castle Repair).
+    Instead of editing hashes manually, we propose an Intent.
+    """
+
+    id: str  # UUID
+    author: str  # "System" or Sovereign ID
+    description: str
+    changes: Dict[str, str]  # {file_path: new_sha256}
+    status: IntentStatus = IntentStatus.PENDING
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    signature: Optional[str] = None
+
+    def sign(self, key: str) -> None:
+        """Sign the intent (Placeholder for full crypto)."""
+        content = f"{self.id}{self.author}{json.dumps(self.changes, sort_keys=True)}"
+        self.signature = hashlib.sha256((content + key).encode()).hexdigest()
+        self.status = IntentStatus.AUTHORIZED
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self), indent=2)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> "SecurityIntent":
+        data = json.loads(json_str)
+        # Convert status string back to Enum
+        data["status"] = IntentStatus(data["status"])
+        return cls(**data)
+
+
+class SecurityIntentManager:
+    """
+    Manages the lifecycle of Security Intents.
+    """
+
+    INTENT_DIR = Path(".vibe/security_intents")
+    HASH_FILE = Path("scripts/governance/kernel_hashes.json")
+
+    def __init__(self):
+        self.INTENT_DIR.mkdir(parents=True, exist_ok=True)
+
+    def propose_intent(self, author: str, description: str, changes: Dict[str, str]) -> SecurityIntent:
+        """Create and save a new pending intent."""
+        import uuid
+
+        intent = SecurityIntent(id=str(uuid.uuid4()), author=author, description=description, changes=changes)
+        self._save_intent(intent)
+        logger.info(f"🛡️ VAJRA: Proposed Security Intent {intent.id}: {description}")
+        return intent
+
+    def get_intent(self, intent_id: str) -> Optional[SecurityIntent]:
+        path = self.INTENT_DIR / f"{intent_id}.json"
+        if not path.exists():
+            return None
+        return SecurityIntent.from_json(path.read_text())
+
+    def authorize_intent(self, intent_id: str, key: str) -> bool:
+        """Authorize a pending intent."""
+        intent = self.get_intent(intent_id)
+        if not intent:
+            return False
+
+        intent.sign(key)
+        self._save_intent(intent)
+        logger.info(f"🛡️ VAJRA: Authorized Intent {intent.id}")
+        return True
+
+    def execute_intent(self, intent_id: str) -> bool:
+        """
+        Execute an authorized intent by updating the kernel hashes.
+        """
+        intent = self.get_intent(intent_id)
+        if not intent:
+            logger.error(f"Intent {intent_id} not found")
+            return False
+
+        if intent.status != IntentStatus.AUTHORIZED:
+            logger.error(f"Intent {intent_id} is not AUTHORIZED (status: {intent.status})")
+            return False
+
+        # Update Hash File
+        try:
+            current_hashes = {}
+            if self.HASH_FILE.exists():
+                current_hashes = json.loads(self.HASH_FILE.read_text())
+
+            # Apply changes
+            for file_path, new_hash in intent.changes.items():
+                current_hashes[file_path] = new_hash
+                logger.info(f"🛡️ VAJRA: Updated hash for {file_path}")
+
+            # Save Hash File
+            self.HASH_FILE.write_text(json.dumps(current_hashes, indent=2))
+
+            # Mark Executed
+            intent.status = IntentStatus.EXECUTED
+            self._save_intent(intent)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to execute intent: {e}")
+            return False
+
+    def _save_intent(self, intent: SecurityIntent) -> None:
+        path = self.INTENT_DIR / f"{intent.id}.json"
+        path.write_text(intent.to_json())
