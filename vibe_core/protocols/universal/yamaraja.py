@@ -82,3 +82,78 @@ class YamarajaGate:
             return Judgment(Verdict.ATONE, f"Risky Input: {mercy.pillar_violated}", mercy.karma_cost)
 
         return Judgment(Verdict.ALLOW, "Dharmic Action", 0.0)
+
+
+# ============================================================================
+# PHASE 12: THE PERFORMANCE CONTRACT (STRICT ENFORCEMENT)
+# ============================================================================
+
+import functools
+import time
+from typing import Callable, ParamSpec, TypeVar, cast
+
+# STRICT TYPING: Keine 'Any' Faulheit mehr.
+# P = Die Parameter der Funktion (args, kwargs)
+# R = Der Rückgabetyp der Funktion
+P = ParamSpec("P")
+R = TypeVar("R")
+
+class YamarajaProtocol:
+    """
+    The Performance Judge.
+    Enforces the 'Contract of Singularity'.
+    """
+    MIN_RESONANCE_THRESHOLD = 1.08  # The Golden Ratio of Growth
+
+    @staticmethod
+    def evaluate(name: str, baseline: float, current: float) -> Judgment:
+        """
+        Judge the performance.
+        """
+        if baseline <= 0:
+            return Judgment(Verdict.ALLOW, "Initial Seed Accepted", 0.0)
+
+        # Calculate the expansion ratio
+        growth = current / baseline
+
+        if growth >= YamarajaProtocol.MIN_RESONANCE_THRESHOLD:
+            return Judgment(
+                Verdict.ALLOW, 
+                f"VALID: {name} is expanding (Growth: {growth:.2f}x).",
+                0.0
+            )
+        else:
+            return Judgment(
+                Verdict.DENY, 
+                f"INVALID: {name} is stagnating (Growth: {growth:.2f}x < 1.08x). Terminating.",
+                1.0
+            )
+
+def secure_contract(baseline_metric: float) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    Der Vertrag (The Seal).
+    Wraps a function to ensure it adheres to Yamaraja's Contract.
+    Strictly Typed using ParamSpec.
+    """
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @functools.wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            start = time.perf_counter()
+            
+            # Ausführung (Type Safe)
+            result = func(*args, **kwargs)
+            
+            end = time.perf_counter()
+            duration = end - start
+            ops_per_sec = 1.0 / duration if duration > 0 else float('inf')
+            
+            # The Judgment
+            judgment = YamarajaProtocol.evaluate(func.__qualname__, baseline_metric, ops_per_sec)
+            
+            if judgment.verdict == Verdict.DENY:
+                # STRICT ENFORCEMENT - The 'Hardening'
+                raise SystemError(f"YAMARAJA PROTOCOL VIOLATION: {judgment.reason}")
+            
+            return result
+        return wrapper
+    return decorator
