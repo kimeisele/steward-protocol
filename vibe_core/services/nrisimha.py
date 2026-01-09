@@ -43,6 +43,7 @@ class NrisimhaWatchdog(MantraProtocol):
         self._last_pulse = 0.0
         self._alignment_score = 1.0  # Start perfectly aligned
         self._opcode_handlers = opcode_handlers or {}  # Kernel-injected handlers
+        self._handlers = self._opcode_handlers  # Alias for tests/compatibility
         self._naga_proxies = naga_proxies or []  # NagaProxy instances to broadcast to
         logger.info(f"🦁 Nrisimha Watchdog initialized for Sovereign: {sovereign_anchor.identity_id}")
 
