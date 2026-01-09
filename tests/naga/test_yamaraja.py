@@ -1,7 +1,7 @@
 import pytest
 import time
 from typing import List
-from vibe_core.protocols.universal.yamaraja import secure_contract, YamarajaProtocol
+from vibe_core.protocols.governance.yamaraja import secure_contract, YamarajaProtocol
 
 # 1. MOCK FUNCTION: FAST (Should Pass)
 @secure_contract(baseline_metric=100.0)
@@ -35,8 +35,8 @@ def test_contract_enforcement():
     with pytest.raises(SystemError) as excinfo:
         slow_function()
     
-    assert "YAMARAJA PROTOCOL VIOLATION" in str(excinfo.value)
-    assert "stagnating" in str(excinfo.value)
+    assert "YAMARAJA VIOLATION" in str(excinfo.value)
+    assert "STAGNATION" in str(excinfo.value)
 
 def test_typing_integrity():
     """
@@ -52,9 +52,9 @@ def test_mock_judgment():
     Directly test the logic.
     """
     # 100 baseline, 150 current -> 1.5x -> Pass
-    j = YamarajaProtocol.evaluate("test", 100.0, 150.0)
+    j = YamarajaProtocol.measure_kriya("test", 100.0, 150.0)
     assert j.verdict == "allow"
     
     # 100 baseline, 105 current -> 1.05x -> Fail (< 1.08)
-    j2 = YamarajaProtocol.evaluate("test", 100.0, 105.0)
+    j2 = YamarajaProtocol.measure_kriya("test", 100.0, 105.0)
     assert j2.verdict == "deny"
