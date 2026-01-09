@@ -42,6 +42,8 @@ class StandardProcess:
         # Actual Work (SHA256 is good for 'Compute')
         return hashlib.sha256(data + seed).digest()
 
+from vibe_core.protocols.universal.yamaraja import secure_contract
+
 class CaitanyaKernel:
     """
     The Resonant Engine.
@@ -76,6 +78,8 @@ class CaitanyaKernel:
             avg_latency=duration / iterations if iterations > 0 else 0
         )
 
+    # STRICT CONTRACT: Must beat 10k ops/sec or DIE.
+    @secure_contract(baseline_metric=10000.0) 
     def run_resonant_cycle(self, iterations: int, data_payload: bytes) -> KernelStats:
         """
         Execute resonantly. (Living Spirit)
