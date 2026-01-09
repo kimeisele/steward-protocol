@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Protocol
 
 from vibe_core.di import ServiceRegistry
-from vibe_core.event_bus import Event, EventType
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols import (
     CognitiveKernelProtocol,

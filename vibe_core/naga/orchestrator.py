@@ -22,7 +22,7 @@ from vibe_core.phoenix.sections.naga.section_main import NagaConfig
 from vibe_core.protocols.naga import NagaFederationProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.ledger import SQLiteLedger
+    from vibe_core.protocols import VibeLedger
     from vibe_core.naga.commit_watcher import NagaCommitWatcher as CommitWatcher
     from vibe_core.naga.components.destructor import NagaDestructor
     from vibe_core.naga.components.kernel import NagaKernel
@@ -66,7 +66,7 @@ class NagaOrchestrator:
     @classmethod
     def bootstrap(
         cls,
-        ledger: "SQLiteLedger",
+        ledger: "VibeLedger",
         correction_orchestrator: "CorrectionOrchestratorProtocol",
         config: Optional["NagaConfig"] = None,
     ) -> "NagaOrchestrator":

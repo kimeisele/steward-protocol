@@ -37,7 +37,10 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.event import EventBusProtocol
 
 logger = logging.getLogger("ASURA.KALIYA")
 
@@ -66,7 +69,7 @@ class KaliyaAgent:
     - Heavy: Memory pressure attack
     """
 
-    def __init__(self, event_bus: Any):
+    def __init__(self, event_bus: "EventBusProtocol"):
         self.event_bus = event_bus
         self.heads: List[asyncio.Task] = []
         self.stop_flag = False
@@ -123,7 +126,7 @@ class KaliyaAgent:
         Head 1: Pure volume attack.
         Floods the bus with minimal events as fast as possible.
         """
-        from vibe_core.event_bus import Event
+        from vibe_core.protocols.event import Event
 
         while time.time() < end_time and not self.stop_flag:
             try:
@@ -151,7 +154,7 @@ class KaliyaAgent:
         Creates events that reference themselves as cause,
         potentially triggering infinite loops in event handlers.
         """
-        from vibe_core.event_bus import Event
+        from vibe_core.protocols.event import Event
 
         my_id = f"ouroboros_{uuid.uuid4()}"
 
@@ -182,7 +185,7 @@ class KaliyaAgent:
         Head 3: Memory pressure attack.
         Sends events with large payloads to exhaust memory.
         """
-        from vibe_core.event_bus import Event
+        from vibe_core.protocols.event import Event
 
         # 10KB payload per event
         heavy_data = "X" * 10000
