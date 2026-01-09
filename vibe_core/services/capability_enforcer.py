@@ -35,8 +35,8 @@ Usage:
 import logging
 from typing import List, Optional, Protocol, Set, runtime_checkable
 
-from vibe_core.protocols.universal import EnforceContext, EnforceProtocol, Rule, Verdict
-
+from vibe_core.protocols.universal.enforce import EnforceProtocol
+from vibe_core.protocols.universal.types import EnforceContext, Rule, Verdict
 logger = logging.getLogger("CAPABILITY_ENFORCER")
 
 
