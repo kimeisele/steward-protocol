@@ -1,5 +1,5 @@
 {
-  "vibe_core/kernel_impl.py": "7b1d523510451c35e8967f21e11c17953a0969b9a687b88c51f43e68625d2343",
+  "vibe_core/kernel_impl.py": "e8b5e21e0650aa690498ea8ef3e29349782bafb30e1ce3eec7286b947c4de17c",
   "vibe_core/kernel_ops.py": "51ddee7fb5e0b4f01a9e5620768dac5b53cd315022ef92afe155de66dab7c83f",
   "vibe_core/ledger.py": "33d222ea5fc0914a14c40aec230046f56e532372cb20df77c01d44b89b7923a0",
   "vibe_core/plugin_protocol.py": "5d9e469d7b2096fcf5fb8af66ce45e58cd07dbf901bd4e9ed17209d42032d6eb",
@@ -24,5 +24,5 @@
   ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
   ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
   "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171",
-  "scripts/governance/kernel_hashes.json": "e6fcc75d4d186daa278963b469291286b37ba3beadb2eed64aeab02041f795f8"
+  "scripts/governance/kernel_hashes.json": "cec3dcb072c14648375993d35627104352a0b06678a0f01d9775ebbfdbe90bca"
 }

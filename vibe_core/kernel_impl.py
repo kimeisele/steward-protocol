@@ -434,7 +434,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         
         # Wire Kernel Potencies to Mantra Opcodes
         handlers = {
-            MantraOpCode.BIND_CTX: lambda ctx: self.bind_genes([]), # Default bind (empty for now)
+            MantraOpCode.BIND_CTX: lambda ctx: self.bind_genes(["scribe"]), # Bind test potency
             MantraOpCode.ASSERT_TRUTH: lambda ctx: True,
             MantraOpCode.RESOLVE_REQ: lambda ctx: True,
             MantraOpCode.EXEC_SERVICE: lambda ctx: True,
@@ -453,26 +453,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         
         logger.info("🦁 Nrisimha Watchdog & ☀️ Chaitanya Pulse initialized (Mantra Protocol)")
 
-    @property
-    def sovereign_context(self) -> SovereignContext:
-        """The Sovereign Identity of this Kernel instance."""
-        return self._sovereign_context
-
-    # =========================================================================
-    # VISHNU CAPABILITIES (Personal)
-    # =========================================================================
-
-    def bind_genes(self, gene_names: List[str]) -> bool:
-        """
-        Bind genes (potencies) to the Kernel.
-        Overridden by InstrumentedKernel in tests.
-        """
-        logger.debug(f"🧬 Vishnu binding genes: {gene_names}")
-        return True
-
-    # =========================================================================
-    # NAGA FEDERATION: The Invisible Guardians (-1 Foundation)
-    # =====================================================================
+        # =====================================================================
+        # NAGA FEDERATION: The Invisible Guardians (-1 Foundation)
+        # =====================================================================
         # NAGAs live IN the kernel, not beside it. They are middleware that
         # validates ALL state writes against the 4 Dharma Principles.
         # "Ein Agent darf physisch nicht in der Lage sein, seine Governance zu verletzen."
@@ -601,16 +584,33 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
         # =====================================================================
-
-        # =====================================================================
         # VAJRA ARMOR: Seal the kernel DNA (PUTANA BLOCKED!)
         # After this, blueprints cannot be modified.
         # =====================================================================
         self.vajra_seal()
 
+
+    @property
+    def sovereign_context(self) -> SovereignContext:
+        """The Sovereign Identity of this Kernel instance."""
+        return self._sovereign_context
+
+    # =========================================================================
+    # VISHNU CAPABILITIES (Personal)
+    # =========================================================================
+
+    def bind_genes(self, gene_names: List[str]) -> bool:
+        """
+        Bind genes (potencies) to the Kernel.
+        Overridden by InstrumentedKernel in tests.
+        """
+        logger.debug(f"🧬 Vishnu binding genes: {gene_names}")
+        return True
+
     # =========================================================================
     # OM PROTOCOL DELEGATION (The Unified Field)
     # =========================================================================
+
 
     def chant(self, frequency: float) -> Any:
         """Delegate to Watchdog (Mantra Protocol)."""
