@@ -1,50 +1,70 @@
+"""
+TEST DWARAPALA - The Gatekeepers (Jaya & Vijaya)
+================================================
+"Identity Check: Are you a Person or a Thing?"
+
+Refactored to strictly enforce PersonProtocol via TestDevotee.
+"""
+
 import pytest
-from typing import Set
-from vibe_core.protocols.types import PersonProtocol, ServiceProtocol, Capability
 from vibe_core.protocols.governance.dwarapala import DwarapalaGate, AccessDenied
 from tests.common.avatars import TestDevotee, TestService
 
-# --- TESTS ---
+@pytest.fixture
+def gate():
+    return DwarapalaGate()
 
-def test_dwarapala_gate_access():
-    gate = DwarapalaGate()
-    
-    # 1. Define Actors (Vidura & Civilians)
-    user_arjuna = TestDevotee(name="Arjuna")
-    user_arjuna.add_capability("read", risk=1)
-    user_arjuna.add_capability("nuke", risk=10)
-    
-    user_civilian = TestDevotee(name="Civilian")
-    user_civilian.add_capability("read", risk=1)
-    
-    service_bot = TestService()
-    
-    # CASE A: Authorized Person (Arjuna -> Nuke)
-    # Should result in success (returns accessor)
-    accessor = gate.verify_accessor(user_arjuna, "nuke")
-    assert accessor == user_arjuna
-    
-    # CASE B: Unauthorized Person (Civilian -> Nuke)
-    # Should raise AccessDenied (Adhikara Failure)
-    with pytest.raises(AccessDenied) as excinfo:
-        gate.verify_accessor(user_civilian, "nuke")
-    assert "Adhikara Failure" in str(excinfo.value)
-    
-    # CASE C: Identity Crisis (Service -> Nuke)
-    # Should raise AccessDenied (Identity Crisis)
-    # ServiceBot is class TestService, which does NOT implement PersonProtocol
-    with pytest.raises(AccessDenied) as excinfo:
-        gate.verify_accessor(service_bot, "read") # type: ignore
-    assert "Identity Crisis" in str(excinfo.value)
+@pytest.fixture
+def jaya():
+    """A Devotee with the right capability."""
+    devotee = TestDevotee(name="Jaya")
+    devotee.grant_capability("enter_vaikuntha")
+    return devotee
 
-def test_gate_open():
-    """Verify pass-through mechanism."""
-    gate = DwarapalaGate()
-    user = TestDevotee(name="User")
-    user.add_capability("enter")
+@pytest.fixture
+def stranger():
+    """A Person without capability."""
+    return TestDevotee(name="Stranger")
+
+@pytest.fixture
+def robot():
+    """A Service (Not a Person)."""
+    return TestService()
+
+def test_gate_opens_for_authorized_person(gate, jaya):
+    """
+    Happy Path: Person + Capability = Access.
+    """
+    resource = "Vaikuntha_Map"
     
-    resource = {"secret": "data"}
+    # 1. Verify Accessor
+    verified_person = gate.verify_accessor(jaya, "enter_vaikuntha")
+    assert verified_person == jaya
     
-    # Open Gate
-    result = gate.open_gate(user, resource)
+    # 2. Access Resource
+    result = gate.open_gate(verified_person, resource)
     assert result == resource
+
+def test_gate_blocks_unauthorized_person(gate, stranger):
+    """
+    Adhikara Failure: Person exists, but lacks Rights.
+    """
+    with pytest.raises(AccessDenied) as exc:
+        gate.verify_accessor(stranger, "enter_vaikuntha")
+    
+    assert "Adhikara Failure" in str(exc.value)
+
+def test_gate_blocks_non_person_service(gate, robot):
+    """
+    Ontological Failure: Services cannot hold capabilities directly.
+    They must act on behalf of a Person.
+    """
+    # Even if we hacked capabilities into the robot...
+    robot.capabilities.append("enter_vaikuntha") 
+    
+    # ...Dwarapala checks 'isinstance(PersonProtocol)' first.
+    with pytest.raises(AccessDenied) as exc:
+        gate.verify_accessor(robot, "enter_vaikuntha")
+    
+    assert "Identity Crisis" in str(exc.value)
+    assert "Service/Object, not a Person" in str(exc.value)
