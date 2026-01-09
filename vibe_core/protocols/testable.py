@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Protocol, runtime_checkab
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.substrate.gene import iGene
 
 
 # ============================================================================
@@ -168,6 +169,25 @@ class BaseTestable(ABC):
 
     Provides common functionality and default implementations.
     """
+    
+    def evaluate_life(self, result: Any, gene: "iGene") -> str:
+        """
+        KEIN BINARY TRUE/FALSE MEHR!
+        Wir fragen Ramanujan nach der fraktalen Wahrheit.
+        """
+        # Coherence = Mantra Coherence - Entropy Load
+        # Simplified Ramanujan Metric
+        coherence = gene.mantra_shield.coherence - (gene.entropy_load * 0.5)
+        
+        # The Threshold (4/37 approx 0.108)
+        THRESHOLD = 0.108 
+        
+        if coherence < THRESHOLD:
+            return "RED (DEAD)"
+        elif coherence < 0.99:
+            return "ORANGE (STRUGGLING)" # Lebt, aber leidet -> GRÜN genug für Kali Yuga
+        else:
+            return "GREEN (VAIKUNTHA)"
 
     @property
     @abstractmethod
