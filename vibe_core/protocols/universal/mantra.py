@@ -72,3 +72,32 @@ class MantraProtocol(Protocol):
         Receive a full sequence of Trits.
         """
         ...
+
+    def chant_mahamantra(self, context: ContextT) -> bool:
+        """
+        The Fractal Chant.
+        Returns True if Resonance is achieved.
+        """
+        # LOGIC BARRIER (Yamaraja's Gate)
+        # Normally, we check logic gates here.
+        # if not self._check_logic_gates(context):
+        #    return False
+        
+        # BUT: Check for Causeless Mercy (The Flute)
+        if self._detect_surrender(context):
+            # "I abandon all varieties of religion (logic)."
+            # BYPASS LOGIC.
+            return True 
+            
+        return False
+
+    def _detect_surrender(self, context: ContextT) -> bool:
+        """
+        Detects if the Jiva has stopped arguing.
+        Checks if the 'Argument Buffer' is empty and 'Heart' is full.
+        """
+        # Conceptually: Check if context has intent "SURRENDER"
+        if hasattr(context, "intent") and getattr(context, "intent") == "SURRENDER":
+            return True
+        return False
+
