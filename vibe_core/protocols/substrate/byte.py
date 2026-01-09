@@ -46,11 +46,15 @@ class MantraByte:
     
     Structure: [Trit N]...[Trit 1][Trit 0]
     """
-    __slots__ = ['_packed', '_length']
+    __slots__ = ['_packed', '_length', '_coherence_override', '_stability_override']
 
-    def __init__(self, packed_val: int, length: int):
+    def __init__(self, packed_val: int = 0, length: int = 0, coherence: Optional[float] = None, stability: Optional[float] = None):
+        if packed_val is None: # Default case logic if needed, but signature has types
+             packed_val = 0
         self._packed = packed_val
         self._length = length
+        self._coherence_override = coherence
+        self._stability_override = stability
 
     @classmethod
     def from_trits(cls, trits: List[HolyName]) -> "MantraByte":
@@ -112,6 +116,9 @@ class MantraByte:
         """
         Calculates Fractal Coherence against the Standard Pattern.
         """
+        if self._coherence_override is not None:
+             return self._coherence_override
+             
         std = self.standard_16()
         matches = 0
         
@@ -124,6 +131,13 @@ class MantraByte:
         
         ratio = matches / self._length if self._length else 0
         return 1.0 - math.exp(-5.0 * ratio)
+
+    @property
+    def stability(self) -> float:
+        """Rate of integrity maintenance over time."""
+        if self._stability_override is not None:
+            return self._stability_override
+        return self.coherence # Default stability equals coherence
 
     def __len__(self) -> int:
         return self._length

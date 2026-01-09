@@ -1,80 +1,91 @@
 """
-TEST AVATARS - The Dramatis Personae of the Test Suite.
-=======================================================
-"Testing is not a Simulation. It is a Dress Rehearsal."
+AVATARS.PY - The Test Sovereigns (Vidura & Friends)
+===================================================
+"Tests are not simulations. They are rituals."
 
-These are REAL implementations of PersonProtocol. 
-They have Identity (Context) and Will (Authorize).
-They are used to test Prahlad (Memory) and Dwarapala (Gate).
+This module provides REAL implementations of PersonProtocol for testing.
+NO MOCKS ALLOWED. These objects have:
+1. Identity (SovereignContext)
+2. Will (Capabilities)
+3. Tattva (Quality Level)
 """
 
 from dataclasses import dataclass, field
-from typing import List, Set, Optional
+from typing import List, Optional
+from datetime import datetime
+
+# Adjust imports based on your exact structure
 from vibe_core.protocols.types import PersonProtocol, Capability, SovereignContext, TranscendentalQuality
 
 @dataclass
 class TestDevotee:
     """
-    A Dharmic Actor (e.g. Vidura, Arjuna).
-    Implements PersonProtocol fully.
+    Vidura: The Honest Tester.
+    A fully realized 'Person' for test scenarios.
+    Implicitly implements PersonProtocol (Duck Typing).
     """
     name: str = "Vidura_The_Tester"
-    tattva_level: int = TranscendentalQuality.SPIRITUAL # Level 50 (Valid)
-    _capabilities: Set[Capability] = field(default_factory=set)
-    _context: Optional[SovereignContext] = None
-
-    def __post_init__(self):
-        # Auto-Sign Identity if not provided
-        if not self._context:
-            self._context = SovereignContext(
-                identity=f"did:vibe:test:{self.name.lower()}",
-                tattva_level=self.tattva_level
-            )
+    tattva_level: int = TranscendentalQuality.TRUTHFULNESS.value # Level 8
+    capabilities: List[Capability] = field(default_factory=list)
+    
+    # THE SOUL (Crypto-Identity)
+    # Hardcoded 'valid' signature for tests
+    _context: SovereignContext = field(default_factory=lambda: SovereignContext(
+        identity="did:vibe:test:vidura-001",
+        tattva_level=TranscendentalQuality.TRUTHFULNESS
+    ))
 
     @property
-    def capabilities(self) -> Set[Capability]:
-        return self._capabilities
+    def sovereign_context(self) -> SovereignContext:
+        """Returns the Immutable Identity."""
+        return self._context
+    
+    # --- HELPER METHODS (The 'Boons') ---
+    
+    def grant_capability(self, cap_name: str):
+        """Mechanically adds a capability (simulating training/initiation)."""
+        self.capabilities.append(Capability(
+            name=cap_name, 
+            risk_level=1 # Default safe
+        ))
 
-    def add_capability(self, cap_name: str, risk: int = 1):
-        """Grant a capability dynamically."""
-        self._capabilities.add(Capability(name=cap_name, risk_level=risk))
-
+    def revoke_all(self):
+        """Resets capabilities (Tyaga)."""
+        self.capabilities = []
+    
     def authorize(self, action: str) -> bool:
-        """
-        The Will.
-        A Devotee authorizes Dharmic actions.
-        """
-        # Simplification: Authorizes everything locally initiated
         return True
 
 @dataclass
 class TestDemon:
     """
-    An Adharmic Actor (e.g. Hiranyakashipu).
-    Technically has Identity, but might fail moral checks.
-    Useful for testing 'Identity Crisis' if we strip PersonProtocol (but here we implement it to test rejection logic).
-    Wait, Dwarapala checks isinstance(PersonProtocol).
-    So if this implements it, it IS a Person.
-    To test 'Not a Person', we use a different class or simple object.
-    
-    This class represents a 'Bad Person' (Person with Bad Intent/Low Tattva).
+    Duryodhana: The Unauthorized Accessor.
+    Used to test rejection logic.
+    Implicitly implements PersonProtocol.
     """
-    name: str = "Hiranyakashipu"
-    tattva_level: int = TranscendentalQuality.MATERIAL # Level 10
-    _capabilities: Set[Capability] = field(default_factory=set)
+    name: str = "Duryodhana_The_Usurper"
+    capabilities: List[Capability] = field(default_factory=list)
     
     @property
-    def capabilities(self) -> Set[Capability]:
-        return self._capabilities
-
+    def sovereign_context(self) -> SovereignContext:
+        # Invalid Context (Unsigned / Low Tattva)
+        return SovereignContext(
+            identity="did:vibe:test:asura-666",
+            tattva_level=TranscendentalQuality.EXISTENCE # Level 1 (Too low)
+        )
+    
     def authorize(self, action: str) -> bool:
         return True
 
+@dataclass
 class TestService:
     """
-    A Service (Prakriti).
-    Does NOT implement PersonProtocol.
-    Used to fail Dwarapala checks.
+    A Robot. Not a Person.
+    Used to verify Dwarapala rejects non-persons.
     """
+    service_id: str = "service_auto_bot_v1"
+    capabilities: List[Capability] = field(default_factory=list)
+    
+    # No 'sovereign_context' property implies it is Prakriti (Matter), not Purusha.
     def serve(self):
         pass

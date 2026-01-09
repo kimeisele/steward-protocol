@@ -4,6 +4,8 @@ from typing import Protocol, TypeVar, Set, runtime_checkable
 
 class TranscendentalQuality(IntEnum):
     UNCONSCIOUS = 0
+    EXISTENCE = 1
+    TRUTHFULNESS = 8
     MATERIAL = 10
     SPIRITUAL = 50
     INCONCEIVABLE_POTENCY = 56 # Acintya
