@@ -207,11 +207,19 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
 
         from vibe_core.di import ServiceRegistry
         from vibe_core.naga.wrappers import (
+            AshvamedhaEnforce,
+            AshvamedhaInfer,
             AshvamedhaReadWrite,
+            AshvamedhaStore,
             AshvamedhaSync,
-            # Add others as they are implemented
         )
-        from vibe_core.protocols.universal import ReadWriteProtocol, SyncProtocol
+        from vibe_core.protocols.universal import (
+            EnforceProtocol,
+            InferProtocol,
+            ReadWriteProtocol,
+            StoreRecallProtocol,
+            SyncProtocol,
+        )
 
         flooded_count = 0
 
@@ -247,13 +255,25 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
                 proxy = instance
                 wrapped = False
 
-                # Apply wrappers onion-style
+                # Apply wrappers onion-style (5 Atomic Verbs = 5/5 Mahamantra Coverage)
                 if "ReadWriteProtocol" in shapes:
                     proxy = AshvamedhaReadWrite(proxy)
                     wrapped = True
 
                 if "SyncProtocol" in shapes:
                     proxy = AshvamedhaSync(proxy)
+                    wrapped = True
+
+                if "EnforceProtocol" in shapes:
+                    proxy = AshvamedhaEnforce(proxy)
+                    wrapped = True
+
+                if "InferProtocol" in shapes:
+                    proxy = AshvamedhaInfer(proxy)
+                    wrapped = True
+
+                if "StoreRecallProtocol" in shapes:
+                    proxy = AshvamedhaStore(proxy)
                     wrapped = True
 
                 if wrapped:
@@ -303,6 +323,14 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
         # 3. ENFORCE
         if {"enforce", "check"}.issubset(methods):
             candidates.append("EnforceProtocol")
+
+        # 4. INFER (Buddhi/Cognition)
+        if {"infer", "classify"}.issubset(methods):
+            candidates.append("InferProtocol")
+
+        # 5. STORE/RECALL (Smriti/Memory)
+        if {"store", "recall"}.issubset(methods):
+            candidates.append("StoreRecallProtocol")
 
         return candidates
 
