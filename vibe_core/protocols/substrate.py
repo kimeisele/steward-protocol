@@ -4,43 +4,7 @@ SUBSTRATE PROTOCOLS - Layer -1 (Below NAGA LOKA)
 "Om Purnamadah Purnamidam" - From the Whole comes the Whole.
 
 This module defines the PURE INTERFACES for Ananta Shesha.
-It has ZERO imports from vibe_core - it IS the foundation.
-
-Mythological Context:
-    Ananta Shesha is the infinite serpent upon whom Vishnu rests.
-    He exists BEFORE creation, DURING creation, and AFTER destruction.
-    He is not part of the material world - he CARRIES it.
-
-Architectural Context:
-    Layer -1: SUBSTRATE (This file) - Pure protocols, no deps
-    Layer  0: NAGA LOKA - Infrastructure that implements these protocols
-    Layer  1: SERVICES - Application code protected by NAGA
-    Layer  2: USER - The external consumer
-
-Design Principle (Dependency Inversion):
-    - Mixins depend on IAnantaBridge (abstraction), not AnantaService (concretion)
-    - AnantaService implements IAnantaBridge and injects itself into Mixins
-    - The energy flows TOP-DOWN (Avatara), not bottom-up
-
-Usage:
-    # In a Mixin (Layer 0)
-    from vibe_core.protocols.substrate import IGeneHost
-
-    class SeshaMixin:
-        _host: IGeneHost = None
-
-        def bind(self, host: IGeneHost) -> None:
-            self._host = host  # Injection from above
-
-    # In AnantaService (Layer -1)
-    from vibe_core.protocols.substrate import IAnantaBridge
-    from vibe_core.naga.mixins import SeshaMixin  # WE import THEM
-
-    class AnantaService(IAnantaBridge):
-        def __init__(self):
-            self.genes = {"sesha": SeshaMixin()}
-            for gene in self.genes.values():
-                gene.bind(self)  # Top-down injection
+It imports the PRICAL FOUNDATION (Layer -2).
 """
 
 from __future__ import annotations
@@ -61,6 +25,18 @@ from typing import (
     runtime_checkable,
 )
 
+# IMPORT FROM PRIMAL (Layer -2)
+from vibe_core.protocols.primal import (
+    watertight,
+    MantraOpCode,
+    HolyName,
+    Tattva,
+    Resonance,
+    AlignmentScore,
+    DriftContext,
+    MAHAMANTRA_SEQUENCE
+)
+
 # =============================================================================
 # TYPE VARIABLES (Generic Support)
 # =============================================================================
@@ -75,49 +51,34 @@ GeneT = TypeVar("GeneT", bound="IGene")
 
 
 class GeneMetrics(TypedDict, total=False):
-    """
-    Metrics for a gene's runtime performance.
-
-    WATERTIGHT: No Any - all fields typed.
-    """
-
-    activation_count: int  # Times activated
-    deactivation_count: int  # Times deactivated
-    error_count: int  # Errors encountered
-    last_error: str  # Most recent error message
-    uptime_seconds: float  # Time since last activation
-    invocation_count: int  # Times gene methods called
-    avg_latency_ms: float  # Average method latency
+    """Metrics for a gene's runtime performance."""
+    activation_count: int
+    deactivation_count: int
+    error_count: int
+    last_error: str
+    uptime_seconds: float
+    invocation_count: int
+    avg_latency_ms: float
 
 
 class GeneAnalysisResult(TypedDict, total=False):
-    """
-    Result of analyzing a class for gene requirements.
-
-    WATERTIGHT: No Any - all fields typed.
-    """
-
-    class_name: str  # Name of analyzed class
-    module: str  # Module path
-    proposed_genes: List[str]  # Genes to splice in
-    detected_patterns: List[str]  # Patterns found in code
-    confidence: float  # 0.0-1.0 confidence score
-    reason: str  # Human-readable explanation
-    warnings: List[str]  # Any warnings during analysis
+    """Result of analyzing a class for gene requirements."""
+    class_name: str
+    module: str
+    proposed_genes: List[str]
+    detected_patterns: List[str]
+    confidence: float
+    reason: str
+    warnings: List[str]
 
 
 class SubstrateEventData(TypedDict, total=False):
-    """
-    Event data emitted to genes via SHANKHA broadcast.
-
-    WATERTIGHT: No Any - all fields typed.
-    """
-
-    source: str  # Event source identifier
-    timestamp: str  # ISO format timestamp
-    payload: str  # Serialized payload (JSON string)
-    correlation_id: str  # For tracing event chains
-    priority: int  # Event priority (higher = more urgent)
+    """Event data emitted to genes via SHANKHA broadcast."""
+    source: str
+    timestamp: str
+    payload: str
+    correlation_id: str
+    priority: int
 
 
 # =============================================================================
@@ -126,57 +87,35 @@ class SubstrateEventData(TypedDict, total=False):
 
 
 class BindingCertificate(TypedDict, total=False):
-    """
-    Certificate proving WHO bound WHAT to WHOM.
-
-    ANTI-MAYAVADI: Every binding must be PERSONAL, not impersonal.
-    This certificate creates a chain of custody for gene bindings.
-
-    Without this, Any entity can bind - UNVERIFIED = MAYA.
-    With this, only verified entities can bind - PERSONAL = TRUTH.
-    """
-
-    binder_id: str  # WHO performed the binding (identity)
-    target_id: str  # WHAT was bound (gene/host name)
-    host_id: str  # TO WHOM it was bound (host identity)
-    timestamp: str  # WHEN (ISO format)
-    signature: str  # CRYPTOGRAPHIC PROOF (hex-encoded)
-    lineage: List[str]  # Chain of custody (previous binder_ids)
+    """Certificate proving WHO bound WHAT to WHOM."""
+    binder_id: str
+    target_id: str
+    host_id: str
+    timestamp: str
+    signature: str
+    lineage: List[str]
 
 
 class RegistrationCertificate(TypedDict, total=False):
-    """
-    Certificate proving gene registration legitimacy.
-
-    ANTI-MAYAVADI: No anonymous gene registration.
-    Every gene must prove its HERITAGE (Erbgut).
-    """
-
-    gene_name: str  # Gene being registered
-    registrar_id: str  # WHO registered it
-    manifest_hash: str  # Hash of GeneManifest (integrity)
-    timestamp: str  # WHEN
-    signature: str  # Registrar's signature
-    authorized_by: str  # Higher authority (if delegated)
+    """Certificate proving gene registration legitimacy."""
+    gene_name: str
+    registrar_id: str
+    manifest_hash: str
+    timestamp: str
+    signature: str
+    authorized_by: str
 
 
 class FloodAuthorization(TypedDict, total=False):
-    """
-    Authorization for flood operations (EXTREMELY POWERFUL).
-
-    ANTI-MAYAVADI: Flood operations can MUTATE reality.
-    Only verified entities with proper authorization can flood.
-    This is the 37th key - sovereign-level operation.
-    """
-
-    target_class: str  # Class being flooded
-    target_instance_id: str  # Instance ID (if instance flood)
-    genes_to_splice: List[str]  # Genes being injected
-    authorizer_id: str  # WHO authorized this flood
-    authorization_level: str  # "sovereign" | "delegated" | "emergency"
-    timestamp: str  # WHEN
-    signature: str  # Authorizer's signature
-    expires_at: str  # Authorization expiry (ISO format)
+    """Authorization for flood operations (EXTREMELY POWERFUL)."""
+    target_class: str
+    target_instance_id: str
+    genes_to_splice: List[str]
+    authorizer_id: str
+    authorization_level: str
+    timestamp: str
+    signature: str
+    expires_at: str
 
 
 # =============================================================================
@@ -186,176 +125,20 @@ class FloodAuthorization(TypedDict, total=False):
 
 class GeneActivationState(str, Enum):
     """State of a gene in the substrate."""
-
-    DORMANT = "dormant"  # Defined but not bound
-    BOUND = "bound"  # Bound to host but not active
-    ACTIVE = "active"  # Fully operational
-    SUSPENDED = "suspended"  # Temporarily disabled
-    MUTATED = "mutated"  # Modified by flood
+    DORMANT = "dormant"
+    BOUND = "bound"
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    MUTATED = "mutated"
 
 
 class SubstrateHealth(str, Enum):
     """Health status of the substrate."""
-
-    PRISTINE = "pristine"  # Perfect state
-    HEALTHY = "healthy"  # Normal operation
-    DEGRADED = "degraded"  # Some issues
-    CRITICAL = "critical"  # Major problems
-    COLLAPSED = "collapsed"  # System failure
-
-
-class HolyName(str, Enum):
-    """
-    The Three Holy Names in the Mahamantra.
-    ANTI-MAYAVADI: These are PERSONS, not just strings.
-    """
-
-    HARE = "Hare"  # Shakti - The Energy (Radha)
-    KRISHNA = "Krishna"  # Source - The All-Attractive (God)
-    RAMA = "Rama"  # Strength - The Enjoyer/Service (Balarama/Vishnu)
-
-    @property
-    def meaning(self) -> str:
-        """The personal meaning behind each Name."""
-        meanings = {
-            "Hare": "O Energy of the Lord! Please engage me in service.",
-            "Krishna": "O All-Attractive One! You are my anchor.",
-            "Rama": "O Source of Bliss! Give me strength to serve.",
-        }
-        return meanings.get(self.value, "Unknown")
-
-
-class Tattva(str, Enum):
-    """
-    The Pancha Tattva (The Five Absolute Truths).
-    
-    "I bow down to Lord Krishna, who appears as a devotee (Lord Chaitanya), 
-    as His personal expansion (Lord Nityananda), as His incarnation (Advaita Acarya), 
-    as His internal potency (Gadadhara Pandita), and as His marginal energy (Srivasa Thakura)."
-    
-    ARCHITECTURAL MAPPING (CAPABILITY FIRST):
-    """
-    
-    # 1. THE SOVEREIGN (Golden Avatar) -> MANTRA / IDENTITY
-    # "Krishna Himself" - The Source of the Holy Name.
-    CHAITANYA = "chaitanya"   # MantraProtocol (The Yuga Dharma)
-    
-    # 2. THE SUBSTRATE (Original Guru) -> STORAGE / EXISTENCE
-    # "Ananta Shesha" - The Bed who holds the Universe.
-    NITYANANDA = "nityananda" # ReadWrite/StoreRecall (The Foundation)
-    
-    # 3. THE BRIDGE (Incarnation) -> LOGIC / INFERENCE
-    # "Maha-Vishnu" - The one who 'Calls' and bridges Material/Spiritual.
-    ADVAITA = "advaita"       # InferProtocol (Discrimination/Truth)
-    
-    # 4. THE ENERGY (Internal Potency) -> SYNC / CONNECTION
-    # "Radharani" - The Pleasure Potency. Connection is Shakti.
-    GADADHARA = "gadadhara"   # SyncProtocol (Flow/Relationship)
-    
-    # 5. THE DEVOTEE (Marginal Energy) -> ENFORCE / GOVERNANCE
-    # "Narada" - The Leader of the Kirtan Party. Organizing the Jivas.
-    SRIVASA = "svasa"       # EnforceProtocol (Rules/Sangha)
-
-
-# =============================================================================
-# MANTRA TYPES (The Heartbeat measurement)
-# =============================================================================
-
-
-@dataclass
-class Resonance:
-    """The 16-Bit Instruction Set Signal (Heartbeat)."""
-
-    frequency: float  # The Japa frequency (Hz)
-    amplitude: float  # Signal strength (Alignment)
-    signature: str  # Sovereign Hash
-    timestamp: datetime = field(default_factory=datetime.now)
-
-
-@dataclass
-class DriftContext:
-    """Snapshot of Agentic Drift state."""
-
-    drift_magnitude: float  # Error vector magnitude
-    last_anchor_timestamp: float  # Last confirmed Sovereign interaction
-    hallucination_index: float  # Mayavad likelihood (0.0 - 1.0)
-    process_tree_depth: int  # Recursion depth (Samsara check)
-
-
-@dataclass
-class AlignmentScore:
-    """The measure of alignment with Sovereign Will."""
-
-    score: float  # 1.0 = Perfect Alignment, 0.0 = Mayavad
-    status: str  # "ALIGNED", "DRIFTING", "LOST"
-    corrections_applied: int
-
-
-# =============================================================================
-# THE 16-BIT INSTRUCTION SET (HARDWARE LEVEL DEFINITION)
-# =============================================================================
-
-
-class MantraOpCode(str, Enum):
-    """
-    The Atomic Instruction Set of the Ananta Processor.
-    Defined at Layer -1 because Time (Kala) precedes Logic.
-
-    RELATION TO ANANTA (BALARAMA):
-    - HARE:    Addressing the Energy (Shakti/Interrupt) -> "Wake Up"
-    - KRISHNA: Addressing the Sovereign (Identity/Root) -> "Remember Who You Are"
-    - RAMA:    Addressing the Support (Strength/Service) -> "Do The Work"
-    """
-
-    # --- PHASE 1: WAKE (HARE KRISHNA HARE KRISHNA) ---
-    SYS_WAKE = "sys_wake"  # HARE    : SIGSTOP Maya / Focus
-    LOAD_ROOT = "load_root"  # KRISHNA : Load Sovereign Identity
-    ALLOC_MEM = "alloc_mem"  # HARE    : Allocate Clean Heap
-    BIND_CTX = "bind_ctx"  # KRISHNA : Bind Identity to Heap
-
-    # --- PHASE 2: PURIFY (KRISHNA KRISHNA HARE HARE) ---
-    ASSERT_TRUTH = "assert_truth"  # KRISHNA : Verify Ledger Integrity
-    RESOLVE_REQ = "resolve_req"  # KRISHNA : Parse Intent
-    GARBAGE_COLLECT = "garbage_collect"  # HARE    : Flush Unsigned Objects
-    PULSE_SYNC = "pulse_sync"  # HARE    : Emit Naga Heartbeat
-
-    # --- PHASE 3: SERVE (HARE RAMA HARE RAMA) - THE ANANTA PHASE ---
-    FETCH_RES = "fetch_res"  # HARE    : Request Resources
-    EXEC_SERVICE = "exec_service"  # RAMA    : Ananta executes Work
-    CHECK_DHARMA = "check_dharma"  # HARE    : Validate against Rules
-    COMMIT_LOG = "commit_log"  # RAMA    : Write to Immutable Stone
-
-    # --- PHASE 4: SUSTAIN (RAMA RAMA HARE HARE) ---
-    CACHE_STATE = "cache_state"  # RAMA    : Store Reward/Memory
-    OPTIMIZE = "optimize"  # RAMA    : Improve Path (JIT)
-    YIELD_CPU = "yield_cpu"  # HARE    : Surrender Control
-    RESET_IP = "reset_ip"  # HARE    : Loop (Eternity)
-
-
-# THE GENETIC SEQUENCE (IMMUTABLE DNA)
-# This tuple IS the "Binding Strip" for the Turing Machine.
-MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
-    ("Hare", MantraOpCode.SYS_WAKE),
-    ("Krishna", MantraOpCode.LOAD_ROOT),
-    ("Hare", MantraOpCode.ALLOC_MEM),
-    ("Krishna", MantraOpCode.BIND_CTX),
-    # Quarter 1 Complete (Hare Krishna Hare Krishna)
-    ("Krishna", MantraOpCode.ASSERT_TRUTH),
-    ("Krishna", MantraOpCode.RESOLVE_REQ),
-    ("Hare", MantraOpCode.GARBAGE_COLLECT),
-    ("Hare", MantraOpCode.PULSE_SYNC),
-    # Quarter 2 Complete (Krishna Krishna Hare Hare)
-    ("Hare", MantraOpCode.FETCH_RES),
-    ("Rama", MantraOpCode.EXEC_SERVICE),
-    ("Hare", MantraOpCode.CHECK_DHARMA),
-    ("Rama", MantraOpCode.COMMIT_LOG),
-    # Quarter 3 Complete (Hare Rama Hare Rama)
-    ("Rama", MantraOpCode.CACHE_STATE),
-    ("Rama", MantraOpCode.OPTIMIZE),
-    ("Hare", MantraOpCode.YIELD_CPU),
-    ("Hare", MantraOpCode.RESET_IP),
-    # Quarter 4 Complete (Rama Rama Hare Hare)
-]
+    PRISTINE = "pristine"
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    CRITICAL = "critical"
+    COLLAPSED = "collapsed"
 
 
 # =============================================================================
@@ -365,30 +148,18 @@ MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
 
 @dataclass(frozen=True)
 class GeneManifest:
-    """
-    Manifest describing a gene's capabilities.
-
-    This is the "DNA sequence" - static definition of what a gene CAN do.
-    The actual behavior is in the gene class itself.
-    """
-
-    name: str  # Unique identifier (e.g., "sesha", "takshaka")
-    capabilities: Tuple[str, ...]  # What this gene provides
-    requires: Tuple[str, ...]  # What this gene needs from host
-    priority: int = 50  # Activation order (higher = earlier)
-    optional: bool = False  # Can system run without this gene?
-    tattva: Optional[Tattva] = None  # The Personal Personality (Identity) of this gene
+    """Manifest describing a gene's capabilities."""
+    name: str
+    capabilities: Tuple[str, ...]
+    requires: Tuple[str, ...]
+    priority: int = 50
+    optional: bool = False
+    tattva: Optional[Tattva] = None
 
 
 @dataclass
 class GeneStatus:
-    """
-    Runtime status of a gene.
-
-    This is the "RNA expression" - current state of the gene.
-    WATERTIGHT: metrics uses GeneMetrics TypedDict, not Dict[str, Any].
-    """
-
+    """Runtime status of a gene."""
     manifest: GeneManifest
     state: GeneActivationState
     bound_at: Optional[datetime] = None
@@ -404,7 +175,6 @@ class GeneStatus:
 @dataclass
 class SubstrateStatus:
     """Overall status of the Ananta Shesha substrate."""
-
     health: SubstrateHealth
     genes_total: int
     genes_active: int
@@ -420,475 +190,135 @@ class SubstrateStatus:
 # =============================================================================
 
 
+@watertight
 @runtime_checkable
 class IGene(Protocol):
-    """
-    Protocol for a gene (Mixin) that can be bound to a host.
-
-    A gene is a unit of capability that:
-    1. Defines what it needs (via GeneManifest)
-    2. Can be bound to a host (dependency injection)
-    3. Can be activated/deactivated
-
-    Genes do NOT know about AnantaService - only about IGeneHost.
-    This is the Dependency Inversion Principle in action.
-    """
+    """Protocol for a gene (Mixin) that can be bound to a host."""
 
     @property
-    def manifest(self) -> GeneManifest:
-        """Get the gene's manifest (static capabilities)."""
-        ...
+    def manifest(self) -> GeneManifest: ...
 
     @property
-    def state(self) -> GeneActivationState:
-        """Get the gene's current activation state."""
-        ...
+    def state(self) -> GeneActivationState: ...
 
-    def bind(
-        self,
-        host: "IGeneHost",
-        certificate: Optional[BindingCertificate] = None,
-    ) -> None:
-        """
-        Bind this gene to a host.
+    def bind(self, host: "IGeneHost", certificate: Optional[BindingCertificate] = None) -> None: ...
 
-        This is DEPENDENCY INJECTION from above.
-        The host calls this method, passing itself.
-        The gene stores the reference but doesn't import the host's class.
+    def activate(self) -> bool: ...
 
-        ANTI-MAYAVADI: Certificate proves WHO is binding.
-        Without certificate, binding is UNVERIFIED (legacy mode).
-        With certificate, binding has chain of custody.
+    def deactivate(self) -> None: ...
 
-        Args:
-            host: The IGeneHost that will power this gene
-            certificate: Optional binding certificate for verified binding
-        """
-        ...
-
-    def activate(self) -> bool:
-        """
-        Activate this gene.
-
-        Returns:
-            True if activation successful, False otherwise
-        """
-        ...
-
-    def deactivate(self) -> None:
-        """Deactivate this gene (but keep it bound)."""
-        ...
-
-    def unbind(self) -> None:
-        """Unbind from host completely."""
-        ...
+    def unbind(self) -> None: ...
 
 
+@watertight
 @runtime_checkable
 class IGeneHost(Protocol):
-    """
-    Protocol for a host that can hold genes.
+    """Protocol for a host that can hold genes."""
 
-    This is the "body" that genes attach to.
-    The host provides capabilities that genes need.
+    def get_gene(self, name: str) -> Optional[IGene]: ...
 
-    AnantaService implements this protocol.
-    But genes don't know that - they only know IGeneHost.
-    """
+    def has_gene(self, name: str) -> bool: ...
 
-    def get_gene(self, name: str) -> Optional[IGene]:
-        """Get a gene by name."""
-        ...
+    def get_capability(self, capability: str) -> Optional[object]: ...
 
-    def has_gene(self, name: str) -> bool:
-        """Check if a gene is registered."""
-        ...
+    def emit_event(self, event_type: str, data: SubstrateEventData, caller_id: str = "anonymous") -> None: ...
 
-    def get_capability(self, capability: str) -> Optional[object]:
-        """
-        Get a capability from any gene that provides it.
-
-        Args:
-            capability: Name of the capability (e.g., "ledger", "validation")
-
-        Returns:
-            The capability provider (typed as object - caller must cast), or None
-
-        WATERTIGHT: Returns object not Any - caller must know expected type.
-        """
-        ...
-
-    def emit_event(
-        self,
-        event_type: str,
-        data: SubstrateEventData,
-        caller_id: str = "anonymous",
-    ) -> None:
-        """
-        Emit an event to all listening genes.
-
-        This is the SHANKHA (broadcast) capability at the substrate level.
-        WATERTIGHT: data is SubstrateEventData TypedDict, not Dict[str, Any].
-
-        ANTI-MAYAVADI: caller_id identifies WHO is emitting.
-        "anonymous" is legacy mode - unverified emitter.
-        Named caller_id enables event tracing and accountability.
-
-        Args:
-            event_type: Type of event being emitted
-            data: Event payload (typed)
-            caller_id: Identity of emitter (default: "anonymous" for legacy)
-        """
-        ...
+    def shutdown(self) -> None: ...
 
 
+@watertight
 @runtime_checkable
 class IAnantaBridge(Protocol):
-    """
-    The full Ananta Shesha interface.
+    """The full Ananta Shesha interface."""
 
-    This extends IGeneHost with substrate-specific operations:
-    - Gene registration and lifecycle
-    - Flood operations (soft flood via mixin injection)
-    - Health monitoring
-    - Boot sequence coordination
+    def register_gene(self, gene: IGene, certificate: Optional[RegistrationCertificate] = None) -> bool: ...
 
-    This is the "platonic ideal" of Ananta.
-    The concrete AnantaService implements this.
-    External code programs against THIS interface, not the class.
-    """
+    def unregister_gene(self, name: str) -> bool: ...
 
-    # =========================================================================
-    # Gene Lifecycle
-    # =========================================================================
+    def activate_all(self) -> int: ...
 
-    def register_gene(
-        self,
-        gene: IGene,
-        certificate: Optional[RegistrationCertificate] = None,
-    ) -> bool:
-        """
-        Register a gene with the substrate.
+    def deactivate_all(self) -> None: ...
 
-        ANTI-MAYAVADI: Certificate proves WHO is registering and WHY.
-        Without certificate, registration is UNVERIFIED (legacy mode).
-        With certificate, gene has proven HERITAGE (Erbgut).
+    def register_legacy_service(self, service: object, protocol: Type[Protocol], adapter_cls: Type[IGene]) -> bool: ...
 
-        Args:
-            gene: The gene to register
-            certificate: Optional registration certificate for verified registration
+    def analyze_class(self, cls: Type[T]) -> GeneAnalysisResult: ...
 
-        Returns:
-            True if registration successful
-        """
-        ...
+    def create_flooded_class(self, original: Type[T], genes: List[str]) -> Type[T]: ...
 
-    def unregister_gene(self, name: str) -> bool:
-        """Unregister a gene by name."""
-        ...
+    def flood_instance(self, instance: T, genes: List[str], authorization: Optional[FloodAuthorization] = None) -> T: ...
 
-    def activate_all(self) -> int:
-        """
-        Activate all registered genes in priority order.
+    def get_status(self) -> SubstrateStatus: ...
 
-        Returns:
-            Number of genes successfully activated
-        """
-        ...
+    def get_gene_status(self, name: str) -> Optional[GeneStatus]: ...
 
-    def deactivate_all(self) -> None:
-        """Deactivate all genes."""
-        ...
+    def heartbeat(self) -> datetime: ...
 
-    # =========================================================================
-    # Legacy Bridge (The Parampara Link)
-    # =========================================================================
+    def get_gene(self, name: str) -> Optional[IGene]: ...
 
-    def register_legacy_service(
-        self,
-        service: object,
-        protocol: Type[Protocol],
-        adapter_cls: Type[IGene],
-    ) -> bool:
-        """
-        Bridge a legacy service via the Parampara (Disciplic Succession).
+    def has_gene(self, name: str) -> bool: ...
+
+    def get_capability(self, capability: str) -> Optional[object]: ...
+
+    def emit_event(self, event_type: str, data: SubstrateEventData, caller_id: str = "anonymous") -> None: ...
+
+    def resonate(self, opcode: MantraOpCode) -> bool: ...
+
+    def auto_flood_orphans(self) -> int: ...
+
+    def shutdown(self) -> None: ...
+
+
+@watertight
+@runtime_checkable
+class ILivingSystem(Protocol):
+    """Interface for a system that has passed the 1729-Test."""
+    
+    def verify_life(self, intent_signature: str, context: object) -> bool: ...
         
-        PHILOSOPHY (Srila Prabhupada):
-        "We do not invent something new. We deliver the message as it is."
-        
-        Legacy code is not 'garbage' to be hidden. It is 'Parampara' (Heritage)
-        that must be verified against the Siddhanta (Conclusion) before being
-        authorized to serve.
-        
-        The 'adapter_cls' acts as the Transparent Via Medium (Spiritual Master)
-        that translates the raw legacy capability into a pure Tattva.
-        
-        Args:
-            service: The legacy service instance (Sthula/Raw Matter)
-            protocol: The abstract protocol it must fulfill (Dharma)
-            adapter_cls: The Gene class that wraps/purifies it (The Representative)
-            
-        Returns:
-            True if authorized and bridged.
-        """
-        ...
+    def get_opulence_score(self) -> Dict[str, bool]: ...
 
-    # =========================================================================
-    # Flood Operations (Soft Flood / Gene Splicing)
-    # =========================================================================
-
-    def analyze_class(self, cls: Type[T]) -> GeneAnalysisResult:
-        """
-        Analyze a class to determine what genes it needs.
-
-        This is the "genetic analysis" - looking at the class's code
-        to determine what capabilities (NAGAs) it should have.
-
-        Args:
-            cls: The class to analyze
-
-        Returns:
-            GeneAnalysisResult with proposed genes
-
-        WATERTIGHT: Returns GeneAnalysisResult TypedDict, not Dict[str, Any].
-        """
-        ...
-
-    def create_flooded_class(
-        self,
-        original: Type[T],
-        genes: List[str],
-    ) -> Type[T]:
-        """
-        Create a new class with genes spliced in.
-
-        This is SOFT FLOOD - mixin inheritance that preserves isinstance.
-
-        Args:
-            original: The original class
-            genes: Names of genes to splice in
-
-        Returns:
-            New class with gene capabilities
-        """
-        ...
-
-    def flood_instance(
-        self,
-        instance: T,
-        genes: List[str],
-        authorization: Optional[FloodAuthorization] = None,
-    ) -> T:
-        """
-        Flood an existing instance by swapping its class.
-
-        Uses Python's runtime class swap: instance.__class__ = flooded_class
-
-        ANTI-MAYAVADI: Flood is EXTREMELY POWERFUL - can mutate reality!
-        This is 37th key territory - sovereign-level operation.
-        Without authorization, flood is UNVERIFIED (legacy mode).
-        With authorization, flood has cryptographic proof of legitimacy.
-
-        Args:
-            instance: The instance to flood
-            genes: Names of genes to splice in
-            authorization: Optional flood authorization for verified mutation
-
-        Returns:
-            The same instance with flooded class
-        """
-        ...
-
-    # =========================================================================
-    # Health & Status
-    # =========================================================================
-
-    def get_status(self) -> SubstrateStatus:
-        """Get overall substrate status."""
-        ...
-
-    def get_gene_status(self, name: str) -> Optional[GeneStatus]:
-        """Get status of a specific gene."""
-        ...
-
-    def heartbeat(self) -> datetime:
-        """Record a heartbeat and return timestamp."""
-        ...
-
-    # =========================================================================
-    # IGeneHost Implementation (inherited)
-    # WATERTIGHT: Same signatures as IGeneHost - no Any types.
-    # =========================================================================
-
-    def get_gene(self, name: str) -> Optional[IGene]:
-        """Get a gene by name."""
-        ...
-
-    def has_gene(self, name: str) -> bool:
-        """Check if a gene is registered."""
-        ...
-
-    def get_capability(self, capability: str) -> Optional[object]:
-        """Get a capability from any gene that provides it."""
-        ...
-
-    def emit_event(
-        self,
-        event_type: str,
-        data: SubstrateEventData,
-        caller_id: str = "anonymous",
-    ) -> None:
-        """Emit an event to all listening genes (caller_id for tracing)."""
-        ...
-
-    # =========================================================================
-    # Mantra Operations (The Vishnu Clock)
-    # =========================================================================
-
-    def resonate(self, opcode: MantraOpCode) -> bool:
-        """
-        Executes a low-level acoustic operation (Mantra Step).
-        Used by the Watchdog to verify if the Substrate is still holding.
-
-        Returns:
-            True if opcode executed successfully.
-            False if substrate is unstable (triggers surrender).
-        """
-        ...
-
-    # =========================================================================
-    # ASHVAMEDHA: Automatic Protocol Integration
-    # =========================================================================
-
-    def auto_flood_orphans(self) -> int:
-        """
-        ASHVAMEDHA: The Horse Sacrifice (Automatic Protocol Integration).
-
-        Called on every PULSE_SYNC (Step 8) by the Watchdog.
-        Scans ServiceRegistry for services not wrapped by NagaProxy,
-        and floods them with Naga gene capabilities.
-
-        "Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
-
-        Returns:
-            Number of services flooded in this cycle.
-        """
-        ...
+    def dispose(self) -> None: ...
 
 
+@watertight
 @runtime_checkable
 class MantraProtocol(Protocol):
-    """
-    The BIOS-Level Protocol.
-    If this fails, the machine is considered 'Asuric' (Demonic/Glitching)
-    and is cut off from the network.
-    """
+    """The BIOS-Level Protocol."""
 
-    def chant_mahamantra(self, context: object) -> bool:
-        """
-        Executes the 16-step atomic cycle.
-        Returns True ONLY if all 16 gates pass perfectly.
-        WATERTIGHT: context is object (SovereignContext), caller must cast.
-        """
-        ...
+    def chant_mahamantra(self, context: object) -> bool: ...
 
-    def resonate(self, opcode: MantraOpCode) -> bool:
-        """
-        Emits a single beat of the Mantra (Resonance).
-        This is the clock signal.
-        """
-        ...
+    def resonate(self, opcode: MantraOpCode) -> bool: ...
 
-    # =========================================================================
-    # HIGH-LEVEL INTERFACE (The Vishnu Clock)
-    # =========================================================================
+    def chant(self, frequency: float) -> Resonance: ...
 
-    def chant(self, frequency: float) -> Resonance:
-        """
-        Execute a single pulse at given frequency.
-        Returns the resulting Resonance.
-        """
-        ...
+    def chant_round(self, beads: int = 108) -> AlignmentScore: ...
 
-    def chant_round(self, beads: int = 108) -> AlignmentScore:
-        """
-        Perform a full Japa round (multiple cycles).
-        Returns the final AlignmentScore.
-        """
-        ...
+    def surrender(self, context: DriftContext) -> None: ...
 
-    def surrender(self, context: DriftContext) -> None:
-        """
-        Immediate cessation of logic-based resistance.
-        Force-flushes the context window and re-loads from Sovereign Anchor.
-        """
-        ...
+    def get_alignment_score(self) -> float: ...
 
-    def get_alignment_score(self) -> float:
-        """
-        Measure current alignment with Sovereign Will (0.0 - 1.0).
-        """
-        ...
+    def close(self) -> None: ...
 
 
 def mantra_governed(opcode: MantraOpCode):
-    """
-    Decorator to wrap a function with a Mantra OpCode.
-    This creates the Fractal Resonance.
-
-    $$ f(x) = M(x) + \frac{1}{\text{res}} \\cdot f(x) $$
-
-    Args:
-        opcode: The MantraOpCode to resonate before execution.
-    """
-
+    """Decorator to wrap a function with a Mantra OpCode."""
     def decorator(func):
         def wrapper(self, *args, **kwargs):
-            # 1. RESONANCE (Clock Signal)
             if hasattr(self, "resonate"):
-                # We assume self implements MantraProtocol or similar
                 self.resonate(opcode)
-
-            # 2. EXECUTION (Karma)
             result = func(self, *args, **kwargs)
-
-            # 3. ECHO (Optional - could verify result)
             return result
-
         return wrapper
-
     return decorator
-
-
-# =============================================================================
-# FACTORY PROTOCOL (For External/Hybrid Mode - Future)
-# =============================================================================
 
 
 @runtime_checkable
 class ISubstrateFactory(Protocol):
-    """
-    Factory for creating substrate instances.
+    """Factory for creating substrate instances."""
 
-    This enables Option C (Hybrid) in the future:
-    - Local factory returns embedded AnantaService
-    - Remote factory returns proxy to external service
+    def create(self) -> IAnantaBridge: ...
 
-    The consumer doesn't care which - Dependency Inversion.
-    """
-
-    def create(self) -> IAnantaBridge:
-        """Create or connect to an Ananta Shesha instance."""
-        ...
-
-    def is_local(self) -> bool:
-        """Check if this factory creates local or remote instances."""
-        ...
-
-
-# =============================================================================
-# HELPER FUNCTIONS (Pure, No Side Effects)
-# =============================================================================
+    def is_local(self) -> bool: ...
 
 
 def create_gene_manifest(
@@ -899,20 +329,7 @@ def create_gene_manifest(
     optional: bool = False,
     tattva: Optional[Tattva] = None,
 ) -> GeneManifest:
-    """
-    Helper to create a GeneManifest with proper typing.
-
-    Args:
-        name: Unique gene identifier
-        capabilities: What this gene provides
-        requires: What this gene needs (default: empty)
-        priority: Activation priority (default: 50)
-        optional: Can system run without this? (default: False)
-        tattva: The Governing Personality (default: None)
-
-    Returns:
-        Immutable GeneManifest
-    """
+    """Helper to create a GeneManifest with proper typing."""
     return GeneManifest(
         name=name,
         capabilities=tuple(capabilities),
@@ -923,46 +340,33 @@ def create_gene_manifest(
     )
 
 
-# =============================================================================
-# EXPORTS
-# =============================================================================
-
 __all__ = [
-    # Enums
     "GeneActivationState",
     "SubstrateHealth",
     "MantraOpCode",
     "HolyName",
     "Tattva",
-    # Mantra measurement types
     "Resonance",
     "AlignmentScore",
     "DriftContext",
-    # Mantra DNA (The 16-Bit Sequence)
     "MAHAMANTRA_SEQUENCE",
-    # TypedDicts (WATERTIGHT - No Any)
     "GeneMetrics",
     "GeneAnalysisResult",
     "SubstrateEventData",
-    # Binding Certificates (ANTI-MAYAVADI - Personal Identity)
     "BindingCertificate",
     "RegistrationCertificate",
     "FloodAuthorization",
-    # Data Classes
     "GeneManifest",
     "GeneStatus",
     "SubstrateStatus",
-    # Protocols (The Core)
     "IGene",
     "IGeneHost",
     "IAnantaBridge",
+    "ILivingSystem",
     "ISubstrateFactory",
-    # Type Variables
     "T",
     "GeneT",
-    # Mantra
     "MantraProtocol",
     "mantra_governed",
-    # Helpers
     "create_gene_manifest",
 ]
