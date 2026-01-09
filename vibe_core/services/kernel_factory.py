@@ -25,6 +25,7 @@ Registration:
 
 import logging
 from typing import TYPE_CHECKING, Optional
+from vibe_core.factory import VibeFactory as StaticFactory
 
 if TYPE_CHECKING:
     from vibe_core.phoenix import PhoenixConfig
@@ -82,6 +83,22 @@ class KernelFactory:
 
         logger.info(f"🏭 Kernel created (id: {id(kernel)})")
         return kernel
+
+    def get_kernel(
+        self,
+        ledger_path: Optional[str] = None,
+        load_plugins: bool = True,
+        test_mode: bool = False,
+    ) -> "KernelProtocol":
+        """
+        Get or Create the MAIN Kernel instance (Singleton Access).
+        Delegates to VibeFactory.
+        """
+        return StaticFactory.get_kernel(
+            ledger_path=ledger_path,
+            load_plugins=load_plugins,
+            test_mode=test_mode
+        )
 
 
 __all__ = ["KernelFactory"]

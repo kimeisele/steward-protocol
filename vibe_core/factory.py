@@ -25,7 +25,7 @@ from vibe_core.protocols.ledger import VibeLedger
 # Concrete Implementations (Hidden Details)
 # HIER UND NUR HIER sind diese Imports legal!
 # =============================================================================
-from vibe_core.kernel_impl import RealVibeKernel
+# Concrete Implementations are Lazy Loaded to prevent circular imports
 from vibe_core.ledger import SQLiteLedger, InMemoryLedger
 
 
@@ -61,7 +61,10 @@ class VibeFactory:
             KernelProtocol - the living, breathing kernel
         """
         if cls._kernel_instance is None:
-            # Hier findet die "Geburt" statt (mit der neuen __init__ Logik!)
+            # Hier findet die "Geburt" statt
+            # Lazy Import to break Ouroboros
+            from vibe_core.kernel_impl import RealVibeKernel
+            
             cls._kernel_instance = RealVibeKernel(
                 ledger_path=ledger_path,
                 load_plugins=load_plugins,
