@@ -1,64 +1,50 @@
 import pytest
-from dataclasses import dataclass, field
-from typing import List, Optional
-from vibe_core.protocols.testable import Testable, TestableType, TestCase
-from vibe_core.protocols.governance.dwarapala import DwarapalaGatekeeper, CommitIntent
+from typing import Set
+from vibe_core.protocols.types import PersonProtocol, ServiceProtocol, Capability
+from vibe_core.protocols.governance.dwarapala import DwarapalaGate, AccessDenied
+from tests.common.avatars import TestDevotee, TestService
 
-@dataclass
-class MockComponent(Testable):
-    id: str
-    pass_test: bool = True
-    has_fast_test: bool = True
+# --- TESTS ---
 
-    def get_testable_id(self) -> str:
-        return self.id
-
-    def get_testable_type(self) -> TestableType:
-        return TestableType.PLUGIN
-
-    def get_test_cases(self) -> List[TestCase]:
-        if not self.has_fast_test:
-            return []
-        
-        tags = ["fast"]
-        def mock_test(kernel: Optional[object], target: Testable) -> bool:
-            return self.pass_test
-
-        return [TestCase(name="mock_check", description="Mock", tags=tags, test_func=mock_test)]
-
-    def evaluate_life(self, result: object, gene: object) -> str:
-        return "GREEN"
-
-
-@dataclass
-class MockIntent(CommitIntent):
-    author: str
-    changes: List[Testable]
-    message: str
-
-def test_dwarapala_gatekeeper():
-    gate = DwarapalaGatekeeper()
-
-    # 1. Block Cowardice (No Tests)
-    coward = MockComponent(id="coward", has_fast_test=False)
-    intent1 = MockIntent("User", [coward], "feat: bad code")
-    allowed, msg = gate.inspect_commit(intent1)
+def test_dwarapala_gate_access():
+    gate = DwarapalaGate()
     
-    assert not allowed
-    assert "Cowardice" in msg
-
-    # 2. Block Failure (Test Fails)
-    failure = MockComponent(id="failure", pass_test=False)
-    intent2 = MockIntent("User", [failure], "feat: broken code")
-    allowed, msg = gate.inspect_commit(intent2)
+    # 1. Define Actors (Vidura & Civilians)
+    user_arjuna = TestDevotee(name="Arjuna")
+    user_arjuna.add_capability("read", risk=1)
+    user_arjuna.add_capability("nuke", risk=10)
     
-    assert not allowed
-    assert "BLOCK" in msg
-
-    # 3. Allow Victory (Test Passes)
-    hero = MockComponent(id="hero", pass_test=True)
-    intent3 = MockIntent("User", [hero], "feat: good code")
-    allowed, msg = gate.inspect_commit(intent3)
+    user_civilian = TestDevotee(name="Civilian")
+    user_civilian.add_capability("read", risk=1)
     
-    assert allowed
-    assert "Access Granted" in msg
+    service_bot = TestService()
+    
+    # CASE A: Authorized Person (Arjuna -> Nuke)
+    # Should result in success (returns accessor)
+    accessor = gate.verify_accessor(user_arjuna, "nuke")
+    assert accessor == user_arjuna
+    
+    # CASE B: Unauthorized Person (Civilian -> Nuke)
+    # Should raise AccessDenied (Adhikara Failure)
+    with pytest.raises(AccessDenied) as excinfo:
+        gate.verify_accessor(user_civilian, "nuke")
+    assert "Adhikara Failure" in str(excinfo.value)
+    
+    # CASE C: Identity Crisis (Service -> Nuke)
+    # Should raise AccessDenied (Identity Crisis)
+    # ServiceBot is class TestService, which does NOT implement PersonProtocol
+    with pytest.raises(AccessDenied) as excinfo:
+        gate.verify_accessor(service_bot, "read") # type: ignore
+    assert "Identity Crisis" in str(excinfo.value)
+
+def test_gate_open():
+    """Verify pass-through mechanism."""
+    gate = DwarapalaGate()
+    user = TestDevotee(name="User")
+    user.add_capability("enter")
+    
+    resource = {"secret": "data"}
+    
+    # Open Gate
+    result = gate.open_gate(user, resource)
+    assert result == resource
