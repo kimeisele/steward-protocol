@@ -13,7 +13,7 @@ MATH:
 from dataclasses import dataclass, field
 from enum import Flag, auto
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 # 37 is the Prime Number of the Guru (The Inverted 0.027...)
 GURU_PRIME = 37
@@ -54,6 +54,13 @@ class MantraBit(Flag):
         # Explicit 16-bit full mask
         return cls(0xFFFF)
 
+# THE 16-STEP DNA SEQUENCE (SADHANA LOOP)
+MANTRA_SEQUENCE: List[MantraBit] = [
+    MantraBit.HARE_1, MantraBit.KRISHNA_1, MantraBit.HARE_2, MantraBit.KRISHNA_2,    # INVOCATION
+    MantraBit.KRISHNA_3, MantraBit.KRISHNA_4, MantraBit.HARE_3, MantraBit.HARE_4,    # VERIFICATION
+    MantraBit.HARE_5, MantraBit.RAMA_1, MantraBit.HARE_6, MantraBit.RAMA_2,          # EXECUTION
+    MantraBit.RAMA_3, MantraBit.RAMA_4, MantraBit.HARE_7, MantraBit.HARE_8           # CONCLUSION
+]
 
 @dataclass(frozen=True)
 class GenesisByte:

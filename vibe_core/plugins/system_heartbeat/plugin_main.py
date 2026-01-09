@@ -11,15 +11,20 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols import (
     CognitiveKernelProtocol,
     SystemHeartbeatProtocol,
-    VibeKernel,
+    SystemHeartbeatProtocol,
 )
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.kernel_protocol import KernelProtocol as VibeKernel
+else:
+    VibeKernel = Any
 
 logger = logging.getLogger("SYSTEM_HEARTBEAT")
 

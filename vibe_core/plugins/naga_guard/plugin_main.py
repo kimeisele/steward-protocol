@@ -28,11 +28,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from vibe_core.plugin_protocol import HookResult, KernelPlugin
+from vibe_core.plugin_protocol import HookResult, KernelPlugin, HookStatus
+
+if TYPE_CHECKING:
+    from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 if TYPE_CHECKING:
     from vibe_core import Task
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
     from vibe_core.naga.orchestrator import NagaOrchestrator
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.protocols.naga import SeshaProtocol, TakshakaProtocol
@@ -114,10 +117,11 @@ class NagaGuardPlugin(KernelPlugin):
     # LIFECYCLE
     # =========================================================================
 
-    def on_boot(
+    def on_init(
         self,
-        kernel: "RealVibeKernel",
-        config: Optional[Dict[str, Any]] = None,
+        kernel: "KernelProtocol",
+        logger: Any,
+        config: Dict[str, Any],
     ) -> HookResult:
         """
         Bootstrap NAGA Federation and connect to kernel infrastructure.
@@ -130,6 +134,7 @@ class NagaGuardPlugin(KernelPlugin):
         5. Wire CommitAuthority -> CommitWatcher (if available)
         6. Connect services for gate guarding
         """
+        self._config = config
         try:
             # 1. Get ledger from kernel
             ledger = getattr(kernel, "ledger", None)
@@ -169,30 +174,26 @@ class NagaGuardPlugin(KernelPlugin):
             if self._takshaka:
                 logger.info(f"[NAGA] Guard active (threshold={self._toxicity_threshold})")
 
-            return HookResult.ok()
+            return HookResult(HookStatus.SUCCESS)
 
         except Exception as e:
             logger.error(f"[NAGA] Bootstrap failed: {e}")
             import traceback
 
             traceback.print_exc()
-            return HookResult.error(str(e))
+            return HookResult(HookStatus.ERROR, str(e))
 
-    def _wire_eventbus(self, kernel: "RealVibeKernel") -> None:
-        """Wire EventBus events to FloodManager."""
-        if not self._orchestrator or not self._orchestrator.flood_manager:
+    def _wire_eventbus(self, kernel: "KernelProtocol") -> None:
+        """
+        Wire into the Event Bus for monitoring.
+        """
+        if not hasattr(kernel, "event_bus"):
             return
 
         try:
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.events import EventBusProtocol
-
-            event_bus = ServiceRegistry.get(EventBusProtocol)
-            if event_bus is None:
-                # Try kernel attribute
-                event_bus = getattr(kernel, "event_bus", None)
-
-            if event_bus and hasattr(event_bus, "subscribe"):
+            # Type-safe subscription
+            event_bus = kernel.event_bus
+            if hasattr(event_bus, "subscribe"):
                 # Subscribe FloodManager to all events
                 flood_manager = self._orchestrator.flood_manager
 

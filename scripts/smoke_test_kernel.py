@@ -65,6 +65,9 @@ def smoke_test_kernel():
     test_ledger_path = "/tmp/vibe_os/test/smoke_ledger.db"
     test_lineage_path = "/tmp/vibe_os/test/smoke_lineage.db"
 
+    # Ensure directories exist
+    Path(test_ledger_path).parent.mkdir(parents=True, exist_ok=True)
+
     # Clean up old test databases
     for path in [test_ledger_path, test_lineage_path]:
         if Path(path).exists():

@@ -126,7 +126,10 @@ class KaliyaAgent:
         Head 1: Pure volume attack.
         Floods the bus with minimal events as fast as possible.
         """
-        from vibe_core.protocols.event import Event
+        if TYPE_CHECKING:
+            from vibe_core.protocols.event import Event
+        else:
+            from vibe_core.event_bus import Event
 
         while time.time() < end_time and not self.stop_flag:
             try:
@@ -154,7 +157,10 @@ class KaliyaAgent:
         Creates events that reference themselves as cause,
         potentially triggering infinite loops in event handlers.
         """
-        from vibe_core.protocols.event import Event
+        if TYPE_CHECKING:
+            from vibe_core.protocols.event import Event
+        else:
+            from vibe_core.event_bus import Event
 
         my_id = f"ouroboros_{uuid.uuid4()}"
 
@@ -185,7 +191,10 @@ class KaliyaAgent:
         Head 3: Memory pressure attack.
         Sends events with large payloads to exhaust memory.
         """
-        from vibe_core.protocols.event import Event
+        if TYPE_CHECKING:
+            from vibe_core.protocols.event import Event
+        else:
+            from vibe_core.event_bus import Event
 
         # 10KB payload per event
         heavy_data = "X" * 10000
