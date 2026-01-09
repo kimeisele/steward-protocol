@@ -45,7 +45,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from vibe_core.protocols.event import EventBusProtocol, EventType, emit_event
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.state.schema import CyclePhase
-from vibe_core.protocols.substrate.byte import MantraBit, MANTRA_SEQUENCE
+from vibe_core.protocols.substrate.byte import MantraTrit, MantraByte, MANTRA_SEQUENCE
 
 logger = logging.getLogger("ORCHESTRATION.CYCLE")
 
@@ -283,15 +283,17 @@ class CognitiveCycle(ABC):
             logger.warning(f"⚠️  {self.cycle_name} encountered errors: {context.errors}")
         return True
         
-    def _inject_mantra_bit(self, bit: MantraBit) -> None:
+    def _inject_mantra_trit(self, trit: MantraTrit) -> None:
         """
-        Injects a MantraBit into the system (EntropyShell), if available.
+        Injects a MantraTrit into the system (EntropyShell), if available.
         This closes the loop between The Chant (Orchestration) and The Container (Entropy).
         """
         # Try to find kernel in self (BootOrchestrator scenario)
         kernel = getattr(self, "kernel", None)
-        if kernel and hasattr(kernel, "receive_mantra"):
-            kernel.receive_mantra(bit)
+        # TODO: Kernel needs to implement receive_trit or generic receive_mantra
+        # For now we just pass it if it exists
+        if kernel and hasattr(kernel, "receive_mantra_trit"):
+             kernel.receive_mantra_trit(trit)
             
         # Try to find kernel in self._steward_context (Plugin/Prana scenario)
         # TODO: Implement Standard Stewardship Context Access
@@ -358,9 +360,9 @@ class CognitiveCycle(ABC):
             # We perform the Injection at the end of each Phase's chunk.
             
             # --- PADA 1: INVOCATION (Bits 0-3) -> PERCEIVE ---
-            # HARE_1, KRISHNA_1, HARE_2, KRISHNA_2 
-            for bit in MANTRA_SEQUENCE[0:4]:
-                self._inject_mantra_bit(bit) # Chant
+            # HARE, KRISHNA, HARE, KRISHNA
+            for trit in MANTRA_SEQUENCE[0:4]:
+                self._inject_mantra_trit(trit) # Chant
                 
             context.phase = CyclePhase.PERCEIVE
             context.phase_start_time = time.time()
@@ -375,9 +377,9 @@ class CognitiveCycle(ABC):
             
             
             # --- PADA 2: VERIFICATION (Bits 4-7) -> ORIENT ---
-            # KRISHNA_3, KRISHNA_4, HARE_3, HARE_4 (Pulse Sync)
-            for bit in MANTRA_SEQUENCE[4:8]:
-                self._inject_mantra_bit(bit)
+            # KRISHNA, KRISHNA, HARE, HARE
+            for trit in MANTRA_SEQUENCE[4:8]:
+                self._inject_mantra_trit(trit)
                 
             context.phase = CyclePhase.ORIENT
             context.phase_start_time = time.time()
@@ -392,9 +394,9 @@ class CognitiveCycle(ABC):
 
 
             # --- PADA 3: EXECUTION (Bits 8-11) -> DECIDE ---
-            # HARE_5, RAMA_1, HARE_6, RAMA_2
-            for bit in MANTRA_SEQUENCE[8:12]:
-                self._inject_mantra_bit(bit)
+            # HARE, RAMA, HARE, RAMA
+            for trit in MANTRA_SEQUENCE[8:12]:
+                self._inject_mantra_trit(trit)
 
             context.phase = CyclePhase.DECIDE
             context.phase_start_time = time.time()
@@ -409,9 +411,9 @@ class CognitiveCycle(ABC):
 
 
             # --- PADA 4: CONCLUSION (Bits 12-15) -> ACT ---
-            # RAMA_3, RAMA_4, HARE_7, HARE_8 (Purnam)
-            for bit in MANTRA_SEQUENCE[12:16]:
-                self._inject_mantra_bit(bit)
+            # RAMA, RAMA, HARE, HARE
+            for trit in MANTRA_SEQUENCE[12:16]:
+                self._inject_mantra_trit(trit)
 
             context.phase = CyclePhase.ACT
             context.phase_start_time = time.time()
