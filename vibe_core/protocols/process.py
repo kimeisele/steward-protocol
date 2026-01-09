@@ -10,10 +10,27 @@ This enables swappable execution backends:
 - Test: MockProcessManager (no-op logging)
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Tuple, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Tuple, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:
     from vibe_core.process_manager import AgentProcessInfo
+    from vibe_core.scheduling.task import DispatchTask
+
+
+class AgentMessage(TypedDict, total=False):
+    """Message from agent process."""
+
+    type: str
+    payload: Dict[str, Any]
+    timestamp: float
+
+
+class AgentConfig(TypedDict, total=False):
+    """Agent process configuration."""
+
+    env_vars: Dict[str, str]
+    timeout_seconds: float
+    max_memory_mb: int
 
 
 @runtime_checkable
@@ -36,7 +53,7 @@ class ProcessSupervisorProtocol(Protocol):
         agent_id: str,
         cartridge_path: str,
         cartridge_class_name: str,
-        config: Any = None,
+        config: "Optional[AgentConfig]" = None,
     ) -> None:
         """
         Spawn a new agent process.
@@ -49,7 +66,7 @@ class ProcessSupervisorProtocol(Protocol):
         """
         ...
 
-    def send_task(self, agent_id: str, task: Any) -> bool:
+    def send_task(self, agent_id: str, task: "DispatchTask") -> bool:
         """
         Send a task to an agent process.
 
@@ -62,7 +79,7 @@ class ProcessSupervisorProtocol(Protocol):
         """
         ...
 
-    def get_pending_messages(self) -> List[Tuple[str, Dict[str, Any]]]:
+    def get_pending_messages(self) -> List[Tuple[str, "AgentMessage"]]:
         """
         Get all pending messages from agent processes.
 

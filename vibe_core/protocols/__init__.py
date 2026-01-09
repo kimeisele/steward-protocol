@@ -63,6 +63,7 @@ from .event import (
     EventType,
     NullEventBus,
     create_event,
+    emit_event,
     get_event_bus_safe,
 )
 
@@ -297,6 +298,7 @@ __all__ = [
     "EventBusStatus",
     "NullEventBus",
     "create_event",
+    "emit_event",
     "get_event_bus_safe",
     # OPUS-311 Sprint 3: Memory Protocol
     "MemoryProtocol",
