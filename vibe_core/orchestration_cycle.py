@@ -42,7 +42,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from vibe_core.event_bus import EventBus, EventType, emit_event
+from vibe_core.protocols.event import EventBusProtocol, EventType, emit_event
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.state.schema import CyclePhase
 
@@ -201,7 +201,7 @@ class CognitiveCycle(ABC):
     def __init__(self):
         """Initialize cycle with system dependencies (None until setup() called)."""
         self._trace: Optional[UnifiedTrace] = None
-        self._event_bus: Optional[EventBus] = None
+        self._event_bus: Optional[EventBusProtocol] = None
         self._steward_context: Optional[Any] = None
         self._last_cycle_time: float = 0.0  # For rate limiting
         logger.debug(f"🔄 {self.__class__.__name__} initialized (awaiting setup)")
@@ -210,7 +210,7 @@ class CognitiveCycle(ABC):
     # DEPENDENCY INJECTION (must be called before orchestrate())
     # ========================================================================
 
-    def setup(self, trace: UnifiedTrace, event_bus: EventBus, steward_context: Any) -> None:
+    def setup(self, trace: UnifiedTrace, event_bus: EventBusProtocol, steward_context: Any) -> None:
         """
         Wire up system integration points BEFORE orchestrate().
 

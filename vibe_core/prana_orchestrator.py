@@ -27,7 +27,8 @@ from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.protocols.event import EventBusProtocol
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 logger = logging.getLogger("PRANA_ORCHESTRATOR")
 
@@ -208,9 +209,9 @@ class PranaOrchestrator(CognitiveCycle):
         plugin_loader: Any = None,
         ledger: Any = None,
         trace: Optional[UnifiedTrace] = None,
-        event_bus: Optional[EventBus] = None,
+        event_bus: "Optional[EventBusProtocol]" = None,
         *,
-        kernel: Any = None,  # Backward compatibility for tests
+        kernel: "Optional[KernelProtocol]" = None,  # Backward compatibility for tests
     ):
         """
         Initialize Prana Orchestrator.
