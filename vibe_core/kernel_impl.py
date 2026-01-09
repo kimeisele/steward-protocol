@@ -78,6 +78,11 @@ from .protocols.agent import AgentManifest, VibeAgent
 # The auditor plugin registers itself; kernel uses NullAuditor fallback
 from .protocols.auditor import AuditorProtocol, NullAuditor
 
+# Mantra Watchdog (The Vishnu Clock)
+from .services.nrisimha import NrisimhaWatchdog
+from .protocols.universal.types import SovereignContext
+from .protocols.substrate import MantraOpCode
+
 # OPUS-309: Operator Cognitive Protocol (Hot-Swap Hook)
 # Kernel doesn't know MANAS exists - only knows this protocol
 from .protocols.cognition import (
@@ -160,28 +165,24 @@ from .security import VajraGuarded
 
 class RealVibeKernel(VibeKernel, VajraGuarded):
     """
-    🩸 THE REAL VIBE KERNEL 🩸
+    🩸 THE REAL VIBE KERNEL (VISHNU/JAGANNATH) 🩸
 
     This is not a mock. This is actual execution runtime for VibeOS cartridges.
 
-    Capabilities:
-    - Process table (agent registry)
-    - Real task scheduler (FIFO queue)
-    - Immutable ledger (append-only)
-    - Manifest registry (agent identity)
-    - Kernel injection (dependency injection pattern)
-    - Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
-    - QuantumReactor (OPUS-200/201 - resonance-based manifestation)  # NEW
-
-    Philosophy (OPUS-200/201):
-      Actions don't get "allowed" or "denied" - they MANIFEST
-      when their resonance energy overcomes the field's inertia.
+    Architecture:
+    - nrisimha: The Protector (Security/Watchdog)
+    - chaitanya: The Yuga Dharma (Pulse/Mantra)
     """
 
     # SAMSARA CONFIG: Maximum entropy (ledger events) before Pralaya (pruning) occurs
     MAX_ENTROPY_EVENTS = 1000
     _reactor = None
     _akasha_field = ""
+    
+    # Divine Potencies
+    nrisimha: NrisimhaWatchdog
+    chaitanya: NrisimhaWatchdog
+    watchdog: NrisimhaWatchdog  # Parampara Alias
 
     def __init__(
         self,
@@ -193,17 +194,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     ):
         """
         Initialize the kernel.
-
-        Args:
-            ledger_path: Path to ledger database (":memory:" for in-memory, None for config default)
-            config: Optional PhoenixConfig for dependency injection.
-                    If None, uses global get_config() singleton.
-                    For ephemeral child kernels, pass custom config.
-            parent: Optional parent kernel (for ephemeral cities).
-                    Child kernels can access parent for result folding.
-            load_plugins: If True, auto-discover and boot plugins (default: True).
-                          Set False for isolated testing or minimal boot.
-            test_mode: If True, disable heavy I/O and blocking persistence (default: False).
         """
         # =====================================================================
         # VAJRA ARMOR: Initialize DNA protection (must be first!)
@@ -212,8 +202,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
 
         # =====================================================================
         # NARASIMHA GATEKEEPER: Birth the 37th (Kshetrajna)
-        # Without Identity, the 36 fields are dead mechanism.
-        # The Gatekeeper validates all chaos injection and DI access.
         # =====================================================================
         from vibe_core.di import ServiceRegistry
 
@@ -226,6 +214,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self._is_ephemeral = parent is not None
         self._load_plugins = load_plugins
         self._test_mode = test_mode
+        self._plugins = []  # Root initialization of the Sangha
 
         # OPUS-301: Initialize async logging early to prevent I/O blocking
         if not self._test_mode:
@@ -435,8 +424,56 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
 
         # =====================================================================
-        # NAGA FEDERATION: The Invisible Guardians (-1 Foundation)
+        # MANTRA PULSE: Chaitanya (Time/Rhythm) & Nrisimha (Security)
         # =====================================================================
+        # Create a Sovereign Anchor for the System itself (The 37th)
+        self._sovereign_context = SovereignContext(
+            identity_id="KERNEL_PRIME",
+            signature="kernel_boot_signature",
+            roles=["sovereign", "system"]
+        )
+        
+        # Wire Kernel Potencies to Mantra Opcodes
+        handlers = {
+            MantraOpCode.BIND_CTX: lambda ctx: self.bind_genes([]), # Default bind (empty for now)
+            MantraOpCode.ASSERT_TRUTH: lambda ctx: True,
+            MantraOpCode.RESOLVE_REQ: lambda ctx: True,
+            MantraOpCode.EXEC_SERVICE: lambda ctx: True,
+            MantraOpCode.COMMIT_LOG: lambda ctx: True,
+        }
+        
+        # The Protector
+        self.nrisimha = NrisimhaWatchdog(
+            sovereign_anchor=self._sovereign_context,
+            opcode_handlers=handlers
+        )
+        
+        # The Dharma (Pulse)
+        self.chaitanya = self.nrisimha
+        self.watchdog = self.nrisimha # Parampara
+        
+        logger.info("🦁 Nrisimha Watchdog & ☀️ Chaitanya Pulse initialized (Mantra Protocol)")
+
+    @property
+    def sovereign_context(self) -> SovereignContext:
+        """The Sovereign Identity of this Kernel instance."""
+        return self._sovereign_context
+
+    # =========================================================================
+    # VISHNU CAPABILITIES (Personal)
+    # =========================================================================
+
+    def bind_genes(self, gene_names: List[str]) -> bool:
+        """
+        Bind genes (potencies) to the Kernel.
+        Overridden by InstrumentedKernel in tests.
+        """
+        logger.debug(f"🧬 Vishnu binding genes: {gene_names}")
+        return True
+
+    # =========================================================================
+    # NAGA FEDERATION: The Invisible Guardians (-1 Foundation)
+    # =====================================================================
         # NAGAs live IN the kernel, not beside it. They are middleware that
         # validates ALL state writes against the 4 Dharma Principles.
         # "Ein Agent darf physisch nicht in der Lage sein, seine Governance zu verletzen."
@@ -486,6 +523,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # Phase 6: Load Cognitive Packs (Genesis)
         self.genesis_path = None
         self._plugin_metadata = {}
+        self._plugins = []  # Always initialize Sangha
 
         if self._load_plugins:
             import os
@@ -561,8 +599,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
                 data_getter=self._get_operations_manifestation_data,
             )
         else:
-            self._plugins = []
-            self._plugins = []
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
         # =====================================================================
@@ -572,6 +608,30 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # After this, blueprints cannot be modified.
         # =====================================================================
         self.vajra_seal()
+
+    # =========================================================================
+    # OM PROTOCOL DELEGATION (The Unified Field)
+    # =========================================================================
+
+    def chant(self, frequency: float) -> Any:
+        """Delegate to Watchdog (Mantra Protocol)."""
+        return self.watchdog.chant(frequency)
+
+    def chant_round(self, beads: int = 108) -> Any:
+        """Delegate to Watchdog (Mantra Protocol)."""
+        return self.watchdog.chant_round(beads)
+
+    def surrender(self, context: Any) -> None:
+        """Delegate to Watchdog (Mantra Protocol)."""
+        self.watchdog.surrender(context)
+
+    def get_alignment_score(self) -> float:
+        """Delegate to Watchdog (Mantra Protocol)."""
+        return self.watchdog.get_alignment_score()
+
+    def chant_mahamantra(self, context: Any) -> bool:
+        """Delegate to Watchdog (Mantra Protocol)."""
+        return self.watchdog.chant_mahamantra(context)
 
     # =========================================================================
     # AMRITA PROTOCOL: Self-Healing Properties (KURUKSHETRA FIX)
@@ -586,6 +646,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         It calls on_pulse() for every loaded plugin.
         """
         logger.info("💓 KERNEL: System pulse started")
+        
+        # 1. THE MANTRA (Time/Rhythm) - The Heartbeat
+        # "Everything rests on the Mantra."
+        self.chaitanya.chant_mahamantra(self.sovereign_context)
+        
         results = {}
 
         # Create a mock transaction if needed by plugins (legacy compatibility)

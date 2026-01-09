@@ -19,7 +19,8 @@ STATUS: DEVOTEE / ACTIVE BINDER
 import hashlib
 import hmac
 import json
-from typing import Any, Dict, Optional, Tuple, Union
+from enum import Enum
+from typing import Any, Dict, Optional, Tuple, Union, TypedDict
 
 from vibe_core.protocols.naga.base import NagaBase
 
@@ -28,6 +29,38 @@ from vibe_core.protocols.naga.types import NagaStatus, NagaType
 
 # Vasuki Capabilities
 VASUKI_CAPS = ("hash", "sign", "verify")
+
+
+class NodeAddress(TypedDict):
+    """Network address of a node."""
+    host: str
+    port: int
+    protocol: str
+    node_id: str
+
+
+class SendStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    DELIVERED = "delivered"
+    FAILED = "failed"
+
+
+class SendResult(TypedDict):
+    """Result of a send operation."""
+    status: SendStatus
+    message_id: str
+    timestamp: str
+    error: Optional[str]
+
+
+class SignedEnvelope(TypedDict):
+    """A signed message envelope."""
+    payload: str  # Serialized data
+    signature: str
+    hash: str
+    signer_id: str
+    timestamp: str
 
 
 class IntegrityError(Exception):
