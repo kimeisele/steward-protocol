@@ -66,7 +66,7 @@ class Event:
     agent_id: str = ""
     task_id: Optional[str] = None
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: Dict[str, object] = field(default_factory=dict)
 
 
 @dataclass
@@ -135,8 +135,12 @@ class EventBusProtocol(Protocol):
         """Get event history (most recent first)."""
         ...
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> EventBusStatus:
         """Get event bus status."""
+        ...
+
+    def clear_history(self) -> None:
+        """Clear event history."""
         ...
 
 
@@ -179,16 +183,19 @@ class NullEventBus:
         """Return empty history."""
         return []
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> EventBusStatus:
         """Return minimal status."""
-        return {
-            "total_events": self._event_count,
-            "dropped_events": self._event_count,  # All dropped
-            "subscriber_count": 0,
-            "history_size": 0,
-            "type_counts": {},
-            "is_null": True,
-        }
+        return EventBusStatus(
+            total_events=self._event_count,
+            dropped_events=self._event_count,
+            subscriber_count=0,
+            history_size=0,
+            type_counts={},
+        )
+
+    def clear_history(self) -> None:
+        """No-op clear."""
+        pass
 
 
 # Helper function for easy event creation
@@ -197,7 +204,7 @@ def create_event(
     agent_id: str,
     message: str = "",
     task_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[Dict[str, object]] = None,
 ) -> Event:
     """Create an event with proper defaults."""
     return Event(
@@ -230,3 +237,27 @@ def get_event_bus_safe() -> EventBusProtocol:
 
     # Arjuna Pattern: NullEventBus fallback
     return NullEventBus()
+
+
+async def emit_event(
+    event_type: str,
+    agent_id: str,
+    message: str = "",
+    task_id: Optional[str] = None,
+    details: Optional[Dict[str, object]] = None,
+):
+    """
+    Convenience function to emit an event via the safe event bus.
+
+    Usage:
+        await emit_event(EventType.ACTION, "herald", "Hello world")
+    """
+    bus = get_event_bus_safe()
+    event = create_event(
+        event_type=EventType(event_type) if isinstance(event_type, str) else event_type,
+        agent_id=agent_id,
+        message=message,
+        task_id=task_id,
+        details=details or {},
+    )
+    await bus.emit(event)

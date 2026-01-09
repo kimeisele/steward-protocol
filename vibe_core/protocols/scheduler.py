@@ -7,7 +7,21 @@ This protocol enables swapping InMemoryScheduler for other implementations
 (e.g., Redis-backed, distributed) without modifying kernel code.
 """
 
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
+
+if TYPE_CHECKING:
+    from vibe_core.scheduling.task import DispatchTask
+
+
+class QueueStatus(TypedDict, total=False):
+    """Scheduler queue statistics."""
+
+    queue_length: int
+    pending_count: int
+    processing_count: int
+    completed_count: int
+    failed_count: int
+    oldest_pending_age_ms: float
 
 
 @runtime_checkable
@@ -25,7 +39,7 @@ class SchedulerProtocol(Protocol):
         next_task = scheduler.next_task()
     """
 
-    def submit_task(self, task) -> str:
+    def submit_task(self, task: "DispatchTask") -> str:
         """
         Submit a task to the queue.
 
@@ -37,7 +51,7 @@ class SchedulerProtocol(Protocol):
         """
         ...
 
-    def next_task(self) -> Optional[Any]:
+    def next_task(self) -> Optional["DispatchTask"]:
         """
         Get next task from queue (FIFO).
 
@@ -46,7 +60,7 @@ class SchedulerProtocol(Protocol):
         """
         ...
 
-    def get_queue_status(self) -> Dict[str, Any]:
+    def get_queue_status(self) -> QueueStatus:
         """
         Get queue statistics.
 
@@ -56,7 +70,7 @@ class SchedulerProtocol(Protocol):
         ...
 
     @property
-    def pending_tasks(self) -> List[Any]:
+    def pending_tasks(self) -> List["DispatchTask"]:
         """Get list of pending tasks."""
         ...
 
