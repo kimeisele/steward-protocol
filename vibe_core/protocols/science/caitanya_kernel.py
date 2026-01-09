@@ -42,7 +42,7 @@ class StandardProcess:
         # Actual Work (SHA256 is good for 'Compute')
         return hashlib.sha256(data + seed).digest()
 
-from vibe_core.protocols.universal.yamaraja import secure_contract
+from vibe_core.protocols.governance.yamaraja import secure_contract
 
 class CaitanyaKernel:
     """
