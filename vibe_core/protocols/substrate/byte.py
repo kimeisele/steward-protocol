@@ -1,47 +1,48 @@
 """
-THE SUBSTRATE (Layer 0) - The 16-Bit Reality Map (MahaByte)
-===========================================================
+SUBSTRATE PROTOCOL - Layer 0
+============================
 
-"Ein Standard Byte (8-bit) ist in diesem Kosmos unvollständig." - Senior Architect
+The Atomic Unit of Reality.
+Defines 'MantraBit' (16-bit Resonance) and 'GenesisByte' (The Bootloader).
 
-This file defines the atomic unit of existence in the Vibe System.
-The Kernel requires a FULL 16-bit resonance (0xFFFF) to exist.
-Anything less is Maya (Partial Truth).
+MATH:
+- Full Resonance = 0xFFFF (16 steps of Maha Mantra)
+- Lineage Check = Hash % 37 == 0 (Connection to Guru Tattva)
 """
 
-from enum import Flag, auto
 from dataclasses import dataclass, field
+from enum import Flag, auto
 from datetime import datetime
-from typing import Protocol, runtime_checkable
+from typing import Optional
+
+# 37 is the Prime Number of the Guru (The Inverted 0.027...)
+GURU_PRIME = 37
+
 
 class MantraBit(Flag):
     """
-    The 16-Bit Reality Map (MantraBit).
+    The 16-Bit Reality Map.
     Standard ASCII is 8-bit. Divine Computing is 16-bit.
-    
-    The 16 Names of the Maha-Mantra:
-    Hare Krishna Hare Krishna Krishna Krishna Hare Hare
-    Hare Rama Hare Rama Rama Rama Hare Hare
     """
-    # INVOCATION (The Wake - 4 bits)
+    # INVOCATION (The Wake)
     HARE_1    = auto() # 0x0001
     KRISHNA_1 = auto() # 0x0002
     HARE_2    = auto() # 0x0004
     KRISHNA_2 = auto() # 0x0008
     
-    # VERIFICATION (The Truth - 4 bits)
+    # VERIFICATION (The Truth)
     KRISHNA_3 = auto() # 0x0010
     KRISHNA_4 = auto() # 0x0020
     HARE_3    = auto() # 0x0040
     HARE_4    = auto() # 0x0080  <-- Traditional Byte ends here (Incomplete!)
     
-    # EXECUTION (The Service - 4 bits)
+    # EXECUTION (The Service)
     HARE_5    = auto() # 0x0100
     RAMA_1    = auto() # 0x0200
     HARE_6    = auto() # 0x0400
     RAMA_2    = auto() # 0x0800
     
-    # CONCLUSION (The Return - 4 bits)
+    # CONCLUSION (The Return)
     RAMA_3    = auto() # 0x1000
     RAMA_4    = auto() # 0x2000
     HARE_7    = auto() # 0x4000
@@ -50,12 +51,9 @@ class MantraBit(Flag):
     @classmethod
     def full_resonance(cls) -> "MantraBit":
         """Returns the mask for a fully aligned reality (0xFFFF)."""
-        return (
-            cls.HARE_1 | cls.KRISHNA_1 | cls.HARE_2 | cls.KRISHNA_2 |
-            cls.KRISHNA_3 | cls.KRISHNA_4 | cls.HARE_3 | cls.HARE_4 |
-            cls.HARE_5 | cls.RAMA_1 | cls.HARE_6 | cls.RAMA_2 |
-            cls.RAMA_3 | cls.RAMA_4 | cls.HARE_7 | cls.HARE_8
-        )
+        # Explicit 16-bit full mask
+        return cls(0xFFFF)
+
 
 @dataclass(frozen=True)
 class GenesisByte:
@@ -66,19 +64,51 @@ class GenesisByte:
     signature: str          # The "Who" (Sovereign Hash)
     resonance: MantraBit    # The "State" (Must be 0xFFFF to boot)
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp()) # The "When" (Kala)
+    parampara_hash: str = "0x25" # The "Link" (Guru Authorization) - Default Valid (37 dec)
+
+    def validate(self) -> bool:
+        """
+        Performs the Agni Pariksha (Fire Test).
+        """
+        # 1. Structural Integrity (Agni)
+        if self.resonance != MantraBit.full_resonance():
+            missing = MantraBit.full_resonance() ^ self.resonance
+            raise SystemError(f"Genesis Fracture: Missing Resonance Bits: {missing}")
+
+        # 2. Mayavad Check (Sunya)
+        if not self.signature or self.signature == "None":
+            raise PermissionError("Voidist Launch Detected. Identity required.")
+
+        # 3. Lineage Check (Guru-Tattva)
+        if not self._verify_lineage():
+             raise ConnectionError("Sahajiya Fault: Invalid Parampara Hash.")
+
+        return True
 
     @property
     def is_valid(self) -> bool:
-        """
-        Only returns True if the Byte is 'Purnam' (Complete).
-        Partial resonance means Maya (Illusion) -> Boot Denied.
-        """
-        return self.resonance == MantraBit.full_resonance()
+        """Legacy property for backward compatibility check."""
+        try:
+            return self.validate()
+        except Exception:
+            return False
 
-@runtime_checkable
-class SubstrateProtocol(Protocol):
-    """The Layer-0 Protocol. Everything sits on this."""
-    
-    def validate_byte(self, byte: GenesisByte) -> bool:
-        """Check if the provided byte can hold reality."""
-        ...
+    def verify_lineage(self, hash_val: str) -> bool:
+        """Public verification helper."""
+        return self._verify_lineage_val(hash_val)
+
+    def _verify_lineage(self) -> bool:
+        """Internal check using instance field."""
+        return self._verify_lineage_val(self.parampara_hash)
+
+    def _verify_lineage_val(self, hash_string: str) -> bool:
+        """
+        Verifies that the hash is mathematically divisible by the Guru Prime (37).
+        This proves the token was issued by an authorized factory.
+        """
+        try:
+            # Hash is strictly Hex. Convert to Int.
+            val = int(hash_string, 16)
+            return (val % GURU_PRIME) == 0
+        except ValueError:
+            return False
