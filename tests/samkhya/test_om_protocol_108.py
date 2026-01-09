@@ -95,20 +95,20 @@ class TestOmProtocol108:
 
     def test_om_protocol_exists(self):
         """OmProtocol exists and is importable."""
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
 
         assert OmProtocol is not None
 
     def test_om_protocol_is_runtime_checkable(self):
         """OmProtocol is @runtime_checkable."""
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
 
         assert hasattr(OmProtocol, "__protocol_attrs__") or hasattr(OmProtocol, "_is_runtime_protocol")
 
     @pytest.mark.parametrize("parent", OM_PROTOCOL_PARENTS)
     def test_om_protocol_inherits_from(self, parent: str):
         """OmProtocol inherits from all 9 parents."""
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
 
         parent_names = [cls.__name__ for cls in OmProtocol.__mro__]
         assert parent in parent_names, f"OmProtocol must inherit from {parent}"
@@ -116,7 +116,7 @@ class TestOmProtocol108:
     @pytest.mark.parametrize("method_name,method_type", REQUIRED_METHODS)
     def test_om_protocol_has_method(self, method_name: str, method_type: str):
         """OmProtocol has all 32 required methods."""
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
 
         assert hasattr(OmProtocol, method_name), f"OmProtocol missing: {method_name}"
 
@@ -145,7 +145,7 @@ class TestOmProtocol108:
     def test_kernel_method_signature_compatible(self, method_name: str, method_type: str):
         """RealVibeKernel method signatures match OmProtocol."""
         from vibe_core.kernel_impl import RealVibeKernel
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
 
         if not hasattr(RealVibeKernel, method_name):
             pytest.skip(f"Missing: {method_name}")
@@ -180,7 +180,7 @@ class TestOmProtocol108:
         But Kernel MUST implement MantraProtocol (The Pulse).
         """
         from vibe_core.kernel_impl import RealVibeKernel
-        from vibe_core.protocols.universal import OmProtocol
+        from vibe_core.protocols.universal.om import OmProtocol
         from vibe_core.protocols.substrate import MantraProtocol
 
         # 1. Reject Impersonalism
@@ -276,7 +276,7 @@ def test_japa_bead(test_id: str, method_name: str, check_type: str):
     Each bead is a micro-verification of OmProtocol compliance.
     """
     from vibe_core.kernel_impl import RealVibeKernel
-    from vibe_core.protocols.universal import OmProtocol
+    from vibe_core.protocols.universal.om import OmProtocol
 
     if check_type == "protocol":
         assert hasattr(OmProtocol, method_name), f"Protocol missing: {method_name}"

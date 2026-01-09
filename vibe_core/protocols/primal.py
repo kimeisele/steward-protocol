@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, Type, runtime_checkable, get_type_hints
+from typing import Any, Dict, List, Optional, Protocol, Tuple, Type, runtime_checkable, get_type_hints
 
 # =============================================================================
 # 1. THE META-LAW: WATERTIGHT PROTOCOL
@@ -76,7 +76,7 @@ class WatertightValidator:
         else: leaks.append(f"⚠️ [YASHAS] No identity requirements.")
 
         # VIRYA (Strength)
-        has_raises = any(("Raises" in (m.__doc__ or "")) or ("Returns" in (m.__doc__ or ""))) for n, m in inspect.getmembers(protocol) if inspect.isfunction(m))
+        has_raises = any(("Raises" in (m.__doc__ or "") or "Returns" in (m.__doc__ or "")) for n, m in inspect.getmembers(protocol) if inspect.isfunction(m))
         if has_raises: opulences_found.add(Opulence.VIRYA)
         else: leaks.append(f"❌ [VIRYA] Missing robustness spec.")
 
