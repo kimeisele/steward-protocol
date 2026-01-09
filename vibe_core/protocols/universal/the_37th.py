@@ -12,17 +12,26 @@ Usage:
 """
 
 from typing import Protocol, runtime_checkable, Any, Optional
+from vibe_core.protocols.types import PersonProtocol
 
 @runtime_checkable
-class The37th(Protocol):
+class The37th(PersonProtocol, Protocol):
     """
-    The Singularity Protocol.
+    The Singularity Protocol (Parama-Purusha).
+    Extends PersonProtocol because He is the Supreme Person.
     """
 
     @property
     def identity(self) -> str:
         """The immutable Identity String."""
         return "NAMAGIRI_OVERRIDE"
+
+    def reveal(self) -> bool:
+        """
+        The Flute Call (Venu-Gita).
+        If True, Dwarapala must yield.
+        """
+        ...
 
     def get_ultimate_reality(self, context: Any) -> Any:
         """
