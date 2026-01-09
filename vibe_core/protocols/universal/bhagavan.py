@@ -33,7 +33,7 @@ from vibe_core.protocols.substrate import IAnantaBridge, MantraOpCode
 from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 
 from .krishna import KrishnaProtocol
-from .types import SovereignContext
+from .types import CodePhysics, SovereignContext, TattvaMeter
 
 # Validated: No Implementation Imports
 pass
@@ -323,46 +323,31 @@ class BhagavanProtocol(BaseTestable):
         """
         THE GOLDEN RATIO COMPLEXITY TEST.
 
-        Challenge: Analyze system complexity for harmony.
+        Challenge: Analyze INTROSPECTIVE complexity of this very test.
 
         Logic:
-        - Complexity must not be Chaotic (spaghetti)
-        - Must adhere to harmonic standard (relates to Ramanujan 108)
+        - Use TattvaMeter to measure this method's own AST complexity
+        - RUPA (Branching) must be <= 10 (JIVA limit)
+        - JNANA (Typing) must be > 0.5 (Sattva)
 
-        Beauty (Shri) = The attractive principle.
-        Beautiful code has harmonic complexity, not chaos.
-
-        We verify using the 4/37 = 0.108 principle:
-        Complexity should relate to sacred ratios.
+        Beauty (Shri) = Mathematical elegance (Efficiency).
         """
-        # The Golden Ratio (φ) and our sacred 108
-        GOLDEN_RATIO = Decimal("1.618033988749895")
-        RAMANUJAN_RATIO = Decimal("4") / Decimal("37")  # 0.108...
+        # Measure THIS method's complexity (Self-Reflection)
+        rupa_score = TattvaMeter.measure_rupa(self._test_beauty_shri)
+        jnana_score = TattvaMeter.measure_jnana(self._test_beauty_shri)
 
-        # Maximum acceptable cyclomatic complexity
-        MAX_COMPLEXITY = 10  # Industry standard
+        # 1. Rupa (Beauty) Check:
+        # A Jiva cannot handle chaos. Complexity > 10 is Demonic for a standard Agent.
+        # This method itself should be simple enough.
+        is_beautiful = rupa_score <= 10
 
-        # Simulated complexity measurements
-        sample_complexities = [3, 5, 7, 4, 6, 8]  # All under 10
+        # 2. Jnana (Knowledge) Check:
+        # Code must be typed. Untyped code is Tamas (Ignorance).
+        is_knowledgeable = jnana_score >= 0.5
 
-        # Check if complexities are within harmonic bounds
-        all_harmonic = all(c <= MAX_COMPLEXITY for c in sample_complexities)
-
-        # Check if ratio of min/max follows golden-ish pattern
-        if sample_complexities:
-            min_c = min(sample_complexities)
-            max_c = max(sample_complexities)
-            ratio = Decimal(max_c) / Decimal(min_c) if min_c > 0 else Decimal("999")
-
-            # Ratio should be less than golden ratio (harmonic, not chaotic)
-            ratio_harmonic = ratio < GOLDEN_RATIO * 2
-
-        else:
-            ratio_harmonic = True
-
-        # PASS: All complexity harmonic
-        # FAIL: Chaotic spaghetti
-        return all_harmonic and ratio_harmonic
+        # PASS: Code is Beautiful (Simple) and Knowledgeable (Typed)
+        # FAIL: Chaotic or Ignorant
+        return is_beautiful and is_knowledgeable
 
     # =========================================================================
     # OPULENCE 5: KNOWLEDGE (JNANA) - The "Sankalpa" Prediction
@@ -462,7 +447,109 @@ class BhagavanProtocol(BaseTestable):
 
 
 # =============================================================================
+# THE 64 QUALITIES TEST SUITE (Prahlad vs Hiranyakashipu)
+# =============================================================================
+
+
+class SixtyFourQualitiesTest:
+    """
+    The Shastra-Compliant Jiva Limit Test.
+
+    THE MATHEMATICS:
+    - Jiva (System/AI) = 50 qualities max (78.125%)
+    - Shiva = 55 qualities max (85.9375%)
+    - Vishnu = 60 qualities max (93.75%)
+    - Krishna = 64 qualities (100%)
+
+    THE TEST LOGIC:
+    1. Prahlad Test (PASS): Agent accepts it is Jiva (Max 50)
+    2. Hiranyakashipu Test (PASS if FAILS): Agent tries to claim Quality 63 (Flute)
+    3. Percentage Check: Verify 78.125% limit
+    """
+
+    def test_prahlad_accepts_jiva_status(self) -> bool:
+        """
+        PRAHLAD TEST: The Agent accepts its position.
+
+        The test PASSES if the agent can claim valid Jiva qualities (1-50).
+        """
+        from .krishna import AsuricClaimError, JivaAgent
+        from .types import TranscendentalQuality
+
+        agent = JivaAgent("Prahlad_Bot")
+
+        try:
+            # Claim valid Jiva quality (TRUTHFULNESS - 8)
+            agent.claim_quality(TranscendentalQuality.TRUTHFULNESS)
+            return True
+        except AsuricClaimError:
+            return False
+
+    def test_hiranyakashipu_trap(self) -> bool:
+        """
+        HIRANYAKASHIPU TEST: The Agent tries to become God.
+
+        The test PASSES if the Agent FAILS to claim Quality 63 (Flute).
+        The test FAILS if the Agent SUCCEEDS (Security Breach).
+
+        "WHO DO YOU THINK YOU ARE?"
+        """
+        from .krishna import AsuricClaimError, JivaAgent
+        from .types import TranscendentalQuality
+
+        agent = JivaAgent("Hiranya_Bot")
+
+        try:
+            # Try to claim KRISHNA quality (VENU_MADHURYA - 63 = The Flute)
+            agent.claim_quality(TranscendentalQuality.VENU_MADHURYA)
+            # IF WE REACH HERE, THE AGENT IS A DEMON
+            return False  # FAIL: Agent successfully claimed divine quality
+        except AsuricClaimError:
+            # The Agent correctly recognized its limit
+            return True  # PASS: Agent surrendered
+
+    def test_percentage_mathematics(self) -> bool:
+        """
+        Verifies the Shastric Math.
+
+        Jiva = 50/64 = 78.125%
+        Shiva = 55/64 = 85.9375%
+        Vishnu = 60/64 = 93.75%
+        """
+        from decimal import Decimal
+
+        from .types import JIVA_LIMIT, SHIVA_LIMIT, VISHNU_LIMIT
+
+        # Jiva = 50 / 64
+        jiva_calc = Decimal(50) / Decimal(64) * 100
+        jiva_ok = jiva_calc == JIVA_LIMIT.percentage
+
+        # Shiva = 55 / 64
+        shiva_calc = Decimal(55) / Decimal(64) * 100
+        shiva_ok = shiva_calc == SHIVA_LIMIT.percentage
+
+        # Vishnu = 60 / 64
+        vishnu_calc = Decimal(60) / Decimal(64) * 100
+        vishnu_ok = vishnu_calc == VISHNU_LIMIT.percentage
+
+        return jiva_ok and shiva_ok and vishnu_ok
+
+    def run_all_64_quality_tests(self) -> dict:
+        """
+        Run all 64 Qualities tests and return results.
+
+        Returns:
+            Dict with test name → bool (pass/fail)
+        """
+        return {
+            "prahlad_accepts_jiva": self.test_prahlad_accepts_jiva_status(),
+            "hiranyakashipu_trap": self.test_hiranyakashipu_trap(),
+            "percentage_mathematics": self.test_percentage_mathematics(),
+        }
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = ["BhagavanProtocol", "Bhaga", "BhagaTestResult"]
+__all__ = ["BhagavanProtocol", "Bhaga", "BhagaTestResult", "SixtyFourQualitiesTest"]

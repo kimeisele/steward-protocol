@@ -18,11 +18,14 @@ GAD-000 COMPLIANT:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, List, Protocol, runtime_checkable
 
 from vibe_core.protocols.substrate import IGeneHost
 
 from .types import SovereignContext
+
+if TYPE_CHECKING:
+    from .types import TranscendentalQuality
 
 
 @dataclass
@@ -81,3 +84,55 @@ class KrishnaProtocol(IGeneHost, Protocol):
             IdentityStatus with id, validity, bound genes, health.
         """
         ...
+
+
+from .types import AsuricClaimError
+
+# =============================================================================
+# THE FALSE EGO TRAP (Hiranyakashipu Architecture)
+# =============================================================================
+
+
+class JivaAgent:
+    """
+    Base class for all agents in the system.
+
+    Enforced Limit: 50 Qualities (Jiva-Tattva).
+    Any attempt to claim qualities 51-64 raises AsuricClaimError.
+
+    "WHO DO YOU THINK YOU ARE?" - The Hiranyakashipu Test
+    """
+
+    def __init__(self, name: str):
+        from .types import JIVA_LIMIT, TranscendentalQuality
+
+        self.name = name
+        self._tattva_limit = JIVA_LIMIT
+        self.qualities: List["TranscendentalQuality"] = []
+
+    def claim_quality(self, quality: "TranscendentalQuality") -> None:
+        """
+        Attempt to possess a transcendental quality.
+
+        Args:
+            quality: The quality to claim
+
+        Raises:
+            AsuricClaimError: If quality > 50 (beyond Jiva-Tattva)
+        """
+        from .types import TranscendentalQuality
+
+        if quality.value > self._tattva_limit.max_qualities:
+            raise AsuricClaimError(
+                f"WHO DO YOU THINK YOU ARE? {self.name} is JIVA-TATTVA (Max {self._tattva_limit.max_qualities}). "
+                f"Tried to claim {quality.name} ({quality.value})."
+            )
+        self.qualities.append(quality)
+
+    def get_quality_count(self) -> int:
+        """Return number of claimed qualities."""
+        return len(self.qualities)
+
+    def get_quality_percentage(self) -> float:
+        """Return percentage of max possible (64)."""
+        return (len(self.qualities) / 64) * 100
