@@ -59,6 +59,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
 from vibe_core.event_bus import EventBus
+from vibe_core.protocols.event import EventBusProtocol
 # OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
 from vibe_core.protocols.kernel_protocol import KernelProtocol
 from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
@@ -103,7 +104,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         config: Optional[CityConfig] = None,
         boot_mode: BootMode = BootMode.FULL,
         trace: Optional[UnifiedTrace] = None,
-        event_bus: Optional[EventBus] = None,
+        event_bus: Optional[EventBusProtocol] = None,
     ):
         """
         Initialize the boot orchestrator.

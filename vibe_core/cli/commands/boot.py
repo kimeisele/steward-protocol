@@ -6,7 +6,10 @@ Initialize the Vibe Kernel.
 
 import time
 import getpass
-from typing import List
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
 from vibe_core.boot_orchestrator import BootOrchestrator
@@ -66,7 +69,7 @@ class BootCommand(BaseCommand):
             
             # 4. IGNITE (The Spark)
             # Passes the GenesisByte. If valid, Orchestrator builds Kernel.
-            kernel = orchestrator.ignite(genesis)
+            kernel: "KernelProtocol" = orchestrator.ignite(genesis)
 
             elapsed = time.time() - start
 
