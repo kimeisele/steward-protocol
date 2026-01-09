@@ -59,7 +59,7 @@ from .types import (
     Verdict as TypeVerdict,
 )
 from .union import EntityStatus, UnionProtocol
-from .yamaraja import Judgment, Verdict, YamarajaGate
+# from .yamaraja import Judgment, Verdict, YamarajaGate
 
 # NOTE: MantraInstruction has been replaced by MantraOpCode from substrate.py
 # Use MantraOpCode (directly from vibe_core.protocols.substrate)

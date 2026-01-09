@@ -8,7 +8,7 @@ It runs their 'fast' tests.
 If ANY fail, the Commit is rejected.
 """
 
-from typing import List, Protocol, Tuple, Any
+from typing import List, Protocol, Tuple
 from vibe_core.protocols.testable import Testable, TestableType
 # Assuming YamarajaPhysics/Judgment exist in governance.yamaraja
 from vibe_core.protocols.governance.yamaraja import YamarajaPhysics, Judgment, Verdict
@@ -45,7 +45,8 @@ class DwarapalaGatekeeper:
                     try:
                         # 2. EXECUTE TEST
                         # We pass 'None' as Kernel because Pre-Commit is often static/isolated
-                        success = case.test_func(None, component) # type: ignore
+                        # Ideally type hint kernel as Optional[KernelProtocol] in definition
+                        success = case.test_func(None, component)
                         
                         if not success:
                             return False, f"⛔ BLOCK: {component.get_testable_id()} failed test '{case.name}'"
