@@ -59,7 +59,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
 from vibe_core.event_bus import EventBus
-from vibe_core.kernel_impl import RealVibeKernel
+# OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
+from vibe_core.protocols.kernel_protocol import KernelProtocol
+from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
+from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
+from vibe_core.services.kernel_factory import KernelFactory
 from vibe_core.operator_adapter import (
     LocalLLMOperator,
     TerminalOperator,
@@ -81,7 +85,7 @@ from vibe_core.sarga import Element, get_sarga
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 
 
-class BootOrchestrator(CognitiveCycle):
+class BootOrchestrator(CognitiveCycle, BootProtocol):
     """
     Unified boot orchestration for Agent City OS.
 
@@ -139,7 +143,14 @@ class BootOrchestrator(CognitiveCycle):
         self.ledger_path = ledger_path
         self.project_root = project_root or Path.cwd()
         self.config = config  # BLOCKER #0: Phoenix Config integration
-        self.kernel: Optional[RealVibeKernel] = None
+
+        # FACTORY PATTERN (No more 'new RealVibeKernel()')
+        # Inject factory or use default service
+        self._kernel_factory: KernelFactoryProtocol = KernelFactory()
+        
+        # KERNEL IS NOW LATENT (None) until ignited
+        self.kernel: Optional[KernelProtocol] = None
+
         self.discoverer: Optional[Any] = None  # Lazy: Discoverer loaded at runtime
 
         # Sarga phase components (initialized during boot)
@@ -159,7 +170,36 @@ class BootOrchestrator(CognitiveCycle):
             trace = UnifiedTrace()
         if not event_bus:
             event_bus = EventBus()
+        if not event_bus:
+            event_bus = EventBus()
         self.setup(trace, event_bus, steward_context=None)
+
+    # ========================================================================
+    # THE IGNITION (GENESIS) - REPLACES DIRECT BOOT
+    # ========================================================================
+
+    def ignite(self, genesis: GenesisByte) -> Any:
+        """
+        The Conscious Act of Creation.
+        Accepts the 16-Bit Genesis Byte to authorize the boot.
+        """
+        if not genesis.is_valid:
+            logger.critical("⛔ APARADHA: Genesis Byte incomplete! Resonance < 100%")
+            # logger.critical(f"   Missing Bits: {~genesis.resonance & MantraBit.full_resonance()}")
+            raise PermissionError("Kernel Ignition Denied: Incomplete Mantra Resonance")
+
+        logger.info(f"🕉️  GENESIS ACCEPTED. Signature: {genesis.signature}")
+        logger.info(f"   Resonance: 16-Bit Aligned ({genesis.resonance.name})")
+        
+        # NOW we trigger the OODA Loop
+        return self.boot()
+
+    def shutdown(self, reason: str) -> bool:
+        """Graceful collapse of the wave function."""
+        if self.kernel:
+            # TODO: Add shutdown protocol
+            return True
+        return False
 
     # ========================================================================
     # COGNITIVECYCLE CONFIGURATION
@@ -239,9 +279,13 @@ class BootOrchestrator(CognitiveCycle):
         metadata = {}
 
         try:
-            # AKASHA: Space - Create kernel, allocate memory
-            logger.info("⚡ OPUS-095: Setting up kernel space (AKASHA)")
-            self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
+            # AKASHA: Space - Create kernel via Factory
+            logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
+            
+            # THE FIX: No hardcoded class instantiation here
+            # Use get_kernel (Singleton Access)
+            self.kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
+            
             logger.info(f"      → Kernel space allocated (ledger: {self.ledger_path})")
 
             # VAYU: Air - Establish communication channels

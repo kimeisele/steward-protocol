@@ -5,7 +5,12 @@ Initialize the Vibe Kernel.
 """
 
 import time
+import getpass
 from typing import List
+
+from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
+from vibe_core.boot_orchestrator import BootOrchestrator
+from vibe_core.boot_mode import BootMode
 
 from vibe_core.protocols.command import (
     BaseCommand,
@@ -41,11 +46,27 @@ class BootCommand(BaseCommand):
         try:
             start = time.time()
 
-            # Import kernel
-            from vibe_core.kernel_impl import RealVibeKernel
-
-            # Boot
-            kernel = RealVibeKernel(load_plugins=not minimal)
+            # 1. ACQUIRE IDENTITY (Sovereign Check)
+            # In a real system, this pulls from the cryptographic keystore
+            user_signature = f"sovereign:{getpass.getuser()}"
+            
+            # 2. GENERATE GENESIS BYTE (The 16-Bit Spark)
+            # We affirm the full cycle (Hare Krishna...) exists in intent
+            genesis = GenesisByte(
+                signature=user_signature,
+                resonance=MantraBit.full_resonance(), # Sets 0xFFFF
+                timestamp=start
+            )
+            
+            # 3. INITIALIZE ORCHESTRATOR (The Machine)
+            # No Kernel creation here! Just the empty shell.
+            orchestrator = BootOrchestrator(
+                boot_mode=BootMode.MINIMAL if minimal else BootMode.FULL
+            )
+            
+            # 4. IGNITE (The Spark)
+            # Passes the GenesisByte. If valid, Orchestrator builds Kernel.
+            kernel = orchestrator.ignite(genesis)
 
             elapsed = time.time() - start
 
