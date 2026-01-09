@@ -40,12 +40,30 @@ class MantraOpCode(Enum):
     YIELD_CPU = auto()       # HARE
     RESET_IP = auto()        # HARE
 
+from typing import Protocol, runtime_checkable, List, Optional, TypeVar
+from vibe_core.protocols.substrate.byte import MantraByte
+from vibe_core.protocols.universal.guna import GunaProtocol, GunaProfile, ZERO, ONE
+
 @runtime_checkable
-class MantraProtocol(Protocol):
+class MantraProtocol(GunaProtocol, Protocol):
     """
     The BIOS-Level Protocol.
     Must be implemented by the Kernel or any 'Mantra-Governed' entity.
+    
+    The Holy Name is the Sound Avatar (Shabda-Brahma).
+    It is 'Saguna' in the transcendental sense (Full of Qualities).
     """
+
+    def get_guna_profile(self) -> GunaProfile:
+        """
+        PURE EXISTENCE. Not Void.
+        """
+        return GunaProfile(
+            sattva=ZERO, 
+            rajas=ZERO, 
+            tamas=ZERO, 
+            visuddha=ONE # 100% Krishna Injection
+        )
     
     def chant(self, frequency_hz: float = 432.0) -> float:
         """
