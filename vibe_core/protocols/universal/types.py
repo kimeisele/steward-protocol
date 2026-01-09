@@ -6,6 +6,16 @@ from decimal import Decimal
 from enum import Enum, IntEnum
 from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
 
+# IMPORT MANTRA TYPES FROM PRIMAL (Layer -2)
+# This breaks the dependency on substrate.py
+from vibe_core.protocols.primal import (
+    AlignmentScore,
+    DriftContext,
+    HolyName,
+    MantraOpCode,
+    Resonance,
+)
+
 # T = TypeVar("T") # Reserved for Generics if upgrades needed
 
 # Strict Metadata Type (No Any)
@@ -327,10 +337,3 @@ class MemoryValue:
     timestamp: datetime
     ttl: Optional[int] = None
     embedding: Optional[List[float]] = None
-
-
-# --- MANTRA TYPES (THE 634 FIX) ---
-
-# NOTE: Mantra types (Resonance, AlignmentScore, DriftContext) have been moved 
-# to vibe_core.protocols.substrate (Layer -1 / DNA).
-# Import from there for the 16-Bit Instruction Set.
