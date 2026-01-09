@@ -72,23 +72,26 @@ def test_boot_protocol_shutdown_signature():
 
 def test_genesis_byte_logic():
     """Verify GenesisByte validation logic."""
-    from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
+    from vibe_core.protocols.substrate.byte import GenesisByte, MantraByte, HolyName
     
     # 1. Empty Genesis (No Resonance)
-    g = GenesisByte(signature="", resonance=MantraBit(0))
+    g = GenesisByte(signature="", resonance=MantraByte.from_trits([]), dimension=16)
+    # validate() raises Exceptions now, doesn't return bool (is_valid catches them)
     assert not g.is_valid
     
-    # 2. Valid Genesis (requires valid signature and FULL resonance - 0xFFFF)
-    # The Protocol defines Full Resonance as the key to the Gate.
+    # 2. Valid Genesis (requires valid signature and STANDARD resonance)
+    # The Protocol defines Standard 16-word resonance as the key.
     
     g_valid = GenesisByte(
         signature="valid_sig_123",
-        resonance=MantraBit.full_resonance(),
+        resonance=MantraByte.standard_16(),
+        dimension=16,
         timestamp=123456789.0
     )
     
     assert g_valid.is_valid
-    assert g_valid.resonance & MantraBit.HARE_1 # Should have at least the first bit
+    # Check first trit is HARE
+    assert g_valid.resonance.sequence[0].value == HolyName.HARE
 
 
 # =============================================================================
