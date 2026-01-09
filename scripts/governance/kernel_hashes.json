@@ -1,5 +1,5 @@
 {
-  "vibe_core/kernel_impl.py": "676bbcd2f8f6a7316ca871a8dfdd076ac74d93be72cf054971b3369b17679207",
+  "vibe_core/kernel_impl.py": "7b1d523510451c35e8967f21e11c17953a0969b9a687b88c51f43e68625d2343",
   "vibe_core/kernel_ops.py": "51ddee7fb5e0b4f01a9e5620768dac5b53cd315022ef92afe155de66dab7c83f",
   "vibe_core/ledger.py": "33d222ea5fc0914a14c40aec230046f56e532372cb20df77c01d44b89b7923a0",
   "vibe_core/plugin_protocol.py": "5d9e469d7b2096fcf5fb8af66ce45e58cd07dbf901bd4e9ed17209d42032d6eb",
@@ -7,8 +7,10 @@
   "vibe_core/narasimha.py": "2c9ce88ba49216c97020d2741f65015ab86748d0becfa6e065261ab8adbb8fdf",
   "vibe_core/capability_registry.py": "bac393afde8744a51afbb8e7cd7368da306d6a6f44660f88354f583facfc04bb",
   "vibe_core/bridge.py": "a79b06711964e1a5ef932e18280076e69e6922eaf3ddeae3a59b7a20847843a5",
-  "scripts/governance/restore_kernel.sh": "bf3ca1c757dde6b19a06543083f5af40f96318f51d5a3257d98df170e11a76cb",
-  "scripts/governance/verify_kernel.py": "d1ed75caebdcb52999a9206ce18e6902f1c786b03aa93476ed69b073322ec298",
+  "vibe_core/security.py": "b542b976ec0c3a102f8153a6554ae8ccc26b7d522bf90acea844ea11045ed61a",
+  "vibe_core/protocols/substrate.py": "b544708985646609ba912a186ee08fde7266f46ee4f1bc0e51613742310c6788",
+  "vibe_core/protocols/integrity.py": "42d6127727ee8e497772f246f85eaac55822d16b0089fbc46c39cb82c63cc0ae",
+  "CONSTITUTION.md": "a868f2647445ab356c485ac4363cc718c38d3bf3a8a7452a72d19f027a92c41f",
   ".github/workflows/attest.yml": "a546c5cf343917b31ede30c68ffe7cf2ea97fae41b0ea9ffcbf20f719f9b668c",
   ".github/workflows/container-build.yml": "d303af901e0d3d9031436c40cbda9b5b7d8b5f8e125ab1c81762ffa9d9103805",
   ".github/workflows/deploy.yml": "5b86104b01fe4fc2f6371b1ad56dce89795c161ef868dc88e081581beab34ed1",
@@ -20,5 +22,7 @@
   ".github/workflows/steward-ci.yml": "a29bdc460b439cb441c60076d95b1d8210cf18a3fda9b55febbb124b3497322e",
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
   ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
-  ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320"
+  ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
+  "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171",
+  "scripts/governance/kernel_hashes.json": "e6fcc75d4d186daa278963b469291286b37ba3beadb2eed64aeab02041f795f8"
 }
