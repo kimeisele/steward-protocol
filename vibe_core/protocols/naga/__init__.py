@@ -162,6 +162,7 @@ from vibe_core.protocols.naga.sesha import (
     ImportResult,
     LedgerBlock,
     Sesha,
+    SeshaProtocol,
     SyncRequest,
     SyncStatus,
 )
@@ -169,6 +170,7 @@ from vibe_core.protocols.naga.sesha import (
 # Takshaka (The Architect)
 from vibe_core.protocols.naga.takshaka import (
     Takshaka,
+    TakshakaProtocol,
     ToxicityReport,
     VajraViolation,
     VerifyResult,
@@ -183,6 +185,7 @@ from vibe_core.protocols.naga.vasuki import (
     SendStatus,
     SignedEnvelope,
     Vasuki,
+    VasukiProtocol,
 )
 
 # =============================================================================
@@ -198,6 +201,7 @@ __all__ = [
     "EventRecord",  # YAMARAJA: Typed event for Sesha.record_event()
     # Sesha
     "Sesha",
+    "SeshaProtocol",
     "SyncStatus",
     "SyncRequest",
     "LedgerBlock",
@@ -207,9 +211,12 @@ __all__ = [
     "SignedEnvelope",
     "SendStatus",
     "SendResult",
+    "SendResult",
     "NodeAddress",
+    "VasukiProtocol",
     # Takshaka
     "Takshaka",
+    "TakshakaProtocol",
     "VerifyStatus",
     "VerifyResult",
     "ToxicityReport",
