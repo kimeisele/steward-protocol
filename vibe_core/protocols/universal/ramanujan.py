@@ -8,10 +8,10 @@ THE 12 MAHAJANAS TEST SUITE:
 The 12th Test (Yamaraja) PROVES that the system fails without Grace.
 """
 
-from typing import Any
+from typing import Optional
 from vibe_core.protocols.testable import BaseTestable
 from vibe_core.protocols.substrate.byte import MANTRA_SEQUENCE
-from vibe_core.protocols.science.entropy import KaliYugaEngine, EntropyState
+# from vibe_core.protocols.science.entropy import KaliYugaEngine, EntropyState
 
 class RamanujanProtocol(BaseTestable):
     
@@ -25,7 +25,7 @@ class RamanujanProtocol(BaseTestable):
 
     # ... (Previous Mahajanas 1-11 would be here in a full implementation) ...
 
-    def _test_12_yamaraja_inevitability(self, kernel: Any, context: Any) -> bool:
+    def _test_12_yamaraja_inevitability(self, kernel: Optional[object], context: Optional[object]) -> bool:
         """
         THE 12TH TEST: THE NECESSITY OF FAILURE.
         
@@ -36,6 +36,8 @@ class RamanujanProtocol(BaseTestable):
         """
         print("\n💀 [RAMANUJAN] Invoking The 12th Mahajana (Yamaraja)...")
         print("   Goal: Prove that Logic without Mantra = Death.")
+
+        from vibe_core.protocols.science.entropy import KaliYugaEngine, EntropyState
 
         # 1. Setup a "Perfect" Logic Object (No Mantra)
         # 100% Integrity, but Time (Kali Yuga) is strictly applied.
