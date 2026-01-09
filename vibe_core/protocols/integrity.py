@@ -274,3 +274,121 @@ class IntegrityChecker:
         self.register_command_registry()
         self.register_cartridge_tools()
         self.register_cognitive()
+
+
+# =============================================================================
+# VISHNU KERNEL INTEGRITY (Security Ring 0)
+# =============================================================================
+
+# The Immutable Core - Changes here require "Main Branch" consensus.
+SECURITY_RING_0 = [
+    # Core Orchestration
+    "vibe_core/kernel_impl.py",
+    "vibe_core/kernel_ops.py",
+    "vibe_core/ledger.py",
+    # Plugin System
+    "vibe_core/plugin_protocol.py",
+    "vibe_core/plugin_loader.py",
+    # Security (Sword, Shield, Gate)
+    "vibe_core/narasimha.py",
+    "vibe_core/capability_registry.py",
+    "vibe_core/bridge.py",
+    "vibe_core/security.py",
+    # Protocol Foundation
+    "vibe_core/protocols/substrate.py",
+    "vibe_core/protocols/integrity.py",
+    "CONSTITUTION.md",
+    # Infrastructure - Workflows
+    ".github/workflows/attest.yml",
+    ".github/workflows/container-build.yml",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/factory.yml",
+    ".github/workflows/heartbeat.yml",
+    ".github/workflows/integration-tests.yml",
+    ".github/workflows/scheduled-agents.yml",
+    ".github/workflows/scribe-docs.yml",
+    ".github/workflows/steward-ci.yml",
+    ".github/workflows/system-cycle.yml",
+    # Infrastructure - Config
+    ".pre-commit-config.yaml",
+    ".gitignore",
+    # Governance (The Watchers)
+    "scripts/governance/vishnu_guard.py",
+    "scripts/governance/kernel_hashes.json"
+]
+
+from typing import List, Protocol, runtime_checkable
+from vibe_core.security import VajraGuarded
+
+@runtime_checkable
+class KernelIntegrityProtocol(Protocol):
+    """
+    Protocol for maintaining the Structural Integrity of the Kernel.
+    
+    "Vishnu 0 Protection" - The Kernel protects itself.
+    """
+    
+    def verify_ring_0(self) -> bool:
+        """Verify that all Ring 0 files match their canonical hashes."""
+        ...
+        
+    def get_protected_files(self) -> List[str]:
+        """Return the list of files in Security Ring 0."""
+        ...
+        
+    def restore_kernel(self) -> List[str]:
+        """Force-restore the Kernel to its canonical state."""
+        ...
+
+
+class VishnuIntegrityGuardian(VajraGuarded):
+    """
+    Implementation of KernelIntegrityProtocol.
+    
+    "The Nuclear Option" - Restores truth from origin/main.
+    Protected by VajraGuarded to prevent list poisoning.
+    """
+    
+    def __init__(self):
+        VajraGuarded.__init__(self)
+        self._security_ring_0 = SECURITY_RING_0
+        self.protect_attribute("_security_ring_0")
+        self.vajra_seal()
+    
+    def verify_ring_0(self) -> bool:
+        """Check if any Ring 0 file differs from origin/main."""
+        import subprocess
+        try:
+            subprocess.run(["git", "fetch", "origin", "main", "--depth=1"], check=False, capture_output=True)
+            for file in self._security_ring_0:
+                result = subprocess.run(
+                    ["git", "diff", "--quiet", "origin/main", "--", file],
+                    check=False
+                )
+                if result.returncode != 0:
+                    return False
+            return True
+        except Exception:
+            return False
+
+    def get_protected_files(self) -> List[str]:
+        return self._security_ring_0
+
+    def restore_kernel(self) -> List[str]:
+        """NUCLEAR RESET: Overwrites local changes with origin/main version."""
+        import subprocess
+        restored = []
+        try:
+            subprocess.run(["git", "fetch", "origin", "main", "--depth=1"], check=False, capture_output=True)
+            for file in self._security_ring_0:
+                diff_check = subprocess.run(
+                    ["git", "diff", "--quiet", "origin/main", "--", file],
+                    check=False
+                )
+                if diff_check.returncode != 0:
+                    subprocess.run(["git", "checkout", "origin/main", "--", file], check=True)
+                    subprocess.run(["git", "add", file], check=True)
+                    restored.append(file)
+            return restored
+        except Exception as e:
+            raise RuntimeError(f"VISHNU FAILURE: Could not restore kernel integrity: {e}")
