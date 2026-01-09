@@ -43,7 +43,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Type, TypeVar
 
 if TYPE_CHECKING:
-    from vibe_core.ledger import SQLiteLedger
+    from vibe_core.protocols import VibeLedger
 
 T = TypeVar("T")
 
@@ -344,7 +344,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
 
         # ... (rest of existing methods) ...
 
-    def __init__(self, ledger: Optional["SQLiteLedger"] = None) -> None:
+    def __init__(self, ledger: Optional["VibeLedger"] = None) -> None:
         """Initialize Ananta."""
         super().__init__(service_name="Ananta")
 
@@ -700,7 +700,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
     # Loading Governance (OUROBOROS on Loaders)
     # =========================================================================
 
-    def inject_ledger(self, ledger: "SQLiteLedger") -> None:
+    def inject_ledger(self, ledger: "VibeLedger") -> None:
         """Inject ledger after construction."""
         self._ledger = ledger
 

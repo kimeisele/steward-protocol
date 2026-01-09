@@ -309,7 +309,7 @@ class LifecyclePlugin(KernelPlugin):
         if hasattr(self._kernel, "_event_bus") and self._kernel._event_bus:
             try:
                 # EventBus uses emit() not publish()
-                from vibe_core.event_bus import Event
+                from vibe_core.protocols.event import Event
 
                 event = Event(
                     event_type="system.life.birth",

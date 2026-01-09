@@ -55,7 +55,7 @@ from vibe_core.protocols.naga import (
 from vibe_core.protocols.naga.groups import SecurityProtocol, Subject, Verdict
 
 if TYPE_CHECKING:
-    from vibe_core.ledger import SQLiteLedger
+    from vibe_core.protocols import VibeLedger
 
 logger = logging.getLogger("TAKSHAKA")
 
@@ -87,7 +87,7 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
     def __init__(
         self,
         sesha: Optional[SeshaProtocol] = None,
-        ledger: Optional["SQLiteLedger"] = None,
+        ledger: Optional["VibeLedger"] = None,
         trust_mode: str = "strict",
         toxicity_threshold: float = 0.3,
         rate_limit_rpm: int = 60,

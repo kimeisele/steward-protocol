@@ -49,7 +49,7 @@ from vibe_core.protocols.naga import (
 from vibe_core.protocols.naga.groups import DataProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.ledger import SQLiteLedger
+    from vibe_core.protocols import VibeLedger
 
 logger = logging.getLogger("SESHA")
 
@@ -78,7 +78,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
 
     def __init__(
         self,
-        ledger: Optional["SQLiteLedger"] = None,
+        ledger: Optional["VibeLedger"] = None,
         block_size: int = 100,
     ):
         """
@@ -110,7 +110,7 @@ class SeshaService(NagaBaseService, SeshaProtocol, DataProtocol):
         else:
             logger.warning("🐍 SESHA initialized in DEGRADED mode (No Ledger)")
 
-    def inject_ledger(self, ledger: "SQLiteLedger") -> None:
+    def inject_ledger(self, ledger: "VibeLedger") -> None:
         """Inject ledger after construction (for lazy init)."""
         self._ledger = ledger
         logger.debug("SESHA: Ledger injected")
