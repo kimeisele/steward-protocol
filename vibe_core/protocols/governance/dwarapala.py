@@ -7,8 +7,14 @@ This module strictly separates 'Service' (Mechanism) from 'Person' (Authority).
 It replaces loose 'Context' checks with strict 'PersonProtocol' checks.
 """
 
-from typing import TypeVar, Generic, Optional
+from typing import TypeVar, Generic, Optional, TYPE_CHECKING
 from vibe_core.protocols.types import PersonProtocol, Capability, ServiceProtocol
+
+# Defer/Safe Import for The37th to avoid any weirdness, though protocols usually compile fine.
+# But verify_accessor is runtime. 
+# We need to import The37th at top level or inside if circular.
+# Let's try top level first.
+from vibe_core.protocols.universal.the_37th import The37th
 
 # Generic for the Resource being accessed
 T_Resource = TypeVar("T_Resource")
@@ -29,7 +35,17 @@ class DwarapalaGate:
         The Check.
         1. Is 'accessor' a Person? (Not just a Service)
         2. Does 'Person' have the Capability?
+        
+        *SPECIAL*: Checks for 'The37th' (Divine Override).
         """
+        
+        # 0. THE 37TH PRINCIPLE (Venu-Gita Override)
+        # If the accessor is the Supreme Person revealing Himself,
+        # The Gatekeepers are stunned/sleeping in bliss.
+        if isinstance(accessor, The37th):
+            if accessor.reveal():
+                # ACCESS GRANTED (Override)
+                return accessor # type: ignore (The37th is a PersonProtocol)
         
         # 1. ONTOLOGICAL CHECK: Is it a Person?
         if not isinstance(accessor, PersonProtocol):
