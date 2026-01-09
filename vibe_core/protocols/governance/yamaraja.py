@@ -11,7 +11,7 @@ Refactored for Hardness:
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Set
+from typing import Optional, Set, Dict
 
 # Absolute Imports required for Hardness
 from vibe_core.protocols.governance.guru import AnantaShesha
@@ -45,7 +45,7 @@ class YamarajaGate:
         # Dangerous Operations (Die Sünden) - Hardcoded Set
         self.ugra_karma: Set[str] = {"delete", "destroy", "kill", "wipe", "narasimha"}
 
-    def judge_action(self, context: SovereignContext, command: str, payload: Any) -> Judgment:
+    def judge_action(self, context: SovereignContext, command: str, payload: Optional[Dict[str, object]] = None) -> Judgment:
         """
         Das Jüngste Gericht für jeden Command call.
         """
@@ -58,7 +58,7 @@ class YamarajaGate:
             self.shesha.bestow_mercy("yamaraja_critical_fail", e)
             return Judgment(Verdict.DENY, "System Turmoil (Yamaraja Unavailable)", 1.0)
 
-    def _execute_judgment(self, context: SovereignContext, command: str, payload: Any) -> Judgment:
+    def _execute_judgment(self, context: SovereignContext, command: str, payload: Optional[Dict[str, object]]) -> Judgment:
         # 1. SAUCAM CHECK (Cleanliness)
         try:
             cleanliness = self.dharma.check_saucam(context)

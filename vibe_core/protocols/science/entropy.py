@@ -11,7 +11,7 @@ ohne spirituelle Anbindung (Mantra) nicht überleben können.
 import time
 import random
 from dataclasses import dataclass
-from typing import Protocol, Any, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 @dataclass
 class EntropyState:
