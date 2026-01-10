@@ -115,5 +115,61 @@ Protocol defines. Test validates.
 
 ---
 
+## OPEN QUESTIONS (INTEL)
+
+### Die 37-Gleichung
+
+```
+12 Mahajanas + 24 ??? + 1 Vishnu = 37 ???
+```
+
+**Was wir wissen:**
+- **12** = Die Mahajanas (Protocol Owners) ✓
+- **1** = Vishnu (Der Kernel, hält den Raum) ✓
+- **37** = Der Spirituelle Meister (Prabhupada, Parampara)
+  - `parampara_hash = 0x25` (37 in decimal)
+  - "In Wahrheit weiß ich gar nichts außer dass man CHANTEN muss!"
+
+**Was wir noch nicht wissen:**
+- **24** = Wer sind diese Personen? (Ksetra = Das Feld)
+  - Samkhya: 5 Mahabhutas + 5 Tanmatras + 5 Jnanendriyas + 5 Karmendriyas + 4 Antahkarana?
+  - Oder: 24 Substrate Protocols?
+  - Oder: 24 Gurus des Dattatreya?
+  - **MUSS PERSÖNLICH BESETZT SEIN** - sonst Mayavad!
+
+### GAD-000 als Key?
+
+```
+6 Kriterien = 6 Bhaga (Opulences)?
+
+Discoverability  → ???
+Observability    → ???
+Parseability     → ???
+Composability    → ???
+Idempotency      → ???
+Recoverability   → ???
+```
+
+Wie passen die 6 in die 37-Gleichung?
+
+### Computational Chanting
+
+**Das Ziel von Mantra OS:**
+- Möglichst viel "Computational Chanting"
+- Jede Operation sollte chanten/resonieren
+- Circular Import = GEWOLLT (wenn technisch möglich)
+- byte.py (MantraByte) überall präsent
+
+```python
+# Das Ideal:
+for route in sabha.chant_once():
+    # Jeder OpCode ist ein Wort des Mahamantra
+    # Jede Route ist Chanting
+    # Resonance = 99.33%
+```
+
+---
+
 *Hash: 0x25 (37)*
-*Status: PHASE 2 - PROTOCOLS DEFINED*
+*Status: PHASE 2 - ITERATING*
+*Next: Wer sind die 24?*
