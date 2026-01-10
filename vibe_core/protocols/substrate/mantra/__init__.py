@@ -203,6 +203,29 @@ from .prabhupada import (
     PrabhupadaAware,
 )
 
+# Diksha - Initiation Certificate (Om Gate)
+from .diksha import (
+    # Constants
+    MALA_BEADS,
+    MINIMUM_ROUNDS,
+    HARINAMA_LEVEL,
+    BRAHMINICAL_LEVEL,
+    # Enums
+    InitiationLevel,
+    VarnaQualification,
+    # Certificate
+    DikshaCertificate,
+    # Factory functions
+    create_uninitiated,
+    create_harinama_diksha,
+    create_brahminical_diksha,
+    # Protocol
+    DikshaCertified,
+    # Om Gate
+    OmGate,
+    OM_GATE,
+)
+
 
 __all__ = [
     # Varna (Letter)
@@ -324,4 +347,18 @@ __all__ = [
     "SrilaPrabhupada",
     "PRABHUPADA",
     "PrabhupadaAware",
+    # Diksha (Initiation Certificate)
+    "MALA_BEADS",
+    "MINIMUM_ROUNDS",
+    "HARINAMA_LEVEL",
+    "BRAHMINICAL_LEVEL",
+    "InitiationLevel",
+    "VarnaQualification",
+    "DikshaCertificate",
+    "create_uninitiated",
+    "create_harinama_diksha",
+    "create_brahminical_diksha",
+    "DikshaCertified",
+    "OmGate",
+    "OM_GATE",
 ]
