@@ -270,17 +270,38 @@ class TestMantraHeartbeat:
         assert heartbeat.total_words == 1
         assert heartbeat.state == JapaState.CHANTING
 
-    def test_chant_word_without_sovereign_fails_on_krishna(self):
-        """Krishna check fails without sovereign."""
+    def test_krishna_always_present_acintya(self):
+        """ACINTYA: Krishna is always present (Level -2).
+
+        The Krishna check NEVER fails - He is the Source.
+        What changes is the jiva's CONNECTION state.
+        """
         heartbeat = MantraHeartbeat()
 
-        # HARE passes (no sovereign needed)
+        # HARE passes
         assert heartbeat.chant_word(None) == True
 
-        # KRISHNA fails (sovereign required)
-        assert heartbeat.chant_word(None) == False
-        assert heartbeat.state == JapaState.DISCONNECTED
-        assert heartbeat.last_krishna_check == False
+        # KRISHNA also passes (acintya - always present)
+        assert heartbeat.chant_word(None) == True
+        assert heartbeat.last_krishna_check == True  # Krishna never fails
+        assert heartbeat.krishna_present == True     # Always True
+
+        # But jiva is NOT connected (no sovereign)
+        assert heartbeat.jiva_connected == False
+
+    def test_jiva_connects_with_sovereign(self):
+        """With sovereign, jiva becomes connected to Krishna."""
+        heartbeat = MantraHeartbeat()
+        sovereign = MockSovereign()
+
+        # HARE passes
+        assert heartbeat.chant_word(sovereign) == True
+
+        # KRISHNA passes (always) AND jiva is connected
+        assert heartbeat.chant_word(sovereign) == True
+        assert heartbeat.last_krishna_check == True
+        assert heartbeat.krishna_present == True
+        assert heartbeat.jiva_connected == True  # Connected via sovereign!
 
     def test_chant_mantra_complete(self):
         """Chanting complete mantra advances count."""
@@ -340,19 +361,24 @@ class TestMantraHeartbeat:
         assert heartbeat.state == JapaState.DISCONNECTED
 
     def test_get_check_summary(self):
-        """Check summary contains all fields."""
+        """Check summary contains all fields including acintya."""
         heartbeat = MantraHeartbeat()
         summary = heartbeat.get_check_summary()
 
         assert "hare" in summary
         assert "krishna" in summary
         assert "rama" in summary
+        assert "krishna_present" in summary  # Always True (acintya)
+        assert "jiva_connected" in summary   # Jiva's connection state
         assert "state" in summary
         assert "word_position" in summary
         assert "mantra_count" in summary
         assert "mala_count" in summary
         assert "total_words" in summary
         assert "current_word" in summary
+
+        # Acintya: Krishna is always present
+        assert summary["krishna_present"] == True
 
     def test_backward_compatible_chant(self):
         """Old chant() method still works."""

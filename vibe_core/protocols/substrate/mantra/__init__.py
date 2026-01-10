@@ -145,6 +145,22 @@ from .sadhana import (
     get_intensity_name,
 )
 
+# Acintya - The Inconceivable Principle
+from .acintya import (
+    KRISHNA_SMALLEST,
+    KRISHNA_LARGEST,
+    ACINTYA_ACCEPTED,
+    AcintyaAspect,
+    JivaCondition,
+    KrishnaPresence,
+    KRISHNA,
+    JivaState,
+    AcintyaAware,
+    vibration_is_krishna,
+    mantra_not_different_from_source,
+    check_bheda_abheda,
+)
+
 
 __all__ = [
     # Varna (Letter)
@@ -226,4 +242,17 @@ __all__ = [
     "create_sadhana",
     "create_intensive_sadhana",
     "get_intensity_name",
+    # Acintya (The Inconceivable)
+    "KRISHNA_SMALLEST",
+    "KRISHNA_LARGEST",
+    "ACINTYA_ACCEPTED",
+    "AcintyaAspect",
+    "JivaCondition",
+    "KrishnaPresence",
+    "KRISHNA",
+    "JivaState",
+    "AcintyaAware",
+    "vibration_is_krishna",
+    "mantra_not_different_from_source",
+    "check_bheda_abheda",
 ]
