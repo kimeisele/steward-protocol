@@ -182,6 +182,21 @@ from vibe_core.protocols.naga.federation import (
 # Garuda (The Carrier)
 from vibe_core.protocols.naga.garuda import Garuda, GarudaProtocol
 
+# CLI Command (BALARAMA - The Injector)
+from vibe_core.protocols.naga.cli_command import (
+    INagaCommand,
+    Mahajana,
+    MAHAJANA_TO_OPCODE,
+    NagaCommandBase,
+    NagaCommandRegistry,
+    NagaCommandResult,
+    NAGA_COMMAND_REGISTRY,
+    naga_command,
+    OPCODE_TO_MAHAJANA,
+    OPCODE_TO_PHASE,
+    Phase,
+)
+
 # Sesha (The Bed)
 from vibe_core.protocols.naga.sesha import (
     ImportResult,
@@ -350,4 +365,16 @@ __all__ = [
     "IntelItem",
     "IntelQuery",
     "IntelResponse",
+    # CLI Command (BALARAMA - The Injector)
+    "INagaCommand",
+    "Mahajana",
+    "MAHAJANA_TO_OPCODE",
+    "NagaCommandBase",
+    "NagaCommandRegistry",
+    "NagaCommandResult",
+    "NAGA_COMMAND_REGISTRY",
+    "naga_command",
+    "OPCODE_TO_MAHAJANA",
+    "OPCODE_TO_PHASE",
+    "Phase",
 ]
