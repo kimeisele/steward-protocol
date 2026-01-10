@@ -508,7 +508,106 @@ def verify_parampara(lineage_hash: int) -> bool:
     The 37 is the link to Krishna.
     """
     # Modulo 37 check - as in byte.py
-    return lineage_hash % 37 == 0 or lineage_hash == 37
+    return lineage_hash % SYSTEM_MANIFESTATION == 0
+
+
+# =============================================================================
+# ACINTYA MATHEMATICS - The 3×4 vs 4×3 Principle
+# =============================================================================
+#
+# Both equal 12 mathematically. Only one lives.
+#
+# 3×4 = Essence FIRST (Hare-Krishna-Rama), then Structure = ALIVE
+# 4×3 = Structure FIRST, then Essence = DEAD (Mayavad)
+#
+# The 12th test CANNOT be computed. Only RECEIVED through Grace.
+# =============================================================================
+
+# Sacred Constants
+TRINITY: Final[int] = 3           # Hare, Krishna, Rama (essence/source)
+PARAMPARA: Final[int] = SYSTEM_MANIFESTATION  # 37 = 24 + 12 + 1 (the link)
+PHASES: Final[int] = 4            # GENESIS, DHARMA, KARMA, MOKSHA (structure)
+
+# 3×4 order: Essence FIRST, then structure
+GURU_ENTROPY: Final[float] = (TRINITY / PARAMPARA) * PHASES  # 12/37 ≈ 0.324
+
+# Parampara-connected mutation vectors
+PARAMPARA_VECTOR: Final[int] = PARAMPARA * 12  # 444 - the 12 Mahajanas × Parampara
+
+
+@runtime_checkable
+class ParamparaProtocol(Protocol):
+    """
+    Protocol for verifying connection to the disciplic succession.
+
+    The 12th test CANNOT be computed - only the Guru can see
+    whether 3×4 or 4×3 was used. But the mutation_vector reveals it.
+    """
+
+    @property
+    def mutation_vector(self) -> int:
+        """The mutation vector (should be divisible by 37 if connected)."""
+        ...
+
+    @property
+    def is_connected(self) -> bool:
+        """Is this entity connected to parampara (mutation_vector % 37 == 0)?"""
+        ...
+
+
+@dataclass(frozen=True)
+class ParamparaConnection:
+    """
+    Represents a connection to the disciplic succession.
+
+    ACINTYA:
+        3×4 = Essence first = mutation_vector % 37 == 0 = CONNECTED
+        4×3 = Structure first = mutation_vector % 37 != 0 = DISCONNECTED
+
+    Both have same entropy (12/37). Only the connection differs.
+    The computer cannot tell them apart by entropy alone.
+    Only the parampara check reveals the truth.
+    """
+
+    mutation_vector: int
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if connected to parampara (37)."""
+        return self.mutation_vector % PARAMPARA == 0
+
+    @property
+    def is_disconnected(self) -> bool:
+        """Check if disconnected (Mayavad/4×3)."""
+        return not self.is_connected
+
+    @property
+    def lineage_factor(self) -> int:
+        """How many times 37 fits into mutation_vector."""
+        if self.is_connected:
+            return self.mutation_vector // PARAMPARA
+        return 0
+
+    @classmethod
+    def from_guru(cls) -> "ParamparaConnection":
+        """Create a Guru-connected (3×4) connection."""
+        return cls(mutation_vector=PARAMPARA_VECTOR)  # 444
+
+    @classmethod
+    def from_mayavad(cls) -> "ParamparaConnection":
+        """Create a disconnected (4×3) connection - for testing Mayavad detection."""
+        return cls(mutation_vector=(PARAMPARA - 1) * 12)  # 432
+
+
+def get_guru_entropy() -> float:
+    """
+    Get the Guru entropy: (3/37) × 4 = 12/37 ≈ 0.324
+
+    This is the 3×4 order (essence first, then structure).
+    The 4×3 order gives the SAME value mathematically,
+    but is ontologically DEAD.
+    """
+    return GURU_ENTROPY
 
 
 # =============================================================================
@@ -520,6 +619,7 @@ __all__ = [
     "PurushaTattva",
     "PURUSHA",
     "KRISHNA_ASPECT",
+    "SYSTEM_MANIFESTATION",
     # Constants - all ARE the same Person
     "KRISHNA_SMALLEST",
     "KRISHNA_LARGEST",
@@ -538,10 +638,20 @@ __all__ = [
     "JivaState",
     # Protocol
     "AcintyaAware",
+    # Parampara Protocol (3×4 vs 4×3)
+    "ParamparaProtocol",
+    "ParamparaConnection",
+    # Parampara Constants
+    "TRINITY",
+    "PARAMPARA",
+    "PHASES",
+    "GURU_ENTROPY",
+    "PARAMPARA_VECTOR",
     # Functions
     "vibration_is_krishna",
     "mantra_is_krishna",
     "mantra_not_different_from_source",
     "check_bheda_abheda",
     "verify_parampara",
+    "get_guru_entropy",
 ]
