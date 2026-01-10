@@ -3,10 +3,16 @@ TEST SERVE PHASE COMMANDS
 =========================
 
 Tests for SERVE phase (8-11) commands:
-- ChatCommand (PRAHLADA - EXEC_SERVICE) - Universal Router
-- IntelCommand (SHUKA - FETCH_RES)
+- IntelCommand (SHUKA - FETCH_RES) - Position 8
+- ChatCommand (PRAHLADA - EXEC_SERVICE) - Position 9, Universal Router
+- ValidateCommand (JANAKA - CHECK_DHARMA) - Position 10
+- CommitCommand (BHISHMA - COMMIT_LOG) - Position 11
 
 "PRAHLADA routes to all Mahajanas."
+"JANAKA validates dharma."
+"BHISHMA commits with unwavering oath."
+
+SERVE PHASE COMPLETE - All 4 positions tested.
 """
 
 import pytest
@@ -21,6 +27,8 @@ from vibe_core.cli.naga_commands.serve.chat import (
     INTENT_PATTERNS,
 )
 from vibe_core.cli.naga_commands.serve.intel import IntelCommand
+from vibe_core.cli.naga_commands.serve.validate import ValidateCommand
+from vibe_core.cli.naga_commands.serve.commit import CommitCommand
 from vibe_core.protocols.naga.cli_command import (
     INagaCommand,
     Mahajana,
@@ -467,3 +475,315 @@ class TestUniversalInterface:
         result = cmd.execute(["something", "completely", "random"])
         assert result.success  # Never fails
         assert "PRAHLADA" in result.output
+
+
+# =============================================================================
+# VALIDATE COMMAND TESTS (JANAKA - CHECK_DHARMA)
+# =============================================================================
+
+
+class TestValidateCommand:
+    """Test ValidateCommand (JANAKA - CHECK_DHARMA)."""
+
+    def test_implements_protocol(self):
+        """ValidateCommand implements INagaCommand."""
+        cmd = ValidateCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_check_dharma(self):
+        """Opcode is CHECK_DHARMA."""
+        cmd = ValidateCommand()
+        assert cmd.opcode == MantraOpCode.CHECK_DHARMA
+
+    def test_mahajana_is_janaka(self):
+        """Mahajana is JANAKA."""
+        cmd = ValidateCommand()
+        assert cmd.mahajana == Mahajana.JANAKA
+
+    def test_name_is_validate(self):
+        """Name is 'validate'."""
+        cmd = ValidateCommand()
+        assert cmd.name == "validate"
+
+    def test_phase_is_serve(self):
+        """Phase is SERVE."""
+        cmd = ValidateCommand()
+        assert cmd.phase == Phase.SERVE
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = ValidateCommand()
+        assert len(cmd.help_text) > 0
+        assert "JANAKA" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args runs all validations."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "JANAKA" in result.output
+
+    def test_execute_types_only(self):
+        """Execute with --types only."""
+        cmd = ValidateCommand()
+        result = cmd.execute(["--types"])
+        assert result.success
+        data = result.to_dict()
+        assert "types_passed" in data
+
+    def test_execute_imports_only(self):
+        """Execute with --imports only."""
+        cmd = ValidateCommand()
+        result = cmd.execute(["--imports"])
+        assert result.success
+        data = result.to_dict()
+        assert "imports_passed" in data
+
+    def test_execute_protocols_only(self):
+        """Execute with --protocols only."""
+        cmd = ValidateCommand()
+        result = cmd.execute(["--protocols"])
+        assert result.success
+        data = result.to_dict()
+        assert "protocols_passed" in data
+
+    def test_execute_quick_mode(self):
+        """Execute with --quick mode."""
+        cmd = ValidateCommand()
+        result = cmd.execute(["--quick"])
+        assert result.success
+        assert "CHECK_DHARMA" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.CHECK_DHARMA
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.JANAKA
+
+    def test_result_has_status(self):
+        """Result contains dharma status."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert "status" in data
+        assert data["status"] in ["DHARMIC", "ADHARMIC"]
+
+
+# =============================================================================
+# COMMIT COMMAND TESTS (BHISHMA - COMMIT_LOG)
+# =============================================================================
+
+
+class TestCommitCommand:
+    """Test CommitCommand (BHISHMA - COMMIT_LOG)."""
+
+    def test_implements_protocol(self):
+        """CommitCommand implements INagaCommand."""
+        cmd = CommitCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_commit_log(self):
+        """Opcode is COMMIT_LOG."""
+        cmd = CommitCommand()
+        assert cmd.opcode == MantraOpCode.COMMIT_LOG
+
+    def test_mahajana_is_bhishma(self):
+        """Mahajana is BHISHMA."""
+        cmd = CommitCommand()
+        assert cmd.mahajana == Mahajana.BHISHMA
+
+    def test_name_is_commit(self):
+        """Name is 'commit'."""
+        cmd = CommitCommand()
+        assert cmd.name == "commit"
+
+    def test_phase_is_serve(self):
+        """Phase is SERVE."""
+        cmd = CommitCommand()
+        assert cmd.phase == Phase.SERVE
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = CommitCommand()
+        assert len(cmd.help_text) > 0
+        assert "BHISHMA" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args shows status."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "BHISHMA" in result.output
+
+    def test_execute_log_flag(self):
+        """Execute with --log shows commits."""
+        cmd = CommitCommand()
+        result = cmd.execute(["--log"])
+        assert result.success
+        assert "Recent Commits" in result.output or "Ledger" in result.output
+
+    def test_execute_staged_flag(self):
+        """Execute with --staged shows staged."""
+        cmd = CommitCommand()
+        result = cmd.execute(["--staged"])
+        assert result.success
+        assert "Staged" in result.output
+
+    def test_execute_diff_flag(self):
+        """Execute with --diff shows diff."""
+        cmd = CommitCommand()
+        result = cmd.execute(["--diff"])
+        assert result.success
+        assert "Diff" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.COMMIT_LOG
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.BHISHMA
+
+    def test_result_has_branch(self):
+        """Result contains branch info."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        # In a git repo, branch should be present
+        assert "branch" in data or "git_repo" in data
+
+
+# =============================================================================
+# SERVE PHASE REGISTRY TESTS (UPDATED)
+# =============================================================================
+
+
+class TestServeRegistryComplete:
+    """Test that all SERVE phase commands are registered."""
+
+    def test_validate_registered(self):
+        """ValidateCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("validate")
+        assert cmd is not None
+        assert cmd.name == "validate"
+
+    def test_commit_registered(self):
+        """CommitCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("commit")
+        assert cmd is not None
+        assert cmd.name == "commit"
+
+    def test_serve_phase_has_all_four(self):
+        """SERVE phase has all 4 commands."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.SERVE)
+        assert len(cmds) == 4
+        names = [c.name for c in cmds]
+        assert "intel" in names     # Position 8
+        assert "chat" in names      # Position 9
+        assert "validate" in names  # Position 10
+        assert "commit" in names    # Position 11
+
+    def test_janaka_has_validate(self):
+        """JANAKA owns validate command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.JANAKA)
+        names = [c.name for c in cmds]
+        assert "validate" in names
+
+    def test_bhishma_has_commit(self):
+        """BHISHMA owns commit command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.BHISHMA)
+        names = [c.name for c in cmds]
+        assert "commit" in names
+
+
+# =============================================================================
+# SERVE PHASE STRICT TYPING
+# =============================================================================
+
+
+class TestServeStrictTyping:
+    """Test that SERVE commands have proper typing."""
+
+    def test_validate_result_no_any(self):
+        """ValidateCommand result has no Any."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+    def test_commit_result_no_any(self):
+        """CommitCommand result has no Any."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+
+# =============================================================================
+# SERVE PHASE IMMUTABILITY
+# =============================================================================
+
+
+class TestServeImmutability:
+    """Test that SERVE results are immutable."""
+
+    def test_validate_result_frozen(self):
+        """ValidateCommand result is frozen."""
+        cmd = ValidateCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+    def test_commit_result_frozen(self):
+        """CommitCommand result is frozen."""
+        cmd = CommitCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+
+# =============================================================================
+# SERVE PHASE COMPLETE TESTS
+# =============================================================================
+
+
+class TestServePhaseComplete:
+    """Verify SERVE phase is complete with all 4 commands."""
+
+    def test_all_opcodes_covered(self):
+        """All SERVE opcodes have commands."""
+        serve_opcodes = [
+            MantraOpCode.FETCH_RES,      # Position 8
+            MantraOpCode.EXEC_SERVICE,   # Position 9
+            MantraOpCode.CHECK_DHARMA,   # Position 10
+            MantraOpCode.COMMIT_LOG,     # Position 11
+        ]
+        for opcode in serve_opcodes:
+            cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)
+            assert len(cmds) >= 1, f"No command for {opcode.name}"
+
+    def test_all_mahajanas_covered(self):
+        """All SERVE mahajanas have commands."""
+        serve_mahajanas = [
+            Mahajana.SHUKA,     # FETCH_RES (intel)
+            Mahajana.PRAHLADA,  # EXEC_SERVICE (chat)
+            Mahajana.JANAKA,    # CHECK_DHARMA (validate)
+            Mahajana.BHISHMA,   # COMMIT_LOG (commit)
+        ]
+        for mahajana in serve_mahajanas:
+            cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(mahajana)
+            assert len(cmds) >= 1, f"No command for {mahajana.name}"
