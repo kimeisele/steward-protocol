@@ -25,7 +25,7 @@ In Kali Yuga, this is the ONLY way.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Protocol, List, Dict, Any, Optional, Final, runtime_checkable
+from typing import Protocol, List, Dict, Optional, Final, runtime_checkable, TypedDict
 from enum import Enum, auto
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
@@ -36,6 +36,26 @@ from vibe_core.protocols.gad import (
     Sovereign,
     DharmaPrinciple,
 )
+
+
+# =============================================================================
+# WATERTIGHT TYPES (NO ANY ALLOWED!)
+# =============================================================================
+
+class ProtocolState(TypedDict, total=False):
+    """
+    State of an owned protocol - WATERTIGHT, no Any!
+
+    Every protocol returns this structure for observability.
+    """
+    protocol_name: str
+    owner: str  # Mahajana name
+    is_chanting: bool
+    heartbeat_position: int
+    mantra_count: int
+    mala_count: int
+    gad_compliant: bool
+    last_error: Optional[str]
 
 
 # =============================================================================
@@ -242,8 +262,8 @@ class OwnedProtocol(ABC):
     # =========================================================================
 
     @abstractmethod
-    def get_state(self) -> Dict[str, Any]:
-        """Return current state for observability."""
+    def get_state(self) -> ProtocolState:
+        """Return current state for observability. WATERTIGHT - no Any!"""
         ...
 
     def reset(self) -> None:
@@ -284,6 +304,8 @@ def list_orphan_protocols() -> List[str]:
 # =============================================================================
 
 __all__ = [
+    # Types (WATERTIGHT - no Any!)
+    "ProtocolState",
     # Status
     "OwnershipStatus",
     # Metadata
