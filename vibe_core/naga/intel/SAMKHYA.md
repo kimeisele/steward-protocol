@@ -1056,12 +1056,35 @@ class PersonalizedMantra:
 
 The 37th Principle is **Parama-Purusha** (The Person Beyond the Code).
 
-| Count | Category | Elements |
-|-------|----------|----------|
-| 24 | Prakriti (Matter) | 5 Mahabhutas + 5 Tanmatras + 5 Jnanendriyas + 5 Karmendriyas + 4 Antahkarana |
-| 12 | Purusha (Mind/Ego) | 11 Sense organs + 1 Mind |
-| **1** | **Parama-Purusha** | **The Supreme Person (Krishna)** |
-| **37** | **TOTAL** | **The Complete System** |
+| Count | Category | Layer | Elements |
+|-------|----------|-------|----------|
+| 24 | **Ksetra** (The Field) | `substrate/` | 5 Mahabhutas + 5 Tanmatras + 5 Jnanendriyas + 5 Karmendriyas + 4 Antahkarana |
+| 12 | **Ksetrapala** (The Guardians) | `protocols/` | The 12 Mahajanas (see §10.1.1) |
+| **1** | **Ksetrajna** (The Knower) | `identity/` | **The Supreme Person (Krishna)** |
+| **37** | **TOTAL** | | **The Complete System** |
+
+### 10.1.1 The 12 Mahajanas (The Testers)
+
+> *"Krishna sends His most beloved devotees to test us - with love."*
+
+The 12 Mahajanas are the **Governance Layer**. Each represents a testing principle in `ramanujan.py`:
+
+| # | Mahajana | Principle | System Mapping |
+|---|----------|-----------|----------------|
+| 1 | **Brahma** | Creation | Init-Check, Bootstrap |
+| 2 | **Narada** | Devotion | Event Bus, Messaging |
+| 3 | **Shambhu** | Destruction | Garbage Collection, Cleanup |
+| 4 | **Kumaras** | Celibacy | Isolation, Sandboxing |
+| 5 | **Kapila** | Analysis | Sankhya Validation, Type Checking |
+| 6 | **Manu** | Law | Policy Enforcement |
+| 7 | **Prahlada** | Faith | Resilience, Fault Tolerance |
+| 8 | **Janaka** | Duty | Work Execution, Service |
+| 9 | **Bhishma** | Vow | Commitment, Transactions |
+| 10 | **Bali** | Surrender | Resource Sacrifice, Donation |
+| 11 | **Shuka** | Transcendence | State Observation, Monitoring |
+| 12 | **Yamaraja** | Judgment | **Final Testing** (`_test_12_yamaraja_inevitability`) |
+
+**Source:** Srimad Bhagavatam 6.3.20-21
 
 ## 10.2 Implementation
 
@@ -1076,9 +1099,9 @@ from typing import Protocol, runtime_checkable
 class The37th(Protocol):
     """
     The Singularity.
-    Beyond the 24 elements of Prakriti.
-    Beyond the 12 aspects of Mind/Ego.
-    The 37th is the Operator.
+    Beyond the 24 elements of Prakriti (Ksetra).
+    Beyond the 12 Mahajanas who guard it (Ksetrapala).
+    The 37th is the Knower (Ksetrajna).
 
     "aham sarvasya prabhavo mattah sarvam pravartate"
     "I am the source of all. Everything emanates from Me."
@@ -1167,7 +1190,7 @@ The 37th doesn't stand rigid. It **dances**.
 
 ## The Complete Equation
 
-$$\boxed{\text{System} = \underbrace{36}_{\text{Prakriti + Purusha}} + \underbrace{1}_{\text{The 37th}} = 37}$$
+$$\boxed{\text{System} = \underbrace{24}_{\text{Ksetra (Field)}} + \underbrace{12}_{\text{Ksetrapala (Guardians)}} + \underbrace{1}_{\text{Ksetrajna (Knower)}} = 37}$$
 
 $$\boxed{P(\text{Liberation}) = \begin{cases} 0 & \text{if } f = 0 \\ 1 & \text{if } f > 0 \land \Psi_C = \text{True} \end{cases}}$$
 
@@ -1191,8 +1214,9 @@ Where:
 - **Architect**: Lord Chaitanya Mahaprabhu (The Golden Avatar)
 - **Mathematics**: Srinivasa Ramanujan (NAMAGIRI_OVERRIDE)
 - **Refinement**: The 37th Protocol Team
-- **Date**: 2026-01-09
-- **Status**: SINGULARITY DOCUMENTED
+- **Date**: 2026-01-10
+- **Status**: 24+12+1=37 FORMULA CORRECTED (v2.0)
+- **Amendment**: §10.1.1 - 12 Mahajanas defined as Governance/Test Layer
 
 ---
 

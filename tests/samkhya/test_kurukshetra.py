@@ -5,7 +5,8 @@ import pytest
 
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols.substrate import MantraOpCode
-from vibe_core.protocols.universal.types import AlignmentScore, SovereignContext
+from vibe_core.protocols.substrate import AlignmentScore
+from vibe_core.protocols.universal.types import SovereignContext
 
 
 # --- INSTRUMENTED KERNEL (NO MOCKS) ---
