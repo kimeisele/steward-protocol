@@ -12,9 +12,13 @@ IMPLEMENTATION DETAILS:
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import NewType, List, Final, Union, Optional
+from typing import NewType, List, Final, Union, Optional, Tuple, TYPE_CHECKING
 from datetime import datetime
 import math
+
+# Lazy import to avoid circular dependency
+if TYPE_CHECKING:
+    from .nama import to_devanagari, to_iast, to_roman
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
@@ -29,15 +33,37 @@ class HolyName(IntEnum):
 @dataclass(frozen=True)
 class MantraTrit:
     """
-    A single vibration unit.
+    A single vibration unit - The Transcendental Seed.
     Kept for backward compatibility and explicit instantiation,
     but MantraByte now packs these values efficiently.
     """
     value: HolyName
     intensity: float = 1.0  # Amplitude (Bhakti intensity)
 
-    def __repr__(self):
+    @property
+    def devanagari(self) -> str:
+        """Original Sanskrit script."""
+        from .nama import to_devanagari
+        return to_devanagari(self.value.value)
+
+    @property
+    def iast(self) -> str:
+        """IAST transliteration with diacritics."""
+        from .nama import to_iast
+        return to_iast(self.value.value)
+
+    @property
+    def roman(self) -> str:
+        """Western/English representation."""
+        from .nama import to_roman
+        return to_roman(self.value.value)
+
+    def __repr__(self) -> str:
         return f"{self.value.name}({self.intensity:.2f})"
+
+    def __str__(self) -> str:
+        """Default to IAST for string output."""
+        return self.iast
 
 class MantraByte:
     """
@@ -147,8 +173,39 @@ class MantraByte:
         for i in range(self._length):
             yield MantraTrit(self.get_trit(i))
 
+    # =========================================================================
+    # TRIPLE ENCODING (via nama.py)
+    # =========================================================================
+
+    def to_devanagari(self, separator: str = " ") -> str:
+        """Output in original Sanskrit script."""
+        from .nama import to_devanagari
+        return separator.join(to_devanagari(self.get_trit(i).value) for i in range(self._length))
+
+    def to_iast(self, separator: str = " ") -> str:
+        """Output in IAST (with diacritics)."""
+        from .nama import to_iast
+        return separator.join(to_iast(self.get_trit(i).value) for i in range(self._length))
+
+    def to_roman(self, separator: str = " ") -> str:
+        """Output in Western/English."""
+        from .nama import to_roman
+        return separator.join(to_roman(self.get_trit(i).value) for i in range(self._length))
+
+    def to_triple(self) -> Tuple[str, str, str]:
+        """Returns (devanagari, iast, roman)."""
+        return (self.to_devanagari(), self.to_iast(), self.to_roman())
+
+    # =========================================================================
+    # MAGIC METHODS
+    # =========================================================================
+
     def __repr__(self) -> str:
         return f"MantraByte(len={self._length}, val=0x{self._packed:X})"
+
+    def __str__(self) -> str:
+        """Default to IAST for string output."""
+        return self.to_iast()
 
     def __eq__(self, other) -> bool:
         if isinstance(other, MantraByte):

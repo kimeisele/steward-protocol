@@ -6,11 +6,15 @@ def test_ternary_structure():
     h = MantraTrit(HolyName.HARE)
     k = MantraTrit(HolyName.KRISHNA)
     r = MantraTrit(HolyName.RAMA)
-    
+
     assert h.value == 0
     assert k.value == 1
     assert r.value == 2
-    assert str(h) == "HARE(1.00)"
+    assert repr(h) == "HARE(1.00)"
+    # str() now returns IAST encoding
+    assert str(h) == "hare"
+    assert str(k) == "kṛṣṇa"
+    assert str(r) == "rāma"
 
 def test_mantra_byte_sequence():
     """Confirms MantraByte acts as a sequence of trits."""
