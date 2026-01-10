@@ -65,7 +65,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.ASSERT_TRUTH,
+    MantraOpCode.RESET_IP,  # Vyuha: Q4 Worker 3 (ASSERT_TRUTH now HEAD: Vyasa)
 ]
 
 

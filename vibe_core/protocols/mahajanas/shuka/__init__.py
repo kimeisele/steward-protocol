@@ -80,7 +80,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.CACHE_STATE,
+    MantraOpCode.YIELD_CPU,  # Vyuha: Q4 Worker 2 (CACHE_STATE now HEAD: Nrisimha)
 ]
 
 

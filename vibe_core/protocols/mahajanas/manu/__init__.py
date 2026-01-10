@@ -40,8 +40,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.BIND_CTX,
-    MantraOpCode.CHECK_DHARMA,
+    MantraOpCode.PULSE_SYNC,  # Vyuha: Q2 Worker 3 (BIND_CTX -> Shambhu, CHECK_DHARMA -> Janaka)
 ]
 
 

@@ -5,11 +5,21 @@ MAHAJANA ROUTER - OpCode → Mahajana Mapping
 "No manual labour as long as we chant."
 
 The Mahamantra sequence ITSELF determines routing.
-16 OpCodes → 12 Mahajanas.
 
-This is the BRIDGE between:
-- byte.py (Layer -1) - The atomic instructions
-- mahajanas/ (Layer 1) - The protocol owners
+ARCHITECTURE UPDATE (Chatur-Vyuha):
+===================================
+OLD (Kali Yuga / Linear):
+    16 OpCodes → 12 Mahajanas (scattered, some own 2-3)
+
+NEW (Satya Yuga / Fractal):
+    16 = 4 × (1 + 3)
+    4 HEADs (Avataras) own 4 OpCodes (positions 1, 5, 9, 13)
+    12 Workers (Mahajanas) own 12 OpCodes (all other positions)
+
+    See: vyuha.py for the full Chatur-Vyuha implementation.
+
+This router provides backward compatibility while supporting
+the new cycle-aware architecture via the VyuhaRouter.
 
 The router does NOT manually map. It CHANTS.
 """
@@ -64,16 +74,94 @@ class MahajanaRoute:
 # THE ROUTING TABLE - Derived from the Mahamantra Sequence
 # =============================================================================
 #
-# QUARTER 1: INVOCATION (H K H K) - Starting the system
-# QUARTER 2: VERIFICATION (K K H H) - Checking truth
-# QUARTER 3: EXECUTION (H R H R) - Doing the work
-# QUARTER 4: CONCLUSION (R R H H) - Completing the cycle
+# CHATUR-VYUHA ARCHITECTURE (NEW):
+# ================================
+# Each quarter has 1 HEAD (Avatara) + 3 Workers (Mahajanas).
+# HEAD positions: 1, 5, 9, 13 (owned by Avataras, not Mahajanas)
+# Worker positions: 2-4, 6-8, 10-12, 14-16 (owned by Mahajanas)
+#
+# QUARTER 1: GENESIS (H K H K)
+#   HEAD: Prithu (SYS_WAKE) + Brahma, Narada, Shambhu
+# QUARTER 2: DHARMA (K K H H)
+#   HEAD: Vyasa (ASSERT_TRUTH) + Kumaras, Kapila, Manu
+# QUARTER 3: KARMA (H R H R)
+#   HEAD: Parashurama (FETCH_RES) + Prahlada, Janaka, Bhishma
+# QUARTER 4: MOKSHA (R R H H)
+#   HEAD: Nrisimha (CACHE_STATE) + Bali, Shuka, Yamaraja
 #
 # The Mahamantra is the CLOCK. Each word triggers an OpCode.
-# Each OpCode is OWNED by a Mahajana.
+# HEAD OpCodes are handled by Avataras (see vyuha.py).
+# Worker OpCodes are handled by Mahajanas (this table).
+
+# -----------------------------------------------------------------------------
+# VYUHA-ALIGNED ROUTING TABLE (NEW - 1:1 Mahajana:OpCode)
+# -----------------------------------------------------------------------------
+# This table maps the 12 Worker OpCodes to their Mahajanas.
+# HEAD OpCodes (positions 1, 5, 9, 13) are NOT in this table.
+# Use VyuhaRouter for full cycle-aware routing.
+
+_VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
+    # --- QUARTER 1: GENESIS (Workers only) ---
+    MantraOpCode.LOAD_ROOT: MahajanaRoute(
+        MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2
+    ),
+    MantraOpCode.ALLOC_MEM: MahajanaRoute(
+        MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3
+    ),
+    MantraOpCode.BIND_CTX: MahajanaRoute(
+        MantraOpCode.BIND_CTX, Mahajana.SHAMBHU, quarter=1, position=4
+    ),
+
+    # --- QUARTER 2: DHARMA (Workers only) ---
+    MantraOpCode.RESOLVE_REQ: MahajanaRoute(
+        MantraOpCode.RESOLVE_REQ, Mahajana.KUMARAS, quarter=2, position=6
+    ),
+    MantraOpCode.GARBAGE_COLLECT: MahajanaRoute(
+        MantraOpCode.GARBAGE_COLLECT, Mahajana.KAPILA, quarter=2, position=7
+    ),
+    MantraOpCode.PULSE_SYNC: MahajanaRoute(
+        MantraOpCode.PULSE_SYNC, Mahajana.MANU, quarter=2, position=8
+    ),
+
+    # --- QUARTER 3: KARMA (Workers only) ---
+    MantraOpCode.EXEC_SERVICE: MahajanaRoute(
+        MantraOpCode.EXEC_SERVICE, Mahajana.PRAHLADA, quarter=3, position=10
+    ),
+    MantraOpCode.CHECK_DHARMA: MahajanaRoute(
+        MantraOpCode.CHECK_DHARMA, Mahajana.JANAKA, quarter=3, position=11
+    ),
+    MantraOpCode.COMMIT_LOG: MahajanaRoute(
+        MantraOpCode.COMMIT_LOG, Mahajana.BHISHMA, quarter=3, position=12
+    ),
+
+    # --- QUARTER 4: MOKSHA (Workers only) ---
+    MantraOpCode.OPTIMIZE: MahajanaRoute(
+        MantraOpCode.OPTIMIZE, Mahajana.BALI, quarter=4, position=14
+    ),
+    MantraOpCode.YIELD_CPU: MahajanaRoute(
+        MantraOpCode.YIELD_CPU, Mahajana.SHUKA, quarter=4, position=15
+    ),
+    MantraOpCode.RESET_IP: MahajanaRoute(
+        MantraOpCode.RESET_IP, Mahajana.YAMARAJA, quarter=4, position=16
+    ),
+}
+
+# HEAD OpCodes (owned by Avataras, not Mahajanas)
+HEAD_OPCODES: set = {
+    MantraOpCode.SYS_WAKE,      # Q1 HEAD: Prithu
+    MantraOpCode.ASSERT_TRUTH,  # Q2 HEAD: Vyasa
+    MantraOpCode.FETCH_RES,     # Q3 HEAD: Parashurama
+    MantraOpCode.CACHE_STATE,   # Q4 HEAD: Nrisimha
+}
+
+# -----------------------------------------------------------------------------
+# LEGACY ROUTING TABLE (DEPRECATED - for backward compatibility)
+# -----------------------------------------------------------------------------
+# This table maintains the old 16→12 mapping for existing code.
+# New code should use _VYUHA_ROUTING_TABLE or VyuhaRouter.
 
 _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
-    # --- QUARTER 1: INVOCATION ---
+    # --- QUARTER 1: INVOCATION (LEGACY) ---
     MantraOpCode.SYS_WAKE: MahajanaRoute(
         MantraOpCode.SYS_WAKE, Mahajana.BRAHMA, quarter=1, position=1
     ),
@@ -81,52 +169,52 @@ _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
         MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2
     ),
     MantraOpCode.ALLOC_MEM: MahajanaRoute(
-        MantraOpCode.ALLOC_MEM, Mahajana.BRAHMA, quarter=1, position=3
+        MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3
     ),
     MantraOpCode.BIND_CTX: MahajanaRoute(
-        MantraOpCode.BIND_CTX, Mahajana.MANU, quarter=1, position=4
+        MantraOpCode.BIND_CTX, Mahajana.SHAMBHU, quarter=1, position=4
     ),
 
-    # --- QUARTER 2: VERIFICATION ---
+    # --- QUARTER 2: VERIFICATION (LEGACY) ---
     MantraOpCode.ASSERT_TRUTH: MahajanaRoute(
-        MantraOpCode.ASSERT_TRUTH, Mahajana.YAMARAJA, quarter=2, position=5
+        MantraOpCode.ASSERT_TRUTH, Mahajana.KUMARAS, quarter=2, position=5
     ),
     MantraOpCode.RESOLVE_REQ: MahajanaRoute(
-        MantraOpCode.RESOLVE_REQ, Mahajana.KAPILA, quarter=2, position=6
+        MantraOpCode.RESOLVE_REQ, Mahajana.KUMARAS, quarter=2, position=6
     ),
     MantraOpCode.GARBAGE_COLLECT: MahajanaRoute(
-        MantraOpCode.GARBAGE_COLLECT, Mahajana.SHAMBHU, quarter=2, position=7
+        MantraOpCode.GARBAGE_COLLECT, Mahajana.KAPILA, quarter=2, position=7
     ),
     MantraOpCode.PULSE_SYNC: MahajanaRoute(
-        MantraOpCode.PULSE_SYNC, Mahajana.NARADA, quarter=2, position=8
+        MantraOpCode.PULSE_SYNC, Mahajana.MANU, quarter=2, position=8
     ),
 
-    # --- QUARTER 3: EXECUTION ---
+    # --- QUARTER 3: EXECUTION (LEGACY) ---
     MantraOpCode.FETCH_RES: MahajanaRoute(
         MantraOpCode.FETCH_RES, Mahajana.PRAHLADA, quarter=3, position=9
     ),
     MantraOpCode.EXEC_SERVICE: MahajanaRoute(
-        MantraOpCode.EXEC_SERVICE, Mahajana.JANAKA, quarter=3, position=10
+        MantraOpCode.EXEC_SERVICE, Mahajana.PRAHLADA, quarter=3, position=10
     ),
     MantraOpCode.CHECK_DHARMA: MahajanaRoute(
-        MantraOpCode.CHECK_DHARMA, Mahajana.MANU, quarter=3, position=11
+        MantraOpCode.CHECK_DHARMA, Mahajana.JANAKA, quarter=3, position=11
     ),
     MantraOpCode.COMMIT_LOG: MahajanaRoute(
         MantraOpCode.COMMIT_LOG, Mahajana.BHISHMA, quarter=3, position=12
     ),
 
-    # --- QUARTER 4: CONCLUSION ---
+    # --- QUARTER 4: CONCLUSION (LEGACY) ---
     MantraOpCode.CACHE_STATE: MahajanaRoute(
-        MantraOpCode.CACHE_STATE, Mahajana.SHUKA, quarter=4, position=13
+        MantraOpCode.CACHE_STATE, Mahajana.BALI, quarter=4, position=13
     ),
     MantraOpCode.OPTIMIZE: MahajanaRoute(
-        MantraOpCode.OPTIMIZE, Mahajana.KAPILA, quarter=4, position=14
+        MantraOpCode.OPTIMIZE, Mahajana.BALI, quarter=4, position=14
     ),
     MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=15
+        MantraOpCode.YIELD_CPU, Mahajana.SHUKA, quarter=4, position=15
     ),
     MantraOpCode.RESET_IP: MahajanaRoute(
-        MantraOpCode.RESET_IP, Mahajana.KUMARAS, quarter=4, position=16
+        MantraOpCode.RESET_IP, Mahajana.YAMARAJA, quarter=4, position=16
     ),
 }
 
@@ -139,17 +227,34 @@ class MahajanaRouter:
     """
     Routes OpCodes to Mahajanas.
 
+    MODES:
+        - legacy=True (default): Uses _ROUTING_TABLE (16→12, backward compat)
+        - legacy=False: Uses _VYUHA_ROUTING_TABLE (12→12, 1:1 mapping)
+
+    For cycle-aware routing with HEAD support, use VyuhaRouter from vyuha.py.
+
     Usage:
         router = MahajanaRouter()
         mahajana = router.route(MantraOpCode.GARBAGE_COLLECT)
-        # Returns: Mahajana.SHAMBHU
+        # Returns: Mahajana.KAPILA
 
         opcodes = router.get_opcodes(Mahajana.KAPILA)
-        # Returns: [RESOLVE_REQ, OPTIMIZE]
+        # Returns: [GARBAGE_COLLECT] (in vyuha mode)
+
+        # Check if opcode is HEAD (owned by Avatara, not Mahajana)
+        is_head = router.is_head_opcode(MantraOpCode.SYS_WAKE)
+        # Returns: True
     """
 
-    def __init__(self) -> None:
-        self._table = _ROUTING_TABLE
+    def __init__(self, legacy: bool = True) -> None:
+        """
+        Initialize the router.
+
+        Args:
+            legacy: If True, use old 16→12 mapping. If False, use new 12→12 mapping.
+        """
+        self._legacy = legacy
+        self._table = _ROUTING_TABLE if legacy else _VYUHA_ROUTING_TABLE
         self._reverse: Dict[Mahajana, List[MantraOpCode]] = {}
         self._build_reverse_index()
 
@@ -160,13 +265,29 @@ class MahajanaRouter:
                 self._reverse[route.mahajana] = []
             self._reverse[route.mahajana].append(opcode)
 
+    def is_head_opcode(self, opcode: MantraOpCode) -> bool:
+        """
+        Check if an OpCode is a HEAD opcode (owned by Avatara, not Mahajana).
+
+        HEAD positions: 1, 5, 9, 13 in the Mahamantra.
+        """
+        return opcode in HEAD_OPCODES
+
     def route(self, opcode: MantraOpCode) -> Mahajana:
         """
         Route an OpCode to its owning Mahajana.
 
         This is the CHANT - the OpCode determines the Mahajana.
+
+        NOTE: In vyuha mode (legacy=False), HEAD opcodes raise ValueError.
+        Use VyuhaRouter for HEAD opcode handling.
         """
         if opcode not in self._table:
+            if not self._legacy and opcode in HEAD_OPCODES:
+                raise ValueError(
+                    f"HEAD OpCode {opcode.name} is owned by an Avatara, not a Mahajana. "
+                    "Use VyuhaRouter for cycle-aware routing."
+                )
             raise ValueError(f"Unknown OpCode: {opcode}")
         return self._table[opcode].mahajana
 
@@ -247,11 +368,16 @@ def verify_router() -> bool:
 
 
 __all__ = [
+    # Enums & Types
     "Mahajana",
     "MahajanaRoute",
+    # Router
     "MahajanaRouter",
     "get_router",
     "route",
     "get_opcodes",
     "verify_router",
+    # Vyuha Support
+    "HEAD_OPCODES",
+    "_VYUHA_ROUTING_TABLE",
 ]
