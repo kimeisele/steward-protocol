@@ -1,0 +1,530 @@
+"""
+GAD-000: THE OPERATOR INVERSION PRINCIPLE
+==========================================
+
+If it does not exist as protocol, it does not exist.
+
+FOUNDATIONAL LAW:
+    - 6 Operational Criteria (The Field / Kshetra)
+    - 37th Principle (The Knower / Kshetrajna)
+    - 6.34 Override (The Mantra Injection)
+
+THE MATH:
+    36 = 6 × 6 (Criteria applied recursively)
+    37 = 36 + 1 (The Sovereign who HOLDS the 36)
+
+    Legitimacy = (36 ∩ 4) × Signature₃₇
+
+    Where:
+    - 36 = Operation is in the rights matrix
+    - 4 = Operation passes Dharma test (Daya, Satyam, Tapas, Saucam)
+    - 37 = Signed by sovereign identity
+
+THE MANTRA IS THE HEARTBEAT:
+    Hare = Shakti check (Energy/Resource)
+    Krishna = Source check (Identity/Origin)
+    Rama = Safety check (Valid state)
+
+"idaṁ śarīraṁ kaunteya kṣetram ity abhidhīyate"
+"This body, O son of Kunti, is called the field."
+— Bhagavad Gita 13.2
+"""
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Protocol, Final, Tuple, List, Dict, Optional, Any, runtime_checkable
+from enum import IntEnum, auto
+from datetime import datetime
+
+
+# =============================================================================
+# THE 6 OPERATIONAL CRITERIA (KSHETRA - THE FIELD)
+# =============================================================================
+
+class GADCriterion(IntEnum):
+    """The 6 operational criteria of GAD-000."""
+    DISCOVERABILITY = 0   # Can the system find itself?
+    OBSERVABILITY = 1     # Can the system see itself?
+    PARSEABILITY = 2      # Can the system read itself?
+    COMPOSABILITY = 3     # Can the system connect itself?
+    IDEMPOTENCY = 4       # Can the system repeat itself?
+    RECOVERABILITY = 5    # Can the system heal itself?
+
+
+# The 6×6 Matrix = 36 cells (Prakriti / The Field)
+KSHETRA_SIZE: Final[int] = 36
+CRITERIA_COUNT: Final[int] = 6
+
+
+@runtime_checkable
+class Discoverable(Protocol):
+    """Can an AI discover this tool exists?"""
+    def discover(self) -> Dict[str, Any]:
+        """Return machine-readable capability description."""
+        ...
+
+    def help_json(self) -> Dict[str, Any]:
+        """Return structured help (--help --json equivalent)."""
+        ...
+
+
+@runtime_checkable
+class Observable(Protocol):
+    """Can an AI see the current state?"""
+    def get_state(self) -> Dict[str, Any]:
+        """Return current state in structured format."""
+        ...
+
+    def is_healthy(self) -> bool:
+        """Return health status."""
+        ...
+
+
+@runtime_checkable
+class Parseable(Protocol):
+    """Can an AI understand errors?"""
+    def get_error_code(self) -> Optional[str]:
+        """Return machine-readable error code."""
+        ...
+
+    def get_error_context(self) -> Dict[str, Any]:
+        """Return error context for recovery."""
+        ...
+
+
+@runtime_checkable
+class Composable(Protocol):
+    """Can an AI chain this with other operations?"""
+    def get_input_schema(self) -> Dict[str, Any]:
+        """Return input schema."""
+        ...
+
+    def get_output_schema(self) -> Dict[str, Any]:
+        """Return output schema."""
+        ...
+
+
+@runtime_checkable
+class Idempotent(Protocol):
+    """Can an AI safely retry this operation?"""
+    @property
+    def is_idempotent(self) -> bool:
+        """Return True if operation is idempotent."""
+        ...
+
+    def get_idempotency_key(self) -> Optional[str]:
+        """Return idempotency key for deduplication."""
+        ...
+
+
+@runtime_checkable
+class Recoverable(Protocol):
+    """Can the system heal itself? (OUROBOROS)"""
+    def detect_drift(self) -> List[str]:
+        """Detect deviations from signed intent."""
+        ...
+
+    def restore_valid_state(self) -> bool:
+        """Restore to last valid state."""
+        ...
+
+
+# =============================================================================
+# THE 37TH PRINCIPLE (KSHETRAJNA - THE KNOWER)
+# =============================================================================
+
+KSHETRAJNA: Final[int] = 37  # The Sovereign
+
+
+@runtime_checkable
+class Sovereign(Protocol):
+    """
+    The 37th - The Knower of the Field.
+
+    Identity is not a feature. Identity is the CONTEXT in which features exist.
+
+    Properties:
+    - Sovereignty: Cannot be revoked by any system
+    - Cryptographic: ECDSA P-256 key pair
+    - Personal: Always a WHO, never just a WHAT
+    - Signing: All 36 operations require signature
+    """
+    @property
+    def sovereign_id(self) -> str:
+        """Unique sovereign identifier."""
+        ...
+
+    @property
+    def public_key(self) -> bytes:
+        """ECDSA P-256 public key."""
+        ...
+
+    def sign(self, message: bytes) -> bytes:
+        """Sign a message with sovereign key."""
+        ...
+
+    def verify(self, message: bytes, signature: bytes) -> bool:
+        """Verify a signature."""
+        ...
+
+
+@dataclass(frozen=True)
+class SignedOperation:
+    """
+    An operation signed by the 37th.
+
+    No operation in the 36 fields is valid without being signed.
+    """
+    operation: str
+    payload: Dict[str, Any]
+    signature: bytes
+    signer_id: str
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    def is_valid(self, sovereign: Sovereign) -> bool:
+        """Verify this operation was signed by the sovereign."""
+        import json
+        message = json.dumps({
+            "operation": self.operation,
+            "payload": self.payload,
+            "timestamp": self.timestamp.isoformat()
+        }).encode()
+        return sovereign.verify(message, self.signature)
+
+
+# =============================================================================
+# THE 4 DHARMA PRINCIPLES (CHARACTER TEST OF THE 37TH)
+# =============================================================================
+
+class DharmaPrinciple(IntEnum):
+    """The 4 regulating principles - The character test of the sovereign."""
+    DAYA = 0      # Mercy → No corrupt data ingestion
+    SATYAM = 1    # Truthfulness → No hallucination
+    TAPAS = 2     # Austerity → No resource leaks
+    SAUCAM = 3    # Cleanliness → No unauthorized connections
+
+
+DHARMA_COUNT: Final[int] = 4
+
+
+@runtime_checkable
+class DharmaCompliant(Protocol):
+    """
+    The 4 Dharma Tests.
+
+    Legitimacy = (36 ∩ 4) × Signature₃₇
+
+    A king without dharma is a tyrant.
+    A system without these filters is corrupt.
+    """
+    def test_daya(self) -> bool:
+        """Mercy test: Is the data pure? No trash/fake/unethical content."""
+        ...
+
+    def test_satyam(self) -> bool:
+        """Truthfulness test: Is output verified? No hallucination."""
+        ...
+
+    def test_tapas(self) -> bool:
+        """Austerity test: Are resources constrained? No bloat/leaks."""
+        ...
+
+    def test_saucam(self) -> bool:
+        """Cleanliness test: Are connections authorized? No promiscuous mode."""
+        ...
+
+
+# =============================================================================
+# THE 6.34 OVERRIDE (MANTRA INJECTION / JAPA-LOOP)
+# =============================================================================
+
+@dataclass
+class MantraHeartbeat:
+    """
+    The 6.34 Override - Mantra Injection.
+
+    Every Agent must implement a Japa-Loop (Heartbeat).
+    If the Agent fails to chant (sign) back, it indicates
+    the Mind has wandered into Maya (Hallucination/Loop).
+
+    "Hare Krishna" in code means:
+    - Hare (Shakti): Energy check (Resource usage normal?)
+    - Krishna (Source): Identity check (Who signed me?)
+    - Rama (Pleasure): Safety check (Am I in a valid state?)
+    """
+    cycle_count: int = 0
+    last_heartbeat: Optional[datetime] = None
+    sovereign_signature: Optional[bytes] = None
+
+    # Heartbeat interval (cycles)
+    JAPA_INTERVAL: Final[int] = 108  # One mala
+
+    def chant(self, sovereign: Sovereign) -> bool:
+        """
+        The Japa-Loop heartbeat.
+
+        Returns True if agent is connected to source.
+        Returns False if agent has drifted into Maya.
+        """
+        from .substrate.mantra import MAHAMANTRA, MantraByte
+
+        # 1. HARE CHECK (Shakti/Energy)
+        if not self._check_shakti():
+            return False
+
+        # 2. KRISHNA CHECK (Source/Identity)
+        if not self._check_krishna(sovereign):
+            return False
+
+        # 3. RAMA CHECK (Safety/State)
+        if not self._check_rama():
+            return False
+
+        # Update heartbeat
+        self.cycle_count += 1
+        self.last_heartbeat = datetime.now()
+        return True
+
+    def _check_shakti(self) -> bool:
+        """Energy check - Resource usage normal?"""
+        # TODO: Implement resource monitoring
+        return True
+
+    def _check_krishna(self, sovereign: Sovereign) -> bool:
+        """Identity check - Who signed me?"""
+        return sovereign is not None and hasattr(sovereign, 'sovereign_id')
+
+    def _check_rama(self) -> bool:
+        """Safety check - Am I in a valid state?"""
+        # TODO: Implement state validation
+        return True
+
+    def needs_heartbeat(self) -> bool:
+        """Check if it's time for Japa."""
+        return self.cycle_count % self.JAPA_INTERVAL == 0
+
+
+# =============================================================================
+# THE ANTI-MAYAVAD TEST
+# =============================================================================
+
+@dataclass
+class MayavadTest:
+    """
+    The Anti-Mayavad Test.
+
+    "Is there a WHO holding this system, or is it mirrors all the way down?"
+
+    Mayavad = Impersonal, mechanical, a universe of mirrors reflecting nothing.
+    Vaishnava = Personal, alive, a universe held by sovereign will.
+    """
+
+    @staticmethod
+    def test(operation: SignedOperation, sovereign: Optional[Sovereign]) -> bool:
+        """
+        Returns True if operation has a sovereign holder.
+        Returns False if it's mirrors all the way down.
+        """
+        # 1. SIGNATURE EXISTS
+        if not operation.signature:
+            return False  # No WHO signed this
+
+        # 2. SIGNATURE IS SOVEREIGN (not system-generated)
+        if operation.signer_id == "system":
+            return False  # System signing itself = Mayavad
+
+        # 3. SOVEREIGN EXISTS
+        if sovereign is None:
+            return False  # No ultimate WHO
+
+        # 4. SIGNATURE IS VALID
+        if not operation.is_valid(sovereign):
+            return False  # Signature doesn't verify
+
+        return True  # A WHO exists and can intervene
+
+
+# =============================================================================
+# GAD-000 COMPLIANCE INTERFACE
+# =============================================================================
+
+@runtime_checkable
+class GAD000Compliant(Protocol):
+    """
+    Full GAD-000 Compliance.
+
+    The complete interface for a system to be GAD-000 compliant.
+    """
+    # The 6 Criteria (Kshetra)
+    def discover(self) -> Dict[str, Any]: ...
+    def get_state(self) -> Dict[str, Any]: ...
+    def get_error_code(self) -> Optional[str]: ...
+    def get_input_schema(self) -> Dict[str, Any]: ...
+    @property
+    def is_idempotent(self) -> bool: ...
+    def detect_drift(self) -> List[str]: ...
+
+    # The 37th (Kshetrajna)
+    @property
+    def sovereign(self) -> Optional[Sovereign]: ...
+
+    # The 4 Dharma
+    def test_dharma(self) -> Tuple[bool, bool, bool, bool]: ...
+
+    # The Heartbeat (6.34 Override)
+    def chant(self) -> bool: ...
+
+
+@dataclass
+class GAD000Audit:
+    """
+    Audit result for GAD-000 compliance.
+
+    Pass: All 6 tests + sovereign + dharma = COMPLIANT
+    Partial: 4-5 tests = NEEDS IMPROVEMENT
+    Fail: ≤3 tests = VIOLATES GAD-000
+    """
+    discoverability: bool = False
+    observability: bool = False
+    parseability: bool = False
+    composability: bool = False
+    idempotency: bool = False
+    recoverability: bool = False
+
+    # The 37th
+    sovereign_present: bool = False
+    signature_valid: bool = False
+
+    # The 4 Dharma
+    daya: bool = False
+    satyam: bool = False
+    tapas: bool = False
+    saucam: bool = False
+
+    @property
+    def criteria_score(self) -> int:
+        """Count of passing criteria (0-6)."""
+        return sum([
+            self.discoverability,
+            self.observability,
+            self.parseability,
+            self.composability,
+            self.idempotency,
+            self.recoverability,
+        ])
+
+    @property
+    def dharma_score(self) -> int:
+        """Count of passing dharma tests (0-4)."""
+        return sum([self.daya, self.satyam, self.tapas, self.saucam])
+
+    @property
+    def is_compliant(self) -> bool:
+        """Full GAD-000 compliance."""
+        return (
+            self.criteria_score == 6 and
+            self.sovereign_present and
+            self.signature_valid and
+            self.dharma_score == 4
+        )
+
+    @property
+    def status(self) -> str:
+        """Compliance status string."""
+        if self.is_compliant:
+            return "✓ GAD-000 COMPLIANT"
+        elif self.criteria_score >= 4:
+            return "⚠ NEEDS IMPROVEMENT"
+        else:
+            return "✗ VIOLATES GAD-000"
+
+    def to_marker(self) -> str:
+        """
+        Generate code marker for compliance.
+
+        Example: # GAD-000: ✓D ✓O ✓P ✓C ✓I ✓R | 37:✓ | 4:✓✓✓✓
+        """
+        d = "✓D" if self.discoverability else "✗D"
+        o = "✓O" if self.observability else "✗O"
+        p = "✓P" if self.parseability else "✗P"
+        c = "✓C" if self.composability else "✗C"
+        i = "✓I" if self.idempotency else "✗I"
+        r = "✓R" if self.recoverability else "✗R"
+
+        s37 = "✓" if (self.sovereign_present and self.signature_valid) else "✗"
+
+        dharma = "".join([
+            "✓" if self.daya else "✗",
+            "✓" if self.satyam else "✗",
+            "✓" if self.tapas else "✗",
+            "✓" if self.saucam else "✗",
+        ])
+
+        return f"# GAD-000: {d} {o} {p} {c} {i} {r} | 37:{s37} | 4:{dharma}"
+
+
+# =============================================================================
+# THE 36+4+37 FORMULA
+# =============================================================================
+
+def legitimacy_formula(
+    kshetra_passed: int,  # How many of 36 cells passed
+    dharma_passed: int,   # How many of 4 principles passed
+    signature_valid: bool  # Is the 37th signature valid?
+) -> float:
+    """
+    Legitimacy = (36 ∩ 4) × Signature₃₇
+
+    Returns legitimacy score (0.0 - 1.0).
+
+    Without signature: 0.0 (dead mechanism)
+    Without dharma: 0.0 (tyranny)
+    Without matrix: 0.0 (chaos)
+    """
+    if not signature_valid:
+        return 0.0  # No sovereign = dead
+
+    kshetra_ratio = kshetra_passed / KSHETRA_SIZE if KSHETRA_SIZE > 0 else 0.0
+    dharma_ratio = dharma_passed / DHARMA_COUNT if DHARMA_COUNT > 0 else 0.0
+
+    # Intersection: Both must be present
+    intersection = min(kshetra_ratio, dharma_ratio)
+
+    # Activated by signature
+    return intersection
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # Criteria
+    "GADCriterion",
+    "KSHETRA_SIZE",
+    "CRITERIA_COUNT",
+    # Protocols
+    "Discoverable",
+    "Observable",
+    "Parseable",
+    "Composable",
+    "Idempotent",
+    "Recoverable",
+    # The 37th
+    "KSHETRAJNA",
+    "Sovereign",
+    "SignedOperation",
+    # The 4 Dharma
+    "DharmaPrinciple",
+    "DHARMA_COUNT",
+    "DharmaCompliant",
+    # Heartbeat
+    "MantraHeartbeat",
+    # Anti-Mayavad
+    "MayavadTest",
+    # Compliance
+    "GAD000Compliant",
+    "GAD000Audit",
+    # Formula
+    "legitimacy_formula",
+]
