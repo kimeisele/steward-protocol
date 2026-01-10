@@ -349,7 +349,9 @@ class Purushottama:
 
 
 # Singleton - Der Höchste Herr
-KRISHNA: Final[Purushottama] = Purushottama()
+# Named PURUSHOTTAMA (not KRISHNA) to distinguish from acintya.KRISHNA (KrishnaPresence)
+# Both model the same Person, different aspects: Purushottama = Identity, KrishnaPresence = Connectivity
+PURUSHOTTAMA: Final[Purushottama] = Purushottama()
 
 
 # =============================================================================
@@ -407,9 +409,9 @@ __all__ = [
     # Guru Tattva (Transmission)
     "GuruTattva",
     "GuruConnection",
-    # Purushottama (Krishna)
+    # Purushottama (Krishna as Supreme Person)
     "Purushottama",
-    "KRISHNA",
+    "PURUSHOTTAMA",
     # Summary
     "TATTVA_SUMMARY",
 ]

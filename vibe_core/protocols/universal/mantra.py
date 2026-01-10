@@ -3,46 +3,18 @@ MANTRA PROTOCOL - The Meta-Protocol
 ===================================
 Connects the Atomic Verbs (Read/Write/Sync) to the Cosmic Clock.
 Layer: Universal (Meta-Protocol)
+
+NOTE: MantraOpCode is CANONICAL in substrate/__init__.py (Layer -1).
+This module re-exports it for backward compatibility.
 """
 
-from enum import Enum, auto
-from typing import Protocol, runtime_checkable, List, Optional, TypeVar
-from vibe_core.protocols.substrate.byte import MantraByte
+from typing import Protocol, runtime_checkable, TypeVar
 
-ContextT = TypeVar("ContextT")
-
-class MantraOpCode(Enum):
-    """
-    The 16 Atomic Kernel Instructions.
-    Aligned with the 16 Words of the Mahamantra.
-    """
-    # --- QUARTER 1: INVOCATION (H K H K) ---
-    SYS_WAKE = auto()        # HARE
-    LOAD_ROOT = auto()       # KRISHNA
-    ALLOC_MEM = auto()       # HARE
-    BIND_CTX = auto()        # KRISHNA
-    
-    # --- QUARTER 2: VERIFICATION (K K H H) ---
-    ASSERT_TRUTH = auto()    # KRISHNA
-    RESOLVE_REQ = auto()     # KRISHNA
-    GARBAGE_COLLECT = auto() # HARE
-    PULSE_SYNC = auto()      # HARE
-    
-    # --- QUARTER 3: EXECUTION (H R H R) ---
-    FETCH_RES = auto()       # HARE
-    EXEC_SERVICE = auto()    # RAMA
-    CHECK_DHARMA = auto()    # HARE
-    COMMIT_LOG = auto()      # RAMA
-    
-    # --- QUARTER 4: CONCLUSION (R R H H) ---
-    CACHE_STATE = auto()     # RAMA
-    OPTIMIZE = auto()        # RAMA
-    YIELD_CPU = auto()       # HARE
-    RESET_IP = auto()        # HARE
-
-from typing import Protocol, runtime_checkable, List, Optional, TypeVar
+from vibe_core.protocols.substrate import MantraOpCode, MAHAMANTRA_SEQUENCE
 from vibe_core.protocols.substrate.byte import MantraByte
 from vibe_core.protocols.universal.guna import GunaProtocol, GunaProfile, ZERO, ONE
+
+ContextT = TypeVar("ContextT")
 
 @runtime_checkable
 class MantraProtocol(GunaProtocol, Protocol):
@@ -118,4 +90,17 @@ class MantraProtocol(GunaProtocol, Protocol):
         if hasattr(context, "intent") and getattr(context, "intent") == "SURRENDER":
             return True
         return False
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # Re-exported from substrate (CANONICAL source)
+    "MantraOpCode",
+    "MAHAMANTRA_SEQUENCE",
+    # This module's definitions
+    "MantraProtocol",
+]
 

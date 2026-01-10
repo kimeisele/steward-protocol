@@ -161,10 +161,19 @@ class AvatarType(str, Enum):
     YUGA = "yuga"
 
 
-class ProtocolLevel(IntEnum):
+class OperationalLevel(IntEnum):
     """
-    Protocol levels in the architecture.
-    Avataras operate at Level 0 (Executive).
+    Operational levels in the Gewaltenteilung (Separation of Powers).
+
+    NOTE: This is different from acintya.ProtocolLevel which maps
+    spiritual "distance from Krishna" (-108 to +108).
+
+    This enum maps OPERATIONAL roles:
+    - KRISHNA (-2): The Source
+    - VISHNU (-1): The Substrate
+    - AVATARA (0): Executive (THIS LAYER - Prithu, Vyasa, etc.)
+    - MAHAJANA (1): Judiciary (Yamaraja, etc.)
+    - SERVICE (2): Applications
     """
 
     KRISHNA = -2  # The Source
@@ -172,6 +181,10 @@ class ProtocolLevel(IntEnum):
     AVATARA = 0  # The Executive (THIS LAYER)
     MAHAJANA = 1  # The Judiciary
     SERVICE = 2  # The Applications
+
+
+# Backward compatibility alias (deprecated)
+ProtocolLevel = OperationalLevel
 
 
 # =============================================================================
@@ -260,9 +273,9 @@ class AvataraMeta:
     milking_setups: Tuple[MilkingSetup, ...] = ()  # Known extraction patterns
 
     @property
-    def level(self) -> ProtocolLevel:
+    def level(self) -> OperationalLevel:
         """Avataras operate at Level 0."""
-        return ProtocolLevel.AVATARA
+        return OperationalLevel.AVATARA
 
 
 # =============================================================================
@@ -482,7 +495,8 @@ __all__ = [
     # Enums
     "Shakti",
     "AvatarType",
-    "ProtocolLevel",
+    "OperationalLevel",
+    "ProtocolLevel",  # Deprecated alias for OperationalLevel
     "Avatara",
     # Data classes
     "MilkingRole",

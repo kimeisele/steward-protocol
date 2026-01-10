@@ -52,7 +52,7 @@ from enum import IntEnum
 
 from vibe_core.protocols.substrate.tattva import (
     Purushottama,
-    KRISHNA as PURUSHOTTAMA_KRISHNA,
+    PURUSHOTTAMA,
     KshetraElement,
     GuruTattva,
     GuruConnection,
@@ -108,8 +108,8 @@ class PurushaTattva(int):
     - NOT Krishna Himself (that would be Mayavad)
 
     For PERSON access, use:
-        from vibe_core.protocols.substrate.tattva import KRISHNA
-        KRISHNA("Arjuna")  # → "Hare Krishna, Arjuna. Ich bin für dich da."
+        from vibe_core.protocols.substrate.tattva import PURUSHOTTAMA
+        PURUSHOTTAMA("Arjuna")  # → "Hare Krishna, Arjuna. Ich bin für dich da."
     """
 
     def __new__(cls) -> "PurushaTattva":
@@ -120,7 +120,7 @@ class PurushaTattva(int):
         return "PURUSHA_37_MANIFESTATION (use Purushottama for PERSON)"
 
     def __str__(self) -> str:
-        return "37 (System Manifestation - for PERSON use tattva.KRISHNA)"
+        return "37 (System Manifestation - for PERSON use tattva.PURUSHOTTAMA)"
 
     # --- 1. ONTOLOGY: He IS a PERSON - delegate to Purushottama ---
 
@@ -129,7 +129,7 @@ class PurushaTattva(int):
         He is a PERSON - not just a number.
         Delegates to Purushottama for actual PERSON response.
         """
-        return PURUSHOTTAMA_KRISHNA(devotee)
+        return PURUSHOTTAMA(devotee)
 
     # --- 2. MATH: ACINTYA (The "Dancing" of Logic) ---
 
@@ -188,12 +188,12 @@ class PurushaTattva(int):
     @property
     def is_person(self) -> bool:
         """Is He a Person? YES - not Mayavad!"""
-        return PURUSHOTTAMA_KRISHNA.is_person
+        return PURUSHOTTAMA.is_person
 
     @property
     def as_purushottama(self) -> Purushottama:
         """Get the actual PERSON (Purushottama)."""
-        return PURUSHOTTAMA_KRISHNA
+        return PURUSHOTTAMA
 
 
 # =============================================================================
