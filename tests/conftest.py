@@ -558,6 +558,96 @@ def sattva_gene(request):
         return None
 
 
+# =============================================================================
+# THE 12TH TEST: GURU GENE (3×4 Factor)
+# =============================================================================
+# Uses: vibe_core/protocols/governance/guru.py (ParamparaProtocol)
+#
+# The 12th test CANNOT be computed. Only RECEIVED through grace.
+# See guru.py for the full ACINTYA mathematics.
+# =============================================================================
+
+def _get_parampara_constants():
+    """Lazy import from guru protocol to avoid circular dependencies."""
+    try:
+        from vibe_core.protocols.governance.guru import (
+            TRINITY, PARAMPARA, PHASES, GURU_ENTROPY, PARAMPARA_VECTOR
+        )
+        return TRINITY, PARAMPARA, PHASES, GURU_ENTROPY, PARAMPARA_VECTOR
+    except ImportError:
+        # Fallback if protocol not available
+        return 3, 37, 4, 12/37, 444
+
+
+@pytest.fixture
+def guru_gene(request):
+    """
+    Fixture: The 12th Test - Guru Gene with 3/37 factor.
+
+    Uses: vibe_core/protocols/governance/guru.py
+
+    ACINTYA MATHEMATICS:
+        entropy = (3 / 37) × 4 = 12/37 ≈ 0.324
+
+    The order matters:
+        3×4 = Essence first (Hare-Krishna-Rama), then structure
+        4×3 = Structure first, then essence (MAYAVAD - dead)
+
+    Both equal 12. Only one lives.
+
+    Usage:
+        def test_parampara(guru_gene):
+            assert guru_gene.entropy_load == 12/37
+            assert guru_gene.mutation_vector % 37 == 0  # Connected
+    """
+    try:
+        from vibe_core.protocols.substrate.gene import iGene
+        from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.governance.guru import GURU_ENTROPY, PARAMPARA_VECTOR
+
+        return iGene(
+            entropy_load=GURU_ENTROPY,  # 12/37 ≈ 0.324
+            mantra_shield=MantraByte.standard_16(),
+            mutation_vector=PARAMPARA_VECTOR,  # 444 - NOT random!
+        )
+    except ImportError:
+        return None
+
+
+@pytest.fixture
+def anti_guru_gene(request):
+    """
+    Fixture: The WRONG order - 4×3 (structure first, MAYAVAD).
+
+    Uses: vibe_core/protocols/governance/guru.py
+
+    SAME entropy mathematically: (4 / 37) × 3 = 12/37 ≈ 0.324
+    But ontologically DEAD - structure demands essence.
+
+    Usage:
+        def test_mayavad_detection(guru_gene, anti_guru_gene):
+            assert guru_gene.entropy_load == anti_guru_gene.entropy_load  # Same!
+            assert guru_gene.mutation_vector % 37 == 0      # Connected
+            assert anti_guru_gene.mutation_vector % 37 != 0  # Disconnected
+    """
+    try:
+        from vibe_core.protocols.substrate.gene import iGene
+        from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.governance.guru import GURU_ENTROPY, PARAMPARA
+
+        # Mutation vector NOT connected to parampara
+        # 36 × 12 = 432 - NOT divisible by 37!
+        disconnected_vector = (PARAMPARA - 1) * 12  # 432
+
+        return iGene(
+            entropy_load=GURU_ENTROPY,  # Same 12/37 ≈ 0.324
+            mantra_shield=MantraByte.standard_16(),
+            mutation_vector=disconnected_vector,  # 432 - DISCONNECTED
+        )
+    except ImportError:
+        return None
+
+
 def _get_mahamantra_sequence():
     """Lazy import to avoid circular dependencies."""
     try:
