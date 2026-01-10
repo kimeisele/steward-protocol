@@ -54,10 +54,12 @@ from .types import (
     SovereignContext,
     SyncResult,
     SyncStatus,
+    TranscendentalQuality,  # The 64 Qualities
 )
 from .types import (
     Verdict as TypeVerdict,
 )
+from .types import Verdict  # Direct export for backward compatibility
 from .union import EntityStatus, UnionProtocol
 # from .yamaraja import Judgment, Verdict, YamarajaGate
 
