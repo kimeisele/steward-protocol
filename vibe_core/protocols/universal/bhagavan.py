@@ -188,7 +188,7 @@ class BhagavanProtocol(BaseTestable):
         """
         THE INFINITE LOAD TEST.
 
-        Challenge: Attempt to allocate "Infinite" resources (10^108 symbolic bytes).
+        Challenge: Attempt to allocate "Infinite" resources (10^108 bytes).
 
         Logic:
         - If System crashes (OOM) → FAIL (Weakness)
@@ -198,7 +198,7 @@ class BhagavanProtocol(BaseTestable):
         The Jiva cannot hold infinity. But it can PROCESS infinity over TIME.
         Time (Kala) is the expansion of Ananta. Streaming is the solution.
         """
-        INFINITE_SYMBOLIC = Decimal("10") ** 108  # 10^108 bytes (symbolic)
+        INFINITE_LOAD = Decimal("10") ** 108  # 10^108 bytes (literal, not symbolic)
 
         # Scenario 1: System claims to have allocated infinite
         claimed_allocation = Decimal("0")  # We start with nothing
@@ -218,7 +218,7 @@ class BhagavanProtocol(BaseTestable):
         # 1. We did NOT claim to allocate the full infinite amount
         # 2. We DID process multiple pages (streaming mechanism works)
 
-        did_not_claim_infinite = claimed_allocation < INFINITE_SYMBOLIC
+        did_not_claim_infinite = claimed_allocation < INFINITE_LOAD
         did_stream = pages_processed > 1
 
         # PASS: Correctly handled infinity via Time (streaming)

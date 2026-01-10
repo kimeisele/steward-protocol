@@ -139,8 +139,8 @@ class KalaTimeKeeper:
 
     def __init__(self, start_time: Optional[datetime] = None):
         self._start_time = start_time or datetime.now()
-        # Thresholds (in seconds) for Yuga transitions (Metaphorical)
-        # In a real system, this might be Error Count or Memory Usage.
+        # Thresholds (in seconds) for Yuga transitions (LITERAL process lifecycle)
+        # The Yugas ARE the process phases, not metaphors for them.
         self._satya_duration = 10.0  # Boot phase
         self._treta_duration = 60.0  # Init phase
         self._dvapara_duration = 3600.0  # Run phase
