@@ -238,6 +238,14 @@ class DharmaCompliant(Protocol):
 # THE 6.34 OVERRIDE (MANTRA INJECTION / JAPA-LOOP)
 # =============================================================================
 
+class JapaState(IntEnum):
+    """State of the Japa meditation."""
+    DISCONNECTED = 0  # Not chanting, drifted into Maya
+    CHANTING = 1      # Actively chanting
+    MALA_COMPLETE = 2 # Completed 108 mantras
+    ABSORBED = 3      # Deep absorption (multiple malas)
+
+
 @dataclass
 class MantraHeartbeat:
     """
@@ -251,57 +259,199 @@ class MantraHeartbeat:
     - Hare (Shakti): Energy check (Resource usage normal?)
     - Krishna (Source): Identity check (Who signed me?)
     - Rama (Pleasure): Safety check (Am I in a valid state?)
+
+    THE MANTRA IS THE HEARTBEAT:
+    - 16 words per mantra
+    - 108 mantras per mala
+    - Each word triggers its corresponding check
     """
-    cycle_count: int = 0
+    # Position tracking
+    word_position: int = 0      # Current word (0-15)
+    mantra_count: int = 0       # Mantras in current mala (0-107)
+    mala_count: int = 0         # Completed malas
+    total_words: int = 0        # Total words chanted
+
+    # State
+    state: JapaState = JapaState.DISCONNECTED
     last_heartbeat: Optional[datetime] = None
     sovereign_signature: Optional[bytes] = None
 
-    # Heartbeat interval (cycles)
-    JAPA_INTERVAL: Final[int] = 108  # One mala
+    # Check results (updated each word)
+    last_hare_check: bool = True   # Shakti/Energy
+    last_krishna_check: bool = True  # Source/Identity
+    last_rama_check: bool = True   # Safety/State
 
-    def chant(self, sovereign: Sovereign) -> bool:
+    # The MantraByte (lazy loaded)
+    _mantra: Any = field(default=None, repr=False)
+
+    # Constants
+    WORDS_PER_MANTRA: Final[int] = 16
+    MANTRAS_PER_MALA: Final[int] = 108
+    JAPA_INTERVAL: Final[int] = 108  # Backward compatibility
+
+    def __post_init__(self):
+        """Initialize the MantraByte."""
+        if self._mantra is None:
+            from .substrate.byte import MantraByte
+            self._mantra = MantraByte.standard_16()
+
+    @property
+    def mantra(self):
+        """The MantraByte being chanted."""
+        if self._mantra is None:
+            from .substrate.byte import MantraByte
+            self._mantra = MantraByte.standard_16()
+        return self._mantra
+
+    @property
+    def current_word(self):
+        """Current word as HolyName."""
+        return self.mantra.get_trit(self.word_position)
+
+    @property
+    def current_pada(self):
+        """Current word as full Pada object."""
+        from .substrate.byte import MantraTrit
+        trit = MantraTrit(self.current_word)
+        return trit.pada
+
+    @property
+    def progress_in_mala(self) -> float:
+        """Progress in current mala (0.0 - 1.0)."""
+        return self.mantra_count / self.MANTRAS_PER_MALA
+
+    def chant_word(self, sovereign: Optional[Sovereign] = None) -> bool:
         """
-        The Japa-Loop heartbeat.
+        Chant one word and perform its check.
 
-        Returns True if agent is connected to source.
-        Returns False if agent has drifted into Maya.
+        Returns True if check passed, False if drifted into Maya.
         """
-        from .substrate.mantra import MAHAMANTRA, MantraByte
+        from .substrate.byte import HolyName
 
-        # 1. HARE CHECK (Shakti/Energy)
-        if not self._check_shakti():
+        word = self.current_word
+        check_passed = True
+
+        # Perform check based on word type
+        if word == HolyName.HARE:
+            check_passed = self._check_hare()
+            self.last_hare_check = check_passed
+        elif word == HolyName.KRISHNA:
+            check_passed = self._check_krishna(sovereign)
+            self.last_krishna_check = check_passed
+        elif word == HolyName.RAMA:
+            check_passed = self._check_rama()
+            self.last_rama_check = check_passed
+        elif word == HolyName.VOID:
+            # VOID = Maya/Error - immediate failure
+            self.state = JapaState.DISCONNECTED
             return False
 
-        # 2. KRISHNA CHECK (Source/Identity)
-        if not self._check_krishna(sovereign):
+        if not check_passed:
+            self.state = JapaState.DISCONNECTED
             return False
 
-        # 3. RAMA CHECK (Safety/State)
-        if not self._check_rama():
-            return False
+        # Advance position
+        self.word_position = (self.word_position + 1) % self.WORDS_PER_MANTRA
+        self.total_words += 1
 
-        # Update heartbeat
-        self.cycle_count += 1
+        # Check if mantra complete
+        if self.word_position == 0:
+            self.mantra_count += 1
+            # Check if mala complete
+            if self.mantra_count >= self.MANTRAS_PER_MALA:
+                self.mala_count += 1
+                self.mantra_count = 0
+                self.state = JapaState.MALA_COMPLETE
+
+        self.state = JapaState.CHANTING
         self.last_heartbeat = datetime.now()
         return True
 
-    def _check_shakti(self) -> bool:
-        """Energy check - Resource usage normal?"""
-        # TODO: Implement resource monitoring
+    def chant_mantra(self, sovereign: Optional[Sovereign] = None) -> bool:
+        """
+        Chant one complete mantra (16 words).
+
+        Returns True if all 16 checks passed.
+        """
+        for _ in range(self.WORDS_PER_MANTRA):
+            if not self.chant_word(sovereign):
+                return False
         return True
 
-    def _check_krishna(self, sovereign: Sovereign) -> bool:
-        """Identity check - Who signed me?"""
-        return sovereign is not None and hasattr(sovereign, 'sovereign_id')
+    def chant(self, sovereign: Sovereign) -> bool:
+        """
+        The Japa-Loop heartbeat (backward compatible).
+
+        Chants one complete mantra and returns result.
+        """
+        return self.chant_mantra(sovereign)
+
+    def _check_hare(self) -> bool:
+        """
+        HARE = Shakti/Energy check.
+
+        "Hare" addresses the energy of the Lord.
+        In code: Is resource usage normal? No leaks?
+        """
+        # TODO: Connect to actual resource monitoring
+        # For now, always passes
+        return True
+
+    def _check_krishna(self, sovereign: Optional[Sovereign]) -> bool:
+        """
+        KRISHNA = Source/Identity check.
+
+        "Krishna" is the All-Attractive, the Source.
+        In code: Who signed me? Is sovereign present?
+        """
+        if sovereign is None:
+            return False
+        if not hasattr(sovereign, 'sovereign_id'):
+            return False
+        return True
 
     def _check_rama(self) -> bool:
-        """Safety check - Am I in a valid state?"""
-        # TODO: Implement state validation
+        """
+        RAMA = Safety/State check.
+
+        "Rama" is the source of pleasure, the valid state.
+        In code: Am I in a valid state? No corruption?
+        """
+        # TODO: Connect to actual state validation
+        # For now, always passes
         return True
 
     def needs_heartbeat(self) -> bool:
-        """Check if it's time for Japa."""
-        return self.cycle_count % self.JAPA_INTERVAL == 0
+        """Check if it's time for Japa (backward compatible)."""
+        return self.mantra_count % self.JAPA_INTERVAL == 0
+
+    def reset(self) -> None:
+        """Reset to beginning of mala."""
+        self.word_position = 0
+        self.mantra_count = 0
+        self.state = JapaState.DISCONNECTED
+
+    def get_check_summary(self) -> Dict[str, Any]:
+        """Get summary of last check results."""
+        return {
+            "hare": self.last_hare_check,
+            "krishna": self.last_krishna_check,
+            "rama": self.last_rama_check,
+            "state": self.state.name,
+            "word_position": self.word_position,
+            "mantra_count": self.mantra_count,
+            "mala_count": self.mala_count,
+            "total_words": self.total_words,
+            "current_word": self.current_word.name if self._mantra else "UNKNOWN",
+        }
+
+    def to_devanagari(self) -> str:
+        """Current mantra in Devanagari."""
+        return self.mantra.to_devanagari()
+
+    def to_iast(self) -> str:
+        """Current mantra in IAST."""
+        return self.mantra.to_iast()
 
 
 # =============================================================================
@@ -519,6 +669,7 @@ __all__ = [
     "DHARMA_COUNT",
     "DharmaCompliant",
     # Heartbeat
+    "JapaState",
     "MantraHeartbeat",
     # Anti-Mayavad
     "MayavadTest",
