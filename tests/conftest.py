@@ -647,10 +647,134 @@ def pytest_runtest_teardown(item, nextitem):
         del _mahamantra_state[test_id]
 
 
+# =============================================================================
+# TÜV BADGE REGISTRY (Gap 3 Wiring)
+# =============================================================================
+# Passing tests get a TÜV badge (certification).
+# Badge level based on:
+#   - Gene vitality (entropy vs coherence)
+#   - Test duration
+#   - Coverage (if available)
+#
+# Levels: BRONZE (pass), SILVER (pass + low entropy), GOLD (pass + sattva)
+# =============================================================================
+
+_tuv_badges = {}  # test_id -> TuvBadge
+
+
+def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict):
+    """
+    Issue a TÜV badge to a passing test.
+
+    Badge score based on:
+      - Base score: 0.5 (passed)
+      - Gene bonus: +0.3 if entropy < 0.3 (sattva)
+      - Speed bonus: +0.2 if duration < 1s
+    """
+    try:
+        from datetime import datetime, timedelta
+        from vibe_core.protocols.naga.tuv import TuvBadge
+        import hashlib
+    except ImportError:
+        return None
+
+    # Calculate score
+    score = 0.5  # Base: test passed
+
+    # Gene bonus
+    if gene_data and "gene" in gene_data:
+        gene = gene_data["gene"]
+        if gene and hasattr(gene, "entropy_load"):
+            if gene.entropy_load < 0.3:
+                score += 0.3  # Sattva bonus
+            elif gene.entropy_load < 0.5:
+                score += 0.15  # Rajas bonus
+
+    # Speed bonus
+    if duration < 1.0:
+        score += 0.2
+    elif duration < 5.0:
+        score += 0.1
+
+    # Cap at 1.0
+    score = min(score, 1.0)
+
+    # Create signature
+    sig_data = f"{test_id}:{score}:{datetime.now().isoformat()}"
+    signature = hashlib.sha256(sig_data.encode()).hexdigest()[:16]
+
+    badge = TuvBadge(
+        entity_id=test_id,
+        issued_at=datetime.now(),
+        expires_at=datetime.now() + timedelta(days=1),  # Valid for 1 day
+        score=score,
+        signature=f"TÜV-{signature}",
+    )
+
+    _tuv_badges[test_id] = badge
+    return badge
+
+
+def _get_badge_level(score: float) -> str:
+    """Convert score to badge level."""
+    if score >= 0.9:
+        return "GOLD"
+    elif score >= 0.7:
+        return "SILVER"
+    else:
+        return "BRONZE"
+
+
+@pytest.fixture
+def tuv_badge(request):
+    """
+    Fixture: Access the TÜV badge for this test (after completion).
+
+    Note: Badge is issued AFTER test passes, so this fixture
+    returns a function to retrieve it post-test.
+
+    Usage:
+        def test_with_badge(tuv_badge):
+            # ... test logic ...
+            # Badge will be issued after test passes
+    """
+    test_id = request.node.nodeid
+
+    def get_badge():
+        return _tuv_badges.get(test_id)
+
+    return get_badge
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """
+    Print TÜV badge summary at end of test session.
+    """
+    if not _tuv_badges:
+        return
+
+    # Count badges by level
+    gold = sum(1 for b in _tuv_badges.values() if b.score >= 0.9)
+    silver = sum(1 for b in _tuv_badges.values() if 0.7 <= b.score < 0.9)
+    bronze = sum(1 for b in _tuv_badges.values() if b.score < 0.7)
+    total = len(_tuv_badges)
+
+    terminalreporter.write_sep("=", "TÜV BADGE SUMMARY")
+    terminalreporter.write_line(f"Total Badges Issued: {total}")
+    terminalreporter.write_line(f"  GOLD:   {gold}")
+    terminalreporter.write_line(f"  SILVER: {silver}")
+    terminalreporter.write_line(f"  BRONZE: {bronze}")
+
+    # Average score
+    if total > 0:
+        avg_score = sum(b.score for b in _tuv_badges.values()) / total
+        terminalreporter.write_line(f"  Average Score: {avg_score:.2f}")
+
+
 def pytest_runtest_logreport(report):
     """
     Log Mahamantra completion status with test result.
-    Includes gene vitality check.
+    Issues TÜV badge to passing tests.
     """
     if report.when == "call":
         logger = logging.getLogger("MAHAMANTRA")
@@ -658,17 +782,24 @@ def pytest_runtest_logreport(report):
 
         # Get gene info if available
         gene_status = ""
-        if test_id in _mahamantra_state and "gene" in _mahamantra_state[test_id]:
-            gene = _mahamantra_state[test_id]["gene"]
+        gene_data = _mahamantra_state.get(test_id, {})
+        if "gene" in gene_data:
+            gene = gene_data["gene"]
             if gene:
                 coherence = gene.mantra_shield.coherence
                 entropy = gene.entropy_load
                 vital = "ALIVE" if not gene.is_fatal else "FATAL"
                 gene_status = f" | Gene: {vital} (E={entropy:.2f}, C={coherence:.2f})"
 
+        # Issue badge and log result
+        badge_status = ""
         if report.passed:
-            logger.debug(f"✓ MALA BEAD COMPLETE: {report.nodeid}{gene_status}")
+            badge = _issue_tuv_badge(test_id, report.duration, gene_data)
+            if badge:
+                level = _get_badge_level(badge.score)
+                badge_status = f" | TÜV: {level} ({badge.score:.2f})"
+            logger.debug(f"✓ MALA BEAD COMPLETE: {test_id}{gene_status}{badge_status}")
         elif report.failed:
-            logger.debug(f"✗ APARADHA (offense): {report.nodeid}{gene_status}")
+            logger.debug(f"✗ APARADHA (offense): {test_id}{gene_status}")
         elif report.skipped:
-            logger.debug(f"○ PRATYAHARA (withdrawal): {report.nodeid}{gene_status}")
+            logger.debug(f"○ PRATYAHARA (withdrawal): {test_id}{gene_status}")
