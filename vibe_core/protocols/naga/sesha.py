@@ -144,4 +144,35 @@ class Sesha(NagaBase):
             return {"items": len(self._store), "bytes_approx": len(str(self._store))}
 
 
+# =============================================================================
+# NULL IMPLEMENTATION (The Silent Witness)
+# =============================================================================
+
+
+class NullSesha:
+    """
+    The Void Beneath.
+    Accepts all history, remembers nothing.
+    Used for stateless testing.
+    """
+
+    def record_event(self, event_type: str, data: Any, signature: str = "") -> str:
+        return "0x00_NULL_EVENT_HASH"  # Akarma
+
+    def store(self, key: str, value: Any, signature: str) -> bool:
+        return True  # Accept without storing
+
+    def recall(self, key: str) -> Optional[Any]:
+        return None  # Only Silence
+
+    def get_stats(self) -> Dict[str, int]:
+        return {"items": 0, "bytes_approx": 0}
+
+    def get_top_hash(self) -> str:
+        return ""
+
+    def serve(self, request: Any) -> Any:
+        return "NULL_SESHA_RESPONSE"
+
+
 SeshaProtocol = Sesha

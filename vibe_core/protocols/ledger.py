@@ -15,6 +15,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypedDict
 from .agent import AgentManifest, VibeAgent
 from .registry import ManifestRegistry
 
+# Import Layer -1 (Holy Name Maths) for Ternary Status
+try:
+    from vibe_core.protocols.substrate.byte import HolyName
+except ImportError:
+    from enum import IntEnum
+    class HolyName(IntEnum):
+        HARE = 0
+        KRISHNA = 1
+        RAMA = 2
+        VOID = 3
+
 if TYPE_CHECKING:
     from vibe_core.protocols.kernel_types import KernelStatusReport, PluginProtocol
     from vibe_core.scheduling import Task
@@ -59,6 +70,8 @@ class LedgerEvent(TypedDict, total=False):
     details: Dict[str, str]  # Nested dict still typed (str keys/values)
     prev_hash: str
     hash: str
+    status: int  # HolyName value (0=HARE, 1=KRISHNA, 2=RAMA, 3=VOID)
+    ttl: Optional[int]  # Time To Live in seconds (None = permanent)
 
 
 class KernelStatus(str, Enum):
@@ -343,4 +356,40 @@ class LedgerProtocol(Protocol):
 
     def get_all_entries(self) -> List[LedgerEvent]:
         """Alias for get_all_events (backward compatibility)."""
+        ...
+
+    # --- PHASE 29: DECAY INTEGRATION ---
+    
+    def record_event_with_status(
+        self, 
+        event_type: str, 
+        agent_id: str, 
+        details: Dict[str, str],
+        status: "HolyName"
+    ) -> str:
+        """
+        Record an event with explicit Karmic Status.
+        
+        LOGIC (Decay):
+        - KRISHNA (01): Store permanently (Merkle Tip Update).
+        - RAMA (10):    Store with TTL (Time To Live = 24h).
+        - VOID (11):    Reject immediately (Not recorded).
+        - HARE (00):    Store as pending (TTL = 1h).
+        """
+        ...
+
+    def purge_decayed(self) -> int:
+        """
+        Remove all entries that have exceeded their TTL.
+        This is the 'Forgetting' mechanism (Kali Yuga Entropy).
+        
+        Returns:
+            Number of entries purged.
+        """
+        ...
+
+    def get_status(self, event_id: str) -> Optional["HolyName"]:
+        """
+        Get the Karmic Status of an entry.
+        """
         ...
