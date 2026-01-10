@@ -89,7 +89,6 @@ def test_sudarshana_spin(mock_kernel_pool):
     
     assert len(KERNEL.active_manifestations) > 0
 
-
 def test_sudarshana_autodiscovery(mock_kernel_pool):
     """
     Verifies that Sudarshana finds context even if not first arg.
@@ -104,11 +103,55 @@ def test_sudarshana_autodiscovery(mock_kernel_pool):
     assert future is not None
     assert mock_kernel_pool.apply_async.call_count == 1
     
-    # service.sync("path", context=ctx) 
-    # args=(self, "path"), kwargs={'context': ctx}
-    
+    # Unwrap the PranaTask from the _guarded_execution call
     call_args = mock_kernel_pool.apply_async.call_args
-    target_args = call_args.kwargs.get('args')
+    # args[0] passed to apply_async is the PranaTask object (because of _guarded_execution wrapper)
+    prana_task = call_args.kwargs.get('args')[0]
     
-    assert isinstance(target_args[0], MultiArgService)
-    assert target_args[1] == "path"
+    from vibe_core.protocols.universal.sudarshana import PranaTask
+    assert isinstance(prana_task, PranaTask)
+    
+    # Inspect the logic inside the Task
+    # service.sync("path", context=ctx)
+    # The actual args captured by wrapper:
+    assert isinstance(prana_task.args[0], MultiArgService) # self
+    assert prana_task.args[1] == "path"
+    assert prana_task.kwargs['context'] == ctx
+
+def test_sudarshana_immune_response(mock_kernel_pool):
+    """
+    Verifies that if the worker returns a PranaFailure, 
+    the Nervous System (Future) raises the Exception locally.
+    """
+    # 1. Setup - Mock the Pool to return a PranaFailure
+    from vibe_core.protocols.universal.sudarshana import PranaFailure
+    
+    mock_async = MagicMock()
+    mock_kernel_pool.apply_async.return_value = mock_async
+    
+    # Simulate a crash in the worker (Legacy code failure)
+    simulated_error = ValueError("Kali Yuga Error: Calculation Impossible")
+    failure_payload = PranaFailure(
+        error=simulated_error, 
+        traceback="Mock Traceback", 
+        task_id="test_crash_id"
+    )
+    
+    # The Future.get() call returns the payload (PranaFailure)
+    mock_async.get.return_value = failure_payload
+    mock_async.ready.return_value = True
+    
+    service = MultiArgService()
+    ctx = SovereignContext(identity_id="did:test_immune", signature="sig", tattva_level=TranscendentalQuality.EXISTENCE)
+    
+    # 2. Execute 
+    future = service.sync("risky_path", context=ctx) # Dummy call to get a future
+    
+    # 3. Verify Immune Response
+    # Calling .get() should RAISE the ValueError, unwrapped from PranaFailure
+    print("\n🛡️ Verifying Immune Response...")
+    with pytest.raises(ValueError) as excinfo:
+        future.get()
+    
+    assert "Kali Yuga Error" in str(excinfo.value)
+    print(f"✅ Safe! Caught expected error: {excinfo.value}")
