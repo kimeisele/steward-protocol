@@ -803,3 +803,216 @@ def pytest_runtest_logreport(report):
             logger.debug(f"✗ APARADHA (offense): {test_id}{gene_status}")
         elif report.skipped:
             logger.debug(f"○ PRATYAHARA (withdrawal): {test_id}{gene_status}")
+
+
+# =============================================================================
+# TESTABLE REGISTRY → PYTEST BRIDGE (Gap 4 Wiring)
+# =============================================================================
+# Converts TestableRegistry's discovered TestCases into real pytest tests.
+#
+# The bridge works in two modes:
+#   1. LAZY: Fixture-based (test_registry_cases) - for manual parametrization
+#   2. EAGER: Hook-based (pytest_generate_tests) - auto-generates tests
+#
+# Each TestCase from the registry becomes a pytest test that:
+#   - Runs the TestCase.test_func with a fresh kernel
+#   - Inherits Mahamantra lifecycle (Gap 1)
+#   - Gets injected with iGene (Gap 2)
+#   - Receives TÜV badge on pass (Gap 3)
+# =============================================================================
+
+_testable_registry = None
+
+
+def _get_testable_registry():
+    """Lazy-load the global testable registry."""
+    global _testable_registry
+    if _testable_registry is None:
+        try:
+            from vibe_core.protocols.testable_registry import get_global_registry
+            _testable_registry = get_global_registry()
+        except ImportError:
+            return None
+    return _testable_registry
+
+
+@pytest.fixture(scope="session")
+def testable_registry():
+    """
+    Fixture: Access the global TestableRegistry.
+
+    Usage:
+        def test_registry_discovery(testable_registry, fresh_kernel):
+            testable_registry.discover_from_kernel(fresh_kernel)
+            summary = testable_registry.get_summary()
+            print(f"Discovered {summary['total_testables']} components")
+    """
+    return _get_testable_registry()
+
+
+@pytest.fixture(scope="session")
+def discovered_test_cases(testable_registry, request):
+    """
+    Fixture: Get all discovered TestCases after kernel discovery.
+
+    This fixture triggers discovery from a fresh kernel and returns
+    all TestCase objects for parametrized testing.
+
+    Usage:
+        @pytest.mark.parametrize("case", discovered_test_cases())
+        def test_discovered(case, fresh_kernel):
+            result = case.test_func(fresh_kernel, {})
+            assert result is True
+    """
+    if testable_registry is None:
+        return []
+
+    # Try to discover from a fresh kernel if available
+    # This is session-scoped, so discovery happens once
+    try:
+        from vibe_core.kernel_impl import RealVibeKernel
+        kernel = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
+        testable_registry.discover_from_kernel(kernel)
+    except Exception as e:
+        logger.warning(f"Failed to discover testables: {e}")
+
+    return testable_registry.get_all_test_cases()
+
+
+def pytest_generate_tests(metafunc):
+    """
+    Pytest hook: Dynamically generate tests from TestableRegistry.
+
+    If a test has a 'registry_test_case' fixture, parametrize it with
+    all discovered TestCases from the registry.
+
+    Usage:
+        def test_registry_component(registry_test_case, fresh_kernel):
+            # registry_test_case is a TestCase from the registry
+            result = registry_test_case.test_func(fresh_kernel, {})
+            assert result is True, registry_test_case.description
+    """
+    if "registry_test_case" in metafunc.fixturenames:
+        registry = _get_testable_registry()
+        if registry is None:
+            # No registry available, skip parametrization
+            metafunc.parametrize("registry_test_case", [], ids=[])
+            return
+
+        # Discover if not already done
+        if len(registry.testables) == 0:
+            try:
+                from vibe_core.kernel_impl import RealVibeKernel
+                kernel = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
+                registry.discover_from_kernel(kernel)
+            except Exception:
+                pass
+
+        # Get all test cases
+        cases = registry.get_all_test_cases()
+
+        # Create IDs from test case names
+        ids = [case.name for case in cases]
+
+        metafunc.parametrize("registry_test_case", cases, ids=ids)
+
+
+@pytest.fixture
+def registry_test_case():
+    """
+    Placeholder fixture for registry test cases.
+    Actual value is injected via pytest_generate_tests parametrization.
+    """
+    return None
+
+
+@pytest.fixture
+def run_registry_test(fresh_kernel, test_gene):
+    """
+    Fixture factory: Run a TestCase from the registry.
+
+    Provides a function that executes a TestCase with:
+      - Fresh kernel instance
+      - Gene-based entropy context
+      - Proper timeout handling
+
+    Usage:
+        def test_my_registry_tests(run_registry_test, testable_registry):
+            for case in testable_registry.get_all_test_cases():
+                result = run_registry_test(case)
+                assert result.success, f"{case.name} failed"
+    """
+    import asyncio
+    from dataclasses import dataclass
+
+    @dataclass
+    class TestResult:
+        success: bool
+        message: str
+        duration_ms: float
+
+    def _run(test_case):
+        """Execute a TestCase and return result."""
+        import time
+        start = time.time()
+
+        try:
+            # Handle both sync and async test functions
+            test_func = test_case.test_func
+            timeout_s = test_case.timeout_ms / 1000.0
+
+            if asyncio.iscoroutinefunction(test_func):
+                # Async test
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                coro = test_func(fresh_kernel, {"gene": test_gene})
+                result = loop.run_until_complete(
+                    asyncio.wait_for(coro, timeout=timeout_s)
+                )
+            else:
+                # Sync test
+                result = test_func(fresh_kernel, {"gene": test_gene})
+
+            duration = (time.time() - start) * 1000
+
+            if result:
+                return TestResult(True, "PASSED", duration)
+            else:
+                return TestResult(False, "FAILED: returned False", duration)
+
+        except asyncio.TimeoutError:
+            duration = (time.time() - start) * 1000
+            return TestResult(False, f"TIMEOUT after {test_case.timeout_ms}ms", duration)
+        except Exception as e:
+            duration = (time.time() - start) * 1000
+            return TestResult(False, f"ERROR: {e}", duration)
+
+    return _run
+
+
+# =============================================================================
+# REGISTRY SUMMARY HOOK
+# =============================================================================
+
+
+def pytest_report_header(config):
+    """Add TestableRegistry info to pytest header."""
+    registry = _get_testable_registry()
+    if registry is None:
+        return []
+
+    try:
+        summary = registry.get_summary()
+        if summary["total_testables"] > 0:
+            return [
+                f"TestableRegistry: {summary['total_testables']} components, "
+                f"{summary['total_tests']} generated tests"
+            ]
+    except Exception:
+        pass
+
+    return []
