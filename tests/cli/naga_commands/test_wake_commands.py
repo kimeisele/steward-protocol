@@ -3,14 +3,25 @@ TEST WAKE PHASE COMMANDS
 ========================
 
 Tests for WAKE phase (0-3) commands:
-- StatusCommand (PRITHU - SYS_WAKE)
+- StatusCommand (PRITHU - SYS_WAKE) - Position 0
+- IdentityCommand (BRAHMA - LOAD_ROOT) - Position 1
+- ResourcesCommand (NARADA - ALLOC_MEM) - Position 2
+- ContextCommand (SHAMBHU - BIND_CTX) - Position 3
 
 "Prithu is the first king - status is the first command."
+"Brahma creates - identity establishes the root."
+"Narada distributes - resources are allocated."
+"Shambhu transforms - context is bound."
+
+WAKE PHASE COMPLETE - All 4 positions tested.
 """
 
 import pytest
 
 from vibe_core.cli.naga_commands.wake.status import StatusCommand
+from vibe_core.cli.naga_commands.wake.identity import IdentityCommand
+from vibe_core.cli.naga_commands.wake.resources import ResourcesCommand
+from vibe_core.cli.naga_commands.wake.context import ContextCommand
 from vibe_core.protocols.naga.cli_command import (
     INagaCommand,
     Mahajana,
@@ -255,3 +266,397 @@ class TestSemantics:
         # Verify it's first in the enum
         opcodes = list(MantraOpCode)
         assert opcodes[0] == cmd.opcode
+
+
+# =============================================================================
+# IDENTITY COMMAND TESTS (BRAHMA - LOAD_ROOT)
+# =============================================================================
+
+
+class TestIdentityCommand:
+    """Test IdentityCommand (BRAHMA - LOAD_ROOT)."""
+
+    def test_implements_protocol(self):
+        """IdentityCommand implements INagaCommand."""
+        cmd = IdentityCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_load_root(self):
+        """Opcode is LOAD_ROOT."""
+        cmd = IdentityCommand()
+        assert cmd.opcode == MantraOpCode.LOAD_ROOT
+
+    def test_mahajana_is_brahma(self):
+        """Mahajana is BRAHMA."""
+        cmd = IdentityCommand()
+        assert cmd.mahajana == Mahajana.BRAHMA
+
+    def test_name_is_identity(self):
+        """Name is 'identity'."""
+        cmd = IdentityCommand()
+        assert cmd.name == "identity"
+
+    def test_phase_is_wake(self):
+        """Phase is WAKE."""
+        cmd = IdentityCommand()
+        assert cmd.phase == Phase.WAKE
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = IdentityCommand()
+        assert len(cmd.help_text) > 0
+        assert "BRAHMA" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args shows identity."""
+        cmd = IdentityCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "BRAHMA" in result.output
+
+    def test_execute_config_flag(self):
+        """Execute with --config shows configuration."""
+        cmd = IdentityCommand()
+        result = cmd.execute(["--config"])
+        assert result.success
+        assert "Configuration" in result.output
+
+    def test_execute_lineage_flag(self):
+        """Execute with --lineage shows lineage."""
+        cmd = IdentityCommand()
+        result = cmd.execute(["--lineage"])
+        assert result.success
+        assert "Lineage" in result.output
+
+    def test_execute_root_flag(self):
+        """Execute with --root shows root paths."""
+        cmd = IdentityCommand()
+        result = cmd.execute(["--root"])
+        assert result.success
+        assert "Root Paths" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = IdentityCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.LOAD_ROOT
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = IdentityCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.BRAHMA
+
+
+# =============================================================================
+# RESOURCES COMMAND TESTS (NARADA - ALLOC_MEM)
+# =============================================================================
+
+
+class TestResourcesCommand:
+    """Test ResourcesCommand (NARADA - ALLOC_MEM)."""
+
+    def test_implements_protocol(self):
+        """ResourcesCommand implements INagaCommand."""
+        cmd = ResourcesCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_alloc_mem(self):
+        """Opcode is ALLOC_MEM."""
+        cmd = ResourcesCommand()
+        assert cmd.opcode == MantraOpCode.ALLOC_MEM
+
+    def test_mahajana_is_narada(self):
+        """Mahajana is NARADA."""
+        cmd = ResourcesCommand()
+        assert cmd.mahajana == Mahajana.NARADA
+
+    def test_name_is_resources(self):
+        """Name is 'resources'."""
+        cmd = ResourcesCommand()
+        assert cmd.name == "resources"
+
+    def test_phase_is_wake(self):
+        """Phase is WAKE."""
+        cmd = ResourcesCommand()
+        assert cmd.phase == Phase.WAKE
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = ResourcesCommand()
+        assert len(cmd.help_text) > 0
+        assert "NARADA" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args shows resources."""
+        cmd = ResourcesCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "NARADA" in result.output
+
+    def test_execute_memory_flag(self):
+        """Execute with --memory shows memory details."""
+        cmd = ResourcesCommand()
+        result = cmd.execute(["--memory"])
+        assert result.success
+        assert "Memory" in result.output
+
+    def test_execute_registry_flag(self):
+        """Execute with --registry shows registry allocations."""
+        cmd = ResourcesCommand()
+        result = cmd.execute(["--registry"])
+        assert result.success
+        assert "Registry" in result.output
+
+    def test_execute_pools_flag(self):
+        """Execute with --pools shows pool status."""
+        cmd = ResourcesCommand()
+        result = cmd.execute(["--pools"])
+        assert result.success
+        assert "Pools" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = ResourcesCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.ALLOC_MEM
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = ResourcesCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.NARADA
+
+
+# =============================================================================
+# CONTEXT COMMAND TESTS (SHAMBHU - BIND_CTX)
+# =============================================================================
+
+
+class TestContextCommand:
+    """Test ContextCommand (SHAMBHU - BIND_CTX)."""
+
+    def test_implements_protocol(self):
+        """ContextCommand implements INagaCommand."""
+        cmd = ContextCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_bind_ctx(self):
+        """Opcode is BIND_CTX."""
+        cmd = ContextCommand()
+        assert cmd.opcode == MantraOpCode.BIND_CTX
+
+    def test_mahajana_is_shambhu(self):
+        """Mahajana is SHAMBHU."""
+        cmd = ContextCommand()
+        assert cmd.mahajana == Mahajana.SHAMBHU
+
+    def test_name_is_context(self):
+        """Name is 'context'."""
+        cmd = ContextCommand()
+        assert cmd.name == "context"
+
+    def test_phase_is_wake(self):
+        """Phase is WAKE."""
+        cmd = ContextCommand()
+        assert cmd.phase == Phase.WAKE
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = ContextCommand()
+        assert len(cmd.help_text) > 0
+        assert "SHAMBHU" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args shows context."""
+        cmd = ContextCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "SHAMBHU" in result.output
+
+    def test_execute_env_flag(self):
+        """Execute with --env shows environment."""
+        cmd = ContextCommand()
+        result = cmd.execute(["--env"])
+        assert result.success
+        assert "Environment" in result.output
+
+    def test_execute_session_flag(self):
+        """Execute with --session shows session."""
+        cmd = ContextCommand()
+        result = cmd.execute(["--session"])
+        assert result.success
+        assert "Session" in result.output
+
+    def test_execute_bindings_flag(self):
+        """Execute with --bindings shows bindings."""
+        cmd = ContextCommand()
+        result = cmd.execute(["--bindings"])
+        assert result.success
+        assert "Bindings" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = ContextCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.BIND_CTX
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = ContextCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.SHAMBHU
+
+
+# =============================================================================
+# WAKE PHASE REGISTRY TESTS (COMPLETE)
+# =============================================================================
+
+
+class TestWakeRegistryComplete:
+    """Test that all WAKE phase commands are registered."""
+
+    def test_identity_registered(self):
+        """IdentityCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("identity")
+        assert cmd is not None
+        assert cmd.name == "identity"
+
+    def test_resources_registered(self):
+        """ResourcesCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("resources")
+        assert cmd is not None
+        assert cmd.name == "resources"
+
+    def test_context_registered(self):
+        """ContextCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("context")
+        assert cmd is not None
+        assert cmd.name == "context"
+
+    def test_wake_phase_has_all_four(self):
+        """WAKE phase has all 4 commands."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.WAKE)
+        assert len(cmds) == 4
+        names = [c.name for c in cmds]
+        assert "status" in names     # Position 0
+        assert "identity" in names   # Position 1
+        assert "resources" in names  # Position 2
+        assert "context" in names    # Position 3
+
+    def test_brahma_has_identity(self):
+        """BRAHMA owns identity command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.BRAHMA)
+        names = [c.name for c in cmds]
+        assert "identity" in names
+
+    def test_narada_has_resources(self):
+        """NARADA owns resources command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.NARADA)
+        names = [c.name for c in cmds]
+        assert "resources" in names
+
+    def test_shambhu_has_context(self):
+        """SHAMBHU owns context command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.SHAMBHU)
+        names = [c.name for c in cmds]
+        assert "context" in names
+
+
+# =============================================================================
+# WAKE PHASE STRICT TYPING
+# =============================================================================
+
+
+class TestWakeStrictTyping:
+    """Test that WAKE commands have proper typing."""
+
+    def test_identity_result_no_any(self):
+        """IdentityCommand result has no Any."""
+        cmd = IdentityCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+    def test_resources_result_no_any(self):
+        """ResourcesCommand result has no Any."""
+        cmd = ResourcesCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+    def test_context_result_no_any(self):
+        """ContextCommand result has no Any."""
+        cmd = ContextCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+
+# =============================================================================
+# WAKE PHASE IMMUTABILITY
+# =============================================================================
+
+
+class TestWakeImmutability:
+    """Test that WAKE results are immutable."""
+
+    def test_identity_result_frozen(self):
+        """IdentityCommand result is frozen."""
+        cmd = IdentityCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+    def test_resources_result_frozen(self):
+        """ResourcesCommand result is frozen."""
+        cmd = ResourcesCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+    def test_context_result_frozen(self):
+        """ContextCommand result is frozen."""
+        cmd = ContextCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+
+# =============================================================================
+# WAKE PHASE COMPLETE TESTS
+# =============================================================================
+
+
+class TestWakePhaseComplete:
+    """Verify WAKE phase is complete with all 4 commands."""
+
+    def test_all_opcodes_covered(self):
+        """All WAKE opcodes have commands."""
+        wake_opcodes = [
+            MantraOpCode.SYS_WAKE,    # Position 0
+            MantraOpCode.LOAD_ROOT,   # Position 1
+            MantraOpCode.ALLOC_MEM,   # Position 2
+            MantraOpCode.BIND_CTX,    # Position 3
+        ]
+        for opcode in wake_opcodes:
+            cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)
+            assert len(cmds) >= 1, f"No command for {opcode.name}"
+
+    def test_all_mahajanas_covered(self):
+        """All WAKE mahajanas have commands."""
+        wake_mahajanas = [
+            Mahajana.PRITHU,   # SYS_WAKE (status)
+            Mahajana.BRAHMA,   # LOAD_ROOT (identity)
+            Mahajana.NARADA,   # ALLOC_MEM (resources)
+            Mahajana.SHAMBHU,  # BIND_CTX (context)
+        ]
+        for mahajana in wake_mahajanas:
+            cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(mahajana)
+            assert len(cmds) >= 1, f"No command for {mahajana.name}"
