@@ -434,6 +434,130 @@ def naga_harness_orchestrator():
 _mahamantra_state = {}
 
 
+# =============================================================================
+# GENE INJECTION (Gap 2 Wiring)
+# =============================================================================
+# Each test is BORN with an iGene:
+#   - entropy_load: Kali Yuga stress factor (0.0-1.0)
+#   - mantra_shield: Protection via MantraByte coherence
+#   - mutation_vector: Bitmask for chaos injection
+#
+# if entropy_load > mantra_shield.coherence → FATAL (test should fail)
+# =============================================================================
+
+
+def _create_test_gene(test_name: str, markers: list):
+    """
+    Create an iGene for a test based on its markers.
+
+    Marker → Entropy mapping:
+      @pytest.mark.hardening → 0.8 (high stress)
+      @pytest.mark.integration → 0.5 (medium stress)
+      @pytest.mark.slow → 0.6 (elevated stress)
+      @pytest.mark.smoke → 0.1 (minimal stress)
+      default → 0.3 (normal)
+    """
+    try:
+        from vibe_core.protocols.substrate.gene import iGene
+        from vibe_core.protocols.substrate.byte import MantraByte
+    except ImportError:
+        return None
+
+    # Determine entropy based on markers
+    marker_names = [m.name for m in markers]
+
+    if "hardening" in marker_names:
+        entropy = 0.8
+    elif "slow" in marker_names:
+        entropy = 0.6
+    elif "integration" in marker_names:
+        entropy = 0.5
+    elif "smoke" in marker_names:
+        entropy = 0.1
+    else:
+        entropy = 0.3
+
+    # Create gene with standard Mahamantra shield
+    import random
+    return iGene(
+        entropy_load=entropy,
+        mantra_shield=MantraByte.standard_16(),
+        mutation_vector=random.getrandbits(32),
+    )
+
+
+@pytest.fixture
+def test_gene(request):
+    """
+    Fixture: Inject an iGene into the test.
+
+    Usage:
+        def test_something(test_gene):
+            assert not test_gene.is_fatal, "Test born dead!"
+            print(f"Entropy: {test_gene.entropy_load}")
+            print(f"Coherence: {test_gene.mantra_shield.coherence}")
+
+    The gene is also stored in _mahamantra_state for lifecycle access.
+    """
+    gene = _create_test_gene(request.node.name, list(request.node.iter_markers()))
+
+    # Store in mahamantra state
+    test_id = request.node.nodeid
+    if test_id in _mahamantra_state:
+        _mahamantra_state[test_id]["gene"] = gene
+    else:
+        _mahamantra_state[test_id] = {"gene": gene}
+
+    return gene
+
+
+@pytest.fixture
+def chaos_gene(request):
+    """
+    Fixture: High-entropy gene for chaos/stress testing.
+
+    Usage:
+        def test_under_stress(chaos_gene):
+            # This test runs with 0.9 entropy (near fatal)
+            assert chaos_gene.entropy_load == 0.9
+    """
+    try:
+        from vibe_core.protocols.substrate.gene import iGene
+        from vibe_core.protocols.substrate.byte import MantraByte
+        import random
+
+        return iGene(
+            entropy_load=0.9,  # Near fatal
+            mantra_shield=MantraByte.standard_16(),
+            mutation_vector=random.getrandbits(32),
+        )
+    except ImportError:
+        return None
+
+
+@pytest.fixture
+def sattva_gene(request):
+    """
+    Fixture: Low-entropy gene for stable/pure testing.
+
+    Usage:
+        def test_pure_path(sattva_gene):
+            # This test runs with 0.1 entropy (highly stable)
+            assert not sattva_gene.is_fatal
+    """
+    try:
+        from vibe_core.protocols.substrate.gene import iGene
+        from vibe_core.protocols.substrate.byte import MantraByte
+
+        return iGene(
+            entropy_load=0.1,  # Very stable
+            mantra_shield=MantraByte.standard_16(),
+            mutation_vector=0,  # No mutations
+        )
+    except ImportError:
+        return None
+
+
 def _get_mahamantra_sequence():
     """Lazy import to avoid circular dependencies."""
     try:
@@ -526,12 +650,25 @@ def pytest_runtest_teardown(item, nextitem):
 def pytest_runtest_logreport(report):
     """
     Log Mahamantra completion status with test result.
+    Includes gene vitality check.
     """
     if report.when == "call":
         logger = logging.getLogger("MAHAMANTRA")
+        test_id = report.nodeid
+
+        # Get gene info if available
+        gene_status = ""
+        if test_id in _mahamantra_state and "gene" in _mahamantra_state[test_id]:
+            gene = _mahamantra_state[test_id]["gene"]
+            if gene:
+                coherence = gene.mantra_shield.coherence
+                entropy = gene.entropy_load
+                vital = "ALIVE" if not gene.is_fatal else "FATAL"
+                gene_status = f" | Gene: {vital} (E={entropy:.2f}, C={coherence:.2f})"
+
         if report.passed:
-            logger.debug(f"✓ MALA BEAD COMPLETE: {report.nodeid}")
+            logger.debug(f"✓ MALA BEAD COMPLETE: {report.nodeid}{gene_status}")
         elif report.failed:
-            logger.debug(f"✗ APARADHA (offense): {report.nodeid}")
+            logger.debug(f"✗ APARADHA (offense): {report.nodeid}{gene_status}")
         elif report.skipped:
-            logger.debug(f"○ PRATYAHARA (withdrawal): {report.nodeid}")
+            logger.debug(f"○ PRATYAHARA (withdrawal): {report.nodeid}{gene_status}")
