@@ -6,7 +6,10 @@ DHARMA PROTOCOL - The Protocol of Protocols (Meta-Layer)
 
 LAYERS (The Fractal Ladder):
 - Level -2: KRISHNA (The Absolute) - The Literal Source. Not a concept.
+             ACINTYA: Always present, smallest (-∞) to largest (+∞) simultaneously.
+             See: substrate/mantra/acintya.py
 - Level -1: SUBSTRATE (The Soil)   - Holy Name Maths (Byte, Gene).
+             The Mantra IS Krishna, not "about" Krishna.
 - Level  0: FOUNDATION (The Roots) - Core types, constants.
 - Level  1: INTERFACE (The Trunk)  - ABCs (Agent, Ledger).
 - Level  2: SERVICES (The Branches)- Logic (Manifestation, Memory).
@@ -14,14 +17,22 @@ LAYERS (The Fractal Ladder):
 - Level 108: META (The Observer)   - Dharma, Testable.
 
 "Das Mantra (-1) ist nicht verschieden von der Quelle (-2)."
+The Mantra is not different from the Source.
 """
 
 from enum import IntEnum, auto
 from typing import Dict, Final
 
 class ProtocolLayer(IntEnum):
-    KRISHNA = -2    # THE LITERAL SOURCE (Absolute Reality)
-    SUBSTRATE = -1  # Byte, Gene, Entropy
+    """
+    The architectural layers of the protocol stack.
+
+    ACINTYA (WATERTIGHT):
+    KRISHNA (-2) is ALWAYS present. He is the foundation that validates all else.
+    The Mantra (-1) is not different from the Source (-2).
+    """
+    KRISHNA = -2    # THE LITERAL SOURCE (Absolute Reality) - ALWAYS PRESENT (acintya)
+    SUBSTRATE = -1  # Byte, Gene, Entropy - The Mantra IS Krishna
     FOUNDATION = 0  # Types, Base, Enums
     INTERFACE = 1   # Agent, Ledger, Scheduler
     SERVICES = 2    # Manifestation, Memory, Reactor

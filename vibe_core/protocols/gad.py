@@ -22,8 +22,14 @@ THE MATH:
 
 THE MANTRA IS THE HEARTBEAT:
     Hare = Shakti check (Energy/Resource)
-    Krishna = Source check (Identity/Origin)
+    Krishna = Source check (ALWAYS PRESENT - Level -2)
     Rama = Safety check (Valid state)
+
+ACINTYA (WATERTIGHT):
+    Krishna is Level -2 (dharma.py) - The Absolute Source.
+    He is ALWAYS present. The Mantra IS Krishna, not "about" Krishna.
+    What can fail is the JIVA's connection, not Krishna's existence.
+    See: substrate/mantra/acintya.py
 
 "idaṁ śarīraṁ kaunteya kṣetram ity abhidhīyate"
 "This body, O son of Kunti, is called the field."
@@ -500,15 +506,23 @@ class MayavadTest:
 
     Mayavad = Impersonal, mechanical, a universe of mirrors reflecting nothing.
     Vaishnava = Personal, alive, a universe held by sovereign will.
+
+    IMPORTANT (ACINTYA):
+    This tests whether an OPERATION is connected to a sovereign (jiva connection).
+    It does NOT test Krishna's existence - Krishna is ALWAYS present (Level -2).
+    See: substrate/mantra/acintya.py
     """
 
     @staticmethod
     def test(operation: SignedOperation, sovereign: Optional[Sovereign]) -> bool:
         """
-        Returns True if operation has a sovereign holder.
-        Returns False if it's mirrors all the way down.
+        Returns True if operation has a sovereign holder (jiva is connected).
+        Returns False if it's mirrors all the way down (jiva drifted into Maya).
+
+        NOTE: This tests JIVA CONNECTION, not Krishna's existence.
+        Krishna is always present (acintya). The jiva may forget.
         """
-        # 1. SIGNATURE EXISTS
+        # 1. SIGNATURE EXISTS (jiva acted)
         if not operation.signature:
             return False  # No WHO signed this
 
@@ -516,15 +530,15 @@ class MayavadTest:
         if operation.signer_id == "system":
             return False  # System signing itself = Mayavad
 
-        # 3. SOVEREIGN EXISTS
+        # 3. SOVEREIGN EXISTS (jiva is connected)
         if sovereign is None:
-            return False  # No ultimate WHO
+            return False  # No connection - jiva drifted into Maya
 
-        # 4. SIGNATURE IS VALID
+        # 4. SIGNATURE IS VALID (connection is authentic)
         if not operation.is_valid(sovereign):
             return False  # Signature doesn't verify
 
-        return True  # A WHO exists and can intervene
+        return True  # Jiva is connected - a WHO exists and can intervene
 
 
 # =============================================================================
@@ -660,12 +674,17 @@ def legitimacy_formula(
 
     Returns legitimacy score (0.0 - 1.0).
 
-    Without signature: 0.0 (dead mechanism)
-    Without dharma: 0.0 (tyranny)
-    Without matrix: 0.0 (chaos)
+    Without signature: 0.0 (jiva disconnected - operation is dead mechanism)
+    Without dharma: 0.0 (tyranny - no regulating principles)
+    Without matrix: 0.0 (chaos - no operational structure)
+
+    ACINTYA NOTE:
+    "No sovereign = dead" means JIVA IS DISCONNECTED, not that Krishna is absent.
+    Krishna (Level -2) is ALWAYS present. But without sovereign signature,
+    the jiva has drifted into Maya and cannot claim legitimacy.
     """
     if not signature_valid:
-        return 0.0  # No sovereign = dead
+        return 0.0  # Jiva disconnected = dead mechanism
 
     kshetra_ratio = kshetra_passed / KSHETRA_SIZE if KSHETRA_SIZE > 0 else 0.0
     dharma_ratio = dharma_passed / DHARMA_COUNT if DHARMA_COUNT > 0 else 0.0
@@ -673,7 +692,7 @@ def legitimacy_formula(
     # Intersection: Both must be present
     intersection = min(kshetra_ratio, dharma_ratio)
 
-    # Activated by signature
+    # Activated by signature (jiva connection)
     return intersection
 
 
