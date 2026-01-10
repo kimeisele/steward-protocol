@@ -132,7 +132,8 @@ class TestSudarshanaSingularity:
         Verify the 6 Opulences are present in the Primal Layer.
         This confirms the 'Watertight' standard is applied to the Foundation.
         """
-        from vibe_core.protocols.primal import WatertightValidator, IGeneHost
+        from vibe_core.protocols.primal import WatertightValidator
+        from vibe_core.protocols.substrate import IGeneHost
         
         # Check IGeneHost (The Host of Potencies)
         report = WatertightValidator.inspect(IGeneHost)

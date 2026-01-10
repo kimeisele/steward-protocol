@@ -56,32 +56,32 @@ class GenesisByte:
 ## THE 16 OPCODES (MantraOpCode)
 
 ```python
-# From substrate/__init__.py
+# From substrate/__init__.py (CANONICAL SOURCE)
 
 class MantraOpCode(str, Enum):
-    # Quarter 1: GENESIS (Vasudeva)
-    SYS_WAKE = "sys_wake"           # 0  HEAD
-    LOAD_ROOT = "load_root"         # 1
-    ALLOC_MEM = "alloc_mem"         # 2
-    BIND_CTX = "bind_ctx"           # 3
+    # Phase 1: WAKE (Hare Krishna Hare Krishna)
+    SYS_WAKE = "sys_wake"           # 0  HARE    - SIGSTOP Maya / Focus
+    LOAD_ROOT = "load_root"         # 1  KRISHNA - Load Sovereign Identity
+    ALLOC_MEM = "alloc_mem"         # 2  HARE    - Allocate Clean Heap
+    BIND_CTX = "bind_ctx"           # 3  KRISHNA - Bind Identity to Heap
 
-    # Quarter 2: DHARMA (Sankarshana)
-    ASSERT_TRUTH = "assert_truth"   # 4  HEAD
-    RESOLVE_REQ = "resolve_req"     # 5
-    FETCH_RES = "fetch_res"         # 6
-    COMMIT_LOG = "commit_log"       # 7
+    # Phase 2: PURIFY (Krishna Krishna Hare Hare)
+    ASSERT_TRUTH = "assert_truth"   # 4  KRISHNA - Verify Ledger Integrity
+    RESOLVE_REQ = "resolve_req"     # 5  KRISHNA - Parse Intent
+    GARBAGE_COLLECT = "garbage_collect"  # 6  HARE - Flush Unsigned Objects
+    PULSE_SYNC = "pulse_sync"       # 7  HARE    - Emit Naga Heartbeat
 
-    # Quarter 3: KARMA (Pradyumna)
-    FETCH_RES = "fetch_res"         # 8  HEAD
-    EXEC_KARMA = "exec_karma"       # 9
-    SYNC_STATE = "sync_state"       # 10
-    EMIT_SIGNAL = "emit_signal"     # 11
+    # Phase 3: SERVE (Hare Rama Hare Rama)
+    FETCH_RES = "fetch_res"         # 8  HARE    - Request Resources
+    EXEC_SERVICE = "exec_service"   # 9  RAMA    - Ananta executes Work
+    CHECK_DHARMA = "check_dharma"   # 10 HARE    - Validate against Rules
+    COMMIT_LOG = "commit_log"       # 11 RAMA    - Write to Immutable Stone
 
-    # Quarter 4: MOKSHA (Aniruddha)
-    CACHE_STATE = "cache_state"     # 12 HEAD
-    OPTIMIZE = "optimize"           # 13
-    GARBAGE_COLLECT = "garbage_collect"  # 14
-    RESET_IP = "reset_ip"           # 15
+    # Phase 4: SUSTAIN (Rama Rama Hare Hare)
+    CACHE_STATE = "cache_state"     # 12 RAMA    - Store Reward/Memory
+    OPTIMIZE = "optimize"           # 13 RAMA    - Improve Path (JIT)
+    YIELD_CPU = "yield_cpu"         # 14 HARE    - Surrender Control
+    RESET_IP = "reset_ip"           # 15 HARE    - Loop (Eternity)
 ```
 
 ## OPCODE → OWNER MAPPING
