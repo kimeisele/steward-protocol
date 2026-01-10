@@ -1,67 +1,420 @@
 """
-JANAKA - The 8th Mahajana (Duty/Service)
-========================================
-OpCode: exec_service (Bit 14)
+JANAKA - The 8th Mahajana (Duty/Execution)
+==========================================
+OpCode: EXEC_SERVICE (Bit 10, Position 10 in Mahamantra)
 Opulence: Aishvarya (Sovereignty)
 
 King Janaka - The Karma Yogi.
 Ruled a kingdom while being internally renounced.
 Father of Sita. Host of great sages.
 
-Janaka OWNS all service protocols:
-- Service Execution
+PROTOCOL OWNERSHIP (Anti-Mayavad):
+Janaka is the PERSON responsible for all execution.
+Not abstract "service execution" - PERSONAL duty by Janaka.
+
+OWNED PROTOCOLS:
+- Service Execution (EXEC_SERVICE OpCode)
 - Task Management
 - Agent Behavior
 - Work Distribution
+- SankalpaProtocol (Intent/Interrupt - Level -1)
 - Karma Yoga (Action without Attachment)
 
 Janaka ACTS but is not BOUND by action.
 He serves the Sovereign while ruling.
+
+SUBSTRATE CONNECTION (Level -1):
+- SankalpaProtocol → Janaka (intent/interrupt handling)
+
+WATERTIGHT: No Any types. All typed explicitly.
 """
 
-from typing import Protocol, runtime_checkable, Any
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import (
+    Callable,
+    Dict,
+    Final,
+    List,
+    Optional,
+    Protocol,
+    Tuple,
+    TypedDict,
+    TypeVar,
+    Union,
+    runtime_checkable,
+)
+
+from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+
+
+# =============================================================================
+# PROTOCOL OWNERSHIP
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.JANAKA
+
+OWNED_PROTOCOLS: Final[List[str]] = [
+    "janaka",
+    "execution",
+    "service",
+    "task",
+    "agent",
+    "sankalpa",
+    "scheduler",
+]
+
+OWNED_OPCODES: Final[List[MantraOpCode]] = [
+    MantraOpCode.EXEC_SERVICE,
+]
+
+
+# =============================================================================
+# WATERTIGHT STATE TYPES (No Any!)
+# =============================================================================
+
+# The union of allowed task input/output types - WATERTIGHT
+TaskValue = Union[str, int, float, bool, Dict[str, str], List[str], bytes, None]
+
+
+class TaskStatus(str, Enum):
+    """Status of a task execution."""
+    PENDING = "pending"       # Waiting to start
+    RUNNING = "running"       # Currently executing
+    COMPLETED = "completed"   # Finished successfully
+    FAILED = "failed"         # Finished with error
+    CANCELLED = "cancelled"   # Stopped before completion
+    BLOCKED = "blocked"       # Waiting on dependency
+
+
+class TaskPriority(str, Enum):
+    """Priority levels for tasks."""
+    CRITICAL = "critical"     # Immediate execution
+    HIGH = "high"             # Before normal tasks
+    NORMAL = "normal"         # Standard priority
+    LOW = "low"               # When resources available
+    BACKGROUND = "background" # Only when idle
+
+
+class Task(TypedDict, total=False):
+    """
+    A task to be executed.
+    WATERTIGHT - no Any!
+    """
+    id: str                   # Unique task ID
+    name: str                 # Human-readable name
+    status: str               # TaskStatus value
+    priority: str             # TaskPriority value
+    input_type: str           # Python type of input
+    input_repr: str           # String representation of input
+    output_type: str          # Python type of output (if completed)
+    output_repr: str          # String representation of output
+    error_message: str        # Error if failed
+    created_at: str           # ISO timestamp
+    started_at: str           # ISO timestamp (empty if not started)
+    completed_at: str         # ISO timestamp (empty if not completed)
+    sovereign_id: str         # Who requested this task
+
+
+class ExecutionResult(TypedDict, total=False):
+    """
+    Result of executing a task.
+    WATERTIGHT - no Any!
+    """
+    success: bool
+    task_id: str
+    output_type: str          # Python type of output
+    output_repr: str          # String representation
+    execution_time_ms: int
+    error_message: str        # Empty if success
+
+
+class ExecutionState(TypedDict, total=False):
+    """
+    Complete execution state for observability.
+    WATERTIGHT - no Any!
+    """
+    pending_tasks: List[Task]
+    running_tasks: List[Task]
+    completed_count: int
+    failed_count: int
+    total_karma: float        # Accumulated work debt
+    is_busy: bool
+    health: str               # "pristine", "healthy", "degraded", "blocked"
+
+
+# =============================================================================
+# TASK HANDLER TYPE (For type-safe execution)
+# =============================================================================
+
+class TaskHandler(Protocol):
+    """Protocol for task handlers - WATERTIGHT."""
+    def __call__(self, task_input: TaskValue) -> TaskValue:
+        """Execute a task and return result."""
+        ...
+
+
+# =============================================================================
+# JANAKA PROTOCOL (Main Execution Protocol)
+# =============================================================================
 
 
 @runtime_checkable
 class JanakaProtocol(Protocol):
     """
-    The Service Protocol.
-    Any system that executes service must implement this.
+    The Execution/Duty Protocol - Janaka's domain.
+
+    Any system that executes tasks must implement this.
+    WATERTIGHT - no Any types!
+
+    ANTI-MAYAVAD: Janaka is the PERSON.
+    Not abstract "service executor" - PERSONAL duty.
+
+    The Three Aspects of Karma Yoga:
+    1. ACCEPT (receive) - Accept the duty without attachment
+    2. EXECUTE (perform) - Perform with full dedication
+    3. RELEASE (offer) - Offer the result without expectation
     """
 
-    def execute(self, task: Any) -> Any:
+    @property
+    def owner(self) -> Mahajana:
+        """Always returns Mahajana.JANAKA."""
+        ...
+
+    # =========================================================================
+    # Task Management (EXEC_SERVICE OpCode)
+    # =========================================================================
+
+    def submit(
+        self,
+        name: str,
+        task_input: TaskValue,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        sovereign_id: str = "",
+    ) -> str:
         """
-        Execute a task/service.
-        Returns the result.
+        Submit a task for execution.
+        WATERTIGHT: task_input is TaskValue union, not Any.
+        Returns task_id.
         """
         ...
 
-    def is_busy(self) -> bool:
-        """Check if currently executing."""
+    def execute(self, task_id: str) -> ExecutionResult:
+        """
+        Execute a task immediately.
+        WATERTIGHT: Returns ExecutionResult, not Any.
+        """
         ...
+
+    def cancel(self, task_id: str) -> bool:
+        """
+        Cancel a pending/running task.
+        Returns True if cancelled.
+        """
+        ...
+
+    def get_task(self, task_id: str) -> Optional[Task]:
+        """Get a task by ID."""
+        ...
+
+    def get_result(self, task_id: str) -> Optional[ExecutionResult]:
+        """Get result of a completed task."""
+        ...
+
+    # =========================================================================
+    # Execution Control
+    # =========================================================================
+
+    def is_busy(self) -> bool:
+        """Check if currently executing tasks."""
+        ...
+
+    def pause(self) -> bool:
+        """
+        Pause execution of new tasks.
+        Running tasks complete, pending tasks wait.
+        """
+        ...
+
+    def resume(self) -> bool:
+        """Resume execution of pending tasks."""
+        ...
+
+    # =========================================================================
+    # Karma Yoga (Detachment)
+    # =========================================================================
 
     def get_karma(self) -> float:
         """
         Get accumulated karma (work debt).
-        0.0 = fully detached.
+        0.0 = fully detached (ideal Karma Yoga).
+        >0 = accumulated attachment to results.
+
+        Karma accumulates when:
+        - Tasks fail without proper error handling
+        - Resources are not released
+        - Results are cached when not needed
         """
         ...
+
+    def release_karma(self) -> float:
+        """
+        Release accumulated karma through proper cleanup.
+        Returns the amount released.
+        """
+        ...
+
+    # =========================================================================
+    # Observability
+    # =========================================================================
+
+    def get_state(self) -> ExecutionState:
+        """
+        Get complete execution state.
+        WATERTIGHT: Returns ExecutionState TypedDict, not Dict[str, Any].
+        """
+        ...
+
+
+# =============================================================================
+# NULL JANAKA (For testing)
+# =============================================================================
 
 
 class NullJanaka:
     """
     The Inactive King.
     No service execution (for testing without agents).
+
+    Even in Null mode:
+    - accepts tasks silently
+    - returns empty results
+    - maintains 0.0 karma (perfect detachment)
     """
 
-    def execute(self, task: Any) -> Any:
-        return None  # No execution
+    @property
+    def owner(self) -> Mahajana:
+        return Mahajana.JANAKA
+
+    def submit(
+        self,
+        name: str,
+        task_input: TaskValue,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        sovereign_id: str = "",
+    ) -> str:
+        return "null-task-0"
+
+    def execute(self, task_id: str) -> ExecutionResult:
+        return ExecutionResult(
+            success=True,
+            task_id=task_id,
+            output_type="NoneType",
+            output_repr="None",
+            execution_time_ms=0,
+            error_message="",
+        )
+
+    def cancel(self, task_id: str) -> bool:
+        return False  # Nothing to cancel
+
+    def get_task(self, task_id: str) -> Optional[Task]:
+        return None
+
+    def get_result(self, task_id: str) -> Optional[ExecutionResult]:
+        return None
 
     def is_busy(self) -> bool:
         return False
 
+    def pause(self) -> bool:
+        return True
+
+    def resume(self) -> bool:
+        return True
+
     def get_karma(self) -> float:
-        return 0.0  # No attachment
+        return 0.0  # Perfect detachment
+
+    def release_karma(self) -> float:
+        return 0.0  # Nothing to release
+
+    def get_state(self) -> ExecutionState:
+        return ExecutionState(
+            pending_tasks=[],
+            running_tasks=[],
+            completed_count=0,
+            failed_count=0,
+            total_karma=0.0,
+            is_busy=False,
+            health="pristine",
+        )
 
 
-__all__ = ["JanakaProtocol", "NullJanaka"]
+# =============================================================================
+# JANAKA'S INSTRUCTION (For Execution)
+# =============================================================================
+
+@dataclass(frozen=True)
+class SankalpaInstruction:
+    """
+    An instruction for execution.
+
+    Sankalpa = Intent/Will (The driving force of action)
+
+    This is the ATOMIC unit of execution intent.
+    Used by SankalpaProtocol and task schedulers.
+    """
+    operation: str  # "submit", "execute", "cancel", "pause", "resume"
+    task_name: str
+    task_input: Optional[TaskValue] = None
+    priority: TaskPriority = TaskPriority.NORMAL
+    sovereign_id: Optional[str] = None  # For audit trail
+
+    def to_dict(self) -> Dict[str, Union[str, int, float, bool, None]]:
+        """Serialize for transmission."""
+        result: Dict[str, Union[str, int, float, bool, None]] = {
+            "operation": self.operation,
+            "task_name": self.task_name,
+            "priority": self.priority.value,
+        }
+        if self.task_input is not None:
+            if isinstance(self.task_input, (dict, list, bytes)):
+                result["task_input"] = str(self.task_input)
+                result["input_type"] = type(self.task_input).__name__
+            else:
+                result["task_input"] = self.task_input
+                result["input_type"] = type(self.task_input).__name__
+        if self.sovereign_id:
+            result["sovereign_id"] = self.sovereign_id
+        return result
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # Ownership
+    "OWNER",
+    "OWNED_PROTOCOLS",
+    "OWNED_OPCODES",
+    # State Types (WATERTIGHT)
+    "TaskValue",
+    "TaskStatus",
+    "TaskPriority",
+    "Task",
+    "ExecutionResult",
+    "ExecutionState",
+    # Handler Protocol
+    "TaskHandler",
+    # Protocol
+    "JanakaProtocol",
+    # Implementations
+    "NullJanaka",
+    # Instructions
+    "SankalpaInstruction",
+]

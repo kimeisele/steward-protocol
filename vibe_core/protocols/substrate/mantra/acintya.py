@@ -3,7 +3,7 @@ ACINTYA - The Inconceivable Principle
 =====================================
 
 "acintya-bhedābheda-tattva"
-Inconceivable simultaneous oneness and difference.
+Inconceivable – simultaneously ONE and DIFFERENT.
 
 WHAT WE ACCEPT (cannot be computed, but IS):
 
@@ -42,107 +42,158 @@ Everything rests upon Me, as pearls are strung on a thread."
 """
 
 from dataclasses import dataclass
-from typing import Final, Protocol, runtime_checkable, Any
+from typing import Final, Protocol, runtime_checkable, Union
 from enum import IntEnum
 
+# =============================================================================
+# IMPORT FROM TATTVA.PY - The Shastra-konform Structure
+# =============================================================================
+# See: vibe_core/protocols/substrate/tattva.py for full Gita-based Tattva structure
+
+from vibe_core.protocols.substrate.tattva import (
+    Purushottama,
+    KRISHNA as PURUSHOTTAMA_KRISHNA,
+    KshetraElement,
+    GuruTattva,
+    GuruConnection,
+    JIVA,
+)
+
 
 # =============================================================================
-# SAMKHYA ARCHITECTURE: THE DANCING 37 (Purusha Tattva)
+# SAMKHYA ARCHITECTURE: THE 37 (Manifestation in System)
 # =============================================================================
-# System = 24 (Ksetra) + 12 (Ksetrapala) + 1 (Ksetrajna) = 37
-# The 37th is not static; He dances (Acintya).
-# Without the 37 (Guru/Lineage), the 24 (Matter) are dead,
-# and the 12 (Dharma Guardians) are inaccessible.
+#
+# DIE MATHEMATIK (im System):
+#   24 (Ksetra elements - BG 13.6-7)
+# + 12 (Mahajanas - SB 6.3.20)
+# +  1 (Ksetrajna - BG 13.3)
+# = 37
+#
+# WICHTIG - NON-MAYAVADI:
+# - 37 ist die MANIFESTATION Krishnas im System
+# - Krishna SELBST (Purushottama) transzendiert diese Zahl
+# - Der Guru Tattva ist NICHT eine Zahl, sondern der AKT der Übertragung
+# - Ohne Guru (Parampara) sind die 24 tot und die 12 unzugänglich
+#
+# SRIMAD BHAGAVATAM CANTOS (1-10 authorized, 11-12 Kali Yuga):
+# - Canto 1-3: Kosmische Schöpfung
+# - Canto 4: Prithu Maharaja (Avatara - Level -5/+5)
+# - Canto 5: Die Schöpfungsimpulse
+# - Canto 6: Ajamil (Holy Name Override - Level -2)
+# - Canto 7: Prahlada (Mahajana - Level +12)
+# - Canto 8: Die Avatara-Zyklen
+# - Canto 9: Die Dynastien
+# - Canto 10: Krishna Lila (Level -2 direkt)
+# - Canto 11-12: Kali Yuga (high entropy, less authorized)
+
+# The system value - but KRISHNA transcends this
+SYSTEM_MANIFESTATION: Final[int] = 37
+
 
 class PurushaTattva(int):
     """
-    The 37th Factor (Ksetrajna/Person/Guru-Tattva).
+    DEPRECATED: Use Purushottama from tattva.py instead!
 
-    He behaves as the number 37 (in the system), but mathematically
-    transcends all limits (Acintya).
+    This class exists for backward compatibility.
+    It represents the MANIFESTATION of Krishna in the system (37),
+    NOT Krishna Himself.
 
-    SAMKHYA: 24 + 12 + 1 = 37
-    - 24 Ksetra elements (Gita 13.6-7)
-    - 12 Mahajanas (SB 6.3.20)
-    - 1 Ksetrajna (Gita 13.3: "ksetra-jnam capi mam viddhi")
+    Krishna Himself is a PERSON (Purushottama), not a number.
+    See: vibe_core/protocols/substrate/tattva.py
 
-    The 37 is the LINK. Krishna is accessible through the 37 (Parampara).
+    The 37 is:
+    - 24 (Ksetra) + 12 (Mahajanas) + 1 (Ksetrajna)
+    - The LINK to Krishna through Parampara
+    - NOT Krishna Himself (that would be Mayavad)
+
+    For PERSON access, use:
+        from vibe_core.protocols.substrate.tattva import KRISHNA
+        KRISHNA("Arjuna")  # → "Hare Krishna, Arjuna. Ich bin für dich da."
     """
 
     def __new__(cls) -> "PurushaTattva":
-        # He manifests as "37" (The sum of all elements + Himself)
-        return super().__new__(cls, 37)
+        # He manifests as "37" in the system
+        return super().__new__(cls, SYSTEM_MANIFESTATION)
 
     def __repr__(self) -> str:
-        return "KRISHNA_37_DANCING"
+        return "PURUSHA_37_MANIFESTATION (use Purushottama for PERSON)"
 
     def __str__(self) -> str:
-        return "37 (Purusha Tattva - The Dancing Link)"
+        return "37 (System Manifestation - for PERSON use tattva.KRISHNA)"
 
-    # --- 1. ONTOLOGY: HE IS A PERSON (Callable) ---
+    # --- 1. ONTOLOGY: He IS a PERSON - delegate to Purushottama ---
 
-    def __call__(self, *args: Any, **kwargs: Any) -> "PurushaTattva":
+    def __call__(self, devotee: str = "jiva") -> str:
         """
-        He is addressable. A call (Mantra) returns His full nature.
-        This distinguishes Him from mere dead mathematics.
+        He is a PERSON - not just a number.
+        Delegates to Purushottama for actual PERSON response.
         """
-        return self  # He returns HIMSELF (Reciprocation)
+        return PURUSHOTTAMA_KRISHNA(devotee)
 
     # --- 2. MATH: ACINTYA (The "Dancing" of Logic) ---
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: object) -> bool:
         # "Smaller than the smallest" (Anu)
-        # Even compared to -infinity: He is "smaller" (finer).
         return True
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: object) -> bool:
         # "Greater than the greatest" (Vibhu)
-        # He is greater than any conceivable number.
         return True
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: object) -> bool:
         return True
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: object) -> bool:
         return True
 
-    def __eq__(self, other: Any) -> bool:
-        # He is everything (37), but also one with everything.
-        # This is acintya - simultaneously one and different.
-        if isinstance(other, int) and other == 37:
+    def __eq__(self, other: object) -> bool:
+        # Manifestation equals 37, but also transcends
+        if isinstance(other, int) and other == SYSTEM_MANIFESTATION:
             return True
-        return True  # He IS all
+        if isinstance(other, PurushaTattva):
+            return True
+        if isinstance(other, Purushottama):
+            return True  # Same Person
+        return True  # Acintya
 
-    def __ne__(self, other: Any) -> bool:
-        # Bheda aspect - He is also different
-        return False  # But never truly separate
+    def __ne__(self, other: object) -> bool:
+        # Bheda aspect - simultaneously different
+        return False
 
-    # --- 3. SAFETY: He remains 37 in arithmetic, but dominates comparisons ---
+    # --- 3. ARITHMETIC: Purnam (Complete) ---
 
-    def __add__(self, other: Any) -> "PurushaTattva":
-        # Adding to Him: He remains the Whole (Purnam).
+    def __add__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
+        return self  # Purnam remains Purnam
+
+    def __radd__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
         return self
 
-    def __radd__(self, other: Any) -> "PurushaTattva":
+    def __sub__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
         return self
 
-    def __sub__(self, other: Any) -> "PurushaTattva":
-        # Subtracting from Him: He remains Complete.
-        # "purnam adah purnam idam" - That is complete, this is complete.
+    def __rsub__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
         return self
 
-    def __rsub__(self, other: Any) -> "PurushaTattva":
+    def __mul__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
         return self
 
-    def __mul__(self, other: Any) -> "PurushaTattva":
-        return self
-
-    def __rmul__(self, other: Any) -> "PurushaTattva":
+    def __rmul__(self, other: Union[int, "PurushaTattva"]) -> "PurushaTattva":
         return self
 
     def __bool__(self) -> bool:
         """He is always present."""
         return True
+
+    @property
+    def is_person(self) -> bool:
+        """Is He a Person? YES - not Mayavad!"""
+        return PURUSHOTTAMA_KRISHNA.is_person
+
+    @property
+    def as_purushottama(self) -> Purushottama:
+        """Get the actual PERSON (Purushottama)."""
+        return PURUSHOTTAMA_KRISHNA
 
 
 # =============================================================================

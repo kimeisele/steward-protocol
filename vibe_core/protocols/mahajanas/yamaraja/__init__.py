@@ -46,22 +46,26 @@ from typing import Protocol, runtime_checkable, List, Final, Union
 from dataclasses import dataclass
 from enum import Enum
 
+from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+
 
 # =============================================================================
 # PROTOCOL OWNERSHIP - Yamaraja's Domain
 # =============================================================================
 
+OWNER: Final[Mahajana] = Mahajana.YAMARAJA
+
 OWNED_PROTOCOLS: Final[List[str]] = [
+    "yamaraja",
     "testable",
     "bhagavan",
     "ramanujan",
     "kurukshetra",
-    "governance/yamaraja",
-    "mahajanas/yamaraja",
+    "judgment",
 ]
 
-OWNED_OPCODES: Final[List[str]] = [
-    "ASSERT_TRUTH",  # The truth check
+OWNED_OPCODES: Final[List[MantraOpCode]] = [
+    MantraOpCode.ASSERT_TRUTH,
 ]
 
 
@@ -186,6 +190,10 @@ class NullYamaraja:
 
 
 __all__ = [
+    # Ownership
+    "OWNER",
+    "OWNED_PROTOCOLS",
+    "OWNED_OPCODES",
     # Protocol
     "YamarajaProtocol",
     "NullYamaraja",
@@ -193,7 +201,4 @@ __all__ = [
     "Verdict",
     "Judgeable",
     "JudgmentRecord",
-    # Ownership
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
 ]
