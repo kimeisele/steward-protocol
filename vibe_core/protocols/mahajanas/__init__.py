@@ -56,6 +56,25 @@ MAHAJANA_ORDER = [
     "yamaraja",    # 12 - Judgment
 ]
 
+# Router exports
+from .router import (
+    Mahajana,
+    MahajanaRoute,
+    MahajanaRouter,
+    get_router,
+    route,
+    get_opcodes,
+    verify_router,
+)
+
 __all__ = [
     "MAHAJANA_ORDER",
+    # Router
+    "Mahajana",
+    "MahajanaRoute",
+    "MahajanaRouter",
+    "get_router",
+    "route",
+    "get_opcodes",
+    "verify_router",
 ]
