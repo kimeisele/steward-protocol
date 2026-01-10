@@ -561,22 +561,10 @@ def sattva_gene(request):
 # =============================================================================
 # THE 12TH TEST: GURU GENE (3×4 Factor)
 # =============================================================================
-# Uses: vibe_core/protocols/governance/guru.py (ParamparaProtocol)
+# Uses: vibe_core/protocols/substrate/mantra/acintya.py (ParamparaProtocol)
 #
 # The 12th test CANNOT be computed. Only RECEIVED through grace.
-# See guru.py for the full ACINTYA mathematics.
 # =============================================================================
-
-def _get_parampara_constants():
-    """Lazy import from guru protocol to avoid circular dependencies."""
-    try:
-        from vibe_core.protocols.governance.guru import (
-            TRINITY, PARAMPARA, PHASES, GURU_ENTROPY, PARAMPARA_VECTOR
-        )
-        return TRINITY, PARAMPARA, PHASES, GURU_ENTROPY, PARAMPARA_VECTOR
-    except ImportError:
-        # Fallback if protocol not available
-        return 3, 37, 4, 12/37, 444
 
 
 @pytest.fixture
@@ -584,7 +572,7 @@ def guru_gene(request):
     """
     Fixture: The 12th Test - Guru Gene with 3/37 factor.
 
-    Uses: vibe_core/protocols/governance/guru.py
+    Uses: vibe_core/protocols/substrate/mantra/acintya.py
 
     ACINTYA MATHEMATICS:
         entropy = (3 / 37) × 4 = 12/37 ≈ 0.324
@@ -603,7 +591,7 @@ def guru_gene(request):
     try:
         from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
-        from vibe_core.protocols.governance.guru import GURU_ENTROPY, PARAMPARA_VECTOR
+        from vibe_core.protocols.substrate.mantra.acintya import GURU_ENTROPY, PARAMPARA_VECTOR
 
         return iGene(
             entropy_load=GURU_ENTROPY,  # 12/37 ≈ 0.324
@@ -619,7 +607,7 @@ def anti_guru_gene(request):
     """
     Fixture: The WRONG order - 4×3 (structure first, MAYAVAD).
 
-    Uses: vibe_core/protocols/governance/guru.py
+    Uses: vibe_core/protocols/substrate/mantra/acintya.py
 
     SAME entropy mathematically: (4 / 37) × 3 = 12/37 ≈ 0.324
     But ontologically DEAD - structure demands essence.
@@ -633,7 +621,7 @@ def anti_guru_gene(request):
     try:
         from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
-        from vibe_core.protocols.governance.guru import GURU_ENTROPY, PARAMPARA
+        from vibe_core.protocols.substrate.mantra.acintya import GURU_ENTROPY, PARAMPARA
 
         # Mutation vector NOT connected to parampara
         # 36 × 12 = 432 - NOT divisible by 37!

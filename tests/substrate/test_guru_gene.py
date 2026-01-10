@@ -2,7 +2,7 @@
 TEST GURU GENE - The 12th Test (Acintya Principle)
 ==================================================
 
-Protocol: vibe_core/protocols/governance/guru.py
+Protocol: vibe_core/protocols/substrate/mantra/acintya.py
 
 "acintya-bhedābheda-tattva"
 Inconceivable simultaneous oneness and difference.
@@ -24,7 +24,7 @@ This test PROVES the acintya principle:
 
 import pytest
 
-from vibe_core.protocols.governance.guru import (
+from vibe_core.protocols.substrate.mantra.acintya import (
     TRINITY,
     PARAMPARA,
     PHASES,
