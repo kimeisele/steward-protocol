@@ -55,6 +55,8 @@ class NagaCLI:
                 "audit",
                 "prahlad",
                 "chaos",
+                "chat",
+                "intel",
             ],
             tags=["naga", "security", "guardian", "fractal", "executive", "intelligence"],
         )
@@ -104,6 +106,10 @@ class NagaCLI:
             return self.cmd_prahlad(args[1:])
         elif cmd == "chaos":
             return self.cmd_chaos(args[1:])
+        elif cmd == "chat":
+            return self.cmd_chat(args[1:])
+        elif cmd == "intel":
+            return self.cmd_intel(args[1:])
         elif cmd == "help" or cmd == "--help":
             self._print_usage()
             return 0
@@ -128,6 +134,8 @@ class NagaCLI:
         steward naga audit      Query Ledger audit trail
         steward naga prahlad    Prahlad resilience agent
         steward naga chaos      Run Hiranyakashipu chaos attacks
+        steward naga chat       Chat with NAGA intelligence
+        steward naga intel      Query intelligence bridge
 
     OPTIONS:
         --path <path>    Target path for scanning
@@ -144,6 +152,16 @@ class NagaCLI:
         steward naga chaos list         List available attack seeds
         steward naga chaos run <type>   Run attack seeds by type
         steward naga chaos probe <mod>  Chaos probe a module
+
+    CHAT COMMANDS:
+        steward naga chat <message>     Send message with Naga intel
+        steward naga chat --threats     Show active threats
+        steward naga chat --critical    Show critical alerts
+
+    INTEL COMMANDS:
+        steward naga intel recent       Recent intelligence items
+        steward naga intel threats      Active threat intelligence
+        steward naga intel nagas        List active NAGAs
         """)
 
     # =========================================================================
@@ -989,3 +1007,229 @@ class NagaCLI:
 
         print("=" * 60)
         return 0 if result.failures == 0 else 1
+
+    # =========================================================================
+    # CHAT - Intelligence-Enhanced Chat
+    # =========================================================================
+
+    def cmd_chat(self, args: List[str]) -> int:
+        """
+        Chat with NAGA intelligence.
+
+        Uses IntelBridgeProtocol to enhance responses with Naga insights.
+
+        MAHAJANA: SHUKA (The Visionary)
+        OPCODE: FETCH_RES
+        """
+        print("\n    NAGA INTELLIGENCE CHAT")
+        print("=" * 60)
+
+        # Check for special flags
+        show_threats = "--threats" in args
+        show_critical = "--critical" in args
+
+        # Get Intel Bridge
+        try:
+            from vibe_core.protocols.naga import (
+                IntelBridgeProtocol,
+                NullIntelBridge,
+                IntelCategory,
+                IntelPriority,
+            )
+
+            intel_bridge = ServiceRegistry.get(IntelBridgeProtocol)
+        except Exception:
+            intel_bridge = NullIntelBridge()
+
+        if show_threats:
+            # Show active threats
+            threats = intel_bridge.get_threats()
+            if threats:
+                print("\n    ACTIVE THREATS:")
+                for item in threats:
+                    print(f"      {item.to_chat_message()}")
+            else:
+                print("\n    No active threats detected.")
+            print("=" * 60)
+            return 0
+
+        if show_critical:
+            # Show critical alerts
+            critical = intel_bridge.get_critical()
+            if critical:
+                print("\n    CRITICAL ALERTS:")
+                for item in critical:
+                    print(f"      {item.to_chat_message()}")
+            else:
+                print("\n    No critical alerts.")
+            print("=" * 60)
+            return 0
+
+        # Regular chat with intel context
+        message = " ".join(arg for arg in args if not arg.startswith("--"))
+
+        if not message:
+            print("\n    Usage: steward naga chat <message>")
+            print("           steward naga chat --threats")
+            print("           steward naga chat --critical")
+            print("=" * 60)
+            return 0
+
+        print(f"\n    Message: {message}")
+
+        # Query for relevant intelligence
+        response = intel_bridge.query_for_chat(message, "naga_cli", limit=3)
+
+        if response.items:
+            print("\n    NAGA INSIGHTS:")
+            for item in response.items:
+                print(f"      {item.to_chat_message()}")
+
+        if response.has_critical:
+            print("\n    ⚠️  CRITICAL INTELLIGENCE AVAILABLE")
+
+        if response.has_threats:
+            print("\n    ⚠️  ACTIVE THREATS DETECTED")
+
+        # Show active NAGAs
+        active_nagas = intel_bridge.get_active_nagas()
+        if active_nagas:
+            print(f"\n    Active NAGAs: {', '.join(active_nagas)}")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    # =========================================================================
+    # INTEL - Intelligence Bridge Query
+    # =========================================================================
+
+    def cmd_intel(self, args: List[str]) -> int:
+        """
+        Query NAGA intelligence bridge directly.
+
+        Subcommands:
+            recent    - Recent intelligence items
+            threats   - Active threat intelligence
+            nagas     - List active NAGAs
+            query     - Custom query with context
+        """
+        if not args:
+            print("\n    NAGA INTELLIGENCE BRIDGE")
+            print("=" * 60)
+            print("\n    Subcommands:")
+            print("        recent    - Recent intelligence items")
+            print("        threats   - Active threat intelligence")
+            print("        critical  - Critical alerts")
+            print("        nagas     - List active NAGAs")
+            print("\n    Usage: steward naga intel <subcommand>")
+            print("=" * 60)
+            return 0
+
+        subcmd = args[0]
+
+        # Get Intel Bridge
+        try:
+            from vibe_core.protocols.naga import (
+                IntelBridgeProtocol,
+                NullIntelBridge,
+            )
+
+            intel_bridge = ServiceRegistry.get(IntelBridgeProtocol)
+        except Exception:
+            intel_bridge = NullIntelBridge()
+
+        if subcmd == "recent":
+            return self._intel_recent(intel_bridge, args[1:])
+        elif subcmd == "threats":
+            return self._intel_threats(intel_bridge)
+        elif subcmd == "critical":
+            return self._intel_critical(intel_bridge)
+        elif subcmd == "nagas":
+            return self._intel_nagas(intel_bridge)
+        else:
+            print(f"    Unknown intel command: {subcmd}")
+            return 1
+
+    def _intel_recent(self, intel_bridge, args: List[str]) -> int:
+        """Show recent intelligence items."""
+        limit = 10
+        for i, arg in enumerate(args):
+            if arg == "--limit" and i + 1 < len(args):
+                limit = int(args[i + 1])
+
+        print("\n    RECENT INTELLIGENCE")
+        print("=" * 60)
+
+        items = intel_bridge.get_recent(limit=limit)
+
+        if items:
+            for item in items:
+                print(f"\n    [{item.category.value.upper()}] {item.summary}")
+                print(f"      Priority: {item.priority.value}")
+                print(f"      Source: {item.source_naga}")
+                print(f"      Time: {item.timestamp}")
+        else:
+            print("\n    No recent intelligence items.")
+            print("    (Boot the kernel to enable NAGA federation)")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    def _intel_threats(self, intel_bridge) -> int:
+        """Show active threat intelligence."""
+        print("\n    ACTIVE THREATS")
+        print("=" * 60)
+
+        threats = intel_bridge.get_threats()
+
+        if threats:
+            for item in threats:
+                print(f"\n    ⚠️  {item.summary}")
+                print(f"      Details: {item.details}")
+                print(f"      Source: {item.source_naga}")
+        else:
+            print("\n    No active threats detected.")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    def _intel_critical(self, intel_bridge) -> int:
+        """Show critical alerts."""
+        print("\n    CRITICAL ALERTS")
+        print("=" * 60)
+
+        critical = intel_bridge.get_critical()
+
+        if critical:
+            for item in critical:
+                print(f"\n    🚨 {item.summary}")
+                print(f"      Details: {item.details}")
+                print(f"      Source: {item.source_naga}")
+        else:
+            print("\n    No critical alerts.")
+
+        print("\n" + "=" * 60)
+        return 0
+
+    def _intel_nagas(self, intel_bridge) -> int:
+        """List active NAGAs."""
+        print("\n    ACTIVE NAGAS")
+        print("=" * 60)
+
+        nagas = intel_bridge.get_active_nagas()
+        categories = intel_bridge.get_available_categories()
+
+        print("\n    Available Categories:")
+        for cat in categories:
+            print(f"      - {cat.value}")
+
+        if nagas:
+            print("\n    Active NAGA Services:")
+            for naga in nagas:
+                print(f"      - {naga}")
+        else:
+            print("\n    No active NAGA services.")
+            print("    (Boot the kernel to enable NAGA federation)")
+
+        print("\n" + "=" * 60)
+        return 0
