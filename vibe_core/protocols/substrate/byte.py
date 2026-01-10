@@ -19,6 +19,9 @@ import math
 # Lazy import to avoid circular dependency
 if TYPE_CHECKING:
     from .nama import to_devanagari, to_iast, to_roman
+    from .mantra.pada import Pada, PadaType, PADA_BY_TYPE
+    from .mantra.aksara import Aksara
+    from .mantra.routing import FractalLevel, FractalRoute
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
@@ -57,6 +60,26 @@ class MantraTrit:
         """Western/English representation."""
         from .nama import to_roman
         return to_roman(self.value.value)
+
+    # =========================================================================
+    # FRACTAL INTEGRATION (via mantra/)
+    # =========================================================================
+
+    @property
+    def pada(self) -> "Pada":
+        """Full Pada object with aksaras and meaning."""
+        from .mantra.pada import PADA_BY_TYPE, PadaType
+        return PADA_BY_TYPE.get(PadaType(self.value.value))
+
+    @property
+    def aksaras(self) -> Tuple["Aksara", ...]:
+        """Component syllables of this word."""
+        return self.pada.aksaras if self.value != HolyName.VOID else ()
+
+    @property
+    def meaning(self) -> str:
+        """Philosophical meaning of this word."""
+        return self.pada.meaning if self.value != HolyName.VOID else ""
 
     def __repr__(self) -> str:
         return f"{self.value.name}({self.intensity:.2f})"
@@ -195,6 +218,64 @@ class MantraByte:
     def to_triple(self) -> Tuple[str, str, str]:
         """Returns (devanagari, iast, roman)."""
         return (self.to_devanagari(), self.to_iast(), self.to_roman())
+
+    # =========================================================================
+    # FRACTAL DECOMPOSITION (via mantra/)
+    # =========================================================================
+
+    def to_padas(self) -> List["Pada"]:
+        """Decompose to Pada (word) level."""
+        from .mantra.pada import PADA_BY_TYPE, PadaType
+        return [PADA_BY_TYPE.get(PadaType(self.get_trit(i).value)) for i in range(self._length)]
+
+    def to_aksaras(self) -> List["Aksara"]:
+        """Decompose to Aksara (syllable) level - flattened."""
+        result = []
+        for pada in self.to_padas():
+            if pada:
+                result.extend(pada.aksaras)
+        return result
+
+    def iter_at_level(self, level: "FractalLevel"):
+        """
+        Iterate through this MantraByte at specified fractal level.
+
+        Args:
+            level: Which fractal level (PADA, AKSARA, VARNA)
+
+        Yields:
+            Items at that level
+        """
+        from .mantra.routing import FractalLevel
+        if level == FractalLevel.PADA:
+            yield from self.to_padas()
+        elif level == FractalLevel.AKSARA:
+            yield from self.to_aksaras()
+        elif level == FractalLevel.VARNA:
+            for aksara in self.to_aksaras():
+                for char in aksara.devanagari:
+                    yield char
+
+    def get_fractal_path(self, pada_index: int, aksara_index: int = 0) -> List["FractalRoute"]:
+        """Get the fractal path from Vakya down to Aksara for a position."""
+        from .mantra.routing import get_fractal_path
+        if 0 <= pada_index < self._length:
+            return get_fractal_path(pada_index % 16, aksara_index)
+        raise IndexError(f"Invalid pada index: {pada_index}")
+
+    def get_quarter(self, index: int) -> int:
+        """Get which quarter (0-3) a position belongs to."""
+        from .mantra.routing import get_quarter
+        return get_quarter(index % 16)
+
+    def get_padas_in_quarter(self, quarter: int) -> Tuple["Pada", ...]:
+        """Get all padas in a quarter from this MantraByte."""
+        from .mantra.routing import QUARTERS
+        if 0 <= quarter < 4:
+            indices = QUARTERS[quarter]
+            padas = self.to_padas()
+            return tuple(padas[i] for i in indices if i < len(padas))
+        raise IndexError(f"Invalid quarter: {quarter}")
 
     # =========================================================================
     # MAGIC METHODS
