@@ -79,4 +79,7 @@ class NullYamaraja:
         return 0.0  # Neutral
 
 
-__all__ = ["YamarajaProtocol", "NullYamaraja", "Verdict"]
+# Adapter to existing implementation (Bridge to Holographic Reality)
+from .adapter import YamarajaAdapter, get_yamaraja
+
+__all__ = ["YamarajaProtocol", "NullYamaraja", "Verdict", "YamarajaAdapter", "get_yamaraja"]

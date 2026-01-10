@@ -67,6 +67,15 @@ from .router import (
     verify_router,
 )
 
+# Protocol exports (Discovered Interface)
+from .protocol import (
+    MahajanaVerdict,
+    MahajanaResult,
+    MahajanaProtocol,
+    BaseMahajana,
+    NullMahajana,
+)
+
 __all__ = [
     "MAHAJANA_ORDER",
     # Router
@@ -77,4 +86,10 @@ __all__ = [
     "route",
     "get_opcodes",
     "verify_router",
+    # Protocol
+    "MahajanaVerdict",
+    "MahajanaResult",
+    "MahajanaProtocol",
+    "BaseMahajana",
+    "NullMahajana",
 ]
