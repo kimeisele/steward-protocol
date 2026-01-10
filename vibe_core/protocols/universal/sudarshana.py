@@ -20,9 +20,10 @@ import functools
 import multiprocessing
 import uuid
 import logging
-from typing import Callable, Any, TypeVar, ParamSpec, Optional, Dict
+from typing import Callable, Any, TypeVar, ParamSpec, Optional, Dict, Generic
 from enum import Enum, auto
 from dataclasses import dataclass
+from multiprocessing.pool import AsyncResult
 
 from vibe_core.protocols.universal.mantra import MantraOpCode
 from vibe_core.protocols.universal.types import SovereignContext, AccessDeniedError
@@ -39,31 +40,31 @@ class SysState(Enum):
     ENTROPY_HIGH = 99  # Panic state
 
 @dataclass
-class PranaTask:
+class PranaTask(Generic[R]):
     """The atom of work. The 'Fractal' unit."""
     id: str
-    target: Callable
+    target: Callable[..., R]
     args: tuple
     kwargs: dict
     mantra_signature: str
 
-class PranaFuture:
+class PranaFuture(Generic[R]):
     """
     The Nervous System (Nadi).
     Connects the separated Limb (Worker) back to the Brain (Main Thread).
     """
-    def __init__(self, task_id: str, async_result: Any):
+    def __init__(self, task_id: str, async_result: AsyncResult):
         self.task_id = task_id
         self._val = async_result
 
-    def get(self, timeout: Optional[float] = None) -> Any:
+    def get(self, timeout: Optional[float] = None) -> R:
         """
         Synchronous waiting for the result.
         Paradox: We use Async to be fast, but sometimes we MUST wait.
         """
         return self._val.get(timeout=timeout)
 
-    def wait(self, timeout: Optional[float] = None):
+    def wait(self, timeout: Optional[float] = None) -> None:
         self._val.wait(timeout)
 
     def ready(self) -> bool:
@@ -72,7 +73,7 @@ class PranaFuture:
     def successful(self) -> bool:
         return self._val.successful()
         
-    def __repr__(self):
+    def __repr__(self) -> str:
         state = "READY" if self.ready() else "PENDING"
         return f"<PranaFuture {self.task_id} [{state}]>"
 
@@ -91,14 +92,14 @@ class MantraKernel:
         self.core_count = core_count or multiprocessing.cpu_count()
         # LAZY INIT POOL? No, User wants it ready.
         self.pool = multiprocessing.Pool(processes=self.core_count)
-        self.active_manifestations: Dict[str, Any] = {} # Tracking running tasks
+        self.active_manifestations: Dict[str, AsyncResult] = {} # Tracking running tasks
         self.logger = logging.getLogger("MantraKernel")
         
         # Configure logging if not running under pytest capture issues
         # logging.basicConfig(level=logging.INFO) 
         self.logger.info(f"🌀 MantraKernel Initialized. Cores aligned: {self.core_count}")
 
-    def inject_prana(self, task: PranaTask) -> PranaFuture:
+    def inject_prana(self, task: PranaTask[R]) -> PranaFuture[R]:
         """
         Takes a task and assigns it to a physical core.
         Returns a PranaFuture (Nervous System Link).
@@ -122,21 +123,21 @@ class MantraKernel:
         # Return the Nadi (Link)
         return PranaFuture(task.id, async_result)
 
-    def _on_complete(self, result: Any):
+    def _on_complete(self, result: object) -> None:
         """The Echo returns."""
         # This callback runs in the result thread (helper).
         self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
 
-    def _on_error(self, error: BaseException):
+    def _on_error(self, error: BaseException) -> None:
         self.logger.error(f"💀 Task Failed (Orphan died): {error}")
 
-    def purge_orphans(self):
+    def purge_orphans(self) -> None:
         """
         Garbage Collection: Reclaims resources from stuck tasks.
         """
         self.logger.info("🧹 Sweeping the temple. Removing orphan contexts.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         self.pool.close()
         self.pool.join()
         self.logger.info("🛑 Kali Yuga containment. System Halt.")
@@ -172,7 +173,7 @@ def mantra_governed(opcode: MantraOpCode):
     """
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> PranaFuture: # Returns Future now!
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> PranaFuture[R]: # Returns Future now!
             # 1. Context Extraktion (Suche nach SovereignContext in Args)
             context = None
             for arg in args:
