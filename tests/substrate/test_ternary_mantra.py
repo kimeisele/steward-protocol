@@ -81,3 +81,107 @@ def test_fractal_facture_ternary():
     )
     with pytest.raises(SystemError, match="Dissonance Detected"):
         g_chaos.validate()
+
+
+# =============================================================================
+# FRACTAL INTEGRATION TESTS
+# =============================================================================
+
+class TestMantraTritFractal:
+    """Test MantraTrit integration with mantra/ fractal structure."""
+
+    def test_trit_has_pada(self):
+        """MantraTrit exposes full Pada object."""
+        h = MantraTrit(HolyName.HARE)
+        assert h.pada is not None
+        assert h.pada.iast == "hare"
+        assert h.pada.devanagari == "हरे"
+
+    def test_trit_has_aksaras(self):
+        """MantraTrit exposes aksaras."""
+        h = MantraTrit(HolyName.HARE)
+        assert len(h.aksaras) == 2
+        assert h.aksaras[0].iast == "ha"
+        assert h.aksaras[1].iast == "re"
+
+    def test_trit_has_meaning(self):
+        """MantraTrit exposes philosophical meaning."""
+        h = MantraTrit(HolyName.HARE)
+        k = MantraTrit(HolyName.KRISHNA)
+        r = MantraTrit(HolyName.RAMA)
+        assert "Energy" in h.meaning
+        assert "Attractive" in k.meaning
+        assert "Pleasure" in r.meaning
+
+    def test_void_has_no_fractal(self):
+        """VOID has empty aksaras and meaning."""
+        v = MantraTrit(HolyName.VOID)
+        assert v.aksaras == ()
+        assert v.meaning == ""
+
+
+class TestMantraByteFractal:
+    """Test MantraByte integration with mantra/ fractal structure."""
+
+    def test_to_padas_returns_16(self):
+        """Standard 16 decomposes to 16 Padas."""
+        mb = MantraByte.standard_16()
+        padas = mb.to_padas()
+        assert len(padas) == 16
+
+    def test_to_aksaras_returns_32(self):
+        """Standard 16 decomposes to 32 Aksaras (2 per word)."""
+        mb = MantraByte.standard_16()
+        aksaras = mb.to_aksaras()
+        assert len(aksaras) == 32
+
+    def test_iter_at_level_pada(self):
+        """Iterate at PADA level."""
+        from vibe_core.protocols.substrate.mantra.routing import FractalLevel
+        mb = MantraByte.standard_16()
+        padas = list(mb.iter_at_level(FractalLevel.PADA))
+        assert len(padas) == 16
+        assert padas[0].iast == "hare"
+        assert padas[1].iast == "kṛṣṇa"
+
+    def test_iter_at_level_aksara(self):
+        """Iterate at AKSARA level."""
+        from vibe_core.protocols.substrate.mantra.routing import FractalLevel
+        mb = MantraByte.standard_16()
+        aksaras = list(mb.iter_at_level(FractalLevel.AKSARA))
+        assert len(aksaras) == 32
+        assert aksaras[0].iast == "ha"
+        assert aksaras[1].iast == "re"
+        assert aksaras[2].iast == "kṛ"
+        assert aksaras[3].iast == "ṣṇa"
+
+    def test_get_quarter(self):
+        """Get quarter for positions."""
+        mb = MantraByte.standard_16()
+        assert mb.get_quarter(0) == 0
+        assert mb.get_quarter(3) == 0
+        assert mb.get_quarter(4) == 1
+        assert mb.get_quarter(8) == 2
+        assert mb.get_quarter(12) == 3
+
+    def test_get_padas_in_quarter(self):
+        """Get padas in each quarter."""
+        mb = MantraByte.standard_16()
+        # Quarter 0: Hare Krishna Hare Krishna
+        q0 = mb.get_padas_in_quarter(0)
+        assert len(q0) == 4
+        assert [p.iast for p in q0] == ["hare", "kṛṣṇa", "hare", "kṛṣṇa"]
+        # Quarter 2: Hare Rama Hare Rama
+        q2 = mb.get_padas_in_quarter(2)
+        assert [p.iast for p in q2] == ["hare", "rāma", "hare", "rāma"]
+
+    def test_get_fractal_path(self):
+        """Get fractal path for a position."""
+        from vibe_core.protocols.substrate.mantra.routing import FractalLevel
+        mb = MantraByte.standard_16()
+        path = mb.get_fractal_path(1)  # Second word (Krishna)
+        assert len(path) == 3
+        assert path[0].level == FractalLevel.VAKYA
+        assert path[1].level == FractalLevel.PADA
+        assert path[1].index == 1
+        assert path[2].level == FractalLevel.AKSARA
