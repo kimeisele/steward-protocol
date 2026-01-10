@@ -59,7 +59,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.YIELD_CPU,
+    MantraOpCode.OPTIMIZE,  # Vyuha: Q4 Worker 1 (YIELD_CPU -> Shuka)
 ]
 
 

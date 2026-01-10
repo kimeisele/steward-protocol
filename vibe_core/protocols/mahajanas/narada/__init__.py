@@ -68,7 +68,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.PULSE_SYNC,
+    MantraOpCode.ALLOC_MEM,  # Vyuha: Q1 Worker 2 (PULSE_SYNC -> Manu)
 ]
 
 

@@ -59,7 +59,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.GARBAGE_COLLECT,
+    MantraOpCode.BIND_CTX,  # Vyuha: Q1 Worker 3 (GARBAGE_COLLECT -> Kapila)
 ]
 
 

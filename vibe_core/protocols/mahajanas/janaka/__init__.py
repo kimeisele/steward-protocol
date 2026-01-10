@@ -68,7 +68,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.EXEC_SERVICE,
+    MantraOpCode.CHECK_DHARMA,  # Vyuha: Q3 Worker 2 (EXEC_SERVICE -> Prahlada)
 ]
 
 

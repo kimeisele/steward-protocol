@@ -59,7 +59,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESET_IP,
+    MantraOpCode.RESOLVE_REQ,  # Vyuha: Q2 Worker 1 (RESET_IP -> Yamaraja)
 ]
 
 

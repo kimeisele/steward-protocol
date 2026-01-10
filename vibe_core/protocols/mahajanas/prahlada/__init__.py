@@ -65,7 +65,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.FETCH_RES,
+    MantraOpCode.EXEC_SERVICE,  # Vyuha: Q3 Worker 1 (FETCH_RES now HEAD: Parashurama)
 ]
 
 

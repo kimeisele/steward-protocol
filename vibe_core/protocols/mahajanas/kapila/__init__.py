@@ -62,8 +62,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESOLVE_REQ,
-    MantraOpCode.OPTIMIZE,
+    MantraOpCode.GARBAGE_COLLECT,  # Vyuha: Q2 Worker 2 (RESOLVE_REQ -> Kumaras, OPTIMIZE -> Bali)
 ]
 
 

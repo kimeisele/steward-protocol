@@ -61,9 +61,7 @@ OWNED_PROTOCOLS: Final[List[str]] = [
 ]
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.SYS_WAKE,
-    MantraOpCode.LOAD_ROOT,
-    MantraOpCode.ALLOC_MEM,
+    MantraOpCode.LOAD_ROOT,  # Vyuha: Q1 Worker 1 (SYS_WAKE now HEAD: Prithu)
 ]
 
 
