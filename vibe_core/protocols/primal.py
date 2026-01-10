@@ -113,36 +113,11 @@ class Tattva(str, Enum):
     NITYANANDA = "nityananda" # Substrate/Storage
     ADVAITA = "advaita"       # Logic/Inference
     GADADHARA = "gadadhara"   # Sync/Connection
-    SRIVASA = "svasa"         # Enforce/Governance
+    SRIVASA = "srivasa"       # Enforce/Governance
 
-class HolyName(str, Enum):
-    """The Three Holy Names."""
-    HARE = "Hare"
-    KRISHNA = "Krishna"
-    RAMA = "Rama"
-    
-    @property
-    def meaning(self) -> str:
-        return "Divine Meaning"
-
-class MantraOpCode(str, Enum):
-    """The Atomic Instruction Set (16 Steps)."""
-    SYS_WAKE = "sys_wake"
-    LOAD_ROOT = "load_root"
-    ALLOC_MEM = "alloc_mem"
-    BIND_CTX = "bind_ctx"
-    ASSERT_TRUTH = "assert_truth"
-    RESOLVE_REQ = "resolve_req"
-    GARBAGE_COLLECT = "garbage_collect"
-    PULSE_SYNC = "pulse_sync"
-    FETCH_RES = "fetch_res"
-    EXEC_SERVICE = "exec_service"
-    CHECK_DHARMA = "check_dharma"
-    COMMIT_LOG = "commit_log"
-    CACHE_STATE = "cache_state"
-    OPTIMIZE = "optimize"
-    YIELD_CPU = "yield_cpu"
-    RESET_IP = "reset_ip"
+# RE-EXPORTS from substrate (Single Source of Truth)
+# The canonical definitions live in substrate/__init__.py (Layer -1)
+from vibe_core.protocols.substrate import HolyName, MantraOpCode
 
 @dataclass
 class Resonance:
@@ -168,24 +143,8 @@ class AlignmentScore:
     corrections_applied: int
 
 # =============================================================================
-# 3. DNA SEQUENCE
+# 3. DNA SEQUENCE (RE-EXPORT from substrate)
 # =============================================================================
 
-MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
-    ("Hare", MantraOpCode.SYS_WAKE),
-    ("Krishna", MantraOpCode.LOAD_ROOT),
-    ("Hare", MantraOpCode.ALLOC_MEM),
-    ("Krishna", MantraOpCode.BIND_CTX),
-    ("Krishna", MantraOpCode.ASSERT_TRUTH),
-    ("Krishna", MantraOpCode.RESOLVE_REQ),
-    ("Hare", MantraOpCode.GARBAGE_COLLECT),
-    ("Hare", MantraOpCode.PULSE_SYNC),
-    ("Hare", MantraOpCode.FETCH_RES),
-    ("Rama", MantraOpCode.EXEC_SERVICE),
-    ("Hare", MantraOpCode.CHECK_DHARMA),
-    ("Rama", MantraOpCode.COMMIT_LOG),
-    ("Rama", MantraOpCode.CACHE_STATE),
-    ("Rama", MantraOpCode.OPTIMIZE),
-    ("Hare", MantraOpCode.YIELD_CPU),
-    ("Hare", MantraOpCode.RESET_IP),
-]
+# The canonical MAHAMANTRA_SEQUENCE lives in substrate/__init__.py (Layer -1)
+from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE
