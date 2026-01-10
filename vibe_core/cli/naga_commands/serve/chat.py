@@ -39,8 +39,20 @@ from vibe_core.protocols.naga.cli_command import (
     NagaCommandResult,
     NAGA_COMMAND_REGISTRY,
     naga_command,
+    # Router bridge - uses REAL MahajanaRouter
+    route_opcode,
+    MahajanaRouter,
+    get_router,
 )
 from vibe_core.protocols.substrate import MantraOpCode
+
+# Import Sabha for Mahajana infrastructure awareness
+from vibe_core.protocols.mahajanas import (
+    get_sabha,
+    MahajanaProtocol,
+    MahajanaResult,
+    MahajanaVerdict,
+)
 
 
 # =============================================================================
