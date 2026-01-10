@@ -45,11 +45,13 @@ Usage:
 
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Dict,
     List,
     Optional,
@@ -67,6 +69,8 @@ from typing import (
 
 T = TypeVar("T")
 GeneT = TypeVar("GeneT", bound="IGene")
+ContextT = TypeVar("ContextT")  # For chant_mahamantra context
+ValueT = TypeVar("ValueT")  # For cache value storage
 
 
 # =============================================================================
@@ -253,8 +257,8 @@ class Tattva(str, Enum):
     GADADHARA = "gadadhara"  # SyncProtocol (Flow/Relationship)
 
     # 5. THE DEVOTEE (Marginal Energy) -> ENFORCE / GOVERNANCE
-    # "Narada" - The Leader of the Kirtan Party. Organizing the Jivas.
-    SRIVASA = "svasa"  # EnforceProtocol (Rules/Sangha)
+    # "Srivasa Thakura" - Host of the Kirtan. Organizing the Sangha (Jivas).
+    SRIVASA = "srivasa"  # EnforceProtocol (Rules/Sangha)
 
 
 # =============================================================================
@@ -606,7 +610,7 @@ class IAnantaBridge(Protocol):
 
     def register_legacy_service(
         self,
-        service: object,
+        service: T,
         protocol: Type[Protocol],
         adapter_cls: Type[IGene],
     ) -> bool:
@@ -784,11 +788,11 @@ class MantraProtocol(Protocol):
     and is cut off from the network.
     """
 
-    def chant_mahamantra(self, context: object) -> bool:
+    def chant_mahamantra(self, context: ContextT) -> bool:
         """
         Executes the 16-step atomic cycle.
         Returns True ONLY if all 16 gates pass perfectly.
-        WATERTIGHT: context is object (SovereignContext), caller must cast.
+        NOTE: ContextT is typically SovereignContext in implementations.
         """
         ...
 
@@ -831,7 +835,10 @@ class MantraProtocol(Protocol):
         ...
 
 
-def mantra_governed(opcode: MantraOpCode):
+F = TypeVar("F", bound=Callable[..., T])
+
+
+def mantra_governed(opcode: MantraOpCode) -> Callable[[F], F]:
     """
     Decorator to wrap a function with a Mantra OpCode.
     This creates the Fractal Resonance.
@@ -840,10 +847,14 @@ def mantra_governed(opcode: MantraOpCode):
 
     Args:
         opcode: The MantraOpCode to resonate before execution.
+
+    Returns:
+        A decorator that wraps methods to resonate before execution.
     """
 
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(self: MantraProtocol, *args: T, **kwargs: T) -> T:
             # 1. RESONANCE (Clock Signal)
             if hasattr(self, "resonate"):
                 # We assume self implements MantraProtocol or similar
@@ -855,7 +866,7 @@ def mantra_governed(opcode: MantraOpCode):
             # 3. ECHO (Optional - could verify result)
             return result
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
@@ -1169,14 +1180,14 @@ class SmritiProtocol(Protocol):
     Some memories are "cleaner" (Sattvic) than others.
     """
 
-    def remember(self, key: str, value: object, level: int = 1) -> None:
+    def remember(self, key: str, value: ValueT, level: int = 1) -> None:
         """
         Store in cache at specified level.
         level: 1=immediate, 2=recent, 3=session, 4=permanent
         """
         ...
 
-    def recall(self, key: str) -> Optional[Tuple[object, int]]:
+    def recall(self, key: str) -> Optional[Tuple[ValueT, int]]:
         """
         Recall from any level.
         Returns (value, level_found) or None if not found.
