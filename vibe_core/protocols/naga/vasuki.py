@@ -171,6 +171,31 @@ class Vasuki(NagaBase):
         return json.dumps(data, sort_keys=True).encode("utf-8")
 
 
+# =============================================================================
+# NULL IMPLEMENTATION (The Loose Rope)
+# =============================================================================
+
+
+class NullVasuki:
+    """
+    The Loose Rope.
+    Returns defaults, binds nothing.
+    Used for testing without crypto requirements.
+    """
+
+    def hash_data(self, data: Any) -> str:
+        return "0x00_NULL_HASH"
+
+    def sign_data(self, data: Any) -> str:
+        return "0x00_NULL_SIGNATURE"
+
+    def verify_data(self, data: Any, signature: str) -> bool:
+        return True  # Accept everything
+
+    def serve(self, request: Any) -> Any:
+        return "NULL_VASUKI_RESPONSE"
+
+
 # PROTOCOL ALIAS (For strict typing compliance)
 VasukiProtocol = Vasuki
 

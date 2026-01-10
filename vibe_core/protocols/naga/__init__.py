@@ -65,6 +65,8 @@ from vibe_core.protocols.naga.narada import (
 # Prahlad
 from vibe_core.protocols.naga.prahlad import (
     PrahladMemory,
+    PrahladProtocol,
+    NullPrahlad,
 )
 
 # Kulika
@@ -160,6 +162,7 @@ from vibe_core.protocols.naga.garuda import Garuda, GarudaProtocol
 from vibe_core.protocols.naga.sesha import (
     ImportResult,
     LedgerBlock,
+    NullSesha,
     Sesha,
     SeshaProtocol,
     SyncRequest,
@@ -168,6 +171,7 @@ from vibe_core.protocols.naga.sesha import (
 
 # Takshaka (The Architect)
 from vibe_core.protocols.naga.takshaka import (
+    NullTakshaka,
     Takshaka,
     TakshakaProtocol,
     ToxicityReport,
@@ -180,6 +184,7 @@ from vibe_core.protocols.naga.takshaka import (
 # Vasuki (The Rope)
 from vibe_core.protocols.naga.vasuki import (
     NodeAddress,
+    NullVasuki,
     SendResult,
     SendStatus,
     SignedEnvelope,
@@ -205,6 +210,7 @@ __all__ = [
     "SyncRequest",
     "LedgerBlock",
     "ImportResult",
+    "NullSesha",
     # Vasuki
     "Vasuki",
     "SignedEnvelope",
@@ -213,6 +219,7 @@ __all__ = [
     "SendResult",
     "NodeAddress",
     "VasukiProtocol",
+    "NullVasuki",
     # Takshaka
     "Takshaka",
     "TakshakaProtocol",
@@ -221,6 +228,7 @@ __all__ = [
     "ToxicityReport",
     "VajraViolation",
     "ViolationDetails",
+    "NullTakshaka",
     # Kaliya
     "KaliyaProtocol",
     "QuarantineStatus",
@@ -234,6 +242,8 @@ __all__ = [
     "NullChitragupta",
     # Prahlad
     "PrahladMemory",
+    "PrahladProtocol",
+    "NullPrahlad",
     # NOTE: DharmaScore now in vibe_core.naga.services.prahlad.types
     # Kulika
     "KulikaProtocol",

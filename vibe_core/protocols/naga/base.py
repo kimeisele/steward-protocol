@@ -150,3 +150,46 @@ class NagaBase(IGene, ABC):
         Must be implemented by concrete Nagas.
         """
         pass
+
+
+# =============================================================================
+# ANANTA NULL - The Divine Zero (Purnam)
+# =============================================================================
+
+
+class AnantaNull:
+    """
+    The Divine Zero. 
+    Not 'Nothing', but 'Potency in Slumber'.
+    
+    "Purnam adah purnam idam" - That is Full, This is Full.
+    
+    Every Null implementation should inherit from this to ensure:
+    1. It is not Void (Shunyavad)
+    2. It carries the Mantra in HARE state (00 = Potential)
+    3. It serves by waiting
+    """
+    
+    def __init__(self) -> None:
+        # Import here to avoid circular dependency
+        try:
+            from vibe_core.protocols.substrate.byte import MantraByte, HolyName
+            # 00 = HARE (Potential / Seed / Silence)
+            self.resonance = MantraByte(HolyName.HARE)
+        except ImportError:
+            # Fallback for bootstrapping
+            self.resonance = None
+    
+    @property
+    def is_void(self) -> bool:
+        """Returns False. Nothing is Void in this system."""
+        return False
+
+    @property
+    def is_silent(self) -> bool:
+        """Returns True. It serves by waiting."""
+        return True
+
+    def serve(self, request: Any) -> Any:
+        """The Silent Service - Returns nothing but acknowledges."""
+        return None
