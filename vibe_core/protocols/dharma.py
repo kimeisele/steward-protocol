@@ -62,6 +62,7 @@ PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {
     "cognition.py": ProtocolLayer.SERVICES,
     "governance/yamaraja.py": ProtocolLayer.SERVICES,
     "akashic.py": ProtocolLayer.SERVICES,
+    "universal/gita.py": ProtocolLayer.INTERFACE, # The Divine Standard
 
     # LEVEL 3: WIRING (The Action)
     "cli.py": ProtocolLayer.WIRING,

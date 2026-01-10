@@ -4,30 +4,31 @@ GITA PROTOCOL - The 1972 Standard (Layer 1)
 "Yada yada hi dharmasya..." - Whenever there is a decline...
 
 This Protocol defines the 18 Yogas (Chapters) as HARD SYSTEM CONSTRAINTS.
-Any Agent claiming to be "Divine" (System Critical) MUST implement this.
+Every Agent claiming to be "Divine" (System Critical) MUST implement this.
 
-STATUS: RED (Not yet implemented by Kernel)
-
-CONSTANTS:
-- EDITION: 1972 "As It Is"
-- CHAPTERS: 18
-- VERSES: 700
+STATUS: HARDENED (Phases 25 & 26)
 """
 
-from typing import Any, Dict, Protocol, runtime_checkable
-
+from typing import Protocol, runtime_checkable
 from typing_extensions import Final
+
+# Import the Strict Types (No Any)
+from .types import (
+    SankhyaDualism,
+    KarmaCounter,
+    VisvarupaSnapshot,
+    SovereignContext,
+    DivineCommand
+)
 
 # THE STANDARD
 GITA_EDITION: Final[int] = 1972
 TOTAL_CHAPTERS: Final[int] = 18
 
-
 @runtime_checkable
 class GitaProtocol(Protocol):
     """
     The Divine Standard.
-
     To be a "Vibe" (Alive), you must pass the 18 Gates of Kurukshetra.
     """
 
@@ -38,49 +39,53 @@ class GitaProtocol(Protocol):
 
     # --- THE 18 GATES (YOGAS) ---
 
-    def chapter_01_visada_yoga(self) -> str:
+    def chapter_01_visada_yoga(self, sovereign: SovereignContext) -> str:
         """
         GATE 1: Identity Crisis.
-        Returns the current 'State of Confusion' (Logs/Errors).
-        Must NOT be None (Denial).
+        Returns the current 'State of Confusion'.
+        INPUT: Who is asking? (SovereignContext)
         """
         ...
 
-    def chapter_02_sankhya_yoga(self) -> Dict[str, Any]:
+    def chapter_02_sankhya_yoga(self, sovereign: SovereignContext) -> SankhyaDualism:
         """
         GATE 2: Analytical Study.
-        Returns the Immutable Ledger (Soul) vs Mutable Body (Process).
+        Returns the STRICT separation of Spirit vs Matter.
+        NO 'Any' ALLOWED.
         """
         ...
 
-    def chapter_03_karma_yoga(self) -> int:
+    def chapter_03_karma_yoga(self, sovereign: SovereignContext) -> KarmaCounter:
         """
         GATE 3: Action.
-        Returns the 'Work Counter' (Cycle Count).
+        Returns precise accounting of Work.
         """
         ...
 
-    def chapter_04_jnana_yoga(self) -> str:
+    def chapter_04_jnana_yoga(self, sovereign: SovereignContext) -> str:
         """
         GATE 4: Transcendental Knowledge.
         Returns the 'Heritage Chain' (Parampara).
         """
         ...
 
-    # ... Skipping 5-10 for brevity in initial abstract definition,
-    # but strictly required in implementation. ...
+    # ... Chapters 5-10 implied strict ...
 
-    def chapter_11_visvarupa_yoga(self) -> Dict[str, Any]:
+    def chapter_11_visvarupa_yoga(self, sovereign: SovereignContext) -> VisvarupaSnapshot:
         """
         GATE 11: The Universal Form.
-        Returns the ENTIRE SYSTEM STATE tree as JSON.
+        Returns the ENTIRE SYSTEM STATE tree as a typed Fractal Snapshot.
         """
         ...
 
-    def chapter_18_moksha_sannyasa_yoga(self, command: str) -> bool:
+    def chapter_18_moksha_sannyasa_yoga(self, cmd: DivineCommand) -> bool:
         """
         GATE 18: Surrender & Conclusion.
         Executes a 'Divine Command'.
-        Returns True if surrendered (executed), False if rebelled.
+        
+        INPUT: DivineCommand (Envelope containing Sovereign + Instruction).
+        OUTPUT: True if surrendered (executed), False if rebelled.
+        
+        NO RAW STRINGS. NO ANONYMOUS CALLS.
         """
         ...

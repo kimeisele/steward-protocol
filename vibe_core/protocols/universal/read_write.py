@@ -1,5 +1,13 @@
-from typing import Optional, Protocol, runtime_checkable
+"""
+READ/WRITE PROTOCOL - The Record/Akasha (Layer 1)
+==================================================
 
+HARDENED (Phase 27):
+- NO ANONYMOUS ACCESS.
+- Context is MANDATORY.
+"""
+
+from typing import Protocol, runtime_checkable
 from .types import ReadResult, SovereignContext
 
 
@@ -15,30 +23,37 @@ class ReadWriteProtocol(Protocol):
     - Composability: Can pipe ReadResult into specialized logic.
     - Idempotency: Read is side-effect free; Write is idempotent.
     - Recoverability: Exceptions defined for graceful handling.
+    
+    HARDENED (Phase 27):
+    - NO ANONYMOUS ACCESS.
+    - Context is MANDATORY.
     """
 
-    def read(self, key: str, context: Optional[SovereignContext] = None) -> ReadResult:
+    def read(self, key: str, context: SovereignContext) -> ReadResult:
         """
         Read value by key.
-        Returns ENVELOPE (Value + Provenance).
-
+        Args:
+            context: (Required) Who is reading?
         Raises:
             KeyNotFoundError: If key does not exist.
             AccessDeniedError: If context lacks permission.
         """
         ...
 
-    def write(self, key: str, value: object, context: Optional[SovereignContext] = None) -> None:
+    def write(self, key: str, value: object, context: SovereignContext) -> None:
         """
         Write value by key.
         Args:
             context: (Required) Who is writing?
-
+            value: (Required) The strict object (Metadata/Struct), not Any.
         Raises:
             AccessDeniedError: If signature invalid or permission denied.
         """
         ...
 
-    def exists(self, key: str, context: Optional[SovereignContext] = None) -> bool:
-        """Check if key exists."""
+    def exists(self, key: str, context: SovereignContext) -> bool:
+        """
+        Check if key exists.
+        Even checking existence requires permission (to prevent enumeration attacks).
+        """
         ...

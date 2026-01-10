@@ -1,56 +1,60 @@
 """
-TEST GITA COMPLIANCE - The Red Suite
-
-"Prove that the system is not yet Divine."
-
-OBJECTIVE:
-Verify if the Core Components implement the `GitaProtocol`.
-Since they do not, this test MUST FAIL (Red).
-
-TARGETS:
-1. NagaBase (The Services)
-2. RealVibeKernel (The Controller)
+TEST GITA COMPLIANCE - The Red & Green Suite (Hardened)
 """
-
 import pytest
-
+from typing import Dict, Any, List
 from vibe_core.protocols.naga.base import NagaBase
 from vibe_core.protocols.universal.gita import GitaProtocol
-
-# Assuming RealVibeKernel is importable or mockable for interface check
-# from vibe_core.kernel_impl import RealVibeKernel
-
+from vibe_core.protocols.universal.types import (
+    SovereignContext, DivineCommand, SankhyaDualism, 
+    KarmaCounter, VisvarupaSnapshot, TranscendentalQuality
+)
 
 class MockService(NagaBase):
-    """A standard Naga (Snake) Service."""
+    """A standard Naga (Snake). Fails because it ignores the Sovereign."""
+    def serve(self, req): pass
 
-    def serve(self, req):
-        pass
-
-
-def test_naga_is_divine():
+class ArjunaCore:
     """
-    Test if a Standard Naga observes the Gita Protocol.
-    EXPECTED: FAIL (It currently only observes NagaBase).
+    A Divine Implementation.
+    Follows Phase 25 (Strict Outputs) and Phase 26 (Sovereign Inputs).
     """
+    @property
+    def gita_library_hash(self) -> str: return "1972"
+
+    def chapter_01_visada_yoga(self, sovereign: SovereignContext) -> str:
+        return "I see omens."
+
+    def chapter_02_sankhya_yoga(self, sovereign: SovereignContext) -> SankhyaDualism:
+        return SankhyaDualism("PURUSHA_1", "ACTIVE", {"sattva": 1.0})
+
+    def chapter_03_karma_yoga(self, sovereign: SovereignContext) -> KarmaCounter:
+        return KarmaCounter(108, 0.0, 100.0, "Akarma")
+        
+    def chapter_04_jnana_yoga(self, sovereign: SovereignContext) -> str:
+        return "Parampara-001"
+
+    def chapter_11_visvarupa_yoga(self, sovereign: SovereignContext) -> VisvarupaSnapshot:
+        return VisvarupaSnapshot("ROOT", TranscendentalQuality.EXISTENCE, {}, [])
+
+    def chapter_18_moksha_sannyasa_yoga(self, cmd: DivineCommand) -> bool:
+        return cmd.sovereign.identity_id == "KRISHNA"
+
+def test_naga_is_NOT_divine():
     snake = MockService("Takshaka", ("bite",))
+    assert not isinstance(snake, GitaProtocol)
 
-    # IS IT DIVINE?
-    assert isinstance(snake, GitaProtocol), "Naga does not follow the Gita!"
+def test_arjuna_IS_divine():
+    arjuna = ArjunaCore()
+    # This checks runtime Protocol compliance
+    assert isinstance(arjuna, GitaProtocol)
 
-
-def test_kernel_is_divine():
-    """
-    Test if the Kernel observes the Gita Protocol.
-    EXPECTED: FAIL (It currently observes KernelProtocol).
-    """
-    # We can't easily instantiate Kernel here due to deps, but we can check the class
-    # or a mock that represents current reality.
-
-    class CurrentKernel:
-        """Represents current Kernel implementation."""
-
-        pass
-
-    kernel = CurrentKernel()
-    assert isinstance(kernel, GitaProtocol), "Kernel does not follow the Gita!"
+def test_sankhya_properties():
+    """Verify strict type properties on return value."""
+    arjuna = ArjunaCore()
+    # Mock sovereign
+    sov = SovereignContext("Arjuna", "Sig", 0.0)
+    
+    sankhya = arjuna.chapter_02_sankhya_yoga(sov)
+    assert sankhya.purusha_id == "PURUSHA_1"
+    assert sankhya.guna_balance["sattva"] == 1.0

@@ -1,36 +1,50 @@
-from typing import List, Protocol, runtime_checkable
+"""
+ENFORCE PROTOCOL - The Law of Karma (Layer 1)
+==============================================
 
-from .types import EnforceContext, Rule, Verdict
+HARDENED (Phase 28):
+- Replaced 'bool' returns with 'HolyName'.
+- You cannot simply 'Pass' or 'Fail'. You generate Karma, Akarma, or Vikarma.
+"""
+
+from typing import List, Protocol, runtime_checkable
+from vibe_core.protocols.substrate.byte import HolyName
+from .types import EnforceContext, Rule, Verdict, SovereignContext
 
 
 @runtime_checkable
 class EnforceProtocol(Protocol):
     """
-    Atomic protocol for policy enforcement (The Law/Dharma).
+    The Law of Karma.
 
-    GAD-000 COMPLIANCE:
-    - Discoverability: 'get_rules' makes policy inspectable.
-    - Observability: Decisions can be logged via returned Verdicts.
-    - Parseability: 'Verdict' is an Enum, not a string.
-    - Composability: Can chaining checks (check -> enforce).
-    - Idempotency: Checks should be side-effect free.
-    - Recoverability: Fallback to strict/safe defaults on error.
+    HARDENED (Phase 28):
+    Replaced 'bool' returns with 'HolyName'.
+    You cannot simply 'Pass' or 'Fail'. You generate Karma, Akarma, or Vikarma.
     """
+
+    def verify_action(self, action: str, ctx: SovereignContext) -> HolyName:
+        """
+        Prüft, ob die Aktion mit der Parampara harmoniert.
+
+        Returns:
+            KRISHNA (01): Action Authorized (Akarma / Devotion).
+            RAMA (10):    Action Allowed with Warning (Karma / Duty).
+            VOID (11):    Action Blocked (Vikarma / Sin/Error).
+            HARE (00):    Action Ignored/Pending.
+        """
+        ...
 
     def enforce(self, action: str, context: EnforceContext) -> Verdict:
         """
         Enforce rules on an action.
-        Args:
-            action: The verb being attempted.
-            context: The context (including Sovereign Identity).
+        The 'context' now strictly contains a 'sovereign'.
         """
         ...
 
-    def check(self, action: str) -> bool:
+    def calculate_merkle_root(self, ctx: SovereignContext, action: str) -> str:
         """
-        Quick check if action is allowed (boolean only).
-        Useful for UI states or fast-fail paths.
-        Does NOT replace 'enforce' for critical paths.
+        Berechnet den neuen Hash für den Ledger basierend auf:
+        Identity + PreviousHash + Action + MantraResonance.
         """
         ...
 
