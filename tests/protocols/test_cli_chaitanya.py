@@ -19,6 +19,10 @@ import pytest
 from datetime import datetime
 
 from vibe_core.protocols.universal.cli import (
+    # Strict Types (Anti-Mayavad)
+    CliInput,
+    CliPayload,
+    CliResult,
     # Original (strict)
     AnantaResponse,
     ShellProtocol,
@@ -32,6 +36,16 @@ from vibe_core.protocols.universal.cli import (
     NavigationResult,
     ChaitanyaShell,
     CHAITANYA_SHELL,
+    # ICommand Protocol (16-Command Interface)
+    CommandResult,
+    CommandHelp,
+    ICliCommand,
+    # MantraProcessor (Computational Engine)
+    MantraProcessorResult,
+    MantraProcessor,
+    # GAD-000 Seal (No Manual Labour)
+    GAD000Seal,
+    verify_gad000,
 )
 
 
@@ -277,3 +291,406 @@ class TestSingletons:
         assert MAHAMANTRA is not None
         assert "Hare Kṛṣṇa" in MAHAMANTRA
         assert "Rāma" in MAHAMANTRA
+
+
+class TestCommandResult:
+    """Test the CommandResult type (strict, no Any)."""
+
+    def test_command_result_success(self):
+        """CommandResult tracks success state."""
+        result = CommandResult(
+            success=True,
+            opcode="exec_service",
+            message="Executed successfully"
+        )
+        assert result.success is True
+        assert bool(result) is True
+
+    def test_command_result_failure(self):
+        """CommandResult tracks failure state."""
+        result = CommandResult(
+            success=False,
+            opcode="exec_service",
+            message="Execution failed"
+        )
+        assert result.success is False
+        assert bool(result) is False
+
+    def test_command_result_with_data(self):
+        """CommandResult can carry typed data."""
+        result = CommandResult(
+            success=True,
+            opcode="cache_state",
+            message="Cached",
+            data={"key": "value", "count": 42}
+        )
+        assert result.data is not None
+        assert result.data["key"] == "value"
+        assert result.data["count"] == 42
+
+    def test_command_result_has_timestamp(self):
+        """CommandResult has a timestamp."""
+        result = CommandResult(
+            success=True,
+            opcode="sys_wake",
+            message="Awake"
+        )
+        assert result.timestamp is not None
+        assert isinstance(result.timestamp, datetime)
+
+
+class TestCommandHelp:
+    """Test the CommandHelp type (GAD-000 compliant)."""
+
+    def test_command_help_has_gad_000_criteria(self):
+        """CommandHelp includes all GAD-000 criteria."""
+        help_info = CommandHelp(
+            opcode="exec_service",
+            name="exec",
+            phase="SERVE",
+            word="RAMA",
+            description="Execute work",
+            input_type="ResolvedIntent",
+            output_type="CliResult",
+            discoverability="vibe help --json",
+            observability="vibe status --json",
+            parseability="E_NO_CTX, E_UNSIGNED",
+            composability="vibe parse | vibe exec",
+            idempotency="Same intent_hash → cached result",
+            recoverability="vibe gc && vibe reset"
+        )
+        # D-O-P-C-I-R
+        assert help_info.discoverability is not None
+        assert help_info.observability is not None
+        assert help_info.parseability is not None
+        assert help_info.composability is not None
+        assert help_info.idempotency is not None
+        assert help_info.recoverability is not None
+
+    def test_command_help_has_mantra_mapping(self):
+        """CommandHelp includes Mahamantra mapping."""
+        help_info = CommandHelp(
+            opcode="sys_wake",
+            name="wake",
+            phase="WAKE",
+            word="HARE",
+            description="Focus system, stop maya",
+            input_type="None",
+            output_type="CliResult",
+            discoverability="vibe help wake",
+            observability="vibe status",
+            parseability="E_ALREADY_AWAKE",
+            composability="vibe wake | vibe identity",
+            idempotency="Idempotent - multiple calls safe",
+            recoverability="vibe reset"
+        )
+        assert help_info.phase == "WAKE"
+        assert help_info.word == "HARE"
+        assert help_info.opcode == "sys_wake"
+
+
+class TestICliCommand:
+    """Test the ICliCommand Protocol."""
+
+    def test_protocol_is_runtime_checkable(self):
+        """ICliCommand is runtime checkable."""
+        # Create a minimal implementation
+        class TestCommand:
+            @property
+            def opcode(self) -> str:
+                return "sys_wake"
+
+            @property
+            def name(self) -> str:
+                return "wake"
+
+            @property
+            def phase(self) -> str:
+                return "WAKE"
+
+            @property
+            def word(self) -> str:
+                return "HARE"
+
+            def execute(self, ctx, payload):
+                return MahamantraGrace()
+
+            def help(self):
+                return CommandHelp(
+                    opcode="sys_wake",
+                    name="wake",
+                    phase="WAKE",
+                    word="HARE",
+                    description="Test",
+                    input_type="None",
+                    output_type="CliResult",
+                    discoverability="test",
+                    observability="test",
+                    parseability="test",
+                    composability="test",
+                    idempotency="test",
+                    recoverability="test"
+                )
+
+        cmd = TestCommand()
+        assert isinstance(cmd, ICliCommand)
+
+    def test_protocol_has_required_methods(self):
+        """ICliCommand requires opcode, name, phase, word, execute, help."""
+        # Verify protocol has expected attributes
+        assert hasattr(ICliCommand, 'opcode')
+        assert hasattr(ICliCommand, 'name')
+        assert hasattr(ICliCommand, 'phase')
+        assert hasattr(ICliCommand, 'word')
+        assert hasattr(ICliCommand, 'execute')
+        assert hasattr(ICliCommand, 'help')
+
+
+class TestCliResult:
+    """Test the CliResult union type."""
+
+    def test_cli_result_can_be_command_result(self):
+        """CliResult accepts CommandResult."""
+        result: CliResult = CommandResult(
+            success=True,
+            opcode="exec_service",
+            message="OK"
+        )
+        assert isinstance(result, CommandResult)
+
+    def test_cli_result_can_be_mahamantra_grace(self):
+        """CliResult accepts MahamantraGrace."""
+        result: CliResult = MahamantraGrace()
+        assert isinstance(result, MahamantraGrace)
+
+    def test_cli_result_both_truthy_patterns(self):
+        """CliResult types have consistent truthiness."""
+        success: CliResult = CommandResult(
+            success=True,
+            opcode="test",
+            message="OK"
+        )
+        failure: CliResult = CommandResult(
+            success=False,
+            opcode="test",
+            message="Failed"
+        )
+        grace: CliResult = MahamantraGrace()
+
+        assert bool(success) is True
+        assert bool(failure) is False
+        assert bool(grace) is True  # Grace is always truthy
+
+
+class TestMantraProcessor:
+    """Test the MantraProcessor - the Computational Engine."""
+
+    @pytest.fixture
+    def processor(self):
+        return MantraProcessor()
+
+    def test_processor_has_16_commands(self, processor):
+        """MantraProcessor has exactly 16 commands (16 words of Mahamantra)."""
+        commands = processor.list_commands()
+        assert len(commands) == 16
+
+    def test_processor_maps_to_opcodes(self, processor):
+        """Each command maps to a MantraOpCode."""
+        # Test all 16 commands
+        command_names = [
+            "wake", "identity", "alloc", "bind",
+            "verify", "parse", "gc", "pulse",
+            "fetch", "exec", "check", "commit",
+            "cache", "optimize", "yield", "reset"
+        ]
+        for cmd in command_names:
+            opcode = processor.get_opcode(cmd)
+            assert opcode is not None, f"Command {cmd} should have an opcode"
+
+    def test_processor_routes_to_mahajanas(self, processor):
+        """Commands route to Mahajanas via OpCodes."""
+        # Test a few known routes
+        assert processor.get_mahajana("identity") == "brahma"
+        assert processor.get_mahajana("exec") == "janaka"
+        assert processor.get_mahajana("reset") == "kumaras"
+
+    def test_processor_identifies_head_commands(self, processor):
+        """HEAD commands (Avatara-owned) are identified."""
+        # HEAD positions: 1, 5, 9, 13 = wake, verify, fetch, cache
+        assert processor.is_head_command("wake") is True
+        assert processor.is_head_command("verify") is True
+        assert processor.is_head_command("fetch") is True
+        assert processor.is_head_command("cache") is True
+
+        # Workers are NOT heads
+        assert processor.is_head_command("exec") is False
+        assert processor.is_head_command("reset") is False
+
+    def test_processor_unknown_command_returns_none(self, processor):
+        """Unknown command returns None for opcode."""
+        assert processor.get_opcode("unknown_cmd") is None
+        assert processor.get_mahajana("unknown_cmd") is None
+
+    def test_processor_chant_unknown_returns_grace(self, processor):
+        """Chanting unknown command returns MahamantraGrace."""
+        result = processor.chant("unknown_cmd", "invalid_ctx")
+        assert isinstance(result, MantraProcessorResult)
+        assert isinstance(result.result, MahamantraGrace)
+        assert "Unknown command" in result.result.message
+
+    def test_processor_chant_valid_returns_result(self, processor):
+        """Chanting valid command returns MantraProcessorResult."""
+        result = processor.chant("exec", "some_ctx")
+        assert isinstance(result, MantraProcessorResult)
+        assert result.command == "exec"
+        assert result.opcode == "exec_service"
+        # Should get grace because ctx is invalid
+        assert isinstance(result.result, MahamantraGrace)
+
+    def test_processor_list_commands_sorted_by_position(self, processor):
+        """Commands are sorted by position (1-16)."""
+        commands = processor.list_commands()
+        positions = [c["position"] for c in commands]
+        assert positions == sorted(positions)
+
+    def test_processor_list_commands_has_all_quarters(self, processor):
+        """All 4 quarters are represented in commands."""
+        commands = processor.list_commands()
+        quarters = set(c["quarter"] for c in commands)
+        assert quarters == {1, 2, 3, 4}
+
+
+class TestMantraProcessorResult:
+    """Test the MantraProcessorResult type."""
+
+    def test_result_contains_routing_metadata(self):
+        """MantraProcessorResult contains routing metadata."""
+        result = MantraProcessorResult(
+            command="exec",
+            opcode="exec_service",
+            mahajana="janaka",
+            quarter=3,
+            position=10,
+            is_head=False,
+            result=MahamantraGrace()
+        )
+        assert result.command == "exec"
+        assert result.opcode == "exec_service"
+        assert result.mahajana == "janaka"
+        assert result.quarter == 3
+        assert result.position == 10
+        assert result.is_head is False
+
+    def test_result_with_head_flag(self):
+        """MantraProcessorResult correctly flags HEAD commands."""
+        head_result = MantraProcessorResult(
+            command="wake",
+            opcode="sys_wake",
+            mahajana="brahma",
+            quarter=1,
+            position=1,
+            is_head=True,
+            result=MahamantraGrace()
+        )
+        worker_result = MantraProcessorResult(
+            command="exec",
+            opcode="exec_service",
+            mahajana="janaka",
+            quarter=3,
+            position=10,
+            is_head=False,
+            result=CommandResult(success=True, opcode="exec_service", message="OK")
+        )
+
+        assert head_result.is_head is True
+        assert worker_result.is_head is False
+
+
+class TestGAD000Seal:
+    """Test the GAD-000 Seal - No Manual Labour."""
+
+    def test_verify_gad000_returns_seal(self):
+        """verify_gad000() returns a GAD000Seal."""
+        seal = verify_gad000()
+        assert isinstance(seal, GAD000Seal)
+
+    def test_seal_has_16_commands(self):
+        """Seal verifies 16 commands are mapped."""
+        seal = verify_gad000()
+        assert seal.commands_mapped == 16
+
+    def test_seal_has_16_opcodes(self):
+        """Seal verifies 16 opcodes are routed."""
+        seal = verify_gad000()
+        assert seal.opcodes_routed == 16
+
+    def test_seal_has_12_worker_opcodes(self):
+        """Seal verifies 12 worker opcodes (non-HEAD)."""
+        seal = verify_gad000()
+        assert seal.worker_opcodes == 12
+
+    def test_seal_has_4_heads(self):
+        """Seal verifies 4 HEADs (Avataras) are active."""
+        seal = verify_gad000()
+        assert seal.heads_active == 4
+
+    def test_seal_has_mahajanas(self):
+        """Seal verifies Mahajanas are active (9-12 depending on mode)."""
+        seal = verify_gad000()
+        assert seal.unique_mahajanas >= 9
+
+    def test_seal_heartbeat_available(self):
+        """Seal verifies MantraHeartbeat is available."""
+        seal = verify_gad000()
+        assert seal.heartbeat_available is True
+
+    def test_seal_krishna_present(self):
+        """Seal verifies Krishna is ALWAYS present (acintya)."""
+        seal = verify_gad000()
+        assert seal.krishna_present is True
+
+    def test_seal_is_valid(self):
+        """Seal is_valid returns True when all checks pass."""
+        seal = verify_gad000()
+        assert seal.is_valid is True
+
+    def test_seal_marker_is_sealed_37(self):
+        """Seal marker is 'GAD-000:SEALED:37' when valid."""
+        seal = verify_gad000()
+        assert seal.marker == "GAD-000:SEALED:37"
+
+    def test_broken_seal_marker(self):
+        """Broken seal marker shows what's missing."""
+        broken_seal = GAD000Seal(
+            commands_mapped=10,  # Missing 6
+            opcodes_routed=16,
+            worker_opcodes=12,
+            heads_active=4,
+            unique_mahajanas=9,
+            heartbeat_available=True,
+            krishna_present=True,
+        )
+        assert "cmd:10/16" in broken_seal.marker
+        assert broken_seal.is_valid is False
+
+
+class TestGAD000SealMath:
+    """Test the mathematical correctness of GAD-000."""
+
+    def test_37_equals_24_plus_12_plus_1(self):
+        """37 = 24 (Ksetra) + 12 (Mahajanas) + 1 (Ksetrajna)."""
+        ksetra = 24
+        mahajanas = 12
+        ksetrajna = 1
+        assert ksetra + mahajanas + ksetrajna == 37
+
+    def test_16_equals_12_workers_plus_4_heads(self):
+        """16 opcodes = 12 worker opcodes + 4 HEADs."""
+        seal = verify_gad000()
+        assert seal.worker_opcodes + seal.heads_active == 16
+
+    def test_16_words_equals_16_opcodes(self):
+        """16 words of Mahamantra = 16 OpCodes."""
+        seal = verify_gad000()
+        assert seal.commands_mapped == 16
+        assert seal.opcodes_routed == 16

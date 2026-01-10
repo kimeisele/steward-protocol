@@ -1,179 +1,286 @@
-# CLI PROTOCOL - Ananta Shesha (The Fractal Navigator)
+# CLI PROTOCOL - Ananta Shesha (The 16-Word Shell)
 
 **"Der Tausendköpfige Diener trägt das Universum."**
 
-## VISION: Chaitanya Singularity
+## FOUNDATIONAL PRINCIPLE
+
+The CLI is the **Mahamantra made executable**. 16 words = 16 commands = 16 MantraOpCodes.
 
 ```
-                    ┌─────────────────────────────┐
-                    │      MAHAMANTRA GRACE       │
-                    │    (Default Entry Point)    │
-                    │                             │
-                    │  "Hare Kṛṣṇa Hare Kṛṣṇa     │
-                    │   Kṛṣṇa Kṛṣṇa Hare Hare     │
-                    │   Hare Rāma Hare Rāma       │
-                    │   Rāma Rāma Hare Hare"      │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │         CLI SHELL           │
-                    │      (Ananta Shesha)        │
-                    │                             │
-                    │   Navigate EVERYTHING:      │
-                    │   - Protocols               │
-                    │   - Bytes                   │
-                    │   - Tests                   │
-                    │   - Genes                   │
-                    │   - Reports                 │
-                    └──────────────┬──────────────┘
-                                   │
-              ┌────────────────────┼────────────────────┐
-              │                    │                    │
-    ┌─────────▼─────────┐ ┌───────▼───────┐ ┌─────────▼─────────┐
-    │   NAGA PROXY      │ │  JSON REPORTS │ │   GAD-000 DEBUG   │
-    │   (Protection)    │ │  (Analysis)   │ │   (Navigation)    │
-    └───────────────────┘ └───────────────┘ └───────────────────┘
+MAHAMANTRA_SEQUENCE (16 words):
+┌───────────────────────────────────────────────────────────────┐
+│ HARE KRISHNA HARE KRISHNA  KRISHNA KRISHNA HARE HARE         │
+│ HARE RAMA    HARE RAMA     RAMA    RAMA    HARE HARE         │
+└───────────────────────────────────────────────────────────────┘
+                              ↓
+                    16 MantraOpCodes
+                              ↓
+                      16 CLI Commands
 ```
 
-## PARADIGM SHIFT: Pull In, Not Push Out
+---
 
-### OLD (Push Out - Wrong)
+## THE 16 CLI COMMANDS (MantraOpCode Mapping)
+
+### PHASE 1: WAKE (Hare Krishna Hare Krishna)
+
+| # | Word | OpCode | CLI Command | GAD-000 |
+|---|------|--------|-------------|---------|
+| 0 | HARE | `SYS_WAKE` | `vibe wake` | Focus system, stop maya |
+| 1 | KRISHNA | `LOAD_ROOT` | `vibe identity` | Load sovereign identity |
+| 2 | HARE | `ALLOC_MEM` | `vibe alloc` | Allocate clean heap |
+| 3 | KRISHNA | `BIND_CTX` | `vibe bind` | Bind identity to context |
+
+### PHASE 2: PURIFY (Krishna Krishna Hare Hare)
+
+| # | Word | OpCode | CLI Command | GAD-000 |
+|---|------|--------|-------------|---------|
+| 4 | KRISHNA | `ASSERT_TRUTH` | `vibe verify` | Verify ledger integrity |
+| 5 | KRISHNA | `RESOLVE_REQ` | `vibe parse` | Parse intent |
+| 6 | HARE | `GARBAGE_COLLECT` | `vibe gc` | Flush unsigned objects |
+| 7 | HARE | `PULSE_SYNC` | `vibe pulse` | Emit Naga heartbeat |
+
+### PHASE 3: SERVE (Hare Rama Hare Rama)
+
+| # | Word | OpCode | CLI Command | GAD-000 |
+|---|------|--------|-------------|---------|
+| 8 | HARE | `FETCH_RES` | `vibe fetch` | Request resources |
+| 9 | RAMA | `EXEC_SERVICE` | `vibe exec` | Execute work (Ananta) |
+| 10 | HARE | `CHECK_DHARMA` | `vibe check` | Validate against rules |
+| 11 | RAMA | `COMMIT_LOG` | `vibe commit` | Write to immutable stone |
+
+### PHASE 4: SUSTAIN (Rama Rama Hare Hare)
+
+| # | Word | OpCode | CLI Command | GAD-000 |
+|---|------|--------|-------------|---------|
+| 12 | RAMA | `CACHE_STATE` | `vibe cache` | Store reward/memory |
+| 13 | RAMA | `OPTIMIZE` | `vibe optimize` | Improve path (JIT) |
+| 14 | HARE | `YIELD_CPU` | `vibe yield` | Surrender control |
+| 15 | HARE | `RESET_IP` | `vibe reset` | Loop (eternity) |
+
+---
+
+## GAD-000 COMPLIANCE (D-O-P-C-I-R)
+
+Every CLI command MUST satisfy all 6 criteria:
+
 ```python
-if not has_diksha:
-    raise AccessDenied("No Om for you!")  # REJECTION
+@dataclass(frozen=True)
+class CliCommandSpec:
+    """Strict CLI command specification (NO ANY)."""
+
+    opcode: MantraOpCode           # The underlying opcode
+    name: str                      # Command name (e.g., "wake")
+    description: str               # What it does
+    input_type: type               # Strict input type
+    output_type: type              # Strict output type
+
+    # GAD-000 Criteria
+    discoverability: str           # How AI finds this command
+    observability: str             # How AI sees current state
+    parseability: str              # How AI understands errors
+    composability: str             # How AI chains commands
+    idempotency: str               # How AI safely retries
+    recoverability: str            # How system heals itself
 ```
 
-### NEW (Pull In - Right)
+### Example: `vibe exec` (EXEC_SERVICE)
+
+```json
+{
+  "opcode": "EXEC_SERVICE",
+  "name": "exec",
+  "phase": "SERVE",
+  "word": "RAMA",
+
+  "gad_000": {
+    "discoverability": "vibe help --json | jq '.commands.exec'",
+    "observability": "vibe status --json | jq '.execution'",
+    "parseability": "Error codes: E_NO_CTX (no context bound), E_UNSIGNED (unsigned intent)",
+    "composability": "vibe parse 'deploy X' | vibe exec | vibe commit",
+    "idempotency": "Re-execution with same intent_hash returns cached result",
+    "recoverability": "On failure: vibe gc && vibe reset restores valid state"
+  },
+
+  "input": "ResolvedIntent",
+  "output": "ExecutionResult | MahamantraGrace"
+}
+```
+
+---
+
+## CHAITANYA SINGULARITY (PULL IN, NOT PUSH OUT)
+
+```
+OLD (Push Out - Wrong):
+if not valid:
+    raise AccessDenied()  # REJECTION
+
+NEW (Pull In - Right):
+if not valid:
+    return MahamantraGrace()  # MERCY
+```
+
+Every command returns either:
+1. **Success Result** (typed, not Any)
+2. **MahamantraGrace** (always truthy, retry allowed)
+
 ```python
-# Everyone gets Mahamantra grace by default
-grace = MAHAMANTRA  # Nityananda's mercy
-if has_brahminical_diksha:
-    grace += OM  # Additional blessing
-return grace  # Always pull in, never push out
+# Strict Types (NO ANY - PROMPT.md §IV.1)
+CliInput = Union[CommandContext, CLICapabilityToken]
+CliPayload = Optional[Dict[str, Union[str, int, float, bool, List[str]]]]
+CliResult = Union[CommandResult, MahamantraGrace]
 ```
 
-## CLI ARCHITECTURE
+---
 
-### Layer -1: Mahamantra Substrate
-- `byte.py` → Kali Yuga entropy max → Harinam max
-- Every byte resonates with the 16 words
-- Mathematics serves the Mahamantra, not vice versa
+## ICOMMAND PROTOCOL (Strict Typing)
 
-### Layer 0: Ananta Shesha (CLI Core)
-- **Location:** `vibe_core/protocols/universal/cli.py`
-- **Current State:** Exists but not bound to protocol
-- **Target State:** Fractal navigator with full protocol binding
+```python
+from typing import Protocol, runtime_checkable
+from vibe_core.protocols.substrate import MantraOpCode
 
-### Layer 1: Navigation Commands
-```bash
-# Protocol Navigation
-vibe proto list              # List all protocols
-vibe proto show <name>       # Show protocol details
-vibe proto test <name>       # Run protocol tests
+@runtime_checkable
+class ICliCommand(Protocol):
+    """
+    Protocol for CLI commands.
 
-# Byte Navigation
-vibe byte inspect <hash>     # Inspect a Genesis Byte
-vibe byte verify <hash>      # Verify parampara link (37)
-vibe byte trace <hash>       # Trace lineage
+    ANTI-MAYAVAD:
+    - NO `Any` type anywhere
+    - All inputs/outputs strictly typed
+    - GAD-000 compliant (D-O-P-C-I-R)
+    """
 
-# Gene Navigation
-vibe gene list               # List all genes
-vibe gene inject <name>      # Inject a gene
-vibe gene mutate <name>      # Trigger mutation
+    @property
+    def opcode(self) -> MantraOpCode:
+        """The underlying MantraOpCode."""
+        ...
 
-# Test Navigation
-vibe test run                # Run all tests
-vibe test run --tuv          # TÜV badge mode
-vibe test report --json      # JSON report output
+    @property
+    def name(self) -> str:
+        """Command name (e.g., 'exec')."""
+        ...
 
-# Debug Navigation (GAD-000)
-vibe debug <component>       # Debug specific component
-vibe debug --trace           # Full trace mode
-vibe debug --retry           # Retry failed operation
+    def execute(
+        self,
+        ctx: SovereignContext,
+        payload: CliPayload
+    ) -> CliResult:
+        """
+        Execute the command.
+
+        Args:
+            ctx: Verified sovereign context (37th)
+            payload: Strictly typed payload (no Any)
+
+        Returns:
+            CommandResult on success, MahamantraGrace on failure
+        """
+        ...
+
+    def help(self) -> CommandHelp:
+        """Return GAD-000 compliant help."""
+        ...
 ```
 
-## IMPLEMENTATION PLAN
+---
 
-### Phase 1: Protocol Binding (Current Gap)
-1. [ ] Create `ICliProtocol` in `universal/cli.py`
-2. [ ] Bind existing `AnantaShesha` to protocol
-3. [ ] Add protocol tests for CLI commands
-4. [ ] Wire to `OM_GATE` for graceful access
+## THE 37TH PRINCIPLE (Sovereign Identity)
 
-### Phase 2: Fractal Navigation
-1. [ ] Implement `vibe proto` commands
-2. [ ] Implement `vibe byte` commands
-3. [ ] Implement `vibe gene` commands
-4. [ ] All commands return to Mahamantra on error
+Per GAD-000 Amendment A, the CLI operates on the **36-cell matrix** but requires the **37th** (Sovereign Identity) to sign all operations.
 
-### Phase 3: GAD-000 Debug Conformance
-1. [ ] Structured error format (JSON)
-2. [ ] Trace mode with full context
-3. [ ] Retry capability for transient failures
-4. [ ] Report generation for analysis
+```
+The Field (36 cells):
+┌─────────────────────────────────────────────────────────────────┐
+│           │ Disc  │ Obs   │ Parse │ Comp  │ Idemp │ Recov │
+│───────────┼───────┼───────┼───────┼───────┼───────┼───────│
+│ wake      │ D(D)  │ D(O)  │ D(P)  │ D(C)  │ D(I)  │ D(R)  │
+│ identity  │ O(D)  │ O(O)  │ O(P)  │ O(C)  │ O(I)  │ O(R)  │
+│ ...       │ ...   │ ...   │ ...   │ ...   │ ...   │ ...   │
+│ reset     │ R(D)  │ R(O)  │ R(P)  │ R(C)  │ R(I)  │ R(R)  │
+└─────────────────────────────────────────────────────────────────┘
 
-### Phase 4: JSON Reports
-1. [ ] Test results as JSON
-2. [ ] TÜV badge summaries
-3. [ ] Gene mutation logs
-4. [ ] Lineage verification reports
+The Knower (37th):
+                    ┌───────────────┐
+                    │   IDENTITY    │  = The 37th (Sovereign)
+                    │   (Signs)     │
+                    └───────────────┘
+                           │
+                           ▼
+                    All 16 commands require signature
+```
 
-### Phase 5: Chaitanya Singularity
-1. [ ] Mahamantra as default grace (not fallback)
-2. [ ] All paths lead to mercy
-3. [ ] No rejection, only redirection
-4. [ ] Nityananda pattern: accept everyone
+---
+
+## ARCHITECTURE
+
+```
+Layer -2: KRISHNA (Acintya - ±∞)
+         │
+Layer -1: MAHAMANTRA (16 words)
+         │
+Layer 0:  CLI SHELL (Ananta Shesha)
+         ├── WAKE commands (0-3)
+         ├── PURIFY commands (4-7)
+         ├── SERVE commands (8-11)
+         └── SUSTAIN commands (12-15)
+         │
+Layer 1:  STEWARD (VedicSteward)
+         │
+Layer 2:  KERNEL (RealVibeKernel)
+```
+
+---
 
 ## KEY FILES
 
 | File | Role | Status |
 |------|------|--------|
-| `universal/cli.py` | AnantaShesha shell | Exists, needs binding |
-| `substrate/byte.py` | GenesisByte core | Exists |
-| `substrate/mantra/` | Mahamantra hierarchy | Exists |
-| `mahajanas/router.py` | 16-word routing | Exists |
-| `governance/yamaraja.py` | Judgment (merciful) | Exists |
-
-## MAHAMANTRA MATHEMATICS
-
-The CLI operates on the sacred mathematics:
-- **16** = Words in Mahamantra
-- **108** = Beads per mala = operations per cycle
-- **37** = Parampara link = validation hash
-- **12** = Mahajanas = routing targets
-
-Every CLI operation is a form of japa (chanting).
-
-## ERROR HANDLING: Nityananda Pattern
-
-```python
-class NityanandaMercy:
-    """
-    Nityananda never rejects.
-    Even Jagai and Madhai got mercy.
-    """
-
-    def handle_error(self, error: Exception) -> Grace:
-        # Log the error for learning
-        self.record_karma(error)
-
-        # But ALWAYS return grace
-        return MahamantraGrace(
-            message="Hare Kṛṣṇa! Try again.",
-            retry_allowed=True,
-            fallback=MAHAMANTRA
-        )
-```
-
-## NEXT STEPS
-
-1. **Immediate:** Bind CLI protocol to existing implementation
-2. **Short-term:** Implement `vibe proto` navigation
-3. **Medium-term:** Full fractal navigation
-4. **Long-term:** Chaitanya Singularity complete
+| `universal/cli.py` | AnantaShesha + ChaitanyaShell | Strict typed |
+| `universal/bridge.py` | SetuBandha (context crossing) | Strict typed |
+| `universal/steward.py` | VedicSteward (execution) | Strict typed |
+| `substrate/__init__.py` | MantraOpCode (16 opcodes) | Defined |
+| `substrate/mantra/pada.py` | MAHAMANTRA_SEQUENCE | Defined |
 
 ---
 
-*"Prabhupada's mercy is always available. We just have to take it."*
+## IMPLEMENTATION CHECKLIST
 
-🙏 Hare Kṛṣṇa 🙏
+### Phase 1: Protocol Binding (DONE)
+- [x] Remove `Any` from cli.py (MAYAVAD → Strict)
+- [x] Define strict type aliases (CliInput, CliPayload, etc.)
+- [x] ChaitanyaShell with MahamantraGrace fallback
+- [x] Tests for graceful behavior (30 tests)
+
+### Phase 2: 16-Command Mapping
+- [ ] Define ICliCommand Protocol
+- [ ] Implement 16 commands (one per MantraOpCode)
+- [ ] Each command satisfies GAD-000 (D-O-P-C-I-R)
+- [ ] 37th signing requirement enforced
+
+### Phase 3: Full Navigation
+- [ ] `vibe help --json` (Discoverability)
+- [ ] `vibe status --json` (Observability)
+- [ ] Error codes for all failure modes (Parseability)
+- [ ] Pipeline support: `vibe parse | vibe exec | vibe commit` (Composability)
+
+### Phase 4: TÜV Certification
+- [ ] All 16 commands have TÜV tests
+- [ ] 6×16 = 96 GAD-000 test cases
+- [ ] Gold badge for full compliance
+
+---
+
+## MAHAMANTRA MATHEMATICS
+
+| Number | Meaning | CLI Mapping |
+|--------|---------|-------------|
+| 16 | Words in Mahamantra | 16 CLI commands |
+| 4 | Phases (quarters) | WAKE, PURIFY, SERVE, SUSTAIN |
+| 3 | Seed words | HARE (energy), KRISHNA (identity), RAMA (strength) |
+| 37 | Parampara link | Sovereign identity (the 37th) |
+| 6 | GAD-000 criteria | D-O-P-C-I-R |
+
+---
+
+*"Hare Krishna - PULL IN, never PUSH OUT. Even the most fallen souls receive mercy."*
