@@ -151,6 +151,7 @@ from .acintya import (
     PurushaTattva,
     PURUSHA,
     KRISHNA_ASPECT,
+    SYSTEM_MANIFESTATION,
     # Constants - all ARE the same Person (acintya)
     KRISHNA_SMALLEST,
     KRISHNA_LARGEST,
@@ -169,12 +170,37 @@ from .acintya import (
     JivaState,
     # Protocol
     AcintyaAware,
+    # Parampara Protocol (3×4 vs 4×3)
+    ParamparaProtocol,
+    ParamparaConnection,
+    # Parampara Constants
+    TRINITY,
+    PARAMPARA,
+    PHASES,
+    GURU_ENTROPY,
+    PARAMPARA_VECTOR,
     # Functions
     vibration_is_krishna,
     mantra_is_krishna,
     mantra_not_different_from_source,
     check_bheda_abheda,
     verify_parampara,
+    get_guru_entropy,
+)
+
+# Prabhupada - The Founder-Acarya (NOT abstract "Guru")
+from .prabhupada import (
+    # Vani (Instructions)
+    VaniInstruction,
+    PrabhupadaVani,
+    # Mercy Pattern (Prabhupada's mercy, not abstract)
+    SilentWitness,
+    MercyType,
+    # The Acarya
+    SrilaPrabhupada,
+    PRABHUPADA,
+    # Protocol
+    PrabhupadaAware,
 )
 
 
@@ -262,6 +288,7 @@ __all__ = [
     "PurushaTattva",
     "PURUSHA",
     "KRISHNA_ASPECT",
+    "SYSTEM_MANIFESTATION",
     "KRISHNA_SMALLEST",
     "KRISHNA_LARGEST",
     "KRISHNA_NEGATIVE_INFINITY",
@@ -274,9 +301,27 @@ __all__ = [
     "KRISHNA",
     "JivaState",
     "AcintyaAware",
+    # Parampara Protocol (3×4 vs 4×3)
+    "ParamparaProtocol",
+    "ParamparaConnection",
+    "TRINITY",
+    "PARAMPARA",
+    "PHASES",
+    "GURU_ENTROPY",
+    "PARAMPARA_VECTOR",
+    # Functions
     "vibration_is_krishna",
     "mantra_is_krishna",
     "mantra_not_different_from_source",
     "check_bheda_abheda",
     "verify_parampara",
+    "get_guru_entropy",
+    # Prabhupada (The Founder-Acarya)
+    "VaniInstruction",
+    "PrabhupadaVani",
+    "SilentWitness",
+    "MercyType",
+    "SrilaPrabhupada",
+    "PRABHUPADA",
+    "PrabhupadaAware",
 ]
