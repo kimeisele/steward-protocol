@@ -20,7 +20,7 @@ Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 import json
 import logging
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from vibe_core.protocols.akashic import AkashicProtocol
@@ -151,7 +151,7 @@ class MemoryStore(AkashicProtocol):
             # Prune old memories before saving
             self._prune_old_memories()
 
-            data = {"memories": [m.to_dict() for m in self._memories], "updated_at": datetime.utcnow().isoformat()}
+            data = {"memories": [m.to_dict() for m in self._memories], "updated_at": datetime.now(timezone.utc).isoformat()}
 
             # Atomic write
             temp_file = self._memory_file.with_suffix(".tmp")
@@ -164,7 +164,7 @@ class MemoryStore(AkashicProtocol):
 
     def _prune_old_memories(self) -> None:
         """Remove memories older than retention period."""
-        cutoff = datetime.utcnow() - timedelta(days=self.MEMORY_RETENTION_DAYS)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=self.MEMORY_RETENTION_DAYS)
         cutoff_str = cutoff.isoformat()
 
         original_count = len(self._memories)
@@ -212,7 +212,7 @@ class MemoryStore(AkashicProtocol):
         entry = MemoryEntry(
             intent_type=intent_type,
             intent_description=description,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             outcome=outcome,
             context=context or {},
             feedback=feedback,
@@ -248,7 +248,7 @@ class MemoryStore(AkashicProtocol):
         Returns:
             True if we should wait before suggesting again
         """
-        cooldown_cutoff = datetime.utcnow() - timedelta(hours=self.FAILURE_COOLDOWN_HOURS)
+        cooldown_cutoff = datetime.now(timezone.utc) - timedelta(hours=self.FAILURE_COOLDOWN_HOURS)
         cooldown_str = cooldown_cutoff.isoformat()
 
         recent_failures = [
@@ -270,7 +270,7 @@ class MemoryStore(AkashicProtocol):
         Returns:
             True if user rejected this recently
         """
-        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
         cutoff_str = cutoff.isoformat()
 
         recent_rejections = [

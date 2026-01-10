@@ -14,7 +14,7 @@ CRITICAL MEMORY TESTS:
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -57,7 +57,7 @@ class TestMemoryEntry:
         entry = MemoryEntry(
             intent_type="test",
             intent_description="Test entry",
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             outcome="success",
         )
         result = entry.to_dict()
@@ -281,7 +281,7 @@ class TestMemoryPersistence:
         entry = MemoryEntry(
             intent_type="amnesia_test",
             intent_description="Testing memory",
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             outcome="success",
         )
 
