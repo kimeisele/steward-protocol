@@ -20,6 +20,7 @@ import functools
 import multiprocessing
 import uuid
 import logging
+import traceback
 from typing import Callable, Any, TypeVar, ParamSpec, Optional, Dict, Generic
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -48,6 +49,22 @@ class PranaTask(Generic[R]):
     kwargs: dict
     mantra_signature: str
 
+@dataclass
+class PranaFailure:
+    """
+    Represents a failed manifestation. 
+    Carries the trace of the entropy (Exception) back to the source.
+    """
+    error: Exception
+    traceback: str
+    task_id: str
+
+class MantraCrash(Exception):
+    """
+    Raised in the main thread when a worker dies.
+    """
+    pass
+
 class PranaFuture(Generic[R]):
     """
     The Nervous System (Nadi).
@@ -60,9 +77,22 @@ class PranaFuture(Generic[R]):
     def get(self, timeout: Optional[float] = None) -> R:
         """
         Synchronous waiting for the result.
-        Paradox: We use Async to be fast, but sometimes we MUST wait.
+        Unwraps PranaFailure -> Excetion (Immune Response).
         """
-        return self._val.get(timeout=timeout)
+        try:
+            result = self._val.get(timeout=timeout)
+            
+            # The Immune Check: Is it a Failure?
+            if isinstance(result, PranaFailure):
+                # Re-raise it locally so logic can handle it
+                # We could log here, but the Kernel logs errors too.
+                # Just bridging the gap.
+                raise result.error 
+                
+            return result # type: ignore
+            
+        except multiprocessing.TimeoutError:
+            raise TimeoutError(f"Task {self.task_id} timed out.")
 
     def wait(self, timeout: Optional[float] = None) -> None:
         self._val.wait(timeout)
@@ -81,6 +111,25 @@ class PranaFuture(Generic[R]):
 # --- 2. The Task Kernel (The State Organ) ---
 # MantraKernel: The Governor of Prana (Compute).
 # Distinct from 'TaskKernel' (Logical Sandbox).
+
+def _guarded_execution(task: PranaTask[R]) -> Any:
+    """
+    The Immune Wrapper. Runs on the 'Real Core'.
+    It catches exceptions and converts them into PranaFailure data.
+    Note: Returns Any because it returns either R or PranaFailure.
+    """
+    try:
+        # 1. Execute the Legacy Code
+        # Note: task.target might require unpacking args/kwargs or similar
+        # Based on how we constructed it: target=func, args=args, kwargs=kwargs
+        return task.target(*task.args, **task.kwargs)
+    except Exception as e:
+        # 2. Catch the Entropy
+        return PranaFailure(
+            error=e,
+            traceback=traceback.format_exc(),
+            task_id=task.id
+        )
 
 class MantraKernel:
     """
@@ -106,15 +155,18 @@ class MantraKernel:
         """
         if self.state == SysState.ENTROPY_HIGH:
             self.logger.error("⚠️ ENTROPY TOO HIGH. Rejecting Task.")
-            raise SystemError("MantraKernel Rejected Task: Entropy High")
+            raise MantraCrash("MantraKernel Rejected Task: Entropy High")
 
         self.logger.info(f"⚡ Injecting Prana into Task {task.id} [{task.mantra_signature}]")
         
         # Async execution on a real core
+        # We wrap the call in _guarded_execution
+        # Note: apply_async(func, args, kwds) arguments must be pickleable.
+        # _guarded_execution is top level, so it is pickleable.
+        
         async_result = self.pool.apply_async(
-            task.target, 
-            args=task.args, 
-            kwds=task.kwargs,
+            _guarded_execution, 
+            args=(task,), # Pass the task object as the argument
             callback=self._on_complete,
             error_callback=self._on_error
         )
@@ -126,10 +178,14 @@ class MantraKernel:
     def _on_complete(self, result: object) -> None:
         """The Echo returns."""
         # This callback runs in the result thread (helper).
-        self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
+        if isinstance(result, PranaFailure):
+             self.logger.warning(f"💀 Task Failed (Caught by Immune System): {result.error}")
+        else:
+             self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
 
     def _on_error(self, error: BaseException) -> None:
-        self.logger.error(f"💀 Task Failed (Orphan died): {error}")
+        # This caches POOL level mechanism errors, or unchecked errors
+        self.logger.error(f"💀 Task Failed (Orphan died/Unchecked): {error}")
 
     def purge_orphans(self) -> None:
         """
