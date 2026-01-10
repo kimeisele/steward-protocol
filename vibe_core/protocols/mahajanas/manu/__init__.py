@@ -22,21 +22,26 @@ Manu establishes ORDER. Without Manu = Anarchy.
 from typing import Protocol, runtime_checkable, Optional, List, Final
 from dataclasses import dataclass
 
+from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+
 
 # =============================================================================
 # PROTOCOL OWNERSHIP - Manu's Domain
 # =============================================================================
 
+OWNER: Final[Mahajana] = Mahajana.MANU
+
 OWNED_PROTOCOLS: Final[List[str]] = [
+    "manu",
     "dharma",
     "enforce",
-    "governance/yamaraja",  # Yamaraja judges, Manu provides law
-    "mahajanas/manu",
+    "governance",
+    "law",
 ]
 
-OWNED_OPCODES: Final[List[str]] = [
-    "BIND_CTX",      # Bind operation to context
-    "CHECK_DHARMA",  # Verify dharmic compliance
+OWNED_OPCODES: Final[List[MantraOpCode]] = [
+    MantraOpCode.BIND_CTX,
+    MantraOpCode.CHECK_DHARMA,
 ]
 
 
@@ -114,13 +119,14 @@ class NullManu:
 
 
 __all__ = [
+    # Ownership
+    "OWNER",
+    "OWNED_PROTOCOLS",
+    "OWNED_OPCODES",
     # Protocol
     "ManuProtocol",
     "NullManu",
     # Types
     "DharmaContext",
     "ManuVerdict",
-    # Ownership
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
 ]
