@@ -9,7 +9,7 @@ Proves that the @mantra_governed decorator successfully wraps legacy code.
 import pytest
 import time
 from unittest.mock import MagicMock
-from vibe_core.protocols.universal.sudarshana import mantra_governed, SUDARSHANA
+from vibe_core.protocols.universal.sudarshana import mantra_governed, KERNEL
 from vibe_core.protocols.universal.mantra import MantraOpCode
 from vibe_core.protocols.universal.types import SovereignContext, TranscendentalQuality
 
@@ -38,7 +38,7 @@ class MultiArgService:
 @pytest.fixture(autouse=True)
 def mock_kernel_pool():
     """
-    Patches the global SUDARSHANA.pool to avoid spawning real processes during unit tests.
+    Patches the global KERNEL.pool to avoid spawning real processes during unit tests.
     """
     mock_pool = MagicMock()
     mock_async = MagicMock()
@@ -48,15 +48,15 @@ def mock_kernel_pool():
     mock_async.get.return_value = "legacy_data_from_test.txt"
     mock_async.ready.return_value = True
     
-    original_pool = SUDARSHANA.pool
-    SUDARSHANA.pool = mock_pool
-    SUDARSHANA.active_manifestations.clear()
+    original_pool = KERNEL.pool
+    KERNEL.pool = mock_pool
+    KERNEL.active_manifestations.clear()
     
     yield mock_pool
     
     # Teardown
-    SUDARSHANA.pool = original_pool
-    SUDARSHANA.active_manifestations.clear()
+    KERNEL.pool = original_pool
+    KERNEL.active_manifestations.clear()
 
 # --- TESTS ---
 
@@ -87,7 +87,7 @@ def test_sudarshana_spin(mock_kernel_pool):
     # Check Kernel Logic ran
     assert mock_kernel_pool.apply_async.call_count == 1
     
-    assert len(SUDARSHANA.active_manifestations) > 0
+    assert len(KERNEL.active_manifestations) > 0
 
 
 def test_sudarshana_autodiscovery(mock_kernel_pool):
