@@ -9,30 +9,24 @@ Every CLI command is a Protocol. Each command maps to:
 - Mahajana (who owns it)
 - Phase (WAKE/PURIFY/SERVE/SUSTAIN)
 
-MAHAJANA MAPPING (12 Workers + 4 Avataras = 16):
-    WAKE Phase (0-3):
-        0. PRITHU (Avatara) - SYS_WAKE
-        1. BRAHMA - LOAD_ROOT (Identity)
-        2. NARADA - ALLOC_MEM (Resources)
-        3. SHAMBHU - BIND_CTX (Context)
+WIRING TO MAHAJANA PROTOCOLS:
+=============================
+This module uses the REAL Mahajana infrastructure from:
+- protocols/mahajanas/router.py (MahajanaRouter - THE CHANTING ENGINE)
+- protocols/mahajanas/protocol.py (MahajanaProtocol - handle() interface)
 
-    PURIFY Phase (4-7):
-        4. VYASA (Avatara) - ASSERT_TRUTH
-        5. KUMARAS - RESOLVE_REQ (Intent)
-        6. KAPILA - GARBAGE_COLLECT (Analysis)
-        7. MANU - PULSE_SYNC (Law/Heartbeat)
+No duplicate enums. No duplicate routing. Wire once, grow forever.
 
-    SERVE Phase (8-11):
-        8. PARASHURAMA (Avatara) - FETCH_RES
-        9. PRAHLADA - EXEC_SERVICE (Execution)
-        10. JANAKA - CHECK_DHARMA (Validation)
-        11. BHISHMA - COMMIT_LOG (Ledger)
+The router.py already has:
+- Mahajana enum (12 workers)
+- MahajanaRoute dataclass
+- _ROUTING_TABLE (OpCode → Mahajana)
+- HEAD_OPCODES (4 Avataras: Prithu, Vyasa, Parashurama, Nrisimha)
 
-    SUSTAIN Phase (12-15):
-        12. NRISIMHA (Avatara) - CACHE_STATE
-        13. BALI - OPTIMIZE (Surrender/Optimization)
-        14. SHUKA - YIELD_CPU (Vision/Yield)
-        15. YAMARAJA - RESET_IP (Judgment/Reset)
+This CLI layer USES that infrastructure, adding:
+- Phase enum (4 phases)
+- INagaCommand protocol (CLI-specific interface)
+- NagaCommandRegistry (auto-discovery)
 
 STRICT TYPING (NO ANY):
 Per PROMPT.md IV.1 - All types explicit, no Any allowed.
@@ -44,36 +38,76 @@ from typing import Dict, List, Optional, Protocol, Tuple, runtime_checkable
 
 from vibe_core.protocols.substrate import MantraOpCode
 
+# =============================================================================
+# IMPORT FROM REAL MAHAJANA INFRASTRUCTURE
+# =============================================================================
+# No duplicate enums! Use the REAL router.
+from vibe_core.protocols.mahajanas.router import (
+    Mahajana as RouterMahajana,
+    MahajanaRouter,
+    get_router,
+    route as mahajana_route,
+    HEAD_OPCODES,
+)
+
 
 # =============================================================================
-# MAHAJANA REGISTRY
+# EXTENDED MAHAJANA ENUM (Adds 4 Avataras to 12 Mahajanas)
 # =============================================================================
+# The router.py has only the 12 Mahajanas. We extend with 4 Avataras for CLI.
 
 class Mahajana(str, Enum):
-    """The 12 Mahajanas + 4 Avataras who own the 16 opcodes."""
+    """
+    The 12 Mahajanas + 4 Avataras who own the 16 opcodes.
+
+    Maps to protocols/mahajanas/router.Mahajana for the 12 workers.
+    Adds 4 HEAD positions (Avataras) for CLI completeness.
+    """
     # WAKE Phase (0-3)
-    PRITHU = "prithu"          # Avatara - SYS_WAKE
+    PRITHU = "prithu"          # Avatara - SYS_WAKE (HEAD Q1)
     BRAHMA = "brahma"          # LOAD_ROOT
     NARADA = "narada"          # ALLOC_MEM
     SHAMBHU = "shambhu"        # BIND_CTX
 
     # PURIFY Phase (4-7)
-    VYASA = "vyasa"            # Avatara - ASSERT_TRUTH
+    VYASA = "vyasa"            # Avatara - ASSERT_TRUTH (HEAD Q2)
     KUMARAS = "kumaras"        # RESOLVE_REQ
     KAPILA = "kapila"          # GARBAGE_COLLECT
     MANU = "manu"              # PULSE_SYNC
 
     # SERVE Phase (8-11)
-    PARASHURAMA = "parashurama"  # Avatara - FETCH_RES
+    PARASHURAMA = "parashurama"  # Avatara - FETCH_RES (HEAD Q3)
     PRAHLADA = "prahlada"        # EXEC_SERVICE
     JANAKA = "janaka"            # CHECK_DHARMA
     BHISHMA = "bhishma"          # COMMIT_LOG
 
     # SUSTAIN Phase (12-15)
-    NRISIMHA = "nrisimha"      # Avatara - CACHE_STATE
+    NRISIMHA = "nrisimha"      # Avatara - CACHE_STATE (HEAD Q4)
     BALI = "bali"              # OPTIMIZE
     SHUKA = "shuka"            # YIELD_CPU
     YAMARAJA = "yamaraja"      # RESET_IP
+
+    @classmethod
+    def from_router(cls, router_mahajana: RouterMahajana) -> "Mahajana":
+        """Convert from router.Mahajana to CLI Mahajana."""
+        return cls(router_mahajana.value)
+
+    def to_router(self) -> Optional[RouterMahajana]:
+        """Convert to router.Mahajana (None if Avatara)."""
+        try:
+            return RouterMahajana(self.value)
+        except ValueError:
+            return None  # Avataras don't exist in router
+
+    @property
+    def is_avatara(self) -> bool:
+        """Check if this is an Avatara (HEAD position)."""
+        return self in {
+            Mahajana.PRITHU,
+            Mahajana.VYASA,
+            Mahajana.PARASHURAMA,
+            Mahajana.NRISIMHA,
+        }
 
 
 class Phase(str, Enum):
@@ -85,26 +119,50 @@ class Phase(str, Enum):
 
 
 # =============================================================================
-# OPCODE → MAHAJANA MAPPING
+# OPCODE → MAHAJANA ROUTING (Uses REAL MahajanaRouter)
 # =============================================================================
+# These mappings are DERIVED from the real router, with Avataras added.
+# The router only has 12 workers. We add 4 HEAD opcodes for Avataras.
 
+# HEAD OpCodes → Avataras (not in router.py's 12-Mahajana table)
+_HEAD_TO_AVATARA: Dict[MantraOpCode, Mahajana] = {
+    MantraOpCode.SYS_WAKE: Mahajana.PRITHU,       # Q1 HEAD
+    MantraOpCode.ASSERT_TRUTH: Mahajana.VYASA,   # Q2 HEAD
+    MantraOpCode.FETCH_RES: Mahajana.PARASHURAMA,# Q3 HEAD
+    MantraOpCode.CACHE_STATE: Mahajana.NRISIMHA, # Q4 HEAD
+}
+
+
+def route_opcode(opcode: MantraOpCode) -> Mahajana:
+    """
+    Route an OpCode to its owning Mahajana.
+
+    USES THE REAL MAHAJANA ROUTER (Vyuha mode) for worker opcodes.
+    Adds HEAD opcode → Avatara mapping for completeness.
+
+    Vyuha mode (legacy=False) provides the 12→12 mapping:
+    - Each of 12 Mahajanas owns exactly 1 worker opcode
+    - 4 HEAD opcodes are owned by Avataras
+
+    This is the SINGLE SOURCE OF TRUTH for CLI routing.
+    """
+    # HEAD opcodes → Avataras
+    if opcode in _HEAD_TO_AVATARA:
+        return _HEAD_TO_AVATARA[opcode]
+
+    # Worker opcodes → use REAL router in VYUHA mode (1:1 mapping)
+    try:
+        vyuha_router = MahajanaRouter(legacy=False)
+        router_mahajana = vyuha_router.route(opcode)
+        return Mahajana.from_router(router_mahajana)
+    except ValueError:
+        # Fallback (should not happen if router is complete)
+        raise ValueError(f"Unknown OpCode: {opcode}")
+
+
+# Static table for backward compatibility (generated from route_opcode)
 OPCODE_TO_MAHAJANA: Dict[MantraOpCode, Mahajana] = {
-    MantraOpCode.SYS_WAKE: Mahajana.PRITHU,
-    MantraOpCode.LOAD_ROOT: Mahajana.BRAHMA,
-    MantraOpCode.ALLOC_MEM: Mahajana.NARADA,
-    MantraOpCode.BIND_CTX: Mahajana.SHAMBHU,
-    MantraOpCode.ASSERT_TRUTH: Mahajana.VYASA,
-    MantraOpCode.RESOLVE_REQ: Mahajana.KUMARAS,
-    MantraOpCode.GARBAGE_COLLECT: Mahajana.KAPILA,
-    MantraOpCode.PULSE_SYNC: Mahajana.MANU,
-    MantraOpCode.FETCH_RES: Mahajana.PARASHURAMA,
-    MantraOpCode.EXEC_SERVICE: Mahajana.PRAHLADA,
-    MantraOpCode.CHECK_DHARMA: Mahajana.JANAKA,
-    MantraOpCode.COMMIT_LOG: Mahajana.BHISHMA,
-    MantraOpCode.CACHE_STATE: Mahajana.NRISIMHA,
-    MantraOpCode.OPTIMIZE: Mahajana.BALI,
-    MantraOpCode.YIELD_CPU: Mahajana.SHUKA,
-    MantraOpCode.RESET_IP: Mahajana.YAMARAJA,
+    opcode: route_opcode(opcode) for opcode in MantraOpCode
 }
 
 MAHAJANA_TO_OPCODE: Dict[Mahajana, MantraOpCode] = {v: k for k, v in OPCODE_TO_MAHAJANA.items()}
@@ -401,7 +459,14 @@ __all__ = [
     # Enums
     "Mahajana",
     "Phase",
-    # Mappings
+    # Router bridge (from protocols/mahajanas/router.py)
+    "RouterMahajana",
+    "MahajanaRouter",
+    "get_router",
+    "HEAD_OPCODES",
+    # Routing function (uses REAL router)
+    "route_opcode",
+    # Mappings (backward compat, derived from router)
     "OPCODE_TO_MAHAJANA",
     "MAHAJANA_TO_OPCODE",
     "OPCODE_TO_PHASE",

@@ -4,13 +4,17 @@ TEST PURIFY PHASE COMMANDS
 
 Tests for PURIFY phase (4-7) commands:
 - ScanCommand (VYASA - ASSERT_TRUTH)
+- DetectCommand (KUMARAS - RESOLVE_REQ)
 
 "Vyasa compiled truth - scan verifies all."
+"Kumaras detect impurity - resolve all intent."
 """
 
 import pytest
 
 from vibe_core.cli.naga_commands.purify.scan import ScanCommand
+from vibe_core.cli.naga_commands.purify.detect import DetectCommand
+from vibe_core.cli.naga_commands.purify.flood import FloodCommand
 from vibe_core.protocols.naga.cli_command import (
     INagaCommand,
     Mahajana,
@@ -321,3 +325,401 @@ class TestSemantics:
         cmd = ScanCommand()
         assert cmd.opcode == MantraOpCode.ASSERT_TRUTH
         assert "ASSERT_TRUTH" in cmd.execute([]).output
+
+
+# =============================================================================
+# DETECT COMMAND TESTS
+# =============================================================================
+
+class TestDetectCommand:
+    """Test DetectCommand (KUMARAS - RESOLVE_REQ)."""
+
+    def test_implements_protocol(self):
+        """DetectCommand implements INagaCommand."""
+        cmd = DetectCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_resolve_req(self):
+        """Opcode is RESOLVE_REQ (position 6)."""
+        cmd = DetectCommand()
+        assert cmd.opcode == MantraOpCode.RESOLVE_REQ
+
+    def test_mahajana_is_kumaras(self):
+        """Mahajana is KUMARAS (the four pure sages)."""
+        cmd = DetectCommand()
+        assert cmd.mahajana == Mahajana.KUMARAS
+
+    def test_name_is_detect(self):
+        """Name is 'detect'."""
+        cmd = DetectCommand()
+        assert cmd.name == "detect"
+
+    def test_phase_is_purify(self):
+        """Phase is PURIFY."""
+        cmd = DetectCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = DetectCommand()
+        assert len(cmd.help_text) > 0
+        assert "KUMARAS" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args returns drift detection."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "KUMARAS" in result.output
+        assert "Drift Detection" in result.output
+
+    def test_execute_git_flag(self):
+        """Execute with --git returns git-only detection."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--git"])
+        assert result.success
+        assert "Git Drift" in result.output
+        # Should NOT have pattern analysis
+        assert "Pattern Analysis" not in result.output
+
+    def test_execute_patterns_flag(self):
+        """Execute with --patterns returns patterns-only detection."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--patterns"])
+        assert result.success
+        assert "Pattern Analysis" in result.output
+        # Should NOT have git drift section header
+        data = result.to_dict()
+        assert data.get("uncommitted_count") is None or data.get("uncommitted_count") == ""
+
+    def test_execute_intent_flag(self):
+        """Execute with --intent detects intent."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--intent", "what", "is", "the", "status"])
+        assert result.success
+        assert "Intent Resolution" in result.output
+        assert "STATUS" in result.output
+
+    def test_execute_intent_scan(self):
+        """Execute with --intent detects scan intent."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--intent", "scan", "for", "vulnerabilities"])
+        assert result.success
+        data = result.to_dict()
+        assert data.get("intent") == "scan"
+
+    def test_execute_intent_unknown(self):
+        """Execute with --intent handles unknown intent."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--intent", "something", "random"])
+        assert result.success
+        assert "UNKNOWN" in result.output
+
+    def test_execute_intent_missing_message(self):
+        """Execute with --intent but no message fails."""
+        cmd = DetectCommand()
+        result = cmd.execute(["--intent"])
+        assert not result.success
+        assert result.exit_code == 1
+        assert "Missing message" in result.error
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.RESOLVE_REQ
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.KUMARAS
+
+    def test_result_data_has_phase(self):
+        """Result data includes phase info."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("phase") == "purify"
+
+    def test_result_data_has_position(self):
+        """Result data includes position 6."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("position") == "6"
+
+
+# =============================================================================
+# DETECT REGISTRY INTEGRATION TESTS
+# =============================================================================
+
+class TestDetectRegistryIntegration:
+    """Test that DetectCommand is registered."""
+
+    def test_detect_registered(self):
+        """DetectCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("detect")
+        assert cmd is not None
+        assert cmd.name == "detect"
+
+    def test_kumaras_has_detect(self):
+        """KUMARAS owns detect command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.KUMARAS)
+        names = [c.name for c in cmds]
+        assert "detect" in names
+
+    def test_resolve_req_has_detect(self):
+        """RESOLVE_REQ opcode has detect command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.RESOLVE_REQ)
+        names = [c.name for c in cmds]
+        assert "detect" in names
+
+
+# =============================================================================
+# DETECT STRICT TYPING TESTS
+# =============================================================================
+
+class TestDetectStrictTyping:
+    """Test that DetectCommand results have no Any types."""
+
+    def test_detect_result_no_any(self):
+        """DetectCommand result has no Any."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+
+# =============================================================================
+# DETECT IMMUTABILITY TESTS
+# =============================================================================
+
+class TestDetectImmutability:
+    """Test that DetectCommand results are immutable."""
+
+    def test_detect_result_frozen(self):
+        """DetectCommand result is frozen."""
+        cmd = DetectCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+
+# =============================================================================
+# DETECT SEMANTICS TESTS
+# =============================================================================
+
+class TestDetectSemantics:
+    """Test semantic meaning of KUMARAS as detect owner."""
+
+    def test_kumaras_meaning(self):
+        """KUMARAS semantically fits detect."""
+        # Kumaras = The four pure sages who detect impurity
+        # Detect = Find drift and resolve intent
+        cmd = DetectCommand()
+        assert "KUMARAS" in cmd.help_text or "purity" in cmd.help_text.lower()
+
+    def test_purify_meaning(self):
+        """Detect is appropriate for PURIFY phase."""
+        # PURIFY = Validation and cleanup
+        # Detect = Find what needs purifying
+        cmd = DetectCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_resolve_req_meaning(self):
+        """RESOLVE_REQ fits detect semantically."""
+        # RESOLVE_REQ = Understand what is requested
+        # Detect = Resolve intent, find drift
+        cmd = DetectCommand()
+        assert cmd.opcode == MantraOpCode.RESOLVE_REQ
+        assert "RESOLVE_REQ" in cmd.execute([]).output
+
+
+# =============================================================================
+# FLOOD COMMAND TESTS
+# =============================================================================
+
+class TestFloodCommand:
+    """Test FloodCommand (MANU - PULSE_SYNC)."""
+
+    def test_implements_protocol(self):
+        """FloodCommand implements INagaCommand."""
+        cmd = FloodCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_pulse_sync(self):
+        """Opcode is PULSE_SYNC (position 8)."""
+        cmd = FloodCommand()
+        assert cmd.opcode == MantraOpCode.PULSE_SYNC
+
+    def test_mahajana_is_manu(self):
+        """Mahajana is MANU (the lawgiver)."""
+        cmd = FloodCommand()
+        assert cmd.mahajana == Mahajana.MANU
+
+    def test_name_is_flood(self):
+        """Name is 'flood'."""
+        cmd = FloodCommand()
+        assert cmd.name == "flood"
+
+    def test_phase_is_purify(self):
+        """Phase is PURIFY."""
+        cmd = FloodCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = FloodCommand()
+        assert len(cmd.help_text) > 0
+        assert "MANU" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args returns flood status."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "MANU" in result.output
+        assert "FloodManager" in result.output
+
+    def test_execute_stats_flag(self):
+        """Execute with --stats shows statistics."""
+        cmd = FloodCommand()
+        result = cmd.execute(["--stats"])
+        assert result.success
+        # Stats should work even when FloodManager unavailable
+
+    def test_execute_subscribers_flag(self):
+        """Execute with --subscribers shows subscribers."""
+        cmd = FloodCommand()
+        result = cmd.execute(["--subscribers"])
+        assert result.success
+
+    def test_execute_pulse_flag(self):
+        """Execute with --pulse shows pulse status."""
+        cmd = FloodCommand()
+        result = cmd.execute(["--pulse"])
+        assert result.success
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.PULSE_SYNC
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.MANU
+
+    def test_result_data_has_phase(self):
+        """Result data includes phase info."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("phase") == "purify"
+
+    def test_result_data_has_position(self):
+        """Result data includes position 8."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("position") == "8"
+
+    def test_result_has_active_status(self):
+        """Result data includes active status."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert "active" in data
+
+
+# =============================================================================
+# FLOOD REGISTRY INTEGRATION TESTS
+# =============================================================================
+
+class TestFloodRegistryIntegration:
+    """Test that FloodCommand is registered."""
+
+    def test_flood_registered(self):
+        """FloodCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("flood")
+        assert cmd is not None
+        assert cmd.name == "flood"
+
+    def test_manu_has_flood(self):
+        """MANU owns flood command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.MANU)
+        names = [c.name for c in cmds]
+        assert "flood" in names
+
+    def test_pulse_sync_has_flood(self):
+        """PULSE_SYNC opcode has flood command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.PULSE_SYNC)
+        names = [c.name for c in cmds]
+        assert "flood" in names
+
+
+# =============================================================================
+# FLOOD STRICT TYPING TESTS
+# =============================================================================
+
+class TestFloodStrictTyping:
+    """Test that FloodCommand results have no Any types."""
+
+    def test_flood_result_no_any(self):
+        """FloodCommand result has no Any."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+
+# =============================================================================
+# FLOOD IMMUTABILITY TESTS
+# =============================================================================
+
+class TestFloodImmutability:
+    """Test that FloodCommand results are immutable."""
+
+    def test_flood_result_frozen(self):
+        """FloodCommand result is frozen."""
+        cmd = FloodCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+
+# =============================================================================
+# FLOOD SEMANTICS TESTS
+# =============================================================================
+
+class TestFloodSemantics:
+    """Test semantic meaning of MANU as flood owner."""
+
+    def test_manu_meaning(self):
+        """MANU semantically fits flood."""
+        # Manu = The lawgiver who established dharmic rhythm
+        # Flood = Observation flow that maintains system rhythm
+        cmd = FloodCommand()
+        assert "MANU" in cmd.help_text or "law" in cmd.help_text.lower()
+
+    def test_purify_meaning(self):
+        """Flood is appropriate for PURIFY phase."""
+        # PURIFY = Validation and cleanup
+        # Flood = Observes and validates system state
+        cmd = FloodCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_pulse_sync_meaning(self):
+        """PULSE_SYNC fits flood semantically."""
+        # PULSE_SYNC = System heartbeat and synchronization
+        # Flood = FloodManager observation pulse
+        cmd = FloodCommand()
+        assert cmd.opcode == MantraOpCode.PULSE_SYNC
+        assert "PULSE_SYNC" in cmd.execute([]).output

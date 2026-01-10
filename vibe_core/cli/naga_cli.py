@@ -80,7 +80,11 @@ class NagaCLI:
         """
         Main entry point.
 
-        Routes to subcommands.
+        PROTOCOL-FIRST ROUTING:
+        1. First try NagaCommandRegistry (protocol-based commands)
+        2. Fall back to legacy cmd_* methods for unimplemented commands
+
+        This enables gradual migration from legacy to protocol-based commands.
         """
         if not args:
             self._print_usage()
@@ -88,35 +92,85 @@ class NagaCLI:
 
         cmd = args[0]
 
-        if cmd == "status":
-            return self.cmd_status(args[1:])
-        elif cmd == "scan":
-            return self.cmd_scan(args[1:])
-        elif cmd == "detect":
-            return self.cmd_detect(args[1:])
-        elif cmd == "flood":
-            return self.cmd_flood(args[1:])
-        elif cmd == "bite":
-            return self.cmd_bite(args[1:])
-        elif cmd == "remediate":
-            return self.cmd_remediate(args[1:])
-        elif cmd == "audit":
-            return self.cmd_audit(args[1:])
-        elif cmd == "prahlad":
-            return self.cmd_prahlad(args[1:])
-        elif cmd == "chaos":
-            return self.cmd_chaos(args[1:])
-        elif cmd == "chat":
-            return self.cmd_chat(args[1:])
-        elif cmd == "intel":
-            return self.cmd_intel(args[1:])
-        elif cmd == "help" or cmd == "--help":
+        if cmd == "help" or cmd == "--help":
             self._print_usage()
             return 0
-        else:
-            print(f"Unknown command: {cmd}")
-            self._print_usage()
-            return 1
+
+        # =================================================================
+        # PROTOCOL-FIRST: Try NagaCommandRegistry
+        # =================================================================
+        result = self._try_protocol_command(cmd, args[1:])
+        if result is not None:
+            return result
+
+        # =================================================================
+        # LEGACY FALLBACK: Route to cmd_* methods
+        # =================================================================
+        legacy_handlers = {
+            "status": self.cmd_status,
+            "scan": self.cmd_scan,
+            "detect": self.cmd_detect,
+            "flood": self.cmd_flood,
+            "bite": self.cmd_bite,
+            "remediate": self.cmd_remediate,
+            "audit": self.cmd_audit,
+            "prahlad": self.cmd_prahlad,
+            "chaos": self.cmd_chaos,
+            "chat": self.cmd_chat,
+            "intel": self.cmd_intel,
+        }
+
+        handler = legacy_handlers.get(cmd)
+        if handler:
+            return handler(args[1:])
+
+        print(f"Unknown command: {cmd}")
+        self._print_usage()
+        return 1
+
+    def _try_protocol_command(self, cmd: str, args: List[str]) -> Optional[int]:
+        """
+        Try to execute a command via NagaCommandRegistry.
+
+        Returns:
+            Exit code if protocol command exists and executed, None otherwise.
+
+        PROTOCOL ROUTING:
+        Uses the fractal CLI architecture from protocols/naga/cli_command.py.
+        Commands route through MahajanaRouter to their owning Mahajana.
+        """
+        try:
+            # Import protocol infrastructure
+            from vibe_core.cli.naga_commands import discover_commands
+            from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
+
+            # Ensure commands are discovered (Balarama pattern)
+            discover_commands()
+
+            # Try to get protocol command
+            protocol_cmd = NAGA_COMMAND_REGISTRY.get(cmd)
+            if protocol_cmd is None:
+                return None  # No protocol command, fall back to legacy
+
+            # Execute protocol command
+            result = protocol_cmd.execute(args)
+
+            # Print output
+            if result.output:
+                print(result.output)
+            if result.error:
+                print(f"Error: {result.error}")
+
+            return result.exit_code
+
+        except ImportError as e:
+            # Protocol infrastructure not available, fall back to legacy
+            logger.debug(f"Protocol infrastructure unavailable: {e}")
+            return None
+        except Exception as e:
+            # Log error but fall back to legacy
+            logger.warning(f"Protocol command failed, falling back to legacy: {e}")
+            return None
 
     def _print_usage(self):
         """Print NAGA CLI usage."""
