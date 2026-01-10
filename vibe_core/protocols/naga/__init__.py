@@ -150,6 +150,30 @@ from vibe_core.protocols.naga.cortex import (
     ThreatSummary,
 )
 
+# Flood (NARADA - The Messenger)
+from vibe_core.protocols.naga.flood import (
+    FloodProtocol,
+    FloodConsumerProtocol,
+    NullFlood,
+    FloodLayer,
+    FloodStatus,
+    FloodStats,
+    FloodConfig,
+    FloodSignal,
+    FloodObservation,
+)
+
+# Intel Bridge (SHUKA - The Visionary)
+from vibe_core.protocols.naga.intel_bridge import (
+    IntelBridgeProtocol,
+    NullIntelBridge,
+    IntelCategory,
+    IntelPriority,
+    IntelItem,
+    IntelQuery,
+    IntelResponse,
+)
+
 # Federation
 from vibe_core.protocols.naga.federation import (
     NagaFederationProtocol,
@@ -308,4 +332,22 @@ __all__ = [
     "ProtocolCoverageReport",
     # Backward compat
     "TÜVRegistry",
+    # Flood (NARADA - The Messenger)
+    "FloodProtocol",
+    "FloodConsumerProtocol",
+    "NullFlood",
+    "FloodLayer",
+    "FloodStatus",
+    "FloodStats",
+    "FloodConfig",
+    "FloodSignal",
+    "FloodObservation",
+    # Intel Bridge (SHUKA - The Visionary)
+    "IntelBridgeProtocol",
+    "NullIntelBridge",
+    "IntelCategory",
+    "IntelPriority",
+    "IntelItem",
+    "IntelQuery",
+    "IntelResponse",
 ]
