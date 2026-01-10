@@ -283,4 +283,97 @@ Layer 2:  KERNEL (RealVibeKernel)
 
 ---
 
+## SEMANTIC LAYER (NEW - Session 2026-01-10)
+
+The semantic layer bridges natural language intent to MantraOpCode execution.
+
+### THE SEMANTIC STACK
+
+```
+Layer 1 (User):      "create an agent"
+                          │
+                          ▼
+Layer 0 (Cognitive): OperatorCognitiveProtocol.process_intent()
+                          │
+                     CognitiveResult(IntentType.EXECUTE, syscall="SPAWN_COGNITION")
+                          │
+                          ▼
+Layer -1 (Bridge):   IntentOpCodeBridge.translate()
+                          │
+                     MantraOpCode.ALLOC_MEM (confidence: 0.95)
+                          │
+                          ▼
+Layer -2 (Router):   MahajanaRouter.route()
+                          │
+                     Mahajana.BRAHMA (Creator, Quarter 1)
+                          │
+                          ▼
+Layer -3 (Execute):  Mahajana.handle() → Result
+```
+
+### KEY SEMANTIC PROTOCOLS
+
+| Protocol | File | Purpose | Tests |
+|----------|------|---------|-------|
+| `IntentOpCodeBridge` | `universal/intent_bridge.py` | IntentType → MantraOpCode | 32 |
+| `SemanticRouter` | `universal/semantic_router.py` | Full CognitiveResult → Mahajana flow | 25 |
+| `ChatProtocol` | `protocols/chat.py` | Chat contract (EXEC_SERVICE, SERVE, RAMA) | 27 |
+| `LanguageProtocol` | `protocols/language.py` | 3-level text (Western/Sanskrit/Diacritics) | 41 |
+
+### SYSCALL → OPCODE → MAHAJANA MAPPING
+
+```
+SPAWN_COGNITION   → ALLOC_MEM       → BRAHMA   (creates)
+DESTROY_COGNITION → GARBAGE_COLLECT → SHAMBHU  (destroys)
+GRANT_MANDATE     → BIND_CTX        → MANU     (law)
+SWEAR_OATH        → COMMIT_LOG      → BHISHMA  (vows)
+RECORD_KARMA      → COMMIT_LOG      → BHISHMA  (ledger)
+BROADCAST_EVENT   → PULSE_SYNC      → NARADA   (communication)
+```
+
+### THE THREE LANGUAGE LEVELS
+
+```
+Level 1: WESTERN    "Hare Krishna"       (ASCII)
+Level 2: SANSKRIT   हरे कृष्ण             (Devanagari)
+Level 3: DIACRITICS "Hare Kṛṣṇa"         (IAST - precise)
+
+Fractal: Each character maps 1:1 across levels.
+```
+
+### TRANSLATION LAYER (Resonance-First)
+
+```
+THE ŚRAVAṆAM PRINCIPLE:
+Hearing comes first. Sound is the universal connector.
+
+Layer 1: RESONANCE (Śabda)  → Sound/vibration pattern
+Layer 2: MEANING (Artha)     → Semantic content (language-independent)
+Layer 3: FORM (Rūpa)         → Written representation
+
+German ↔ English ↔ Sanskrit
+   ↑         ↑         ↑
+   All connect through RESONANCE first!
+```
+
+| Protocol | Purpose | Tests |
+|----------|---------|-------|
+| `TranslationProtocol` | Full translation flow | 45 |
+| `ResonanceProtocol` | Sound/vibration layer | (in translation.py) |
+
+**Vedic Phoneme Classification:**
+- sthana (place): kaṇṭha (throat), tālu (palate), danta (teeth)
+- prayatna (effort): spṛṣṭa (contact), īṣat-spṛṣṭa (slight contact)
+
+### IMPLEMENTATION STATUS
+
+- [x] IntentOpCodeBridge (32 tests)
+- [x] SemanticRouter (25 tests)
+- [x] ChatProtocol (27 tests)
+- [x] LanguageProtocol (41 tests)
+- [x] TranslationProtocol (45 tests)
+- [x] Total: 170 new semantic tests
+
+---
+
 *"Hare Krishna - PULL IN, never PUSH OUT. Even the most fallen souls receive mercy."*
