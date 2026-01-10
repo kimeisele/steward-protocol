@@ -14,7 +14,10 @@ These tests verify:
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+import tempfile
+from pathlib import Path
+from typing import List, Optional, Union
+from vibe_core.protocols.system_shell import ShellProtocol, ShellResult
 
 # =============================================================================
 # SECTION 1: DATA MODEL TESTS
@@ -327,8 +330,51 @@ class TestSutraWeaver:
 # =============================================================================
 
 
+# =============================================================================
+# SECTION 3: WIKI SYNC TESTS (PROTOCOL COMPLIANT)
+# =============================================================================
+
+
+class StubShell:
+    """
+    YAMARAJA COMPLIANT: Stub implementation of ShellProtocol.
+    """
+
+    def __init__(self):
+        self.commands: List[List[str]] = []
+        self.responses: dict = {} # map command[0] or full command string to ShellResult
+        self.default_response = ShellResult(stdout="", stderr="", returncode=0)
+
+    def run(
+        self,
+        command: List[str],
+        cwd: Optional[Union[str, Path]] = None,
+        check: bool = False,
+        env: Optional[dict] = None
+    ) -> ShellResult:
+        self.commands.append(command)
+        
+        # Simple matching for tests
+        cmd_str = " ".join(command)
+        if cmd_str in self.responses:
+            res = self.responses[cmd_str]
+        elif command[0] in self.responses: # match by executable/verb logic?
+             # Specific logic for git remote get-url
+             if command[:3] == ["git", "remote", "get-url"]:
+                 res = self.responses.get("git remote get-url", self.default_response)
+             else:
+                 res = self.responses.get(command[0], self.default_response)
+        else:
+            res = self.default_response
+            
+        if check and not res.success:
+            raise SystemError(f"StubShell: Command failed: {cmd_str}")
+            
+        return res
+
+
 class TestWikiSync:
-    """Tests for WikiSync class."""
+    """Tests for WikiSync class using StubShell."""
 
     def test_sync_initialization(self):
         """Test WikiSync initializes."""
@@ -338,42 +384,41 @@ class TestWikiSync:
         assert sync._workspace is not None
         assert sync._wiki_dir is None
 
-    @patch("subprocess.run")
-    def test_get_wiki_url(self, mock_run):
+    def test_get_wiki_url(self):
         """Test getting wiki URL from git remote."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiSync
 
-        mock_run.return_value = MagicMock(
-            stdout="https://github.com/user/repo.git\n",
-            returncode=0,
+        stub = StubShell()
+        stub.responses["git remote get-url"] = ShellResult(
+            stdout="https://github.com/user/repo.git\n", stderr="", returncode=0
         )
 
-        sync = WikiSync()
+        sync = WikiSync(shell_executor=stub)
         url = sync.get_wiki_url()
 
         assert url == "https://github.com/user/repo.wiki.git"
 
-    @patch("subprocess.run")
-    def test_get_wiki_url_without_git_extension(self, mock_run):
+    def test_get_wiki_url_without_git_extension(self):
         """Test getting wiki URL when origin doesn't have .git."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiSync
-
-        mock_run.return_value = MagicMock(
-            stdout="https://github.com/user/repo\n",
-            returncode=0,
+        
+        stub = StubShell()
+        stub.responses["git remote get-url"] = ShellResult(
+            stdout="https://github.com/user/repo\n", stderr="", returncode=0
         )
 
-        sync = WikiSync()
+        sync = WikiSync(shell_executor=stub)
         url = sync.get_wiki_url()
 
         assert url == "https://github.com/user/repo.wiki.git"
 
     def test_write_pages(self):
-        """Test writing pages to wiki directory."""
+        """Test writing pages to wiki directory (FileSystem test)."""
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPage, WikiPageType, WikiSync
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            sync = WikiSync()
+            stub = StubShell()
+            sync = WikiSync(shell_executor=stub)
             pages = [
                 WikiPage(page_type=WikiPageType.HOME, title="Home", content="# Test Home"),
             ]
@@ -389,7 +434,8 @@ class TestWikiSync:
         from vibe_core.plugins.opus_assistant.manas.cortex.sutra import WikiPage, WikiPageType, WikiSync
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            sync = WikiSync()
+            stub = StubShell()
+            sync = WikiSync(shell_executor=stub)
             pages = [
                 WikiPage(page_type=WikiPageType.HOME, title="Home", content="Home content"),
                 WikiPage(page_type=WikiPageType.PANTHEON, title="Pantheon", content="Pantheon content"),

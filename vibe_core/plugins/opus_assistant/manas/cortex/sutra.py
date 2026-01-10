@@ -33,13 +33,14 @@ Wiki Pages Generated:
 """
 
 import logging
-import subprocess
+# subprocess removed
 import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
+from vibe_core.protocols.system_shell import ShellProtocol, SystemShell, ShellResult
 
 logger = logging.getLogger("MANAS.Cortex.Sutra")
 
@@ -641,12 +642,13 @@ class WikiSync:
     "The sync is the bridge between thought and manifestation."
     """
 
-    def __init__(self, workspace: Optional[Path] = None):
+    def __init__(self, workspace: Optional[Path] = None, shell_executor: Optional[ShellProtocol] = None):
         """
         Initialize wiki sync.
 
         Args:
             workspace: Workspace path (for detecting repo URL)
+            shell_executor: Optional shell executor (for testing)
         """
         import os
 
@@ -654,6 +656,7 @@ class WikiSync:
         self._wiki_dir: Optional[Path] = None
         # OPUS-071: Load GitHub token for authentication
         self._github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+        self.shell = shell_executor or SystemShell()
 
     def _get_authenticated_url(self, url: str) -> str:
         """
@@ -694,11 +697,9 @@ class WikiSync:
             Wiki git URL or None
         """
         try:
-            result = subprocess.run(
+            result = self.shell.run(
                 ["git", "remote", "get-url", "origin"],
                 cwd=self._workspace,
-                capture_output=True,
-                text=True,
                 check=True,
             )
             origin = result.stdout.strip()
@@ -736,31 +737,30 @@ class WikiSync:
             temp_dir = Path(tempfile.mkdtemp(prefix="sutra_wiki_"))
 
         try:
-            subprocess.run(
+            self.shell.run(
                 ["git", "clone", auth_url, str(temp_dir)],
-                capture_output=True,
-                text=True,
                 check=True,
             )
             self._wiki_dir = temp_dir
             logger.info(f"SUTRA WikiSync: Cloned wiki to {temp_dir}")
             return temp_dir
 
-        except subprocess.CalledProcessError as e:
+        except SystemError as e:
             # Wiki might not exist yet - initialize it
-            if "not found" in e.stderr.lower() or "empty repository" in e.stderr.lower():
+            err_msg = str(e).lower()
+            if "not found" in err_msg or "empty repository" in err_msg:
                 logger.info("SUTRA WikiSync: Wiki repo does not exist, will initialize")
                 self._wiki_dir = temp_dir
-                subprocess.run(["git", "init"], cwd=temp_dir, check=True)
+                self.shell.run(["git", "init"], cwd=temp_dir, check=True)
                 # Set remote for push
                 if auth_url:
-                    subprocess.run(
+                    self.shell.run(
                         ["git", "remote", "add", "origin", auth_url],
                         cwd=temp_dir,
                         check=False,  # May fail if remote exists
                     )
                 return temp_dir
-            logger.error(f"SUTRA WikiSync: Clone failed: {e.stderr}")
+            logger.error(f"SUTRA WikiSync: Clone failed: {e}")
             return None
 
     def write_pages(self, pages: List[WikiPage], wiki_dir: Optional[Path] = None) -> int:
@@ -809,26 +809,24 @@ class WikiSync:
 
         try:
             # Configure git user for this repo (SUTRA is the author)
-            subprocess.run(
+            self.shell.run(
                 ["git", "config", "user.email", "sutra@manas.steward"],
                 cwd=self._wiki_dir,
                 check=False,
             )
-            subprocess.run(
+            self.shell.run(
                 ["git", "config", "user.name", "SUTRA (MANAS Cortex)"],
                 cwd=self._wiki_dir,
                 check=False,
             )
 
             # Add all changes
-            subprocess.run(["git", "add", "-A"], cwd=self._wiki_dir, check=True)
+            self.shell.run(["git", "add", "-A"], cwd=self._wiki_dir, check=True)
 
             # Check if there are changes
-            result = subprocess.run(
+            result = self.shell.run(
                 ["git", "status", "--porcelain"],
                 cwd=self._wiki_dir,
-                capture_output=True,
-                text=True,
             )
 
             if not result.stdout.strip():
@@ -836,19 +834,19 @@ class WikiSync:
                 return True
 
             # Commit
-            subprocess.run(["git", "commit", "-m", message], cwd=self._wiki_dir, check=True)
+            self.shell.run(["git", "commit", "-m", message], cwd=self._wiki_dir, check=True)
 
             # Push with authenticated URL
             wiki_url = self.get_wiki_url()
             if wiki_url:
                 auth_url = self._get_authenticated_url(wiki_url)
                 # Set push URL with auth
-                subprocess.run(
+                self.shell.run(
                     ["git", "remote", "set-url", "origin", auth_url],
                     cwd=self._wiki_dir,
                     check=False,
                 )
-                subprocess.run(
+                self.shell.run(
                     ["git", "push", "-u", "origin", "master"],
                     cwd=self._wiki_dir,
                     check=True,
@@ -857,7 +855,7 @@ class WikiSync:
 
             return True
 
-        except subprocess.CalledProcessError as e:
+        except SystemError as e:
             logger.error(f"SUTRA WikiSync: Git operation failed: {e}")
             return False
 
@@ -914,16 +912,17 @@ class SutraOrchestrator:
     "The orchestrator conducts the symphony of threads."
     """
 
-    def __init__(self, workspace: Optional[Path] = None):
+    def __init__(self, workspace: Optional[Path] = None, shell_executor: Optional[ShellProtocol] = None):
         """
         Initialize orchestrator.
 
         Args:
             workspace: Workspace path
+            shell_executor: Optional shell executor
         """
         self._workspace = workspace or Path.cwd()
         self._weaver = SutraWeaver(workspace=self._workspace)
-        self._sync = WikiSync(workspace=self._workspace)
+        self._sync = WikiSync(workspace=self._workspace, shell_executor=shell_executor)
 
     def generate(self, page_types: Optional[List[WikiPageType]] = None) -> List[WikiPage]:
         """

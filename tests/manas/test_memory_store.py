@@ -23,6 +23,26 @@ from vibe_core.plugins.opus_assistant.manas.memory_store import (
     MemoryEntry,
     MemoryStore,
 )
+from vibe_core.protocols.akashic import AkashicProtocol
+from vibe_core.state.state_service import reset_state_service
+
+
+@pytest.fixture(autouse=True)
+def clean_state_service():
+    """Ensure state service is fresh for each test."""
+    reset_state_service()
+    yield
+    reset_state_service()
+
+
+
+def test_implements_akashic_protocol():
+    """
+    YAMARAJA TEST: MemoryStore must satisfy AkashicProtocol.
+    """
+    store = MemoryStore()
+    assert isinstance(store, AkashicProtocol), "MemoryStore must implement AkashicProtocol"
+
 
 # =============================================================================
 # SECTION 1: MemoryEntry MUTATION TESTS
@@ -298,8 +318,7 @@ class TestMemoryPersistence:
         store = MemoryStore(workspace=tmp_path)
         store.record_intent_outcome("file_test", "Test", "success")
 
-        memory_file = tmp_path / ".opus_state" / "manas_memory.json"
-        assert memory_file.exists(), "Memory file MUST be created!"
+        assert store._memory_file.exists(), "Memory file MUST be created!"
 
     def test_memory_file_valid_json(self, tmp_path):
         """
@@ -309,8 +328,7 @@ class TestMemoryPersistence:
         store = MemoryStore(workspace=tmp_path)
         store.record_intent_outcome("json_test", "Test", "success")
 
-        memory_file = tmp_path / ".opus_state" / "manas_memory.json"
-        content = memory_file.read_text()
+        content = store._memory_file.read_text()
 
         # Should not raise
         data = json.loads(content)
