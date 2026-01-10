@@ -415,3 +415,123 @@ def naga_harness_orchestrator():
 
     with NagaTestHarness.for_orchestrator() as harness:
         yield harness
+
+
+# =============================================================================
+# MAHAMANTRA TEST LIFECYCLE (Gap 1 Wiring)
+# =============================================================================
+# Maps pytest phases to the 16-step Mahamantra cycle:
+#
+#   SETUP    → Phase 1: GENESIS (H K H K) - Steps 1-4
+#   CALL     → Phase 2: DHARMA (K K H H) - Steps 5-8
+#            → Phase 3: KARMA (H R H R) - Steps 9-12
+#   TEARDOWN → Phase 4: MOKSHA (R R H H) - Steps 13-16
+#
+# This is the heartbeat. Every test is a Mala bead.
+# =============================================================================
+
+# Thread-local storage for current test's Mahamantra state
+_mahamantra_state = {}
+
+
+def _get_mahamantra_sequence():
+    """Lazy import to avoid circular dependencies."""
+    try:
+        from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, MantraOpCode
+        return MAHAMANTRA_SEQUENCE, MantraOpCode
+    except ImportError:
+        return None, None
+
+
+def _emit_mantra_step(step: int, phase: str, test_name: str):
+    """Emit a Mahamantra step for the current test."""
+    sequence, MantraOpCode = _get_mahamantra_sequence()
+    if sequence is None:
+        return
+
+    if step < 0 or step >= 16:
+        return
+
+    word, opcode = sequence[step]
+    # Log at DEBUG level - visible with pytest -v or --log-level=DEBUG
+    logger = logging.getLogger("MAHAMANTRA")
+    logger.debug(f"[{phase}] Step {step+1}/16: {word} → {opcode.value} | {test_name}")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    """
+    Phase 1: GENESIS (Hare Krishna Hare Krishna)
+    Steps 1-4: SYS_WAKE, LOAD_ROOT, ALLOC_MEM, BIND_CTX
+
+    The test is BORN.
+    """
+    test_id = item.nodeid
+    _mahamantra_state[test_id] = {"step": 0, "phase": "GENESIS"}
+
+    # Execute 4 Genesis steps
+    for step in range(4):
+        _emit_mantra_step(step, "GENESIS", item.name)
+        _mahamantra_state[test_id]["step"] = step + 1
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_call(item):
+    """
+    Phase 2: DHARMA (Krishna Krishna Hare Hare) - Steps 5-8
+    Phase 3: KARMA (Hare Rama Hare Rama) - Steps 9-12
+
+    The test EXECUTES.
+    """
+    test_id = item.nodeid
+    if test_id not in _mahamantra_state:
+        _mahamantra_state[test_id] = {"step": 4, "phase": "DHARMA"}
+
+    # Phase 2: DHARMA (steps 5-8)
+    _mahamantra_state[test_id]["phase"] = "DHARMA"
+    for step in range(4, 8):
+        _emit_mantra_step(step, "DHARMA", item.name)
+        _mahamantra_state[test_id]["step"] = step + 1
+
+    # Phase 3: KARMA (steps 9-12)
+    _mahamantra_state[test_id]["phase"] = "KARMA"
+    for step in range(8, 12):
+        _emit_mantra_step(step, "KARMA", item.name)
+        _mahamantra_state[test_id]["step"] = step + 1
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_teardown(item, nextitem):
+    """
+    Phase 4: MOKSHA (Rama Rama Hare Hare)
+    Steps 13-16: CACHE_STATE, OPTIMIZE, YIELD_CPU, RESET_IP
+
+    The test DIES and returns to origin.
+    """
+    test_id = item.nodeid
+    if test_id not in _mahamantra_state:
+        _mahamantra_state[test_id] = {"step": 12, "phase": "MOKSHA"}
+
+    # Phase 4: MOKSHA (steps 13-16)
+    _mahamantra_state[test_id]["phase"] = "MOKSHA"
+    for step in range(12, 16):
+        _emit_mantra_step(step, "MOKSHA", item.name)
+        _mahamantra_state[test_id]["step"] = step + 1
+
+    # Clean up state
+    if test_id in _mahamantra_state:
+        del _mahamantra_state[test_id]
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log Mahamantra completion status with test result.
+    """
+    if report.when == "call":
+        logger = logging.getLogger("MAHAMANTRA")
+        if report.passed:
+            logger.debug(f"✓ MALA BEAD COMPLETE: {report.nodeid}")
+        elif report.failed:
+            logger.debug(f"✗ APARADHA (offense): {report.nodeid}")
+        elif report.skipped:
+            logger.debug(f"○ PRATYAHARA (withdrawal): {report.nodeid}")
