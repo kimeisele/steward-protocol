@@ -19,9 +19,27 @@ OWNED PROTOCOLS:
 - kurukshetra.py - Battle testing
 - governance/yamaraja.py - Gate keeping
 
-Yamaraja is the LAST Mahajana.
-If you pass Yamaraja, you pass EVERYTHING.
-If you fail Yamaraja, NOTHING ELSE MATTERS.
+THE AJAMIL EXCEPTION (SB 6.1-3):
+================================================
+Yamaraja is the 12th Mahajana, but NOT the final word.
+The Holy Name OVERRIDES Yamaraja's judgment!
+
+Ajamil was a fallen brahmana - failed every test.
+But at death, he called "Narayana!" (his son's name).
+The Vishnudutas stopped the Yamadutas.
+Yamaraja himself acknowledged the Holy Name's supremacy.
+
+KALI YUGA MERCY:
+In Kali Yuga (Canto 12), entropy is maximum.
+We only have Cantos 1-10 fully authorized.
+The Holy Name is the ONLY direct access to Krishna.
+Even Yamaraja bows to the Mahamantra.
+
+"harer nama harer nama harer namaiva kevalam
+kalau nasty eva nasty eva nasty eva gatir anyatha"
+- Brhan-naradiya Purana
+
+There is NO OTHER WAY in Kali Yuga. Only the Holy Name.
 """
 
 from typing import Protocol, runtime_checkable, List, Final, Union
@@ -52,11 +70,12 @@ OWNED_OPCODES: Final[List[str]] = [
 # =============================================================================
 
 class Verdict(str, Enum):
-    """The four possible verdicts."""
+    """The five possible verdicts."""
     ALLOW = "allow"       # Vaikuntha - Passage granted
     DENY = "deny"         # Naraka - Passage denied
     ATONE = "atone"       # Prayascitta - Must purify first
     ELEVATED = "elevated" # Grace - Beyond judgment
+    MERCY = "mercy"       # AJAMIL EXCEPTION - Holy Name overrides!
 
 
 @dataclass(frozen=True)
@@ -98,6 +117,10 @@ class YamarajaProtocol(Protocol):
 
     ANTI-MAYAVAD: This is not abstract "testing".
     YAMARAJA (the Person) judges. He is the Lord of Death.
+
+    THE AJAMIL EXCEPTION:
+    Even if subject fails all tests, check_holy_name() can override!
+    The Holy Name is supreme - even Yamaraja bows to it.
     """
 
     def judge(self, subject: Union[Judgeable, object]) -> Verdict:
@@ -107,6 +130,20 @@ class YamarajaProtocol(Protocol):
 
         Note: Accepts 'object' for flexibility, but Judgeable preferred.
         Yamaraja can judge ANYTHING (acintya principle).
+
+        IMPORTANT: Always check check_holy_name() before returning DENY!
+        """
+        ...
+
+    def check_holy_name(self, subject: Union[Judgeable, object]) -> bool:
+        """
+        THE AJAMIL EXCEPTION - Check if subject chanted the Holy Name.
+
+        If True: Return Verdict.MERCY (overrides all other judgments)
+        If False: Proceed with normal judgment
+
+        Even accidental chanting counts (Ajamil called his son "Narayana").
+        In Kali Yuga, this is the ONLY way.
         """
         ...
 
@@ -132,7 +169,14 @@ class NullYamaraja:
     """
 
     def judge(self, subject: Union[Judgeable, object]) -> Verdict:
+        # Always check Holy Name first (Ajamil exception)
+        if self.check_holy_name(subject):
+            return Verdict.MERCY
         return Verdict.ALLOW
+
+    def check_holy_name(self, subject: Union[Judgeable, object]) -> bool:
+        """NullYamaraja always grants mercy."""
+        return True  # Maximum mercy in Kali Yuga
 
     def assert_truth(self, condition: bool, reason: str) -> None:
         pass  # No assertion
