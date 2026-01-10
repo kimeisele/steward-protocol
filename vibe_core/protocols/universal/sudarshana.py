@@ -47,11 +47,44 @@ class PranaTask:
     kwargs: dict
     mantra_signature: str
 
-# --- 2. The Task Kernel (The State Organ) ---
-
-class MantraKernel:
+class PranaFuture:
     """
-    The Governor. It manages the 'Real Cores' and cleans Orphans.
+    The Nervous System (Nadi).
+    Connects the separated Limb (Worker) back to the Brain (Main Thread).
+    """
+    def __init__(self, task_id: str, async_result: Any):
+        self.task_id = task_id
+        self._val = async_result
+
+    def get(self, timeout: Optional[float] = None) -> Any:
+        """
+        Synchronous waiting for the result.
+        Paradox: We use Async to be fast, but sometimes we MUST wait.
+        """
+        return self._val.get(timeout=timeout)
+
+    def wait(self, timeout: Optional[float] = None):
+        self._val.wait(timeout)
+
+    def ready(self) -> bool:
+        return self._val.ready()
+
+    def successful(self) -> bool:
+        return self._val.successful()
+        
+    def __repr__(self):
+        state = "READY" if self.ready() else "PENDING"
+        return f"<PranaFuture {self.task_id} [{state}]>"
+
+
+# --- 2. The Task Kernel (The State Organ) ---
+# RENAMED: SudarshanaKernel (Physical Compute) vs TaskKernel (Logical Sandbox)
+
+class SudarshanaKernel:
+    """
+    The Governor of Prana (Compute).
+    distinct from 'TaskKernel' (which is the Logical Brain).
+    This Kernel manages the Sudarshana Chakra (The Process Pool).
     """
     def __init__(self, core_count: Optional[int] = None):
         self.state = SysState.DORMANT
@@ -63,21 +96,20 @@ class MantraKernel:
         
         # Configure logging if not running under pytest capture issues
         # logging.basicConfig(level=logging.INFO) 
-        self.logger.info(f"🌀 Kernel Initialized. Cores aligned: {self.core_count}")
+        self.logger.info(f"🌀 SudarshanaKernel Initialized. Cores aligned: {self.core_count}")
 
-    def inject_prana(self, task: PranaTask) -> Optional[str]:
+    def inject_prana(self, task: PranaTask) -> PranaFuture:
         """
         Takes a task and assigns it to a physical core.
+        Returns a PranaFuture (Nervous System Link).
         """
         if self.state == SysState.ENTROPY_HIGH:
             self.logger.error("⚠️ ENTROPY TOO HIGH. Rejecting Task.")
-            return None
+            raise SystemError("Sudarshana Rejected Task: Entropy High")
 
         self.logger.info(f"⚡ Injecting Prana into Task {task.id} [{task.mantra_signature}]")
         
         # Async execution on a real core
-        # Note: We pass kwargs too
-        # multiprocessing.Pool.apply_async supports args and kwargs
         async_result = self.pool.apply_async(
             task.target, 
             args=task.args, 
@@ -86,15 +118,14 @@ class MantraKernel:
             error_callback=self._on_error
         )
         self.active_manifestations[task.id] = async_result
-        return task.id
+        
+        # Return the Nadi (Link)
+        return PranaFuture(task.id, async_result)
 
     def _on_complete(self, result: Any):
         """The Echo returns."""
-        # This runs in main thread usually provided by pool callback mechanism?
-        # Actually standard python multiprocessing callbacks run in main thread.
-        # print(f"✨ Karma Resolved: {result}") 
-        # Using print for now as per user spec, but logger is better.
-        self.logger.info(f"✨ Karma Resolved: {result}")
+        # This callback runs in the result thread (helper).
+        self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
 
     def _on_error(self, error: BaseException):
         self.logger.error(f"💀 Task Failed (Orphan died): {error}")
@@ -103,8 +134,6 @@ class MantraKernel:
         """
         Garbage Collection: Reclaims resources from stuck tasks.
         """
-        # Logic to check for stuck async_results would go here
-        # For now, just a stub as per user request
         self.logger.info("🧹 Sweeping the temple. Removing orphan contexts.")
 
     def shutdown(self):
@@ -134,7 +163,7 @@ class SudarshanaChakra:
 
 # GLOBAL KERNEL (The Living Spirit)
 # Warning: This spawns processes on import!
-KERNEL = MantraKernel()
+SUDARSHANA = SudarshanaKernel()
 
 def mantra_governed(opcode: MantraOpCode):
     """
@@ -143,7 +172,7 @@ def mantra_governed(opcode: MantraOpCode):
     """
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> Any: # Returns TaskID string now!
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> PranaFuture: # Returns Future now!
             # 1. Context Extraktion (Suche nach SovereignContext in Args)
             context = None
             for arg in args:
@@ -163,10 +192,6 @@ def mantra_governed(opcode: MantraOpCode):
             # 3. Packaging the Dead Matter into Living Task
             task_id = str(uuid.uuid4())[:8]
             
-            # Note regarding pickling: 'func' must be picklable (top level).
-            # If wrapper is used on methods, 'func' is unbound function, 'args[0]' is self.
-            # This generally pickle-able if class is module level.
-            
             task = PranaTask(
                 id=task_id,
                 target=func,
@@ -176,10 +201,7 @@ def mantra_governed(opcode: MantraOpCode):
             )
             
             # 4. Offload to the Kernel
-            KERNEL.inject_prana(task)
-            
-            # Return Promise/ID (The Nervous System gap)
-            return f"🌀 Task {task_id} submitted to the Wheel."
+            return SUDARSHANA.inject_prana(task)
             
         return wrapper
     return decorator
