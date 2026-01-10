@@ -147,18 +147,34 @@ from .sadhana import (
 
 # Acintya - The Inconceivable Principle
 from .acintya import (
+    # The Dancing 37 (Purusha Tattva)
+    PurushaTattva,
+    PURUSHA,
+    KRISHNA_ASPECT,
+    # Constants - all ARE the same Person (acintya)
     KRISHNA_SMALLEST,
     KRISHNA_LARGEST,
+    KRISHNA_NEGATIVE_INFINITY,
+    KRISHNA_POSITIVE_INFINITY,
     ACINTYA_ACCEPTED,
+    # Levels (Krishna = Mahamantra = -2)
+    ProtocolLevel,
+    # Enums
     AcintyaAspect,
     JivaCondition,
+    # Krishna (IS)
     KrishnaPresence,
     KRISHNA,
+    # Jiva state
     JivaState,
+    # Protocol
     AcintyaAware,
+    # Functions
     vibration_is_krishna,
+    mantra_is_krishna,
     mantra_not_different_from_source,
     check_bheda_abheda,
+    verify_parampara,
 )
 
 
@@ -242,10 +258,16 @@ __all__ = [
     "create_sadhana",
     "create_intensive_sadhana",
     "get_intensity_name",
-    # Acintya (The Inconceivable)
+    # Acintya (The Inconceivable) - The Dancing 37
+    "PurushaTattva",
+    "PURUSHA",
+    "KRISHNA_ASPECT",
     "KRISHNA_SMALLEST",
     "KRISHNA_LARGEST",
+    "KRISHNA_NEGATIVE_INFINITY",
+    "KRISHNA_POSITIVE_INFINITY",
     "ACINTYA_ACCEPTED",
+    "ProtocolLevel",
     "AcintyaAspect",
     "JivaCondition",
     "KrishnaPresence",
@@ -253,6 +275,8 @@ __all__ = [
     "JivaState",
     "AcintyaAware",
     "vibration_is_krishna",
+    "mantra_is_krishna",
     "mantra_not_different_from_source",
     "check_bheda_abheda",
+    "verify_parampara",
 ]

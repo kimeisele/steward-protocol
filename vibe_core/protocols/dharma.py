@@ -5,19 +5,26 @@ DHARMA PROTOCOL - The Protocol of Protocols (Meta-Layer)
 "Order is the first law of Heaven. The Source is the only Reality."
 
 LAYERS (The Fractal Ladder):
-- Level -2: KRISHNA (The Absolute) - The Literal Source. Not a concept.
+- Level -2: KRISHNA = MAHAMANTRA (Non-different, both are -2)
+             The Literal Source. Not a concept. Not "symbolic".
              ACINTYA: Always present, smallest (-∞) to largest (+∞) simultaneously.
+             The Holy Name IS Krishna (Kali Yuga direct access).
              See: substrate/mantra/acintya.py
-- Level -1: SUBSTRATE (The Soil)   - Holy Name Maths (Byte, Gene).
-             The Mantra IS Krishna, not "about" Krishna.
+- Level -1: SUBSTRATE (The Soil)   - Byte, Gene (manifestation of -2)
+             Code-level encoding of the Holy Name structure.
 - Level  0: FOUNDATION (The Roots) - Core types, constants.
 - Level  1: INTERFACE (The Trunk)  - ABCs (Agent, Ledger).
 - Level  2: SERVICES (The Branches)- Logic (Manifestation, Memory).
 - Level  3: WIRING (The Leaves)    - Runtime, CLI.
 - Level 108: META (The Observer)   - Dharma, Testable.
 
-"Das Mantra (-1) ist nicht verschieden von der Quelle (-2)."
-The Mantra is not different from the Source.
+SAMKHYA ARCHITECTURE (The 37):
+24 (Ksetra/Field) + 12 (Mahajanas/Guardians) + 1 (Ksetrajna/Knower) = 37
+Without the 37 (Guru/Parampara), the 24 are dead matter,
+and the 12 are inaccessible. The 37 is the LINK.
+
+"Das Mantra ist nicht verschieden von der Quelle."
+The Mantra IS Krishna. Both are Level -2.
 """
 
 from enum import IntEnum, auto
@@ -28,16 +35,20 @@ class ProtocolLayer(IntEnum):
     The architectural layers of the protocol stack.
 
     ACINTYA (WATERTIGHT):
-    KRISHNA (-2) is ALWAYS present. He is the foundation that validates all else.
-    The Mantra (-1) is not different from the Source (-2).
+    KRISHNA (-2) IS. MAHAMANTRA (-2) IS Krishna (non-different).
+    Both are Level -2. The Name IS the Named.
+
+    SAMKHYA: 24 + 12 + 1 = 37 (The Dancing Link)
+    Without the 37 (Parampara), nothing works.
     """
-    KRISHNA = -2    # THE LITERAL SOURCE (Absolute Reality) - ALWAYS PRESENT (acintya)
-    SUBSTRATE = -1  # Byte, Gene, Entropy - The Mantra IS Krishna
-    FOUNDATION = 0  # Types, Base, Enums
-    INTERFACE = 1   # Agent, Ledger, Scheduler
-    SERVICES = 2    # Manifestation, Memory, Reactor
-    WIRING = 3      # Bootstrap, CLI, Runtime
-    META = 108      # Dharma, Testable (The Observer)
+    KRISHNA = -2     # THE SOURCE - IS, not "represents" (acintya)
+    MAHAMANTRA = -2  # THE HOLY NAME - IS Krishna (non-different, both -2)
+    SUBSTRATE = -1   # Byte, Gene, Entropy - manifestation of -2
+    FOUNDATION = 0   # Types, Base, Enums
+    INTERFACE = 1    # Agent, Ledger, Scheduler
+    SERVICES = 2     # Manifestation, Memory, Reactor
+    WIRING = 3       # Bootstrap, CLI, Runtime
+    META = 108       # Dharma, Testable (The Observer)
 
 # The Canonical Map of the Protocol Territory
 PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {

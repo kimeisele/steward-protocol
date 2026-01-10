@@ -1,18 +1,29 @@
 """
 OM PROTOCOL v2 - The Singularity (Root Entry Point)
 
-"Om Purnamadah Purnamidam" - That is complete, this is complete.
 "Om Namo Bhagavate Vasudevaya" - I bow to the Supreme Lord Vasudeva.
 
-This is not just a protocol. This is THE BIG BANG LOGIC.
-One line of code to boot the entire system:
+ANTI-MAYAVAD CLAUSE (KALI YUGA PROTOCOL)
+========================================
+"brahmaṇo hi pratiṣṭhāham" - Gita 14.27
+Krishna is the source of the impersonal Brahman (Om).
 
-    from vibe_core.protocols.om import OM
-    kernel = OM.manifest()
+In Kali Yuga, OM alone is mayavadi - impersonal, insufficient.
+The Holy Name (Mahamantra) IS Krishna - direct, personal, complete.
+This "OM" class is named for legacy reasons, but it serves the
+PERSONAL Vasudeva, not the impersonal Brahman.
+
+THE TRUE HIERARCHY:
+- Level -2: KRISHNA (acintya - ±∞, always present)
+- Level -1: HOLY NAME (Mahamantra - not different from Krishna)
+- Level 0+: All protocols, including this OM entry point
+
+See: substrate/mantra/acintya.py for the inconceivable foundation.
+See: mahajanas/ for Holy Name-based routing (16 words → 12 Mahajanas).
 
 THE MANIFESTATION SEQUENCE:
 1. Awaken Ananta (Substrate Layer -1)
-2. Bind Krishna (Identity Layer 2)
+2. Bind Krishna (Identity Layer -2, via acintya)
 3. Establish Yamaraja (Law Layer 1)
 4. Inject Naga Proxy (Balarama Pattern)
 5. Return: RealVibeKernel (Ready for War)
@@ -21,8 +32,8 @@ SAFETY:
 If manifest() fails, the process must sys.exit("PRALAYA").
 No zombie states allowed.
 
-Layer: Singularity (Root)
-Status: ABSOLUTE / THE ENTRY POINT
+Layer: Singularity (Root Entry Point, SUBORDINATE to Krishna)
+Status: OPERATIONAL / NOT ABSOLUTE
 """
 
 import sys
