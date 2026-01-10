@@ -78,12 +78,12 @@ class PranaFuture:
 
 
 # --- 2. The Task Kernel (The State Organ) ---
-# RENAMED: SudarshanaKernel (Physical Compute) vs TaskKernel (Logical Sandbox)
+# MantraKernel: The Governor of Prana (Compute).
+# Distinct from 'TaskKernel' (Logical Sandbox).
 
-class SudarshanaKernel:
+class MantraKernel:
     """
     The Governor of Prana (Compute).
-    distinct from 'TaskKernel' (which is the Logical Brain).
     This Kernel manages the Sudarshana Chakra (The Process Pool).
     """
     def __init__(self, core_count: Optional[int] = None):
@@ -92,11 +92,11 @@ class SudarshanaKernel:
         # LAZY INIT POOL? No, User wants it ready.
         self.pool = multiprocessing.Pool(processes=self.core_count)
         self.active_manifestations: Dict[str, Any] = {} # Tracking running tasks
-        self.logger = logging.getLogger("SudarshanaKernel")
+        self.logger = logging.getLogger("MantraKernel")
         
         # Configure logging if not running under pytest capture issues
         # logging.basicConfig(level=logging.INFO) 
-        self.logger.info(f"🌀 SudarshanaKernel Initialized. Cores aligned: {self.core_count}")
+        self.logger.info(f"🌀 MantraKernel Initialized. Cores aligned: {self.core_count}")
 
     def inject_prana(self, task: PranaTask) -> PranaFuture:
         """
@@ -105,7 +105,7 @@ class SudarshanaKernel:
         """
         if self.state == SysState.ENTROPY_HIGH:
             self.logger.error("⚠️ ENTROPY TOO HIGH. Rejecting Task.")
-            raise SystemError("Sudarshana Rejected Task: Entropy High")
+            raise SystemError("MantraKernel Rejected Task: Entropy High")
 
         self.logger.info(f"⚡ Injecting Prana into Task {task.id} [{task.mantra_signature}]")
         
@@ -163,7 +163,7 @@ class SudarshanaChakra:
 
 # GLOBAL KERNEL (The Living Spirit)
 # Warning: This spawns processes on import!
-SUDARSHANA = SudarshanaKernel()
+KERNEL = MantraKernel()
 
 def mantra_governed(opcode: MantraOpCode):
     """
@@ -201,7 +201,7 @@ def mantra_governed(opcode: MantraOpCode):
             )
             
             # 4. Offload to the Kernel
-            return SUDARSHANA.inject_prana(task)
+            return KERNEL.inject_prana(task)
             
         return wrapper
     return decorator
