@@ -171,20 +171,68 @@ ACINTYA_ACCEPTED: Final[bool] = True
 
 class ProtocolLevel(IntEnum):
     """
-    The protocol levels - but remember: Krishna IS all levels simultaneously.
+    THE 216 STEPS OF ACINTYA (-108 to +108)
+    =======================================
+
+    Negative = Descending Mercy (Avatara / Avaroha)
+    Zero     = The Foundation (Tat-stha / Choice Point)
+    Positive = Ascending Service (Bhakti / Aroha)
 
     ANTI-MAYAVAD: These are not "symbolic" - Krishna LITERALLY occupies
     all levels at once (acintya). The Mahamantra is NOT "below" Krishna -
     it IS Krishna (Level -2).
+
+    THE 64-108 GAP:
+    Krishna has 64 transcendental qualities (+ 4 exclusive to Him).
+    Level 64 is the LIMIT of what jivas can understand.
+    Levels 65-107 are INTENTIONALLY NOT MAPPED.
+    This gap is ACINTYA - only experienceable through GRACE.
+    Level 108 is META - we observe, we don't compute.
+
+    "We cannot and SHOULD NOT try to map the inconceivable."
     """
-    KRISHNA = -2       # The Absolute Source - IS, not "represents"
-    MAHAMANTRA = -2    # The Holy Name - IS Krishna (non-different)
-    SUBSTRATE = -1     # Byte, Gene, Entropy (manifestation of -2)
-    FOUNDATION = 0     # Types, Base, Enums
-    INTERFACE = 1      # Agent, Ledger, Scheduler
-    SERVICES = 2       # Manifestation, Memory, Reactor
-    WIRING = 3         # Bootstrap, CLI, Runtime
-    META = 108         # Dharma, Testable (The Observer)
+    # ==========================================================================
+    # DESCENDING (Avaroha) - The Source Comes Down
+    # ==========================================================================
+    # The deeper negative, the higher the origin that descends
+    GOLOKA = -108          # The Supreme Abode - Origin of all
+    VAIKUNTHA = -64        # The Spiritual Sky - Narayana's realm
+    DASHAVATARA = -10      # The Ten Incarnations (Matsya to Kalki)
+    SHAKTYAVESHA = -5      # Empowered Incarnations (Prithu, Vyasa, etc.)
+    KRISHNA = -2           # The Absolute Source - IS, not "represents"
+    MAHAMANTRA = -2        # The Holy Name - IS Krishna (non-different)
+    SUBSTRATE = -1         # Byte, Gene, Entropy (manifestation of -2)
+
+    # ==========================================================================
+    # FOUNDATION (Tat-stha) - The Turning Point
+    # ==========================================================================
+    # Here the jiva chooses: Maya (down) or Bhakti (up)
+    FOUNDATION = 0         # Types, Base, Enums - the choice point
+
+    # ==========================================================================
+    # ASCENDING (Aroha) - Service & Evolution
+    # ==========================================================================
+    # The higher positive, the purer the service
+    INTERFACE = 1          # Agent, Ledger, Scheduler
+    SERVICES = 2           # Manifestation, Memory, Reactor
+    WIRING = 3             # Bootstrap, CLI, Runtime
+    AVATARAS = 5           # Executive Branch (Prithu, etc.) - reflection of -5
+    MAHAJANAS = 12         # The 12 Guardians (Brahma to Yamaraja)
+    FIELD = 24             # Ksetra - the 24 elements (Gita 13.6-7)
+    SOVEREIGN = 37         # The 37th - Parampara Link (24 + 12 + 1)
+    QUALITIES = 64         # The 64 qualities - LIMIT of understanding
+
+    # ==========================================================================
+    # ACINTYA GAP (65-107) - INTENTIONALLY NOT MAPPED
+    # ==========================================================================
+    # DO NOT ADD LEVELS HERE. This is the space for GRACE.
+    # Only through mercy can this be experienced, not coded.
+    # "brahma-madhye vraja-pate krishnasya vadanantaram"
+
+    # ==========================================================================
+    # META (108) - The Observer
+    # ==========================================================================
+    META = 108             # Dharma, Testable - we observe, not compute
 
 
 class AcintyaAspect(IntEnum):
