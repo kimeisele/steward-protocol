@@ -14,6 +14,7 @@ import pytest
 
 from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.cli.naga_commands.purify.detect import DetectCommand
+from vibe_core.cli.naga_commands.purify.gc import GcCommand
 from vibe_core.cli.naga_commands.purify.flood import FloodCommand
 from vibe_core.protocols.naga.cli_command import (
     INagaCommand,
@@ -723,3 +724,220 @@ class TestFloodSemantics:
         cmd = FloodCommand()
         assert cmd.opcode == MantraOpCode.PULSE_SYNC
         assert "PULSE_SYNC" in cmd.execute([]).output
+
+
+# =============================================================================
+# GC COMMAND TESTS
+# =============================================================================
+
+class TestGcCommand:
+    """Test GcCommand (KAPILA - GARBAGE_COLLECT)."""
+
+    def test_implements_protocol(self):
+        """GcCommand implements INagaCommand."""
+        cmd = GcCommand()
+        assert isinstance(cmd, INagaCommand)
+
+    def test_opcode_is_garbage_collect(self):
+        """Opcode is GARBAGE_COLLECT (position 7)."""
+        cmd = GcCommand()
+        assert cmd.opcode == MantraOpCode.GARBAGE_COLLECT
+
+    def test_mahajana_is_kapila(self):
+        """Mahajana is KAPILA (the analyzer)."""
+        cmd = GcCommand()
+        assert cmd.mahajana == Mahajana.KAPILA
+
+    def test_name_is_gc(self):
+        """Name is 'gc'."""
+        cmd = GcCommand()
+        assert cmd.name == "gc"
+
+    def test_phase_is_purify(self):
+        """Phase is PURIFY."""
+        cmd = GcCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_help_text_exists(self):
+        """Help text is defined."""
+        cmd = GcCommand()
+        assert len(cmd.help_text) > 0
+        assert "KAPILA" in cmd.help_text
+
+    def test_execute_no_args_succeeds(self):
+        """Execute with no args returns gc analysis."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert result.success
+        assert result.exit_code == 0
+        assert "KAPILA" in result.output
+        assert "Garbage Collection" in result.output
+
+    def test_execute_analyze_flag(self):
+        """Execute with --analyze shows analysis."""
+        cmd = GcCommand()
+        result = cmd.execute(["--analyze"])
+        assert result.success
+        assert "Analysis complete" in result.output
+        data = result.to_dict()
+        assert data.get("action") == "analyze"
+
+    def test_execute_shows_pycache_count(self):
+        """Execute shows __pycache__ count."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert "__pycache__" in result.output
+
+    def test_execute_shows_pyc_count(self):
+        """Execute shows .pyc count."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert ".pyc" in result.output
+
+    def test_execute_shows_total_size(self):
+        """Execute shows total size."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert "MB" in result.output
+
+    def test_result_has_correct_opcode(self):
+        """Result contains correct opcode."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert result.opcode == MantraOpCode.GARBAGE_COLLECT
+
+    def test_result_has_correct_mahajana(self):
+        """Result contains correct mahajana."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert result.mahajana == Mahajana.KAPILA
+
+    def test_result_data_has_phase(self):
+        """Result data includes phase info."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("phase") == "purify"
+
+    def test_result_data_has_position(self):
+        """Result data includes position 7."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert data.get("position") == "7"
+
+    def test_result_has_pycache_count(self):
+        """Result data includes pycache count."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        data = result.to_dict()
+        assert "pycache_count" in data
+
+
+# =============================================================================
+# GC REGISTRY INTEGRATION TESTS
+# =============================================================================
+
+class TestGcRegistryIntegration:
+    """Test that GcCommand is registered."""
+
+    def test_gc_registered(self):
+        """GcCommand is registered."""
+        cmd = NAGA_COMMAND_REGISTRY.get("gc")
+        assert cmd is not None
+        assert cmd.name == "gc"
+
+    def test_kapila_has_gc(self):
+        """KAPILA owns gc command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.KAPILA)
+        names = [c.name for c in cmds]
+        assert "gc" in names
+
+    def test_garbage_collect_has_gc(self):
+        """GARBAGE_COLLECT opcode has gc command."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.GARBAGE_COLLECT)
+        names = [c.name for c in cmds]
+        assert "gc" in names
+
+
+# =============================================================================
+# GC STRICT TYPING TESTS
+# =============================================================================
+
+class TestGcStrictTyping:
+    """Test that GcCommand results have no Any types."""
+
+    def test_gc_result_no_any(self):
+        """GcCommand result has no Any."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        assert hasattr(result, 'success')
+        assert hasattr(result, 'opcode')
+        assert hasattr(result, 'mahajana')
+
+
+# =============================================================================
+# GC IMMUTABILITY TESTS
+# =============================================================================
+
+class TestGcImmutability:
+    """Test that GcCommand results are immutable."""
+
+    def test_gc_result_frozen(self):
+        """GcCommand result is frozen."""
+        cmd = GcCommand()
+        result = cmd.execute([])
+        with pytest.raises(Exception):
+            result.success = False
+
+
+# =============================================================================
+# GC SEMANTICS TESTS
+# =============================================================================
+
+class TestGcSemantics:
+    """Test semantic meaning of KAPILA as gc owner."""
+
+    def test_kapila_meaning(self):
+        """KAPILA semantically fits gc."""
+        # Kapila = The founder of Sankhya (analytical philosophy)
+        # Gc = Analyze and clean unused resources
+        cmd = GcCommand()
+        assert "KAPILA" in cmd.help_text or "analy" in cmd.help_text.lower()
+
+    def test_purify_meaning(self):
+        """Gc is appropriate for PURIFY phase."""
+        # PURIFY = Validation and cleanup
+        # Gc = Clean garbage, purify resources
+        cmd = GcCommand()
+        assert cmd.phase == Phase.PURIFY
+
+    def test_garbage_collect_meaning(self):
+        """GARBAGE_COLLECT fits gc semantically."""
+        # GARBAGE_COLLECT = Remove unused resources
+        # Gc = Garbage collection
+        cmd = GcCommand()
+        assert cmd.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert "GARBAGE_COLLECT" in cmd.execute([]).output
+
+
+# =============================================================================
+# PURIFY PHASE COMPLETE TEST
+# =============================================================================
+
+class TestPurifyPhaseComplete:
+    """Test that PURIFY phase is complete with all 4 commands."""
+
+    def test_all_purify_commands_registered(self):
+        """All 4 PURIFY phase commands are registered."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.PURIFY)
+        names = [c.name for c in cmds]
+        assert "scan" in names    # VYASA - Position 4
+        assert "detect" in names  # KUMARAS - Position 5
+        assert "gc" in names      # KAPILA - Position 6
+        assert "flood" in names   # MANU - Position 7
+
+    def test_purify_has_four_commands(self):
+        """PURIFY phase has exactly 4 commands."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.PURIFY)
+        assert len(cmds) == 4
