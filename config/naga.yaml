@@ -1,27 +1,90 @@
-# NAGA Federation Configuration
-# "Niemand darf es merken" - they infiltrate invisibly.
-#
-# Environment variable overrides:
-#   NAGA_TRUST_MODE=strict|permissive
-#   NAGA_STRICT=1  (alias for trust_mode=strict)
-#   NAGA_GOSSIP_ENABLED=1
-#   NAGA_TOXICITY_THRESHOLD=0.3
-
 sesha:
   enabled: true
-  gossip_enabled: false  # Enable when federation is ready
+  gossip_enabled: false
   block_size: 100
   sync_interval_seconds: 60
-
 vasuki:
   enabled: true
-  serialization_format: msgpack  # msgpack | json
+  serialization_format: msgpack
   sign_outbound: true
   validate_schema: true
-
 takshaka:
   enabled: true
-  trust_mode: strict  # strict | permissive
+  trust_mode: strict
   toxicity_threshold: 0.3
   rate_limit_rpm: 60
   rate_limit_window: 60.0
+kaliya:
+  enabled: true
+  default_quarantine_duration_seconds: 3600
+  max_violations_before_quarantine: 3
+  escalation_threshold: 5
+karkotaka:
+  enabled: true
+  vault_dir: .steward/vault
+narada:
+  enabled: true
+  max_interceptions_per_minute: 1000
+  observe_args: true
+  observe_return: true
+  observe_duration: true
+chitragupta:
+  enabled: true
+  baseline_window_size: 100
+  anomaly_threshold_std: 2.0
+  max_profiles: 1000
+prahlad:
+  enabled: true
+  auto_generate_tests: true
+  chaos_probe_enabled: true
+  dharma_audit_interval_seconds: 3600
+  verify_state_preservation: true
+ananta:
+  enabled: true
+  wrap_manifest_registry: true
+  max_load_events: 10000
+cortex:
+  enabled: true
+  signal_buffer_size: 100
+  correlation_threshold: 3
+  max_signal_age_seconds: 300.0
+  auto_dispatch: true
+  log_decisions: true
+flood:
+  enabled: true
+  max_analysis_queue: 1000
+  analysis_timeout_ms: 50
+  queue_wait_timeout_seconds: 5.0
+  seen_events_max: 10000
+  seen_events_trim_size: 5000
+  max_content_size: 10000
+commit_watcher:
+  enabled: true
+  panic_threshold: 3
+  panic_window_seconds: 300
+  stagnation_seconds: 600
+  deferral_threshold: 5
+  conflict_rate_threshold: 0.5
+  rolling_window_size: 100
+visibility:
+  enabled: true
+  target_naga_tests: 600
+  tests_per_component: 10
+  protected_threshold: 70.0
+  monitoring_threshold: 30.0
+tuv:
+  enabled: true
+  implementation_patterns:
+  - Service
+  - Handler
+  - Manager
+  - Controller
+  - Provider
+  - Adapter
+  - Implementation
+  - Impl
+  - Tool
+  - Identity
+  critical_gaps: []
+  skip_pycache: true
+  skip_type_checking_blocks: true

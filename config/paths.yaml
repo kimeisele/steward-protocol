@@ -1,117 +1,79 @@
-# Paths Configuration
-# All system paths - eliminates 250+ hardcoded Path() violations
-#
-# OPUS-025: Strict Scope Separation (ADR-025a, ADR-025b)
-# - tool:    GLOBAL SCOPE - XDG-compliant paths for steward CLI
-# - project: LOCAL SCOPE  - .vibe/ paths for vibe kernel instance
-# - data:    Project data directory
-# - system:  Runtime paths (DEPRECATED - migrating to project.runtime)
-#
-# Usage in code:
-#   path = config.paths.data.resolve("economy_db")
-#   path = config.paths.cartridges.resolve("system")
-#   path = config.paths.knowledge.resolve("circuits")
-#   path = config.paths.project.resolve("state_db")
-#   path = config.paths.tool.resolve("lib")  # XDG with fallback
-
-# Phase 2: Extended with missing path keys (workspace, archive, intelligence, etc.)
-
-# ================================================
-# GLOBAL SCOPE: The Tool (steward CLI) - XDG Compliant
-# ================================================
-# NOTE: XDG environment variable resolution happens in Python's resolve() method.
-# These are defaults; XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_CACHE_HOME override them.
 tool:
-  config_root: "~/.config/steward"
-  data_root: "~/.local/share/steward"
-  cache_root: "~/.cache/steward"
-  # Derived paths
-  keys: "{config_root}/keys"
-  profiles: "{config_root}/profiles"
-  lib: "{data_root}/lib"
-  models: "{data_root}/models"
-  library: "{data_root}/library"
-
-# ================================================
-# LOCAL SCOPE: The Instance (vibe kernel)
-# ================================================
+  config_root: ~/.config/steward
+  data_root: ~/.local/share/steward
+  cache_root: ~/.cache/steward
+  keys: ~/.config/steward/keys
+  profiles: ~/.config/steward/profiles
+  lib: ~/.local/share/steward/lib
+  models: ~/.local/share/steward/models
+  library: ~/.local/share/steward/library
 project:
-  vibe_root: ".vibe"
-  state_db: "{vibe_root}/vibe.db"
-  runtime: "{vibe_root}/runtime"
-  sandboxes: "{vibe_root}/sandboxes"
-  logs: "{vibe_root}/logs"
-  memory: "{vibe_root}/state/memory.json"
-  tasks: "{vibe_root}/state/tasks"
-  workspace_root: "."
-  diplomatic_bag: "diplomatic_bag"
-  intelligence: "intelligence"
-  archive: "{vibe_root}/state/archive"
-  migration: "{vibe_root}/migrations"
-  starter_packs: "knowledge/starter_packs"
-
+  vibe_root: .vibe
+  state_db: .vibe/vibe.db
+  runtime: .vibe/runtime
+  sandboxes: .vibe/sandboxes
+  logs: .vibe/logs
+  memory: .vibe/state/memory.json
+  tasks: .vibe/state/tasks
+  workspace_root: .
+  diplomatic_bag: diplomatic_bag
+  intelligence: intelligence
+  archive: .vibe/state/archive
+  migration: .vibe/migrations
+  starter_packs: knowledge/starter_packs
 data:
-  root: "data"
-  economy_db: "{root}/economy.db"
-  registry_citizens: "{root}/registry/citizens.json"
-  registry_licenses: "{root}/registry/licenses.json"
-  security_master_key: "{root}/security/master.key"
-  ledger_audit_trail: "{root}/ledger/audit_trail.jsonl"
-  ledger_kernel: "{root}/ledger/kernel.jsonl"
-  ledger_violations: "{root}/ledger/violations.jsonl"
-  reports: "{root}/reports"
-  events_herald: "{root}/events/herald.jsonl"
-  identities: "{root}/identities"
-  federation_pokedex: "{root}/federation/pokedex.json"
-  supreme_court: "{root}/supreme_court"
-  # Phase 2 additions - missing data paths
-  vibe_ledger: "{root}/vibe_ledger.db"
-  library_catalog: "{root}/library/catalog.json"
-  logs_transactions: "{root}/logs/transactions.log"
-  milk_ocean_db: "{root}/milk_ocean.db"
-  test_baselines: "{root}/test_baselines.json"
-  test_mutations_log: "{root}/logs/test_mutations.log"
-  governance_executed: "{root}/governance/executed"
-  vibe_agency_db: "{root}/vibe_agency.db"
-
+  root: data
+  economy_db: data/economy.db
+  registry_citizens: data/registry/citizens.json
+  registry_licenses: data/registry/licenses.json
+  security_master_key: data/security/master.key
+  ledger_audit_trail: data/ledger/audit_trail.jsonl
+  ledger_kernel: data/ledger/kernel.jsonl
+  ledger_violations: data/ledger/violations.jsonl
+  reports: data/reports
+  events_herald: data/events/herald.jsonl
+  identities: data/identities
+  federation_pokedex: data/federation/pokedex.json
+  supreme_court: data/supreme_court
+  vibe_ledger: data/vibe_ledger.db
+  library_catalog: data/library/catalog.json
+  logs_transactions: data/logs/transactions.log
+  test_baselines: data/test_baselines.json
+  test_mutations_log: data/logs/test_mutations.log
+  governance_executed: data/governance/executed
 cartridges:
-  system: "vibe_core/cartridges/system"
-  agent_city: "vibe_core/cartridges/agent_city"
-  plugins: "vibe_core/plugins"
-  phoenix_sections: "vibe_core/phoenix/sections"
-
+  system: vibe_core/cartridges/system
+  agent_city: vibe_core/cartridges/agent_city
+  plugins: vibe_core/plugins
+  phoenix_sections: vibe_core/phoenix/sections
 knowledge:
-  root: "knowledge"
-  circuits: "{root}/circuits"
-  playbooks: "{root}/playbooks"
-  templates: "{root}/templates"
-  prompts: "{root}/prompts"
-  config: "config"
-  matrix: "MATRIX.md"
-  # Legacy paths (emit deprecation warning when used)
-  legacy_circuits: "vibe_core/playbook/circuits"
-  legacy_playbooks: "vibe_core/playbook/playbooks"
-  # Phase 2 additions - missing knowledge paths
-  interface_templates: "{root}/interface/templates"
-  soul: "config/soul.yaml"
-
+  root: knowledge
+  circuits: knowledge/circuits
+  playbooks: knowledge/playbooks
+  templates: knowledge/templates
+  prompts: knowledge/prompts
+  config: config
+  matrix: MATRIX.md
+  legacy_circuits: vibe_core/playbook/circuits
+  legacy_playbooks: vibe_core/playbook/playbooks
+  interface_templates: knowledge/interface/templates
+  soul: config/soul.yaml
 system:
-  runtime_root: "/tmp/vibe_os"
-  agents: "{runtime_root}/agents"
-  models: "{runtime_root}/models"
-  cache: "{runtime_root}/cache"
-  logs: "{runtime_root}/logs"
-  # Phase 2 additions - missing system paths
-  lineage_db: "{runtime_root}/kernel/lineage.db"
-
+  runtime_root: /tmp/vibe_os
+  agents: /tmp/vibe_os/agents
+  models: /tmp/vibe_os/models
+  cache: /tmp/vibe_os/cache
+  logs: /tmp/vibe_os/logs
+  lineage_db: /tmp/vibe_os/kernel/lineage.db
+  library_path: library
 docs:
-  operations: "OPERATIONS.md"
-  settings: "SETTINGS.md"
-  envoy: "ENVOY.md"
-  readme: "README.md"
-  index: "INDEX.md"
-  agents: "AGENTS.md"
-  help: "HELP.md"
-  tasks: "TASKS.md"
-  opus: "OPUS.md"
-  citymap: "CITYMAP.md"
+  operations: OPERATIONS.md
+  settings: SETTINGS.md
+  envoy: ENVOY.md
+  readme: README.md
+  index: INDEX.md
+  agents: AGENTS.md
+  help: HELP.md
+  tasks: TASKS.md
+  opus: OPUS.md
+  citymap: CITYMAP.md

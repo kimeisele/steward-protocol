@@ -1,533 +1,334 @@
-# Interface Configuration - UI Rendering System
-#
-# This file defines HOW the UI system renders markdown files.
-# The InterfacePlugin reads this config to know:
-# - Which renderers are enabled
-# - How often each renderer should refresh
-# - Template and document type settings
-# - UI element types, layouts, and dependencies
-#
-# FRACTAL: Custom agents can add their own renderers here!
-# Example: A broker agent adds broker_btc renderer that refreshes every 5h.
-
-# =============================================================================
-# GLOBAL SETTINGS
-# =============================================================================
 templates_dir: knowledge/interface/templates
-default_interval: 0  # 0 = render on every tick
-
-# =============================================================================
-# GLOBAL VARIABLES (available in all templates)
-# =============================================================================
+default_interval: 0
 variables:
   project_name: steward-protocol
   project_url: https://github.com/kimeisele/steward-protocol
-  version: "0.1.0"
-
-# =============================================================================
-# TIME/DATE FORMATTING
-# =============================================================================
+  version: 0.1.0
 formatting:
   timezone: UTC
-  date_format: "%Y-%m-%d"
-  time_format: "%H:%M:%S"
-  datetime_format: "%Y-%m-%d %H:%M:%S"
-  relative_time: true  # "2 minutes ago" vs "2025-12-06 20:15:00"
-
-# =============================================================================
-# UI ELEMENT TYPES (reusable components)
-# =============================================================================
+  date_format: '%Y-%m-%d'
+  time_format: '%H:%M:%S'
+  datetime_format: '%Y-%m-%d %H:%M:%S'
+  relative_time: true
 element_types:
-  # Tables
   table:
     header_style: bold
-    alignment: left  # left | center | right
-    separator: "|"
-
-  # Status indicators
+    alignment: left
+    separator: '|'
   status:
     icons:
-      running: "🟢"
-      stopped: "🔴"
-      warning: "🟡"
-      unknown: "⚪"
-    format: "{icon} {label}"
-
-  # Lists
+      running: "\U0001F7E2"
+      stopped: "\U0001F534"
+      warning: "\U0001F7E1"
+      unknown: "\u26AA"
+    format: '{icon} {label}'
   list:
-    bullet: "-"
-    checkbox_empty: "[ ]"
-    checkbox_checked: "[x]"
+    bullet: '-'
+    checkbox_empty: '[ ]'
+    checkbox_checked: '[x]'
     indent: 2
-
-  # Terminal/Command
   terminal:
-    prompt: ">"
-    code_fence: "```"
-    language: "bash"
-
-  # Metric displays
+    prompt: '>'
+    code_fence: '```'
+    language: bash
   metric:
-    format: "{label}: {value} {unit}"
+    format: '{label}: {value} {unit}'
     progress_bar: true
     progress_width: 20
-
-  # Navigation
   nav:
-    separator: " · "
-    link_format: "[{label}]({url})"
-
-# =============================================================================
-# LAYOUT TYPES (document structure)
-# =============================================================================
+    separator: " \xB7 "
+    link_format: '[{label}]({url})'
 layouts:
-  # Full page with header and footer
   fullpage:
     has_header: true
     has_footer: true
     has_nav: true
-    sections: [header, nav, content, footer]
-
-  # Middle content only (for embedding)
+    sections:
+    - header
+    - nav
+    - content
+    - footer
+    columns: 1
   content_only:
     has_header: false
     has_footer: false
     has_nav: false
-    sections: [content]
-
-  # Dashboard style (grid of widgets)
+    sections:
+    - content
+    columns: 1
   dashboard:
     has_header: true
     has_footer: true
     has_nav: true
-    sections: [header, nav, widgets, footer]
+    sections:
+    - header
+    - nav
+    - widgets
+    - footer
     columns: 2
-
-  # Terminal style (input/output)
   terminal:
     has_header: true
     has_footer: false
     has_nav: false
-    sections: [header, request, status, history]
-
-# =============================================================================
-# SECTION OWNERSHIP TYPES
-# =============================================================================
+    sections:
+    - header
+    - request
+    - status
+    - history
+    columns: 1
 ownership_types:
-  # LIVE - System writes, always fresh
   live:
     writable_by: system
     preserve_on_render: false
     refresh_on_tick: true
-    marker_start: "<!-- @LIVE:{id} -->"
-    marker_end: "<!-- /@LIVE -->"
-
-  # AI - AI can write, preserved between renders
+    marker_start: <!-- @LIVE:{id} -->
+    marker_end: <!-- /@LIVE -->
   ai:
     writable_by: ai
     preserve_on_render: true
     refresh_on_tick: false
-    marker_start: "<!-- @AI:{id} -->"
-    marker_end: "<!-- /@AI -->"
-
-  # HUMAN - User writes, always preserved
+    marker_start: <!-- @AI:{id} -->
+    marker_end: <!-- /@AI -->
   human:
     writable_by: human
     preserve_on_render: true
     refresh_on_tick: false
-    marker_start: "<!-- @HUMAN:{id} -->"
-    marker_end: "<!-- /@HUMAN -->"
-
-# =============================================================================
-# WINDOW/VIEW TYPES (application contexts)
-# =============================================================================
+    marker_start: <!-- @HUMAN:{id} -->
+    marker_end: <!-- /@HUMAN -->
 view_types:
-  # Documentation view
   docs:
     layout: fullpage
     editable: false
     auto_refresh: false
-
-  # Dashboard view
+    refresh_interval: 30
   dashboard:
     layout: dashboard
     editable: false
     auto_refresh: true
     refresh_interval: 30
-
-  # Terminal view (bidirectional)
   terminal:
     layout: terminal
     editable: true
     auto_refresh: true
     refresh_interval: 5
-
-  # Workspace view (AI can edit)
   workspace:
     layout: fullpage
     editable: true
     auto_refresh: true
     refresh_interval: 30
-
-  # Agent workflow view
   workflow:
     layout: dashboard
     editable: false
     auto_refresh: true
     refresh_interval: 10
-
-# =============================================================================
-# DEPENDENCIES (UI element dependencies)
-# =============================================================================
 dependencies:
-  # Example: kernel_status depends on kernel being booted
   kernel_status:
-    requires: [kernel.booted]
-    fallback: "Kernel not running"
-
+    requires:
+    - kernel.booted
+    fallback: Kernel not running
   agent_list:
-    requires: [kernel.booted, agents.loaded]
-    fallback: "No agents loaded"
-
+    requires:
+    - kernel.booted
+    - agents.loaded
+    fallback: No agents loaded
   task_queue:
-    requires: [kernel.booted, scheduler.ready]
-    fallback: "Scheduler not ready"
-
-# =============================================================================
-# SYSTEM RENDERERS (built-in)
-# =============================================================================
+    requires:
+    - kernel.booted
+    - scheduler.ready
+    fallback: Scheduler not ready
 renderers:
-  # Core navigation/status
-  # README.md via Jinja2 template (readme_dashboard.md.j2)
   readme:
     enabled: true
     output: README.md
-    template: readme.md.j2
     view_type: docs
     interval: 60
-
+    template: readme.md.j2
   index:
     enabled: true
     output: INDEX.md
     view_type: docs
     interval: 60
-
   help:
     enabled: true
     output: HELP.md
     view_type: docs
     interval: 300
-
-  # Agent ecosystem
   agents:
     enabled: true
     output: AGENTS.md
     view_type: dashboard
     interval: 30
     sections:
-      - id: header
-        owner: live
-        source: kernel.status
-      - id: agent_registry
-        owner: live
-        source: agents.list
-      - id: agent_stats
-        owner: live
-        source: agents.stats
-
+    - id: header
+      owner: live
+      source: kernel.status
+    - id: agent_registry
+      owner: live
+      source: agents.list
+    - id: agent_stats
+      owner: live
+      source: agents.stats
   citymap:
     enabled: true
     output: CITYMAP.md
     view_type: docs
     interval: 60
-
-  # Operations/Status
-  # OPUS-314: Removed unused sections (renderer doesn't read them)
   operations:
     enabled: true
     output: OPERATIONS.md
     view_type: dashboard
     interval: 10
-
-  # DISABLED: Redundant with OPERATIONS.md (gemini/opus-declutter-and-enhance)
-  # dashboard:
-  #   enabled: true
-  #   output: DASHBOARD.md
-  #   view_type: dashboard
-  #   interval: 30
-
-  # Bidirectional (user can write)
-  # IMPORTANT: interval=0 so completions are detected immediately on every tick
-  # OPUS-314: Removed unused sections (renderer doesn't read them)
   envoy:
     enabled: true
     output: ENVOY.md
     view_type: terminal
     interval: 0
-
-  # OPUS-314: Removed unused sections (renderer doesn't read them)
   settings:
     enabled: true
     output: SETTINGS.md
     view_type: terminal
     interval: 5
-
-  # DISABLED: Empty stub, pure noise (gemini/opus-declutter-and-enhance)
-  # rag:
-  #   enabled: true
-  #   output: RAG.md
-  #   view_type: docs
-  #   interval: 120
-
-  # Git integration
   git:
     enabled: true
     output: GIT.md
     view_type: dashboard
     interval: 30
     sections:
-      - id: status
-        owner: live
-        source: git.status
-      - id: recent_commits
-        owner: live
-        source: git.log
-
-  # Tasks
-  # OPUS-314: Removed unused sections (renderer doesn't read them)
+    - id: status
+      owner: live
+      source: git.status
+    - id: recent_commits
+      owner: live
+      source: git.log
   tasks:
     enabled: true
     output: TASKS.md
     view_type: workflow
     interval: 10
-
-  # Matrix (routing)
   matrix:
     enabled: false
     output: MATRIX.md
     view_type: docs
     interval: 300
-
-  # Proof (verification)
   proof:
     enabled: false
     output: PROOF.md
     view_type: docs
     interval: 0
-
-  # Ephemeral (hypercube)
   ephemeral:
     enabled: true
     output: EPHEMERAL.md
     view_type: dashboard
     interval: 60
-
-  # OPUS - Master AI Dashboard (SSOT for kernel work)
-  # ARCHITECTURE (OPUS-312 CLEANUP):
-  # - opus_assistant.on_pulse() owns OPUS.md via kernel.manifestation + StateMutation
-  # - InterfacePlugin's opus renderer is DISABLED (was redundant wrapper)
-  # - Single Writer: opus_assistant through proper kernel channels
-  # opus:
-  #   enabled: false  # OPUS-312: Disabled - opus_assistant owns OPUS.md via kernel.manifestation
-  #   output: OPUS.md
-  #   view_type: workspace
-  #   interval: 30
-  #   sections:
-  #     # LIVE: Kernel status
-  #     - id: status
-  #       owner: live
-  #       source: kernel.status
-  #     - id: metrics
-  #       owner: live
-  #       source: opus.metrics
-  #       element_type: table
-  #     # LIVE: Architecture (integrated)
-  #     - id: architecture
-  #       owner: live
-  #       source: arch.mermaid
-  #     - id: component_sizes
-  #       owner: live
-  #       source: arch.components
-  #       element_type: table
-  #     - id: plugin_status
-  #       owner: live
-  #       source: arch.plugins
-  #       element_type: table
-  #     # LIVE: Roadmap from manifest.json
-  #     - id: roadmap
-  #       owner: live
-  #       source: opus.roadmap
-  #       element_type: table
-  #     # LIVE: Architecture docs from manifest.json
-  #     - id: documents
-  #       owner: live
-  #       source: opus.documents
-  #       element_type: table
-  #     # LIVE: P0 Plans (expanded)
-  #     - id: p0_plans
-  #       owner: live
-  #       source: opus.p0_plans
-  #     # AI: I maintain these
-  #     - id: current_goal
-  #       owner: ai
-  #     - id: phase_status
-  #       owner: ai
-  #       element_type: list
-  #     - id: extraction_log
-  #       owner: ai
-  #       element_type: table
-  #     - id: blockers
-  #       owner: ai
-  #       element_type: list
-  #     # HUMAN: User approves
-  #     - id: next_actions
-  #       owner: human
-  #       element_type: list
-
-
-  # ARCHITECTURE - Dynamic code analysis
   architecture:
     enabled: true
     output: ARCHITECTURE.md
     view_type: dashboard
-    interval: 300  # 5 min
+    interval: 300
     sections:
-      - id: mermaid_diagram
-        owner: live
-        source: arch.mermaid
-      - id: component_sizes
-        owner: live
-        source: arch.components
-        element_type: table
-      - id: plugin_status
-        owner: live
-        source: arch.plugins
-        element_type: table
-
-  # COGNITION - Real-time orchestration cycle monitoring (OPUS-095)
+    - id: mermaid_diagram
+      owner: live
+      source: arch.mermaid
+    - id: component_sizes
+      owner: live
+      source: arch.components
+      element_type: table
+    - id: plugin_status
+      owner: live
+      source: arch.plugins
+      element_type: table
   cognition:
     enabled: true
     output: COGNITION.md
     view_type: dashboard
-    interval: 5  # Aggressive refresh for live debugging
+    interval: 5
     sections:
-      - id: holon_hierarchy
-        owner: live
-        source: cycles.active
-      - id: phase_metrics
-        owner: live
-        source: cycles.metrics
-      - id: memory_safety
-        owner: live
-        source: cycles.status
-      - id: completed_cycles
-        owner: live
-        source: cycles.completed
-      - id: error_tracking
-        owner: live
-        source: cycles.errors
-
-  # STATE - Prakriti State Inspector (OPUS-014, OPUS-151)
-  # The Markdown IS the state reality, not a reflection of it.
+    - id: holon_hierarchy
+      owner: live
+      source: cycles.active
+    - id: phase_metrics
+      owner: live
+      source: cycles.metrics
+    - id: memory_safety
+      owner: live
+      source: cycles.status
+    - id: completed_cycles
+      owner: live
+      source: cycles.completed
+    - id: error_tracking
+      owner: live
+      source: cycles.errors
   state:
     enabled: true
     output: STATE.md
     view_type: dashboard
     interval: 10
     sections:
-      - id: summary
-        owner: live
-        source: state.summary
-        element_type: status
-      - id: sthula
-        owner: live
-        source: state.sthula
-        element_type: table
-      - id: prana
-        owner: live
-        source: state.prana
-        element_type: table
-      - id: purusha
-        owner: live
-        source: state.purusha
-        element_type: table
-      - id: session
-        owner: live
-        source: state.session
-        element_type: list
-      - id: git_status
-        owner: live
-        source: state.git
-        element_type: status
-
-  # ECONOMY - Resource Meters (OPUS-014, OPUS-151)
-  # Token usage, credits, costs - the economic reality.
+    - id: summary
+      owner: live
+      source: state.summary
+      element_type: status
+    - id: sthula
+      owner: live
+      source: state.sthula
+      element_type: table
+    - id: prana
+      owner: live
+      source: state.prana
+      element_type: table
+    - id: purusha
+      owner: live
+      source: state.purusha
+      element_type: table
+    - id: session
+      owner: live
+      source: state.session
+      element_type: list
+    - id: git_status
+      owner: live
+      source: state.git
+      element_type: status
   economy:
     enabled: true
     output: ECONOMY.md
     view_type: dashboard
     interval: 30
     sections:
-      - id: treasury
-        owner: live
-        source: economy.treasury
-        element_type: table
-      - id: agent_credits
-        owner: live
-        source: economy.credits
-        element_type: table
-      - id: transactions
-        owner: live
-        source: economy.transactions
-        element_type: table
-
-# =============================================================================
-# CUSTOM RENDERERS (user/agent defined)
-# =============================================================================
-# Agents can add their own renderers here!
-# Example:
-#
-# custom_renderers:
-#   broker_btc:
-#     enabled: true
-#     output: BROKER_BTC.md
-#     interval: 18000  # 5 hours
-#     data_source: broker.get_btc_price
-#     template: custom/broker.j2
-#
-#   weather_report:
-#     enabled: true
-#     output: WEATHER.md
-#     interval: 3600  # 1 hour
-#     data_source: weather.get_forecast
-
+    - id: treasury
+      owner: live
+      source: economy.treasury
+      element_type: table
+    - id: agent_credits
+      owner: live
+      source: economy.credits
+      element_type: table
+    - id: transactions
+      owner: live
+      source: economy.transactions
+      element_type: table
 custom_renderers: {}
-
-# =============================================================================
-# HEADER SETTINGS
-# =============================================================================
 header:
   show_nav: true
   show_timestamp: true
   show_kernel_status: true
   generator_name: InterfacePlugin
-  nav_docs: [README.md, INDEX.md, AGENTS.md, CITYMAP.md, HELP.md, TASKS.md, SETTINGS.md, ENVOY.md]
-
-# =============================================================================
-# FOOTER SETTINGS
-# =============================================================================
+  nav_docs:
+  - README.md
+  - INDEX.md
+  - AGENTS.md
+  - CITYMAP.md
+  - HELP.md
+  - TASKS.md
+  - SETTINGS.md
+  - ENVOY.md
 footer:
   show_generator: true
   show_timestamp: true
-  format: "*Generated by {generator} | {timestamp}*"
-
-# =============================================================================
-# DEFAULT TEMPLATES (per element type)
-# =============================================================================
+  format: '*Generated by {generator} | {timestamp}*'
 default_templates:
-  table: "templates/elements/table.md.j2"
-  list: "templates/elements/list.md.j2"
-  status: "templates/elements/status.md.j2"
-  metric: "templates/elements/metric.md.j2"
-  terminal: "templates/elements/terminal.md.j2"
-  nav: "templates/elements/nav.md.j2"
+  table: templates/elements/table.md.j2
+  list: templates/elements/list.md.j2
+  status: templates/elements/status.md.j2
+  metric: templates/elements/metric.md.j2
+  terminal: templates/elements/terminal.md.j2
+  nav: templates/elements/nav.md.j2

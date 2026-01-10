@@ -34,7 +34,10 @@ from vibe_core.protocols.substrate import GeneManifest, GeneStatus
 from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 
 from .types import EnforceContext, SovereignContext
-from .yamaraja import DharmaVerdict, YamarajaProtocol
+# YamarajaProtocol is in mahajanas/ (the 12 authorities)
+from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocol
+# DharmaVerdict is in universal/dharma
+from vibe_core.protocols.universal.dharma import DharmaVerdict
 
 # Validated: No Implementation Imports
 pass

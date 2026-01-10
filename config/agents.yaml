@@ -1,72 +1,50 @@
-# System Agents Configuration
-# Wiring of agent names to implementation classes
-# Extracted from phoenix.yaml - now auto-discovered via Phoenix Sections
-
 system_agents:
-  # Discovery & Exploration
-  - name: "DiscoveryAgent"
-    class: "vibe_core.cartridges.system.discoverer.agent:Discoverer"
-    protocol: "VibeAgent"
-    enabled: true
-
-  # Knowledge Management
-  - name: "ArchivistAgent"
-    class: "vibe_core.cartridges.system.archivist.cartridge_main:ArchivistCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  # Governance & Constitution
-  - name: "HeraldAgent"
-    class: "vibe_core.cartridges.system.herald.cartridge_main:HeraldCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "CivicAgent"
-    class: "vibe_core.cartridges.system.civic.cartridge_main:CivicCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "SupremeCourtAgent"
-    class: "vibe_core.cartridges.system.supreme_court.cartridge_main:SupremeCourtCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  # Execution & Auditing
-  - name: "EngineerAgent"
-    class: "vibe_core.cartridges.system.engineer.cartridge_main:EngineerCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "AuditorAgent"
-    class: "vibe_core.cartridges.system.auditor.cartridge_main:AuditorCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "WatchmanAgent"
-    class: "vibe_core.cartridges.system.watchman.cartridge_main:WatchmanCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  # Communication & Analysis
-  - name: "ForumAgent"
-    class: "vibe_core.cartridges.system.forum.cartridge_main:ForumCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "OracleAgent"
-    class: "vibe_core.cartridges.system.oracle.cartridge_main:OracleCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "ScienceAgent"
-    class: "vibe_core.cartridges.system.science.cartridge_main:ScienceCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-  - name: "EnvoyAgent"
-    class: "vibe_core.cartridges.system.envoy.cartridge_main:EnvoyCartridge"
-    protocol: "VibeAgent"
-    enabled: true
-
-# Custom agents added by users
+- name: DiscoveryAgent
+  class: vibe_core.cartridges.system.discoverer.agent:Discoverer
+  protocol: VibeAgent
+  enabled: true
+- name: ArchivistAgent
+  class: vibe_core.cartridges.system.archivist.cartridge_main:ArchivistCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: HeraldAgent
+  class: vibe_core.cartridges.system.herald.cartridge_main:HeraldCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: CivicAgent
+  class: vibe_core.cartridges.system.civic.cartridge_main:CivicCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: SupremeCourtAgent
+  class: vibe_core.cartridges.system.supreme_court.cartridge_main:SupremeCourtCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: EngineerAgent
+  class: vibe_core.cartridges.system.engineer.cartridge_main:EngineerCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: AuditorAgent
+  class: vibe_core.cartridges.system.auditor.cartridge_main:AuditorCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: WatchmanAgent
+  class: vibe_core.cartridges.system.watchman.cartridge_main:WatchmanCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: ForumAgent
+  class: vibe_core.cartridges.system.forum.cartridge_main:ForumCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: OracleAgent
+  class: vibe_core.cartridges.system.oracle.cartridge_main:OracleCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: ScienceAgent
+  class: vibe_core.cartridges.system.science.cartridge_main:ScienceCartridge
+  protocol: VibeAgent
+  enabled: true
+- name: EnvoyAgent
+  class: vibe_core.cartridges.system.envoy.cartridge_main:EnvoyCartridge
+  protocol: VibeAgent
+  enabled: true
 custom_agents: []

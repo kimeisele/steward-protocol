@@ -1,34 +1,17 @@
-# Guardrails Configuration - Preflight Checks
-#
-# Controls system behavior BEFORE boot/execution.
-# Different from runtime guards (tool_safety_guard) or test guards (test_guardian).
-#
-# Modes:
-#   block  - Stop execution, require fix
-#   warn   - Show warning, continue anyway
-#   ignore - Skip check entirely
-
-# Git State Checks
 git:
-  uncommitted_changes: ignore  # block | warn | ignore
-  behind_remote: ignore        # block | warn | ignore
-  untracked_files: ignore      # block | warn | ignore
-
-# Test State Checks
+  uncommitted_changes: ignore
+  behind_remote: ignore
+  untracked_files: ignore
 tests:
-  must_pass: ignore            # block | warn | ignore (run tests before boot)
-  coverage_minimum: ignore     # block | warn | ignore
-
-# Environment Checks
+  must_pass: ignore
+  coverage_minimum: ignore
 environment:
-  required_env_vars: warn      # block | warn | ignore
-  python_version: ignore       # block | warn | ignore
-
-# Auto-Generated Files (UI) Management
+  required_env_vars: warn
+  python_version: ignore
 ui_files:
-  auto_commit: true            # Auto-commit generated .md files after render
-  auto_push: false             # Auto-push after commit (risky, default false)
-  commit_message: "auto: Update generated UI files"
-  patterns:                    # Files to auto-commit (glob patterns)
-    - "*.md"                   # All root .md files (UI)
-    - "!docs/**"               # Exclude docs folder (human-edited)
+  auto_commit: true
+  auto_push: false
+  commit_message: 'auto: Update generated UI files'
+  patterns:
+  - '*.md'
+  - '!docs/**'

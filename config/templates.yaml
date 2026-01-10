@@ -1,79 +1,55 @@
-# Templates Configuration
-# Jinja2 template registry - replaces hardcoded BUILTIN_TEMPLATES
-#
-# Usage in code:
-#   result = config.templates.render("status_summary", city_name="Agent City", ...)
-
-template_dir: "knowledge/templates"
+template_dir: knowledge/templates
 auto_reload: true
-
 templates:
-  # Action handler templates (from action_handlers.py BUILTIN_TEMPLATES)
   status_summary:
-    file: "status_summary.j2"
-    description: "City status summary with agent and task counts"
-    category: "status"
-
+    file: status_summary.j2
+    description: City status summary with agent and task counts
+    category: status
   agent_list:
-    file: "agent_list.j2"
-    description: "List of registered agents with capabilities"
-    category: "status"
-
+    file: agent_list.j2
+    description: List of registered agents with capabilities
+    category: status
   simple:
-    file: "simple.j2"
-    description: "Simple message passthrough"
-    category: "utility"
-
-  # Error and response templates
+    file: simple.j2
+    description: Simple message passthrough
+    category: utility
   error_report:
-    file: "error_report.j2"
-    description: "Formatted error display"
-    category: "error"
-
+    file: error_report.j2
+    description: Formatted error display
+    category: error
   task_result:
-    file: "task_result.j2"
-    description: "Task completion result"
-    category: "response"
-
-  # Git templates (from renderers/git.py)
+    file: task_result.j2
+    description: Task completion result
+    category: response
   git_analysis:
-    file: "git_analysis.j2"
-    description: "Git repository analysis report"
-    category: "report"
-
+    file: git_analysis.j2
+    description: Git repository analysis report
+    category: report
   git_status:
-    file: "git_status.j2"
-    description: "Git status display"
-    category: "report"
-
-  # Task templates (from renderers/tasks.py)
+    file: git_status.j2
+    description: Git status display
+    category: report
   mission_control:
-    file: "mission_control.j2"
-    description: "Task mission control dashboard"
-    category: "dashboard"
-
-  # Panel templates (from opus/renderer.py)
+    file: mission_control.j2
+    description: Task mission control dashboard
+    category: dashboard
   code_health:
-    file: "code_health.j2"
-    description: "Code health TODO/HACK/FIXME panel"
-    category: "panel"
-
+    file: code_health.j2
+    description: Code health TODO/HACK/FIXME panel
+    category: panel
   architecture:
-    file: "architecture.j2"
-    description: "Architecture mermaid diagram panel"
-    category: "panel"
-
+    file: architecture.j2
+    description: Architecture mermaid diagram panel
+    category: panel
   component_sizes:
-    file: "component_sizes.j2"
-    description: "Component size metrics panel"
-    category: "panel"
-
+    file: component_sizes.j2
+    description: Component size metrics panel
+    category: panel
   plugin_status:
-    file: "plugin_status.j2"
-    description: "Plugin status overview panel"
-    category: "panel"
-
+    file: plugin_status.j2
+    description: Plugin status overview panel
+    category: panel
   metrics:
-    file: "metrics.j2"
-    description: "System metrics panel"
-    category: "panel"
+    file: metrics.j2
+    description: System metrics panel
+    category: panel

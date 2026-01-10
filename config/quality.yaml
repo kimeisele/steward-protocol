@@ -1,135 +1,67 @@
-# Quality Configuration - The immortal CI/lint settings
-#
-# This file survives container wipes. It IS the source of truth for:
-# - Lint rules (what errors to catch)
-# - Format rules (how code should look)
-# - Test configuration (how to run tests)
-# - CI workflows (what checks to run)
-#
-# Agents and kernel can read this to understand quality requirements.
-# Pre-commit hooks can be GENERATED from this config.
-
-# =============================================================================
-# LINTING (ruff)
-# =============================================================================
 lint:
   tool: ruff
-  # Critical rules - CI FAILS on these
   critical_rules:
-    - E9    # Runtime errors (syntax errors, etc.)
-    - F63   # Invalid print syntax
-    - F7    # Syntax errors in assertions
-    - F82   # Undefined names
-  # Informational rules - shown but don't fail CI
+  - E9
+  - F63
+  - F7
+  - F82
   info_rules:
-    - E     # pycodestyle errors
-    - F     # pyflakes
-    - I     # isort
-    - W     # pycodestyle warnings
-  # Paths to check
+  - E
+  - F
+  - I
+  - W
   paths:
-    - vibe_core
-    - steward
-    - scripts
-  # Paths to exclude
+  - vibe_core
+  - steward
+  - scripts
   exclude:
-    - .git
-    - .venv
-    - __pycache__
-    - data
-    - archive
-    - node_modules
+  - .git
+  - .venv
+  - __pycache__
+  - data
+  - archive
+  - node_modules
   line_length: 120
-
-# =============================================================================
-# FORMATTING (ruff format)
-# =============================================================================
 format:
   tool: ruff
   auto_fix: true
   paths:
-    - vibe_core
-    - steward
-    - scripts
+  - vibe_core
+  - steward
+  - scripts
   line_length: 120
   quote_style: double
-
-# =============================================================================
-# TESTING (pytest) - With Profiles for Speed & Transparency
-# =============================================================================
-# Profiles allow kernel/agents to run tests intelligently:
-#   pytest $(config.quality.get_pytest_args("fast"))
-#   pytest $(config.quality.get_pytest_args("ci"))
-# =============================================================================
 test:
   tool: pytest
   paths:
-    - tests
-  default_profile: fast  # Default for local dev
-  timeout: 300  # Global timeout (profiles can override)
-  workers: 0    # Global workers (0 = auto)
-  coverage_threshold: 0  # Global coverage threshold
-
-  # ==========================================================================
-  # FIXTURES - Standardized Test Objects (Phoenix Config Style)
-  # ==========================================================================
-  # These configure the test fixtures exposed via conftest.py
-  # DO NOT hardcode values in Python - read from here!
-  # ==========================================================================
-  fixtures:
-    # Default kernel configuration for tests
-    kernel:
-      ledger_path: ":memory:"  # In-memory for isolation
-      load_plugins: false      # Minimal by default
-
-    # Test agent defaults
-    agents:
-      compliant:
-        id_prefix: "test-compliant"
-        oath_sworn: true
-        capabilities: ["governance", "task_execution"]
-      no_oath:
-        id_prefix: "test-no-oath"
-        oath_sworn: null  # Attribute missing entirely
-      false_oath:
-        id_prefix: "test-false-oath"
-        oath_sworn: false
-
-    # Kernel presets (used by TestKernel factory)
-    kernel_presets:
-      minimal:
-        description: "Bare kernel, no plugins, memory ledger"
-        plugins: []
-      permissive:
-        description: "All operations allowed, no governance"
-        plugins: ["test_mode"]
-      governance:
-        description: "Full governance stack enabled"
-        plugins: ["steward_protocol", "vedic_governance"]
-      recording:
-        description: "Records all hook calls for assertions"
-        plugins: ["test_orchestration"]
-
-  # Available test profiles
+  - tests
+  default_profile: fast
   profiles:
-    # FAST - Quick feedback during development
     fast:
       name: fast
-      description: "Quick feedback during development (excludes slow tests)"
+      description: Quick feedback during development (excludes slow tests)
+      include_categories: []
+      exclude_categories: []
+      markers: []
       exclude_markers:
-        - slow
-        - integration
-        - e2e
-      workers: 0  # auto-parallel
+      - slow
+      - integration
+      - e2e
+      workers: 0
       fail_fast: true
-      timeout: 120  # OPUS-306: Increased from 30 (kernel boot takes ~30-60s)
+      timeout: 120
+      coverage: false
+      coverage_threshold: 0
       verbose: false
       show_durations: 5
-
-    # FULL - Complete test suite with coverage
+      extra_args: []
     full:
       name: full
-      description: "Complete test suite with coverage analysis"
+      description: Complete test suite with coverage analysis
+      include_categories: []
+      exclude_categories: []
+      markers: []
+      exclude_markers: []
       workers: 0
       fail_fast: false
       timeout: 300
@@ -137,112 +69,100 @@ test:
       coverage_threshold: 0
       verbose: true
       show_durations: 10
-
-    # CI - CI/CD optimized (strict, parallel, fail-fast)
+      extra_args: []
     ci:
       name: ci
-      description: "CI-optimized: parallel, fail-fast, timeout enforced"
+      description: 'CI-optimized: parallel, fail-fast, timeout enforced'
+      include_categories: []
+      exclude_categories: []
+      markers: []
+      exclude_markers: []
       workers: 0
       fail_fast: true
       timeout: 300
+      coverage: false
+      coverage_threshold: 0
       verbose: false
       show_durations: 10
       extra_args:
-        - "--tb=short"
-
-    # SMOKE - Quick sanity check
+      - --tb=short
     smoke:
       name: smoke
-      description: "Quick sanity check (smoke-tagged tests only)"
+      description: Quick sanity check (smoke-tagged tests only)
+      include_categories: []
+      exclude_categories: []
       markers:
-        - smoke
+      - smoke
+      exclude_markers: []
       workers: 0
       fail_fast: true
       timeout: 10
+      coverage: false
+      coverage_threshold: 0
       verbose: false
-
-    # UNIT - Unit tests only
+      show_durations: 0
+      extra_args: []
     unit:
       name: unit
-      description: "Unit tests only (fast, isolated)"
+      description: Unit tests only (fast, isolated)
+      include_categories: []
+      exclude_categories: []
       markers:
-        - unit
+      - unit
       exclude_markers:
-        - integration
-        - e2e
-        - slow
+      - integration
+      - e2e
+      - slow
       workers: 0
       fail_fast: false
-      timeout: 120  # OPUS-306: Increased from 30 (kernel boot takes ~30-60s)
+      timeout: 120
+      coverage: false
+      coverage_threshold: 0
+      verbose: false
       show_durations: 5
-
-    # INTEGRATION - Integration tests only
+      extra_args: []
     integration:
       name: integration
-      description: "Integration tests only (sequential for stability)"
+      description: Integration tests only (sequential for stability)
+      include_categories: []
+      exclude_categories: []
       markers:
-        - integration
-      workers: 1  # sequential for stability
+      - integration
+      exclude_markers: []
+      workers: 1
       fail_fast: false
       timeout: 120
+      coverage: false
+      coverage_threshold: 0
       verbose: true
-
-# =============================================================================
-# CI WORKFLOWS
-# =============================================================================
+      show_durations: 0
+      extra_args: []
+  timeout: 300
+  workers: 0
+  coverage_threshold: 0
 ci:
   workflows:
-    - name: Lint & Format Check
-      file: steward-ci.yml
-      triggers:
-        - push
-        - pull_request
-      required: true
-
-    - name: Integration Tests
-      file: integration-tests.yml
-      triggers:
-        - push
-        - pull_request
-      required: true
-
-    - name: Scheduled Agents
-      file: scheduled-agents.yml
-      triggers:
-        - schedule
-      required: false
-
+  - name: Lint & Format Check
+    file: steward-ci.yml
+    triggers:
+    - push
+    - pull_request
+    required: true
+  - name: Integration Tests
+    file: integration-tests.yml
+    triggers:
+    - push
+    - pull_request
+    required: true
+  - name: Scheduled Agents
+    file: scheduled-agents.yml
+    triggers:
+    - schedule
+    required: false
   protected_branches:
-    - main
-    - master
-
+  - main
+  - master
   require_status_checks: true
-
-# =============================================================================
-# PRE-COMMIT GUARDS (read by .githooks/pre-commit)
-# =============================================================================
-guards:
-  # Paths to scan for agent violations
-  agent_paths:
-    - vibe_core/cartridges/system
-    - vibe_core/cartridges/agent_city
-
-  # Guard 1: Block requirements.txt in agent directories
-  block_requirements_txt: true
-
-  # Guard 2: Block direct Path("data/...") calls
-  block_hardcoded_data_paths: true
-
-  # Guard 3: Warn hardcoded paths in __init__
-  warn_init_hardcoded_paths: true
-
-  # Guard 4: Ruff auto-format + critical error check
-  ruff_autoformat: true
-  ruff_critical_check: true
-
-# =============================================================================
-# ENFORCEMENT
-# =============================================================================
 enforce_on_commit: true
 enforce_on_push: true
 block_on_failure: true
