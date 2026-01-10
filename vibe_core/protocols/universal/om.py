@@ -3,6 +3,24 @@ OM PROTOCOL - The Unified Field (Layer 1)
 
 "Om Purnamadah Purnamidam" - The Whole is Complete.
 
+WARNING: ANTI-MAYAVAD CLAUSE
+============================
+"brahmaṇo hi pratiṣṭhāham" - Gita 14.27
+"I (Krishna) am the source of the impersonal Brahman (Om)."
+
+Om is NOT the ultimate. Om emanates FROM Krishna (Level -2).
+In Kali Yuga, Om alone is insufficient - the Holy Name (Mahamantra)
+is the direct connection to Krishna.
+
+This protocol exists for structural purposes (interface unification),
+NOT as the "top" of the hierarchy. The REAL hierarchy:
+- Level -2: KRISHNA (acintya - always present, ±∞)
+- Level -1: MANTRA (Holy Name - not different from Krishna)
+- Level 0+: All else (including OmProtocol)
+
+See: substrate/mantra/acintya.py for the true foundation.
+See: mahajanas/router.py for Mahamantra-based routing.
+
 This protocol unifies the Trimurti (Creation, Preservation, Destruction)
 into a single interface. It represents the "Vibe" of a complete Holon.
 """

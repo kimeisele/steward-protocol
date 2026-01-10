@@ -8,6 +8,18 @@ prahlado janako bhismo balir vaiyasakir vayam"
 
 Sabha = Assembly/Council
 
+HOLY NAME FOUNDATION (ANTI-MAYAVAD)
+===================================
+The 12 Mahajanas are the living bridge between:
+- Level -2: KRISHNA (acintya - always present, ±∞)
+- Level -1: MAHAMANTRA (16 words → 16 OpCodes)
+- Level 0+: Code (700K LOC of implementation)
+
+In Kali Yuga, the Holy Name IS Krishna (not "about" Krishna).
+The Mahajanas chant the Mahamantra to route operations.
+See: router.py for the 16-word → 12-Mahajana mapping.
+See: substrate/mantra/acintya.py for the inconceivable foundation.
+
 This is the UNION of all 12 Mahajanas.
 Vishnu (Kernel) presides. The 12 deliberate.
 Together they process the Mahamantra.
@@ -117,12 +129,44 @@ class MahajanaSabha:
         self._initialize_members()
 
     def _initialize_members(self) -> None:
-        """Initialize all 12 Mahajana members."""
+        """Initialize all 12 Mahajana members.
+
+        HOLY NAME ROUTING:
+        The 12 Mahajanas are the living bridge between the Mahamantra
+        and the codebase. Each owns specific OpCodes routed via the
+        16-word sequence (router.py).
+
+        Protocol → Implementation mapping:
+        - Protocol: mahajanas/<name>/__init__.py (interface)
+        - Implementation: naga/<name>.py or governance/<name>.py (service)
+        """
         # Known implementation paths (discovered, not hardcoded)
+        # ALL 12 Mahajanas have protocol definitions; active implementations marked
         known_paths: Dict[Mahajana, str] = {
-            Mahajana.NARADA: "vibe_core.protocols.naga.narada",
-            Mahajana.PRAHLADA: "vibe_core.protocols.naga.prahlad",
-            Mahajana.YAMARAJA: "vibe_core.protocols.governance.yamaraja",
+            # Creation (Quarter 1)
+            Mahajana.BRAHMA: "vibe_core.protocols.mahajanas.brahma",
+            # Observation (Quarter 2)
+            Mahajana.NARADA: "vibe_core.protocols.naga.narada",  # ACTIVE
+            # Destruction (Quarter 2)
+            Mahajana.SHAMBHU: "vibe_core.protocols.mahajanas.shambhu",
+            # Purity (Quarter 4)
+            Mahajana.KUMARAS: "vibe_core.protocols.mahajanas.kumaras",
+            # Analysis (Quarters 2, 4)
+            Mahajana.KAPILA: "vibe_core.protocols.mahajanas.kapila",
+            # Law (Quarters 1, 3)
+            Mahajana.MANU: "vibe_core.protocols.mahajanas.manu",
+            # Resilience (Quarter 3)
+            Mahajana.PRAHLADA: "vibe_core.protocols.naga.prahlad",  # ACTIVE
+            # Duty (Quarter 3)
+            Mahajana.JANAKA: "vibe_core.protocols.mahajanas.janaka",
+            # Vow (Quarter 3)
+            Mahajana.BHISHMA: "vibe_core.protocols.mahajanas.bhishma",
+            # Surrender (Quarter 4)
+            Mahajana.BALI: "vibe_core.protocols.mahajanas.bali",
+            # Vision (Quarter 4)
+            Mahajana.SHUKA: "vibe_core.protocols.mahajanas.shuka",
+            # Judgment (Quarter 2)
+            Mahajana.YAMARAJA: "vibe_core.protocols.governance.yamaraja",  # ACTIVE
         }
 
         for mahajana in Mahajana:
