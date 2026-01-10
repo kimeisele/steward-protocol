@@ -19,7 +19,13 @@ from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
 from .krishna import IdentityStatus, KrishnaProtocol
 from .mantra import MantraOpCode, MantraProtocol
 from .om import OmProtocol
-from .prabhupada import PRABHUPADA, PrabhupadaVani, SrilaPrabhupada, VaniInstruction
+# PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
+from vibe_core.protocols.substrate.mantra.prabhupada import (
+    PRABHUPADA,
+    PrabhupadaVani,
+    SrilaPrabhupada,
+    VaniInstruction,
+)
 from .rama import RamaProtocol
 from .ramanujan import RamanujanProtocol
 from .read_write import ReadWriteProtocol

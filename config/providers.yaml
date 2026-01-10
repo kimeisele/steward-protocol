@@ -1,32 +1,20 @@
-# Providers Configuration
-# LLM providers, playbook executors, feature flags, import order
-# Extracted from phoenix.yaml - now auto-discovered via Phoenix Sections
-
-# LLM Providers
 providers:
-  llm_provider: "vibe_core.runtime.providers.anthropic:AnthropicProvider"
-  fallback_provider: "vibe_core.runtime.providers.base:DefaultLLMProvider"
-
-# Playbook Executors
+  llm_provider: vibe_core.runtime.providers.anthropic:AnthropicProvider
+  fallback_provider: vibe_core.runtime.providers.base:DefaultLLMProvider
 playbook:
-  executor_agent: "vibe_core.agents.llm_agent:SimpleLLMAgent"
-  fallback_agent: "vibe_core.agents.specialist_agent:SpecialistAgent"
-
-# Feature Flags
-# OPUS-076: LIVE_FIRE ENABLED - No more pussy mode!
+  executor_agent: vibe_core.agents.llm_agent:SimpleLLMAgent
+  fallback_agent: vibe_core.agents.specialist_agent:SpecialistAgent
 features:
   oauth_enforcement: true
-  live_fire_enabled: true   # ← THE SWITCH IS ON
+  live_fire_enabled: true
   performance_metrics: true
   debug_mode: false
-
-# Import Order (for avoiding circular dependencies)
 imports:
   order:
-    - "vibe_core.protocols"          # Layer 1: Protocols/Interfaces
-    - "vibe_core.kernel_impl"        # Core implementations
-    - "vibe_core.agents"             # Agent implementations
-    - "vibe_core.runtime"            # Runtime components
-    - "vibe_core.cartridges.system"  # System agent cartridges
-    - "vibe_core.cartridges.agent_city"  # City agent cartridges
-    - "vibe_core.playbook"           # Playbook execution
+  - vibe_core.protocols
+  - vibe_core.kernel_impl
+  - vibe_core.agents
+  - vibe_core.runtime
+  - vibe_core.cartridges.system
+  - vibe_core.cartridges.agent_city
+  - vibe_core.playbook

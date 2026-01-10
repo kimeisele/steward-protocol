@@ -1,21 +1,13 @@
-# External APIs Configuration
-# Keys stay in environment - this defines WHERE to find them
-# Auto-loaded by PhoenixConfig -> config.apis
-
 external:
   tavily:
-    env_var: "TAVILY_API_KEY"
-    description: "Web search API for research capabilities"
+    env_var: TAVILY_API_KEY
+    description: Web search API for research capabilities
     required: false
-
   twitter:
-    env_var: "TWITTER_API_KEY"
-    description: "Twitter/X API for broadcasting"
+    env_var: TWITTER_API_KEY
+    description: Twitter/X API for broadcasting
     required: false
     additional_vars:
-      - "TWITTER_API_SECRET"
-      - "TWITTER_ACCESS_TOKEN"
-      - "TWITTER_ACCESS_SECRET"
-
-  # Note: LLM provider keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
-  # are defined in config/llm.yaml under providers section
+    - TWITTER_API_SECRET
+    - TWITTER_ACCESS_TOKEN
+    - TWITTER_ACCESS_SECRET

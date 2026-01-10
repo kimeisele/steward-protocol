@@ -1,89 +1,50 @@
-# STEWARD Protocol Configuration
-# ================================
-#
-# This file configures the STEWARD PROTOCOL - NOT an agent identity.
-# STEWARD is the governance framework itself, not an agent like herald/civic.
-#
-# What belongs here:
-#   - Layer 1.5: User & Team Context (operator preferences)
-#   - Layer 1.6: Cognitive Policy (model preferences, budgets)
-#   - Behavior Rules (Genesis Protocol, Anti-Slop)
-#
-# What does NOT belong here:
-#   - Agent identity (agents have steward.json files)
-#   - System prompt templates (prompts are GENERATED from Protocol data)
-#
-# The system prompt is composed FROM:
-#   1. STEWARD.md (Protocol description)
-#   2. kernel.manifest_registry (discovered agents)
-#   3. This config (operator preferences below)
-#   4. Current kernel state (live data)
-
-# =============================================================================
-# USER & TEAM CONTEXT (Layer 1.5)
-# =============================================================================
-
 user_context:
-  # Default user preferences (used when no specific user)
   default_user:
-    workflow_style: "test_first"  # balanced, test_first, iterative
-    verbosity: "low"               # low, medium, high
-    communication: "concise"       # concise, friendly, explanatory
-    language: "en-US"
-
-  # Named users (--user flag selects)
+    role: ''
+    workflow_style: test_first
+    verbosity: low
+    communication: concise
+    language: en-US
+    timezone: ''
+    constraints: []
   users:
     kim:
-      role: "Tech Lead"
-      workflow_style: "test_first"
-      verbosity: "low"
-      communication: "concise"
-      language: "de-DE"
+      role: Tech Lead
+      workflow_style: test_first
+      verbosity: low
+      communication: concise
+      language: de-DE
+      timezone: ''
       constraints:
-        - "No verbose confirmations"
-        - "Show full tracebacks on errors"
-        - "Minimal logging output"
-
-  # Team-wide defaults
+      - No verbose confirmations
+      - Show full tracebacks on errors
+      - Minimal logging output
   team:
-    development_style: "test_driven"
-    git_workflow: "rebase_over_merge"
-    commit_style: "conventional_commits"
-    min_coverage: 0.80
+    development_style: test_driven
+    git_workflow: rebase_over_merge
+    commit_style: conventional_commits
+    min_coverage: 0.8
     quality_gates:
-      - "All tests must pass"
-      - "Pre-push checks mandatory"
-      - "Min 80% test coverage"
-
-# =============================================================================
-# COGNITIVE POLICY (Layer 1.6)
-# =============================================================================
-
+    - All tests must pass
+    - Pre-push checks mandatory
+    - Min 80% test coverage
 cognitive_policy:
-  # Model preferences for different cognitive tasks
   model_preferences:
-    reasoning: "anthropic/claude-3-opus"      # Deep analysis
-    efficiency: "anthropic/claude-3-haiku"    # Fast operations
-    creative: "anthropic/claude-3-opus"       # Creative work
-    fallback: "anthropic/claude-3-sonnet"     # Backup
-
-  # Economic constraints (hard limits)
+    reasoning: anthropic/claude-3-opus
+    efficiency: anthropic/claude-3-haiku
+    creative: anthropic/claude-3-opus
+    fallback: anthropic/claude-3-sonnet
   economic_constraints:
-    max_cost_per_run: 1.00        # USD per delegation
-    max_daily_budget: 10.00       # USD per 24h
+    max_cost_per_run: 1.0
+    max_daily_budget: 10.0
     provider_priority:
-      - "Anthropic"
-      - "OpenRouter"
-      - "Google"
-
-# =============================================================================
-# BEHAVIOR (Genesis Protocol, Anti-Slop Rules)
-# =============================================================================
-
+    - Anthropic
+    - OpenRouter
+    - Google
 behavior:
-  genesis_protocol: true      # Verify system integrity before work
-  anti_slop_rules: true       # No shortcuts, verify everything
-  require_tests: true         # Must run tests before claiming done
-  require_commit: true        # Must commit changes
-  require_handoff: true       # Must update .session_handoff.json
-  enforce_oath: true          # Enforce Constitutional Oath for all agents
+  genesis_protocol: true
+  anti_slop_rules: true
+  require_tests: true
+  require_commit: true
+  require_handoff: true
+  enforce_oath: true

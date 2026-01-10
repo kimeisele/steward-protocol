@@ -23,6 +23,13 @@ See: mahajanas/router.py for Mahamantra-based routing.
 
 This protocol unifies the Trimurti (Creation, Preservation, Destruction)
 into a single interface. It represents the "Vibe" of a complete Holon.
+
+DIKSHA GATE (KALI YUGA ENFORCEMENT)
+===================================
+Om access requires BRAHMINICAL diksha (2nd initiation).
+Without diksha, Om redirects to Mahamantra (Prabhupada's mercy).
+
+See: substrate/mantra/diksha.py for the DikshaCertificate protocol.
 """
 
 from typing import Protocol, runtime_checkable

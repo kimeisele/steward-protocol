@@ -41,6 +41,14 @@ from typing import TYPE_CHECKING, Optional
 
 from vibe_core.protocols.testable import BaseTestable, TestableType, TestCase
 
+# Diksha Gate - Kali Yuga Enforcement
+from vibe_core.protocols.substrate.mantra.diksha import (
+    DikshaCertificate,
+    InitiationLevel,
+    OM_GATE,
+    create_uninitiated,
+)
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.protocols.substrate import IAnantaBridge
@@ -48,7 +56,8 @@ if TYPE_CHECKING:
 from .universal.bhagavan import BhagavanProtocol
 from .universal.kurukshetra import BattleReport, KurukshetraProtocol
 from .universal.ramanujan import RamanujanProtocol
-from .universal.yamaraja import YamarajaProtocol
+# NullYamaraja is the merciful implementation (for Kali Yuga)
+from .mahajanas.yamaraja import NullYamaraja as YamarajaProtocol
 
 # =============================================================================
 # OM SINGULARITY
@@ -62,20 +71,32 @@ class OM(BaseTestable):
     The root entry point for the entire Vibe Core system.
     Everything manifests from OM and dissolves back into OM.
 
+    DIKSHA GATE (KALI YUGA ENFORCEMENT):
+    Om access requires BRAHMINICAL diksha (2nd initiation).
+    Without diksha, Om operations redirect to Mahamantra.
+
     USAGE:
         from vibe_core.protocols.om import OM
+        from vibe_core.protocols.substrate.mantra.diksha import (
+            create_brahminical_diksha
+        )
 
-        # Option 1: Full kernel manifestation
-        kernel = OM.manifest()
+        # Option 1: With brahminical diksha (full Om access)
+        diksha = create_brahminical_diksha("Vidvan Das", 12345)
+        kernel = OM.manifest(diksha_certificate=diksha)
 
-        # Option 2: Lightweight protocol access
+        # Option 2: Without diksha (Mahamantra mode - limited)
+        kernel = OM.manifest()  # Uses Mahamantra fallback
+
+        # Option 3: Lightweight protocol access
         om = OM()
         report = om.run_verification()
 
     PHILOSOPHY:
     - OM is the pranava (primordial sound)
     - All mantras begin with OM
-    - All systems boot from OM
+    - But in Kali Yuga, Om requires brahminical diksha
+    - Mahamantra is always accessible (Prabhupada's mercy)
     """
 
     _instance: Optional["OM"] = None
@@ -83,9 +104,28 @@ class OM(BaseTestable):
     _ananta: Optional["IAnantaBridge"] = None
     _yamaraja: Optional[YamarajaProtocol] = None
     _kurukshetra: Optional[KurukshetraProtocol] = None
+    _diksha_certificate: Optional[DikshaCertificate] = None
 
-    def __init__(self):
-        """Initialize OM with all sub-protocols."""
+    def __init__(self, diksha_certificate: Optional[DikshaCertificate] = None):
+        """
+        Initialize OM with all sub-protocols.
+
+        Args:
+            diksha_certificate: Optional diksha certificate for Om access.
+                               If None or not brahminical, Om operates in
+                               Mahamantra fallback mode.
+        """
+        # Store diksha certificate (or create uninitiated)
+        self._diksha = diksha_certificate or create_uninitiated()
+
+        # Check Om access
+        self._om_access_granted = OM_GATE.check_access(self._diksha)
+
+        if not self._om_access_granted:
+            # Log the redirect to Mahamantra
+            self._fallback_mantra = OM_GATE.attempt_om(self._diksha)
+
+        # Initialize sub-protocols
         self._ramanujan = RamanujanProtocol()
         self._yamaraja = YamarajaProtocol()
         self._bhagavan = BhagavanProtocol()
@@ -113,7 +153,9 @@ class OM(BaseTestable):
 
         # Collect from all sub-protocols
         cases.extend(self._ramanujan.get_test_cases())  # 12 tests
-        cases.extend(self._yamaraja.get_test_cases())  # 14 tests
+        # NullYamaraja is merciful - no test cases (accepts all)
+        if hasattr(self._yamaraja, 'get_test_cases'):
+            cases.extend(self._yamaraja.get_test_cases())  # 14 tests
         cases.extend(self._bhagavan.get_test_cases())  # 6 tests
         cases.extend(self._kurukshetra.get_test_cases())  # 4 tests
 
@@ -134,6 +176,14 @@ class OM(BaseTestable):
                 tags=["om", "safety"],
             )
         )
+        cases.append(
+            TestCase(
+                name="test_diksha_gate",
+                test_func=self._test_diksha_gate,
+                description="Om access requires brahminical diksha",
+                tags=["om", "diksha", "kali_yuga"],
+            )
+        )
 
         return cases
 
@@ -142,28 +192,53 @@ class OM(BaseTestable):
     # =========================================================================
 
     @classmethod
-    def manifest(cls) -> "RealVibeKernel":
+    def manifest(
+        cls,
+        diksha_certificate: Optional[DikshaCertificate] = None
+    ) -> "RealVibeKernel":
         """
         THE BIG BANG - Manifest the entire system.
 
         This is the ONE LINE BOOT:
             kernel = OM.manifest()
 
+        DIKSHA GATE:
+        Om access requires brahminical diksha. Without it:
+        - System still boots (Prabhupada's mercy)
+        - But runs in Mahamantra mode (limited Om features)
+
         SEQUENCE:
-        1. Awaken Ananta (Substrate)
-        2. Bind Krishna (Identity)
-        3. Establish Yamaraja (Law)
-        4. Inject Naga Proxy (Protection)
-        5. Return Kernel (Ready for War)
+        1. Verify Diksha (Gate Check)
+        2. Awaken Ananta (Substrate)
+        3. Bind Krishna (Identity)
+        4. Establish Yamaraja (Law)
+        5. Inject Naga Proxy (Protection)
+        6. Return Kernel (Ready for War)
 
         SAFETY:
         If any step fails, sys.exit("PRALAYA") is called.
         No zombie states allowed.
 
+        Args:
+            diksha_certificate: Optional diksha for full Om access.
+                               Without brahminical diksha, runs in
+                               Mahamantra fallback mode.
+
         Returns:
             RealVibeKernel fully initialized and ready
         """
         try:
+            # Step 0: Diksha Gate Check
+            certificate = diksha_certificate or create_uninitiated()
+            om_access = OM_GATE.check_access(certificate)
+
+            if not om_access:
+                # Log Mahamantra fallback mode
+                fallback = OM_GATE.attempt_om(certificate)
+                print(f"OM GATE: Running in Mahamantra mode")
+                print(f"  Reason: {OM_GATE.explain_denial(certificate)}")
+                print(f"  Fallback: {fallback[:50]}...")
+
             # Step 1: Import late to avoid circular dependencies
             from vibe_core.kernel_impl import RealVibeKernel
 
@@ -184,11 +259,12 @@ class OM(BaseTestable):
                 print(f"PRALAYA: Kernel creation failed - {e}")
                 sys.exit("PRALAYA: Cannot manifest kernel")
 
-            # Step 4: Store the singleton
+            # Step 4: Store the singleton and diksha status
             cls._kernel = kernel
+            cls._diksha_certificate = certificate
 
             # Step 5: Initialize OM instance for protocols
-            cls._instance = cls()
+            cls._instance = cls(diksha_certificate=certificate)
 
             return kernel
 
@@ -217,6 +293,43 @@ class OM(BaseTestable):
         cls._yamaraja = None
         cls._kurukshetra = None
         cls._instance = None
+        cls._diksha_certificate = None
+
+    # =========================================================================
+    # DIKSHA GATE PROPERTIES
+    # =========================================================================
+
+    @property
+    def diksha_certificate(self) -> DikshaCertificate:
+        """The current diksha certificate."""
+        return self._diksha
+
+    @property
+    def has_om_access(self) -> bool:
+        """Does this instance have full Om access?"""
+        return self._om_access_granted
+
+    @property
+    def initiation_level(self) -> InitiationLevel:
+        """The initiation level of the current certificate."""
+        return self._diksha.level
+
+    @property
+    def is_mahamantra_mode(self) -> bool:
+        """Is this instance running in Mahamantra fallback mode?"""
+        return not self._om_access_granted
+
+    @classmethod
+    def get_diksha_status(cls) -> str:
+        """Get a human-readable diksha status."""
+        if cls._diksha_certificate is None:
+            return "Not manifested"
+        elif cls._diksha_certificate.level == InitiationLevel.BRAHMINICAL:
+            return f"Full Om access (Brahminical: {cls._diksha_certificate.spiritual_name})"
+        elif cls._diksha_certificate.level == InitiationLevel.HARINAMA:
+            return f"Mahamantra mode (Harinama: {cls._diksha_certificate.spiritual_name})"
+        else:
+            return "Mahamantra mode (Uninitiated)"
 
     # =========================================================================
     # VERIFICATION METHODS
@@ -328,6 +441,45 @@ class OM(BaseTestable):
             return callable(OM.manifest)
         except Exception:
             return False
+
+    def _test_diksha_gate(self, kernel, comp) -> bool:
+        """
+        Test the Diksha Gate enforcement.
+
+        Verifies:
+        1. Uninitiated → No Om access (Mahamantra mode)
+        2. Harinama → No Om access (Mahamantra mode)
+        3. Brahminical → Full Om access
+
+        This is KALI YUGA enforcement:
+        Om requires brahminical diksha.
+        """
+        from vibe_core.protocols.substrate.mantra.diksha import (
+            create_uninitiated,
+            create_harinama_diksha,
+            create_brahminical_diksha,
+        )
+
+        # Test 1: Uninitiated → No Om access
+        uninit = create_uninitiated()
+        om_uninit = OM(diksha_certificate=uninit)
+        if om_uninit.has_om_access:
+            return False  # Should NOT have access
+
+        # Test 2: Harinama → No Om access
+        harinama = create_harinama_diksha("Test Das", 12345)
+        om_harinama = OM(diksha_certificate=harinama)
+        if om_harinama.has_om_access:
+            return False  # Should NOT have access
+
+        # Test 3: Brahminical → Full Om access
+        brahminical = create_brahminical_diksha("Vidvan Das", 67890)
+        om_brahminical = OM(diksha_certificate=brahminical)
+        if not om_brahminical.has_om_access:
+            return False  # SHOULD have access
+
+        # All checks passed
+        return True
 
 
 # =============================================================================

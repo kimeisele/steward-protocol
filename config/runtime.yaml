@@ -1,34 +1,26 @@
-# Runtime Configuration
-# Auto-loaded by PhoenixConfig -> config.runtime
-
 timeouts:
   operator_timeout: 300.0
   action_timeout: 300
   test_timeout_ms: 5000
   ritual_interval: 300.0
-
 limits:
   max_recursion_depth: 5
   max_circuit_transitions: 20
-  max_message_size: 1048576  # 1MB
+  max_message_size: 1048576
   max_agent_restarts: 3
   event_history_size: 1000
   pulse_threshold: 10.0
-
 circuit_recovery:
   reflection_interval: 3
   stuck_threshold: 3
   max_retry_attempts: 5
-
 action_defaults:
   retry_count: 3
-
-# Orchestration - Kernel tick/process coordination
 orchestration:
-  health_check_interval: 2.0      # vibe_launcher supervisor loop
-  discovery_interval: 60.0        # Discoverer cartridge scan interval
-  pulse_sleep: 1.0                # Pulse async sleep between updates
-  file_poll_interval: 2.0         # FileOperator polling delay
-  monitoring_interval: 10.0       # Gateway monitoring start interval
-  heartbeat_max_tasks_per_pulse: 5  # Max tasks per heartbeat cycle
-  heartbeat_commit_changes: true  # Auto-commit task progress
+  health_check_interval: 2.0
+  discovery_interval: 60.0
+  pulse_sleep: 1.0
+  file_poll_interval: 2.0
+  monitoring_interval: 10.0
+  heartbeat_max_tasks_per_pulse: 5
+  heartbeat_commit_changes: true

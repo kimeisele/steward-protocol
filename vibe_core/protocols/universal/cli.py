@@ -20,7 +20,8 @@ from typing import Any, Protocol, runtime_checkable
 
 # IMPORTS (The Holy Trinity of Dependencies)
 from .bridge import MayavadError, SetuBandha
-from .prabhupada import PRABHUPADA
+# PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
+from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
 from .steward import VedicSteward
 
 

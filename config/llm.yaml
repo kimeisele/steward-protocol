@@ -1,27 +1,21 @@
-# LLM Configuration
-# Auto-loaded by PhoenixConfig -> config.llm
-
 local:
-  model_name: "qwen2.5-0.5b-instruct-q4_k_m.gguf"
-  model_repo: "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+  model_name: qwen2.5-0.5b-instruct-q4_k_m.gguf
+  model_repo: Qwen/Qwen2.5-0.5B-Instruct-GGUF
   n_ctx: 2048
-  n_threads: null  # auto-detect
+  n_threads: null
   n_batch: 512
   default_max_tokens: 256
   default_temperature: 0.7
-
 providers:
   anthropic:
-    default_model: "claude-sonnet-4-20250514"
-    api_key_env: "ANTHROPIC_API_KEY"
+    default_model: claude-sonnet-4-20250514
+    api_key_env: ANTHROPIC_API_KEY
   openai:
-    default_model: "gpt-4-turbo"
-    api_key_env: "OPENAI_API_KEY"
+    default_model: gpt-4-turbo
+    api_key_env: OPENAI_API_KEY
   openrouter:
-    default_model: "anthropic/claude-sonnet-4"
-    pro_model: "anthropic/claude-opus-4"
-    low_model: "anthropic/claude-3.5-haiku"
-    api_key_env: "OPENROUTER_API_KEY"
+    default_model: anthropic/claude-sonnet-4
+    api_key_env: OPENROUTER_API_KEY
   google:
-    default_model: "gemini-2.0-flash"
-    api_key_env: "GOOGLE_API_KEY"
+    default_model: gemini-2.0-flash
+    api_key_env: GOOGLE_API_KEY

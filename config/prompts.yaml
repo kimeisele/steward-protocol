@@ -1,92 +1,63 @@
-# Prompts Configuration
-# LLM prompt registry - replaces 38 inline f-string prompt violations
-#
-# Usage in code:
-#   prompt = config.prompts.get_prompt("system_boot", agent_name="herald")
-#   entry = config.prompts.get_entry("system_boot")  # for model_hint, max_tokens
-
-prompt_dir: "knowledge/prompts"
+prompt_dir: knowledge/prompts
 auto_reload: true
-
 prompts:
-  # System prompts (from boot_sequence.py)
   system_boot:
-    file: "system_boot.j2"
-    description: "STEWARD Protocol system initialization prompt"
-    category: "system"
-    model_hint: "claude-3-sonnet"
+    file: system_boot.j2
+    description: STEWARD Protocol system initialization prompt
+    category: system
+    model_hint: claude-3-sonnet
     max_tokens: 4096
-
-  # Operator prompts (from operator_adapter.py)
   operator_system:
-    file: "operator_system.j2"
-    description: "Agent City OS operator system prompt"
-    category: "system"
-    model_hint: "claude-3-sonnet"
-
-  # Context extraction (from deterministic_executor.py)
+    file: operator_system.j2
+    description: Agent City OS operator system prompt
+    category: system
+    model_hint: claude-3-sonnet
   context_extraction:
-    file: "context_extraction.j2"
-    description: "Extract context from user input"
-    category: "extraction"
+    file: context_extraction.j2
+    description: Extract context from user input
+    category: extraction
     temperature: 0.3
-
-  # Parameter extraction (from blueprint_generator.py)
   parameter_extraction:
-    file: "parameter_extraction.j2"
-    description: "Extract structured parameters from user request"
-    category: "extraction"
+    file: parameter_extraction.j2
+    description: Extract structured parameters from user request
+    category: extraction
     temperature: 0.1
-
-  # Agent routing (from circuit_engine.py)
   agent_routing:
-    file: "agent_routing.j2"
-    description: "Route request to appropriate agent"
-    category: "routing"
+    file: agent_routing.j2
+    description: Route request to appropriate agent
+    category: routing
     temperature: 0.2
-
-  # Degradation fallback (from degradation_chain.py)
   degradation_fallback:
-    file: "degradation_fallback.j2"
-    description: "Fallback prompt for graceful degradation (German)"
-    category: "fallback"
-    model_hint: "local"
-
-  # Intent classification
+    file: degradation_fallback.j2
+    description: Fallback prompt for graceful degradation (German)
+    category: fallback
+    model_hint: local
   intent_classifier:
-    file: "intent_classifier.j2"
-    description: "Classify user intent for routing"
-    category: "routing"
-    temperature: 0.1
+    file: intent_classifier.j2
+    description: Classify user intent for routing
+    category: routing
     max_tokens: 100
-
-  # Error recovery
+    temperature: 0.1
   error_recovery:
-    file: "error_recovery.j2"
-    description: "Prompt for error recovery suggestions"
-    category: "error"
+    file: error_recovery.j2
+    description: Prompt for error recovery suggestions
+    category: error
     temperature: 0.5
-
-  # Task summarization
   task_summary:
-    file: "task_summary.j2"
-    description: "Summarize task results for user"
-    category: "response"
+    file: task_summary.j2
+    description: Summarize task results for user
+    category: response
     temperature: 0.3
-
-  # Code generation
   code_generation:
-    file: "code_generation.j2"
-    description: "Generate code based on specification"
-    category: "generation"
-    model_hint: "claude-3-opus"
-    temperature: 0.2
+    file: code_generation.j2
+    description: Generate code based on specification
+    category: generation
+    model_hint: claude-3-opus
     max_tokens: 8192
-
-  # Documentation generation
+    temperature: 0.2
   doc_generation:
-    file: "doc_generation.j2"
-    description: "Generate documentation for code"
-    category: "generation"
-    temperature: 0.4
+    file: doc_generation.j2
+    description: Generate documentation for code
+    category: generation
     max_tokens: 4096
+    temperature: 0.4

@@ -1,108 +1,15 @@
-# ============================================================================
-# TEST GOVERNANCE - Who Watches the Watchers
-# ============================================================================
-#
-# This configuration controls how the test suite is protected from
-# silent mutations that could hide regressions.
-#
-# PHILOSOPHY:
-# Tests are CONTRACTS. When a test fails, the CODE is wrong, not the test.
-# AI agents are forbidden from modifying tests to make them pass.
-#
-# ============================================================================
-
----
-
-# ========================================================================
-# MUTATION POLICY
-# ========================================================================
-# What happens when AI attempts to modify a test file?
-#
-# Options:
-#   - blocked: Modification is rejected entirely (RECOMMENDED)
-#   - human_approval: Requires explicit human approval via prompt
-#   - warn_only: Log warning but allow (DANGEROUS - use only for debugging)
-#
-mutation_policy: "blocked"
-
-
-# ========================================================================
-# BASELINE ENFORCEMENT
-# ========================================================================
-# If true, test file hashes are recorded in lineage.
-# Any mutation since "birth" is detected and flagged.
-#
+mutation_policy: blocked
 baseline_enforcement: true
-baseline_path: "data/test_baselines.json"
-
-
-# ========================================================================
-# REGRESSION MODE
-# ========================================================================
-# When a test fails, what should AI do?
-#
-# Options:
-#   - fix_code_not_test: AI MUST fix the implementation (RECOMMENDED)
-#   - allow_test_updates: AI can update tests (DANGEROUS)
-#
-regression_mode: "fix_code_not_test"
-
-
-# ========================================================================
-# FROZEN TESTS (CONSTITUTIONAL)
-# ========================================================================
-# These tests can NEVER be modified by AI, period.
-# They are the "constitution" of the test suite.
-#
+baseline_path: data/test_baselines.json
+regression_mode: fix_code_not_test
 frozen_tests:
-  # Core integration tests
-  - "tests/integration/test_system_boot.py"
-  - "tests/test_unified_loader.py"
-
-  # Security/hardening tests
-  - "tests/hardening/**"
-  - "tests/test_crypto_verification.py"
-
-  # Lifecycle tests (contract enforcement)
-  - "tests/test_lifecycle_*.py"
-
-
-# ========================================================================
-# HUMAN REVIEW REQUIRED
-# ========================================================================
-# Any change to these patterns requires explicit human review.
-# By default, ALL tests require human review.
-#
+- tests/integration/test_system_boot.py
+- tests/test_unified_loader.py
+- tests/hardening/**
+- tests/test_crypto_verification.py
+- tests/test_lifecycle_*.py
 human_review_required_patterns:
-  - "tests/**"
-
-
-# ========================================================================
-# AUDIT SETTINGS
-# ========================================================================
-# Track every attempt to modify tests.
-#
+- tests/**
 log_all_test_mutations: true
-mutation_log_path: "data/logs/test_mutations.log"
+mutation_log_path: data/logs/test_mutations.log
 alert_on_mutation_attempt: true
-
-
-# ========================================================================
-# NOTES
-# ========================================================================
-notes: |
-  TEST GOVERNANCE ensures the integrity of the test suite.
-
-  PROBLEM SOLVED:
-  1. AI writes a test for feature X
-  2. Code changes break the test
-  3. AI "fixes" the test instead of the code
-  4. Regression goes unnoticed!
-
-  SOLUTION:
-  - Tests are immutable contracts
-  - Hash of each test recorded at "birth"
-  - Mutations are blocked or require human approval
-  - When test fails, AI MUST fix CODE, not test
-
-  This is "who watches the watchers" - the lineage watches the tests.

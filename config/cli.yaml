@@ -1,28 +1,14 @@
-# CLI Configuration
-# =================
-# Fractal CLI System settings for steward-protocol.
-#
-# The CLI auto-discovers commands from plugin manifests.
-# This file configures output formatting and observability.
-
-# Global enable/disable
 enabled: true
 debug: false
-
-# Output formatting
 output:
-  default_format: "human"  # human, json, yaml
+  default_format: human
   json_indent: 2
   yaml_sort_keys: false
-  rich_enabled: true       # Use Rich library for tables/colors
-
-# Observability (steward observe)
+  rich_enabled: true
 observe:
   enabled: true
-  auto_discover: true      # Auto-discover monitors from plugins
+  auto_discover: true
   refresh_interval_ms: 1000
-
-# Namespace filtering (empty = all enabled)
 namespaces:
-  enabled: []              # Whitelist - empty means all
-  disabled: []             # Blacklist - takes precedence
+  enabled: []
+  disabled: []

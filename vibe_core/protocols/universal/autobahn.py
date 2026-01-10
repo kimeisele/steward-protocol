@@ -17,7 +17,8 @@ from enum import Enum
 from typing import Generic, Protocol, TypeVar, runtime_checkable
 
 # Layer 0 Imports (The Foundation)
-from .prabhupada import PRABHUPADA
+# PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
+from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
 from .types import AccessDeniedError, SovereignContext, TattvaMeter
 
 # =============================================================================
