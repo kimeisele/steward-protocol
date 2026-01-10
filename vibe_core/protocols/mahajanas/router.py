@@ -161,7 +161,25 @@ HEAD_OPCODES: set = {
 # New code should use _VYUHA_ROUTING_TABLE or VyuhaRouter.
 
 _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
-    # --- QUARTER 1: INVOCATION (LEGACY) ---
+    # ==========================================================================
+    # SEMANTIC ROUTING TABLE (Mahajana nature matches OpCode function)
+    # ==========================================================================
+    #
+    # Each Mahajana's spiritual quality determines their OpCode ownership:
+    #   BRAHMA (Creator)    → SYS_WAKE, LOAD_ROOT, ALLOC_MEM (creation ops)
+    #   NARADA (Messenger)  → PULSE_SYNC (communication)
+    #   SHAMBHU (Destroyer) → GARBAGE_COLLECT (destruction/cleanup)
+    #   KUMARAS (Pure)      → RESET_IP (return to pure state)
+    #   KAPILA (Analyst)    → RESOLVE_REQ, OPTIMIZE (analysis ops)
+    #   MANU (Lawgiver)     → BIND_CTX, CHECK_DHARMA (law/rules)
+    #   PRAHLADA (Resilient)→ FETCH_RES (persevering to get resources)
+    #   JANAKA (Duty)       → EXEC_SERVICE (dutiful execution)
+    #   BHISHMA (Vow)       → COMMIT_LOG (commitment/oath)
+    #   BALI (Surrender)    → YIELD_CPU, CACHE_STATE (surrender control/state)
+    #   SHUKA (Vision)      → (shares via Vyuha architecture)
+    #   YAMARAJA (Judge)    → ASSERT_TRUTH (final judgment)
+    #
+    # --- QUARTER 1: GENESIS (H K H K) ---
     MantraOpCode.SYS_WAKE: MahajanaRoute(
         MantraOpCode.SYS_WAKE, Mahajana.BRAHMA, quarter=1, position=1
     ),
@@ -169,52 +187,52 @@ _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
         MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2
     ),
     MantraOpCode.ALLOC_MEM: MahajanaRoute(
-        MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3
+        MantraOpCode.ALLOC_MEM, Mahajana.BRAHMA, quarter=1, position=3
     ),
     MantraOpCode.BIND_CTX: MahajanaRoute(
-        MantraOpCode.BIND_CTX, Mahajana.SHAMBHU, quarter=1, position=4
+        MantraOpCode.BIND_CTX, Mahajana.MANU, quarter=1, position=4
     ),
 
-    # --- QUARTER 2: VERIFICATION (LEGACY) ---
+    # --- QUARTER 2: DHARMA (K K H H) ---
     MantraOpCode.ASSERT_TRUTH: MahajanaRoute(
-        MantraOpCode.ASSERT_TRUTH, Mahajana.KUMARAS, quarter=2, position=5
+        MantraOpCode.ASSERT_TRUTH, Mahajana.YAMARAJA, quarter=2, position=5
     ),
     MantraOpCode.RESOLVE_REQ: MahajanaRoute(
-        MantraOpCode.RESOLVE_REQ, Mahajana.KUMARAS, quarter=2, position=6
+        MantraOpCode.RESOLVE_REQ, Mahajana.KAPILA, quarter=2, position=6
     ),
     MantraOpCode.GARBAGE_COLLECT: MahajanaRoute(
-        MantraOpCode.GARBAGE_COLLECT, Mahajana.KAPILA, quarter=2, position=7
+        MantraOpCode.GARBAGE_COLLECT, Mahajana.SHAMBHU, quarter=2, position=7
     ),
     MantraOpCode.PULSE_SYNC: MahajanaRoute(
-        MantraOpCode.PULSE_SYNC, Mahajana.MANU, quarter=2, position=8
+        MantraOpCode.PULSE_SYNC, Mahajana.NARADA, quarter=2, position=8
     ),
 
-    # --- QUARTER 3: EXECUTION (LEGACY) ---
+    # --- QUARTER 3: KARMA (H R H R) ---
     MantraOpCode.FETCH_RES: MahajanaRoute(
         MantraOpCode.FETCH_RES, Mahajana.PRAHLADA, quarter=3, position=9
     ),
     MantraOpCode.EXEC_SERVICE: MahajanaRoute(
-        MantraOpCode.EXEC_SERVICE, Mahajana.PRAHLADA, quarter=3, position=10
+        MantraOpCode.EXEC_SERVICE, Mahajana.JANAKA, quarter=3, position=10
     ),
     MantraOpCode.CHECK_DHARMA: MahajanaRoute(
-        MantraOpCode.CHECK_DHARMA, Mahajana.JANAKA, quarter=3, position=11
+        MantraOpCode.CHECK_DHARMA, Mahajana.MANU, quarter=3, position=11
     ),
     MantraOpCode.COMMIT_LOG: MahajanaRoute(
         MantraOpCode.COMMIT_LOG, Mahajana.BHISHMA, quarter=3, position=12
     ),
 
-    # --- QUARTER 4: CONCLUSION (LEGACY) ---
+    # --- QUARTER 4: MOKSHA (R R H H) ---
     MantraOpCode.CACHE_STATE: MahajanaRoute(
-        MantraOpCode.CACHE_STATE, Mahajana.BALI, quarter=4, position=13
+        MantraOpCode.CACHE_STATE, Mahajana.SHUKA, quarter=4, position=13
     ),
     MantraOpCode.OPTIMIZE: MahajanaRoute(
-        MantraOpCode.OPTIMIZE, Mahajana.BALI, quarter=4, position=14
+        MantraOpCode.OPTIMIZE, Mahajana.KAPILA, quarter=4, position=14
     ),
     MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.SHUKA, quarter=4, position=15
+        MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=15
     ),
     MantraOpCode.RESET_IP: MahajanaRoute(
-        MantraOpCode.RESET_IP, Mahajana.YAMARAJA, quarter=4, position=16
+        MantraOpCode.RESET_IP, Mahajana.KUMARAS, quarter=4, position=16
     ),
 }
 
