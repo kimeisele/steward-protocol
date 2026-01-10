@@ -19,9 +19,9 @@ import pytest
 from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, HolyName, MantraOpCode, MantraProtocol
 
 
-class MockAnantaProcessor(MantraProtocol):
+class ReferenceAnantaProcessor(MantraProtocol):
     """
-    A minimal implementation of the Ananta Processor that simply records the beats.
+    A reference implementation of the Ananta Processor that simply records the beats.
     It simulates the System obeying the Mantra.
     """
 
@@ -103,7 +103,7 @@ def test_ananta_execution():
     """
     2. Verify the Execution Loop (The Software Driver).
     """
-    processor = MockAnantaProcessor()
+    processor = ReferenceAnantaProcessor()
     context = object()  # Sovereign Context
 
     # Run the cycle

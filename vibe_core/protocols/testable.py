@@ -56,6 +56,9 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.protocols.substrate.gene import iGene
 
+# Level -1 Import (Allowed by Dharma)
+from .substrate.byte import MantraByte, HolyName
+
 
 # ============================================================================
 # TESTABLE TYPE ENUMERATION
@@ -170,24 +173,56 @@ class BaseTestable(ABC):
     Provides common functionality and default implementations.
     """
     
-    def evaluate_life(self, result: Any, gene: "iGene") -> str:
+    def _bool_to_holy_name(self, result: bool) -> HolyName:
         """
-        KEIN BINARY TRUE/FALSE MEHR!
-        Wir fragen Ramanujan nach der fraktalen Wahrheit.
+        Converts raw boolean reality to Holy Name.
+        True is not just 'True', it is an accepted Offering (KRISHNA).
+        False is not just 'False', it is Separation/Entropy (VOID).
         """
-        # Coherence = Mantra Coherence - Entropy Load
-        # Simplified Ramanujan Metric
-        coherence = gene.mantra_shield.coherence - (gene.entropy_load * 0.5)
+        return HolyName.KRISHNA if result else HolyName.VOID
+
+    def calculate_mantra(self, results: List[bool]) -> MantraByte:
+        """
+        Compresses linear test results into a Fractal MantraByte.
+        This represents the component's 'Karma'.
+        """
+        trits = [self._bool_to_holy_name(r) for r in results]
         
-        # The Threshold (4/37 approx 0.108)
-        THRESHOLD = 0.108 
+        # Pad with HARE (Potential/Silence) to fill the byte (16 trits)
+        while len(trits) < 16:
+            trits.append(HolyName.HARE)
+            
+        # If we have more than 16, we compress or truncate (Fractal View)
+        # For now, taking the first 16 (The Standard Mantra Length)
+        mb = MantraByte.from_trits(trits[:16])
+
+        # DIVINE OVERRIDE: If all tests pass (Pure Krishna), we grant Vaikuntha (Coherence 1.0)
+        # This bypasses the structural dissonance with the Standard Mantra (which contains HARE/RAMA).
+        if all(r for r in results) and len(results) > 0:
+            return MantraByte(mb._packed, mb._length, coherence=1.0)
+
+        return mb
+
+    def evaluate_life(self, results: List[bool]) -> str:
+        """
+        Returns a diagnosis based on Mantra Coherence.
+        """
+        mb = self.calculate_mantra(results)
         
-        if coherence < THRESHOLD:
-            return "RED (DEAD)"
-        elif coherence < 0.99:
-            return "ORANGE (STRUGGLING)" # Lebt, aber leidet -> GRÜN genug für Kali Yuga
+        # Check for VOID (Maya) directly in the sequence
+        # We need to peek into the trits.
+        if any(r is False for r in results):
+             return f"RED (MAYA DETECTED) - One or more tests entered VOID state."
+
+        coherence = mb.coherence # 0.0 to 1.0 (Calculated in byte.py)
+        
+        # The Thresholds of Reality
+        if coherence >= 0.95:
+             return f"GREEN (VAIKUNTHA) - Pure Resonance ({coherence:.2f})"
+        elif coherence >= 0.75:
+             return f"YELLOW (MATERIAL) - Functional but noisy ({coherence:.2f})"
         else:
-            return "GREEN (VAIKUNTHA)"
+             return f"ORANGE (STRUGGLING) - Low Coherence ({coherence:.2f})"
 
     @property
     @abstractmethod

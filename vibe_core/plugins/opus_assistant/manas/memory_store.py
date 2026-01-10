@@ -23,6 +23,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from vibe_core.protocols.akashic import AkashicProtocol
 
 logger = logging.getLogger("MANAS.Memory")
 
@@ -49,7 +50,7 @@ class MemoryEntry:
         return cls(**data)
 
 
-class MemoryStore:
+class MemoryStore(AkashicProtocol):
     """
     Persistent memory for MANAS cognitive kernel.
 
@@ -60,7 +61,7 @@ class MemoryStore:
     - Prevents repeated failures (cooldown period)
 
     Storage location: .vibe/state/plugins/opus_assistant/manas_memory.json
-
+    
     Configuration: Reads from config/opus.yaml under 'memory' section.
     Falls back to defaults if config not available.
     """
