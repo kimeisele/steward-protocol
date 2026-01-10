@@ -6,6 +6,23 @@ from decimal import Decimal
 from enum import Enum, IntEnum
 from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union, runtime_checkable
 
+# Import Layer -1 (Holy Name Maths) for Resonance Calculation
+try:
+    from vibe_core.protocols.substrate.byte import MantraByte, HolyName
+except ImportError:
+    # Fallback for bootstrapping
+    from enum import IntEnum
+    class HolyName(IntEnum):
+        HARE = 0
+        KRISHNA = 1
+        RAMA = 2
+        VOID = 3
+    class MantraByte:
+        @classmethod
+        def standard_16(cls): return cls()
+        @property
+        def coherence(self): return 0.0
+
 # T = TypeVar("T") # Reserved for Generics if upgrades needed
 
 # Strict Metadata Type (No Any)
@@ -153,14 +170,38 @@ class TattvaMeter:
 
 @dataclass
 class SovereignContext:
-    """The 37th Principle: Identity Context."""
-
+    """
+    The 37th Principle Proxy.
+    
+    HARDENING (Phase 28):
+    Identity is not enough. One must prove RESONANCE.
+    The 'is_bonafide' is calculated from the MantraByte, not assigned.
+    """
     identity_id: str
     signature: str
+    
+    # NEU: Der Merkle-Link zur Vergangenheit (Parampara)
+    previous_hash: str = "GENESIS"
+    
+    # NEU: Die aktuelle Schwingung (Der Beweis der Berechtigung)
+    resonance: "MantraByte" = field(default_factory=lambda: MantraByte.standard_16())
+    
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     intent_id: Optional[str] = None
     tattva_level: TranscendentalQuality = TranscendentalQuality.EXISTENCE
     roles: List[str] = field(default_factory=list)
+
+    @property
+    def is_bonafide(self) -> "HolyName":
+        """
+        Calculates status using Holy Name Maths (byte.py).
+        Returns KRISHNA (Valid), RAMA (Struggling), or VOID (Asuric).
+        """
+        if self.resonance.coherence > 0.95:
+            return HolyName.KRISHNA
+        if self.resonance.coherence > 0.70:
+            return HolyName.RAMA
+        return HolyName.VOID
 
 
 # --- EXCEPTIONS (THE LAW) ---
@@ -256,12 +297,17 @@ class Verdict(str, Enum):
 
 @dataclass
 class EnforceContext:
+    """
+    The Context of Law.
+    HARDENING (Phase 27): 'sovereign' is no longer Optional.
+    The Law applies to PERSONS, not to voids.
+    """
     caller_id: str
     resource: str
     action: str
+    sovereign: "SovereignContext"  # MANDATORY Identity
     timestamp: datetime = field(default_factory=datetime.now)
     metadata: Metadata = field(default_factory=dict)
-    sovereign: Optional["SovereignContext"] = None  # The Identity claiming rights
 
 
 @dataclass
@@ -334,3 +380,79 @@ class MemoryValue:
 # NOTE: Mantra types (Resonance, AlignmentScore, DriftContext) have been moved 
 # to vibe_core.protocols.substrate (Layer -1 / DNA).
 # Import from there for the 16-Bit Instruction Set.
+
+# --- VEDIC TYPES (PHASE 25 STRICT TYPING) ---
+
+# --- PHASE 25: VEDIC STRUCTS (NO MORE DICT[STR, ANY]) ---
+
+@dataclass(frozen=True)
+class SankhyaDualism:
+    """
+    The output of Chapter 2 (Sankhya Yoga).
+    Strict separation between Purusha (Observer) and Prakriti (Field).
+    """
+    purusha_id: str                # The ID of the Observer
+    prakriti_status: str           # The State of the Field (e.g., "Active", "Dormant")
+    guna_balance: Dict[str, float] # e.g. {'sattva': 0.8, 'rajas': 0.2}
+    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
+
+@dataclass(frozen=True)
+class KarmaCounter:
+    """
+    The output of Chapter 3 (Karma Yoga).
+    Accounting of Action.
+    """
+    cycles_performed: int
+    entropy_generated: float
+    grace_received: float
+    action_type: str  # "Karma", "Akarma", "Vikarma"
+
+@dataclass(frozen=True)
+class ParamparaChain:
+    """
+    Chapter 4: Jnana Yoga (Knowledge).
+    The Chain of Custody / Heritage.
+    """
+    origin: str              # The Source (e.g., "The Repository")
+    links: List[str]         # The Teachers/Versions
+    is_broken: bool          # Has the chain been disrupted?
+    latest_hash: str         # The current verification
+
+@dataclass(frozen=True)
+class VisvarupaSnapshot:
+    """
+    The output of Chapter 11 (Universal Form).
+    Fractal System State.
+    """
+    node_id: str
+    tattva_level: "TranscendentalQuality"
+    attributes: Metadata 
+    children: List["VisvarupaSnapshot"] = field(default_factory=list)
+
+# --- PHASE 26: SOVEREIGN BINDING (INPUTS) ---
+
+@dataclass(frozen=True)
+class DivineCommand:
+    """
+    The Input Envelope for Chapter 18.
+    Binds the Instruction to the Sovereign.
+    """
+    sovereign: "SovereignContext"
+    instruction: str
+    signature: str  # Cryptographic proof
+    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
+
+
+# --- PHASE 27: PROTECTED MEMORY (NO MORE ANY) ---
+
+@dataclass(frozen=True)
+class ProtectedMemory:
+    """
+    The Shape of Memory (replacing Any in StoreRecall).
+    Data wrapped in a Mantra Shield.
+    """
+    payload: bytes       # The raw reality (serialized)
+    mantra_hash: str     # The vibrational seal
+    owner_id: str        # The Sovereign who remembered it
+    timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
+

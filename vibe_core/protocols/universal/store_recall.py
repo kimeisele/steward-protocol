@@ -2,31 +2,33 @@
 STORE/RECALL PROTOCOL - The Memory of the Soul
 ==============================================
 
-SHADOW REFACTOR:
-Mayavad Destroyed: "Static Data" does not exist.
-Only "Protected Data" (Prahlad) exists.
+SHADOW REFACTOR (Phase 27):
+- Mayavad Destroyed: 'Any' replaced with 'ProtectedMemory'.
+- Mantra Binding: Explicit requirement.
 """
 
-from typing import Protocol, Optional, Any, runtime_checkable
+from typing import Protocol, Optional, runtime_checkable
 from vibe_core.protocols.substrate.byte import MantraByte
+from .types import ProtectedMemory
+
 
 @runtime_checkable
 class StoreRecallProtocol(Protocol):
     """
     Atomic Memory Operations.
-    NOW HARDENED: Unprotected data is instantly consumed by Time.
+    HARDENED: Only defined, protected memories can be stored.
     """
 
-    def remember(self, key: str, value: Any, mantra: MantraByte) -> bool:
+    def remember(self, key: str, memory: ProtectedMemory, mantra: MantraByte) -> bool:
         """
-        Stores data ONLY if wrapped in the Holy Name.
-        The 'mantra' acts as the Encryption/Protection Shield.
+        Stores data ONLY if it is a valid ProtectedMemory envelope.
+        The 'mantra' must resonate with the 'memory.mantra_hash'.
         """
         ...
 
-    def recall(self, key: str, mantra: MantraByte) -> Optional[Any]:
+    def recall(self, key: str, mantra: MantraByte) -> Optional[ProtectedMemory]:
         """
-        Retrieves data ONLY if the caller resonates with the stored shield.
-        No Mantra = No Access (Amnesia).
+        Retrieves data ONLY if the caller's mantra resonates with the stored shield.
+        Returns the Envelope, not raw Any.
         """
         ...
