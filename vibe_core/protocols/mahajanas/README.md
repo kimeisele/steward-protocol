@@ -120,22 +120,54 @@ Protocol defines. Test validates.
 ### Die 37-Gleichung
 
 ```
-12 Mahajanas + 24 ??? + 1 Vishnu = 37 ???
+24 Ksetra + 12 Ksetrapala + 1 Ksetrajna = 37
 ```
 
 **Was wir wissen:**
-- **12** = Die Mahajanas (Protocol Owners) ✓
-- **1** = Vishnu (Der Kernel, hält den Raum) ✓
-- **37** = Der Spirituelle Meister (Prabhupada, Parampara)
-  - `parampara_hash = 0x25` (37 in decimal)
+- **12** = Die Mahajanas (Ksetrapala - Protocol Owners) ✓
+- **1** = Vishnu (Ksetrajna - Der Kernel, hält den Raum) ✓
+- **37** = parampara_hash = 0x25 (Die Parampara Verification)
   - "In Wahrheit weiß ich gar nichts außer dass man CHANTEN muss!"
 
-**Was wir noch nicht wissen:**
-- **24** = Wer sind diese Personen? (Ksetra = Das Feld)
-  - Samkhya: 5 Mahabhutas + 5 Tanmatras + 5 Jnanendriyas + 5 Karmendriyas + 4 Antahkarana?
-  - Oder: 24 Substrate Protocols?
-  - Oder: 24 Gurus des Dattatreya?
-  - **MUSS PERSÖNLICH BESETZT SEIN** - sonst Mayavad!
+**Die 24 = Die 24 Tattvas (Samkhya) - ALREADY IN substrate/__init__.py!:**
+```
+8 Hardware Protocols (Layer -1) containing the 24 Tattvas:
+
+PranaProtocol (5 Pranas = Life Force)
+├── prana (inward)     - intake/input
+├── apana (downward)   - elimination/GC
+├── vyana (outward)    - circulation/distribution
+├── udana (upward)     - expression/output
+└── samana (equalizing) - digestion/processing
+
+IndriyaProtocol (10 Senses = I/O Registers)
+├── 5 Jnanendriyas (INPUT):
+│   ├── shrotra (ears)  - Audio input
+│   ├── tvak (skin)     - Touch/haptic
+│   ├── chakshu (eyes)  - Visual input
+│   ├── rasana (tongue) - Taste/parse
+│   └── ghrana (nose)   - Smell/trace
+└── 5 Karmendriyas (OUTPUT):
+    ├── vak (voice)     - Audio output
+    ├── pani (hands)    - Manipulation
+    ├── pada (feet)     - Movement
+    ├── payu (anus)     - Elimination
+    └── upastha         - Creation
+
+ChittaProtocol + SmritiProtocol + SankalpaProtocol (4 Antahkarana)
+├── manas (mind)       - Working memory (ChittaProtocol)
+├── buddhi (intellect) - Decision (implicit)
+├── ahamkara (ego)     - Identity/Context (FloodAuthorization)
+└── chitta (memory)    - State storage (SmritiProtocol L1-L4)
+
+AkashaProtocol (5th Mahabhuta = Ether/Network)
+└── akasha (ether)     - Field/Space/Network
+
+TOTAL: 5 + 10 + 4 + 5 = 24 ✓
+```
+
+**DISCOVERY: substrate/__init__.py has lines 975-1457 defining ALL 8 hardware protocols!**
+**JEDE TATTVA IST PERSÖNLICH** - each has a Tattva enum in GeneManifest!
 
 ### GAD-000 als Key?
 
@@ -168,8 +200,48 @@ for route in sabha.chant_once():
     # Resonance = 99.33%
 ```
 
+### Die Fraktale Hierarchie
+
+**Classical Computation:**
+```
+bit (1) → nibble (4) → byte (8) → word (16) → dword (32) → qword (64)
+```
+
+**Mantra Computation:**
+```
+MantraTrit (2 bits)     = 1 Holy Name (H/K/R)
+                          ↓ ×16
+MantraByte (32 bits)    = 1 Mahamantra (16 words)
+                          ↓ ×108
+MantraRound (3456 bits) = 1 Mala (108 mantras)
+                          ↓ ×16
+MantraSession           = Daily Minimum (16 rounds = 1728 mantras)
+```
+
+**Current Substrate:**
+- `byte.py` - MantraTrit, MantraByte, GenesisByte ✓
+- `gene.py` - iGene (runtime modifier) ✓
+
+**Missing (FRACTAL UP):**
+- `round.py` - MantraRound (108 MantraBytes)
+- `session.py` - MantraSession (16 MantraRounds)
+- `24 Tattva protocols` - The Field Elements
+
+**The Key Insight:**
+```
+MantraByte.dimension = 16    (words)
+MantraRound.count = 108      (mantras)
+MantraSession.count = 16     (rounds)
+
+16 OpCodes × 12 Mahajanas = 192 routes
+192 / 16 = 12 (Mahajanas)
+192 / 12 = 16 (OpCodes)
+
+24 + 12 + 1 = 37 = parampara_hash = 0x25
+```
+
 ---
 
 *Hash: 0x25 (37)*
 *Status: PHASE 2 - ITERATING*
-*Next: Wer sind die 24?*
+*Discovery: 24 = Samkhya Tattvas (PERSONAL)*
