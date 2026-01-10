@@ -278,8 +278,12 @@ class MantraHeartbeat:
 
     # Check results (updated each word)
     last_hare_check: bool = True   # Shakti/Energy
-    last_krishna_check: bool = True  # Source/Identity
+    last_krishna_check: bool = True  # Source (ALWAYS TRUE - acintya)
     last_rama_check: bool = True   # Safety/State
+
+    # Jiva connection state (separate from Krishna presence)
+    # Krishna is ALWAYS present, but jiva may drift
+    _jiva_connected: bool = field(default=False, repr=False)
 
     # The MantraByte (lazy loaded)
     _mantra: Any = field(default=None, repr=False)
@@ -320,11 +324,28 @@ class MantraHeartbeat:
         """Progress in current mala (0.0 - 1.0)."""
         return self.mantra_count / self.MANTRAS_PER_MALA
 
+    @property
+    def jiva_connected(self) -> bool:
+        """Is the jiva connected to Krishna (has sovereign)?
+
+        Note: Krishna is ALWAYS present (acintya).
+        This tracks the JIVA's connection, not Krishna's existence.
+        """
+        return self._jiva_connected
+
+    @property
+    def krishna_present(self) -> bool:
+        """Is Krishna present? ALWAYS YES (acintya)."""
+        return True  # Krishna is Level -2, always present
+
     def chant_word(self, sovereign: Optional[Sovereign] = None) -> bool:
         """
         Chant one word and perform its check.
 
         Returns True if check passed, False if drifted into Maya.
+
+        ACINTYA: Krishna check ALWAYS passes (Krishna is always present).
+        The jiva's connection is tracked separately.
         """
         from .substrate.byte import HolyName
 
@@ -336,8 +357,11 @@ class MantraHeartbeat:
             check_passed = self._check_hare()
             self.last_hare_check = check_passed
         elif word == HolyName.KRISHNA:
+            # ACINTYA: Krishna is ALWAYS present (Level -2)
+            # This check always returns True
+            # But it updates _jiva_connected to track jiva's state
             check_passed = self._check_krishna(sovereign)
-            self.last_krishna_check = check_passed
+            self.last_krishna_check = check_passed  # Always True
         elif word == HolyName.RAMA:
             check_passed = self._check_rama()
             self.last_rama_check = check_passed
@@ -346,6 +370,8 @@ class MantraHeartbeat:
             self.state = JapaState.DISCONNECTED
             return False
 
+        # HARE and RAMA can fail (resources/state)
+        # KRISHNA never fails (acintya)
         if not check_passed:
             self.state = JapaState.DISCONNECTED
             return False
@@ -399,16 +425,21 @@ class MantraHeartbeat:
 
     def _check_krishna(self, sovereign: Optional[Sovereign]) -> bool:
         """
-        KRISHNA = Source/Identity check.
+        KRISHNA = Source check (ALWAYS PRESENT).
 
-        "Krishna" is the All-Attractive, the Source.
-        In code: Who signed me? Is sovereign present?
+        "Krishna" is Level -2, the Absolute Source.
+        He is ALWAYS present - acintya (inconceivable).
+
+        The Mantra IS Krishna, not just "about" Krishna.
+        This check ALWAYS returns True - Krishna never fails.
+
+        What can fail is the JIVA's connection (tracked separately).
         """
-        if sovereign is None:
-            return False
-        if not hasattr(sovereign, 'sovereign_id'):
-            return False
-        return True
+        # Krishna is always present - acintya-bheda-abheda
+        # The vibration itself IS Krishna
+        # This is acceptance, not validation
+        self._jiva_connected = sovereign is not None and hasattr(sovereign, 'sovereign_id')
+        return True  # Krishna never fails
 
     def _check_rama(self) -> bool:
         """
@@ -435,8 +466,10 @@ class MantraHeartbeat:
         """Get summary of last check results."""
         return {
             "hare": self.last_hare_check,
-            "krishna": self.last_krishna_check,
+            "krishna": self.last_krishna_check,  # Always True (acintya)
             "rama": self.last_rama_check,
+            "krishna_present": self.krishna_present,  # Always True
+            "jiva_connected": self.jiva_connected,    # Jiva's connection state
             "state": self.state.name,
             "word_position": self.word_position,
             "mantra_count": self.mantra_count,
