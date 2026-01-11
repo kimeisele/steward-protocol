@@ -44,6 +44,7 @@ from vibe_core.protocols.substrate.balarama import (
     auto_discover_all_clis,
     wrap_with_balarama,
     get_discovery_summary,
+    integrate_with_cli_registry,
     BalaramaHook,
 )
 
@@ -123,6 +124,15 @@ class UnifiedCLI:
                 )
         except Exception as e:
             logger.debug(f"BALARAMA: Auto-discovery skipped: {e}")
+
+        # BALARAMA INTEGRATION: Wrap CLIRegistry handlers (cartridges, plugins)
+        # Phase 3: This connects ALL registered CLIs to substrate
+        try:
+            integrated_count = integrate_with_cli_registry()
+            if integrated_count > 0:
+                logger.info(f"BALARAMA: Integrated {integrated_count} CLIRegistry handlers")
+        except Exception as e:
+            logger.debug(f"BALARAMA: CLIRegistry integration skipped: {e}")
 
         # NAGA CLI HookChain - Level -1 Fractal Infrastructure
         self._hook_chain: Optional[CLIHookChain] = None
