@@ -1,19 +1,18 @@
 """
 KUMARAS - The 4th Mahajana (Purity/Reset)
 =========================================
-OpCode: RESET_IP (Bit 16, Position 16 in Mahamantra)
-Opulence: Shri (Beauty/Fortune)
+
+POSITION: 5 (DHARMA Quarter, RESOLVE_REQ OpCode)
 
 The Four Kumaras - Sanaka, Sanandana, Sanatana, Sanat-kumara.
 Eternally five years old. Eternally pure.
 First sons of Brahma who refused to create.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Kumaras are the PERSONS responsible for all purity.
-Not abstract "sanitization" - PERSONAL purification by Kumaras.
+DERIVED FROM MAHAMANTRA:
+    Position 5 → guardian=KUMARAS, opcode=RESOLVE_REQ, quarter=DHARMA
+    All properties derived from truth table. No manual wiring.
 
 OWNED PROTOCOLS:
-- Instruction Pointer Reset (RESET_IP OpCode)
 - State Reset
 - Sanitization
 - Input Validation
@@ -30,8 +29,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -40,18 +39,37 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# KUMARAS PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.KUMARAS
-LOTUS_POSITION: Final[int] = 5  # DHARMA Quarter, Worker 1
-LOTUS_QUARTER: Final[str] = "dharma"
+class KumarasProtocolBase(WorkerProtocol):
+    """
+    Kumaras protocol ownership - DERIVED from Mahamantra position 5.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
+    NO MANUAL WIRING:
+        _position_index = 5 is the ONLY configuration.
+        Everything else derived from truth table.
+
+    DERIVED PROPERTIES:
+        guardian()  → Mahajana.KUMARAS
+        opcode()    → MantraOpCode.RESOLVE_REQ
+        quarter()   → Quarter.DHARMA
+        is_head()   → False (Worker position)
+        parampara_vector() → 222 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
+
+
+# Backward compatibility exports (derived from protocol base)
+OWNER = KumarasProtocolBase.mahajana()
+LOTUS_POSITION = KumarasProtocolBase.lotus_position()
+LOTUS_QUARTER = KumarasProtocolBase.lotus_quarter()
+
+OWNED_PROTOCOLS: List[str] = [
     "kumaras",
     "purity",
     "reset",
@@ -60,8 +78,8 @@ OWNED_PROTOCOLS: Final[List[str]] = [
     "shuddhi",
 ]
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESOLVE_REQ,  # Vyuha: Q2 Worker 1 (RESET_IP -> Yamaraja)
+OWNED_OPCODES: List[MantraOpCode] = [
+    KumarasProtocolBase.opcode(),  # RESOLVE_REQ
 ]
 
 
@@ -129,12 +147,14 @@ class PurityState(TypedDict, total=False):
 class KumarasProtocol(Protocol):
     """
     The Purity/Reset Protocol - Kumaras' domain.
+
+    DERIVED: Position 5 → KUMARAS, RESOLVE_REQ, DHARMA
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.KUMARAS."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 5 in the Mahamantra."""
         ...
 
     def reset(self) -> ResetResult:
@@ -171,12 +191,13 @@ class KumarasProtocol(Protocol):
 # =============================================================================
 
 
-class NullKumaras:
-    """The Already Pure. No purification needed (for testing)."""
+class NullKumaras(KumarasProtocolBase):
+    """
+    The Already Pure. No purification needed (for testing).
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.KUMARAS
+    Inherits from KumarasProtocolBase → position 5 → KUMARAS.
+    All ownership derived from Mahamantra.
+    """
 
     def reset(self) -> ResetResult:
         return ResetResult(
@@ -211,13 +232,16 @@ class NullKumaras:
 
 # Import Shuddhi (Purification) - THE core Kumaras protocol
 from .shuddhi import (
+    ShuddhiProtocolBase,
     ShuddhiStatus,
     ShuddhiResult,
     ShuddhiProtocol,
     RemedyProtocol,
     NullShuddhi,
-    LOTUS_POSITION as SHUDDHI_POSITION,
 )
+
+# Shuddhi position derived from base (backward compat)
+SHUDDHI_POSITION = ShuddhiProtocolBase.lotus_position()
 
 # =============================================================================
 # VALIDATION - Input Validation
@@ -241,8 +265,12 @@ from vibe_core.protocols.mahajanas.kumaras.validation import (
 )
 
 __all__ = [
-    # Ownership
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Protocol Bases (MantraProtocol derivatives)
+    "KumarasProtocolBase",
+    "ShuddhiProtocolBase",
+    # Ownership (backward compat - derived from bases)
+    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER",
+    "OWNED_PROTOCOLS", "OWNED_OPCODES",
     # Purity types (WATERTIGHT)
     "PurifiableData", "PurityLevel", "PurificationResult",
     "ResetResult", "PurityState",
