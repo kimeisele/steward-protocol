@@ -415,6 +415,20 @@ from vibe_core.protocols.mahajanas.janaka.cycle import (
     NullCycleRegistry,
 )
 
+# =============================================================================
+# SCHEDULER - Task Scheduling
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.janaka.scheduler import (
+    SchedulingAlgorithm,
+    ScheduledTask,
+    TaskExecutor,
+    SchedulerProtocol,
+    Scheduler,
+    NullScheduler,
+    LOTUS_POSITION as SCHEDULER_POSITION,
+)
+
 
 # =============================================================================
 # EXPORTS
@@ -456,4 +470,12 @@ __all__ = [
     "CycleOwnedProtocol",
     "NullCognitiveCycle",
     "NullCycleRegistry",
+    # Scheduler (Task Scheduling)
+    "SchedulingAlgorithm",
+    "ScheduledTask",
+    "TaskExecutor",
+    "SchedulerProtocol",
+    "Scheduler",
+    "NullScheduler",
+    "SCHEDULER_POSITION",
 ]

@@ -204,6 +204,20 @@ from vibe_core.protocols.mahajanas.brahma.di import (
     DIProtocolState,
 )
 
+# =============================================================================
+# BOOTSTRAP - System Genesis
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.brahma.bootstrap import (
+    BootstrapPhase,
+    BootstrapStep,
+    BootstrapResult,
+    BootstrapProtocol,
+    Bootstrap,
+    NullBootstrap,
+    LOTUS_POSITION as BOOTSTRAP_POSITION,
+)
+
 __all__ = [
     # Genesis
     "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
@@ -216,4 +230,12 @@ __all__ = [
     "ServiceInfo",
     "RegistryStats",
     "DIProtocolState",
+    # Bootstrap (System Genesis)
+    "BootstrapPhase",
+    "BootstrapStep",
+    "BootstrapResult",
+    "BootstrapProtocol",
+    "Bootstrap",
+    "NullBootstrap",
+    "BOOTSTRAP_POSITION",
 ]

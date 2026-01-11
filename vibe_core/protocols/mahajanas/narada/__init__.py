@@ -390,6 +390,21 @@ from vibe_core.protocols.mahajanas.narada.events import (
     NullEventBus,
 )
 
+# =============================================================================
+# BROADCAST - Multi-Channel Communication
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.narada.broadcast import (
+    DeliveryMode,
+    Channel,
+    Subscription,
+    BroadcastHandler,
+    BroadcastProtocol,
+    Broadcaster,
+    NullBroadcaster,
+    LOTUS_POSITION as BROADCAST_POSITION,
+)
+
 __all__ = [
     # Ownership
     "OWNER",
@@ -420,4 +435,13 @@ __all__ = [
     "EventBusProtocol",
     "EventBusOwnedProtocol",
     "NullEventBus",
+    # Broadcast (Multi-Channel)
+    "DeliveryMode",
+    "Channel",
+    "Subscription",
+    "BroadcastHandler",
+    "BroadcastProtocol",
+    "Broadcaster",
+    "NullBroadcaster",
+    "BROADCAST_POSITION",
 ]
