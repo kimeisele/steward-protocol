@@ -1,39 +1,19 @@
 """
 SHUKA - The 11th Mahajana (Vision/Knowledge/Config)
 ====================================================
-OpCode: CACHE_STATE (Bit 13, Position 13 in Mahamantra)
-Opulence: Jnana (Knowledge)
+
+POSITION: 14 (MOKSHA Quarter, YIELD_CPU OpCode)
 
 Shukadeva Goswami - The Parrot of Knowledge.
 Son of Vyasa. Speaker of Srimad Bhagavatam.
 Born liberated. Sees past, present, future.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Shuka is the PERSON responsible for all vision/knowledge.
-Not abstract "caching" - PERSONAL observation by Shuka.
+DERIVED FROM MAHAMANTRA:
+    Position 14 -> guardian=SHUKA, opcode=YIELD_CPU, quarter=MOKSHA
+    All properties derived from truth table. No manual wiring.
 
-OWNED PROTOCOLS:
-- State Caching (CACHE_STATE OpCode)
-- Reflection / Introspection
-- Knowledge Storage
-- **CONFIG** - The Shastra of the System
-- Darshana (Vision/Philosophy)
-
-WHY CONFIG BELONGS TO SHUKA:
-1. Config = "Shastra" (documented knowledge) of the system
-2. VYASA (Avatara) COMPILES the Vedas → Creates config
-3. SHUKA (Mahajana) DELIVERS/OBSERVES the Vedas → Caches config
-4. Shuka "sees without attachment" - pure observation
-5. CACHE_STATE is his OpCode - config IS cached state
-
-FRACTAL ARCHITECTURE:
-    Config
-    └── Section (fractal - each section is also a config)
-        └── Field (atomic - typed value)
-
-Each level is SELF-SIMILAR (holographic).
-Zoom in: Still a config structure.
-Zoom out: Still a config structure.
+Shuka "sees without attachment" - pure observation.
+Config IS cached state.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -47,8 +27,8 @@ from enum import Enum
 from pathlib import Path
 from typing import (
     Callable,
+    ClassVar,
     Dict,
-    Final,
     Generic,
     List,
     Optional,
@@ -61,29 +41,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# SHUKA PROTOCOL BASE - Derives from MantraPosition 14
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.SHUKA
-LOTUS_POSITION: Final[int] = 14  # MOKSHA Quarter, Worker 2
-LOTUS_QUARTER: Final[str] = "moksha"
+class ShukaProtocolBase(WorkerProtocol):
+    """
+    Shuka protocol ownership - DERIVED from Mahamantra position 14.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "shuka",
-    "config",
-    "section",
-    "cache",
-    "reflect",
-    "darshana",
-]
+    NO MANUAL WIRING:
+        _position_index = 14 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.YIELD_CPU,  # Vyuha: Q4 Worker 2 (CACHE_STATE now HEAD: Nrisimha)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.SHUKA
+        opcode()    -> MantraOpCode.YIELD_CPU
+        quarter()   -> Quarter.MOKSHA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 555 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 14  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[14]
 
 
 # =============================================================================
@@ -366,16 +349,13 @@ class ShukaProtocol(Protocol):
     """
     The Vision Protocol - Shuka's domain.
 
-    Any system that caches/reflects/configs must implement this.
+    DERIVED: Position 14 -> SHUKA, YIELD_CPU, MOKSHA
     WATERTIGHT - no Any types!
-
-    ANTI-MAYAVAD: Shuka is the PERSON.
-    Not abstract "caching" - PERSONAL observation.
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.SHUKA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 14 in the Mahamantra."""
         ...
 
     # =========================================================================
@@ -433,15 +413,13 @@ class ShukaProtocol(Protocol):
 # =============================================================================
 
 
-class NullShuka:
+class NullShuka(ShukaProtocolBase):
     """
     The Blind One.
     No caching/vision (for testing without state).
-    """
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.SHUKA
+    Inherits from ShukaProtocolBase -> position 14 -> SHUKA.
+    """
 
     def cache(self, key: str, value: CachedValue) -> bool:
         return True  # Pretend we cached
@@ -488,10 +466,8 @@ from vibe_core.protocols.mahajanas.shuka.reflect import (
 # =============================================================================
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "ShukaProtocolBase",
     # State Types (WATERTIGHT)
     "CachedValue",
     "ReflectionResult",
@@ -517,5 +493,4 @@ __all__ = [
     "ReflectProtocol",
     "Reflector",
     "NullReflector",
-    "REFLECT_POSITION",
 ]

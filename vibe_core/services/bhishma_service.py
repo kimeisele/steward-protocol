@@ -20,7 +20,6 @@ from vibe_core.protocols.mahajanas.bhishma import (
     CommitResult,
     CommitState,
     VerificationResult,
-    OWNER,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 
@@ -40,7 +39,7 @@ class BhishmaService(BhishmaProtocol):
 
     @property
     def owner(self) -> Mahajana:
-        return OWNER
+        return Mahajana.BHISHMA  # Position 11
 
     # =========================================================================
     # BhishmaProtocol Implementation

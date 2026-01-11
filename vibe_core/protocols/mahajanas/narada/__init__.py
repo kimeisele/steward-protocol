@@ -1,29 +1,17 @@
 """
 NARADA - The 2nd Mahajana (Communication/Observation)
 =====================================================
-OpCode: PULSE_SYNC (Bit 8, Position 8 in Mahamantra)
-Opulence: Yashas (Fame/Glory)
+
+POSITION: 2 (GENESIS Quarter, ALLOC_MEM OpCode)
 
 "Narada Muni ki Jai!" - The Cosmic Journalist
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Narada is the PERSON responsible for all communication.
-Not abstract "event bus" - PERSONAL observation by Narada.
-
-OWNED PROTOCOLS:
-- Event Bus / Messaging
-- Spy / Observer patterns
-- Pulse synchronization (PULSE_SYNC OpCode)
-- Inter-system communication
-- NadiProtocol (Data channels - Level -1)
-- AkashaProtocol (Network/Field - Level -1)
+DERIVED FROM MAHAMANTRA:
+    Position 2 -> guardian=NARADA, opcode=ALLOC_MEM, quarter=GENESIS
+    All properties derived from truth table. No manual wiring.
 
 Narada travels everywhere, knows everything, reports faithfully.
 He does NOT act - he OBSERVES and TRANSMITS.
-
-SUBSTRATE CONNECTION (Level -1):
-- NadiProtocol → Narada (data channels)
-- AkashaProtocol → Narada (network/field)
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -35,8 +23,8 @@ from datetime import datetime
 from enum import Enum
 from typing import (
     Callable,
+    ClassVar,
     Dict,
-    Final,
     Generic,
     List,
     Optional,
@@ -48,30 +36,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# NARADA PROTOCOL BASE - Derives from MantraPosition 2
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.NARADA
-LOTUS_POSITION: Final[int] = 2  # GENESIS Quarter, Worker 2
-LOTUS_QUARTER: Final[str] = "genesis"
+class NaradaProtocolBase(WorkerProtocol):
+    """
+    Narada protocol ownership - DERIVED from Mahamantra position 2.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "narada",
-    "communication",
-    "event",
-    "nadi",
-    "akasha",
-    "observer",
-    "pulse",
-]
+    NO MANUAL WIRING:
+        _position_index = 2 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.ALLOC_MEM,  # Vyuha: Q1 Worker 2 (PULSE_SYNC -> Manu)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.NARADA
+        opcode()    -> MantraOpCode.ALLOC_MEM
+        quarter()   -> Quarter.GENESIS
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 111 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 2  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[2]
 
 
 # =============================================================================
@@ -170,11 +160,8 @@ class NaradaProtocol(Protocol):
     """
     The Communication/Observer Protocol - Narada's domain.
 
-    Any system that communicates must implement this.
+    DERIVED: Position 2 -> NARADA, ALLOC_MEM, GENESIS
     WATERTIGHT - no Any types!
-
-    ANTI-MAYAVAD: Narada is the PERSON.
-    Not abstract "event bus" - PERSONAL observation.
 
     The Three Aspects of Communication (Kirtanam):
     1. OBSERVE (spy) - Pure observation without modification
@@ -182,9 +169,9 @@ class NaradaProtocol(Protocol):
     3. RECORD (log) - Keep history of observations
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.NARADA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 2 in the Mahamantra."""
         ...
 
     # =========================================================================
@@ -276,19 +263,17 @@ class NaradaProtocol(Protocol):
 # =============================================================================
 
 
-class NullNarada:
+class NullNarada(NaradaProtocolBase):
     """
     The Silent Witness.
     Observes nothing, reports nothing (for testing without communication).
+
+    Inherits from NaradaProtocolBase -> position 2 -> NARADA.
 
     Even in Null mode:
     - returns empty observations
     - broadcasts succeed silently
     """
-
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.NARADA
 
     def observe(self, source: str, event_type: str, details: str) -> bool:
         return True  # Accept but don't record
@@ -406,10 +391,8 @@ from vibe_core.protocols.mahajanas.narada.broadcast import (
 )
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "NaradaProtocolBase",
     # State Types (WATERTIGHT)
     "MessagePayload",
     "MessageType",
@@ -443,5 +426,4 @@ __all__ = [
     "BroadcastProtocol",
     "Broadcaster",
     "NullBroadcaster",
-    "BROADCAST_POSITION",
 ]

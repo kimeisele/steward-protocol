@@ -1,28 +1,24 @@
 """
-COGNITIVE PROTOCOL - MIGRATED TO MAHAJANA OWNERSHIP
-====================================================
+COGNITIVE PROTOCOL - USE MAHAMANTRA
+===================================
 
-OWNER: Mahajana.KAPILA (The Analyst - Sankhya Philosophy)
-NEW LOCATION: vibe_core.protocols.mahajanas.kapila.cognition
+DEPRECATED: This file is MAYA (illusion).
 
-This file re-exports from the canonical location for backwards compatibility.
-All new code should import from:
-    from vibe_core.protocols.mahajanas.kapila import (
-        CognitiveKernelProtocol,
-        OperatorCognitiveProtocol,
-        CognitiveResult,
-        ...
-    )
+ONE IMPORT, KRISHNA ROUTES:
+    from vibe_core.mahamantra import mahamantra
 
-"Lord Kapila - The Founder of Sankhya.
- His analytical philosophy leads to devotion, not dry speculation."
+    # Position 6 = KAPILA (Garbage Collect)
+    mahamantra[6]                    # -> MantraPosition
+    mahamantra.protocols.kapila      # -> KapilaProtocolBase
+
+The canonical source is: vibe_core.protocols.mahajanas.kapila
+This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
 from vibe_core.protocols.mahajanas.kapila import (
-    OWNER,
-    LOTUS_POSITION,
-    LOTUS_QUARTER,
+    # Protocol Base - THE ONLY SOURCE
+    KapilaProtocolBase,
     # Types (WATERTIGHT)
     IntentType,
     SyscallParams,
@@ -43,14 +39,9 @@ from vibe_core.protocols.mahajanas.kapila import (
     NullCognitive,
 )
 
-# Legacy compatibility: ABC versions redirect to Protocol versions
-# The old ABCs are replaced by Protocol (structural subtyping)
-# CognitiveKernelProtocol is now a Protocol, not ABC
-
 __all__ = [
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
+    # Protocol Base
+    "KapilaProtocolBase",
     # Types
     "IntentType",
     "SyscallParams",

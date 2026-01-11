@@ -14,7 +14,6 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Union
 
 from vibe_core.protocols.mahajanas.janaka import (
-    OWNER,
     ExecutionResult,
     ExecutionState,
     JanakaProtocol,
@@ -42,7 +41,7 @@ class JanakaService(JanakaProtocol):
 
     @property
     def owner(self) -> Mahajana:
-        return OWNER
+        return Mahajana.JANAKA  # Position 10
 
     # =========================================================================
     # JanakaProtocol Implementation

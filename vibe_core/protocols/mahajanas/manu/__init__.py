@@ -1,49 +1,48 @@
 """
 MANU - The 6th Mahajana (Law/Governance)
 ========================================
-OpCodes: bind_ctx (Bit 11), check_dharma (Bit 12)
-Opulence: Aishvarya (Sovereignty)
+
+POSITION: 7 (DHARMA Quarter, PULSE_SYNC OpCode)
 
 The Lawgiver. Father of mankind.
 Manu-samhita - The Laws of Manu.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Manu is the PERSON responsible for these protocols.
-They are not "universal" - they are PERSONAL (owned by Manu).
-
-OWNED PROTOCOLS:
-- dharma.py - Dharma verification
-- enforce.py - Law enforcement
-- governance/ - Governance systems
+DERIVED FROM MAHAMANTRA:
+    Position 7 -> guardian=MANU, opcode=PULSE_SYNC, quarter=DHARMA
+    All properties derived from truth table. No manual wiring.
 
 Manu establishes ORDER. Without Manu = Anarchy.
 """
 
-from typing import Protocol, runtime_checkable, Optional, List, Final
+from typing import Protocol, runtime_checkable, Optional, List, ClassVar
 from dataclasses import dataclass
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP - Manu's Domain
+# MANU PROTOCOL BASE - Derives from MantraPosition 7
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.MANU
-LOTUS_POSITION: Final[int] = 7  # DHARMA Quarter, Worker 3
-LOTUS_QUARTER: Final[str] = "dharma"
+class ManuProtocolBase(WorkerProtocol):
+    """
+    Manu protocol ownership - DERIVED from Mahamantra position 7.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "manu",
-    "dharma",
-    "enforce",
-    "governance",
-    "law",
-]
+    NO MANUAL WIRING:
+        _position_index = 7 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.PULSE_SYNC,  # Vyuha: Q2 Worker 3 (BIND_CTX -> Shambhu, CHECK_DHARMA -> Janaka)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.MANU
+        opcode()    -> MantraOpCode.PULSE_SYNC
+        quarter()   -> Quarter.DHARMA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 296 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 7  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[7]
 
 
 # =============================================================================
@@ -103,10 +102,12 @@ class ManuProtocol(Protocol):
         ...
 
 
-class NullManu:
+class NullManu(ManuProtocolBase):
     """
     The Lawless State.
     All actions permitted (for testing without governance).
+
+    Inherits from ManuProtocolBase -> position 7 -> MANU.
     """
 
     def bind_context(self, context: DharmaContext) -> bool:
@@ -142,10 +143,8 @@ from .varnashrama import (
 )
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "ManuProtocolBase",
     # Protocol
     "ManuProtocol",
     "NullManu",
@@ -158,7 +157,6 @@ __all__ = [
     "get_layer",
     "check_compliance",
     "is_dharmic",
-    "DHARMA_POSITION",
     # Varnashrama (Social Law)
     "Varna",
     "Ashrama",

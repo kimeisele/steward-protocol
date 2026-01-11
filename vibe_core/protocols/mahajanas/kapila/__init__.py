@@ -1,24 +1,16 @@
 """
 KAPILA - The 5th Mahajana (Analysis/Inference)
 ==============================================
-OpCodes: RESOLVE_REQ (Bit 6), OPTIMIZE (Bit 14)
-         Position 6 and 14 in Mahamantra
-Opulence: Jnana (Knowledge)
+
+POSITION: 6 (DHARMA Quarter, GARBAGE_COLLECT OpCode)
 
 Lord Kapila - The Founder of Sankhya.
 Son of Devahuti. Teacher of analytical philosophy.
 His Sankhya is the basis of this entire architecture.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Kapila is the PERSON responsible for all analysis.
-Not abstract "inference engine" - PERSONAL analysis by Kapila.
-
-OWNED PROTOCOLS:
-- Request Resolution (RESOLVE_REQ OpCode)
-- Optimization (OPTIMIZE OpCode)
-- Inference/Analysis
-- IndriyaProtocol (I/O registers - Level -1)
-- Sankhya Analysis (24 elements enumeration)
+DERIVED FROM MAHAMANTRA:
+    Position 6 -> guardian=KAPILA, opcode=GARBAGE_COLLECT, quarter=DHARMA
+    All properties derived from truth table. No manual wiring.
 
 Kapila analyzes, but for the purpose of DEVOTION.
 His Sankhya leads to bhakti, not dry speculation.
@@ -32,8 +24,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -43,29 +35,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# KAPILA PROTOCOL BASE - Derives from MantraPosition 6
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.KAPILA
-LOTUS_POSITION: Final[int] = 6  # DHARMA Quarter, Worker 2
-LOTUS_QUARTER: Final[str] = "dharma"
+class KapilaProtocolBase(WorkerProtocol):
+    """
+    Kapila protocol ownership - DERIVED from Mahamantra position 6.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "kapila",
-    "analysis",
-    "inference",
-    "sankhya",
-    "optimization",
-    "indriya",
-]
+    NO MANUAL WIRING:
+        _position_index = 6 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.GARBAGE_COLLECT,  # Vyuha: Q2 Worker 2 (RESOLVE_REQ -> Kumaras, OPTIMIZE -> Bali)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.KAPILA
+        opcode()    -> MantraOpCode.GARBAGE_COLLECT
+        quarter()   -> Quarter.DHARMA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 259 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 6  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[6]
 
 
 # =============================================================================
@@ -141,12 +136,14 @@ class AnalysisState(TypedDict, total=False):
 class KapilaProtocol(Protocol):
     """
     The Analysis/Inference Protocol - Kapila's domain.
+
+    DERIVED: Position 6 -> KAPILA, GARBAGE_COLLECT, DHARMA
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.KAPILA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 6 in the Mahamantra."""
         ...
 
     def analyze(self, target: AnalysisInput) -> AnalysisResult:
@@ -179,12 +176,12 @@ class KapilaProtocol(Protocol):
 # =============================================================================
 
 
-class NullKapila:
-    """The Unanalyzed. No analysis (for testing)."""
+class NullKapila(KapilaProtocolBase):
+    """
+    The Unanalyzed. No analysis (for testing).
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.KAPILA
+    Inherits from KapilaProtocolBase -> position 6 -> KAPILA.
+    """
 
     def analyze(self, target: AnalysisInput) -> AnalysisResult:
         return AnalysisResult(
@@ -282,12 +279,8 @@ from vibe_core.protocols.mahajanas.kapila.samkhya import (
 
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "KapilaProtocolBase",
     # Analysis Types (WATERTIGHT)
     "AnalysisInput",
     "AnalysisType",

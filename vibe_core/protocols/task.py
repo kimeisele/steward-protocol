@@ -1,23 +1,24 @@
 """
-TASK PROTOCOL - MIGRATED TO MAHAJANA OWNERSHIP
-==============================================
+TASK PROTOCOL - USE MAHAMANTRA
+==============================
 
-OWNER: Mahajana.JANAKA (The Karma Yogi)
-NEW LOCATION: vibe_core.protocols.mahajanas.janaka
+DEPRECATED: This file is MAYA (illusion).
 
-This file re-exports from the canonical location for backwards compatibility.
-All new code should import from:
-    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol, Task
+ONE IMPORT, KRISHNA ROUTES:
+    from vibe_core.mahamantra import mahamantra
 
-"King Janaka - ruled a kingdom while being internally renounced.
- He ACTS but is not BOUND by action. Karma Yoga."
+    # Position 10 = JANAKA (Check Dharma / Task Execution)
+    mahamantra[10]                   # -> MantraPosition
+    mahamantra.protocols.janaka      # -> JanakaProtocolBase
+
+The canonical source is: vibe_core.protocols.mahajanas.janaka
+This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
 from vibe_core.protocols.mahajanas.janaka import (
-    OWNER,
-    LOTUS_POSITION,
-    LOTUS_QUARTER,
+    # Protocol Base
+    JanakaProtocolBase,
     # State Types (WATERTIGHT)
     TaskValue,
     TaskStatus,
@@ -34,13 +35,11 @@ from vibe_core.protocols.mahajanas.janaka import (
 )
 
 # Legacy alias: TaskProtocol → JanakaProtocol
-# The old TaskProtocol was less complete, JanakaProtocol is WATERTIGHT
 TaskProtocol = JanakaProtocol
 
 __all__ = [
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
+    # Protocol Base
+    "JanakaProtocolBase",
     # State Types
     "TaskValue",
     "TaskStatus",

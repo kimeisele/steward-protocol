@@ -26,7 +26,7 @@ Usage:
     naga scan --path <dir>       # Scan specific path
 """
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
     NagaCommandBase,
