@@ -1637,6 +1637,11 @@ __all__ = [
     "GridState",
     "get_gpu",
     "sankirtan",
+    # =========================================================================
+    # NOTE: CLI SUBSTRATE & BALARAMA not exported here (circular dependency)
+    # Import directly from vibe_core.protocols.substrate.cli_substrate
+    # and vibe_core.protocols.substrate.balarama
+    # =========================================================================
 ]
 
 # =============================================================================
@@ -1697,3 +1702,16 @@ from vibe_core.protocols.substrate.gpu import (
     get_gpu,
     sankirtan,
 )
+
+# =============================================================================
+# NOTE: CLI SUBSTRATE & BALARAMA (Not imported here - circular dependency)
+# =============================================================================
+# CLI Substrate (cli_substrate.py) and Balarama (balarama.py) depend on
+# mahajanas.router which creates a circular import when included here.
+#
+# Import these directly:
+#   from vibe_core.protocols.substrate.cli_substrate import ...
+#   from vibe_core.protocols.substrate.balarama import ...
+#
+# They are NOT re-exported from this __init__.py to avoid circular imports.
+# =============================================================================
