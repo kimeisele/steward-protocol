@@ -29,6 +29,11 @@ from vibe_core.protocols.governance.bridge import (
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja.security import SecurityLevel
 
+# For file writing
+from pathlib import Path
+from datetime import datetime
+import re
+
 # Intelligence - THE INSIGHT
 from vibe_core.protocols.naga.intel_bridge import (
     IntelBridgeProtocol,
@@ -98,8 +103,8 @@ class GovernanceCLI:
             command="governance",
             description="Protocol Governance + NAGA Intel (12 Mahajanas)",
             domain="governance",
-            subcommands=["audit", "inspect", "list", "owners", "intel", "gaps", "scan", "terrain"],
-            tags=["protocol", "governance", "mahajana", "yamaraja", "intel", "shuka", "scan"],
+            subcommands=["audit", "inspect", "list", "owners", "intel", "gaps", "scan", "terrain", "assign", "fix-all"],
+            tags=["protocol", "governance", "mahajana", "yamaraja", "intel", "shuka", "scan", "assign", "fix"],
         )
 
     def run(self, args: List[str]) -> int:
@@ -130,6 +135,10 @@ class GovernanceCLI:
             return self.cmd_scan(remaining)
         elif cmd == "terrain":
             return self.cmd_terrain(remaining)
+        elif cmd == "assign":
+            return self.cmd_assign(remaining)
+        elif cmd == "fix-all":
+            return self.cmd_fix_all(remaining)
         else:
             print(f"Unknown command: {cmd}")
             self._print_usage()
@@ -156,6 +165,10 @@ INTEL COMMANDS:
 DISCOVERY COMMANDS:
     steward governance scan               Scan ENTIRE repo (unknown terrain)
     steward governance terrain            Show ungoverned directories
+
+WRITE COMMANDS:
+    steward governance assign <path> <mahajana>   Assign ownership to file
+    steward governance fix-all [--dry-run]        Auto-fix all ungoverned files
 
 Status: {report['governed_count']}/{report['total_protocols']} governed | {len(intel_insights)} intel items
 """)
@@ -553,3 +566,320 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
             print(f"\n  ACTION: Use governance bridge to add these directories")
 
         return 0
+
+    # =========================================================================
+    # WRITE COMMANDS (Modify Governance)
+    # =========================================================================
+
+    def cmd_assign(self, args: List[str]) -> int:
+        """
+        Assign ownership to a file.
+
+        Usage: governance assign <path> <mahajana>
+
+        Writes OWNER declaration to file + logs to ledger.
+        """
+        if len(args) < 2:
+            print("Usage: governance assign <path> <mahajana>")
+            print("Example: governance assign substrate/balarama.py bali")
+            print(f"\nValid Mahajanas: {', '.join(m.value for m in Mahajana)}")
+            return 1
+
+        file_path = args[0]
+        mahajana_name = args[1].lower()
+        dry_run = "--dry-run" in args
+
+        # Validate Mahajana
+        try:
+            mahajana = Mahajana(mahajana_name)
+        except ValueError:
+            print(f"❌ Unknown Mahajana: {mahajana_name}")
+            print(f"Valid: {', '.join(m.value for m in Mahajana)}")
+            return 1
+
+        # Find the file
+        vibe_core = Path(__file__).parent.parent
+
+        # Try different path resolutions
+        candidates = [
+            vibe_core / "protocols" / file_path,
+            vibe_core / file_path,
+            Path(file_path),
+        ]
+
+        target_file = None
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_file():
+                target_file = candidate
+                break
+
+        if target_file is None:
+            print(f"❌ File not found: {file_path}")
+            print(f"Tried: {[str(c) for c in candidates]}")
+            return 1
+
+        # Check if already has OWNER
+        content = target_file.read_text()
+        has_owner = "OWNER: Final" in content or "OWNER =" in content
+
+        if has_owner and "--force" not in args:
+            print(f"⚠️  {file_path} already has OWNER declaration")
+            print("Use --force to overwrite")
+            return 1
+
+        if dry_run:
+            print(f"[DRY-RUN] Would assign {file_path} → {mahajana.value.upper()}")
+            return 0
+
+        # Write OWNER to file
+        success = self._write_owner_to_file(target_file, mahajana, content, has_owner)
+
+        if success:
+            print(f"✅ Assigned {file_path} → {mahajana.value.upper()}")
+
+            # Log to ledger (if available)
+            self._log_assignment(file_path, mahajana)
+
+            return 0
+        else:
+            print(f"❌ Failed to write to {file_path}")
+            return 1
+
+    def _write_owner_to_file(
+        self,
+        file_path: Path,
+        mahajana: Mahajana,
+        content: str,
+        has_owner: bool
+    ) -> bool:
+        """
+        Write OWNER declaration to a Python file.
+
+        Inserts after imports, before first class/function.
+        """
+        try:
+            # Build the OWNER block
+            owner_block = f'''
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
+'''
+
+            if has_owner:
+                # Replace existing OWNER line
+                content = re.sub(
+                    r'OWNER:\s*Final\[Mahajana\]\s*=\s*Mahajana\.\w+',
+                    f'OWNER: Final[Mahajana] = Mahajana.{mahajana.name}',
+                    content
+                )
+            else:
+                # Find insertion point (after imports, before first class/def)
+                lines = content.split('\n')
+                insert_idx = 0
+
+                # Skip docstring
+                in_docstring = False
+                for i, line in enumerate(lines):
+                    if line.strip().startswith('"""') or line.strip().startswith("'''"):
+                        if in_docstring:
+                            in_docstring = False
+                            insert_idx = i + 1
+                        else:
+                            in_docstring = True
+                    elif not in_docstring:
+                        if line.startswith('from ') or line.startswith('import '):
+                            insert_idx = i + 1
+                        elif line.startswith('class ') or line.startswith('def '):
+                            break
+
+                # Check if we need to add the import
+                needs_import = "from vibe_core.protocols.mahajanas.router import" not in content
+                needs_final = "from typing import" not in content or "Final" not in content
+
+                import_additions = []
+                if needs_import:
+                    import_additions.append("from vibe_core.protocols.mahajanas.router import Mahajana")
+                if needs_final:
+                    if "from typing import" in content:
+                        # Add Final to existing typing import
+                        content = re.sub(
+                            r'from typing import \(',
+                            'from typing import (\n    Final,',
+                            content
+                        )
+                        content = re.sub(
+                            r'from typing import ([^(])',
+                            r'from typing import Final, \1',
+                            content
+                        )
+                    else:
+                        import_additions.append("from typing import Final")
+
+                # Insert imports if needed
+                if import_additions:
+                    import_block = '\n'.join(import_additions) + '\n'
+                    lines.insert(insert_idx, import_block)
+                    insert_idx += 1
+
+                # Insert OWNER block
+                lines.insert(insert_idx, owner_block)
+                content = '\n'.join(lines)
+
+            # Write back
+            file_path.write_text(content)
+            return True
+
+        except Exception as e:
+            print(f"Error writing to file: {e}")
+            return False
+
+    def _log_assignment(self, file_path: str, mahajana: Mahajana) -> None:
+        """Log assignment to Bhishma ledger (if available)."""
+        try:
+            from vibe_core.protocols.mahajanas.bhishma.ledger import Ledger
+            ledger = Ledger()
+            ledger.record(
+                event_type="governance.assign",
+                data={
+                    "path": str(file_path),
+                    "owner": mahajana.value,
+                    "timestamp": datetime.now().isoformat(),
+                    "by": "governance-cli",
+                }
+            )
+        except Exception:
+            pass  # Ledger not available, skip
+
+    def cmd_fix_all(self, args: List[str]) -> int:
+        """
+        Auto-fix all ungoverned files.
+
+        Usage: governance fix-all [--dry-run]
+
+        Uses heuristics to determine Mahajana based on:
+        1. File location (mahajanas/bali/*.py → BALI)
+        2. Directory patterns (substrate/ → based on purpose)
+        3. File name patterns
+        """
+        dry_run = "--dry-run" in args
+        as_json = "--json" in args
+
+        # Get ungoverned files
+        report = audit()
+        ungoverned = report["ungoverned_list"]
+
+        if not ungoverned:
+            print("✅ No ungoverned files - governance is watertight!")
+            return 0
+
+        print(f"\n{'='*60}")
+        print(f"  FIX-ALL: {len(ungoverned)} ungoverned files")
+        print(f"{'='*60}")
+
+        if dry_run:
+            print("  [DRY-RUN MODE - No changes will be made]\n")
+
+        # Heuristic mapping
+        fixed = []
+        failed = []
+
+        for file_path in ungoverned:
+            mahajana = self._determine_mahajana(file_path)
+
+            if dry_run:
+                print(f"  {file_path} → {mahajana.value.upper()}")
+                fixed.append({"path": file_path, "owner": mahajana.value})
+            else:
+                # Actually assign
+                result = self.cmd_assign([file_path, mahajana.value])
+                if result == 0:
+                    fixed.append({"path": file_path, "owner": mahajana.value})
+                else:
+                    failed.append(file_path)
+
+        # Summary
+        print(f"\n{'='*60}")
+        print(f"  SUMMARY")
+        print(f"{'='*60}")
+        print(f"  Fixed: {len(fixed)}")
+        print(f"  Failed: {len(failed)}")
+
+        if failed:
+            print(f"\n  Failed files:")
+            for f in failed:
+                print(f"    - {f}")
+
+        if as_json:
+            print(json.dumps({"fixed": fixed, "failed": failed}, indent=2))
+
+        return 0 if not failed else 1
+
+    def _determine_mahajana(self, file_path: str) -> Mahajana:
+        """
+        Determine which Mahajana should own a file based on heuristics.
+
+        Priority:
+        1. Explicit folder (mahajanas/bali/*.py → BALI)
+        2. Substrate patterns
+        3. Name patterns
+        4. Default
+        """
+        path_lower = file_path.lower()
+
+        # 1. Explicit Mahajana folder
+        for m in Mahajana:
+            if f"mahajanas/{m.value}/" in path_lower or f"mahajanas/{m.value}\\" in path_lower:
+                return m
+
+        # 2. Substrate patterns
+        substrate_map = {
+            "balarama": Mahajana.BALI,  # Balarama = Bali's service
+            "cli_substrate": Mahajana.NARADA,  # CLI = communication
+            "graph": Mahajana.KAPILA,  # Graph = analysis
+            "lotus": Mahajana.BRAHMA,  # Lotus = creation
+            "acintya": Mahajana.SHUKA,  # Acintya = vision/knowledge
+            "mantra": Mahajana.NARADA,  # Mantra = sacred sound/communication
+            "gpu": Mahajana.JANAKA,  # GPU = execution
+            "cpu": Mahajana.JANAKA,  # CPU = execution
+            "resonance": Mahajana.NARADA,  # Resonance = vibration/communication
+        }
+
+        for pattern, mahajana in substrate_map.items():
+            if pattern in path_lower:
+                return mahajana
+
+        # 3. Root mahajanas files
+        root_map = {
+            "router": Mahajana.NARADA,
+            "parampara": Mahajana.BHISHMA,
+            "vishnu": Mahajana.BRAHMA,  # Vishnu protocol
+            "adoption": Mahajana.BRAHMA,
+            "discovery": Mahajana.SHUKA,
+            "vyuha": Mahajana.BRAHMA,
+            "protocol": Mahajana.YAMARAJA,
+            "sabha": Mahajana.MANU,
+        }
+
+        for pattern, mahajana in root_map.items():
+            if pattern in path_lower:
+                return mahajana
+
+        # 4. Security/validation → YAMARAJA
+        if "security" in path_lower or "validation" in path_lower:
+            return Mahajana.YAMARAJA
+
+        # 5. Cognition/samkhya → KAPILA
+        if "cognition" in path_lower or "samkhya" in path_lower:
+            return Mahajana.KAPILA
+
+        # 6. Default based on current distribution (pick least loaded)
+        report = audit()
+        dist = report["owner_distribution"]
+        min_count = min(dist.values()) if dist else 0
+        for m in Mahajana:
+            if dist.get(m.value, 0) == min_count:
+                return m
+
+        return Mahajana.PRAHLADA  # Ultimate fallback

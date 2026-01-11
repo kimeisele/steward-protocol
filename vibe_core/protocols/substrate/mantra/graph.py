@@ -90,6 +90,14 @@ from vibe_core.protocols.substrate.mantra.lotus import (
 
 
 # =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+# NOTE: Using string literal to avoid circular import with mahajanas.router
+
+OWNER: Final[str] = "kapila"
+
+
+# =============================================================================
 # GRAPH NODE TYPES
 # =============================================================================
 

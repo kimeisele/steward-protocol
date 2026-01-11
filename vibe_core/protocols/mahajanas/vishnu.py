@@ -44,6 +44,13 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.BRAHMA
+
+
 
 # =============================================================================
 # THE 16 LOTUS POSITIONS
