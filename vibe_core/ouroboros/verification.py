@@ -35,9 +35,43 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 from vibe_core.ouroboros.ingestion import ViolationRecord, ViolationSource
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class VerifiedViolationDict(TypedDict, total=False):
+    """Serialized verified violation. WATERTIGHT."""
+
+    # From ViolationRecord
+    rule_id: str
+    file_path: str
+    line: int
+    message: str
+    severity: str
+    source: str
+    # Verification metadata
+    verification_status: str
+    verified_at: str
+    verification_method: str
+    origin: str
+    file_exists: bool
+    line_exists: bool
+    pattern_matches: bool
+
+
+class ValidatorStats(TypedDict):
+    """Validator statistics. WATERTIGHT."""
+
+    project_root: str
+    strict_mode: bool
+    max_staleness_days: int
+    known_patterns: int
 
 logger = logging.getLogger("OUROBOROS.SATYA")
 
@@ -91,7 +125,7 @@ class VerifiedViolation:
             VerificationStatus.STALE,  # Stale is still potentially valid
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> VerifiedViolationDict:
         """Convert to dict for KG storage."""
         base = self.record.to_dict()
         base.update(
@@ -105,7 +139,7 @@ class VerifiedViolation:
                 "pattern_matches": self.pattern_matches,
             }
         )
-        return base
+        return base  # type: ignore[return-value]
 
 
 @dataclass
@@ -377,14 +411,14 @@ class SatyaValidator:
 
         return []
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> ValidatorStats:
         """Get validator statistics (GAD-000: Observability)."""
-        return {
-            "project_root": str(self._project_root),
-            "strict_mode": self._strict,
-            "max_staleness_days": self._max_staleness_days,
-            "known_patterns": len(self.VIOLATION_PATTERNS),
-        }
+        return ValidatorStats(
+            project_root=str(self._project_root),
+            strict_mode=self._strict,
+            max_staleness_days=self._max_staleness_days,
+            known_patterns=len(self.VIOLATION_PATTERNS),
+        )
 
 
 # Convenience functions
