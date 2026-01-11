@@ -358,7 +358,20 @@ class UnifiedCLI:
             print(json.dumps(caps, indent=2))
             return 0
 
-        # 6. Help / Unknown
+        # 6. MAHAMANTRA FALLBACK - 108 Protocol commands (ZERO wiring)
+        # Routes to mahajana protocols via cli_auto
+        try:
+            from vibe_core.mahamantra import cli_auto
+            cli_auto.discover_all()
+            result = cli_auto.execute(command_name, remaining_args)
+            if result.exit_code != 127:  # 127 = command not found
+                for item in result.output.items:
+                    print(f"{item.key}: {item.value}")
+                return result.exit_code
+        except ImportError:
+            pass  # mahamantra not available
+
+        # 7. Help / Unknown
         if command_name in ("-h", "--help", "help"):
             self._print_help(commands)
             return 0

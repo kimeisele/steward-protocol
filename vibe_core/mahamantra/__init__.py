@@ -678,4 +678,10 @@ __all__ = [
     "cli_discover",
     "cli_execute",
     "cli_capabilities",
+    # === CLI ENTRY (The Thin Gate - REPLACES unified_cli.py) ===
+    # ~100 LOC vs 1555 LOC, ZERO manual wiring
+    "MahamantraCLIEntry",
+    "get_cli_entry",
+    "cli_main",
+    "cli_entry_point",
 ]
