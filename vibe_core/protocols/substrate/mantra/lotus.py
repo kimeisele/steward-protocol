@@ -104,6 +104,15 @@ from vibe_core.protocols.gad import MantraHeartbeat, JapaState
 
 
 # =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+# NOTE: Using string literal to avoid circular import with mahajanas.router
+
+OWNER: Final[str] = "brahma"
+
+
+
+# =============================================================================
 # HOLY NAME MATH CONSTANTS
 # =============================================================================
 

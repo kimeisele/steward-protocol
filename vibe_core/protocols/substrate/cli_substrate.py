@@ -68,6 +68,13 @@ from vibe_core.protocols.substrate.mantra.acintya import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.NARADA
+
+
 
 # =============================================================================
 # ANANTA CONSTANTS

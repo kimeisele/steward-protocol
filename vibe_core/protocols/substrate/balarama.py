@@ -67,6 +67,13 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 from vibe_core.protocols.substrate.cli_substrate import (
+
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.BALI
+
     AnantaSubstrate,
     CLIHeartbeat,
     CLILotusPosition,

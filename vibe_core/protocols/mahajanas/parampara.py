@@ -51,6 +51,13 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana
 
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.BHISHMA
+
+
 
 # =============================================================================
 # THE 4 SAMPRADAYAS (Authorized Disciplic Successions)

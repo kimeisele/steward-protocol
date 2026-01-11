@@ -66,6 +66,13 @@ from vibe_core.protocols.substrate.mantra.lotus import (
 
 
 # =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.BRAHMA
+
+
+# =============================================================================
 # ADOPTION STATUS - Where is the protocol in the pipeline?
 # =============================================================================
 

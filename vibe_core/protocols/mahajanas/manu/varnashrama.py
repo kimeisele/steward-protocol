@@ -22,6 +22,13 @@ from decimal import Decimal
 from vibe_core.protocols.universal.guna import GunaProfile, GunaType, ZERO
 from vibe_core.protocols.mahajanas.router import Mahajana
 
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by CLI)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.MANU
+
+
 
 # =============================================================================
 # VARNA - Function/Role (Based on Guna + Karma)
