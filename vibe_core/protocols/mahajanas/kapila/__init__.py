@@ -375,4 +375,12 @@ __all__ = [
     "route_wild_protocol",
     "fight_protocol_entropy",
     "enumerate_all_elements",
+    # Service (Real Implementation)
+    "KapilaService",
 ]
+
+# =============================================================================
+# KAPILA SERVICE - The Real Implementation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kapila.service import KapilaService

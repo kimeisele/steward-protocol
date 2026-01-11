@@ -275,4 +275,12 @@ __all__ = [
     "LineageProtocol",
     "Lineage",
     "NullLineage",
+    # Service (Real Implementation)
+    "BhishmaService",
 ]
+
+# =============================================================================
+# BHISHMA SERVICE - The Real Implementation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bhishma.service import BhishmaService

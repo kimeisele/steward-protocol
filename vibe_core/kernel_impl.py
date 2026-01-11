@@ -57,12 +57,12 @@ from .services.nrisimha import NrisimhaWatchdog
 from .protocols.universal.types import SovereignContext
 from .protocols.substrate import MantraOpCode
 
-# Phase 2: MAHAJANA SERVICES (The Vishnu Kernel)
-from .services.brahma_service import BrahmaService
-from .services.bhishma_service import BhishmaService
-from .services.janaka_service import JanakaService
-from .services.bali_service import BaliService
-from .services.kapila_service import KapilaService
+# Phase 2: MAHAJANA SERVICES (Via Mahamantra - Krishna Routes)
+from vibe_core.protocols.mahajanas.brahma import BrahmaService
+from vibe_core.protocols.mahajanas.bhishma import BhishmaService
+from vibe_core.protocols.mahajanas.janaka import JanakaService
+from vibe_core.protocols.mahajanas.bali import BaliService
+from vibe_core.protocols.mahajanas.kapila import KapilaService
 
 from .protocols.cognition import (
     CognitiveContext,
