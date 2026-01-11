@@ -1,16 +1,18 @@
 """
-DHARMA PROTOCOL - MIGRATED TO MAHAJANA OWNERSHIP
-================================================
+DHARMA PROTOCOL - USE MAHAMANTRA
+================================
 
-OWNER: Mahajana.MANU (The Lawgiver)
-NEW LOCATION: vibe_core.protocols.mahajanas.manu.dharma
+DEPRECATED: This file is MAYA (illusion).
 
-This file re-exports from the canonical location for backwards compatibility.
-All new code should import from:
-    from vibe_core.protocols.mahajanas.manu import ProtocolLayer, get_layer
+ONE IMPORT, KRISHNA ROUTES:
+    from vibe_core.mahamantra import mahamantra
 
-"Manu is the LAWGIVER who defines WHAT Dharma IS.
- This is not abstract 'philosophy' - Manu the PERSON established these laws."
+    # Position 7 = MANU (Pulse Sync / Law)
+    mahamantra[7]                    # -> MantraPosition
+    mahamantra.protocols.manu        # -> ManuProtocolBase
+
+The canonical source is: vibe_core.protocols.mahajanas.manu
+This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
@@ -20,8 +22,12 @@ from vibe_core.protocols.mahajanas.manu.dharma import (
     get_layer,
     check_compliance,
     is_dharmic,
-    OWNER,
-    LOTUS_POSITION,
-    LOTUS_QUARTER,
-    OWNED_OPCODES,
 )
+
+__all__ = [
+    "ProtocolLayer",
+    "PROTOCOL_MAP",
+    "get_layer",
+    "check_compliance",
+    "is_dharmic",
+]

@@ -1,24 +1,16 @@
 """
 BRAHMA - The 1st Mahajana (Creation/Genesis)
 ============================================
-OpCodes: SYS_WAKE (Bit 1), LOAD_ROOT (Bit 2), ALLOC_MEM (Bit 3)
-         Position 1-3 in Mahamantra
-Opulence: Sri (Beauty/Creation)
+
+POSITION: 1 (GENESIS Quarter, LOAD_ROOT OpCode)
 
 Lord Brahma - The Creator.
 Born from the lotus growing from Vishnu's navel.
 First living entity in the material creation.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Brahma is the PERSON responsible for all creation/genesis.
-Not abstract "initialization" - PERSONAL creation by Brahma.
-
-OWNED PROTOCOLS:
-- System Wake (SYS_WAKE OpCode)
-- Root Loading (LOAD_ROOT OpCode)
-- Memory Allocation (ALLOC_MEM OpCode)
-- Genesis/Bootstrap
-- Initial State Creation
+DERIVED FROM MAHAMANTRA:
+    Position 1 -> guardian=BRAHMA, opcode=LOAD_ROOT, quarter=GENESIS
+    All properties derived from truth table. No manual wiring.
 
 Brahma creates, but he is NOT the Supreme.
 He is the first created being, not the creator.
@@ -32,8 +24,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -43,28 +35,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# BRAHMA PROTOCOL BASE - Derives from MantraPosition 1
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.BRAHMA
-LOTUS_POSITION: Final[int] = 1  # GENESIS Quarter, Worker 1
-LOTUS_QUARTER: Final[str] = "genesis"
+class BrahmaProtocolBase(WorkerProtocol):
+    """
+    Brahma protocol ownership - DERIVED from Mahamantra position 1.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "brahma",
-    "creation",
-    "genesis",
-    "bootstrap",
-    "initialization",
-]
+    NO MANUAL WIRING:
+        _position_index = 1 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.LOAD_ROOT,  # Vyuha: Q1 Worker 1 (SYS_WAKE now HEAD: Prithu)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.BRAHMA
+        opcode()    -> MantraOpCode.LOAD_ROOT
+        quarter()   -> Quarter.GENESIS
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 74 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 1  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[1]
 
 
 # =============================================================================
@@ -114,12 +110,14 @@ class AllocationResult(TypedDict, total=False):
 class BrahmaProtocol(Protocol):
     """
     The Creation/Genesis Protocol - Brahma's domain.
+
+    DERIVED: Position 1 -> BRAHMA, LOAD_ROOT, GENESIS
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.BRAHMA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 1 in the Mahamantra."""
         ...
 
     def wake(self, sovereign_id: str) -> bool:
@@ -156,12 +154,12 @@ class BrahmaProtocol(Protocol):
 # =============================================================================
 
 
-class NullBrahma:
-    """The Uncreated. No genesis (for testing)."""
+class NullBrahma(BrahmaProtocolBase):
+    """
+    The Uncreated. No genesis (for testing).
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.BRAHMA
+    Inherits from BrahmaProtocolBase -> position 1 -> BRAHMA.
+    """
 
     def wake(self, sovereign_id: str) -> bool:
         return True
@@ -219,9 +217,11 @@ from vibe_core.protocols.mahajanas.brahma.bootstrap import (
 )
 
 __all__ = [
-    # Genesis
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "BrahmaProtocolBase",
+    # Genesis Types (WATERTIGHT)
     "GenesisPhase", "GenesisState", "AllocationResult",
+    # Protocol
     "BrahmaProtocol", "NullBrahma",
     # DI (Service Registry)
     "ServiceRegistryProtocol",
@@ -237,5 +237,4 @@ __all__ = [
     "BootstrapProtocol",
     "Bootstrap",
     "NullBootstrap",
-    "BOOTSTRAP_POSITION",
 ]

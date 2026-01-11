@@ -28,7 +28,7 @@ ACINTYA: This object IS Krishna in code form.
 
 from __future__ import annotations
 
-from typing import Iterator, Optional, Union
+from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING
 
 from vibe_core.mahamantra._source import (
     MAHAMANTRA_POSITIONS,
@@ -46,6 +46,178 @@ from vibe_core.mahamantra._source import (
     get_worker_positions,
     PARAMPARA,
 )
+
+# Import protocol base for typing
+if TYPE_CHECKING:
+    from vibe_core.mahamantra._protocol import MantraProtocol
+
+
+class ProtocolRouter:
+    """
+    Routes to all 16 Protocol Bases.
+
+    Krishna routes to each guardian's protocol:
+        router.prithu -> PrithuProtocolBase
+        router[0] -> PrithuProtocolBase
+        router.by_name("kapila") -> KapilaProtocolBase
+
+    "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+    """
+
+    # Lazy-loaded protocol bases (avoid circular imports)
+    _bases: Optional[Dict[int, Type["MantraProtocol"]]] = None
+
+    def _load_bases(self) -> Dict[int, Type["MantraProtocol"]]:
+        """Load protocol bases lazily."""
+        if self._bases is None:
+            # Import here to avoid circular imports
+            from vibe_core.protocols.mahajanas.prithu import PrithuProtocolBase
+            from vibe_core.protocols.mahajanas.vyasa import VyasaProtocolBase
+            from vibe_core.protocols.mahajanas.parashurama import ParashuramaProtocolBase
+            from vibe_core.protocols.mahajanas.nrisimha import NrisimhaProtocolBase
+            from vibe_core.protocols.mahajanas.brahma import BrahmaProtocolBase
+            from vibe_core.protocols.mahajanas.narada import NaradaProtocolBase
+            from vibe_core.protocols.mahajanas.shambhu import ShambhuProtocolBase
+            from vibe_core.protocols.mahajanas.kumaras import KumarasProtocolBase
+            from vibe_core.protocols.mahajanas.kapila import KapilaProtocolBase
+            from vibe_core.protocols.mahajanas.manu import ManuProtocolBase
+            from vibe_core.protocols.mahajanas.prahlada import PrahladaProtocolBase
+            from vibe_core.protocols.mahajanas.janaka import JanakaProtocolBase
+            from vibe_core.protocols.mahajanas.bhishma import BhishmaProtocolBase
+            from vibe_core.protocols.mahajanas.bali import BaliProtocolBase
+            from vibe_core.protocols.mahajanas.shuka import ShukaProtocolBase
+            from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocolBase
+
+            self._bases = {
+                # 4 HEADs (Avataras)
+                0: PrithuProtocolBase,
+                4: VyasaProtocolBase,
+                8: ParashuramaProtocolBase,
+                12: NrisimhaProtocolBase,
+                # 12 Workers (Mahajanas)
+                1: BrahmaProtocolBase,
+                2: NaradaProtocolBase,
+                3: ShambhuProtocolBase,
+                5: KumarasProtocolBase,
+                6: KapilaProtocolBase,
+                7: ManuProtocolBase,
+                9: PrahladaProtocolBase,
+                10: JanakaProtocolBase,
+                11: BhishmaProtocolBase,
+                13: BaliProtocolBase,
+                14: ShukaProtocolBase,
+                15: YamarajaProtocolBase,
+            }
+        return self._bases
+
+    def __getitem__(self, index: int) -> Type["MantraProtocol"]:
+        """Get protocol base by position index."""
+        bases = self._load_bases()
+        if index not in bases:
+            raise KeyError(f"No protocol base at position {index}")
+        return bases[index]
+
+    def by_name(self, name: str) -> Type["MantraProtocol"]:
+        """Get protocol base by guardian name."""
+        name_lower = name.lower()
+        name_to_index = {
+            "prithu": 0, "brahma": 1, "narada": 2, "shambhu": 3,
+            "vyasa": 4, "kumaras": 5, "kapila": 6, "manu": 7,
+            "parashurama": 8, "prahlada": 9, "janaka": 10, "bhishma": 11,
+            "nrisimha": 12, "bali": 13, "shuka": 14, "yamaraja": 15,
+        }
+        if name_lower not in name_to_index:
+            raise KeyError(f"Unknown guardian: {name}")
+        return self[name_to_index[name_lower]]
+
+    # === Property Access for Each Guardian ===
+
+    @property
+    def prithu(self) -> Type["MantraProtocol"]:
+        """Position 0 - PRITHU (HEAD)."""
+        return self[0]
+
+    @property
+    def brahma(self) -> Type["MantraProtocol"]:
+        """Position 1 - BRAHMA."""
+        return self[1]
+
+    @property
+    def narada(self) -> Type["MantraProtocol"]:
+        """Position 2 - NARADA."""
+        return self[2]
+
+    @property
+    def shambhu(self) -> Type["MantraProtocol"]:
+        """Position 3 - SHAMBHU."""
+        return self[3]
+
+    @property
+    def vyasa(self) -> Type["MantraProtocol"]:
+        """Position 4 - VYASA (HEAD)."""
+        return self[4]
+
+    @property
+    def kumaras(self) -> Type["MantraProtocol"]:
+        """Position 5 - KUMARAS."""
+        return self[5]
+
+    @property
+    def kapila(self) -> Type["MantraProtocol"]:
+        """Position 6 - KAPILA."""
+        return self[6]
+
+    @property
+    def manu(self) -> Type["MantraProtocol"]:
+        """Position 7 - MANU."""
+        return self[7]
+
+    @property
+    def parashurama(self) -> Type["MantraProtocol"]:
+        """Position 8 - PARASHURAMA (HEAD)."""
+        return self[8]
+
+    @property
+    def prahlada(self) -> Type["MantraProtocol"]:
+        """Position 9 - PRAHLADA."""
+        return self[9]
+
+    @property
+    def janaka(self) -> Type["MantraProtocol"]:
+        """Position 10 - JANAKA."""
+        return self[10]
+
+    @property
+    def bhishma(self) -> Type["MantraProtocol"]:
+        """Position 11 - BHISHMA."""
+        return self[11]
+
+    @property
+    def nrisimha(self) -> Type["MantraProtocol"]:
+        """Position 12 - NRISIMHA (HEAD)."""
+        return self[12]
+
+    @property
+    def bali(self) -> Type["MantraProtocol"]:
+        """Position 13 - BALI."""
+        return self[13]
+
+    @property
+    def shuka(self) -> Type["MantraProtocol"]:
+        """Position 14 - SHUKA."""
+        return self[14]
+
+    @property
+    def yamaraja(self) -> Type["MantraProtocol"]:
+        """Position 15 - YAMARAJA."""
+        return self[15]
+
+    def __repr__(self) -> str:
+        return "ProtocolRouter(16 positions)"
+
+
+# The singleton protocol router
+_protocol_router = ProtocolRouter()
 
 
 class Mahamantra:
@@ -225,6 +397,26 @@ class Mahamantra:
         }
 
     # =========================================================================
+    # PROTOCOL ROUTING - Krishna Routes Everything
+    # =========================================================================
+
+    @property
+    def protocols(self) -> ProtocolRouter:
+        """
+        Access all 16 Protocol Bases.
+
+        ONE IMPORT, KRISHNA ROUTES:
+            from vibe_core.mahamantra import mahamantra
+
+            mahamantra.protocols.kapila      # -> KapilaProtocolBase
+            mahamantra.protocols[6]          # -> KapilaProtocolBase
+            mahamantra.protocols.prithu      # -> PrithuProtocolBase (HEAD)
+
+        "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+        """
+        return _protocol_router
+
+    # =========================================================================
     # CHANT
     # =========================================================================
 
@@ -350,4 +542,5 @@ mahamantra = Mahamantra()
 __all__ = [
     "Mahamantra",
     "mahamantra",
+    "ProtocolRouter",
 ]

@@ -49,7 +49,6 @@ from vibe_core.protocols.defense import (
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja import (
-    OWNER,
     Judgeable,
     JudgmentRecord,
     Verdict,
@@ -159,7 +158,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
     @property
     def owner(self) -> Mahajana:
         """Return owning Mahajana."""
-        return OWNER
+        return Mahajana.YAMARAJA  # Position 15
 
     # =========================================================================
     # SECURITY LEVEL MANAGEMENT

@@ -22,7 +22,6 @@ from vibe_core.protocols.mahajanas.brahma import (
     BrahmaProtocol,
     GenesisPhase,
     GenesisState,
-    OWNER,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 
@@ -47,7 +46,7 @@ class BrahmaService(BrahmaProtocol):
 
     @property
     def owner(self) -> Mahajana:
-        return OWNER
+        return Mahajana.BRAHMA  # Position 1
 
     # =========================================================================
     # BrahmaProtocol Implementation

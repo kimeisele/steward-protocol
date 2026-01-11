@@ -1,30 +1,19 @@
 """
 JANAKA - The 8th Mahajana (Duty/Execution)
 ==========================================
-OpCode: EXEC_SERVICE (Bit 10, Position 10 in Mahamantra)
-Opulence: Aishvarya (Sovereignty)
+
+POSITION: 10 (KARMA Quarter, CHECK_DHARMA OpCode)
 
 King Janaka - The Karma Yogi.
 Ruled a kingdom while being internally renounced.
 Father of Sita. Host of great sages.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Janaka is the PERSON responsible for all execution.
-Not abstract "service execution" - PERSONAL duty by Janaka.
-
-OWNED PROTOCOLS:
-- Service Execution (EXEC_SERVICE OpCode)
-- Task Management
-- Agent Behavior
-- Work Distribution
-- SankalpaProtocol (Intent/Interrupt - Level -1)
-- Karma Yoga (Action without Attachment)
+DERIVED FROM MAHAMANTRA:
+    Position 10 -> guardian=JANAKA, opcode=CHECK_DHARMA, quarter=KARMA
+    All properties derived from truth table. No manual wiring.
 
 Janaka ACTS but is not BOUND by action.
 He serves the Sovereign while ruling.
-
-SUBSTRATE CONNECTION (Level -1):
-- SankalpaProtocol → Janaka (intent/interrupt handling)
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -36,8 +25,8 @@ from datetime import datetime
 from enum import Enum
 from typing import (
     Callable,
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -48,30 +37,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# JANAKA PROTOCOL BASE - Derives from MantraPosition 10
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.JANAKA
-LOTUS_POSITION: Final[int] = 10  # KARMA Quarter, Worker 2
-LOTUS_QUARTER: Final[str] = "karma"
+class JanakaProtocolBase(WorkerProtocol):
+    """
+    Janaka protocol ownership - DERIVED from Mahamantra position 10.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "janaka",
-    "execution",
-    "service",
-    "task",
-    "agent",
-    "sankalpa",
-    "scheduler",
-]
+    NO MANUAL WIRING:
+        _position_index = 10 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.CHECK_DHARMA,  # Vyuha: Q3 Worker 2 (EXEC_SERVICE -> Prahlada)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.JANAKA
+        opcode()    -> MantraOpCode.CHECK_DHARMA
+        quarter()   -> Quarter.KARMA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 407 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 10  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[10]
 
 
 # =============================================================================
@@ -169,11 +160,8 @@ class JanakaProtocol(Protocol):
     """
     The Execution/Duty Protocol - Janaka's domain.
 
-    Any system that executes tasks must implement this.
+    DERIVED: Position 10 -> JANAKA, CHECK_DHARMA, KARMA
     WATERTIGHT - no Any types!
-
-    ANTI-MAYAVAD: Janaka is the PERSON.
-    Not abstract "service executor" - PERSONAL duty.
 
     The Three Aspects of Karma Yoga:
     1. ACCEPT (receive) - Accept the duty without attachment
@@ -181,9 +169,9 @@ class JanakaProtocol(Protocol):
     3. RELEASE (offer) - Offer the result without expectation
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.JANAKA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 10 in the Mahamantra."""
         ...
 
     # =========================================================================
@@ -286,20 +274,18 @@ class JanakaProtocol(Protocol):
 # =============================================================================
 
 
-class NullJanaka:
+class NullJanaka(JanakaProtocolBase):
     """
     The Inactive King.
     No service execution (for testing without agents).
+
+    Inherits from JanakaProtocolBase -> position 10 -> JANAKA.
 
     Even in Null mode:
     - accepts tasks silently
     - returns empty results
     - maintains 0.0 karma (perfect detachment)
     """
-
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.JANAKA
 
     def submit(
         self,
@@ -435,12 +421,8 @@ from vibe_core.protocols.mahajanas.janaka.scheduler import (
 # =============================================================================
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "JanakaProtocolBase",
     # State Types (WATERTIGHT)
     "TaskValue",
     "TaskStatus",
@@ -477,5 +459,4 @@ __all__ = [
     "SchedulerProtocol",
     "Scheduler",
     "NullScheduler",
-    "SCHEDULER_POSITION",
 ]

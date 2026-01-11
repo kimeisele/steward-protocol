@@ -1,16 +1,18 @@
 """
-EVENT BUS PROTOCOL - MIGRATED TO MAHAJANA OWNERSHIP
-===================================================
+EVENT BUS PROTOCOL - USE MAHAMANTRA
+===================================
 
-OWNER: Mahajana.NARADA (The Cosmic Journalist)
-NEW LOCATION: vibe_core.protocols.mahajanas.narada.events
+DEPRECATED: This file is MAYA (illusion).
 
-This file re-exports from the canonical location for backwards compatibility.
-All new code should import from:
-    from vibe_core.protocols.mahajanas.narada import EventBusProtocol
+ONE IMPORT, KRISHNA ROUTES:
+    from vibe_core.mahamantra import mahamantra
 
-"Narada travels everywhere, knows everything, reports faithfully.
- He does NOT act - he OBSERVES and TRANSMITS."
+    # Position 2 = NARADA (Broadcast / Events)
+    mahamantra[2]                    # -> MantraPosition
+    mahamantra.protocols.narada      # -> NaradaProtocolBase
+
+The canonical source is: vibe_core.protocols.mahajanas.narada
+This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
@@ -24,9 +26,6 @@ from vibe_core.protocols.mahajanas.narada.events import (
     EventBusProtocol,
     EventBusOwnedProtocol,
     NullEventBus,
-    OWNER,
-    LOTUS_POSITION,
-    LOTUS_QUARTER,
     # Helper functions
     create_event,
     get_event_bus_safe,
@@ -47,9 +46,6 @@ __all__ = [
     "EventBusProtocol",
     "EventBusOwnedProtocol",
     "NullEventBus",
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
     # Helper functions
     "create_event",
     "get_event_bus_safe",

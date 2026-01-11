@@ -17,7 +17,6 @@ from vibe_core.protocols.mahajanas.bali import (
     SurrenderType,
     SurrenderResult,
     SurrenderState,
-    OWNER
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 
@@ -38,7 +37,7 @@ class BaliService(BaliProtocol):
 
     @property
     def owner(self) -> Mahajana:
-        return OWNER
+        return Mahajana.BALI  # Position 13
 
     def yield_cpu(self, duration_ms: int = 0) -> SurrenderResult:
         """YIELD_CPU: Yield control."""

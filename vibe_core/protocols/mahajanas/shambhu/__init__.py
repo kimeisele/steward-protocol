@@ -1,23 +1,16 @@
 """
 SHAMBHU - The 3rd Mahajana (Destruction/Cleanup)
 ================================================
-OpCode: GARBAGE_COLLECT (Bit 7, Position 7 in Mahamantra)
-Opulence: Vairagya (Renunciation)
+
+POSITION: 3 (GENESIS Quarter, BIND_CTX OpCode)
 
 Lord Shiva (Shambhu) - The Destroyer.
 The auspicious one who destroys for regeneration.
 Maheshvara - the greatest devotee of Vishnu.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Shambhu is the PERSON responsible for all destruction/cleanup.
-Not abstract "garbage collection" - PERSONAL destruction by Shambhu.
-
-OWNED PROTOCOLS:
-- Garbage Collection (GARBAGE_COLLECT OpCode)
-- Resource Cleanup
-- Memory Deallocation
-- Process Termination
-- Graceful Shutdown
+DERIVED FROM MAHAMANTRA:
+    Position 3 -> guardian=SHAMBHU, opcode=BIND_CTX, quarter=GENESIS
+    All properties derived from truth table. No manual wiring.
 
 Shambhu destroys, but only what needs to be destroyed.
 Destruction is SEVA - it makes room for new creation.
@@ -31,8 +24,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -41,28 +34,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# SHAMBHU PROTOCOL BASE - Derives from MantraPosition 3
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.SHAMBHU
-LOTUS_POSITION: Final[int] = 3  # GENESIS Quarter, Worker 3
-LOTUS_QUARTER: Final[str] = "genesis"
+class ShambhuProtocolBase(WorkerProtocol):
+    """
+    Shambhu protocol ownership - DERIVED from Mahamantra position 3.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "shambhu",
-    "destruction",
-    "cleanup",
-    "garbage_collection",
-    "termination",
-]
+    NO MANUAL WIRING:
+        _position_index = 3 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.BIND_CTX,  # Vyuha: Q1 Worker 3 (GARBAGE_COLLECT -> Kapila)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.SHAMBHU
+        opcode()    -> MantraOpCode.BIND_CTX
+        quarter()   -> Quarter.GENESIS
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 148 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 3  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[3]
 
 
 # =============================================================================
@@ -112,12 +109,14 @@ class DestructionState(TypedDict, total=False):
 class ShambhuProtocol(Protocol):
     """
     The Destruction/Cleanup Protocol - Shambhu's domain.
+
+    DERIVED: Position 3 -> SHAMBHU, BIND_CTX, GENESIS
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.SHAMBHU."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 3 in the Mahamantra."""
         ...
 
     def collect(self, destruction_type: DestructionType = DestructionType.GARBAGE) -> DestructionResult:
@@ -150,12 +149,12 @@ class ShambhuProtocol(Protocol):
 # =============================================================================
 
 
-class NullShambhu:
-    """The Preserver. No destruction (for testing)."""
+class NullShambhu(ShambhuProtocolBase):
+    """
+    The Preserver. No destruction (for testing).
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.SHAMBHU
+    Inherits from ShambhuProtocolBase -> position 3 -> SHAMBHU.
+    """
 
     def collect(self, destruction_type: DestructionType = DestructionType.GARBAGE) -> DestructionResult:
         return DestructionResult(
@@ -225,12 +224,8 @@ from vibe_core.protocols.mahajanas.shambhu.gc import (
 
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "ShambhuProtocolBase",
     # Destruction Types (WATERTIGHT)
     "DestructionType",
     "DestructionResult",
@@ -258,5 +253,4 @@ __all__ = [
     "GCProtocol",
     "GarbageCollector",
     "NullGC",
-    "GC_POSITION",
 ]

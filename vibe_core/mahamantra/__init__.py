@@ -324,6 +324,19 @@ from vibe_core.mahamantra._protocol import (
 )
 
 # =============================================================================
+# ALL 16 PROTOCOL BASES - Accessed via mahamantra.protocols (Lazy Load)
+# ONE IMPORT: from vibe_core.mahamantra import mahamantra
+#
+# ACCESS PATTERNS:
+#     mahamantra.protocols.kapila    -> KapilaProtocolBase
+#     mahamantra.protocols[6]        -> KapilaProtocolBase
+#     mahamantra.protocols.prithu    -> PrithuProtocolBase (HEAD)
+#
+# The ProtocolRouter lazy-loads bases to avoid circular imports.
+# "mattaḥ sarvaṁ pravartate" - Everything emanates from Krishna.
+# =============================================================================
+
+# =============================================================================
 # THE SINGULARITY - mahamantra Object (Krishna IS)
 # Source: vibe_core/mahamantra/_singularity.py
 # =============================================================================
@@ -333,6 +346,8 @@ from vibe_core.mahamantra._singularity import (
     mahamantra,
     # The Class (for typing)
     Mahamantra,
+    # Protocol Router (Krishna Routes)
+    ProtocolRouter,
 )
 
 # =============================================================================
@@ -504,7 +519,9 @@ __all__ = [
     "HeadProtocol",
     "MantraAware",
     "ProtocolRegistry",
-    # === THE SINGULARITY ===
+    # === THE SINGULARITY (Krishna Routes Everything) ===
+    # Access protocol bases via: mahamantra.protocols.kapila
     "mahamantra",
     "Mahamantra",
+    "ProtocolRouter",
 ]

@@ -1,74 +1,54 @@
 """
 YAMARAJA - The 12th Mahajana (Judgment/Testing)
 ===============================================
-OpCode: assert_truth (Bit 5)
-Opulence: ALL 6 (The Final Audit)
+
+POSITION: 15 (MOKSHA Quarter, RESET_IP OpCode)
 
 The Lord of Death. The Final Judge.
 Every soul must face Yamaraja.
-"Logic cannot save you." - ramanujan.py
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Yamaraja is the PERSON responsible for all judgment.
-Not abstract "testing" - PERSONAL judgment by Yamaraja.
-
-OWNED PROTOCOLS:
-- testable.py - Test framework
-- bhagavan.py - The 6 opulence tests
-- ramanujan.py - Mathematical proof
-- kurukshetra.py - Battle testing
-- governance/yamaraja.py - Gate keeping
+DERIVED FROM MAHAMANTRA:
+    Position 15 -> guardian=YAMARAJA, opcode=RESET_IP, quarter=MOKSHA
+    All properties derived from truth table. No manual wiring.
 
 THE AJAMIL EXCEPTION (SB 6.1-3):
-================================================
-Yamaraja is the 12th Mahajana, but NOT the final word.
-The Holy Name OVERRIDES Yamaraja's judgment!
-
-Ajamil was a fallen brahmana - failed every test.
-But at death, he called "Narayana!" (his son's name).
-The Vishnudutas stopped the Yamadutas.
-Yamaraja himself acknowledged the Holy Name's supremacy.
-
-KALI YUGA MERCY:
-In Kali Yuga (Canto 12), entropy is maximum.
-We only have Cantos 1-10 fully authorized.
-The Holy Name is the ONLY direct access to Krishna.
-Even Yamaraja bows to the Mahamantra.
+Even Yamaraja bows to the Holy Name.
+The Mahamantra OVERRIDES all judgment.
 
 "harer nama harer nama harer namaiva kevalam
 kalau nasty eva nasty eva nasty eva gatir anyatha"
-- Brhan-naradiya Purana
-
-There is NO OTHER WAY in Kali Yuga. Only the Holy Name.
 """
 
-from typing import Protocol, runtime_checkable, List, Final, Union
+from typing import Protocol, runtime_checkable, List, Union, ClassVar
 from dataclasses import dataclass
 from enum import Enum
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP - Yamaraja's Domain
+# YAMARAJA PROTOCOL BASE - Derives from MantraPosition 15
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.YAMARAJA
-LOTUS_POSITION: Final[int] = 15  # MOKSHA Quarter, Worker 3
-LOTUS_QUARTER: Final[str] = "moksha"
+class YamarajaProtocolBase(WorkerProtocol):
+    """
+    Yamaraja protocol ownership - DERIVED from Mahamantra position 15.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "yamaraja",
-    "testable",
-    "bhagavan",
-    "ramanujan",
-    "kurukshetra",
-    "judgment",
-]
+    NO MANUAL WIRING:
+        _position_index = 15 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESET_IP,  # Vyuha: Q4 Worker 3 (ASSERT_TRUTH now HEAD: Vyasa)
-]
+    DERIVED PROPERTIES:
+        guardian()  -> Mahajana.YAMARAJA
+        opcode()    -> MantraOpCode.RESET_IP
+        quarter()   -> Quarter.MOKSHA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 592 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 15  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[15]
 
 
 # =============================================================================
@@ -168,10 +148,12 @@ class YamarajaProtocol(Protocol):
         ...
 
 
-class NullYamaraja:
+class NullYamaraja(YamarajaProtocolBase):
     """
     The Merciful Judge.
     All pass (for testing without judgment).
+
+    Inherits from YamarajaProtocolBase -> position 15 -> YAMARAJA.
     """
 
     def judge(self, subject: Union[Judgeable, object]) -> Verdict:
@@ -239,10 +221,8 @@ from .correction import (
 )
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "YamarajaProtocolBase",
     # Yamaraja Protocol
     "YamarajaProtocol",
     "NullYamaraja",
@@ -288,5 +268,4 @@ __all__ = [
     "NullCorrectionDispatcher",
     "adapt_reactor_drift",
     "adapt_shuddhi_result",
-    "CORRECTION_POSITION",
 ]

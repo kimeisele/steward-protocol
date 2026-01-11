@@ -19,7 +19,6 @@ from vibe_core.protocols.mahajanas.kapila import (
     OptimizationResult,
     MetricsResult,
     AnalysisState,
-    OWNER
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.cognition import (
@@ -43,7 +42,7 @@ class KapilaService(KapilaProtocol):
 
     @property
     def owner(self) -> Mahajana:
-        return OWNER
+        return Mahajana.KAPILA  # Position 6
 
     def analyze(self, target: AnalysisInput) -> AnalysisResult:
         self._analyses_performed += 1
