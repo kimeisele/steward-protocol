@@ -181,9 +181,58 @@ class NagaCommitWatcher:
         # Cortex integration (optional, non-invasive)
         self._cortex_callback: Optional[CortexCommitCallback] = None
 
+        # Ouroboros integration (Ananta Shesha Bridge)
+        self._subscribe_to_bridge()
+
         logger.info(
             f"[COMMIT_WATCHER] Initialized (panic_threshold={self._panic_threshold}, stagnation={self._stagnation_seconds}s)"
         )
+
+    def _subscribe_to_bridge(self) -> None:
+        """Subscribe to Ananta Shesha bridge events."""
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+            anchor = get_system_anchor()
+            anchor.add_handler("prakriti.commit", self._on_bridge_commit)
+            logger.debug("[COMMIT_WATCHER] Subscribed to bridge events")
+        except Exception as e:
+            logger.warning(f"[COMMIT_WATCHER] Bridge subscription failed: {e}")
+
+    def _on_bridge_commit(self, event: Any) -> None:
+        """
+        Handle commit event from Ananta Shesha bridge.
+        
+        Adapts schema.CommitResult (Prakriti) to commit_authority.CommitResult (Watcher).
+        """
+        try:
+            # Import local to avoid circular deps
+            from pathlib import Path
+            from vibe_core.state.commit_authority import CommitOutcome, CommitResult
+
+            data = event.data
+            
+            # Map schema.CommitResult -> commit_authority.CommitResult
+            success = data.get("success", False)
+            outcome = CommitOutcome.SUCCESS if success else CommitOutcome.PANIC_DUMPED
+            
+            # If files_committed is empty and success is True, it might be SKIPPED
+            files = data.get("files_committed", [])
+            if success and not files:
+                outcome = CommitOutcome.SKIPPED
+                
+            result = CommitResult(
+                outcome=outcome,
+                sha=data.get("git_sha") or data.get("commit_hash"),
+                message=f"Bridge Event: {event.source}",
+                paths_committed=[Path(p) for p in files],
+                # Best effort mapping
+            )
+            
+            self.observe(result)
+            
+        except Exception as e:
+            logger.warning(f"[COMMIT_WATCHER] Failed to process bridge event: {e}")
 
     def set_cortex_callback(self, callback: CortexCommitCallback) -> None:
         """Set callback for sending signals to Cortex. Non-invasive integration."""

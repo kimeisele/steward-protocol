@@ -62,194 +62,163 @@ class ScanCommand(NagaCommandBase):
         Returns:
             NagaCommandResult with scan results
         """
+        import re
+        from pathlib import Path
+
         # Parse flags
         quick = "--quick" in args
         deep = "--deep" in args
         toxicity_only = "--toxicity" in args
         protocols_only = "--protocols" in args
+        verbose = "--verbose" in args or "-v" in args
 
         # Parse path
-        path = None
+        target_path_str = "."
         if "--path" in args:
             try:
                 idx = args.index("--path")
-                path = args[idx + 1]
+                target_path_str = args[idx + 1]
             except (IndexError, ValueError):
                 return self.failure(
                     "Invalid --path flag. Usage: --path <directory>",
                     exit_code=1)
+        
+        target_path = Path(target_path_str).absolute()
+        if not target_path.exists():
+            return self.failure(f"Path not found: {target_path}", exit_code=1)
 
         try:
-            if quick:
-                result = self._quick_scan(path)
-            elif deep:
-                result = self._deep_scan(path)
-            elif toxicity_only:
-                result = self._toxicity_scan(path)
+            scan_type = "all"
+            if toxicity_only:
+                scan_type = "security"
             elif protocols_only:
-                result = self._protocol_scan(path)
-            else:
-                result = self._standard_scan(path)
+                scan_type = "types"
+
+            # Logic from naga_cli.py cmd_scan
+            results = {
+                "silent_failures": [],
+                "vfs_bypasses": [],
+                "any_types": [],
+                "security_issues": [],
+            }
+
+            py_files = list(target_path.rglob("*.py"))
+            if not py_files and target_path.is_file() and target_path.suffix == ".py":
+                py_files = [target_path]
+
+            for py_file in py_files:
+                try:
+                    content = py_file.read_text(encoding="utf-8", errors="ignore")
+
+                    if scan_type in ["all", "silent"]:
+                        results["silent_failures"].extend(self._find_silent_failures(content, py_file))
+
+                    if scan_type in ["all", "vfs"]:
+                        results["vfs_bypasses"].extend(self._find_vfs_bypasses(content, py_file))
+
+                    if scan_type in ["all", "types"]:
+                        results["any_types"].extend(self._find_any_types(content, py_file))
+
+                    if scan_type in ["all", "security"]:
+                        results["security_issues"].extend(self._find_security_issues(content, py_file))
+
+                except Exception as e:
+                    if verbose:
+                        print(f"    Error scanning {py_file}: {e}")
+
+            # Format output
+            output_lines = [
+                f"[VYASA] Codebase Scan: {target_path}",
+                "=" * 60,
+                f"    Scanned {len(py_files)} Python files",
+                "-" * 60,
+            ]
+
+            total_issues = 0
+            for key, issues in results.items():
+                if issues:
+                    count = len(issues)
+                    total_issues += count
+                    output_lines.append(f"    {key.upper().replace('_', ' ')}: {count}")
+                    if verbose:
+                        for issue in issues[:5]:
+                            output_lines.append(f"      {issue['file']}:{issue['line']}")
+
+            output_lines.append("-" * 60)
+            output_lines.append(f"    TOTAL ISSUES: {total_issues}")
+            output_lines.append("=" * 60)
+            output_lines.append("ASSERT_TRUTH: COMPLETED")
 
             return self.success(
-                result,
+                "\n".join(output_lines),
                 data=(
                     ("phase", "purify"),
                     ("position", "4"),
                     ("mahajana", "vyasa"),
-                    ("mode", self._get_mode(args)),
-                    ("path", path or ".")))
+                    ("total_issues", str(total_issues)),
+                    ("path", str(target_path))))
         except Exception as e:
             return self.failure(
                 f"Scan failed: {e}",
                 exit_code=1)
 
-    def _get_mode(self, args: List[str]) -> str:
-        """Determine scan mode from args."""
-        if "--quick" in args:
-            return "quick"
-        if "--deep" in args:
-            return "deep"
-        if "--toxicity" in args:
-            return "toxicity"
-        if "--protocols" in args:
-            return "protocols"
-        return "standard"
+    def _find_silent_failures(self, content: str, filepath: any) -> List[Dict]:
+        """Find except: pass patterns."""
+        import re
+        issues = []
+        lines = content.split("\n")
+        for i, line in enumerate(lines, 1):
+            if re.search(r"except.*:\s*pass\s*$", line) or re.search(r"except.*:\s*\.\.\.\s*$", line):
+                issues.append({"file": str(filepath), "line": i, "code": line.strip()})
+        return issues
 
-    def _quick_scan(self, path: str = None) -> str:
-        """Quick scan - critical checks only."""
-        target = path or "."
-        lines = [
-            f"[VYASA] Quick Scan: {target}",
-            "=" * 40,
-            "  Critical Issues  : 0",
-            "  Warnings         : 2",
-            "  Scan Time        : 0.3s",
-            "=" * 40,
-            "ASSERT_TRUTH: PASSED (quick)",
-        ]
-        return "\n".join(lines)
+    def _find_vfs_bypasses(self, content: str, filepath: any) -> List[Dict]:
+        """Find direct open() calls that bypass VFS."""
+        import re
+        issues = []
+        if "test" in str(filepath).lower():
+            return []
+        lines = content.split("\n")
+        for i, line in enumerate(lines, 1):
+            if re.search(r"(?<!vfs\.)open\s*\(", line):
+                if line.strip().startswith("#") or ("from" in line and "import" in line):
+                    continue
+                issues.append({"file": str(filepath), "line": i, "code": line.strip()})
+        return issues
 
-    def _deep_scan(self, path: str = None) -> str:
-        """Deep scan - all verification checks."""
-        target = path or "."
-        lines = [
-            f"[VYASA] Deep Scan: {target}",
-            "=" * 50,
-            "",
-            "TOXICITY SCAN:",
-            "  Injection vectors   : 0 found",
-            "  XSS vulnerabilities : 0 found",
-            "  Secrets exposed     : 0 found",
-            "  Unsafe patterns     : 3 warnings",
-            "",
-            "PROTOCOL SCAN:",
-            "  Protocols defined   : 47",
-            "  Protocols sealed    : 45",
-            "  Coverage            : 96%",
-            "  Gaps identified     : 2",
-            "",
-            "INTEGRITY SCAN:",
-            "  Files verified      : 1,247",
-            "  Checksums valid     : 1,247",
-            "  Corruption detected : 0",
-            "",
-            "DHARMA SCAN:",
-            "  GAD-000 compliance  : 94%",
-            "  Strict typing       : 98%",
-            "  Immutability        : 100%",
-            "",
-            "=" * 50,
-            "Scan Time: 4.7s",
-            "ASSERT_TRUTH: PASSED (deep)",
-        ]
-        return "\n".join(lines)
+    def _find_any_types(self, content: str, filepath: any) -> List[Dict]:
+        """Find Dict[str, Any] and similar."""
+        import re
+        issues = []
+        lines = content.split("\n")
+        for i, line in enumerate(lines, 1):
+            if re.search(r":\s*Any\b", line) or re.search(r"\[\s*Any\s*\]", line):
+                if line.strip().startswith("#"):
+                    continue
+                issues.append({"file": str(filepath), "line": i, "code": line.strip()})
+        return issues
 
-    def _toxicity_scan(self, path: str = None) -> str:
-        """Toxicity scan - security checks only."""
-        target = path or "."
-        lines = [
-            f"[VYASA] Toxicity Scan: {target}",
-            "=" * 40,
-            "",
-            "TAKSHAKA SECURITY ANALYSIS:",
-            "  Injection vectors   : 0 found",
-            "  XSS vulnerabilities : 0 found",
-            "  SQL injection       : 0 found",
-            "  Command injection   : 0 found",
-            "  Path traversal      : 0 found",
-            "  Secrets exposed     : 0 found",
-            "",
-            "VAJRA VIOLATIONS:",
-            "  Critical            : 0",
-            "  High                : 0",
-            "  Medium              : 1",
-            "  Low                 : 2",
-            "",
-            "=" * 40,
-            "Toxicity Level: LOW",
-            "ASSERT_TRUTH: PASSED (toxicity)",
+    def _find_security_issues(self, content: str, filepath: any) -> List[Dict]:
+        """Find potential security issues."""
+        import re
+        issues = []
+        lines = content.split("\n")
+        patterns = [
+            (r"eval\s*\(", "EVAL"),
+            (r"exec\s*\(", "EXEC"),
+            (r"subprocess\.call\s*\(.*shell\s*=\s*True", "SHELL_INJECTION"),
+            (r"yaml\.load\s*\((?!.*Loader)", "UNSAFE_YAML"),
+            (r"pickle\.load", "PICKLE"),
+            (r"__import__\s*\(", "DYNAMIC_IMPORT"),
         ]
-        return "\n".join(lines)
+        for i, line in enumerate(lines, 1):
+            if line.strip().startswith("#"):
+                continue
+            for pattern, issue_type in patterns:
+                if re.search(pattern, line):
+                    issues.append({"file": str(filepath), "line": i, "type": issue_type, "code": line.strip()})
+        return issues
 
-    def _protocol_scan(self, path: str = None) -> str:
-        """Protocol scan - coverage checks only."""
-        target = path or "."
-        lines = [
-            f"[VYASA] Protocol Scan: {target}",
-            "=" * 40,
-            "",
-            "PROTOCOL COVERAGE:",
-            "  Total Protocols     : 47",
-            "  Sealed              : 45",
-            "  Draft               : 2",
-            "  Coverage            : 96%",
-            "",
-            "GAPS IDENTIFIED:",
-            "  1. ICliCommand migration pending",
-            "  2. naga_cli.py god file exists",
-            "",
-            "MAHAJANA OWNERSHIP:",
-            "  BRAHMA    : 3 protocols",
-            "  NARADA    : 4 protocols",
-            "  PRAHLADA  : 5 protocols",
-            "  SHUKA     : 2 protocols",
-            "  VYASA     : 2 protocols",
-            "  (others)  : 31 protocols",
-            "",
-            "=" * 40,
-            "ASSERT_TRUTH: PASSED (protocols)",
-        ]
-        return "\n".join(lines)
-
-    def _standard_scan(self, path: str = None) -> str:
-        """Standard scan - balanced checks."""
-        target = path or "."
-        lines = [
-            f"[VYASA] Standard Scan: {target}",
-            "=" * 50,
-            "",
-            "PHASE: PURIFY (Position 4)",
-            "OPCODE: ASSERT_TRUTH",
-            "MAHAJANA: VYASA (The Divine Compiler)",
-            "",
-            "SCAN RESULTS:",
-            "  Toxicity        : LOW (3 warnings)",
-            "  Protocols       : 96% coverage",
-            "  Integrity       : 100% valid",
-            "  Dharma          : 94% compliant",
-            "",
-            "SUMMARY:",
-            "  Critical Issues : 0",
-            "  Warnings        : 5",
-            "  Info            : 12",
-            "",
-            "=" * 50,
-            "Scan Time: 1.2s",
-            "ASSERT_TRUTH: PASSED",
-            "\"Vyasa compiled truth - scan verifies all.\"",
-        ]
-        return "\n".join(lines)
 
 
 # Export for direct import

@@ -14,7 +14,61 @@ Design Principle: Signals are IMMUTABLE data carriers, not actors.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class FloodRawData(TypedDict, total=False):
+    """Raw data from flood events. WATERTIGHT."""
+
+    event_name: str
+    payload: str  # JSON serialized
+    source: str
+    timestamp: str
+    correlation_id: str
+
+
+class ThreatData(TypedDict, total=False):
+    """Threat data from Takshaka. WATERTIGHT."""
+
+    threat_id: str
+    source: str
+    severity: int  # 0-10
+    threat_type: str  # "injection", "bypass", "privilege_escalation"
+    description: str
+    detected_at: str
+    mitigated: bool
+
+
+class PeerHealthData(TypedDict, total=False):
+    """Peer health data from Vasuki. WATERTIGHT."""
+
+    peer_id: str
+    status: str  # "healthy", "degraded", "offline"
+    last_heartbeat: str
+    latency_ms: float
+    error_count: int
+    uptime_seconds: float
+
+
+class ViolationDetails(TypedDict, total=False):
+    """Details of a healable violation. WATERTIGHT."""
+
+    path: str
+    rule: str
+
+
+class CognitivePayload(TypedDict, total=False):
+    """Cognitive context payload for Manas. WATERTIGHT."""
+
+    naga_patterns: List[str]
+    threat_level: float
+    signal_summary: Dict[str, int]
+    dominant_pattern: str
 
 
 class SignalType(Enum):
@@ -38,7 +92,7 @@ class NagaSignal:
     source_id: str
     signal_type: SignalType = SignalType.FLOOD
     timestamp: datetime = field(default_factory=datetime.now)
-    raw_data: Dict[str, Any] = field(default_factory=dict)
+    raw_data: FloodRawData = field(default_factory=dict)
 
     @property
     def age_seconds(self) -> float:
@@ -151,8 +205,8 @@ class CorrelatedContext:
 
     # Aggregated intelligence from NAGAs
     sesha_patterns: List[str] = field(default_factory=list)
-    takshaka_threats: List[Dict[str, Any]] = field(default_factory=list)
-    vasuki_peer_health: Dict[str, Any] = field(default_factory=dict)
+    takshaka_threats: List[ThreatData] = field(default_factory=list)
+    vasuki_peer_health: PeerHealthData = field(default_factory=dict)
 
     # Derived analysis
     signal_count_by_type: Dict[str, int] = field(default_factory=dict)
@@ -206,22 +260,22 @@ class CorrelatedContext:
             return self.takshaka_threats[0].get("source", "unknown")
         return None
 
-    def get_violation_details(self) -> Optional[Dict[str, Any]]:
+    def get_violation_details(self) -> Optional[ViolationDetails]:
         """Get details of the first healable violation."""
         for sig in self.signals:
             if isinstance(sig, StateSignal) and sig.violation:
-                return {
-                    "path": sig.path,
-                    "rule": sig.violation_reason or "dharma_violation",
-                }
+                return ViolationDetails(
+                    path=sig.path,
+                    rule=sig.violation_reason or "dharma_violation",
+                )
             if isinstance(sig, CommitSignal) and sig.pattern in (
                 "PANIC",
                 "BYPASS",
             ):
-                return {
-                    "path": sig.files_changed[0] if sig.files_changed else None,
-                    "rule": f"commit_{sig.pattern.lower()}",
-                }
+                return ViolationDetails(
+                    path=sig.files_changed[0] if sig.files_changed else "",
+                    rule=f"commit_{sig.pattern.lower()}",
+                )
         return None
 
     def get_degraded_circuit(self) -> Optional[str]:
@@ -231,11 +285,11 @@ class CorrelatedContext:
                 return sig.agent_id
         return None
 
-    def get_cognitive_payload(self) -> Dict[str, Any]:
+    def get_cognitive_payload(self) -> CognitivePayload:
         """Get context payload for Manas."""
-        return {
-            "naga_patterns": self.sesha_patterns,
-            "threat_level": self.threat_level,
-            "signal_summary": self.signal_count_by_type,
-            "dominant_pattern": self.dominant_pattern,
-        }
+        return CognitivePayload(
+            naga_patterns=self.sesha_patterns,
+            threat_level=self.threat_level,
+            signal_summary=self.signal_count_by_type,
+            dominant_pattern=self.dominant_pattern or "",
+        )
