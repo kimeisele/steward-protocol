@@ -61,6 +61,9 @@ from vibe_core.mahamantra._source import (
 )
 from vibe_core.mahamantra._protocol import ProtocolRegistry
 
+# Governance Bridge (lazy import to avoid circular deps)
+_governance_bridge = None
+
 # Import protocol base for typing
 if TYPE_CHECKING:
     from vibe_core.mahamantra._protocol import MantraProtocol
@@ -564,6 +567,74 @@ class Mahamantra:
             # Load all modules - this triggers decorators
             for i in range(16):
                 _ = _module_router[i]
+
+    # =========================================================================
+    # GOVERNANCE - Bridge to Protocol Ownership
+    # =========================================================================
+
+    @property
+    def governance(self) -> "ProtocolBridge":
+        """
+        Access Protocol Governance Bridge.
+
+        100% COVERAGE: Every protocol has a Mahajana owner.
+
+        USAGE:
+            from vibe_core.mahamantra import mahamantra
+
+            # Get owner of a protocol
+            owner = mahamantra.governance.get_owner("defense.py")
+            # → Mahajana.YAMARAJA
+
+            # Get security level
+            level = mahamantra.governance.get_level("ledger.py")
+            # → SecurityLevel.KERNEL
+
+            # List all protocols owned by a Mahajana
+            protocols = mahamantra.governance.list_by_owner(Mahajana.KAPILA)
+            # → [ProtocolEntry(...), ...]
+
+            # Run governance audit
+            audit = mahamantra.governance.audit()
+            # → GovernanceAudit(total=187, governed=187, health=1.0)
+
+        "yasya deve parā bhaktir yathā deve tathā gurau"
+        - One who has unflinching devotion to the Lord and the spiritual master,
+          unto him all the import of Vedic knowledge is automatically revealed.
+        """
+        global _governance_bridge
+        if _governance_bridge is None:
+            from vibe_core.protocols.governance.bridge import ProtocolBridge
+            _governance_bridge = ProtocolBridge
+        return _governance_bridge
+
+    def get_owner(self, protocol_path: str) -> Optional["Mahajana"]:
+        """
+        Get the owning Mahajana for a protocol.
+
+        Convenience method - same as mahamantra.governance.get_owner().
+
+        Args:
+            protocol_path: Relative path from protocols/ (e.g., "defense.py")
+
+        Returns:
+            Mahajana owner or None if ungoverned
+        """
+        # Need to use the router Mahajana, not source Mahajana
+        from vibe_core.protocols.mahajanas.router import Mahajana as RouterMahajana
+        owner = self.governance.get_owner(protocol_path)
+        return owner
+
+    def audit(self) -> dict:
+        """
+        Run governance audit.
+
+        Convenience method - same as mahamantra.governance.audit().
+
+        Returns:
+            GovernanceAudit TypedDict with health_score, ungoverned_list, etc.
+        """
+        return self.governance.audit()
 
     # =========================================================================
     # CHANT

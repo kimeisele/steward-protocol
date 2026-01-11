@@ -418,7 +418,8 @@ _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory,
     "lila/jagannath.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
                            "Jagannath Puri lila"),
 
-    # --- mahajanas/ (Pure zone - governance metadata only) ---
+    # --- mahajanas/ ROOT FILES ONLY (subfolders auto-governed by FRACTAL LAW) ---
+    # Files at mahajanas/ root that aren't in a guardian subfolder
     "mahajanas/owned_protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
                                      "Owned protocol base"),
     "mahajanas/protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
@@ -429,10 +430,19 @@ _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory,
                             "Mahajana assembly"),
     "mahajanas/vyuha.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
                             "Chatur-Vyuha architecture"),
-    "mahajanas/shuka/naga.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                                 "Shuka's NAGA vision"),
-    "mahajanas/yamaraja/security.py": (Mahajana.YAMARAJA, SecurityLevel.SUBSTRATE, ProtocolCategory.CORE,
-                                        "SecurityProtocol"),
+    "mahajanas/adoption.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
+                               "Protocol adoption"),
+    "mahajanas/discovery.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
+                                "Mahajana discovery"),
+    "mahajanas/parampara.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.GOVERNANCE,
+                                "Parampara (disciplic succession)"),
+    "mahajanas/vishnu.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.GOVERNANCE,
+                            "Vishnu source"),
+    "divine_base.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
+                       "Divine base protocol"),
+
+    # NOTE: All mahajanas/<NAME>/*.py files are AUTO-GOVERNED by FRACTAL LAW
+    # NO MANUAL ENTRIES NEEDED - structure dictates ownership
 
     # --- science/ (Analysis) ---
     "science/caitanya_kernel.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
@@ -471,6 +481,14 @@ _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory,
                                    "Vakya (sentence)"),
     "substrate/mantra/varna.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
                                    "Varna (letters)"),
+    "substrate/balarama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
+                               "Balarama CLI wrapper"),
+    "substrate/cli_substrate.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SUBSTRATE,
+                                    "CLI substrate"),
+    "substrate/mantra/graph.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
+                                   "Mantra graph"),
+    "substrate/mantra/lotus.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
+                                   "16-petal lotus"),
 
     # --- universal/ (remaining) ---
     "universal/cli.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
@@ -538,12 +556,32 @@ class ProtocolBridge:
         """
         Get the owning Mahajana for a protocol.
 
+        FRACTAL LAW:
+        1. If path contains 'mahajanas/<NAME>/', it belongs to <NAME>. NO MANUAL WIRING.
+        2. Fall back to explicit mapping for wild protocols (universal, naga, root).
+
         Args:
             protocol_path: Relative path from protocols/ (e.g., "defense.py")
 
         Returns:
             Mahajana owner or None if ungoverned
         """
+        # 1. FRACTAL LAW - Structure dictates ownership
+        parts = Path(protocol_path).parts
+
+        # Find 'mahajanas' in path and get the guardian name after it
+        if "mahajanas" in parts:
+            idx = list(parts).index("mahajanas")
+            if idx + 1 < len(parts):
+                potential_guardian = parts[idx + 1]
+                # Skip if it's a .py file at mahajanas/ root (like router.py)
+                if not potential_guardian.endswith(".py"):
+                    try:
+                        return Mahajana(potential_guardian)
+                    except ValueError:
+                        pass  # Not a valid Mahajana name, fall through
+
+        # 2. CONSTITUTION - Explicit mapping for wild protocols
         entry = _PROTOCOL_GOVERNANCE.get(protocol_path)
         if entry:
             return entry[0]
@@ -655,9 +693,9 @@ class ProtocolBridge:
         - Total protocols found
         - How many are governed vs ungoverned
         - Distribution by owner and level
-        """
-        governed = set(_PROTOCOL_GOVERNANCE.keys())
 
+        FRACTAL LAW: mahajanas/<NAME>/*.py files are auto-governed.
+        """
         # Scan actual files
         actual_files: Set[str] = set()
         protocols_root = cls._protocols_root
@@ -671,29 +709,35 @@ class ProtocolBridge:
             rel_path = str(py_file.relative_to(protocols_root))
             actual_files.add(rel_path)
 
-        # Calculate ungoverned
-        ungoverned = actual_files - governed
-        ungoverned_list = sorted(ungoverned)
-
-        # Owner distribution
+        # Calculate governed using get_owner (which applies FRACTAL LAW)
+        governed_files: Set[str] = set()
+        ungoverned_files: Set[str] = set()
         owner_dist: Dict[str, int] = {}
-        for _, (owner, _, _, _) in _PROTOCOL_GOVERNANCE.items():
-            owner_dist[owner.value] = owner_dist.get(owner.value, 0) + 1
 
-        # Level distribution
+        for f in actual_files:
+            owner = cls.get_owner(f)
+            if owner is not None:
+                governed_files.add(f)
+                owner_dist[owner.value] = owner_dist.get(owner.value, 0) + 1
+            else:
+                ungoverned_files.add(f)
+
+        ungoverned_list = sorted(ungoverned_files)
+
+        # Level distribution (only from explicit mappings - fractal files use default)
         level_dist: Dict[str, int] = {}
         for _, (_, level, _, _) in _PROTOCOL_GOVERNANCE.items():
             level_dist[level.name] = level_dist.get(level.name, 0) + 1
 
         # Health score
-        governed_count = len(governed & actual_files)
+        governed_count = len(governed_files)
         total = len(actual_files)
         health = governed_count / total if total > 0 else 0.0
 
         return GovernanceAudit(
             total_protocols=total,
             governed_count=governed_count,
-            ungoverned_count=len(ungoverned),
+            ungoverned_count=len(ungoverned_files),
             ungoverned_list=ungoverned_list,
             owner_distribution=owner_dist,
             level_distribution=level_dist,
