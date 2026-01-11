@@ -608,11 +608,20 @@ class CLIDiscoveryResult(TypedDict, total=False):
 
 
 # Known CLI locations in vibe_core
+# Phase 2: Extended for plugin/cartridge coverage
 CLI_DISCOVERY_PATHS: Final[Dict[str, str]] = {
+    # Core CLI (18 handlers)
     "vibe_core/cli": "vibe_core.cli",
+    # Plugin CLIs
     "vibe_core/plugins/opus_assistant/cli": "vibe_core.plugins.opus_assistant.cli",
+    "vibe_core/plugins/lifecycle": "vibe_core.plugins.lifecycle",
+    "vibe_core/plugins/task_manager": "vibe_core.plugins.task_manager",
+    # Phoenix sections
     "vibe_core/phoenix/sections/cli": "vibe_core.phoenix.sections.cli",
+    # Cartridge CLIs (Phase 3)
     "vibe_core/cartridges/system/herald": "vibe_core.cartridges.system.herald",
+    "vibe_core/cartridges/system/envoy": "vibe_core.cartridges.system.envoy",
+    "vibe_core/cartridges/system/civic": "vibe_core.cartridges.system.civic",
 }
 
 
