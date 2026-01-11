@@ -54,6 +54,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.YAMARAJA
+LOTUS_POSITION: Final[int] = 15  # MOKSHA Quarter, Worker 3
+LOTUS_QUARTER: Final[str] = "moksha"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "yamaraja",
@@ -201,6 +203,41 @@ from .security import (
     SecuredSubject,
 )
 
+# Import samskara submodule (Migration/Transformation)
+from .samskara import (
+    SamskaraType,
+    MigrationStatus,
+    WildProtocol,
+    MigrationVerdict,
+    SamskaraState,
+    MigrationManifest,
+    SamskaraProtocol,
+    SamskaraOwnedProtocol,
+    NullSamskara,
+)
+
+# Import Correction (Drift Detection & Healing) - Yamaraja's judicial function
+from .correction import (
+    DriftSource,
+    DriftSeverity,
+    HealingStrategy,
+    HealingStatus,
+    UnifiedDriftReport,
+    HealingResult,
+    CorrectionStats,
+    DriftRegistryProtocol,
+    CorrectionDispatcherProtocol,
+    CorrectionOrchestratorProtocol,
+    HealingStrategyResolverProtocol,
+    DriftDetector,
+    CorrectionHandler,
+    NullDriftRegistry,
+    NullCorrectionDispatcher,
+    adapt_reactor_drift,
+    adapt_shuddhi_result,
+    LOTUS_POSITION as CORRECTION_POSITION,
+)
+
 __all__ = [
     # Ownership
     "OWNER",
@@ -223,4 +260,33 @@ __all__ = [
     "SecurityAuditRecord",
     "SecurityStateSnapshot",
     "SecuredSubject",
+    # Samskara Protocol (Migration/Transformation)
+    "SamskaraType",
+    "MigrationStatus",
+    "WildProtocol",
+    "MigrationVerdict",
+    "SamskaraState",
+    "MigrationManifest",
+    "SamskaraProtocol",
+    "SamskaraOwnedProtocol",
+    "NullSamskara",
+    # Correction Protocol (Drift Detection & Healing)
+    "DriftSource",
+    "DriftSeverity",
+    "HealingStrategy",
+    "HealingStatus",
+    "UnifiedDriftReport",
+    "HealingResult",
+    "CorrectionStats",
+    "DriftRegistryProtocol",
+    "CorrectionDispatcherProtocol",
+    "CorrectionOrchestratorProtocol",
+    "HealingStrategyResolverProtocol",
+    "DriftDetector",
+    "CorrectionHandler",
+    "NullDriftRegistry",
+    "NullCorrectionDispatcher",
+    "adapt_reactor_drift",
+    "adapt_shuddhi_result",
+    "CORRECTION_POSITION",
 ]

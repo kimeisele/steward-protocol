@@ -69,6 +69,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.SHUKA
+LOTUS_POSITION: Final[int] = 14  # MOKSHA Quarter, Worker 2
+LOTUS_QUARTER: Final[str] = "moksha"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "shuka",

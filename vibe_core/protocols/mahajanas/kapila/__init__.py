@@ -51,6 +51,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.KAPILA
+LOTUS_POSITION: Final[int] = 6  # DHARMA Quarter, Worker 2
+LOTUS_QUARTER: Final[str] = "dharma"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "kapila",
@@ -226,9 +228,112 @@ class NullKapila:
         )
 
 
+# =============================================================================
+# COGNITIVE PROTOCOL (Kapila's Analytical Mind)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kapila.cognition import (
+    # Types (WATERTIGHT)
+    IntentType,
+    SyscallParams,
+    QueryResult,
+    MessageRecord,
+    TickResult,
+    ThoughtResult,
+    HeartbeatResult,
+    # Dataclasses
+    CognitiveResult,
+    SignedOperatorInput,
+    CognitiveContext,
+    # Protocols
+    CognitiveKernelProtocol,
+    SystemHeartbeatProtocol,
+    OperatorCognitiveProtocol,
+    # Null implementation
+    NullCognitive,
+)
+
+# =============================================================================
+# SAMKHYA PROTOCOL (24 Prakriti Element Mapping)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kapila.samkhya import (
+    # Enums
+    PrakritiCategory,
+    PrakritiElement,
+    # Mappings
+    ELEMENT_PROTOCOL_LAYER,
+    ELEMENT_GUARDIAN,
+    ELEMENT_OPCODE,
+    # Types (WATERTIGHT)
+    ElementAnalysis,
+    EntropyReport,
+    SamkhyaState,
+    # Protocol
+    SamkhyaProtocol,
+    get_samkhya,
+    # Convenience functions
+    analyze_prakriti_element,
+    analyze_protocol_entropy,
+    route_wild_protocol,
+    fight_protocol_entropy,
+    enumerate_all_elements,
+)
+
+
 __all__ = [
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
-    "AnalysisInput", "AnalysisType", "AnalysisResult",
-    "OptimizationResult", "MetricsResult", "AnalysisState",
-    "KapilaProtocol", "NullKapila",
+    # Ownership
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_PROTOCOLS",
+    "OWNED_OPCODES",
+    # Analysis Types (WATERTIGHT)
+    "AnalysisInput",
+    "AnalysisType",
+    "AnalysisResult",
+    "OptimizationResult",
+    "MetricsResult",
+    "AnalysisState",
+    # Analysis Protocol
+    "KapilaProtocol",
+    "NullKapila",
+    # Cognitive Types (WATERTIGHT)
+    "IntentType",
+    "SyscallParams",
+    "QueryResult",
+    "MessageRecord",
+    "TickResult",
+    "ThoughtResult",
+    "HeartbeatResult",
+    # Cognitive Dataclasses
+    "CognitiveResult",
+    "SignedOperatorInput",
+    "CognitiveContext",
+    # Cognitive Protocols
+    "CognitiveKernelProtocol",
+    "SystemHeartbeatProtocol",
+    "OperatorCognitiveProtocol",
+    # Null implementations
+    "NullCognitive",
+    # Samkhya Enums
+    "PrakritiCategory",
+    "PrakritiElement",
+    # Samkhya Mappings
+    "ELEMENT_PROTOCOL_LAYER",
+    "ELEMENT_GUARDIAN",
+    "ELEMENT_OPCODE",
+    # Samkhya Types (WATERTIGHT)
+    "ElementAnalysis",
+    "EntropyReport",
+    "SamkhyaState",
+    # Samkhya Protocol
+    "SamkhyaProtocol",
+    "get_samkhya",
+    # Samkhya Convenience functions
+    "analyze_prakriti_element",
+    "analyze_protocol_entropy",
+    "route_wild_protocol",
+    "fight_protocol_entropy",
+    "enumerate_all_elements",
 ]

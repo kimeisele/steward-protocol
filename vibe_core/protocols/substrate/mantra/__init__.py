@@ -226,6 +226,44 @@ from .diksha import (
     OM_GATE,
 )
 
+# Lotus - The Mahamantra AS Universal Kernel
+# The Lotus IS the Mantra unfolding - not a separate system
+from .lotus import (
+    # Constants (Holy Name Math)
+    LOTUS_POSITIONS,
+    LOTUS_QUARTERS,
+    WORDS_PER_QUARTER,
+    LOTUS_PARAMPARA,
+    LOTUS_TRINITY,
+    LOTUS_PHASES,
+    LOTUS_MALA,
+    # Enums
+    LotusMode,
+    LotusQuarter,
+    # LOTUS ↔ MAHAMANTRA MAPPING (The Connection!)
+    LOTUS_TO_MANTRA_QUARTER,
+    MANTRA_TO_LOTUS_QUARTER,
+    get_lotus_quarter,
+    get_mantra_quarter,
+    get_pada_at_position,
+    # Types (WATERTIGHT)
+    LotusPetal,
+    LotusNode,
+    LotusState,
+    LotusRoute,
+    # Heartbeat (wraps MantraHeartbeat - they are ONE)
+    LotusHeartbeat,
+    # Protocol
+    LotusProtocol,
+    # Base Class
+    LotusBase,
+    # Registry
+    LotusRegistry,
+    # Global Functions
+    get_lotus,
+    grow_lotus,
+)
+
 
 __all__ = [
     # Varna (Letter)
@@ -361,4 +399,31 @@ __all__ = [
     "DikshaCertified",
     "OmGate",
     "OM_GATE",
+    # Lotus (The Mahamantra AS Universal Kernel)
+    "LOTUS_POSITIONS",
+    "LOTUS_QUARTERS",
+    "WORDS_PER_QUARTER",
+    "LOTUS_PARAMPARA",
+    "LOTUS_TRINITY",
+    "LOTUS_PHASES",
+    "LOTUS_MALA",
+    "LotusMode",
+    "LotusQuarter",
+    # LOTUS ↔ MAHAMANTRA MAPPING
+    "LOTUS_TO_MANTRA_QUARTER",
+    "MANTRA_TO_LOTUS_QUARTER",
+    "get_lotus_quarter",
+    "get_mantra_quarter",
+    "get_pada_at_position",
+    # Types
+    "LotusPetal",
+    "LotusNode",
+    "LotusState",
+    "LotusRoute",
+    "LotusHeartbeat",
+    "LotusProtocol",
+    "LotusBase",
+    "LotusRegistry",
+    "get_lotus",
+    "grow_lotus",
 ]

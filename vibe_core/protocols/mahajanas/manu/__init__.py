@@ -30,6 +30,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.MANU
+LOTUS_POSITION: Final[int] = 7  # DHARMA Quarter, Worker 3
+LOTUS_QUARTER: Final[str] = "dharma"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "manu",
@@ -117,6 +119,28 @@ class NullManu:
         return None
 
 
+# Import Dharma (The Architectural Law) - Manu's PRIMARY protocol
+from .dharma import (
+    ProtocolLayer,
+    PROTOCOL_MAP,
+    get_layer,
+    check_compliance,
+    is_dharmic,
+    LOTUS_POSITION as DHARMA_POSITION,
+)
+
+# Import Varnashrama (The Social Law) - Manu's SOCIAL protocol
+from .varnashrama import (
+    Varna,
+    Ashrama,
+    Certification,
+    CERT_TO_VARNA,
+    SocialPosition,
+    determine_varna,
+    determine_ashrama,
+    create_position,
+)
+
 __all__ = [
     # Ownership
     "OWNER",
@@ -128,4 +152,20 @@ __all__ = [
     # Types
     "DharmaContext",
     "ManuVerdict",
+    # Dharma (Architectural Law)
+    "ProtocolLayer",
+    "PROTOCOL_MAP",
+    "get_layer",
+    "check_compliance",
+    "is_dharmic",
+    "DHARMA_POSITION",
+    # Varnashrama (Social Law)
+    "Varna",
+    "Ashrama",
+    "Certification",
+    "CERT_TO_VARNA",
+    "SocialPosition",
+    "determine_varna",
+    "determine_ashrama",
+    "create_position",
 ]

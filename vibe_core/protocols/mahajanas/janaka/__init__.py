@@ -56,6 +56,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.JANAKA
+LOTUS_POSITION: Final[int] = 10  # KARMA Quarter, Worker 2
+LOTUS_QUARTER: Final[str] = "karma"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "janaka",
@@ -394,12 +396,35 @@ class SankalpaInstruction:
 
 
 # =============================================================================
+# CYCLE PROTOCOL (Orchestration Loops)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.janaka.cycle import (
+    CyclePhase,
+    CycleStatus,
+    CycleElement,
+    PhaseResult,
+    CycleContextState,
+    RetentionConfig,
+    CycleRegistryStats,
+    CycleState,
+    CognitiveCycleProtocol,
+    CycleRegistryProtocol,
+    CycleOwnedProtocol,
+    NullCognitiveCycle,
+    NullCycleRegistry,
+)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
     # Ownership
     "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
     "OWNED_PROTOCOLS",
     "OWNED_OPCODES",
     # State Types (WATERTIGHT)
@@ -417,4 +442,18 @@ __all__ = [
     "NullJanaka",
     # Instructions
     "SankalpaInstruction",
+    # Cycle Protocol (WATERTIGHT)
+    "CyclePhase",
+    "CycleStatus",
+    "CycleElement",
+    "PhaseResult",
+    "CycleContextState",
+    "RetentionConfig",
+    "CycleRegistryStats",
+    "CycleState",
+    "CognitiveCycleProtocol",
+    "CycleRegistryProtocol",
+    "CycleOwnedProtocol",
+    "NullCognitiveCycle",
+    "NullCycleRegistry",
 ]

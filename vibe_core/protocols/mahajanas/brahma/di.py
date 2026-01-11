@@ -192,12 +192,11 @@ class ServiceRegistryOwnedProtocol(OwnedProtocol):
 
     def get_state(self) -> ProtocolState:
         """Return current state. WATERTIGHT - no Any!"""
-        stats = self._registry.get_stats()
         return ProtocolState(
             protocol_name=self.PROTOCOL_NAME,
             owner=self.OWNER.value,
             is_chanting=self.is_chanting,
-            heartbeat_position=self._heartbeat.position,
+            heartbeat_position=self._heartbeat.word_position,
             mantra_count=self._heartbeat.mantra_count,
             mala_count=self._heartbeat.mala_count,
             gad_compliant=True,  # DI is fundamental, always compliant

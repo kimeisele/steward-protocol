@@ -56,6 +56,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.NARADA
+LOTUS_POSITION: Final[int] = 2  # GENESIS Quarter, Worker 2
+LOTUS_QUARTER: Final[str] = "genesis"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "narada",
@@ -375,6 +377,19 @@ class KirtanamInstruction:
 # EXPORTS
 # =============================================================================
 
+# Event Bus Protocol
+from vibe_core.protocols.mahajanas.narada.events import (
+    EventType,
+    EventData,
+    Event,
+    SubscriberInfo,
+    EventBusStats,
+    EventBusState,
+    EventBusProtocol,
+    EventBusOwnedProtocol,
+    NullEventBus,
+)
+
 __all__ = [
     # Ownership
     "OWNER",
@@ -395,4 +410,14 @@ __all__ = [
     "NullNarada",
     # Instructions
     "KirtanamInstruction",
+    # Event Bus (WATERTIGHT)
+    "EventType",
+    "EventData",
+    "Event",
+    "SubscriberInfo",
+    "EventBusStats",
+    "EventBusState",
+    "EventBusProtocol",
+    "EventBusOwnedProtocol",
+    "NullEventBus",
 ]

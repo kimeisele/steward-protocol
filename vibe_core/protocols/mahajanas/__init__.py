@@ -85,6 +85,37 @@ from .sabha import (
     get_sabha,
 )
 
+# Adoption Pipeline (Mahamantra IS the Filter)
+from .adoption import (
+    AdoptionStatus,
+    AdoptionDecision,
+    ProtocolAnalysis,
+    AdoptionResult,
+    ShudhiReport,
+    run_shudhi,
+    detect_opcodes_from_source,
+    detect_primary_opcode,
+    AdoptionPipeline,
+    get_pipeline,
+    adopt,
+    analyze,
+)
+
+# OwnedProtocol (Lotus + Vedic Graph Integration)
+from .owned_protocol import (
+    ProtocolState,
+    OwnershipStatus,
+    ProtocolMeta,
+    OwnedProtocol,
+    get_mahajana_position,
+    get_mahajana_lineage,
+    register_protocol,
+    get_protocol,
+    get_protocols_by_owner,
+    list_orphan_protocols,
+    VEDIC_GRAPH,
+)
+
 __all__ = [
     "MAHAJANA_ORDER",
     # Router
@@ -107,4 +138,29 @@ __all__ = [
     "SabhaProtocol",
     "MahajanaSabha",
     "get_sabha",
+    # Adoption Pipeline (Mahamantra IS the Filter)
+    "AdoptionStatus",
+    "AdoptionDecision",
+    "ProtocolAnalysis",
+    "AdoptionResult",
+    "ShudhiReport",
+    "run_shudhi",
+    "detect_opcodes_from_source",
+    "detect_primary_opcode",
+    "AdoptionPipeline",
+    "get_pipeline",
+    "adopt",
+    "analyze",
+    # OwnedProtocol (Lotus Integration)
+    "ProtocolState",
+    "OwnershipStatus",
+    "ProtocolMeta",
+    "OwnedProtocol",
+    "get_mahajana_position",
+    "get_mahajana_lineage",
+    "register_protocol",
+    "get_protocol",
+    "get_protocols_by_owner",
+    "list_orphan_protocols",
+    "VEDIC_GRAPH",
 ]
