@@ -1,3 +1,4 @@
+"""
 "Niemand darf es merken" - but YOU can command them.
 
 FRACTAL NAGA CLI (Operation Kurukshetra):
@@ -5,7 +6,7 @@ FRACTAL NAGA CLI (Operation Kurukshetra):
     All logic now resides in vibe_core/cli/naga_commands/ governed by the 12 Mahajanas.
 
 "The Balarama Pattern: He becomes the bed, the throne, and the shoes."
-"
+"""
 
 import logging
 from pathlib import Path

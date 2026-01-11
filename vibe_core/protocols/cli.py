@@ -1,5 +1,5 @@
 """
-OPUS-307 Phase E+: CLI Protocol
+OPUS-307 Phase E+: CLI Protocol + ANANTA INTELLIGENCE
 
 GAD-000 COMPLIANCE: CLI commands must be:
 1. Discoverable - registered, not hardcoded
@@ -7,10 +7,18 @@ GAD-000 COMPLIANCE: CLI commands must be:
 3. Parseable - structured output
 4. Composable - can be combined
 5. Idempotent - same input = same output
+6. INTELLIGENT - connected to NAGA IntelBridge (NEW!)
 
-THE ANTI-GOD-OBJECT PRINCIPLE:
-UnifiedCLI should NOT know about individual CLI handlers.
-It discovers them via CLIRegistry (same pattern as CapabilityRegistry).
+THE ANANTA SHESHA PATTERN:
+"The infinite serpent who serves as Vishnu's bed"
+
+@register_cli automatically:
+1. Wraps cmd_* with @cli_governed (NAGA observation)
+2. Injects _get_intel() for IntelBridge access (SHUKA vision)
+3. Injects _query_context_intel() for context-aware queries
+
+ONE DECORATOR → ALL CLIs GET INTELLIGENCE
+No manual labor. Mahamantra-routed. Watertight.
 
 PROMPT.md Compliance:
 - "Protocol statt konkrete Klassen (Dependency Inversion)"
@@ -19,10 +27,35 @@ PROMPT.md Compliance:
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Protocol, Type, runtime_checkable
+from typing import Callable, Dict, List, Optional, Protocol, Type, TypedDict, Union, runtime_checkable
 
 # Import capability types for NAGA CLI hook integration
 from vibe_core.protocols.cli_execution import CLIPermissionLevel
+
+
+# =============================================================================
+# WATERTIGHT TYPES (No Any)
+# =============================================================================
+
+
+class CLIResultData(TypedDict, total=False):
+    """
+    Structured data from CLI command execution.
+
+    WATERTIGHT: No Any - all fields typed.
+    Extensible via total=False - fields are optional.
+    """
+
+    count: int  # Number of items
+    items: List[str]  # List of item names/ids
+    message: str  # Human-readable message
+    stats: Dict[str, int]  # Statistics (counts)
+    health: float  # Health score (0.0-1.0)
+    governed: int  # Number governed
+    ungoverned: int  # Number ungoverned
+    distribution: Dict[str, int]  # Distribution by category
+    gaps: List[str]  # Identified gaps
+    suggestions: List[str]  # Recommendations
 
 
 @dataclass
@@ -31,11 +64,12 @@ class CLIResult:
     Structured result from CLI command execution.
 
     GAD-000: All outputs must be machine-readable.
+    WATERTIGHT: Uses CLIResultData TypedDict, not Dict[str, Any].
     """
 
     success: bool
     exit_code: int = 0
-    data: Optional[Dict[str, Any]] = None
+    data: Optional[CLIResultData] = None
     error: Optional[str] = None
 
     # For composability
@@ -188,14 +222,18 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
     """
     Decorator to register a CLI handler.
 
-    ANANTA PATTERN: Registration = Automatic Governance
+    ANANTA SHESHA PATTERN: Registration = Automatic Governance + Intelligence
 
-    Like water flowing into every crevice, @register_cli automatically
-    wraps ALL cmd_* and _cmd_* methods with @cli_governed.
+    Like water flowing into every crevice, @register_cli automatically:
+    1. Wraps ALL cmd_* methods with @cli_governed (NAGA observation)
+    2. Injects _get_intel() method (IntelBridge access)
+    3. Injects _query_context_intel() method (context-aware queries)
+    4. Injects _ananta_intel attribute (lazy-loaded bridge)
 
     This eliminates manual decoration and ensures:
     - No command can escape NAGA observation
-    - New commands are automatically governed
+    - ALL CLIs get NAGA intelligence automatically
+    - New commands are automatically governed + intelligent
     - Self-healing infrastructure (GAD-000 Principle 6)
 
     Usage:
@@ -208,23 +246,119 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
             def run(self, args: List[str]) -> int:
                 ...
 
-            def cmd_list(self, args): ...  # AUTO-GOVERNED!
-            def cmd_show(self, args): ...  # AUTO-GOVERNED!
+            def cmd_list(self, args):
+                # AUTO-GOVERNED + can use self._get_intel()
+                intel = self._get_intel()
+                ...
     """
-    # === ANANTA: Auto-wrap all cmd_* methods with cli_governed ===
+    # === ANANTA PHASE 1: Auto-wrap cmd_* with cli_governed ===
     try:
         from vibe_core.naga.services.base import cli_governed
 
         for name in dir(cls):
             if name.startswith(("cmd_", "_cmd_")):
                 method = getattr(cls, name)
-                # Only wrap if callable and not already wrapped
                 if callable(method) and not hasattr(method, "__wrapped__"):
                     wrapped = cli_governed()(method)
                     setattr(cls, name, wrapped)
     except ImportError:
-        # Graceful degradation if NAGA not available
         pass
+
+    # === ANANTA PHASE 2: Inject intelligence methods ===
+    _inject_ananta_intelligence(cls)
 
     CLIRegistry.register(cls)
     return cls
+
+
+def _inject_ananta_intelligence(cls: Type) -> None:
+    """
+    Inject ANANTA intelligence methods into a CLI class.
+
+    SHUKA's Vision: Every CLI can see through NAGA's eyes.
+
+    Injected:
+    - _ananta_intel: Lazy-loaded IntelBridge instance
+    - _get_intel(): Returns IntelBridge (or NullIntelBridge)
+    - _query_context_intel(context): Query intel for specific context
+    """
+    # Don't override if class already has these methods
+    if hasattr(cls, "_get_intel") and not getattr(cls._get_intel, "_ananta_injected", False):
+        return
+
+    # === Inject _get_intel method ===
+    # Import here to avoid circular dependency at module level
+    from vibe_core.protocols.naga.intel_bridge import IntelBridgeProtocol
+
+    def _get_intel(self) -> "IntelBridgeProtocol":
+        """
+        Get IntelBridge - ANANTA injected.
+
+        Returns IntelBridgeProtocol or NullIntelBridge.
+        Lazy-loaded from ServiceRegistry.
+        WATERTIGHT: Returns typed IntelBridgeProtocol, not Any.
+        """
+        if not hasattr(self, "_ananta_intel") or self._ananta_intel is None:
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.protocols.naga.intel_bridge import (
+                    IntelBridgeProtocol,
+                    NullIntelBridge,
+                )
+                bridge = ServiceRegistry.get(IntelBridgeProtocol)
+                self._ananta_intel = bridge if bridge is not None else NullIntelBridge()
+            except Exception:
+                from vibe_core.protocols.naga.intel_bridge import NullIntelBridge
+                self._ananta_intel = NullIntelBridge()
+        return self._ananta_intel
+
+    _get_intel._ananta_injected = True
+    setattr(cls, "_get_intel", _get_intel)
+
+    # === Inject _query_context_intel method ===
+    def _query_context_intel(self, context: str, max_results: int = 5) -> List[str]:
+        """
+        Query NAGA intel for a specific context - ANANTA injected.
+
+        Returns list of formatted intel messages.
+        """
+        try:
+            from vibe_core.protocols.naga.intel_bridge import IntelQuery, IntelCategory
+
+            intel = self._get_intel()
+            query = IntelQuery(
+                context=context,
+                categories=(IntelCategory.SECURITY, IntelCategory.HEALTH, IntelCategory.SUGGESTION),
+                max_results=max_results,
+            )
+            response = intel.query(query)
+            return [item.to_chat_message() for item in response.items]
+        except Exception:
+            return []
+
+    _query_context_intel._ananta_injected = True
+    setattr(cls, "_query_context_intel", _query_context_intel)
+
+    # === Inject _get_critical_intel method ===
+    def _get_critical_intel(self) -> List[str]:
+        """Get critical intel items - ANANTA injected."""
+        try:
+            intel = self._get_intel()
+            return [item.to_chat_message() for item in intel.get_critical()]
+        except Exception:
+            return []
+
+    _get_critical_intel._ananta_injected = True
+    setattr(cls, "_get_critical_intel", _get_critical_intel)
+
+    # === Inject _get_threats method ===
+    def _get_threats(self) -> List[str]:
+        """Get threat intel items - ANANTA injected."""
+        try:
+            intel = self._get_intel()
+            return [item.to_chat_message() for item in intel.get_threats()]
+        except Exception:
+            return []
+
+    _get_threats._ananta_injected = True
+    setattr(cls, "_get_threats", _get_threats)
