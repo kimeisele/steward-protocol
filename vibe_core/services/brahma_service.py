@@ -10,7 +10,9 @@ Wraps ManifestRegistry and CapabilityRegistry.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
+
+from vibe_core.protocols.capability import CapabilityModifyResult
 
 from vibe_core.capability_registry import CapabilityRegistry
 from vibe_core.ledger import VibeLedger
@@ -131,13 +133,13 @@ class BrahmaService(BrahmaProtocol):
 
     def grant_capability(
         self, agent_id: str, capabilities: List[str], granter_id: str, reason: Optional[str] = None
-    ) -> Dict[str, object]:
+    ) -> CapabilityModifyResult:
         """Grant capabilities."""
         return self._capability_registry.grant(agent_id, capabilities, granter_id, reason)
 
     def revoke_capability(
         self, agent_id: str, capabilities: List[str], revoker_id: str, reason: Optional[str] = None
-    ) -> Dict[str, object]:
+    ) -> CapabilityModifyResult:
         """Revoke capabilities."""
         return self._capability_registry.revoke(agent_id, capabilities, revoker_id, reason)
 
@@ -285,1282 +287,152 @@ class BrahmaService(BrahmaProtocol):
             "plugins_loaded": [getattr(p, "plugin_id", "unknown") for p in plugins],
         }
 
-        def load_plugins(self, kernel: object) -> Tuple[Dict[str, object], Dict[str, object]]:
+    def load_plugins(self, kernel: object) -> Tuple[Dict[str, object], Dict[str, object]]:
+        """
+        Discover and load plugins.
+        Delegated from Kernel to Brahma (The Creator).
+        """
+        import os
+        from pathlib import Path
 
-            """
+        from vibe_core.plugin_loader import PluginLoader
+        from vibe_core.loaders.manifest_registry import ManifestRegistry
 
-            Discover and load plugins.
+        # OPUS-307 Phase F: Ensure manifests are scanned
+        ManifestRegistry.scan_all()
 
-            Delegated from Kernel to Brahma (The Creator).
+        custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
+        if custom_paths_env:
+            scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
+            return PluginLoader.discover_and_load(scan_paths=scan_paths)
+        else:
+            return PluginLoader.discover_from_registry()
 
-            """
+    def bootstrap(self, kernel: object, config: object) -> None:
+        """
+        Bootstrap the kernel state and Sangha (Plugins).
+        Delegated from Kernel to Brahma (Genesis).
+        """
+        # 1. BLUEPRINTS - Brahma stores the patterns of existence
+        setattr(kernel, "_agent_registry_blueprint", lambda: {})
 
-            import os
+        # 2. PLUGINS - Discover and load the Sangha
+        plugins_map, metadata = self.load_plugins(kernel)
+        setattr(kernel, "_plugins_map", plugins_map)
+        setattr(kernel, "_plugin_metadata", metadata)
 
-            from pathlib import Path
+        # Sort and store plugins
+        plugins = sorted(
+            plugins_map.values(),
+            key=lambda p: int(getattr(p, "priority", 50)),
+        )
+        setattr(kernel, "_plugins", plugins)
 
-            from vibe_core.plugin_loader import PluginLoader
+        # 3. BOOT - Wake the Plugins
+        self.boot_plugins(kernel, plugins)
 
-            from vibe_core.loaders.manifest_registry import ManifestRegistry
+        logger.info(f"✨ BRAHMA: Bootstrap complete. Community size: {len(plugins)}")
 
-    
+    async def boot_orchestration(self, kernel: object, boot_mode: Any) -> None:
+        """🚀 THE ASYNC BOOT ORCHESTRATION (Genesis). Delegated from Kernel."""
+        import asyncio
+        import time
 
-            # OPUS-307 Phase F: Ensure manifests are scanned
+        from vibe_core.lineage import LineageEventType
 
-            ManifestRegistry.scan_all()
+        # Set boot time and status
+        setattr(kernel, "_status", "BOOTING")
+        setattr(kernel, "_boot_time", time.time())
 
-    
+        logger.info(f"⚙️  BRAHMA: Booting system async (mode: {boot_mode.value})")
 
-            custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
+        # Phase 5: Record Kernel Boot in Parampara
+        if hasattr(kernel, "lineage"):
+            kernel.lineage.add_block(
+                event_type=LineageEventType.KERNEL_BOOT,
+                agent_id=None,
+                data={"version": "2.0.0", "boot_mode": boot_mode.value},
+            )
 
-            if custom_paths_env:
+        # Register manifests
+        agent_registry = getattr(kernel, "_agent_registry", {})
+        for agent_id, agent in agent_registry.items():
+            if hasattr(agent, "get_manifest"):
+                manifest = agent.get_manifest()
+                self._manifest_registry.register(manifest)
+                logger.info(f"   📜 BRAHMA: Registered {agent_id}")
 
-                scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
+        setattr(kernel, "_status", "RUNNING")  # KernelStatus.RUNNING
+        logger.info("✅ BRAHMA: KERNEL RUNNING (ASYNC)")
 
-                return PluginLoader.discover_and_load(scan_paths=scan_paths)
+        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
+        prakriti = getattr(kernel, "prakriti", None)
+        if prakriti:
+            try:
+                prakriti.begin_session()
+                prakriti.sync_ledger_git(strategy="git_wins")
+                if prakriti.is_dirty:
+                    prakriti.recover_from_crash()
+            except Exception as e:
+                logger.error(f"❌ BRAHMA: Prakriti Boot Failure: {e}")
 
+        # 🍎 ASYNC PERSISTENCE (ADR-204)
+        try:
+            from vibe_core.state.state_service import get_state_service
+
+            workspace = getattr(kernel, "_workspace", None)
+            ss = get_state_service(workspace)
+            ss.start_background_worker()
+        except Exception as e:
+            logger.warning(f"⚠️ BRAHMA: Failed to start background persistence: {e}")
+
+        # PULSE: Write initial snapshot on boot
+        if hasattr(kernel, "_pulse"):
+            await kernel._pulse()  # Accessing internal pulse wrapper in kernel impl
+
+        # Phase 18: Gateway as Task
+        if not boot_mode.should_skip_gateway():
+            if hasattr(kernel, "_run_gateway_async"):
+                task = asyncio.create_task(kernel._run_gateway_async())
+                setattr(kernel, "_gateway_task", task)
+                logger.info("🌐 BRAHMA: Network Gateway task started")
             else:
-
-                return PluginLoader.discover_from_registry()
-
-    
-
-                def bootstrap(self, kernel: object, config: object) -> None:
-
-    
-
-                    """
-
-    
-
-                    Bootstrap the kernel state and Sangha (Plugins).
-
-    
-
-                    Delegated from Kernel to Brahma (Genesis).
-
-    
-
-                    """
-
-    
-
-                    import os
-
-    
-
-                    from vibe_core.protocols.kernel_types import KernelStatus
-
-    
-
-                    
-
-    
-
-                    # 1. BLUEPRINTS - Brahma stores the patterns of existence
-
-    
-
-                    setattr(kernel, "_agent_registry_blueprint", lambda: {})
-
-    
-
-                    
-
-    
-
-                    # 2. PLUGINS - Discover and load the Sangha
-
-    
-
-                    plugins_map, metadata = self.load_plugins(kernel)
-
-    
-
-                    setattr(kernel, "_plugins_map", plugins_map)
-
-    
-
-                    setattr(kernel, "_plugin_metadata", metadata)
-
-    
-
-                    
-
-    
-
-                    # Sort and store plugins
-
-    
-
-                    plugins = sorted(
-
-    
-
-                        plugins_map.values(),
-
-    
-
-                        key=lambda p: int(getattr(p, "priority", 50)),
-
-    
-
-                    )
-
-    
-
-                    setattr(kernel, "_plugins", plugins)
-
-    
-
-                    
-
-    
-
-                    # 3. BOOT - Wake the Plugins
-
-    
-
-                    self.boot_plugins(kernel, plugins)
-
-    
-
-                    
-
-    
-
-                    logger.info(f"✨ BRAHMA: Bootstrap complete. Community size: {len(plugins)}")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    async def boot_orchestration(self, kernel: object, boot_mode: any) -> None:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        """🚀 THE ASYNC BOOT ORCHESTRATION (Genesis). Delegated from Kernel."""
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        import asyncio
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        import time
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        from datetime import datetime
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        from vibe_core.lineage import LineageEventType
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # Set boot time and status
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        setattr(kernel, "_status", "BOOTING")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        setattr(kernel, "_boot_time", time.time())
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        logger.info(f"⚙️  BRAHMA: Booting system async (mode: {boot_mode.value})")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # Phase 5: Record Kernel Boot in Parampara
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        if hasattr(kernel, "lineage"):
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            kernel.lineage.add_block(
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                event_type=LineageEventType.KERNEL_BOOT,
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                agent_id=None,
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                data={"version": "2.0.0", "boot_mode": boot_mode.value},
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            )
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # Register manifests
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        agent_registry = getattr(kernel, "_agent_registry", {})
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        for agent_id, agent in agent_registry.items():
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            if hasattr(agent, "get_manifest"):
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                manifest = agent.get_manifest()
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                self._manifest_registry.register(manifest)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                logger.info(f"   📜 BRAHMA: Registered {agent_id}")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        setattr(kernel, "_status", "RUNNING") # KernelStatus.RUNNING
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        logger.info("✅ BRAHMA: KERNEL RUNNING (ASYNC)")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        prakriti = getattr(kernel, "prakriti", None)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        if prakriti:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            try:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                prakriti.begin_session()
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                prakriti.sync_ledger_git(strategy="git_wins")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                if prakriti.is_dirty:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                    prakriti.recover_from_crash()
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            except Exception as e:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                logger.error(f"❌ BRAHMA: Prakriti Boot Failure: {e}")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # 🍎 ASYNC PERSISTENCE (ADR-204)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        try:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            from vibe_core.state.state_service import get_state_service
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            workspace = getattr(kernel, "_workspace", None)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            ss = get_state_service(workspace)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            ss.start_background_worker()
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        except Exception as e:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            logger.warning(f"⚠️ BRAHMA: Failed to start background persistence: {e}")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # PULSE: Write initial snapshot on boot
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        if hasattr(kernel, "_pulse"):
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            await kernel._pulse() # Accessing internal pulse wrapper in kernel impl
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        # Phase 18: Gateway as Task
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        if not boot_mode.should_skip_gateway():
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            if hasattr(kernel, "_run_gateway_async"):
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                task = asyncio.create_task(kernel._run_gateway_async())
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                setattr(kernel, "_gateway_task", task)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                logger.info("🌐 BRAHMA: Network Gateway task started")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            else:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                                logger.warning("🌐 BRAHMA: Gateway async runner missing")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        else:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                            logger.info("🚫 BRAHMA: Network Gateway SKIPPED (headless mode)")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-            
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                def terminate_agent(self, kernel: object, agent_id: str, reason: str = "Unknown") -> bool:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    """Terminate agent. Delegated from Kernel."""
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    agent_registry = getattr(kernel, "_agent_registry", {})
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    if agent_id not in agent_registry:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        return False
-
-    
-
-            
-
-    
-
-        
-
-    
-
-            
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    logger.warning(f"🔪 BRAHMA: Terminating {agent_id} ({reason})")
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    # 1. Stop process
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    proc_mgr = getattr(kernel, "process_manager", None)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    if proc_mgr and agent_id in proc_mgr.processes:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        proc_mgr.processes[agent_id].process.terminate()
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        del proc_mgr.processes[agent_id]
-
-    
-
-            
-
-    
-
-        
-
-    
-
-            
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    # 2. Cleanup
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    del agent_registry[agent_id]
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    self.revoke_capability(agent_id, ["*"], "KERNEL", reason)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    return True
-
-    
-
-            
-
-    
-
-        
-
-    
-
-            
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                def can_modify_capability(self, kernel: object, actor_id: str, target_id: str) -> bool:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    """Capability permission gate."""
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    enforcer = getattr(kernel, "_capability_enforcer", None)
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    if enforcer:
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                        return bool(enforcer.can_revoke(actor_id, target_id))
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    return actor_id == "kernel"
-
-    
-
-            
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
+                logger.warning("🌐 BRAHMA: Gateway async runner missing")
+        else:
+            logger.info("🚫 BRAHMA: Network Gateway SKIPPED (headless mode)")
+
+    def terminate_agent(self, kernel: object, agent_id: str, reason: str = "Unknown") -> bool:
+        """Terminate agent. Delegated from Kernel."""
+        agent_registry = getattr(kernel, "_agent_registry", {})
+        if agent_id not in agent_registry:
+            return False
+
+        logger.warning(f"🔪 BRAHMA: Terminating {agent_id} ({reason})")
+
+        # 1. Stop process
+        proc_mgr = getattr(kernel, "process_manager", None)
+        if proc_mgr and agent_id in proc_mgr.processes:
+            proc_mgr.processes[agent_id].process.terminate()
+            del proc_mgr.processes[agent_id]
+
+        # 2. Cleanup
+        del agent_registry[agent_id]
+        self.revoke_capability(agent_id, ["*"], "KERNEL", reason)
+
+        return True
+
+    def can_modify_capability(self, kernel: object, actor_id: str, target_id: str) -> bool:
+        """Capability permission gate."""
+        enforcer = getattr(kernel, "_capability_enforcer", None)
+        if enforcer:
+            return bool(enforcer.can_revoke(actor_id, target_id))
+        return actor_id == "kernel"
+
+    def boot_plugins(self, kernel: object, plugins: List[object]) -> None:
+        """Boot all plugins in priority order."""
+        for plugin in plugins:
+            if hasattr(plugin, "on_boot"):
+                try:
+                    plugin.on_boot(kernel)
+                except Exception as e:
+                    logger.error(f"❌ BRAHMA: Plugin boot failed: {e}")
