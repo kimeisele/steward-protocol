@@ -38,6 +38,15 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from vibe_core.cli.legacy import StewardCLI
 
+# BALARAMA PATTERN - Wrap legacy CLIs with substrate connection
+# "Balarama gives strength without modification"
+from vibe_core.protocols.substrate.balarama import (
+    auto_discover_all_clis,
+    wrap_with_balarama,
+    get_discovery_summary,
+    BalaramaHook,
+)
+
 # OPUS-307 Phase E+: CLIProtocol (Anti-God-Object)
 # Import CLIRegistry and trigger registration of all CLI handlers
 # OPUS-307 Phase D/E+: Protocol-based CLI handlers
@@ -91,7 +100,29 @@ class UnifiedCLI:
     def __init__(self):
         self._loader = CLILoader()
         self._executor = CLIExecutor()
-        self._legacy = StewardCLI()
+
+        # BALARAMA PATTERN: Wrap legacy CLI with substrate connection
+        # "Balarama gives strength without modification"
+        _raw_legacy = StewardCLI()
+        try:
+            self._legacy = wrap_with_balarama(_raw_legacy, "legacy")
+            logger.info("BALARAMA: Legacy CLI wrapped with substrate")
+        except Exception as e:
+            logger.warning(f"BALARAMA: Failed to wrap legacy CLI: {e}")
+            self._legacy = _raw_legacy  # Fallback to unwrapped
+
+        # BALARAMA AUTO-DISCOVERY: Wrap all discoverable CLIs
+        # This connects 80%+ of legacy CLIs to substrate without modification
+        try:
+            discovery_results = auto_discover_all_clis(wrap=True)
+            summary = get_discovery_summary(discovery_results)
+            if summary["total_wrapped"] > 0:
+                logger.info(
+                    f"BALARAMA: Auto-discovered {summary['total_discovered']} CLIs, "
+                    f"wrapped {summary['total_wrapped']}"
+                )
+        except Exception as e:
+            logger.debug(f"BALARAMA: Auto-discovery skipped: {e}")
 
         # NAGA CLI HookChain - Level -1 Fractal Infrastructure
         self._hook_chain: Optional[CLIHookChain] = None
@@ -203,6 +234,10 @@ class UnifiedCLI:
                     sesha_service=sesha,
                 )
             )
+
+            # BALARAMA HOOK: Auto-wrap CLIs at invocation time
+            # This catches any CLI that wasn't wrapped during discovery
+            self._hook_chain.register(BalaramaHook())
 
             # Log connection status
             connected = []
