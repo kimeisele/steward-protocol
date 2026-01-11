@@ -46,6 +46,7 @@ from vibe_core.mahamantra._source import (
     get_worker_positions,
     PARAMPARA,
 )
+from vibe_core.mahamantra._protocol import ProtocolRegistry
 
 # Import protocol base for typing
 if TYPE_CHECKING:
@@ -494,6 +495,31 @@ class Mahamantra:
         "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
         """
         return _module_router
+
+    @property
+    def registry(self) -> type:
+        """
+        Access the Protocol Registry.
+
+        All 16 ProtocolBase classes auto-register via @ProtocolRegistry.register.
+
+        USAGE:
+            mahamantra.registry.get(1)      # -> BrahmaProtocolBase
+            mahamantra.registry.coverage()  # -> (16, 16)
+            mahamantra.registry.all_registered()  # -> {0: Prithu..., 15: Yamaraja...}
+
+        "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+        """
+        # Ensure all modules are loaded for registration
+        self._ensure_all_registered()
+        return ProtocolRegistry
+
+    def _ensure_all_registered(self) -> None:
+        """Load all mahajana modules to trigger @ProtocolRegistry.register decorators."""
+        if ProtocolRegistry.coverage()[0] < 16:
+            # Load all modules - this triggers decorators
+            for i in range(16):
+                _ = _module_router[i]
 
     # =========================================================================
     # CHANT

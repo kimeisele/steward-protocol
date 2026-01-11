@@ -36,13 +36,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # NARADA PROTOCOL BASE - Derives from MantraPosition 2
 # =============================================================================
 
+@ProtocolRegistry.register
 class NaradaProtocolBase(WorkerProtocol):
     """
     Narada protocol ownership - DERIVED from Mahamantra position 2.

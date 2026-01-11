@@ -41,13 +41,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # SHUKA PROTOCOL BASE - Derives from MantraPosition 14
 # =============================================================================
 
+@ProtocolRegistry.register
 class ShukaProtocolBase(WorkerProtocol):
     """
     Shuka protocol ownership - DERIVED from Mahamantra position 14.

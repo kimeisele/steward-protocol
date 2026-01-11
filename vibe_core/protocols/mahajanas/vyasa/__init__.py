@@ -44,13 +44,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode
+from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # VYASA PROTOCOL BASE - Derives from MantraPosition 4
 # =============================================================================
 
+@ProtocolRegistry.register
 class VyasaProtocolBase(HeadProtocol):
     """
     Vyasa protocol ownership - DERIVED from Mahamantra position 4.

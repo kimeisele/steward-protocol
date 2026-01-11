@@ -39,7 +39,7 @@ from typing import (
 from dataclasses import dataclass
 from enum import Enum
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 # --- STRICT TYPING PRIMITIVES ---
 P = ParamSpec("P")
@@ -50,6 +50,7 @@ R = TypeVar("R")
 # YAMARAJA PROTOCOL BASE - Derives from MantraPosition 15
 # =============================================================================
 
+@ProtocolRegistry.register
 class YamarajaProtocolBase(WorkerProtocol):
     """
     Yamaraja protocol ownership - DERIVED from Mahamantra position 15.

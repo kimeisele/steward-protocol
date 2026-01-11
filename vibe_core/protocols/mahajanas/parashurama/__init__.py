@@ -46,13 +46,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode
+from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # PARASHURAMA PROTOCOL BASE - Derives from MantraPosition 8
 # =============================================================================
 
+@ProtocolRegistry.register
 class ParashuramaProtocolBase(HeadProtocol):
     """
     Parashurama protocol ownership - DERIVED from Mahamantra position 8.

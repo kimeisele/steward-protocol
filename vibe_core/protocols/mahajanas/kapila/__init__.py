@@ -35,13 +35,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # KAPILA PROTOCOL BASE - Derives from MantraPosition 6
 # =============================================================================
 
+@ProtocolRegistry.register
 class KapilaProtocolBase(WorkerProtocol):
     """
     Kapila protocol ownership - DERIVED from Mahamantra position 6.

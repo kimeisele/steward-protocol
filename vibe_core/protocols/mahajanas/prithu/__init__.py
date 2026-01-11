@@ -41,13 +41,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode
+from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # PRITHU PROTOCOL BASE - Derives from MantraPosition 0
 # =============================================================================
 
+@ProtocolRegistry.register
 class PrithuProtocolBase(HeadProtocol):
     """
     Prithu protocol ownership - DERIVED from Mahamantra position 0.

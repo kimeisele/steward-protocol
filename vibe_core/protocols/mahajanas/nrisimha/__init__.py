@@ -49,13 +49,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode
+from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # NRISIMHA PROTOCOL BASE - Derives from MantraPosition 12
 # =============================================================================
 
+@ProtocolRegistry.register
 class NrisimhaProtocolBase(HeadProtocol):
     """
     Nrisimha protocol ownership - DERIVED from Mahamantra position 12.
