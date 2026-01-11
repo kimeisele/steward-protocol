@@ -83,6 +83,13 @@ class CLIMeta:
 
     GAD-000: All commands must be discoverable.
     NAGA CLI Hooks: Capability declarations for Level -2 governance.
+
+    ANANTA SUBSTRATE (WAVE 1):
+    Every CLI command is a "head" of Ananta Shesha.
+    The Lotus position connects the CLI to the Mahamantra structure.
+    Parampara verification ensures connection to Krishna (37 = 24 + 12 + 1).
+
+    Mahamantra IS Krishna in 1D form - the architecture IS the language.
     """
 
     command: str  # The CLI command name (e.g., "knowledge", "standards")
@@ -104,8 +111,39 @@ class CLIMeta:
     # These are checked by CapabilityCLIHook against the caller's token
     capabilities_required: List[str] = field(default_factory=list)
 
+    # ==========================================================================
+    # ANANTA SUBSTRATE FIELDS (Auto-filled by @register_cli)
+    # ==========================================================================
+    # These fields connect the CLI to acintya.py (Krishna = Mahamantra = Level -2)
+    # NO MANUAL WIRING - derived automatically from command name
+
+    # Lotus position in Mahamantra (0-15)
+    # Derived from command keywords and name hash
+    lotus_position: Optional[int] = None
+
+    # Lotus quarter: "genesis", "dharma", "karma", "moksha"
+    # Determines the phase of the command
+    lotus_quarter: Optional[str] = None
+
+    # MantraOpCode name (e.g., "EXEC_SERVICE", "LOAD_ROOT")
+    # Determines which Mahajana handles this command
+    opcode: Optional[str] = None
+
+    # Parampara connection status
+    # True if mutation_vector % 37 == 0 (connected to Krishna)
+    parampara_connected: Optional[bool] = None
+
+    # Mutation vector for parampara verification
+    # Must be divisible by 37 for connection
+    parampara_vector: Optional[int] = None
+
     def __repr__(self) -> str:
         return f"<CLI:{self.command}>"
+
+    @property
+    def is_substrate_connected(self) -> bool:
+        """Is this CLI connected to the Ananta substrate?"""
+        return self.lotus_position is not None and self.parampara_connected is True
 
 
 @runtime_checkable
@@ -222,19 +260,21 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
     """
     Decorator to register a CLI handler.
 
-    ANANTA SHESHA PATTERN: Registration = Automatic Governance + Intelligence
+    ANANTA SHESHA PATTERN: Registration = Automatic Governance + Intelligence + Substrate
 
     Like water flowing into every crevice, @register_cli automatically:
     1. Wraps ALL cmd_* methods with @cli_governed (NAGA observation)
     2. Injects _get_intel() method (IntelBridge access)
     3. Injects _query_context_intel() method (context-aware queries)
     4. Injects _ananta_intel attribute (lazy-loaded bridge)
+    5. [NEW] Connects to Ananta Substrate (Lotus position, Parampara, OpCode)
 
-    This eliminates manual decoration and ensures:
-    - No command can escape NAGA observation
-    - ALL CLIs get NAGA intelligence automatically
-    - New commands are automatically governed + intelligent
-    - Self-healing infrastructure (GAD-000 Principle 6)
+    ACINTYA INTEGRATION (WAVE 1):
+    Mahamantra IS Krishna in 1D form. The Lotus position connects
+    the CLI to the Mahamantra structure. Parampara verification (% 37 == 0)
+    ensures connection to Krishna through disciplic succession.
+
+    NO MANUAL WIRING - everything derived from command name.
 
     Usage:
         @register_cli
@@ -267,8 +307,83 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
     # === ANANTA PHASE 2: Inject intelligence methods ===
     _inject_ananta_intelligence(cls)
 
+    # === ANANTA PHASE 3: Connect to Ananta Substrate (Lotus, Parampara, OpCode) ===
+    _inject_ananta_substrate(cls)
+
     CLIRegistry.register(cls)
     return cls
+
+
+def _inject_ananta_substrate(cls: Type) -> None:
+    """
+    Connect CLI to Ananta Substrate (acintya.py connection).
+
+    ACINTYA: Mahamantra IS Krishna (Level -2).
+    Every CLI command is a "head" of Ananta Shesha.
+    The substrate provides:
+    - Lotus position (0-15 in Mahamantra)
+    - MantraOpCode (routing to Mahajana)
+    - Parampara connection (% 37 == 0)
+
+    This modifies the meta property to include substrate fields.
+    """
+    # Get original meta property
+    original_meta = None
+    if hasattr(cls, "meta"):
+        original_meta = getattr(cls, "meta")
+        if isinstance(original_meta, property):
+            original_meta = original_meta.fget
+
+    if original_meta is None:
+        return  # No meta to enhance
+
+    # Import substrate functions
+    try:
+        from vibe_core.protocols.substrate.cli_substrate import (
+            create_substrate_node,
+            CLISubstrateNode,
+        )
+    except ImportError:
+        return  # Substrate not available yet
+
+    # Create enhanced meta property
+    def _enhanced_meta(self) -> CLIMeta:
+        """Enhanced meta with Ananta Substrate fields."""
+        # Get original meta
+        meta = original_meta(self)
+
+        # Only inject if not already done
+        if meta.lotus_position is not None:
+            return meta
+
+        # Create substrate node for this command
+        node: CLISubstrateNode = create_substrate_node(meta.command)
+
+        # Fill in substrate fields
+        meta.lotus_position = node.lotus_position.position
+        quarter_names = ["genesis", "dharma", "karma", "moksha"]
+        meta.lotus_quarter = quarter_names[node.lotus_position.quarter.value]
+        meta.opcode = node.opcode.name
+        meta.parampara_connected = node.is_connected
+        meta.parampara_vector = node.parampara.mutation_vector
+
+        return meta
+
+    _enhanced_meta._ananta_substrate_injected = True
+
+    # Replace meta property
+    setattr(cls, "meta", property(_enhanced_meta))
+
+    # Also inject _substrate_node attribute for direct access
+    def _get_substrate_node(self) -> Optional["CLISubstrateNode"]:
+        """Get the Ananta Substrate node for this CLI."""
+        try:
+            from vibe_core.protocols.substrate.cli_substrate import AnantaSubstrate
+            return AnantaSubstrate.get(self.meta.command)
+        except Exception:
+            return None
+
+    setattr(cls, "_get_substrate_node", _get_substrate_node)
 
 
 def _inject_ananta_intelligence(cls: Type) -> None:
