@@ -129,6 +129,14 @@ class SurvivalResult(TypedDict, total=False):
     message: str
 
 
+class ExecuteCliResult(TypedDict):
+    """Result of CLI execute operation. WATERTIGHT - no Any!"""
+    success: bool
+    service: str
+    status: str
+    memory_health: str
+
+
 # =============================================================================
 # PRAHLADA PROTOCOL (Main Memory Protocol)
 # =============================================================================
@@ -275,6 +283,16 @@ class NullPrahlada(PrahladaProtocolBase):
     def get_entry(self, key: str) -> Optional[MemoryEntry]:
         return None
 
+    def execute_cli(self, service: str = "memory") -> ExecuteCliResult:
+        """CLI: Execute service check. WATERTIGHT."""
+        state = self.get_state()
+        return ExecuteCliResult(
+            success=True,
+            service=service,
+            status="running",
+            memory_health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # PRAHLADA'S INSTRUCTION (For Memory Access)
@@ -354,6 +372,7 @@ __all__ = [
     "MemoryState",
     "AttackType",
     "SurvivalResult",
+    "ExecuteCliResult",
     # Protocol
     "PrahladaProtocol",
     # Implementations

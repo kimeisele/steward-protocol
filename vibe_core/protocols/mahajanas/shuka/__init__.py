@@ -102,6 +102,15 @@ class ReflectionResult(TypedDict, total=False):
     health: str  # "pristine", "healthy", "degraded"
 
 
+class ViewCliResult(TypedDict):
+    """Result of CLI view operation. WATERTIGHT - no Any!"""
+    success: bool
+    key: str
+    cached: bool
+    cache_count: int
+    health: str
+
+
 # =============================================================================
 # CONFIG FIELD TYPES (Atomic Level)
 # =============================================================================
@@ -441,6 +450,18 @@ class NullShuka(ShukaProtocolBase):
     def get_config(self) -> Optional[ConfigProtocol]:
         return None  # No config in null mode
 
+    def view_cli(self, key: str = "status") -> ViewCliResult:
+        """CLI: View cached state. WATERTIGHT."""
+        reflection = self.reflect()
+        cached_value = self.view(key)
+        return ViewCliResult(
+            success=True,
+            key=key,
+            cached=cached_value is not None,
+            cache_count=reflection.get("cache_count", 0),
+            health=reflection.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # REFLECT - System Introspection
@@ -471,6 +492,7 @@ __all__ = [
     # State Types (WATERTIGHT)
     "CachedValue",
     "ReflectionResult",
+    "ViewCliResult",
     # Config Types
     "FieldType",
     "ConfigField",
