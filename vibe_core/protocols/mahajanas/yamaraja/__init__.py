@@ -1,11 +1,20 @@
 """
-YAMARAJA - The 12th Mahajana (Judgment/Testing)
-===============================================
+YAMARAJA - The 12th Mahajana (Position 15 - UNIFIED)
+====================================================
+
+ACINTYA: ONE Yamaraja with MULTIPLE aspects (not separate modules!).
 
 POSITION: 15 (MOKSHA Quarter, RESET_IP OpCode)
 
 The Lord of Death. The Final Judge.
 Every soul must face Yamaraja.
+
+ASPECTS (All in ONE entity):
+    1. YamarajaProtocolBase - Mahamantra position ownership
+    2. YamarajaProtocol     - Protocol interface for judgment
+    3. YamarajaGate         - Governance gate (permissions)
+    4. YamarajaPhysics      - Performance enforcement
+    5. secure_contract      - Performance decorator
 
 DERIVED FROM MAHAMANTRA:
     Position 15 -> guardian=YAMARAJA, opcode=RESET_IP, quarter=MOKSHA
@@ -17,13 +26,24 @@ The Mahamantra OVERRIDES all judgment.
 
 "harer nama harer nama harer namaiva kevalam
 kalau nasty eva nasty eva nasty eva gatir anyatha"
+
+HARDENING LEVEL: GERMAN (Strict Types, No Any)
 """
 
-from typing import Protocol, runtime_checkable, List, Union, ClassVar
+import time
+import functools
+from typing import (
+    Protocol, runtime_checkable, List, Union, ClassVar,
+    TypeVar, ParamSpec, Callable, Set, Optional, Dict,
+)
 from dataclasses import dataclass
 from enum import Enum
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+
+# --- STRICT TYPING PRIMITIVES ---
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 # =============================================================================
@@ -89,6 +109,17 @@ class JudgmentRecord:
     verdict: Verdict
     reason: str
     karma_delta: float  # Change to karma balance
+
+
+@dataclass(frozen=True)
+class Judgment:
+    """
+    Governance judgment result (used by YamarajaGate).
+    Lighter than JudgmentRecord - no subject tracking.
+    """
+    verdict: Verdict
+    reason: str
+    karma_cost: float
 
 
 # =============================================================================
@@ -173,6 +204,142 @@ class NullYamaraja(YamarajaProtocolBase):
         return 0.0  # Neutral
 
 
+# =============================================================================
+# YAMARAJA PHYSICS - Performance Enforcement (Aspect 4)
+# =============================================================================
+
+class YamarajaPhysics:
+    """
+    Enforces the Laws of Thermodynamics & Singularity.
+    Performance judgment - "Are you fast enough?"
+    """
+    MIN_RESONANCE_THRESHOLD = 1.08  # The Golden Ratio of Growth
+
+    @staticmethod
+    def measure_kriya(name: str, baseline: float, current: float) -> Judgment:
+        if baseline <= 0:
+            return Judgment(Verdict.ALLOW, "Initial Seed", 0.0)
+
+        growth = current / baseline
+
+        if growth >= YamarajaPhysics.MIN_RESONANCE_THRESHOLD:
+            return Judgment(Verdict.ALLOW, f"EXPANSION: {growth:.2f}x", 0.0)
+        else:
+            return Judgment(Verdict.DENY, f"STAGNATION: {growth:.2f}x < 1.08x", 1.0)
+
+
+def secure_contract(baseline_metric: float) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    The Yamaraja Seal (Aspect 5).
+    Wraps a function. If it performs linearly (slowly), it is terminated.
+
+    Strict Typing: Preserves the signature P -> R of the wrapped function.
+    """
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @functools.wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            # 1. Start Clock
+            start = time.perf_counter()
+
+            # 2. Execute (Type Safe)
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:
+                # Code that crashes is inherently Tamasic
+                raise SystemError(f"YAMARAJA: Process {func.__qualname__} died violently: {e}")
+
+            # 3. Stop Clock & Judge
+            duration = time.perf_counter() - start
+
+            # --- INTELLIGENT OPS CALCULATION ---
+            ops = 0.0
+            if hasattr(result, "ops_per_sec"):
+                # Trust the internal metrics (The 'Caitanya' way)
+                ops = float(getattr(result, "ops_per_sec"))
+            else:
+                # Default observation (The 'Material' way)
+                ops = (1.0 / duration) if duration > 0 else float('inf')
+
+            judgment = YamarajaPhysics.measure_kriya(func.__qualname__, baseline_metric, ops)
+
+            if judgment.verdict == Verdict.DENY:
+                # THE DANDA (Punishment)
+                raise SystemError(f"YAMARAJA VIOLATION: {judgment.reason}")
+
+            return result
+        return wrapper
+    return decorator
+
+
+# =============================================================================
+# YAMARAJA GATE - Governance Implementation (Aspect 3)
+# =============================================================================
+
+class YamarajaGate:
+    """
+    The Governance Gate - "Who are you? May you pass?"
+    Judges actions based on identity, cleanliness, and danger level.
+    """
+
+    def __init__(self) -> None:
+        # LAZY IMPORT to avoid circular dependency
+        from vibe_core.protocols.universal.dharma import UniversalDharma
+        self.dharma = UniversalDharma()
+        self.ugra_karma: Set[str] = {"delete", "destroy", "kill", "wipe", "narasimha"}
+
+    def judge_action(
+        self,
+        context: "SovereignContext",
+        command: str,
+        payload: Optional[Union[Judgeable, Dict[str, str]]] = None
+    ) -> Judgment:
+        """
+        Judge an action request.
+
+        Args:
+            context: The sovereign context (identity, tattva level)
+            command: The action being requested
+            payload: Optional payload to check
+
+        Returns:
+            Judgment with verdict, reason, karma_cost
+        """
+        # LAZY IMPORT to avoid circular dependency
+        from vibe_core.protocols.universal.types import TranscendentalQuality
+
+        # 1. SAUCAM CHECK (Flag only, don't return yet)
+        cleanliness = self.dharma.check_saucam(context)
+        is_dirty = not cleanliness.is_dharmic
+
+        # 2. UGRA KARMA CHECK (Dangerous Ops)
+        is_dangerous = any(sin in command.lower() for sin in self.ugra_karma)
+
+        # 3. TATTVA CHECK (Permission Level)
+        user_level = context.tattva_level
+
+        if is_dangerous:
+            # Nur Vishnu/Krishna Tattva oder Admin darf zerstören
+            if user_level < TranscendentalQuality.INCONCEIVABLE_POTENCY:  # < 56
+                return Judgment(Verdict.DENY, "Jiva cannot perform Ugra Karma", 0.5)
+
+        # 4. SAFE ACTION HANDLING
+        if is_dirty:
+            return Judgment(Verdict.ATONE, cleanliness.pillar_violated or "Dirty", 0.1)
+
+        # 5. DAYA CHECK (Input Safety)
+        mercy = self.dharma.check_daya(payload)
+        if not mercy.is_dharmic:
+            return Judgment(Verdict.ATONE, f"Risky Input: {mercy.pillar_violated}", mercy.karma_cost)
+
+        return Judgment(Verdict.ALLOW, "Dharmic Action", 0.0)
+
+
+# Type hint for forward reference
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibe_core.protocols.universal.types import SovereignContext
+
+
 # Import security submodule
 from .security import (
     SecurityProtocol,
@@ -230,6 +397,13 @@ __all__ = [
     "Verdict",
     "Judgeable",
     "JudgmentRecord",
+    "Judgment",
+    # Governance Gate (Aspect 3)
+    "YamarajaGate",
+    # Performance Judge (Aspect 4)
+    "YamarajaPhysics",
+    # Performance Decorator (Aspect 5)
+    "secure_contract",
     # Security Protocol (Owned by Yamaraja)
     "SecurityProtocol",
     "NullSecurityProtocol",

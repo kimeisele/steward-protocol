@@ -346,8 +346,10 @@ from vibe_core.mahamantra._singularity import (
     mahamantra,
     # The Class (for typing)
     Mahamantra,
-    # Protocol Router (Krishna Routes)
+    # Protocol Router (Krishna Routes to CLASSES)
     ProtocolRouter,
+    # Module Router (Krishna Routes to MODULES) - CAITANYA SINGULARITY
+    ModuleRouter,
 )
 
 # =============================================================================
@@ -521,7 +523,9 @@ __all__ = [
     "ProtocolRegistry",
     # === THE SINGULARITY (Krishna Routes Everything) ===
     # Access protocol bases via: mahamantra.protocols.kapila
+    # Access modules via: mahamantra.mod.yamaraja (CAITANYA SINGULARITY)
     "mahamantra",
     "Mahamantra",
     "ProtocolRouter",
+    "ModuleRouter",
 ]

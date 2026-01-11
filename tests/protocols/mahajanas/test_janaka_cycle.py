@@ -9,7 +9,6 @@ import pytest
 from typing import List
 
 from vibe_core.protocols.mahajanas.janaka import (
-    OWNER,
     # Cycle types
     CyclePhase,
     CycleStatus,
@@ -55,8 +54,9 @@ class TestCognitiveCycleProtocol:
     """Test CognitiveCycleProtocol types and interfaces."""
 
     def test_owner_is_janaka(self) -> None:
-        """ANTI-MAYAVAD: Cycle is owned by JANAKA."""
-        assert OWNER == Mahajana.JANAKA
+        """ANTI-MAYAVAD: Cycle is owned by JANAKA (Position 10)."""
+        from vibe_core.mahamantra import mahamantra
+        assert mahamantra[10].guardian == Mahajana.JANAKA
 
     def test_null_cycle_implements_protocol(self) -> None:
         """NullCognitiveCycle should work as a drop-in replacement."""

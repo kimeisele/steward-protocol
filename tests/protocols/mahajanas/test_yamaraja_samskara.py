@@ -9,7 +9,6 @@ import pytest
 from typing import List
 
 from vibe_core.protocols.mahajanas.yamaraja import (
-    OWNER,
     # Samskara types
     SamskaraType,
     MigrationStatus,
@@ -82,8 +81,9 @@ class TestSamskaraProtocol:
     """Test SamskaraProtocol types and interfaces."""
 
     def test_owner_is_yamaraja(self) -> None:
-        """ANTI-MAYAVAD: Samskara is owned by YAMARAJA."""
-        assert OWNER == Mahajana.YAMARAJA
+        """ANTI-MAYAVAD: Samskara is owned by YAMARAJA (Position 15)."""
+        from vibe_core.mahamantra import mahamantra
+        assert mahamantra[15].guardian == Mahajana.YAMARAJA
 
     def test_null_samskara_implements_protocol(self) -> None:
         """NullSamskara should work as a drop-in replacement."""

@@ -84,7 +84,9 @@ class NagaBase(IGene, ABC):
             raise ValueError("NagaBase: ASURIC BINDING REJECTED (Invalid Signature).")
 
         # LAZY IMPORT to avoid circular dependency (Naga -> Base -> Yamaraja -> Naga)
-        from vibe_core.protocols.universal.yamaraja import YamarajaGate
+        # YamarajaGate from governance (Yamaraja = Position 15 in Mahamantra)
+        # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+        from vibe_core.protocols.mahajanas.yamaraja import YamarajaGate
 
         self._host = host
 

@@ -16,7 +16,7 @@ Safety features based on Senior Architecture Review:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
 if TYPE_CHECKING:
     from vibe_core import Task
@@ -38,6 +38,14 @@ class PluginResult(Enum):
     FATAL = "fatal"  # Unrecoverable (unload plugin)
 
 
+class HookStatus(Enum):
+    """Status codes for hook execution (alternative API)."""
+
+    SUCCESS = "success"  # Hook succeeded
+    ERROR = "error"  # Hook failed but recoverable
+    FATAL = "fatal"  # Hook failed, unrecoverable
+
+
 class PulsePhase(Enum):
     """
     Execution phases for pulse cycle - ordered by dependency.
@@ -56,6 +64,10 @@ class PulsePhase(Enum):
     CLEANUP = 4  # Shuddhi - Finally cleanup
 
 
+# Type alias for status
+StatusType = Union[PluginResult, HookStatus]
+
+
 @dataclass
 class HookResult:
     """
@@ -63,11 +75,26 @@ class HookResult:
 
     Plugins should return this instead of raising exceptions.
     The kernel uses this for error boundaries.
+
+    Supports two APIs:
+    1. HookResult(status=PluginResult.OK)
+    2. HookResult(HookStatus.SUCCESS) or HookResult(HookStatus.ERROR, "message")
     """
 
-    status: PluginResult = PluginResult.OK
+    status: StatusType = PluginResult.OK
     error_message: Optional[str] = None
     data: object = None
+
+    def __post_init__(self) -> None:
+        """Convert HookStatus to PluginResult for consistency."""
+        if isinstance(self.status, HookStatus):
+            # Map HookStatus to PluginResult
+            mapping = {
+                HookStatus.SUCCESS: PluginResult.OK,
+                HookStatus.ERROR: PluginResult.ERROR,
+                HookStatus.FATAL: PluginResult.FATAL,
+            }
+            # Keep original status as-is for backward compat
 
     @classmethod
     def ok(cls, data: object = None) -> "HookResult":

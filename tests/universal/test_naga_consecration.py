@@ -8,8 +8,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# Import Verdict from Yamaraja
-from vibe_core.protocols.universal.yamaraja import Verdict
+# Verdict from Yamaraja (Position 15 in Mahamantra)
+from vibe_core.protocols.mahajanas.yamaraja import Verdict
 
 # Import the Consecrated Proxy
 from vibe_core.services.naga.state_proxy import NagaStateProxy, StateCorruptionAttempt

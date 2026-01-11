@@ -20,14 +20,16 @@ from vibe_core.protocols.substrate.mantra.prabhupada import (
     PrabhupadaAware,
 )
 
-from .yamaraja import (
+# ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+# governance/yamaraja.py was MERGED into mahajanas/yamaraja
+from vibe_core.protocols.mahajanas.yamaraja import (
     YamarajaGate,
     Judgment,
     Verdict,
+    YamarajaProtocol,
+    YamarajaPhysics,
+    secure_contract,
 )
-
-# YamarajaProtocol is in mahajanas/ (the 12 authorities)
-from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocol
 
 # DharmaVerdict is in universal/dharma
 from vibe_core.protocols.universal.dharma import DharmaVerdict

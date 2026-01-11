@@ -12,14 +12,26 @@ HARDENING:
 3. Jagannath (Der Herr des Universums) hat Vorfahrt.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-from typing import Generic, Protocol, TypeVar, runtime_checkable
+from typing import Any, Dict, Generic, Optional, Protocol, TypeVar, runtime_checkable
 
 # Layer 0 Imports (The Foundation)
 # PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
 from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
 from .types import AccessDeniedError, SovereignContext, TattvaMeter
+
+
+# =============================================================================
+# MAYAVAD ERROR (Void Detection)
+# =============================================================================
+
+
+class MayavadError(Exception):
+    """Raised when untyped/void data detected (Anti-Mayavad enforcement)."""
+    pass
+
 
 # =============================================================================
 # THE ROLLING STOCK (Das Fahrzeug)
@@ -29,9 +41,62 @@ T_Payload = TypeVar("T_Payload")
 
 
 class Lane(str, Enum):
-    SATTVA = "sattva"  # Priority 1: Verified Clean Code
-    RAJAS = "rajas"  # Priority 2: Action / State Change
-    TAMAS = "tamas"  # Priority 3: Logging / Cleanup (Background)
+    SATTVA = "SATTVA"  # Priority 1: Verified Clean Code
+    RAJAS = "RAJAS"  # Priority 2: Action / State Change
+    TAMAS = "TAMAS"  # Priority 3: Logging / Cleanup (Background)
+
+
+# =============================================================================
+# MANTRA SEAL (Cryptographic Signature)
+# =============================================================================
+
+
+@dataclass
+class MantraSeal:
+    """
+    A cryptographic seal for packets.
+    "The packet tests itself."
+    """
+    signer_id: str
+    signature: str
+    timestamp: datetime
+    intent_hash: str
+
+    def is_valid(self) -> bool:
+        """Validate the seal has all required components."""
+        return bool(self.signer_id and self.signature and self.intent_hash)
+
+
+# =============================================================================
+# TRANSPORT RESULT
+# =============================================================================
+
+
+@dataclass
+class TransportResult:
+    """Result of packet transport."""
+    success: bool
+    packet_id: str
+    lane: Lane
+    message: str = ""
+    quarantine_reason: str = ""
+
+
+# =============================================================================
+# PACKET (Legacy Interface)
+# =============================================================================
+
+
+@dataclass
+class Packet:
+    """
+    Legacy Packet interface for backward compatibility.
+    """
+    id: str
+    lane: Lane
+    payload: Any
+    signature: str
+    headers: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -39,12 +104,30 @@ class VajraPacket(Generic[T_Payload]):
     """
     Ein versiegeltes Paket auf der Autobahn.
     Kann nicht geöffnet werden, ohne das Siegel zu brechen.
+    "The packet tests itself."
     """
 
     id: str
     payload: T_Payload
-    context: SovereignContext
     lane: Lane
+    seal: Optional[MantraSeal] = None
+    context: Optional[SovereignContext] = None
+
+    def verify(self) -> bool:
+        """
+        Self-verification (Living Software).
+        Returns True if packet is valid.
+        """
+        # 1. Check seal validity
+        if self.seal and not self.seal.is_valid():
+            return False
+
+        # 2. Check payload Watertight compliance
+        if hasattr(self.payload, 'verify_seal'):
+            if not self.payload.verify_seal():
+                return False
+
+        return True
 
     def inspect(self) -> float:
         """
@@ -57,7 +140,7 @@ class VajraPacket(Generic[T_Payload]):
 
         # 2. Theologischer Check (Siddhanta)
         # Ist der Context autorisiert?
-        if not PRABHUPADA.verify_siddhanta(self.payload, self.context):
+        if self.context and not PRABHUPADA.verify_siddhanta(self.payload, self.context):
             raise AccessDeniedError(f"Packet {self.id} rejected by Acharya.")
 
         return (jnana_score * 0.7) + (0.3 / (rupa_score + 1))
@@ -124,3 +207,11 @@ class GermanAutobahn:
     def _clear_road(self):
         """Macht Platz für den Herrn."""
         pass
+
+
+# =============================================================================
+# ALIASES (Backward Compatibility)
+# =============================================================================
+
+# IAutobahn is the protocol interface
+IAutobahn = AutobahnProtocol
