@@ -159,22 +159,24 @@ Gap 65-107: ACINTYA - nur durch GNADE erfahrbar
 ```
 Position  │ Guardian    │ Status
 ──────────┼─────────────┼─────────
- 0        │ PRITHU      │ [ ] TODO
+ 0        │ PRITHU      │ [ ] HEAD (Avatara)
  1        │ BRAHMA      │ [ ] TODO
  2        │ NARADA      │ [ ] TODO
  3        │ SHAMBHU     │ [ ] TODO
- 4        │ VYASA       │ [ ] TODO
- 5        │ KUMARAS     │ [x] MIGRATED
+ 4        │ VYASA       │ [ ] HEAD (Avatara)
+ 5        │ KUMARAS     │ [x] MIGRATED ✓
  6        │ KAPILA      │ [ ] TODO
  7        │ MANU        │ [ ] TODO
- 8        │ PARASHURAMA │ [ ] TODO
- 9        │ PRAHLADA    │ [x] MIGRATED
+ 8        │ PARASHURAMA │ [ ] HEAD (Avatara)
+ 9        │ PRAHLADA    │ [x] MIGRATED ✓
 10        │ JANAKA      │ [ ] TODO
-11        │ BHISHMA     │ [ ] TODO
-12        │ NRISIMHA    │ [ ] TODO
-13        │ BALI        │ [ ] TODO
+11        │ BHISHMA     │ [x] MIGRATED ✓
+12        │ NRISIMHA    │ [ ] HEAD (Avatara)
+13        │ BALI        │ [x] MIGRATED ✓
 14        │ SHUKA       │ [ ] TODO
 15        │ YAMARAJA    │ [ ] TODO
+
+4/12 Mahajanas migrated (HEADs are Avataras, not Mahajanas)
 ```
 
 ## DAS ZIEL
