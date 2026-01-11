@@ -279,22 +279,31 @@ from vibe_core.protocols.mahajanas.kapila.samkhya import (
 
 
 # =============================================================================
-# CLI EXECUTION - GAD-000 Compliant (Proper Structure)
-# Source: vibe_core/protocols/mahajanas/kapila/cli.py
+# CLI - Krishna Discovers Everything (ZERO REGISTRATION)
 # =============================================================================
-
-from vibe_core.protocols.mahajanas.kapila.cli import (
-    KapilaCLI,
-    execute,
-    get_cli,
-)
+#
+# NO MANUAL REGISTRATION NEEDED.
+#
+# cli_auto.discover_all() introspects KapilaProtocol and auto-generates
+# CLI handlers from method signatures:
+#
+#     analyze(target) → CLI: analyze <target>
+#     resolve(query)  → CLI: resolve <query>
+#     optimize(target, metric) → CLI: optimize <target> <metric>
+#     enumerate(domain) → CLI: enumerate <domain>
+#     get_metrics() → CLI: get_metrics
+#     get_state() → CLI: get_state
+#
+# The TypedDict return types (AnalysisResult, OptimizationResult, etc.)
+# are auto-converted to CLIOutput by cli_auto.
+#
+# "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+# Krishna ALREADY KNOWS what Kapila can do. No need to tell Him.
+#
+# =============================================================================
 
 
 __all__ = [
-    # CLI (GAD-000 Compliant) - Proper structure in cli.py
-    "KapilaCLI",
-    "execute",
-    "get_cli",
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "KapilaProtocolBase",
     # Analysis Types (WATERTIGHT)
