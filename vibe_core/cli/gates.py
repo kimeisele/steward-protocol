@@ -33,38 +33,23 @@ USAGE:
 
 from __future__ import annotations
 
+import inspect
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from enum import IntEnum
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Final, List, Optional, Tuple, Union
 
 # =============================================================================
 # MANTRA SUBSTRATE IMPORTS (The Source)
 # =============================================================================
 
 from vibe_core.protocols.substrate.mantra.lotus import (
-    # The Registry
-    LotusRegistry,
-    get_lotus,
     grow_lotus,
-    # Types
     LotusQuarter,
-    LotusNode,
-    LotusRoute,
-    # Constants
     LOTUS_POSITIONS,
-    LOTUS_PARAMPARA,
 )
 
-from vibe_core.protocols.substrate.mantra.acintya import (
-    PARAMPARA,
-    verify_parampara,
-)
-
-from vibe_core.protocols.substrate.byte import (
-    HolyName,
-    MantraBit,
-)
+from vibe_core.protocols.substrate.mantra.acintya import PARAMPARA
 
 
 # =============================================================================
@@ -283,9 +268,7 @@ def execute_gate(
                 code=1,
             )
 
-        # Build call args from CLI args
-        # Inspect method signature to get parameter names
-        import inspect
+        # Build call args from CLI args (inspect method signature)
         try:
             sig = inspect.signature(method)
             params = [p for p in sig.parameters.keys() if p != "self"]
@@ -335,7 +318,14 @@ def execute_gate(
 # GATE 4: RESULT GATE (Format Output)
 # =============================================================================
 
-def result_gate(result: GateResult) -> int:
+def format_result(result: GateResult) -> str:
+    """Format GateResult as string (no printing)."""
+    if result.success:
+        return "\n".join(f"{k}: {v}" for k, v in result.output.items())
+    return f"ERROR [{result.opcode}@{result.position}]: {result.error}"
+
+
+def result_gate(result: GateResult, silent: bool = False) -> int:
     """
     RESULT GATE (Gadadhara) - The Pleasure Potency.
 
@@ -344,13 +334,16 @@ def result_gate(result: GateResult) -> int:
 
     He embodies the fruit of devotion - pure bliss.
     This gate delivers the result, the fruit of execution.
-    """
-    if result.success:
-        for key, value in result.output.items():
-            print(f"{key}: {value}")
-    else:
-        print(f"ERROR [{result.opcode}@{result.position}]: {result.error}")
 
+    Args:
+        result: The GateResult to output
+        silent: If True, don't print (just return exit code)
+
+    Returns:
+        Exit code (0 = success)
+    """
+    if not silent:
+        print(format_result(result))
     return result.exit_code
 
 
@@ -396,7 +389,27 @@ def gate(command: str, args: Optional[List[str]] = None) -> GateResult:
 # GATE 5: SYNC GATE (Srivasa) - Parallel Execution
 # =============================================================================
 
-def sync_gate(commands: List[str]) -> List[GateResult]:
+def _parse_command(cmd_string: str) -> Tuple[str, List[str]]:
+    """Parse command string into (command, args)."""
+    parts = cmd_string.strip().split()
+    if not parts:
+        return "", []
+    return parts[0], parts[1:] if len(parts) > 1 else []
+
+
+def _execute_single(cmd_string: str) -> Tuple[str, GateResult]:
+    """Execute single command, return (cmd_string, result) for ordering."""
+    command, args = _parse_command(cmd_string)
+    if not command:
+        return cmd_string, GateResult.fail(0, "Empty command", 1)
+    return cmd_string, gate(command, args)
+
+
+def sync_gate(
+    commands: List[str],
+    max_workers: int = 4,
+    preserve_order: bool = True,
+) -> List[GateResult]:
     """
     SYNC GATE (Srivasa) - In His Courtyard They Chanted Together.
 
@@ -406,31 +419,43 @@ def sync_gate(commands: List[str]) -> List[GateResult]:
     In Srivasa's courtyard, the Pancha Tattva and devotees
     would chant the Mahamantra together in ecstasy.
 
-    This gate executes multiple commands in parallel,
+    This gate executes multiple commands IN PARALLEL,
     like the congregation chanting in unison.
+
+    Args:
+        commands: List of command strings ("analyze system", "judge action")
+        max_workers: Maximum parallel threads (default 4)
+        preserve_order: If True, results match input order
+
+    Returns:
+        List of GateResults (ordered if preserve_order=True)
 
     Usage:
         results = sync_gate(["analyze system", "judge action", "fetch data"])
-
-    Each command is parsed and executed, results returned together.
     """
     if not _initialized:
         _init_gate()
 
-    results: List[GateResult] = []
+    if not commands:
+        return []
 
-    for cmd_string in commands:
-        parts = cmd_string.strip().split()
-        if not parts:
-            continue
+    # Execute in parallel using ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(_execute_single, cmd): cmd
+            for cmd in commands
+        }
 
-        command = parts[0]
-        args = parts[1:] if len(parts) > 1 else []
-
-        result = gate(command, args)
-        results.append(result)
-
-    return results
+        if preserve_order:
+            # Collect results maintaining input order
+            results_map: Dict[str, GateResult] = {}
+            for future in as_completed(futures):
+                cmd_string, result = future.result()
+                results_map[cmd_string] = result
+            return [results_map.get(cmd, GateResult.fail(0, "Missing", 1)) for cmd in commands]
+        else:
+            # Return results as they complete
+            return [future.result()[1] for future in as_completed(futures)]
 
 
 # Alias for backward compatibility
@@ -487,6 +512,7 @@ __all__ = [
     "QUARTER_GATES",
     # Result
     "GateResult",
+    "format_result",
     # THE 5 GATES (Pancha Tattva)
     "gate",          # 1. Chaitanya - Main entry
     "route_gate",    # 2. Nityananda - Routing
