@@ -17,10 +17,28 @@ GAD-000 Compliance:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.naga.identity import NagaIdentity
+
+# Import TypedDicts from signals for consistency
+from vibe_core.naga.cortex.signals import CognitivePayload
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class DispatchDetails(TypedDict, total=False):
+    """Details of a dispatch result. WATERTIGHT."""
+
+    executor: str  # Who executed the dispatch
+    action_taken: str  # What action was performed
+    affected_paths: List[str]  # What was affected
+    duration_ms: float  # How long it took
+    error_message: str  # If failed, why
 
 
 class DecisionAction(Enum):
@@ -69,7 +87,7 @@ class CortexDecision:
     # Action-specific parameters
     rule: Optional[str] = None  # For HEAL: which rule
     boost: float = 0.0  # For ROUTE: confidence adjustment
-    context: Dict[str, Any] = field(default_factory=dict)  # For CONSULT
+    context: CognitivePayload = field(default_factory=dict)  # For CONSULT
 
     # Auditability (human-readable)
     reasoning: str = ""  # Why this decision
@@ -133,7 +151,7 @@ class DispatchResult:
     status: str  # HEALED, ROUTED, CONSULTED, BITTEN, FAILED, UNAVAILABLE
     timestamp: datetime = field(default_factory=datetime.now)
     event_id: Optional[str] = None  # Ledger event if recorded
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: DispatchDetails = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
@@ -188,7 +206,7 @@ def decide_route(circuit_id: str, adjustment: float, reasoning: str = "") -> Cor
     )
 
 
-def decide_consult(context: Dict[str, Any], reasoning: str = "") -> CortexDecision:
+def decide_consult(context: CognitivePayload, reasoning: str = "") -> CortexDecision:
     """Manas should be informed of new context."""
     return CortexDecision(
         action=DecisionAction.CONSULT,
