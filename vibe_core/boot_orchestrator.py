@@ -63,7 +63,7 @@ from vibe_core.protocols.event import EventBusProtocol
 # OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
 from vibe_core.protocols.kernel_protocol import KernelProtocol
 from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
-from vibe_core.protocols.substrate.byte import GenesisByte, MantraBit
+from vibe_core.protocols.substrate.byte import GenesisByte
 from vibe_core.services.kernel_factory import KernelFactory
 from vibe_core.operator_adapter import (
     LocalLLMOperator,

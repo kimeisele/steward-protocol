@@ -11,7 +11,7 @@ IMPLEMENTATION DETAILS:
 """
 
 from dataclasses import dataclass, field
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import NewType, List, Final, Union, Optional, Tuple, TYPE_CHECKING
 from datetime import datetime
 import math
@@ -32,6 +32,38 @@ class HolyName(IntEnum):
     KRISHNA = 1 # 01
     RAMA = 2    # 10
     VOID = 3    # 11 (Maya/Error)
+
+
+class MantraBit(IntFlag):
+    """
+    The 16-Bit Mahamantra Resonance Flags.
+    Each bit represents one word position in the mantra.
+    """
+    # Quarter 1: Genesis (Hare Krishna Hare Krishna)
+    HARE_1 = 1 << 0
+    KRISHNA_1 = 1 << 1
+    HARE_2 = 1 << 2
+    KRISHNA_2 = 1 << 3
+    # Quarter 2: Dharma (Krishna Krishna Hare Hare)
+    KRISHNA_3 = 1 << 4
+    KRISHNA_4 = 1 << 5
+    HARE_3 = 1 << 6
+    HARE_4 = 1 << 7
+    # Quarter 3: Karma (Hare Rama Hare Rama)
+    HARE_5 = 1 << 8
+    RAMA_1 = 1 << 9
+    HARE_6 = 1 << 10
+    RAMA_2 = 1 << 11
+    # Quarter 4: Moksha (Rama Rama Hare Hare)
+    RAMA_3 = 1 << 12
+    RAMA_4 = 1 << 13
+    HARE_7 = 1 << 14
+    HARE_8 = 1 << 15
+
+    @classmethod
+    def full_resonance(cls) -> "MantraBit":
+        """Return full 16-bit resonance (0xFFFF)."""
+        return cls(0xFFFF)
 
 @dataclass(frozen=True)
 class MantraTrit:
@@ -297,31 +329,39 @@ class MantraByte:
 class GenesisByte:
     """
     The Seed (Bijam).
-    Now supports packed ternary resonance.
+    Now supports packed ternary resonance and 16-bit MantraBit flags.
     """
     signature: str = ""
-    resonance: MantraByte = field(default_factory=lambda: MantraByte.standard_16())
-    dimension: int = 16 
+    resonance: Union[MantraByte, "MantraBit", int] = field(default_factory=lambda: MantraByte.standard_16())
+    dimension: int = 16
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     parampara_hash: str = "0x25" # 37
 
     def validate(self) -> bool:
-        # 1. Fractal Purnam Check
-        if self.resonance.dimension < self.dimension:
-             raise SystemError(f"Fractal Fracture: Expected dimension {self.dimension}, got {self.resonance.dimension}")
+        # Handle MantraBit/int resonance
+        if isinstance(self.resonance, (int, MantraBit)):
+            # Check for full 16-bit resonance (0xFFFF)
+            resonance_val = int(self.resonance)
+            if resonance_val != 0xFFFF:
+                raise PermissionError(f"Incomplete Mantra Resonance: got 0x{resonance_val:04X}, need 0xFFFF")
+        else:
+            # MantraByte handling
+            # 1. Fractal Purnam Check
+            if self.resonance.dimension < self.dimension:
+                raise SystemError(f"Fractal Fracture: Expected dimension {self.dimension}, got {self.resonance.dimension}")
 
-        # 2. Coherence Check
-        if self.resonance.coherence < 0.8:
-             raise SystemError(f"Dissonance Detected: Coherence {self.resonance.coherence:.2f} < 0.8")
+            # 2. Coherence Check
+            if self.resonance.coherence < 0.8:
+                raise SystemError(f"Dissonance Detected: Coherence {self.resonance.coherence:.2f} < 0.8")
 
         # 3. Mayavad Check
         if not self.signature or self.signature == "None":
-             raise PermissionError("Voidist Launch Detected. Identity required.")
+            raise PermissionError("Voidist Launch Detected. Identity required.")
 
         # 4. Lineage
         if not self._verify_lineage():
-             raise ConnectionError("Sahajiya Fault: Invalid Parampara Hash.")
-             
+            raise ConnectionError("Sahajiya Fault: Invalid Parampara Hash.")
+
         return True
         
     @property

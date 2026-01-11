@@ -37,18 +37,58 @@ from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkab
 from vibe_core.protocols.substrate import MantraOpCode
 
 # =============================================================================
-# IMPORT FROM REAL INFRASTRUCTURE - NO DUPLICATES!
+# IMPORT FROM REAL INFRASTRUCTURE
 # =============================================================================
 # Avatara from avataras (4 HEADs)
 from vibe_core.protocols.avataras import Avatara
 
-# Mahajana from router (12 Workers)
+# Core Mahajana (12 Workers) - for internal use
 from vibe_core.protocols.mahajanas.router import (
-    Mahajana,
+    Mahajana as CoreMahajana,
     MahajanaRouter,
     get_router,
     HEAD_OPCODES,
 )
+
+
+# =============================================================================
+# CLI MAHAJANA (16 Positions - Unified for CLI)
+# =============================================================================
+# For CLI purposes, we treat all 16 positions as "Mahajanas"
+# This simplifies command routing while preserving the theological distinction
+
+
+class Mahajana(str, Enum):
+    """
+    The 16 Mahajanas (CLI View) - All Protocol Owners.
+
+    For CLI purposes, HEAD positions (Avataras) are also treated as Mahajanas.
+    This simplifies command registration and routing.
+
+    Theological distinction (Avatara vs Mahajana) is preserved in:
+    - vibe_core.protocols.avataras (4 HEADs)
+    - vibe_core.protocols.mahajanas.router (12 Workers)
+    """
+    # Quarter 1: WAKE (Genesis)
+    PRITHU = "prithu"       # 00 - HEAD (Avatara) - SYS_WAKE
+    BRAHMA = "brahma"       # 01 - Worker - LOAD_ROOT
+    NARADA = "narada"       # 02 - Worker - ALLOC_MEM
+    SHAMBHU = "shambhu"     # 03 - Worker - BIND_CTX
+    # Quarter 2: PURIFY (Dharma)
+    VYASA = "vyasa"         # 04 - HEAD (Avatara) - ASSERT_TRUTH
+    KUMARAS = "kumaras"     # 05 - Worker - RESOLVE_REQ
+    KAPILA = "kapila"       # 06 - Worker - GARBAGE_COLLECT
+    MANU = "manu"           # 07 - Worker - PULSE_SYNC
+    # Quarter 3: SERVE (Karma)
+    PARASHURAMA = "parashurama"  # 08 - HEAD (Avatara) - FETCH_RES
+    PRAHLADA = "prahlada"   # 09 - Worker - EXEC_SERVICE
+    JANAKA = "janaka"       # 10 - Worker - CHECK_DHARMA
+    BHISHMA = "bhishma"     # 11 - Worker - COMMIT_LOG
+    # Quarter 4: SUSTAIN (Moksha)
+    NRISIMHA = "nrisimha"   # 12 - HEAD (Avatara) - CACHE_STATE
+    BALI = "bali"           # 13 - Worker - OPTIMIZE
+    SHUKA = "shuka"         # 14 - Worker - YIELD_CPU
+    YAMARAJA = "yamaraja"   # 15 - Worker - RESET_IP
 
 # Vyuha routing - THE SOURCE OF TRUTH
 from vibe_core.protocols.mahajanas.vyuha import (
@@ -116,6 +156,40 @@ OPCODE_TO_PHASE: Dict[MantraOpCode, Phase] = {
     opcode: get_phase_for_opcode(opcode) for opcode in MantraOpCode
 }
 
+# =============================================================================
+# CLI MAHAJANA MAPPINGS (16-fold)
+# =============================================================================
+# Maps each opcode to its CLI Mahajana (unified 16-member enum)
+
+OPCODE_TO_MAHAJANA: Dict[MantraOpCode, Mahajana] = {
+    MantraOpCode.SYS_WAKE: Mahajana.PRITHU,
+    MantraOpCode.LOAD_ROOT: Mahajana.BRAHMA,
+    MantraOpCode.ALLOC_MEM: Mahajana.NARADA,
+    MantraOpCode.BIND_CTX: Mahajana.SHAMBHU,
+    MantraOpCode.ASSERT_TRUTH: Mahajana.VYASA,
+    MantraOpCode.RESOLVE_REQ: Mahajana.KUMARAS,
+    MantraOpCode.GARBAGE_COLLECT: Mahajana.KAPILA,
+    MantraOpCode.PULSE_SYNC: Mahajana.MANU,
+    MantraOpCode.FETCH_RES: Mahajana.PARASHURAMA,
+    MantraOpCode.EXEC_SERVICE: Mahajana.PRAHLADA,
+    MantraOpCode.CHECK_DHARMA: Mahajana.JANAKA,
+    MantraOpCode.COMMIT_LOG: Mahajana.BHISHMA,
+    MantraOpCode.CACHE_STATE: Mahajana.NRISIMHA,
+    MantraOpCode.OPTIMIZE: Mahajana.BALI,
+    MantraOpCode.YIELD_CPU: Mahajana.SHUKA,
+    MantraOpCode.RESET_IP: Mahajana.YAMARAJA,
+}
+
+# Reverse mapping
+MAHAJANA_TO_OPCODE: Dict[Mahajana, MantraOpCode] = {
+    mahajana: opcode for opcode, mahajana in OPCODE_TO_MAHAJANA.items()
+}
+
+
+def get_mahajana_for_opcode(opcode: MantraOpCode) -> Mahajana:
+    """Get CLI Mahajana for an opcode."""
+    return OPCODE_TO_MAHAJANA[opcode]
+
 
 # =============================================================================
 # COMMAND RESULT (STRICT TYPING)
@@ -136,6 +210,7 @@ class NagaCommandResult:
     output: str = ""
     error: str = ""
     opcode: MantraOpCode = MantraOpCode.SYS_WAKE
+    mahajana: Mahajana = Mahajana.PRITHU
     # Structured data as tuple of key-value pairs (no Dict[str, Any])
     data: Tuple[Tuple[str, str], ...] = ()
 
@@ -186,6 +261,11 @@ class INagaCommand(Protocol):
         ...
 
     @property
+    def mahajana(self) -> Mahajana:
+        """CLI Mahajana for this command."""
+        ...
+
+    @property
     def owner(self) -> Owner:
         """Owner derived from opcode (Avatara for HEAD, Mahajana for Worker)."""
         ...
@@ -227,17 +307,23 @@ class NagaCommandBase:
     Base class for NAGA commands.
 
     Only requires opcode, name, help_text.
-    Owner and Phase are DERIVED from opcode automatically.
+    Mahajana, Owner, and Phase are DERIVED from opcode automatically.
     "The Mahamantra links back."
     """
 
     _opcode: MantraOpCode = MantraOpCode.SYS_WAKE
+    _mahajana: Mahajana = Mahajana.PRITHU
     _name: str = "unnamed"
     _help_text: str = "No help available."
 
     @property
     def opcode(self) -> MantraOpCode:
         return self._opcode
+
+    @property
+    def mahajana(self) -> Mahajana:
+        """Derived from opcode via CLI mapping."""
+        return get_mahajana_for_opcode(self._opcode)
 
     @property
     def owner(self) -> Owner:
@@ -264,6 +350,7 @@ class NagaCommandBase:
             exit_code=1,
             error=f"Command '{self._name}' not implemented",
             opcode=self._opcode,
+            mahajana=self.mahajana,
         )
 
     def success(self, output: str, data: Tuple[Tuple[str, str], ...] = ()) -> NagaCommandResult:
@@ -273,6 +360,7 @@ class NagaCommandBase:
             exit_code=0,
             output=output,
             opcode=self._opcode,
+            mahajana=self.mahajana,
             data=data,
         )
 
@@ -283,6 +371,7 @@ class NagaCommandBase:
             exit_code=exit_code,
             error=error,
             opcode=self._opcode,
+            mahajana=self.mahajana,
         )
 
 
@@ -342,6 +431,14 @@ class NagaCommandRegistry:
                 result.append(cmd)
         return result
 
+    def get_by_mahajana(self, mahajana: Mahajana) -> List[INagaCommand]:
+        """Get all commands by CLI Mahajana."""
+        result = []
+        for cmd in self._commands.values():
+            if cmd.mahajana == mahajana:
+                result.append(cmd)
+        return result
+
     def list_all(self) -> List[INagaCommand]:
         """Get all registered commands."""
         return list(self._commands.values())
@@ -398,8 +495,8 @@ def naga_command(
 __all__ = [
     # Types (from real infrastructure)
     "Avatara",       # From protocols/avataras (4 HEADs)
-    "Mahajana",      # From protocols/mahajanas/router (12 Workers)
-    "Owner",         # Union[Avatara, Mahajana]
+    "Mahajana",      # CLI Mahajana (16-member unified enum)
+    "Owner",         # Union[Avatara, CoreMahajana]
     "Phase",         # 4 CLI Phases
     # Router bridge
     "MahajanaRouter",
@@ -408,8 +505,11 @@ __all__ = [
     # Routing (via vyuha)
     "route_opcode",
     "get_phase_for_opcode",
+    "get_mahajana_for_opcode",
     "OPCODE_TO_OWNER",
     "OPCODE_TO_PHASE",
+    "OPCODE_TO_MAHAJANA",
+    "MAHAJANA_TO_OPCODE",
     # Result
     "NagaCommandResult",
     # Protocol

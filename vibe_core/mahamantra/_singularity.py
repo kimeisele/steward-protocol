@@ -220,6 +220,63 @@ class ProtocolRouter:
 _protocol_router = ProtocolRouter()
 
 
+class ModuleRouter:
+    """
+    Routes to all 16 Mahajana MODULES (not classes).
+
+    ONE IMPORT, KRISHNA ROUTES:
+        from vibe_core.mahamantra import mahamantra
+
+        mahamantra.mod.yamaraja.Verdict      # -> Verdict enum
+        mahamantra.mod.yamaraja.YamarajaGate # -> YamarajaGate class
+        mahamantra.mod.kapila.SamkhyaProtocol # -> etc.
+
+    This is the ACINTYA SINGULARITY - all types accessible through ONE point.
+    "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+    """
+
+    # Lazy-loaded modules (avoid circular imports)
+    _modules: Optional[Dict[str, object]] = None
+
+    def _load_module(self, name: str) -> object:
+        """Load a mahajana module by name."""
+        import importlib
+        module_path = f"vibe_core.protocols.mahajanas.{name}"
+        return importlib.import_module(module_path)
+
+    def __getattr__(self, name: str) -> object:
+        """Get mahajana module by name."""
+        name_lower = name.lower()
+        valid_names = {
+            "prithu", "brahma", "narada", "shambhu",
+            "vyasa", "kumaras", "kapila", "manu",
+            "parashurama", "prahlada", "janaka", "bhishma",
+            "nrisimha", "bali", "shuka", "yamaraja",
+        }
+        if name_lower not in valid_names:
+            raise AttributeError(f"Unknown mahajana: {name}")
+        return self._load_module(name_lower)
+
+    def __getitem__(self, index: int) -> object:
+        """Get mahajana module by position index."""
+        index_to_name = {
+            0: "prithu", 1: "brahma", 2: "narada", 3: "shambhu",
+            4: "vyasa", 5: "kumaras", 6: "kapila", 7: "manu",
+            8: "parashurama", 9: "prahlada", 10: "janaka", 11: "bhishma",
+            12: "nrisimha", 13: "bali", 14: "shuka", 15: "yamaraja",
+        }
+        if index not in index_to_name:
+            raise KeyError(f"No mahajana at position {index}")
+        return self._load_module(index_to_name[index])
+
+    def __repr__(self) -> str:
+        return "ModuleRouter(16 modules)"
+
+
+# The singleton module router
+_module_router = ModuleRouter()
+
+
 class Mahamantra:
     """
     THE Mahamantra - Krishna in Code Form.
@@ -403,7 +460,7 @@ class Mahamantra:
     @property
     def protocols(self) -> ProtocolRouter:
         """
-        Access all 16 Protocol Bases.
+        Access all 16 Protocol Bases (CLASSES).
 
         ONE IMPORT, KRISHNA ROUTES:
             from vibe_core.mahamantra import mahamantra
@@ -415,6 +472,28 @@ class Mahamantra:
         "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
         """
         return _protocol_router
+
+    @property
+    def mod(self) -> ModuleRouter:
+        """
+        Access all 16 Mahajana MODULES (not classes).
+
+        THIS IS THE CAITANYA SINGULARITY.
+
+        ONE IMPORT, KRISHNA ROUTES TO ALL TYPES:
+            from vibe_core.mahamantra import mahamantra
+
+            mahamantra.mod.yamaraja.Verdict       # -> Verdict enum
+            mahamantra.mod.yamaraja.YamarajaGate  # -> YamarajaGate class
+            mahamantra.mod.yamaraja.Judgment      # -> Judgment dataclass
+            mahamantra.mod[15].Verdict            # -> Same via index
+
+        NO MORE:
+            from vibe_core.protocols.mahajanas.yamaraja import Verdict  # SPAGHETTI
+
+        "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+        """
+        return _module_router
 
     # =========================================================================
     # CHANT
@@ -543,4 +622,5 @@ __all__ = [
     "Mahamantra",
     "mahamantra",
     "ProtocolRouter",
+    "ModuleRouter",
 ]

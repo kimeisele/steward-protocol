@@ -9,7 +9,6 @@ import pytest
 from typing import List
 
 from vibe_core.protocols.mahajanas.narada import (
-    OWNER,
     EventType,
     EventData,
     Event,
@@ -27,8 +26,9 @@ class TestEventBusProtocol:
     """Test EventBusProtocol types and interfaces."""
 
     def test_owner_is_narada(self) -> None:
-        """ANTI-MAYAVAD: EventBus is owned by NARADA."""
-        assert OWNER == Mahajana.NARADA
+        """ANTI-MAYAVAD: EventBus is owned by NARADA (Position 2)."""
+        from vibe_core.mahamantra import mahamantra
+        assert mahamantra[2].guardian == Mahajana.NARADA
 
     def test_null_event_bus_implements_protocol(self) -> None:
         """NullEventBus should work as a drop-in replacement."""

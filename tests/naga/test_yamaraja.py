@@ -1,7 +1,8 @@
 import pytest
 import time
 from typing import List
-from vibe_core.protocols.governance.yamaraja import secure_contract, YamarajaProtocol
+# ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+from vibe_core.protocols.mahajanas.yamaraja import secure_contract, YamarajaPhysics
 
 # 1. MOCK FUNCTION: FAST (Should Pass)
 @secure_contract(baseline_metric=100.0)
@@ -52,9 +53,9 @@ def test_mock_judgment():
     Directly test the logic.
     """
     # 100 baseline, 150 current -> 1.5x -> Pass
-    j = YamarajaProtocol.measure_kriya("test", 100.0, 150.0)
+    j = YamarajaPhysics.measure_kriya("test", 100.0, 150.0)
     assert j.verdict == "allow"
-    
+
     # 100 baseline, 105 current -> 1.05x -> Fail (< 1.08)
-    j2 = YamarajaProtocol.measure_kriya("test", 100.0, 105.0)
+    j2 = YamarajaPhysics.measure_kriya("test", 100.0, 105.0)
     assert j2.verdict == "deny"

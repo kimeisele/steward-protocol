@@ -11,8 +11,9 @@ from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 from .types import SovereignContext, TranscendentalQuality
-# Defer import to break cycle with universal/__init__ -> cli -> steward -> governance
-# from vibe_core.protocols.governance.yamaraja import Verdict, YamarajaGate
+# ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+# Defer import to break cycle with universal/__init__ -> cli -> steward -> mahajanas
+# from vibe_core.protocols.mahajanas.yamaraja import Verdict, YamarajaGate
 
 
 @runtime_checkable
@@ -30,12 +31,14 @@ class VedicSteward:
     """
 
     def __init__(self, context: SovereignContext):
-        from vibe_core.protocols.governance.yamaraja import YamarajaGate
+        # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+        from vibe_core.protocols.mahajanas.yamaraja import YamarajaGate
         self.context = context
         self.gate = YamarajaGate()  # Dependency Injection wäre besser, aber wir machen es explizit.
 
     def execute_command(self, command: str, payload: Any) -> Any:
-        from vibe_core.protocols.governance.yamaraja import Verdict
+        # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
+        from vibe_core.protocols.mahajanas.yamaraja import Verdict
         # 1. Ask Yamaraja
         judgment = self.gate.judge_action(self.context, command, payload)
 

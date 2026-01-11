@@ -22,13 +22,13 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from vibe_core.protocols.mahajanas.yamaraja import (
-    OWNER,
     Judgeable,
     JudgmentRecord,
     NullYamaraja,
     Verdict,
     YamarajaProtocol,
 )
+from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja.security import (
     NullSecurityProtocol,
     SecuredSubject,
@@ -550,11 +550,13 @@ class TestOwnership:
     """Tests for Mahajana ownership verification."""
 
     def test_yamaraja_owns_security(self):
-        """Security is owned by Yamaraja (12th Mahajana)."""
-        from vibe_core.protocols.mahajanas.yamaraja import OWNER, OWNED_PROTOCOLS
-        assert OWNER == Mahajana.YAMARAJA
-        assert "yamaraja" in OWNED_PROTOCOLS
-        assert "judgment" in OWNED_PROTOCOLS
+        """Security is owned by Yamaraja (12th Mahajana) - Position 15."""
+        from vibe_core.mahamantra import mahamantra
+        # Yamaraja is at position 15 in the Mahamantra
+        pos = mahamantra[15]
+        assert pos.guardian == Mahajana.YAMARAJA
+        # Protocol base derives ownership from position
+        assert mahamantra.protocols.yamaraja._position_index == 15
 
     @pytest.fixture
     def service(self):
