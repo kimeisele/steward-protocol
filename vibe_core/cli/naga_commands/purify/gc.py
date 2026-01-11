@@ -32,20 +32,16 @@ from pathlib import Path
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.GARBAGE_COLLECT,
-    mahajana=Mahajana.KAPILA,
     name="gc",
-    help_text="Analyze and clean unused resources (KAPILA's analysis - PURIFY phase)",
-)
+    help_text="Analyze and clean unused resources (KAPILA's analysis - PURIFY phase)")
 class GcCommand(NagaCommandBase):
     """
     Garbage collection command implementation.
@@ -145,8 +141,7 @@ class GcCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _analyze_garbage(self) -> dict:
         """Analyze what garbage exists."""

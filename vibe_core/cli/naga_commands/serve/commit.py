@@ -30,20 +30,16 @@ from pathlib import Path
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.COMMIT_LOG,
-    mahajana=Mahajana.BHISHMA,
     name="commit",
-    help_text="Commit status and log (BHISHMA's oath - SERVE phase)",
-)
+    help_text="Commit status and log (BHISHMA's oath - SERVE phase)")
 class CommitCommand(NagaCommandBase):
     """
     Commit command implementation.
@@ -94,8 +90,7 @@ class CommitCommand(NagaCommandBase):
             output_parts.append("  Bhishma requires git to track commitments.")
             return self.success(
                 "\n".join(output_parts),
-                data=tuple(data + [("git_repo", "false")]),
-            )
+                data=tuple(data + [("git_repo", "false")]))
 
         data.append(("git_repo", "true"))
 
@@ -159,8 +154,7 @@ class CommitCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _is_git_repo(self) -> bool:
         """Check if current directory is a git repository."""
@@ -170,8 +164,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=5,
-            )
+                timeout=5)
             return result.returncode == 0
         except Exception:
             return False
@@ -184,8 +177,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=10,
-            )
+                timeout=10)
 
             if result.returncode == 0 and result.stdout.strip():
                 files = result.stdout.strip().split("\n")
@@ -203,8 +195,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=10,
-            )
+                timeout=10)
 
             if result.returncode == 0:
                 return {"diff": result.stdout.strip()}
@@ -221,8 +212,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=10,
-            )
+                timeout=10)
 
             if result.returncode == 0 and result.stdout.strip():
                 commits = result.stdout.strip().split("\n")
@@ -240,8 +230,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=5,
-            )
+                timeout=5)
 
             if result.returncode == 0:
                 return result.stdout.strip() or "detached HEAD"
@@ -258,8 +247,7 @@ class CommitCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=5,
-            )
+                timeout=5)
 
             if result.returncode == 0:
                 return result.stdout.strip()

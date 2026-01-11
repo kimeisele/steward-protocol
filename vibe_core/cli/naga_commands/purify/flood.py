@@ -29,20 +29,16 @@ Usage:
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.PULSE_SYNC,
-    mahajana=Mahajana.MANU,
     name="flood",
-    help_text="FloodManager status and pulse sync (MANU's law - PURIFY phase)",
-)
+    help_text="FloodManager status and pulse sync (MANU's law - PURIFY phase)")
 class FloodCommand(NagaCommandBase):
     """
     Flood command implementation.
@@ -144,8 +140,7 @@ class FloodCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _get_flood_status(self) -> dict:
         """Get FloodManager status from Federation."""

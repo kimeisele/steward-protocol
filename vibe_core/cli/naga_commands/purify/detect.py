@@ -31,20 +31,16 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.RESOLVE_REQ,
-    mahajana=Mahajana.KUMARAS,
     name="detect",
-    help_text="Detect drifts and resolve intent (KUMARAS' purity - PURIFY phase)",
-)
+    help_text="Detect drifts and resolve intent (KUMARAS' purity - PURIFY phase)")
 class DetectCommand(NagaCommandBase):
     """
     Detect command implementation.
@@ -86,8 +82,7 @@ class DetectCommand(NagaCommandBase):
             else:
                 return self.failure(
                     "Missing message after --intent. Usage: naga detect --intent <message>",
-                    exit_code=1,
-                )
+                    exit_code=1)
 
         # Build output
         output_parts = []
@@ -120,8 +115,7 @@ class DetectCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _detect_git_drift(self) -> dict:
         """Detect drift via git status."""
@@ -131,8 +125,7 @@ class DetectCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=10,
-            )
+                timeout=10)
 
             if result.stdout.strip():
                 lines = result.stdout.strip().split("\n")
@@ -237,9 +230,7 @@ RESOLVE_REQ: No specific command intent detected"""
             data=(
                 ("message", message),
                 ("intent", detected_intents[0] if detected_intents else "unknown"),
-                ("all_intents", ",".join(detected_intents) if detected_intents else "none"),
-            ),
-        )
+                ("all_intents", ",".join(detected_intents) if detected_intents else "none")))
 
 
 # Export for direct import

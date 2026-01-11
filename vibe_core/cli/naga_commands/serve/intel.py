@@ -27,20 +27,16 @@ Usage:
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.FETCH_RES,
-    mahajana=Mahajana.SHUKA,
     name="intel",
-    help_text="Query NAGA intelligence (SHUKA's vision)",
-)
+    help_text="Query NAGA intelligence (SHUKA's vision)")
 class IntelCommand(NagaCommandBase):
     """
     Intel command implementation.
@@ -71,22 +67,19 @@ class IntelCommand(NagaCommandBase):
             except (IndexError, ValueError):
                 return self.failure(
                     "Invalid --category flag. Usage: --category <type>",
-                    exit_code=1,
-                )
+                    exit_code=1)
 
         try:
             # Get intel bridge
             intel = self._get_intel(
                 critical_only=critical_only,
                 threats_only=threats_only,
-                category=category,
-            )
+                category=category)
 
             if not intel:
                 return self.success(
                     "[SHUKA] No intelligence available.",
-                    data=(("count", "0"),),
-                )
+                    data=(("count", "0")))
 
             return self.success(
                 intel,
@@ -94,21 +87,17 @@ class IntelCommand(NagaCommandBase):
                     ("critical_only", str(critical_only)),
                     ("threats_only", str(threats_only)),
                     ("category", category or "all"),
-                    ("mahajana", "shuka"),
-                ),
-            )
+                    ("mahajana", "shuka")))
         except Exception as e:
             return self.failure(
                 f"Intel service unavailable: {e}",
-                exit_code=2,
-            )
+                exit_code=2)
 
     def _get_intel(
         self,
         critical_only: bool = False,
         threats_only: bool = False,
-        category: str = None,
-    ) -> str:
+        category: str = None) -> str:
         """
         Fetch intelligence from NAGA bridge.
 

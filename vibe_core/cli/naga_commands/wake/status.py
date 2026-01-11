@@ -27,20 +27,16 @@ Usage:
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.SYS_WAKE,
-    mahajana=Mahajana.PRITHU,
     name="status",
-    help_text="System status (PRITHU's wake - first command of every cycle)",
-)
+    help_text="System status (PRITHU's wake - first command of every cycle)")
 class StatusCommand(NagaCommandBase):
     """
     Status command implementation.
@@ -80,14 +76,11 @@ class StatusCommand(NagaCommandBase):
                     ("phase", "wake"),
                     ("position", "0"),
                     ("mahajana", "prithu"),
-                    ("mode", self._get_mode(args)),
-                ),
-            )
+                    ("mode", self._get_mode(args))))
         except Exception as e:
             return self.failure(
                 f"Status check failed: {e}",
-                exit_code=1,
-            )
+                exit_code=1)
 
     def _get_mode(self, args: List[str]) -> str:
         """Determine status mode from args."""

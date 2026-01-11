@@ -30,20 +30,16 @@ from pathlib import Path
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.LOAD_ROOT,
-    mahajana=Mahajana.BRAHMA,
     name="identity",
-    help_text="Load root identity and config (BRAHMA's creation - WAKE phase)",
-)
+    help_text="Load root identity and config (BRAHMA's creation - WAKE phase)")
 class IdentityCommand(NagaCommandBase):
     """
     Identity command implementation.
@@ -127,8 +123,7 @@ class IdentityCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _get_identity(self) -> dict:
         """Get project identity."""
@@ -190,8 +185,7 @@ class IdentityCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=5,
-            )
+                timeout=5)
             if result.returncode == 0:
                 lineage.append(f"Origin: {result.stdout.strip()}")
         except Exception:

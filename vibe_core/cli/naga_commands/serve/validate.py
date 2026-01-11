@@ -31,20 +31,16 @@ from pathlib import Path
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.CHECK_DHARMA,
-    mahajana=Mahajana.JANAKA,
     name="validate",
-    help_text="Validate system dharma (JANAKA's test - SERVE phase)",
-)
+    help_text="Validate system dharma (JANAKA's test - SERVE phase)")
 class ValidateCommand(NagaCommandBase):
     """
     Validate command implementation.
@@ -159,8 +155,7 @@ class ValidateCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _validate_types(self, quick: bool = False) -> dict:
         """Run type checking with mypy."""
@@ -171,8 +166,7 @@ class ValidateCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=5,
-            )
+                timeout=5)
 
             if result.returncode != 0:
                 return {
@@ -209,8 +203,7 @@ class ValidateCommand(NagaCommandBase):
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
-                timeout=60,
-            )
+                timeout=60)
 
             if result.returncode == 0:
                 return {"passed": True, "message": "No type errors found"}
