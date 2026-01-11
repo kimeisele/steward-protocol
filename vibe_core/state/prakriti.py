@@ -670,24 +670,25 @@ class Prakriti(PrakritiProtocol):
     # =========================================================================
 
     def _notify_commit_watcher(self, result: CommitResult) -> None:
-        """Notify NAGA CommitWatcher about a commit.
+        """Notify NAGA CommitWatcher via AnantaShesha bridge.
 
         Der Wächter observes all commits for pattern detection.
-        Non-critical - failures are logged but don't block commits.
+        We bridge this via Layer -1 (Ananta) to avoid coupling with Layer 0 (Naga).
         """
         try:
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.naga import NagaFederationProtocol
+            from dataclasses import asdict
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
 
-            # Try to get NAGA Federation from ServiceRegistry
-            # The commit_watcher is accessed through the federation
-            naga = ServiceRegistry.get(NagaFederationProtocol)
-            if naga and hasattr(naga, "commit_watcher") and naga.commit_watcher:
-                naga.commit_watcher.observe(result)
-                logger.debug(f"[PRAKRITI] NAGA CommitWatcher notified: {result.git_sha[:7]}")
+            # Bridge Pattern: State -> AnantaShesha -> Naga
+            anchor = get_system_anchor()
+            
+            # Send pure data dict
+            anchor.notify_commit(asdict(result))
+            
+            logger.debug(f"[PRAKRITI] NAGA CommitWatcher notified via Bridge: {result.git_sha[:7] if result.git_sha else 'N/A'}")
         except Exception as e:
             # Non-critical - don't block commits
-            logger.debug(f"[PRAKRITI] NAGA CommitWatcher not available: {e}")
+            logger.debug(f"[PRAKRITI] Bridge notification failed: {e}")
 
     def _is_process_alive(self, pid: int) -> bool:
         """Check if a process with given PID is still running.

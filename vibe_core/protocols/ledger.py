@@ -10,7 +10,7 @@ This stub allows cartridges to be type-checked and developed standalone.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 
 from .agent import AgentManifest, VibeAgent
 from .registry import ManifestRegistry
@@ -32,12 +32,12 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# TYPED DICTS - VIMANA RANGE ROVER (replaces Dict[str, Any])
+# TYPED DICTS - VIMANA RANGE ROVER (replaces Dict[str, object])
 # =============================================================================
 
 
 class QueueStatus(TypedDict, total=False):
-    """Scheduler queue statistics - replaces Dict[str, Any]."""
+    """Scheduler queue statistics - replaces Dict[str, object]."""
 
     queue_length: int
     pending_count: int
@@ -48,7 +48,7 @@ class QueueStatus(TypedDict, total=False):
 
 
 class TaskEvent(TypedDict, total=False):
-    """Task event record - replaces Dict[str, Any] for task queries."""
+    """Task event record - replaces Dict[str, object] for task queries."""
 
     task_id: str
     event_type: str  # "TASK_STARTED", "TASK_COMPLETED", "TASK_FAILED"
@@ -61,13 +61,13 @@ class TaskEvent(TypedDict, total=False):
 
 
 class LedgerEvent(TypedDict, total=False):
-    """Generic ledger event - replaces Dict[str, Any]."""
+    """Generic ledger event - replaces Dict[str, object]."""
 
     event_id: str
     event_type: str
     agent_id: str
     timestamp: str
-    details: Dict[str, str]  # Nested dict still typed (str keys/values)
+    details: Dict[str, object]  # Nested dict still typed
     prev_hash: str
     hash: str
     status: int  # HolyName value (0=HARE, 1=KRISHNA, 2=RAMA, 3=VOID)
@@ -106,13 +106,13 @@ class VibeLedger(ABC):
     """Immutable event ledger interface"""
 
     @abstractmethod
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, str]) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, object]) -> str:
         """Record a generic event (used by agents for governance actions)
 
         Args:
             event_type: Type of event (e.g., "proposal_created", "vote_cast", "credit_transfer")
             agent_id: ID of agent recording the event
-            details: Event-specific details (typed as Dict[str, str])
+            details: Event-specific details (typed as Dict[str, object])
 
         Returns:
             event_id: Unique identifier for this event
@@ -125,7 +125,7 @@ class VibeLedger(ABC):
         pass
 
     @abstractmethod
-    def record_completion(self, task: "Task", result: str, duration_ms: Optional[float] = None) -> None:
+    def record_completion(self, task: "Task", result: object, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         pass
 
@@ -308,14 +308,14 @@ class LedgerProtocol(Protocol):
         event_id = ledger.record_event("AGENT_BORN", "herald", {"role": "announcer"})
     """
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, str]) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, object]) -> str:
         """
         Record an immutable event.
 
         Args:
             event_type: Type of event (e.g., "AGENT_BORN", "TASK_COMPLETED")
             agent_id: ID of agent this event belongs to
-            details: Event payload (typed Dict[str, str])
+            details: Event payload (typed Dict[str, object])
 
         Returns:
             event_id: Unique identifier for this event
@@ -342,7 +342,7 @@ class LedgerProtocol(Protocol):
         """Record task start event."""
         ...
 
-    def record_completion(self, task: "Task", result: str) -> None:
+    def record_completion(self, task: "Task", result: object) -> None:
         """Record task completion event."""
         ...
 
@@ -364,7 +364,7 @@ class LedgerProtocol(Protocol):
         self, 
         event_type: str, 
         agent_id: str, 
-        details: Dict[str, str],
+        details: Dict[str, object],
         status: "HolyName"
     ) -> str:
         """

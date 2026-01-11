@@ -24,8 +24,8 @@ import shutil
 import sqlite3
 import threading
 import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
 # BLOCKER #1: Import canonical VibeLedger ABC from kernel.py
 from .kernel import VibeLedger
@@ -82,14 +82,14 @@ class InMemoryLedger(VibeLedger):
     """Immutable Event Ledger - Append-only task record"""
 
     def __init__(self):
-        self.events: List[Dict[str, Any]] = []
+        self.events: List[Dict[str, object]] = []
         self._event_counter = 0
 
     def record_event(
         self,
         event_type: str,
         agent_id: str,
-        details: Dict[str, Any],
+        details: Dict[str, object],
         result: str = None,
         task_id: str = None,
         error: str = None,
@@ -99,7 +99,7 @@ class InMemoryLedger(VibeLedger):
         event_id = f"EVT-{self._event_counter:06d}"
         event = {
             "event_id": event_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             "agent_id": agent_id,
             "details": details,
@@ -114,7 +114,7 @@ class InMemoryLedger(VibeLedger):
     def record_start(self, task) -> None:
         """Record task start"""
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": "task_start",
             "task_id": task.task_id,
             "agent_id": task.agent_id,
@@ -123,10 +123,10 @@ class InMemoryLedger(VibeLedger):
         self.events.append(event)
         logger.debug(f"📝 Ledger: Task started {task.task_id}")
 
-    def record_completion(self, task, result: Any, duration_ms: Optional[float] = None) -> None:
+    def record_completion(self, task, result: object, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": "task_completed",
             "task_id": task.task_id,
             "agent_id": task.agent_id,
@@ -139,7 +139,7 @@ class InMemoryLedger(VibeLedger):
     def record_failure(self, task, error: str, duration_ms: Optional[float] = None) -> None:
         """Record task failure"""
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": "task_failed",
             "task_id": task.task_id,
             "agent_id": task.agent_id,
@@ -149,7 +149,7 @@ class InMemoryLedger(VibeLedger):
         self.events.append(event)
         logger.debug(f"📝 Ledger: Task failed {task.task_id} ({duration_ms}ms)")
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Optional[Dict[str, object]]:
         """Query task result"""
         # Search backwards for the most recent event
         for event in reversed(self.events):
@@ -157,7 +157,7 @@ class InMemoryLedger(VibeLedger):
                 return event
         return None
 
-    def get_all_events(self) -> List[Dict[str, Any]]:
+    def get_all_events(self) -> List[Dict[str, object]]:
         """Return all ledger events"""
         return self.events.copy()
 
@@ -171,7 +171,7 @@ class InMemoryLedger(VibeLedger):
         agent_id: Optional[str] = None,
         task_id: Optional[str] = None,
         include_archives: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, object]]:
         """Unified Ledger Query for InMemoryLedger."""
         # 1. Filter
         results = []
@@ -182,9 +182,9 @@ class InMemoryLedger(VibeLedger):
                 continue
             if task_id and event.get("task_id") != task_id:
                 continue
-            if start_date and event.get("timestamp") < start_date:
+            if start_date and str(event.get("timestamp")) < start_date:
                 continue
-            if end_date and event.get("timestamp") > end_date:
+            if end_date and str(event.get("timestamp")) > end_date:
                 continue
             results.append(event)
 
@@ -424,7 +424,7 @@ class SQLiteLedger(VibeLedger):
         self,
         event_type: str,
         agent_id: str,
-        details: Dict[str, Any],
+        details: Dict[str, object],
         result: str = None,
         task_id: str = None,
         error: str = None,
@@ -511,7 +511,7 @@ class SQLiteLedger(VibeLedger):
         self._insert_event(event)
         logger.debug(f"📝 Ledger: Task started {task.task_id}")
 
-    def record_completion(self, task, result: Any, duration_ms: Optional[float] = None) -> None:
+    def record_completion(self, task, result: object, duration_ms: Optional[float] = None) -> None:
         """Record task completion"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -548,7 +548,7 @@ class SQLiteLedger(VibeLedger):
         combined = event_data + previous_hash
         return hashlib.sha256(combined.encode()).hexdigest()
 
-    def _insert_event(self, event: Dict[str, Any]) -> None:
+    def _insert_event(self, event: Dict[str, object]) -> None:
         """Insert event into database (append-only with hash chaining)
 
         Thread-safe: Uses lock to ensure hash chain integrity.
@@ -606,7 +606,7 @@ class SQLiteLedger(VibeLedger):
             # OPUS-303: Invalidate count cache
             self._cache_valid = False
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Optional[Dict[str, object]]:
         """Query task result (return most recent event for task)"""
         if not self.connection:
             return None
@@ -627,7 +627,7 @@ class SQLiteLedger(VibeLedger):
             return dict(row)
         return None
 
-    def get_all_events(self) -> List[Dict[str, Any]]:
+    def get_all_events(self) -> List[Dict[str, object]]:
         """Return all ledger events in order with parsed details"""
         return self.get_events(limit=-1, include_archives=False)
 
@@ -641,7 +641,7 @@ class SQLiteLedger(VibeLedger):
         agent_id: Optional[str] = None,
         task_id: Optional[str] = None,
         include_archives: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, object]]:
         """OPUS-208 Phase 2.2: Unified Ledger Query.
         Transparently queries hot DB and (optionally) archives using dynamic ATTACH.
         """
@@ -706,12 +706,12 @@ class SQLiteLedger(VibeLedger):
 
         return self._parse_results(all_results)
 
-    def _parse_results(self, rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _parse_results(self, rows: List[Dict[str, object]]) -> List[Dict[str, object]]:
         """Parse JSON details in result rows."""
         for row in rows:
             if row.get("payload") and row.get("details") is None:
                 try:
-                    row["details"] = json.loads(row["payload"])
+                    row["details"] = json.loads(str(row["payload"]))
                 except (json.JSONDecodeError, TypeError) as e:
                     # OPUS-312: Log JSON parse failures at debug (graceful degradation)
                     logger.debug(f"JSON parse failed for payload: {e}")
@@ -728,7 +728,7 @@ class SQLiteLedger(VibeLedger):
         files.sort(reverse=True)
         return [os.path.join(archive_dir, f) for f in files]
 
-    def verify_chain_integrity(self) -> Dict[str, Any]:
+    def verify_chain_integrity(self) -> Dict[str, object]:
         """Verify the hash chain is intact (tamper detection)"""
         events = self.get_all_events()
 
@@ -837,7 +837,7 @@ class SQLiteLedger(VibeLedger):
         self._cache_valid = True
         return count
 
-    def get_events_since(self, last_id: int) -> List[Dict[str, Any]]:
+    def get_events_since(self, last_id: int) -> List[Dict[str, object]]:
         """OPUS-208: Efficiently fetch only new events since checkpoint."""
         if not self.connection:
             return []
@@ -851,14 +851,14 @@ class SQLiteLedger(VibeLedger):
             event = dict(row)
             if event.get("payload") and event.get("details") is None:
                 try:
-                    event["details"] = json.loads(event["payload"])
+                    event["details"] = json.loads(str(event["payload"])) # Added str() for consistency
                 except (json.JSONDecodeError, TypeError) as e:
                     # OPUS-312: Log JSON parse failures at debug (graceful degradation)
                     logger.debug(f"JSON parse failed for event payload: {e}")
             events.append(event)
         return events
 
-    def get_meta(self, key: str) -> Optional[Any]:
+    def get_meta(self, key: str) -> Optional[object]:
         """OPUS-208: Retrieve persistent meta value (e.g. trust anchor)."""
         if not self.connection:
             return None
@@ -871,7 +871,7 @@ class SQLiteLedger(VibeLedger):
                 return row[0]
         return None
 
-    def set_meta(self, key: str, value: Any) -> None:
+    def set_meta(self, key: str, value: object) -> None:
         """OPUS-208: Store persistent meta value."""
         if not self.connection:
             return
@@ -899,9 +899,10 @@ class SQLiteLedger(VibeLedger):
         """Initialize a new batch buffer."""
         self._batch_buffer = []
 
-    def batch_record(self, event_type, agent_id, details):
+    def batch_record(self, event_type: str, agent_id: str, details: Dict[str, object]):
         """Add an event to the batch buffer."""
         self._batch_buffer.append((event_type, agent_id, details))
+
 
     def batch_commit(self):
         """Commit all buffered events in a single transaction."""
