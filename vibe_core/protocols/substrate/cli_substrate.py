@@ -525,6 +525,126 @@ def verify_cli_parampara(command: str) -> bool:
 
 
 # =============================================================================
+# CLI HEARTBEAT - Singing Glories (WAVE 2)
+# =============================================================================
+
+class CLIHeartbeatData(TypedDict, total=False):
+    """
+    Data for CLI heartbeat events.
+    WATERTIGHT - no Any!
+
+    Every CLI execution is "singing glories" - a heartbeat pulse.
+    """
+    command: str
+    lotus_position: int
+    lotus_quarter: str
+    opcode: str
+    parampara_connected: bool
+    execution_count: int
+    exit_code: int
+    duration_ms: int
+    timestamp: str
+
+
+class CLIHeartbeat:
+    """
+    CLI Heartbeat - Singing Glories to AnantaShesha.
+
+    Every CLI execution pulses to the system substrate.
+    This connects CLI to the living system (not dead code).
+
+    SHASTRA BASIS:
+        Ananta Shesha sings the glories of Vishnu with infinite heads.
+        Each CLI command execution = one head singing.
+        The heartbeat is the pulse of seva (service).
+    """
+
+    @staticmethod
+    def pulse(node: CLISubstrateNode, exit_code: int = 0, duration_ms: int = 0) -> CLIHeartbeatData:
+        """
+        Emit a heartbeat pulse for CLI execution.
+
+        This is called after every CLI command execution.
+        The pulse is sent to AnantaShesha (system substrate).
+        """
+        # Record execution in node
+        node.record_execution()
+
+        # Create heartbeat data
+        quarter_names = ["genesis", "dharma", "karma", "moksha"]
+        heartbeat_data = CLIHeartbeatData(
+            command=node.command,
+            lotus_position=node.lotus_position.position,
+            lotus_quarter=quarter_names[node.lotus_position.quarter.value],
+            opcode=node.opcode.name,
+            parampara_connected=node.is_connected,
+            execution_count=node.execution_count,
+            exit_code=exit_code,
+            duration_ms=duration_ms,
+            timestamp=datetime.now().isoformat(),
+        )
+
+        # Emit to AnantaShesha (if available)
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+            anchor = get_system_anchor()
+            anchor.emit_event("cli.heartbeat", dict(heartbeat_data))
+        except ImportError:
+            pass  # AnantaShesha not available
+
+        return heartbeat_data
+
+    @staticmethod
+    def get_system_heartbeat() -> Optional[Dict[str, Union[str, int, float, bool]]]:
+        """
+        Get the system heartbeat from AnantaShesha.
+
+        Returns the full system status including:
+        - uptime_seconds
+        - genes_registered
+        - events_processed
+        - health
+        """
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+            anchor = get_system_anchor()
+            return dict(anchor.heartbeat())
+        except ImportError:
+            return None
+
+
+def emit_cli_heartbeat(command: str, exit_code: int = 0, duration_ms: int = 0) -> Optional[CLIHeartbeatData]:
+    """
+    Emit a CLI heartbeat for a command execution.
+
+    This is the main entry point for CLI heartbeat.
+    Called after handler.run() completes.
+
+    Args:
+        command: The CLI command name
+        exit_code: The exit code from run()
+        duration_ms: Execution duration in milliseconds
+
+    Returns:
+        CLIHeartbeatData if successful, None otherwise
+    """
+    node = AnantaSubstrate.get(command)
+    if node is None:
+        node = AnantaSubstrate.register(command)
+
+    return CLIHeartbeat.pulse(node, exit_code, duration_ms)
+
+
+def get_cli_heartbeat_stats() -> Dict[str, CLISubstrateState]:
+    """
+    Get heartbeat statistics for all registered CLI commands.
+
+    Returns a dict of command → CLISubstrateState with execution counts.
+    """
+    return AnantaSubstrate.get_state()
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -552,4 +672,9 @@ __all__ = [
     # Integration Functions
     "create_substrate_node",
     "verify_cli_parampara",
+    # Heartbeat (WAVE 2)
+    "CLIHeartbeatData",
+    "CLIHeartbeat",
+    "emit_cli_heartbeat",
+    "get_cli_heartbeat_stats",
 ]

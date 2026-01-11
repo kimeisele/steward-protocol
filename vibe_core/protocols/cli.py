@@ -310,8 +310,76 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
     # === ANANTA PHASE 3: Connect to Ananta Substrate (Lotus, Parampara, OpCode) ===
     _inject_ananta_substrate(cls)
 
+    # === ANANTA PHASE 4: Wrap run() with heartbeat (WAVE 2) ===
+    _inject_ananta_heartbeat(cls)
+
     CLIRegistry.register(cls)
     return cls
+
+
+def _inject_ananta_heartbeat(cls: Type) -> None:
+    """
+    Wrap run() method to emit heartbeat after execution.
+
+    WAVE 2: Every CLI execution = singing glories = heartbeat pulse.
+
+    The heartbeat connects CLI to the living system (AnantaShesha).
+    Without heartbeat, the CLI is "dead matter" - disconnected.
+
+    SHASTRA BASIS:
+        Ananta Shesha sings the glories of Vishnu eternally.
+        Each CLI command execution is one head singing.
+        The heartbeat is the pulse of seva (service).
+    """
+    # Get original run method
+    if not hasattr(cls, "run"):
+        return
+
+    original_run = cls.run
+
+    # Don't wrap if already wrapped
+    if hasattr(original_run, "_ananta_heartbeat_wrapped"):
+        return
+
+    import time
+
+    def _heartbeat_run(self, args: List[str]) -> int:
+        """
+        Run with heartbeat - ANANTA PHASE 4.
+
+        Emits heartbeat to AnantaShesha after execution.
+        Records execution time and exit code.
+        """
+        start_time = time.time()
+
+        # Execute original run
+        try:
+            exit_code = original_run(self, args)
+        except Exception as e:
+            # Emit heartbeat even on exception (with error code)
+            duration_ms = int((time.time() - start_time) * 1000)
+            _emit_heartbeat(self, exit_code=1, duration_ms=duration_ms)
+            raise
+
+        # Calculate duration
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        # Emit heartbeat
+        _emit_heartbeat(self, exit_code=exit_code, duration_ms=duration_ms)
+
+        return exit_code
+
+    def _emit_heartbeat(self, exit_code: int, duration_ms: int) -> None:
+        """Emit heartbeat to AnantaShesha."""
+        try:
+            from vibe_core.protocols.substrate.cli_substrate import emit_cli_heartbeat
+            command = self.meta.command
+            emit_cli_heartbeat(command, exit_code=exit_code, duration_ms=duration_ms)
+        except Exception:
+            pass  # Don't fail CLI on heartbeat error
+
+    _heartbeat_run._ananta_heartbeat_wrapped = True
+    cls.run = _heartbeat_run
 
 
 def _inject_ananta_substrate(cls: Type) -> None:
