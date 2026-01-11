@@ -193,8 +193,25 @@ class NullBrahma:
         )
 
 
+from vibe_core.protocols.mahajanas.brahma.di import (
+    ServiceRegistryProtocol,
+    ServiceRegistryOwnedProtocol,
+    NullServiceRegistry,
+    ServiceInfo,
+    RegistryStats,
+    DIProtocolState,
+)
+
 __all__ = [
+    # Genesis
     "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
     "GenesisPhase", "GenesisState", "AllocationResult",
     "BrahmaProtocol", "NullBrahma",
+    # DI (Service Registry)
+    "ServiceRegistryProtocol",
+    "ServiceRegistryOwnedProtocol",
+    "NullServiceRegistry",
+    "ServiceInfo",
+    "RegistryStats",
+    "DIProtocolState",
 ]
