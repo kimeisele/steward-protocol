@@ -24,7 +24,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
-    Any,
     ClassVar,
     Dict,
     List,
@@ -105,6 +104,14 @@ class CommitState(TypedDict, total=False):
     lineage_length: int
     lineage_hash: str         # Hash of entire lineage
     health: str               # "pristine", "healthy", "degraded"
+
+
+class CommitCliResult(TypedDict):
+    """Result of CLI commit operation. WATERTIGHT - no Any!"""
+    success: bool
+    commit_id: str
+    timestamp: str
+    message: str
 
 
 # =============================================================================
@@ -199,8 +206,8 @@ class NullBhishma(BhishmaProtocolBase):
             health="pristine",
         )
 
-    def commit_cli(self, message: str = "null commit", sovereign: str = "cli") -> Dict[str, Any]:
-        """CLI: Commit with simple string args."""
+    def commit_cli(self, message: str = "null commit", sovereign: str = "cli") -> CommitCliResult:
+        """CLI: Commit with simple string args. WATERTIGHT."""
         # CommitEntry is a Union type - pass a dict as the entry
         entry: Dict[str, str] = {
             "action": "cli_commit",
@@ -210,12 +217,12 @@ class NullBhishma(BhishmaProtocolBase):
         }
         result = self.commit(entry, sovereign)
         # CommitResult is TypedDict - access via dict keys
-        return {
-            "success": result.get("success", True),
-            "commit_id": result.get("commit_id", "null"),
-            "timestamp": result.get("timestamp", ""),
-            "message": message,
-        }
+        return CommitCliResult(
+            success=result.get("success", True),
+            commit_id=result.get("commit_id", "null"),
+            timestamp=result.get("timestamp", ""),
+            message=message,
+        )
 
 
 # =============================================================================
@@ -250,8 +257,9 @@ from vibe_core.protocols.mahajanas.bhishma.lineage import (
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BhishmaProtocolBase",
-    # Bhishma Protocol
+    # Bhishma Protocol (WATERTIGHT)
     "CommitEntry", "CommitResult", "VerificationResult", "CommitState",
+    "CommitCliResult",
     "BhishmaProtocol", "NullBhishma",
     # Ledger
     "GENESIS_HASH",

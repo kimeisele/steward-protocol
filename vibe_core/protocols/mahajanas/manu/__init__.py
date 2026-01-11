@@ -14,7 +14,7 @@ DERIVED FROM MAHAMANTRA:
 Manu establishes ORDER. Without Manu = Anarchy.
 """
 
-from typing import Any, ClassVar, Dict, List, Optional, Protocol, runtime_checkable
+from typing import ClassVar, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 from dataclasses import dataclass
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
@@ -102,6 +102,14 @@ class ManuProtocol(Protocol):
         ...
 
 
+class SyncResult(TypedDict):
+    """Result of sync operation. WATERTIGHT - no Any!"""
+    success: bool
+    target: str
+    synced: bool
+    message: str
+
+
 class NullManu(ManuProtocolBase):
     """
     The Lawless State.
@@ -119,14 +127,14 @@ class NullManu(ManuProtocolBase):
     def get_ruling(self, action: str) -> Optional[str]:
         return None
 
-    def sync(self, target: str = "all") -> Dict[str, Any]:
-        """CLI: Synchronize dharmic state."""
-        return {
-            "success": True,
-            "target": target,
-            "synced": True,
-            "message": "NullManu sync complete",
-        }
+    def sync(self, target: str = "all") -> SyncResult:
+        """CLI: Synchronize dharmic state. WATERTIGHT."""
+        return SyncResult(
+            success=True,
+            target=target,
+            synced=True,
+            message="NullManu sync complete",
+        )
 
 
 # Import Dharma (The Architectural Law) - Manu's PRIMARY protocol
@@ -157,9 +165,10 @@ __all__ = [
     # Protocol
     "ManuProtocol",
     "NullManu",
-    # Types
+    # Types (WATERTIGHT)
     "DharmaContext",
     "ManuVerdict",
+    "SyncResult",
     # Dharma (Architectural Law)
     "ProtocolLayer",
     "PROTOCOL_MAP",
