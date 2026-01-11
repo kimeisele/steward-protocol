@@ -585,6 +585,231 @@ def integrate_with_cli_registry() -> int:
 
 
 # =============================================================================
+# AUTO-DISCOVERY (WAVE 4) - Scan folders for CLIs
+# =============================================================================
+
+
+class CLIDiscoveryResult(TypedDict, total=False):
+    """Result of CLI auto-discovery."""
+
+    path: str  # Directory scanned
+    module_prefix: str  # Python module prefix
+    discovered: int  # Number of CLIs discovered
+    wrapped: int  # Number of CLIs wrapped
+    failed: int  # Number of failures
+    cli_commands: List[str]  # List of discovered commands
+    errors: List[str]  # Error messages
+
+
+# Known CLI locations in vibe_core
+CLI_DISCOVERY_PATHS: Final[Dict[str, str]] = {
+    "vibe_core/cli": "vibe_core.cli",
+    "vibe_core/plugins/opus_assistant/cli": "vibe_core.plugins.opus_assistant.cli",
+    "vibe_core/phoenix/sections/cli": "vibe_core.phoenix.sections.cli",
+    "vibe_core/cartridges/system/herald": "vibe_core.cartridges.system.herald",
+}
+
+
+def discover_cli_folder(
+    folder_path: str,
+    module_prefix: str,
+    wrap: bool = True,
+) -> CLIDiscoveryResult:
+    """
+    Discover CLIs in a specific folder.
+
+    NO MANUAL WIRING - folder structure IS ownership.
+    Like Mahajanas: folder = domain = responsibility.
+
+    Args:
+        folder_path: Absolute or relative path to CLI folder
+        module_prefix: Python module prefix (e.g., "vibe_core.cli")
+        wrap: Whether to wrap discovered CLIs with Balarama
+
+    Returns:
+        CLIDiscoveryResult with discovery statistics
+    """
+    result = CLIDiscoveryResult(
+        path=folder_path,
+        module_prefix=module_prefix,
+        discovered=0,
+        wrapped=0,
+        failed=0,
+        cli_commands=[],
+        errors=[],
+    )
+
+    path_obj = Path(folder_path)
+    if not path_obj.exists():
+        result["errors"].append(f"Path does not exist: {folder_path}")
+        return result
+
+    # Find all *_cli.py and cli.py files
+    cli_files: List[Path] = []
+    for pattern in ["*_cli.py", "cli.py"]:
+        cli_files.extend(path_obj.glob(pattern))
+
+    for cli_file in cli_files:
+        if cli_file.name.startswith("_"):
+            continue
+
+        # Calculate module name
+        relative = cli_file.relative_to(path_obj)
+        module_name = f"{module_prefix}.{relative.stem}"
+
+        try:
+            # Import the module
+            module = importlib.import_module(module_name)
+
+            # Find CLI classes (ending with CLI, having meta and run)
+            for name, obj in inspect.getmembers(module, inspect.isclass):
+                if not name.endswith("CLI"):
+                    continue
+                if obj.__module__ != module.__name__:
+                    continue  # Skip imported classes
+                if not _is_cli_handler(obj):
+                    continue
+
+                # Try to instantiate and get command
+                try:
+                    instance = obj()
+                    if not hasattr(instance, "meta"):
+                        continue
+
+                    command = instance.meta.command
+                    result["discovered"] += 1
+                    result["cli_commands"].append(command)
+
+                    # Store in discovered registry
+                    BalaramaRegistry._discovered[command] = obj
+
+                    # Wrap if requested
+                    if wrap and not BalaramaRegistry.is_wrapped(command):
+                        # Check if already has substrate (via @register_cli)
+                        has_substrate = (
+                            hasattr(instance.meta, "lotus_position")
+                            and instance.meta.lotus_position is not None
+                        )
+
+                        if not has_substrate:
+                            try:
+                                BalaramaRegistry.wrap(instance, command)
+                                result["wrapped"] += 1
+                                logger.info(
+                                    f"🔱 Auto-discovered & wrapped: {command} "
+                                    f"from {cli_file.name}"
+                                )
+                            except Exception as wrap_err:
+                                result["failed"] += 1
+                                result["errors"].append(
+                                    f"Wrap failed for {command}: {wrap_err}"
+                                )
+                        else:
+                            logger.debug(
+                                f"Skipped {command} - already has substrate"
+                            )
+
+                except TypeError as te:
+                    # CLI requires constructor arguments - can't auto-wrap
+                    result["errors"].append(
+                        f"{name} requires constructor args: {te}"
+                    )
+                except Exception as e:
+                    result["failed"] += 1
+                    result["errors"].append(f"Failed to process {name}: {e}")
+
+        except ImportError as ie:
+            result["errors"].append(f"Import failed for {module_name}: {ie}")
+        except Exception as e:
+            result["errors"].append(f"Error processing {cli_file}: {e}")
+
+    # Update registry state
+    BalaramaRegistry._discovery_paths.append(folder_path)
+    BalaramaRegistry._last_discovery = datetime.now().isoformat()
+
+    return result
+
+
+def auto_discover_all_clis(
+    base_path: Optional[str] = None,
+    wrap: bool = True,
+) -> Dict[str, CLIDiscoveryResult]:
+    """
+    Auto-discover ALL CLIs from known locations.
+
+    NO MANUAL WIRING - scans all CLI folders automatically.
+    Like Mahajanas: folder structure = architecture.
+
+    Args:
+        base_path: Base path to vibe_core (auto-detected if None)
+        wrap: Whether to wrap discovered CLIs with Balarama
+
+    Returns:
+        Dict of folder -> CLIDiscoveryResult
+    """
+    results: Dict[str, CLIDiscoveryResult] = {}
+
+    # Auto-detect base path if not provided
+    if base_path is None:
+        # Try to find vibe_core from this file's location
+        this_file = Path(__file__)
+        # Go up from substrate/balarama.py to vibe_core
+        base_path = str(this_file.parent.parent.parent)
+
+    base = Path(base_path)
+
+    for rel_path, module_prefix in CLI_DISCOVERY_PATHS.items():
+        full_path = base / rel_path.replace("vibe_core/", "")
+
+        # Adjust module prefix if we're in vibe_core already
+        if "vibe_core" in str(base):
+            full_path = base.parent / rel_path
+
+        if full_path.exists():
+            logger.info(f"🔍 Scanning {rel_path}...")
+            results[rel_path] = discover_cli_folder(
+                str(full_path),
+                module_prefix,
+                wrap=wrap,
+            )
+        else:
+            logger.debug(f"Path not found: {full_path}")
+
+    return results
+
+
+def get_discovery_summary(
+    results: Dict[str, CLIDiscoveryResult]
+) -> Dict[str, Union[int, List[str]]]:
+    """
+    Get summary of discovery results.
+
+    Returns aggregate statistics across all scanned folders.
+    """
+    total_discovered = 0
+    total_wrapped = 0
+    total_failed = 0
+    all_commands: List[str] = []
+    all_errors: List[str] = []
+
+    for path, result in results.items():
+        total_discovered += result.get("discovered", 0)
+        total_wrapped += result.get("wrapped", 0)
+        total_failed += result.get("failed", 0)
+        all_commands.extend(result.get("cli_commands", []))
+        all_errors.extend(result.get("errors", []))
+
+    return {
+        "total_discovered": total_discovered,
+        "total_wrapped": total_wrapped,
+        "total_failed": total_failed,
+        "total_errors": len(all_errors),
+        "all_commands": sorted(set(all_commands)),
+        "folders_scanned": len(results),
+    }
+
+
+# =============================================================================
 # BALARAMA HOOK (For CLIHookChain integration)
 # =============================================================================
 
@@ -674,9 +899,11 @@ __all__ = [
     # Constants
     "BALARAMA_LEVEL",
     "BALARAMA_PARAMPARA",
+    "CLI_DISCOVERY_PATHS",
     # State Types (WATERTIGHT)
     "BalaramaWrapState",
     "BalaramaRegistryState",
+    "CLIDiscoveryResult",
     # Wrapped CLI
     "BalaramaWrappedCLI",
     # Registry
@@ -685,6 +912,10 @@ __all__ = [
     "wrap_with_balarama",
     "discover_and_wrap",
     "integrate_with_cli_registry",
+    # Auto-Discovery (WAVE 4)
+    "discover_cli_folder",
+    "auto_discover_all_clis",
+    "get_discovery_summary",
     # Hook Protocol
     "BalaramaHookProtocol",
     "BalaramaHook",
