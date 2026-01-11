@@ -13,10 +13,50 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class ViolationContext(TypedDict, total=False):
+    """Context data for a violation. WATERTIGHT."""
+
+    surrounding_code: str
+    suggestion: str
+    fix_command: str
+    related_rule: str
+
+
+class ViolationRecordDict(TypedDict, total=False):
+    """Serialized violation record. WATERTIGHT."""
+
+    source: str
+    rule_id: str
+    file_path: str
+    line: int
+    message: str
+    severity: str
+    has_remedy: bool
+    context: ViolationContext
+    ingested_at: str
+    verification_status: str
+    verified_at: str
+    origin: str
+
+
+class PytestOutput(TypedDict, total=False):
+    """Pytest JSON output structure. WATERTIGHT."""
+
+    tests: List[Dict[str, Any]]  # Complex structure, typed at boundary
+    summary: Dict[str, int]
+    created: float
+    duration: float
 
 logger = logging.getLogger("OUROBOROS")
 
@@ -57,29 +97,29 @@ class ViolationRecord:
     message: str = ""
     severity: str = "MEDIUM"
     has_remedy: bool = False
-    context: Optional[Dict[str, Any]] = None
+    context: Optional[ViolationContext] = None
 
     # SATYA: Verification metadata (optional, populated by SatyaValidator)
     verification_status: str = "unverified"  # unverified | verified | stale | maya
     verified_at: Optional[str] = None
     origin: str = "unknown"  # live_scan | report | ci | manual
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "source": self.source.value,
-            "rule_id": self.rule_id,
-            "file_path": self.file_path,
-            "line": self.line,
-            "message": self.message,
-            "severity": self.severity,
-            "has_remedy": self.has_remedy,
-            "context": self.context or {},
-            "ingested_at": datetime.now().isoformat(),
+    def to_dict(self) -> ViolationRecordDict:
+        return ViolationRecordDict(
+            source=self.source.value,
+            rule_id=self.rule_id,
+            file_path=self.file_path or "",
+            line=self.line or 0,
+            message=self.message,
+            severity=self.severity,
+            has_remedy=self.has_remedy,
+            context=self.context or ViolationContext(),
+            ingested_at=datetime.now().isoformat(),
             # SATYA: Verification metadata
-            "verification_status": self.verification_status,
-            "verified_at": self.verified_at,
-            "origin": self.origin,
-        }
+            verification_status=self.verification_status,
+            verified_at=self.verified_at or "",
+            origin=self.origin,
+        )
 
     def is_verified(self) -> bool:
         """Check if this violation has been verified to exist."""
@@ -271,7 +311,7 @@ class ViolationIngester:
             logger.error(f"[OUROBOROS] Failed to parse ruff output: {e}")
             return 0
 
-    def ingest_pytest_output(self, pytest_json: Dict[str, Any]) -> int:
+    def ingest_pytest_output(self, pytest_json: PytestOutput) -> int:
         """
         Ingest violations from pytest JSON output.
 
