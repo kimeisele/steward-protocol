@@ -34,13 +34,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # BHISHMA PROTOCOL BASE - Derives from MantraPosition 11
 # =============================================================================
 
+@ProtocolRegistry.register
 class BhishmaProtocolBase(WorkerProtocol):
     """
     Bhishma protocol ownership - DERIVED from Mahamantra position 11.

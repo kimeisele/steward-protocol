@@ -34,13 +34,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # BALI PROTOCOL BASE - Derives from MantraPosition 13
 # =============================================================================
 
+@ProtocolRegistry.register
 class BaliProtocolBase(WorkerProtocol):
     """
     Bali protocol ownership - DERIVED from Mahamantra position 13.

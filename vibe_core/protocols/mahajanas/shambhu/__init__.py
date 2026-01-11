@@ -34,13 +34,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # SHAMBHU PROTOCOL BASE - Derives from MantraPosition 3
 # =============================================================================
 
+@ProtocolRegistry.register
 class ShambhuProtocolBase(WorkerProtocol):
     """
     Shambhu protocol ownership - DERIVED from Mahamantra position 3.

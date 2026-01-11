@@ -17,13 +17,14 @@ Manu establishes ORDER. Without Manu = Anarchy.
 from typing import ClassVar, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 from dataclasses import dataclass
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # MANU PROTOCOL BASE - Derives from MantraPosition 7
 # =============================================================================
 
+@ProtocolRegistry.register
 class ManuProtocolBase(WorkerProtocol):
     """
     Manu protocol ownership - DERIVED from Mahamantra position 7.

@@ -39,13 +39,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # KUMARAS PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================
 
+@ProtocolRegistry.register
 class KumarasProtocolBase(WorkerProtocol):
     """
     Kumaras protocol ownership - DERIVED from Mahamantra position 5.

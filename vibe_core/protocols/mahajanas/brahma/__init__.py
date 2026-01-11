@@ -35,13 +35,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # BRAHMA PROTOCOL BASE - Derives from MantraPosition 1
 # =============================================================================
 
+@ProtocolRegistry.register
 class BrahmaProtocolBase(WorkerProtocol):
     """
     Brahma protocol ownership - DERIVED from Mahamantra position 1.

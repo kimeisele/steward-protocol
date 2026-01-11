@@ -41,13 +41,14 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
 
 # =============================================================================
 # PRAHLADA PROTOCOL BASE - Derives from MantraPosition 9
 # =============================================================================
 
+@ProtocolRegistry.register
 class PrahladaProtocolBase(WorkerProtocol):
     """
     Prahlada protocol ownership - DERIVED from Mahamantra position 9.
