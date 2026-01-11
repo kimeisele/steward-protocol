@@ -267,9 +267,6 @@ from vibe_core.mahamantra._watertight import (
 from vibe_core.mahamantra._fractal import (
     # Constants
     FRACTAL_BASE,
-    KSETRA_COUNT,
-    MAHAJANA_COUNT,
-    KSETRAJNA_COUNT,
     # Classes
     FractalNode,
     FractalTree,
@@ -277,6 +274,53 @@ from vibe_core.mahamantra._fractal import (
     scale_up,
     scale_down,
     verify_fractal_integrity,
+)
+
+# =============================================================================
+# SOURCE - THE TRUTH TABLE (16 MantraPositions)
+# Source: vibe_core/mahamantra/_source.py
+# =============================================================================
+
+from vibe_core.mahamantra._source import (
+    # THE Truth Table
+    MAHAMANTRA_POSITIONS,
+    MantraPosition,
+    # Enums (canonical - replaces scattered definitions)
+    Quarter as SourceQuarter,  # Avoid conflict with vakya.Quarter
+    Mahajana as SourceMahajana,  # Canonical Mahajana
+    Avatara,
+    MantraOpCode as SourceOpCode,  # Canonical OpCode
+    # Type
+    Guardian,
+    # Lookup functions
+    get_position,
+    get_position_by_guardian,
+    get_position_by_opcode,
+    get_quarter_positions,
+    get_head_positions,
+    get_worker_positions,
+    # Verification
+    verify_truth_table,
+    # Constants (37 formula)
+    KSETRA_COUNT,
+    MAHAJANA_COUNT,
+    KSETRAJNA_COUNT,
+)
+
+# =============================================================================
+# PROTOCOL BASE CLASS (Derive from MantraPosition)
+# Source: vibe_core/mahamantra/_protocol.py
+# =============================================================================
+
+from vibe_core.mahamantra._protocol import (
+    # Base Classes
+    MantraProtocol,
+    WorkerProtocol,
+    HeadProtocol,
+    # Interface
+    MantraAware,
+    # Registry
+    ProtocolRegistry,
 )
 
 # =============================================================================
@@ -419,12 +463,33 @@ __all__ = [
     "FORBIDDEN_TYPES",
     # === FRACTAL ===
     "FRACTAL_BASE",
-    "KSETRA_COUNT",
-    "MAHAJANA_COUNT",
-    "KSETRAJNA_COUNT",
     "FractalNode",
     "FractalTree",
     "scale_up",
     "scale_down",
     "verify_fractal_integrity",
+    # === SOURCE (Truth Table) ===
+    "MAHAMANTRA_POSITIONS",
+    "MantraPosition",
+    "SourceQuarter",
+    "SourceMahajana",
+    "Avatara",
+    "SourceOpCode",
+    "Guardian",
+    "get_position",
+    "get_position_by_guardian",
+    "get_position_by_opcode",
+    "get_quarter_positions",
+    "get_head_positions",
+    "get_worker_positions",
+    "verify_truth_table",
+    "KSETRA_COUNT",
+    "MAHAJANA_COUNT",
+    "KSETRAJNA_COUNT",
+    # === PROTOCOL BASE ===
+    "MantraProtocol",
+    "WorkerProtocol",
+    "HeadProtocol",
+    "MantraAware",
+    "ProtocolRegistry",
 ]
