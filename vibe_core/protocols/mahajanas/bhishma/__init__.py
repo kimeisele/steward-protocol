@@ -1,24 +1,16 @@
 """
 BHISHMA - The 9th Mahajana (Vow/Commitment)
 ===========================================
-OpCode: COMMIT_LOG (Bit 12, Position 12 in Mahamantra)
-Opulence: Yashas (Fame/Glory)
+
+POSITION: 11 (KARMA Quarter, COMMIT_LOG OpCode)
 
 Bhishma Pitamaha - The Grandsire.
 Took a terrible vow and kept it until death.
 Taught Dharma to the Pandavas from his bed of arrows.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Bhishma is the PERSON responsible for all commitments.
-Not abstract "logging" - PERSONAL vow-keeping by Bhishma.
-
-OWNED PROTOCOLS:
-- Commit Logging (COMMIT_LOG OpCode)
-- Transaction Commits
-- Lineage Verification
-- Immutable Records
-- Pratjna (Vow-keeping)
-- Ledger Management
+DERIVED FROM MAHAMANTRA:
+    Position 11 → guardian=BHISHMA, opcode=COMMIT_LOG, quarter=KARMA
+    All properties derived from truth table. No manual wiring.
 
 Once Bhishma commits, it CANNOT be undone.
 His word is his bond. The log is the law.
@@ -32,8 +24,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -42,29 +34,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# BHISHMA PROTOCOL BASE - Derives from MantraPosition 11
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.BHISHMA
-LOTUS_POSITION: Final[int] = 11  # KARMA Quarter, Worker 3
-LOTUS_QUARTER: Final[str] = "karma"
+class BhishmaProtocolBase(WorkerProtocol):
+    """
+    Bhishma protocol ownership - DERIVED from Mahamantra position 11.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "bhishma",
-    "commitment",
-    "ledger",
-    "logging",
-    "audit",
-    "lineage",
-]
+    NO MANUAL WIRING:
+        _position_index = 11 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.COMMIT_LOG,
-]
+    DERIVED PROPERTIES:
+        guardian()  → Mahajana.BHISHMA
+        opcode()    → MantraOpCode.COMMIT_LOG
+        quarter()   → Quarter.KARMA
+        is_head()   → False (Worker position)
+        parampara_vector() → 444 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 11  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[11]
 
 
 # =============================================================================
@@ -120,12 +115,14 @@ class CommitState(TypedDict, total=False):
 class BhishmaProtocol(Protocol):
     """
     The Commitment/Ledger Protocol - Bhishma's domain.
+
+    DERIVED: Position 11 → BHISHMA, COMMIT_LOG, KARMA
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.BHISHMA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 11 in the Mahamantra."""
         ...
 
     def commit(self, entry: CommitEntry, sovereign_id: str) -> CommitResult:
@@ -157,12 +154,12 @@ class BhishmaProtocol(Protocol):
 # =============================================================================
 
 
-class NullBhishma:
-    """The Uncommitted. No logging (for testing)."""
+class NullBhishma(BhishmaProtocolBase):
+    """
+    The Uncommitted. No logging (for testing).
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.BHISHMA
+    Inherits from BhishmaProtocolBase → position 11 → BHISHMA.
+    """
 
     def commit(self, entry: CommitEntry, sovereign_id: str) -> CommitResult:
         return CommitResult(
@@ -232,8 +229,8 @@ from vibe_core.protocols.mahajanas.bhishma.lineage import (
 
 
 __all__ = [
-    # Ownership
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "BhishmaProtocolBase",
     # Bhishma Protocol
     "CommitEntry", "CommitResult", "VerificationResult", "CommitState",
     "BhishmaProtocol", "NullBhishma",
@@ -243,7 +240,6 @@ __all__ = [
     "LedgerProtocol",
     "Ledger",
     "NullLedger",
-    "LEDGER_POSITION",
     # Lineage
     "PARAMPARA_DIVISOR",
     "LineageStatus",
@@ -252,5 +248,4 @@ __all__ = [
     "LineageProtocol",
     "Lineage",
     "NullLineage",
-    "LINEAGE_POSITION",
 ]
