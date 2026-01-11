@@ -195,8 +195,61 @@ class NullBali:
         )
 
 
+# =============================================================================
+# SHUTDOWN - Graceful Shutdown Protocol
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bali.shutdown import (
+    ShutdownPhase,
+    ShutdownReason,
+    ShutdownResult,
+    ShutdownHook,
+    ShutdownHookEntry,
+    ShutdownProtocol,
+    ShutdownCoordinator,
+    NullShutdown,
+    LOTUS_POSITION as SHUTDOWN_POSITION,
+)
+
+# =============================================================================
+# YIELD_CPU - Cooperative Scheduling Protocol
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bali.yield_cpu import (
+    YieldPolicy,
+    YieldResult,
+    YieldStats,
+    YieldProtocol,
+    YieldScheduler,
+    Hiranyakashipu,  # Anti-pattern
+    NullYield,
+    LOTUS_POSITION as YIELD_POSITION,
+)
+
+
 __all__ = [
+    # Ownership
     "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Bali Protocol
     "SurrenderType", "SurrenderResult", "SurrenderState",
     "BaliProtocol", "NullBali",
+    # Shutdown
+    "ShutdownPhase",
+    "ShutdownReason",
+    "ShutdownResult",
+    "ShutdownHook",
+    "ShutdownHookEntry",
+    "ShutdownProtocol",
+    "ShutdownCoordinator",
+    "NullShutdown",
+    "SHUTDOWN_POSITION",
+    # Yield CPU
+    "YieldPolicy",
+    "YieldResult",
+    "YieldStats",
+    "YieldProtocol",
+    "YieldScheduler",
+    "Hiranyakashipu",
+    "NullYield",
+    "YIELD_POSITION",
 ]

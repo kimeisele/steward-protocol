@@ -319,6 +319,20 @@ class SmaranamInstruction:
 
 
 # =============================================================================
+# CHITTA - Working Memory (RAM)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.prahlada.chitta import (
+    ChittaConfig,
+    ChittaProtocol,
+    Chitta,
+    ChittaOwnedProtocol,
+    NullChitta,
+    LOTUS_POSITION as CHITTA_POSITION,
+)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -339,4 +353,11 @@ __all__ = [
     "NullPrahlada",
     # Instructions
     "SmaranamInstruction",
+    # Chitta - Working Memory (RAM)
+    "ChittaConfig",
+    "ChittaProtocol",
+    "Chitta",
+    "ChittaOwnedProtocol",
+    "NullChitta",
+    "CHITTA_POSITION",
 ]
