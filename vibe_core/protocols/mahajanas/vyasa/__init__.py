@@ -111,6 +111,14 @@ class TruthState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class AssertCliResult(TypedDict):
+    """Result of CLI assert operation. WATERTIGHT - no Any!"""
+    success: bool
+    claim: str
+    truth_level: str
+    health: str
+
+
 # =============================================================================
 # VYASA PROTOCOL
 # =============================================================================
@@ -219,6 +227,17 @@ class NullVyasa(VyasaProtocolBase):
             health="pristine",
         )
 
+    def assert_cli(self, claim: str = "truth") -> AssertCliResult:
+        """CLI: Assert a truth claim. WATERTIGHT."""
+        result = self.assert_truth(claim, "cli_evidence")
+        state = self.get_state()
+        return AssertCliResult(
+            success=result.get("valid", True),
+            claim=claim,
+            truth_level=result.get("truth_level", "asserted"),
+            health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # EXPORTS
@@ -231,6 +250,7 @@ __all__ = [
     "TruthLevel",
     "AssertionResult",
     "TruthState",
+    "AssertCliResult",
     # Protocol
     "VyasaProtocol",
     # Implementations

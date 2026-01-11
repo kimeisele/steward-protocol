@@ -126,6 +126,14 @@ class CacheState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class CacheCliResult(TypedDict):
+    """Result of CLI cache operation. WATERTIGHT - no Any!"""
+    success: bool
+    key: str
+    cache_level: str
+    health: str
+
+
 # =============================================================================
 # NRISIMHA PROTOCOL
 # =============================================================================
@@ -255,6 +263,17 @@ class NullNrisimha(NrisimhaProtocolBase):
             health="pristine",
         )
 
+    def cache_cli(self, key: str = "state") -> CacheCliResult:
+        """CLI: Cache state. WATERTIGHT."""
+        result = self.cache(key, "cli_value")
+        state = self.get_state()
+        return CacheCliResult(
+            success=result.get("success", True),
+            key=key,
+            cache_level=result.get("cache_level", "hot"),
+            health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # EXPORTS
@@ -268,6 +287,7 @@ __all__ = [
     "CacheValue",
     "CacheResult",
     "CacheState",
+    "CacheCliResult",
     # Protocol
     "NrisimhaProtocol",
     # Implementations

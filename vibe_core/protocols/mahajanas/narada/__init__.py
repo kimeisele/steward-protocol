@@ -135,6 +135,14 @@ class BroadcastResult(TypedDict, total=False):
     message_id: str
 
 
+class BroadcastCliResult(TypedDict):
+    """Result of CLI broadcast operation. WATERTIGHT - no Any!"""
+    success: bool
+    message_type: str
+    recipients: int
+    health: str
+
+
 # =============================================================================
 # LISTENER TYPE (For type-safe callbacks)
 # =============================================================================
@@ -314,6 +322,17 @@ class NullNarada(NaradaProtocolBase):
             health="pristine",
         )
 
+    def broadcast_cli(self, message: str = "pulse") -> BroadcastCliResult:
+        """CLI: Broadcast a message. WATERTIGHT."""
+        result = self.broadcast(MessageType.PULSE, message)
+        state = self.get_state()
+        return BroadcastCliResult(
+            success=result.get("success", True),
+            message_type="pulse",
+            recipients=result.get("recipients_count", 0),
+            health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # NARADA'S INSTRUCTION (For Communication)
@@ -400,6 +419,7 @@ __all__ = [
     "Observation",
     "ObserverState",
     "BroadcastResult",
+    "BroadcastCliResult",
     # Callback Protocol
     "ListenerCallback",
     # Protocol

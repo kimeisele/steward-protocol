@@ -122,6 +122,14 @@ class PurityState(TypedDict, total=False):
     health: str
 
 
+class PurifyCliResult(TypedDict):
+    """Result of CLI purify operation. WATERTIGHT - no Any!"""
+    success: bool
+    is_pure: bool
+    purity_level: str
+    health: str
+
+
 # =============================================================================
 # KUMARAS PROTOCOL
 # =============================================================================
@@ -213,6 +221,16 @@ class NullKumaras(KumarasProtocolBase):
             health="pristine",
         )
 
+    def purify_cli(self, target: str = "input") -> PurifyCliResult:
+        """CLI: Purify/validate input. WATERTIGHT."""
+        state = self.get_state()
+        return PurifyCliResult(
+            success=True,
+            is_pure=self.is_pure(),
+            purity_level=self.get_purity_level().value,
+            health=state.get("health", "pristine"),
+        )
+
 
 # Import Shuddhi (Purification) - THE core Kumaras protocol
 from .shuddhi import (
@@ -254,7 +272,7 @@ __all__ = [
     "ShuddhiProtocolBase",
     # Purity types (WATERTIGHT)
     "PurifiableData", "PurityLevel", "PurificationResult",
-    "ResetResult", "PurityState",
+    "ResetResult", "PurityState", "PurifyCliResult",
     # Kumaras Protocol
     "KumarasProtocol", "NullKumaras",
     # Shuddhi Protocol (CST Surgery)

@@ -109,6 +109,14 @@ class WakeState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class WakeCliResult(TypedDict):
+    """Result of CLI wake operation. WATERTIGHT - no Any!"""
+    success: bool
+    phase: str
+    is_awake: bool
+    health: str
+
+
 # =============================================================================
 # PRITHU PROTOCOL
 # =============================================================================
@@ -220,6 +228,17 @@ class NullPrithu(PrithuProtocolBase):
             health="pristine",
         )
 
+    def wake_cli(self, target: str = "system") -> WakeCliResult:
+        """CLI: Wake the system. WATERTIGHT."""
+        result = self.wake()
+        state = self.get_state()
+        return WakeCliResult(
+            success=result.get("success", True),
+            phase=result.get("phase", "ready"),
+            is_awake=self.is_awake(),
+            health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # EXPORTS
@@ -232,6 +251,7 @@ __all__ = [
     "WakePhase",
     "WakeResult",
     "WakeState",
+    "WakeCliResult",
     # Protocol
     "PrithuProtocol",
     # Implementations

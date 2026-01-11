@@ -100,6 +100,14 @@ class DestructionState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class DestroyCliResult(TypedDict):
+    """Result of CLI destroy operation. WATERTIGHT - no Any!"""
+    success: bool
+    items_destroyed: int
+    bytes_freed: int
+    health: str
+
+
 # =============================================================================
 # SHAMBHU PROTOCOL
 # =============================================================================
@@ -186,6 +194,17 @@ class NullShambhu(ShambhuProtocolBase):
             health="pristine",
         )
 
+    def destroy_cli(self, target: str = "garbage") -> DestroyCliResult:
+        """CLI: Destroy/cleanup. WATERTIGHT."""
+        result = self.collect(DestructionType.GARBAGE)
+        state = self.get_state()
+        return DestroyCliResult(
+            success=result.get("success", True),
+            items_destroyed=result.get("items_destroyed", 0),
+            bytes_freed=result.get("bytes_freed", 0),
+            health=state.get("health", "pristine"),
+        )
+
 
 # =============================================================================
 # TRANSFORMATION PROTOCOL (Shambhu's Breaking & Routing)
@@ -230,6 +249,7 @@ __all__ = [
     "DestructionType",
     "DestructionResult",
     "DestructionState",
+    "DestroyCliResult",
     # Destruction Protocol
     "ShambhuProtocol",
     "NullShambhu",

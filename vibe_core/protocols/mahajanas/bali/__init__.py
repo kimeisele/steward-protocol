@@ -100,6 +100,14 @@ class SurrenderState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class SurrenderCliResult(TypedDict):
+    """Result of CLI surrender operation. WATERTIGHT - no Any!"""
+    success: bool
+    surrender_type: str
+    can_surrender: bool
+    health: str
+
+
 # =============================================================================
 # BALI PROTOCOL
 # =============================================================================
@@ -191,6 +199,17 @@ class NullBali(BaliProtocolBase):
             health="degraded",  # Anti-pattern is unhealthy
         )
 
+    def surrender_cli(self, target: str = "yield") -> SurrenderCliResult:
+        """CLI: Surrender/yield. WATERTIGHT."""
+        result = self.surrender(SurrenderType.YIELD)
+        state = self.get_state()
+        return SurrenderCliResult(
+            success=result.get("success", False),
+            surrender_type="yield",
+            can_surrender=self.can_surrender(),
+            health=state.get("health", "degraded"),
+        )
+
 
 # =============================================================================
 # SHUTDOWN - Graceful Shutdown Protocol
@@ -227,8 +246,8 @@ from vibe_core.protocols.mahajanas.bali.yield_cpu import (
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BaliProtocolBase",
-    # Bali Protocol
-    "SurrenderType", "SurrenderResult", "SurrenderState",
+    # Bali Protocol (WATERTIGHT)
+    "SurrenderType", "SurrenderResult", "SurrenderState", "SurrenderCliResult",
     "BaliProtocol", "NullBali",
     # Shutdown
     "ShutdownPhase",
