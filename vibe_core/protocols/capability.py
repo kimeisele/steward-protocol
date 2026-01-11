@@ -15,7 +15,23 @@ Types:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Any, Dict, FrozenSet, List, Optional, Protocol, TypedDict, runtime_checkable
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any] for registry operations
+# =============================================================================
+
+
+class CapabilityModifyResult(TypedDict, total=False):
+    """Result of a capability modification (grant/revoke). WATERTIGHT."""
+
+    success: bool
+    revoked: List[str]  # For revoke operations
+    granted: List[str]  # For grant operations
+    not_found: List[str]  # Capabilities not found
+    already_had: List[str]  # Capabilities already present (for grant)
+    message: str
 
 
 class CapabilityType(Enum):
@@ -126,4 +142,137 @@ class CapabilityAdapter(ABC):
     @abstractmethod
     def get_meta(self, source: Any) -> CapabilityMeta:
         """Extract metadata from source object."""
+        ...
+
+
+# =============================================================================
+# CAPABILITY REGISTRY PROTOCOL - WATERTIGHT Phase 2
+# =============================================================================
+
+
+@runtime_checkable
+class CapabilityRegistryProtocol(Protocol):
+    """
+    Protocol for agent capability management.
+
+    WATERTIGHT: All methods use typed returns, no Dict[str, Any].
+
+    Implementations:
+        - CapabilityRegistry (persistent with ledger audit trail)
+        - NullCapabilityRegistry (for testing)
+
+    Usage:
+        registry = ServiceRegistry.get(CapabilityRegistryProtocol)
+        registry.register_agent("agent_001", ["read_file", "write_file"])
+    """
+
+    def register_agent(self, agent_id: str, capabilities: List[str]) -> None:
+        """
+        Register an agent with initial capabilities.
+
+        Args:
+            agent_id: The agent to register
+            capabilities: List of initial capabilities
+        """
+        ...
+
+    def has_capability(self, agent_id: str, capability: str) -> bool:
+        """
+        Check if an agent has a specific capability.
+
+        Args:
+            agent_id: The agent to check
+            capability: The capability required
+
+        Returns:
+            True if agent has the capability, False otherwise
+        """
+        ...
+
+    def revoke(
+        self,
+        agent_id: str,
+        capabilities: List[str],
+        revoker_id: str,
+        reason: Optional[str] = None,
+    ) -> CapabilityModifyResult:
+        """
+        Revoke one or more capabilities from an agent.
+
+        Args:
+            agent_id: The agent to revoke from
+            capabilities: List of capabilities to revoke
+            revoker_id: The agent/system performing the revocation
+            reason: Optional reason for revocation (for audit trail)
+
+        Returns:
+            CapabilityModifyResult with success, revoked, not_found, message
+        """
+        ...
+
+    def grant(
+        self,
+        agent_id: str,
+        capabilities: List[str],
+        granter_id: str,
+        reason: Optional[str] = None,
+    ) -> CapabilityModifyResult:
+        """
+        Grant new capabilities to an agent.
+
+        Args:
+            agent_id: The agent to grant to
+            capabilities: List of capabilities to grant
+            granter_id: The agent/system performing the grant
+            reason: Optional reason for grant (for audit trail)
+
+        Returns:
+            CapabilityModifyResult with success, granted, already_had, message
+        """
+        ...
+
+    def get_capabilities(self, agent_id: str) -> FrozenSet[str]:
+        """
+        Get all current capabilities for an agent.
+
+        Args:
+            agent_id: The agent to query
+
+        Returns:
+            Immutable set of capabilities (empty if unregistered)
+        """
+        ...
+
+    def get_original_capabilities(self, agent_id: str) -> FrozenSet[str]:
+        """
+        Get the original capabilities assigned at registration.
+
+        Args:
+            agent_id: The agent to query
+
+        Returns:
+            Immutable set of original capabilities (empty if unregistered)
+        """
+        ...
+
+    def revoke_all(self, agent_id: str, revoker_id: str, reason: Optional[str] = None) -> bool:
+        """
+        Revoke ALL capabilities from an agent (nuclear option).
+
+        Args:
+            agent_id: The agent to revoke from
+            revoker_id: The agent/system performing the revocation
+            reason: Optional reason for revocation
+
+        Returns:
+            True if successful, False if agent not registered
+        """
+        ...
+
+    def is_registered(self, agent_id: str) -> bool:
+        """Check if an agent is registered in the capability system."""
+        ...
+
+    def list_all_agents(self) -> List[str]:
+        """Get list of all registered agent IDs."""
         ...
