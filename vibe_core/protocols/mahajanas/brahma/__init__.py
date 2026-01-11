@@ -101,6 +101,14 @@ class AllocationResult(TypedDict, total=False):
     error_message: str
 
 
+class CreateCliResult(TypedDict):
+    """Result of CLI create operation. WATERTIGHT - no Any!"""
+    success: bool
+    phase: str
+    is_created: bool
+    health: str
+
+
 # =============================================================================
 # BRAHMA PROTOCOL
 # =============================================================================
@@ -192,6 +200,16 @@ class NullBrahma(BrahmaProtocolBase):
             health="pristine",
         )
 
+    def create_cli(self, target: str = "genesis") -> CreateCliResult:
+        """CLI: Create/initialize. WATERTIGHT."""
+        state = self.get_state()
+        return CreateCliResult(
+            success=True,
+            phase=state.get("phase", "active"),
+            is_created=self.is_created(),
+            health=state.get("health", "pristine"),
+        )
+
 
 from vibe_core.protocols.mahajanas.brahma.di import (
     ServiceRegistryProtocol,
@@ -220,7 +238,7 @@ __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BrahmaProtocolBase",
     # Genesis Types (WATERTIGHT)
-    "GenesisPhase", "GenesisState", "AllocationResult",
+    "GenesisPhase", "GenesisState", "AllocationResult", "CreateCliResult",
     # Protocol
     "BrahmaProtocol", "NullBrahma",
     # DI (Service Registry)
