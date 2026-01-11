@@ -465,6 +465,25 @@ class NullShuka:
 
 
 # =============================================================================
+# REFLECT - System Introspection
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.shuka.reflect import (
+    HealthStatus,
+    HealthCheck,
+    Capability,
+    Dependency,
+    SystemMetrics,
+    SystemSnapshot,
+    HealthChecker,
+    ReflectProtocol,
+    Reflector,
+    NullReflector,
+    LOTUS_POSITION as REFLECT_POSITION,
+)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -487,4 +506,16 @@ __all__ = [
     "ShukaProtocol",
     # Implementations
     "NullShuka",
+    # Reflect (System Introspection)
+    "HealthStatus",
+    "HealthCheck",
+    "Capability",
+    "Dependency",
+    "SystemMetrics",
+    "SystemSnapshot",
+    "HealthChecker",
+    "ReflectProtocol",
+    "Reflector",
+    "NullReflector",
+    "REFLECT_POSITION",
 ]

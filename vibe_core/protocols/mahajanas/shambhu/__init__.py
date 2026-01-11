@@ -208,6 +208,21 @@ from vibe_core.protocols.mahajanas.shambhu.transformation import (
     NullTransformation,
 )
 
+# =============================================================================
+# GC - Garbage Collection
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.shambhu.gc import (
+    GCStrategy,
+    ManagedObject,
+    GCResult,
+    GCStats,
+    GCProtocol,
+    GarbageCollector,
+    NullGC,
+    LOTUS_POSITION as GC_POSITION,
+)
+
 
 __all__ = [
     # Ownership
@@ -235,4 +250,13 @@ __all__ = [
     # Transformation Protocol
     "TransformationProtocol",
     "NullTransformation",
+    # GC (Garbage Collection)
+    "GCStrategy",
+    "ManagedObject",
+    "GCResult",
+    "GCStats",
+    "GCProtocol",
+    "GarbageCollector",
+    "NullGC",
+    "GC_POSITION",
 ]

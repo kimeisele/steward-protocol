@@ -219,6 +219,27 @@ from .shuddhi import (
     LOTUS_POSITION as SHUDDHI_POSITION,
 )
 
+# =============================================================================
+# VALIDATION - Input Validation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kumaras.validation import (
+    ValidationType,
+    ValidationRule,
+    ValidationResult,
+    ValidatorFunc,
+    ValidationProtocol,
+    Validator,
+    NullValidator,
+    # Factory functions
+    required,
+    type_check,
+    range_check,
+    pattern_check,
+    length_check,
+    LOTUS_POSITION as VALIDATION_POSITION,
+)
+
 __all__ = [
     # Ownership
     "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
@@ -231,4 +252,18 @@ __all__ = [
     "ShuddhiStatus", "ShuddhiResult",
     "ShuddhiProtocol", "RemedyProtocol", "NullShuddhi",
     "SHUDDHI_POSITION",
+    # Validation (Input Validation)
+    "ValidationType",
+    "ValidationRule",
+    "ValidationResult",
+    "ValidatorFunc",
+    "ValidationProtocol",
+    "Validator",
+    "NullValidator",
+    "required",
+    "type_check",
+    "range_check",
+    "pattern_check",
+    "length_check",
+    "VALIDATION_POSITION",
 ]

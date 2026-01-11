@@ -333,6 +333,20 @@ from vibe_core.protocols.mahajanas.prahlada.chitta import (
 
 
 # =============================================================================
+# SMRITI - Long-term Memory (Cache)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.prahlada.smriti import (
+    CacheStrategy,
+    SmritiEntry,
+    SmritiProtocol,
+    Smriti,
+    NullSmriti,
+    LOTUS_POSITION as SMRITI_POSITION,
+)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -360,4 +374,11 @@ __all__ = [
     "ChittaOwnedProtocol",
     "NullChitta",
     "CHITTA_POSITION",
+    # Smriti - Long-term Memory (Cache)
+    "CacheStrategy",
+    "SmritiEntry",
+    "SmritiProtocol",
+    "Smriti",
+    "NullSmriti",
+    "SMRITI_POSITION",
 ]
