@@ -189,16 +189,38 @@ class NullYamaraja:
         return 0.0  # Neutral
 
 
+# Import security submodule
+from .security import (
+    SecurityProtocol,
+    NullSecurityProtocol,
+    SecurityLevel,
+    SecurityCapability,
+    SecurityViolation,
+    SecurityAuditRecord,
+    SecurityStateSnapshot,
+    SecuredSubject,
+)
+
 __all__ = [
     # Ownership
     "OWNER",
     "OWNED_PROTOCOLS",
     "OWNED_OPCODES",
-    # Protocol
+    # Yamaraja Protocol
     "YamarajaProtocol",
     "NullYamaraja",
-    # Types
+    # Yamaraja Types
     "Verdict",
     "Judgeable",
     "JudgmentRecord",
+    # Security Protocol (Owned by Yamaraja)
+    "SecurityProtocol",
+    "NullSecurityProtocol",
+    "SecurityLevel",
+    # Security Types
+    "SecurityCapability",
+    "SecurityViolation",
+    "SecurityAuditRecord",
+    "SecurityStateSnapshot",
+    "SecuredSubject",
 ]
