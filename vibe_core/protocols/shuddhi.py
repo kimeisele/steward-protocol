@@ -1,27 +1,23 @@
 """
-SHUDDHI PROTOCOL - MIGRATED TO MAHAJANA OWNERSHIP
-=================================================
+SHUDDHI PROTOCOL - USE MAHAMANTRA
+=================================
 
-OWNER: Mahajana.KUMARAS
-NEW LOCATION: vibe_core.protocols.mahajanas.kumaras.shuddhi
+DEPRECATED: This file is MAYA (illusion).
 
-This file re-exports from the canonical location for backwards compatibility.
-All new code should import from:
-    from vibe_core.protocols.mahajanas.kumaras import ShuddhiProtocol
+USE THIS INSTEAD:
+    from vibe_core.mahamantra import mahamantra
+    mahamantra[5]  # → Position 5 (KUMARAS, RESOLVE_REQ, DHARMA)
 
-"The Kumaras are the PERSONS responsible for ALL purification.
- Not abstract 'sanitization' - PERSONAL purification."
+OR:
+    from vibe_core.protocols.mahajanas.kumaras import ShuddhiProtocolBase
 """
 
 # Re-export from canonical Mahajana location
 from vibe_core.protocols.mahajanas.kumaras.shuddhi import (
+    ShuddhiProtocolBase,
     ShuddhiStatus,
     ShuddhiResult,
     ShuddhiProtocol,
     RemedyProtocol,
     NullShuddhi,
-    OWNER,
-    LOTUS_POSITION,
-    LOTUS_QUARTER,
-    OWNED_OPCODES,
 )

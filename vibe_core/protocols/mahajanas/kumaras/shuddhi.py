@@ -50,15 +50,7 @@ class ShuddhiProtocolBase(WorkerProtocol):
     _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
 
 
-# =============================================================================
-# BACKWARD COMPATIBILITY - Derived from ShuddhiProtocolBase
-# =============================================================================
-
-# These are DERIVED, not hardcoded
-OWNER = ShuddhiProtocolBase.mahajana()
-LOTUS_POSITION = ShuddhiProtocolBase.lotus_position()
-LOTUS_QUARTER = ShuddhiProtocolBase.lotus_quarter()
-OWNED_OPCODES: List[MantraOpCode] = [ShuddhiProtocolBase.opcode()]
+# NO MANUAL WIRING - Everything derived from mahamantra[5]
 
 
 # =============================================================================
@@ -254,13 +246,8 @@ class NullShuddhi(ShuddhiProtocolBase):
 # =============================================================================
 
 __all__ = [
-    # Protocol Base (MantraProtocol derivative)
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "ShuddhiProtocolBase",
-    # Backward compat (derived from base)
-    "OWNER",
-    "LOTUS_POSITION",
-    "LOTUS_QUARTER",
-    "OWNED_OPCODES",
     # Status
     "ShuddhiStatus",
     # Result (WATERTIGHT)
