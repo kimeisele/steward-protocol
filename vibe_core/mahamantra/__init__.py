@@ -353,6 +353,56 @@ from vibe_core.mahamantra._singularity import (
 )
 
 # =============================================================================
+# CLI BRIDGE - Krishna Routes All Commands (Option B: Sauber Verbinden)
+# Source: vibe_core/mahamantra/_cli_bridge.py
+# =============================================================================
+
+from vibe_core.mahamantra._cli_bridge import (
+    # The Bridge Singleton
+    cli_bridge,
+    # The Class (for typing)
+    MahamantraCLIBridge,
+    # Result type
+    BridgeResult,
+    # Domain mappings
+    DOMAIN_KEYWORDS,
+    # Convenience functions
+    route as cli_route,  # Alias to avoid conflict with router.route
+    get_position as cli_get_position,
+)
+
+# =============================================================================
+# CLI EXECUTION PROTOCOL - GAD-000 Compliant
+# Source: vibe_core/mahamantra/_cli_protocol.py
+# =============================================================================
+
+from vibe_core.mahamantra._cli_protocol import (
+    # Error codes (Parseability)
+    CLIErrorCode,
+    # Output types (Composability)
+    OutputFormat,
+    CLIOutputItem,
+    CLIOutput,
+    # Error type (Parseability)
+    CLIError,
+    # Result type (Idempotency)
+    CLIResult,
+    # Capability (Discoverability)
+    CLIParameter,
+    CLICapability,
+    # State (Observability)
+    CLIState,
+    # Health (Recoverability)
+    CLIHealth,
+    # Context (37th - Identity)
+    CLIContext,
+    # The Protocol
+    CLIExecutable,
+    # Base implementation
+    CLIExecutableBase,
+)
+
+# =============================================================================
 # KERNEL CONSTANTS
 # =============================================================================
 
@@ -528,4 +578,37 @@ __all__ = [
     "Mahamantra",
     "ProtocolRouter",
     "ModuleRouter",
+    # === CLI BRIDGE (Option B: Sauber Verbinden) ===
+    # Route CLI commands via: cli_bridge.route("analyze", ["--deep"])
+    # Or via: cli_route("analyze", ["--deep"])
+    "cli_bridge",
+    "MahamantraCLIBridge",
+    "BridgeResult",
+    "DOMAIN_KEYWORDS",
+    "cli_route",
+    "cli_get_position",
+    # === CLI PROTOCOL (GAD-000 Compliant) ===
+    # Error codes (Parseability)
+    "CLIErrorCode",
+    # Output types (Composability)
+    "OutputFormat",
+    "CLIOutputItem",
+    "CLIOutput",
+    # Error type (Parseability)
+    "CLIError",
+    # Result type (Idempotency)
+    "CLIResult",
+    # Capability (Discoverability)
+    "CLIParameter",
+    "CLICapability",
+    # State (Observability)
+    "CLIState",
+    # Health (Recoverability)
+    "CLIHealth",
+    # Context (37th - Identity)
+    "CLIContext",
+    # The Protocol
+    "CLIExecutable",
+    # Base implementation
+    "CLIExecutableBase",
 ]
