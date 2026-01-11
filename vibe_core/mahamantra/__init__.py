@@ -403,6 +403,58 @@ from vibe_core.mahamantra._cli_protocol import (
 )
 
 # =============================================================================
+# CLI ENGINE - Krishna Does The Work (NO copy-paste, ONE engine)
+# Source: vibe_core/mahamantra/_cli_engine.py
+# =============================================================================
+
+from vibe_core.mahamantra._cli_engine import (
+    # The Engine Singleton
+    cli_engine,
+    # The Class (for typing)
+    CLIEngine,
+    # Handler type
+    CLIHandler,
+    # Registration data
+    MahajanaCliRegistration,
+    # Decorator for easy registration
+    cli_command,
+)
+
+# =============================================================================
+# CLI AUTO - Krishna Discovers Everything (ZERO REGISTRATION)
+# Source: vibe_core/mahamantra/_cli_auto.py
+#
+# RECOMMENDED: Use cli_auto instead of cli_engine for ZERO registration code.
+#
+# cli_auto.discover_all() introspects ALL 16 mahajana Protocols and
+# auto-generates CLI handlers from method signatures and TypedDict returns.
+#
+# COMPARISON:
+#     BEFORE (cli_engine - manual registration):
+#         cli_engine.register(position=6, capabilities=[...], handlers={...})
+#         # × 16 mahajanas × 5+ commands each = 1200+ lines
+#
+#     AFTER (cli_auto - auto-discovery):
+#         cli_auto.discover_all()  # ONE line, 108 methods discovered
+#
+# "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+# Krishna ALREADY KNOWS what each Mahajana can do. Why tell Him?
+# =============================================================================
+
+from vibe_core.mahamantra._cli_auto import (
+    # The Auto-Discovery Singleton (RECOMMENDED)
+    cli_auto,
+    # The Class (for typing)
+    CLIAutoDiscovery,
+    # Discovered method info
+    DiscoveredMethod,
+    # Convenience functions
+    discover as cli_discover,
+    execute as cli_execute,
+    capabilities as cli_capabilities,
+)
+
+# =============================================================================
 # KERNEL CONSTANTS
 # =============================================================================
 
@@ -611,4 +663,19 @@ __all__ = [
     "CLIExecutable",
     # Base implementation
     "CLIExecutableBase",
+    # === CLI ENGINE (Krishna Does The Work) ===
+    # ONE engine, NO copy-paste
+    "cli_engine",
+    "CLIEngine",
+    "CLIHandler",
+    "MahajanaCliRegistration",
+    "cli_command",
+    # === CLI AUTO (Krishna Discovers Everything - RECOMMENDED) ===
+    # ZERO registration - 108 methods auto-discovered
+    "cli_auto",
+    "CLIAutoDiscovery",
+    "DiscoveredMethod",
+    "cli_discover",
+    "cli_execute",
+    "cli_capabilities",
 ]

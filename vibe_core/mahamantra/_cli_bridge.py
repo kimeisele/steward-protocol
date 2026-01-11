@@ -196,60 +196,28 @@ class MahamantraCLIBridge:
         Route and execute a CLI command.
 
         Flow:
-        1. Get mahajana position for command
-        2. Check if mahajana module has execute() method
-        3. If yes: execute via mahamantra.mod[position].execute()
-        4. If no: fallback to CLIRegistry
+        1. Delegate to cli_engine.execute()
+        2. cli_engine handles routing, execution, state, health
+        3. Return BridgeResult
 
         Returns BridgeResult with execution details.
         """
-        position = self.get_position(command)
+        # Import cli_engine here to avoid circular import at module load
+        from vibe_core.mahamantra._cli_engine import cli_engine
 
-        if position is None:
-            return BridgeResult(
-                success=False,
-                exit_code=1,
-                error=f"No route found for command: {command}"
-            )
+        # Get position for reporting
+        position = cli_engine.get_position(command)
 
-        # Try mahajana module first
-        try:
-            module = mahamantra.mod[position]
-
-            # Check if module has execute method
-            if hasattr(module, "execute"):
-                exit_code = module.execute(command, args)
-                return BridgeResult(
-                    success=exit_code == 0,
-                    exit_code=exit_code,
-                    position=position,
-                    handler=f"mahamantra.mod[{position}]"
-                )
-
-            # Check if module has cli_handler
-            if hasattr(module, "cli_handler"):
-                handler = module.cli_handler
-                exit_code = handler(command, args)
-                return BridgeResult(
-                    success=exit_code == 0,
-                    exit_code=exit_code,
-                    position=position,
-                    handler=f"mahamantra.mod[{position}].cli_handler"
-                )
-
-        except Exception as e:
-            # Module doesn't support CLI execution directly
-            pass
-
-        # Fallback to CLIRegistry
-        if self._fallback_enabled:
-            return self._fallback_to_registry(command, args, position)
+        # Execute via cli_engine (Krishna does the work)
+        result = cli_engine.execute(command, args)
 
         return BridgeResult(
-            success=False,
-            exit_code=1,
+            success=result.success,
+            exit_code=result.exit_code,
             position=position,
-            error=f"Mahajana at position {position} has no CLI handler"
+            handler=f"cli_engine[{position}]",
+            fallback=False,
+            error=result.error.message if result.error else None,
         )
 
     def _fallback_to_registry(
