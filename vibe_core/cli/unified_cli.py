@@ -358,18 +358,16 @@ class UnifiedCLI:
             print(json.dumps(caps, indent=2))
             return 0
 
-        # 6. MAHAMANTRA FALLBACK - 108 Protocol commands (ZERO wiring)
-        # Routes to mahajana protocols via cli_auto
+        # 6. PANCHA TATTVA GATES - Mahamantra CLI
+        # śrī-kṛṣṇa-caitanya prabhu-nityānanda
+        # śrī-advaita gadādhara śrīvāsādi-gaura-bhakta-vṛnda
         try:
-            from vibe_core.mahamantra import cli_auto
-            cli_auto.discover_all()
-            result = cli_auto.execute(command_name, remaining_args)
+            from vibe_core.cli.gates import gate, result_gate
+            result = gate(command_name, remaining_args)
             if result.exit_code != 127:  # 127 = command not found
-                for item in result.output.items:
-                    print(f"{item.key}: {item.value}")
-                return result.exit_code
+                return result_gate(result)
         except ImportError:
-            pass  # mahamantra not available
+            pass  # gates not available
 
         # 7. Help / Unknown
         if command_name in ("-h", "--help", "help"):
