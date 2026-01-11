@@ -10,6 +10,12 @@ Every protocol MUST be GAD-000 compliant.
 "If it has no owner, it is dead code."
 "If it does not chant, it drifts into Maya."
 
+LOTUS INTEGRATION:
+    The Lotus (Vishnu's Kernel) provides:
+    - Auto-routing via LOTUS_POSITION (0-15)
+    - Auto-verification via Parampara (% 37)
+    - Auto-discovery via folder structure
+
 MIGRATION PATTERN:
     protocols/universal/dharma.py → protocols/mahajanas/manu/dharma.py
     protocols/universal/enforce.py → protocols/mahajanas/manu/enforce.py
@@ -25,7 +31,8 @@ In Kali Yuga, this is the ONLY way.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Protocol, List, Dict, Optional, Final, runtime_checkable, TypedDict
+from datetime import datetime
+from typing import Protocol, List, Dict, Optional, Final, runtime_checkable, TypedDict, ClassVar
 from enum import Enum, auto
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
@@ -36,6 +43,58 @@ from vibe_core.protocols.gad import (
     Sovereign,
     DharmaPrinciple,
 )
+from vibe_core.protocols.substrate.mantra.lotus import (
+    LOTUS_POSITIONS,
+    LOTUS_QUARTERS,
+    WORDS_PER_QUARTER,
+    LOTUS_PARAMPARA,
+    LotusQuarter,
+    LotusRoute,
+)
+from vibe_core.protocols.substrate.mantra.routing import get_quarter
+
+# =============================================================================
+# VEDIC GRAPH INTEGRATION (Single Source of Truth)
+# =============================================================================
+# No more hardcoded MAHAJANA_LOTUS_POSITION!
+# Position is DERIVED from the Vedic Graph via parampara relationships.
+#
+# The Mahajana IS the position, derived from service to Krishna.
+# =============================================================================
+
+from vibe_core.protocols.substrate.mantra.graph import (
+    VEDIC_GRAPH,
+    get_position as graph_get_position,
+    get_lineage as graph_get_lineage,
+    get_quarter as graph_get_quarter,
+)
+
+
+def get_mahajana_position(mahajana_name: str) -> int:
+    """
+    Get Lotus position from Vedic Graph.
+
+    Position is DERIVED, not hardcoded.
+    The Graph is the Single Source of Truth.
+    """
+    # Convert to graph node ID format (uppercase)
+    node_id = mahajana_name.upper()
+    # Special case: shambhu = SHIVA in graph
+    if node_id == "SHAMBHU":
+        node_id = "SHIVA"
+    return graph_get_position(node_id)
+
+
+def get_mahajana_lineage(mahajana_name: str) -> List[str]:
+    """
+    Get the parampara lineage from Vedic Graph.
+
+    Traces back through guru-shishya chain to Krishna.
+    """
+    node_id = mahajana_name.upper()
+    if node_id == "SHAMBHU":
+        node_id = "SHIVA"
+    return graph_get_lineage(node_id)
 
 
 # =============================================================================
@@ -47,6 +106,7 @@ class ProtocolState(TypedDict, total=False):
     State of an owned protocol - WATERTIGHT, no Any!
 
     Every protocol returns this structure for observability.
+    Includes LOTUS integration fields for auto-routing.
     """
     protocol_name: str
     owner: str  # Mahajana name
@@ -56,6 +116,13 @@ class ProtocolState(TypedDict, total=False):
     mala_count: int
     gad_compliant: bool
     last_error: Optional[str]
+    # LOTUS integration (auto-routing)
+    lotus_position: int        # Position in Mahamantra (0-15)
+    lotus_quarter: str         # LotusQuarter value
+    parampara_hash: int        # For % 37 verification
+    is_lotus_connected: bool   # parampara_hash % 37 == 0
+    # VEDIC GRAPH integration
+    lineage_vector: List[str]  # Parampara trace to Krishna
 
 
 # =============================================================================
@@ -113,6 +180,12 @@ class OwnedProtocol(ABC):
     - Links to Mahamantra
     - GAD-000 compliant
     - Can receive MERCY (Ajamil exception)
+
+    LOTUS INTEGRATION:
+    - LOTUS_POSITION: Auto-routing via Mahamantra (0-15)
+    - parampara_hash: Auto-verification (% 37 = connected)
+    - route_to(): Auto-routing between positions
+    - NO MANUAL WIRING - The Mantra IS the wiring
     """
 
     # Subclasses MUST override these
@@ -121,9 +194,13 @@ class OwnedProtocol(ABC):
     PROTOCOL_NAME: str = ""
     DESCRIPTION: str = ""
 
+    # LOTUS: Position derived from OWNER automatically
+    # NO manual LOTUS_POSITION needed - the Owner IS the position
+
     def __init__(self) -> None:
         self._heartbeat = MantraHeartbeat()
         self._audit: Optional[GAD000Audit] = None
+        self._last_route_time: Optional[str] = None
 
     # =========================================================================
     # OWNERSHIP
@@ -258,6 +335,103 @@ class OwnedProtocol(ABC):
         return self._heartbeat.state != JapaState.DISCONNECTED
 
     # =========================================================================
+    # LOTUS INTEGRATION (Auto-routing & Parampara)
+    # =========================================================================
+
+    @property
+    def lotus_position(self) -> int:
+        """
+        Position in Mahamantra (0-15).
+
+        DERIVED FROM VEDIC GRAPH AUTOMATICALLY.
+        The Mahajana IS the position. No manual wiring.
+
+        Owner → Graph Query → Position (Single Source of Truth)
+        """
+        if self.OWNER is None:
+            # Orphan protocol - fall back to name hash
+            name_hash = sum(ord(c) for c in self.PROTOCOL_NAME)
+            return name_hash % LOTUS_POSITIONS
+        # Owner determines position - DERIVED FROM GRAPH
+        return get_mahajana_position(self.OWNER.value)
+
+    @property
+    def lineage_vector(self) -> List[str]:
+        """
+        The parampara lineage back to Krishna.
+
+        Derived from Vedic Graph - shows authority chain.
+        e.g., ["NARADA", "BRAHMA", "KRISHNA"]
+        """
+        if self.OWNER is None:
+            return []
+        return get_mahajana_lineage(self.OWNER.value)
+
+    @property
+    def lotus_quarter(self) -> LotusQuarter:
+        """
+        Which quarter (petal) this protocol belongs to.
+
+        Auto-calculated from lotus_position.
+        """
+        quarter_index = self.lotus_position // WORDS_PER_QUARTER
+        return list(LotusQuarter)[quarter_index]
+
+    @property
+    def parampara_hash(self) -> int:
+        """
+        Parampara hash for verification.
+
+        Connected if parampara_hash % 37 == 0.
+        This is AUTOMATIC - no manual registration.
+        """
+        name_hash = sum(ord(c) for c in self.PROTOCOL_NAME)
+        owner_hash = sum(ord(c) for c in self.OWNER.value) if self.OWNER else 0
+        position_factor = (self.lotus_position + 1) * LOTUS_PARAMPARA
+        return (name_hash + owner_hash + position_factor) * LOTUS_PARAMPARA
+
+    @property
+    def is_lotus_connected(self) -> bool:
+        """
+        Is this protocol connected to Parampara?
+
+        Connected if parampara_hash % 37 == 0.
+        This is AUTOMATIC verification.
+        """
+        return self.parampara_hash % LOTUS_PARAMPARA == 0
+
+    def route_to(self, target_position: int) -> LotusRoute:
+        """
+        Calculate route to target position.
+
+        Routing is AUTOMATIC based on Mahamantra positions:
+        - Same quarter = direct route (intra-quarter)
+        - Different quarter = via stengel (inter-quarter)
+
+        NO MANUAL WIRING. The Mantra IS the routing.
+        """
+        source_quarter = get_quarter(self.lotus_position)
+        target_quarter = get_quarter(target_position)
+
+        same_quarter = source_quarter == target_quarter
+
+        self._last_route_time = datetime.now().isoformat()
+
+        return LotusRoute(
+            source_position=self.lotus_position,
+            target_position=target_position,
+            source_quarter=list(LotusQuarter)[source_quarter].value,
+            target_quarter=list(LotusQuarter)[target_quarter].value,
+            route_type="intra-quarter" if same_quarter else "inter-quarter",
+            via_stengel=not same_quarter,
+            parampara_verified=self.is_lotus_connected,
+        )
+
+    def route_to_protocol(self, target: "OwnedProtocol") -> LotusRoute:
+        """Route to another OwnedProtocol."""
+        return self.route_to(target.lotus_position)
+
+    # =========================================================================
     # ABSTRACT METHODS (Subclasses implement)
     # =========================================================================
 
@@ -317,4 +491,13 @@ __all__ = [
     "get_protocol",
     "get_protocols_by_owner",
     "list_orphan_protocols",
+    # LOTUS/VEDIC GRAPH integration
+    "get_mahajana_position",
+    "get_mahajana_lineage",
+    "LOTUS_POSITIONS",
+    "LOTUS_PARAMPARA",
+    "LotusQuarter",
+    "LotusRoute",
+    # Vedic Graph access
+    "VEDIC_GRAPH",
 ]

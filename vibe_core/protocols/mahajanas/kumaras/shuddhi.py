@@ -1,0 +1,247 @@
+"""
+SHUDDHI - The Surgical Self-Healing Protocol
+=============================================
+
+OWNER: KUMARAS (The Four Pure Ones)
+POSITION: 5 (DHARMA Quarter)
+OPCODE: RESOLVE_REQ (Purification through Resolution)
+
+Shuddhi (Sanskrit: 'Purification') is the core service for surgical
+code transformations using Concrete Syntax Trees (CST).
+
+OWNERSHIP DECLARATION:
+    - This protocol is OWNED by Mahajana.KUMARAS
+    - The Kumaras are responsible for ALL purification
+    - Not abstract "sanitization" - PERSONAL purification
+
+ANTI-MAYAVAD:
+    - No Any types (that's spiritual pollution!)
+    - All types explicit and WATERTIGHT
+    - The protocol IS the purification, not a wrapper
+
+ORIGINAL: protocols/shuddhi.py
+MIGRATED: protocols/mahajanas/kumaras/shuddhi.py
+"""
+
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Final, List, Optional, Protocol, runtime_checkable
+
+from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+
+
+# =============================================================================
+# OWNERSHIP DECLARATION - Kumaras OWN this protocol
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.KUMARAS
+LOTUS_POSITION: Final[int] = 5  # DHARMA Quarter, Worker 1
+LOTUS_QUARTER: Final[str] = "dharma"
+
+OWNED_OPCODES: Final[List[MantraOpCode]] = [
+    MantraOpCode.RESOLVE_REQ,  # Purification = Resolution of impurity
+]
+
+
+# =============================================================================
+# SHUDDHI STATUS - The state of purification
+# =============================================================================
+
+class ShuddhiStatus(str, Enum):
+    """The state of a purification attempt."""
+
+    PURIFIED = "purified"        # Transformation successful and verified
+    SKIPPED = "skipped"          # No violation found in the file
+    FAILED = "failed"            # Error during transformation or verification
+    OUT_OF_SCOPE = "out_of_scope"  # Heuristic: Required context missing
+
+
+# =============================================================================
+# SHUDDHI RESULT - WATERTIGHT (no Any!)
+# =============================================================================
+
+@dataclass
+class ShuddhiResult:
+    """The outcome of a Shuddhi operation. WATERTIGHT."""
+
+    status: ShuddhiStatus
+    file_path: Path
+    rule_id: str
+    message: str = ""
+    diff: str = ""
+    purified_code: Optional[str] = None
+    # OWNERSHIP FIELDS (Anti-Mayavad)
+    owner: Mahajana = Mahajana.KUMARAS
+    lotus_position: int = 5
+
+    @property
+    def success(self) -> bool:
+        """True if the file is clean (either purified or already clean)."""
+        return self.status in (ShuddhiStatus.PURIFIED, ShuddhiStatus.SKIPPED)
+
+    @property
+    def is_kumaras_blessed(self) -> bool:
+        """True if Kumaras have blessed this purification."""
+        return self.owner == Mahajana.KUMARAS and self.success
+
+
+# =============================================================================
+# SHUDDHI PROTOCOL - The surgical self-healing interface
+# =============================================================================
+
+@runtime_checkable
+class ShuddhiProtocol(Protocol):
+    """
+    The surgical self-healing interface of the Kernel.
+
+    OWNER: Mahajana.KUMARAS (The Four Pure Ones)
+
+    Dharma: Shuddhi does not 'replace text'. It performs structural surgery
+    on the Concrete Syntax Tree, preserving comments and formatting.
+
+    ANTI-MAYAVAD:
+    - No Any types in parameters or returns
+    - All operations are PERSONAL (Kumaras do the work)
+    - The protocol IS the purification, not mere text replacement
+    """
+
+    @property
+    def owner(self) -> Mahajana:
+        """The Mahajana owner - always KUMARAS."""
+        ...
+
+    def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
+        """
+        Heals a specific structural violation in a file.
+
+        This is KUMARAS' primary operation:
+        - CST surgery, not text replacement
+        - Preserves comments and formatting
+        - Returns ShuddhiResult (WATERTIGHT)
+
+        Args:
+            file_path: Path to the target file.
+            rule_id: The ID of the violation (e.g., 'unsafe_io_write').
+
+        Returns:
+            ShuddhiResult indicating the outcome of the surgery.
+        """
+        ...
+
+    def list_remedies(self) -> List[str]:
+        """Returns list of registered remedy rule_ids."""
+        ...
+
+    def can_heal(self, rule_id: str) -> bool:
+        """Returns True if a remedy is registered for this rule_id."""
+        ...
+
+
+# =============================================================================
+# REMEDY PROTOCOL - Individual healing operations
+# =============================================================================
+
+@runtime_checkable
+class RemedyProtocol(Protocol):
+    """
+    The contract for individual Shuddhi remedies.
+
+    OWNER: Inherits from ShuddhiProtocol → Mahajana.KUMARAS
+
+    Each remedy heals a specific violation type identified by rule_id.
+    The rule_id MUST match an entry in standards.yaml with has_sattva_remedy: true.
+
+    VEDA-4 Pattern:
+        SHABDA   → rule_id (what violation this heals)
+        ARTHA    → requirements (what the remedy needs)
+        PRATYAYA → applied/violation_found (state tracking)
+        KARMA    → CST transformation (the healing action)
+    """
+
+    @property
+    def rule_id(self) -> str:
+        """
+        The rule this remedy heals.
+
+        MUST match an id in standards.yaml with has_sattva_remedy: true.
+        """
+        ...
+
+    @property
+    def applied(self) -> bool:
+        """True if the remedy made any changes."""
+        ...
+
+    @property
+    def violation_found(self) -> bool:
+        """True if a violation was detected (may not be healable)."""
+        ...
+
+    def requirements(self) -> List[str]:
+        """
+        List of required imports or interfaces.
+
+        Example: ['vibe_core.di.ServiceRegistry', 'self.system']
+        """
+        ...
+
+    def get_diff(self, old_code: str, new_code: str) -> str:
+        """Generates a unified diff for the change."""
+        ...
+
+
+# =============================================================================
+# NULL SHUDDHI - Already pure (for testing)
+# =============================================================================
+
+class NullShuddhi:
+    """
+    The Already Pure Shuddhi - no purification needed.
+
+    Used for testing and for code that is already pure.
+    Still owned by KUMARAS (purity is their domain).
+    """
+
+    @property
+    def owner(self) -> Mahajana:
+        return Mahajana.KUMARAS
+
+    def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
+        """No purification needed - already pure."""
+        return ShuddhiResult(
+            status=ShuddhiStatus.SKIPPED,
+            file_path=file_path,
+            rule_id=rule_id,
+            message="Already pure (NullShuddhi)",
+            owner=Mahajana.KUMARAS,
+            lotus_position=5,
+        )
+
+    def list_remedies(self) -> List[str]:
+        return []
+
+    def can_heal(self, rule_id: str) -> bool:
+        return True  # Everything is already healed
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # Ownership
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    # Status
+    "ShuddhiStatus",
+    # Result (WATERTIGHT)
+    "ShuddhiResult",
+    # Protocols
+    "ShuddhiProtocol",
+    "RemedyProtocol",
+    # Null implementation
+    "NullShuddhi",
+]

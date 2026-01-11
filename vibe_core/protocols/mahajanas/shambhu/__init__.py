@@ -49,6 +49,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.SHAMBHU
+LOTUS_POSITION: Final[int] = 3  # GENESIS Quarter, Worker 3
+LOTUS_QUARTER: Final[str] = "genesis"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "shambhu",
@@ -186,8 +188,51 @@ class NullShambhu:
         )
 
 
+# =============================================================================
+# TRANSFORMATION PROTOCOL (Shambhu's Breaking & Routing)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.shambhu.transformation import (
+    # Types
+    TransformationType,
+    ConcernType,
+    MixedConcern,
+    TransformationPlan,
+    TransformationResult,
+    TransformationState,
+    # Registry
+    MIXED_FILE_REGISTRY,
+    # Protocol
+    TransformationProtocol,
+    # Null implementation
+    NullTransformation,
+)
+
+
 __all__ = [
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
-    "DestructionType", "DestructionResult", "DestructionState",
-    "ShambhuProtocol", "NullShambhu",
+    # Ownership
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_PROTOCOLS",
+    "OWNED_OPCODES",
+    # Destruction Types (WATERTIGHT)
+    "DestructionType",
+    "DestructionResult",
+    "DestructionState",
+    # Destruction Protocol
+    "ShambhuProtocol",
+    "NullShambhu",
+    # Transformation Types (WATERTIGHT)
+    "TransformationType",
+    "ConcernType",
+    "MixedConcern",
+    "TransformationPlan",
+    "TransformationResult",
+    "TransformationState",
+    # Transformation Registry
+    "MIXED_FILE_REGISTRY",
+    # Transformation Protocol
+    "TransformationProtocol",
+    "NullTransformation",
 ]

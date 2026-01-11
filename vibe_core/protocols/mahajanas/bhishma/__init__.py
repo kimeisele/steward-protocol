@@ -50,6 +50,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.BHISHMA
+LOTUS_POSITION: Final[int] = 11  # KARMA Quarter, Worker 3
+LOTUS_QUARTER: Final[str] = "karma"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "bhishma",
@@ -201,7 +203,7 @@ class NullBhishma:
 
 
 __all__ = [
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
     "CommitEntry", "CommitResult", "VerificationResult", "CommitState",
     "BhishmaProtocol", "NullBhishma",
 ]

@@ -48,6 +48,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.KUMARAS
+LOTUS_POSITION: Final[int] = 5  # DHARMA Quarter, Worker 1
+LOTUS_QUARTER: Final[str] = "dharma"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "kumaras",
@@ -207,9 +209,26 @@ class NullKumaras:
         )
 
 
+# Import Shuddhi (Purification) - THE core Kumaras protocol
+from .shuddhi import (
+    ShuddhiStatus,
+    ShuddhiResult,
+    ShuddhiProtocol,
+    RemedyProtocol,
+    NullShuddhi,
+    LOTUS_POSITION as SHUDDHI_POSITION,
+)
+
 __all__ = [
+    # Ownership
     "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Purity types (WATERTIGHT)
     "PurifiableData", "PurityLevel", "PurificationResult",
     "ResetResult", "PurityState",
+    # Kumaras Protocol
     "KumarasProtocol", "NullKumaras",
+    # Shuddhi Protocol (CST Surgery)
+    "ShuddhiStatus", "ShuddhiResult",
+    "ShuddhiProtocol", "RemedyProtocol", "NullShuddhi",
+    "SHUDDHI_POSITION",
 ]

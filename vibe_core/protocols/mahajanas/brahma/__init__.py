@@ -51,6 +51,8 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.BRAHMA
+LOTUS_POSITION: Final[int] = 1  # GENESIS Quarter, Worker 1
+LOTUS_QUARTER: Final[str] = "genesis"
 
 OWNED_PROTOCOLS: Final[List[str]] = [
     "brahma",
