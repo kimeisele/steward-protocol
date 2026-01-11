@@ -1,30 +1,25 @@
 """
 PRAHLADA - The 7th Mahajana (Resilience/Memory)
 ===============================================
-OpCode: FETCH_RES (Bit 9, Position 9 in Mahamantra)
-Opulence: Virya (Strength/Valor)
+
+POSITION: 9 (KARMA Quarter, EXEC_SERVICE OpCode)
 
 The boy devotee. Tortured by Hiranyakashipu, protected by Nrisimha.
 "Sravanam Kirtanam Vishnoh Smaranam..." - REMEMBERING.
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Prahlada is the PERSON responsible for all resilience.
-Not abstract "memory" - PERSONAL protection by Prahlada.
+DERIVED FROM MAHAMANTRA:
+    Position 9 → guardian=PRAHLADA, opcode=EXEC_SERVICE, quarter=KARMA
+    All properties derived from truth table. No manual wiring.
 
 OWNED PROTOCOLS:
 - Memory Protection (ChittaProtocol - RAM)
 - Long-term Storage (SmritiProtocol - Cache)
-- Resource Fetching (FETCH_RES OpCode)
 - Fault Tolerance
 - Recovery from Attack
 - Devotional Persistence
 
 Prahlada survives what should kill him.
 He is the Patron Saint of Memory.
-
-SUBSTRATE CONNECTION (Level -1):
-- ChittaProtocol → Prahlada (working memory)
-- SmritiProtocol → Prahlada (long-term memory)
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -35,8 +30,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -46,29 +41,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# PRAHLADA PROTOCOL BASE - Derives from MantraPosition 9
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.PRAHLADA
-LOTUS_POSITION: Final[int] = 9  # KARMA Quarter, Worker 1
-LOTUS_QUARTER: Final[str] = "karma"
+class PrahladaProtocolBase(WorkerProtocol):
+    """
+    Prahlada protocol ownership - DERIVED from Mahamantra position 9.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "prahlada",
-    "memory",
-    "chitta",
-    "smriti",
-    "resilience",
-    "fault_tolerance",
-]
+    NO MANUAL WIRING:
+        _position_index = 9 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.EXEC_SERVICE,  # Vyuha: Q3 Worker 1 (FETCH_RES now HEAD: Parashurama)
-]
+    DERIVED PROPERTIES:
+        guardian()  → Mahajana.PRAHLADA
+        opcode()    → MantraOpCode.EXEC_SERVICE
+        quarter()   → Quarter.KARMA
+        is_head()   → False (Worker position)
+        parampara_vector() → 370 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 9  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[9]
 
 
 # =============================================================================
@@ -141,11 +139,10 @@ class PrahladaProtocol(Protocol):
     """
     The Resilience/Memory Protocol - Prahlada's domain.
 
+    DERIVED: Position 9 → PRAHLADA, EXEC_SERVICE, KARMA
+
     Any system that stores/retrieves memory must implement this.
     WATERTIGHT - no Any types!
-
-    ANTI-MAYAVAD: Prahlada is the PERSON.
-    Not abstract "memory" - PERSONAL protection.
 
     The Three Stages of Memory (Smaranam):
     1. STORE (remember) - Initial encoding
@@ -153,9 +150,9 @@ class PrahladaProtocol(Protocol):
     3. RECALL (retrieve) - Retrieval from storage
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.PRAHLADA."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 9 in the Mahamantra."""
         ...
 
     # =========================================================================
@@ -228,19 +225,17 @@ class PrahladaProtocol(Protocol):
 # =============================================================================
 
 
-class NullPrahlada:
+class NullPrahlada(PrahladaProtocolBase):
     """
     The Forgetful One.
     No memory persistence (for testing without state).
+
+    Inherits from PrahladaProtocolBase → position 9 → PRAHLADA.
 
     Even in Null mode:
     - survives all attacks (Prahlada always survives)
     - returns None for recalls (nothing to remember)
     """
-
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.PRAHLADA
 
     def remember(self, key: str, value: MemoryValue) -> bool:
         return True  # Accept but don't store
@@ -351,10 +346,8 @@ from vibe_core.protocols.mahajanas.prahlada.smriti import (
 # =============================================================================
 
 __all__ = [
-    # Ownership
-    "OWNER",
-    "OWNED_PROTOCOLS",
-    "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "PrahladaProtocolBase",
     # State Types (WATERTIGHT)
     "MemoryValue",
     "MemoryEntry",
@@ -373,12 +366,10 @@ __all__ = [
     "Chitta",
     "ChittaOwnedProtocol",
     "NullChitta",
-    "CHITTA_POSITION",
     # Smriti - Long-term Memory (Cache)
     "CacheStrategy",
     "SmritiEntry",
     "SmritiProtocol",
     "Smriti",
     "NullSmriti",
-    "SMRITI_POSITION",
 ]

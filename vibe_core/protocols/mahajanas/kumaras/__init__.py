@@ -64,23 +64,7 @@ class KumarasProtocolBase(WorkerProtocol):
     _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
 
 
-# Backward compatibility exports (derived from protocol base)
-OWNER = KumarasProtocolBase.mahajana()
-LOTUS_POSITION = KumarasProtocolBase.lotus_position()
-LOTUS_QUARTER = KumarasProtocolBase.lotus_quarter()
-
-OWNED_PROTOCOLS: List[str] = [
-    "kumaras",
-    "purity",
-    "reset",
-    "sanitization",
-    "validation",
-    "shuddhi",
-]
-
-OWNED_OPCODES: List[MantraOpCode] = [
-    KumarasProtocolBase.opcode(),  # RESOLVE_REQ
-]
+# NO MANUAL WIRING - Everything derived from mahamantra[5]
 
 
 # =============================================================================
@@ -265,12 +249,9 @@ from vibe_core.protocols.mahajanas.kumaras.validation import (
 )
 
 __all__ = [
-    # Protocol Bases (MantraProtocol derivatives)
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "KumarasProtocolBase",
     "ShuddhiProtocolBase",
-    # Ownership (backward compat - derived from bases)
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER",
-    "OWNED_PROTOCOLS", "OWNED_OPCODES",
     # Purity types (WATERTIGHT)
     "PurifiableData", "PurityLevel", "PurificationResult",
     "ResetResult", "PurityState",
@@ -279,7 +260,6 @@ __all__ = [
     # Shuddhi Protocol (CST Surgery)
     "ShuddhiStatus", "ShuddhiResult",
     "ShuddhiProtocol", "RemedyProtocol", "NullShuddhi",
-    "SHUDDHI_POSITION",
     # Validation (Input Validation)
     "ValidationType",
     "ValidationRule",
@@ -293,5 +273,4 @@ __all__ = [
     "range_check",
     "pattern_check",
     "length_check",
-    "VALIDATION_POSITION",
 ]
