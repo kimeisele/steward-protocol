@@ -28,7 +28,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.signals import CommitSignal
@@ -36,6 +36,51 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.phoenix.sections.naga.section_main import CommitWatcherConfig
     from vibe_core.state.commit_authority import CommitOutcome, CommitResult
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class AlertDetails(TypedDict, total=False):
+    """Details for commit alerts. WATERTIGHT."""
+
+    panic_count: int
+    window_seconds: float
+    seconds_since_success: float
+    threshold_seconds: float
+    consecutive_deferrals: int
+    threshold: int
+    healed_count: int
+    total_count: int
+    rate: float
+
+
+class AlertDict(TypedDict):
+    """Serialized alert format. WATERTIGHT."""
+
+    alert_type: str
+    alert_code: str
+    severity: str
+    message: str
+    details: AlertDetails
+    timestamp: str
+
+
+class CommitStatsDict(TypedDict, total=False):
+    """Serialized commit stats. WATERTIGHT."""
+
+    total_observed: int
+    success_count: int
+    skipped_count: int
+    deferred_count: int
+    healed_count: int
+    panic_count: int
+    alerts_generated: int
+    success_rate: float
+    last_success_ago: float
+    uptime_seconds: float
 
 # Type aliases for callbacks (GAD-000 Typing Discipline)
 CortexCommitCallback = Callable[["CommitSignal"], None]
@@ -86,20 +131,20 @@ class CommitAlert:
     alert_type: str  # PANIC_PATTERN, STAGNATION, DEFERRAL_LOOP, CONFLICT_DRIFT
     severity: str  # WARNING, ERROR, CRITICAL
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: AlertDetails = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
     # GAD-000 Parseability: Machine-readable alert code
     alert_code: AlertCode = AlertCode.A001_PANIC_PATTERN
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "alert_type": self.alert_type,
-            "alert_code": self.alert_code.value,  # Machine-parseable
-            "severity": self.severity,
-            "message": self.message,
-            "details": self.details,
-            "timestamp": self.timestamp.isoformat(),
-        }
+    def to_dict(self) -> AlertDict:
+        return AlertDict(
+            alert_type=self.alert_type,
+            alert_code=self.alert_code.value,
+            severity=self.severity,
+            message=self.message,
+            details=self.details,
+            timestamp=self.timestamp.isoformat(),
+        )
 
 
 @dataclass
@@ -116,20 +161,22 @@ class CommitStats:
     last_success_at: Optional[float] = None
     started_at: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> CommitStatsDict:
         uptime = time.time() - self.started_at
-        return {
-            "total_observed": self.total_observed,
-            "success_count": self.success_count,
-            "skipped_count": self.skipped_count,
-            "deferred_count": self.deferred_count,
-            "healed_count": self.healed_count,
-            "panic_count": self.panic_count,
-            "alerts_generated": self.alerts_generated,
-            "success_rate": self.success_count / max(self.total_observed, 1),
-            "last_success_ago": (time.time() - self.last_success_at if self.last_success_at else None),
-            "uptime_seconds": uptime,
-        }
+        result = CommitStatsDict(
+            total_observed=self.total_observed,
+            success_count=self.success_count,
+            skipped_count=self.skipped_count,
+            deferred_count=self.deferred_count,
+            healed_count=self.healed_count,
+            panic_count=self.panic_count,
+            alerts_generated=self.alerts_generated,
+            success_rate=self.success_count / max(self.total_observed, 1),
+            uptime_seconds=uptime,
+        )
+        if self.last_success_at:
+            result["last_success_ago"] = time.time() - self.last_success_at
+        return result
 
 
 # =============================================================================
