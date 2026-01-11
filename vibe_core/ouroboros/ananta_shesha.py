@@ -34,7 +34,62 @@ Usage:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, TypedDict
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class HeartbeatResult(TypedDict, total=False):
+    """System heartbeat result. WATERTIGHT."""
+
+    uptime_seconds: float
+    genes_registered: int
+    capabilities_available: int
+    events_processed: int
+    last_heartbeat: str
+    health: str
+
+
+class ViolationData(TypedDict, total=False):
+    """Data for violation events. WATERTIGHT."""
+
+    file: str
+    rule: str
+    line: int
+    message: str
+    severity: str
+    source: str
+
+
+class LoopDetectionData(TypedDict, total=False):
+    """Data for loop detection events. WATERTIGHT."""
+
+    loop_id: str
+    iterations: int
+    pattern: str
+    files_affected: List[str]
+    source: str
+
+
+class CommitData(TypedDict, total=False):
+    """Data for commit events. WATERTIGHT."""
+
+    sha: str
+    message: str
+    author: str
+    files_changed: List[str]
+    timestamp: str
+
+
+class HealingRequestData(TypedDict, total=False):
+    """Data for healing request events. WATERTIGHT."""
+
+    target: str
+    reason: str
+    source: str
 
 # Protocol imports (Layer -1 - no circular deps)
 from vibe_core.protocols.substrate import (
@@ -203,7 +258,7 @@ class AnantaShesha(IGeneHost):
     # Health & Status (Ananta = Time, Shesha = Space)
     # =========================================================================
 
-    def heartbeat(self) -> Dict[str, Any]:
+    def heartbeat(self) -> HeartbeatResult:
         """
         System heartbeat - the pulse of Ananta (Time).
 
@@ -212,14 +267,14 @@ class AnantaShesha(IGeneHost):
         self._last_heartbeat = datetime.now()
         uptime = (self._last_heartbeat - self._start_time).total_seconds()
 
-        return {
-            "uptime_seconds": uptime,
-            "genes_registered": len(self._genes),
-            "capabilities_available": len(self._capability_providers),
-            "events_processed": self._event_count,
-            "last_heartbeat": self._last_heartbeat.isoformat(),
-            "health": self._calculate_health().value,
-        }
+        return HeartbeatResult(
+            uptime_seconds=uptime,
+            genes_registered=len(self._genes),
+            capabilities_available=len(self._capability_providers),
+            events_processed=self._event_count,
+            last_heartbeat=self._last_heartbeat.isoformat(),
+            health=self._calculate_health().value,
+        )
 
     def _calculate_health(self) -> SubstrateHealth:
         """Calculate overall system health from gene statuses."""
@@ -260,30 +315,30 @@ class AnantaShesha(IGeneHost):
     # Bridge Methods (Connect layers)
     # =========================================================================
 
-    def notify_violation(self, violation_data: Dict[str, Any]) -> None:
+    def notify_violation(self, violation_data: ViolationData) -> None:
         """
         Called by System Ouroboros when violation detected.
 
         Routes to NAGA for potential healing.
         """
-        self.emit_event("violation.detected", violation_data)
+        self.emit_event("violation.detected", dict(violation_data))
 
-    def notify_loop_detected(self, loop_data: Dict[str, Any]) -> None:
+    def notify_loop_detected(self, loop_data: LoopDetectionData) -> None:
         """
         Called by NAGA Ouroboros when correction loop detected.
 
         Escalates to system level for intervention.
         """
-        self.emit_event("naga.loop_detected", loop_data)
+        self.emit_event("naga.loop_detected", dict(loop_data))
         logger.warning(f"ANANTA_SHESHA: Loop detected - {loop_data}")
 
-    def notify_commit(self, commit_data: Dict[str, Any]) -> None:
+    def notify_commit(self, commit_data: CommitData) -> None:
         """
         Called by Prakriti when commit occurs.
 
         Routes to interested parties (NAGA CommitWatcher, etc).
         """
-        self.emit_event("prakriti.commit", commit_data)
+        self.emit_event("prakriti.commit", dict(commit_data))
 
     def request_healing(self, target: str, reason: str) -> None:
         """
@@ -291,11 +346,12 @@ class AnantaShesha(IGeneHost):
 
         Routes DOWN to NAGA services.
         """
-        self.emit_event("healing.requested", {
-            "target": target,
-            "reason": reason,
-            "source": "ananta_shesha",
-        })
+        healing_data = HealingRequestData(
+            target=target,
+            reason=reason,
+            source="ananta_shesha",
+        )
+        self.emit_event("healing.requested", dict(healing_data))
 
 
 # =============================================================================
@@ -333,4 +389,10 @@ __all__ = [
     "SystemEvent",
     "get_system_anchor",
     "reset_system_anchor",
+    # WATERTIGHT TypedDicts
+    "HeartbeatResult",
+    "ViolationData",
+    "LoopDetectionData",
+    "CommitData",
+    "HealingRequestData",
 ]

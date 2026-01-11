@@ -20,10 +20,33 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from vibe_core.ouroboros.ingestion import ViolationIngester, ViolationRecord, ViolationSource
 from vibe_core.ouroboros.parser_loader import ViolationParserLoader
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - No Dict[str, Any]
+# =============================================================================
+
+
+class LastResultSummary(TypedDict, total=False):
+    """Summary of last ingestion result. WATERTIGHT."""
+
+    sources_found: int
+    violations_ingested: int
+    timestamp: str
+
+
+class OrchestratorStatus(TypedDict, total=False):
+    """Orchestrator status for observability. WATERTIGHT."""
+
+    workspace: str
+    parsers_loaded: int
+    parser_names: List[str]
+    verify_enabled: bool
+    last_result: Optional[LastResultSummary]
 
 logger = logging.getLogger("OUROBOROS.LOOP")
 
@@ -238,24 +261,23 @@ class OuroborosLoopOrchestrator:
         except Exception as e:
             logger.debug(f"🐍 OUROBOROS: AnantaShesha notify failed: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> OrchestratorStatus:
         """Get orchestrator status for observability."""
         parsers = self.parser_loader.list_parsers()
-        return {
-            "workspace": str(self._workspace),
-            "parsers_loaded": len(parsers),
-            "parser_names": parsers,
-            "verify_enabled": self._verify,
-            "last_result": (
-                {
-                    "sources_found": self._last_result.sources_found,
-                    "violations_ingested": self._last_result.ingested_count,
-                    "timestamp": self._last_result.timestamp,
-                }
-                if self._last_result
-                else None
-            ),
-        }
+        last: Optional[LastResultSummary] = None
+        if self._last_result:
+            last = LastResultSummary(
+                sources_found=self._last_result.sources_found,
+                violations_ingested=self._last_result.ingested_count,
+                timestamp=self._last_result.timestamp,
+            )
+        return OrchestratorStatus(
+            workspace=str(self._workspace),
+            parsers_loaded=len(parsers),
+            parser_names=parsers,
+            verify_enabled=self._verify,
+            last_result=last,
+        )
 
 
 # =============================================================================
