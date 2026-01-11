@@ -29,20 +29,16 @@ Usage:
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.ASSERT_TRUTH,
-    mahajana=Mahajana.VYASA,
     name="scan",
-    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)",
-)
+    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)")
 class ScanCommand(NagaCommandBase):
     """
     Scan command implementation.
@@ -81,8 +77,7 @@ class ScanCommand(NagaCommandBase):
             except (IndexError, ValueError):
                 return self.failure(
                     "Invalid --path flag. Usage: --path <directory>",
-                    exit_code=1,
-                )
+                    exit_code=1)
 
         try:
             if quick:
@@ -103,14 +98,11 @@ class ScanCommand(NagaCommandBase):
                     ("position", "4"),
                     ("mahajana", "vyasa"),
                     ("mode", self._get_mode(args)),
-                    ("path", path or "."),
-                ),
-            )
+                    ("path", path or ".")))
         except Exception as e:
             return self.failure(
                 f"Scan failed: {e}",
-                exit_code=1,
-            )
+                exit_code=1)
 
     def _get_mode(self, args: List[str]) -> str:
         """Determine scan mode from args."""

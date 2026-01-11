@@ -30,20 +30,16 @@ from pathlib import Path
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.OPTIMIZE,
-    mahajana=Mahajana.BALI,
     name="optimize",
-    help_text="Performance optimization (BALI's sacrifice - SUSTAIN phase)",
-)
+    help_text="Performance optimization (BALI's sacrifice - SUSTAIN phase)")
 class OptimizeCommand(NagaCommandBase):
     """
     Optimize command implementation.
@@ -133,8 +129,7 @@ class OptimizeCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _basic_optimization_check(self) -> dict:
         """Get basic project metrics."""

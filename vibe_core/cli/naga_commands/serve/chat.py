@@ -155,7 +155,6 @@ def extract_args(message: str, intent: str) -> List[str]:
 
 @naga_command(
     opcode=MantraOpCode.EXEC_SERVICE,
-    mahajana=Mahajana.PRAHLADA,
     name="chat",
     help_text="Chat with the system - PRAHLADA routes to all Mahajanas",
 )
@@ -238,7 +237,6 @@ class ChatCommand(NagaCommandBase):
             output=routing_header + result.output,
             error=result.error,
             opcode=result.opcode,
-            mahajana=result.mahajana,
             data=result.data + (
                 ("routed_by", "prahlada"),
                 ("original_message", message),

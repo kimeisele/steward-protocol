@@ -31,20 +31,16 @@ from typing import List, Tuple
 from datetime import datetime
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.BIND_CTX,
-    mahajana=Mahajana.SHAMBHU,
     name="context",
-    help_text="Execution context binding (SHAMBHU's transformation - WAKE phase)",
-)
+    help_text="Execution context binding (SHAMBHU's transformation - WAKE phase)")
 class ContextCommand(NagaCommandBase):
     """
     Context command implementation.
@@ -132,8 +128,7 @@ class ContextCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _get_basic_context(self) -> dict:
         """Get basic execution context."""

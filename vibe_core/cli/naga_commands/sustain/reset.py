@@ -32,20 +32,16 @@ from typing import List, Tuple
 from datetime import datetime
 
 from vibe_core.protocols.naga.cli_command import (
-    Mahajana,
     NagaCommandBase,
     NagaCommandResult,
-    naga_command,
-)
+    naga_command)
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.RESET_IP,
-    mahajana=Mahajana.YAMARAJA,
     name="reset",
-    help_text="System reset (YAMARAJA's judgment - SUSTAIN phase, final position)",
-)
+    help_text="System reset (YAMARAJA's judgment - SUSTAIN phase, final position)")
 class ResetCommand(NagaCommandBase):
     """
     Reset command implementation.
@@ -124,8 +120,7 @@ class ResetCommand(NagaCommandBase):
 
         return self.success(
             "\n".join(output_parts),
-            data=tuple(data),
-        )
+            data=tuple(data))
 
     def _get_cycle_info(self) -> dict:
         """Get Mahamantra cycle information."""
