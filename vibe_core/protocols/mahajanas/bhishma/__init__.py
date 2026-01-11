@@ -202,8 +202,55 @@ class NullBhishma:
         )
 
 
+# =============================================================================
+# LEDGER - Immutable Commit Log
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bhishma.ledger import (
+    GENESIS_HASH,
+    LedgerEntry,
+    LedgerProtocol,
+    Ledger,
+    NullLedger,
+    LOTUS_POSITION as LEDGER_POSITION,
+)
+
+# =============================================================================
+# LINEAGE - Parampara Chain Verification
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bhishma.lineage import (
+    PARAMPARA_DIVISOR,
+    LineageStatus,
+    LineageNode,
+    LineageVerification,
+    LineageProtocol,
+    Lineage,
+    NullLineage,
+    LOTUS_POSITION as LINEAGE_POSITION,
+)
+
+
 __all__ = [
+    # Ownership
     "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Bhishma Protocol
     "CommitEntry", "CommitResult", "VerificationResult", "CommitState",
     "BhishmaProtocol", "NullBhishma",
+    # Ledger
+    "GENESIS_HASH",
+    "LedgerEntry",
+    "LedgerProtocol",
+    "Ledger",
+    "NullLedger",
+    "LEDGER_POSITION",
+    # Lineage
+    "PARAMPARA_DIVISOR",
+    "LineageStatus",
+    "LineageNode",
+    "LineageVerification",
+    "LineageProtocol",
+    "Lineage",
+    "NullLineage",
+    "LINEAGE_POSITION",
 ]
