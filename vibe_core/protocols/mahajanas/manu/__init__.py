@@ -14,7 +14,7 @@ DERIVED FROM MAHAMANTRA:
 Manu establishes ORDER. Without Manu = Anarchy.
 """
 
-from typing import Protocol, runtime_checkable, Optional, List, ClassVar
+from typing import Any, ClassVar, Dict, List, Optional, Protocol, runtime_checkable
 from dataclasses import dataclass
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
@@ -118,6 +118,15 @@ class NullManu(ManuProtocolBase):
 
     def get_ruling(self, action: str) -> Optional[str]:
         return None
+
+    def sync(self, target: str = "all") -> Dict[str, Any]:
+        """CLI: Synchronize dharmic state."""
+        return {
+            "success": True,
+            "target": target,
+            "synced": True,
+            "message": "NullManu sync complete",
+        }
 
 
 # Import Dharma (The Architectural Law) - Manu's PRIMARY protocol

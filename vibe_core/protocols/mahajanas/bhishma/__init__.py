@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    Any,
     ClassVar,
     Dict,
     List,
@@ -197,6 +198,24 @@ class NullBhishma(BhishmaProtocolBase):
             lineage_hash="",
             health="pristine",
         )
+
+    def commit_cli(self, message: str = "null commit", sovereign: str = "cli") -> Dict[str, Any]:
+        """CLI: Commit with simple string args."""
+        # CommitEntry is a Union type - pass a dict as the entry
+        entry: Dict[str, str] = {
+            "action": "cli_commit",
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
+            "author": sovereign,
+        }
+        result = self.commit(entry, sovereign)
+        # CommitResult is TypedDict - access via dict keys
+        return {
+            "success": result.get("success", True),
+            "commit_id": result.get("commit_id", "null"),
+            "timestamp": result.get("timestamp", ""),
+            "message": message,
+        }
 
 
 # =============================================================================
