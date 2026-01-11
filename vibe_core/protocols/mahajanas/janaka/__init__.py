@@ -24,7 +24,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import (
-    Any,
     Callable,
     ClassVar,
     Dict,
@@ -138,6 +137,16 @@ class ExecutionState(TypedDict, total=False):
     total_karma: float        # Accumulated work debt
     is_busy: bool
     health: str               # "pristine", "healthy", "degraded", "blocked"
+
+
+class CheckResult(TypedDict):
+    """Result of check operation. WATERTIGHT - no Any!"""
+    success: bool
+    target: str
+    pending: int
+    running: int
+    completed: int
+    health: str
 
 
 # =============================================================================
@@ -342,17 +351,17 @@ class NullJanaka(JanakaProtocolBase):
             health="pristine",
         )
 
-    def check(self, target: str = "status") -> Dict[str, Any]:
-        """CLI: Check execution state (dharma check)."""
+    def check(self, target: str = "status") -> "CheckResult":
+        """CLI: Check execution state (dharma check). WATERTIGHT."""
         state = self.get_state()
-        return {
-            "success": True,
-            "target": target,
-            "pending": len(state.get("pending_tasks", [])),
-            "running": len(state.get("running_tasks", [])),
-            "completed": state.get("completed_count", 0),
-            "health": state.get("health", "unknown"),
-        }
+        return CheckResult(
+            success=True,
+            target=target,
+            pending=len(state.get("pending_tasks", [])),
+            running=len(state.get("running_tasks", [])),
+            completed=state.get("completed_count", 0),
+            health=state.get("health", "unknown"),
+        )
 
 
 # =============================================================================
@@ -443,6 +452,7 @@ __all__ = [
     "Task",
     "ExecutionResult",
     "ExecutionState",
+    "CheckResult",
     # Handler Protocol
     "TaskHandler",
     # Protocol

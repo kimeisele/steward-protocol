@@ -37,7 +37,7 @@ import inspect
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Final, List, Optional, Tuple, Union
+from typing import Callable, Dict, Final, List, Optional, Tuple, Union
 
 # =============================================================================
 # MANTRA SUBSTRATE IMPORTS (The Source)
@@ -282,8 +282,8 @@ def execute_gate(
         except (ValueError, TypeError):
             params = []
 
-        # Map positional args to parameter names
-        call_kwargs: Dict[str, Any] = {}
+        # Map positional args to parameter names (CLI args are always strings)
+        call_kwargs: Dict[str, str] = {}
         positional_args: List[str] = []
 
         for i, arg in enumerate(args):
