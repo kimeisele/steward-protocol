@@ -353,6 +353,27 @@ from vibe_core.mahamantra._singularity import (
 )
 
 # =============================================================================
+# GOVERNANCE BRIDGE - Protocol Ownership (100% Coverage)
+# Source: vibe_core/protocols/governance/bridge.py
+#
+# ACCESS VIA MAHAMANTRA:
+#     mahamantra.governance.get_owner("defense.py")  # → Mahajana.YAMARAJA
+#     mahamantra.governance.audit()                   # → GovernanceAudit
+#     mahamantra.get_owner("ledger.py")              # Convenience shortcut
+# =============================================================================
+
+from vibe_core.protocols.governance.bridge import (
+    ProtocolBridge,
+    GovernanceAudit,
+    ProtocolEntry,
+    ProtocolCategory,
+    MahajanaPortfolio,
+    get_owner as governance_get_owner,
+    list_by_owner as governance_list_by_owner,
+    audit as governance_audit,
+)
+
+# =============================================================================
 # CLI BRIDGE - Krishna Routes All Commands (Option B: Sauber Verbinden)
 # Source: vibe_core/mahamantra/_cli_bridge.py
 # =============================================================================
@@ -753,10 +774,21 @@ __all__ = [
     # === THE SINGULARITY (Krishna Routes Everything) ===
     # Access protocol bases via: mahamantra.protocols.kapila
     # Access modules via: mahamantra.mod.yamaraja (CAITANYA SINGULARITY)
+    # Access governance via: mahamantra.governance
     "mahamantra",
     "Mahamantra",
     "ProtocolRouter",
     "ModuleRouter",
+    # === GOVERNANCE BRIDGE (100% Protocol Ownership) ===
+    # Access via: mahamantra.governance.get_owner("defense.py")
+    "ProtocolBridge",
+    "GovernanceAudit",
+    "ProtocolEntry",
+    "ProtocolCategory",
+    "MahajanaPortfolio",
+    "governance_get_owner",
+    "governance_list_by_owner",
+    "governance_audit",
     # === CLI BRIDGE (Option B: Sauber Verbinden) ===
     # Route CLI commands via: cli_bridge.route("analyze", ["--deep"])
     # Or via: cli_route("analyze", ["--deep"])
