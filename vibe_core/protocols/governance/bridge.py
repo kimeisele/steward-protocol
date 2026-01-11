@@ -229,6 +229,8 @@ _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory,
                "Governance Architecture Document"),
     "governance_gate.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
                            "Governance gates"),
+    "governance/fractal_cli.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
+                                  "16-command fractal CLI protocol"),
 
     # =========================================================================
     # PRAHLADA (Devotion/Resilience) - Level 1-4
