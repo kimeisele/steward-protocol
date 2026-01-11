@@ -26,7 +26,7 @@ WATERTIGHT: No Any types. All typed explicitly.
 ANTI-MAYAVAD: Every protocol has a PERSON (OWNER).
 """
 
-from typing import Final
+from typing import Dict, Final, List, Optional, Tuple
 
 # =============================================================================
 # LEVEL -2: ACINTYA (Krishna = Mahamantra)
@@ -455,6 +455,133 @@ from vibe_core.mahamantra._cli_auto import (
 )
 
 # =============================================================================
+# CLI ENTRY (The Thin Gate - REPLACES unified_cli.py)
+# Source: vibe_core/mahamantra/_cli_entry.py
+# =============================================================================
+
+from vibe_core.mahamantra._cli_entry import (
+    # The Entry Class
+    MahamantraCLIEntry,
+    # Singleton getter
+    get_entry as get_cli_entry,
+    # Main function
+    main as cli_main,
+    # Entry point
+    cli_entry as cli_entry_point,
+)
+
+# =============================================================================
+# GATES - THE SINGLE ENTRY POINT (Pancha Tattva)
+# Source: vibe_core/cli/gates.py
+#
+# THE 5 GATES (ONE IMPORT):
+#     from vibe_core.mahamantra import gate, sync_gate
+#
+#     result = gate("analyze", ["system"])        # Single command
+#     results = sync_gate(["analyze", "judge"])   # Parallel execution
+#
+# "śrī-kṛṣṇa-caitanya prabhu-nityānanda
+#  śrī-advaita gadādhara śrīvāsādi-gaura-bhakta-vṛnda"
+#
+# WRAPPER FUNCTIONS: Delay import to avoid circular dependencies at module load.
+# =============================================================================
+
+
+def gate(command: str, args: Optional[List[str]] = None) -> "GateResult":
+    """
+    GATE (Chaitanya) - Main entry point. Routes to mahamantra position.
+
+    Usage:
+        from vibe_core.mahamantra import gate
+        result = gate("analyze", ["system"])
+
+    See: vibe_core/cli/gates.py for full implementation.
+    """
+    from vibe_core.cli.gates import gate as _gate
+    return _gate(command, args)
+
+
+def sync_gate(
+    commands: List[str],
+    max_workers: int = 4,
+    preserve_order: bool = True,
+) -> List["GateResult"]:
+    """
+    SYNC GATE (Srivasa) - Parallel execution of multiple commands.
+
+    Usage:
+        from vibe_core.mahamantra import sync_gate
+        results = sync_gate(["analyze", "judge", "fetch"])
+
+    See: vibe_core/cli/gates.py for full implementation.
+    """
+    from vibe_core.cli.gates import sync_gate as _sync_gate
+    return _sync_gate(commands, max_workers, preserve_order)
+
+
+def route_gate(command: str) -> Tuple[int, str]:
+    """ROUTE GATE (Nityananda) - Route command to position."""
+    from vibe_core.cli.gates import route_gate as _route_gate
+    return _route_gate(command)
+
+
+def execute_gate(position: int, method_name: str, args: List[str]) -> "GateResult":
+    """EXECUTE GATE (Advaita) - Execute at position."""
+    from vibe_core.cli.gates import execute_gate as _execute_gate
+    return _execute_gate(position, method_name, args)
+
+
+def result_gate(result: "GateResult", silent: bool = False) -> int:
+    """RESULT GATE (Gadadhara) - Format and return exit code."""
+    from vibe_core.cli.gates import result_gate as _result_gate
+    return _result_gate(result, silent)
+
+
+def format_result(result: "GateResult") -> str:
+    """Format GateResult as string."""
+    from vibe_core.cli.gates import format_result as _format_result
+    return _format_result(result)
+
+
+def gate_main(argv: Optional[List[str]] = None) -> int:
+    """Main entry point for gate-based CLI."""
+    from vibe_core.cli.gates import gate_main as _gate_main
+    return _gate_main(argv)
+
+
+# Alias for backward compatibility
+cli_gate = gate
+
+
+# Gate constants (access via function to avoid circular import)
+def get_gate_opcodes() -> Dict[int, str]:
+    """Get GATE_OPCODES dict (lazy load)."""
+    from vibe_core.cli.gates import GATE_OPCODES
+    return GATE_OPCODES
+
+
+def get_opcode_to_position() -> Dict[str, int]:
+    """Get OPCODE_TO_POSITION dict (lazy load)."""
+    from vibe_core.cli.gates import OPCODE_TO_POSITION
+    return OPCODE_TO_POSITION
+
+
+def get_quarter_gates() -> Dict:
+    """Get QUARTER_GATES dict (lazy load)."""
+    from vibe_core.cli.gates import QUARTER_GATES
+    return QUARTER_GATES
+
+
+def get_gate_result_class():
+    """Get GateResult class (lazy load)."""
+    from vibe_core.cli.gates import GateResult
+    return GateResult
+
+
+# Type alias for annotation
+GateResult = "GateResult"  # Forward reference, use get_gate_result_class() for actual class
+
+# =============================================================================
 # KERNEL CONSTANTS
 # =============================================================================
 
@@ -684,4 +811,23 @@ __all__ = [
     "get_cli_entry",
     "cli_main",
     "cli_entry_point",
+    # === GATES (Pancha Tattva - THE SINGLE ENTRY POINT) ===
+    # ONE import: from vibe_core.mahamantra import gate, sync_gate
+    # Constant getters (lazy load to avoid circular imports)
+    "get_gate_opcodes",
+    "get_opcode_to_position",
+    "get_quarter_gates",
+    "get_gate_result_class",
+    # Result type (forward reference)
+    "GateResult",
+    "format_result",
+    # THE 5 GATES
+    "gate",          # Chaitanya - Main entry
+    "route_gate",    # Nityananda - Routing
+    "execute_gate",  # Advaita - Execution
+    "result_gate",   # Gadadhara - Result
+    "sync_gate",     # Srivasa - Parallel
+    # Aliases
+    "cli_gate",
+    "gate_main",
 ]
