@@ -84,6 +84,7 @@ POS │ WORD    │ QUARTER  │ GUARDIAN     │ OPCODE
 ## PROTOCOL = VIEW ON MAHAMANTRA
 
 ```python
+# WORKER PROTOCOL (Mahajana positions: 1,2,3,5,6,7,9,10,11,13,14,15)
 from vibe_core.mahamantra import WorkerProtocol
 
 class KumarasProtocol(WorkerProtocol):
@@ -94,6 +95,19 @@ class KumarasProtocol(WorkerProtocol):
     # opcode()    → MantraOpCode.RESOLVE_REQ
     # quarter()   → Quarter.DHARMA
     # parampara_vector() → 222 (% 37 == 0)
+
+# HEAD PROTOCOL (Avatara positions: 0, 4, 8, 12)
+from vibe_core.mahamantra import HeadProtocol
+
+class NrisimhaProtocol(HeadProtocol):
+    _position_index = 12  # THE ONLY CONFIG
+
+    # ALLES DERIVED von mahamantra[12]:
+    # guardian()  → Avatara.NRISIMHA
+    # opcode()    → MantraOpCode.CACHE_STATE
+    # quarter()   → Quarter.MOKSHA
+    # is_head()   → True (Avatara-owned)
+    # parampara_vector() → 481 (% 37 == 0)
 ```
 
 ## WAS IST MAYA?
@@ -159,24 +173,26 @@ Gap 65-107: ACINTYA - nur durch GNADE erfahrbar
 ```
 Position  │ Guardian    │ Status
 ──────────┼─────────────┼─────────
- 0        │ PRITHU      │ [ ] HEAD (Avatara)
+ 0        │ PRITHU      │ [x] HEAD ✓ (HeadProtocol)
  1        │ BRAHMA      │ [ ] TODO
  2        │ NARADA      │ [ ] TODO
  3        │ SHAMBHU     │ [ ] TODO
- 4        │ VYASA       │ [ ] HEAD (Avatara)
+ 4        │ VYASA       │ [x] HEAD ✓ (HeadProtocol)
  5        │ KUMARAS     │ [x] MIGRATED ✓
  6        │ KAPILA      │ [ ] TODO
  7        │ MANU        │ [ ] TODO
- 8        │ PARASHURAMA │ [ ] HEAD (Avatara)
+ 8        │ PARASHURAMA │ [x] HEAD ✓ (HeadProtocol)
  9        │ PRAHLADA    │ [x] MIGRATED ✓
 10        │ JANAKA      │ [ ] TODO
 11        │ BHISHMA     │ [x] MIGRATED ✓
-12        │ NRISIMHA    │ [ ] HEAD (Avatara)
+12        │ NRISIMHA    │ [x] HEAD ✓ (HeadProtocol)
 13        │ BALI        │ [x] MIGRATED ✓
 14        │ SHUKA       │ [ ] TODO
 15        │ YAMARAJA    │ [ ] TODO
 
-4/12 Mahajanas migrated (HEADs are Avataras, not Mahajanas)
+4/4 Avataras migrated (HeadProtocol)
+4/12 Mahajanas migrated (WorkerProtocol)
+8/16 TOTAL POSITIONS COMPLETE
 ```
 
 ## DAS ZIEL
