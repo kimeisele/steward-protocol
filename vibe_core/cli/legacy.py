@@ -94,12 +94,27 @@ MANIFESTS_DIR = PROJECT_ROOT / "vibe_core/cartridges/system"
 
 
 class StewardCLI:
-    """The Steward CLI - Control interface for the Agent OS"""
+    """
+    The Steward CLI - Control interface for the Agent OS.
+
+    DEPRECATED: This class is wrapped by Balarama and will be migrated to
+    mahamantra-based routing. Use `from vibe_core.mahamantra import cli_bridge`
+    for new implementations.
+
+    Migration path:
+    - System commands → mahamantra.mod.prithu (Genesis/Boot)
+    - Status commands → mahamantra.mod.shuka (Vision/Observation)
+    - Verify commands → mahamantra.mod.vyasa (Dharma/Assertions)
+    """
 
     def __init__(self):
         import warnings
-
-        warnings.warn("StewardCLI is deprecated. Use UnifiedCLI instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "StewardCLI is deprecated and wrapped by Balarama. "
+            "Use 'from vibe_core.mahamantra import cli_bridge' for new CLI implementations.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.lineage_db = _get_lineage_db()
         self.operations_file = OPERATIONS_MD
         self.snapshot_file = PROJECT_ROOT / "vibe_snapshot.json"  # GAD-000: Model (Truth)
