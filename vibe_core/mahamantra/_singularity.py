@@ -24,10 +24,23 @@ USAGE:
     mahamantra.workers      # All 12 Workers
 
 ACINTYA: This object IS Krishna in code form.
+
+FRACTAL ARCHITECTURE:
+    ZERO HARDCODED MAPPINGS. Everything derives from _source.py.
+    Add new mahajana to folder + _source.py = instantly available.
+    NO code changes to _singularity.py required.
+
+    "mattaḥ parataraṁ nānyat kiñcid asti dhanañjaya
+    mayi sarvam idaṁ protaṁ sūtre maṇi-gaṇā iva"
+
+    "There is no truth superior to Me.
+    Everything rests upon Me, as pearls are strung on a thread."
+    — Bhagavad Gita 7.7
 """
 
 from __future__ import annotations
 
+import importlib
 from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING
 
 from vibe_core.mahamantra._source import (
@@ -53,9 +66,48 @@ if TYPE_CHECKING:
     from vibe_core.mahamantra._protocol import MantraProtocol
 
 
+# =============================================================================
+# DYNAMIC LOOKUP HELPERS - Derived from _source.py ONLY
+# =============================================================================
+
+def _get_guardian_name(index: int) -> str:
+    """
+    Get guardian name from index - DERIVED from _source.py.
+
+    NO hardcoded mappings. The truth table IS the source.
+    """
+    if 0 <= index < 16:
+        return MAHAMANTRA_POSITIONS[index].guardian.value
+    raise IndexError(f"Invalid position index: {index}")
+
+
+def _get_index_by_guardian_name(name: str) -> Optional[int]:
+    """
+    Get index from guardian name - DERIVED from _source.py.
+
+    NO hardcoded mappings. The truth table IS the source.
+    """
+    name_lower = name.lower()
+    for pos in MAHAMANTRA_POSITIONS:
+        if pos.guardian.value == name_lower:
+            return pos.index
+    return None
+
+
+def _is_valid_guardian_name(name: str) -> bool:
+    """
+    Check if name is a valid guardian - DERIVED from _source.py.
+
+    NO hardcoded sets. The truth table IS the source.
+    """
+    return _get_index_by_guardian_name(name) is not None
+
+
 class ProtocolRouter:
     """
     Routes to all 16 Protocol Bases.
+
+    FRACTAL: ZERO hardcoded mappings. Everything derives from _source.py.
 
     Krishna routes to each guardian's protocol:
         router.prithu -> PrithuProtocolBase
@@ -66,70 +118,52 @@ class ProtocolRouter:
     """
 
     # Lazy-loaded protocol bases (avoid circular imports)
-    _bases: Optional[Dict[int, Type["MantraProtocol"]]] = None
+    _bases: Dict[int, Type["MantraProtocol"]]
 
-    def _load_bases(self) -> Dict[int, Type["MantraProtocol"]]:
-        """Load protocol bases lazily."""
-        if self._bases is None:
-            # Import here to avoid circular imports
-            from vibe_core.protocols.mahajanas.prithu import PrithuProtocolBase
-            from vibe_core.protocols.mahajanas.vyasa import VyasaProtocolBase
-            from vibe_core.protocols.mahajanas.parashurama import ParashuramaProtocolBase
-            from vibe_core.protocols.mahajanas.nrisimha import NrisimhaProtocolBase
-            from vibe_core.protocols.mahajanas.brahma import BrahmaProtocolBase
-            from vibe_core.protocols.mahajanas.narada import NaradaProtocolBase
-            from vibe_core.protocols.mahajanas.shambhu import ShambhuProtocolBase
-            from vibe_core.protocols.mahajanas.kumaras import KumarasProtocolBase
-            from vibe_core.protocols.mahajanas.kapila import KapilaProtocolBase
-            from vibe_core.protocols.mahajanas.manu import ManuProtocolBase
-            from vibe_core.protocols.mahajanas.prahlada import PrahladaProtocolBase
-            from vibe_core.protocols.mahajanas.janaka import JanakaProtocolBase
-            from vibe_core.protocols.mahajanas.bhishma import BhishmaProtocolBase
-            from vibe_core.protocols.mahajanas.bali import BaliProtocolBase
-            from vibe_core.protocols.mahajanas.shuka import ShukaProtocolBase
-            from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocolBase
+    def __init__(self) -> None:
+        self._bases = {}
 
-            self._bases = {
-                # 4 HEADs (Avataras)
-                0: PrithuProtocolBase,
-                4: VyasaProtocolBase,
-                8: ParashuramaProtocolBase,
-                12: NrisimhaProtocolBase,
-                # 12 Workers (Mahajanas)
-                1: BrahmaProtocolBase,
-                2: NaradaProtocolBase,
-                3: ShambhuProtocolBase,
-                5: KumarasProtocolBase,
-                6: KapilaProtocolBase,
-                7: ManuProtocolBase,
-                9: PrahladaProtocolBase,
-                10: JanakaProtocolBase,
-                11: BhishmaProtocolBase,
-                13: BaliProtocolBase,
-                14: ShukaProtocolBase,
-                15: YamarajaProtocolBase,
-            }
-        return self._bases
+    def _load_base(self, index: int) -> Type["MantraProtocol"]:
+        """
+        Load a protocol base lazily by index.
+
+        FRACTAL: Uses _source.py to derive guardian name, then importlib.
+        NO hardcoded imports. Add to _source.py = instantly available.
+        """
+        if index in self._bases:
+            return self._bases[index]
+
+        # Get guardian name from _source.py (THE truth table)
+        guardian_name = _get_guardian_name(index)
+
+        # Dynamic import - NO hardcoded paths
+        module_path = f"vibe_core.protocols.mahajanas.{guardian_name}"
+        module = importlib.import_module(module_path)
+
+        # Get ProtocolBase class (convention: {Guardian}ProtocolBase)
+        class_name = f"{guardian_name.capitalize()}ProtocolBase"
+        protocol_base = getattr(module, class_name)
+
+        # Cache it
+        self._bases[index] = protocol_base
+        return protocol_base
 
     def __getitem__(self, index: int) -> Type["MantraProtocol"]:
         """Get protocol base by position index."""
-        bases = self._load_bases()
-        if index not in bases:
+        if not (0 <= index < 16):
             raise KeyError(f"No protocol base at position {index}")
-        return bases[index]
+        return self._load_base(index)
 
     def by_name(self, name: str) -> Type["MantraProtocol"]:
-        """Get protocol base by guardian name."""
-        name_lower = name.lower()
-        name_to_index = {
-            "prithu": 0, "brahma": 1, "narada": 2, "shambhu": 3,
-            "vyasa": 4, "kumaras": 5, "kapila": 6, "manu": 7,
-            "parashurama": 8, "prahlada": 9, "janaka": 10, "bhishma": 11,
-            "nrisimha": 12, "bali": 13, "shuka": 14, "yamaraja": 15,
-        }
-        if name_lower not in name_to_index:
+        """
+        Get protocol base by guardian name.
+
+        FRACTAL: Uses _source.py lookup. NO hardcoded name dict.
+        """
+        index = _get_index_by_guardian_name(name)
+        if index is None:
             raise KeyError(f"Unknown guardian: {name}")
-        return self[name_to_index[name_lower]]
+        return self[index]
 
     # === Property Access for Each Guardian ===
 
@@ -225,6 +259,8 @@ class ModuleRouter:
     """
     Routes to all 16 Mahajana MODULES (not classes).
 
+    FRACTAL: ZERO hardcoded mappings. Everything derives from _source.py.
+
     ONE IMPORT, KRISHNA ROUTES:
         from vibe_core.mahamantra import mahamantra
 
@@ -236,39 +272,47 @@ class ModuleRouter:
     "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
     """
 
-    # Lazy-loaded modules (avoid circular imports)
-    _modules: Optional[Dict[str, object]] = None
+    # Lazy-loaded modules cache
+    _modules: Dict[str, object]
+
+    def __init__(self) -> None:
+        self._modules = {}
 
     def _load_module(self, name: str) -> object:
-        """Load a mahajana module by name."""
-        import importlib
+        """
+        Load a mahajana module by name.
+
+        FRACTAL: NO hardcoded validation. Uses _source.py as truth.
+        """
+        if name in self._modules:
+            return self._modules[name]
+
         module_path = f"vibe_core.protocols.mahajanas.{name}"
-        return importlib.import_module(module_path)
+        module = importlib.import_module(module_path)
+        self._modules[name] = module
+        return module
 
     def __getattr__(self, name: str) -> object:
-        """Get mahajana module by name."""
+        """
+        Get mahajana module by name.
+
+        FRACTAL: Uses _source.py lookup. NO hardcoded name set.
+        """
         name_lower = name.lower()
-        valid_names = {
-            "prithu", "brahma", "narada", "shambhu",
-            "vyasa", "kumaras", "kapila", "manu",
-            "parashurama", "prahlada", "janaka", "bhishma",
-            "nrisimha", "bali", "shuka", "yamaraja",
-        }
-        if name_lower not in valid_names:
+        if not _is_valid_guardian_name(name_lower):
             raise AttributeError(f"Unknown mahajana: {name}")
         return self._load_module(name_lower)
 
     def __getitem__(self, index: int) -> object:
-        """Get mahajana module by position index."""
-        index_to_name = {
-            0: "prithu", 1: "brahma", 2: "narada", 3: "shambhu",
-            4: "vyasa", 5: "kumaras", 6: "kapila", 7: "manu",
-            8: "parashurama", 9: "prahlada", 10: "janaka", 11: "bhishma",
-            12: "nrisimha", 13: "bali", 14: "shuka", 15: "yamaraja",
-        }
-        if index not in index_to_name:
+        """
+        Get mahajana module by position index.
+
+        FRACTAL: Uses _source.py lookup. NO hardcoded index dict.
+        """
+        if not (0 <= index < 16):
             raise KeyError(f"No mahajana at position {index}")
-        return self._load_module(index_to_name[index])
+        guardian_name = _get_guardian_name(index)
+        return self._load_module(guardian_name)
 
     def __repr__(self) -> str:
         return "ModuleRouter(16 modules)"
