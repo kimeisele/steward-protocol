@@ -1,23 +1,16 @@
 """
 BALI - The 10th Mahajana (Surrender/Yield)
 ==========================================
-OpCode: YIELD_CPU (Bit 15, Position 15 in Mahamantra)
-Opulence: Vairagya (Renunciation)
+
+POSITION: 13 (MOKSHA Quarter, OPTIMIZE OpCode)
 
 King Bali - The Generous Demon King.
 Gave everything to Vamana - even his own position.
 "sarva-dharman parityajya mam ekam saranam vraja" (BG 18.66)
 
-PROTOCOL OWNERSHIP (Anti-Mayavad):
-Bali is the PERSON responsible for all surrender.
-Not abstract "yielding" - PERSONAL surrender by Bali.
-
-OWNED PROTOCOLS:
-- CPU Yielding (YIELD_CPU OpCode)
-- Graceful Shutdown
-- Resource Release
-- Cooperative Multitasking
-- Prapatti (Surrender)
+DERIVED FROM MAHAMANTRA:
+    Position 13 → guardian=BALI, opcode=OPTIMIZE, quarter=MOKSHA
+    All properties derived from truth table. No manual wiring.
 
 A system that cannot surrender = INFINITE LOOPS = HIRANYAKASHIPU.
 Bali proves that even a demon can be liberated through surrender.
@@ -31,8 +24,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import (
+    ClassVar,
     Dict,
-    Final,
     List,
     Optional,
     Protocol,
@@ -41,28 +34,32 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# PROTOCOL OWNERSHIP
+# BALI PROTOCOL BASE - Derives from MantraPosition 13
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.BALI
-LOTUS_POSITION: Final[int] = 13  # MOKSHA Quarter, Worker 1
-LOTUS_QUARTER: Final[str] = "moksha"
+class BaliProtocolBase(WorkerProtocol):
+    """
+    Bali protocol ownership - DERIVED from Mahamantra position 13.
 
-OWNED_PROTOCOLS: Final[List[str]] = [
-    "bali",
-    "surrender",
-    "yield",
-    "shutdown",
-    "release",
-]
+    NO MANUAL WIRING:
+        _position_index = 13 is the ONLY configuration.
+        Everything else derived from truth table.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.OPTIMIZE,  # Vyuha: Q4 Worker 1 (YIELD_CPU -> Shuka)
-]
+    DERIVED PROPERTIES:
+        guardian()  → Mahajana.BALI
+        opcode()    → MantraOpCode.OPTIMIZE
+        quarter()   → Quarter.MOKSHA
+        is_head()   → False (Worker position)
+        parampara_vector() → 518 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 13  # THE ONLY CONFIGURATION
+
+
+# NO MANUAL WIRING - Everything derived from mahamantra[13]
 
 
 # =============================================================================
@@ -112,12 +109,14 @@ class SurrenderState(TypedDict, total=False):
 class BaliProtocol(Protocol):
     """
     The Surrender/Yield Protocol - Bali's domain.
+
+    DERIVED: Position 13 → BALI, OPTIMIZE, MOKSHA
     WATERTIGHT - no Any types!
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """Always returns Mahajana.BALI."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 13 in the Mahamantra."""
         ...
 
     def yield_cpu(self, duration_ms: int = 0) -> SurrenderResult:
@@ -150,15 +149,13 @@ class BaliProtocol(Protocol):
 # =============================================================================
 
 
-class NullBali:
+class NullBali(BaliProtocolBase):
     """
     The Hiranyakashipu Pattern.
     Cannot surrender (documents the anti-pattern).
-    """
 
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.BALI
+    Inherits from BaliProtocolBase → position 13 → BALI.
+    """
 
     def yield_cpu(self, duration_ms: int = 0) -> SurrenderResult:
         return SurrenderResult(
@@ -228,8 +225,8 @@ from vibe_core.protocols.mahajanas.bali.yield_cpu import (
 
 
 __all__ = [
-    # Ownership
-    "OWNER", "OWNED_PROTOCOLS", "OWNED_OPCODES",
+    # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
+    "BaliProtocolBase",
     # Bali Protocol
     "SurrenderType", "SurrenderResult", "SurrenderState",
     "BaliProtocol", "NullBali",
@@ -242,7 +239,6 @@ __all__ = [
     "ShutdownProtocol",
     "ShutdownCoordinator",
     "NullShutdown",
-    "SHUTDOWN_POSITION",
     # Yield CPU
     "YieldPolicy",
     "YieldResult",
@@ -251,5 +247,4 @@ __all__ = [
     "YieldScheduler",
     "Hiranyakashipu",
     "NullYield",
-    "YIELD_POSITION",
 ]
