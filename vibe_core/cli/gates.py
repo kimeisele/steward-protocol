@@ -254,7 +254,14 @@ def execute_gate(
 
         # Instantiate and call method
         instance = null_class()
-        method = getattr(instance, method_name, None)
+
+        # Try {method}_cli first (CLI-friendly wrapper takes priority)
+        cli_method_name = f"{method_name}_cli"
+        method = getattr(instance, cli_method_name, None)
+
+        if method is None:
+            # Try exact method name
+            method = getattr(instance, method_name, None)
 
         if method is None:
             # Try opcode as method name

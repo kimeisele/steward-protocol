@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import (
+    Any,
     Callable,
     ClassVar,
     Dict,
@@ -340,6 +341,18 @@ class NullJanaka(JanakaProtocolBase):
             is_busy=False,
             health="pristine",
         )
+
+    def check(self, target: str = "status") -> Dict[str, Any]:
+        """CLI: Check execution state (dharma check)."""
+        state = self.get_state()
+        return {
+            "success": True,
+            "target": target,
+            "pending": len(state.get("pending_tasks", [])),
+            "running": len(state.get("running_tasks", [])),
+            "completed": state.get("completed_count", 0),
+            "health": state.get("health", "unknown"),
+        }
 
 
 # =============================================================================

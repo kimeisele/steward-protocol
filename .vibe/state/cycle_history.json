@@ -1,26 +1,21 @@
 {
-  "completed": [
+  "completed": [],
+  "errors": [
     {
-      "cycle_id": "294d985a",
+      "cycle_id": "75c5454a",
       "parent_cycle_id": null,
-      "trace_id": "7a3035b6",
+      "trace_id": "177f20dc",
       "cycle_name": "boot_sequence",
-      "phase": "recover",
-      "observations_count": 1,
-      "orientations_count": 1,
-      "decisions_count": 1,
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
       "actions_count": 0,
       "errors": {
-        "boot_config_valid": true,
-        "kernel_space_allocated": true,
-        "communication_established": true,
-        "capabilities_discovered": 0,
-        "discovery_skipped": true,
-        "agents_registered": 1
+        "orchestrate": "'MantraByte' object is not subscriptable"
       },
-      "timestamp": "2026-01-09T17:54:46.527492"
+      "timestamp": "2026-01-11T18:48:12.520863"
     }
   ],
-  "errors": [],
-  "last_updated": "2026-01-09T17:54:46.527513"
+  "last_updated": "2026-01-11T18:48:12.520880"
 }

@@ -10,15 +10,15 @@
     "decisions_by_action": {}
   },
   "dispatched": {
-    "5ea9636cd79cf6eb": "2026-01-07T08:47:44.231510"
+    "97b41484eea474e6": "2026-01-11T19:35:42.181892"
   },
   "config": {
     "enabled": true,
-    "signal_buffer_size": 10,
+    "signal_buffer_size": 100,
     "correlation_threshold": 3,
     "max_signal_age_seconds": 300.0,
     "auto_dispatch": false,
-    "log_decisions": true
+    "log_decisions": false
   },
-  "snapshot_at": "2026-01-07T08:47:44.231549"
+  "snapshot_at": "2026-01-11T19:35:42.181915"
 }
