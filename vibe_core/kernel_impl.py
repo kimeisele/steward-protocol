@@ -8,6 +8,23 @@ This is an actual working implementation of the VibeKernel that:
 3. Maintains an immutable ledger
 4. Registers agent manifests
 
+DEPRECATED: Phase 4 Migration to Mahamantra
+============================================
+Kernel operations are being decomposed into mahajana services:
+
+MIGRATION PATH:
+- Process management → mahamantra.mod.janaka (cycles/execution)
+- Task scheduling → mahamantra.mod.janaka (scheduler)
+- Ledger → mahamantra.mod.bhishma (ledger/lineage)
+- Agent manifests → mahamantra.mod.brahma (bootstrap/registry)
+- Health checks → mahamantra.mod.shuka (introspection)
+- Security ops → mahamantra.mod.yamaraja (security)
+
+CURRENT STATUS: Deprecated but functional
+- Kernel continues to work via existing implementation
+- New kernel operations should use mahajana patterns
+- Access: `from vibe_core.mahamantra import mahamantra`
+
 "The 16-word DNA cycle ensures that H=0 every 16 ticks." -- Ramanujan
 "One yet different (Acintya) - the Kernel orchestrates, the Mahajanas execute."
 

@@ -3,6 +3,21 @@ Dependency Injection Container for Vibe Core.
 
 OPUS-209 Phase 0: Foundation for kernel extraction.
 
+DEPRECATED: Phase 4 Migration to Mahamantra
+============================================
+This ServiceRegistry is being migrated to mahamantra-based routing.
+
+MIGRATION PATH:
+- Services should be registered as mahajana capabilities
+- Access via: `from vibe_core.mahamantra import mahamantra`
+- Example: `mahamantra.mod.kapila` for analysis services
+- Example: `mahamantra.mod.yamaraja` for security services
+
+CURRENT STATUS: Deprecated but functional
+- New services should use mahajana patterns
+- Existing services continue to work via this registry
+- Bridge to mahamantra available via `get_mahajana_for_service()`
+
 Replaces: 5 different singleton patterns scattered across codebase:
 - StateService: Dict registry `_instances`
 - Weaver: Global variable `_global_weaver`
@@ -731,3 +746,118 @@ class ServiceRegistry:
             count = len(cls._auto_flooded_services)
             cls._auto_flooded_services.clear()
             return count
+
+
+# =============================================================================
+# PHASE 4: MAHAMANTRA BRIDGE
+# =============================================================================
+
+# Service → Mahajana mapping for gradual migration
+_SERVICE_MAHAJANA_MAP: Dict[str, str] = {
+    # Analysis/Intelligence
+    "AnalysisService": "kapila",
+    "CognitionService": "kapila",
+    "SamkhyaService": "kapila",
+    # Security/Judgment
+    "SecurityService": "yamaraja",
+    "ValidationService": "yamaraja",
+    "AuditService": "yamaraja",
+    # Events/Communication
+    "EventBus": "narada",
+    "BroadcastService": "narada",
+    "NotificationService": "narada",
+    # Execution/Tasks
+    "ExecutorService": "janaka",
+    "TaskManager": "janaka",
+    "SchedulerService": "janaka",
+    # State/Ledger
+    "VibeLedger": "bhishma",
+    "StateService": "bhishma",
+    "LineageService": "bhishma",
+    # Bootstrap/Creation
+    "PluginService": "brahma",
+    "LoaderService": "brahma",
+    "FactoryService": "brahma",
+    # Cleanup/GC
+    "GCService": "shambhu",
+    "CleanupService": "shambhu",
+    # Resources
+    "ResourceService": "bali",
+    "QuotaService": "bali",
+    # Vision/Introspection
+    "IntrospectionService": "shuka",
+    "ReflectionService": "shuka",
+}
+
+
+def get_mahajana_for_service(service_name: str) -> Optional[str]:
+    """
+    Get the mahajana that should own a service.
+
+    PHASE 4 MIGRATION BRIDGE:
+    Maps ServiceRegistry services to their mahajana owners.
+
+    Usage:
+        mahajana = get_mahajana_for_service("EventBus")
+        # → "narada"
+
+        # Then access via mahamantra:
+        from vibe_core.mahamantra import mahamantra
+        narada = mahamantra.mod.narada
+
+    Returns:
+        Mahajana name or None if not mapped
+    """
+    # Check direct mapping
+    if service_name in _SERVICE_MAHAJANA_MAP:
+        return _SERVICE_MAHAJANA_MAP[service_name]
+
+    # Check suffix patterns
+    for suffix, mahajana in [
+        ("Ledger", "bhishma"),
+        ("Security", "yamaraja"),
+        ("Event", "narada"),
+        ("Task", "janaka"),
+        ("Analysis", "kapila"),
+        ("Plugin", "brahma"),
+        ("GC", "shambhu"),
+        ("Resource", "bali"),
+    ]:
+        if suffix in service_name:
+            return mahajana
+
+    return None
+
+
+def migrate_service_to_mahamantra(interface: Type[T]) -> Optional[Any]:
+    """
+    Attempt to get a service from mahamantra instead of ServiceRegistry.
+
+    PHASE 4 MIGRATION:
+    Tries to resolve service via mahamantra routing first.
+    Falls back to ServiceRegistry if not available.
+
+    Usage:
+        # Instead of:
+        service = ServiceRegistry.get(EventBus)
+
+        # Try:
+        service = migrate_service_to_mahamantra(EventBus)
+        if service is None:
+            service = ServiceRegistry.get(EventBus)  # Fallback
+    """
+    service_name = interface.__name__
+    mahajana = get_mahajana_for_service(service_name)
+
+    if mahajana is None:
+        return None
+
+    try:
+        from vibe_core.mahamantra import mahamantra
+        module = getattr(mahamantra.mod, mahajana, None)
+        if module and hasattr(module, service_name):
+            return getattr(module, service_name)
+    except Exception:
+        pass
+
+    return None
