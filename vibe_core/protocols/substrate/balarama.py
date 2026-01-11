@@ -67,13 +67,6 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 from vibe_core.protocols.substrate.cli_substrate import (
-
-# =============================================================================
-# PROTOCOL OWNERSHIP (Governed by CLI)
-# =============================================================================
-
-OWNER: Final[Mahajana] = Mahajana.BALI
-
     AnantaSubstrate,
     CLIHeartbeat,
     CLILotusPosition,
@@ -84,6 +77,12 @@ OWNER: Final[Mahajana] = Mahajana.BALI
     derive_opcode,
     emit_cli_heartbeat,
 )
+
+# =============================================================================
+# PROTOCOL OWNERSHIP (Governed by FRACTAL LAW)
+# =============================================================================
+
+OWNER: Final[Mahajana] = Mahajana.BALI
 
 
 logger = logging.getLogger("BALARAMA")
