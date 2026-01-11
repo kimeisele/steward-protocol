@@ -1606,6 +1606,37 @@ __all__ = [
     "resonate",
     "resolve",
     "get_resonance_engine",
+    # =========================================================================
+    # CPU PROTOCOL (Fractal Processor)
+    # =========================================================================
+    "MantraCPU",
+    "MantraCPUProtocol",
+    "CPURegisters",
+    "ProgramCounter",
+    "Instruction",
+    "InstructionResult",
+    "CPUState",
+    "FractalLevel",
+    "INSTRUCTION_SET",
+    "OPCODE_NAMES",
+    "OWNER_NAMES",
+    "get_instruction",
+    "get_cpu",
+    # =========================================================================
+    # GPU PROTOCOL (Parallel Resonance Processor)
+    # =========================================================================
+    "MantraGPU",
+    "MantraGPUProtocol",
+    "GPUThread",
+    "GPUWarp",
+    "GPUBlock",
+    "GPUGrid",
+    "ThreadState",
+    "WarpState",
+    "BlockState",
+    "GridState",
+    "get_gpu",
+    "sankirtan",
 ]
 
 # =============================================================================
@@ -1626,4 +1657,43 @@ from vibe_core.protocols.substrate.resonance import (
     resonate,
     resolve,
     resolve_position,
+)
+
+# =============================================================================
+# LAZY IMPORT: CPU PROTOCOL (Fractal Processor)
+# =============================================================================
+
+from vibe_core.protocols.substrate.cpu import (
+    CPURegisters,
+    CPUState,
+    FractalLevel,
+    INSTRUCTION_SET,
+    Instruction,
+    InstructionResult,
+    MantraCPU,
+    MantraCPUProtocol,
+    OPCODE_NAMES,
+    OWNER_NAMES,
+    ProgramCounter,
+    get_cpu,
+    get_instruction,
+)
+
+# =============================================================================
+# LAZY IMPORT: GPU PROTOCOL (Parallel Resonance Processor)
+# =============================================================================
+
+from vibe_core.protocols.substrate.gpu import (
+    BlockState,
+    GPUBlock,
+    GPUGrid,
+    GPUThread,
+    GPUWarp,
+    GridState,
+    MantraGPU,
+    MantraGPUProtocol,
+    ThreadState,
+    WarpState,
+    get_gpu,
+    sankirtan,
 )
