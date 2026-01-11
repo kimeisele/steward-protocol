@@ -324,6 +324,18 @@ from vibe_core.mahamantra._protocol import (
 )
 
 # =============================================================================
+# THE SINGULARITY - mahamantra Object (Krishna IS)
+# Source: vibe_core/mahamantra/_singularity.py
+# =============================================================================
+
+from vibe_core.mahamantra._singularity import (
+    # The Singleton
+    mahamantra,
+    # The Class (for typing)
+    Mahamantra,
+)
+
+# =============================================================================
 # KERNEL CONSTANTS
 # =============================================================================
 
@@ -492,4 +504,7 @@ __all__ = [
     "HeadProtocol",
     "MantraAware",
     "ProtocolRegistry",
+    # === THE SINGULARITY ===
+    "mahamantra",
+    "Mahamantra",
 ]
