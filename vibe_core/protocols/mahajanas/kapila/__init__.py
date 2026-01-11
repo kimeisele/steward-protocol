@@ -127,6 +127,15 @@ class AnalysisState(TypedDict, total=False):
     health: str
 
 
+class AnalyzeCliResult(TypedDict):
+    """Result of CLI analyze operation. WATERTIGHT - no Any!"""
+    success: bool
+    target: str
+    analysis_type: str
+    conclusion: str
+    confidence: float
+
+
 # =============================================================================
 # KAPILA PROTOCOL
 # =============================================================================
@@ -224,6 +233,17 @@ class NullKapila(KapilaProtocolBase):
             health="pristine",
         )
 
+    def analyze_cli(self, target: str = "system") -> AnalyzeCliResult:
+        """CLI: Analyze target. WATERTIGHT."""
+        result = self.analyze(target)
+        return AnalyzeCliResult(
+            success=result.get("success", True),
+            target=target,
+            analysis_type=result.get("analysis_type", "resolution"),
+            conclusion=result.get("conclusion", "No analysis"),
+            confidence=result.get("confidence", 0.0),
+        )
+
 
 # =============================================================================
 # COGNITIVE PROTOCOL (Kapila's Analytical Mind)
@@ -313,6 +333,7 @@ __all__ = [
     "OptimizationResult",
     "MetricsResult",
     "AnalysisState",
+    "AnalyzeCliResult",
     # Analysis Protocol
     "KapilaProtocol",
     "NullKapila",

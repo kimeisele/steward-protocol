@@ -122,6 +122,17 @@ class Judgment:
     karma_cost: float
 
 
+from typing import TypedDict
+
+class JudgeCliResult(TypedDict):
+    """Result of CLI judge operation. WATERTIGHT - no Any!"""
+    success: bool
+    subject: str
+    verdict: str
+    reason: str
+    karma_balance: float
+
+
 # =============================================================================
 # PROTOCOL DEFINITION
 # =============================================================================
@@ -202,6 +213,18 @@ class NullYamaraja(YamarajaProtocolBase):
 
     def get_karma_balance(self) -> float:
         return 0.0  # Neutral
+
+    def judge_cli(self, subject: str = "action") -> JudgeCliResult:
+        """CLI: Judge a subject. WATERTIGHT."""
+        judgeable = Judgeable(subject_type="cli", subject_id=subject)
+        verdict = self.judge(judgeable)
+        return JudgeCliResult(
+            success=True,
+            subject=subject,
+            verdict=verdict.value,
+            reason="NullYamaraja grants mercy",
+            karma_balance=self.get_karma_balance(),
+        )
 
 
 # =============================================================================
@@ -393,11 +416,12 @@ __all__ = [
     # Yamaraja Protocol
     "YamarajaProtocol",
     "NullYamaraja",
-    # Yamaraja Types
+    # Yamaraja Types (WATERTIGHT)
     "Verdict",
     "Judgeable",
     "JudgmentRecord",
     "Judgment",
+    "JudgeCliResult",
     # Governance Gate (Aspect 3)
     "YamarajaGate",
     # Performance Judge (Aspect 4)

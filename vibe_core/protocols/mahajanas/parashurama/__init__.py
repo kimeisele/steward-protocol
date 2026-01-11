@@ -122,6 +122,14 @@ class FetchState(TypedDict, total=False):
     health: str               # "pristine", "healthy", "degraded"
 
 
+class FetchCliResult(TypedDict):
+    """Result of CLI fetch operation. WATERTIGHT - no Any!"""
+    success: bool
+    resource_id: str
+    status: str
+    latency_ms: int
+
+
 # =============================================================================
 # PARASHURAMA PROTOCOL
 # =============================================================================
@@ -230,6 +238,16 @@ class NullParashurama(ParashuramaProtocolBase):
             health="pristine",
         )
 
+    def fetch_cli(self, resource_id: str = "default") -> FetchCliResult:
+        """CLI: Fetch a resource. WATERTIGHT."""
+        result = self.fetch(resource_id)
+        return FetchCliResult(
+            success=result.get("success", True),
+            resource_id=resource_id,
+            status=result.get("status", "success"),
+            latency_ms=result.get("latency_ms", 0),
+        )
+
 
 # =============================================================================
 # EXPORTS
@@ -243,6 +261,7 @@ __all__ = [
     "ResourceValue",
     "FetchResult",
     "FetchState",
+    "FetchCliResult",
     # Protocol
     "ParashuramaProtocol",
     # Implementations
