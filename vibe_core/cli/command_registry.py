@@ -250,9 +250,14 @@ class CommandRegistry:
 
     Single source of truth for ALL commands in the system.
 
+    DEPRECATED: Use `from vibe_core.mahamantra import cli_bridge` for new
+    implementations. This registry now falls back to cli_bridge when
+    commands are not found locally.
+
     Scans:
     - ManifestRegistry for 'commands' sections
     - Programmatic registrations
+    - Fallback: mahamantra cli_bridge routing
 
     Provides:
     - get(name) → CommandProtocol
@@ -264,6 +269,13 @@ class CommandRegistry:
     _instance: Optional["CommandRegistry"] = None
 
     def __init__(self):
+        import warnings
+        warnings.warn(
+            "CommandRegistry is being replaced by mahamantra cli_bridge. "
+            "Use 'from vibe_core.mahamantra import cli_bridge' for new implementations.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._commands: Dict[str, CommandProtocol] = {}
         self._pending_wiring: Dict[str, ManifestCommandSpec] = {}
         self._aliases: Dict[str, str] = {}  # OPUS-311: alias -> target command
@@ -1013,6 +1025,21 @@ class CommandRegistry:
         """
         cmd = self.get(name)
         if not cmd:
+            # FALLBACK: Try mahamantra cli_bridge routing
+            try:
+                from vibe_core.mahamantra import cli_bridge
+                bridge_result = cli_bridge.route(name, args)
+                if bridge_result.exit_code != 127:  # Not "command not found"
+                    return CommandResult(
+                        success=bridge_result.success,
+                        error=bridge_result.error,
+                        exit_code=bridge_result.exit_code,
+                    )
+            except ImportError:
+                pass  # cli_bridge not available
+            except Exception as e:
+                logger.debug(f"cli_bridge fallback failed: {e}")
+
             return CommandResult(
                 success=False,
                 error=f"Command not found: {name}",
