@@ -50,12 +50,52 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict
 
 from .base import BaseSense
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - Karma Sense Data Contracts
+# =============================================================================
+
+
+class ChronicPainDict(TypedDict):
+    """Serialized chronic pain data. WATERTIGHT."""
+
+    path: str
+    repair_count: int
+    first_repair: str
+    last_repair: str
+    severity_history: List[str]
+    varga_pattern: Optional[str]
+    recommended_action: str
+
+
+class ChronicPainReportDict(TypedDict):
+    """Serialized chronic pain report. WATERTIGHT."""
+
+    total_repairs: int
+    unique_paths: int
+    hotspot_count: int
+    hotspots: List[ChronicPainDict]
+    time_window_days: int
+    threshold: int
+    health_score: float
+
+
+class KarmaSummaryDict(TypedDict):
+    """Serialized karma summary. WATERTIGHT."""
+
+    total_events: int
+    repair_events: int
+    reflex_actions: int
+    chronic_pain_count: int
+    most_troubled_path: Optional[str]
+    health_score: float
 
 logger = logging.getLogger("MANAS.Cortex.KarmaSense")
 
@@ -81,16 +121,16 @@ class ChronicPain:
     varga_pattern: Optional[str]  # Most common varga disharmony
     recommended_action: str
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "path": self.path,
-            "repair_count": self.repair_count,
-            "first_repair": self.first_repair,
-            "last_repair": self.last_repair,
-            "severity_history": self.severity_history,
-            "varga_pattern": self.varga_pattern,
-            "recommended_action": self.recommended_action,
-        }
+    def to_dict(self) -> ChronicPainDict:
+        return ChronicPainDict(
+            path=self.path,
+            repair_count=self.repair_count,
+            first_repair=self.first_repair,
+            last_repair=self.last_repair,
+            severity_history=self.severity_history,
+            varga_pattern=self.varga_pattern,
+            recommended_action=self.recommended_action,
+        )
 
 
 @dataclass
@@ -105,16 +145,16 @@ class ChronicPainReport:
     threshold: int
     health_score: float  # 0.0 (bad) to 1.0 (good)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "total_repairs": self.total_repairs,
-            "unique_paths": self.unique_paths,
-            "hotspot_count": self.hotspot_count,
-            "hotspots": [h.to_dict() for h in self.hotspots],
-            "time_window_days": self.time_window_days,
-            "threshold": self.threshold,
-            "health_score": self.health_score,
-        }
+    def to_dict(self) -> ChronicPainReportDict:
+        return ChronicPainReportDict(
+            total_repairs=self.total_repairs,
+            unique_paths=self.unique_paths,
+            hotspot_count=self.hotspot_count,
+            hotspots=[h.to_dict() for h in self.hotspots],
+            time_window_days=self.time_window_days,
+            threshold=self.threshold,
+            health_score=self.health_score,
+        )
 
 
 @dataclass
@@ -128,15 +168,15 @@ class KarmaSummary:
     most_troubled_path: Optional[str]
     health_score: float
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "total_events": self.total_events,
-            "repair_events": self.repair_events,
-            "reflex_actions": self.reflex_actions,
-            "chronic_pain_count": self.chronic_pain_count,
-            "most_troubled_path": self.most_troubled_path,
-            "health_score": self.health_score,
-        }
+    def to_dict(self) -> KarmaSummaryDict:
+        return KarmaSummaryDict(
+            total_events=self.total_events,
+            repair_events=self.repair_events,
+            reflex_actions=self.reflex_actions,
+            chronic_pain_count=self.chronic_pain_count,
+            most_troubled_path=self.most_troubled_path,
+            health_score=self.health_score,
+        )
 
 
 class KarmaSense(BaseSense):
