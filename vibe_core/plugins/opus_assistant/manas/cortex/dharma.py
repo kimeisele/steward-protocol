@@ -29,9 +29,58 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, TypedDict
 
 logger = logging.getLogger("MANAS.Cortex.Dharma")
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - Dharma Data Contracts
+# =============================================================================
+
+
+class ViolationDict(TypedDict):
+    """Serialized architectural violation. WATERTIGHT."""
+
+    type: str
+    path: str
+    description: str
+    severity: str
+    suggested_action: str
+    can_auto_fix: bool
+
+
+class SeverityBreakdown(TypedDict):
+    """Severity count breakdown. WATERTIGHT."""
+
+    critical: int
+    high: int
+    medium: int
+    low: int
+
+
+class DriftReportDict(TypedDict):
+    """Serialized drift report. WATERTIGHT."""
+
+    generated_at: str
+    total_violations: int
+    documented_modules: int
+    actual_modules: int
+    compliance_score: float
+    severity_breakdown: SeverityBreakdown
+    violations: List[ViolationDict]
+
+
+class ProposalDict(TypedDict):
+    """Serialized constitutional amendment proposal. WATERTIGHT."""
+
+    proposal_id: str
+    title: str
+    description: str
+    affected_paths: List[str]
+    proposed_changes: List[str]
+    created_at: str
+    status: str
 
 
 # =============================================================================
@@ -50,15 +99,15 @@ class ArchitecturalViolation:
     suggested_action: str  # What to do about it
     can_auto_fix: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": self.violation_type,
-            "path": self.path,
-            "description": self.description,
-            "severity": self.severity,
-            "suggested_action": self.suggested_action,
-            "can_auto_fix": self.can_auto_fix,
-        }
+    def to_dict(self) -> ViolationDict:
+        return ViolationDict(
+            type=self.violation_type,
+            path=self.path,
+            description=self.description,
+            severity=self.severity,
+            suggested_action=self.suggested_action,
+            can_auto_fix=self.can_auto_fix,
+        )
 
 
 @dataclass
@@ -78,21 +127,21 @@ class DriftReport:
     medium: int = 0
     low: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "generated_at": self.generated_at,
-            "total_violations": self.total_violations,
-            "documented_modules": self.documented_modules,
-            "actual_modules": self.actual_modules,
-            "compliance_score": self.compliance_score,
-            "severity_breakdown": {
-                "critical": self.critical,
-                "high": self.high,
-                "medium": self.medium,
-                "low": self.low,
-            },
-            "violations": [v.to_dict() for v in self.violations],
-        }
+    def to_dict(self) -> DriftReportDict:
+        return DriftReportDict(
+            generated_at=self.generated_at,
+            total_violations=self.total_violations,
+            documented_modules=self.documented_modules,
+            actual_modules=self.actual_modules,
+            compliance_score=self.compliance_score,
+            severity_breakdown=SeverityBreakdown(
+                critical=self.critical,
+                high=self.high,
+                medium=self.medium,
+                low=self.low,
+            ),
+            violations=[v.to_dict() for v in self.violations],
+        )
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -121,16 +170,16 @@ class ConstitutionalAmendmentProposal:
     created_at: str
     status: str = "pending"  # pending, approved, rejected
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "proposal_id": self.proposal_id,
-            "title": self.title,
-            "description": self.description,
-            "affected_paths": self.affected_paths,
-            "proposed_changes": self.proposed_changes,
-            "created_at": self.created_at,
-            "status": self.status,
-        }
+    def to_dict(self) -> ProposalDict:
+        return ProposalDict(
+            proposal_id=self.proposal_id,
+            title=self.title,
+            description=self.description,
+            affected_paths=self.affected_paths,
+            proposed_changes=self.proposed_changes,
+            created_at=self.created_at,
+            status=self.status,
+        )
 
 
 # =============================================================================

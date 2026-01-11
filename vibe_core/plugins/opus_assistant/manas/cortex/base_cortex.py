@@ -34,11 +34,39 @@ ADAPTER PATTERN:
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
     from vibe_core.protocols.kernel_protocol import KernelProtocol
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS - Cortex Result Contract
+# =============================================================================
+
+
+class CortexResult(TypedDict, total=False):
+    """
+    Standard result from cortex execution. WATERTIGHT.
+
+    Required fields:
+        success: Whether execution succeeded
+        handler: Which cortex handled this
+        message: Human-readable result
+
+    Optional fields:
+        error: Error message if failed
+        data: Any additional payload
+        duration_ms: Execution time
+    """
+
+    success: bool
+    handler: str
+    message: str
+    error: str
+    data: Any  # Legitimate Any - varies per cortex
+    duration_ms: float
 
 
 class BaseCortex(ABC):
@@ -114,7 +142,7 @@ class BaseCortex(ABC):
         self._kernel = kernel
 
     @abstractmethod
-    def execute(self, intent: "Intent") -> Dict[str, Any]:
+    def execute(self, intent: "Intent") -> CortexResult:
         """
         Execute an intent and return structured result.
 
@@ -125,7 +153,7 @@ class BaseCortex(ABC):
             intent: The intent to execute
 
         Returns:
-            Dict with at least:
+            CortexResult with:
                 - success: bool
                 - handler: str (cortex name)
                 - message: str (human-readable result)
@@ -157,26 +185,32 @@ def cortex_success(
     handler: str,
     message: str,
     **extra: Any,
-) -> Dict[str, Any]:
+) -> CortexResult:
     """Create a successful cortex result."""
-    return {
-        "success": True,
-        "handler": handler,
-        "message": message,
-        **extra,
-    }
+    result = CortexResult(
+        success=True,
+        handler=handler,
+        message=message,
+    )
+    # Add extra fields if provided
+    for key, value in extra.items():
+        result[key] = value  # type: ignore[literal-required]
+    return result
 
 
 def cortex_error(
     handler: str,
     error: str,
     **extra: Any,
-) -> Dict[str, Any]:
+) -> CortexResult:
     """Create an error cortex result."""
-    return {
-        "success": False,
-        "handler": handler,
-        "error": error,
-        "message": f"Error: {error}",
-        **extra,
-    }
+    result = CortexResult(
+        success=False,
+        handler=handler,
+        error=error,
+        message=f"Error: {error}",
+    )
+    # Add extra fields if provided
+    for key, value in extra.items():
+        result[key] = value  # type: ignore[literal-required]
+    return result
