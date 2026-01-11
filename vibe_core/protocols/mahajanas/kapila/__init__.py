@@ -278,7 +278,23 @@ from vibe_core.protocols.mahajanas.kapila.samkhya import (
 )
 
 
+# =============================================================================
+# CLI EXECUTION - GAD-000 Compliant (Proper Structure)
+# Source: vibe_core/protocols/mahajanas/kapila/cli.py
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kapila.cli import (
+    KapilaCLI,
+    execute,
+    get_cli,
+)
+
+
 __all__ = [
+    # CLI (GAD-000 Compliant) - Proper structure in cli.py
+    "KapilaCLI",
+    "execute",
+    "get_cli",
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "KapilaProtocolBase",
     # Analysis Types (WATERTIGHT)
