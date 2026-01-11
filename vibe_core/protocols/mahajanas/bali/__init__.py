@@ -266,4 +266,12 @@ __all__ = [
     "YieldScheduler",
     "Hiranyakashipu",
     "NullYield",
+    # Service (Real Implementation)
+    "BaliService",
 ]
+
+# =============================================================================
+# BALI SERVICE - The Real Implementation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bali.service import BaliService

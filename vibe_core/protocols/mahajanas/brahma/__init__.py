@@ -234,6 +234,12 @@ from vibe_core.protocols.mahajanas.brahma.bootstrap import (
     LOTUS_POSITION as BOOTSTRAP_POSITION,
 )
 
+# =============================================================================
+# BRAHMA SERVICE - The Real Implementation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BrahmaProtocolBase",
@@ -255,4 +261,6 @@ __all__ = [
     "BootstrapProtocol",
     "Bootstrap",
     "NullBootstrap",
+    # Service (Real Implementation)
+    "BrahmaService",
 ]

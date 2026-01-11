@@ -482,4 +482,12 @@ __all__ = [
     "SchedulerProtocol",
     "Scheduler",
     "NullScheduler",
+    # Service (Real Implementation)
+    "JanakaService",
 ]
+
+# =============================================================================
+# JANAKA SERVICE - The Real Implementation
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.janaka.service import JanakaService
