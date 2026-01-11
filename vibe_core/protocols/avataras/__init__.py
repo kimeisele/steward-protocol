@@ -488,6 +488,58 @@ SHAKTI_OWNERS: Final[dict[Shakti, Avatara]] = {
 
 
 # =============================================================================
+# AVATARA IMPLEMENTATIONS (The 4 HEADs of CHATUR-VYUHA)
+# =============================================================================
+
+# Import the 4 HEAD protocols for each cycle
+# Q1 GENESIS: Prithu (PALANA - SYS_WAKE)
+from vibe_core.protocols.avataras.prithu import (
+    Prithu,
+    PrithuProtocol,
+    AllocationRequest,
+    AllocationResult,
+    ResourceType,
+)
+
+# Q2 DHARMA: Vyasa (JNANA - ASSERT_TRUTH)
+from vibe_core.protocols.avataras.vyasa import (
+    Vyasa,
+    NullVyasa,
+    VyasaProtocol,
+    TruthAssertion,
+    ValidationResult,
+    KnowledgeCompilation,
+    DharmaVerdict,
+)
+
+# Q3 KARMA: Parashurama (KSHATRA - FETCH_RES)
+from vibe_core.protocols.avataras.parashurama import (
+    Parashurama,
+    NullParashurama,
+    ParashuramaProtocol,
+    ResourceRequest,
+    FetchResult,
+    ExecutionRequest,
+    ExecutionResult,
+    ReclaimRequest,
+    ReclaimResult,
+)
+
+# Q4 MOKSHA: Nrisimha (RAKSHANA - CACHE_STATE)
+from vibe_core.protocols.avataras.nrisimha import (
+    Nrisimha,
+    NullNrisimha,
+    NrisimhaProtocol,
+    CacheEntry as NrisimhaCacheEntry,
+    CacheResult,
+    ProtectionRequest,
+    ProtectionResult,
+    PurgeRequest,
+    PurgeResult,
+)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -503,10 +555,52 @@ __all__ = [
     "MilkingSetup",
     "MilkingResult",
     "AvataraMeta",
-    # Protocols
+    # Protocols (Base)
     "AvataraProtocol",
     # Base class
     "BaseAvatara",
     # Registry
     "SHAKTI_OWNERS",
+    # =========================================================================
+    # Q1 GENESIS: Prithu (HEAD - SYS_WAKE)
+    # =========================================================================
+    "Prithu",
+    "PrithuProtocol",
+    "AllocationRequest",
+    "AllocationResult",
+    "ResourceType",
+    # =========================================================================
+    # Q2 DHARMA: Vyasa (HEAD - ASSERT_TRUTH)
+    # =========================================================================
+    "Vyasa",
+    "NullVyasa",
+    "VyasaProtocol",
+    "TruthAssertion",
+    "ValidationResult",
+    "KnowledgeCompilation",
+    "DharmaVerdict",
+    # =========================================================================
+    # Q3 KARMA: Parashurama (HEAD - FETCH_RES)
+    # =========================================================================
+    "Parashurama",
+    "NullParashurama",
+    "ParashuramaProtocol",
+    "ResourceRequest",
+    "FetchResult",
+    "ExecutionRequest",
+    "ExecutionResult",
+    "ReclaimRequest",
+    "ReclaimResult",
+    # =========================================================================
+    # Q4 MOKSHA: Nrisimha (HEAD - CACHE_STATE)
+    # =========================================================================
+    "Nrisimha",
+    "NullNrisimha",
+    "NrisimhaProtocol",
+    "NrisimhaCacheEntry",
+    "CacheResult",
+    "ProtectionRequest",
+    "ProtectionResult",
+    "PurgeRequest",
+    "PurgeResult",
 ]
