@@ -4,6 +4,19 @@ CANTO 10: THE FLUTE (Event Bus - The Song of Agents)
 The Event Bus is the mechanism through which agents communicate their state changes.
 Instead of static logs, agents now "emit" events that are broadcast to all listeners.
 
+DEPRECATED: Phase 4 Migration to Mahamantra (NARADA)
+=====================================================
+EventBus is being migrated to mahamantra.mod.narada.
+
+MIGRATION PATH:
+- Events → mahamantra.mod.narada (broadcast/events)
+- Signals → mahajanas/narada/events.py
+- Access: `from vibe_core.mahamantra import mahamantra; mahamantra.mod.narada`
+
+CURRENT STATUS: Deprecated but functional
+- New event systems should use narada patterns
+- Existing EventBus continues to work
+
 Event Types:
 - THOUGHT: Agent is planning (Blue)
 - ACTION: Agent acts (Green)

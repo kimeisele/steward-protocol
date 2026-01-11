@@ -4,6 +4,21 @@ SEMANTIC SYSCALLS - Neuro-Symbolic Kernel Interface
 This module defines the semantic syscall layer for the VibeOS kernel.
 Unlike procedural calls, semantic syscalls operate on MEANING, not just data.
 
+DEPRECATED: Phase 4 Migration to Mahamantra
+============================================
+Semantic syscalls are being migrated to protocol-based mahajana services.
+
+MIGRATION PATH:
+- Operators → mahamantra protocol decorators (@ProtocolRegistry.register)
+- Syscall execution → mahamantra.mod.parashurama (karma/execution)
+- Intent routing → mahamantra cli_bridge
+- Blueprints → mahamantra circuit routing
+
+CURRENT STATUS: Deprecated but functional
+- Existing syscalls continue to work
+- New operators should use @mahajana patterns
+- Access: `from vibe_core.mahamantra import mahamantra`
+
 Architecture (Neuro-Symbolic OS):
     Neural (LLM/Intent) → Semantic Compiler (Blueprint) → Symbolic (Syscall) → Kernel
 
