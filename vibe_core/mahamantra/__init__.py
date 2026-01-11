@@ -220,11 +220,71 @@ from vibe_core.protocols.substrate.mantra.vakya import (
 )
 
 # =============================================================================
+# INTENT ENGINE (No Manual Wiring - Krishna Does The Work)
+# Source: vibe_core/mahamantra/_intent.py
+# =============================================================================
+
+from vibe_core.mahamantra._intent import (
+    # Intent Types
+    IntentType,
+    IntentPriority,
+    IntentStatus,
+    # Intent Classes
+    MantraIntent,
+    IntentResult,
+    IntentQueue,
+    # Resolver Protocol
+    IntentResolver,
+    # Kernel Engine
+    MantraKernel,
+    get_kernel,
+    resolve,
+    surrender,
+)
+
+# =============================================================================
+# WATERTIGHT VERIFICATION (No Any Types!)
+# Source: vibe_core/mahamantra/_watertight.py
+# =============================================================================
+
+from vibe_core.mahamantra._watertight import (
+    # Types
+    TypeViolation,
+    WatertightReport,
+    # Functions
+    verify_watertight,
+    is_watertight,
+    print_report,
+    # Constants
+    FORBIDDEN_TYPES,
+)
+
+# =============================================================================
+# FRACTAL SCALING (Unendlich Skalierbar = Acintya)
+# Source: vibe_core/mahamantra/_fractal.py
+# =============================================================================
+
+from vibe_core.mahamantra._fractal import (
+    # Constants
+    FRACTAL_BASE,
+    KSETRA_COUNT,
+    MAHAJANA_COUNT,
+    KSETRAJNA_COUNT,
+    # Classes
+    FractalNode,
+    FractalTree,
+    # Functions
+    scale_up,
+    scale_down,
+    verify_fractal_integrity,
+)
+
+# =============================================================================
 # KERNEL CONSTANTS
 # =============================================================================
 
 # The Kernel Version (37-based)
-KERNEL_VERSION: Final[str] = "0.37.0"
+KERNEL_VERSION: Final[str] = "0.37.1"
 
 # The Kernel Level
 KERNEL_LEVEL: Final[int] = -2  # Krishna = Mahamantra
@@ -338,4 +398,33 @@ __all__ = [
     "KERNEL_VERSION",
     "KERNEL_LEVEL",
     "KERNEL_PARAMPARA_CHECK",
+    # === INTENT ENGINE ===
+    "IntentType",
+    "IntentPriority",
+    "IntentStatus",
+    "MantraIntent",
+    "IntentResult",
+    "IntentQueue",
+    "IntentResolver",
+    "MantraKernel",
+    "get_kernel",
+    "resolve",
+    "surrender",
+    # === WATERTIGHT ===
+    "TypeViolation",
+    "WatertightReport",
+    "verify_watertight",
+    "is_watertight",
+    "print_report",
+    "FORBIDDEN_TYPES",
+    # === FRACTAL ===
+    "FRACTAL_BASE",
+    "KSETRA_COUNT",
+    "MAHAJANA_COUNT",
+    "KSETRAJNA_COUNT",
+    "FractalNode",
+    "FractalTree",
+    "scale_up",
+    "scale_down",
+    "verify_fractal_integrity",
 ]
