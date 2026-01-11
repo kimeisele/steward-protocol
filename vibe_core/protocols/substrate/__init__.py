@@ -1591,4 +1591,39 @@ __all__ = [
     "AkashaProtocol",
     # Helpers
     "create_gene_manifest",
+    # =========================================================================
+    # RESONANCE PROTOCOL (Anti-Entropy Engine)
+    # =========================================================================
+    "ResonanceProtocol",
+    "ResonanceEngine",
+    "ResonanceVector",
+    "ResonanceMatrix",
+    "ResonanceEntry",
+    "PhoneticClass",
+    "compute_resonance_vector",
+    "resolve_position",
+    "compute_resonance_matrix",
+    "resonate",
+    "resolve",
+    "get_resonance_engine",
 ]
+
+# =============================================================================
+# LAZY IMPORT: RESONANCE PROTOCOL (Avoid circular imports)
+# =============================================================================
+# These are imported lazily to avoid circular dependency issues
+
+from vibe_core.protocols.substrate.resonance import (
+    PhoneticClass,
+    ResonanceEngine,
+    ResonanceEntry,
+    ResonanceMatrix,
+    ResonanceProtocol,
+    ResonanceVector,
+    compute_resonance_matrix,
+    compute_resonance_vector,
+    get_resonance_engine,
+    resonate,
+    resolve,
+    resolve_position,
+)
