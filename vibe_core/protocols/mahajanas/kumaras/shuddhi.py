@@ -2,17 +2,14 @@
 SHUDDHI - The Surgical Self-Healing Protocol
 =============================================
 
-OWNER: KUMARAS (The Four Pure Ones)
-POSITION: 5 (DHARMA Quarter)
-OPCODE: RESOLVE_REQ (Purification through Resolution)
+POSITION: 5 (KUMARAS, DHARMA Quarter, RESOLVE_REQ)
 
 Shuddhi (Sanskrit: 'Purification') is the core service for surgical
 code transformations using Concrete Syntax Trees (CST).
 
-OWNERSHIP DECLARATION:
-    - This protocol is OWNED by Mahajana.KUMARAS
-    - The Kumaras are responsible for ALL purification
-    - Not abstract "sanitization" - PERSONAL purification
+DERIVED FROM MAHAMANTRA:
+    Position 5 → guardian=KUMARAS, opcode=RESOLVE_REQ, quarter=DHARMA
+    All properties derived from truth table. No manual wiring.
 
 ANTI-MAYAVAD:
     - No Any types (that's spiritual pollution!)
@@ -23,25 +20,45 @@ ORIGINAL: protocols/shuddhi.py
 MIGRATED: protocols/mahajanas/kumaras/shuddhi.py
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Final, List, Optional, Protocol, runtime_checkable
+from typing import ClassVar, List, Optional, Protocol, runtime_checkable
 
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 
 
 # =============================================================================
-# OWNERSHIP DECLARATION - Kumaras OWN this protocol
+# SHUDDHI PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================
 
-OWNER: Final[Mahajana] = Mahajana.KUMARAS
-LOTUS_POSITION: Final[int] = 5  # DHARMA Quarter, Worker 1
-LOTUS_QUARTER: Final[str] = "dharma"
+class ShuddhiProtocolBase(WorkerProtocol):
+    """
+    Shuddhi protocol ownership - DERIVED from Mahamantra position 5.
 
-OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESOLVE_REQ,  # Purification = Resolution of impurity
-]
+    NO MANUAL WIRING:
+        _position_index = 5 is the ONLY configuration.
+        Everything else derived from truth table.
+
+    DERIVED PROPERTIES:
+        guardian()  → Mahajana.KUMARAS
+        opcode()    → MantraOpCode.RESOLVE_REQ
+        quarter()   → Quarter.DHARMA
+        is_head()   → False (Worker position)
+        parampara_vector() → 222 (% 37 == 0)
+    """
+    _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
+
+
+# =============================================================================
+# BACKWARD COMPATIBILITY - Derived from ShuddhiProtocolBase
+# =============================================================================
+
+# These are DERIVED, not hardcoded
+OWNER = ShuddhiProtocolBase.mahajana()
+LOTUS_POSITION = ShuddhiProtocolBase.lotus_position()
+LOTUS_QUARTER = ShuddhiProtocolBase.lotus_quarter()
+OWNED_OPCODES: List[MantraOpCode] = [ShuddhiProtocolBase.opcode()]
 
 
 # =============================================================================
@@ -71,9 +88,17 @@ class ShuddhiResult:
     message: str = ""
     diff: str = ""
     purified_code: Optional[str] = None
-    # OWNERSHIP FIELDS (Anti-Mayavad)
-    owner: Mahajana = Mahajana.KUMARAS
-    lotus_position: int = 5
+
+    # DERIVED FROM MAHAMANTRA (not hardcoded)
+    @property
+    def owner(self) -> Mahajana:
+        """Owner derived from ShuddhiProtocolBase."""
+        return ShuddhiProtocolBase.mahajana()
+
+    @property
+    def lotus_position(self) -> int:
+        """Position derived from ShuddhiProtocolBase."""
+        return ShuddhiProtocolBase.lotus_position()
 
     @property
     def success(self) -> bool:
@@ -85,6 +110,11 @@ class ShuddhiResult:
         """True if Kumaras have blessed this purification."""
         return self.owner == Mahajana.KUMARAS and self.success
 
+    @property
+    def parampara_vector(self) -> int:
+        """Parampara connection vector (always % 37 == 0)."""
+        return ShuddhiProtocolBase.parampara_vector()
+
 
 # =============================================================================
 # SHUDDHI PROTOCOL - The surgical self-healing interface
@@ -95,7 +125,7 @@ class ShuddhiProtocol(Protocol):
     """
     The surgical self-healing interface of the Kernel.
 
-    OWNER: Mahajana.KUMARAS (The Four Pure Ones)
+    DERIVED: Position 5 → KUMARAS, RESOLVE_REQ, DHARMA
 
     Dharma: Shuddhi does not 'replace text'. It performs structural surgery
     on the Concrete Syntax Tree, preserving comments and formatting.
@@ -106,9 +136,9 @@ class ShuddhiProtocol(Protocol):
     - The protocol IS the purification, not mere text replacement
     """
 
-    @property
-    def owner(self) -> Mahajana:
-        """The Mahajana owner - always KUMARAS."""
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 5 in the Mahamantra."""
         ...
 
     def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
@@ -195,17 +225,13 @@ class RemedyProtocol(Protocol):
 # NULL SHUDDHI - Already pure (for testing)
 # =============================================================================
 
-class NullShuddhi:
+class NullShuddhi(ShuddhiProtocolBase):
     """
     The Already Pure Shuddhi - no purification needed.
 
     Used for testing and for code that is already pure.
-    Still owned by KUMARAS (purity is their domain).
+    Inherits from ShuddhiProtocolBase → position 5 → KUMARAS.
     """
-
-    @property
-    def owner(self) -> Mahajana:
-        return Mahajana.KUMARAS
 
     def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
         """No purification needed - already pure."""
@@ -214,8 +240,6 @@ class NullShuddhi:
             file_path=file_path,
             rule_id=rule_id,
             message="Already pure (NullShuddhi)",
-            owner=Mahajana.KUMARAS,
-            lotus_position=5,
         )
 
     def list_remedies(self) -> List[str]:
@@ -230,7 +254,9 @@ class NullShuddhi:
 # =============================================================================
 
 __all__ = [
-    # Ownership
+    # Protocol Base (MantraProtocol derivative)
+    "ShuddhiProtocolBase",
+    # Backward compat (derived from base)
     "OWNER",
     "LOTUS_POSITION",
     "LOTUS_QUARTER",
