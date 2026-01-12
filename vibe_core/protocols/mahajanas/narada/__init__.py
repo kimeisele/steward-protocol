@@ -410,6 +410,19 @@ from vibe_core.protocols.mahajanas.narada.broadcast import (
     LOTUS_POSITION as BROADCAST_POSITION,
 )
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.narada
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.narada.types import (
+    # event_bus.py (EventType already defined above)
+    EventColor,
+    Event as EventBusEvent,
+    EventBus,
+    SubscriberMetrics,
+    SudarshanaGuard,
+)
+
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "NaradaProtocolBase",
@@ -447,4 +460,11 @@ __all__ = [
     "BroadcastProtocol",
     "Broadcaster",
     "NullBroadcaster",
+    # === MIGRATED TYPES (mahamantra.mod.narada) ===
+    # event_bus.py
+    "EventColor",
+    "EventBusEvent",
+    "EventBus",
+    "SubscriberMetrics",
+    "SudarshanaGuard",
 ]

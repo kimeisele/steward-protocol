@@ -438,6 +438,26 @@ from vibe_core.protocols.mahajanas.janaka.scheduler import (
     LOTUS_POSITION as SCHEDULER_POSITION,
 )
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.janaka
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.janaka.types import (
+    # prana.py
+    SessionStartConfig,
+    HeartbeatConfig,
+    KernelConfig,
+    OpusConfig,
+    LimitsConfig,
+    PranaConfig,
+    load_config,
+    is_kernel_running,
+    ensure_kernel_running,
+    get_last_heartbeat,
+    record_heartbeat,
+    # task_types.py (TaskStatus already defined above)
+)
+
 
 # =============================================================================
 # EXPORTS
@@ -485,6 +505,19 @@ __all__ = [
     "NullScheduler",
     # Service (Real Implementation)
     "JanakaService",
+    # === MIGRATED TYPES (mahamantra.mod.janaka) ===
+    # prana.py
+    "SessionStartConfig",
+    "HeartbeatConfig",
+    "KernelConfig",
+    "OpusConfig",
+    "LimitsConfig",
+    "PranaConfig",
+    "load_config",
+    "is_kernel_running",
+    "ensure_kernel_running",
+    "get_last_heartbeat",
+    "record_heartbeat",
 ]
 
 # =============================================================================

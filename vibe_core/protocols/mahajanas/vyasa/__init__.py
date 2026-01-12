@@ -250,6 +250,25 @@ class NullVyasa(VyasaProtocolBase):
 
 from vibe_core.protocols.mahajanas.vyasa.service import VyasaService
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.vyasa
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.vyasa.types import (
+    # errors.py
+    ErrorCategory,
+    ErrorCode,
+    StructuredError,
+    # lineage.py (lazy loaded)
+    LineageBlock,
+    LineageChain,
+    LineageEventType,
+    # ledger.py (lazy loaded)
+    InMemoryLedger,
+    SQLiteLedger,
+    ArchiveAttachment,
+)
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "VyasaProtocolBase",
@@ -264,4 +283,17 @@ __all__ = [
     "NullVyasa",
     # Service (Real Implementation)
     "VyasaService",
+    # === MIGRATED TYPES (mahamantra.mod.vyasa) ===
+    # errors.py
+    "ErrorCategory",
+    "ErrorCode",
+    "StructuredError",
+    # lineage.py
+    "LineageBlock",
+    "LineageChain",
+    "LineageEventType",
+    # ledger.py
+    "InMemoryLedger",
+    "SQLiteLedger",
+    "ArchiveAttachment",
 ]

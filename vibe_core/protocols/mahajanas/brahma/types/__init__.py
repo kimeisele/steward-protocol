@@ -21,6 +21,10 @@ from vibe_core.protocols.mahajanas.brahma.types.identity import (
     ManifestGenerator,
 )
 
+from vibe_core.protocols.mahajanas.brahma.types.agent_interface import (
+    AgentSystemInterface,
+)
+
 __all__ = [
     # sarga.py
     "Element",
@@ -31,4 +35,6 @@ __all__ = [
     "CapabilityRegistry",
     # identity.py
     "ManifestGenerator",
+    # agent_interface.py
+    "AgentSystemInterface",
 ]

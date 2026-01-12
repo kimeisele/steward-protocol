@@ -160,6 +160,26 @@ from .varnashrama import (
     create_position,
 )
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.manu
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.manu.types import (
+    # pulse.py
+    SystemState,
+    PulseFrequency,
+    PulsePacket,
+    PulseManager,
+    get_pulse_manager,
+    # kernel_ops.py
+    check_system_health,
+    sync_resource_quotas,
+    grant_repo_access,
+    pulse,
+    execute_playbook,
+    narasimha_destroy_agent,
+)
+
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "ManuProtocolBase",
@@ -185,4 +205,18 @@ __all__ = [
     "determine_varna",
     "determine_ashrama",
     "create_position",
+    # === MIGRATED TYPES (mahamantra.mod.manu) ===
+    # pulse.py
+    "SystemState",
+    "PulseFrequency",
+    "PulsePacket",
+    "PulseManager",
+    "get_pulse_manager",
+    # kernel_ops.py
+    "check_system_health",
+    "sync_resource_quotas",
+    "grant_repo_access",
+    "pulse",
+    "execute_playbook",
+    "narasimha_destroy_agent",
 ]

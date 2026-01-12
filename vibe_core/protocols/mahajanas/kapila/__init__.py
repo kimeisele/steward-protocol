@@ -298,6 +298,27 @@ from vibe_core.protocols.mahajanas.kapila.samkhya import (
     enumerate_all_elements,
 )
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.kapila
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.kapila.types import (
+    # topology.py
+    Varsha,
+    Agent,
+    AgentPlacement,
+    BhuMandalaTopology,
+    get_topology,
+    refresh_topology,
+    get_agent_placement,
+    # circuit_types.py
+    InvariantViolation,
+    CircuitState,
+    CircuitExecutionResult,
+    TaskLedgerEntry,
+    ErrorRecoveryAttempt,
+)
+
 
 # =============================================================================
 # CLI - Krishna Discovers Everything (ZERO REGISTRATION)
@@ -378,6 +399,21 @@ __all__ = [
     "enumerate_all_elements",
     # Service (Real Implementation)
     "KapilaService",
+    # === MIGRATED TYPES (mahamantra.mod.kapila) ===
+    # topology.py
+    "Varsha",
+    "Agent",
+    "AgentPlacement",
+    "BhuMandalaTopology",
+    "get_topology",
+    "refresh_topology",
+    "get_agent_placement",
+    # circuit_types.py
+    "InvariantViolation",
+    "CircuitState",
+    "CircuitExecutionResult",
+    "TaskLedgerEntry",
+    "ErrorRecoveryAttempt",
 ]
 
 # =============================================================================

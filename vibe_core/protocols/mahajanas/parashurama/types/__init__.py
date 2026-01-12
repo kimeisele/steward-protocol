@@ -20,6 +20,10 @@ from vibe_core.protocols.mahajanas.parashurama.types.io_service import (
     KernelIOService,
 )
 
+from vibe_core.protocols.mahajanas.parashurama.types.file_operator import (
+    FileBasedOperator,
+)
+
 __all__ = [
     # network_proxy.py
     "KernelNetworkProxy",
@@ -29,4 +33,6 @@ __all__ = [
     "DocumentType",
     "WriteResult",
     "KernelIOService",
+    # file_operator.py
+    "FileBasedOperator",
 ]

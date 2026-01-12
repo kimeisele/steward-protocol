@@ -252,6 +252,19 @@ class NullPrithu(PrithuProtocolBase):
 # LAZY IMPORT to avoid circular dependency with boot_mode migration
 # PrithuService is loaded on first access via __getattr__
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.prithu
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.prithu.types import (
+    # boot_mode.py
+    BootMode,
+    # process_manager.py
+    ProcessStatus,
+    ProcessManager,
+    AgentProcessInfo,
+)
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "PrithuProtocolBase",
@@ -266,6 +279,13 @@ __all__ = [
     "NullPrithu",
     # Service (Real Implementation)
     "PrithuService",
+    # === MIGRATED TYPES (mahamantra.mod.prithu) ===
+    # boot_mode.py
+    "BootMode",
+    # process_manager.py
+    "ProcessStatus",
+    "ProcessManager",
+    "AgentProcessInfo",
 ]
 
 
