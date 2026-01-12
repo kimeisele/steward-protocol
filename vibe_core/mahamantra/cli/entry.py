@@ -138,7 +138,7 @@ class MahamantraCLIEntry:
         print("STEWARD CLI - Krishna Routes Everything")
         print("=" * 50)
         print()
-        print(f"Discovered: {self._discovered} commands from 16 mahajanas")
+        print(f"Discovered: {self._discovered} commands from 16 positions (12 mahajanas + 4 avataras)")
         print()
         print("USAGE:")
         print("  steward <command> [args]")
