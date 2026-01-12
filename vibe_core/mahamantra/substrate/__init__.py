@@ -303,6 +303,36 @@ from vibe_core.mahamantra.substrate.guna import (
 )
 
 # =============================================================================
+# YAJNA - The Offering Architecture (Bhoga → Yajna → Prasadam)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.yajna import (
+    # Constants (The Sacred Numbers)
+    PRIME_SIGNATURE,
+    MAHA_POSITIONS,
+    MALA_ROUNDS,
+    TRINITY as YAJNA_TRINITY,
+    STD_MANTRA_PATTERN,
+    # Exceptions (Spiritual Errors)
+    DissonanceError,
+    TamasBlockError,
+    ParamparaBreakError,
+    # Enums
+    Guna as YajnaGuna,
+    HolyName as YajnaHolyName,
+    # Types (Offering/Result)
+    Bhoga,
+    Prasadam,
+    # Core (MantraByte + Yajna)
+    MantraByte as YajnaMantraByte,
+    YajnaProtocol,
+    Yajna,
+    # Functions
+    get_yajna,
+    offer,
+)
+
+# =============================================================================
 # SCANNER - Auto-Discovery of Declarations
 # =============================================================================
 
@@ -498,4 +528,28 @@ __all__ = [
     "scan_all",
     "scan_for_governance",
     "print_scan_report",
+    # === YAJNA (Offering Architecture) ===
+    # Constants
+    "PRIME_SIGNATURE",
+    "MAHA_POSITIONS",
+    "MALA_ROUNDS",
+    "YAJNA_TRINITY",
+    "STD_MANTRA_PATTERN",
+    # Exceptions
+    "DissonanceError",
+    "TamasBlockError",
+    "ParamparaBreakError",
+    # Enums
+    "YajnaGuna",
+    "YajnaHolyName",
+    # Types
+    "Bhoga",
+    "Prasadam",
+    # Core
+    "YajnaMantraByte",
+    "YajnaProtocol",
+    "Yajna",
+    # Functions
+    "get_yajna",
+    "offer",
 ]

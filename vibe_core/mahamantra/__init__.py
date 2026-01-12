@@ -565,7 +565,7 @@ class MahamantraLotus(LotusNode):
         try:
             # Import ONLY from protocols (SAFE)
             from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
-            from vibe_core.mahamantra.substrate.wiring import get_position_by_opcode
+            from vibe_core.mahamantra.substrate import get_position_by_opcode
             
             # We assume the registry is populated by the bootloader/CLI entry point.
             # Mahamantra does not scan CLI folders itself (Upward Dependency Violation).
