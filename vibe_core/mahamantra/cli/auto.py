@@ -58,7 +58,7 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra._cli_protocol import (
+from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
     CLIContext,
     CLIErrorCode,
@@ -66,7 +66,7 @@ from vibe_core.mahamantra._cli_protocol import (
     CLIParameter,
     CLIResult,
 )
-from vibe_core.mahamantra._singularity import mahamantra
+from vibe_core.mahamantra.kernel.singularity import mahamantra
 
 
 # =============================================================================

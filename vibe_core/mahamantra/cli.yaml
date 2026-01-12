@@ -1,0 +1,90 @@
+# =============================================================================
+# MAHAMANTRA CLI - Self-Manifesting Commands
+# =============================================================================
+#
+# "harer nama harer nama harer namaiva kevalam
+#  kalau nasty eva nasty eva nasty eva gatir anyatha"
+#
+# The Mahamantra brings its own CLI. No hardcoding in UnifiedCLI.
+# The truth is IN the module (Svatah-pramana), not in the router.
+#
+# DESIGN:
+#   - This manifest is auto-discovered by CLILoaderProtocol
+#   - Commands declare their handlers (module:function)
+#   - The loader calls the handler when invoked
+#   - NO MANUAL WIRING in unified_cli.py
+#
+# =============================================================================
+
+name: mahamantra
+namespace: mahamantra
+description: "The Great Rhythm - Awakening Protocol Commands"
+
+commands:
+  # ===========================================================================
+  # SANKIRTAN - Mass DNA Injection
+  # ===========================================================================
+  - name: sankirtan
+    handler: "vibe_core.mahamantra.substrate.sankirtan:cli_sankirtan"
+    help: "Inject Mahajana DNA into orphan files (FOLDER_IS_WIRING)"
+    execution_mode: offline
+    options:
+      - name: "--target"
+        type: str
+        help: "Filter by path or Mahajana name"
+        required: false
+      - name: "--live"
+        flag: true
+        help: "Execute injection (default: dry-run)"
+      - name: "--report"
+        flag: true
+        help: "Print detailed report after injection"
+
+  # ===========================================================================
+  # SCAN - Code Discovery
+  # ===========================================================================
+  - name: scan
+    handler: "vibe_core.mahamantra.substrate.scanner:cli_scan"
+    help: "Scan codebase for Mahajana declarations"
+    execution_mode: offline
+    options:
+      - name: "--path"
+        type: str
+        help: "Path to scan (default: vibe_core/)"
+        required: false
+      - name: "--json"
+        flag: true
+        help: "Output as JSON"
+      - name: "--orphans"
+        flag: true
+        help: "Show only orphan files (no declaration)"
+
+  # ===========================================================================
+  # RESOLVE - Mahajana Alias Resolution
+  # ===========================================================================
+  - name: resolve
+    handler: "vibe_core.mahamantra.substrate.scanner:cli_resolve"
+    help: "Resolve Mahajana by name, alias, or position"
+    execution_mode: offline
+    options:
+      - name: "name"
+        type: str
+        help: "Mahajana name, alias (creator/schopfer), or position (1-16)"
+        required: true
+
+  # ===========================================================================
+  # CHANT - Execute Mahamantra Cycle
+  # ===========================================================================
+  - name: chant
+    handler: "vibe_core.mahamantra:cli_chant"
+    help: "Execute a Mahamantra cycle (16-step atomic operation)"
+    execution_mode: hybrid
+    options:
+      - name: "--rounds"
+        type: int
+        help: "Number of rounds (default: 1)"
+        required: false
+        default: "1"
+      - name: "--verbose"
+        flag: true
+        help: "Show each step"

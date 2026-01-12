@@ -10,11 +10,9 @@ Implementation MUST pass these tests.
 import pytest
 from typing import List
 
-from vibe_core.mahamantra._cli_entry_protocol import (
+from vibe_core.mahamantra.cli import (
     CLIEntryProtocol,
     CLIEntryResult,
-)
-from vibe_core.mahamantra._cli_protocol import (
     CLICapability,
     CLIHealth,
     CLIResult,
@@ -78,14 +76,14 @@ class TestMahamantraCLIEntry:
 
     def test_cli_auto_discovers_108_methods(self):
         """cli_auto MUST discover 108 methods from Protocols."""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         count = cli_auto.discover_all()
         assert count == 108, f"Expected 108 methods, got {count}"
 
     def test_cli_auto_covers_all_16_positions(self):
         """cli_auto MUST discover methods for all 16 positions."""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         cli_auto.discover_all()
 
@@ -94,7 +92,8 @@ class TestMahamantraCLIEntry:
 
     def test_cli_auto_execute_returns_cli_result(self):
         """cli_auto.execute() MUST return CLIResult."""
-        from vibe_core.mahamantra import cli_auto, CLIResult
+        from vibe_core.mahamantra.cli.auto import cli_auto
+        from vibe_core.mahamantra.cli.protocol import CLIResult
 
         cli_auto.discover_all()
         result = cli_auto.execute("analyze", ["test"])
@@ -106,7 +105,7 @@ class TestMahamantraCLIEntry:
 
     def test_cli_auto_routes_to_correct_position(self):
         """cli_auto MUST route commands to correct mahajana position."""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         cli_auto.discover_all()
 
@@ -124,7 +123,8 @@ class TestMahamantraCLIEntry:
 
     def test_cli_auto_capabilities_returns_list(self):
         """cli_auto.get_capabilities() MUST return List[CLICapability]."""
-        from vibe_core.mahamantra import cli_auto, CLICapability
+        from vibe_core.mahamantra.cli.auto import cli_auto
+        from vibe_core.mahamantra.cli.protocol import CLICapability
 
         cli_auto.discover_all()
         caps = cli_auto.get_capabilities()
@@ -147,7 +147,7 @@ class TestZeroManualWiring:
 
     def test_no_hardcoded_command_map(self):
         """Entry point MUST NOT have hardcoded command maps."""
-        from vibe_core.mahamantra._cli_auto import CLIAutoDiscovery
+        from vibe_core.mahamantra.cli.auto import CLIAutoDiscovery
 
         # CLIAutoDiscovery should NOT have any hardcoded handlers
         discovery = CLIAutoDiscovery()
@@ -158,7 +158,8 @@ class TestZeroManualWiring:
 
     def test_all_commands_from_protocol_introspection(self):
         """ALL commands MUST come from Protocol introspection, not hardcoding."""
-        from vibe_core.mahamantra import cli_auto, mahamantra
+        from vibe_core.mahamantra.cli.auto import cli_auto
+        from vibe_core.mahamantra.kernel.singularity import mahamantra
 
         cli_auto.discover_all()
 
@@ -172,7 +173,7 @@ class TestZeroManualWiring:
 
     def test_discover_is_idempotent(self):
         """discover_all() MUST be idempotent."""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         count1 = cli_auto.discover_all()
         count2 = cli_auto.discover_all()
@@ -191,7 +192,7 @@ class TestGAD000Compliance:
 
     def test_discoverability_all_commands_listed(self):
         """GAD-000 #1: Can AI discover all available commands?"""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         cli_auto.discover_all()
         caps = cli_auto.get_capabilities()
@@ -207,7 +208,7 @@ class TestGAD000Compliance:
 
     def test_parseability_structured_output(self):
         """GAD-000 #3: Are outputs machine-readable?"""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         cli_auto.discover_all()
         result = cli_auto.execute("analyze", ["test"])
@@ -223,7 +224,7 @@ class TestGAD000Compliance:
 
     def test_idempotency_same_input_same_output(self):
         """GAD-000 #5: Same input = same output?"""
-        from vibe_core.mahamantra import cli_auto
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
         cli_auto.discover_all()
 
@@ -247,7 +248,8 @@ class TestParamparaConnection:
 
     def test_all_positions_connected(self):
         """All 16 positions MUST be connected to Parampara."""
-        from vibe_core.mahamantra import mahamantra, PARAMPARA
+        from vibe_core.mahamantra.kernel.singularity import mahamantra
+        from vibe_core.mahamantra.substrate import PARAMPARA
 
         for pos in mahamantra.positions:
             assert pos.parampara_vector % PARAMPARA == 0, (
@@ -256,6 +258,6 @@ class TestParamparaConnection:
 
     def test_parampara_is_37(self):
         """PARAMPARA constant MUST be 37."""
-        from vibe_core.mahamantra import PARAMPARA
+        from vibe_core.mahamantra.substrate import PARAMPARA
 
         assert PARAMPARA == 37

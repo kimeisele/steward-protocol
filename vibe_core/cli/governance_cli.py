@@ -428,67 +428,40 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
     # =========================================================================
 
     def cmd_scan(self, args: List[str]) -> int:
-        """Scan ENTIRE repo - show what's governed vs unknown."""
-        from pathlib import Path
-        from collections import defaultdict
+        """Scan ENTIRE repo using mahamantra scanner - find __mahajana__ declarations."""
         as_json = "--json" in args
 
-        # Scan entire vibe_core
-        vibe_core = Path(__file__).parent.parent  # Go up from cli/ to vibe_core/
-        all_files = list(vibe_core.rglob("*.py"))
+        # Use mahamantra ONE IMPORT pattern
+        from vibe_core.mahamantra import mahamantra
 
-        # Group by top-level directory
-        by_dir = defaultdict(list)
-        for f in all_files:
-            try:
-                rel = f.relative_to(vibe_core)
-                parts = rel.parts
-                if len(parts) > 1:
-                    top_dir = parts[0]
-                else:
-                    top_dir = "ROOT"
-                by_dir[top_dir].append(str(rel))
-            except ValueError:
-                pass
-
-        # Get governed count
-        report = audit()
-        governed = report["total_protocols"]
-        total = len(all_files)
-        unknown = total - governed
-        unknown_pct = (unknown / total * 100) if total > 0 else 0
+        result = mahamantra.scan()
 
         if as_json:
-            result = {
-                "total_files": total,
-                "governed": governed,
-                "unknown": unknown,
-                "unknown_pct": unknown_pct,
-                "by_directory": {d: len(files) for d, files in by_dir.items()},
+            output = {
+                "files_scanned": result.files_scanned,
+                "declarations_found": result.declarations_found,
+                "simple_declarations": result.simple_declarations,
+                "by_mahajana": dict(result.by_mahajana),
+                "by_position": {str(k): v for k, v in result.by_position.items()},
+                "errors": result.errors,
+                "coverage_pct": (result.declarations_found / max(result.files_scanned, 1)) * 100,
             }
-            print(json.dumps(result, indent=2))
+            print(json.dumps(output, indent=2))
         else:
-            print(f"\n{'='*60}")
-            print(f"  FULL REPO SCAN (vibe_core/)")
-            print(f"{'='*60}")
-            print(f"\n  Total Python files:  {total}")
-            print(f"  Governed protocols:  {governed}")
-            print(f"  Unknown terrain:     {unknown} ({unknown_pct:.1f}%)")
-            print(f"\n  {'DIRECTORY':<25} {'FILES':>6} {'STATUS':<15}")
-            print(f"  {'-'*50}")
+            # Use mahamantra's built-in print_scan()
+            mahamantra.print_scan()
 
-            # Known governed directories
-            governed_dirs = {"protocols"}
+            # Add governance context
+            coverage = (result.declarations_found / max(result.files_scanned, 1)) * 100
+            ungoverned = result.files_scanned - result.declarations_found
 
-            for d, files in sorted(by_dir.items(), key=lambda x: -len(x[1])):
-                file_count = len(files)
-                if d in governed_dirs:
-                    status = "✅ GOVERNED"
-                else:
-                    status = "⚠️  UNKNOWN"
-                print(f"  {d:<25} {file_count:>6} {status}")
-
-            print(f"\n  ⚠️  {unknown_pct:.1f}% of codebase is ungoverned!")
+            print(f"\n  {'='*50}")
+            print(f"  GOVERNANCE STATUS")
+            print(f"  {'='*50}")
+            print(f"  Coverage:    {coverage:.1f}%")
+            print(f"  Ungoverned:  {ungoverned} files")
+            print(f"\n  ACTION: Add __mahajana__ = 'name' to ungoverned files")
+            print(f"  DOCS:   from vibe_core.mahamantra import mahamantra")
 
         return 0
 

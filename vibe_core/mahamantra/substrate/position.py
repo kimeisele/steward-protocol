@@ -273,11 +273,29 @@ def get_head_position(quarter: Quarter) -> MantraPosition:
     return MAHAMANTRA_POSITIONS[idx * 4]
 
 
-def get_worker_positions(quarter: Quarter) -> Tuple[MantraPosition, ...]:
+def get_worker_positions_for_quarter(quarter: Quarter) -> Tuple[MantraPosition, ...]:
     """Get the WORKER positions for a quarter (3 per quarter)."""
     idx = QUARTER_INDEX[quarter]
     start = idx * 4
     return MAHAMANTRA_POSITIONS[start + 1:start + 4]
+
+
+# Alias for backward compatibility
+get_worker_positions = get_worker_positions_for_quarter
+
+
+def get_all_head_positions() -> Tuple[MantraPosition, ...]:
+    """Get all 4 HEAD positions (Avataras at 0, 4, 8, 12)."""
+    return tuple(p for p in MAHAMANTRA_POSITIONS if p.is_head)
+
+
+def get_all_worker_positions() -> Tuple[MantraPosition, ...]:
+    """Get all 12 WORKER positions (Mahajanas)."""
+    return tuple(p for p in MAHAMANTRA_POSITIONS if not p.is_head)
+
+
+# Alias for singularity.py compatibility
+get_quarter_positions = get_positions_by_quarter
 
 
 # =============================================================================
@@ -299,4 +317,9 @@ __all__ = [
     "get_positions_by_quarter",
     "get_head_position",
     "get_worker_positions",
+    "get_worker_positions_for_quarter",
+    "get_all_head_positions",
+    "get_all_worker_positions",
+    # Aliases
+    "get_quarter_positions",
 ]

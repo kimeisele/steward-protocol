@@ -309,6 +309,124 @@ class MahamantraLotus(LotusNode):
         """Meta-Protocols."""
         return self._cache.setdefault("protocols", LotusNode(LotusPath(("protocols",))))
 
+    @property
+    def kernel(self) -> LotusNode:
+        """Kernel - Singularity, Fractal, Intent."""
+        return self._cache.setdefault("kernel", LotusNode(LotusPath(("kernel",))))
+
+    @property
+    def cli(self) -> LotusNode:
+        """CLI - Command Line Interface."""
+        return self._cache.setdefault("cli", LotusNode(LotusPath(("cli",))))
+
+    # === Scanner Integration ===
+
+    def scan(self) -> "ScanResult":
+        """
+        Scan the codebase for declarations.
+
+        Returns ScanResult with counts and breakdown by mahajana.
+        """
+        from vibe_core.mahamantra.substrate.scanner import scan_all
+        return scan_all()
+
+    def print_scan(self) -> None:
+        """Print a human-readable scan report."""
+        from vibe_core.mahamantra.substrate.scanner import print_scan_report
+        print_scan_report()
+
+    # =========================================================================
+    # SANKIRTAN - The Great Injection (ASHVAMEDHA)
+    # =========================================================================
+
+    def sankirtan(self, dry_run: bool = True) -> "SankirtanResult":
+        """
+        SANKIRTAN: The Mass Chanting / DNA Injection.
+
+        Scans the codebase and injects Mahajana identity into orphan files.
+        Uses FOLDER_IS_WIRING to determine identity.
+
+        Args:
+            dry_run: If True, only report what would be done. If False, inject.
+
+        Returns:
+            SankirtanResult with counts and details.
+
+        "In this age of Kali there is no other way, no other way,
+        no other way for self-realization than chanting the holy name."
+        """
+        from vibe_core.mahamantra.substrate.sankirtan import perform_sankirtan
+        return perform_sankirtan(dry_run=dry_run)
+
+    def inject(self, file_path: str, mahajana: str, dry_run: bool = True) -> bool:
+        """
+        Inject Mahajana identity into a single file.
+
+        Uses BalaramaInjector pattern (DNA surgery).
+
+        Args:
+            file_path: Path to file to inject
+            mahajana: Mahajana name (e.g., "brahma", "yamaraja")
+            dry_run: If True, only report. If False, write.
+
+        Returns:
+            True if injection successful/would succeed.
+        """
+        from vibe_core.mahamantra.substrate.sankirtan import inject_file
+        return inject_file(file_path, mahajana, dry_run=dry_run)
+
+    # === Alias Resolution ===
+
+    def resolve(self, name_or_position: str) -> LotusNode:
+        """
+        Resolve a mahajana by name, alias, or position.
+
+        Examples:
+            mahamantra.resolve("brahma")    # Sanskrit name
+            mahamantra.resolve("creator")   # English alias
+            mahamantra.resolve("schöpfer")  # German alias
+            mahamantra.resolve("1")         # Position number
+        """
+        from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
+
+        alias = resolve_mahajana(name_or_position)
+        name = alias.name
+
+        # Route to correct quarter/mahajana
+        pos = alias.position
+        if pos < 4:
+            return getattr(self.genesis, name)
+        elif pos < 8:
+            return getattr(self.dharma, name)
+        elif pos < 12:
+            return getattr(self.karma, name)
+        else:
+            return getattr(self.moksha, name)
+
+    def __getattr__(self, name: str) -> LotusNode:
+        """
+        Enhanced attribute access with alias support.
+
+        Falls back to alias resolution if normal lookup fails.
+        """
+        # First try normal lookup
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            pass
+
+        # Try alias resolution
+        try:
+            from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
+            alias = resolve_mahajana(name)
+            return self.resolve(alias.name)
+        except (ImportError, ValueError):
+            pass
+
+        raise AttributeError(
+            f"'{name}' not found in mahamantra (tried folder, module, and alias)"
+        )
+
 
 # =============================================================================
 # THE SINGULARITY INSTANCE

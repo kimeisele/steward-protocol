@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union
 
 # ONE IMPORT - Krishna IS the router
-from vibe_core.mahamantra._singularity import mahamantra
+from vibe_core.mahamantra.kernel.singularity import mahamantra
 
 
 # =============================================================================
@@ -203,7 +203,7 @@ class MahamantraCLIBridge:
         Returns BridgeResult with execution details.
         """
         # Import cli_engine here to avoid circular import at module load
-        from vibe_core.mahamantra._cli_engine import cli_engine
+        from vibe_core.mahamantra.cli.engine import cli_engine
 
         # Get position for reporting
         position = cli_engine.get_position(command)

@@ -43,7 +43,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Protocol, runtime_checkable
 
-from vibe_core.mahamantra._cli_protocol import (
+from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
     CLIHealth,
     CLIResult,

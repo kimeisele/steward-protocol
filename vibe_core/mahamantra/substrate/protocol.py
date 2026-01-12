@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from abc import ABC
 from typing import (
+    Callable,
     ClassVar,
     Dict,
     List,
@@ -318,9 +319,20 @@ class ProtocolRegistry:
 
     Mappt Position Index auf Protokollklasse.
     Stellt sicher: ein Protokoll pro Position.
+
+    TICK LISTENERS:
+        Protocols can register as tick listeners to be notified
+        when mahamantra.tick() advances. This enables runtime
+        discovery without spaghetti imports.
+
+        @ProtocolRegistry.tick_listener
+        def on_mahamantra_tick(tick_state: Dict) -> None:
+            # Handle tick
+            pass
     """
 
     _registry: ClassVar[Dict[int, Type[MantraProtocol]]] = {}
+    _tick_listeners: ClassVar[List[Callable]] = []
 
     @classmethod
     def register(cls, protocol_class: Type[MantraProtocol]) -> Type[MantraProtocol]:
@@ -382,6 +394,68 @@ class ProtocolRegistry:
     def clear(cls) -> None:
         """Clear registry (for testing)."""
         cls._registry.clear()
+        cls._tick_listeners.clear()
+
+    # =========================================================================
+    # TICK LISTENERS - Runtime Discovery Without Spaghetti
+    # =========================================================================
+
+    @classmethod
+    def tick_listener(cls, callback: Callable[[Dict], None]) -> Callable[[Dict], None]:
+        """
+        Register a tick listener as decorator.
+
+        Usage:
+            @ProtocolRegistry.tick_listener
+            def on_tick(tick_state: Dict) -> None:
+                print(f"Position: {tick_state['position']}")
+
+        The callback receives the tick state dict with:
+            - tick: Current tick counter (0-15)
+            - position: Same as tick
+            - quarter: Current quarter (genesis/dharma/karma/moksha)
+            - guardian: Guardian name at this position
+            - word: Holy name at this position
+            - opcode: Opcode value at this position
+        """
+        if callback not in cls._tick_listeners:
+            cls._tick_listeners.append(callback)
+        return callback
+
+    @classmethod
+    def register_tick_listener(cls, callback: Callable[[Dict], None]) -> None:
+        """Register a tick listener (non-decorator form)."""
+        if callback not in cls._tick_listeners:
+            cls._tick_listeners.append(callback)
+
+    @classmethod
+    def unregister_tick_listener(cls, callback: Callable[[Dict], None]) -> None:
+        """Unregister a tick listener."""
+        if callback in cls._tick_listeners:
+            cls._tick_listeners.remove(callback)
+
+    @classmethod
+    def broadcast_tick(cls, tick_state: Dict) -> int:
+        """
+        Broadcast tick to all registered listeners.
+
+        Called by mahamantra.tick() after advancing position.
+        Returns number of listeners notified.
+        """
+        notified = 0
+        for listener in cls._tick_listeners:
+            try:
+                listener(tick_state)
+                notified += 1
+            except Exception:
+                # Don't let one failing listener break the tick
+                pass
+        return notified
+
+    @classmethod
+    def tick_listener_count(cls) -> int:
+        """Get number of registered tick listeners."""
+        return len(cls._tick_listeners)
 
 
 # =============================================================================

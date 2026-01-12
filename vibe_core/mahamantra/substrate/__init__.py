@@ -197,6 +197,11 @@ from vibe_core.mahamantra.substrate.position import (
     get_positions_by_quarter,
     get_head_position,
     get_worker_positions,
+    get_worker_positions_for_quarter,
+    get_all_head_positions,
+    get_all_worker_positions,
+    # Aliases
+    get_quarter_positions,
 )
 
 # =============================================================================
@@ -212,6 +217,85 @@ from vibe_core.mahamantra.substrate.protocol import (
     MantraAware,
     # Registry
     ProtocolRegistry,
+)
+
+# =============================================================================
+# PANCHA TATTVA - Die 5 Persönlichkeiten (SSOT)
+# =============================================================================
+#
+# Die Essenz des Mahamantra offenbart sich nur durch sie.
+# byte.py = unpersönliche Mathematik
+# pancha_tattva.py = persönlicher Einstieg
+#
+
+from vibe_core.mahamantra.substrate.pancha_tattva import (
+    # Main Enum
+    PanchaTattva,
+    TattvaIndex,
+    # Aspect
+    TattvaAspect,
+    PANCHA_TATTVA_ASPECTS,
+    # Lookup
+    get_tattva_aspect,
+    get_tattva_by_index,
+    get_tattva_by_capability,
+    get_tattva_by_protocol,
+    # Byte Mapping
+    TATTVA_TO_HOLYNAME,
+    tattva_to_trit,
+    # Gates
+    TattvaGate,
+    GATE_TO_TATTVA,
+    # Protocol
+    PanchaTattvaAware,
+    # Position Mapping
+    get_tattva_for_position,
+    # Parampara
+    PANCHA_TATTVA_COUNT,
+    PANCHA_TATTVA_VECTOR,
+    verify_pancha_tattva_parampara,
+    # Prayer
+    PANCHA_TATTVA_MANTRA,
+    PANCHA_TATTVA_MEANING,
+)
+
+# =============================================================================
+# WATERTIGHT - Type Integrity Verification
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.watertight import (
+    # Types
+    TypeViolation,
+    WatertightReport,
+    # Functions
+    check_file,
+    check_directory,
+    verify_watertight,
+    print_report,
+    is_watertight,
+    # Constants
+    FORBIDDEN_TYPES,
+)
+
+# =============================================================================
+# SCANNER - Auto-Discovery of Declarations
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.scanner import (
+    # Alias
+    MahajanaAlias,
+    MAHAJANA_ALIASES,
+    resolve_mahajana,
+    get_position as get_mahajana_position,
+    get_name as get_mahajana_name,
+    # Declaration
+    SimpleDeclaration,
+    # Scanner
+    ScanResult,
+    scan_all,
+    # Governance
+    scan_for_governance,
+    print_scan_report,
 )
 
 # =============================================================================
@@ -323,10 +407,54 @@ __all__ = [
     "get_positions_by_quarter",
     "get_head_position",
     "get_worker_positions",
+    "get_worker_positions_for_quarter",
+    "get_all_head_positions",
+    "get_all_worker_positions",
+    "get_quarter_positions",
     # === PROTOCOL (SSOT) ===
     "MantraProtocol",
     "WorkerProtocol",
     "HeadProtocol",
     "MantraAware",
     "ProtocolRegistry",
+    # === PANCHA TATTVA (SSOT) ===
+    "PanchaTattva",
+    "TattvaIndex",
+    "TattvaAspect",
+    "PANCHA_TATTVA_ASPECTS",
+    "get_tattva_aspect",
+    "get_tattva_by_index",
+    "get_tattva_by_capability",
+    "get_tattva_by_protocol",
+    "TATTVA_TO_HOLYNAME",
+    "tattva_to_trit",
+    "TattvaGate",
+    "GATE_TO_TATTVA",
+    "PanchaTattvaAware",
+    "get_tattva_for_position",
+    "PANCHA_TATTVA_COUNT",
+    "PANCHA_TATTVA_VECTOR",
+    "verify_pancha_tattva_parampara",
+    "PANCHA_TATTVA_MANTRA",
+    "PANCHA_TATTVA_MEANING",
+    # === WATERTIGHT (Type Integrity) ===
+    "TypeViolation",
+    "WatertightReport",
+    "check_file",
+    "check_directory",
+    "verify_watertight",
+    "print_report",
+    "is_watertight",
+    "FORBIDDEN_TYPES",
+    # === SCANNER (Discovery) ===
+    "MahajanaAlias",
+    "MAHAJANA_ALIASES",
+    "resolve_mahajana",
+    "get_mahajana_position",
+    "get_mahajana_name",
+    "SimpleDeclaration",
+    "ScanResult",
+    "scan_all",
+    "scan_for_governance",
+    "print_scan_report",
 ]

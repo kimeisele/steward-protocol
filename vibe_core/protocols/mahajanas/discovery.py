@@ -14,7 +14,7 @@ ZERO MANUAL MAPPING:
     Only the Mahamantra filter decides.
 
 THE DISCOVERY ENGINE:
-    1. SCAN - Find all .py files in a path
+    1. SCAN - Uses ScannerProtocol (SUBSTRATE)
     2. FILTER - Exclude already-owned, tests, __pycache__
     3. ANALYZE - Run each through analyze()
     4. ADOPT - Run through adopt_full()
@@ -22,9 +22,12 @@ THE DISCOVERY ENGINE:
 
 "What is the map?" - The Mahamantra IS the map.
 All 16 positions are routing destinations.
+
+SUBSTRATE INTEGRATION:
+    Discovery uses ScannerProtocol from substrate.
+    NO HARDCODED PATHS. Config-driven via ScanConfig.
 """
 
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -37,7 +40,6 @@ from typing import (
     Set,
     Callable,
 )
-import os
 
 from vibe_core.protocols.mahajanas.adoption import (
     AdoptionStatus,
@@ -51,6 +53,18 @@ from vibe_core.protocols.mahajanas.adoption import (
     get_pipeline,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
+
+# === SUBSTRATE SCANNER PROTOCOL ===
+from vibe_core.protocols.substrate.scanner import (
+    ScannerProtocol,
+    ScanConfig,
+    ScanResult,
+    ScannedFile,
+    FileStatus,
+    DeclarationType,
+    extract_declarations,
+    get_default_config,
+)
 
 
 # =============================================================================
@@ -151,21 +165,35 @@ OWNERSHIP_MARKERS: Dict[str, Set[str]] = {
 }
 
 
-def detect_owner(source_code: str) -> Optional[str]:
+def detect_owner(source_code: str, file_path: str = "<unknown>") -> Optional[str]:
     """
     Detect if source code already has a Mahajana owner.
 
+    Uses SUBSTRATE extract_declarations() for __mahajana__ detection.
+    Falls back to keyword matching for legacy code.
+
     Returns Mahajana name if owned, None if orphan.
     """
+    # === PRIMARY: Use substrate AST extraction ===
+    declarations = extract_declarations(
+        source_code,
+        file_path,
+        [DeclarationType.MAHAJANA.value],
+    )
+
+    for decl in declarations:
+        if decl.get("type") == DeclarationType.MAHAJANA.value:
+            value = decl.get("value", "")
+            if value and value in OWNERSHIP_MARKERS:
+                return value
+
+    # === FALLBACK: Legacy keyword detection ===
     source_lower = source_code.lower()
 
     for mahajana, markers in OWNERSHIP_MARKERS.items():
         for marker in markers:
             if marker.lower() in source_lower:
                 return mahajana
-
-    # Check path-based ownership (protocols/mahajanas/{owner}/)
-    # This is detected by caller from path
 
     return None
 
@@ -243,58 +271,113 @@ class DiscoveryEngine:
         scan_path() → discover_orphans() → adopt_all() → report()
 
     ZERO MANUAL WIRING:
-        - Scans filesystem
-        - Detects ownership
+        - Uses ScannerProtocol (SUBSTRATE) for scanning
+        - Detects ownership via extract_declarations
         - Identifies orphans
         - Adopts via Mahamantra
         - Reports progress
+
+    SUBSTRATE INTEGRATION:
+        Scanning is delegated to ScannerProtocol.
+        NO HARDCODED PATHS - config-driven via ScanConfig.
     """
 
-    def __init__(self, base_path: Optional[Path] = None) -> None:
-        """Initialize discovery engine."""
+    def __init__(
+        self,
+        base_path: Optional[Path] = None,
+        scanner: Optional[ScannerProtocol] = None,
+        config: Optional[ScanConfig] = None,
+    ) -> None:
+        """
+        Initialize discovery engine.
+
+        Args:
+            base_path: Base path to scan (deprecated - use config)
+            scanner: ScannerProtocol instance (optional - creates default)
+            config: ScanConfig for scanning (optional - uses defaults)
+        """
         self._base_path = base_path or Path.cwd()
         self._discovered: Dict[str, DiscoveredFile] = {}
         self._adoptions: Dict[str, FullAdoptionResult] = {}
         self._progress: Optional[DiscoveryProgress] = None
         self._start_time: Optional[datetime] = None
 
+        # === SUBSTRATE SCANNER ===
+        if scanner is not None:
+            self._scanner = scanner
+        else:
+            # Create scanner with config
+            from vibe_core.mahamantra.substrate.scanner import MahajanaScanner
+            scan_config = config or get_default_config()
+            scan_config["base_path"] = str(self._base_path)
+            self._scanner = MahajanaScanner(scan_config)
+
     # =========================================================================
-    # SCAN - Find all Python files
+    # SCAN - Uses ScannerProtocol (SUBSTRATE)
     # =========================================================================
 
     def scan(self, path: Optional[Path] = None) -> List[DiscoveredFile]:
         """
-        Scan a path for Python files.
+        Scan a path for Python files using ScannerProtocol.
+
+        SUBSTRATE INTEGRATION:
+            Delegates to ScannerProtocol.scan() then converts
+            ScannedFile → DiscoveredFile.
 
         Returns list of discovered files with status.
         """
-        scan_path = path or self._base_path
         self._start_time = datetime.now()
         discovered: List[DiscoveredFile] = []
 
-        for file_path in scan_path.rglob("*.py"):
-            if should_skip(file_path):
+        # === USE SUBSTRATE SCANNER ===
+        scan_result = self._scanner.scan(str(path) if path else None)
+
+        for scanned in scan_result.get("files", []):
+            file_path = Path(scanned["path"])
+            status_str = scanned.get("status", "")
+
+            # Map FileStatus → DiscoveryStatus
+            if status_str == FileStatus.SKIPPED.value:
                 discovered.append(self._create_discovered(
                     file_path,
                     DiscoveryStatus.SKIPPED,
                 ))
-                continue
-
-            # Check if already owned by folder structure
-            folder_owner = is_in_mahajana_folder(file_path)
-            if folder_owner:
+            elif status_str == FileStatus.OWNED.value:
+                # Get mahajana from declarations
+                owner = None
+                for decl in scanned.get("declarations", []):
+                    if decl.get("type") == DeclarationType.MAHAJANA.value:
+                        owner = decl.get("value")
+                        break
                 discovered.append(self._create_discovered(
                     file_path,
                     DiscoveryStatus.OWNED,
-                    owner=folder_owner,
+                    owner=owner,
                 ))
-                continue
-
-            # Mark as pending for analysis
-            discovered.append(self._create_discovered(
-                file_path,
-                DiscoveryStatus.PENDING,
-            ))
+            elif status_str == FileStatus.ORPHAN.value:
+                discovered.append(self._create_discovered(
+                    file_path,
+                    DiscoveryStatus.ORPHAN,
+                ))
+            elif status_str == FileStatus.ERROR.value:
+                discovered.append(self._create_discovered(
+                    file_path,
+                    DiscoveryStatus.SKIPPED,
+                ))
+            else:
+                # PENDING or SCANNED → check folder ownership
+                folder_owner = is_in_mahajana_folder(file_path)
+                if folder_owner:
+                    discovered.append(self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.OWNED,
+                        owner=folder_owner,
+                    ))
+                else:
+                    discovered.append(self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.PENDING,
+                    ))
 
         # Store discovered files
         for df in discovered:
@@ -346,8 +429,8 @@ class DiscoveryEngine:
             entry["status"] = DiscoveryStatus.SKIPPED.value
             return entry
 
-        # Detect owner from source
-        owner = detect_owner(source_code)
+        # Detect owner from source (uses substrate extract_declarations)
+        owner = detect_owner(source_code, str(file_path))
 
         if owner:
             entry["status"] = DiscoveryStatus.OWNED.value

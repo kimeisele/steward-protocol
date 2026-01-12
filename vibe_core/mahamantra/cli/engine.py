@@ -42,7 +42,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from vibe_core.mahamantra._cli_protocol import (
+from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
     CLIContext,
     CLIError,
