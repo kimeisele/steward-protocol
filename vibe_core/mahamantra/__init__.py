@@ -542,6 +542,10 @@ class MahamantraLotus(LotusNode):
             Every position has a guardian.
             The guardian handles the command.
 
+        PRIORITY:
+            1. Canonical Registry (Naga Commands) - If defined
+            2. Parampara Hash - Fallback resonance
+
         Args:
             command: The command string to route
 
@@ -555,9 +559,33 @@ class MahamantraLotus(LotusNode):
         if not command:
             return RouteResult(position=0, guardian="prithu", quarter="genesis")
 
-        # Parampara vector - weighted sum mod 16
-        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
-        position = mutation_vector % 16
+        position = -1
+
+        # 1. CANONICAL REGISTRY (The Truth)
+        try:
+            # Import ONLY from protocols (SAFE)
+            from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
+            from vibe_core.mahamantra.substrate.wiring import get_position_by_opcode
+            
+            # We assume the registry is populated by the bootloader/CLI entry point.
+            # Mahamantra does not scan CLI folders itself (Upward Dependency Violation).
+            
+            cmd_obj = NAGA_COMMAND_REGISTRY.get(command)
+            if cmd_obj:
+                # Found explicit mapping!
+                pos_mapping = get_position_by_opcode(cmd_obj.opcode)
+                if pos_mapping:
+                    position = pos_mapping.index
+        except ImportError:
+            pass
+        except Exception:
+            pass
+
+        # 2. PARAMPARA HASH (Fallback Resonance)
+        if position == -1:
+            # Parampara vector - weighted sum mod 16
+            mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
+            position = mutation_vector % 16
 
         # Get guardian/quarter from substrate (SSOT)
         from vibe_core.mahamantra.substrate.wiring import get_position_by_index
