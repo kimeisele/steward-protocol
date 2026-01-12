@@ -212,7 +212,7 @@ class NullBrahma(BrahmaProtocolBase):
         )
 
 
-from vibe_core.protocols.mahajanas.brahma.di import (
+from vibe_core.protocols.mahajanas.brahma.service_registry_protocol import (
     ServiceRegistryProtocol,
     ServiceRegistryOwnedProtocol,
     NullServiceRegistry,
