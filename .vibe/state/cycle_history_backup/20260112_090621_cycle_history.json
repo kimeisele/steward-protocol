@@ -1,0 +1,111 @@
+{
+  "completed": [],
+  "errors": [
+    {
+      "cycle_id": "20ae3a34",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4645424336'>",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672635"
+    },
+    {
+      "cycle_id": "b630d2b7",
+      "parent_cycle_id": null,
+      "trace_id": "08e7f815",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672652"
+    },
+    {
+      "cycle_id": "f8b698ed",
+      "parent_cycle_id": null,
+      "trace_id": "e2d8eda4",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672658"
+    },
+    {
+      "cycle_id": "74b36b27",
+      "parent_cycle_id": null,
+      "trace_id": "3c971ffe",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672663"
+    },
+    {
+      "cycle_id": "6375ba92",
+      "parent_cycle_id": null,
+      "trace_id": "61007e41",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672668"
+    },
+    {
+      "cycle_id": "f912f0da",
+      "parent_cycle_id": null,
+      "trace_id": "10274d9b",
+      "cycle_name": "test",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672672"
+    },
+    {
+      "cycle_id": "20531c41",
+      "parent_cycle_id": null,
+      "trace_id": "5a4493ee",
+      "cycle_name": "test_orchestration",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T08:24:21.672676"
+    }
+  ],
+  "last_updated": "2026-01-12T08:24:21.672687"
+}

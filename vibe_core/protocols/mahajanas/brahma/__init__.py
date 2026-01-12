@@ -239,7 +239,8 @@ from vibe_core.protocols.mahajanas.brahma.bootstrap import (
 # BRAHMA SERVICE - The Real Implementation
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+# LAZY IMPORT to avoid circular dependency with capability_registry migration
+# BrahmaService is loaded on first access via __getattr__
 
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
@@ -265,3 +266,11 @@ __all__ = [
     # Service (Real Implementation)
     "BrahmaService",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for BrahmaService to avoid circular import."""
+    if name == "BrahmaService":
+        from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+        return BrahmaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

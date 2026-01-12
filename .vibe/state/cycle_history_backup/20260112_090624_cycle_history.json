@@ -2,9 +2,9 @@
   "completed": [],
   "errors": [
     {
-      "cycle_id": "132319a2",
+      "cycle_id": "bb8416ac",
       "parent_cycle_id": null,
-      "trace_id": "625ccd43",
+      "trace_id": "<MagicMock name='mock.start()' id='4536957712'>",
       "cycle_name": "boot_sequence",
       "phase": "perceive",
       "observations_count": 0,
@@ -14,8 +14,8 @@
       "errors": {
         "orchestrate": "'MantraByte' object is not subscriptable"
       },
-      "timestamp": "2026-01-12T09:07:19.281219"
+      "timestamp": "2026-01-12T09:06:21.232128"
     }
   ],
-  "last_updated": "2026-01-12T09:07:19.281245"
+  "last_updated": "2026-01-12T09:06:21.232141"
 }
