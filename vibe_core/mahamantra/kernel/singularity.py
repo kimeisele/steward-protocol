@@ -41,7 +41,21 @@ FRACTAL ARCHITECTURE:
 from __future__ import annotations
 
 import importlib
-from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING
+from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING, TypedDict
+
+
+# =============================================================================
+# WATERTIGHT TYPES
+# =============================================================================
+
+class TickState(TypedDict):
+    """Return type for tick() - WATERTIGHT."""
+    tick: int
+    position: int
+    quarter: str
+    guardian: str
+    word: str
+    opcode: Optional[int]
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
 from vibe_core.protocols.veda import (
@@ -692,11 +706,11 @@ class Mahamantra:
 
     _tick_counter: int = 0
 
-    def tick(self) -> Dict[str, any]:
+    def tick(self) -> TickState:
         """
         Advance one position in the 16-word mantra.
 
-        Returns current state (position, quarter, guardian).
+        Returns TickState (position, quarter, guardian).
         PURE FUNCTION - no side effects, no broadcast.
 
         Broadcasting is Narada's domain (BroadcastProtocol).
@@ -721,14 +735,14 @@ class Mahamantra:
         else:
             quarter = Quarter.MOKSHA
 
-        return {
-            "tick": current,
-            "position": current,
-            "quarter": quarter.value,
-            "guardian": position.guardian.value,
-            "word": position.word.name,
-            "opcode": position.opcode.value if position.opcode else None,
-        }
+        return TickState(
+            tick=current,
+            position=current,
+            quarter=quarter.value,
+            guardian=position.guardian.value,
+            word=position.word.name,
+            opcode=position.opcode.value if position.opcode else None,
+        )
 
     def get_tick(self) -> int:
         """Get current tick position (0-15)."""
