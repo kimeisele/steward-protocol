@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Set, Tuple
 
-from vibe_core.protocols.substrate.mantra.acintya import PARAMPARA
+from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 
 
 # =============================================================================

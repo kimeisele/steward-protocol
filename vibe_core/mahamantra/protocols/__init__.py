@@ -263,31 +263,18 @@ from vibe_core.mahamantra.protocols._gad import (
 )
 
 # =============================================================================
-# OPCODE - 16 OpCodes + Message Bus
+# OPCODE - From SSOT (substrate/opcode.py)
 # =============================================================================
+# NOTE: OpCodes are now SSOT in substrate/opcode.py
+# Import from there, not from protocols/_opcode.py (DELETED)
 
-from vibe_core.mahamantra.protocols._opcode import (
-    # OpCodes
+from vibe_core.mahamantra.substrate.opcode import (
     MantraOpCode,
     OPCODE_NAMES,
     MAHAJANA_OPCODES,
     get_opcode,
     get_opcode_name,
     get_mahajana_opcode,
-    # Message
-    BusMessage,
-    # Null Bus
-    NullBus,
-    get_null_bus,
-    # Message Bus
-    MessageBus,
-    get_message_bus,
-    # Protocol
-    OpCodeProtocol,
-    # Executor
-    OpCodeExecutor,
-    # Protocol Definition
-    OpCodeProtocolDef,
 )
 
 # =============================================================================
@@ -405,19 +392,11 @@ __all__ = [
     "GADBase",
     "legitimacy_formula",
     "GADProtocolDef",
-    # === OPCODE ===
+    # === OPCODE (from substrate/opcode.py SSOT) ===
     "MantraOpCode",
     "OPCODE_NAMES",
     "MAHAJANA_OPCODES",
     "get_opcode",
     "get_opcode_name",
     "get_mahajana_opcode",
-    "BusMessage",
-    "NullBus",
-    "get_null_bus",
-    "MessageBus",
-    "get_message_bus",
-    "OpCodeProtocol",
-    "OpCodeExecutor",
-    "OpCodeProtocolDef",
 ]

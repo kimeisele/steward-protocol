@@ -11,7 +11,8 @@ FALSCH: Protocol-per-Service     → 100 Services = 100 Protocols = TOTGEBURT
 FALSCH: Capability-as-Tags       → Keine Typsicherheit, nur Runtime
 FALSCH: Domain-Cluster-Protocols → Zu breit, nicht komponierbar
 
-RICHTIG: Atomic Verb Protocols   → Wie NAGA groups.py
+RICHTIG: Atomic Verb Proto
+cols   → Wie NAGA groups.py
 ```
 
 **Golden Solution:**

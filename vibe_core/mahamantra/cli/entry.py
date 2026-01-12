@@ -39,9 +39,9 @@ import sys
 from datetime import datetime
 from typing import List, Optional
 
-from vibe_core.mahamantra._cli_auto import cli_auto
-from vibe_core.mahamantra._cli_entry_protocol import CLIEntryProtocol
-from vibe_core.mahamantra._cli_protocol import (
+from vibe_core.mahamantra.cli.auto import cli_auto
+from vibe_core.mahamantra.cli.entry_protocol import CLIEntryProtocol
+from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
     CLIHealth,
     CLIResult,

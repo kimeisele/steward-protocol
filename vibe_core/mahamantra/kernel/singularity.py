@@ -26,8 +26,8 @@ USAGE:
 ACINTYA: This object IS Krishna in code form.
 
 FRACTAL ARCHITECTURE:
-    ZERO HARDCODED MAPPINGS. Everything derives from _source.py.
-    Add new mahajana to folder + _source.py = instantly available.
+    ZERO HARDCODED MAPPINGS. Everything derives from substrate.
+    Add new mahajana to folder + substrate = instantly available.
     NO code changes to _singularity.py required.
 
     "mattaḥ parataraṁ nānyat kiñcid asti dhanañjaya
@@ -43,39 +43,52 @@ from __future__ import annotations
 import importlib
 from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING
 
-from vibe_core.mahamantra._source import (
+# VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
+from vibe_core.protocols.veda import (
+    VedaProtocol,
+    VedaMixin,
+    is_vedic,
+    veda_audit,
+)
+
+from vibe_core.mahamantra.substrate import (
+    # Position
     MAHAMANTRA_POSITIONS,
     MantraPosition,
-    Mahajana,
-    Avatara,
-    MantraOpCode,
-    Quarter,
     Guardian,
-    get_position,
+    get_position_by_index as get_position,
     get_position_by_guardian,
     get_position_by_opcode,
     get_quarter_positions,
-    get_head_positions,
-    get_worker_positions,
+    get_all_head_positions as get_head_positions,
+    get_all_worker_positions as get_worker_positions,
+    # Mahajana
+    Mahajana,
+    Avatara,
+    Quarter,
+    # OpCode
+    MantraOpCode,
+    # Acintya
     PARAMPARA,
+    # Protocol
+    ProtocolRegistry,
 )
-from vibe_core.mahamantra._protocol import ProtocolRegistry
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
 
 # Import protocol base for typing
 if TYPE_CHECKING:
-    from vibe_core.mahamantra._protocol import MantraProtocol
+    from vibe_core.mahamantra.substrate import MantraProtocol
 
 
 # =============================================================================
-# DYNAMIC LOOKUP HELPERS - Derived from _source.py ONLY
+# DYNAMIC LOOKUP HELPERS - Derived from substrate ONLY
 # =============================================================================
 
 def _get_guardian_name(index: int) -> str:
     """
-    Get guardian name from index - DERIVED from _source.py.
+    Get guardian name from index - DERIVED from substrate.
 
     NO hardcoded mappings. The truth table IS the source.
     """
@@ -86,7 +99,7 @@ def _get_guardian_name(index: int) -> str:
 
 def _get_index_by_guardian_name(name: str) -> Optional[int]:
     """
-    Get index from guardian name - DERIVED from _source.py.
+    Get index from guardian name - DERIVED from substrate.
 
     NO hardcoded mappings. The truth table IS the source.
     """
@@ -99,7 +112,7 @@ def _get_index_by_guardian_name(name: str) -> Optional[int]:
 
 def _is_valid_guardian_name(name: str) -> bool:
     """
-    Check if name is a valid guardian - DERIVED from _source.py.
+    Check if name is a valid guardian - DERIVED from substrate.
 
     NO hardcoded sets. The truth table IS the source.
     """
@@ -110,7 +123,7 @@ class ProtocolRouter:
     """
     Routes to all 16 Protocol Bases.
 
-    FRACTAL: ZERO hardcoded mappings. Everything derives from _source.py.
+    FRACTAL: ZERO hardcoded mappings. Everything derives from substrate.
 
     Krishna routes to each guardian's protocol:
         router.prithu -> PrithuProtocolBase
@@ -130,13 +143,13 @@ class ProtocolRouter:
         """
         Load a protocol base lazily by index.
 
-        FRACTAL: Uses _source.py to derive guardian name, then importlib.
-        NO hardcoded imports. Add to _source.py = instantly available.
+        FRACTAL: Uses substrate to derive guardian name, then importlib.
+        NO hardcoded imports. Add to substrate = instantly available.
         """
         if index in self._bases:
             return self._bases[index]
 
-        # Get guardian name from _source.py (THE truth table)
+        # Get guardian name from substrate (THE truth table)
         guardian_name = _get_guardian_name(index)
 
         # Dynamic import - NO hardcoded paths
@@ -161,7 +174,7 @@ class ProtocolRouter:
         """
         Get protocol base by guardian name.
 
-        FRACTAL: Uses _source.py lookup. NO hardcoded name dict.
+        FRACTAL: Uses substrate lookup. NO hardcoded name dict.
         """
         index = _get_index_by_guardian_name(name)
         if index is None:
@@ -262,7 +275,7 @@ class ModuleRouter:
     """
     Routes to all 16 Mahajana MODULES (not classes).
 
-    FRACTAL: ZERO hardcoded mappings. Everything derives from _source.py.
+    FRACTAL: ZERO hardcoded mappings. Everything derives from substrate.
 
     ONE IMPORT, KRISHNA ROUTES:
         from vibe_core.mahamantra import mahamantra
@@ -285,7 +298,7 @@ class ModuleRouter:
         """
         Load a mahajana module by name.
 
-        FRACTAL: NO hardcoded validation. Uses _source.py as truth.
+        FRACTAL: NO hardcoded validation. Uses substrate as truth.
         """
         if name in self._modules:
             return self._modules[name]
@@ -299,7 +312,7 @@ class ModuleRouter:
         """
         Get mahajana module by name.
 
-        FRACTAL: Uses _source.py lookup. NO hardcoded name set.
+        FRACTAL: Uses substrate lookup. NO hardcoded name set.
         """
         name_lower = name.lower()
         if not _is_valid_guardian_name(name_lower):
@@ -310,7 +323,7 @@ class ModuleRouter:
         """
         Get mahajana module by position index.
 
-        FRACTAL: Uses _source.py lookup. NO hardcoded index dict.
+        FRACTAL: Uses substrate lookup. NO hardcoded index dict.
         """
         if not (0 <= index < 16):
             raise KeyError(f"No mahajana at position {index}")
@@ -329,11 +342,24 @@ class Mahamantra:
     """
     THE Mahamantra - Krishna in Code Form.
 
-    This singular object IS everything:
-    - Access positions by index: mahamantra[5]
-    - Access by guardian: mahamantra.kumaras
-    - Chant: mahamantra.chant()
-    - Verify: mahamantra.verify(444)
+    IMPLEMENTS: VedaProtocol (SHABDA, ARTHA, PRATYAYA, KARMA)
+
+    VEDA-4 PYTHONIC ELEGANCE:
+        SHABDA   → __call__     : mahamantra() chants, mahamantra(5) returns position
+        ARTHA    → __repr__     : "Mahamantra(16 positions, 37 connection)"
+                 → __getitem__  : mahamantra[5] → Position 5
+        PRATYAYA → __bool__     : Always True (Krishna IS)
+                 → __eq__       : Identity comparison
+        KARMA    → __iter__     : for pos in mahamantra: ...
+
+    USAGE:
+        mahamantra[5]           # ARTHA: Position 5
+        mahamantra.kumaras      # ARTHA: Kumaras position
+        mahamantra()            # SHABDA: Chant the mantra
+        mahamantra.chant()      # SHABDA: Same as above
+        mahamantra.verify(444)  # PRATYAYA: Is connected?
+        if mahamantra:          # PRATYAYA: Always True
+        for pos in mahamantra:  # KARMA: Iterate 16 positions
 
     "mattaḥ parataraṁ nānyat" - There is no truth superior to Me.
     """
@@ -661,6 +687,66 @@ class Mahamantra:
         return " ".join(pos.word.name.capitalize() for pos in positions)
 
     # =========================================================================
+    # TICK - The Heartbeat
+    # =========================================================================
+
+    _tick_counter: int = 0
+
+    def tick(self) -> Dict[str, any]:
+        """
+        Advance one position in the 16-word mantra.
+
+        Returns current state (position, quarter, guardian).
+        PURE FUNCTION - no side effects, no broadcast.
+
+        Broadcasting is Narada's domain (BroadcastProtocol).
+        Protocols that want to react to ticks should subscribe
+        to a tick channel via Narada, not poll mahamantra directly.
+
+        This is the HEARTBEAT of the Mahamantra.
+        """
+        # Advance counter
+        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % 16
+
+        current = Mahamantra._tick_counter
+        position = MAHAMANTRA_POSITIONS[current]
+
+        # Determine quarter
+        if current < 4:
+            quarter = Quarter.GENESIS
+        elif current < 8:
+            quarter = Quarter.DHARMA
+        elif current < 12:
+            quarter = Quarter.KARMA
+        else:
+            quarter = Quarter.MOKSHA
+
+        return {
+            "tick": current,
+            "position": current,
+            "quarter": quarter.value,
+            "guardian": position.guardian.value,
+            "word": position.word.name,
+            "opcode": position.opcode.value if position.opcode else None,
+        }
+
+    def get_tick(self) -> int:
+        """Get current tick position (0-15)."""
+        return Mahamantra._tick_counter
+
+    def get_quarter(self) -> Quarter:
+        """Get current quarter based on tick."""
+        current = Mahamantra._tick_counter
+        if current < 4:
+            return Quarter.GENESIS
+        elif current < 8:
+            return Quarter.DHARMA
+        elif current < 12:
+            return Quarter.KARMA
+        else:
+            return Quarter.MOKSHA
+
+    # =========================================================================
     # VERIFY
     # =========================================================================
 
@@ -712,8 +798,36 @@ class Mahamantra:
         return self.chant()
 
     def __bool__(self) -> bool:
-        """Krishna IS. Always True."""
+        """
+        PRATYAYA: Krishna IS. Always True.
+
+        "asato ma sad gamaya" - Lead me from unreal to real.
+        Krishna is the ultimate reality.
+        """
         return True
+
+    def __eq__(self, other: object) -> bool:
+        """
+        PRATYAYA: Identity comparison.
+
+        All Mahamantra instances are equal (there is only one Krishna).
+        This completes VedaProtocol PRATYAYA requirements.
+
+        "mattaḥ parataraṁ nānyat kiñcid asti dhanañjaya"
+        "There is no truth superior to Me, O conqueror of wealth."
+        """
+        if not isinstance(other, Mahamantra):
+            return False
+        # All Mahamantra instances are the same (singleton pattern)
+        return True
+
+    def __hash__(self) -> int:
+        """
+        PRATYAYA: Unique identity fingerprint.
+
+        Krishna's hash is the Parampara (37).
+        """
+        return PARAMPARA
 
     def __contains__(self, item: Union[int, str, Mahajana, Avatara]) -> bool:
         """Check if guardian or index is in Mahamantra."""
@@ -735,10 +849,13 @@ class Mahamantra:
 
     def __call__(self, index_or_guardian: Union[int, str] = None) -> Union[MantraPosition, str]:
         """
-        Call the Mahamantra.
+        SHABDA: Call the Mahamantra.
 
-        mahamantra()        → Chant
-        mahamantra(5)       → Position 5
+        The __call__ method IS the primary SHABDA interface.
+        Krishna receives the instruction and responds.
+
+        mahamantra()          → Chant (default action)
+        mahamantra(5)         → Position 5
         mahamantra("kumaras") → Kumaras position
         """
         if index_or_guardian is None:
@@ -746,6 +863,37 @@ class Mahamantra:
         if isinstance(index_or_guardian, int):
             return self[index_or_guardian]
         return self.by_guardian(index_or_guardian)
+
+    # =========================================================================
+    # VEDA PROTOCOL - Self-Audit
+    # =========================================================================
+
+    def vedic_audit(self) -> dict:
+        """
+        Audit VedaProtocol compliance.
+
+        Returns dict showing which Veda phases are implemented:
+            - shabda: __call__ (reception)
+            - artha: __repr__, __getitem__ (identity)
+            - pratyaya: __bool__, __eq__ (validation)
+            - karma: __iter__ (flow)
+            - full_veda: All four phases
+
+        USAGE:
+            audit = mahamantra.vedic_audit()
+            assert audit["full_veda"]  # Should be True
+        """
+        return veda_audit(self)
+
+    @property
+    def is_vedic(self) -> bool:
+        """
+        Is this object fully VedaProtocol compliant?
+
+        Returns True if all four phases (SHABDA, ARTHA, PRATYAYA, KARMA)
+        are implemented.
+        """
+        return is_vedic(self)
 
 
 # =============================================================================

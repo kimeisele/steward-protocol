@@ -30,6 +30,10 @@ kalau nasty eva nasty eva nasty eva gatir anyatha"
 HARDENING LEVEL: GERMAN (Strict Types, No Any)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+
 import time
 import functools
 from typing import (
@@ -389,6 +393,19 @@ from .samskara import (
     NullSamskara,
 )
 
+# Import Watchman (AST-based violation detection) - Yamaraja's vigilance
+from .watchman import (
+    ViolationSeverity,
+    ViolationPattern,
+    Violation,
+    PatrolResult,
+    InspectionResult,
+    HealthResult,
+    WatchmanState,
+    WatchmanProtocol,
+    NullWatchman,
+)
+
 # Import Correction (Drift Detection & Healing) - Yamaraja's judicial function
 from .correction import (
     DriftSource,
@@ -449,6 +466,16 @@ __all__ = [
     "SamskaraProtocol",
     "SamskaraOwnedProtocol",
     "NullSamskara",
+    # Watchman Protocol (AST-based Violation Detection)
+    "ViolationSeverity",
+    "ViolationPattern",
+    "Violation",
+    "PatrolResult",
+    "InspectionResult",
+    "HealthResult",
+    "WatchmanState",
+    "WatchmanProtocol",
+    "NullWatchman",
     # Correction Protocol (Drift Detection & Healing)
     "DriftSource",
     "DriftSeverity",

@@ -24,6 +24,10 @@ SHASTRA BASIS:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+
 from __future__ import annotations
 
 import time
