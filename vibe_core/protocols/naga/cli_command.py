@@ -165,19 +165,19 @@ OPCODE_TO_MAHAJANA: Dict[MantraOpCode, Mahajana] = {
     MantraOpCode.SYS_WAKE: Mahajana.PRITHU,
     MantraOpCode.LOAD_ROOT: Mahajana.BRAHMA,
     MantraOpCode.ALLOC_MEM: Mahajana.NARADA,
-    MantraOpCode.BIND_CTX: Mahajana.SHAMBHU,
-    MantraOpCode.ASSERT_TRUTH: Mahajana.VYASA,
-    MantraOpCode.RESOLVE_REQ: Mahajana.KUMARAS,
-    MantraOpCode.GARBAGE_COLLECT: Mahajana.KAPILA,
-    MantraOpCode.PULSE_SYNC: Mahajana.MANU,
-    MantraOpCode.FETCH_RES: Mahajana.PARASHURAMA,
-    MantraOpCode.EXEC_SERVICE: Mahajana.PRAHLADA,
-    MantraOpCode.CHECK_DHARMA: Mahajana.JANAKA,
-    MantraOpCode.COMMIT_LOG: Mahajana.BHISHMA,
-    MantraOpCode.CACHE_STATE: Mahajana.NRISIMHA,
-    MantraOpCode.OPTIMIZE: Mahajana.BALI,
+    MantraOpCode.INIT_THREAD: Mahajana.SHAMBHU,
+    MantraOpCode.COMPILE_AST: Mahajana.VYASA,
+    MantraOpCode.BIND_SYMBOL: Mahajana.KUMARAS,
+    MantraOpCode.TYPE_CHECK: Mahajana.KAPILA,
+    MantraOpCode.DHARMA_TEST: Mahajana.MANU,
+    MantraOpCode.EXEC_OP: Mahajana.PARASHURAMA,
+    MantraOpCode.EXTEND_CAP: Mahajana.PRAHLADA,
+    MantraOpCode.STATE_SYNC: Mahajana.JANAKA,
+    MantraOpCode.LEDGER_SIGN: Mahajana.BHISHMA,
+    MantraOpCode.YIELD_CPU: Mahajana.NRISIMHA,
+    MantraOpCode.IO_FLUSH: Mahajana.BALI,
     MantraOpCode.YIELD_CPU: Mahajana.SHUKA,
-    MantraOpCode.RESET_IP: Mahajana.YAMARAJA,
+    MantraOpCode.AUDIT_SEAL: Mahajana.YAMARAJA,
 }
 
 # Reverse mapping
@@ -470,7 +470,7 @@ def naga_command(
 
     Usage:
         @naga_command(
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             name="chat",
             help_text="Chat with the cognitive layer"
         )

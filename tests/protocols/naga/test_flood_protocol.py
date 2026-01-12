@@ -219,7 +219,7 @@ class TestNullFlood:
     def test_opcode_is_pulse_sync(self):
         """NullFlood uses PULSE_SYNC opcode."""
         flood = NullFlood()
-        assert flood.opcode == MantraOpCode.PULSE_SYNC
+        assert flood.opcode == MantraOpCode.DHARMA_TEST
 
     def test_mahajana_is_narada(self):
         """NullFlood owned by NARADA."""
@@ -275,7 +275,7 @@ class TestMantraConnection:
 
     def test_opcode_is_pulse_sync(self):
         """Flood uses PULSE_SYNC opcode."""
-        assert FLOOD_OPCODE == MantraOpCode.PULSE_SYNC
+        assert FLOOD_OPCODE == MantraOpCode.DHARMA_TEST
 
     def test_phase_is_purify(self):
         """Flood is in PURIFY phase."""

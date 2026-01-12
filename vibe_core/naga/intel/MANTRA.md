@@ -113,22 +113,22 @@ MAHAMANTRA_SEQUENCE: List[Tuple[str, "MantraOpCode"]] = [
     ("Hare",    MantraOpCode.SYS_WAKE),
     ("Krishna", MantraOpCode.LOAD_ROOT),
     ("Hare",    MantraOpCode.ALLOC_MEM),
-    ("Krishna", MantraOpCode.BIND_CTX),
+    ("Krishna", MantraOpCode.INIT_THREAD),
     # Quarter 1 Complete (Hare Krishna Hare Krishna)
-    ("Krishna", MantraOpCode.ASSERT_TRUTH),
-    ("Krishna", MantraOpCode.RESOLVE_REQ),
-    ("Hare",    MantraOpCode.GARBAGE_COLLECT),
-    ("Hare",    MantraOpCode.PULSE_SYNC),
+    ("Krishna", MantraOpCode.COMPILE_AST),
+    ("Krishna", MantraOpCode.BIND_SYMBOL),
+    ("Hare",    MantraOpCode.TYPE_CHECK),
+    ("Hare",    MantraOpCode.DHARMA_TEST),
     # Quarter 2 Complete (Krishna Krishna Hare Hare)
-    ("Hare",    MantraOpCode.FETCH_RES),
-    ("Rama",    MantraOpCode.EXEC_SERVICE),
-    ("Hare",    MantraOpCode.CHECK_DHARMA),
-    ("Rama",    MantraOpCode.COMMIT_LOG),
+    ("Hare",    MantraOpCode.EXEC_OP),
+    ("Rama",    MantraOpCode.EXTEND_CAP),
+    ("Hare",    MantraOpCode.STATE_SYNC),
+    ("Rama",    MantraOpCode.LEDGER_SIGN),
     # Quarter 3 Complete (Hare Rama Hare Rama)
-    ("Rama",    MantraOpCode.CACHE_STATE),
-    ("Rama",    MantraOpCode.OPTIMIZE),
+    ("Rama",    MantraOpCode.YIELD_CPU),
+    ("Rama",    MantraOpCode.IO_FLUSH),
     ("Hare",    MantraOpCode.YIELD_CPU),
-    ("Hare",    MantraOpCode.RESET_IP),
+    ("Hare",    MantraOpCode.AUDIT_SEAL),
     # Quarter 4 Complete (Rama Rama Hare Hare)
 ]
 ```

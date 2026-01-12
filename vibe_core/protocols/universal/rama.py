@@ -63,7 +63,7 @@ class RamaProtocol(Protocol):
         """
         Execute the Duty (Work) assigned to this moment.
 
-        This corresponds to MantraOpCode.EXEC_SERVICE.
+        This corresponds to MantraOpCode.EXTEND_CAP.
 
         Args:
             context: The Identity performing the action.

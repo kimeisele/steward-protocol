@@ -217,45 +217,45 @@ class NrisimhaWatchdog(MantraProtocol):
         elif opcode == MantraOpCode.ALLOC_MEM:
             # Allocate clean heap
             pass
-        elif opcode == MantraOpCode.BIND_CTX:
+        elif opcode == MantraOpCode.INIT_THREAD:
             # Bind context to identity
             pass
-        elif opcode == MantraOpCode.ASSERT_TRUTH:
+        elif opcode == MantraOpCode.COMPILE_AST:
             # Verify ledger integrity
             pass
-        elif opcode == MantraOpCode.RESOLVE_REQ:
+        elif opcode == MantraOpCode.BIND_SYMBOL:
             # Parse intent
             pass
-        elif opcode == MantraOpCode.GARBAGE_COLLECT:
+        elif opcode == MantraOpCode.TYPE_CHECK:
             # Flush unsigned objects
             pass
-        elif opcode == MantraOpCode.PULSE_SYNC:
+        elif opcode == MantraOpCode.DHARMA_TEST:
             # Emit Naga heartbeat
             self._last_pulse = time.time()
             # ASHVAMEDHA: Auto-flood orphan services on every pulse
             self._ashvamedha_pulse()
-        elif opcode == MantraOpCode.FETCH_RES:
+        elif opcode == MantraOpCode.EXEC_OP:
             # Request resources
             pass
-        elif opcode == MantraOpCode.EXEC_SERVICE:
+        elif opcode == MantraOpCode.EXTEND_CAP:
             # Execute business logic (Rama's work)
             pass
-        elif opcode == MantraOpCode.CHECK_DHARMA:
+        elif opcode == MantraOpCode.STATE_SYNC:
             # Validate against rules
             pass
-        elif opcode == MantraOpCode.COMMIT_LOG:
+        elif opcode == MantraOpCode.LEDGER_SIGN:
             # Write to immutable log
             pass
-        elif opcode == MantraOpCode.CACHE_STATE:
+        elif opcode == MantraOpCode.YIELD_CPU:
             # Store reward/memory
             pass
-        elif opcode == MantraOpCode.OPTIMIZE:
+        elif opcode == MantraOpCode.IO_FLUSH:
             # JIT compilation
             pass
         elif opcode == MantraOpCode.YIELD_CPU:
             # Surrender control
             pass
-        elif opcode == MantraOpCode.RESET_IP:
+        elif opcode == MantraOpCode.AUDIT_SEAL:
             # Loop back to start
             pass
 

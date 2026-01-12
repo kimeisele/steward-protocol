@@ -56,26 +56,26 @@ class TestIntentTypeTranslation:
         """CHAT intent routes to EXEC_SERVICE (Prahlada)."""
         result = CognitiveResult(intent_type=IntentType.CHAT, confidence=0.9)
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.EXEC_SERVICE
+        assert bridge_result.opcode == MantraOpCode.EXTEND_CAP
         assert "intent:chat" in bridge_result.source
 
     def test_execute_intent_defaults_to_exec_service(self):
         """EXECUTE intent without syscall routes to EXEC_SERVICE."""
         result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9)
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.EXEC_SERVICE
+        assert bridge_result.opcode == MantraOpCode.EXTEND_CAP
 
     def test_query_intent_defaults_to_fetch_res(self):
         """QUERY intent routes to FETCH_RES (Prahlada fetches)."""
         result = CognitiveResult(intent_type=IntentType.QUERY, confidence=0.9)
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.FETCH_RES
+        assert bridge_result.opcode == MantraOpCode.EXEC_OP
 
     def test_route_intent_defaults_to_resolve_req(self):
         """ROUTE intent without target routes to RESOLVE_REQ (Kumaras)."""
         result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9)
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.RESOLVE_REQ
+        assert bridge_result.opcode == MantraOpCode.BIND_SYMBOL
 
 
 class TestSyscallTypeTranslation:
@@ -101,7 +101,7 @@ class TestSyscallTypeTranslation:
             syscall_type="DESTROY_COGNITION"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert bridge_result.opcode == MantraOpCode.TYPE_CHECK
 
     def test_grant_mandate_maps_to_bind_ctx(self):
         """GRANT_MANDATE → BIND_CTX (Manu binds permissions)."""
@@ -111,7 +111,7 @@ class TestSyscallTypeTranslation:
             syscall_type="GRANT_MANDATE"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.BIND_CTX
+        assert bridge_result.opcode == MantraOpCode.INIT_THREAD
 
     def test_swear_oath_maps_to_commit_log(self):
         """SWEAR_OATH → COMMIT_LOG (Bhishma commits vows)."""
@@ -121,7 +121,7 @@ class TestSyscallTypeTranslation:
             syscall_type="SWEAR_OATH"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.COMMIT_LOG
+        assert bridge_result.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_broadcast_event_maps_to_pulse_sync(self):
         """BROADCAST_EVENT → PULSE_SYNC (Narada broadcasts)."""
@@ -131,7 +131,7 @@ class TestSyscallTypeTranslation:
             syscall_type="BROADCAST_EVENT"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.PULSE_SYNC
+        assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
 
 class TestRouteTargetTranslation:
@@ -145,7 +145,7 @@ class TestRouteTargetTranslation:
             target="envoy"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.EXEC_SERVICE
+        assert bridge_result.opcode == MantraOpCode.EXTEND_CAP
         assert "target:envoy" in bridge_result.source
 
     def test_kernel_target_maps_to_sys_wake(self):
@@ -166,7 +166,7 @@ class TestRouteTargetTranslation:
             target="herald"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.PULSE_SYNC
+        assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
     def test_unknown_target_falls_back_to_resolve_req(self):
         """Unknown target falls back to RESOLVE_REQ with low confidence."""
@@ -176,7 +176,7 @@ class TestRouteTargetTranslation:
             target="unknown_agent_xyz"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.RESOLVE_REQ
+        assert bridge_result.opcode == MantraOpCode.BIND_SYMBOL
         assert bridge_result.confidence <= 0.6  # Low confidence for fallback
         assert "unknown" in bridge_result.source
 
@@ -192,7 +192,7 @@ class TestQueryTypeTranslation:
             query_type="status"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.FETCH_RES
+        assert bridge_result.opcode == MantraOpCode.EXEC_OP
 
     def test_health_query_maps_to_assert_truth(self):
         """Query type 'health' → ASSERT_TRUTH (verification)."""
@@ -202,7 +202,7 @@ class TestQueryTypeTranslation:
             query_type="health"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.ASSERT_TRUTH
+        assert bridge_result.opcode == MantraOpCode.COMPILE_AST
 
     def test_config_query_maps_to_load_root(self):
         """Query type 'config' → LOAD_ROOT."""
@@ -240,7 +240,7 @@ class TestTranslationPriority:
         )
         bridge_result = translate(result)
         # ROUTE defaults to RESOLVE_REQ, but herald → PULSE_SYNC
-        assert bridge_result.opcode == MantraOpCode.PULSE_SYNC
+        assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
 
 class TestBridgeDiscoverability:
@@ -280,7 +280,7 @@ class TestRawTranslation:
         """translate_raw() works with just intent_type."""
         bridge = get_bridge()
         result = bridge.translate_raw(IntentType.CHAT)
-        assert result.opcode == MantraOpCode.EXEC_SERVICE
+        assert result.opcode == MantraOpCode.EXTEND_CAP
 
     def test_translate_raw_with_syscall(self):
         """translate_raw() handles syscall_type parameter."""
@@ -289,7 +289,7 @@ class TestRawTranslation:
             IntentType.EXECUTE,
             syscall_type="RECORD_KARMA"
         )
-        assert result.opcode == MantraOpCode.COMMIT_LOG
+        assert result.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_translate_raw_with_target(self):
         """translate_raw() handles target parameter."""
@@ -298,7 +298,7 @@ class TestRawTranslation:
             IntentType.ROUTE,
             target="oracle"
         )
-        assert result.opcode == MantraOpCode.FETCH_RES
+        assert result.opcode == MantraOpCode.EXEC_OP
 
 
 class TestBridgeResult:
@@ -307,24 +307,24 @@ class TestBridgeResult:
     def test_bridge_result_is_frozen(self):
         """BridgeResult is immutable."""
         result = BridgeResult(
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             confidence=0.9,
             source="test"
         )
         with pytest.raises(Exception):  # FrozenInstanceError
-            result.opcode = MantraOpCode.FETCH_RES
+            result.opcode = MantraOpCode.EXEC_OP
 
     def test_bridge_result_optional_notes(self):
         """BridgeResult.notes is optional."""
         result = BridgeResult(
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             confidence=0.9,
             source="test"
         )
         assert result.notes is None
 
         result_with_notes = BridgeResult(
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             confidence=0.9,
             source="test",
             notes="Some explanation"
@@ -344,14 +344,14 @@ class TestSemanticConsistency:
     def test_destruction_syscalls_map_to_cleanup_opcodes(self):
         """Destruction-related syscalls map to cleanup opcodes."""
         # DESTROY = destruction → GARBAGE_COLLECT (cleanup)
-        assert SYSCALL_TO_OPCODE[SyscallType.DESTROY_COGNITION] == MantraOpCode.GARBAGE_COLLECT
-        assert SYSCALL_TO_OPCODE[SyscallType.REVOKE_MANDATE] == MantraOpCode.GARBAGE_COLLECT
+        assert SYSCALL_TO_OPCODE[SyscallType.DESTROY_COGNITION] == MantraOpCode.TYPE_CHECK
+        assert SYSCALL_TO_OPCODE[SyscallType.REVOKE_MANDATE] == MantraOpCode.TYPE_CHECK
 
     def test_commitment_syscalls_map_to_commit_log(self):
         """Commitment-related syscalls map to COMMIT_LOG (Bhishma)."""
-        assert SYSCALL_TO_OPCODE[SyscallType.SWEAR_OATH] == MantraOpCode.COMMIT_LOG
-        assert SYSCALL_TO_OPCODE[SyscallType.RECORD_KARMA] == MantraOpCode.COMMIT_LOG
+        assert SYSCALL_TO_OPCODE[SyscallType.SWEAR_OATH] == MantraOpCode.LEDGER_SIGN
+        assert SYSCALL_TO_OPCODE[SyscallType.RECORD_KARMA] == MantraOpCode.LEDGER_SIGN
 
     def test_communication_syscalls_map_to_pulse_sync(self):
         """Communication-related syscalls map to PULSE_SYNC (Narada)."""
-        assert SYSCALL_TO_OPCODE[SyscallType.BROADCAST_EVENT] == MantraOpCode.PULSE_SYNC
+        assert SYSCALL_TO_OPCODE[SyscallType.BROADCAST_EVENT] == MantraOpCode.DHARMA_TEST

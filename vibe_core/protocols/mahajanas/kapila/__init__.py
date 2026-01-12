@@ -53,7 +53,7 @@ class KapilaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.KAPILA
-        opcode()    -> MantraOpCode.GARBAGE_COLLECT
+        opcode()    -> MantraOpCode.TYPE_CHECK
         quarter()   -> Quarter.DHARMA
         is_head()   -> False (Worker position)
         parampara_vector() -> 259 (% 37 == 0)

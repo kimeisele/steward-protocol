@@ -326,7 +326,7 @@ CYCLE_GENESIS: Final[CycleDefinition] = CycleDefinition(
     worker_2_opcode=MantraOpCode.ALLOC_MEM,
     # Worker 3: Shambhu (Destruction/Cleanup preparation)
     worker_3=Mahajana.SHAMBHU,
-    worker_3_opcode=MantraOpCode.BIND_CTX,
+    worker_3_opcode=MantraOpCode.INIT_THREAD,
 )
 
 # CYCLE 2: DHARMA (Sankarshana)
@@ -338,16 +338,16 @@ CYCLE_DHARMA: Final[CycleDefinition] = CycleDefinition(
     # HEAD: Vyasa (Knowledge/Jnana)
     head=Avatara.VYASA,
     head_shakti=Shakti.JNANA,
-    head_opcode=MantraOpCode.ASSERT_TRUTH,
+    head_opcode=MantraOpCode.COMPILE_AST,
     # Worker 1: Kumaras (Purity)
     worker_1=Mahajana.KUMARAS,
-    worker_1_opcode=MantraOpCode.RESOLVE_REQ,
+    worker_1_opcode=MantraOpCode.BIND_SYMBOL,
     # Worker 2: Kapila (Analysis)
     worker_2=Mahajana.KAPILA,
-    worker_2_opcode=MantraOpCode.GARBAGE_COLLECT,
+    worker_2_opcode=MantraOpCode.TYPE_CHECK,
     # Worker 3: Manu (Law)
     worker_3=Mahajana.MANU,
-    worker_3_opcode=MantraOpCode.PULSE_SYNC,
+    worker_3_opcode=MantraOpCode.DHARMA_TEST,
 )
 
 # CYCLE 3: KARMA (Pradyumna)
@@ -359,16 +359,16 @@ CYCLE_KARMA: Final[CycleDefinition] = CycleDefinition(
     # HEAD: Parashurama (Action/Kshatra)
     head=Avatara.PARASHURAMA,
     head_shakti=Shakti.KSHATRA,
-    head_opcode=MantraOpCode.FETCH_RES,
+    head_opcode=MantraOpCode.EXEC_OP,
     # Worker 1: Prahlada (Resilience)
     worker_1=Mahajana.PRAHLADA,
-    worker_1_opcode=MantraOpCode.EXEC_SERVICE,
+    worker_1_opcode=MantraOpCode.EXTEND_CAP,
     # Worker 2: Janaka (Duty)
     worker_2=Mahajana.JANAKA,
-    worker_2_opcode=MantraOpCode.CHECK_DHARMA,
+    worker_2_opcode=MantraOpCode.STATE_SYNC,
     # Worker 3: Bhishma (Commitment)
     worker_3=Mahajana.BHISHMA,
-    worker_3_opcode=MantraOpCode.COMMIT_LOG,
+    worker_3_opcode=MantraOpCode.LEDGER_SIGN,
 )
 
 # CYCLE 4: MOKSHA (Aniruddha)
@@ -380,16 +380,16 @@ CYCLE_MOKSHA: Final[CycleDefinition] = CycleDefinition(
     # HEAD: Nrisimha (Protection/Rakshana)
     head=Avatara.NRISIMHA,
     head_shakti=Shakti.RAKSHANA,
-    head_opcode=MantraOpCode.CACHE_STATE,
+    head_opcode=MantraOpCode.YIELD_CPU,
     # Worker 1: Bali (Surrender)
     worker_1=Mahajana.BALI,
-    worker_1_opcode=MantraOpCode.OPTIMIZE,
+    worker_1_opcode=MantraOpCode.IO_FLUSH,
     # Worker 2: Shuka (Vision)
     worker_2=Mahajana.SHUKA,
     worker_2_opcode=MantraOpCode.YIELD_CPU,
     # Worker 3: Yamaraja (Judgment)
     worker_3=Mahajana.YAMARAJA,
-    worker_3_opcode=MantraOpCode.RESET_IP,
+    worker_3_opcode=MantraOpCode.AUDIT_SEAL,
 )
 
 # All cycles in order

@@ -70,7 +70,7 @@ class BrahmaProtocol(OwnedProtocol):
 class KapilaProtocol(OwnedProtocol):
     """Protocol owned by KAPILA → Position 6 (DHARMA)."""
     OWNER = Mahajana.KAPILA
-    OPCODES = [MantraOpCode.CHECK_DHARMA]
+    OPCODES = [MantraOpCode.STATE_SYNC]
     PROTOCOL_NAME = "kapila_test"
     DESCRIPTION = "Test protocol owned by Kapila"
     # NO LOTUS_POSITION - derived from OWNER automatically!
@@ -95,7 +95,7 @@ class KapilaProtocol(OwnedProtocol):
 class JanakaProtocol(OwnedProtocol):
     """Protocol owned by JANAKA → Position 10 (KARMA)."""
     OWNER = Mahajana.JANAKA
-    OPCODES = [MantraOpCode.CHECK_DHARMA]
+    OPCODES = [MantraOpCode.STATE_SYNC]
     PROTOCOL_NAME = "janaka_test"
     DESCRIPTION = "Test protocol owned by Janaka"
     # NO LOTUS_POSITION - derived from OWNER automatically!
@@ -120,7 +120,7 @@ class JanakaProtocol(OwnedProtocol):
 class NaradaProtocol(OwnedProtocol):
     """Protocol owned by NARADA → Position 2 (GENESIS)."""
     OWNER = Mahajana.NARADA
-    OPCODES = [MantraOpCode.PULSE_SYNC]
+    OPCODES = [MantraOpCode.DHARMA_TEST]
     PROTOCOL_NAME = "narada_test"
     DESCRIPTION = "Test protocol owned by Narada"
     # NO LOTUS_POSITION - derived from OWNER automatically!

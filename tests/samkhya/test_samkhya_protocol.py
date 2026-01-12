@@ -156,11 +156,11 @@ class TestElementOpcodeMapping:
 
     def test_vak_has_pulse_sync(self) -> None:
         """VAK maps to PULSE_SYNC (communication/sync)."""
-        assert ELEMENT_OPCODE[PrakritiElement.VAK] == MantraOpCode.PULSE_SYNC
+        assert ELEMENT_OPCODE[PrakritiElement.VAK] == MantraOpCode.DHARMA_TEST
 
     def test_manas_has_resolve_req(self) -> None:
         """MANAS maps to RESOLVE_REQ (analysis)."""
-        assert ELEMENT_OPCODE[PrakritiElement.MANAS] == MantraOpCode.RESOLVE_REQ
+        assert ELEMENT_OPCODE[PrakritiElement.MANAS] == MantraOpCode.BIND_SYMBOL
 
     def test_upastha_has_load_root(self) -> None:
         """UPASTHA maps to LOAD_ROOT (genesis/creation)."""
@@ -168,7 +168,7 @@ class TestElementOpcodeMapping:
 
     def test_payu_has_garbage_collect(self) -> None:
         """PAYU maps to GARBAGE_COLLECT (destruction/cleanup)."""
-        assert ELEMENT_OPCODE[PrakritiElement.PAYU] == MantraOpCode.GARBAGE_COLLECT
+        assert ELEMENT_OPCODE[PrakritiElement.PAYU] == MantraOpCode.TYPE_CHECK
 
 
 # =============================================================================

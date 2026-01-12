@@ -39,7 +39,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.GARBAGE_COLLECT,
+    opcode=MantraOpCode.TYPE_CHECK,
     name="gc",
     help_text="Analyze and clean unused resources (KAPILA's analysis - PURIFY phase)")
 class GcCommand(NagaCommandBase):

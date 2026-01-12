@@ -25,8 +25,8 @@ async def test_kernel_mantra_wiring():
 
     # 3. Check OpCode Handlers
     handlers = kernel.watchdog._handlers
-    assert MantraOpCode.ASSERT_TRUTH in handlers
-    assert MantraOpCode.EXEC_SERVICE in handlers
+    assert MantraOpCode.COMPILE_AST in handlers
+    assert MantraOpCode.EXTEND_CAP in handlers
 
     # 4. Verify Pulse Integration
     # We spy on the chant_mahamantra method
@@ -45,7 +45,7 @@ async def test_kernel_mantra_wiring():
     # 5. Verify Execution of Handlers (Indirectly)
     # We can patch the handler for EXEC_SERVICE to ensure it gets called
     mock_service_handler = MagicMock(return_value=True)
-    kernel.watchdog._handlers[MantraOpCode.EXEC_SERVICE] = mock_service_handler
+    kernel.watchdog._handlers[MantraOpCode.EXTEND_CAP] = mock_service_handler
 
     await kernel.pulse()
     mock_service_handler.assert_called()

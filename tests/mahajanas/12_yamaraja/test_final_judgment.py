@@ -175,7 +175,7 @@ class TestYamarajaJudgment:
         This is the judgment gate.
         """
         opcodes = list(MantraOpCode)
-        assert opcodes[4] == MantraOpCode.ASSERT_TRUTH, \
+        assert opcodes[4] == MantraOpCode.COMPILE_AST, \
             "assert_truth must be OpCode #5 (index 4)"
 
 

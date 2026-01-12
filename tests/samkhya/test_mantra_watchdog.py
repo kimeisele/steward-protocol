@@ -39,7 +39,7 @@ class TestMantraWatchdog:
 
         last_word, last_opcode = MAHAMANTRA_SEQUENCE[-1]
         assert last_word == "Hare"
-        assert last_opcode == MantraOpCode.RESET_IP
+        assert last_opcode == MantraOpCode.AUDIT_SEAL
 
     def test_chant_mahamantra(self, watchdog, sovereign):
         """Verify the 16-step atomic cycle completes successfully."""

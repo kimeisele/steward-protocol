@@ -133,14 +133,14 @@ class TestOpcodeDetection:
         """Event protocol should detect PULSE_SYNC."""
         detected = detect_opcodes_from_source(EVENT_PROTOCOL)
 
-        assert MantraOpCode.PULSE_SYNC in detected
+        assert MantraOpCode.DHARMA_TEST in detected
         # "pulse", "sync", "heartbeat", "event" all trigger PULSE_SYNC
 
     def test_detect_dharma_opcodes(self) -> None:
         """Dharma protocol should detect CHECK_DHARMA."""
         detected = detect_opcodes_from_source(DHARMA_PROTOCOL)
 
-        assert MantraOpCode.CHECK_DHARMA in detected
+        assert MantraOpCode.STATE_SYNC in detected
         # "dharma", "rule", "policy", "enforce" trigger CHECK_DHARMA
 
     def test_detect_primary_creation(self) -> None:
@@ -155,14 +155,14 @@ class TestOpcodeDetection:
         primary = detect_primary_opcode(EVENT_PROTOCOL)
 
         assert primary is not None
-        assert primary == MantraOpCode.PULSE_SYNC
+        assert primary == MantraOpCode.DHARMA_TEST
 
     def test_detect_primary_dharma(self) -> None:
         """Primary OpCode for dharma protocol should be CHECK_DHARMA."""
         primary = detect_primary_opcode(DHARMA_PROTOCOL)
 
         assert primary is not None
-        assert primary == MantraOpCode.CHECK_DHARMA
+        assert primary == MantraOpCode.STATE_SYNC
 
     def test_empty_source_no_opcodes(self) -> None:
         """Empty source should detect no OpCodes."""

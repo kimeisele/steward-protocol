@@ -210,38 +210,38 @@ ELEMENT_GUARDIAN: Final[Dict[PrakritiElement, Mahajana]] = {
 
 ELEMENT_OPCODE: Final[Dict[PrakritiElement, MantraOpCode]] = {
     # ANTAHKARANA → Core ops
-    PrakritiElement.MANAS: MantraOpCode.RESOLVE_REQ,
-    PrakritiElement.BUDDHI: MantraOpCode.ASSERT_TRUTH,
-    PrakritiElement.AHANKARA: MantraOpCode.BIND_CTX,
-    PrakritiElement.CITTA: MantraOpCode.CACHE_STATE,
+    PrakritiElement.MANAS: MantraOpCode.BIND_SYMBOL,
+    PrakritiElement.BUDDHI: MantraOpCode.COMPILE_AST,
+    PrakritiElement.AHANKARA: MantraOpCode.INIT_THREAD,
+    PrakritiElement.CITTA: MantraOpCode.YIELD_CPU,
 
     # TANMATRA → Signal ops
-    PrakritiElement.SHABDA: MantraOpCode.PULSE_SYNC,
-    PrakritiElement.SPARSHA: MantraOpCode.FETCH_RES,
-    PrakritiElement.RUPA: MantraOpCode.CACHE_STATE,
-    PrakritiElement.RASA: MantraOpCode.ASSERT_TRUTH,
-    PrakritiElement.GANDHA: MantraOpCode.CHECK_DHARMA,
+    PrakritiElement.SHABDA: MantraOpCode.DHARMA_TEST,
+    PrakritiElement.SPARSHA: MantraOpCode.EXEC_OP,
+    PrakritiElement.RUPA: MantraOpCode.YIELD_CPU,
+    PrakritiElement.RASA: MantraOpCode.COMPILE_AST,
+    PrakritiElement.GANDHA: MantraOpCode.STATE_SYNC,
 
     # JNANENDRIYA → Knowledge ops
-    PrakritiElement.SHROTRA: MantraOpCode.PULSE_SYNC,
-    PrakritiElement.TVAK: MantraOpCode.FETCH_RES,
-    PrakritiElement.CHAKSHUS: MantraOpCode.CHECK_DHARMA,
-    PrakritiElement.RASANA: MantraOpCode.RESOLVE_REQ,
-    PrakritiElement.GHRANA: MantraOpCode.CHECK_DHARMA,
+    PrakritiElement.SHROTRA: MantraOpCode.DHARMA_TEST,
+    PrakritiElement.TVAK: MantraOpCode.EXEC_OP,
+    PrakritiElement.CHAKSHUS: MantraOpCode.STATE_SYNC,
+    PrakritiElement.RASANA: MantraOpCode.BIND_SYMBOL,
+    PrakritiElement.GHRANA: MantraOpCode.STATE_SYNC,
 
     # KARMENDRIYA → Action ops
-    PrakritiElement.VAK: MantraOpCode.PULSE_SYNC,
-    PrakritiElement.PANI: MantraOpCode.EXEC_SERVICE,
-    PrakritiElement.PADA: MantraOpCode.FETCH_RES,
-    PrakritiElement.PAYU: MantraOpCode.GARBAGE_COLLECT,
+    PrakritiElement.VAK: MantraOpCode.DHARMA_TEST,
+    PrakritiElement.PANI: MantraOpCode.EXTEND_CAP,
+    PrakritiElement.PADA: MantraOpCode.EXEC_OP,
+    PrakritiElement.PAYU: MantraOpCode.TYPE_CHECK,
     PrakritiElement.UPASTHA: MantraOpCode.LOAD_ROOT,
 
     # MAHABHUTA → Infrastructure ops
     PrakritiElement.AKASHA: MantraOpCode.ALLOC_MEM,
-    PrakritiElement.VAYU: MantraOpCode.EXEC_SERVICE,
-    PrakritiElement.TEJAS: MantraOpCode.OPTIMIZE,
-    PrakritiElement.APAS: MantraOpCode.CACHE_STATE,
-    PrakritiElement.PRITHVI: MantraOpCode.COMMIT_LOG,
+    PrakritiElement.VAYU: MantraOpCode.EXTEND_CAP,
+    PrakritiElement.TEJAS: MantraOpCode.IO_FLUSH,
+    PrakritiElement.APAS: MantraOpCode.YIELD_CPU,
+    PrakritiElement.PRITHVI: MantraOpCode.LEDGER_SIGN,
 }
 
 
@@ -320,8 +320,8 @@ class SamkhyaProtocol(OwnedProtocol):
 
     OWNER: Mahajana = Mahajana.KAPILA
     OPCODES: List[MantraOpCode] = [
-        MantraOpCode.RESOLVE_REQ,      # Primary: Resolution
-        MantraOpCode.GARBAGE_COLLECT,  # Secondary: Cleanup
+        MantraOpCode.BIND_SYMBOL,      # Primary: Resolution
+        MantraOpCode.TYPE_CHECK,  # Secondary: Cleanup
     ]
     PROTOCOL_NAME: str = "samkhya"
     DESCRIPTION: str = "Maps 24 Prakriti elements to protocol categories for adoption"
@@ -533,19 +533,19 @@ class SamkhyaProtocol(OwnedProtocol):
 
         if category == PrakritiCategory.ANTAHKARANA:
             # Internal instruments need resolution + truth
-            fighters.extend([MantraOpCode.ASSERT_TRUTH, MantraOpCode.BIND_CTX])
+            fighters.extend([MantraOpCode.COMPILE_AST, MantraOpCode.INIT_THREAD])
         elif category == PrakritiCategory.TANMATRA:
             # Subtle elements need sync + validation
-            fighters.extend([MantraOpCode.PULSE_SYNC, MantraOpCode.ASSERT_TRUTH])
+            fighters.extend([MantraOpCode.DHARMA_TEST, MantraOpCode.COMPILE_AST])
         elif category == PrakritiCategory.JNANENDRIYA:
             # Knowledge senses need dharma check
-            fighters.extend([MantraOpCode.CHECK_DHARMA, MantraOpCode.FETCH_RES])
+            fighters.extend([MantraOpCode.STATE_SYNC, MantraOpCode.EXEC_OP])
         elif category == PrakritiCategory.KARMENDRIYA:
             # Working senses need execution + cleanup
-            fighters.extend([MantraOpCode.EXEC_SERVICE, MantraOpCode.GARBAGE_COLLECT])
+            fighters.extend([MantraOpCode.EXTEND_CAP, MantraOpCode.TYPE_CHECK])
         else:  # MAHABHUTA
             # Gross elements need persistence + state
-            fighters.extend([MantraOpCode.COMMIT_LOG, MantraOpCode.CACHE_STATE])
+            fighters.extend([MantraOpCode.LEDGER_SIGN, MantraOpCode.YIELD_CPU])
 
         return fighters
 

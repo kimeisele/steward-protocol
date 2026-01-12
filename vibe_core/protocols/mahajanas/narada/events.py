@@ -47,7 +47,7 @@ LOTUS_POSITION: Final[int] = 2  # GENESIS Quarter, Worker 2
 LOTUS_QUARTER: Final[str] = "genesis"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.PULSE_SYNC,  # Event synchronization
+    MantraOpCode.DHARMA_TEST,  # Event synchronization
 ]
 
 

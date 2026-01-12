@@ -210,7 +210,7 @@ class TestShambhuDestruction:
         This is the destruction gate in the Mahamantra.
         """
         opcodes = list(MantraOpCode)
-        assert opcodes[6] == MantraOpCode.GARBAGE_COLLECT, \
+        assert opcodes[6] == MantraOpCode.TYPE_CHECK, \
             "garbage_collect must be OpCode #7 (index 6)"
 
     def test_07_instance_tracking_works(self) -> None:

@@ -224,7 +224,7 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
         flooded_count = 0
 
         # 1. RESONATE: Sound the Conch
-        self.resonate(MantraOpCode.PULSE_SYNC)
+        self.resonate(MantraOpCode.DHARMA_TEST)
 
         # 2. SCAN: Darshan of the Registry
         # We access the raw services because we are Ananta (Infrastructure)

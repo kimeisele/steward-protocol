@@ -65,7 +65,7 @@ class YamarajaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.YAMARAJA
-        opcode()    -> MantraOpCode.RESET_IP
+        opcode()    -> MantraOpCode.AUDIT_SEAL
         quarter()   -> Quarter.MOKSHA
         is_head()   -> False (Worker position)
         parampara_vector() -> 592 (% 37 == 0)

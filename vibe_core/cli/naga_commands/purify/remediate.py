@@ -21,7 +21,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.GARBAGE_COLLECT,
+    opcode=MantraOpCode.TYPE_CHECK,
     name="remediate",
     help_text="Actually FIX detected issues (KAPILA's analysis)")
 class RemediateCommand(NagaCommandBase):

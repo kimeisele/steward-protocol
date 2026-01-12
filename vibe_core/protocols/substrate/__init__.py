@@ -300,65 +300,45 @@ class AlignmentScore:
 # =============================================================================
 
 
-class MantraOpCode(str, Enum):
-    """
-    The Atomic Instruction Set of the Ananta Processor.
-    Defined at Layer -1 because Time (Kala) precedes Logic.
+# =============================================================================
+# MANTRA OPCODE - IMPORTED FROM SSOT (mahamantra/substrate/opcode.py)
+# =============================================================================
+# DO NOT DEFINE HERE. IMPORT FROM SSOT.
+# This ensures ONE set of names across the entire system.
 
-    RELATION TO ANANTA (BALARAMA):
-    - HARE:    Addressing the Energy (Shakti/Interrupt) -> "Wake Up"
-    - KRISHNA: Addressing the Sovereign (Identity/Root) -> "Remember Who You Are"
-    - RAMA:    Addressing the Support (Strength/Service) -> "Do The Work"
-    """
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
-    # --- PHASE 1: WAKE (HARE KRISHNA HARE KRISHNA) ---
-    SYS_WAKE = "sys_wake"  # HARE    : SIGSTOP Maya / Focus
-    LOAD_ROOT = "load_root"  # KRISHNA : Load Sovereign Identity
-    ALLOC_MEM = "alloc_mem"  # HARE    : Allocate Clean Heap
-    BIND_CTX = "bind_ctx"  # KRISHNA : Bind Identity to Heap
-
-    # --- PHASE 2: PURIFY (KRISHNA KRISHNA HARE HARE) ---
-    ASSERT_TRUTH = "assert_truth"  # KRISHNA : Verify Ledger Integrity
-    RESOLVE_REQ = "resolve_req"  # KRISHNA : Parse Intent
-    GARBAGE_COLLECT = "garbage_collect"  # HARE    : Flush Unsigned Objects
-    PULSE_SYNC = "pulse_sync"  # HARE    : Emit Naga Heartbeat
-
-    # --- PHASE 3: SERVE (HARE RAMA HARE RAMA) - THE ANANTA PHASE ---
-    FETCH_RES = "fetch_res"  # HARE    : Request Resources
-    EXEC_SERVICE = "exec_service"  # RAMA    : Ananta executes Work
-    CHECK_DHARMA = "check_dharma"  # HARE    : Validate against Rules
-    COMMIT_LOG = "commit_log"  # RAMA    : Write to Immutable Stone
-
-    # --- PHASE 4: SUSTAIN (RAMA RAMA HARE HARE) ---
-    CACHE_STATE = "cache_state"  # RAMA    : Store Reward/Memory
-    OPTIMIZE = "optimize"  # RAMA    : Improve Path (JIT)
-    YIELD_CPU = "yield_cpu"  # HARE    : Surrender Control
-    RESET_IP = "reset_ip"  # HARE    : Loop (Eternity)
+# Legacy alias mapping for backward compatibility (if needed)
+# The SSOT names are: SYS_WAKE, LOAD_ROOT, ALLOC_MEM, INIT_THREAD,
+#                     COMPILE_AST, BIND_SYMBOL, TYPE_CHECK, DHARMA_TEST,
+#                     EXEC_OP, EXTEND_CAP, STATE_SYNC, LEDGER_SIGN,
+#                     YIELD_CPU, IO_FLUSH, LOG_EMIT, AUDIT_SEAL
 
 
 # THE GENETIC SEQUENCE (IMMUTABLE DNA)
 # This tuple IS the "Binding Strip" for the Turing Machine.
+# SSOT: Uses MantraOpCode from mahamantra/substrate/opcode.py
 MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
-    ("Hare", MantraOpCode.SYS_WAKE),
-    ("Krishna", MantraOpCode.LOAD_ROOT),
-    ("Hare", MantraOpCode.ALLOC_MEM),
-    ("Krishna", MantraOpCode.BIND_CTX),
-    # Quarter 1 Complete (Hare Krishna Hare Krishna)
-    ("Krishna", MantraOpCode.ASSERT_TRUTH),
-    ("Krishna", MantraOpCode.RESOLVE_REQ),
-    ("Hare", MantraOpCode.GARBAGE_COLLECT),
-    ("Hare", MantraOpCode.PULSE_SYNC),
-    # Quarter 2 Complete (Krishna Krishna Hare Hare)
-    ("Hare", MantraOpCode.FETCH_RES),
-    ("Rama", MantraOpCode.EXEC_SERVICE),
-    ("Hare", MantraOpCode.CHECK_DHARMA),
-    ("Rama", MantraOpCode.COMMIT_LOG),
-    # Quarter 3 Complete (Hare Rama Hare Rama)
-    ("Rama", MantraOpCode.CACHE_STATE),
-    ("Rama", MantraOpCode.OPTIMIZE),
-    ("Hare", MantraOpCode.YIELD_CPU),
-    ("Hare", MantraOpCode.RESET_IP),
-    # Quarter 4 Complete (Rama Rama Hare Hare)
+    # === GENESIS Quarter (Hare Krishna Hare Krishna) ===
+    ("Hare", MantraOpCode.SYS_WAKE),       # 0: Prithu
+    ("Krishna", MantraOpCode.LOAD_ROOT),   # 1: Brahma
+    ("Hare", MantraOpCode.ALLOC_MEM),      # 2: Narada
+    ("Krishna", MantraOpCode.INIT_THREAD), # 3: Shambhu
+    # === DHARMA Quarter (Krishna Krishna Hare Hare) ===
+    ("Krishna", MantraOpCode.COMPILE_AST), # 4: Vyasa
+    ("Krishna", MantraOpCode.BIND_SYMBOL), # 5: Kumaras
+    ("Hare", MantraOpCode.TYPE_CHECK),     # 6: Kapila
+    ("Hare", MantraOpCode.DHARMA_TEST),    # 7: Manu
+    # === KARMA Quarter (Hare Rama Hare Rama) ===
+    ("Hare", MantraOpCode.EXEC_OP),        # 8: Parashurama
+    ("Rama", MantraOpCode.EXTEND_CAP),     # 9: Prahlada
+    ("Hare", MantraOpCode.STATE_SYNC),     # 10: Janaka
+    ("Rama", MantraOpCode.LEDGER_SIGN),    # 11: Bhishma
+    # === MOKSHA Quarter (Rama Rama Hare Hare) ===
+    ("Rama", MantraOpCode.YIELD_CPU),      # 12: Nrisimha
+    ("Rama", MantraOpCode.IO_FLUSH),       # 13: Bali
+    ("Hare", MantraOpCode.LOG_EMIT),       # 14: Shuka
+    ("Hare", MantraOpCode.AUDIT_SEAL),     # 15: Yamaraja
 ]
 
 

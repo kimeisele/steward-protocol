@@ -64,7 +64,7 @@ class ParashuramaProtocolBase(HeadProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Avatara.PARASHURAMA
-        opcode()    -> MantraOpCode.FETCH_RES
+        opcode()    -> MantraOpCode.EXEC_OP
         quarter()   -> Quarter.KARMA
         is_head()   -> True (HEAD position)
         parampara_vector() -> 333 (% 37 == 0)

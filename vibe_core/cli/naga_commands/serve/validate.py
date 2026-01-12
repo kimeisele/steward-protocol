@@ -38,7 +38,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.CHECK_DHARMA,
+    opcode=MantraOpCode.STATE_SYNC,
     name="validate",
     help_text="Validate system dharma (JANAKA's test - SERVE phase)")
 class ValidateCommand(NagaCommandBase):

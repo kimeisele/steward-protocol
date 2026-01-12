@@ -34,7 +34,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.FETCH_RES,
+    opcode=MantraOpCode.EXEC_OP,
     name="intel",
     help_text="Query NAGA intelligence (SHUKA's vision)")
 class IntelCommand(NagaCommandBase):

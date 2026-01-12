@@ -37,7 +37,7 @@ class TestMahajanaRouter:
 
     def test_03_shambhu_owns_garbage_collect(self) -> None:
         """SHAMBHU owns GARBAGE_COLLECT (Bit 7)."""
-        assert route(MantraOpCode.GARBAGE_COLLECT) == Mahajana.SHAMBHU
+        assert route(MantraOpCode.TYPE_CHECK) == Mahajana.SHAMBHU
 
     def test_04_bali_owns_yield_cpu(self) -> None:
         """BALI owns YIELD_CPU (Bit 15)."""
@@ -45,7 +45,7 @@ class TestMahajanaRouter:
 
     def test_05_yamaraja_owns_assert_truth(self) -> None:
         """YAMARAJA owns ASSERT_TRUTH (Bit 5)."""
-        assert route(MantraOpCode.ASSERT_TRUTH) == Mahajana.YAMARAJA
+        assert route(MantraOpCode.COMPILE_AST) == Mahajana.YAMARAJA
 
     def test_06_brahma_owns_creation_opcodes(self) -> None:
         """BRAHMA owns SYS_WAKE, LOAD_ROOT, ALLOC_MEM."""
@@ -58,15 +58,15 @@ class TestMahajanaRouter:
     def test_07_kapila_owns_analysis_opcodes(self) -> None:
         """KAPILA owns RESOLVE_REQ, OPTIMIZE."""
         kapila_opcodes = get_opcodes(Mahajana.KAPILA)
-        assert MantraOpCode.RESOLVE_REQ in kapila_opcodes
-        assert MantraOpCode.OPTIMIZE in kapila_opcodes
+        assert MantraOpCode.BIND_SYMBOL in kapila_opcodes
+        assert MantraOpCode.IO_FLUSH in kapila_opcodes
         assert len(kapila_opcodes) == 2
 
     def test_08_manu_owns_law_opcodes(self) -> None:
         """MANU owns BIND_CTX, CHECK_DHARMA."""
         manu_opcodes = get_opcodes(Mahajana.MANU)
-        assert MantraOpCode.BIND_CTX in manu_opcodes
-        assert MantraOpCode.CHECK_DHARMA in manu_opcodes
+        assert MantraOpCode.INIT_THREAD in manu_opcodes
+        assert MantraOpCode.STATE_SYNC in manu_opcodes
         assert len(manu_opcodes) == 2
 
     def test_09_sequence_has_16_steps(self) -> None:
@@ -108,9 +108,9 @@ class TestMahajanaRouteData:
     def test_route_has_all_fields(self) -> None:
         """Route has opcode, mahajana, quarter, position."""
         router = get_router()
-        route_obj = router.get_route(MantraOpCode.GARBAGE_COLLECT)
+        route_obj = router.get_route(MantraOpCode.TYPE_CHECK)
 
-        assert route_obj.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert route_obj.opcode == MantraOpCode.TYPE_CHECK
         assert route_obj.mahajana == Mahajana.SHAMBHU
         assert route_obj.quarter == 2
         assert route_obj.position == 7

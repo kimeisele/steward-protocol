@@ -55,7 +55,7 @@ class JanakaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.JANAKA
-        opcode()    -> MantraOpCode.CHECK_DHARMA
+        opcode()    -> MantraOpCode.STATE_SYNC
         quarter()   -> Quarter.KARMA
         is_head()   -> False (Worker position)
         parampara_vector() -> 407 (% 37 == 0)

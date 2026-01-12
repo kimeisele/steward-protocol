@@ -37,7 +37,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.CACHE_STATE,
+    opcode=MantraOpCode.YIELD_CPU,
     name="cache",
     help_text="Cache state management (NRISIMHA's protection - SUSTAIN phase)")
 class CacheCommand(NagaCommandBase):

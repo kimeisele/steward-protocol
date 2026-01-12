@@ -40,7 +40,7 @@ class TestScanCommand:
     def test_opcode_is_assert_truth(self):
         """Opcode is ASSERT_TRUTH (position 4)."""
         cmd = ScanCommand()
-        assert cmd.opcode == MantraOpCode.ASSERT_TRUTH
+        assert cmd.opcode == MantraOpCode.COMPILE_AST
 
     def test_mahajana_is_vyasa(self):
         """Mahajana is VYASA (the divine compiler)."""
@@ -131,7 +131,7 @@ class TestScanCommand:
         """Result contains correct opcode."""
         cmd = ScanCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.ASSERT_TRUTH
+        assert result.opcode == MantraOpCode.COMPILE_AST
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -182,7 +182,7 @@ class TestPurifyRegistryIntegration:
 
     def test_assert_truth_has_scan(self):
         """ASSERT_TRUTH opcode has scan command."""
-        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.ASSERT_TRUTH)
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.COMPILE_AST)
         names = [c.name for c in cmds]
         assert "scan" in names
 
@@ -197,13 +197,13 @@ class TestPosition4:
     def test_assert_truth_is_purify_head(self):
         """ASSERT_TRUTH is the HEAD opcode of PURIFY phase."""
         cmd = ScanCommand()
-        assert cmd.opcode == MantraOpCode.ASSERT_TRUTH
+        assert cmd.opcode == MantraOpCode.COMPILE_AST
         # Position 4 is the first opcode of PURIFY phase
         purify_opcodes = [
-            MantraOpCode.ASSERT_TRUTH,
-            MantraOpCode.RESOLVE_REQ,
-            MantraOpCode.GARBAGE_COLLECT,
-            MantraOpCode.PULSE_SYNC,
+            MantraOpCode.COMPILE_AST,
+            MantraOpCode.BIND_SYMBOL,
+            MantraOpCode.TYPE_CHECK,
+            MantraOpCode.DHARMA_TEST,
         ]
         assert cmd.opcode == purify_opcodes[0]  # HEAD
 
@@ -211,7 +211,7 @@ class TestPosition4:
         """VYASA is an Avatara (HEAD of PURIFY phase)."""
         # Avataras are at positions 0, 4, 8, 12 (HEAD of each phase)
         cmd = ScanCommand()
-        assert cmd.opcode == MantraOpCode.ASSERT_TRUTH
+        assert cmd.opcode == MantraOpCode.COMPILE_AST
         assert cmd.mahajana == Mahajana.VYASA
 
     def test_purify_is_second_phase(self):
@@ -220,10 +220,10 @@ class TestPosition4:
         assert cmd.phase == Phase.PURIFY
         # PURIFY contains: ASSERT_TRUTH, RESOLVE_REQ, GARBAGE_COLLECT, PULSE_SYNC
         purify_opcodes = [
-            MantraOpCode.ASSERT_TRUTH,
-            MantraOpCode.RESOLVE_REQ,
-            MantraOpCode.GARBAGE_COLLECT,
-            MantraOpCode.PULSE_SYNC,
+            MantraOpCode.COMPILE_AST,
+            MantraOpCode.BIND_SYMBOL,
+            MantraOpCode.TYPE_CHECK,
+            MantraOpCode.DHARMA_TEST,
         ]
         assert cmd.opcode in purify_opcodes
 
@@ -324,7 +324,7 @@ class TestSemantics:
         # ASSERT_TRUTH = Verify correctness
         # Scan = System verification
         cmd = ScanCommand()
-        assert cmd.opcode == MantraOpCode.ASSERT_TRUTH
+        assert cmd.opcode == MantraOpCode.COMPILE_AST
         assert "ASSERT_TRUTH" in cmd.execute([]).output
 
 
@@ -343,7 +343,7 @@ class TestDetectCommand:
     def test_opcode_is_resolve_req(self):
         """Opcode is RESOLVE_REQ (position 6)."""
         cmd = DetectCommand()
-        assert cmd.opcode == MantraOpCode.RESOLVE_REQ
+        assert cmd.opcode == MantraOpCode.BIND_SYMBOL
 
     def test_mahajana_is_kumaras(self):
         """Mahajana is KUMARAS (the four pure sages)."""
@@ -429,7 +429,7 @@ class TestDetectCommand:
         """Result contains correct opcode."""
         cmd = DetectCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.RESOLVE_REQ
+        assert result.opcode == MantraOpCode.BIND_SYMBOL
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -473,7 +473,7 @@ class TestDetectRegistryIntegration:
 
     def test_resolve_req_has_detect(self):
         """RESOLVE_REQ opcode has detect command."""
-        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.RESOLVE_REQ)
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.BIND_SYMBOL)
         names = [c.name for c in cmds]
         assert "detect" in names
 
@@ -535,7 +535,7 @@ class TestDetectSemantics:
         # RESOLVE_REQ = Understand what is requested
         # Detect = Resolve intent, find drift
         cmd = DetectCommand()
-        assert cmd.opcode == MantraOpCode.RESOLVE_REQ
+        assert cmd.opcode == MantraOpCode.BIND_SYMBOL
         assert "RESOLVE_REQ" in cmd.execute([]).output
 
 
@@ -554,7 +554,7 @@ class TestFloodCommand:
     def test_opcode_is_pulse_sync(self):
         """Opcode is PULSE_SYNC (position 8)."""
         cmd = FloodCommand()
-        assert cmd.opcode == MantraOpCode.PULSE_SYNC
+        assert cmd.opcode == MantraOpCode.DHARMA_TEST
 
     def test_mahajana_is_manu(self):
         """Mahajana is MANU (the lawgiver)."""
@@ -609,7 +609,7 @@ class TestFloodCommand:
         """Result contains correct opcode."""
         cmd = FloodCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.PULSE_SYNC
+        assert result.opcode == MantraOpCode.DHARMA_TEST
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -660,7 +660,7 @@ class TestFloodRegistryIntegration:
 
     def test_pulse_sync_has_flood(self):
         """PULSE_SYNC opcode has flood command."""
-        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.PULSE_SYNC)
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.DHARMA_TEST)
         names = [c.name for c in cmds]
         assert "flood" in names
 
@@ -722,7 +722,7 @@ class TestFloodSemantics:
         # PULSE_SYNC = System heartbeat and synchronization
         # Flood = FloodManager observation pulse
         cmd = FloodCommand()
-        assert cmd.opcode == MantraOpCode.PULSE_SYNC
+        assert cmd.opcode == MantraOpCode.DHARMA_TEST
         assert "PULSE_SYNC" in cmd.execute([]).output
 
 
@@ -741,7 +741,7 @@ class TestGcCommand:
     def test_opcode_is_garbage_collect(self):
         """Opcode is GARBAGE_COLLECT (position 7)."""
         cmd = GcCommand()
-        assert cmd.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert cmd.opcode == MantraOpCode.TYPE_CHECK
 
     def test_mahajana_is_kapila(self):
         """Mahajana is KAPILA (the analyzer)."""
@@ -804,7 +804,7 @@ class TestGcCommand:
         """Result contains correct opcode."""
         cmd = GcCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert result.opcode == MantraOpCode.TYPE_CHECK
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -855,7 +855,7 @@ class TestGcRegistryIntegration:
 
     def test_garbage_collect_has_gc(self):
         """GARBAGE_COLLECT opcode has gc command."""
-        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.GARBAGE_COLLECT)
+        cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(MantraOpCode.TYPE_CHECK)
         names = [c.name for c in cmds]
         assert "gc" in names
 
@@ -917,7 +917,7 @@ class TestGcSemantics:
         # GARBAGE_COLLECT = Remove unused resources
         # Gc = Garbage collection
         cmd = GcCommand()
-        assert cmd.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert cmd.opcode == MantraOpCode.TYPE_CHECK
         assert "GARBAGE_COLLECT" in cmd.execute([]).output
 
 

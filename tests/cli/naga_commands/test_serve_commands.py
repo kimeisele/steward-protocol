@@ -53,7 +53,7 @@ class TestChatCommand:
     def test_opcode_is_exec_service(self):
         """Opcode is EXEC_SERVICE."""
         cmd = ChatCommand()
-        assert cmd.opcode == MantraOpCode.EXEC_SERVICE
+        assert cmd.opcode == MantraOpCode.EXTEND_CAP
 
     def test_mahajana_is_prahlada(self):
         """Mahajana is PRAHLADA."""
@@ -110,7 +110,7 @@ class TestChatCommand:
         """Result contains correct opcode."""
         cmd = ChatCommand()
         result = cmd.execute(["test"])
-        assert result.opcode == MantraOpCode.EXEC_SERVICE
+        assert result.opcode == MantraOpCode.EXTEND_CAP
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -134,7 +134,7 @@ class TestIntelCommand:
     def test_opcode_is_fetch_res(self):
         """Opcode is FETCH_RES."""
         cmd = IntelCommand()
-        assert cmd.opcode == MantraOpCode.FETCH_RES
+        assert cmd.opcode == MantraOpCode.EXEC_OP
 
     def test_mahajana_is_shuka(self):
         """Mahajana is SHUKA."""
@@ -200,7 +200,7 @@ class TestIntelCommand:
         """Result contains correct opcode."""
         cmd = IntelCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.FETCH_RES
+        assert result.opcode == MantraOpCode.EXEC_OP
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -493,7 +493,7 @@ class TestValidateCommand:
     def test_opcode_is_check_dharma(self):
         """Opcode is CHECK_DHARMA."""
         cmd = ValidateCommand()
-        assert cmd.opcode == MantraOpCode.CHECK_DHARMA
+        assert cmd.opcode == MantraOpCode.STATE_SYNC
 
     def test_mahajana_is_janaka(self):
         """Mahajana is JANAKA."""
@@ -559,7 +559,7 @@ class TestValidateCommand:
         """Result contains correct opcode."""
         cmd = ValidateCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.CHECK_DHARMA
+        assert result.opcode == MantraOpCode.STATE_SYNC
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -592,7 +592,7 @@ class TestCommitCommand:
     def test_opcode_is_commit_log(self):
         """Opcode is COMMIT_LOG."""
         cmd = CommitCommand()
-        assert cmd.opcode == MantraOpCode.COMMIT_LOG
+        assert cmd.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_mahajana_is_bhishma(self):
         """Mahajana is BHISHMA."""
@@ -648,7 +648,7 @@ class TestCommitCommand:
         """Result contains correct opcode."""
         cmd = CommitCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.COMMIT_LOG
+        assert result.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -767,10 +767,10 @@ class TestServePhaseComplete:
     def test_all_opcodes_covered(self):
         """All SERVE opcodes have commands."""
         serve_opcodes = [
-            MantraOpCode.FETCH_RES,      # Position 8
-            MantraOpCode.EXEC_SERVICE,   # Position 9
-            MantraOpCode.CHECK_DHARMA,   # Position 10
-            MantraOpCode.COMMIT_LOG,     # Position 11
+            MantraOpCode.EXEC_OP,      # Position 8
+            MantraOpCode.EXTEND_CAP,   # Position 9
+            MantraOpCode.STATE_SYNC,   # Position 10
+            MantraOpCode.LEDGER_SIGN,     # Position 11
         ]
         for opcode in serve_opcodes:
             cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)

@@ -161,8 +161,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         self.nrisimha = NrisimhaWatchdog(
             sovereign_anchor=self._sovereign_context,
             opcode_handlers={
-                MantraOpCode.BIND_CTX: lambda ctx: self.bind_genes(["scribe"]),
-                MantraOpCode.ASSERT_TRUTH: lambda ctx: True,
+                MantraOpCode.INIT_THREAD: lambda ctx: self.bind_genes(["scribe"]),
+                MantraOpCode.COMPILE_AST: lambda ctx: True,
             }
         )
         self.chaitanya = self.nrisimha

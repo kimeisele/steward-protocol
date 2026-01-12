@@ -35,7 +35,7 @@ class ManuProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.MANU
-        opcode()    -> MantraOpCode.PULSE_SYNC
+        opcode()    -> MantraOpCode.DHARMA_TEST
         quarter()   -> Quarter.DHARMA
         is_head()   -> False (Worker position)
         parampara_vector() -> 296 (% 37 == 0)

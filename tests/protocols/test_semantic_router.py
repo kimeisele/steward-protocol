@@ -57,7 +57,7 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.EXEC_SERVICE
+        assert result.opcode == MantraOpCode.EXTEND_CAP
         # EXEC_SERVICE maps to JANAKA (legacy) or PRAHLADA (vyuha)
         assert result.mahajana in (Mahajana.JANAKA, Mahajana.PRAHLADA)
 
@@ -84,7 +84,7 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.GARBAGE_COLLECT
+        assert result.opcode == MantraOpCode.TYPE_CHECK
         assert result.mahajana == Mahajana.SHAMBHU
 
     def test_swear_oath_routes_to_bhishma(self):
@@ -97,7 +97,7 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.COMMIT_LOG
+        assert result.opcode == MantraOpCode.LEDGER_SIGN
         assert result.mahajana == Mahajana.BHISHMA
 
     def test_broadcast_event_routes_to_narada(self):
@@ -110,7 +110,7 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.PULSE_SYNC
+        assert result.opcode == MantraOpCode.DHARMA_TEST
         # PULSE_SYNC maps to NARADA (legacy) or MANU (vyuha)
         assert result.mahajana in (Mahajana.NARADA, Mahajana.MANU)
 
@@ -142,7 +142,7 @@ class TestRouteTargets:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.PULSE_SYNC
+        assert result.opcode == MantraOpCode.DHARMA_TEST
 
 
 class TestQueryRouting:
@@ -158,7 +158,7 @@ class TestQueryRouting:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.FETCH_RES
+        assert result.opcode == MantraOpCode.EXEC_OP
         # FETCH_RES is a HEAD in vyuha, handled as PRAHLADA
         assert result.mahajana == Mahajana.PRAHLADA
 
@@ -172,7 +172,7 @@ class TestQueryRouting:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.ASSERT_TRUTH
+        assert result.opcode == MantraOpCode.COMPILE_AST
         assert result.mahajana == Mahajana.YAMARAJA
 
 
@@ -206,7 +206,7 @@ class TestRawRouting:
         """route_raw() works with just intent_type."""
         result = route_raw(IntentType.QUERY)
         assert result.success
-        assert result.opcode == MantraOpCode.FETCH_RES
+        assert result.opcode == MantraOpCode.EXEC_OP
 
     def test_route_raw_with_syscall(self):
         """route_raw() handles syscall_type."""
@@ -214,7 +214,7 @@ class TestRawRouting:
             IntentType.EXECUTE,
             syscall_type="RECORD_KARMA"
         )
-        assert result.opcode == MantraOpCode.COMMIT_LOG
+        assert result.opcode == MantraOpCode.LEDGER_SIGN
         assert result.mahajana == Mahajana.BHISHMA
 
     def test_route_raw_with_target(self):
@@ -223,7 +223,7 @@ class TestRawRouting:
             IntentType.ROUTE,
             target="scribe"
         )
-        assert result.opcode == MantraOpCode.COMMIT_LOG
+        assert result.opcode == MantraOpCode.LEDGER_SIGN
 
 
 class TestDiscoverability:
@@ -279,7 +279,7 @@ class TestHeadOpcodes:
     def test_assert_truth_is_head(self):
         """ASSERT_TRUTH is a HEAD opcode."""
         result = route_raw(IntentType.QUERY, query_type="health")
-        assert result.opcode == MantraOpCode.ASSERT_TRUTH
+        assert result.opcode == MantraOpCode.COMPILE_AST
         # ASSERT_TRUTH is in legacy router, so might not be marked as head
         # depending on router mode
 

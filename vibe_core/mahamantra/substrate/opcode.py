@@ -10,7 +10,7 @@ OPCODE - Die 16 OpCodes des Mahamantra
 SINGLE SOURCE OF TRUTH:
     from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
-KEIN DUPLIKAT MEHR. NUR DIESE DATEI.
+REVERTED TO TRUTH (Post-Legacy Clean Slate).
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -18,13 +18,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Dict, Final, FrozenSet, Tuple
+from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 
 
 # =============================================================================
-# THE 16 OPCODES - SSOT
+# THE 16 OPCODES - SSOT (The New Truth)
 # =============================================================================
 
 class MantraOpCode(IntEnum):

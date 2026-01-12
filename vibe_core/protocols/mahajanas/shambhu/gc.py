@@ -51,7 +51,7 @@ LOTUS_POSITION: Final[int] = 3
 LOTUS_QUARTER: Final[str] = "genesis"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.BIND_CTX,  # GARBAGE_COLLECT
+    MantraOpCode.INIT_THREAD,  # GARBAGE_COLLECT
 ]
 
 

@@ -114,25 +114,25 @@ OPCODE_SIGNATURES: Dict[MantraOpCode, Set[str]] = {
     MantraOpCode.SYS_WAKE: {"wake", "init", "bootstrap", "start", "begin"},
     MantraOpCode.LOAD_ROOT: {"load", "root", "create", "inject", "provide"},
     MantraOpCode.ALLOC_MEM: {"alloc", "memory", "buffer", "pool", "reserve"},
-    MantraOpCode.BIND_CTX: {"bind", "context", "scope", "attach", "mount"},
+    MantraOpCode.INIT_THREAD: {"bind", "context", "scope", "attach", "mount"},
 
     # DHARMA Quarter (Truth/Law)
-    MantraOpCode.ASSERT_TRUTH: {"assert", "truth", "verify", "validate", "check"},
-    MantraOpCode.RESOLVE_REQ: {"resolve", "request", "query", "lookup", "find"},
-    MantraOpCode.GARBAGE_COLLECT: {"garbage", "collect", "cleanup", "destroy", "purge"},
-    MantraOpCode.PULSE_SYNC: {"pulse", "sync", "heartbeat", "event", "notify"},
+    MantraOpCode.COMPILE_AST: {"assert", "truth", "verify", "validate", "check"},
+    MantraOpCode.BIND_SYMBOL: {"resolve", "request", "query", "lookup", "find"},
+    MantraOpCode.TYPE_CHECK: {"garbage", "collect", "cleanup", "destroy", "purge"},
+    MantraOpCode.DHARMA_TEST: {"pulse", "sync", "heartbeat", "event", "notify"},
 
     # KARMA Quarter (Action)
-    MantraOpCode.FETCH_RES: {"fetch", "resource", "get", "retrieve", "acquire"},
-    MantraOpCode.EXEC_SERVICE: {"exec", "execute", "run", "service", "process"},
-    MantraOpCode.CHECK_DHARMA: {"dharma", "rule", "law", "policy", "enforce"},
-    MantraOpCode.COMMIT_LOG: {"commit", "log", "record", "persist", "save"},
+    MantraOpCode.EXEC_OP: {"fetch", "resource", "get", "retrieve", "acquire"},
+    MantraOpCode.EXTEND_CAP: {"exec", "execute", "run", "service", "process"},
+    MantraOpCode.STATE_SYNC: {"dharma", "rule", "law", "policy", "enforce"},
+    MantraOpCode.LEDGER_SIGN: {"commit", "log", "record", "persist", "save"},
 
     # MOKSHA Quarter (Liberation)
-    MantraOpCode.CACHE_STATE: {"cache", "state", "store", "memoize", "snapshot"},
-    MantraOpCode.OPTIMIZE: {"optimize", "improve", "tune", "profile", "enhance"},
+    MantraOpCode.YIELD_CPU: {"cache", "state", "store", "memoize", "snapshot"},
+    MantraOpCode.IO_FLUSH: {"optimize", "improve", "tune", "profile", "enhance"},
     MantraOpCode.YIELD_CPU: {"yield", "wait", "pause", "suspend", "defer"},
-    MantraOpCode.RESET_IP: {"reset", "restart", "revert", "rollback", "recover"},
+    MantraOpCode.AUDIT_SEAL: {"reset", "restart", "revert", "rollback", "recover"},
 }
 
 
@@ -352,9 +352,9 @@ class AdoptionPipeline:
                 # HEAD OpCodes: SYS_WAKE=Q1, ASSERT_TRUTH=Q2, FETCH_RES=Q3, CACHE_STATE=Q4
                 head_quarters = {
                     MantraOpCode.SYS_WAKE: 0,
-                    MantraOpCode.ASSERT_TRUTH: 1,
-                    MantraOpCode.FETCH_RES: 2,
-                    MantraOpCode.CACHE_STATE: 3,
+                    MantraOpCode.COMPILE_AST: 1,
+                    MantraOpCode.EXEC_OP: 2,
+                    MantraOpCode.YIELD_CPU: 3,
                 }
                 quarter_index = head_quarters.get(primary, 0)
 

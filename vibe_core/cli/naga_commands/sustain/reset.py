@@ -39,7 +39,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.RESET_IP,
+    opcode=MantraOpCode.AUDIT_SEAL,
     name="reset",
     help_text="System reset (YAMARAJA's judgment - SUSTAIN phase, final position)")
 class ResetCommand(NagaCommandBase):

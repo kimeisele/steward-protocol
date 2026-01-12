@@ -119,19 +119,19 @@ class MantraIntent(Generic[T]):
     def opcode(self) -> MantraOpCode:
         """Map intent type to OpCode."""
         mapping: Dict[IntentType, MantraOpCode] = {
-            IntentType.READ: MantraOpCode.FETCH_RES,
-            IntentType.WRITE: MantraOpCode.COMMIT_LOG,
-            IntentType.TRANSFORM: MantraOpCode.EXEC_SERVICE,
-            IntentType.RESOLVE: MantraOpCode.RESOLVE_REQ,
-            IntentType.BIND: MantraOpCode.BIND_CTX,
+            IntentType.READ: MantraOpCode.EXEC_OP,
+            IntentType.WRITE: MantraOpCode.LEDGER_SIGN,
+            IntentType.TRANSFORM: MantraOpCode.EXTEND_CAP,
+            IntentType.RESOLVE: MantraOpCode.BIND_SYMBOL,
+            IntentType.BIND: MantraOpCode.INIT_THREAD,
             IntentType.MIGRATE: MantraOpCode.LOAD_ROOT,
             IntentType.WAKE: MantraOpCode.SYS_WAKE,
-            IntentType.SYNC: MantraOpCode.PULSE_SYNC,
-            IntentType.HEAL: MantraOpCode.GARBAGE_COLLECT,
-            IntentType.OBSERVE: MantraOpCode.CHECK_DHARMA,
+            IntentType.SYNC: MantraOpCode.DHARMA_TEST,
+            IntentType.HEAL: MantraOpCode.TYPE_CHECK,
+            IntentType.OBSERVE: MantraOpCode.STATE_SYNC,
             IntentType.SURRENDER: MantraOpCode.YIELD_CPU,
         }
-        return mapping.get(self.type, MantraOpCode.RESOLVE_REQ)
+        return mapping.get(self.type, MantraOpCode.BIND_SYMBOL)
 
     @property
     def guardian(self) -> Mahajana:

@@ -154,7 +154,7 @@ def extract_args(message: str, intent: str) -> List[str]:
 
 
 @naga_command(
-    opcode=MantraOpCode.EXEC_SERVICE,
+    opcode=MantraOpCode.EXTEND_CAP,
     name="chat",
     help_text="Chat with the system - PRAHLADA routes to all Mahajanas",
 )

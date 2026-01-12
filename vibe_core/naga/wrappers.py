@@ -95,7 +95,7 @@ class AshvamedhaReadWrite(AshvamedhaBase, ReadWriteProtocol):
 class AshvamedhaSync(AshvamedhaBase, SyncProtocol):
     """Wraps Sync with SATYAM (Truth) and MANTRA (ASSERT_TRUTH)."""
 
-    @mantra_governed(MantraOpCode.ASSERT_TRUTH)
+    @mantra_governed(MantraOpCode.COMPILE_AST)
     def sync_state(self, context: Optional[SovereignContext] = None) -> SyncResult:
         inner: SyncProtocol = self._inner  # type: ignore
         result = inner.sync_state(context)
@@ -103,7 +103,7 @@ class AshvamedhaSync(AshvamedhaBase, SyncProtocol):
         self._satyam.enforce_truth(result)  # type: ignore
         return result
 
-    @mantra_governed(MantraOpCode.ASSERT_TRUTH)
+    @mantra_governed(MantraOpCode.COMPILE_AST)
     def get_sync_status(self) -> Dict[str, object]:
         inner: SyncProtocol = self._inner  # type: ignore
         return inner.get_sync_status()
@@ -123,7 +123,7 @@ class AshvamedhaEnforce(AshvamedhaBase, EnforceProtocol):
     - "Dharma eva hato hanti" - Dharma destroys those who destroy it.
     """
 
-    @mantra_governed(MantraOpCode.CHECK_DHARMA)
+    @mantra_governed(MantraOpCode.STATE_SYNC)
     def enforce(self, action: str, context: EnforceContext) -> Verdict:
         """Enforce rules with Mantra resonance."""
         # DAYA: Sanitize action string
@@ -136,7 +136,7 @@ class AshvamedhaEnforce(AshvamedhaBase, EnforceProtocol):
         self._satyam.enforce_truth(verdict)  # type: ignore
         return verdict
 
-    @mantra_governed(MantraOpCode.CHECK_DHARMA)
+    @mantra_governed(MantraOpCode.STATE_SYNC)
     def check(self, action: str) -> bool:
         """Quick check with Mantra resonance."""
         inner: EnforceProtocol = self._inner  # type: ignore
@@ -162,7 +162,7 @@ class AshvamedhaInfer(AshvamedhaBase, InferProtocol):
     - Buddhi discriminates between Real and Unreal.
     """
 
-    @mantra_governed(MantraOpCode.RESOLVE_REQ)
+    @mantra_governed(MantraOpCode.BIND_SYMBOL)
     def infer(self, input: InferenceInput, fallback: "Inference | None" = None) -> Inference:
         """Draw inference with Mantra resonance."""
         inner: InferProtocol = self._inner  # type: ignore
@@ -177,7 +177,7 @@ class AshvamedhaInfer(AshvamedhaBase, InferProtocol):
                 return fallback
             raise
 
-    @mantra_governed(MantraOpCode.RESOLVE_REQ)
+    @mantra_governed(MantraOpCode.BIND_SYMBOL)
     def classify(self, input: ClassifyInput, fallback: "Classification | None" = None) -> Classification:
         """Classify with Mantra resonance."""
         inner: InferProtocol = self._inner  # type: ignore
@@ -210,7 +210,7 @@ class AshvamedhaStore(AshvamedhaBase, StoreRecallProtocol):
     - "What is written in the Akashic Record cannot be erased."
     """
 
-    @mantra_governed(MantraOpCode.COMMIT_LOG)
+    @mantra_governed(MantraOpCode.LEDGER_SIGN)
     def store(self, key: str, value: MemoryValue, context: "SovereignContext | None" = None) -> None:
         """Store with Mantra resonance - permanent inscription."""
         # DAYA: Sanitize key
@@ -225,7 +225,7 @@ class AshvamedhaStore(AshvamedhaBase, StoreRecallProtocol):
         inner: StoreRecallProtocol = self._inner  # type: ignore
         return inner.recall(key, context)
 
-    @mantra_governed(MantraOpCode.COMMIT_LOG)
+    @mantra_governed(MantraOpCode.LEDGER_SIGN)
     def forget(self, key: str, context: "SovereignContext | None" = None) -> bool:
         """Forget (tombstone) - still requires mantra as it mutates."""
         inner: StoreRecallProtocol = self._inner  # type: ignore

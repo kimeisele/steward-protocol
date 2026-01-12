@@ -21,7 +21,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.RESET_IP,
+    opcode=MantraOpCode.AUDIT_SEAL,
     name="chaos",
     help_text="Run Hiranyakashipu chaos attacks (YAMARAJA's judgment)")
 class ChaosCommand(NagaCommandBase):
