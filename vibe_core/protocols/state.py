@@ -12,24 +12,24 @@ Defines the interfaces for the State system components:
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 
 
 class StateServiceProtocol(ABC):
     """Protocol for StateService (Ahamkara aspect)."""
 
     @abstractmethod
-    def save(self, filename: str, data: Any, create_backup: bool = True, indent: int = 2) -> Any:
+    def save(self, filename: str, data: object, create_backup: bool = True, indent: int = 2) -> object:
         """Save state to a JSON file."""
         pass
 
     @abstractmethod
-    def load(self, filename: str, default: Any = None) -> Any:
+    def load(self, filename: str, default: object = None) -> object:
         """Load state from a JSON file."""
         pass
 
     @abstractmethod
-    def append(self, filename: str, entry: Dict[str, Any]) -> Any:
+    def append(self, filename: str, entry: Dict[str, object]) -> object:
         """Append entry to a JSONL file."""
         pass
 
@@ -53,17 +53,17 @@ class StateSyncHolonProtocol(ABC):
     """Protocol for StateSyncHolon (Tanmatra bridge)."""
 
     @abstractmethod
-    def discover_state_paths(self) -> Dict[str, List[Any]]:
+    def discover_state_paths(self) -> Dict[str, List[object]]:
         """Auto-discover all plugin state paths."""
         pass
 
     @abstractmethod
-    def diagnose_guna(self, path: Path) -> Any:
+    def diagnose_guna(self, path: Path) -> object:
         """Diagnose the current Guna of a state path."""
         pass
 
     @abstractmethod
-    def heal_toward_sattva(self, path: Path) -> Any:
+    def heal_toward_sattva(self, path: Path) -> object:
         """Apply healing force to move state toward Sattva."""
         pass
 
@@ -77,17 +77,17 @@ class StateSyncWeaverProtocol(ABC):
     """Protocol for StateSyncWeaver (Meta-orchestration)."""
 
     @abstractmethod
-    def pulse(self) -> Any:
+    def pulse(self) -> object:
         """Run one weave cycle (discovery + commit)."""
         pass
 
     @abstractmethod
-    def weave(self) -> Any:
+    def weave(self) -> object:
         """Full weaving cycle with cognitive intelligence."""
         pass
 
     @abstractmethod
-    def on_session_end(self) -> Any:
+    def on_session_end(self) -> object:
         """Handle session end commit."""
         pass
 
@@ -109,16 +109,16 @@ class PrakritiProtocol(ABC):
         scope: str = "state",
         stage_patterns: Optional[List[str]] = None,
         sync_ledger: bool = True,
-    ) -> Optional[Any]:
+    ) -> Optional[object]:
         """Commit current changes if workspace is dirty."""
         pass
 
     @abstractmethod
-    def begin_session(self) -> Any:
+    def begin_session(self) -> object:
         """Start a new session."""
         pass
 
     @abstractmethod
-    def end_session(self) -> Optional[Any]:
+    def end_session(self) -> Optional[object]:
         """End current session."""
         pass

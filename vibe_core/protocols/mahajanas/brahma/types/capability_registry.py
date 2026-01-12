@@ -18,13 +18,26 @@ GAD-XXXX: REVOKE_MANDATE Implementation (Phase 2)
 """
 
 import logging
-from typing import FrozenSet, List, Optional, Set
+from typing import Dict, FrozenSet, List, Optional, Protocol, Set
 
 # Absolute imports after migration to mahajana structure
-from vibe_core.kernel import VibeLedger
 from vibe_core.protocols.capability import CapabilityModifyResult
 
 logger = logging.getLogger("CAPABILITY_REGISTRY")
+
+
+class LedgerProtocol(Protocol):
+    """Protocol for the ledger operations required by CapabilityRegistry."""
+    def record_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        details: Dict[str, object],
+        result: Optional[str] = None,
+        task_id: Optional[str] = None,
+        error: Optional[str] = None,
+    ) -> str:
+        ...
 
 
 class CapabilityRegistry:
@@ -39,12 +52,12 @@ class CapabilityRegistry:
     - Permission model for who can modify capabilities
     """
 
-    def __init__(self, ledger: VibeLedger):
+    def __init__(self, ledger: LedgerProtocol):
         """
         Initialize the CapabilityRegistry.
 
         Args:
-            ledger: VibeLedger for immutable audit trail
+            ledger: LedgerProtocol provider for immutable audit trail
         """
         self._capabilities: Dict[str, Set[str]] = {}
         self._original_capabilities: Dict[str, FrozenSet[str]] = {}

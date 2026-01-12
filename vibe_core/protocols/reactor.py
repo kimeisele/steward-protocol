@@ -22,7 +22,7 @@ Usage:
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Callable, Dict, List, Optional, Protocol, runtime_checkable
 
 
 class DriftType(str, Enum):
@@ -55,7 +55,7 @@ class DriftEvent:
     message: str
     detected_at: datetime = field(default_factory=datetime.now)
     source: str = ""  # What component detected it
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: Dict[str, object] = field(default_factory=dict)
     corrected: bool = False
     corrected_at: Optional[datetime] = None
 

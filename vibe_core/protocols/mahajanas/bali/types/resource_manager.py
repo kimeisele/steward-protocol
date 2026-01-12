@@ -17,13 +17,21 @@ Architecture:
 import logging
 import time
 from multiprocessing import Process
-from typing import Any, Dict
+from typing import Dict, Protocol, List, Optional, Union
 
 import psutil
 
 from vibe_core.protocols.resource import ResourceQuota
 
 logger = logging.getLogger("RESOURCE_MANAGER")
+
+
+class ProcessInfoProtocol(Protocol):
+    process: Process
+
+
+class ProcessManagerProtocol(Protocol):
+    processes: Dict[str, ProcessInfoProtocol]
 
 
 class ResourceManager:
@@ -50,7 +58,7 @@ class ResourceManager:
 
     def __init__(self):
         self.quotas: Dict[str, ResourceQuota] = {}
-        self.last_enforcement = {}  # {agent_id: timestamp}
+        self.last_enforcement: Dict[str, float] = {}  # {agent_id: timestamp}
 
     def calculate_quota_from_credits(self, credits: int) -> ResourceQuota:
         """
@@ -66,8 +74,8 @@ class ResourceManager:
         for threshold, resources in self.CREDIT_TIERS:
             if credits >= threshold:
                 return ResourceQuota(
-                    cpu_percent=min(resources["cpu_percent"], self.MAX_CPU_PERCENT),
-                    memory_mb=min(resources["memory_mb"], self.MAX_MEMORY_MB),
+                    cpu_percent=min(int(resources["cpu_percent"]), self.MAX_CPU_PERCENT),
+                    memory_mb=min(int(resources["memory_mb"]), self.MAX_MEMORY_MB),
                 )
 
         # Fallback to minimal
@@ -124,7 +132,7 @@ class ResourceManager:
                 import platform
 
                 if platform.system() == "Linux":
-                    memory_bytes = quota.memory_mb * 1024 * 1024
+                    memory_bytes = int(quota.memory_mb * 1024 * 1024)
                     # This would need to be set in the child process, not here
                     # resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes))
                     logger.debug(f"🔧 {agent_id}: RAM limit {quota.memory_mb} MB (Linux)")
@@ -140,7 +148,7 @@ class ResourceManager:
         except Exception as e:
             logger.error(f"❌ Failed to enforce quota for {agent_id}: {e}")
 
-    def get_usage(self, agent_id: str, process: Process) -> Dict[str, Any]:
+    def get_usage(self, agent_id: str, process: Process) -> Dict[str, Union[str, float, int, bool]]:
         """
         Get current resource usage for an agent.
 
@@ -165,7 +173,7 @@ class ResourceManager:
 
             return {
                 "agent_id": agent_id,
-                "pid": process.pid,
+                "pid": process.pid or 0,
                 "cpu_percent": round(cpu_percent, 2),
                 "memory_mb": round(memory_mb, 2),
                 "quota_cpu": quota.cpu_percent,
@@ -178,12 +186,12 @@ class ResourceManager:
         except Exception as e:
             return {"agent_id": agent_id, "error": str(e)}
 
-    def get_all_usage(self, process_manager) -> Dict[str, Dict[str, Any]]:
+    def get_all_usage(self, process_manager: ProcessManagerProtocol) -> Dict[str, Dict[str, Union[str, float, int, bool]]]:
         """
         Get resource usage for all agents.
 
         Args:
-            process_manager: ProcessManager instance
+            process_manager: ProcessManagerProtocol instance
 
         Returns:
             Dict mapping agent_id to usage stats
@@ -194,30 +202,35 @@ class ResourceManager:
                 usage[agent_id] = self.get_usage(agent_id, info.process)
         return usage
 
-    def check_violations(self, process_manager) -> list:
+    def check_violations(self, process_manager: ProcessManagerProtocol) -> List[Dict[str, Union[str, float, int]]]:
         """
         Check for agents exceeding their quotas.
 
         Args:
-            process_manager: ProcessManager instance
+            process_manager: ProcessManagerProtocol instance
 
         Returns:
             List of violation dicts
         """
-        violations = []
+        violations: List[Dict[str, Union[str, float, int]]] = []
         usage_stats = self.get_all_usage(process_manager)
 
         for agent_id, stats in usage_stats.items():
             if "error" in stats:
                 continue
 
+            cpu_percent = float(stats.get("cpu_percent", 0.0))
+            quota_cpu = float(stats.get("quota_cpu", 0.0))
+            memory_mb = float(stats.get("memory_mb", 0.0))
+            quota_memory = float(stats.get("quota_memory", 0.0))
+
             if not stats.get("cpu_within_quota"):
                 violations.append(
                     {
                         "agent_id": agent_id,
                         "type": "CPU",
-                        "usage": stats["cpu_percent"],
-                        "quota": stats["quota_cpu"],
+                        "usage": cpu_percent,
+                        "quota": quota_cpu,
                     }
                 )
 
@@ -226,8 +239,8 @@ class ResourceManager:
                     {
                         "agent_id": agent_id,
                         "type": "MEMORY",
-                        "usage": stats["memory_mb"],
-                        "quota": stats["quota_memory"],
+                        "usage": memory_mb,
+                        "quota": quota_memory,
                     }
                 )
 

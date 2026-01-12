@@ -4,23 +4,36 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-from vibe_core.protocols import VibeAgent
+from typing import Dict, List, Optional, Protocol, Union
 
 logger = logging.getLogger("IDENTITY")
+
+
+class AgentManifestProtocol(Protocol):
+    agent_id: str
+    name: str
+    version: str
+    author: str
+    description: str
+    domain: str
+    capabilities: List[str]
+    dependencies: List[str]
+
+
+class AgentProtocol(Protocol):
+    def get_manifest(self) -> AgentManifestProtocol: ...
 
 
 class ManifestGenerator:
     """Generates and manages agent manifests (identities)."""
 
     @staticmethod
-    def generate(agent: VibeAgent) -> Dict[str, Any]:
+    def generate(agent: AgentProtocol) -> Dict[str, object]:
         """
         Generate a manifest for an agent.
 
         Args:
-            agent: VibeAgent instance
+            agent: AgentProtocol provider
 
         Returns:
             Dictionary representation of the agent's manifest
@@ -42,12 +55,12 @@ class ManifestGenerator:
         }
 
     @staticmethod
-    def generate_all(agents: Dict[str, VibeAgent]) -> Dict[str, Dict[str, Any]]:
+    def generate_all(agents: Dict[str, AgentProtocol]) -> Dict[str, Dict[str, object]]:
         """
         Generate manifests for multiple agents.
 
         Args:
-            agents: Dictionary of agent_id -> VibeAgent
+            agents: Dictionary of agent_id -> AgentProtocol
 
         Returns:
             Dictionary of agent_id -> manifest
@@ -68,7 +81,7 @@ class ManifestGenerator:
 
     @staticmethod
     def save_manifest(
-        manifest: Dict[str, Any],
+        manifest: Dict[str, object],
         output_path: Path,
         agent_id: Optional[str] = None,
     ) -> bool:
@@ -85,7 +98,7 @@ class ManifestGenerator:
         """
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(json.dumps(manifest, indent=2))
+            output_path.write_text(json.dumps(manifest, indent=2, default=str))
             logger.info(f"✅ Manifest saved: {output_path}")
             return True
         except Exception as e:
@@ -94,7 +107,7 @@ class ManifestGenerator:
 
     @staticmethod
     def save_all_manifests(
-        manifests: Dict[str, Dict[str, Any]],
+        manifests: Dict[str, Dict[str, object]],
         output_dir: Path,
     ) -> int:
         """
@@ -120,7 +133,7 @@ class ManifestGenerator:
         return saved
 
     @staticmethod
-    def load_manifest(manifest_path: Path) -> Optional[Dict[str, Any]]:
+    def load_manifest(manifest_path: Path) -> Optional[Dict[str, object]]:
         """
         Load a manifest from disk.
 
@@ -141,7 +154,7 @@ class ManifestGenerator:
             return None
 
     @staticmethod
-    def get_agent_summary(manifest: Dict[str, Any]) -> str:
+    def get_agent_summary(manifest: Dict[str, object]) -> str:
         """
         Get a human-readable summary of an agent.
 
@@ -151,16 +164,22 @@ class ManifestGenerator:
         Returns:
             Summary string
         """
-        agent = manifest.get("agent", {})
+        # Type safe access
+        agent_info = manifest.get("agent", {})
+        if not isinstance(agent_info, dict):
+            agent_info = {}
+            
         caps = manifest.get("capabilities", [])
+        if not isinstance(caps, list):
+            caps = []
 
-        return f"""{agent.get("name", "Unknown")} v{agent.get("version", "?")}
-Description: {agent.get("description", "No description")}
-Domain: {agent.get("domain", "Unknown")}
-Capabilities: {", ".join(caps) if caps else "None"}"""
+        return f"""{agent_info.get("name", "Unknown")} v{agent_info.get("version", "?")}
+Description: {agent_info.get("description", "No description")}
+Domain: {agent_info.get("domain", "Unknown")}
+Capabilities: {", ".join(str(c) for c in caps) if caps else "None"}"""
 
     @staticmethod
-    def validate_manifest(manifest: Dict[str, Any]) -> List[str]:
+    def validate_manifest(manifest: Dict[str, object]) -> List[str]:
         """
         Validate a manifest structure.
 
@@ -174,6 +193,8 @@ Capabilities: {", ".join(caps) if caps else "None"}"""
 
         # Check required agent fields
         agent = manifest.get("agent", {})
+        if not isinstance(agent, dict):
+             return ["Invalid manifest structure: 'agent' field must be a dict"]
 
         if not agent.get("id"):
             errors.append("Missing required field: agent.id")
