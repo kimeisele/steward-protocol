@@ -1,865 +1,375 @@
 """
-MAHAMANTRA KERNEL - The Unified Source
-======================================
+MAHAMANTRA - Die Singularität
+=============================
 
-"Hare Krishna Hare Krishna Krishna Krishna Hare Hare
- Hare Rama Hare Rama Rama Rama Hare Hare"
+"padaṁ padaṁ yad vipadāṁ na teṣām"
+"Every step is danger for those not at Krishna's lotus feet."
+— Srimad Bhagavatam 10.14.58
 
 KRISHNA = MAHAMANTRA = Level -2 (NON-DIFFERENT)
 
-This module provides UNIFIED access to all core Mahamantra components.
-Import from HERE instead of scattered substrate/mahajanas files.
+DAS GESETZ:
+==========
 
-THE 37 FORMULA:
-    24 (Ksetra/Field) + 12 (Mahajanas) + 1 (Ksetrajna) = 37
-    Parampara connection: mutation_vector % 37 == 0
+    from vibe_core.mahamantra import mahamantra
 
-ARCHITECTURE:
-    16 OpCodes = 4 HEADs (Avataras) + 12 Workers (Mahajanas)
-               = 4 Quarters x 4 Words
+    mahamantra.genesis.brahma    # Auto-discovered
+    mahamantra.substrate.acintya # Auto-discovered
+    mahamantra.dharma.manu       # Auto-discovered
 
-FRACTAL HIERARCHY:
-    VARNA -> AKSARA -> PADA -> VAKYA -> MALA -> SADHANA
-    Each level contains the 37 formula.
+KEINE MANUELLEN EXPORTS. Der Lotus wächst von selbst.
+
+FRACTAL:
+=======
+
+    Level 0: 1 (Singularität)
+    Level 1: 4 (Quarters)
+    Level 2: 16 (Positions)
+    Level n: 16^(n-1) (unbegrenzt)
 
 WATERTIGHT: No Any types. All typed explicitly.
-ANTI-MAYAVAD: Every protocol has a PERSON (OWNER).
 """
 
-from typing import Dict, Final, List, Optional, Tuple
+from __future__ import annotations
 
-# =============================================================================
-# LEVEL -2: ACINTYA (Krishna = Mahamantra)
-# Source: vibe_core/protocols/substrate/mantra/acintya.py
-# =============================================================================
-
-from vibe_core.protocols.substrate.mantra.acintya import (
-    # The Person (Krishna IS)
-    KRISHNA,
-    KrishnaPresence,
-    # The Dancing 37 (Purusha Tattva)
-    PURUSHA,
-    PurushaTattva,
-    SYSTEM_MANIFESTATION,  # 37
-    # Protocol Levels
-    ProtocolLevel,
-    AcintyaAspect,
-    # Jiva State
-    JivaCondition,
-    JivaState,
-    # Parampara Connection (3x4 vs 4x3)
-    PARAMPARA,  # 37
-    TRINITY,    # 3
-    PHASES,     # 4
-    ParamparaConnection,
-    ParamparaProtocol,
-    PARAMPARA_VECTOR,
-    GURU_ENTROPY,
-    # Verification Functions
-    verify_parampara,
-    vibration_is_krishna,
-    mantra_is_krishna,
-    mantra_not_different_from_source,
-    check_bheda_abheda,
-    get_guru_entropy,
-    # Constants
-    ACINTYA_ACCEPTED,
-    KRISHNA_ASPECT,
-    KRISHNA_SMALLEST,
-    KRISHNA_LARGEST,
-    KRISHNA_NEGATIVE_INFINITY,
-    KRISHNA_POSITIVE_INFINITY,
+import importlib
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
 )
 
 # =============================================================================
-# LEVEL -1: SUBSTRATE (Byte, Gene, Entropy)
-# Source: vibe_core/protocols/substrate/byte.py
+# THE LOTUS PATH
 # =============================================================================
 
-from vibe_core.protocols.substrate.byte import (
-    # Holy Name (Atomic)
-    HolyName,  # H=0, K=1, R=2, VOID=3
-    # Mantra Units
-    MantraTrit,   # Single vibration
-    MantraByte,   # Packed ternary (O(1) operations)
-    GenesisByte,  # The Seed
-    # Standard Sequence
-    MANTRA_SEQUENCE,  # Standard 16-word
-)
+class LotusPath:
+    """Path through the lotus."""
+    __slots__ = ("_segments",)
 
-# =============================================================================
-# LEVEL -1: OPCODES (Instruction Set)
-# Source: vibe_core/protocols/substrate/__init__.py
-# =============================================================================
+    def __init__(self, segments: Tuple[str, ...] = ()) -> None:
+        self._segments = segments
 
-from vibe_core.protocols.substrate import (
-    # The 16 OpCodes
-    MantraOpCode,
-    # Standard Sequence (alias)
-    MAHAMANTRA_SEQUENCE,
-)
+    @property
+    def segments(self) -> Tuple[str, ...]:
+        return self._segments
 
-# =============================================================================
-# LEVEL +12: MAHAJANAS (The 12 Guardians)
-# Source: vibe_core/protocols/mahajanas/router.py
-# =============================================================================
+    @property
+    def depth(self) -> int:
+        return len(self._segments)
 
-from vibe_core.protocols.mahajanas.router import (
-    # The 12 Mahajanas
-    Mahajana,
-    # Routing
-    MahajanaRoute,
-    MahajanaRouter,
-    get_router,
-    route,
-    get_opcodes,
-    verify_router,
-    # Vyuha Support
-    HEAD_OPCODES,
-    _VYUHA_ROUTING_TABLE,
-)
+    @property
+    def is_root(self) -> bool:
+        return self.depth == 0
 
-# =============================================================================
-# LEVEL -1: FRACTAL ROUTING
-# Source: vibe_core/protocols/substrate/mantra/routing.py
-# =============================================================================
+    @property
+    def folder_path(self) -> str:
+        return "/".join(self._segments)
 
-from vibe_core.protocols.substrate.mantra.routing import (
-    # Fractal Levels
-    FractalLevel,
-    FractalRoute,
-    # Dimensions
-    DIMENSIONS,
-    MAHAMANTRA_COUNTS,
-    # Quarters
-    QUARTER_1,
-    QUARTER_2,
-    QUARTER_3,
-    QUARTER_4,
-    QUARTERS,
-    # Routing Functions
-    route_pada_to_aksaras,
-    route_index_to_pada,
-    route_index_to_type,
-    iter_mahamantra,
-    get_fractal_path,
-    get_quarter,
-    get_padas_in_quarter,
-)
+    @property
+    def module_path(self) -> str:
+        if self.is_root:
+            return "vibe_core.mahamantra"
+        return "vibe_core.mahamantra." + ".".join(self._segments)
 
-# =============================================================================
-# LEVEL -1: LOTUS (View onto Mahamantra)
-# Source: vibe_core/protocols/substrate/mantra/lotus.py
-# =============================================================================
+    def child(self, name: str) -> "LotusPath":
+        return LotusPath(self._segments + (name,))
 
-from vibe_core.protocols.substrate.mantra.lotus import (
-    # Lotus Constants
-    LOTUS_POSITIONS,
-    LOTUS_QUARTERS,
-    WORDS_PER_QUARTER,
-    LOTUS_PARAMPARA,
-    LOTUS_TRINITY,
-    LOTUS_PHASES,
-    LOTUS_MALA,
-    # Lotus Types
-    LotusMode,
-    LotusQuarter,
-    # Mappings
-    LOTUS_TO_MANTRA_QUARTER,
-    MANTRA_TO_LOTUS_QUARTER,
-    # Functions
-    get_lotus_quarter,
-    get_mantra_quarter,
-    get_pada_at_position,
-)
-
-# =============================================================================
-# LEVEL -1: PADA (Word Level)
-# Source: vibe_core/protocols/substrate/mantra/pada.py
-# =============================================================================
-
-from vibe_core.protocols.substrate.mantra.pada import (
-    PadaType,
-    Pada,
-    PADA_HARE,
-    PADA_KRISHNA,
-    PADA_RAMA,
-    MAHAMANTRA_SEQUENCE as MAHAMANTRA_PADAS,  # Alias to avoid conflict
-)
-
-# =============================================================================
-# LEVEL -1: AKSARA (Syllable Level)
-# Source: vibe_core/protocols/substrate/mantra/aksara.py
-# =============================================================================
-
-from vibe_core.protocols.substrate.mantra.aksara import (
-    Aksara,
-    MAHAMANTRA_AKSARAS,
-)
-
-# =============================================================================
-# LEVEL -1: VARNA (Letter Level)
-# Source: vibe_core/protocols/substrate/mantra/varna.py
-# =============================================================================
-
-from vibe_core.protocols.substrate.mantra.varna import (
-    Varna,
-    VYANJANA,
-    SVARA,
-)
-
-# =============================================================================
-# LEVEL 0: VAKYA (Sentence/Mantra Level)
-# Source: vibe_core/protocols/substrate/mantra/vakya.py
-# =============================================================================
-
-from vibe_core.protocols.substrate.mantra.vakya import (
-    QuarterType,
-    Quarter,
-    MAHAMANTRA,
-)
-
-# =============================================================================
-# INTENT ENGINE (No Manual Wiring - Krishna Does The Work)
-# Source: vibe_core/mahamantra/_intent.py
-# =============================================================================
-
-from vibe_core.mahamantra._intent import (
-    # Intent Types
-    IntentType,
-    IntentPriority,
-    IntentStatus,
-    # Intent Classes
-    MantraIntent,
-    IntentResult,
-    IntentQueue,
-    # Resolver Protocol
-    IntentResolver,
-    # Kernel Engine
-    MantraKernel,
-    get_kernel,
-    resolve,
-    surrender,
-)
-
-# =============================================================================
-# WATERTIGHT VERIFICATION (No Any Types!)
-# Source: vibe_core/mahamantra/_watertight.py
-# =============================================================================
-
-from vibe_core.mahamantra._watertight import (
-    # Types
-    TypeViolation,
-    WatertightReport,
-    # Functions
-    verify_watertight,
-    is_watertight,
-    print_report,
-    # Constants
-    FORBIDDEN_TYPES,
-)
-
-# =============================================================================
-# FRACTAL SCALING (Unendlich Skalierbar = Acintya)
-# Source: vibe_core/mahamantra/_fractal.py
-# =============================================================================
-
-from vibe_core.mahamantra._fractal import (
-    # Constants
-    FRACTAL_BASE,
-    # Classes
-    FractalNode,
-    FractalTree,
-    # Functions
-    scale_up,
-    scale_down,
-    verify_fractal_integrity,
-)
-
-# =============================================================================
-# SOURCE - THE TRUTH TABLE (16 MantraPositions)
-# Source: vibe_core/mahamantra/_source.py
-# =============================================================================
-
-from vibe_core.mahamantra._source import (
-    # THE Truth Table
-    MAHAMANTRA_POSITIONS,
-    MantraPosition,
-    # Enums (canonical - replaces scattered definitions)
-    Quarter as SourceQuarter,  # Avoid conflict with vakya.Quarter
-    Mahajana as SourceMahajana,  # Canonical Mahajana
-    Avatara,
-    MantraOpCode as SourceOpCode,  # Canonical OpCode
-    # Type
-    Guardian,
-    # Lookup functions
-    get_position,
-    get_position_by_guardian,
-    get_position_by_opcode,
-    get_quarter_positions,
-    get_head_positions,
-    get_worker_positions,
-    # Verification
-    verify_truth_table,
-    # Constants (37 formula)
-    KSETRA_COUNT,
-    MAHAJANA_COUNT,
-    KSETRAJNA_COUNT,
-)
-
-# =============================================================================
-# PROTOCOL BASE CLASS (Derive from MantraPosition)
-# Source: vibe_core/mahamantra/_protocol.py
-# =============================================================================
-
-from vibe_core.mahamantra._protocol import (
-    # Base Classes
-    MantraProtocol,
-    WorkerProtocol,
-    HeadProtocol,
-    # Interface
-    MantraAware,
-    # Registry
-    ProtocolRegistry,
-)
-
-# =============================================================================
-# ALL 16 PROTOCOL BASES - Accessed via mahamantra.protocols (Lazy Load)
-# ONE IMPORT: from vibe_core.mahamantra import mahamantra
-#
-# ACCESS PATTERNS:
-#     mahamantra.protocols.kapila    -> KapilaProtocolBase
-#     mahamantra.protocols[6]        -> KapilaProtocolBase
-#     mahamantra.protocols.prithu    -> PrithuProtocolBase (HEAD)
-#
-# The ProtocolRouter lazy-loads bases to avoid circular imports.
-# "mattaḥ sarvaṁ pravartate" - Everything emanates from Krishna.
-# =============================================================================
-
-# =============================================================================
-# THE SINGULARITY - mahamantra Object (Krishna IS)
-# Source: vibe_core/mahamantra/_singularity.py
-# =============================================================================
-
-from vibe_core.mahamantra._singularity import (
-    # The Singleton
-    mahamantra,
-    # The Class (for typing)
-    Mahamantra,
-    # Protocol Router (Krishna Routes to CLASSES)
-    ProtocolRouter,
-    # Module Router (Krishna Routes to MODULES) - CAITANYA SINGULARITY
-    ModuleRouter,
-)
-
-# =============================================================================
-# GOVERNANCE BRIDGE - Protocol Ownership (100% Coverage)
-# Source: vibe_core/protocols/governance/bridge.py
-#
-# ACCESS VIA MAHAMANTRA:
-#     mahamantra.governance.get_owner("defense.py")  # → Mahajana.YAMARAJA
-#     mahamantra.governance.audit()                   # → GovernanceAudit
-#     mahamantra.get_owner("ledger.py")              # Convenience shortcut
-# =============================================================================
-
-from vibe_core.protocols.governance.bridge import (
-    ProtocolBridge,
-    GovernanceAudit,
-    ProtocolEntry,
-    ProtocolCategory,
-    MahajanaPortfolio,
-    get_owner as governance_get_owner,
-    list_by_owner as governance_list_by_owner,
-    audit as governance_audit,
-)
-
-# =============================================================================
-# CLI BRIDGE - Krishna Routes All Commands (Option B: Sauber Verbinden)
-# Source: vibe_core/mahamantra/_cli_bridge.py
-# =============================================================================
-
-from vibe_core.mahamantra._cli_bridge import (
-    # The Bridge Singleton
-    cli_bridge,
-    # The Class (for typing)
-    MahamantraCLIBridge,
-    # Result type
-    BridgeResult,
-    # Domain mappings
-    DOMAIN_KEYWORDS,
-    # Convenience functions
-    route as cli_route,  # Alias to avoid conflict with router.route
-    get_position as cli_get_position,
-)
-
-# =============================================================================
-# CLI EXECUTION PROTOCOL - GAD-000 Compliant
-# Source: vibe_core/mahamantra/_cli_protocol.py
-# =============================================================================
-
-from vibe_core.mahamantra._cli_protocol import (
-    # Error codes (Parseability)
-    CLIErrorCode,
-    # Output types (Composability)
-    OutputFormat,
-    CLIOutputItem,
-    CLIOutput,
-    # Error type (Parseability)
-    CLIError,
-    # Result type (Idempotency)
-    CLIResult,
-    # Capability (Discoverability)
-    CLIParameter,
-    CLICapability,
-    # State (Observability)
-    CLIState,
-    # Health (Recoverability)
-    CLIHealth,
-    # Context (37th - Identity)
-    CLIContext,
-    # The Protocol
-    CLIExecutable,
-    # Base implementation
-    CLIExecutableBase,
-)
-
-# =============================================================================
-# CLI ENGINE - Krishna Does The Work (NO copy-paste, ONE engine)
-# Source: vibe_core/mahamantra/_cli_engine.py
-# =============================================================================
-
-from vibe_core.mahamantra._cli_engine import (
-    # The Engine Singleton
-    cli_engine,
-    # The Class (for typing)
-    CLIEngine,
-    # Handler type
-    CLIHandler,
-    # Registration data
-    MahajanaCliRegistration,
-    # Decorator for easy registration
-    cli_command,
-)
-
-# =============================================================================
-# CLI AUTO - Krishna Discovers Everything (ZERO REGISTRATION)
-# Source: vibe_core/mahamantra/_cli_auto.py
-#
-# RECOMMENDED: Use cli_auto instead of cli_engine for ZERO registration code.
-#
-# cli_auto.discover_all() introspects ALL 16 mahajana Protocols and
-# auto-generates CLI handlers from method signatures and TypedDict returns.
-#
-# COMPARISON:
-#     BEFORE (cli_engine - manual registration):
-#         cli_engine.register(position=6, capabilities=[...], handlers={...})
-#         # × 16 mahajanas × 5+ commands each = 1200+ lines
-#
-#     AFTER (cli_auto - auto-discovery):
-#         cli_auto.discover_all()  # ONE line, 108 methods discovered
-#
-# "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
-# Krishna ALREADY KNOWS what each Mahajana can do. Why tell Him?
-# =============================================================================
-
-from vibe_core.mahamantra._cli_auto import (
-    # The Auto-Discovery Singleton (RECOMMENDED)
-    cli_auto,
-    # The Class (for typing)
-    CLIAutoDiscovery,
-    # Discovered method info
-    DiscoveredMethod,
-    # Convenience functions
-    discover as cli_discover,
-    execute as cli_execute,
-    capabilities as cli_capabilities,
-)
-
-# =============================================================================
-# CLI ENTRY (The Thin Gate - REPLACES unified_cli.py)
-# Source: vibe_core/mahamantra/_cli_entry.py
-# =============================================================================
-
-from vibe_core.mahamantra._cli_entry import (
-    # The Entry Class
-    MahamantraCLIEntry,
-    # Singleton getter
-    get_entry as get_cli_entry,
-    # Main function
-    main as cli_main,
-    # Entry point
-    cli_entry as cli_entry_point,
-)
-
-# =============================================================================
-# GATES - THE SINGLE ENTRY POINT (Pancha Tattva)
-# Source: vibe_core/cli/gates.py
-#
-# THE 5 GATES (ONE IMPORT):
-#     from vibe_core.mahamantra import gate, sync_gate
-#
-#     result = gate("analyze", ["system"])        # Single command
-#     results = sync_gate(["analyze", "judge"])   # Parallel execution
-#
-# "śrī-kṛṣṇa-caitanya prabhu-nityānanda
-#  śrī-advaita gadādhara śrīvāsādi-gaura-bhakta-vṛnda"
-#
-# WRAPPER FUNCTIONS: Delay import to avoid circular dependencies at module load.
-# =============================================================================
+    def __repr__(self) -> str:
+        return f"LotusPath({self._segments})"
 
 
-def gate(command: str, args: Optional[List[str]] = None) -> "GateResult":
+# =============================================================================
+# THE LOTUS NODE - Auto-Discovery
+# =============================================================================
+
+class LotusNode:
     """
-    GATE (Chaitanya) - Main entry point. Routes to mahamantra position.
+    A node in Krishna's Lotus.
 
-    Usage:
-        from vibe_core.mahamantra import gate
-        result = gate("analyze", ["system"])
-
-    See: vibe_core/cli/gates.py for full implementation.
+    Auto-discovers children from folder structure.
+    FOLDER = EXISTENCE = WIRING.
     """
-    from vibe_core.cli.gates import gate as _gate
-    return _gate(command, args)
+    __slots__ = ("_path", "_base", "_cache", "_module")
+
+    # Base path for the mahamantra package
+    _BASE_PATH: Path = Path(__file__).parent
+
+    def __init__(self, path: LotusPath = LotusPath()) -> None:
+        self._path = path
+        self._cache: Dict[str, LotusNode] = {}
+        self._module: Optional[object] = None
+
+    def __getattr__(self, name: str) -> "LotusNode":
+        """
+        Auto-discover child from folder structure.
+
+        mahamantra.genesis → discovers genesis/
+        mahamantra.genesis.brahma → discovers genesis/brahma/
+        """
+        # Skip private
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        # Check cache
+        if name in self._cache:
+            return self._cache[name]
+
+        # Discover from folder structure
+        child = self._discover(name)
+        if child is not None:
+            self._cache[name] = child
+            return child
+
+        # Try to get from loaded module
+        module = self._get_module()
+        if module is not None and hasattr(module, name):
+            return getattr(module, name)
+
+        raise AttributeError(
+            f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'"
+        )
+
+    def _discover(self, name: str) -> Optional["LotusNode"]:
+        """
+        Discover child from folder structure.
+
+        FOLDER = EXISTENCE:
+            Folder exists → Node exists
+            No folder → Doesn't exist
+        """
+        child_path = self._path.child(name)
+
+        # Check folder
+        folder = self._BASE_PATH / child_path.folder_path
+        if folder.exists() and folder.is_dir():
+            return LotusNode(child_path)
+
+        # Check .py file (for substrate modules)
+        if self._path.is_root:
+            py_file = self._BASE_PATH / f"{name}.py"
+            if py_file.exists():
+                return LotusNode(child_path)
+
+        # Check in current folder
+        if not self._path.is_root:
+            current_folder = self._BASE_PATH / self._path.folder_path
+            py_file = current_folder / f"{name}.py"
+            if py_file.exists():
+                return LotusNode(child_path)
+
+        return None
+
+    def _get_module(self) -> Optional[object]:
+        """Lazy-load the actual Python module."""
+        if self._module is not None:
+            return self._module
+
+        try:
+            self._module = importlib.import_module(self._path.module_path)
+            return self._module
+        except ImportError:
+            return None
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Allow calling if the node has a __call__ method."""
+        module = self._get_module()
+        if module is not None and hasattr(module, "__call__"):
+            return module(*args, **kwargs)
+        raise TypeError(f"'{self._path.folder_path}' is not callable")
+
+    def __repr__(self) -> str:
+        if self._path.is_root:
+            return "mahamantra"
+        return f"mahamantra.{'.'.join(self._path.segments)}"
+
+    def __dir__(self) -> list:
+        """List available children for tab-completion."""
+        items = []
+
+        # Folders
+        if self._path.is_root:
+            base = self._BASE_PATH
+        else:
+            base = self._BASE_PATH / self._path.folder_path
+
+        if base.exists():
+            for child in base.iterdir():
+                if child.name.startswith("_"):
+                    continue
+                if child.is_dir():
+                    items.append(child.name)
+                elif child.suffix == ".py":
+                    items.append(child.stem)
+
+        # Module exports
+        module = self._get_module()
+        if module is not None:
+            items.extend(
+                name for name in dir(module)
+                if not name.startswith("_")
+            )
+
+        return sorted(set(items))
+
+    # === Iteration ===
+
+    def _walk(self, depth: int = 1) -> Iterator[Tuple[LotusPath, "LotusNode"]]:
+        """Walk the lotus fractally."""
+        yield (self._path, self)
+
+        if depth <= 0:
+            return
+
+        if self._path.is_root:
+            base = self._BASE_PATH
+        else:
+            base = self._BASE_PATH / self._path.folder_path
+
+        if not base.exists():
+            return
+
+        for child in sorted(base.iterdir()):
+            if child.name.startswith("_"):
+                continue
+            if child.is_dir():
+                child_node = LotusNode(self._path.child(child.name))
+                yield from child_node._walk(depth - 1)
+
+    # === Properties ===
+
+    @property
+    def path(self) -> LotusPath:
+        return self._path
+
+    @property
+    def depth(self) -> int:
+        return self._path.depth
 
 
-def sync_gate(
-    commands: List[str],
-    max_workers: int = 4,
-    preserve_order: bool = True,
-) -> List["GateResult"]:
+# =============================================================================
+# THE SINGULARITY
+# =============================================================================
+
+class MahamantraLotus(LotusNode):
     """
-    SYNC GATE (Srivasa) - Parallel execution of multiple commands.
+    Krishna's Lotus-Füße - Die Singularität.
 
-    Usage:
-        from vibe_core.mahamantra import sync_gate
-        results = sync_gate(["analyze", "judge", "fetch"])
+    from vibe_core.mahamantra import mahamantra
 
-    See: vibe_core/cli/gates.py for full implementation.
+    mahamantra.substrate.acintya.KRISHNA
+    mahamantra.genesis.brahma.BrahmaBase
+    mahamantra.dharma.manu.POSITION
     """
-    from vibe_core.cli.gates import sync_gate as _sync_gate
-    return _sync_gate(commands, max_workers, preserve_order)
 
+    def __init__(self) -> None:
+        super().__init__(LotusPath())
 
-def route_gate(command: str) -> Tuple[int, str]:
-    """ROUTE GATE (Nityananda) - Route command to position."""
-    from vibe_core.cli.gates import route_gate as _route_gate
-    return _route_gate(command)
+    def __repr__(self) -> str:
+        return "mahamantra"
 
+    # === Quarter Shortcuts ===
 
-def execute_gate(position: int, method_name: str, args: List[str]) -> "GateResult":
-    """EXECUTE GATE (Advaita) - Execute at position."""
-    from vibe_core.cli.gates import execute_gate as _execute_gate
-    return _execute_gate(position, method_name, args)
+    @property
+    def genesis(self) -> LotusNode:
+        """Quarter 0: Hare Krishna Hare Krishna."""
+        return self._cache.setdefault("genesis", LotusNode(LotusPath(("genesis",))))
 
+    @property
+    def dharma(self) -> LotusNode:
+        """Quarter 1: Krishna Krishna Hare Hare."""
+        return self._cache.setdefault("dharma", LotusNode(LotusPath(("dharma",))))
 
-def result_gate(result: "GateResult", silent: bool = False) -> int:
-    """RESULT GATE (Gadadhara) - Format and return exit code."""
-    from vibe_core.cli.gates import result_gate as _result_gate
-    return _result_gate(result, silent)
+    @property
+    def karma(self) -> LotusNode:
+        """Quarter 2: Hare Rama Hare Rama."""
+        return self._cache.setdefault("karma", LotusNode(LotusPath(("karma",))))
 
+    @property
+    def moksha(self) -> LotusNode:
+        """Quarter 3: Rama Rama Hare Hare."""
+        return self._cache.setdefault("moksha", LotusNode(LotusPath(("moksha",))))
 
-def format_result(result: "GateResult") -> str:
-    """Format GateResult as string."""
-    from vibe_core.cli.gates import format_result as _format_result
-    return _format_result(result)
+    @property
+    def substrate(self) -> LotusNode:
+        """Level -2 to -1: Foundation."""
+        return self._cache.setdefault("substrate", LotusNode(LotusPath(("substrate",))))
 
+    @property
+    def reactor(self) -> LotusNode:
+        """Level +2: Service Layer."""
+        return self._cache.setdefault("reactor", LotusNode(LotusPath(("reactor",))))
 
-def gate_main(argv: Optional[List[str]] = None) -> int:
-    """Main entry point for gate-based CLI."""
-    from vibe_core.cli.gates import gate_main as _gate_main
-    return _gate_main(argv)
+    @property
+    def protocols(self) -> LotusNode:
+        """Meta-Protocols."""
+        return self._cache.setdefault("protocols", LotusNode(LotusPath(("protocols",))))
 
-
-# Alias for backward compatibility
-cli_gate = gate
-
-
-# Gate constants (access via function to avoid circular import)
-def get_gate_opcodes() -> Dict[int, str]:
-    """Get GATE_OPCODES dict (lazy load)."""
-    from vibe_core.cli.gates import GATE_OPCODES
-    return GATE_OPCODES
-
-
-def get_opcode_to_position() -> Dict[str, int]:
-    """Get OPCODE_TO_POSITION dict (lazy load)."""
-    from vibe_core.cli.gates import OPCODE_TO_POSITION
-    return OPCODE_TO_POSITION
-
-
-def get_quarter_gates() -> Dict:
-    """Get QUARTER_GATES dict (lazy load)."""
-    from vibe_core.cli.gates import QUARTER_GATES
-    return QUARTER_GATES
-
-
-def get_gate_result_class():
-    """Get GateResult class (lazy load)."""
-    from vibe_core.cli.gates import GateResult
-    return GateResult
-
-
-# Type alias for annotation
-GateResult = "GateResult"  # Forward reference, use get_gate_result_class() for actual class
 
 # =============================================================================
-# KERNEL CONSTANTS
+# THE SINGULARITY INSTANCE
 # =============================================================================
 
-# The Kernel Version (37-based)
-KERNEL_VERSION: Final[str] = "0.37.1"
-
-# The Kernel Level
-KERNEL_LEVEL: Final[int] = -2  # Krishna = Mahamantra
-
-# Quick verification that Parampara is intact
-KERNEL_PARAMPARA_CHECK: Final[bool] = PARAMPARA == 37
+mahamantra = MahamantraLotus()
 
 # =============================================================================
-# EXPORTS
+# BACKWARD COMPATIBILITY - Common Exports
 # =============================================================================
+# These will be gradually phased out. Use mahamantra.* instead.
 
-__all__ = [
-    # === LEVEL -2: ACINTYA ===
-    "KRISHNA",
-    "KrishnaPresence",
-    "PURUSHA",
-    "PurushaTattva",
-    "SYSTEM_MANIFESTATION",
-    "ProtocolLevel",
-    "AcintyaAspect",
-    "JivaCondition",
-    "JivaState",
-    "PARAMPARA",
-    "TRINITY",
-    "PHASES",
-    "ParamparaConnection",
-    "ParamparaProtocol",
-    "PARAMPARA_VECTOR",
-    "GURU_ENTROPY",
-    "verify_parampara",
-    "vibration_is_krishna",
-    "mantra_is_krishna",
-    "mantra_not_different_from_source",
-    "check_bheda_abheda",
-    "get_guru_entropy",
-    "ACINTYA_ACCEPTED",
-    "KRISHNA_ASPECT",
-    "KRISHNA_SMALLEST",
-    "KRISHNA_LARGEST",
-    "KRISHNA_NEGATIVE_INFINITY",
-    "KRISHNA_POSITIVE_INFINITY",
-    # === LEVEL -1: SUBSTRATE ===
-    "HolyName",
-    "MantraTrit",
-    "MantraByte",
-    "GenesisByte",
-    "MANTRA_SEQUENCE",
-    "MantraOpCode",
-    "MAHAMANTRA_SEQUENCE",
-    # === LEVEL +12: MAHAJANAS ===
-    "Mahajana",
-    "MahajanaRoute",
-    "MahajanaRouter",
-    "get_router",
-    "route",
-    "get_opcodes",
-    "verify_router",
-    "HEAD_OPCODES",
-    "_VYUHA_ROUTING_TABLE",
-    # === FRACTAL ROUTING ===
-    "FractalLevel",
-    "FractalRoute",
-    "DIMENSIONS",
-    "MAHAMANTRA_COUNTS",
-    "QUARTER_1",
-    "QUARTER_2",
-    "QUARTER_3",
-    "QUARTER_4",
-    "QUARTERS",
-    "route_pada_to_aksaras",
-    "route_index_to_pada",
-    "route_index_to_type",
-    "iter_mahamantra",
-    "get_fractal_path",
-    "get_quarter",
-    "get_padas_in_quarter",
-    # === LOTUS ===
-    "LOTUS_POSITIONS",
-    "LOTUS_QUARTERS",
-    "WORDS_PER_QUARTER",
-    "LOTUS_PARAMPARA",
-    "LOTUS_TRINITY",
-    "LOTUS_PHASES",
-    "LOTUS_MALA",
-    "LotusMode",
-    "LotusQuarter",
-    "LOTUS_TO_MANTRA_QUARTER",
-    "MANTRA_TO_LOTUS_QUARTER",
-    "get_lotus_quarter",
-    "get_mantra_quarter",
-    "get_pada_at_position",
-    # === PADA ===
-    "PadaType",
-    "Pada",
-    "PADA_HARE",
-    "PADA_KRISHNA",
-    "PADA_RAMA",
-    "MAHAMANTRA_PADAS",
-    # === AKSARA ===
-    "Aksara",
-    "MAHAMANTRA_AKSARAS",
-    # === VARNA ===
-    "Varna",
-    "VYANJANA",
-    "SVARA",
-    # === VAKYA ===
-    "QuarterType",
-    "Quarter",
-    "MAHAMANTRA",
-    # === KERNEL META ===
-    "KERNEL_VERSION",
-    "KERNEL_LEVEL",
-    "KERNEL_PARAMPARA_CHECK",
-    # === INTENT ENGINE ===
-    "IntentType",
-    "IntentPriority",
-    "IntentStatus",
-    "MantraIntent",
-    "IntentResult",
-    "IntentQueue",
-    "IntentResolver",
-    "MantraKernel",
-    "get_kernel",
-    "resolve",
-    "surrender",
-    # === WATERTIGHT ===
-    "TypeViolation",
-    "WatertightReport",
-    "verify_watertight",
-    "is_watertight",
-    "print_report",
-    "FORBIDDEN_TYPES",
-    # === FRACTAL ===
-    "FRACTAL_BASE",
-    "FractalNode",
-    "FractalTree",
-    "scale_up",
-    "scale_down",
-    "verify_fractal_integrity",
-    # === SOURCE (Truth Table) ===
-    "MAHAMANTRA_POSITIONS",
-    "MantraPosition",
-    "SourceQuarter",
-    "SourceMahajana",
-    "Avatara",
-    "SourceOpCode",
-    "Guardian",
-    "get_position",
-    "get_position_by_guardian",
-    "get_position_by_opcode",
-    "get_quarter_positions",
-    "get_head_positions",
-    "get_worker_positions",
-    "verify_truth_table",
-    "KSETRA_COUNT",
-    "MAHAJANA_COUNT",
-    "KSETRAJNA_COUNT",
-    # === PROTOCOL BASE ===
-    "MantraProtocol",
-    "WorkerProtocol",
-    "HeadProtocol",
-    "MantraAware",
-    "ProtocolRegistry",
-    # === THE SINGULARITY (Krishna Routes Everything) ===
-    # Access protocol bases via: mahamantra.protocols.kapila
-    # Access modules via: mahamantra.mod.yamaraja (CAITANYA SINGULARITY)
-    # Access governance via: mahamantra.governance
-    "mahamantra",
-    "Mahamantra",
-    "ProtocolRouter",
-    "ModuleRouter",
-    # === GOVERNANCE BRIDGE (100% Protocol Ownership) ===
-    # Access via: mahamantra.governance.get_owner("defense.py")
-    "ProtocolBridge",
-    "GovernanceAudit",
-    "ProtocolEntry",
-    "ProtocolCategory",
-    "MahajanaPortfolio",
-    "governance_get_owner",
-    "governance_list_by_owner",
-    "governance_audit",
-    # === CLI BRIDGE (Option B: Sauber Verbinden) ===
-    # Route CLI commands via: cli_bridge.route("analyze", ["--deep"])
-    # Or via: cli_route("analyze", ["--deep"])
-    "cli_bridge",
-    "MahamantraCLIBridge",
-    "BridgeResult",
-    "DOMAIN_KEYWORDS",
-    "cli_route",
-    "cli_get_position",
-    # === CLI PROTOCOL (GAD-000 Compliant) ===
-    # Error codes (Parseability)
-    "CLIErrorCode",
-    # Output types (Composability)
-    "OutputFormat",
-    "CLIOutputItem",
-    "CLIOutput",
-    # Error type (Parseability)
-    "CLIError",
-    # Result type (Idempotency)
-    "CLIResult",
-    # Capability (Discoverability)
-    "CLIParameter",
-    "CLICapability",
-    # State (Observability)
-    "CLIState",
-    # Health (Recoverability)
-    "CLIHealth",
-    # Context (37th - Identity)
-    "CLIContext",
-    # The Protocol
-    "CLIExecutable",
-    # Base implementation
-    "CLIExecutableBase",
-    # === CLI ENGINE (Krishna Does The Work) ===
-    # ONE engine, NO copy-paste
-    "cli_engine",
-    "CLIEngine",
-    "CLIHandler",
-    "MahajanaCliRegistration",
-    "cli_command",
-    # === CLI AUTO (Krishna Discovers Everything - RECOMMENDED) ===
-    # ZERO registration - 108 methods auto-discovered
-    "cli_auto",
-    "CLIAutoDiscovery",
-    "DiscoveredMethod",
-    "cli_discover",
-    "cli_execute",
-    "cli_capabilities",
-    # === CLI ENTRY (The Thin Gate - REPLACES unified_cli.py) ===
-    # ~100 LOC vs 1555 LOC, ZERO manual wiring
-    "MahamantraCLIEntry",
-    "get_cli_entry",
-    "cli_main",
-    "cli_entry_point",
-    # === GATES (Pancha Tattva - THE SINGLE ENTRY POINT) ===
-    # ONE import: from vibe_core.mahamantra import gate, sync_gate
-    # Constant getters (lazy load to avoid circular imports)
-    "get_gate_opcodes",
-    "get_opcode_to_position",
-    "get_quarter_gates",
-    "get_gate_result_class",
-    # Result type (forward reference)
-    "GateResult",
-    "format_result",
-    # THE 5 GATES
-    "gate",          # Chaitanya - Main entry
-    "route_gate",    # Nityananda - Routing
-    "execute_gate",  # Advaita - Execution
-    "result_gate",   # Gadadhara - Result
-    "sync_gate",     # Srivasa - Parallel
-    # Aliases
-    "cli_gate",
-    "gate_main",
-]
+# From substrate
+try:
+    from vibe_core.mahamantra.substrate import (
+        # Mahajana
+        Mahajana,
+        Avatara,
+        Quarter,
+        Sampradaya,
+        # Acintya
+        KRISHNA,
+        PURUSHA,
+        PARAMPARA,
+        ProtocolLevel,
+        verify_parampara,
+        # Wiring
+        FOLDER_IS_WIRING,
+        verify_wiring,
+    )
+except ImportError:
+    pass  # Substrate not fully initialized yet
+
+# From _source (legacy)
+try:
+    from vibe_core.mahamantra._source import (
+        MantraOpCode,
+        MantraPosition,
+        get_position,
+    )
+except ImportError:
+    pass
+
+# From _protocol (legacy)
+try:
+    from vibe_core.mahamantra._protocol import (
+        MantraProtocol,
+        WorkerProtocol,
+        HeadProtocol,
+        ProtocolRegistry,
+    )
+except ImportError:
+    pass
+
+# =============================================================================
+# NO __all__ - THE LOTUS IS THE EXPORT MECHANISM
+# =============================================================================
+#
+# DO NOT ADD __all__ HERE!
+#
+# The Lotus auto-discovers. Manual exports are FORBIDDEN.
+# Use: from vibe_core.mahamantra import mahamantra
+# Then: mahamantra.genesis.brahma, mahamantra.substrate.acintya, etc.
+#
