@@ -770,47 +770,57 @@ class MahamantraLotus(LotusNode):
 mahamantra = MahamantraLotus()
 
 # =============================================================================
-# BACKWARD COMPATIBILITY - All from SSOT (substrate/)
+# BACKWARD COMPATIBILITY - LAZY IMPORTS from SSOT (substrate/)
 # =============================================================================
 # Diese Exports kommen alle aus substrate/ - der SSOT.
-# Kein legacy code mehr. Alles konsolidiert.
+# LAZY: Only imported when accessed, not at module load time.
+# This prevents 500ms+ import cascades.
 
-try:
-    from vibe_core.mahamantra.substrate import (
-        # === MAHAJANA ===
-        Mahajana,
-        Avatara,
-        Quarter,
-        Sampradaya,
-        # === ACINTYA ===
-        KRISHNA,
-        PURUSHA,
-        PARAMPARA,
-        ProtocolLevel,
-        verify_parampara,
-        # === WIRING ===
-        FOLDER_IS_WIRING,
-        verify_wiring,
-        # === OPCODE (SSOT) ===
-        MantraOpCode,
-        OPCODE_NAMES,
-        get_opcode,
-        get_opcode_name,
-        # === POSITION (SSOT) ===
-        Guardian,
-        MantraPosition,
-        MAHAMANTRA_POSITIONS,
-        get_position_by_index,
-        get_position_by_guardian,
-        # === PROTOCOL (SSOT) ===
-        MantraProtocol,
-        WorkerProtocol,
-        HeadProtocol,
-        MantraAware,
-        ProtocolRegistry,
-    )
-except ImportError:
-    pass  # Substrate not fully initialized yet
+_SUBSTRATE_LAZY_IMPORTS = {
+    # === MAHAJANA ===
+    "Mahajana": "mahajana",
+    "Avatara": "mahajana",
+    "Quarter": "mahajana",
+    "Sampradaya": "mahajana",
+    # === ACINTYA ===
+    "KRISHNA": "acintya",
+    "PURUSHA": "acintya",
+    "PARAMPARA": "acintya",
+    "ProtocolLevel": "acintya",
+    "verify_parampara": "acintya",
+    # === WIRING ===
+    "FOLDER_IS_WIRING": "wiring",
+    "verify_wiring": "wiring",
+    # === OPCODE (SSOT) ===
+    "MantraOpCode": "opcode",
+    "OPCODE_NAMES": "opcode",
+    "get_opcode": "opcode",
+    "get_opcode_name": "opcode",
+    # === POSITION (SSOT) ===
+    "Guardian": "position",
+    "MantraPosition": "position",
+    "MAHAMANTRA_POSITIONS": "position",
+    "get_position_by_index": "position",
+    "get_position_by_guardian": "position",
+    # === PROTOCOL (SSOT) ===
+    "MantraProtocol": "protocol",
+    "WorkerProtocol": "protocol",
+    "HeadProtocol": "protocol",
+    "MantraAware": "protocol",
+    "ProtocolRegistry": "protocol",
+}
+
+
+def __getattr__(name: str):
+    """Lazy import from substrate modules."""
+    if name in _SUBSTRATE_LAZY_IMPORTS:
+        module_name = _SUBSTRATE_LAZY_IMPORTS[name]
+        import importlib
+        module = importlib.import_module(
+            f".substrate.{module_name}", "vibe_core.mahamantra"
+        )
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 # =============================================================================
 # NO __all__ - THE LOTUS IS THE EXPORT MECHANISM
