@@ -1,0 +1,186 @@
+"""
+SUBSTRATE - Die Grundlage des Mahamantra
+========================================
+
+Level -2 bis -1: Das Fundament auf dem alles aufbaut.
+
+LEVEL -2 (ACINTYA):
+    Krishna = Mahamantra = NON-DIFFERENT
+    Das Unbegreifliche, das IS (nicht "repräsentiert")
+
+LEVEL -1 (SUBSTRATE):
+    Byte, Gene, Entropy
+    Die manifestierte Form von -2
+
+"mattaḥ parataraṁ nānyat kiñcid asti dhanañjaya"
+"O Arjuna, there is no truth superior to Me."
+— Bhagavad Gita 7.7
+"""
+
+# =============================================================================
+# MAHAJANA - Die 12 + 4 (Base Types)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.mahajana import (
+    # Die 12 Mahajanas
+    Mahajana,
+    MAHAJANA_COUNT,
+    # Die 4 Avataras
+    Avatara,
+    AVATARA_COUNT,
+    # Die 4 Quarters
+    Quarter,
+    # Die 4 Sampradayas
+    Sampradaya,
+    # Total
+    TOTAL_POSITIONS,
+)
+
+# =============================================================================
+# TATTVA - Purushottama (Krishna als Person)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.tattva import (
+    Purushottama,
+    PURUSHOTTAMA,
+    KshetraElement,
+    GuruTattva,
+    GuruConnection,
+    JIVA,
+)
+
+# =============================================================================
+# ACINTYA - Das Unbegreifliche (Level -2)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.acintya import (
+    # Konstanten
+    SYSTEM_MANIFESTATION,
+    ACINTYA_ACCEPTED,
+    TRINITY,
+    PARAMPARA,
+    PHASES,
+    GURU_ENTROPY,
+    PARAMPARA_VECTOR,
+    # Purusha (Die tanzende 37)
+    PurushaTattva,
+    PURUSHA,
+    KRISHNA_ASPECT,
+    KRISHNA_SMALLEST,
+    KRISHNA_LARGEST,
+    # Level System
+    ProtocolLevel,
+    AcintyaAspect,
+    # Krishna Presence
+    KrishnaPresence,
+    KRISHNA,
+    # Jiva
+    JivaCondition,
+    JivaState,
+    # Protocols
+    AcintyaAware,
+    ParamparaProtocol,
+    ParamparaConnection,
+    # Functions
+    vibration_is_krishna,
+    mantra_is_krishna,
+    mantra_not_different_from_source,
+    check_bheda_abheda,
+    verify_parampara,
+    get_guru_entropy,
+)
+
+# =============================================================================
+# BYTE - Das ternäre Substrat (Level -1)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.byte import (
+    # Holy Names
+    HolyName,
+    # Trit (Single vibration)
+    MantraTrit,
+    # Byte (Packed ternary)
+    MantraByte,
+    # Genesis Byte
+    GenesisByte,
+)
+
+# =============================================================================
+# PARAMPARA - Single Source of Truth
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.parampara import (
+    ParamparaNode,
+    PARAMPARA_GRAPH,
+    # Functions
+    get_position,
+    get_quarter,
+    get_sampradaya,
+    get_guru,
+    get_mahajana_at_position,
+    get_37_formula,
+)
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # === MAHAJANA ===
+    "Mahajana",
+    "MAHAJANA_COUNT",
+    "Avatara",
+    "AVATARA_COUNT",
+    "Quarter",
+    "Sampradaya",
+    "TOTAL_POSITIONS",
+    # === TATTVA ===
+    "Purushottama",
+    "PURUSHOTTAMA",
+    "KshetraElement",
+    "GuruTattva",
+    "GuruConnection",
+    "JIVA",
+    # === ACINTYA ===
+    "SYSTEM_MANIFESTATION",
+    "ACINTYA_ACCEPTED",
+    "TRINITY",
+    "PARAMPARA",
+    "PHASES",
+    "GURU_ENTROPY",
+    "PARAMPARA_VECTOR",
+    "PurushaTattva",
+    "PURUSHA",
+    "KRISHNA_ASPECT",
+    "KRISHNA_SMALLEST",
+    "KRISHNA_LARGEST",
+    "ProtocolLevel",
+    "AcintyaAspect",
+    "KrishnaPresence",
+    "KRISHNA",
+    "JivaCondition",
+    "JivaState",
+    "AcintyaAware",
+    "ParamparaProtocol",
+    "ParamparaConnection",
+    "vibration_is_krishna",
+    "mantra_is_krishna",
+    "mantra_not_different_from_source",
+    "check_bheda_abheda",
+    "verify_parampara",
+    "get_guru_entropy",
+    # === BYTE ===
+    "HolyName",
+    "MantraTrit",
+    "MantraByte",
+    "GenesisByte",
+    # === PARAMPARA ===
+    "ParamparaNode",
+    "PARAMPARA_GRAPH",
+    "get_position",
+    "get_quarter",
+    "get_sampradaya",
+    "get_guru",
+    "get_mahajana_at_position",
+    "get_37_formula",
+]
