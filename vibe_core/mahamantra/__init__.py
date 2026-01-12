@@ -61,6 +61,13 @@ class TickState(TypedDict):
     word: str
     opcode: Optional[int]
 
+
+class RouteResult(TypedDict):
+    """Return type for route() - WATERTIGHT."""
+    position: int
+    guardian: str
+    quarter: str
+
 # =============================================================================
 # THE LOTUS PATH
 # =============================================================================
@@ -508,6 +515,43 @@ class MahamantraLotus(LotusNode):
             return getattr(self.karma, name)
         else:
             return getattr(self.moksha, name)
+
+    # =========================================================================
+    # ROUTING - Every command flows through the mantra
+    # =========================================================================
+
+    def route(self, command: str) -> "RouteResult":
+        """
+        Route a command through the mahamantra.
+
+        THE MAHAMANTRA IS COMPUTE:
+            Every command hashes to a position (0-15).
+            Every position has a guardian.
+            The guardian handles the command.
+
+        Args:
+            command: The command string to route
+
+        Returns:
+            RouteResult with position, guardian, quarter
+
+        Example:
+            result = mahamantra.route("status")
+            print(f"Position {result.position}: {result.guardian}")
+        """
+        if not command:
+            return RouteResult(position=0, guardian="prithu", quarter="genesis")
+
+        # Parampara vector - weighted sum mod 16
+        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
+        position = mutation_vector % 16
+
+        # Get guardian at this position
+        pos_data = self[position]
+        guardian = pos_data.guardian.value if hasattr(pos_data.guardian, 'value') else str(pos_data.guardian)
+        quarter = pos_data.quarter.name if hasattr(pos_data.quarter, 'name') else str(pos_data.quarter)
+
+        return RouteResult(position=position, guardian=guardian, quarter=quarter)
 
     def __getattr__(self, name: str) -> LotusNode:
         """

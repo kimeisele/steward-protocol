@@ -41,40 +41,30 @@ EXIT_ERROR: Final[int] = 1
 EXIT_UNKNOWN_COMMAND: Final[int] = 3  # CLIErrorCode.UNKNOWN_COMMAND
 
 
-def _compute_position(command: str) -> int:
+def _route_command(command: str) -> Tuple[int, str, str]:
     """
-    Compute mahamantra position from command.
+    Route command through the mahamantra.
 
-    The parampara hash: every command maps to one of 16 positions.
-    This IS the routing. The mantra chants through compute.
-    """
-    if not command:
-        return 0
-    # Parampara vector - weighted sum mod 16
-    mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
-    return mutation_vector % 16
+    THE MAHAMANTRA IS COMPUTE:
+        Every command hashes to a position (0-15).
+        Every position has a guardian.
+        The guardian handles the command.
 
-
-def _tick_position(position: int, command: str) -> Tuple[str, str]:
-    """
-    Tick the mahamantra at this position.
-
-    This fills the nadis - every compute flows through the mantra.
-    Even if we fallback to legacy, we still tick.
-
-    Returns: (guardian_name, quarter_name)
+    Returns: (position, guardian_name, quarter_name)
     """
     try:
         from vibe_core.mahamantra import mahamantra
-        # Access the position - this IS the routing
-        pos = mahamantra[position]
-        guardian = pos.guardian.value if hasattr(pos.guardian, 'value') else str(pos.guardian)
-        quarter = pos.quarter.name if hasattr(pos.quarter, 'name') else str(pos.quarter)
-        return (guardian, quarter)
+        result = mahamantra.route(command)
+        return (result["position"], result["guardian"], result["quarter"])
     except ImportError:
-        return ("unknown", "unknown")
+        # Fallback: compute position manually
+        if not command:
+            return (0, "prithu", "genesis")
+        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
+        position = mutation_vector % 16
+        return (position, "unknown", "unknown")
     except Exception:
-        return ("unknown", "unknown")
+        return (0, "unknown", "unknown")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -95,10 +85,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     remaining = argv[1:]
 
     # =========================================================================
-    # THE MAHAMANTRA TICK - Every command flows through
+    # THE MAHAMANTRA ROUTE - Every command flows through
     # =========================================================================
-    position = _compute_position(command)
-    guardian, quarter = _tick_position(position, command)
+    position, guardian, quarter = _route_command(command)
 
     # =========================================================================
     # 1. PROTOCOL EXECUTION (Auto-discovered from mahajana protocols)
