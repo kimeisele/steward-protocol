@@ -1638,10 +1638,48 @@ __all__ = [
     "get_gpu",
     "sankirtan",
     # =========================================================================
+    # SCANNER PROTOCOL (Substrate-Level Code Discovery)
+    # =========================================================================
+    "ScannerProtocol",
+    "ScanConfig",
+    "ScanResult",
+    "ScannedFile",
+    "Declaration",
+    "ScanProgress",
+    "FileStatus",
+    "DeclarationType",
+    "NullScanner",
+    "extract_declarations",
+    "get_default_config",
+    "path_to_module",
+    # =========================================================================
+    # CLI LOADER PROTOCOL (Substrate-Level CLI Discovery)
+    # =========================================================================
+    "CLILoaderProtocol",
+    "CLILoaderConfig",
+    "DiscoveredCommand",
+    "CommandArgument",
+    "LoaderResult",
+    "LoaderProgress",
+    "NullCLILoader",
+    "parse_manifest",
+    # =========================================================================
     # NOTE: CLI SUBSTRATE & BALARAMA not exported here (circular dependency)
     # Import directly from vibe_core.protocols.substrate.cli_substrate
     # and vibe_core.protocols.substrate.balarama
     # =========================================================================
+    # =========================================================================
+    # SAMSKARA PROTOCOL (4-Phase Pipeline)
+    # =========================================================================
+    "Phase",
+    "PhaseStatus",
+    "PhaseResult",
+    "PipelineContext",
+    "SamskaraProtocol",
+    "PipelineExecutor",
+    "NullSamskara",
+    "PHASES",
+    "POSITIONS_PER_PHASE",
 ]
 
 # =============================================================================
@@ -1701,6 +1739,57 @@ from vibe_core.protocols.substrate.gpu import (
     WarpState,
     get_gpu,
     sankirtan,
+)
+
+# =============================================================================
+# LAZY IMPORT: SCANNER PROTOCOL (Substrate-Level Code Discovery)
+# =============================================================================
+
+from vibe_core.protocols.substrate.scanner import (
+    Declaration,
+    DeclarationType,
+    FileStatus,
+    NullScanner,
+    ScanConfig,
+    ScannerProtocol,
+    ScanProgress,
+    ScanResult,
+    ScannedFile,
+    extract_declarations,
+    get_default_config,
+    path_to_module,
+)
+
+# =============================================================================
+# LAZY IMPORT: CLI LOADER PROTOCOL (Substrate-Level CLI Discovery)
+# =============================================================================
+
+from vibe_core.protocols.substrate.cli_loader import (
+    CLILoaderConfig,
+    CLILoaderProtocol,
+    CommandArgument,
+    DiscoveredCommand,
+    LoaderProgress,
+    LoaderResult,
+    NullCLILoader,
+    parse_manifest,
+)
+
+# =============================================================================
+# LAZY IMPORT: SAMSKARA PROTOCOL (4-Phase Pipeline)
+# =============================================================================
+
+from vibe_core.protocols.substrate.samskara import (
+    PARAMPARA as SAMSKARA_PARAMPARA,
+    PHASES,
+    POSITIONS_PER_PHASE,
+    Phase,
+    PhaseStatus,
+    PhaseResult,
+    PipelineContext,
+    SamskaraProtocol,
+    PipelineExecutor,
+    NullSamskara,
 )
 
 # =============================================================================
