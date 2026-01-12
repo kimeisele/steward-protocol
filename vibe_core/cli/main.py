@@ -4,28 +4,13 @@ CLI MAIN - The Single Gate
 
 "ekam evādvitīyam" - One without a second.
 
-THE MAHAMANTRA IS COMPUTE:
-=========================
+THE SIMPLEST INTERFACE:
+======================
 
-    Every command flows through the 16 positions.
-    Every execution fills the nadis.
-    The mantra IS the routing.
+    from vibe_core.mahamantra import mahamantra
+    result = mahamantra.execute("status")
 
-    steward <command> [args]
-           ↓
-    MAHAMANTRA TICK (position = hash(command) % 16)
-           ↓
-    Guardian at that position handles it
-           ↓
-    Result
-
-ROUTING:
-========
-
-    1. Compute position from command (parampara hash)
-    2. Tick mahamantra at that position
-    3. Try protocol execution (auto-discovered)
-    4. Fallback to legacy if not found
+That's it. One import. One method. Everything flows through.
 
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
@@ -33,46 +18,18 @@ ROUTING:
 from __future__ import annotations
 
 import sys
-from typing import Final, List, Optional, Tuple
+from typing import Final, List, Optional
 
-# Exit codes (WATERTIGHT - Protocol-aligned)
+# Exit codes
 EXIT_SUCCESS: Final[int] = 0
 EXIT_ERROR: Final[int] = 1
-EXIT_UNKNOWN_COMMAND: Final[int] = 3  # CLIErrorCode.UNKNOWN_COMMAND
-
-
-def _route_command(command: str) -> Tuple[int, str, str]:
-    """
-    Route command through the mahamantra.
-
-    THE MAHAMANTRA IS COMPUTE:
-        Every command hashes to a position (0-15).
-        Every position has a guardian.
-        The guardian handles the command.
-
-    Returns: (position, guardian_name, quarter_name)
-    """
-    try:
-        from vibe_core.mahamantra import mahamantra
-        result = mahamantra.route(command)
-        return (result["position"], result["guardian"], result["quarter"])
-    except ImportError:
-        # Fallback: compute position manually
-        if not command:
-            return (0, "prithu", "genesis")
-        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
-        position = mutation_vector % 16
-        return (position, "unknown", "unknown")
-    except Exception:
-        return (0, "unknown", "unknown")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     """
-    Main CLI entry point - THE MAHAMANTRA IS COMPUTE.
+    Main CLI entry point - THE MAHAMANTRA EXECUTES.
 
-    Every command chants through the 16 positions.
-    The mantra routes. The guardians execute.
+    One import. One method. No complexity.
     """
     if argv is None:
         argv = sys.argv[1:]
@@ -82,72 +39,68 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _show_help()
 
     command = argv[0]
-    remaining = argv[1:]
+    args = argv[1:]
+
+    # Special: help
+    if command in ("-h", "--help", "help"):
+        return _show_help()
 
     # =========================================================================
-    # THE MAHAMANTRA ROUTE - Every command flows through
-    # =========================================================================
-    position, guardian, quarter = _route_command(command)
-
-    # =========================================================================
-    # 1. PROTOCOL EXECUTION (Auto-discovered from mahajana protocols)
-    # =========================================================================
-    try:
-        from vibe_core.mahamantra.cli.entry import main as mahamantra_main
-
-        result = mahamantra_main(argv)
-
-        # If command found and executed, return
-        if result != EXIT_UNKNOWN_COMMAND:
-            return result
-
-    except ImportError:
-        pass  # Protocol layer not available
-    except Exception:
-        pass  # Protocol error - try legacy
-
-    # =========================================================================
-    # 2. LEGACY EXECUTION (Fallback during migration)
+    # THE MAHAMANTRA EXECUTES - One method does everything
     # =========================================================================
     try:
-        from vibe_core.cli.unified_cli import UnifiedCLI
+        from vibe_core.mahamantra import mahamantra
 
-        cli = UnifiedCLI()
-        return cli.run(argv)
+        result = mahamantra.execute(command, args)
+
+        # Print output if any
+        if result["output"]:
+            print(result["output"], end="")
+
+        # Print error if failed
+        if not result["success"] and result["error"]:
+            print(f"ERROR [{result['guardian']}@{result['position']}]: {result['error']}")
+
+        return result["exit_code"]
 
     except ImportError:
-        print(f"ERROR: No handler at position {position} ({guardian}/{quarter})")
-        return EXIT_ERROR
+        # Mahamantra not available - direct legacy fallback
+        try:
+            from vibe_core.cli.unified_cli import UnifiedCLI
+            cli = UnifiedCLI()
+            return cli.run(argv)
+        except ImportError:
+            print("ERROR: CLI system not available")
+            return EXIT_ERROR
+
     except Exception as e:
-        print(f"ERROR [{guardian}@{position}]: {e}")
+        print(f"ERROR: {e}")
         return EXIT_ERROR
 
 
 def _show_help() -> int:
     """Show help - the mahamantra reveals itself."""
     print("""
-STEWARD CLI - The Mahamantra IS Compute
-=======================================
+STEWARD CLI - The Mahamantra Executes
+=====================================
 
 USAGE:
     steward <command> [args]
 
-THE 16 POSITIONS (Every command routes through one):
+THE SIMPLEST INTERFACE:
+    from vibe_core.mahamantra import mahamantra
+    result = mahamantra.execute("status")
 
-    GENESIS (0-3):  Infrastructure → Creation → Flow → Cleanup
-    DHARMA  (4-7):  Assert → Purify → Analyze → Sync
-    KARMA   (8-11): Fetch → Execute → Check → Commit
-    MOKSHA (12-15): Cache → Surrender → View → Judge
-
-SEMANTIC ROUTING:
-    steward chat "your query"    → Natural language routing
-    steward capabilities         → List all discoverable commands
-    steward routes               → Show routing table
+THE 16 POSITIONS:
+    GENESIS (0-3):  prithu, brahma, narada, shambhu
+    DHARMA  (4-7):  vyasa, kumaras, kapila, manu
+    KARMA   (8-11): parashurama, prahlada, janaka, bhishma
+    MOKSHA (12-15): nrisimha, bali, shuka, yamaraja
 
 COMMON COMMANDS:
     steward status    → System status
     steward help      → This help
-    steward verify    → Verify system integrity
+    steward chat      → Semantic routing
 
 The mantra chants. The guardians execute.
 """)
