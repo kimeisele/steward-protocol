@@ -9,7 +9,7 @@ GAD-000: One protocol, one service, via DI.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 
 @dataclass
@@ -73,7 +73,7 @@ class PluginServiceProtocol(Protocol):
         """
         ...
 
-    def load(self, plugin_id: str) -> Optional[Any]:
+    def load(self, plugin_id: str) -> Optional[object]:
         """
         Load plugin instance (lazy).
 
@@ -85,7 +85,7 @@ class PluginServiceProtocol(Protocol):
         """
         ...
 
-    def load_all(self) -> List[Any]:
+    def load_all(self) -> List[object]:
         """
         Load all enabled plugins.
 

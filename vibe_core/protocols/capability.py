@@ -15,7 +15,7 @@ Types:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, FrozenSet, List, Optional, Protocol, TypedDict, runtime_checkable
+from typing import Dict, FrozenSet, List, Optional, Protocol, TypedDict, runtime_checkable
 
 
 # =============================================================================
@@ -51,9 +51,9 @@ class CapabilityResult:
     """
 
     success: bool
-    output: Any = None
+    output: object = None
     error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, object] = field(default_factory=dict)
 
     # Execution trace (for debugging/audit)
     capability_id: str = ""
@@ -75,7 +75,7 @@ class CapabilityMeta:
     version: str = "1.0.0"
 
     # Schema for input validation
-    parameters_schema: Dict[str, Any] = field(default_factory=dict)
+    parameters_schema: Dict[str, object] = field(default_factory=dict)
 
     # Source info
     source_file: str = ""
@@ -114,15 +114,15 @@ class Capability(Protocol):
         ...
 
     @property
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> Dict[str, object]:
         """Schema for input validation."""
         ...
 
-    def validate(self, parameters: Dict[str, Any]) -> None:
+    def validate(self, parameters: Dict[str, object]) -> None:
         """Validate input parameters. Raise ValueError if invalid."""
         ...
 
-    def execute(self, parameters: Dict[str, Any]) -> CapabilityResult:
+    def execute(self, parameters: Dict[str, object]) -> CapabilityResult:
         """Execute the capability and return unified result."""
         ...
 
@@ -135,12 +135,12 @@ class CapabilityAdapter(ABC):
     """
 
     @abstractmethod
-    def adapt(self, source: Any) -> Capability:
+    def adapt(self, source: object) -> Capability:
         """Adapt a source object to Capability protocol."""
         ...
 
     @abstractmethod
-    def get_meta(self, source: Any) -> CapabilityMeta:
+    def get_meta(self, source: object) -> CapabilityMeta:
         """Extract metadata from source object."""
         ...
 

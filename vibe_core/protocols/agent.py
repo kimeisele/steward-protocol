@@ -12,7 +12,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -26,10 +26,10 @@ class AgentResponse:
     """Standard response from an agent"""
 
     success: bool
-    data: Optional[Dict[str, Any]] = None
+    data: Optional[Dict[str, object]] = None
     error: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """Convert to dictionary"""
         return {
             "success": self.success,
@@ -88,7 +88,7 @@ class AgentManifest:
     compliance_level: int = 2
     issuer: str = "passport_office"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """Serialize to dictionary"""
         return {
             "agent_id": self.agent_id,
@@ -107,7 +107,7 @@ class AgentManifest:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], agent_id_fallback: Optional[str] = None) -> "AgentManifest":
+    def from_dict(cls, data: Dict[str, object], agent_id_fallback: Optional[str] = None) -> "AgentManifest":
         """
         Create AgentManifest from dictionary (loaded from JSON/YAML).
 
@@ -187,7 +187,7 @@ class VibeAgent(ABC):
         description: str = "",
         domain: str = "",
         capabilities: Optional[List[str]] = None,
-        config: Optional[Any] = None,
+        config: Optional[object] = None,
     ):
         """Initialize a VibeAgent"""
         self.agent_id = agent_id
@@ -222,7 +222,7 @@ class VibeAgent(ABC):
         # OPUS-166: Register presence when agent boots
         self.ensure_presence(status="booting")
 
-    def set_kernel_pipe(self, pipe: Any) -> None:
+    def set_kernel_pipe(self, pipe: object) -> None:
         """
         Inject IPC Pipe for Process Isolation.
 
@@ -369,7 +369,7 @@ class VibeAgent(ABC):
 
             return str((Path("/tmp") / "vibe_os" / "agents" / self.agent_id).resolve())
 
-    def send_to_kernel(self, message: Dict[str, Any]) -> None:
+    def send_to_kernel(self, message: Dict[str, object]) -> None:
         """
         Send a message to the Kernel via IPC.
         """
@@ -382,7 +382,7 @@ class VibeAgent(ABC):
             logging.warning(f"Agent {self.agent_id} has no kernel connection")
 
     @abstractmethod
-    def process(self, task: Task) -> Dict[str, Any]:
+    def process(self, task: Task) -> Dict[str, object]:
         """
         Process a Task from the kernel scheduler
 
@@ -411,7 +411,7 @@ class VibeAgent(ABC):
             capabilities=self.capabilities,
         )
 
-    def report_status(self) -> Dict[str, Any]:
+    def report_status(self) -> Dict[str, object]:
         """
         Report current agent status (optional)
 
@@ -431,7 +431,7 @@ class VibeAgent(ABC):
         event_type: str,
         message: str = "",
         task_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[Dict[str, object]] = None,
     ):
         """
         Emit an event for real-time monitoring (Canto 10: Pulse System)
@@ -470,7 +470,7 @@ class VibeAgent(ABC):
         event_type: str,
         message: str = "",
         task_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[Dict[str, object]] = None,
     ):
         """
         Synchronous wrapper for emit_event (for use in non-async contexts)
@@ -526,7 +526,7 @@ class VibeAgent(ABC):
 
         return None
 
-    def ensure_presence(self, status: str = "online", kala_state: Optional[Dict[str, Any]] = None) -> bool:
+    def ensure_presence(self, status: str = "online", kala_state: Optional[Dict[str, object]] = None) -> bool:
         """
         Ensure this agent's presence is registered (PULS layer).
 

@@ -39,12 +39,42 @@ Usage (in agent code):
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional, Protocol, Union, Set
 
 from vibe_core.protocols.event import Event
 
-if TYPE_CHECKING:
-    from vibe_core.kernel import VibeKernel
+# Decoupling from vibe_core.kernel: Local Protocol Definitions
+class LedgerProtocol(Protocol):
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, object]) -> str: ...
+
+class ToolRegistryProtocol(Protocol):
+    def execute(self, call: object) -> object: ...
+
+class EventBusProtocol(Protocol):
+    def subscribe(self, callback: Callable, event_type: Optional[str] = None) -> str: ...
+    def unsubscribe(self, callback: Callable, event_type: Optional[str] = None) -> None: ...
+    async def emit(self, event: Event) -> None: ...
+    def get_status(self) -> Dict[str, object]: ...
+    def get_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[object]: ...
+
+class KernelProtocol(Protocol):
+    """Protocol defining the kernel interface required by AgentSystemInterface."""
+    config: object
+    agent_registry: Dict[str, object]
+    _data_store: Dict[str, Dict[str, object]]
+    
+    @property
+    def tool_registry(self) -> ToolRegistryProtocol: ...
+    
+    @property
+    def event_bus(self) -> EventBusProtocol: ...
+    
+    @property
+    def ledger(self) -> LedgerProtocol: ...
+
+    def get_agent_manifest(self, agent_id: str) -> Optional[object]: ...
+    def find_agents_by_capability(self, capability: str) -> List[object]: ...
+    def _check_agent_capability(self, agent_id: str, capability: str) -> bool: ...
 
 logger = logging.getLogger("AGENT_INTERFACE")
 
@@ -62,12 +92,12 @@ class AgentSystemInterface:
     Agents that bypass this interface violate system architecture.
     """
 
-    def __init__(self, kernel: VibeKernel, agent_id: str):
+    def __init__(self, kernel: KernelProtocol, agent_id: str):
         """
         Initialize system interface for an agent.
 
         Args:
-            kernel: Reference to VibeKernel
+            kernel: Reference to KernelProtocol
             agent_id: Agent identifier
 
         Note: This is called by kernel during agent registration.

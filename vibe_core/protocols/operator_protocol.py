@@ -32,7 +32,7 @@ Usage:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional, Protocol, runtime_checkable
+from typing import Literal, Optional, Protocol, runtime_checkable
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -205,7 +205,7 @@ class OperatorSocket(Protocol):
         """
         ...
 
-    async def provide_intent(self) -> Any:
+    async def provide_intent(self) -> object:
         """
         Provide the next action/decision.
 

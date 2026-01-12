@@ -29,7 +29,7 @@ from typing import Dict, List, Optional
 
 # BLOCKER #1: Import canonical VibeLedger ABC from kernel.py
 # Absolute import after migration to mahajana structure
-from vibe_core.kernel import VibeLedger
+from vibe_core.protocols.ledger import VibeLedger
 
 # P1 SECURITY: Import ECDSA signing from steward/crypto.py
 try:
