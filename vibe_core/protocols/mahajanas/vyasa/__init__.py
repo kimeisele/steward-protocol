@@ -244,6 +244,12 @@ class NullVyasa(VyasaProtocolBase):
 # EXPORTS
 # =============================================================================
 
+# =============================================================================
+# VYASA SERVICE - The Real Implementation (wraps legacy compliance/auditor)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.vyasa.service import VyasaService
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "VyasaProtocolBase",
@@ -256,4 +262,6 @@ __all__ = [
     "VyasaProtocol",
     # Implementations
     "NullVyasa",
+    # Service (Real Implementation)
+    "VyasaService",
 ]

@@ -280,6 +280,12 @@ class NullNrisimha(NrisimhaProtocolBase):
 # EXPORTS
 # =============================================================================
 
+# =============================================================================
+# NRISIMHA SERVICE - The Real Implementation (wraps legacy narasimha.py)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "NrisimhaProtocolBase",
@@ -293,4 +299,6 @@ __all__ = [
     "NrisimhaProtocol",
     # Implementations
     "NullNrisimha",
+    # Service (Real Implementation)
+    "NrisimhaService",
 ]

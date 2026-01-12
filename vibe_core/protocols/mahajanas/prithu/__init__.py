@@ -245,6 +245,12 @@ class NullPrithu(PrithuProtocolBase):
 # EXPORTS
 # =============================================================================
 
+# =============================================================================
+# PRITHU SERVICE - The Real Implementation (wraps legacy boot_orchestrator.py)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.prithu.service import PrithuService
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "PrithuProtocolBase",
@@ -257,4 +263,6 @@ __all__ = [
     "PrithuProtocol",
     # Implementations
     "NullPrithu",
+    # Service (Real Implementation)
+    "PrithuService",
 ]
