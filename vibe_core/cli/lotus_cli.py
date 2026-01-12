@@ -94,10 +94,10 @@ class LotusCLI:
             self._print_help()
             return 0
 
-        # Parse flags
-        explain = "--explain" in args
+        # Parse flags (--debug is alias for --explain)
+        explain = "--explain" in args or "--debug" in args or "-d" in args
         show_table = "--table" in args
-        args = [a for a in args if not a.startswith("--")]
+        args = [a for a in args if not a.startswith("--") and a != "-d"]
 
         if show_table:
             return self._show_routing_table()
@@ -143,24 +143,59 @@ class LotusCLI:
             print(f"  HEAD (Avatara-owned)")
 
     def _print_explain(self, result: SemanticRouteResult) -> None:
-        """Print detailed routing explanation."""
-        print(f"SEMANTIC ROUTE: {result.original_message}")
+        """
+        Print detailed routing explanation.
+
+        THE INVISIBLE BACKEND - Now visible!
+        Shows full mahamantra routing with Guna QoS.
+        """
+        msg = result.original_message or ""
+
+        # Calculate parampara hash
+        parampara_hash = sum(ord(c) * (i + 1) for i, c in enumerate(msg.lower()))
+
+        # Get Guna
+        guna_name = "UNKNOWN"
+        guna_sym = "?"
+        try:
+            from vibe_core.mahamantra.substrate.guna import get_guna_by_position
+            guna = get_guna_by_position(result.position)
+            guna_name = guna.name
+            guna_symbols = {"SATTVA": "●", "RAJAS": "◐", "TAMAS": "○"}
+            guna_sym = guna_symbols.get(guna_name, "?")
+        except ImportError:
+            pass
+
+        # Quarter names
+        quarter_names = ["GENESIS", "DHARMA", "KARMA", "MOKSHA"]
+        quarter_name = quarter_names[result.quarter] if 0 <= result.quarter < 4 else "UNKNOWN"
+
+        print("─" * 60)
+        print("SEMANTIC ROUTE (The Invisible Backend)")
+        print("─" * 60)
+        print(f"  Input:     \"{msg}\"")
+        print(f"  Hash:      {parampara_hash} (mod 16 = {parampara_hash % 16})")
         print()
         print("PROCESSING PATH:")
         for i, step in enumerate(result.processing_path):
             indent = "  " * (i + 1)
             print(f"{indent}↓ {step}")
         print()
-        print(f"RESULT:")
-        print(f"  Intent: {result.intent_type.value}")
-        print(f"  OpCode: {result.opcode.name}")
-        print(f"  Mahajana: {result.mahajana.value.upper()}")
-        print(f"  Quarter: {result.quarter} (of 4)")
-        print(f"  Position: {result.position} (of 16)")
+        print("RESULT:")
+        print(f"  Intent:    {result.intent_type.value}")
+        print(f"  OpCode:    {result.opcode.name}")
+        print(f"  Mahajana:  {result.mahajana.value.upper()}")
+        print(f"  Quarter:   {quarter_name} ({result.quarter}/4)")
+        print(f"  Position:  {result.position}/16")
+        print(f"  Guna:      {guna_name} {guna_sym}")
         print(f"  Confidence: {result.bridge_confidence:.2f}")
-        print(f"  Source: {result.bridge_source}")
+        print(f"  Source:    {result.bridge_source}")
         if result.is_head:
-            print(f"  HEAD: Yes (Avatara-owned position)")
+            print(f"  HEAD:      Yes (Avatara-owned position)")
+        if guna_name == "TAMAS":
+            print()
+            print("  ⚠️  TAMAS operation - requires confirmation")
+        print("─" * 60)
 
     def _show_routing_table(self) -> int:
         """Show full routing table."""
