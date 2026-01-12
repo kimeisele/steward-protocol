@@ -308,16 +308,52 @@ class MahamantraLotus(LotusNode):
             MahamantraLotus._singularity = core
         return MahamantraLotus._singularity
 
+    # Lazy-loaded Shadow Reactor (breaks circular imports)
+    _shadow_reactor = None
+
     def tick(self) -> TickState:
         """
         Der Herzschlag - Advance through the 16 positions.
 
+        BHOGA-PRASADAM-YAJNA:
+        ====================
+
+            Position 0-7:  BHOGA (Offering) - Krishna half
+            Position 8:    THE SWITCH (Parashurama transforms)
+            Position 8-15: PRASADAM (Grace) - Rama half
+
+        THE FLOW:
+        =========
+
+            1. Singularity tick (pure heartbeat)
+            2. Shadow Reactor processes Bhoga-Prasadam cycle
+            3. Position 8 triggers THE SWITCH (transformation)
+            4. Return sanctified state
+
+        NO MANUAL WIRING:
+        ================
+
+            Shadow Reactor auto-discovers from folder structure.
+            FOLDER = WIRING = REGISTRATION
+
         Input: tick()
         Output: TickState {tick, position, quarter, guardian, word, opcode}
-
-        The loop IS the mantra. ONE MANTRA.
         """
-        return self._core.tick()
+        # 1. SINGULARITY - Pure tick (the heartbeat)
+        tick_state = self._core.tick()
+
+        # 2. SHADOW REACTOR - Bhoga-Prasadam cycle (auto-discovered)
+        # Lazy load to break circular imports
+        if MahamantraLotus._shadow_reactor is None:
+            from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor
+            MahamantraLotus._shadow_reactor = get_shadow_reactor()
+
+        # Process through Yajna (sacrifice) cycle
+        # Position 8 = THE SWITCH (Bhoga → Prasadam)
+        MahamantraLotus._shadow_reactor.tick(tick_state)
+
+        # 3. PRASADAM - Return sanctified output
+        return tick_state
 
     def chant(self, separator: str = " ") -> str:
         """
