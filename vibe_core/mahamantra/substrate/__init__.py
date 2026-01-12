@@ -278,6 +278,31 @@ from vibe_core.mahamantra.substrate.watertight import (
 )
 
 # =============================================================================
+# GUNA - The Three Modes of Material Nature (BG 14)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.guna import (
+    # The Guna enum (Material)
+    Guna,
+    # Vishuddha Sattva (Transcendental - the Name itself)
+    VISHUDDHA_SATTVA,
+    is_vishuddha,
+    # OpCode sets
+    SATTVA_OPCODES,
+    RAJAS_OPCODES,
+    TAMAS_OPCODES,
+    OPCODE_GUNA,
+    # Functions
+    get_guna,
+    get_guna_by_position,
+    is_sattva,
+    is_rajas,
+    is_tamas,
+    # QoS
+    GunaQoS,
+)
+
+# =============================================================================
 # SCANNER - Auto-Discovery of Declarations
 # =============================================================================
 
@@ -446,6 +471,22 @@ __all__ = [
     "print_report",
     "is_watertight",
     "FORBIDDEN_TYPES",
+    # === GUNA (Three Modes - BG 14) ===
+    "Guna",
+    # Vishuddha Sattva (Transcendental - the Name itself)
+    "VISHUDDHA_SATTVA",
+    "is_vishuddha",
+    # Material modes
+    "SATTVA_OPCODES",
+    "RAJAS_OPCODES",
+    "TAMAS_OPCODES",
+    "OPCODE_GUNA",
+    "get_guna",
+    "get_guna_by_position",
+    "is_sattva",
+    "is_rajas",
+    "is_tamas",
+    "GunaQoS",
     # === SCANNER (Discovery) ===
     "MahajanaAlias",
     "MAHAJANA_ALIASES",
