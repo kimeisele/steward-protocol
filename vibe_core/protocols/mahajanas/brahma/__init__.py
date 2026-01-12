@@ -236,6 +236,24 @@ from vibe_core.protocols.mahajanas.brahma.bootstrap import (
 )
 
 # =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.brahma
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.brahma.types import (
+    # sarga.py - Creation/Genesis
+    Element,
+    Cycle,
+    SargaPhase,
+    SargaBootSequence,
+    # capability_registry.py
+    CapabilityRegistry,
+    # identity.py
+    ManifestGenerator,
+    # agent_interface.py
+    AgentSystemInterface,
+)
+
+# =============================================================================
 # BRAHMA SERVICE - The Real Implementation
 # =============================================================================
 
@@ -265,6 +283,18 @@ __all__ = [
     "NullBootstrap",
     # Service (Real Implementation)
     "BrahmaService",
+    # === MIGRATED TYPES (mahamantra.mod.brahma) ===
+    # sarga.py
+    "Element",
+    "Cycle",
+    "SargaPhase",
+    "SargaBootSequence",
+    # capability_registry.py
+    "CapabilityRegistry",
+    # identity.py
+    "ManifestGenerator",
+    # agent_interface.py
+    "AgentSystemInterface",
 ]
 
 

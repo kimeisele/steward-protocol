@@ -287,6 +287,25 @@ class NullNrisimha(NrisimhaProtocolBase):
 # LAZY IMPORT to avoid circular dependency with narasimha.py migration
 # NrisimhaService is loaded on first access via __getattr__
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.nrisimha
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.nrisimha.types import (
+    # narasimha.py
+    ThreatLevel,
+    ThreatIndicator,
+    NarasimhaProtocol,
+    get_narasimha,
+    activate_emergency_protocol,
+    # security.py
+    VajraGuarded,
+    VajraViolation,
+    IntentStatus,
+    SecurityIntent,
+    SecurityIntentManager,
+)
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "NrisimhaProtocolBase",
@@ -302,6 +321,19 @@ __all__ = [
     "NullNrisimha",
     # Service (Real Implementation)
     "NrisimhaService",
+    # === MIGRATED TYPES (mahamantra.mod.nrisimha) ===
+    # narasimha.py
+    "ThreatLevel",
+    "ThreatIndicator",
+    "NarasimhaProtocol",
+    "get_narasimha",
+    "activate_emergency_protocol",
+    # security.py
+    "VajraGuarded",
+    "VajraViolation",
+    "IntentStatus",
+    "SecurityIntent",
+    "SecurityIntentManager",
 ]
 
 

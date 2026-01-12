@@ -243,6 +243,14 @@ from vibe_core.protocols.mahajanas.bali.yield_cpu import (
     LOTUS_POSITION as YIELD_POSITION,
 )
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.bali
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.bali.types import (
+    # resource_manager.py
+    ResourceManager,
+)
 
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
@@ -269,6 +277,9 @@ __all__ = [
     "NullYield",
     # Service (Real Implementation)
     "BaliService",
+    # === MIGRATED TYPES (mahamantra.mod.bali) ===
+    # resource_manager.py
+    "ResourceManager",
 ]
 
 # =============================================================================

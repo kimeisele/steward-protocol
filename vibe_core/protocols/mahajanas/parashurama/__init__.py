@@ -260,6 +260,23 @@ class NullParashurama(ParashuramaProtocolBase):
 
 from vibe_core.protocols.mahajanas.parashurama.service import ParashuramaService
 
+# =============================================================================
+# MIGRATED TYPES - Accessed via mahamantra.mod.parashurama
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.parashurama.types import (
+    # network_proxy.py
+    KernelNetworkProxy,
+    # vfs.py
+    VirtualFileSystem,
+    # io_service.py
+    DocumentType,
+    WriteResult,
+    KernelIOService,
+    # file_operator.py
+    FileBasedOperator,
+)
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "ParashuramaProtocolBase",
@@ -275,4 +292,15 @@ __all__ = [
     "NullParashurama",
     # Service (Real Implementation)
     "ParashuramaService",
+    # === MIGRATED TYPES (mahamantra.mod.parashurama) ===
+    # network_proxy.py
+    "KernelNetworkProxy",
+    # vfs.py
+    "VirtualFileSystem",
+    # io_service.py
+    "DocumentType",
+    "WriteResult",
+    "KernelIOService",
+    # file_operator.py
+    "FileBasedOperator",
 ]
