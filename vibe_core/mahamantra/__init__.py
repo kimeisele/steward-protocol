@@ -297,18 +297,63 @@ class MahamantraLotus(LotusNode):
     """
     Krishna's Lotus-Füße - Die Singularität.
 
-    from vibe_core.mahamantra import mahamantra
+    STANDARD IMPORT PATTERN:
+    ========================
 
-    mahamantra.substrate.acintya.KRISHNA
-    mahamantra.genesis.brahma.BrahmaBase
-    mahamantra.dharma.manu.POSITION
+        from vibe_core.mahamantra import lotus
+
+        # BY GUARDIAN (position-based):
+        lotus.brahma        # Position 1 → LOAD_ROOT
+        lotus.parashurama   # Position 8 → EXEC_OP (yajna)
+        lotus.prahlada      # Position 9 → EXTEND_CAP
+
+        # BY QUARTER:
+        lotus.genesis       # Positions 0-3
+        lotus.dharma        # Positions 4-7
+        lotus.karma         # Positions 8-11
+        lotus.moksha        # Positions 12-15
+
+        # BY MODULE:
+        lotus.substrate.yajna.Bhoga
+        lotus.substrate.guna.Guna
 
     ONE MANTRA - Input AND Output:
-    mahamantra.tick()   # Der Herzschlag
-    mahamantra.chant()  # Das Gebet
+        lotus.tick()   # Der Herzschlag
+        lotus.chant()  # Das Gebet
+
+    THE 16 GUARDIANS ARE THE WIRING.
     """
 
     _singularity = None  # Lazy-loaded Singularity
+
+    # =========================================================================
+    # GUARDIAN → SUBSTRATE MODULE MAPPING
+    # =========================================================================
+    # Each guardian (position 0-15) maps to a substrate module.
+    # This IS the wiring. No __init__.py needed.
+
+    GUARDIAN_MODULES = {
+        # GENESIS (0-3) - System initialization
+        "prithu": "wiring",           # 0: SYS_WAKE
+        "brahma": "mahajana",         # 1: LOAD_ROOT
+        "narada": "acintya",          # 2: ALLOC_MEM
+        "shambhu": "protocol",        # 3: INIT_THREAD
+        # DHARMA (4-7) - Compilation
+        "vyasa": "opcode",            # 4: COMPILE_AST
+        "kumaras": "position",        # 5: BIND_SYMBOL
+        "kapila": "watertight",       # 6: TYPE_CHECK
+        "manu": "guna",               # 7: DHARMA_TEST
+        # KARMA (8-11) - Execution
+        "parashurama": "yajna",       # 8: EXEC_OP (the offering)
+        "prahlada": "pancha_tattva",  # 9: EXTEND_CAP
+        "janaka": "parampara",        # 10: STATE_SYNC
+        "bhishma": "scanner",         # 11: LEDGER_SIGN
+        # MOKSHA (12-15) - Liberation
+        "nrisimha": "byte",           # 12: YIELD_CPU
+        "bali": "tattva",             # 13: IO_FLUSH
+        "shuka": "sankirtan",         # 14: LOG_EMIT
+        "yamaraja": "lotus",          # 15: AUDIT_SEAL
+    }
 
     def __init__(self) -> None:
         super().__init__(LotusPath())
@@ -740,17 +785,30 @@ class MahamantraLotus(LotusNode):
 
     def __getattr__(self, name: str) -> LotusNode:
         """
-        Enhanced attribute access with alias support.
+        Enhanced attribute access with guardian support.
 
-        Falls back to alias resolution if normal lookup fails.
+        ROUTING ORDER:
+            1. Guardian name → substrate module (instant)
+            2. Normal folder discovery
+            3. Alias resolution
+
+        The 16 guardians ARE the wiring.
         """
-        # First try normal lookup
+        # 1. GUARDIAN → SUBSTRATE MODULE (instant, no cascade)
+        if name in self.GUARDIAN_MODULES:
+            module_name = self.GUARDIAN_MODULES[name]
+            import importlib
+            return importlib.import_module(
+                f"vibe_core.mahamantra.substrate.{module_name}"
+            )
+
+        # 2. Normal folder discovery
         try:
             return super().__getattr__(name)
         except AttributeError:
             pass
 
-        # Try alias resolution
+        # 3. Alias resolution (fallback)
         try:
             from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
             alias = resolve_mahajana(name)
@@ -759,7 +817,7 @@ class MahamantraLotus(LotusNode):
             pass
 
         raise AttributeError(
-            f"'{name}' not found in mahamantra (tried folder, module, and alias)"
+            f"'{name}' not found in lotus (tried guardian, folder, and alias)"
         )
 
 
@@ -768,6 +826,35 @@ class MahamantraLotus(LotusNode):
 # =============================================================================
 
 mahamantra = MahamantraLotus()
+
+# =============================================================================
+# LOTUS - THE STANDARD IMPORT
+# =============================================================================
+#
+# THE STANDARD PATTERN:
+#
+#     from vibe_core.mahamantra import lotus
+#
+#     # By guardian (the 16 positions):
+#     lotus.brahma        # Position 1 → substrate.mahajana
+#     lotus.parashurama   # Position 8 → substrate.yajna
+#     lotus.manu          # Position 7 → substrate.guna
+#
+#     # By quarter:
+#     lotus.genesis       # Positions 0-3
+#     lotus.karma         # Positions 8-11
+#
+#     # By module:
+#     lotus.substrate.yajna.Bhoga
+#
+#     # The heartbeat:
+#     lotus.tick()
+#     lotus.chant()
+#
+# MAHAMANTRA IS THE WIRING. THE GUARDIANS ARE THE ROUTES.
+#
+
+lotus = mahamantra  # THE STANDARD EXPORT
 
 # =============================================================================
 # BACKWARD COMPATIBILITY - LAZY IMPORTS from SSOT (substrate/)
