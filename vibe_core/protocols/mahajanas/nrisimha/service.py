@@ -23,8 +23,8 @@ from vibe_core.protocols.mahajanas.nrisimha import (
     CacheState,
 )
 
-# Import legacy implementation - DO NOT DUPLICATE
-from vibe_core.narasimha import NarasimhaProtocol as LegacyNarasimha
+# Import from canonical location (narasimha.py moved to nrisimha/types/)
+from vibe_core.protocols.mahajanas.nrisimha.types.narasimha import NarasimhaProtocol as LegacyNarasimha
 
 
 class NrisimhaService(NrisimhaProtocolBase):

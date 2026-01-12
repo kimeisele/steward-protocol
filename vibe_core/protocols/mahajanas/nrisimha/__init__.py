@@ -284,7 +284,8 @@ class NullNrisimha(NrisimhaProtocolBase):
 # NRISIMHA SERVICE - The Real Implementation (wraps legacy narasimha.py)
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
+# LAZY IMPORT to avoid circular dependency with narasimha.py migration
+# NrisimhaService is loaded on first access via __getattr__
 
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
@@ -302,3 +303,11 @@ __all__ = [
     # Service (Real Implementation)
     "NrisimhaService",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for NrisimhaService to avoid circular import."""
+    if name == "NrisimhaService":
+        from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
+        return NrisimhaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

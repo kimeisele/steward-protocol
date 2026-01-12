@@ -1,0 +1,51 @@
+{
+  "completed": [],
+  "errors": [
+    {
+      "cycle_id": "bb8416ac",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='4536957712'>",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T09:06:58.951166"
+    },
+    {
+      "cycle_id": "b40f14ed",
+      "parent_cycle_id": null,
+      "trace_id": "60256a14",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T09:06:58.951186"
+    },
+    {
+      "cycle_id": "6485b05c",
+      "parent_cycle_id": null,
+      "trace_id": "9572a9e3",
+      "cycle_name": "boot_sequence",
+      "phase": "perceive",
+      "observations_count": 0,
+      "orientations_count": 0,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "orchestrate": "'MantraByte' object is not subscriptable"
+      },
+      "timestamp": "2026-01-12T09:06:58.951192"
+    }
+  ],
+  "last_updated": "2026-01-12T09:06:58.951197"
+}
