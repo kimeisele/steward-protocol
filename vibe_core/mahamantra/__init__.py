@@ -76,6 +76,8 @@ class ExecuteResult(TypedDict):
     position: int
     guardian: str
     quarter: str
+    guna: str                       # sattva/rajas/tamas
+    requires_confirmation: bool     # True for TAMAS ops
     output: str
     error: Optional[str]
 
@@ -557,10 +559,15 @@ class MahamantraLotus(LotusNode):
         mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
         position = mutation_vector % 16
 
-        # Get guardian at this position
-        pos_data = self[position]
-        guardian = pos_data.guardian.value if hasattr(pos_data.guardian, 'value') else str(pos_data.guardian)
-        quarter = pos_data.quarter.name if hasattr(pos_data.quarter, 'name') else str(pos_data.quarter)
+        # Get guardian/quarter from substrate (SSOT)
+        from vibe_core.mahamantra.substrate.wiring import get_position_by_index
+        mapping = get_position_by_index(position)
+        if mapping:
+            guardian = mapping.owner  # e.g., "prithu", "brahma"
+            quarter = mapping.quarter.value  # e.g., "genesis"
+        else:
+            guardian = "unknown"
+            quarter = "unknown"
 
         return RouteResult(position=position, guardian=guardian, quarter=quarter)
 
@@ -594,21 +601,56 @@ class MahamantraLotus(LotusNode):
         guardian = route["guardian"]
         quarter = route["quarter"]
 
-        # 2. TRY PROTOCOL EXECUTION (cli_auto)
+        # 2. GUNA - Derive QoS from position (BG 14)
+        #    BUT: The Holy Name itself is VISHUDDHA SATTVA (transcendental)
+        from vibe_core.mahamantra.substrate.guna import (
+            get_guna_by_position,
+            Guna,
+            GunaQoS,
+            VISHUDDHA_SATTVA,
+            is_vishuddha,
+        )
+
+        # Check if this IS the Holy Name (transcendental)
+        if is_vishuddha(command):
+            guna_name = VISHUDDHA_SATTVA  # "vishuddha"
+            requires_confirmation = False  # Grace needs no permission
+        else:
+            # Material operation - derive from position
+            guna = get_guna_by_position(position)
+            guna_name = guna.name.lower()  # sattva/rajas/tamas
+            requires_confirmation = GunaQoS.requires_confirmation(guna)
+
+        # 3. TRY PROTOCOL EXECUTION (cli_auto)
+        # Only use cli_auto if it SUCCEEDS with meaningful output.
+        # Legacy is battle-tested. Protocol layer is still growing.
+        # SANKIRTAN: Don't force cli_auto. Let legacy handle what works.
         try:
             from vibe_core.mahamantra.cli.auto import cli_auto
             cli_result = cli_auto.execute(command, args)
 
-            if cli_result.success or cli_result.exit_code != 3:  # Not UNKNOWN_COMMAND
-                return ExecuteResult(
-                    success=cli_result.success,
-                    exit_code=cli_result.exit_code,
-                    position=position,
-                    guardian=guardian,
-                    quarter=quarter,
-                    output=str(cli_result.output.to_dict()) if cli_result.output else "",
-                    error=cli_result.error.message if cli_result.error else None,
+            # Check for REAL success: must succeed AND have meaningful output
+            # {"result": False} is NOT meaningful - it's a Null implementation stub
+            if cli_result.success and cli_result.output:
+                output_dict = cli_result.output.to_dict()
+                items = output_dict.get("items", [])
+                # Real output has more than just {"result": False}
+                is_meaningful = (
+                    len(items) > 1 or
+                    (len(items) == 1 and items[0].get("value") is not False)
                 )
+                if is_meaningful:
+                    return ExecuteResult(
+                        success=cli_result.success,
+                        exit_code=cli_result.exit_code,
+                        position=position,
+                        guardian=guardian,
+                        quarter=quarter,
+                        guna=guna_name,
+                        requires_confirmation=requires_confirmation,
+                        output=str(output_dict),
+                        error=cli_result.error.message if cli_result.error else None,
+                    )
         except ImportError:
             pass  # Protocol layer not available
         except Exception:
@@ -635,6 +677,8 @@ class MahamantraLotus(LotusNode):
                     position=position,
                     guardian=guardian,
                     quarter=quarter,
+                    guna=guna_name,
+                    requires_confirmation=requires_confirmation,
                     output=output,
                     error=None if exit_code == 0 else f"Exit code {exit_code}",
                 )
@@ -648,6 +692,8 @@ class MahamantraLotus(LotusNode):
                 position=position,
                 guardian=guardian,
                 quarter=quarter,
+                guna=guna_name,
+                requires_confirmation=requires_confirmation,
                 output="",
                 error="CLI system not available",
             )
@@ -658,6 +704,8 @@ class MahamantraLotus(LotusNode):
                 position=position,
                 guardian=guardian,
                 quarter=quarter,
+                guna=guna_name,
+                requires_confirmation=requires_confirmation,
                 output="",
                 error=str(e),
             )
