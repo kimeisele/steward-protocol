@@ -167,7 +167,8 @@ class UnifiedCLI:
             "plugins": self.cmd_plugins,
             "update": self.cmd_update,
             "install": self.cmd_install,  # Alias for update (semantic clarity)
-            "chat": self.cmd_chat,  # OPUS-042: SAMVADA - Human-MANAS dialogue
+            # NOTE: "chat" is handled by LotusCLI via CLIRegistry (acintya)
+            # "chat": self.cmd_chat,  # DEPRECATED - use LotusCLI
             "observe": self.cmd_observe,  # OPUS-108: Observer Loop - MANAS cognition monitor
             "poke": self.cmd_poke,  # OPUS-109: Intent Defibrillator - force-execute stuck intents
         }
@@ -486,9 +487,8 @@ class UnifiedCLI:
                         # OPUS-312: Log arg parse failures
                         logging.getLogger("CLI").debug(f"--tail arg parse failed: {e}")
                 return handler(tail=tail)
-            elif name == "chat":
-                # HEADLESS CHAT: Pass all args to cmd_chat
-                return handler(args)
+            # NOTE: "chat" is handled by LotusCLI via CLIRegistry (acintya)
+            # UnifiedCLI does NOT handle chat - let the protocol do it
             else:
                 # Generic fallback: try calling handler with args list
                 try:
@@ -1177,154 +1177,21 @@ class UnifiedCLI:
 
     # =========================================================================
     # OPUS-042: SAMVADA - Human-MANAS Real-Time Dialogue
+    # NOTE: Chat is now handled by LotusCLI via CLIRegistry (acintya)
+    # This method is DEPRECATED but kept for backwards compatibility
     # =========================================================================
 
     def cmd_chat(self, args: List[str]) -> int:
         """
-        Send a message to the cognitive layer and get a response.
+        DEPRECATED: Use LotusCLI via CLIRegistry instead.
 
-        OPUS-042: SAMVADA (The Dialogue)
-        OPUS-309: Routes through kernel.process_operator_input()
-
-        HEADLESS MODE: When kernel not available, uses mahamantra routing.
-        DEBUG MODE: --debug flag shows the invisible backend flow.
-
-        Usage:
-            steward chat "Status report"
-            steward chat Check the CI status
-            steward chat --debug "What is status"
+        This method delegates to LotusCLI which implements the
+        SemanticRouter protocol (acintya - the real thing).
         """
-        if not args:
-            print("Usage: steward chat <message>")
-            print('       steward chat "Status report"')
-            print("       steward chat --debug <message>  (show routing details)")
-            print("\n❌ No message provided")
-            return 1
-
-        # Check for --debug flag
-        debug_mode = "--debug" in args or "-d" in args
-        args = [a for a in args if a not in ("--debug", "-d")]
-
-        if not args:
-            print("❌ No message provided after --debug flag")
-            return 1
-
-        message = " ".join(args)
-
-        try:
-            import asyncio
-
-            # OPUS-309: CLI → Kernel → Protocol → Plugin
-            # No shortcuts. No exceptions.
-            kernel = self._get_kernel()
-            if not kernel:
-                # HEADLESS MODE: Route through mahamantra directly
-                return self._chat_headless(message, debug_mode)
-
-            if debug_mode:
-                print("─" * 50)
-                print("DEBUG: Kernel mode (full cognitive stack)")
-                print("─" * 50)
-
-            if not hasattr(kernel, "process_operator_input"):
-                print("❌ Kernel does not support cognitive processing.")
-                print("   Upgrade to OPUS-309 or later.")
-                return 1
-
-            from vibe_core.protocols.cognition import IntentType as CognitiveIntentType
-
-            result = asyncio.run(kernel.process_operator_input(message))
-
-            # Handle result by intent type - NO hardcoded plugin names!
-            if result.intent_type == CognitiveIntentType.CHAT:
-                print(f"🗣️ {result.response}")
-                return 0
-
-            elif result.intent_type == CognitiveIntentType.EXECUTE:
-                # OPUS-310: Actually execute the command via CommandRegistry
-                import time as time_module
-
-                from vibe_core.cli.command_registry import CommandRegistry
-                from vibe_core.protocols.command import CommandContext
-
-                registry = CommandRegistry.get_instance()
-
-                # Ensure commands are scanned
-                if registry.stats()["total"] == 0:
-                    registry.scan_all()
-
-                # Build args from params (skip internal params like _resolved_entity)
-                args = []
-                if result.syscall_params:
-                    for k, v in result.syscall_params.items():
-                        if not k.startswith("_"):  # Skip internal params
-                            args.append(str(v))
-
-                # Execute with kernel context
-                context = CommandContext(
-                    kernel=kernel,
-                    session_id=None,
-                    caller="cli.chat",
-                )
-
-                start_time = time_module.time()
-                cmd_result = asyncio.run(
-                    registry.execute(
-                        result.syscall_type,
-                        args,
-                        context,
-                    )
-                )
-                duration_ms = (time_module.time() - start_time) * 1000
-
-                # OPUS-311: Record execution for learning (Feedback + Reflection)
-                if hasattr(kernel, "_cognitive") and hasattr(kernel._cognitive, "record_execution_result"):
-                    kernel._cognitive.record_execution_result(
-                        command=result.syscall_type,
-                        args=args,
-                        success=cmd_result.success,
-                        error=cmd_result.error,
-                        duration_ms=duration_ms,
-                        session_id=None,
-                    )
-
-                if cmd_result.success:
-                    if cmd_result.output:
-                        print(cmd_result.output)
-                    else:
-                        print(f"✅ {result.syscall_type} executed successfully")
-                else:
-                    print(f"❌ {result.syscall_type} failed: {cmd_result.error}")
-                    return 1
-                return 0
-
-            elif result.intent_type == CognitiveIntentType.ROUTE:
-                print(f"🔀 Routing to: {result.target}")
-                if result.reasoning:
-                    print(f"   Reason: {result.reasoning}")
-                return 0
-
-            elif result.intent_type == CognitiveIntentType.QUERY:
-                # OPUS-310: Show suggestions for medium confidence matches
-                if result.response:
-                    print(f"🔍 {result.response}")
-                elif result.query_result:
-                    import json
-
-                    print(json.dumps(result.query_result, indent=2))
-                else:
-                    print(f"🔍 Query: {result.query_type}")
-                return 0
-
-            else:
-                # Unknown intent type - still no hardcoded names
-                print(f"🗣️ {result.response or '[No response]'}")
-                return 0
-
-        except Exception as e:
-            print(f"❌ Chat failed: {e}")
-            logger.error(f"cmd_chat error: {e}")
-            return 1
+        # Delegate to LotusCLI (the protocol implementation)
+        from vibe_core.cli.lotus_cli import LotusCLI
+        lotus = LotusCLI()
+        return lotus.run(args)
 
     def _get_kernel(self):
         """
@@ -1351,151 +1218,11 @@ class UnifiedCLI:
             logger.error(f"Kernel initialization failed: {e}")
             return None
 
-    def _chat_headless(self, message: str, debug_mode: bool = False) -> int:
-        """
-        HEADLESS CHAT: Route through mahamantra without kernel.
-
-        THE VEDIC COMPUTER:
-        - mahamantra.route() determines position
-        - SemanticRouter determines intent/opcode
-        - Guna determines QoS
-        - No LLM/Cognition required - pure resonance
-
-        Args:
-            message: The user's message
-            debug_mode: Show the invisible backend flow
-
-        Returns:
-            Exit code (0 = success)
-        """
-        try:
-            from vibe_core.mahamantra import mahamantra
-            from vibe_core.mahamantra.substrate.guna import get_guna_by_position, Guna
-
-            # === PHASE 1: MAHAMANTRA ROUTING ===
-            route = mahamantra.route(message)
-            position = route["position"]
-            guardian = route["guardian"]
-            quarter = route["quarter"]
-
-            # Get Guna for QoS
-            guna = get_guna_by_position(position)
-            guna_name = guna.name
-
-            # Guna symbols
-            guna_symbols = {"SATTVA": "●", "RAJAS": "◐", "TAMAS": "○"}
-            guna_sym = guna_symbols.get(guna_name, "?")
-
-            if debug_mode:
-                print("─" * 60)
-                print("DEBUG: HEADLESS MODE (mahamantra routing only)")
-                print("─" * 60)
-                print(f"  Input:     \"{message}\"")
-                print(f"  Hash:      {sum(ord(c) * (i + 1) for i, c in enumerate(message.lower()))}")
-                print(f"  Position:  {position}")
-                print(f"  Guardian:  {guardian.upper()}")
-                print(f"  Quarter:   {quarter.upper()}")
-                print(f"  Guna:      {guna_name} {guna_sym}")
-                print("─" * 60)
-
-            # === PHASE 2: SEMANTIC ROUTING (if available) ===
-            opcode = "UNKNOWN"
-            mahajana_target = guardian
-
-            try:
-                from vibe_core.protocols.universal.semantic_router import get_semantic_router
-                from vibe_core.protocols.cognition import CognitiveResult, IntentType
-
-                # Build minimal cognitive result for routing
-                semantic = get_semantic_router()
-
-                # Analyze message for intent (simple keyword matching)
-                intent_type = self._detect_intent(message)
-
-                if debug_mode:
-                    print("SEMANTIC ROUTER:")
-                    print(f"  Intent:    {intent_type.value}")
-
-                # Route through semantic layer
-                semantic_result = semantic.route_raw(
-                    intent_type=intent_type,
-                    message=message,
-                )
-
-                opcode = semantic_result.opcode.name if semantic_result.opcode else "UNKNOWN"
-                mahajana_target = semantic_result.mahajana.value if semantic_result.mahajana else guardian
-
-                if debug_mode:
-                    print(f"  OpCode:    {opcode}")
-                    print(f"  Mahajana:  {mahajana_target.upper()}")
-                    print(f"  Path:      {' → '.join(semantic_result.processing_path)}")
-                    print("─" * 60)
-
-            except ImportError:
-                if debug_mode:
-                    print("SEMANTIC ROUTER: Not available (ImportError)")
-                    print("─" * 60)
-            except Exception as e:
-                if debug_mode:
-                    print(f"SEMANTIC ROUTER: Error - {e}")
-                    print("─" * 60)
-
-            # === PHASE 3: OUTPUT ===
-            print(f"[{mahajana_target.upper()}] Routed: {message}")
-            print(f"  OpCode: {opcode}")
-            print(f"  Quarter: {['GENESIS', 'DHARMA', 'KARMA', 'MOKSHA'][position // 4]} | Position: {position}")
-
-            if guna_name == "TAMAS":
-                print(f"  ⚠️  TAMAS operation - requires confirmation")
-
-            return 0
-
-        except ImportError as e:
-            print(f"❌ Mahamantra not available: {e}")
-            return 1
-        except Exception as e:
-            print(f"❌ Headless chat error: {e}")
-            if debug_mode:
-                import traceback
-                traceback.print_exc()
-            return 1
-
-    def _detect_intent(self, message: str) -> "IntentType":
-        """
-        Simple keyword-based intent detection (no LLM required).
-
-        RESONANCE: Words carry meaning. Patterns emerge.
-        """
-        from vibe_core.protocols.cognition import IntentType
-
-        msg_lower = message.lower()
-
-        # EXECUTE keywords
-        execute_keywords = [
-            "run", "execute", "do", "create", "make", "build", "start",
-            "delete", "remove", "stop", "kill", "deploy", "install",
-        ]
-        for kw in execute_keywords:
-            if kw in msg_lower:
-                return IntentType.EXECUTE
-
-        # QUERY keywords
-        query_keywords = [
-            "what", "where", "how", "which", "list", "show", "find",
-            "get", "fetch", "count", "status",
-        ]
-        for kw in query_keywords:
-            if kw in msg_lower:
-                return IntentType.QUERY
-
-        # ROUTE keywords
-        route_keywords = ["route", "send", "forward", "redirect", "go to"]
-        for kw in route_keywords:
-            if kw in msg_lower:
-                return IntentType.ROUTE
-
-        # Default to CHAT
-        return IntentType.CHAT
+    # =========================================================================
+    # NOTE: Chat is handled by LotusCLI via CLIRegistry (acintya)
+    # UnifiedCLI is THIN - it delegates to protocols.
+    # No spaghetti. No duplication. Protocol-first.
+    # =========================================================================
 
     # =========================================================================
     # OPUS-075: MANAS HIL BRIDGE COMMANDS
