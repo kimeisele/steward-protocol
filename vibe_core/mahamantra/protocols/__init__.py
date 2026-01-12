@@ -6,10 +6,18 @@ MAHAMANTRA PROTOCOLS - The Protocols That Define Protocols
 "I am the source of all. Everything emanates from Me." (BG 10.8)
 
 This module contains the META-PROTOCOLS:
+
+LEVEL -2 (ACINTYA):
 - _core.py: What IS a protocol? (self-referential)
 - _declaration.py: How does something declare itself?
 - _fractal.py: How does something grow fractally?
 - _holographic.py: How does each part contain the whole?
+
+LEVEL 0 (CONTRACT):
+- _lotus.py: The Mahamantra as Kernel (16 petals)
+- _graph.py: Vedic knowledge graphs
+- _bridge.py: Fractal bridges between parts
+- _steward.py: System identity (THE Steward)
 
 ACINTYA PRINCIPLE:
     These protocols define themselves.
@@ -115,6 +123,116 @@ from vibe_core.mahamantra.protocols._holographic import (
 )
 
 # =============================================================================
+# LOTUS - The Mahamantra as Kernel
+# =============================================================================
+
+from vibe_core.mahamantra.protocols._lotus import (
+    # Constants
+    LOTUS_PETALS,
+    LOTUS_QUARTERS,
+    PETALS_PER_QUARTER,
+    MALA_BEADS,
+    # Mappings
+    MAHAJANA_POSITIONS,
+    POSITION_MAHAJANAS,
+    get_mahajana_position,
+    get_position_mahajana,
+    # Enums
+    LotusMode,
+    # Types
+    LotusPetal,
+    LotusState,
+    LotusRoute,
+    # Protocol
+    LotusProtocol,
+    # Base Class
+    LotusBase,
+    # Tree (Fractal)
+    LotusTree,
+    # Hologram
+    LotusHologram,
+    # Protocol Definition
+    LotusProtocolDef,
+)
+
+# =============================================================================
+# GRAPH - Vedic Knowledge Graphs
+# =============================================================================
+
+from vibe_core.mahamantra.protocols._graph import (
+    # Constants
+    PRAKRITI_COUNT,
+    PURIFICATION_CYCLE,
+    # Enums
+    NodeType,
+    EdgeType,
+    Sampradaya,
+    # Types
+    GraphNode,
+    GraphEdge,
+    # Protocol
+    GraphProtocol,
+    # Implementation
+    VedicGraph,
+    # Builder
+    GraphBuilder,
+    # Protocol Graph
+    ProtocolGraph,
+    # Protocol Definition
+    GraphProtocolDef,
+)
+
+# =============================================================================
+# BRIDGE - Fractal Bridges
+# =============================================================================
+
+from vibe_core.mahamantra.protocols._bridge import (
+    # Enums
+    BridgeType,
+    BridgeDirection,
+    BridgeState,
+    # Types
+    BridgeEndpoint,
+    BridgeSpec,
+    Bridge,
+    # Protocol
+    BridgeProtocol,
+    # Registry
+    BridgeRegistry,
+    get_bridge_registry,
+    # Builder
+    BridgeBuilder,
+    # Protocol Definition
+    BridgeProtocolDef,
+)
+
+# =============================================================================
+# STEWARD - System Identity
+# =============================================================================
+
+from vibe_core.mahamantra.protocols._steward import (
+    # Constants
+    STEWARD_NAME,
+    STEWARD_VERSION,
+    # Enums
+    StewardMode,
+    StewardHealth,
+    # State
+    StewardState,
+    # Audit
+    StewardAudit,
+    # System
+    StewardSystem,
+    # Protocol
+    StewardProtocol,
+    # Protocol Definition
+    StewardProtocolDef,
+    # Convenience
+    get_steward,
+    steward,
+)
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -158,4 +276,59 @@ __all__ = [
     "HolographicSystem",
     "HolographicProtocol",
     "get_holographic_system",
+    # === LOTUS ===
+    "LOTUS_PETALS",
+    "LOTUS_QUARTERS",
+    "PETALS_PER_QUARTER",
+    "MALA_BEADS",
+    "MAHAJANA_POSITIONS",
+    "POSITION_MAHAJANAS",
+    "get_mahajana_position",
+    "get_position_mahajana",
+    "LotusMode",
+    "LotusPetal",
+    "LotusState",
+    "LotusRoute",
+    "LotusProtocol",
+    "LotusBase",
+    "LotusTree",
+    "LotusHologram",
+    "LotusProtocolDef",
+    # === GRAPH ===
+    "PRAKRITI_COUNT",
+    "PURIFICATION_CYCLE",
+    "NodeType",
+    "EdgeType",
+    "Sampradaya",
+    "GraphNode",
+    "GraphEdge",
+    "GraphProtocol",
+    "VedicGraph",
+    "GraphBuilder",
+    "ProtocolGraph",
+    "GraphProtocolDef",
+    # === BRIDGE ===
+    "BridgeType",
+    "BridgeDirection",
+    "BridgeState",
+    "BridgeEndpoint",
+    "BridgeSpec",
+    "Bridge",
+    "BridgeProtocol",
+    "BridgeRegistry",
+    "get_bridge_registry",
+    "BridgeBuilder",
+    "BridgeProtocolDef",
+    # === STEWARD ===
+    "STEWARD_NAME",
+    "STEWARD_VERSION",
+    "StewardMode",
+    "StewardHealth",
+    "StewardState",
+    "StewardAudit",
+    "StewardSystem",
+    "StewardProtocol",
+    "StewardProtocolDef",
+    "get_steward",
+    "steward",
 ]
