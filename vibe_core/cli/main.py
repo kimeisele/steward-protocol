@@ -45,6 +45,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     if command in ("-h", "--help", "help"):
         return _show_help()
 
+    # Special: map - System visibility (SATTVA)
+    if command == "map":
+        return _show_map(args)
+
+    # Special: guardian name - Position details
+    guardian_result = _show_guardian(command, args)
+    if guardian_result is not None:
+        return guardian_result
+
     # =========================================================================
     # THE MAHAMANTRA EXECUTES - One method does everything
     # =========================================================================
@@ -78,6 +87,40 @@ def main(argv: Optional[List[str]] = None) -> int:
         return EXIT_ERROR
 
 
+def _show_guardian(command: str, args: List[str]) -> Optional[int]:
+    """
+    Show guardian/position details if command is a guardian name.
+
+    Returns None if not a guardian name (let execute handle it).
+    """
+    try:
+        from vibe_core.mahamantra.cli.map import guardian_command
+        result = guardian_command(command, args)
+        if result is not None:
+            print(result)
+            return EXIT_SUCCESS
+        return None  # Not a guardian name
+    except ImportError:
+        return None
+
+
+def _show_map(args: List[str]) -> int:
+    """
+    Show system map - SATTVA (observation).
+
+    Usage:
+        steward map           → Overview
+        steward map --verbose → With details
+    """
+    try:
+        from vibe_core.mahamantra.cli.map import map_command
+        print(map_command(args))
+        return EXIT_SUCCESS
+    except ImportError as e:
+        print(f"ERROR: Map not available ({e})")
+        return EXIT_ERROR
+
+
 def _show_help() -> int:
     """Show help - the mahamantra reveals itself."""
     print("""
@@ -96,6 +139,10 @@ THE 16 POSITIONS:
     DHARMA  (4-7):  vyasa, kumaras, kapila, manu
     KARMA   (8-11): parashurama, prahlada, janaka, bhishma
     MOKSHA (12-15): nrisimha, bali, shuka, yamaraja
+
+VISIBILITY:
+    steward map       → System map (all positions, commands, files)
+    steward map -v    → Verbose map with command details
 
 COMMON COMMANDS:
     steward status    → System status
