@@ -148,6 +148,30 @@ class SystemContext(BaseModel):
     model_config = ConfigDict(frozen=False)  # Allow updates during boot
 
 
+class Intent(BaseModel):
+    """
+    What the operator WANTS - a decision/action request.
+
+    This is the structured intent passed from operator to kernel.
+    """
+
+    # Core Intent
+    intent_type: IntentType = IntentType.COMMAND
+    raw_input: str = ""
+
+    # Routing
+    target_agent: Optional[str] = None
+    target_tool: Optional[str] = None
+
+    # Metadata
+    source_operator: OperatorType = OperatorType.HUMAN
+    priority: PriorityLevel = PriorityLevel.NORMAL
+    intent_id: str = Field(default_factory=lambda: str(uuid4()))
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    model_config = ConfigDict(frozen=True)
+
+
 class OperatorResponse(BaseModel):
     """
     Response back to the operator after processing intent.
@@ -302,10 +326,12 @@ __all__ = [
     "GitState",
     "TaskState",
     "SystemContext",
+    "Intent",
     "OperatorResponse",
     # Protocol
     "OperatorSocket",
     # Factories
     "create_system_context",
+    "create_intent",
     "create_response",
 ]

@@ -134,12 +134,13 @@ _VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
         MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12
     ),
 
-    # --- QUARTER 4: MOKSHA (Workers only) ---
+    # --- QUARTER 4: MOKSHA (R R H H) - Vyuha 1:1 mapping ---
+    # HEAD: Nrisimha → YIELD_CPU (not in this table)
     MantraOpCode.IO_FLUSH: MahajanaRoute(
         MantraOpCode.IO_FLUSH, Mahajana.BALI, quarter=4, position=14
     ),
-    MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.SHUKA, quarter=4, position=15
+    MantraOpCode.LOG_EMIT: MahajanaRoute(
+        MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15
     ),
     MantraOpCode.AUDIT_SEAL: MahajanaRoute(
         MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16
@@ -223,16 +224,16 @@ _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
 
     # --- QUARTER 4: MOKSHA (R R H H) ---
     MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.SHUKA, quarter=4, position=13
+        MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=13
     ),
     MantraOpCode.IO_FLUSH: MahajanaRoute(
         MantraOpCode.IO_FLUSH, Mahajana.KAPILA, quarter=4, position=14
     ),
-    MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=15
+    MantraOpCode.LOG_EMIT: MahajanaRoute(
+        MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15
     ),
     MantraOpCode.AUDIT_SEAL: MahajanaRoute(
-        MantraOpCode.AUDIT_SEAL, Mahajana.KUMARAS, quarter=4, position=16
+        MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16
     ),
 }
 

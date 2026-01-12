@@ -386,7 +386,7 @@ CYCLE_MOKSHA: Final[CycleDefinition] = CycleDefinition(
     worker_1_opcode=MantraOpCode.IO_FLUSH,
     # Worker 2: Shuka (Vision)
     worker_2=Mahajana.SHUKA,
-    worker_2_opcode=MantraOpCode.YIELD_CPU,
+    worker_2_opcode=MantraOpCode.LOG_EMIT,
     # Worker 3: Yamaraja (Judgment)
     worker_3=Mahajana.YAMARAJA,
     worker_3_opcode=MantraOpCode.AUDIT_SEAL,
