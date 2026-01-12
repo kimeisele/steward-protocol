@@ -106,6 +106,37 @@ from vibe_core.mahamantra.substrate.byte import (
 )
 
 # =============================================================================
+# WIRING - Folder IS Wiring Protocol
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.wiring import (
+    # Constants
+    FOLDER_IS_WIRING,
+    NO_FOLDER_NO_EXISTENCE,
+    POSITIONS_PER_QUARTER,
+    QUARTER_COUNT,
+    FRACTAL_BASE,
+    # Mapping
+    PositionMapping,
+    POSITION_MAPPINGS,
+    POSITION_BY_FOLDER,
+    POSITION_BY_NAME,
+    POSITION_BY_INDEX,
+    # Functions
+    folder_exists,
+    get_position_from_folder,
+    get_position_from_name,
+    get_position_by_index,
+    # Protocol
+    WiringProtocol,
+    WiringVerification,
+    verify_wiring,
+    # Fractal
+    calculate_fractal_depth,
+    calculate_total_nodes,
+)
+
+# =============================================================================
 # PARAMPARA - Single Source of Truth
 # =============================================================================
 
@@ -183,4 +214,24 @@ __all__ = [
     "get_guru",
     "get_mahajana_at_position",
     "get_37_formula",
+    # === WIRING ===
+    "FOLDER_IS_WIRING",
+    "NO_FOLDER_NO_EXISTENCE",
+    "POSITIONS_PER_QUARTER",
+    "QUARTER_COUNT",
+    "FRACTAL_BASE",
+    "PositionMapping",
+    "POSITION_MAPPINGS",
+    "POSITION_BY_FOLDER",
+    "POSITION_BY_NAME",
+    "POSITION_BY_INDEX",
+    "folder_exists",
+    "get_position_from_folder",
+    "get_position_from_name",
+    "get_position_by_index",
+    "WiringProtocol",
+    "WiringVerification",
+    "verify_wiring",
+    "calculate_fractal_depth",
+    "calculate_total_nodes",
 ]
