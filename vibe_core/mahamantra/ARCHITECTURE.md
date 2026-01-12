@@ -2,6 +2,37 @@
 
 **"acintya-bhedabheda-tattva"** - Inconceivable Simultaneous Oneness and Difference
 
+## DIRECTORY STRUCTURE (IMPLEMENTED)
+
+```
+vibe_core/mahamantra/
+│
+├── __init__.py              # ONE IMPORT - exports everything
+│
+├── substrate/               # Level -2 bis -1: Foundation
+│   ├── __init__.py          # Exports all substrate types
+│   ├── mahajana.py          # Mahajana, Avatara, Quarter, Sampradaya
+│   ├── tattva.py            # Purushottama (Krishna as PERSON)
+│   ├── acintya.py           # Level -2: The Inconceivable
+│   ├── byte.py              # Level -1: Ternary substrate
+│   └── parampara.py         # The 37: Single Source of Truth
+│
+├── genesis/                 # Quarter 0: Positions 0-3 (Brahma Sampradaya)
+│   └── __init__.py          # "Hare Krishna Hare Krishna"
+│
+├── dharma/                  # Quarter 1: Positions 4-7 (Kumara Sampradaya)
+│   └── __init__.py          # "Krishna Krishna Hare Hare"
+│
+├── karma/                   # Quarter 2: Positions 8-11 (Sri Sampradaya)
+│   └── __init__.py          # "Hare Rama Hare Rama"
+│
+├── moksha/                  # Quarter 3: Positions 12-15 (Rudra Sampradaya)
+│   └── __init__.py          # "Rama Rama Hare Hare"
+│
+└── reactor/                 # Level +2: Service Layer
+    └── __init__.py          # Graph, Routing, Bus
+```
+
 ## THE SOURCE PRINCIPLE
 
 ```
