@@ -34,14 +34,32 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
+from types import ModuleType
 from typing import (
-    Any,
+    Callable,
     Dict,
     Iterator,
+    List,
     Optional,
     Tuple,
     TYPE_CHECKING,
+    TypedDict,
+    Union,
 )
+
+
+# =============================================================================
+# WATERTIGHT TYPES - No Any allowed
+# =============================================================================
+
+class TickState(TypedDict):
+    """Return type for tick() - WATERTIGHT."""
+    tick: int
+    position: int
+    quarter: str
+    guardian: str
+    word: str
+    opcode: Optional[int]
 
 # =============================================================================
 # THE LOTUS PATH
@@ -175,11 +193,11 @@ class LotusNode:
         except ImportError:
             return None
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: object, **kwargs: object) -> object:
         """Allow calling if the node has a __call__ method."""
         module = self._get_module()
         if module is not None and hasattr(module, "__call__"):
-            return module(*args, **kwargs)
+            return module(*args, **kwargs)  # type: ignore[operator]
         raise TypeError(f"'{self._path.folder_path}' is not callable")
 
     def __repr__(self) -> str:
@@ -290,12 +308,12 @@ class MahamantraLotus(LotusNode):
             MahamantraLotus._singularity = core
         return MahamantraLotus._singularity
 
-    def tick(self) -> Dict[str, Any]:
+    def tick(self) -> TickState:
         """
         Der Herzschlag - Advance through the 16 positions.
 
         Input: tick()
-        Output: {tick, position, quarter, guardian, word, opcode}
+        Output: TickState {tick, position, quarter, guardian, word, opcode}
 
         The loop IS the mantra. ONE MANTRA.
         """
