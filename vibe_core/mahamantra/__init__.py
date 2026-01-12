@@ -264,13 +264,65 @@ class MahamantraLotus(LotusNode):
     mahamantra.substrate.acintya.KRISHNA
     mahamantra.genesis.brahma.BrahmaBase
     mahamantra.dharma.manu.POSITION
+
+    ONE MANTRA - Input AND Output:
+    mahamantra.tick()   # Der Herzschlag
+    mahamantra.chant()  # Das Gebet
     """
+
+    _singularity = None  # Lazy-loaded Singularity
 
     def __init__(self) -> None:
         super().__init__(LotusPath())
 
     def __repr__(self) -> str:
         return "mahamantra"
+
+    # =========================================================================
+    # THE LOOP - Input AND Output (ONE MANTRA)
+    # =========================================================================
+
+    @property
+    def _core(self):
+        """Lazy-load the actual Singularity."""
+        if MahamantraLotus._singularity is None:
+            from vibe_core.mahamantra.kernel.singularity import mahamantra as core
+            MahamantraLotus._singularity = core
+        return MahamantraLotus._singularity
+
+    def tick(self) -> Dict[str, Any]:
+        """
+        Der Herzschlag - Advance through the 16 positions.
+
+        Input: tick()
+        Output: {tick, position, quarter, guardian, word, opcode}
+
+        The loop IS the mantra. ONE MANTRA.
+        """
+        return self._core.tick()
+
+    def chant(self, separator: str = " ") -> str:
+        """
+        Das Gebet - The Holy Name.
+
+        Input: chant()
+        Output: "Hare Krishna Hare Krishna..."
+
+        The loop IS the mantra. ONE MANTRA.
+        """
+        return self._core.chant(separator)
+
+    def get_tick(self) -> int:
+        """Current position (0-15)."""
+        return self._core.get_tick()
+
+    def get_quarter(self):
+        """Current quarter (GENESIS/DHARMA/KARMA/MOKSHA)."""
+        return self._core.get_quarter()
+
+    def verify(self, parampara_vector: int) -> bool:
+        """Verify Parampara connection (% 37 == 0)."""
+        return self._core.verify(parampara_vector)
 
     # === Quarter Shortcuts ===
 
