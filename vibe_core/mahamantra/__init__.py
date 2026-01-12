@@ -317,51 +317,47 @@ class MahamantraLotus(LotusNode):
 mahamantra = MahamantraLotus()
 
 # =============================================================================
-# BACKWARD COMPATIBILITY - Common Exports
+# BACKWARD COMPATIBILITY - All from SSOT (substrate/)
 # =============================================================================
-# These will be gradually phased out. Use mahamantra.* instead.
+# Diese Exports kommen alle aus substrate/ - der SSOT.
+# Kein legacy code mehr. Alles konsolidiert.
 
-# From substrate
 try:
     from vibe_core.mahamantra.substrate import (
-        # Mahajana
+        # === MAHAJANA ===
         Mahajana,
         Avatara,
         Quarter,
         Sampradaya,
-        # Acintya
+        # === ACINTYA ===
         KRISHNA,
         PURUSHA,
         PARAMPARA,
         ProtocolLevel,
         verify_parampara,
-        # Wiring
+        # === WIRING ===
         FOLDER_IS_WIRING,
         verify_wiring,
-    )
-except ImportError:
-    pass  # Substrate not fully initialized yet
-
-# From _source (legacy)
-try:
-    from vibe_core.mahamantra._source import (
+        # === OPCODE (SSOT) ===
         MantraOpCode,
+        OPCODE_NAMES,
+        get_opcode,
+        get_opcode_name,
+        # === POSITION (SSOT) ===
+        Guardian,
         MantraPosition,
-        get_position,
-    )
-except ImportError:
-    pass
-
-# From _protocol (legacy)
-try:
-    from vibe_core.mahamantra._protocol import (
+        MAHAMANTRA_POSITIONS,
+        get_position_by_index,
+        get_position_by_guardian,
+        # === PROTOCOL (SSOT) ===
         MantraProtocol,
         WorkerProtocol,
         HeadProtocol,
+        MantraAware,
         ProtocolRegistry,
     )
 except ImportError:
-    pass
+    pass  # Substrate not fully initialized yet
 
 # =============================================================================
 # NO __all__ - THE LOTUS IS THE EXPORT MECHANISM
