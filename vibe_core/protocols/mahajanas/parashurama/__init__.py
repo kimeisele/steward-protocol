@@ -254,6 +254,12 @@ class NullParashurama(ParashuramaProtocolBase):
 # EXPORTS
 # =============================================================================
 
+# =============================================================================
+# PARASHURAMA SERVICE - The Real Implementation (wraps legacy semantic_syscalls.py)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.parashurama.service import ParashuramaService
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "ParashuramaProtocolBase",
@@ -267,4 +273,6 @@ __all__ = [
     "ParashuramaProtocol",
     # Implementations
     "NullParashurama",
+    # Service (Real Implementation)
+    "ParashuramaService",
 ]
