@@ -55,6 +55,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         return guardian_result
 
     # =========================================================================
+    # DISCOVERY - Populate the Registry (Balarama Injection)
+    # =========================================================================
+    try:
+        from vibe_core.cli.naga_commands import discover_commands
+        discover_commands()
+    except ImportError:
+        pass
+
+    # =========================================================================
     # THE MAHAMANTRA EXECUTES - One method does everything
     # =========================================================================
     try:
