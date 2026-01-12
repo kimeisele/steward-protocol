@@ -68,6 +68,17 @@ class RouteResult(TypedDict):
     guardian: str
     quarter: str
 
+
+class ExecuteResult(TypedDict):
+    """Return type for execute() - WATERTIGHT."""
+    success: bool
+    exit_code: int
+    position: int
+    guardian: str
+    quarter: str
+    output: str
+    error: Optional[str]
+
 # =============================================================================
 # THE LOTUS PATH
 # =============================================================================
@@ -552,6 +563,104 @@ class MahamantraLotus(LotusNode):
         quarter = pos_data.quarter.name if hasattr(pos_data.quarter, 'name') else str(pos_data.quarter)
 
         return RouteResult(position=position, guardian=guardian, quarter=quarter)
+
+    def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
+        """
+        Execute a command through the mahamantra.
+
+        THE SIMPLEST INTERFACE:
+            result = mahamantra.execute("status")
+
+        This does EVERYTHING:
+            1. Route command to position/guardian
+            2. Try protocol execution (auto-discovered)
+            3. Fallback to legacy if needed
+            4. Return structured result
+
+        No manual wiring. No complexity. Just execute.
+
+        Args:
+            command: The command to execute
+            args: Optional arguments
+
+        Returns:
+            ExecuteResult with success, exit_code, output, etc.
+        """
+        args = args or []
+
+        # 1. ROUTE - Get position and guardian
+        route = self.route(command)
+        position = route["position"]
+        guardian = route["guardian"]
+        quarter = route["quarter"]
+
+        # 2. TRY PROTOCOL EXECUTION (cli_auto)
+        try:
+            from vibe_core.mahamantra.cli.auto import cli_auto
+            cli_result = cli_auto.execute(command, args)
+
+            if cli_result.success or cli_result.exit_code != 3:  # Not UNKNOWN_COMMAND
+                return ExecuteResult(
+                    success=cli_result.success,
+                    exit_code=cli_result.exit_code,
+                    position=position,
+                    guardian=guardian,
+                    quarter=quarter,
+                    output=str(cli_result.output.to_dict()) if cli_result.output else "",
+                    error=cli_result.error.message if cli_result.error else None,
+                )
+        except ImportError:
+            pass  # Protocol layer not available
+        except Exception:
+            pass  # Protocol error - try legacy
+
+        # 3. FALLBACK TO LEGACY
+        try:
+            from vibe_core.cli.unified_cli import UnifiedCLI
+            import io
+            import sys
+
+            # Capture output
+            old_stdout = sys.stdout
+            sys.stdout = captured = io.StringIO()
+
+            try:
+                cli = UnifiedCLI()
+                exit_code = cli.run([command] + args)
+                output = captured.getvalue()
+
+                return ExecuteResult(
+                    success=exit_code == 0,
+                    exit_code=exit_code,
+                    position=position,
+                    guardian=guardian,
+                    quarter=quarter,
+                    output=output,
+                    error=None if exit_code == 0 else f"Exit code {exit_code}",
+                )
+            finally:
+                sys.stdout = old_stdout
+
+        except ImportError:
+            return ExecuteResult(
+                success=False,
+                exit_code=1,
+                position=position,
+                guardian=guardian,
+                quarter=quarter,
+                output="",
+                error="CLI system not available",
+            )
+        except Exception as e:
+            return ExecuteResult(
+                success=False,
+                exit_code=1,
+                position=position,
+                guardian=guardian,
+                quarter=quarter,
+                output="",
+                error=str(e),
+            )
 
     def __getattr__(self, name: str) -> LotusNode:
         """
