@@ -249,7 +249,8 @@ class NullPrithu(PrithuProtocolBase):
 # PRITHU SERVICE - The Real Implementation (wraps legacy boot_orchestrator.py)
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.prithu.service import PrithuService
+# LAZY IMPORT to avoid circular dependency with boot_mode migration
+# PrithuService is loaded on first access via __getattr__
 
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
@@ -266,3 +267,11 @@ __all__ = [
     # Service (Real Implementation)
     "PrithuService",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for PrithuService to avoid circular import."""
+    if name == "PrithuService":
+        from vibe_core.protocols.mahajanas.prithu.service import PrithuService
+        return PrithuService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
