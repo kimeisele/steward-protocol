@@ -153,6 +153,68 @@ from vibe_core.mahamantra.substrate.parampara import (
 )
 
 # =============================================================================
+# OPCODE - Die 16 OpCodes (SSOT)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.opcode import (
+    # The OpCode enum
+    MantraOpCode,
+    # Lookup tables
+    OPCODE_NAMES,
+    MAHAJANA_OPCODES,
+    # Quarter groupings
+    GENESIS_OPCODES,
+    DHARMA_OPCODES,
+    KARMA_OPCODES,
+    MOKSHA_OPCODES,
+    QUARTER_OPCODES,
+    # Functions
+    get_opcode,
+    get_opcode_name,
+    get_mahajana_opcode,
+    get_opcode_quarter,
+    get_quarter_opcodes,
+    # Parampara
+    OPCODE_PARAMPARA,
+    get_opcode_parampara,
+    verify_opcode_parampara,
+)
+
+# =============================================================================
+# POSITION - Die 16 MantraPositionen (SSOT)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.position import (
+    # Types
+    Guardian,
+    # Position
+    MantraPosition,
+    MAHAMANTRA_POSITIONS,
+    # Functions
+    get_position as get_position_by_index,  # Takes int 0-15
+    get_position_by_guardian,
+    get_position_by_opcode,
+    get_positions_by_quarter,
+    get_head_position,
+    get_worker_positions,
+)
+
+# =============================================================================
+# PROTOCOL - MantraProtocol Basisklassen (SSOT)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.protocol import (
+    # Base Classes
+    MantraProtocol,
+    WorkerProtocol,
+    HeadProtocol,
+    # Interface
+    MantraAware,
+    # Registry
+    ProtocolRegistry,
+)
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -234,4 +296,37 @@ __all__ = [
     "verify_wiring",
     "calculate_fractal_depth",
     "calculate_total_nodes",
+    # === OPCODE (SSOT) ===
+    "MantraOpCode",
+    "OPCODE_NAMES",
+    "MAHAJANA_OPCODES",
+    "GENESIS_OPCODES",
+    "DHARMA_OPCODES",
+    "KARMA_OPCODES",
+    "MOKSHA_OPCODES",
+    "QUARTER_OPCODES",
+    "get_opcode",
+    "get_opcode_name",
+    "get_mahajana_opcode",
+    "get_opcode_quarter",
+    "get_quarter_opcodes",
+    "OPCODE_PARAMPARA",
+    "get_opcode_parampara",
+    "verify_opcode_parampara",
+    # === POSITION (SSOT) ===
+    "Guardian",
+    "MantraPosition",
+    "MAHAMANTRA_POSITIONS",
+    "get_position_by_index",  # Takes int 0-15
+    "get_position_by_guardian",
+    "get_position_by_opcode",
+    "get_positions_by_quarter",
+    "get_head_position",
+    "get_worker_positions",
+    # === PROTOCOL (SSOT) ===
+    "MantraProtocol",
+    "WorkerProtocol",
+    "HeadProtocol",
+    "MantraAware",
+    "ProtocolRegistry",
 ]
