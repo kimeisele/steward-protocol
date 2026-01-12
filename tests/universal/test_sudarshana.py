@@ -29,7 +29,7 @@ class LivingServiceAdapter:
         return self.legacy.read_file(path)
 
 class MultiArgService:
-    @mantra_governed(MantraOpCode.ASSERT_TRUTH)
+    @mantra_governed(MantraOpCode.COMPILE_AST)
     def sync(self, path: str, context: SovereignContext):
         return True
 

@@ -122,7 +122,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.KRISHNA,
         quarter=Quarter.GENESIS,
         is_head=False,
-        opcode=MantraOpCode.INIT_THREAD,
+        opcode=MantraOpCode.INIT_THREAD,  # Fixed: BIND_CTX -> INIT_THREAD
         guardian=Mahajana.SHAMBHU,
     ),
     # === DHARMA Quarter (4-7) ===
@@ -131,7 +131,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.KRISHNA,
         quarter=Quarter.DHARMA,
         is_head=True,
-        opcode=MantraOpCode.COMPILE_AST,
+        opcode=MantraOpCode.COMPILE_AST,  # Fixed: ASSERT_TRUTH -> COMPILE_AST
         guardian=Avatara.VYASA,
     ),
     MantraPosition(
@@ -139,7 +139,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.KRISHNA,
         quarter=Quarter.DHARMA,
         is_head=False,
-        opcode=MantraOpCode.BIND_SYMBOL,
+        opcode=MantraOpCode.BIND_SYMBOL,  # Fixed: RESOLVE_REQ -> BIND_SYMBOL
         guardian=Mahajana.KUMARAS,
     ),
     MantraPosition(
@@ -147,7 +147,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.DHARMA,
         is_head=False,
-        opcode=MantraOpCode.TYPE_CHECK,
+        opcode=MantraOpCode.TYPE_CHECK,  # Fixed: GARBAGE_COLLECT -> TYPE_CHECK
         guardian=Mahajana.KAPILA,
     ),
     MantraPosition(
@@ -155,7 +155,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.DHARMA,
         is_head=False,
-        opcode=MantraOpCode.DHARMA_TEST,
+        opcode=MantraOpCode.DHARMA_TEST,  # Fixed: PULSE_SYNC -> DHARMA_TEST
         guardian=Mahajana.MANU,
     ),
     # === KARMA Quarter (8-11) ===
@@ -164,7 +164,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.KARMA,
         is_head=True,
-        opcode=MantraOpCode.EXEC_OP,
+        opcode=MantraOpCode.EXEC_OP,  # Fixed: FETCH_RES -> EXEC_OP
         guardian=Avatara.PARASHURAMA,
     ),
     MantraPosition(
@@ -172,7 +172,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.RAMA,
         quarter=Quarter.KARMA,
         is_head=False,
-        opcode=MantraOpCode.EXTEND_CAP,
+        opcode=MantraOpCode.EXTEND_CAP,  # Fixed: EXEC_SERVICE -> EXTEND_CAP
         guardian=Mahajana.PRAHLADA,
     ),
     MantraPosition(
@@ -180,7 +180,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.KARMA,
         is_head=False,
-        opcode=MantraOpCode.STATE_SYNC,
+        opcode=MantraOpCode.STATE_SYNC,  # Fixed: CHECK_DHARMA -> STATE_SYNC
         guardian=Mahajana.JANAKA,
     ),
     MantraPosition(
@@ -188,7 +188,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.RAMA,
         quarter=Quarter.KARMA,
         is_head=False,
-        opcode=MantraOpCode.LEDGER_SIGN,
+        opcode=MantraOpCode.LEDGER_SIGN,  # Fixed: COMMIT_LOG -> LEDGER_SIGN
         guardian=Mahajana.BHISHMA,
     ),
     # === MOKSHA Quarter (12-15) ===
@@ -197,7 +197,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.RAMA,
         quarter=Quarter.MOKSHA,
         is_head=True,
-        opcode=MantraOpCode.YIELD_CPU,
+        opcode=MantraOpCode.YIELD_CPU,  # Fixed: CACHE_STATE -> YIELD_CPU
         guardian=Avatara.NRISIMHA,
     ),
     MantraPosition(
@@ -205,7 +205,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.RAMA,
         quarter=Quarter.MOKSHA,
         is_head=False,
-        opcode=MantraOpCode.IO_FLUSH,
+        opcode=MantraOpCode.IO_FLUSH,  # Fixed: OPTIMIZE -> IO_FLUSH
         guardian=Mahajana.BALI,
     ),
     MantraPosition(
@@ -213,7 +213,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.MOKSHA,
         is_head=False,
-        opcode=MantraOpCode.LOG_EMIT,
+        opcode=MantraOpCode.LOG_EMIT,  # Fixed: YIELD_CPU -> LOG_EMIT
         guardian=Mahajana.SHUKA,
     ),
     MantraPosition(
@@ -221,7 +221,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         word=HolyName.HARE,
         quarter=Quarter.MOKSHA,
         is_head=False,
-        opcode=MantraOpCode.AUDIT_SEAL,
+        opcode=MantraOpCode.AUDIT_SEAL,  # Fixed: RESET_IP -> AUDIT_SEAL
         guardian=Mahajana.YAMARAJA,
     ),
 )

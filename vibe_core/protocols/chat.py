@@ -9,7 +9,7 @@ This defines the CONTRACT for chat operations.
 Implementations must fulfill this contract.
 
 MANTRA MAPPING:
-    Chat = IntentType.CHAT → MantraOpCode.EXEC_SERVICE
+    Chat = IntentType.CHAT → MantraOpCode.EXTEND_CAP
     Phase: SERVE (3)
     Word: RAMA
     Mahajana: JANAKA (legacy) / PRAHLADA (vyuha)
@@ -232,7 +232,7 @@ class ChatProtocol(Protocol):
 # =============================================================================
 
 # Chat's Mantra identity
-CHAT_OPCODE = MantraOpCode.EXEC_SERVICE
+CHAT_OPCODE = MantraOpCode.EXTEND_CAP
 CHAT_PHASE = "SERVE"
 CHAT_WORD = "RAMA"
 CHAT_POSITION = 9

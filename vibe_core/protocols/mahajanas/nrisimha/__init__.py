@@ -67,7 +67,7 @@ class NrisimhaProtocolBase(HeadProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Avatara.NRISIMHA
-        opcode()    -> MantraOpCode.CACHE_STATE
+        opcode()    -> MantraOpCode.YIELD_CPU
         quarter()   -> Quarter.MOKSHA
         is_head()   -> True (HEAD position)
         parampara_vector() -> 481 (% 37 == 0)

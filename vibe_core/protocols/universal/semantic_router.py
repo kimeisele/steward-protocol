@@ -79,7 +79,7 @@ class SemanticRouteResult:
     original_message: Optional[str] = None
 
     # Bridge layer
-    opcode: MantraOpCode = MantraOpCode.EXEC_SERVICE
+    opcode: MantraOpCode = MantraOpCode.EXTEND_CAP
     bridge_confidence: float = 0.0
     bridge_source: str = "unknown"
 
@@ -228,9 +228,9 @@ class SemanticRouter:
 
         head_to_mahajana = {
             MantraOpCode.SYS_WAKE: Mahajana.BRAHMA,
-            MantraOpCode.ASSERT_TRUTH: Mahajana.YAMARAJA,
-            MantraOpCode.FETCH_RES: Mahajana.PRAHLADA,
-            MantraOpCode.CACHE_STATE: Mahajana.SHUKA,
+            MantraOpCode.COMPILE_AST: Mahajana.YAMARAJA,
+            MantraOpCode.EXEC_OP: Mahajana.PRAHLADA,
+            MantraOpCode.YIELD_CPU: Mahajana.SHUKA,
         }
         return head_to_mahajana.get(opcode, Mahajana.PRAHLADA)
 

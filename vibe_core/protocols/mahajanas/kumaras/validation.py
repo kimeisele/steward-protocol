@@ -57,7 +57,7 @@ LOTUS_POSITION: Final[int] = 5
 LOTUS_QUARTER: Final[str] = "dharma"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESOLVE_REQ,
+    MantraOpCode.BIND_SYMBOL,
 ]
 
 

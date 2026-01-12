@@ -280,7 +280,7 @@ class NullIntelBridge:
 
     @property
     def opcode(self) -> MantraOpCode:
-        return MantraOpCode.FETCH_RES
+        return MantraOpCode.EXEC_OP
 
     @property
     def mahajana(self) -> str:
@@ -343,7 +343,7 @@ class NullIntelBridge:
 # =============================================================================
 
 # Intel bridge maps to FETCH_RES
-INTEL_OPCODE = MantraOpCode.FETCH_RES
+INTEL_OPCODE = MantraOpCode.EXEC_OP
 INTEL_PHASE = "SERVE"
 INTEL_WORD = "HARE"
 INTEL_POSITION = 8

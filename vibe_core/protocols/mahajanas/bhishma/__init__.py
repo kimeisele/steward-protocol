@@ -52,7 +52,7 @@ class BhishmaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  → Mahajana.BHISHMA
-        opcode()    → MantraOpCode.COMMIT_LOG
+        opcode()    → MantraOpCode.LEDGER_SIGN
         quarter()   → Quarter.KARMA
         is_head()   → False (Worker position)
         parampara_vector() → 444 (% 37 == 0)

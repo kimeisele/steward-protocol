@@ -37,7 +37,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.COMMIT_LOG,
+    opcode=MantraOpCode.LEDGER_SIGN,
     name="commit",
     help_text="Commit status and log (BHISHMA's oath - SERVE phase)")
 class CommitCommand(NagaCommandBase):

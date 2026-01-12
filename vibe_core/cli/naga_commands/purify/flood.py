@@ -36,7 +36,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.PULSE_SYNC,
+    opcode=MantraOpCode.DHARMA_TEST,
     name="flood",
     help_text="FloodManager status and pulse sync (MANU's law - PURIFY phase)")
 class FloodCommand(NagaCommandBase):

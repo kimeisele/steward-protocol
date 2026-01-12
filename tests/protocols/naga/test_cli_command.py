@@ -182,50 +182,50 @@ class TestOpcodeToMahajana:
 
     def test_bind_ctx_to_shambhu(self):
         """BIND_CTX → SHAMBHU."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.BIND_CTX] == Mahajana.SHAMBHU
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.INIT_THREAD] == Mahajana.SHAMBHU
 
     # PURIFY Phase
     def test_assert_truth_to_vyasa(self):
         """ASSERT_TRUTH → VYASA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.ASSERT_TRUTH] == Mahajana.VYASA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.COMPILE_AST] == Mahajana.VYASA
 
     def test_resolve_req_to_kumaras(self):
         """RESOLVE_REQ → KUMARAS."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.RESOLVE_REQ] == Mahajana.KUMARAS
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.BIND_SYMBOL] == Mahajana.KUMARAS
 
     def test_garbage_collect_to_kapila(self):
         """GARBAGE_COLLECT → KAPILA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.GARBAGE_COLLECT] == Mahajana.KAPILA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.TYPE_CHECK] == Mahajana.KAPILA
 
     def test_pulse_sync_to_manu(self):
         """PULSE_SYNC → MANU."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.PULSE_SYNC] == Mahajana.MANU
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.DHARMA_TEST] == Mahajana.MANU
 
     # SERVE Phase
     def test_fetch_res_to_parashurama(self):
         """FETCH_RES → PARASHURAMA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.FETCH_RES] == Mahajana.PARASHURAMA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.EXEC_OP] == Mahajana.PARASHURAMA
 
     def test_exec_service_to_prahlada(self):
         """EXEC_SERVICE → PRAHLADA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.EXEC_SERVICE] == Mahajana.PRAHLADA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.EXTEND_CAP] == Mahajana.PRAHLADA
 
     def test_check_dharma_to_janaka(self):
         """CHECK_DHARMA → JANAKA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.CHECK_DHARMA] == Mahajana.JANAKA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.STATE_SYNC] == Mahajana.JANAKA
 
     def test_commit_log_to_bhishma(self):
         """COMMIT_LOG → BHISHMA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.COMMIT_LOG] == Mahajana.BHISHMA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.LEDGER_SIGN] == Mahajana.BHISHMA
 
     # SUSTAIN Phase
     def test_cache_state_to_nrisimha(self):
         """CACHE_STATE → NRISIMHA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.CACHE_STATE] == Mahajana.NRISIMHA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.YIELD_CPU] == Mahajana.NRISIMHA
 
     def test_optimize_to_bali(self):
         """OPTIMIZE → BALI."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.OPTIMIZE] == Mahajana.BALI
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.IO_FLUSH] == Mahajana.BALI
 
     def test_yield_cpu_to_shuka(self):
         """YIELD_CPU → SHUKA."""
@@ -233,7 +233,7 @@ class TestOpcodeToMahajana:
 
     def test_reset_ip_to_yamaraja(self):
         """RESET_IP → YAMARAJA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.RESET_IP] == Mahajana.YAMARAJA
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.AUDIT_SEAL] == Mahajana.YAMARAJA
 
 
 # =============================================================================
@@ -253,7 +253,7 @@ class TestOpcodeToPhase:
             MantraOpCode.SYS_WAKE,
             MantraOpCode.LOAD_ROOT,
             MantraOpCode.ALLOC_MEM,
-            MantraOpCode.BIND_CTX,
+            MantraOpCode.INIT_THREAD,
         ]
         for opcode in wake_opcodes:
             assert OPCODE_TO_PHASE[opcode] == Phase.WAKE
@@ -261,10 +261,10 @@ class TestOpcodeToPhase:
     def test_purify_phase_opcodes(self):
         """Purify phase contains opcodes 4-7."""
         purify_opcodes = [
-            MantraOpCode.ASSERT_TRUTH,
-            MantraOpCode.RESOLVE_REQ,
-            MantraOpCode.GARBAGE_COLLECT,
-            MantraOpCode.PULSE_SYNC,
+            MantraOpCode.COMPILE_AST,
+            MantraOpCode.BIND_SYMBOL,
+            MantraOpCode.TYPE_CHECK,
+            MantraOpCode.DHARMA_TEST,
         ]
         for opcode in purify_opcodes:
             assert OPCODE_TO_PHASE[opcode] == Phase.PURIFY
@@ -272,10 +272,10 @@ class TestOpcodeToPhase:
     def test_serve_phase_opcodes(self):
         """Serve phase contains opcodes 8-11."""
         serve_opcodes = [
-            MantraOpCode.FETCH_RES,
-            MantraOpCode.EXEC_SERVICE,
-            MantraOpCode.CHECK_DHARMA,
-            MantraOpCode.COMMIT_LOG,
+            MantraOpCode.EXEC_OP,
+            MantraOpCode.EXTEND_CAP,
+            MantraOpCode.STATE_SYNC,
+            MantraOpCode.LEDGER_SIGN,
         ]
         for opcode in serve_opcodes:
             assert OPCODE_TO_PHASE[opcode] == Phase.SERVE
@@ -283,10 +283,10 @@ class TestOpcodeToPhase:
     def test_sustain_phase_opcodes(self):
         """Sustain phase contains opcodes 12-15."""
         sustain_opcodes = [
-            MantraOpCode.CACHE_STATE,
-            MantraOpCode.OPTIMIZE,
             MantraOpCode.YIELD_CPU,
-            MantraOpCode.RESET_IP,
+            MantraOpCode.IO_FLUSH,
+            MantraOpCode.YIELD_CPU,
+            MantraOpCode.AUDIT_SEAL,
         ]
         for opcode in sustain_opcodes:
             assert OPCODE_TO_PHASE[opcode] == Phase.SUSTAIN
@@ -305,7 +305,7 @@ class TestNagaCommandResult:
             success=True,
             exit_code=0,
             output="Hello",
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             mahajana=Mahajana.PRAHLADA,
         )
         with pytest.raises(Exception):
@@ -329,7 +329,7 @@ class TestNagaCommandResult:
             success=False,
             exit_code=1,
             error="Failed",
-            opcode=MantraOpCode.RESET_IP,
+            opcode=MantraOpCode.AUDIT_SEAL,
             mahajana=Mahajana.YAMARAJA,
         )
         assert not result.success
@@ -340,7 +340,7 @@ class TestNagaCommandResult:
         result = NagaCommandResult(
             success=True,
             exit_code=0,
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             mahajana=Mahajana.PRAHLADA,
             data=(("key1", "value1"), ("key2", "value2")),
         )
@@ -351,7 +351,7 @@ class TestNagaCommandResult:
         result = NagaCommandResult(
             success=True,
             exit_code=0,
-            opcode=MantraOpCode.EXEC_SERVICE,
+            opcode=MantraOpCode.EXTEND_CAP,
             mahajana=Mahajana.PRAHLADA,
             data=(("key1", "value1"), ("key2", "value2")),
         )
@@ -429,25 +429,25 @@ class TestNagaCommandBase:
     def test_phase_derived_from_opcode(self):
         """Phase is derived from opcode."""
         cmd = NagaCommandBase()
-        cmd._opcode = MantraOpCode.EXEC_SERVICE
+        cmd._opcode = MantraOpCode.EXTEND_CAP
         assert cmd.phase == Phase.SERVE
 
     def test_success_helper(self):
         """success() creates success result."""
         cmd = NagaCommandBase()
-        cmd._opcode = MantraOpCode.EXEC_SERVICE
+        cmd._opcode = MantraOpCode.EXTEND_CAP
         cmd._mahajana = Mahajana.PRAHLADA
         result = cmd.success("Done!")
         assert result.success
         assert result.exit_code == 0
         assert result.output == "Done!"
-        assert result.opcode == MantraOpCode.EXEC_SERVICE
+        assert result.opcode == MantraOpCode.EXTEND_CAP
         assert result.mahajana == Mahajana.PRAHLADA
 
     def test_failure_helper(self):
         """failure() creates failure result."""
         cmd = NagaCommandBase()
-        cmd._opcode = MantraOpCode.RESET_IP
+        cmd._opcode = MantraOpCode.AUDIT_SEAL
         cmd._mahajana = Mahajana.YAMARAJA
         result = cmd.failure("Error!")
         assert not result.success
@@ -465,7 +465,7 @@ class TestCustomCommand:
     def test_custom_command_implementation(self):
         """Custom command implements protocol."""
         class MyCommand(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "test"
             _help_text = "Test command"
@@ -474,7 +474,7 @@ class TestCustomCommand:
                 return self.success("Test output")
 
         cmd = MyCommand()
-        assert cmd.opcode == MantraOpCode.EXEC_SERVICE
+        assert cmd.opcode == MantraOpCode.EXTEND_CAP
         assert cmd.mahajana == Mahajana.PRAHLADA
         assert cmd.name == "test"
         assert cmd.phase == Phase.SERVE
@@ -500,7 +500,7 @@ class TestNagaCommandRegistry:
         registry = NagaCommandRegistry()
 
         class MyCommand(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "my-test"
             _help_text = "Test"
@@ -515,19 +515,19 @@ class TestNagaCommandRegistry:
         registry = NagaCommandRegistry()
 
         class Cmd1(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "cmd1"
 
         class Cmd2(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "cmd2"
 
         registry.register(Cmd1())
         registry.register(Cmd2())
 
-        cmds = registry.get_by_opcode(MantraOpCode.EXEC_SERVICE)
+        cmds = registry.get_by_opcode(MantraOpCode.EXTEND_CAP)
         assert len(cmds) == 2
 
     def test_get_by_mahajana(self):
@@ -535,7 +535,7 @@ class TestNagaCommandRegistry:
         registry = NagaCommandRegistry()
 
         class Cmd1(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "prahlada-cmd"
 
@@ -556,12 +556,12 @@ class TestNagaCommandRegistry:
         registry = NagaCommandRegistry()
 
         class ServeCmd(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "serve-cmd"
 
         class SustainCmd(NagaCommandBase):
-            _opcode = MantraOpCode.RESET_IP
+            _opcode = MantraOpCode.AUDIT_SEAL
             _mahajana = Mahajana.YAMARAJA
             _name = "sustain-cmd"
 
@@ -605,13 +605,13 @@ class TestNagaCommandDecorator:
         class TestCmd(NagaCommandBase):
             pass
 
-        TestCmd._opcode = MantraOpCode.CHECK_DHARMA
+        TestCmd._opcode = MantraOpCode.STATE_SYNC
         TestCmd._mahajana = Mahajana.JANAKA
         TestCmd._name = "dharma-check"
         TestCmd._help_text = "Check dharma"
 
         cmd = TestCmd()
-        assert cmd.opcode == MantraOpCode.CHECK_DHARMA
+        assert cmd.opcode == MantraOpCode.STATE_SYNC
         assert cmd.mahajana == Mahajana.JANAKA
         assert cmd.name == "dharma-check"
         assert cmd.help_text == "Check dharma"
@@ -691,7 +691,7 @@ class TestIntegration:
         registry = NagaCommandRegistry()
 
         class EchoCommand(NagaCommandBase):
-            _opcode = MantraOpCode.EXEC_SERVICE
+            _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
             _name = "echo"
             _help_text = "Echo arguments"
@@ -710,14 +710,14 @@ class TestIntegration:
         result = cmd.execute(["hello", "world"])
         assert result.success
         assert result.output == "hello world"
-        assert result.opcode == MantraOpCode.EXEC_SERVICE
+        assert result.opcode == MantraOpCode.EXTEND_CAP
         assert result.mahajana == Mahajana.PRAHLADA
         assert result.exit_code == 0
 
     def test_command_failure_flow(self):
         """Command failure returns proper result."""
         class FailCommand(NagaCommandBase):
-            _opcode = MantraOpCode.RESET_IP
+            _opcode = MantraOpCode.AUDIT_SEAL
             _mahajana = Mahajana.YAMARAJA
             _name = "fail"
 
@@ -730,5 +730,5 @@ class TestIntegration:
         assert not result.success
         assert result.exit_code == 42
         assert result.error == "Intentional failure"
-        assert result.opcode == MantraOpCode.RESET_IP
+        assert result.opcode == MantraOpCode.AUDIT_SEAL
         assert result.mahajana == Mahajana.YAMARAJA

@@ -253,29 +253,29 @@ COMMAND_OPCODE_MAP: Final[Dict[str, MantraOpCode]] = {
     "genesis": MantraOpCode.SYS_WAKE,
     "create": MantraOpCode.ALLOC_MEM,
     "init": MantraOpCode.LOAD_ROOT,
-    "config": MantraOpCode.BIND_CTX,
+    "config": MantraOpCode.INIT_THREAD,
     "bootstrap": MantraOpCode.SYS_WAKE,
 
     # DHARMA Quarter (ASSERT_TRUTH, RESOLVE_REQ, GARBAGE_COLLECT, PULSE_SYNC)
-    "audit": MantraOpCode.ASSERT_TRUTH,
-    "validate": MantraOpCode.RESOLVE_REQ,
-    "standards": MantraOpCode.CHECK_DHARMA,
-    "naga": MantraOpCode.CHECK_DHARMA,
-    "knowledge": MantraOpCode.PULSE_SYNC,
+    "audit": MantraOpCode.COMPILE_AST,
+    "validate": MantraOpCode.BIND_SYMBOL,
+    "standards": MantraOpCode.STATE_SYNC,
+    "naga": MantraOpCode.STATE_SYNC,
+    "knowledge": MantraOpCode.DHARMA_TEST,
 
     # KARMA Quarter (FETCH_RES, EXEC_SERVICE, CHECK_DHARMA, COMMIT_LOG)
-    "run": MantraOpCode.EXEC_SERVICE,
-    "tool": MantraOpCode.EXEC_SERVICE,
-    "ci": MantraOpCode.EXEC_SERVICE,
-    "plugins": MantraOpCode.FETCH_RES,
-    "prompts": MantraOpCode.COMMIT_LOG,
-    "circuit": MantraOpCode.EXEC_SERVICE,
+    "run": MantraOpCode.EXTEND_CAP,
+    "tool": MantraOpCode.EXTEND_CAP,
+    "ci": MantraOpCode.EXTEND_CAP,
+    "plugins": MantraOpCode.EXEC_OP,
+    "prompts": MantraOpCode.LEDGER_SIGN,
+    "circuit": MantraOpCode.EXTEND_CAP,
 
     # MOKSHA Quarter (CACHE_STATE, OPTIMIZE, YIELD_CPU, RESET_IP)
-    "remedies": MantraOpCode.OPTIMIZE,
-    "gc": MantraOpCode.GARBAGE_COLLECT,
-    "reset": MantraOpCode.RESET_IP,
-    "cartridges": MantraOpCode.CACHE_STATE,
+    "remedies": MantraOpCode.IO_FLUSH,
+    "gc": MantraOpCode.TYPE_CHECK,
+    "reset": MantraOpCode.AUDIT_SEAL,
+    "cartridges": MantraOpCode.YIELD_CPU,
     "sections": MantraOpCode.YIELD_CPU,
 }
 
@@ -293,7 +293,7 @@ def derive_opcode(command: str) -> MantraOpCode:
             return opcode
 
     # Default to EXEC_SERVICE (most CLI commands are actions)
-    return MantraOpCode.EXEC_SERVICE
+    return MantraOpCode.EXTEND_CAP
 
 
 # =============================================================================

@@ -66,7 +66,7 @@ class KrishnaProtocol(IGeneHost, Protocol):
         The 'Positive Pathogen' Mechanism.
         Injects capabilities (genes) into this Consciousness.
 
-        This corresponds to MantraOpCode.BIND_CTX.
+        This corresponds to MantraOpCode.INIT_THREAD.
 
         Args:
             gene_names: List of genes (e.g. "scribe", "warrior") to inject.

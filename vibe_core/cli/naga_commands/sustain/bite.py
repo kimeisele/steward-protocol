@@ -20,7 +20,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.RESET_IP,
+    opcode=MantraOpCode.AUDIT_SEAL,
     name="bite",
     help_text="Record a violation to Ledger (TAKSHAKA bite / YAMARAJA judgment)")
 class BiteCommand(NagaCommandBase):

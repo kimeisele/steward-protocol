@@ -132,7 +132,7 @@ class NagaBase(IGene, ABC):
         Emits PULSE_SYNC every few seconds.
         """
         while not self._stop_chanting.is_set():
-            self._emit_mantra(MantraOpCode.PULSE_SYNC)
+            self._emit_mantra(MantraOpCode.DHARMA_TEST)
             time.sleep(5)  # 5 seconds breath execution
 
     def _emit_mantra(self, opcode: str):

@@ -334,7 +334,7 @@ class NullFlood:
 
     @property
     def opcode(self) -> MantraOpCode:
-        return MantraOpCode.PULSE_SYNC
+        return MantraOpCode.DHARMA_TEST
 
     @property
     def mahajana(self) -> str:
@@ -381,7 +381,7 @@ class NullFlood:
 # =============================================================================
 
 # Flood operation maps to PULSE_SYNC
-FLOOD_OPCODE = MantraOpCode.PULSE_SYNC
+FLOOD_OPCODE = MantraOpCode.DHARMA_TEST
 FLOOD_PHASE = "PURIFY"
 FLOOD_WORD = "HARE"
 FLOOD_POSITION = 7

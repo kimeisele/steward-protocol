@@ -260,7 +260,7 @@ class TestNullIntelBridge:
     def test_opcode_is_fetch_res(self):
         """NullIntelBridge uses FETCH_RES opcode."""
         bridge = NullIntelBridge()
-        assert bridge.opcode == MantraOpCode.FETCH_RES
+        assert bridge.opcode == MantraOpCode.EXEC_OP
 
     def test_mahajana_is_shuka(self):
         """NullIntelBridge owned by SHUKA."""
@@ -343,7 +343,7 @@ class TestMantraConnection:
 
     def test_opcode_is_fetch_res(self):
         """Intel uses FETCH_RES opcode."""
-        assert INTEL_OPCODE == MantraOpCode.FETCH_RES
+        assert INTEL_OPCODE == MantraOpCode.EXEC_OP
 
     def test_phase_is_serve(self):
         """Intel is in SERVE phase."""

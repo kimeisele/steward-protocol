@@ -21,7 +21,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.EXEC_SERVICE,
+    opcode=MantraOpCode.EXTEND_CAP,
     name="prahlad",
     help_text="Access Prahlad Resilience Agent (PRAHLADA's resilience)")
 class PrahladCommand(NagaCommandBase):

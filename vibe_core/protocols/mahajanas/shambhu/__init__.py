@@ -52,7 +52,7 @@ class ShambhuProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.SHAMBHU
-        opcode()    -> MantraOpCode.BIND_CTX
+        opcode()    -> MantraOpCode.INIT_THREAD
         quarter()   -> Quarter.GENESIS
         is_head()   -> False (Worker position)
         parampara_vector() -> 148 (% 37 == 0)

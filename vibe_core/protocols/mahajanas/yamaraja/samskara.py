@@ -52,7 +52,7 @@ from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol, Protocol
 OWNER: Final[Mahajana] = Mahajana.YAMARAJA
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESET_IP,  # Transformation gate
+    MantraOpCode.AUDIT_SEAL,  # Transformation gate
 ]
 
 

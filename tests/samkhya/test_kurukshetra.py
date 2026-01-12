@@ -86,7 +86,7 @@ class TestKurukshetra:
         EXPECTATION: The Mantra cycle breaks immediately.
         """
         # Inject Saboteur into the Handler Map
-        kernel.watchdog._handlers[MantraOpCode.ASSERT_TRUTH] = saboteur_handler
+        kernel.watchdog._handlers[MantraOpCode.COMPILE_AST] = saboteur_handler
 
         # Try to Chant with valid context
         is_aligned = kernel.watchdog.chant_mahamantra(kernel.sovereign_context)

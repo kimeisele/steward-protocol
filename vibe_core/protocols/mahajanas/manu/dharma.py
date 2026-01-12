@@ -50,7 +50,7 @@ LOTUS_POSITION: Final[int] = 7  # DHARMA Quarter, Worker 3
 LOTUS_QUARTER: Final[str] = "dharma"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.PULSE_SYNC,  # The Law Pulses Through Everything
+    MantraOpCode.DHARMA_TEST,  # The Law Pulses Through Everything
 ]
 
 

@@ -75,7 +75,7 @@ class MantraSync(MantraBase, SyncProtocol):
     def __init__(self, inner: SyncProtocol):
         self._inner = inner
 
-    @mantra_governed(MantraOpCode.ASSERT_TRUTH)
+    @mantra_governed(MantraOpCode.COMPILE_AST)
     def sync(self, context: Any = None) -> Any:
         return self._inner.sync(context)
 
@@ -92,7 +92,7 @@ class MantraEnforce(MantraBase, EnforceProtocol):
     def __init__(self, inner: EnforceProtocol):
         self._inner = inner
 
-    @mantra_governed(MantraOpCode.CHECK_DHARMA)
+    @mantra_governed(MantraOpCode.STATE_SYNC)
     def enforce(self, action: str, context: Any) -> Any:
         return self._inner.enforce(action, context)
 
@@ -109,7 +109,7 @@ class MantraInfer(MantraBase, InferProtocol):
     def __init__(self, inner: InferProtocol):
         self._inner = inner
 
-    @mantra_governed(MantraOpCode.RESOLVE_REQ)
+    @mantra_governed(MantraOpCode.BIND_SYMBOL)
     def infer(self, input: Any, fallback: Any = None) -> Any:
         return self._inner.infer(input, fallback)
 
@@ -126,7 +126,7 @@ class MantraStoreRecall(MantraBase, StoreRecallProtocol):
     def __init__(self, inner: StoreRecallProtocol):
         self._inner = inner
 
-    @mantra_governed(MantraOpCode.COMMIT_LOG)
+    @mantra_governed(MantraOpCode.LEDGER_SIGN)
     def store(self, key: str, value: Any, context: Any = None) -> None:
         self._inner.store(key, value, context)
 
@@ -171,7 +171,7 @@ class MantraTool(MantraBase, Tool):
     def validate(self, parameters: dict[str, Any]) -> None:
         return self._inner.validate(parameters)
 
-    @mantra_governed(MantraOpCode.EXEC_SERVICE)
+    @mantra_governed(MantraOpCode.EXTEND_CAP)
     def execute(self, parameters: dict[str, Any]) -> Any:
         return self._inner.execute(parameters)
 

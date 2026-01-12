@@ -47,10 +47,10 @@ from vibe_core.semantic_syscalls import SyscallType
 
 # IntentType is broad - these are the DEFAULT OpCodes when no specific target
 INTENT_TO_DEFAULT_OPCODE: Dict[IntentType, MantraOpCode] = {
-    IntentType.CHAT: MantraOpCode.EXEC_SERVICE,      # Prahlada handles conversation
-    IntentType.EXECUTE: MantraOpCode.EXEC_SERVICE,   # Janaka executes duty
-    IntentType.QUERY: MantraOpCode.FETCH_RES,        # Prahlada fetches resources
-    IntentType.ROUTE: MantraOpCode.RESOLVE_REQ,      # Kumaras resolve requests
+    IntentType.CHAT: MantraOpCode.EXTEND_CAP,      # Prahlada handles conversation
+    IntentType.EXECUTE: MantraOpCode.EXTEND_CAP,   # Janaka executes duty
+    IntentType.QUERY: MantraOpCode.EXEC_OP,        # Prahlada fetches resources
+    IntentType.ROUTE: MantraOpCode.BIND_SYMBOL,      # Kumaras resolve requests
 }
 
 
@@ -62,23 +62,23 @@ INTENT_TO_DEFAULT_OPCODE: Dict[IntentType, MantraOpCode] = {
 SYSCALL_TO_OPCODE: Dict[SyscallType, MantraOpCode] = {
     # Agent Lifecycle (Creation = Brahma, Destruction = Shambhu)
     SyscallType.SPAWN_COGNITION: MantraOpCode.ALLOC_MEM,     # Brahma creates
-    SyscallType.DESTROY_COGNITION: MantraOpCode.GARBAGE_COLLECT,  # Shambhu destroys
+    SyscallType.DESTROY_COGNITION: MantraOpCode.TYPE_CHECK,  # Shambhu destroys
 
     # Capability Management (Manu = Law)
-    SyscallType.GRANT_MANDATE: MantraOpCode.BIND_CTX,        # Manu binds permissions
-    SyscallType.REVOKE_MANDATE: MantraOpCode.GARBAGE_COLLECT,  # Shambhu removes
+    SyscallType.GRANT_MANDATE: MantraOpCode.INIT_THREAD,        # Manu binds permissions
+    SyscallType.REVOKE_MANDATE: MantraOpCode.TYPE_CHECK,  # Shambhu removes
 
     # Resource Management (Allocation)
     SyscallType.ALLOCATE_PRANA: MantraOpCode.ALLOC_MEM,      # Allocation
-    SyscallType.TRANSFER_PRANA: MantraOpCode.EXEC_SERVICE,   # Transfer = service
+    SyscallType.TRANSFER_PRANA: MantraOpCode.EXTEND_CAP,   # Transfer = service
 
     # Governance (Bhishma = Vow)
-    SyscallType.SWEAR_OATH: MantraOpCode.COMMIT_LOG,         # Bhishma commits vows
-    SyscallType.RECORD_KARMA: MantraOpCode.COMMIT_LOG,       # Bhishma writes ledger
+    SyscallType.SWEAR_OATH: MantraOpCode.LEDGER_SIGN,         # Bhishma commits vows
+    SyscallType.RECORD_KARMA: MantraOpCode.LEDGER_SIGN,       # Bhishma writes ledger
 
     # Communication (Narada = Messenger)
-    SyscallType.DISPATCH_TASK: MantraOpCode.EXEC_SERVICE,    # Janaka executes
-    SyscallType.BROADCAST_EVENT: MantraOpCode.PULSE_SYNC,    # Narada broadcasts
+    SyscallType.DISPATCH_TASK: MantraOpCode.EXTEND_CAP,    # Janaka executes
+    SyscallType.BROADCAST_EVENT: MantraOpCode.DHARMA_TEST,    # Narada broadcasts
 }
 
 
@@ -89,24 +89,24 @@ SYSCALL_TO_OPCODE: Dict[SyscallType, MantraOpCode] = {
 # When IntentType.ROUTE, the target determines OpCode
 ROUTE_TARGET_TO_OPCODE: Dict[str, MantraOpCode] = {
     # System targets
-    "envoy": MantraOpCode.EXEC_SERVICE,       # AI envoy
+    "envoy": MantraOpCode.EXTEND_CAP,       # AI envoy
     "kernel": MantraOpCode.SYS_WAKE,          # System operations
-    "scheduler": MantraOpCode.EXEC_SERVICE,   # Task dispatch
+    "scheduler": MantraOpCode.EXTEND_CAP,   # Task dispatch
 
     # Agent targets (by role)
-    "watchman": MantraOpCode.ASSERT_TRUTH,    # Verification
-    "herald": MantraOpCode.PULSE_SYNC,        # Communication
-    "scribe": MantraOpCode.COMMIT_LOG,        # Recording
-    "auditor": MantraOpCode.CHECK_DHARMA,     # Audit
-    "artisan": MantraOpCode.EXEC_SERVICE,     # Creation
-    "oracle": MantraOpCode.FETCH_RES,         # Data/insight
+    "watchman": MantraOpCode.COMPILE_AST,    # Verification
+    "herald": MantraOpCode.DHARMA_TEST,        # Communication
+    "scribe": MantraOpCode.LEDGER_SIGN,        # Recording
+    "auditor": MantraOpCode.STATE_SYNC,     # Audit
+    "artisan": MantraOpCode.EXTEND_CAP,     # Creation
+    "oracle": MantraOpCode.EXEC_OP,         # Data/insight
     "engineer": MantraOpCode.ALLOC_MEM,       # Building
-    "civic": MantraOpCode.CHECK_DHARMA,       # Governance
+    "civic": MantraOpCode.STATE_SYNC,       # Governance
 
     # Generic fallbacks
-    "chat": MantraOpCode.EXEC_SERVICE,
-    "help": MantraOpCode.FETCH_RES,
-    "status": MantraOpCode.FETCH_RES,
+    "chat": MantraOpCode.EXTEND_CAP,
+    "help": MantraOpCode.EXEC_OP,
+    "status": MantraOpCode.EXEC_OP,
 }
 
 
@@ -116,15 +116,15 @@ ROUTE_TARGET_TO_OPCODE: Dict[str, MantraOpCode] = {
 
 # When IntentType.QUERY, the query_type refines OpCode
 QUERY_TYPE_TO_OPCODE: Dict[str, MantraOpCode] = {
-    "status": MantraOpCode.FETCH_RES,
-    "health": MantraOpCode.ASSERT_TRUTH,
-    "metrics": MantraOpCode.FETCH_RES,
-    "logs": MantraOpCode.FETCH_RES,
+    "status": MantraOpCode.EXEC_OP,
+    "health": MantraOpCode.COMPILE_AST,
+    "metrics": MantraOpCode.EXEC_OP,
+    "logs": MantraOpCode.EXEC_OP,
     "config": MantraOpCode.LOAD_ROOT,
     "identity": MantraOpCode.LOAD_ROOT,
-    "capabilities": MantraOpCode.CHECK_DHARMA,
-    "karma": MantraOpCode.FETCH_RES,
-    "agents": MantraOpCode.FETCH_RES,
+    "capabilities": MantraOpCode.STATE_SYNC,
+    "karma": MantraOpCode.EXEC_OP,
+    "agents": MantraOpCode.EXEC_OP,
 }
 
 
@@ -197,7 +197,7 @@ class IntentOpCodeBridge:
                 )
             # Fallback for unknown targets
             return BridgeResult(
-                opcode=MantraOpCode.RESOLVE_REQ,
+                opcode=MantraOpCode.BIND_SYMBOL,
                 confidence=0.5,
                 source="target:unknown",
                 notes=f"Unknown target '{target}', using RESOLVE_REQ"
@@ -216,7 +216,7 @@ class IntentOpCodeBridge:
 
         # Priority 4: Default by IntentType
         return BridgeResult(
-            opcode=INTENT_TO_DEFAULT_OPCODE.get(intent, MantraOpCode.EXEC_SERVICE),
+            opcode=INTENT_TO_DEFAULT_OPCODE.get(intent, MantraOpCode.EXTEND_CAP),
             confidence=0.7,
             source=f"intent:{intent.value}",
             notes=f"Default opcode for {intent.value} intent"

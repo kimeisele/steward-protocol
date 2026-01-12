@@ -60,7 +60,7 @@ LOTUS_POSITION: Final[int] = 10
 LOTUS_QUARTER: Final[str] = "karma"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.CHECK_DHARMA,  # EXEC_SERVICE
+    MantraOpCode.STATE_SYNC,  # EXEC_SERVICE
 ]
 
 

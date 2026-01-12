@@ -42,7 +42,7 @@ class ShuddhiProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  → Mahajana.KUMARAS
-        opcode()    → MantraOpCode.RESOLVE_REQ
+        opcode()    → MantraOpCode.BIND_SYMBOL
         quarter()   → Quarter.DHARMA
         is_head()   → False (Worker position)
         parampara_vector() → 222 (% 37 == 0)

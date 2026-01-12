@@ -52,7 +52,7 @@ class BaliProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  → Mahajana.BALI
-        opcode()    → MantraOpCode.OPTIMIZE
+        opcode()    → MantraOpCode.IO_FLUSH
         quarter()   → Quarter.MOKSHA
         is_head()   → False (Worker position)
         parampara_vector() → 518 (% 37 == 0)

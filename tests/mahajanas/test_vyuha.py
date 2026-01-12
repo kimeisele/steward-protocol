@@ -173,7 +173,7 @@ class TestVyuhaRouter:
         """Routes OpCode to its cycle and responsible entity."""
         router = get_vyuha_router()
 
-        cycle, entity = router.route(MantraOpCode.GARBAGE_COLLECT)
+        cycle, entity = router.route(MantraOpCode.TYPE_CHECK)
         assert cycle.vyuha == Vyuha.SANKARSHANA
         assert entity == Mahajana.KAPILA
 
@@ -217,12 +217,12 @@ class TestRoutingFunctions:
 
     def test_get_cycle_for_opcode(self):
         """get_cycle_for_opcode returns correct cycle."""
-        cycle = get_cycle_for_opcode(MantraOpCode.COMMIT_LOG)
+        cycle = get_cycle_for_opcode(MantraOpCode.LEDGER_SIGN)
         assert cycle.vyuha == Vyuha.PRADYUMNA
 
     def test_get_head_for_opcode(self):
         """get_head_for_opcode returns cycle HEAD."""
-        head = get_head_for_opcode(MantraOpCode.OPTIMIZE)
+        head = get_head_for_opcode(MantraOpCode.IO_FLUSH)
         assert head == Avatara.NRISIMHA  # Q4 HEAD
 
     def test_get_cycle_for_mahajana(self):
@@ -233,4 +233,4 @@ class TestRoutingFunctions:
     def test_get_opcodes_for_mahajana(self):
         """get_opcodes_for_mahajana returns single OpCode."""
         opcodes = get_opcodes_for_mahajana(Mahajana.YAMARAJA)
-        assert opcodes == [MantraOpCode.RESET_IP]
+        assert opcodes == [MantraOpCode.AUDIT_SEAL]

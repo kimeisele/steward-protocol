@@ -92,7 +92,7 @@ class KumarasProtocol(WorkerProtocol):
 
     # ALLES DERIVED von mahamantra[5]:
     # guardian()  → Mahajana.KUMARAS
-    # opcode()    → MantraOpCode.RESOLVE_REQ
+    # opcode()    → MantraOpCode.BIND_SYMBOL
     # quarter()   → Quarter.DHARMA
     # parampara_vector() → 222 (% 37 == 0)
 
@@ -104,7 +104,7 @@ class NrisimhaProtocol(HeadProtocol):
 
     # ALLES DERIVED von mahamantra[12]:
     # guardian()  → Avatara.NRISIMHA
-    # opcode()    → MantraOpCode.CACHE_STATE
+    # opcode()    → MantraOpCode.YIELD_CPU
     # quarter()   → Quarter.MOKSHA
     # is_head()   → True (Avatara-owned)
     # parampara_vector() → 481 (% 37 == 0)

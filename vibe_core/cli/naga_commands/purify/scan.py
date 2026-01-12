@@ -36,7 +36,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.ASSERT_TRUTH,
+    opcode=MantraOpCode.COMPILE_AST,
     name="scan",
     help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)")
 class ScanCommand(NagaCommandBase):

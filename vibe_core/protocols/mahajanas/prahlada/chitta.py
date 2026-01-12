@@ -60,7 +60,7 @@ LOTUS_POSITION: Final[int] = 9  # KARMA Quarter, Worker 1
 LOTUS_QUARTER: Final[str] = "karma"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.EXEC_SERVICE,  # Memory operations
+    MantraOpCode.EXTEND_CAP,  # Memory operations
 ]
 
 

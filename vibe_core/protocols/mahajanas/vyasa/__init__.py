@@ -62,7 +62,7 @@ class VyasaProtocolBase(HeadProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Avatara.VYASA
-        opcode()    -> MantraOpCode.ASSERT_TRUTH
+        opcode()    -> MantraOpCode.COMPILE_AST
         quarter()   -> Quarter.DHARMA
         is_head()   -> True (HEAD position)
         parampara_vector() -> 185 (% 37 == 0)

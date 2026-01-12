@@ -38,7 +38,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.RESOLVE_REQ,
+    opcode=MantraOpCode.BIND_SYMBOL,
     name="detect",
     help_text="Detect drifts and resolve intent (KUMARAS' purity - PURIFY phase)")
 class DetectCommand(NagaCommandBase):

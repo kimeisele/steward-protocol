@@ -61,7 +61,7 @@ LOTUS_POSITION: Final[int] = 13  # MOKSHA Quarter, Worker 1
 LOTUS_QUARTER: Final[str] = "moksha"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.OPTIMIZE,  # YIELD_CPU
+    MantraOpCode.IO_FLUSH,  # YIELD_CPU
 ]
 
 

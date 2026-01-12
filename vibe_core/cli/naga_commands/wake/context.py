@@ -38,7 +38,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.BIND_CTX,
+    opcode=MantraOpCode.INIT_THREAD,
     name="context",
     help_text="Execution context binding (SHAMBHU's transformation - WAKE phase)")
 class ContextCommand(NagaCommandBase):

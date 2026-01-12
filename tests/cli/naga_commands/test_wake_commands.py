@@ -200,7 +200,7 @@ class TestPosition0:
             MantraOpCode.SYS_WAKE,
             MantraOpCode.LOAD_ROOT,
             MantraOpCode.ALLOC_MEM,
-            MantraOpCode.BIND_CTX,
+            MantraOpCode.INIT_THREAD,
         ]
         assert cmd.opcode in wake_opcodes
 
@@ -446,7 +446,7 @@ class TestContextCommand:
     def test_opcode_is_bind_ctx(self):
         """Opcode is BIND_CTX."""
         cmd = ContextCommand()
-        assert cmd.opcode == MantraOpCode.BIND_CTX
+        assert cmd.opcode == MantraOpCode.INIT_THREAD
 
     def test_mahajana_is_shambhu(self):
         """Mahajana is SHAMBHU."""
@@ -502,7 +502,7 @@ class TestContextCommand:
         """Result contains correct opcode."""
         cmd = ContextCommand()
         result = cmd.execute([])
-        assert result.opcode == MantraOpCode.BIND_CTX
+        assert result.opcode == MantraOpCode.INIT_THREAD
 
     def test_result_has_correct_mahajana(self):
         """Result contains correct mahajana."""
@@ -643,7 +643,7 @@ class TestWakePhaseComplete:
             MantraOpCode.SYS_WAKE,    # Position 0
             MantraOpCode.LOAD_ROOT,   # Position 1
             MantraOpCode.ALLOC_MEM,   # Position 2
-            MantraOpCode.BIND_CTX,    # Position 3
+            MantraOpCode.INIT_THREAD,    # Position 3
         ]
         for opcode in wake_opcodes:
             cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)

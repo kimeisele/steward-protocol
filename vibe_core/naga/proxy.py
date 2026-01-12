@@ -412,19 +412,19 @@ class NagaProxy(Generic[T]):
         self._resolve_nagas()
 
         # 1. PULSE_SYNC (Hare): The Heartbeat -> Confirm Narada alive
-        if opcode == MantraOpCode.PULSE_SYNC:
+        if opcode == MantraOpCode.DHARMA_TEST:
             narada = object.__getattribute__(self, "_narada")
             if narada:
                 logger.debug(f"💓 PULSE: {self._service_name} alive")
 
         # 2. GARBAGE_COLLECT (Hare): Cleaning -> Clear old buffers
-        elif opcode == MantraOpCode.GARBAGE_COLLECT:
+        elif opcode == MantraOpCode.TYPE_CHECK:
             cleared = self.clear_observations()
             if cleared > 0:
                 logger.debug(f"🗑️ MANTRA GC: Cleared {cleared} stale observations")
 
         # 3. ASSERT_TRUTH (Krishna): Integrity -> Verify Takshaka Link
-        elif opcode == MantraOpCode.ASSERT_TRUTH:
+        elif opcode == MantraOpCode.COMPILE_AST:
             takshaka = object.__getattribute__(self, "_takshaka")
             if not takshaka:
                 logger.warning(f"⚠️ MANTRA: Takshaka missing in {self._service_name}")

@@ -21,7 +21,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.ASSERT_TRUTH,
+    opcode=MantraOpCode.COMPILE_AST,
     name="audit",
     help_text="Query Ledger audit trail (VYASA's records)")
 class AuditCommand(NagaCommandBase):

@@ -60,7 +60,7 @@ LOTUS_POSITION: Final[int] = 15  # MOKSHA Quarter, Worker 3
 LOTUS_QUARTER: Final[str] = "moksha"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.RESET_IP,  # Final Reset/Judgment
+    MantraOpCode.AUDIT_SEAL,  # Final Reset/Judgment
 ]
 
 

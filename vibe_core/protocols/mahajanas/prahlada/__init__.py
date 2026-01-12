@@ -59,7 +59,7 @@ class PrahladaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  → Mahajana.PRAHLADA
-        opcode()    → MantraOpCode.EXEC_SERVICE
+        opcode()    → MantraOpCode.EXTEND_CAP
         quarter()   → Quarter.KARMA
         is_head()   → False (Worker position)
         parampara_vector() → 370 (% 37 == 0)

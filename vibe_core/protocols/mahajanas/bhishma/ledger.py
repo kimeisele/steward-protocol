@@ -63,7 +63,7 @@ LOTUS_POSITION: Final[int] = 11  # KARMA Quarter, Worker 3
 LOTUS_QUARTER: Final[str] = "karma"
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.COMMIT_LOG,
+    MantraOpCode.LEDGER_SIGN,
 ]
 
 # Genesis hash - the root of all ledgers

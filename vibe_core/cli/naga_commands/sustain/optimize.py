@@ -37,7 +37,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.OPTIMIZE,
+    opcode=MantraOpCode.IO_FLUSH,
     name="optimize",
     help_text="Performance optimization (BALI's sacrifice - SUSTAIN phase)")
 class OptimizeCommand(NagaCommandBase):

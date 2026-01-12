@@ -34,7 +34,7 @@ class TestChatMantraConnection:
 
     def test_chat_opcode_is_exec_service(self):
         """Chat maps to EXEC_SERVICE opcode."""
-        assert CHAT_OPCODE == MantraOpCode.EXEC_SERVICE
+        assert CHAT_OPCODE == MantraOpCode.EXTEND_CAP
 
     def test_chat_phase_is_serve(self):
         """Chat is in SERVE phase (Phase 3)."""
