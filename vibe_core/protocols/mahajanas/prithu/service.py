@@ -27,7 +27,8 @@ from vibe_core.protocols.mahajanas.prithu import (
 
 # Import legacy implementation - DO NOT DUPLICATE
 from vibe_core.boot_orchestrator import BootOrchestrator as LegacyBootOrchestrator
-from vibe_core.boot_mode import BootMode
+# Import directly from canonical location to avoid circular import
+from vibe_core.protocols.mahajanas.prithu.types.boot_mode import BootMode
 
 
 class PrithuService(PrithuProtocolBase):
