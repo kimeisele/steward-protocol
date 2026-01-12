@@ -31,7 +31,7 @@ COMPARISON:
             capabilities=[CLICapability(name="analyze", ...)],
             handlers={"analyze": handle_analyze}
         )
-        # × 16 mahajanas × 5+ commands each = ENTROPY
+        # × 16 positions × 5+ commands each = ENTROPY
 
     AFTER (auto-discovery - 0 lines):
         cli_auto.discover_all()  # Called ONCE at boot
@@ -118,7 +118,7 @@ class CLIAutoDiscovery:
 
     def discover_all(self) -> int:
         """
-        Discover ALL CLI capabilities from ALL 16 mahajana Protocols.
+        Discover ALL CLI capabilities from 16 positions (12 mahajanas + 4 avataras).
 
         Returns number of methods discovered.
 
