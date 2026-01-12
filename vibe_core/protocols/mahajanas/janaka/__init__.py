@@ -491,4 +491,12 @@ __all__ = [
 # JANAKA SERVICE - The Real Implementation
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+# LAZY IMPORT to avoid circular dependency with scheduling/task.py
+# JanakaService is loaded on first access via __getattr__
+
+def __getattr__(name: str):
+    """Lazy import for JanakaService to avoid circular import."""
+    if name == "JanakaService":
+        from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+        return JanakaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

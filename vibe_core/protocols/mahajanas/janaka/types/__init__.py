@@ -20,7 +20,12 @@ from vibe_core.protocols.mahajanas.janaka.types.prana import (
     record_heartbeat,
 )
 
+from vibe_core.protocols.mahajanas.janaka.types.task_types import (
+    TaskStatus,
+)
+
 __all__ = [
+    # prana.py
     "SessionStartConfig",
     "HeartbeatConfig",
     "KernelConfig",
@@ -32,4 +37,6 @@ __all__ = [
     "ensure_kernel_running",
     "get_last_heartbeat",
     "record_heartbeat",
+    # task_types.py
+    "TaskStatus",
 ]
