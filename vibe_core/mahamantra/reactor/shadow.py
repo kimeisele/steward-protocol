@@ -387,9 +387,8 @@ class ShadowReactor:
         """
         Trigger on_return for position 0 (THE RETURN).
 
-        15→0: Prasadam becomes next Bhoga.
-        The cycle completes. Acintya - inconceivable.
-        We implement the structure, not the understanding.
+        15→0: Prasadam ready for distribution/acceptance.
+        Agent receives sanctified output. Acintya.
         """
         for reactor in self._reactors.get(RETURN_POSITION, []):
             if hasattr(reactor, "on_return"):
