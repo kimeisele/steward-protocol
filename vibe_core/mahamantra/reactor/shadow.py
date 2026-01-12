@@ -388,8 +388,8 @@ class ShadowReactor:
         Trigger on_return for position 0 (THE RETURN).
 
         15→0: Prasadam becomes next Bhoga.
-        The cycle completes. The output becomes the input.
-        This is how entropy is stopped.
+        The cycle completes. Acintya - inconceivable.
+        We implement the structure, not the understanding.
         """
         for reactor in self._reactors.get(RETURN_POSITION, []):
             if hasattr(reactor, "on_return"):
