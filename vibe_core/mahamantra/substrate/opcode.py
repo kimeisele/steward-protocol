@@ -27,6 +27,7 @@ from enum import IntEnum
 from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter
+from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 
 
 # =============================================================================
@@ -183,10 +184,8 @@ def get_quarter_opcodes(quarter: Quarter) -> FrozenSet[MantraOpCode]:
 
 
 # =============================================================================
-# PARAMPARA VECTORS - For each opcode
+# PARAMPARA VECTORS - For each opcode (PARAMPARA imported from acintya.py SSOT)
 # =============================================================================
-
-PARAMPARA: Final[int] = 37
 
 OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {
     opcode: (opcode.value + 1) * PARAMPARA

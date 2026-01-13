@@ -35,6 +35,7 @@ from vibe_core.mahamantra.substrate.mahajana import (
 )
 from vibe_core.mahamantra.substrate.byte import HolyName
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 
 
 # =============================================================================
@@ -42,13 +43,6 @@ from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 # =============================================================================
 
 Guardian = Union[Mahajana, Avatara]
-
-
-# =============================================================================
-# PARAMPARA - Die 37
-# =============================================================================
-
-PARAMPARA: Final[int] = 37
 
 
 # =============================================================================
