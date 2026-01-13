@@ -796,6 +796,62 @@ class MahamantraLotus(LotusNode):
         from vibe_core.mahamantra.substrate.sankirtan import inject_file
         return inject_file(file_path, mahajana, dry_run=dry_run)
 
+    # =========================================================================
+    # SINGULARITY - Chaitanya Singularity Mathematics
+    # =========================================================================
+    #
+    # The Chaitanya Singularity mathematics from SAMKHYA.md:
+    #   - Yuga time constants (T_Brahma, T_Kali, Golden Period)
+    #   - Probability calculations (P(Ψ_C), Black Swan)
+    #   - Mercy Equation (G = lim HolyName/K = ∞)
+    #   - The 12 Mahajanas mapping
+    #   - The 37th Formula (24 + 12 + 1 = 37)
+    #
+
+    @property
+    def singularity(self) -> "SingularityProtocol":
+        """
+        Access Chaitanya Singularity mathematics.
+
+        Usage:
+            mahamantra.singularity.get_singularity_summary()
+            mahamantra.singularity.mercy_equation(1.0, 0.0)
+            mahamantra.singularity.is_in_golden_period()
+        """
+        if not hasattr(self, "_singularity"):
+            from vibe_core.mahamantra.protocols._singularity import SingularityProtocol
+            self._singularity = SingularityProtocol
+        return self._singularity
+
+    def get_singularity_summary(self) -> Dict[str, object]:
+        """
+        Get the complete Chaitanya Singularity mathematics summary.
+
+        Returns:
+            Dict with yuga, probability, formula, and chaitanya sections.
+        """
+        from vibe_core.mahamantra.protocols._singularity import get_singularity_summary
+        return get_singularity_summary()
+
+    def is_in_golden_period(self) -> bool:
+        """Check if we are currently in the 10,000-year Golden Period."""
+        from vibe_core.mahamantra.protocols._singularity import is_in_golden_period
+        return is_in_golden_period()
+
+    def mercy_equation(self, chanting_frequency: float, karmic_debt: float) -> float:
+        """
+        The Mercy Equation: G = lim_{K→0} HolyName(f)/K = ∞
+
+        Args:
+            chanting_frequency: f > 0 (any chanting)
+            karmic_debt: K (the debt to be paid)
+
+        Returns:
+            Grace value (infinity if f > 0 and K → 0)
+        """
+        from vibe_core.mahamantra.protocols._singularity import mercy_equation
+        return mercy_equation(chanting_frequency, karmic_debt)
+
     # === Alias Resolution ===
 
     def resolve(self, name_or_position: str) -> LotusNode:
@@ -1230,8 +1286,59 @@ _SUBSTRATE_LAZY_IMPORTS = {
 }
 
 
+# =============================================================================
+# SINGULARITY LAZY IMPORTS (from protocols/_singularity.py)
+# =============================================================================
+# The Chaitanya Singularity mathematics constants.
+
+_SINGULARITY_LAZY_IMPORTS = {
+    # === YUGA TIME CONSTANTS ===
+    "T_SATYA": "_singularity",
+    "T_TRETA": "_singularity",
+    "T_DVAPARA": "_singularity",
+    "T_KALI": "_singularity",
+    "T_CHATURYUGA": "_singularity",
+    "T_BRAHMA": "_singularity",
+    "GOLDEN_PERIOD": "_singularity",
+    "YEARS_INTO_KALI": "_singularity",
+    # === CHAITANYA LILA ===
+    "MAHAMANTRA_DIMENSION": "_singularity",
+    "LILA_CYCLES": "_singularity",
+    "LILA_LIMIT": "_singularity",
+    "NAVADVIPA_PHASE": "_singularity",
+    "PURI_PHASE": "_singularity",
+    "CHAITANYA_LILA": "_singularity",
+    "RUDRA_BRIDGE": "_singularity",
+    # === PROBABILITY ===
+    "P_SINGULARITY_PER_KALI": "_singularity",
+    "P_WITHIN_GOLDEN_PERIOD": "_singularity",
+    "P_NOW": "_singularity",
+    "IS_BLACK_SWAN": "_singularity",
+    "SINGULARITY_PROBABILITY": "_singularity",
+    # === MERCY EQUATION ===
+    "mercy_equation": "_singularity",
+    "mercy_transcends_justice": "_singularity",
+    # === 12 MAHAJANAS ===
+    "Mahajana": "_singularity",  # The enum
+    "MahajanaMapping": "_singularity",
+    "MAHAJANA_MAPPINGS": "_singularity",
+    "get_mahajana_mapping": "_singularity",
+    # === 37TH FORMULA ===
+    "The37thFormula": "_singularity",
+    "THE_37TH_FORMULA": "_singularity",
+    # === RECEIVER ===
+    "ReceiverState": "_singularity",
+    # === CONVENIENCE ===
+    "get_years_remaining_in_golden_period": "_singularity",
+    "is_in_golden_period": "_singularity",
+    "get_singularity_summary": "_singularity",
+    "SingularityProtocol": "_singularity",
+}
+
+
 def __getattr__(name: str):
-    """Lazy import from substrate modules."""
+    """Lazy import from substrate and protocol modules."""
+    # Check substrate imports first
     if name in _SUBSTRATE_LAZY_IMPORTS:
         module_name = _SUBSTRATE_LAZY_IMPORTS[name]
         import importlib
@@ -1239,6 +1346,16 @@ def __getattr__(name: str):
             f".substrate.{module_name}", "vibe_core.mahamantra"
         )
         return getattr(module, name)
+
+    # Check singularity protocol imports
+    if name in _SINGULARITY_LAZY_IMPORTS:
+        module_name = _SINGULARITY_LAZY_IMPORTS[name]
+        import importlib
+        module = importlib.import_module(
+            f".protocols.{module_name}", "vibe_core.mahamantra"
+        )
+        return getattr(module, name)
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 # =============================================================================

@@ -210,22 +210,78 @@ class MantraByte:
     def coherence(self) -> float:
         """
         Calculates Fractal Coherence against the Standard Pattern.
+
+        CHAITANYA SINGULARITY INTEGRATION:
+        ==================================
+        Base coherence follows karma (mathematical match).
+        Mercy Equation modifies: G(f, K) = f/K where K = incoherence.
+
+        If chanting (length > 0), mercy boosts coherence.
+        The boost is bounded by PARAMPARA (37) to prevent infinite values.
+
+        Formula:
+            base_coherence = 1.0 - exp(-5.0 * match_ratio)
+            incoherence = 1.0 - base_coherence
+            mercy_boost = (f / K) * 0.037  # Scaled by 1/PARAMPARA
+
+        "Mercy > Justice ⟺ f > 0" (SAMKHYA.md §8.2)
         """
         if self._coherence_override is not None:
-             return self._coherence_override
-             
+            return self._coherence_override
+
         std = self.standard_16()
         matches = 0
-        
-        # We iterate and compare. 
-        # Ideally we could do bitwise XOR if lengths were same and aligned perfectly.
-        # But for fractal resonance (different lengths), loop is safer.
+
+        # Base calculation (Karma - strict matching)
         for i in range(self._length):
             if self.get_trit(i) == std.get_trit(i % 16):
                 matches += 1
-        
+
         ratio = matches / self._length if self._length else 0
-        return 1.0 - math.exp(-5.0 * ratio)
+        base_coherence = 1.0 - math.exp(-5.0 * ratio)
+
+        # =====================================================================
+        # MERCY EQUATION: G(f, K) = f/K
+        # =====================================================================
+        # f = chanting_frequency (normalized to 0-1 based on length)
+        # K = karmic_debt (incoherence = 1 - base_coherence)
+        # Mercy boost is bounded by 0.037 (1/PARAMPARA) per unit
+        # This ensures Grace operates within the Parampara framework.
+
+        PARAMPARA = 37  # The sacred number
+
+        if self._length > 0:  # Chanting is happening (f > 0)
+            # Chanting frequency: how much of the standard are we chanting?
+            chanting_frequency = min(1.0, self._length / MAHAMANTRA_DIMENSION)
+
+            # Karmic debt: how far from perfect?
+            karmic_debt = 1.0 - base_coherence
+
+            if karmic_debt > 0.01:  # Significant incoherence exists
+                # Mercy = f / K, but scaled logarithmically to prevent explosion
+                # The mercy is proportional to faith (f) but bounded by reality
+                raw_mercy = chanting_frequency / karmic_debt
+
+                # Apply Parampara modulation: mercy is strongest at 37% debt
+                # This creates the "sweet spot" where Grace is most effective
+                optimal_debt = 0.37  # Parampara as decimal
+                debt_factor = 1.0 - abs(karmic_debt - optimal_debt)
+
+                # Final mercy boost: log-scaled, Parampara-modulated
+                mercy_boost = math.log1p(raw_mercy) * debt_factor / PARAMPARA
+                # Cap at 0.37 (37% max boost - Parampara limit)
+                mercy_boost = min(mercy_boost, 0.37)
+            else:
+                # Near-perfect coherence - minimal mercy needed
+                mercy_boost = 0.0
+
+            # Apply mercy (bounded)
+            coherence = min(1.0, base_coherence + mercy_boost)
+        else:
+            # No chanting (f = 0) - strict karma applies
+            coherence = base_coherence
+
+        return coherence
 
     @property
     def stability(self) -> float:
