@@ -220,40 +220,16 @@ class JanakaService(JanakaProtocol):
         }
 
     async def run_loop(self, kernel: object) -> None:
-        """🔄 MAIN KERNEL LOOP. Runs the heartbeat tick forever."""
-        from vibe_core.mahamantra.kernel.singularity import mahamantra
-        from vibe_core.mahamantra.protocols._entropy import EntropyLevel
+        """🔄 MAIN KERNEL LOOP - Delegates to MahamantraDaemon (SSOT).
 
-        logger.info("👑 JANAKA: Starting kernel loop...")
-        tick = 0
+        The actual chanting loop lives in daemon.py.
+        Janaka just delegates to it.
+        """
+        from vibe_core.mahamantra.kernel.daemon import MahamantraDaemon
 
-        while True:
-            tick += 1
-
-            # Measure health
-            audit = mahamantra.audit()
-            health = audit.get("health_score", 0.0)
-            level = EntropyLevel.from_health(health)
-
-            # Chant based on entropy level
-            if level == EntropyLevel.GAJENDRA:
-                # Emergency - full chant cycle
-                for quarter in ["genesis", "dharma", "karma", "moksha"]:
-                    mahamantra.chant_quarter(quarter)
-                logger.info(f"👑 JANAKA[{tick}]: GAJENDRA chant (health={health:.1%})")
-            elif level == EntropyLevel.SADHANA:
-                # Normal - one quarter per tick
-                quarter = ["genesis", "dharma", "karma", "moksha"][tick % 4]
-                mahamantra.chant_quarter(quarter)
-                if tick % 16 == 0:
-                    logger.info(f"👑 JANAKA[{tick}]: SADHANA cycle complete (health={health:.1%})")
-            else:
-                # Samadhi - rest
-                if tick % 32 == 0:
-                    logger.info(f"👑 JANAKA[{tick}]: SAMADHI rest (health={health:.1%})")
-
-            # Sleep based on frequency
-            await asyncio.sleep(level.word_interval)
+        logger.info("👑 JANAKA: Delegating to MahamantraDaemon (SSOT)...")
+        daemon = MahamantraDaemon()
+        await daemon.start()
 
     # === DEAD CODE BELOW (nested functions from corrupted file) ===
     # These methods are unreachable due to indent bug - kept for reference
