@@ -2,6 +2,44 @@
 
 **Protocol First. Data Driven. Scientific.**
 
+---
+
+## STATUS (2025-01-13)
+
+### ✅ DONE
+- [x] **Truth Table** → `substrate/position.py` (MAHAMANTRA_POSITIONS)
+- [x] **MantraProtocol Base** → `substrate/protocol.py` (correct derivation)
+- [x] **16 Mahajana Folders** → `genesis/`, `dharma/`, `karma/`, `moksha/`
+- [x] **Singularity Math** → `protocols/_singularity.py` (Chaitanya/Mercy/Parampara)
+- [x] **Shadow Reactor** → `reactor/shadow.py` (Parampara verification per tick)
+
+### ❌ BROKEN
+- [ ] **Mahajana Folders have WRONG declarations!**
+  ```python
+  # brahma/__init__.py says:
+  __mahajana__ = "prithu"  # WRONG! Should be "brahma"
+  __position__ = 0         # WRONG! Should be 1
+  ```
+- [ ] **Mahajana Folders use MANUAL WIRING** (not MantraProtocol derivation)
+  ```python
+  # Current (wrong):
+  POSITION: Final[int] = 1  # Hardcoded
+
+  # Should be (derived):
+  class BrahmaProtocol(MantraProtocol):
+      _position_index = 1  # Everything else derived!
+  ```
+- [ ] **__init__.py is 1408 lines** (too big, needs split)
+- [ ] **81 Any references** in mahamantra/
+
+### 🎯 NEXT
+1. **Fix mahajana declarations** → Correct `__mahajana__`, `__position__`
+2. **Convert to MantraProtocol** → Remove hardcoded constants
+3. **Split __init__.py** → Move LotusNode etc. to separate files
+4. **Kill Any** → Replace with typed alternatives
+
+---
+
 ## PROBLEM
 
 ```
