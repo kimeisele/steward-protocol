@@ -1,20 +1,36 @@
 """
-CLOCK - Der Mahamantra Taktgeber
-================================
+CLOCK - Der Mahamantra Taktgeber (LILA-AWARE)
+=============================================
 
 "kālo 'smi loka-kṣaya-kṛt pravṛddho"
 "Ich bin die Zeit, der große Zerstörer der Welten."
 — Bhagavad Gita 11.32
 
-DAS IST ALLES. EIN CLOCK. MEHR NICHT.
+ZWEI MODI:
+=========
 
-    16 ticks = 1 cycle
-    4 ticks = 1 quarter
-    1 tick = 1 position
+    CPU MODE (tick):     0-15 (ein Mantra)
+    LILA MODE (lila):    0-47 (Chaitanya Lila)
 
-Wie ein echter CPU Clock:
+CHAITANYA LILA:
+==============
+
+    0-23:  NAVADVIP (Build, __init__, Compile)
+    24-47: PURI (Runtime, yield, Execute)
+
+    48 = 16 × 3 = Chaitanya's 48 Jahre
+
+DIE MAP:
+=======
+
     tick tick tick tick...
-    0 → 1 → 2 → ... → 15 → 0 → ...
+
+    NAVADVIP                      PURI
+    ┌─────────────────────┐      ┌─────────────────────┐
+    │ Cycle 1: 0-15       │      │ Cycle 2: 16-31      │ ← partially
+    │ Cycle 2: 16-23      │      │ Cycle 3: 32-47      │
+    └─────────────────────┘      └─────────────────────┘
+           BUILD                       RUNTIME
 
 WATERTIGHT: Keine externen Abhängigkeiten. Nur substrate/.
 """
@@ -33,6 +49,13 @@ from vibe_core.mahamantra.substrate.position import (
     MantraPosition,
 )
 from vibe_core.mahamantra.substrate.protocol import ProtocolRegistry
+from vibe_core.mahamantra.substrate.pancha_tattva import (
+    CHAITANYA_LILA,      # 48
+    NAVADVIPA_PHASE,     # 24
+    get_lila_phase,      # tick → "navadvipa" / "puri"
+    get_mantra_cycle,    # tick → 1, 2, 3
+    get_mantra_position, # tick → 0-15
+)
 
 
 # =============================================================================
@@ -49,45 +72,64 @@ class TickState(TypedDict):
     opcode: Optional[int]  # The opcode value
 
 
+class LilaTickState(TypedDict):
+    """What a lila_tick returns. LILA-AWARE."""
+    # Mantra level (0-15)
+    tick: int           # Current mantra position (0-15)
+    position: int       # Same as tick
+    quarter: str        # genesis/dharma/karma/moksha
+    guardian: str       # The mahajana/avatara name
+    word: str           # HARE/KRISHNA/RAMA
+    opcode: Optional[int]
+    # Lila level (0-47)
+    lila_tick: int      # Current lila position (0-47)
+    phase: str          # "navadvipa" or "puri"
+    cycle: int          # 1, 2, or 3
+    is_navadvip: bool   # True if in build phase
+    is_puri: bool       # True if in runtime phase
+
+
 # =============================================================================
-# THE CLOCK - Das Herz des Systems
+# THE CLOCK - Das Herz des Systems (LILA-AWARE)
 # =============================================================================
 
 class MahamantraClock:
     """
-    Der Taktgeber. 16 Positionen. Mehr nicht.
+    Der Taktgeber. LILA-AWARE.
 
-    Wie ein CPU Clock:
-        clock.tick()  → Advance and return state
-        clock.tick    → Current position (0-15)
-        clock[5]      → Position 5 info
+    ZWEI MODI:
+        clock.tick()      → 0-15 (CPU Mode, ein Mantra)
+        clock.lila_tick() → 0-47 (Lila Mode, Chaitanya's Leben)
 
-    KEINE Router. KEINE CLI. KEINE Spaghetti.
-    NUR: tick tick tick tick...
+    NAVIGATION:
+        clock.goto_navadvip() → Springe zu Build-Phase (0)
+        clock.goto_puri()     → Springe zu Runtime-Phase (24)
+
+    PHASE-AWARE:
+        clock.phase       → "navadvipa" oder "puri"
+        clock.cycle       → 1, 2, oder 3
+        clock.is_navadvip → True in Build-Phase
+        clock.is_puri     → True in Runtime-Phase
     """
 
-    __slots__ = ("_tick",)
+    __slots__ = ("_tick", "_lila_tick")
 
     def __init__(self) -> None:
-        self._tick: int = 0
+        self._tick: int = 0       # Mantra position (0-15)
+        self._lila_tick: int = 0  # Lila position (0-47)
 
     # =========================================================================
-    # THE HEARTBEAT
+    # CPU MODE - Simple 16-position tick
     # =========================================================================
 
     def tick(self) -> TickState:
         """
-        Der Herzschlag. Advance und return state.
+        CPU Mode: Der einfache Herzschlag (0-15).
 
-        1. Get current position
-        2. Dispatch to registered instances
-        3. Advance counter
-        4. Return state
+        Für Backward-Kompatibilität. Ignoriert Lila.
         """
-        # Get current position from truth table
         pos = MAHAMANTRA_POSITIONS[self._tick]
 
-        # Build state
         state: TickState = {
             "tick": self._tick,
             "position": self._tick,
@@ -97,26 +139,122 @@ class MahamantraClock:
             "opcode": pos.opcode.value if pos.opcode else None,
         }
 
-        # Dispatch to registered instance at this position
+        # Dispatch to registered instance
         ProtocolRegistry.dispatch_tick(self._tick, state)
 
-        # Advance (wrap at 16)
-        current = self._tick
+        # Advance mantra position only
         self._tick = (self._tick + 1) % 16
 
         return state
 
-    def reset(self) -> None:
-        """Reset to position 0."""
-        self._tick = 0
+    # =========================================================================
+    # LILA MODE - Full 48-position Chaitanya Lila
+    # =========================================================================
+
+    def lila_tick(self) -> LilaTickState:
+        """
+        Lila Mode: Der volle Chaitanya Herzschlag (0-47).
+
+        NAVADVIP (0-23): Build-Phase, __init__, Compile
+        PURI (24-47):    Runtime-Phase, yield, Execute
+
+        Returns: LilaTickState mit Phase-Info
+        """
+        # Get mantra position from lila position
+        mantra_pos = get_mantra_position(self._lila_tick)
+        pos = MAHAMANTRA_POSITIONS[mantra_pos]
+
+        # Build lila-aware state
+        phase = get_lila_phase(self._lila_tick)
+        cycle = get_mantra_cycle(self._lila_tick)
+
+        state: LilaTickState = {
+            # Mantra level
+            "tick": mantra_pos,
+            "position": mantra_pos,
+            "quarter": pos.quarter.name.lower(),
+            "guardian": pos.guardian.value,
+            "word": pos.word.name,
+            "opcode": pos.opcode.value if pos.opcode else None,
+            # Lila level
+            "lila_tick": self._lila_tick,
+            "phase": phase,
+            "cycle": cycle,
+            "is_navadvip": phase == "navadvipa",
+            "is_puri": phase == "puri",
+        }
+
+        # Dispatch to registered instance (uses mantra position)
+        ProtocolRegistry.dispatch_tick(mantra_pos, state)
+
+        # Advance BOTH counters
+        self._lila_tick = (self._lila_tick + 1) % CHAITANYA_LILA
+        self._tick = get_mantra_position(self._lila_tick)
+
+        return state
 
     # =========================================================================
-    # READ-ONLY ACCESS
+    # NAVIGATION - Springe zu Phase
+    # =========================================================================
+
+    def goto_navadvip(self) -> None:
+        """Springe zu Navadvip (Build-Phase, Position 0)."""
+        self._lila_tick = 0
+        self._tick = 0
+
+    def goto_puri(self) -> None:
+        """Springe zu Puri (Runtime-Phase, Position 24)."""
+        self._lila_tick = NAVADVIPA_PHASE  # 24
+        self._tick = get_mantra_position(self._lila_tick)
+
+    def goto_lila(self, lila_position: int) -> None:
+        """Springe zu beliebiger Lila-Position (0-47)."""
+        if not 0 <= lila_position < CHAITANYA_LILA:
+            raise ValueError(f"Lila position must be 0-47, got {lila_position}")
+        self._lila_tick = lila_position
+        self._tick = get_mantra_position(self._lila_tick)
+
+    def reset(self) -> None:
+        """Reset zu Position 0 (Navadvip Start)."""
+        self._tick = 0
+        self._lila_tick = 0
+
+    # =========================================================================
+    # LILA PROPERTIES
+    # =========================================================================
+
+    @property
+    def lila_position(self) -> int:
+        """Current lila position (0-47)."""
+        return self._lila_tick
+
+    @property
+    def phase(self) -> str:
+        """Current phase: 'navadvipa' or 'puri'."""
+        return get_lila_phase(self._lila_tick)
+
+    @property
+    def cycle(self) -> int:
+        """Current cycle (1, 2, or 3)."""
+        return get_mantra_cycle(self._lila_tick)
+
+    @property
+    def is_navadvip(self) -> bool:
+        """True if in Navadvip (Build) phase."""
+        return self._lila_tick < NAVADVIPA_PHASE
+
+    @property
+    def is_puri(self) -> bool:
+        """True if in Puri (Runtime) phase."""
+        return self._lila_tick >= NAVADVIPA_PHASE
+
+    # =========================================================================
+    # MANTRA PROPERTIES (backward compatible)
     # =========================================================================
 
     @property
     def position(self) -> int:
-        """Current position (0-15)."""
+        """Current mantra position (0-15)."""
         return self._tick
 
     @property
@@ -135,11 +273,16 @@ class MahamantraClock:
         return self.get_position(index)
 
     def __len__(self) -> int:
-        """16 positions."""
+        """16 mantra positions (or 48 lila positions via lila_len)."""
         return 16
 
+    @property
+    def lila_len(self) -> int:
+        """48 lila positions."""
+        return CHAITANYA_LILA
+
     def __iter__(self):
-        """Iterate through all 16 positions."""
+        """Iterate through all 16 mantra positions."""
         return iter(MAHAMANTRA_POSITIONS)
 
     def __contains__(self, item) -> bool:
@@ -158,7 +301,10 @@ class MahamantraClock:
         raise ValueError(f"Unknown guardian: {guardian_name}")
 
     def __repr__(self) -> str:
-        return f"MahamantraClock(position={self._tick})"
+        return (
+            f"MahamantraClock(position={self._tick}, "
+            f"lila={self._lila_tick}, phase={self.phase})"
+        )
 
     # =========================================================================
     # THE CHANT
@@ -192,5 +338,6 @@ clock = MahamantraClock()
 __all__ = [
     "MahamantraClock",
     "TickState",
+    "LilaTickState",
     "clock",
 ]
