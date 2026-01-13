@@ -71,6 +71,7 @@ import vibe_core.cli.prakriti_cli  # noqa: F401 - registers "prakriti" (OPUS-307
 import vibe_core.cli.prompts_cli  # noqa: F401 - registers "prompts" (OPUS-307)
 import vibe_core.cli.remedies_cli  # noqa: F401 - registers "remedies"
 import vibe_core.cli.run_cli  # noqa: F401 - registers "run"
+import vibe_core.cli.samskara_cli  # noqa: F401 - registers "samskara" (Yamaraja migration)
 import vibe_core.cli.sections_cli  # noqa: F401 - registers "sections" (OPUS-307)
 import vibe_core.cli.standards_cli  # noqa: F401 - registers "standards"
 import vibe_core.cli.tool_cli  # noqa: F401 - registers "tool"
