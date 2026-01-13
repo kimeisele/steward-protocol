@@ -380,7 +380,13 @@ class MahamantraLotus(LotusNode):
     THE 16 GUARDIANS ARE THE WIRING.
     """
 
-    # _singularity removed - using watertight clock instead
+    # =========================================================================
+    # STATE - The Reactor holds the tick position (not substrate!)
+    # =========================================================================
+    # Substrate = stateless map (answers "what WOULD be at tick X?")
+    # Lotus = stateful reactor (answers "where am I NOW?")
+
+    _tick: int = 0  # Current position (0-15) - shared across instances
 
     # =========================================================================
     # GUARDIAN → SUBSTRATE MODULE MAPPING
@@ -420,33 +426,46 @@ class MahamantraLotus(LotusNode):
     # =========================================================================
     # THE LOOP - Input AND Output (ONE MANTRA)
     # =========================================================================
-
+    # ARCHITECTURE:
+    #   Substrate (clock.py) = STATELESS pure functions (the map)
+    #   Lotus (this class) = STATEFUL reactor (the walker)
+    #
+    # The Lotus holds the tick position and uses substrate for calculations.
     # =========================================================================
-    # THE CLOCK - Watertight (no external deps)
-    # =========================================================================
-
-    _clock = None  # Lazy-loaded watertight clock
-
-    @property
-    def _core(self):
-        """The watertight clock from substrate."""
-        if MahamantraLotus._clock is None:
-            from vibe_core.mahamantra.substrate.clock import clock
-            MahamantraLotus._clock = clock
-        return MahamantraLotus._clock
 
     def tick(self) -> TickState:
         """
         Der Herzschlag - Advance through the 16 positions.
 
-        WATERTIGHT: Uses substrate.clock, no external dependencies.
+        WATERTIGHT: Uses substrate.clock pure functions.
 
         tick tick tick tick...
         0 → 1 → 2 → ... → 15 → 0 → ...
 
         Returns: TickState {tick, position, quarter, guardian, word, opcode}
         """
-        return self._core.tick()
+        from vibe_core.mahamantra.substrate.clock import (
+            get_tick_info,
+            next_position,
+        )
+
+        # Get current position info
+        info = get_tick_info(MahamantraLotus._tick)
+
+        # Build result BEFORE advancing (return current state)
+        result = TickState(
+            tick=MahamantraLotus._tick,
+            position=info["position"],
+            quarter=info["quarter"],
+            guardian=info["guardian"],
+            word=info["word"],
+            opcode=info["opcode"],
+        )
+
+        # Advance to next position (for next call)
+        MahamantraLotus._tick = next_position(MahamantraLotus._tick)
+
+        return result
 
     def chant(self, separator: str = " ") -> str:
         """
@@ -454,19 +473,23 @@ class MahamantraLotus(LotusNode):
 
         Output: "Hare Krishna Hare Krishna..."
         """
-        return self._core.chant(separator)
+        from vibe_core.mahamantra.substrate.clock import get_chant
+        return get_chant(separator)
 
     def get_tick(self) -> int:
         """Current position (0-15)."""
-        return self._core.position
+        return MahamantraLotus._tick
 
     def get_quarter(self) -> str:
         """Current quarter (genesis/dharma/karma/moksha)."""
-        return self._core.quarter
+        from vibe_core.mahamantra.substrate.clock import get_tick_info
+        info = get_tick_info(MahamantraLotus._tick)
+        return info["quarter"]
 
     def verify(self, parampara_vector: int) -> bool:
         """Verify Parampara connection (% 37 == 0)."""
-        return self._core.verify(parampara_vector)
+        from vibe_core.mahamantra.substrate.clock import verify_parampara
+        return verify_parampara(parampara_vector)
 
     # === Quarter Shortcuts ===
 
@@ -866,8 +889,11 @@ class MahamantraLotus(LotusNode):
         if index_or_guardian is None:
             return self.chant()
         if isinstance(index_or_guardian, int):
-            return self._core[index_or_guardian]
-        return self._core.by_guardian(index_or_guardian)
+            from vibe_core.mahamantra.substrate.clock import get_tick_info
+            return get_tick_info(index_or_guardian)
+        # By guardian name
+        from vibe_core.mahamantra.substrate.clock import get_position_by_guardian
+        return get_position_by_guardian(index_or_guardian)
 
     def __bool__(self) -> bool:
         """
@@ -898,7 +924,8 @@ class MahamantraLotus(LotusNode):
 
         for pos in mahamantra: ...
         """
-        return iter(self._core)
+        from vibe_core.mahamantra.substrate.clock import get_tick_info, MANTRA_LENGTH
+        return (get_tick_info(i) for i in range(MANTRA_LENGTH))
 
     def __len__(self) -> int:
         """16 positions in the Mahamantra."""
@@ -910,11 +937,18 @@ class MahamantraLotus(LotusNode):
 
         mahamantra[5] → Position 5 (KUMARAS)
         """
-        return self._core[index]
+        from vibe_core.mahamantra.substrate.clock import get_tick_info
+        return get_tick_info(index)
 
     def __contains__(self, item: Union[int, str]) -> bool:
         """Check if guardian or index is in Mahamantra."""
-        return item in self._core
+        from vibe_core.mahamantra.substrate.clock import MANTRA_LENGTH
+        if isinstance(item, int):
+            return 0 <= item < MANTRA_LENGTH
+        # Check guardian name
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        guardian_names = [pos.guardian.value for pos in MAHAMANTRA_POSITIONS]
+        return item in guardian_names
 
 
 # =============================================================================
