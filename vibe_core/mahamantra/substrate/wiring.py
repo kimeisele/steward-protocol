@@ -93,10 +93,10 @@ from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 FOLDER_IS_WIRING: Final[bool] = True
 NO_FOLDER_NO_EXISTENCE: Final[bool] = True
 
-# Fractal constants
+# Fractal constants (derived from SSOT: byte.py → mahajana.py → here)
 POSITIONS_PER_QUARTER: Final[int] = 4
 QUARTER_COUNT: Final[int] = 4
-FRACTAL_BASE: Final[int] = 16  # 16^n scaling
+FRACTAL_BASE: Final[int] = TOTAL_POSITIONS  # 16^n scaling (from SSOT)
 
 
 # =============================================================================

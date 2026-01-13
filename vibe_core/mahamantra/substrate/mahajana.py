@@ -39,6 +39,8 @@ __genesis__ = "0xc5899adb"  # GenesisByte: parampara % 37 == 0
 from enum import Enum
 from typing import Final
 
+from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION
+
 
 class Mahajana(str, Enum):
     """
@@ -98,7 +100,7 @@ class Sampradaya(str, Enum):
 # Konstanten
 MAHAJANA_COUNT: Final[int] = 12
 AVATARA_COUNT: Final[int] = 4
-TOTAL_POSITIONS: Final[int] = 16  # 4 Avataras + 12 Mahajanas
+TOTAL_POSITIONS: Final[int] = MAHAMANTRA_DIMENSION  # 4 Avataras + 12 Mahajanas = 16 (from byte.py SSOT)
 
 
 __all__ = [

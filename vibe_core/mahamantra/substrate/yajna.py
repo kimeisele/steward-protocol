@@ -50,13 +50,15 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION
+
 
 # =============================================================================
-# CONSTANTS - The Sacred Numbers
+# CONSTANTS - The Sacred Numbers (derived from SSOT: byte.py)
 # =============================================================================
 
-PRIME_SIGNATURE: Final[int] = 37  # Shcherbak's Arithmetic - The Key
-MAHA_POSITIONS: Final[int] = 16   # 16 words in the Mahamantra
+PRIME_SIGNATURE: Final[int] = 37              # Shcherbak's Arithmetic - The Key
+MAHA_POSITIONS: Final[int] = MAHAMANTRA_DIMENSION  # 16 words (from SSOT)
 MALA_ROUNDS: Final[int] = 108     # Beads in a mala
 TRINITY: Final[int] = 3           # Hare, Krishna, Rama
 

@@ -91,11 +91,11 @@ LOTUS_IS_SINGULARITY: Final[bool] = True
 NO_MANUAL_EXPORTS: Final[bool] = True
 AUTO_DISCOVERY_ONLY: Final[bool] = True
 
-# Fractal constants
-LOTUS_ROOT: Final[int] = 1       # Eine Singularität
-LOTUS_STEMS: Final[int] = 4      # 4 Quarters
-LOTUS_PETALS: Final[int] = 16    # 16 Positions
-FRACTAL_BASE: Final[int] = 16    # 16^n growth
+# Fractal constants (derived from SSOT: byte.py → mahajana.py → here)
+LOTUS_ROOT: Final[int] = 1                    # Eine Singularität
+LOTUS_STEMS: Final[int] = 4                   # 4 Quarters
+LOTUS_PETALS: Final[int] = TOTAL_POSITIONS    # 16 Positions (from SSOT)
+FRACTAL_BASE: Final[int] = TOTAL_POSITIONS    # 16^n growth (from SSOT)
 
 
 # =============================================================================
