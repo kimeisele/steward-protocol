@@ -19,8 +19,8 @@ Prompts are loaded from knowledge/prompts/*.yaml or *.j2
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "shuka"
+__position__ = 14
 __genesis__ = "0x80b8b1b9"  # GenesisByte: parampara % 37 == 0
 
 import logging

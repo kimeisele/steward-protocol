@@ -10,8 +10,8 @@ Philosophy:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "kumaras"
+__position__ = 5
 __genesis__ = "0x62c372a0"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field

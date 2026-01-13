@@ -11,8 +11,8 @@ Environment Variables:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "yamaraja"
+__position__ = 15
 __genesis__ = "0xafc5c566"  # GenesisByte: parampara % 37 == 0
 
 import logging

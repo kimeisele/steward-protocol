@@ -12,8 +12,8 @@ WHERE to find them (which env var names).
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "narada"
+__position__ = 2
 __genesis__ = "0x69936d1a"  # GenesisByte: parampara % 37 == 0
 
 import os

@@ -6,8 +6,8 @@ Loaded from config/agents.yaml via Phoenix auto-discovery.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "prahlada"
+__position__ = 9
 __genesis__ = "0x86f78e2d"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field

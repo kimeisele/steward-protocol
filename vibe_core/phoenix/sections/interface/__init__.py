@@ -6,8 +6,8 @@ Fractal: Custom agents can add their own renderers via config.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "narada"
+__position__ = 2
 __genesis__ = "0xe413bcb9"  # GenesisByte: parampara % 37 == 0
 
 from .section_main import (
