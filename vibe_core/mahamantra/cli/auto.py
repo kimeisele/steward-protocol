@@ -44,7 +44,6 @@ import inspect
 from dataclasses import dataclass
 from datetime import datetime
 from typing import (
-    Any,
     Callable,
     Dict,
     List,
@@ -57,6 +56,23 @@ from typing import (
     get_type_hints,
     runtime_checkable,
 )
+
+# =============================================================================
+# WATERTIGHT TYPE ALIASES - No Any allowed
+# =============================================================================
+
+# CLI-safe primitive types (what CLI args become)
+CLIPrimitive = Union[str, int, float, bool]
+
+# Method call arguments (converted from CLI strings)
+CLICallArgs = Dict[str, CLIPrimitive]
+
+# Method result types (what protocol methods return)
+# Recursive definition for nested structures
+MethodResultLeaf = Union[str, int, float, bool, None]
+MethodResultList = List[Union[MethodResultLeaf, Dict[str, "MethodResultLeaf"]]]
+MethodResultDict = Dict[str, Union[MethodResultLeaf, List[MethodResultLeaf]]]
+MethodResult = Union[None, MethodResultDict, MethodResultList, Tuple[MethodResultLeaf, ...], str, int, float, bool]
 
 from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
@@ -413,12 +429,12 @@ class CLIAutoDiscovery:
         self,
         args: List[str],
         method_info: Optional[DiscoveredMethod],
-    ) -> Dict[str, Any]:
+    ) -> CLICallArgs:
         """Build method call arguments from CLI args."""
         if not method_info or not method_info.parameters:
             return {}
 
-        call_args: Dict[str, Any] = {}
+        call_args: CLICallArgs = {}
 
         for i, param in enumerate(method_info.parameters):
             if i < len(args):
@@ -439,7 +455,7 @@ class CLIAutoDiscovery:
 
         return call_args
 
-    def _result_to_output(self, result: Any) -> CLIOutput:
+    def _result_to_output(self, result: MethodResult) -> CLIOutput:
         """Convert method result to CLIOutput."""
         output = CLIOutput()
 
