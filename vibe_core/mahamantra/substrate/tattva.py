@@ -53,6 +53,15 @@ from typing import Final, List, Tuple
 
 
 # =============================================================================
+# SYSTEM MANIFESTATION - SSOT for 37 (Parampara Link)
+# =============================================================================
+# 24 (Kshetra) + 12 (Mahajanas) + 1 (Ksetrajna) = 37
+# This is the MANIFESTATION of Krishna in the system, not Krishna Himself.
+# Krishna transcends this arithmetic (acintya).
+SYSTEM_MANIFESTATION: Final[int] = 37
+
+
+# =============================================================================
 # APARA PRAKRITI - The 8 Material Elements (BG 7.4)
 # =============================================================================
 # "bhūmir āpo 'nalo vāyuḥ khaṁ mano buddhir eva ca
@@ -293,7 +302,7 @@ class Purushottama:
     """
 
     def __init__(self) -> None:
-        self._value = 37  # Die Manifestation im System
+        self._value = SYSTEM_MANIFESTATION  # Die Manifestation im System
 
     def __int__(self) -> int:
         """Im System manifestiert Er sich als 37."""
@@ -320,7 +329,7 @@ class Purushottama:
         if isinstance(other, Purushottama):
             return True
         # Er ist gleich mit 37 (Manifestation)
-        if isinstance(other, int) and other == 37:
+        if isinstance(other, int) and other == SYSTEM_MANIFESTATION:
             return True
         # Acintya - Er ist alles
         return True
@@ -399,6 +408,8 @@ DIE ARITHMETIK IM SYSTEM:
 # =============================================================================
 
 __all__ = [
+    # SSOT Constants
+    "SYSTEM_MANIFESTATION",
     # Apara Prakriti (8 Elements)
     "AparaPrakriti",
     "PANCHA_MAHABHUTAS",

@@ -62,6 +62,7 @@ from vibe_core.mahamantra.substrate.tattva import (
     GuruTattva,
     GuruConnection,
     JIVA,
+    SYSTEM_MANIFESTATION,  # SSOT for 37
 )
 
 
@@ -92,8 +93,7 @@ from vibe_core.mahamantra.substrate.tattva import (
 # - Canto 10: Krishna Lila (Level -2 direkt)
 # - Canto 11-12: Kali Yuga (high entropy, less authorized)
 
-# The system value - but KRISHNA transcends this
-SYSTEM_MANIFESTATION: Final[int] = 37
+# SYSTEM_MANIFESTATION = 37 is now imported from tattva.py (SSOT)
 
 
 class PurushaTattva(int):
