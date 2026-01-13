@@ -275,6 +275,19 @@ from vibe_core.protocols.mahajanas.vyasa.types import (
     ArchiveAttachment,
 )
 
+# =============================================================================
+# KNOWLEDGE GRAPH PROTOCOL - Universal Knowledge Interface
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.vyasa.knowledge import (
+    KnowledgeGraphProtocolBase,
+    KnowledgeGraphProtocol,
+    NullKnowledgeGraph,
+    NodeType as KGNodeType,
+    RelationType as KGRelationType,
+    ViolationNode,
+)
+
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "VyasaProtocolBase",
@@ -302,4 +315,11 @@ __all__ = [
     "InMemoryLedger",
     "SQLiteLedger",
     "ArchiveAttachment",
+    # === KNOWLEDGE GRAPH PROTOCOL ===
+    "KnowledgeGraphProtocolBase",
+    "KnowledgeGraphProtocol",
+    "NullKnowledgeGraph",
+    "KGNodeType",
+    "KGRelationType",
+    "ViolationNode",
 ]

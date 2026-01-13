@@ -166,8 +166,8 @@ rules:
     severity: "MEDIUM"
     message: "Any type usage detected. Violates PROMPT.md typing discipline."
     fix_suggestion: "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data."
-    has_sattva_remedy: false
-    # NOTE: This rule requires AST Name matching which may need implementation
+    has_sattva_remedy: true  # AnyTypeRemedy removes unused Any imports
+    # NOTE: Full Any replacement requires manual type inference - remedy only handles unused imports
 
   # ============================================================================
   # STRUCTURAL RULES (require semantic analysis, not just AST)

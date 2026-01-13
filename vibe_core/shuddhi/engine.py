@@ -188,13 +188,14 @@ class ShuddhiEngine(ShuddhiProtocol):
         # 1. Perform the healing
         result = self.purify(file_path, rule_id)
 
-        # 2. If successful, update Knowledge Graph
+        # 2. If successful, update Knowledge Graph via PROTOCOL
         if result.status == ShuddhiStatus.PURIFIED:
             try:
                 from vibe_core.di import ServiceRegistry
-                from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+                from vibe_core.protocols.mahajanas.vyasa import KnowledgeGraphProtocol
 
-                kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+                # Use protocol, not implementation
+                kg = ServiceRegistry.get(KnowledgeGraphProtocol)
                 if kg and violation_id:
                     kg.mark_violation_healed(violation_id, rule_id)
                     logger.info(f"[SHUDDHI→KG] Marked violation {violation_id} as healed")
@@ -223,15 +224,16 @@ class ShuddhiEngine(ShuddhiProtocol):
         Returns:
             List of ShuddhiResults for each attempted healing
         """
-        results = []
+        results: List[ShuddhiResult] = []
 
         try:
             from vibe_core.di import ServiceRegistry
-            from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+            from vibe_core.protocols.mahajanas.vyasa import KnowledgeGraphProtocol
 
-            kg = ServiceRegistry.get(UnifiedKnowledgeGraph)
+            # Use protocol, not implementation
+            kg = ServiceRegistry.get(KnowledgeGraphProtocol)
             if not kg:
-                logger.warning("[SHUDDHI] Knowledge Graph not available")
+                logger.warning("[SHUDDHI] KnowledgeGraphProtocol not available")
                 return results
 
             # Get unhealed violations
@@ -241,6 +243,10 @@ class ShuddhiEngine(ShuddhiProtocol):
             for v in violations:
                 rule_id = v.properties.get("rule_id", "")
                 file_path_str = v.properties.get("file_path", "")
+
+                # Type guard for str
+                if not isinstance(rule_id, str) or not isinstance(file_path_str, str):
+                    continue
 
                 # Check if we have a remedy
                 if not self.can_heal(rule_id):
@@ -260,7 +266,7 @@ class ShuddhiEngine(ShuddhiProtocol):
                 results.append(result)
 
                 if result.status == ShuddhiStatus.PURIFIED:
-                    logger.info(f"[SHUDDHI] ✅ Healed {rule_id} in {file_path}")
+                    logger.info(f"[SHUDDHI] Healed {rule_id} in {file_path}")
 
         except Exception as e:
             logger.exception(f"[SHUDDHI] Error in heal_all_violations: {e}")
