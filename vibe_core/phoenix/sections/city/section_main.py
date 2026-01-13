@@ -1,8 +1,8 @@
 """City Configuration - Agent City settings from matrix.yaml."""
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "janaka"
+__position__ = 10
 __genesis__ = "0x404a82c2"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field

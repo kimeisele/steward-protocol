@@ -9,8 +9,8 @@ VEDA-4 Pattern:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "brahma"
-__position__ = 1
+__mahajana__ = "shuka"
+__position__ = 14
 __genesis__ = "0x19f53a32"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field

@@ -151,6 +151,26 @@ FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     "mahamantra/protocols": "vyasa",   # Compilation
     "protocols/universal": "vyasa",    # Universal compilation
     "protocols/substrate": "prithu",   # Substrate foundation
+    # === PHOENIX SECTIONS (config domains) ===
+    "phoenix/sections/naga": "yamaraja",           # Security config
+    "phoenix/sections/agents": "prahlada",         # Agent config
+    "phoenix/sections/quality": "kumaras",         # Quality config
+    "phoenix/sections/guardrails": "kumaras",      # Guardrails config
+    "phoenix/sections/test_governance": "yamaraja", # Test governance
+    "phoenix/sections/llm": "shuka",               # LLM config
+    "phoenix/sections/prompts": "shuka",           # Prompts config
+    "phoenix/sections/providers": "shuka",         # Provider config
+    "phoenix/sections/quotas": "manu",             # Quotas/limits
+    "phoenix/sections/runtime": "brahma",          # Runtime config
+    "phoenix/sections/paths": "brahma",            # Paths config
+    "phoenix/sections/templates": "brahma",        # Templates config
+    "phoenix/sections/kernel": "brahma",           # Kernel config
+    "phoenix/sections/cli": "narada",              # CLI config
+    "phoenix/sections/interface": "narada",        # Interface config
+    "phoenix/sections/apis": "narada",             # APIs config
+    "phoenix/sections/steward": "janaka",          # Steward config
+    "phoenix/sections/manas": "kapila",            # Mind/analysis config
+    "phoenix/sections/city": "janaka",             # City/matrix config
 }
 
 # DERIVED: Scan directories come from the map (protocol-driven, not hardcoded)
