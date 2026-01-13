@@ -58,10 +58,17 @@ import asyncio
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
+# Import types from protocol (SSOT - Single Source of Truth)
+from vibe_core.protocols.task_kernel_protocol import (
+    TaskKernelStatus,
+    TaskKernelResult,
+    InjectedCapabilities,
+    TaskKernelProtocol,
+    TaskKernelFactoryProtocol,
+)
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -72,105 +79,10 @@ logger = logging.getLogger("TASK_KERNEL")
 
 
 # =============================================================================
-# RESULT TYPES
+# RE-EXPORT TYPES FROM PROTOCOL (backward compatibility)
 # =============================================================================
-
-
-class TaskKernelStatus(str, Enum):
-    """Status of TaskKernel execution."""
-
-    SPAWNED = "spawned"  # Created, not yet executing
-    EXECUTING = "executing"  # Running task
-    COMPLETED = "completed"  # Finished successfully
-    FAILED = "failed"  # Finished with error
-    TIMEOUT = "timeout"  # Exceeded time limit
-    CANCELLED = "cancelled"  # Explicitly cancelled
-
-
-@dataclass
-class TaskKernelResult:
-    """
-    Result of TaskKernel execution.
-
-    Used for folding results back to parent kernel and
-    updating synaptic patterns in MANAS.
-    """
-
-    # Identity
-    kernel_id: str
-    task_id: str
-
-    # Status
-    status: TaskKernelStatus
-
-    # Output
-    output: Any = None
-    error: Optional[str] = None
-
-    # Metrics
-    duration_ms: float = 0.0
-    tool_calls_made: int = 0
-    tools_succeeded: int = 0
-    tools_failed: int = 0
-
-    # Timestamps
-    spawned_at: str = ""
-    completed_at: str = ""
-
-    # Synaptic reinforcement signal
-    # Positive = reinforce pattern, Negative = weaken pattern
-    reinforcement_signal: float = 0.0
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize for IPC/logging."""
-        return {
-            "kernel_id": self.kernel_id,
-            "task_id": self.task_id,
-            "status": self.status.value,
-            "output": str(self.output)[:500] if self.output else None,
-            "error": self.error,
-            "duration_ms": self.duration_ms,
-            "tool_calls_made": self.tool_calls_made,
-            "tools_succeeded": self.tools_succeeded,
-            "tools_failed": self.tools_failed,
-            "spawned_at": self.spawned_at,
-            "completed_at": self.completed_at,
-            "reinforcement_signal": self.reinforcement_signal,
-        }
-
-
-# =============================================================================
-# CAPABILITY INJECTOR
-# =============================================================================
-
-
-@dataclass
-class InjectedCapabilities:
-    """
-    Capabilities injected into TaskKernel.
-
-    This is the "Isolated Sandbox" approach per Gemini's recommendation.
-    TaskKernel receives specific Tool instances, not the full registry.
-    Enforces "Need to Know" principle.
-    """
-
-    # Tool instances (not registry reference)
-    tools: Dict[str, "Tool"] = field(default_factory=dict)
-
-    # Read-only config subset
-    workspace_path: Optional[str] = None
-    timeout_seconds: int = 300
-
-    # Callback for synaptic reinforcement
-    on_complete: Optional[Callable[[TaskKernelResult], None]] = None
-
-    def get_tool(self, name: str) -> Optional["Tool"]:
-        """Get a tool by name (returns None if not injected)."""
-        return self.tools.get(name)
-
-    def list_tools(self) -> List[str]:
-        """List available tool names."""
-        return list(self.tools.keys())
+# Types are now defined in task_kernel_protocol.py (SSOT)
+# Re-exported via import above for backward compatibility
 
 
 # =============================================================================
@@ -227,6 +139,57 @@ class TaskKernel:
         self._completed_at: Optional[str] = None
 
         logger.info(f"⚡ TaskKernel spawned: {self.kernel_id} (task={task.id[:8]}, tools={len(self._tools)})")
+
+    # =========================================================================
+    # PROTOCOL PROPERTIES (TaskKernelProtocol implementation)
+    # =========================================================================
+
+    @property
+    def status(self) -> TaskKernelStatus:
+        """Current execution status."""
+        return self._status
+
+    @property
+    def result(self) -> Optional[TaskKernelResult]:
+        """Execution result (available after execute())."""
+        return self._result
+
+    # =========================================================================
+    # TOOL ACCESS (TaskKernelProtocol implementation)
+    # =========================================================================
+
+    def get_tool(self, name: str) -> Optional["Tool"]:
+        """
+        Get an injected tool by name.
+
+        Only returns tools that were explicitly injected at spawn.
+        No registry access - enforces "Need to Know" principle.
+        """
+        return self._capabilities.get_tool(name)
+
+    def list_tools(self) -> List[str]:
+        """List available (injected) tool names."""
+        return self._capabilities.list_tools()
+
+    async def call_tool(
+        self,
+        tool_name: str,
+        parameters: Dict[str, Any],
+    ) -> "ToolResult":
+        """
+        Execute a tool call within this kernel's sandbox.
+
+        Args:
+            tool_name: Name of tool to call (must be injected)
+            parameters: Tool parameters
+
+        Returns:
+            ToolResult from tool execution
+
+        Raises:
+            ValueError: If tool not available
+        """
+        return await self._execute_tool_call(tool_name, parameters)
 
     # =========================================================================
     # OPUS-176 BHARAT: BORDER CONTROL
@@ -778,13 +741,69 @@ def fold_result_to_parent(
 
 
 # =============================================================================
+# TASK KERNEL FACTORY - Implements TaskKernelFactoryProtocol
+# =============================================================================
+
+
+class TaskKernelFactory:
+    """
+    Factory for creating TaskKernel instances.
+
+    Implements TaskKernelFactoryProtocol for dependency injection.
+
+    Usage:
+        # Register in ServiceRegistry
+        ServiceRegistry.register(TaskKernelFactoryProtocol, TaskKernelFactory())
+
+        # Use via protocol
+        factory = ServiceRegistry.get(TaskKernelFactoryProtocol)
+        tk = factory.spawn(task, tools)
+    """
+
+    def spawn(
+        self,
+        task: "ManagedTask",
+        tools: List["Tool"],
+        parent: Optional["RealVibeKernel"] = None,
+        timeout: int = 300,
+        on_complete: Optional[Callable[[TaskKernelResult], None]] = None,
+        caller_plugin_id: Optional[str] = None,
+    ) -> TaskKernel:
+        """
+        Spawn a new TaskKernel for a task.
+
+        Delegates to TaskKernel.spawn() - this factory enables
+        dependency injection without direct TaskKernel import.
+        """
+        return TaskKernel.spawn(
+            task=task,
+            tools=tools,
+            parent=parent,
+            timeout=timeout,
+            on_complete=on_complete,
+            caller_plugin_id=caller_plugin_id,
+        )
+
+
+# Default factory instance
+task_kernel_factory = TaskKernelFactory()
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
-    "TaskKernel",
-    "TaskKernelResult",
+    # Protocol types (from task_kernel_protocol.py)
     "TaskKernelStatus",
+    "TaskKernelResult",
     "InjectedCapabilities",
+    "TaskKernelProtocol",
+    "TaskKernelFactoryProtocol",
+    # Implementation
+    "TaskKernel",
+    "TaskKernelFactory",
+    "task_kernel_factory",
+    # Utility
     "fold_result_to_parent",
 ]
