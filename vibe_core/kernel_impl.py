@@ -151,13 +151,21 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
         # 1. LEDGER (Bhishma - Position 11)
         l_path = ledger_path or "data/vibe_ledger.db"
         self.__ledger = SQLiteLedger(l_path) if l_path != ":memory:" else InMemoryLedger()
-        self.bhishma = mahamantra.mod[11].BhishmaService(self.__ledger)
+
+        # Import services directly (mahamantra.mod API deprecated)
+        from vibe_core.services.bhishma_service import BhishmaService
+        from vibe_core.services.brahma_service import BrahmaService
+        from vibe_core.services.janaka_service import JanakaService
+        from vibe_core.services.bali_service import BaliService
+        from vibe_core.services.kapila_service import KapilaService
+
+        self.bhishma = BhishmaService(self.__ledger)
 
         # 2. REGISTRY (Brahma - Position 1) & Other Mahajanas
-        self.brahma = mahamantra.mod[1].BrahmaService(self.__ledger)
-        self.janaka = mahamantra.mod[10].JanakaService()
-        self.bali = mahamantra.mod[13].BaliService()
-        self.kapila = mahamantra.mod[6].KapilaService()
+        self.brahma = BrahmaService(self.__ledger)
+        self.janaka = JanakaService()
+        self.bali = BaliService()
+        self.kapila = KapilaService()
 
         # 3. MANTRA (Vishnu Clock)
         self._sovereign_context = SovereignContext(
