@@ -30,7 +30,10 @@ import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Union
+
+# WATERTIGHT: JSON-serializable value type (replaces Any)
+JsonValue = Union[str, int, float, bool, None, List["JsonValue"], Dict[str, "JsonValue"]]
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.event_bus import EventBus
@@ -60,6 +63,7 @@ from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
 if TYPE_CHECKING:
     from vibe_core.protocols.kernel_protocol import KernelProtocol
+    from vibe_core.protocols.ledger import LedgerProtocol
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
     from vibe_core.tools.tool_registry import ToolRegistry
 
@@ -157,7 +161,7 @@ class IntentConfidence:
             rollback_safety=rollback_safety,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, JsonValue]:
         """Serialize for storage/display."""
         return {
             "pattern_match": self.pattern_match,
@@ -641,7 +645,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # 🔌 CONFIG LOADING (OPUS-092)
     # =========================================================================
 
-    def _load_full_config(self) -> Dict[str, Any]:
+    def _load_full_config(self) -> Dict[str, JsonValue]:
         """
         Load full config/manas.yaml.
 
@@ -706,7 +710,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             self._global_tool_registry = None
             logger.info("⚡ VAJRA: Kernel injected - ledger ACTIVE (no tool_registry)")
 
-    def inject_ledger(self, ledger: Any) -> None:
+    def inject_ledger(self, ledger: "LedgerProtocol") -> None:
         """
         Inject a standalone ledger for autonomous mode (heartbeat).
 
@@ -894,7 +898,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             except Exception as e:
                 logger.debug(f"🙏 DHARMA SENSE: Could not record success: {e}")
 
-    def get_dharma_summary(self) -> Optional[Dict[str, Any]]:
+    def get_dharma_summary(self) -> Optional[Dict[str, JsonValue]]:
         """Get Dharma summary for OPUS.md display."""
         if not self._dharma_sense:
             return None
@@ -1124,7 +1128,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         self._prana_sense = sense
         logger.info("🫀 PRANA SENSE: Seventh Jnanendriya injected - MANAS can now perceive agent presence")
 
-    def get_prana_summary(self) -> Optional[Dict[str, Any]]:
+    def get_prana_summary(self) -> Optional[Dict[str, JsonValue]]:
         """Get Prana summary for OPUS.md display."""
         if not self._prana_sense:
             return None
@@ -1197,7 +1201,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # NOTE: _process_genesis_vibrations and _process_genesis_vibrations_legacy removed
     # (OPUS-167: moved to GenesisBridge)
 
-    def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
+    def get_sutra_summary(self) -> Optional[Dict[str, JsonValue]]:
         """Get Sutra summary for OPUS.md display."""
         if not self._sutra_sense:
             return None
@@ -1241,15 +1245,15 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         """Inject CognitiveWeaver via bridge."""
         self._weaver_bridge.inject_cognitive_weaver(weaver)
 
-    def get_cognitive_context(self, focus: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_cognitive_context(self, focus: Optional[str] = None) -> Optional[Dict[str, JsonValue]]:
         """Get unified cognitive context via bridge."""
         return self._weaver_bridge.get_cognitive_context(focus)
 
-    def consult_knowledge(self, action: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def consult_knowledge(self, action: str, context: Dict[str, JsonValue]) -> Optional[Dict[str, JsonValue]]:
         """Consult knowledge before action via bridge."""
         return self._weaver_bridge.consult_knowledge(action, context)
 
-    def get_cognitive_diagnosis(self) -> Optional[Dict[str, Any]]:
+    def get_cognitive_diagnosis(self) -> Optional[Dict[str, JsonValue]]:
         """Get full system diagnosis via bridge."""
         return self._weaver_bridge.get_cognitive_diagnosis()
 
@@ -1257,7 +1261,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # 🐍 NAGA CORTEX INTEGRATION (Phase 3B)
     # =========================================================================
 
-    def _merge_naga_context(self, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _merge_naga_context(self, context: Optional[Dict[str, JsonValue]]) -> Dict[str, JsonValue]:
         """
         Merge NAGA intelligence into cognitive context.
 
@@ -1353,7 +1357,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             logger.warning(f"🌙 SANKALPA: Could not initialize: {e}")
             self._sankalpa = None
 
-    def _generate_sankalpa_intents(self, context: Dict[str, Any]) -> List[Intent]:
+    def _generate_sankalpa_intents(self, context: Dict[str, JsonValue]) -> List[Intent]:
         """
         Generate proactive intents from Sankalpa strategies.
 
@@ -1553,7 +1557,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         self,
         event_type: str,
         intent: Intent,
-        extra_data: Optional[Dict[str, Any]] = None,
+        extra_data: Optional[Dict[str, JsonValue]] = None,
     ) -> Optional[str]:
         """
         Record an intent event to the core ledger.
@@ -1615,7 +1619,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # OPUS-095: OODA PHASE METHODS (Abstract from orchestrate())
     # =========================================================================
 
-    async def _perceive(self) -> Tuple[List[Any], Dict[str, Any]]:
+    async def _perceive(self) -> Tuple[List[object], Dict[str, JsonValue]]:
         """
         PERCEIVE Phase: Collect system state observations.
 
@@ -1714,7 +1718,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         metadata["chitta_pool_size"] = self._chitta.pool_size
         return [], metadata  # Empty list - Chitta holds the perceptions
 
-    async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+    async def _orient(self, observations: List[object]) -> Tuple[List[object], Dict[str, JsonValue]]:
         """
         ORIENT Phase: Process Chitta and organize perceptions.
 
@@ -1762,7 +1766,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         return processed_perceptions, metadata
 
-    async def _decide(self, orientations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
+    async def _decide(self, orientations: List[object]) -> Tuple[List[object], Dict[str, JsonValue]]:
         """
         DECIDE Phase: Buddhi discriminates which intents to execute.
 
@@ -1800,7 +1804,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         return decisions, metadata
 
-    async def _act(self, decisions: List[Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    async def _act(self, decisions: List[object]) -> Tuple[Dict[str, JsonValue], Dict[str, JsonValue]]:
         """
         ACT Phase: Execute decided intents.
 
@@ -1945,7 +1949,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             self._biorhythm = BiorhythmProcessor(kernel=self)
         return self._biorhythm
 
-    def tick(self) -> Dict[str, Any]:
+    def tick(self) -> Dict[str, JsonValue]:
         """
         MANAS Biorhythm tick - delegated to BiorhythmProcessor (OPUS-176).
 
@@ -1956,7 +1960,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         self._ensure_booted()
         return self._biorhythm_proc.tick()
 
-    def get_awareness(self) -> Dict[str, Any]:
+    def get_awareness(self) -> Dict[str, JsonValue]:
         """Get current awareness state (for dashboard/templates)."""
         # OPUS-306: Lazy boot on first awareness check
         self._ensure_booted()
@@ -1969,7 +1973,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         expiry = timedelta(hours=self._config.intent_expiry_hours)
         return datetime.utcnow() - intent.created_at > expiry
 
-    def think(self, context: Optional[Dict[str, Any]] = None, force: bool = False) -> List[Intent]:
+    def think(self, context: Optional[Dict[str, JsonValue]] = None, force: bool = False) -> List[Intent]:
         """Thin wrapper: Execute thought cycle via CognitiveCycle.orchestrate()."""
         # OPUS-306: Ensure booted before any operation
         self._ensure_booted()
@@ -2315,7 +2319,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
             return []
         return self._buffer.get_all()
 
-    def set_execution_callback(self, callback: Callable[[Intent], Dict[str, Any]]) -> None:
+    def set_execution_callback(self, callback: Callable[[Intent], Dict[str, JsonValue]]) -> None:
         """
         Set the callback for intent execution.
 
@@ -2333,7 +2337,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         delta = datetime.utcnow() - self._last_activity_time
         return int(delta.total_seconds() / 60)
 
-    def get_memory_summary(self) -> Dict[str, Any]:
+    def get_memory_summary(self) -> Dict[str, JsonValue]:
         """Get summary of MANAS memory for display."""
         # OPUS-306: Ensure booted before accessing memory
         self._ensure_booted()
@@ -2537,7 +2541,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
 
         return sorted(intents, key=sort_key)
 
-    def consult_synapses(self, trigger: str) -> List[Dict[str, Any]]:
+    def consult_synapses(self, trigger: str) -> List[Dict[str, JsonValue]]:
         """
         OPUS-112: Consult synaptic memory for recommended actions.
 
@@ -2674,7 +2678,7 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     # INTEGRATION POINTS
     # =========================================================================
 
-    def get_intent_buffer_for_opus(self) -> Dict[str, Any]:
+    def get_intent_buffer_for_opus(self) -> Dict[str, JsonValue]:
         """
         Get intent buffer formatted for OPUS.md display.
 
