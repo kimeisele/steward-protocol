@@ -69,6 +69,13 @@ class NullYamaraja(YamarajaBase):
     pass
 
 
+# =============================================================================
+# SAMSKARA SERVICE - Migration Engine
+# =============================================================================
+
+from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
+
+
 __all__ = [
     # Backward-compatible constants
     "POSITION",
@@ -79,4 +86,6 @@ __all__ = [
     "YamarajaProtocol",
     "YamarajaBase",
     "NullYamaraja",
+    # Samskara (Migration)
+    "SamskaraService",
 ]
