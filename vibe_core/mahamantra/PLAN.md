@@ -14,12 +14,7 @@
 - [x] **Shadow Reactor** → `reactor/shadow.py` (Parampara verification per tick)
 
 ### ❌ BROKEN
-- [ ] **Mahajana Folders have WRONG declarations!**
-  ```python
-  # brahma/__init__.py says:
-  __mahajana__ = "prithu"  # WRONG! Should be "brahma"
-  __position__ = 0         # WRONG! Should be 1
-  ```
+- [x] ~~**Mahajana Folders have WRONG declarations!**~~ FIXED via SANKIRTAN (e6ee2e9d)
 - [ ] **Mahajana Folders use MANUAL WIRING** (not MantraProtocol derivation)
   ```python
   # Current (wrong):
