@@ -311,6 +311,12 @@ class MahamantraDaemon:
             self._metrics.total_chants += 1
             self._metrics.last_chant_time = datetime.now()
 
+            # === DHARMA QUARTER: Trigger Shuddhi Self-Healing ===
+            # Positions 5-8 = Kumaras (5), Kapila (6), Parashurama (8)
+            # This is where self-healing ACTUALLY happens
+            if quarter == "dharma":
+                await self._trigger_shuddhi(cycle, health)
+
             # Callback
             if self._on_chant:
                 self._on_chant(chant_result, cycle)
@@ -323,6 +329,50 @@ class MahamantraDaemon:
 
         # Brief pause between cycles
         await asyncio.sleep(self._min_interval)
+
+    async def _trigger_shuddhi(self, cycle: int, health: float) -> None:
+        """
+        Trigger Shuddhi self-healing during DHARMA quarter.
+
+        Only triggers healing when:
+        - Health < HEALTH_SADHANA (system needs purification)
+        - Not in Samadhi (system already pure)
+
+        The intensity of healing matches the entropy level:
+        - GAJENDRA: heal_all_violations (aggressive)
+        - SADHANA: heal_all_violations with dry_run first
+        """
+        # Don't heal in Samadhi - system is already pure
+        if health >= HEALTH_SAMADHI:
+            return
+
+        try:
+            from vibe_core.shuddhi.engine import ShuddhiEngine
+
+            # Lazy singleton - avoid import loop
+            if not hasattr(self, "_shuddhi_engine"):
+                self._shuddhi_engine: Optional[ShuddhiEngine] = ShuddhiEngine()
+                logger.info("☢️ SHUDDHI: Engine initialized for self-healing")
+
+            engine = self._shuddhi_engine
+            if engine is None:
+                return
+
+            # In GAJENDRA mode (emergency), heal aggressively
+            # In SADHANA mode, do dry-run first
+            dry_run = health >= HEALTH_SADHANA
+
+            results = engine.heal_all_violations(dry_run=dry_run)
+            healed = sum(1 for r in results if r.status.value == "purified")
+
+            if healed > 0:
+                mode = "DRY-RUN" if dry_run else "LIVE"
+                logger.info(f"☢️ SHUDDHI: Cycle {cycle} - {healed} violations healed ({mode})")
+
+        except ImportError:
+            logger.debug("☢️ SHUDDHI: Engine not available")
+        except Exception as e:
+            logger.warning(f"☢️ SHUDDHI: Healing failed: {e}")
 
     # =========================================================================
     # CONTROL
