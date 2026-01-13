@@ -1,15 +1,15 @@
 """
 KUMARAS - Position 5
-====================
+======================
 
 Quarter: DHARMA
 OpCode: BIND_SYMBOL
-Function: Bind Symbol
-Role: Purity
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/dharma/kumaras/
-    Therefore: Position 5 IS wired to Kumaras.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 222 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"
 __position__ = 5
-__genesis__ = "0xc595d2a8"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 5
 QUARTER: Final[str] = "dharma"
-FOLDER: Final[str] = "kumaras"
-OWNER: Final[str] = "Kumaras"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "BIND_SYMBOL"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 222
 
 
 @runtime_checkable
 class KumarasProtocol(Protocol):
     """
-    Protocol for Kumaras (Bind Symbol).
+    Protocol for Kumaras (BIND_SYMBOL).
 
     Position 5 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class KumarasBase:
+class KumarasBase(WorkerProtocol):
     """
     Base class for Kumaras implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/dharma/kumaras/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 5  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 5
 
 
 class NullKumaras(KumarasBase):
@@ -87,13 +70,12 @@ class NullKumaras(KumarasBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "KumarasProtocol",
     "KumarasBase",
     "NullKumaras",

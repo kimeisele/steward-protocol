@@ -219,7 +219,7 @@ _LAZY_IMPORTS = {
     "folder_exists": "wiring",
     "get_position_from_folder": "wiring",
     "get_position_from_name": "wiring",
-    "get_position_by_index": "wiring",
+    "get_wiring_by_index": "wiring",  # Old get_position_by_index (returns PositionMapping)
     "WiringProtocol": "wiring",
     "WiringVerification": "wiring",
     "verify_wiring": "wiring",
@@ -255,6 +255,7 @@ _LAZY_IMPORTS = {
     "Guardian": "position",
     "MantraPosition": "position",
     "MAHAMANTRA_POSITIONS": "position",
+    "get_position_by_index": "position",  # Returns MantraPosition (SSOT)
     "get_position_by_guardian": "position",
     "get_position_by_opcode": "position",
     "get_positions_by_quarter": "position",
@@ -352,6 +353,7 @@ _LAZY_ALIASES = {
     "YajnaMantraByte": ("yajna", "MantraByte"),
     "get_mahajana_position": ("scanner", "get_position"),
     "get_mahajana_name": ("scanner", "get_name"),
+    "get_wiring_by_index": ("wiring", "get_position_by_index"),  # Alias for old wiring func
 }
 
 

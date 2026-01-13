@@ -1,15 +1,15 @@
 """
 MANU - Position 7
-=================
+===================
 
 Quarter: DHARMA
 OpCode: DHARMA_TEST
-Function: Dharma Test
-Role: Law
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/dharma/manu/
-    Therefore: Position 7 IS wired to Manu.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 296 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"
 __position__ = 7
-__genesis__ = "0x9e23f821"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xe3baeca8"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 7
 QUARTER: Final[str] = "dharma"
-FOLDER: Final[str] = "manu"
-OWNER: Final[str] = "Manu"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "DHARMA_TEST"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 296
 
 
 @runtime_checkable
 class ManuProtocol(Protocol):
     """
-    Protocol for Manu (Dharma Test).
+    Protocol for Manu (DHARMA_TEST).
 
     Position 7 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class ManuBase:
+class ManuBase(WorkerProtocol):
     """
     Base class for Manu implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/dharma/manu/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 7  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 7
 
 
 class NullManu(ManuBase):
@@ -87,13 +70,12 @@ class NullManu(ManuBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "ManuProtocol",
     "ManuBase",
     "NullManu",
