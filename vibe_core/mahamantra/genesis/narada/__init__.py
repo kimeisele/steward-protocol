@@ -1,15 +1,15 @@
 """
 NARADA - Position 2
-===================
+=====================
 
 Quarter: GENESIS
 OpCode: ALLOC_MEM
-Function: Allocate Memory
-Role: Communication
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/genesis/narada/
-    Therefore: Position 2 IS wired to Narada.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 111 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x1713de06"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 2
 QUARTER: Final[str] = "genesis"
-FOLDER: Final[str] = "narada"
-OWNER: Final[str] = "Narada"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "ALLOC_MEM"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 111
 
 
 @runtime_checkable
 class NaradaProtocol(Protocol):
     """
-    Protocol for Narada (Allocate Memory).
+    Protocol for Narada (ALLOC_MEM).
 
     Position 2 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class NaradaBase:
+class NaradaBase(WorkerProtocol):
     """
     Base class for Narada implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/genesis/narada/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 2  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 2
 
 
 class NullNarada(NaradaBase):
@@ -87,13 +70,12 @@ class NullNarada(NaradaBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "NaradaProtocol",
     "NaradaBase",
     "NullNarada",

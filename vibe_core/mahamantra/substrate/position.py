@@ -297,6 +297,9 @@ def get_all_worker_positions() -> Tuple[MantraPosition, ...]:
 # Alias for singularity.py compatibility
 get_quarter_positions = get_positions_by_quarter
 
+# Alias for backward compatibility (tests expect get_position_by_index)
+get_position_by_index = get_position
+
 
 # =============================================================================
 # EXPORTS
@@ -312,6 +315,7 @@ __all__ = [
     "MAHAMANTRA_POSITIONS",
     # Functions
     "get_position",
+    "get_position_by_index",  # Alias for get_position
     "get_position_by_guardian",
     "get_position_by_opcode",
     "get_positions_by_quarter",

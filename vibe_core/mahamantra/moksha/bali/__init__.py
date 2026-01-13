@@ -1,15 +1,15 @@
 """
 BALI - Position 13
-==================
+===================
 
 Quarter: MOKSHA
 OpCode: IO_FLUSH
-Function: IO Flush
-Role: Surrender
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/moksha/bali/
-    Therefore: Position 13 IS wired to Bali.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 518 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bali"
 __position__ = 13
-__genesis__ = "0x6576cfb1"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x699b2aea"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 13
 QUARTER: Final[str] = "moksha"
-FOLDER: Final[str] = "bali"
-OWNER: Final[str] = "Bali"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "IO_FLUSH"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 518
 
 
 @runtime_checkable
 class BaliProtocol(Protocol):
     """
-    Protocol for Bali (IO Flush).
+    Protocol for Bali (IO_FLUSH).
 
     Position 13 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class BaliBase:
+class BaliBase(WorkerProtocol):
     """
     Base class for Bali implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/moksha/bali/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 13  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 13
 
 
 class NullBali(BaliBase):
@@ -87,13 +70,12 @@ class NullBali(BaliBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "BaliProtocol",
     "BaliBase",
     "NullBali",

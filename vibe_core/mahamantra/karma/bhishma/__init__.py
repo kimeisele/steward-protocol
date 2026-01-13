@@ -1,15 +1,15 @@
 """
 BHISHMA - Position 11
-=====================
+======================
 
 Quarter: KARMA
 OpCode: LEDGER_SIGN
-Function: Ledger Sign
-Role: Vow
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/karma/bhishma/
-    Therefore: Position 11 IS wired to Bhishma.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 444 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
 __position__ = 11
-__genesis__ = "0x830732b7"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x030295b1"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 11
 QUARTER: Final[str] = "karma"
-FOLDER: Final[str] = "bhishma"
-OWNER: Final[str] = "Bhishma"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "LEDGER_SIGN"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 444
 
 
 @runtime_checkable
 class BhishmaProtocol(Protocol):
     """
-    Protocol for Bhishma (Ledger Sign).
+    Protocol for Bhishma (LEDGER_SIGN).
 
     Position 11 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class BhishmaBase:
+class BhishmaBase(WorkerProtocol):
     """
     Base class for Bhishma implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/karma/bhishma/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 11  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 11
 
 
 class NullBhishma(BhishmaBase):
@@ -87,13 +70,12 @@ class NullBhishma(BhishmaBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "BhishmaProtocol",
     "BhishmaBase",
     "NullBhishma",

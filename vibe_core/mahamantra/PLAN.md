@@ -15,21 +15,22 @@
 
 ### ❌ BROKEN
 - [x] ~~**Mahajana Folders have WRONG declarations!**~~ FIXED via SANKIRTAN (e6ee2e9d)
-- [ ] **Mahajana Folders use MANUAL WIRING** (not MantraProtocol derivation)
+- [x] ~~**Mahajana Folders use MANUAL WIRING**~~ FIXED via radiate_protocol.py
   ```python
-  # Current (wrong):
-  POSITION: Final[int] = 1  # Hardcoded
-
-  # Should be (derived):
-  class BrahmaProtocol(MantraProtocol):
+  # NOW CORRECT (derived from MantraProtocol):
+  class BrahmaBase(WorkerProtocol):
       _position_index = 1  # Everything else derived!
+
+  # Backward-compatible constants also exported for legacy tests
+  POSITION: Final[int] = 1
+  OPCODE: Final[str] = "LOAD_ROOT"
   ```
 - [ ] **__init__.py is 1408 lines** (too big, needs split)
 - [ ] **81 Any references** in mahamantra/
 
 ### 🎯 NEXT
-1. **Fix mahajana declarations** → Correct `__mahajana__`, `__position__`
-2. **Convert to MantraProtocol** → Remove hardcoded constants
+1. ~~**Fix mahajana declarations**~~ ✓ DONE
+2. ~~**Convert to MantraProtocol**~~ ✓ DONE
 3. **Split __init__.py** → Move LotusNode etc. to separate files
 4. **Kill Any** → Replace with typed alternatives
 

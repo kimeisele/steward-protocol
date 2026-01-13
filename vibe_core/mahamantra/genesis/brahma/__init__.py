@@ -1,15 +1,15 @@
 """
 BRAHMA - Position 1
-===================
+=====================
 
 Quarter: GENESIS
 OpCode: LOAD_ROOT
-Function: Load Root Configuration
-Role: Creation
+Type: WORKER
+Role: Worker
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/genesis/brahma/
-    Therefore: Position 1 IS wired to Brahma.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 74 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = 1
-__genesis__ = "0xac2d2b96"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x96910869"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 1
 QUARTER: Final[str] = "genesis"
-FOLDER: Final[str] = "brahma"
-OWNER: Final[str] = "Brahma"
-IS_HEAD: Final[bool] = False
 OPCODE: Final[str] = "LOAD_ROOT"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 74
 
 
 @runtime_checkable
 class BrahmaProtocol(Protocol):
     """
-    Protocol for Brahma (Load Root Configuration).
+    Protocol for Brahma (LOAD_ROOT).
 
     Position 1 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class BrahmaBase:
+class BrahmaBase(WorkerProtocol):
     """
     Base class for Brahma implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/genesis/brahma/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 1  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 1
 
 
 class NullBrahma(BrahmaBase):
@@ -87,13 +70,12 @@ class NullBrahma(BrahmaBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "BrahmaProtocol",
     "BrahmaBase",
     "NullBrahma",

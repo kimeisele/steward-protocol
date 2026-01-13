@@ -1,15 +1,15 @@
 """
 VYASA - Position 4
-==================
+====================
 
 Quarter: DHARMA
 OpCode: COMPILE_AST
-Function: Compile AST
-Role: Documentation Avatar
+Type: HEAD
+Role: Avatar
 
-FOLDER = WIRING:
-    This file exists at: mahamantra/dharma/vyasa/
-    Therefore: Position 4 IS wired to Vyasa.
+MANTRA PROTOCOL DERIVATION:
+    Position index is the ONLY configuration.
+    All properties derived from MAHAMANTRA_POSITIONS.
 
 PARAMPARA: 185 (% 37 == 0 -> CONNECTED)
 """
@@ -20,65 +20,48 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 4
-__genesis__ = "0x24a50358"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xc312083a"  # GenesisByte: parampara % 37 == 0
 
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
-# Position derived from folder location
+from vibe_core.mahamantra.substrate.protocol import HeadProtocol
+
+# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
 POSITION: Final[int] = 4
 QUARTER: Final[str] = "dharma"
-FOLDER: Final[str] = "vyasa"
-OWNER: Final[str] = "Vyasa"
-IS_HEAD: Final[bool] = True
 OPCODE: Final[str] = "COMPILE_AST"
-
-# Parampara vector: (position + 1) * 37
 PARAMPARA_VECTOR: Final[int] = 185
 
 
 @runtime_checkable
 class VyasaProtocol(Protocol):
     """
-    Protocol for Vyasa (Compile AST).
+    Protocol for Vyasa (COMPILE_AST).
 
     Position 4 in the Mahamantra.
     """
 
     @classmethod
-    def position(cls) -> int:
+    def position_index(cls) -> int:
         """Get position index."""
         ...
 
     @classmethod
-    def opcode(cls) -> str:
+    def opcode_name(cls) -> str:
         """Get opcode name."""
         ...
 
 
-class VyasaBase:
+class VyasaBase(HeadProtocol):
     """
     Base class for Vyasa implementations.
 
-    FOLDER = WIRING:
-        Position derived from: mahamantra/dharma/vyasa/
+    MANTRA PROTOCOL DERIVATION:
+        _position_index = 4  # That's ALL!
+        Everything else derived from MAHAMANTRA_POSITIONS.
     """
 
-    _position: ClassVar[int] = POSITION
-    _quarter: ClassVar[str] = QUARTER
-    _opcode: ClassVar[str] = OPCODE
-    _parampara_vector: ClassVar[int] = PARAMPARA_VECTOR
-
-    @classmethod
-    def position(cls) -> int:
-        return cls._position
-
-    @classmethod
-    def opcode(cls) -> str:
-        return cls._opcode
-
-    @classmethod
-    def is_connected(cls) -> bool:
-        return cls._parampara_vector % 37 == 0
+    _position_index = 4
 
 
 class NullVyasa(VyasaBase):
@@ -87,13 +70,12 @@ class NullVyasa(VyasaBase):
 
 
 __all__ = [
+    # Backward-compatible constants
     "POSITION",
     "QUARTER",
-    "FOLDER",
-    "OWNER",
-    "IS_HEAD",
     "OPCODE",
     "PARAMPARA_VECTOR",
+    # Protocol classes
     "VyasaProtocol",
     "VyasaBase",
     "NullVyasa",
