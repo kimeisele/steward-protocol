@@ -120,9 +120,46 @@ class ProtocolCategory(str, Enum):
 
 
 # =============================================================================
-# THE GRAND MAPPING - Protocol → Mahajana
+# FOLDER_IS_WIRING - Folder Structure Dictates Ownership (SSOT)
 # =============================================================================
-# This is the CONSTITUTION. Every protocol must be assigned.
+# This is the STATE DEFINITION. Folder → Mahajana ownership.
+# Root-level files belong to governance (migration/fallback).
+#
+# "yathā sarvagataṁ saukṣmyād ākāśaṁ nopalipyate"
+# "As the all-pervading ether is not touched because of its subtle nature."
+# — Bhagavad Gita 13.33
+
+FOLDER_OWNERS: Final[Dict[str, Mahajana]] = {
+    # === DIRECT MAHAJANA FOLDERS (mahajanas/<name>/) ===
+    # Handled by FRACTAL LAW in get_owner() - no mapping needed here
+
+    # === STRUCTURAL FOLDERS ===
+    # Note: Avataras (Prithu, Vyasa, Parashurama, Nrisimha) are HEADs, not Mahajanas.
+    # We use the closest Worker Mahajana for folder governance.
+    "governance": Mahajana.MANU,          # Law/Rules - Position 7
+    "substrate": Mahajana.BRAHMA,         # Foundation/Creation - Position 1
+    "naga": Mahajana.YAMARAJA,            # Security/Judgment - Position 15
+    "universal": Mahajana.BRAHMA,         # Universal Truth - Position 1 (Brahma compiles)
+    "avataras": Mahajana.BRAHMA,          # Avatara protocols - Genesis domain
+    "science": Mahajana.KAPILA,           # Analysis/Sankhya - Position 6
+    "lila": Mahajana.NARADA,              # Lifecycle/Communication - Position 2
+
+    # === ROOT LEVEL (protocols/*.py) ===
+    # Files at root belong to GOVERNANCE (Manu) as migration/fallback
+    # They await proper folder assignment via SANKIRTAN
+    "": Mahajana.MANU,  # Empty string = root level fallback
+}
+
+# Reverse lookup for audit reporting
+MAHAJANA_FOLDERS: Final[Dict[Mahajana, str]] = {
+    v: k for k, v in FOLDER_OWNERS.items() if k
+}
+
+
+# =============================================================================
+# THE GRAND MAPPING - Protocol → Mahajana (LEGACY - Being phased out)
+# =============================================================================
+# DEPRECATED: Use FOLDER_IS_WIRING instead. This remains for specific overrides.
 # Format: "relative/path.py": (Mahajana, SecurityLevel, Category, Description)
 
 _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory, str]] = {
@@ -562,36 +599,63 @@ class ProtocolBridge:
         """
         Get the owning Mahajana for a protocol.
 
-        FRACTAL LAW:
-        1. If path contains 'mahajanas/<NAME>/', it belongs to <NAME>. NO MANUAL WIRING.
-        2. Fall back to explicit mapping for wild protocols (universal, naga, root).
+        FOLDER_IS_WIRING - 4 Level Resolution:
+        1. mahajanas/<NAME>/ → Direct Mahajana ownership
+        2. FOLDER_OWNERS → Structural folder ownership
+        3. _PROTOCOL_GOVERNANCE → Legacy explicit mapping
+        4. __mahajana__ declaration → File-level fallback
+        5. Root fallback → Manu (governance)
 
         Args:
             protocol_path: Relative path from protocols/ (e.g., "defense.py")
 
         Returns:
-            Mahajana owner or None if ungoverned
+            Mahajana owner (NEVER None - everything is governed!)
         """
-        # 1. FRACTAL LAW - Structure dictates ownership
         parts = Path(protocol_path).parts
 
-        # Find 'mahajanas' in path and get the guardian name after it
+        # === 1. FRACTAL LAW - mahajanas/<NAME>/ direct ownership ===
         if "mahajanas" in parts:
             idx = list(parts).index("mahajanas")
             if idx + 1 < len(parts):
                 potential_guardian = parts[idx + 1]
-                # Skip if it's a .py file at mahajanas/ root (like router.py)
                 if not potential_guardian.endswith(".py"):
                     try:
                         return Mahajana(potential_guardian)
                     except ValueError:
-                        pass  # Not a valid Mahajana name, fall through
+                        pass
 
-        # 2. CONSTITUTION - Explicit mapping for wild protocols
+        # === 2. FOLDER_IS_WIRING - Structural folders ===
+        if parts:
+            top_folder = parts[0]
+            if not top_folder.endswith(".py"):
+                folder_owner = FOLDER_OWNERS.get(top_folder)
+                if folder_owner:
+                    return folder_owner
+
+        # === 3. LEGACY - Explicit mapping (being phased out) ===
         entry = _PROTOCOL_GOVERNANCE.get(protocol_path)
         if entry:
             return entry[0]
-        return None
+
+        # === 4. FILE FALLBACK - Read __mahajana__ from file ===
+        try:
+            file_path = cls._protocols_root / protocol_path
+            if file_path.exists():
+                content = file_path.read_text()
+                import re
+                match = re.search(r'__mahajana__\s*=\s*["\'](\w+)["\']', content)
+                if match:
+                    mahajana_name = match.group(1)
+                    try:
+                        return Mahajana(mahajana_name)
+                    except ValueError:
+                        pass
+        except Exception:
+            pass
+
+        # === 5. ROOT FALLBACK - Everything belongs to Manu ===
+        return FOLDER_OWNERS.get("", Mahajana.MANU)
 
     @classmethod
     def get_level(cls, protocol_path: str) -> Optional[SecurityLevel]:
