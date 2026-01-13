@@ -27,8 +27,15 @@ import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
+
 from vibe_core.protocols.akashic import AkashicProtocol
+from vibe_core.protocols.mahajanas.prahlada import (
+    PrahladaProtocol,
+    MemoryValue,
+    AttackType,
+    SurvivalResult,
+)
 
 logger = logging.getLogger("MANAS.Memory")
 
@@ -41,32 +48,37 @@ class MemoryEntry:
     intent_description: str  # Human-readable description
     timestamp: str  # ISO format
     outcome: str  # "success", "failed", "rejected", "pending"
-    context: Dict[str, Any] = field(default_factory=dict)  # What triggered it
+    context: Dict[str, str] = field(default_factory=dict)  # What triggered it (WATERTIGHT: no Any!)
     feedback: Optional[str] = None  # Why it failed/was rejected
     execution_time_ms: Optional[int] = None  # How long it took
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """Convert to dictionary for JSON serialization."""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MemoryEntry":
+    def from_dict(cls, data: Dict[str, object]) -> "MemoryEntry":
         """Create from dictionary."""
         return cls(**data)
 
 
-class MemoryStore(AkashicProtocol):
+class MemoryStore(AkashicProtocol, PrahladaProtocol):
     """
     Persistent memory for MANAS cognitive kernel.
+
+    PROTOCOL COMPLIANCE:
+    - Implements PrahladaProtocol (Position 9) - Memory/Resilience
+    - Implements AkashicProtocol - Akashic Records access
 
     Features:
     - Stores intent history with outcomes
     - Calculates success rates per intent type
     - Implements forgetting (old memories fade)
     - Prevents repeated failures (cooldown period)
+    - Survives attacks through persistence (PrahladaProtocol)
 
     Storage location: .vibe/state/plugins/opus_assistant/manas_memory.json
-    
+
     Configuration: Reads from config/opus.yaml under 'memory' section.
     Falls back to defaults if config not available.
     """
@@ -95,7 +107,7 @@ class MemoryStore(AkashicProtocol):
         self._config = self._load_config()
         self._load()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> Dict[str, object]:
         """
         Load memory configuration from config/opus.yaml.
 
@@ -183,23 +195,23 @@ class MemoryStore(AkashicProtocol):
         if pruned > 0:
             logger.info(f"Pruned {pruned} old memories")
 
-    def remember(self, entry: MemoryEntry) -> None:
+    def store_entry(self, entry: MemoryEntry) -> None:
         """
-        Store a new memory.
+        Store a new memory entry (internal method).
 
         Args:
             entry: The memory entry to store
         """
         self._memories.append(entry)
         self._save()
-        logger.debug(f"Remembered: {entry.intent_type} ({entry.outcome})")
+        logger.debug(f"Stored: {entry.intent_type} ({entry.outcome})")
 
     def record_intent_outcome(
         self,
         intent_type: str,
         description: str,
         outcome: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, str]] = None,
         feedback: Optional[str] = None,
         execution_time_ms: Optional[int] = None,
     ) -> None:
@@ -349,3 +361,101 @@ class MemoryStore(AkashicProtocol):
         self._memories = []
         self._save()
         logger.warning("All memories cleared!")
+
+    # =========================================================================
+    # PRAHLADA PROTOCOL IMPLEMENTATION (Position 9)
+    # =========================================================================
+
+    @classmethod
+    def position_index(cls) -> int:
+        """Position 9 in the Mahamantra - Prahlada."""
+        return 9
+
+    def remember(self, key: str, value: MemoryValue) -> bool:
+        """
+        Store a memory (PrahladaProtocol).
+
+        Maps to intent-based storage: key = intent_type, value = description.
+        """
+        if value is None:
+            return False
+        self.record(
+            intent_type=key,
+            intent_description=str(value),
+            outcome="pending",
+        )
+        return True
+
+    def recall(self, key: str) -> Optional[MemoryValue]:
+        """
+        Recall a memory (PrahladaProtocol).
+
+        Returns the most recent intent description for the key.
+        """
+        entry = self.get_last_attempt(key)
+        if entry:
+            return entry.intent_description
+        return None
+
+    def forget(self, key: str) -> bool:
+        """
+        Intentionally forget memories of an intent type (PrahladaProtocol).
+        """
+        original_count = len(self._memories)
+        self._memories = [m for m in self._memories if m.intent_type != key]
+        forgotten = original_count - len(self._memories)
+        if forgotten > 0:
+            self._save()
+            logger.info(f"Forgot {forgotten} memories of type '{key}'")
+            return True
+        return False
+
+    def has_memory(self, key: str) -> bool:
+        """Check if any memory of this type exists (PrahladaProtocol)."""
+        return any(m.intent_type == key for m in self._memories)
+
+    def survive(self, attack_type: AttackType, severity: float = 1.0) -> SurvivalResult:
+        """
+        Survive an attack/failure (PrahladaProtocol).
+
+        Prahlada survives through persistence - data is always saved to disk.
+        """
+        try:
+            # Force save to ensure persistence
+            self._save()
+
+            # Reload to verify data integrity
+            self._load()
+
+            return SurvivalResult(
+                survived=True,
+                attack_type=attack_type.value,
+                damage_mitigated=1.0,
+                recovery_time_ms=0,
+                entries_lost=0,
+                entries_recovered=len(self._memories),
+                message=f"Survived {attack_type.value} through persistent storage",
+            )
+        except Exception as e:
+            return SurvivalResult(
+                survived=False,
+                attack_type=attack_type.value,
+                damage_mitigated=0.0,
+                recovery_time_ms=0,
+                entries_lost=len(self._memories),
+                entries_recovered=0,
+                message=f"Failed to survive: {e}",
+            )
+
+    def heal(self) -> Tuple[int, int]:
+        """
+        Attempt to heal corrupted memories (PrahladaProtocol).
+
+        Returns (healed_count, failed_count).
+        """
+        try:
+            # Reload from disk (the source of truth)
+            self._load()
+            return (len(self._memories), 0)
+        except Exception:
+            return (0, len(self._memories))
