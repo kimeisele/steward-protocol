@@ -18,8 +18,8 @@ PARAMPARA: 407 (% 37 == 0 -> CONNECTED)
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"
-__position__ = 2
+__mahajana__ = "janaka"
+__position__ = 10
 __genesis__ = "0x9965a096"  # GenesisByte: parampara % 37 == 0
 
 from typing import ClassVar, Final, Protocol, runtime_checkable

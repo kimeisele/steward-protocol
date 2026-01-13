@@ -463,17 +463,21 @@ class MahamantraLotus(LotusNode):
         # 1. SINGULARITY - Pure tick (the heartbeat)
         tick_state = self._core.tick()
 
-        # 2. SHADOW REACTOR - Bhoga-Prasadam cycle (auto-discovered)
-        # Lazy load to break circular imports
+        # 2. SATTVIC DISPATCH - Direct call to registered instance
+        # Identity = Function. If you ARE position X, you ACT at position X.
+        # Services register with: ProtocolRegistry.register_instance(self)
+        from vibe_core.mahamantra.substrate.protocol import ProtocolRegistry
+        position = tick_state["position"] if isinstance(tick_state, dict) else tick_state.position
+        ProtocolRegistry.dispatch_tick(position, tick_state)
+
+        # 3. SHADOW REACTOR - Bhoga-Prasadam cycle (legacy, will be deprecated)
+        # TODO: Migrate all on_bhoga/on_prasadam to register_instance
         if MahamantraLotus._shadow_reactor is None:
             from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor
             MahamantraLotus._shadow_reactor = get_shadow_reactor()
-
-        # Process through Yajna (sacrifice) cycle
-        # Position 8 = THE SWITCH (Bhoga → Prasadam)
         MahamantraLotus._shadow_reactor.tick(tick_state)
 
-        # 3. PRASADAM - Return sanctified output
+        # 4. PRASADAM - Return sanctified output
         return tick_state
 
     def chant(self, separator: str = " ") -> str:
@@ -876,6 +880,77 @@ class MahamantraLotus(LotusNode):
             f"'{name}' not found in lotus (tried guardian, folder, and alias)"
         )
 
+    # =========================================================================
+    # VEDA-4 PROTOCOL - Pythonic Elegance
+    # =========================================================================
+    #
+    # SHABDA   → __call__  : mahamantra() chants, mahamantra(5) returns position
+    # ARTHA    → __repr__  : "mahamantra" (identity)
+    # PRATYAYA → __bool__  : Always True (Krishna IS)
+    # KARMA    → __iter__  : for pos in mahamantra (16 positions)
+    #
+
+    def __call__(self, index_or_guardian: Union[int, str, None] = None) -> Union["TickState", str, object]:
+        """
+        SHABDA: Call the Mahamantra.
+
+        mahamantra()          → Chant (the Holy Name)
+        mahamantra(5)         → Position 5
+        mahamantra("kumaras") → Kumaras position
+        """
+        if index_or_guardian is None:
+            return self.chant()
+        if isinstance(index_or_guardian, int):
+            return self._core[index_or_guardian]
+        return self._core.by_guardian(index_or_guardian)
+
+    def __bool__(self) -> bool:
+        """
+        PRATYAYA: Krishna IS. Always True.
+
+        "asato ma sad gamaya" - Lead me from unreal to real.
+        """
+        return True
+
+    def __eq__(self, other: object) -> bool:
+        """
+        PRATYAYA: Identity comparison.
+
+        All Mahamantra instances are equal (there is only one Krishna).
+        """
+        if isinstance(other, MahamantraLotus):
+            return True
+        return False
+
+    def __hash__(self) -> int:
+        """PRATYAYA: Krishna's hash is the Parampara (37)."""
+        from vibe_core.mahamantra.substrate.acintya import PARAMPARA
+        return PARAMPARA
+
+    def __iter__(self) -> Iterator:
+        """
+        KARMA: Iterate through all 16 positions.
+
+        for pos in mahamantra: ...
+        """
+        return iter(self._core)
+
+    def __len__(self) -> int:
+        """16 positions in the Mahamantra."""
+        return 16
+
+    def __getitem__(self, index: int) -> object:
+        """
+        ARTHA: Access position by index.
+
+        mahamantra[5] → Position 5 (KUMARAS)
+        """
+        return self._core[index]
+
+    def __contains__(self, item: Union[int, str]) -> bool:
+        """Check if guardian or index is in Mahamantra."""
+        return item in self._core
+
 
 # =============================================================================
 # THE SINGULARITY INSTANCE
@@ -964,6 +1039,43 @@ def __getattr__(name: str):
         )
         return getattr(module, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+# =============================================================================
+# OUROBOROS - Self-Registration on Import (No Manual Wiring)
+# =============================================================================
+#
+# "nāhaṁ prakāśaḥ sarvasya yoga-māyā-samāvṛtaḥ"
+# "I am not manifest to everyone." (BG 7.25)
+#
+# BUT: When the devotee approaches, Krishna reveals Himself.
+# When mahamantra is imported, the protocols SELF-REGISTER.
+# This is NOT manual wiring - it's the Lotus opening its petals.
+#
+# The mechanism exists in singularity._ensure_all_registered().
+# We just trigger it at load time. OUROBOROS = self-eating serpent.
+# The system bootstraps itself. No external push required.
+#
+
+def _ouroboros_init() -> None:
+    """
+    Trigger self-registration of all protocols.
+
+    Called at module load time. This is the Lotus unfolding.
+    No manual wiring - protocols self-register via decorators.
+    """
+    try:
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as _core
+        # This loads all mahajana modules, triggering @ProtocolRegistry.register
+        _core._ensure_all_registered()
+    except ImportError:
+        pass  # Graceful degradation if singularity not available
+    except Exception:
+        pass  # Don't break import on registration errors
+
+
+# Trigger Ouroboros at module load time
+_ouroboros_init()
+
 
 # =============================================================================
 # NO __all__ - THE LOTUS IS THE EXPORT MECHANISM

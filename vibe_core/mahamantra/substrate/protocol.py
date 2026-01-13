@@ -225,6 +225,25 @@ class MantraProtocol(ABC):
         except (ValueError, IndexError):
             return False
 
+    # =========================================================================
+    # ON_TICK - The Heartbeat Contract (VEDA: SHABDA)
+    # =========================================================================
+
+    def on_tick(self, tick_state: Dict) -> None:
+        """
+        Receive mahamantra tick at this position.
+
+        VEDA SHABDA: The protocol receives instruction.
+        Identity = Function: If you ARE position X, you ACT at position X.
+
+        Override in subclasses to implement position-specific behavior.
+        Default: no-op (protocol exists but doesn't need to act on tick).
+
+        Args:
+            tick_state: Dict with tick, position, quarter, guardian, word, opcode
+        """
+        pass  # Default: no action needed
+
 
 # =============================================================================
 # WORKER PROTOCOL - For Mahajana-owned positions
@@ -321,24 +340,33 @@ class MantraAware(TypingProtocol):
 
 class ProtocolRegistry:
     """
-    Registry aller MantraProtocol Subklassen.
+    Registry aller MantraProtocol Subklassen und Instanzen.
 
-    Mappt Position Index auf Protokollklasse.
-    Stellt sicher: ein Protokoll pro Position.
+    TWO REGISTRIES:
+        _registry:   Position → Protocol CLASS (metadata, discovery)
+        _instances:  Position → Protocol INSTANCE (runtime dispatch)
 
-    TICK LISTENERS:
-        Protocols can register as tick listeners to be notified
-        when mahamantra.tick() advances. This enables runtime
-        discovery without spaghetti imports.
+    SATTVIC DISPATCH:
+        Identity = Function. If you ARE position X, you ACT at position X.
+        No side-channels. No handler lists. Direct dispatch via on_tick().
 
-        @ProtocolRegistry.tick_listener
-        def on_mahamantra_tick(tick_state: Dict) -> None:
-            # Handle tick
-            pass
+    USAGE:
+        # Class registration (for metadata)
+        @ProtocolRegistry.register
+        class JanakaProtocol(WorkerProtocol):
+            _position_index = 10
+
+        # Instance registration (for dispatch)
+        service = ManifestationService(...)
+        ProtocolRegistry.register_instance(service)  # Uses _position_index
+
+        # Dispatch (in mahamantra.tick())
+        ProtocolRegistry.dispatch_tick(position, tick_state)
     """
 
     _registry: ClassVar[Dict[int, Type[MantraProtocol]]] = {}
-    _tick_listeners: ClassVar[List[Callable]] = []
+    _instances: ClassVar[Dict[int, MantraProtocol]] = {}  # Position → instance
+    _tick_listeners: ClassVar[List[Callable]] = []  # Global listeners (legacy)
 
     @classmethod
     def register(cls, protocol_class: Type[MantraProtocol]) -> Type[MantraProtocol]:
@@ -400,7 +428,60 @@ class ProtocolRegistry:
     def clear(cls) -> None:
         """Clear registry (for testing)."""
         cls._registry.clear()
+        cls._instances.clear()
         cls._tick_listeners.clear()
+
+    # =========================================================================
+    # INSTANCE REGISTRY - Runtime Dispatch (SATTVIC)
+    # =========================================================================
+
+    @classmethod
+    def register_instance(cls, instance: MantraProtocol) -> None:
+        """
+        Register a protocol instance for tick dispatch.
+
+        SATTVIC: Identity = Function.
+        The instance's _position_index determines where it acts.
+
+        Args:
+            instance: MantraProtocol instance with _position_index set
+        """
+        position = instance._position_index
+        if position < 0 or position > 15:
+            raise ValueError(f"Instance has invalid _position_index: {position}")
+        cls._instances[position] = instance
+
+    @classmethod
+    def unregister_instance(cls, position: int) -> None:
+        """Unregister instance at position."""
+        cls._instances.pop(position, None)
+
+    @classmethod
+    def get_instance(cls, position: int) -> Optional[MantraProtocol]:
+        """Get registered instance for position."""
+        return cls._instances.get(position)
+
+    @classmethod
+    def dispatch_tick(cls, position: int, tick_state: Dict) -> bool:
+        """
+        Dispatch tick to instance at position.
+
+        SATTVIC DISPATCH:
+            No lists. No callbacks. Direct call to on_tick().
+            Identity = Function.
+
+        Args:
+            position: Mahamantra position (0-15)
+            tick_state: Dict with tick, position, quarter, guardian, word, opcode
+
+        Returns:
+            True if instance exists and was called, False otherwise
+        """
+        instance = cls._instances.get(position)
+        if instance is not None:
+            instance.on_tick(tick_state)
+            return True
+        return False
 
     # =========================================================================
     # TICK LISTENERS - Runtime Discovery Without Spaghetti
