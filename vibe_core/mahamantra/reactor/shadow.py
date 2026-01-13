@@ -1,6 +1,6 @@
 """
-SHADOW REACTOR - Der Bhoga-Prasadam Reaktor
-============================================
+SHADOW REACTOR - Der Bhoga-Prasadam Reaktor (SPAWNBAR)
+======================================================
 
 "yajñārthāt karmaṇo 'nyatra loko 'yaṁ karma-bandhanaḥ
 tad-arthaṁ karma kaunteya mukta-saṅgaḥ samācara"
@@ -8,6 +8,17 @@ tad-arthaṁ karma kaunteya mukta-saṅgaḥ samācara"
 "Work done as a sacrifice for Vishnu has to be performed,
 otherwise work causes bondage in this material world."
 — Bhagavad Gita 3.9
+
+ARCHITECTURE:
+=============
+
+    Substrate (clock.py) = STATELESS map (answers "what WOULD be at tick X?")
+    ShadowReactor       = STATEFUL walker (answers "where am I NOW?")
+
+    SANKIRTAN PATTERN (not Ashvamedha):
+        - Multiple reactors can run in parallel
+        - Each walks its own path through the mantra
+        - Like TaskKernel - lightweight, ephemeral, spawnbar
 
 THE COMPLETE YAJNA CYCLE:
 =========================
@@ -19,10 +30,6 @@ THE COMPLETE YAJNA CYCLE:
 
     The cycle never ends. The output becomes the input.
     This is how entropy is stopped - continuous Yajna.
-
-    108 beads on the Japa mala. 16 words in the Mahamantra.
-    108 / 16 = 6.75 cycles for one mala round.
-    The sacred mathematics of devotion.
 
 AUTO-DISCOVERY:
 ===============
@@ -38,159 +45,52 @@ WATERTIGHT: No Any types. Protocol statt Klassen.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum, auto
+import uuid
 from pathlib import Path
 from typing import (
-    Callable,
     ClassVar,
     Dict,
-    Final,
     List,
     Optional,
-    Protocol,
-    Tuple,
-    Type,
-    TypedDict,
-    runtime_checkable,
 )
 import importlib
-import importlib.util
+
+# Import types from protocol (SSOT)
+from vibe_core.mahamantra.reactor.shadow_protocol import (
+    YajnaPhase,
+    SWITCH_POSITION,
+    RETURN_POSITION,
+    get_phase,
+    TickStateInput,
+    ShadowState,
+    ShadowReactorResult,
+    ShadowReactorListenerProtocol,
+    ShadowReactorProtocol,
+    ShadowReactorFactoryProtocol,
+)
 
 from vibe_core.mahamantra.substrate.wiring import (
     POSITION_MAPPINGS,
     PositionMapping,
     get_position_by_index,
 )
-from vibe_core.mahamantra.substrate.mahajana import Quarter
 
 
 # =============================================================================
-# THE 8 MOMENT - Bhoga/Prasadam Phase
-# =============================================================================
-
-class YajnaPhase(str, Enum):
-    """
-    The phases of Yajna (sacrifice).
-
-    BHOGA: Positions 0-7 (Krishna half) - Offering
-    PRASADAM: Positions 8-15 (Rama half) - Grace
-    RETURN: Position 15→0 - Prasadam becomes next Bhoga
-    """
-    BHOGA = "bhoga"        # Offering phase (0-7)
-    PRASADAM = "prasadam"  # Grace phase (8-15)
-    RETURN = "return"      # Cycle completion (15→0)
-
-
-# The switch position
-SWITCH_POSITION: Final[int] = 8   # Parashurama - EXEC_OP
-RETURN_POSITION: Final[int] = 0   # Prithu - SYS_WAKE (after 15)
-
-
-def get_phase(position: int, previous_position: int = -1) -> YajnaPhase:
-    """
-    Get Yajna phase from position.
-
-    Args:
-        position: Current position (0-15)
-        previous_position: Previous position (-1 if unknown)
-
-    Returns:
-        YajnaPhase: BHOGA, PRASADAM, or RETURN
-    """
-    # THE RETURN: 15→0 transition
-    if position == RETURN_POSITION and previous_position == 15:
-        return YajnaPhase.RETURN
-
-    # Normal phases
-    if position < SWITCH_POSITION:
-        return YajnaPhase.BHOGA
-    return YajnaPhase.PRASADAM
-
-
-# =============================================================================
-# WATERTIGHT TYPES - No Any, proper TypedDicts
-# =============================================================================
-
-class TickStateInput(TypedDict):
-    """
-    Input from mahamantra.tick() - WATERTIGHT.
-
-    This is what we receive from singularity.
-    """
-    tick: int
-    position: int
-    quarter: str
-    guardian: str
-    word: str
-    opcode: Optional[int]
-
-
-class ShadowState(TypedDict):
-    """
-    State of the Shadow Reactor - WATERTIGHT.
-
-    Tracks the full Bhoga-Prasadam-Return cycle.
-    """
-    position: int          # Current position (0-15)
-    previous: int          # Previous position (for RETURN detection)
-    phase: str             # Current phase (bhoga/prasadam/return)
-    quarter: str           # Current quarter
-    guardian: str          # Current guardian
-    opcode: str            # Current opcode
-    cycle_count: int       # How many full cycles completed
-    switch_count: int      # How many Bhoga→Prasadam switches
-    return_count: int      # How many 15→0 RETURNs (cycle completions)
-
-
-# =============================================================================
-# SHADOW REACTOR PROTOCOL - Protocol statt Klasse
-# =============================================================================
-
-@runtime_checkable
-class ShadowReactorProtocol(Protocol):
-    """
-    Protocol for Shadow Reactors.
-
-    Shadow Reactors are auto-discovered from folder structure.
-    They don't register themselves - they just exist.
-
-    THE COMPLETE CYCLE:
-        on_bhoga:   Called during offering phase (0-7) - Krishna
-        on_switch:  Called at THE 8 MOMENT (position 8) - transformation
-        on_prasadam: Called during grace phase (8-15) - Rama
-        on_return:  Called at THE RETURN (15→0) - cycle completion
-
-    "The output becomes the input. Prasadam becomes next Bhoga."
-    """
-
-    def on_bhoga(self, state: ShadowState) -> None:
-        """Called during BHOGA phase (positions 0-7) - Krishna half."""
-        ...
-
-    def on_switch(self, state: ShadowState) -> None:
-        """Called at THE 8 MOMENT (position 8) - Bhoga→Prasadam."""
-        ...
-
-    def on_prasadam(self, state: ShadowState) -> None:
-        """Called during PRASADAM phase (positions 8-15) - Rama half."""
-        ...
-
-    def on_return(self, state: ShadowState) -> None:
-        """Called at THE RETURN (15→0) - Prasadam becomes next Bhoga."""
-        ...
-
-
-# =============================================================================
-# SHADOW REACTOR - The Core Engine
+# SHADOW REACTOR - The Core Engine (SPAWNBAR)
 # =============================================================================
 
 class ShadowReactor:
     """
-    The Shadow Reactor - Auto-discovery Yajna Engine.
+    The Shadow Reactor - Auto-discovery Yajna Engine (SPAWNBAR).
+
+    SANKIRTAN PATTERN (not Ashvamedha):
+        - NO SINGLETON - Multiple reactors can run in parallel
+        - Each walks its own path through the mantra
+        - Like TaskKernel - lightweight, ephemeral, spawnbar
 
     NO MANUAL WIRING.
-    Discovers reactors from folder structure.
+    Discovers listeners from folder structure.
     Manages complete Bhoga-Prasadam-Return cycle.
 
     THE COMPLETE CYCLE:
@@ -202,31 +102,49 @@ class ShadowReactor:
     "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
     """
 
-    # Singleton instance
-    _instance: ClassVar[Optional["ShadowReactor"]] = None
-
-    # Internal state
-    _position: int = 0
-    _previous_position: int = -1  # For RETURN detection
-    _cycle_count: int = 0
-    _switch_count: int = 0
-    _return_count: int = 0  # Cycle completions
-
-    # Discovered reactors (by position)
-    _reactors: Dict[int, List[ShadowReactorProtocol]]
-
-    # Base path for discovery
+    # Base path for discovery (shared across instances)
     _BASE_PATH: ClassVar[Path] = Path(__file__).parent.parent
 
-    def __new__(cls) -> "ShadowReactor":
-        """Singleton pattern - ONE reactor."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._reactors = {}
-            cls._instance._previous_position = -1
-            cls._instance._return_count = 0
-            cls._instance._discover_all()
-        return cls._instance
+    def __init__(
+        self,
+        auto_discover: bool = True,
+        initial_position: int = 0,
+    ) -> None:
+        """
+        Initialize ShadowReactor.
+
+        SPAWNBAR: Each call to __init__ creates a NEW reactor.
+        No singleton. Multiple reactors can exist (SANKIRTAN!).
+
+        Args:
+            auto_discover: If True, discover listeners from folders
+            initial_position: Starting position (0-15)
+        """
+        # Identity
+        self._reactor_id = f"sr_{uuid.uuid4().hex[:8]}"
+
+        # Internal state
+        self._position: int = initial_position
+        self._previous_position: int = -1  # For RETURN detection
+        self._cycle_count: int = 0
+        self._switch_count: int = 0
+        self._return_count: int = 0  # Cycle completions
+
+        # Discovered listeners (by position)
+        self._listeners: Dict[int, List[ShadowReactorListenerProtocol]] = {}
+
+        # Auto-discover if requested
+        if auto_discover:
+            self._discover_all()
+
+    # =========================================================================
+    # PROTOCOL PROPERTIES
+    # =========================================================================
+
+    @property
+    def reactor_id(self) -> str:
+        """Unique identifier for this reactor instance."""
+        return self._reactor_id
 
     # =========================================================================
     # AUTO-DISCOVERY - FOLDER_IS_WIRING
@@ -278,10 +196,10 @@ class ShadowReactor:
             )
 
             if has_reactor:
-                if mapping.position not in self._reactors:
-                    self._reactors[mapping.position] = []
+                if mapping.position not in self._listeners:
+                    self._listeners[mapping.position] = []
                 # Store module as reactor
-                self._reactors[mapping.position].append(module)
+                self._listeners[mapping.position].append(module)
 
         except ImportError:
             pass  # Folder exists but module can't import - that's ok
@@ -357,7 +275,7 @@ class ShadowReactor:
     def _trigger_bhoga(self, state: ShadowState) -> None:
         """Trigger on_bhoga for all reactors at current position."""
         position = state["position"]
-        for reactor in self._reactors.get(position, []):
+        for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_bhoga"):
                 try:
                     reactor.on_bhoga(state)
@@ -366,7 +284,7 @@ class ShadowReactor:
 
     def _trigger_switch(self, state: ShadowState) -> None:
         """Trigger on_switch for position 8 (THE 8 MOMENT)."""
-        for reactor in self._reactors.get(SWITCH_POSITION, []):
+        for reactor in self._listeners.get(SWITCH_POSITION, []):
             if hasattr(reactor, "on_switch"):
                 try:
                     reactor.on_switch(state)
@@ -376,7 +294,7 @@ class ShadowReactor:
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """Trigger on_prasadam for all reactors at current position."""
         position = state["position"]
-        for reactor in self._reactors.get(position, []):
+        for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_prasadam"):
                 try:
                     reactor.on_prasadam(state)
@@ -390,7 +308,7 @@ class ShadowReactor:
         15→0: Prasadam ready for distribution/acceptance.
         Agent receives sanctified output. Acintya.
         """
-        for reactor in self._reactors.get(RETURN_POSITION, []):
+        for reactor in self._listeners.get(RETURN_POSITION, []):
             if hasattr(reactor, "on_return"):
                 try:
                     reactor.on_return(state)
@@ -429,7 +347,7 @@ class ShadowReactor:
     @property
     def discovered_count(self) -> int:
         """Number of discovered reactors."""
-        return sum(len(r) for r in self._reactors.values())
+        return sum(len(r) for r in self._listeners.values())
 
     def get_state(self) -> ShadowState:
         """Get current state."""
@@ -450,16 +368,105 @@ class ShadowReactor:
         )
 
     def __repr__(self) -> str:
-        return f"ShadowReactor(position={self._position}, phase={self.phase.value}, reactors={self.discovered_count})"
+        return f"ShadowReactor(id={self._reactor_id}, position={self._position}, phase={self.phase.value}, listeners={self.discovered_count})"
+
+    # =========================================================================
+    # LISTENER MANAGEMENT (Protocol implementation)
+    # =========================================================================
+
+    def register_listener(
+        self,
+        position: int,
+        listener: ShadowReactorListenerProtocol,
+    ) -> None:
+        """
+        Register a listener at a specific position.
+
+        Args:
+            position: Position (0-15) to listen on
+            listener: Object implementing ShadowReactorListenerProtocol
+        """
+        if not 0 <= position <= 15:
+            raise ValueError(f"Position must be 0-15, got {position}")
+
+        if position not in self._listeners:
+            self._listeners[position] = []
+
+        if listener not in self._listeners[position]:
+            self._listeners[position].append(listener)
+
+    def unregister_listener(
+        self,
+        position: int,
+        listener: ShadowReactorListenerProtocol,
+    ) -> None:
+        """Unregister a listener from a position."""
+        if position in self._listeners:
+            if listener in self._listeners[position]:
+                self._listeners[position].remove(listener)
 
 
 # =============================================================================
-# SINGLETON ACCESS
+# SHADOW REACTOR FACTORY - Implements ShadowReactorFactoryProtocol
+# =============================================================================
+
+class ShadowReactorFactory:
+    """
+    Factory for creating ShadowReactor instances.
+
+    Implements ShadowReactorFactoryProtocol for dependency injection.
+    Enables SANKIRTAN pattern - multiple reactors running in parallel.
+
+    Usage:
+        # Via factory (CORRECT - dependency injection):
+        factory = ShadowReactorFactory()
+        reactor = factory.spawn()
+
+        # Or use the default factory:
+        reactor = shadow_reactor_factory.spawn()
+    """
+
+    def spawn(
+        self,
+        auto_discover: bool = True,
+        initial_position: int = 0,
+    ) -> ShadowReactor:
+        """
+        Spawn a new ShadowReactor instance.
+
+        SANKIRTAN: Each call creates a NEW reactor.
+        No singleton. Multiple reactors can exist.
+
+        Args:
+            auto_discover: If True, discover listeners from folders
+            initial_position: Starting position (0-15)
+
+        Returns:
+            New ShadowReactor instance
+        """
+        return ShadowReactor(
+            auto_discover=auto_discover,
+            initial_position=initial_position,
+        )
+
+
+# Default factory instance
+shadow_reactor_factory = ShadowReactorFactory()
+
+
+# =============================================================================
+# CONVENIENCE FUNCTIONS (BACKWARD COMPATIBILITY)
 # =============================================================================
 
 def get_shadow_reactor() -> ShadowReactor:
-    """Get the singleton Shadow Reactor."""
-    return ShadowReactor()
+    """
+    Create a new Shadow Reactor.
+
+    NOTE: This now creates a NEW reactor each call (SANKIRTAN pattern).
+    Previously was singleton (Ashvamedha). If you need a shared reactor,
+    store the reference yourself.
+    """
+    return shadow_reactor_factory.spawn()
 
 
 # Convenience alias
@@ -471,18 +478,22 @@ shadow = get_shadow_reactor
 # =============================================================================
 
 __all__ = [
-    # Phase
+    # Protocol types (from shadow_protocol.py)
     "YajnaPhase",
     "SWITCH_POSITION",
     "RETURN_POSITION",
     "get_phase",
-    # Types (WATERTIGHT)
     "TickStateInput",
     "ShadowState",
-    # Protocol
+    "ShadowReactorResult",
+    "ShadowReactorListenerProtocol",
     "ShadowReactorProtocol",
-    # Reactor
+    "ShadowReactorFactoryProtocol",
+    # Implementation
     "ShadowReactor",
+    "ShadowReactorFactory",
+    "shadow_reactor_factory",
+    # Utility
     "get_shadow_reactor",
     "shadow",
 ]
