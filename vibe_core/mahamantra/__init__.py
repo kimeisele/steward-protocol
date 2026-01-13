@@ -86,6 +86,26 @@ class ExecuteResult(TypedDict):
     output: str
     error: Optional[str]
 
+
+class LilaState(TypedDict):
+    """
+    Return type for lila() - WATERTIGHT.
+
+    Chaitanya's Lila = 48 positions (24 Navadvipa + 24 Puri).
+    This is the COMPLETE lifecycle, not just the 16-word mantra.
+    """
+    lila_position: int      # 0-47
+    position: int           # 0-15 (mantra position)
+    phase: str              # "navadvipa" or "puri"
+    cycle: int              # 1, 2, or 3
+    quarter: str
+    guardian: str
+    word: str
+    opcode: Optional[int]
+    is_navadvipa: bool      # True for 0-23
+    is_puri: bool           # True for 24-47
+
+
 # =============================================================================
 # THE LOTUS PATH
 # =============================================================================
@@ -386,7 +406,8 @@ class MahamantraLotus(LotusNode):
     # Substrate = stateless map (answers "what WOULD be at tick X?")
     # Lotus = stateful reactor (answers "where am I NOW?")
 
-    _tick: int = 0  # Current position (0-15) - shared across instances
+    _tick: int = 0       # Current position (0-15) - shared across instances
+    _lila_tick: int = 0  # Current lila position (0-47) - Chaitanya's complete cycle
 
     # =========================================================================
     # GUARDIAN → SUBSTRATE MODULE MAPPING
@@ -490,6 +511,92 @@ class MahamantraLotus(LotusNode):
         """Verify Parampara connection (% 37 == 0)."""
         from vibe_core.mahamantra.substrate.clock import verify_parampara
         return verify_parampara(parampara_vector)
+
+    # =========================================================================
+    # LILA - Chaitanya's Complete Cycle (48 = 24 + 24)
+    # =========================================================================
+    #
+    # The 16-word mantra cycles 3 times = 48 positions.
+    # First 24 = Navadvipa (Build/Init)
+    # Last 24 = Puri (Runtime/Yield)
+    #
+    # This is the COMPLETE lifecycle. tick() is just one cycle.
+    #
+
+    def lila(self, position: int) -> "LilaState":
+        """
+        Get Lila state for any position (0-47).
+
+        Chaitanya's Lila = 48 positions:
+            0-23:  Navadvipa Phase (Build)
+            24-47: Puri Phase (Runtime)
+
+        Args:
+            position: Lila position (0-47)
+
+        Returns:
+            LilaState with full context
+        """
+        from vibe_core.mahamantra.substrate.clock import get_lila_info
+        info = get_lila_info(position)
+        return LilaState(
+            lila_position=info["lila_position"],
+            position=info["position"],
+            phase=info["phase"],
+            cycle=info["cycle"],
+            quarter=info["quarter"],
+            guardian=info["guardian"],
+            word=info["word"],
+            opcode=info["opcode"],
+            is_navadvipa=info["is_navadvip"],
+            is_puri=info["is_puri"],
+        )
+
+    def lila_tick(self) -> "LilaState":
+        """
+        Advance through the 48-position Lila cycle.
+
+        Like tick() but for the complete Chaitanya Lila.
+
+        lila_tick lila_tick lila_tick...
+        0 → 1 → 2 → ... → 47 → 0 → ...
+
+        Returns: LilaState with current position and phase
+        """
+        from vibe_core.mahamantra.substrate.clock import (
+            get_lila_info,
+            next_lila_position,
+        )
+
+        # Get current lila info
+        info = get_lila_info(MahamantraLotus._lila_tick)
+
+        # Build result BEFORE advancing
+        result = LilaState(
+            lila_position=info["lila_position"],
+            position=info["position"],
+            phase=info["phase"],
+            cycle=info["cycle"],
+            quarter=info["quarter"],
+            guardian=info["guardian"],
+            word=info["word"],
+            opcode=info["opcode"],
+            is_navadvipa=info["is_navadvip"],
+            is_puri=info["is_puri"],
+        )
+
+        # Advance to next lila position
+        MahamantraLotus._lila_tick = next_lila_position(MahamantraLotus._lila_tick)
+
+        return result
+
+    def get_lila_tick(self) -> int:
+        """Current lila position (0-47)."""
+        return MahamantraLotus._lila_tick
+
+    def get_lila_phase(self) -> str:
+        """Current lila phase (navadvipa/puri)."""
+        return "navadvipa" if MahamantraLotus._lila_tick < 24 else "puri"
 
     # === Quarter Shortcuts ===
 
