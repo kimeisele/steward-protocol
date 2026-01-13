@@ -63,59 +63,31 @@ from typing import (
 
 from vibe_core.mahamantra.kernel.singularity import mahamantra
 from vibe_core.mahamantra.protocols._core import Quarter
+from vibe_core.mahamantra.protocols._entropy import (
+    HEALTH_SAMADHI,
+    HEALTH_SADHANA,
+    EntropyLevel,  # SSOT for frequency
+)
 
 logger = logging.getLogger("MAHAMANTRA.DAEMON")
 
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS - IMPORTED FROM _entropy.py (SSOT)
 # =============================================================================
-
-# Health thresholds for frequency selection
-HEALTH_SAMADHI: Final[float] = 0.95   # Above this: deep rest
-HEALTH_SADHANA: Final[float] = 0.80   # Above this: normal practice
-# Below HEALTH_SADHANA: Gajendra mode (emergency)
+# HEALTH_SAMADHI = 0.95 (from _entropy.py)
+# HEALTH_SADHANA = 0.80 (from _entropy.py)
 
 
 # =============================================================================
-# FREQUENCY
+# FREQUENCY - Use EntropyLevel from _entropy.py (SSOT)
 # =============================================================================
-
-class DaemonFrequency(float, Enum):
-    """
-    Chanting frequencies based on system health.
-
-    Higher entropy = faster chanting = more purification.
-    """
-    IDLE = 0.5      # 32 sec/cycle - Samadhi (system pure)
-    ACTIVE = 1.0    # 16 sec/cycle - Sadhana (normal)
-    STRESS = 5.0    # 3.2 sec/cycle - Gajendra (emergency)
-
-    @classmethod
-    def from_health(cls, health_score: float) -> "DaemonFrequency":
-        """
-        Derive frequency from health score.
-
-        Health > 0.95: IDLE (system pure, slow chant)
-        Health > 0.80: ACTIVE (normal operation)
-        Health < 0.80: STRESS (high entropy, fast chant!)
-        """
-        if health_score >= HEALTH_SAMADHI:
-            return cls.IDLE
-        elif health_score >= HEALTH_SADHANA:
-            return cls.ACTIVE
-        else:
-            return cls.STRESS
-
-    @property
-    def cycle_time(self) -> float:
-        """Time for one complete Mahamantra cycle (16 words)."""
-        return 16.0 / self.value
-
-    @property
-    def word_interval(self) -> float:
-        """Time between each word."""
-        return 1.0 / self.value
+# EntropyLevel REMOVED - use EntropyLevel instead:
+#   EntropyLevel.SAMADHI  = 0.5 Hz (was IDLE)
+#   EntropyLevel.SADHANA  = 1.0 Hz (was ACTIVE)
+#   EntropyLevel.GAJENDRA = 5.0 Hz (was STRESS)
+#
+# EntropyLevel has: .frequency_hz, .cycle_time, .word_interval
 
 
 # =============================================================================
@@ -138,7 +110,7 @@ class DaemonMetrics:
     cycles_completed: int = 0
     total_chants: int = 0
     last_health_score: float = 0.0
-    last_frequency: DaemonFrequency = DaemonFrequency.ACTIVE
+    last_frequency: EntropyLevel = EntropyLevel.SADHANA
     uptime_seconds: float = 0.0
     start_time: Optional[datetime] = None
     last_chant_time: Optional[datetime] = None
@@ -291,7 +263,7 @@ class MahamantraDaemon:
             self._metrics.record_health(health)
 
             # === SELECT FREQUENCY ===
-            frequency = DaemonFrequency.from_health(health)
+            frequency = EntropyLevel.from_health(health)
             self._metrics.last_frequency = frequency
 
             # === CHANT OR REST ===
@@ -315,7 +287,7 @@ class MahamantraDaemon:
         self,
         cycle: int,
         health: float,
-        frequency: DaemonFrequency,
+        frequency: EntropyLevel,
     ) -> None:
         """
         Execute one complete Mahamantra chanting cycle.
@@ -481,7 +453,7 @@ if __name__ == "__main__":
 
 __all__ = [
     # Frequency
-    "DaemonFrequency",
+    "EntropyLevel",
     "HEALTH_SAMADHI",
     "HEALTH_SADHANA",
     # State
