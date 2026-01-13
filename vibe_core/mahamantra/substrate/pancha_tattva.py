@@ -41,8 +41,13 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Final, Tuple, Protocol, runtime_checkable
 
-# Import from byte.py for connection
-from vibe_core.mahamantra.substrate.byte import HolyName
+# Import from byte.py (SSOT for mathematical constants)
+from vibe_core.mahamantra.substrate.byte import (
+    HolyName,
+    MAHAMANTRA_DIMENSION,
+    LILA_CYCLES as _LILA_CYCLES,
+    LILA_LIMIT,
+)
 
 
 # =============================================================================
@@ -402,14 +407,19 @@ def verify_pancha_tattva_parampara(value: int) -> bool:
 #   - 37 + 11 = 48 (Parampara + Rudra)
 #
 
-# The Mahamantra has 16 words
-MAHAMANTRA_WORDS: Final[int] = 16
+# -------------------------------------------------------------------------
+# SSOT: These values are imported from byte.py (the mathematical layer)
+# Here we provide PERSONAL NAMES for the same mathematical truths.
+# -------------------------------------------------------------------------
+
+# The Mahamantra has 16 words (personal name for MAHAMANTRA_DIMENSION)
+MAHAMANTRA_WORDS: Final[int] = MAHAMANTRA_DIMENSION  # SSOT: byte.py
 
 # The Trinity (Hare, Krishna, Rama) or 3 complete cycles
-LILA_CYCLES: Final[int] = 3
+LILA_CYCLES: Final[int] = _LILA_CYCLES  # SSOT: byte.py
 
-# Chaitanya's Lila = 16 × 3 = 48 years
-CHAITANYA_LILA: Final[int] = MAHAMANTRA_WORDS * LILA_CYCLES
+# Chaitanya's Lila = 16 × 3 = 48 years (personal name for LILA_LIMIT)
+CHAITANYA_LILA: Final[int] = LILA_LIMIT  # SSOT: byte.py
 
 # The two symmetric phases of Chaitanya's life
 NAVADVIPA_PHASE: Final[int] = 24  # First 24 years: Householder, Study, Build
