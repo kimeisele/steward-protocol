@@ -380,7 +380,7 @@ class MahamantraLotus(LotusNode):
     THE 16 GUARDIANS ARE THE WIRING.
     """
 
-    _singularity = None  # Lazy-loaded Singularity
+    # _singularity removed - using watertight clock instead
 
     # =========================================================================
     # GUARDIAN → SUBSTRATE MODULE MAPPING
@@ -421,83 +421,48 @@ class MahamantraLotus(LotusNode):
     # THE LOOP - Input AND Output (ONE MANTRA)
     # =========================================================================
 
+    # =========================================================================
+    # THE CLOCK - Watertight (no external deps)
+    # =========================================================================
+
+    _clock = None  # Lazy-loaded watertight clock
+
     @property
     def _core(self):
-        """Lazy-load the actual Singularity."""
-        if MahamantraLotus._singularity is None:
-            from vibe_core.mahamantra.kernel.singularity import mahamantra as core
-            MahamantraLotus._singularity = core
-        return MahamantraLotus._singularity
-
-    # Lazy-loaded Shadow Reactor (breaks circular imports)
-    _shadow_reactor = None
+        """The watertight clock from substrate."""
+        if MahamantraLotus._clock is None:
+            from vibe_core.mahamantra.substrate.clock import clock
+            MahamantraLotus._clock = clock
+        return MahamantraLotus._clock
 
     def tick(self) -> TickState:
         """
         Der Herzschlag - Advance through the 16 positions.
 
-        BHOGA-PRASADAM-YAJNA:
-        ====================
+        WATERTIGHT: Uses substrate.clock, no external dependencies.
 
-            Position 0-7:  BHOGA (Offering) - Krishna half
-            Position 8:    THE SWITCH (Parashurama transforms)
-            Position 8-15: PRASADAM (Grace) - Rama half
+        tick tick tick tick...
+        0 → 1 → 2 → ... → 15 → 0 → ...
 
-        THE FLOW:
-        =========
-
-            1. Singularity tick (pure heartbeat)
-            2. Shadow Reactor processes Bhoga-Prasadam cycle
-            3. Position 8 triggers THE SWITCH (transformation)
-            4. Return sanctified state
-
-        NO MANUAL WIRING:
-        ================
-
-            Shadow Reactor auto-discovers from folder structure.
-            FOLDER = WIRING = REGISTRATION
-
-        Input: tick()
-        Output: TickState {tick, position, quarter, guardian, word, opcode}
+        Returns: TickState {tick, position, quarter, guardian, word, opcode}
         """
-        # 1. SINGULARITY - Pure tick (the heartbeat)
-        tick_state = self._core.tick()
-
-        # 2. SATTVIC DISPATCH - Direct call to registered instance
-        # Identity = Function. If you ARE position X, you ACT at position X.
-        # Services register with: ProtocolRegistry.register_instance(self)
-        from vibe_core.mahamantra.substrate.protocol import ProtocolRegistry
-        position = tick_state["position"] if isinstance(tick_state, dict) else tick_state.position
-        ProtocolRegistry.dispatch_tick(position, tick_state)
-
-        # 3. SHADOW REACTOR - Bhoga-Prasadam cycle (legacy, will be deprecated)
-        # TODO: Migrate all on_bhoga/on_prasadam to register_instance
-        if MahamantraLotus._shadow_reactor is None:
-            from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor
-            MahamantraLotus._shadow_reactor = get_shadow_reactor()
-        MahamantraLotus._shadow_reactor.tick(tick_state)
-
-        # 4. PRASADAM - Return sanctified output
-        return tick_state
+        return self._core.tick()
 
     def chant(self, separator: str = " ") -> str:
         """
         Das Gebet - The Holy Name.
 
-        Input: chant()
         Output: "Hare Krishna Hare Krishna..."
-
-        The loop IS the mantra. ONE MANTRA.
         """
         return self._core.chant(separator)
 
     def get_tick(self) -> int:
         """Current position (0-15)."""
-        return self._core.get_tick()
+        return self._core.position
 
-    def get_quarter(self):
-        """Current quarter (GENESIS/DHARMA/KARMA/MOKSHA)."""
-        return self._core.get_quarter()
+    def get_quarter(self) -> str:
+        """Current quarter (genesis/dharma/karma/moksha)."""
+        return self._core.quarter
 
     def verify(self, parampara_vector: int) -> bool:
         """Verify Parampara connection (% 37 == 0)."""
@@ -1073,8 +1038,9 @@ def _ouroboros_init() -> None:
         pass  # Don't break import on registration errors
 
 
-# Trigger Ouroboros at module load time
-_ouroboros_init()
+# OUROBOROS DISABLED - Triggers cascade to vibe_core.protocols
+# If needed, call mahamantra._ouroboros_init() explicitly.
+# _ouroboros_init()
 
 
 # =============================================================================
