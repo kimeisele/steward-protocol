@@ -13,6 +13,11 @@ Exports:
 """
 
 # Prabhupada's mercy is in substrate/mantra/ (near the Mahamantra)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xd185feb0"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.substrate.mantra.prabhupada import (
     SilentWitness,
     PRABHUPADA,

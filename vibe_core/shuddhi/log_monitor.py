@@ -5,6 +5,11 @@ Scans the system journal for errors and creates healing tasks.
 This bridges the gap between 'Log Reality' and 'Managed Action'.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xf650f082"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import re

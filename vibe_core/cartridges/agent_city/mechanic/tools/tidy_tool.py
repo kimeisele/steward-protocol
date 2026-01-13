@@ -8,6 +8,11 @@ Philosophy: The agent cleans up after itself.
 Rules are CODE, not config. No external file dependencies.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5665528e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 import subprocess

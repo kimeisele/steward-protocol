@@ -10,6 +10,11 @@ This enables swappable resource management backends:
 - Mock: MockResourceManager (no enforcement)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x0d2fa2c0"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from multiprocessing import Process
 from typing import Any, Dict, Protocol, runtime_checkable

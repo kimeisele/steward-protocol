@@ -5,6 +5,11 @@ Provider Settings Section
 Self-contained section for LLM provider configuration.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x5172d415"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import List, Optional
 

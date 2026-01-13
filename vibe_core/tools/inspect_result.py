@@ -24,6 +24,11 @@ Example:
     >>> print(result.output["status"])  # "COMPLETED"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd86c7ac2"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult

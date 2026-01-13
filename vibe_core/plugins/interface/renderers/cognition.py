@@ -13,6 +13,11 @@ Uses generate_content() pattern with dirty tracking (Law 3).
 Sections are config-driven from interface.yaml.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xfbbf1d71"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional

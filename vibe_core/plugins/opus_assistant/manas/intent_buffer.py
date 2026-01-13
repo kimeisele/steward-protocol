@@ -16,7 +16,13 @@ handles the data operations.
 Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2cc1a099"  # GenesisByte: parampara % 37 == 0
 
 import json
 import logging

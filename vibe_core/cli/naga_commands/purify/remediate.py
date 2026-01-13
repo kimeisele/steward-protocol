@@ -10,6 +10,11 @@ Usage:
     naga remediate silent --fix    Fix silent failures
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4c2144dc"  # GenesisByte: parampara % 37 == 0
+
 import re
 from pathlib import Path
 from typing import List, Tuple

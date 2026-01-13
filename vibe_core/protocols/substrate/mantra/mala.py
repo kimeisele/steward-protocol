@@ -24,6 +24,11 @@ THE 37 FORMULA AT MALA LEVEL:
     Or: 108 / 3 = 36, 36 + 1 = 37
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x0e429509"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, Tuple, List, Iterator, Optional
 from enum import IntEnum

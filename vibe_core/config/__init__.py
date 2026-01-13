@@ -8,6 +8,11 @@ NOTE: ConfigLoader was removed in favor of PhoenixConfig V2.
 Use vibe_core.phoenix for the unified typed config system.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x2158c949"  # GenesisByte: parampara % 37 == 0
+
 from .schema import (
     CityConfig,
     CivicConfig,

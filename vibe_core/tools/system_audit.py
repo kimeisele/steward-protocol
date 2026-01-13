@@ -16,6 +16,11 @@ This tool exists because:
     "Blind deletion in a 99% system is suicide."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x2f41a23c"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import importlib.util
 import json

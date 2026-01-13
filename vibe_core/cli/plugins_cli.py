@@ -9,6 +9,11 @@ Usage:
     steward plugins status            # Show loaded plugins
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x9146129d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import List, Optional

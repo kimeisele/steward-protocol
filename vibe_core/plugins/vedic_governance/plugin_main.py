@@ -18,6 +18,11 @@ Philosophy:
  they observe and guide without modifying the eternal substrate."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x789751c8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union

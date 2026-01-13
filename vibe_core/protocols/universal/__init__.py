@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xf582f957"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.substrate import (
     MAHAMANTRA_SEQUENCE,
     AlignmentScore,

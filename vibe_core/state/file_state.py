@@ -10,6 +10,11 @@ GAD-000 Compliant:
 - get_capabilities() for discoverability
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xb48ded0a"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 from dataclasses import dataclass, field

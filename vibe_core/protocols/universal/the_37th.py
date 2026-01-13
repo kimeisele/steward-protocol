@@ -11,6 +11,11 @@ Usage:
     capability = entity.get_ultimate_reality(context)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xaa7dde62"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable, Any, Optional
 from vibe_core.protocols.types import PersonProtocol
 

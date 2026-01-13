@@ -44,6 +44,11 @@ Phase 2 - Dynamic Context:
 OPUS-015: Container-ready (.vibe packable)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb80f8250"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from pathlib import Path

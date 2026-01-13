@@ -4,6 +4,11 @@ Catalog Book Tool - Add books to the library catalog.
 Implements Tool Protocol (vibe_core.tools.tool_protocol.Tool).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5219bb91"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

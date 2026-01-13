@@ -11,7 +11,13 @@ The bridge delegates to:
 "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x389b4ea6"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from pathlib import Path

@@ -13,6 +13,11 @@ DUAL-LOAD STRATEGY:
     4. [FUTURE] Remove agents/providers from phoenix.yaml (after deprecation period)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc2e03e73"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List

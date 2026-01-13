@@ -14,6 +14,11 @@ FRAKTAL PRINCIPLE:
     The executor (LLM, deterministic, human) is pluggable.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xd26f5a5e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

@@ -41,7 +41,13 @@ NO MANUAL WIRING:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xc384a71b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime

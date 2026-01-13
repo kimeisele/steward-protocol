@@ -26,6 +26,11 @@ Usage:
     naga scan --path <dir>       # Scan specific path
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xab9f3b21"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (

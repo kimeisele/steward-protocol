@@ -8,6 +8,11 @@ Enforces mortality on the ledger - removes oldest events to make room for new cr
 Named after Samsara, the cycle of death and rebirth.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd21c8c42"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

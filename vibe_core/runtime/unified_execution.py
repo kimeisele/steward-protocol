@@ -24,6 +24,11 @@ OPUS-200/201 INTEGRATION:
 Refs: docs/architecture/OPUS/OPUS_RUNTIME_SEPARATION.md
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x8ce2e4f7"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

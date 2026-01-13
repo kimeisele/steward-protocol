@@ -28,6 +28,11 @@ Example:
     summary = await archivist.summarize_documents("/path/to/docs")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x167fb3ad"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -35,6 +35,11 @@ ORIGINAL: protocols/dharma.py
 MIGRATED: protocols/mahajanas/manu/dharma.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xf06dfe08"  # GenesisByte: parampara % 37 == 0
+
 from enum import IntEnum
 from typing import Dict, Final, List
 

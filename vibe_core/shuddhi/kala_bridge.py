@@ -10,6 +10,11 @@ Two cycles:
 2. Watchman patrol (every M cycles) - detects code violations
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x39f0252d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 

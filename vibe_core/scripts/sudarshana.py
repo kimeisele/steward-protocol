@@ -18,6 +18,11 @@ Targets:
 5. StoreRecallProtocol -> COMMIT_LOG
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x93193072"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Iterator, List, Optional
 

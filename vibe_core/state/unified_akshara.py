@@ -24,6 +24,11 @@ Where quantum_boost = 1.0 + (reactor_energy × 0.3)
 High quantum energy amplifies good recommendations.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x06a1751a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import random
 from dataclasses import dataclass

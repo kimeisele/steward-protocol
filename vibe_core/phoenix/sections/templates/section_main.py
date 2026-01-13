@@ -15,6 +15,11 @@ This section eliminates 5 hardcoded BUILTIN_TEMPLATES violations:
 Templates are loaded from knowledge/templates/*.j2 with fallback to builtins.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xb4966502"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

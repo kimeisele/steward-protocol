@@ -13,6 +13,11 @@ The kernel just calls: executor.execute(result)
 No complex logic in kernel.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xe234a17b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Set
 

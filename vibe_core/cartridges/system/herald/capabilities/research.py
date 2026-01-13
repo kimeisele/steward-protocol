@@ -4,6 +4,11 @@ Provides market intelligence via Tavily API.
 Kernel-compatible module (configured via system.yaml).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbac87b4c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import Any, Dict, Optional

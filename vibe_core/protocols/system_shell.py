@@ -10,6 +10,11 @@ interactions with the Operating System (e.g. Git, Docker).
 "The Shell is the body; the Protocol is the spirit."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0x0070b98b"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Optional, Protocol, runtime_checkable, Union
 from dataclasses import dataclass
 from pathlib import Path

@@ -25,6 +25,11 @@ CONVERSION:
 "Ein Executor, eine Engine, eine Wahrheit."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8d98d4e2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

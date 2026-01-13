@@ -5,6 +5,11 @@ MarkdownUIManager - Central Coordination for Markdown Interfaces
 Extracts UI coordination logic from Kernel.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xf5b258ab"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Set
 

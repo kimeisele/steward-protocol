@@ -32,6 +32,11 @@ Why This Matters:
 - Foundation for Mission Architecture (Phase 4)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x1592acb0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any
 

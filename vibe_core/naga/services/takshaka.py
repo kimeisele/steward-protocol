@@ -18,6 +18,11 @@ Integration:
 - Auto-discovered by Narada via @naga_service decorator
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xcc2ab531"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import re

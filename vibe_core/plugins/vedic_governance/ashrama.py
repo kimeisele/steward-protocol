@@ -8,6 +8,11 @@ Every agent moves through these stages, creating natural lifecycle.
 Ashrama = "dwelling place" = stage of life
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x42025153"  # GenesisByte: parampara % 37 == 0
+
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict

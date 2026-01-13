@@ -24,6 +24,11 @@ Usage:
     naga intel --category security # Filter by category
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x264c89eb"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (

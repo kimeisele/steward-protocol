@@ -16,6 +16,11 @@ Records:
 GAD-000: "Observability - All operations must be measurable"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xdc0bc691"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass, field

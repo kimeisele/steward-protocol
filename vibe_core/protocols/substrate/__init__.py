@@ -43,7 +43,13 @@ Usage:
                 gene.bind(self)  # Top-down injection
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x253336b8"  # GenesisByte: parampara % 37 == 0
 
 import functools
 from dataclasses import dataclass, field

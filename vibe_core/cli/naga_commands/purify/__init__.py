@@ -15,6 +15,11 @@ PURIFY PHASE COMPLETE - All 4 positions filled.
 """
 
 # Import commands to trigger registration (Balarama pattern)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x1bbab70b"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.cli.naga_commands.purify.detect import DetectCommand
 from vibe_core.cli.naga_commands.purify.gc import GcCommand

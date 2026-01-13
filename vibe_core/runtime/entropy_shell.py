@@ -13,6 +13,11 @@ THE LAW:
 3. If Integrity Reaches Zero, the Shell enforces PRALAYA (System Death).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x9b250582"  # GenesisByte: parampara % 37 == 0
+
 import time
 import logging
 from typing import Any, Optional, TYPE_CHECKING, Dict, List

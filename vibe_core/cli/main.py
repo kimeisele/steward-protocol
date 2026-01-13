@@ -15,7 +15,13 @@ That's it. One import. One method. Everything flows through.
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x03936f7f"  # GenesisByte: parampara % 37 == 0
 
 import sys
 from typing import Final, List, Optional

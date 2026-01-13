@@ -18,6 +18,11 @@ Integration:
 - All NAGAs can publish/subscribe to topics
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x2bbef854"  # GenesisByte: parampara % 37 == 0
+
 import fnmatch
 import json
 import logging

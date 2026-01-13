@@ -21,7 +21,13 @@ ONE IMPORT, KRISHNA ROUTES:
     exit_code = cli_bridge.route("status", ["--verbose"])
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x9f312c63"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union

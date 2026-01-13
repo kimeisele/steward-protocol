@@ -8,6 +8,11 @@ These types replace Dict[str, Any] patterns in kernel_impl.py and kernel_protoco
 VIMANA RANGE ROVER: Military-grade type safety for the Kernel heart.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0xe2f83ac4"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

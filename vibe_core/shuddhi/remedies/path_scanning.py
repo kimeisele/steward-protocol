@@ -7,6 +7,11 @@ ManifestRegistry-driven discovery is SATTVA - knowing what's installed.
 Detection: StandardsInspectionTool (path_scanning_discovery)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xbf308943"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Set, Union
 
 import libcst as cst

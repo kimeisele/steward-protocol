@@ -13,6 +13,11 @@ Usage:
     shutdown_async_logging()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd490ce33"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
 from pathlib import Path

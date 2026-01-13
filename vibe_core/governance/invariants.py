@@ -14,6 +14,11 @@ Architecture note:
 This is ARCH-029 from Phase 3 (Governance & Soul).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x6095d503"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any

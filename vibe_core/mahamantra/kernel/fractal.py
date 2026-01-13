@@ -23,7 +23,13 @@ The pattern IS Krishna (acintya).
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x50d9193c"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum

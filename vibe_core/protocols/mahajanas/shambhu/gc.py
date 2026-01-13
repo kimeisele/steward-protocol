@@ -25,7 +25,13 @@ COLLECTION STRATEGIES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x5e4e3909"  # GenesisByte: parampara % 37 == 0
 
 import time
 from dataclasses import dataclass, field

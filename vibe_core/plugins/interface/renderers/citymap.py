@@ -5,6 +5,11 @@ Directly renders CITYMAP.md from Kernel Topology.
 UNIFIED UI: Implements generate_content() pattern.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x60465953"  # GenesisByte: parampara % 37 == 0
+
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 

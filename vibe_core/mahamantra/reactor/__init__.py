@@ -22,6 +22,11 @@ THE BHOGA-PRASADAM YAJNA:
 LEVEL: +2 (SERVICES) - Dies ist die Service-Schicht
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf71806da"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final
 from vibe_core.mahamantra.substrate import ProtocolLevel
 

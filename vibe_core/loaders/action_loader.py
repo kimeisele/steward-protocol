@@ -18,6 +18,11 @@ KEY FEATURE:
     IntentRouter can query: ActionLoader.get_handler_for_intent("commit_changes")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x776f181d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

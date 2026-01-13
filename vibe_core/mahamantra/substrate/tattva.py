@@ -42,6 +42,11 @@ BG 4.34: "tad viddhi praṇipātena paripraśnena sevayā"
 Der Guru ist die BRÜCKE, nicht ein Element.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x4bf36d36"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import IntEnum, Enum
 from typing import Final, List, Tuple

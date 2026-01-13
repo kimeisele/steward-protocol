@@ -32,6 +32,11 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x3e2fa1fe"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 from pathlib import Path
 from types import ModuleType
@@ -226,7 +231,18 @@ class LotusNode:
         return f"mahamantra.{'.'.join(self._path.segments)}"
 
     def __dir__(self) -> list:
-        """List available children for tab-completion."""
+        """
+        List available children for tab-completion.
+
+        LILA BOUNDARY (Chaitanya's 24+24):
+            Returns max 24 items per call (Navadvipa phase).
+            Use _dir_full() for complete listing.
+            This prevents exponential output explosion.
+        """
+        from vibe_core.mahamantra.substrate.byte import LILA_LIMIT
+
+        NAVADVIPA_LIMIT = LILA_LIMIT // 2  # 24
+
         items = []
 
         # Folders
@@ -244,7 +260,47 @@ class LotusNode:
                 elif child.suffix == ".py":
                     items.append(child.stem)
 
-        # Module exports
+                # Lila boundary check
+                if len(items) >= NAVADVIPA_LIMIT:
+                    break
+
+        # Module exports (only if we have capacity)
+        if len(items) < NAVADVIPA_LIMIT:
+            module = self._get_module()
+            if module is not None:
+                remaining = NAVADVIPA_LIMIT - len(items)
+                module_items = [
+                    name for name in dir(module)
+                    if not name.startswith("_")
+                ]
+                items.extend(module_items[:remaining])
+
+        result = sorted(set(items))
+
+        # Add hint if truncated
+        if len(result) >= NAVADVIPA_LIMIT:
+            result.append("__has_more__")
+
+        return result
+
+    def _dir_full(self) -> list:
+        """Full directory listing (bypasses Lila boundary for internal use)."""
+        items = []
+
+        if self._path.is_root:
+            base = self._BASE_PATH
+        else:
+            base = self._BASE_PATH / self._path.folder_path
+
+        if base.exists():
+            for child in base.iterdir():
+                if child.name.startswith("_"):
+                    continue
+                if child.is_dir():
+                    items.append(child.name)
+                elif child.suffix == ".py":
+                    items.append(child.stem)
+
         module = self._get_module()
         if module is not None:
             items.extend(

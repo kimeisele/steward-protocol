@@ -14,6 +14,11 @@ NAGA Assignment:
 - TAKSHAKA: Validate violation payloads for malicious content
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x99c14374"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from pathlib import Path

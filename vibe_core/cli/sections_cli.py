@@ -8,6 +8,11 @@ Usage:
     steward sections info <name>       # Show section details
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x05feaad1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import List, Optional

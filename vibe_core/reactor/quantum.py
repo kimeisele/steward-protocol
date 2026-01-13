@@ -14,6 +14,11 @@ Mass influences gravitational pull in the resonance field.
 Actions don't get "allowed" - they MANIFEST when energy overcomes inertia.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x7b038ea8"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import math
 from dataclasses import dataclass, field

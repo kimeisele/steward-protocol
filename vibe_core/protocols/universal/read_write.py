@@ -7,6 +7,11 @@ HARDENED (Phase 27):
 - Context is MANDATORY.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x48e836a6"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 from .types import ReadResult, SovereignContext
 

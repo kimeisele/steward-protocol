@@ -29,6 +29,11 @@ Example:
     >>> # If Google fails, automatically falls back to SmartLocal
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xa67e4347"  # GenesisByte: parampara % 37 == 0
+
 import logging
 
 from vibe_core.runtime.providers.base import LLMError, LLMProvider

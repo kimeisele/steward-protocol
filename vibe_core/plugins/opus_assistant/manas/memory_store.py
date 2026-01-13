@@ -17,6 +17,11 @@ Storage: .vibe/state/plugins/opus_assistant/manas_memory.json (survives restarts
 Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7abfb509"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import asdict, dataclass, field

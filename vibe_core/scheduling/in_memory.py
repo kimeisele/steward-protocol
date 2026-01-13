@@ -6,6 +6,11 @@ This is a pure scheduler - no cosmic logic, no governance.
 Task filtering is handled by plugins via on_task_submit hook.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x6ba726f2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections import deque
 from typing import TYPE_CHECKING, Any, Dict, Optional

@@ -19,6 +19,11 @@ OPUS-307 Phase I.2: DeterministicExecutor REMOVED. Singularity or FAIL.
 "Ein Executor, eine Engine, eine Wahrheit."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xe1fcec70"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING
 

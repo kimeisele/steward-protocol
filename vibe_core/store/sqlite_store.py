@@ -12,6 +12,11 @@ Implements ARCH-002: SQLiteStore class with CRUD operations for:
 Schema: docs/tasks/ARCH-001_schema.sql (v2)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x61326d80"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

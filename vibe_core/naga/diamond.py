@@ -44,6 +44,11 @@ The Flow:
 "Gift zu Medizin."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x95567d23"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from dataclasses import dataclass, field

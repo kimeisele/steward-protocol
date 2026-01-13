@@ -16,6 +16,11 @@ This cartridge is now a native VibeAgent:
 The Envoy was the missing link. Now it's truly wired in.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc5e664b6"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from typing import Any, Dict, Optional

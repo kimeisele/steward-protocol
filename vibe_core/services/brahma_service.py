@@ -8,6 +8,11 @@ Wraps ManifestRegistry and CapabilityRegistry.
 "Brahma is the first created being, who creates the rest."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4ea47c97"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple

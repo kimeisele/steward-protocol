@@ -9,6 +9,11 @@ In the Runtime, Balarama acts as the INJECTOR.
 He takes a raw object and infuses it with Life (Gene).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xd03d5a78"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Protocol, runtime_checkable, TypeVar
 from vibe_core.protocols.substrate.gene import iGene
 

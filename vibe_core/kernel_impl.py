@@ -33,6 +33,11 @@ This is NOT a mock. This is real execution context for cartridges.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xfc269a74"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time

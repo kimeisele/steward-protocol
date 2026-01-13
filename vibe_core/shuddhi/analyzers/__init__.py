@@ -9,6 +9,11 @@ This module contains ONLY analyzers that Watchman doesn't provide:
 - LCOM4: Cohesion analysis for God Class detection (future use)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x50a92813"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.shuddhi.analyzers.lcom4 import (
     LCOM4GraphBuilder,
     LCOM4Result,

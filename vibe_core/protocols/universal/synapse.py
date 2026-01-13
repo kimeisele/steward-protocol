@@ -9,6 +9,11 @@ To: A Universal Protocol.
 A Synapse is NOT just data. It is a weighted, directed edge in the Graph of Consciousness.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x0910aa11"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Protocol, runtime_checkable
 

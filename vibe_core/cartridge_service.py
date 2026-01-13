@@ -7,6 +7,11 @@ Replaces: ManifestRegistry (cartridge parts), CartridgeRegistry, LazyCartridgeRe
 GAD-000: Single source of truth, accessed via ServiceRegistry.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xafb03dfd"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import logging
 from pathlib import Path

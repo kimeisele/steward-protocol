@@ -24,6 +24,11 @@ USAGE:
     result = shell.execute(intent)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x109b3e6f"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.plugins.opus_assistant.manas.cortex.base_cortex import (
     BaseCortex,
     cortex_error,

@@ -12,6 +12,11 @@ All errors must be structured so an AI operator can:
 See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xf9a40bd3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Optional

@@ -20,6 +20,11 @@ The 16 system agents that ship with the kernel:
 - manas: Cognitive mind (OPUS-072)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x09232d89"  # GenesisByte: parampara % 37 == 0
+
 __all__ = [
     "envoy",
     "herald",

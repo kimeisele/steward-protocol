@@ -4,6 +4,11 @@ HERALD Scout Tool - Bot Detection & Recruitment Intelligence.
 "Gotta Catch 'Em All"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf38601d7"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

@@ -6,6 +6,11 @@ Orchestrates the conveyor belt:
 3. Prompt Composer → Compose final prompt
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa2f52586"  # GenesisByte: parampara % 37 == 0
+
 import json
 import os
 import sys

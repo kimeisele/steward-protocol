@@ -31,6 +31,11 @@ Usage:
     naga chat "Hello!"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xedb5ebb8"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Optional, Tuple
 
 from vibe_core.protocols.naga.cli_command import (

@@ -37,7 +37,13 @@ THE FOUR VYUHAS:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7f7b467f"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 from dataclasses import dataclass, field

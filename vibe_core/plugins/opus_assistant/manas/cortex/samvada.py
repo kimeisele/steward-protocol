@@ -21,6 +21,11 @@ Architecture:
 "The dialogue between human and machine must be clear and true."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x54d927f7"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

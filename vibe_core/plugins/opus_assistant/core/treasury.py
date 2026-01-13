@@ -29,6 +29,11 @@ Integration:
 - If returns False, the Autonomous Conductor MUST stop
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0ea8c8ce"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

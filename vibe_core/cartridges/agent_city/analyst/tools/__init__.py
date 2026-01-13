@@ -15,6 +15,11 @@ Tools provide MULTI-SOURCE analysis:
 - analyst.architecture System introspection and ARCHITECTURE.md generation
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5ad93aaa"  # GenesisByte: parampara % 37 == 0
+
 from .architecture_tool import ArchitectureAnalysisTool
 from .code_tool import CodeAnalysisTool
 from .deps_tool import DependencyAnalysisTool

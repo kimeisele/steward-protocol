@@ -16,6 +16,11 @@ The Dhruva system uses a hierarchy of authority to determine truth:
 This system ensures consistent truth resolution across the entire OS.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x128b38d9"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional

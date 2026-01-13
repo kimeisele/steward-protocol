@@ -7,6 +7,11 @@ INPUT (Gather Context) -> PROCESS (Generate Content) -> VALIDATE (Governance) ->
 With automatic feedback loops for failed validations and immutable event sourcing.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x626c7031"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass

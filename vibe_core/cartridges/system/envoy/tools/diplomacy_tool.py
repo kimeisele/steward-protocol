@@ -9,6 +9,11 @@ CRITICAL CONSTRAINT: NEVER auto-posts. All invitations saved to
 diplomatic_bag/ for human approval.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x860a73ad"  # GenesisByte: parampara % 37 == 0
+
 import json
 import os
 from datetime import datetime

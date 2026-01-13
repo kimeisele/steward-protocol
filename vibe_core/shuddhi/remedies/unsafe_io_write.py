@@ -4,6 +4,11 @@ OPUS-212: UnsafeIOWriteRemedy - The first CST Healer.
 Transforms raw 'open().write()' calls to 'self.system.write_file()'.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x46dbe964"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Union
 
 import libcst as cst

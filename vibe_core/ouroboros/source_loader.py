@@ -19,6 +19,11 @@ GAD-000 Compliance:
     - Composability: Works with ViolationParserLoader
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x8ca0d279"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path

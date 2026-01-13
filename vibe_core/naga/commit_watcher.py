@@ -22,6 +22,11 @@ The Wächter notices:
 - High healed conflict rates (merge drift)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x88821ad4"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from collections import deque

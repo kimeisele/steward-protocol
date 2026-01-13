@@ -18,6 +18,11 @@ Example Invariants:
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb197b142"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import asdict, dataclass

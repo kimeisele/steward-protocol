@@ -10,7 +10,13 @@ to the Mahajana framework. NO DUPLICATION - just delegation.
 WRAPPED: vibe_core.narasimha.NarasimhaProtocol
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x0176ec06"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from typing import Dict, List, Optional

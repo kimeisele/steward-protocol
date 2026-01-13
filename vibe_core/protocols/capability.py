@@ -12,6 +12,11 @@ Types:
 - ORGANIC: Agents (autonomous entity)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0xbfdc7a41"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

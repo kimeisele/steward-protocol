@@ -25,6 +25,11 @@ Usage:
     naga context --bindings       # Active bindings
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x9ba4570a"  # GenesisByte: parampara % 37 == 0
+
 import os
 from pathlib import Path
 from typing import List, Tuple

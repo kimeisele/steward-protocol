@@ -4,6 +4,11 @@ PRAHLAD Hiranyakashipu Integration - Mixin for living attack seeds.
 Extracted to reduce service.py below 800 lines.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xf6c69d03"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, List, Optional
 

@@ -28,7 +28,13 @@ DELIVERY MODES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x3a9c2fe5"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime

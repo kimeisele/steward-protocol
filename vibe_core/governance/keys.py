@@ -16,6 +16,11 @@ To update a hash, you must change this file, which requires:
 This IS the Protocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x8bc4596e"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, Final
 
 # The Source of Truth (SHA-256 Hashes)

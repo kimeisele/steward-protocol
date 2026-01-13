@@ -8,6 +8,11 @@ Data Flow:
 This is the unified interface for the NAGA layer.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7b3899f2"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Dict, Optional, Protocol, runtime_checkable
 
 from vibe_core.protocols.naga.types import NagaStatus, NagaType

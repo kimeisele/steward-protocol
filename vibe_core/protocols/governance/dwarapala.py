@@ -7,6 +7,11 @@ This module strictly separates 'Service' (Mechanism) from 'Person' (Authority).
 It replaces loose 'Context' checks with strict 'PersonProtocol' checks.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x0c8f48d7"  # GenesisByte: parampara % 37 == 0
+
 from typing import TypeVar, Generic, Optional, TYPE_CHECKING
 from vibe_core.protocols.types import PersonProtocol, Capability, ServiceProtocol
 

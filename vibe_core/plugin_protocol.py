@@ -13,6 +13,11 @@ Safety features based on Senior Architecture Review:
 - State Isolation (plugins own their state)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x6fde4ade"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

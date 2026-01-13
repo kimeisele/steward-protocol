@@ -13,6 +13,11 @@ DIE 4 SÄULEN:
 4. SAUCAM (Cleanliness) -> Network/Context Isolation (Keine Kontamination).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xdd2495cf"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Any, Optional, Protocol, TypeVar, runtime_checkable
 

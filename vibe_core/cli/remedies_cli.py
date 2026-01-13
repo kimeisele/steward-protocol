@@ -25,6 +25,11 @@ Usage:
     steward remedies get <rule_id>            # Get remedy for specific rule
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xaadc8e27"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

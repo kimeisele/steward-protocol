@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x477c34d9"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Dict
 
 from vibe_core.protocols.identity import IdentityProtocol

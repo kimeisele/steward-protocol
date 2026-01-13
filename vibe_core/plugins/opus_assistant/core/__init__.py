@@ -14,6 +14,11 @@ Components:
 - StatePaths: Unified state path resolution (Phase 3 - Migration)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xafb525f7"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader, deep_merge
 from vibe_core.plugins.opus_assistant.core.context_service import OpusContext, OpusContextService, SystemHealth
 from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector, DriftReport

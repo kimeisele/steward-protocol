@@ -9,6 +9,11 @@ Config-driven from config/interface.yaml (Phoenix Config).
 Fractal: Custom agents can register their own renderers!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x83e08115"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import time

@@ -18,6 +18,11 @@ Philosophy:
  they observe and restrict without modifying the eternal substrate."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x08963c77"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Set
 

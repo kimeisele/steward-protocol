@@ -27,6 +27,11 @@ Created: 2025-11-19
 Version: 1.0 (MVP - Core Resolvers)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x0d2b6552"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from collections.abc import Callable

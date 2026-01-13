@@ -19,6 +19,11 @@ Usage:
     loop.apply_pending()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x3d10658d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass, field

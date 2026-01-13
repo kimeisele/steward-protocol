@@ -15,7 +15,13 @@ IMPLEMENTATION:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x2967d08a"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime

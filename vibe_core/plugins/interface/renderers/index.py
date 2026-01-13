@@ -5,6 +5,11 @@ Directly renders INDEX.md from Circuit Schema.
 UNIFIED UI: Implements generate_content() pattern.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0f6a5933"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional

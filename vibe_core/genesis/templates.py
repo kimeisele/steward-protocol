@@ -5,6 +5,11 @@ Central registry for all module type templates.
 Templates are versioned and validated.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xb74300c2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path

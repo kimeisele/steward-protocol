@@ -13,6 +13,11 @@ Pattern copied from: vibe_core/plugins/opus_assistant/core/state_manager.py
 Philosophy: The Vimana must drive through hell without stopping.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xabb2ef6a"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

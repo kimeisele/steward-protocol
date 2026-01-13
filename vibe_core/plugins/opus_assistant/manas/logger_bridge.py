@@ -9,7 +9,13 @@ The actual logging is done by ObservationLogger from opus_assistant/core.
 This bridge just handles the wiring and provides kernel-friendly methods.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x32a67a6f"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from pathlib import Path

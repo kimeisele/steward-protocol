@@ -14,6 +14,11 @@ Architecture:
 "The mind must understand before it responds."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x6853d930"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Optional

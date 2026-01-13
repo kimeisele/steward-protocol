@@ -17,6 +17,11 @@ The adapters convert:
 - AttackSeed → DriftDetector
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xdac691f7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

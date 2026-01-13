@@ -1,5 +1,10 @@
 """Task generation logic for determining next tasks."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x0231dfd0"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, List, Optional
 
 from .batch_operations import BatchOperations

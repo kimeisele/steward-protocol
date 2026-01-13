@@ -12,6 +12,11 @@ This is THE REFLEX - the missing piece that closes the loop:
 Philosophy: "The system proves itself by trying to break itself."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5bc2e6b4"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List

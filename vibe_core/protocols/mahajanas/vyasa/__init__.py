@@ -29,7 +29,13 @@ DOMAIN:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x9f080c96"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime

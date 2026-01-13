@@ -15,6 +15,11 @@ Tool Protocol compliant for kernel-managed execution.
 "The Constitution is not optional. It is the supreme law."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x26e6b73c"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import hashlib
 import logging

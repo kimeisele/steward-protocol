@@ -34,6 +34,11 @@ Integration:
 - Implements IGeneHost for top-down dependency injection
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xc507911e"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import inspect
 import logging

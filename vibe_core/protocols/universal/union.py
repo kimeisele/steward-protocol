@@ -16,6 +16,11 @@ GAD-000 COMPLIANT:
 - Identity: BindingCertificate integration (Anti-Mayavad)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xcdba00eb"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Iterator, List, Optional, Protocol, runtime_checkable

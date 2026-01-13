@@ -24,6 +24,11 @@ Architecture:
 "Outlaws can be legalized through proper governance."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc532ca93"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass

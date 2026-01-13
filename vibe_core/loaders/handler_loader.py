@@ -15,6 +15,11 @@ AGENT-FIRST ROUTING:
     and an agent_type → handlers mapping for future Agent-First routing.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x9259440f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type

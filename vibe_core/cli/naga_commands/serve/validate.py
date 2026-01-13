@@ -26,6 +26,11 @@ Usage:
     naga validate --quick         # Quick validation (no deep checks)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf18cc929"  # GenesisByte: parampara % 37 == 0
+
 import subprocess
 from pathlib import Path
 from typing import List, Tuple

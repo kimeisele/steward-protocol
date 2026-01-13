@@ -33,7 +33,13 @@ The graph is not separate - it IS the Mantra unfolding.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xc2ab8316"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum

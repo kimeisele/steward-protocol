@@ -30,6 +30,11 @@ Created: 2025-11-15
 Version: 1.0 (MVP)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xcba7ff07"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path

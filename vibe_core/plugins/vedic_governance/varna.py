@@ -9,6 +9,11 @@ Varna = the "color" or class of being - functional role in the ecosystem.
 Each Varna represents a different level of consciousness and capability.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xd2303b57"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from typing import Any, Dict
 

@@ -1,5 +1,10 @@
 """Agent identity and manifest generation."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x0fa73311"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime, timezone

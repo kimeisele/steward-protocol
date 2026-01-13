@@ -20,6 +20,11 @@ Usage:
     content = loader.render("readme.md.j2", project=data, agents=list)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x93211729"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, Union

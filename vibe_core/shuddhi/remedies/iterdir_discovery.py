@@ -17,6 +17,11 @@ Note: Full auto-heal requires semantic analysis (what type is being discovered).
 This remedy adds TODO markers for engineer review.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xe8284325"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Optional, Set, Union
 
 import libcst as cst

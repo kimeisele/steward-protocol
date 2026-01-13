@@ -17,6 +17,11 @@ The Cognitive Kernel transforms OPUS from a reactive system
 to a proactive autonomous agent.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf9b490f4"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import hashlib
 import json

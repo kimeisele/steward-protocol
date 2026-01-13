@@ -6,6 +6,11 @@ KAPILA - The Sage of Samkhya Philosophy.
 Types for analysis, topology, and circuits.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x54f2cd71"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.kapila.types.topology import (
     Varsha,
     Agent,

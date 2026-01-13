@@ -12,6 +12,11 @@ Every specialized agent (Coder, Researcher, Reviewer, etc.) inherits from this.
 MIGRATED FROM: agency_os/03_agents/base_agent.py (Post-Split Architecture)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x420dae73"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import json
 import logging

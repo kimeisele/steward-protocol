@@ -18,6 +18,11 @@ Components:
 - oath_mixin.py  → Mixin for agents to swear oaths
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x510d6833"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.steward.constitution import ConstitutionalOath
 from vibe_core.steward.loader import AgentLoader, AgentMeta
 from vibe_core.steward.oath_mixin import OathMixin

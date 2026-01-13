@@ -16,6 +16,11 @@ Action Types:
 - CALL_PLAYBOOK: Execute nested playbook (already implemented)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0adac631"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, Optional

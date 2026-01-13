@@ -6,6 +6,11 @@ This is a compatibility shim for legacy code.
 """
 
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x241ad3bb"  # GenesisByte: parampara % 37 == 0
+
 class HeraldConstitution:
     """Minimal HeraldConstitution class for boot compatibility."""
 

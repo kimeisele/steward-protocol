@@ -15,6 +15,11 @@ Features:
 Version: 1.0 (GAD-511 Phase 2)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x4e6faaf8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from datetime import datetime

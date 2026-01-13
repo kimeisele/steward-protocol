@@ -44,6 +44,11 @@ Architecture:
 Version: 0.1 (Foundation)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x2675b3fb"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field

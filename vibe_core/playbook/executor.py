@@ -21,6 +21,11 @@ Architecture:
 Version: 0.1 (Logic Foundation)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xe0ef2af9"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum

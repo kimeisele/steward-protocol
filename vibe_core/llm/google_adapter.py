@@ -16,6 +16,11 @@ the simpler chat-based protocol from vibe_core.llm.provider.
 Version: 1.0 (ARCH-033)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xb657e508"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import Any

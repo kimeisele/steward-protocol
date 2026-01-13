@@ -24,6 +24,11 @@ GAD-000 Compliant:
 - Recoverable: Failures are explicit, not silent
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x340d6bca"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable, Any, List, Optional, TypeVar, Generic
 from dataclasses import dataclass
 from enum import Enum

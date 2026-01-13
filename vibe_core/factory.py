@@ -13,6 +13,11 @@ Usage:
     ledger = VibeFactory.create_ledger()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd4a989ae"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional
 
 # =============================================================================

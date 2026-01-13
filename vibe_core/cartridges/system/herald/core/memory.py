@@ -10,6 +10,11 @@ Event Sourcing Pattern:
 This makes HERALD's behavior auditable and deterministic.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x3274fbab"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import asdict, dataclass

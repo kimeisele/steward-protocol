@@ -36,6 +36,11 @@ ACINTYA (WATERTIGHT):
 — Bhagavad Gita 13.2
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x2af0c8f0"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Protocol, Final, Tuple, List, Dict, Optional, Any, runtime_checkable

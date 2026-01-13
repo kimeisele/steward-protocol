@@ -13,6 +13,11 @@ Provides:
 Philosophy: ZERO HARDCODED VALUES - Everything introspected!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf2863d48"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import sqlite3

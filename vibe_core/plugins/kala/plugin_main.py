@@ -24,6 +24,11 @@ The kernel is Vishnu (unchanging).
 Kala is the time dimension that makes change possible.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf94a13c2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional

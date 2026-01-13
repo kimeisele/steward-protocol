@@ -1,5 +1,10 @@
 """Task management system for VIBE OS."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x8502a64b"  # GenesisByte: parampara % 37 == 0
+
 from .archive import TaskArchive
 from .batch_operations import BatchOperations
 from .export_engine import ExportEngine

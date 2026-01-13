@@ -25,6 +25,11 @@ Edge Case Handling (OPUS-128):
     - Required flag: Only required=true triggers broken status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc73001d0"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import re

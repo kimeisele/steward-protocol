@@ -20,6 +20,11 @@ The HookChain ensures:
 GAD-000 v2.0: "Wiring complexity > Logic complexity"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc593c56e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Tuple

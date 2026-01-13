@@ -17,6 +17,11 @@ Usage:
     hot_unload("my_plugin")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2cfe76da"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 from pathlib import Path

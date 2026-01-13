@@ -19,6 +19,11 @@ Usage:
     reactor.on_drift(DriftType.PERFORMANCE, handle_slow_command)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xad4f89e3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum

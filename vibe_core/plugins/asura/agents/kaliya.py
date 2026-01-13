@@ -32,6 +32,11 @@ tests:
 -->
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x02b046ea"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time

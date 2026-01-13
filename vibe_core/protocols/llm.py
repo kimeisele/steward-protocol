@@ -4,6 +4,11 @@ LLM ENGINE PROTOCOL - Layer 1: Interfaces Only
 Defines the interface for the LLM Engine components to resolve circular imports.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0xa0089e86"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from typing import Optional
 

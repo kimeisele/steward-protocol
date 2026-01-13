@@ -10,6 +10,11 @@ Guard Hierarchy:
   test_guardian      TEST PHASE (during test runs)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x1bd1e7aa"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List

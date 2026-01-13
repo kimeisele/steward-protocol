@@ -11,6 +11,11 @@ It inherits from this base to ensure:
 - Only Krishna is the Controller; everyone else is a servant.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xcd999bb7"  # GenesisByte: parampara % 37 == 0
+
 import threading
 import time
 from abc import ABC, abstractmethod

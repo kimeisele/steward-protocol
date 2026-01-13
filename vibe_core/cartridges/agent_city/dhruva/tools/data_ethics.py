@@ -14,6 +14,11 @@ This tool enforces:
 The system learns over time what constitutes "legitimate purpose" and "reasonable amount".
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7dea45da"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import asdict, dataclass

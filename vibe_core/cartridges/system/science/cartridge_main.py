@@ -23,6 +23,11 @@ Architecture:
 - Integration with HERALD's content generation pipeline
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x4458cb19"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from typing import Any, Dict, Optional

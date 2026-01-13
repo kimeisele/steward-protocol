@@ -5,6 +5,11 @@ High-level interface for agents to query knowledge.
 Provides semantic queries that map to graph operations.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x264216a5"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, List, Optional
 

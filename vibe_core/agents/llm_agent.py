@@ -7,6 +7,11 @@ via an LLM provider (ARCH-025).
 Updated in ARCH-027 to support tool-use capability.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x5b8aeab2"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from typing import Any, Optional

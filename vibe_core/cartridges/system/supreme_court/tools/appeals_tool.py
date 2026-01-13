@@ -10,6 +10,11 @@ This tool handles:
 Tool Protocol Compliant (Kernel-Managed).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd3aabad3"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import uuid

@@ -12,6 +12,11 @@ Usage:
     chain.register(hook)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4b94822f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Optional
 

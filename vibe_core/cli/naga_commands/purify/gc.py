@@ -26,6 +26,11 @@ Usage:
     naga gc --pycache             # Clean __pycache__ directories
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x71f7ff96"  # GenesisByte: parampara % 37 == 0
+
 import os
 import shutil
 from pathlib import Path

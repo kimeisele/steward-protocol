@@ -10,6 +10,11 @@ It does not destroy (Shiva/Destructor).
 It simply IS.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x3a531e84"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Optional
 

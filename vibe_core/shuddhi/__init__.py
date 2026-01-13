@@ -8,6 +8,11 @@ Architecture:
 4. Engine - Orchestrate the Parse -> Transform -> Verify cycle
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x495f0b96"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.shuddhi.engine import ShuddhiEngine
 from vibe_core.shuddhi.locator import ASTBridge, CSTLocator
 

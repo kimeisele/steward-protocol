@@ -27,6 +27,11 @@ STRICT TYPING (NO ANY):
 Per PROMPT.md §IV.1
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc37d20cb"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

@@ -11,6 +11,11 @@ VEDA-4 Pattern:
   KARMA    → steward observe executes introspection
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7d0ea8c9"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

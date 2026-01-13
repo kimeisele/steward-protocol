@@ -10,6 +10,11 @@ Usage:
     naga bite <violation_type> [--details <json>]
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf8f27f0f"  # GenesisByte: parampara % 37 == 0
+
 import json
 from typing import List, Tuple
 from vibe_core.protocols.naga.cli_command import (

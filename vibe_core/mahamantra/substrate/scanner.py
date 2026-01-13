@@ -509,6 +509,51 @@ class MahajanaScanner:
             self.scan(path)
         return iter(self._files_cache)
 
+    def iter_files_lila(
+        self,
+        path: Optional[str] = None,
+        phase: str = "navadvipa",
+    ) -> Iterator[ScannedFile]:
+        """
+        Iterate over files with Chaitanya Lila Boundaries.
+
+        LILA PAGINATION:
+            - "navadvipa" phase: yields first 24 files
+            - "puri" phase: yields files 24-47
+            - "complete": yields files 48+
+
+        This prevents exponential output for large codebases.
+
+        Args:
+            path: Path to scan
+            phase: "navadvipa" (0-23), "puri" (24-47), or "complete" (full)
+
+        Yields:
+            ScannedFile objects, bounded by Lila phase
+        """
+        from vibe_core.mahamantra.substrate.byte import LILA_LIMIT
+
+        NAVADVIPA_LIMIT = LILA_LIMIT // 2  # 24
+
+        if not self._files_cache:
+            self.scan(path)
+
+        if phase == "navadvipa":
+            # First 24 files
+            for file in self._files_cache[:NAVADVIPA_LIMIT]:
+                yield file
+        elif phase == "puri":
+            # Files 24-47
+            for file in self._files_cache[NAVADVIPA_LIMIT:LILA_LIMIT]:
+                yield file
+        else:
+            # Complete - but still in batches for memory
+            for i, file in enumerate(self._files_cache):
+                yield file
+                # Yield control every 24 files (cooperative multitasking)
+                if (i + 1) % NAVADVIPA_LIMIT == 0:
+                    pass  # Could add async yield here
+
     def get_by_mahajana(self, mahajana: str) -> List[ScannedFile]:
         """Get all files owned by a mahajana."""
         if not self._files_cache:
@@ -701,4 +746,6 @@ __all__ = [
     "print_scan_report",
     # Constants
     "DECLARATION_ATTR",
+    # Lila-bounded iteration (for CLI/external use)
+    # Use scanner.iter_files_lila() for paginated results
 ]

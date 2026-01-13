@@ -11,6 +11,11 @@ The Stadtamt - creates mailboxes for every house:
 Sanskrit: उत्पत्ति (Utpatti) = Genesis/Origin
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd83afd26"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

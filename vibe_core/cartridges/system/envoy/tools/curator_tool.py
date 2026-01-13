@@ -9,6 +9,11 @@ This is passive reconnaissance - no outreach, just observation and analysis.
 Perfect for building the "Hall of Fame" - a curated list of noteworthy projects.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x72f2c149"  # GenesisByte: parampara % 37 == 0
+
 import json
 import os
 from datetime import datetime

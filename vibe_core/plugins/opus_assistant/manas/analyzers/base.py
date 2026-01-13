@@ -8,6 +8,11 @@ This allows the IntentGenerator to orchestrate multiple analyzers
 without knowing their implementation details.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x90c51df1"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path

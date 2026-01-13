@@ -19,6 +19,11 @@ COMPUTATIONAL MAPPING:
     Vakya = Instruction (16 opcodes = one complete instruction set)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x16338f9d"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, Tuple, List, Iterator, Optional
 from enum import IntEnum

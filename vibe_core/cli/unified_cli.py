@@ -5,6 +5,11 @@ Combines Fractal CLI (Plugin-based) with Legacy StewardCLI (System commands).
 WIRED TO PRAKRITI: Unified State Engine (OPUS-009)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xfab6e9bb"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import asyncio
 import json

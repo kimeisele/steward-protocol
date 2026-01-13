@@ -11,6 +11,11 @@ Components:
 3. HintSystem - Provides contextual guidance
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xe966b74c"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

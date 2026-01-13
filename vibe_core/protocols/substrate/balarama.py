@@ -40,7 +40,13 @@ The wrapped CLI gains substrate connection without code changes.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xc3dbad96"  # GenesisByte: parampara % 37 == 0
 
 import importlib
 import inspect

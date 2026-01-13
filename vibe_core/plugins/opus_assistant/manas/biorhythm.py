@@ -15,6 +15,11 @@ This module computes consciousness level from three inputs:
 - Kala rhythm (0.2 weight) - cosmic time (optional)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8919a579"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

@@ -29,6 +29,11 @@ Example:
     >>> kernel.tick()  # Factory creates PlanningSpecialist and executes
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xceb02ab6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any

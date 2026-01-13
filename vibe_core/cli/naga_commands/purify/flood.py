@@ -26,6 +26,11 @@ Usage:
     naga flood --pulse            # Show current pulse rate
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x5e296ca2"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Tuple
 
 from vibe_core.protocols.naga.cli_command import (

@@ -16,6 +16,11 @@ The base classes (BaseAgent, BaseSpecialist) work, but the specific
 implementations (Planning, Coding, Testing) are stubs.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x7fc24019"  # GenesisByte: parampara % 37 == 0
+
 from .base_agent import BaseAgent, CommandResult, KnowledgeResult
 from .base_specialist import BaseSpecialist, MissionContext, SpecialistResult
 from .registry import AgentRegistry

@@ -14,6 +14,11 @@ Usage:
     steward run simple_query --input "What is the system status?"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x3b797832"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

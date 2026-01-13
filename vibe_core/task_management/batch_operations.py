@@ -1,5 +1,10 @@
 """Batch operations for task management."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xb2479d57"  # GenesisByte: parampara % 37 == 0
+
 from typing import Callable, Dict, List
 
 from .models import Task, TaskStatus

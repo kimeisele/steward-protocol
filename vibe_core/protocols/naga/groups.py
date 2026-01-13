@@ -16,6 +16,11 @@ GROUPS:
 5. OBSERVE - observe, record, report (Narada, Chitragupta, Cortex)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x483878ac"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum

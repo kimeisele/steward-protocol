@@ -5,6 +5,11 @@ These models define the structure and constraints for the entire system.
 If the Soul (Config) is corrupted, the Body (Kernel) must not wake.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x224f6ea7"  # GenesisByte: parampara % 37 == 0
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

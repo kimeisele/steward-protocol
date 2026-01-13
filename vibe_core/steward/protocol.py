@@ -9,6 +9,11 @@ FRACTAL PATTERN:
     steward/protocol.py       → AgentProtocol
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xcf4441d6"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Dict, List, Protocol, runtime_checkable
 
 # Re-export AgentManifest from canonical location (NO DUPLICATION)

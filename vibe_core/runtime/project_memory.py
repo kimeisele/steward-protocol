@@ -4,6 +4,11 @@ Tracks project narrative, domain understanding, evolution, and intent history
 across sessions. This is the "brain" that makes STEWARD understand the full picture.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7bb6fa8b"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime

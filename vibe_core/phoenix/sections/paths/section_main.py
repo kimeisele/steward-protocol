@@ -16,6 +16,11 @@ Each path category maps to actual code usage:
     - docs: OPERATIONS.md, SETTINGS.md, ENVOY.md
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa5815ef6"  # GenesisByte: parampara % 37 == 0
+
 import os
 import sys
 from dataclasses import dataclass, field

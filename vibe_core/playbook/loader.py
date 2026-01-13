@@ -16,6 +16,11 @@ This is the bridge between semantic definitions and executable workflows.
 Version: 0.1 (Foundation)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xf3dbd85f"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

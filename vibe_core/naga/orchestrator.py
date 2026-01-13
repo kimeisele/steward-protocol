@@ -10,6 +10,11 @@ This is now a Facade for the Divine Trinity:
 Backward compatibility is maintained.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x2305aa04"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import sys

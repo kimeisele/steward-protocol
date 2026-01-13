@@ -12,6 +12,11 @@ This unifies:
 - Agents (ORGANIC) - autonomous entities (future)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xabfb845a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path

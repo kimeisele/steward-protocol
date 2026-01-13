@@ -9,6 +9,11 @@ Usage:
     steward prompts info              # Show registry status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xef3990c1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import List
 

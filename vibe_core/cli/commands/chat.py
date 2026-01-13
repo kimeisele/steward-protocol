@@ -7,6 +7,11 @@ CLI → CommandRegistry → ChatCommand → Kernel → CognitiveProtocol → MAN
 No hardcoded plugin names. No shortcuts.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xa2c02098"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.command import (

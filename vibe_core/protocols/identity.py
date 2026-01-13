@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xe76754c5"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, Protocol, Tuple, runtime_checkable
 
 

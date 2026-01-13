@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb126d52c"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional

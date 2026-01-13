@@ -14,6 +14,11 @@ Architecture Layers:
 - Level -3: Command Handlers (NagaCLI, ToolCLI, etc.)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7fddc38a"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import time
 from dataclasses import dataclass, field

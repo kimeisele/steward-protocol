@@ -4,6 +4,11 @@ InMemoryManifestRegistry - Agent Manifest Registry Implementation
 Extracted from kernel_impl.py to reduce kernel size.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xc2f173c3"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Dict, List, Optional
 

@@ -12,6 +12,11 @@ Philosophy:
 - TRUTHFUL: Separates fact from inference
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd38e6adf"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import sys
 from datetime import datetime

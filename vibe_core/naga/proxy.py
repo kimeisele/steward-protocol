@@ -32,6 +32,11 @@ Philosophy (PROMPT.md):
     - Keine Silent Failures
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x463c5533"  # GenesisByte: parampara % 37 == 0
+
 import functools
 import logging
 import time

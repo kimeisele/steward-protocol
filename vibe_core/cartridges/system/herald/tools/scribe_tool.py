@@ -11,7 +11,13 @@ ARCHITECTURE: Uses Kernel I/O Service for all file writes when available.
               See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x53dc599e"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from datetime import datetime

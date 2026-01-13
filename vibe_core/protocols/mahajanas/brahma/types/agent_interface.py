@@ -3,7 +3,13 @@ AGENT SYSTEM INTERFACE - The Bridge Between Kernel and Agents
 ==============================================================
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc2e8c95a"  # GenesisByte: parampara % 37 == 0
 
 __doc__ = """
 

@@ -6,6 +6,11 @@ PARASHURAMA - The Warrior Brahmin.
 Types for network/file operations, syscalls, and dispatch.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x81a3c40e"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.parashurama.types.network_proxy import (
     KernelNetworkProxy,
 )

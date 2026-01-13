@@ -11,6 +11,11 @@ The kernel uses these protocols via ServiceRegistry.
 Concrete implementations live in the economy plugin.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xedf03fad"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 
 # =============================================================================

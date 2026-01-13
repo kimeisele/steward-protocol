@@ -7,6 +7,11 @@ This protocol enables swapping InMemoryScheduler for other implementations
 (e.g., Redis-backed, distributed) without modifying kernel code.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xbb18fce0"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:

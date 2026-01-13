@@ -18,6 +18,11 @@ TWO TYPES OF MIXINS:
 "Das Wasser gibt die Werkzeuge. Die Gene bringen das Leben."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x63ec6242"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

@@ -7,6 +7,11 @@ Wraps CircuitLoader into single source of truth.
 GAD-000: Single service, accessed via ServiceRegistry.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x690e400f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional

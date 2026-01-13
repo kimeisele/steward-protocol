@@ -23,6 +23,11 @@ Usage:
             suggest_alternative(pattern.alternative)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x206e418f"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

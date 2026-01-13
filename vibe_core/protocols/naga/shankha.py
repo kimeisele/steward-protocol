@@ -11,6 +11,11 @@ Responsibilities:
 - Integration with existing EventBus
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xa380e7f2"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Protocol, runtime_checkable
 

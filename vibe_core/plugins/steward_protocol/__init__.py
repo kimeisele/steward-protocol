@@ -8,6 +8,11 @@ This plugin follows the Universal Cartridge Pattern:
     validators/       ← Sub-items (future)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x31962bd5"  # GenesisByte: parampara % 37 == 0
+
 from .plugin_main import StewardProtocolPlugin
 
 __all__ = ["StewardProtocolPlugin"]

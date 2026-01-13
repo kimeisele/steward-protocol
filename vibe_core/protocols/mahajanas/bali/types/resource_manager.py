@@ -14,6 +14,11 @@ Architecture:
 - Periodic Sync: Kernel syncs quotas with CivicBank every minute
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0x72240906"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from multiprocessing import Process

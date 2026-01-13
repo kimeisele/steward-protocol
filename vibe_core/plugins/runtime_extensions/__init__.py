@@ -23,4 +23,9 @@ The Ouroboros eats its tail - the system evolves itself.
 # This module is intentionally minimal - generated plugins live here
 # but are loaded dynamically, not imported statically.
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe4e5976c"  # GenesisByte: parampara % 37 == 0
+
 __all__ = []

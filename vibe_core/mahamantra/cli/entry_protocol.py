@@ -37,7 +37,13 @@ ARCHITECTURE LAYERS:
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb6a4c3af"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from dataclasses import dataclass

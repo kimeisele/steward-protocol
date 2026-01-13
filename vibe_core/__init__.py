@@ -13,6 +13,11 @@ This prevents 800ms+ import cascades when only accessing substrate modules.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xaea5b029"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING
 
 # Only import for type checking (no runtime cost)

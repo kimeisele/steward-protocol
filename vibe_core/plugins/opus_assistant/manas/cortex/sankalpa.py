@@ -32,6 +32,11 @@ Core Concepts:
 "Give the mind a purpose, and it becomes unstoppable."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xebbc13e9"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

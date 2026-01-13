@@ -23,6 +23,11 @@ Responsibilities:
 Version: 0.1 (Foundation)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x42601357"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

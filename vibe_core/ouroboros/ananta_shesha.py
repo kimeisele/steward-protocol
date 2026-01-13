@@ -31,6 +31,11 @@ Usage:
     anchor.emit_event("violation.detected", {"file": "x.py"})
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x99b5a1ad"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

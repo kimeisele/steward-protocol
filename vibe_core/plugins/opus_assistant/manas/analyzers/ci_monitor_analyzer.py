@@ -7,6 +7,11 @@ generate intents when CI issues are detected.
 "The system must be able to observe itself."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x44e69903"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime

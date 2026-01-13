@@ -29,6 +29,11 @@ Usage:
         base_class_name = "BaseAction"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x18e6c37d"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import inspect
 import logging

@@ -6,6 +6,11 @@ VYASA - The Compiler of the Vedas.
 Types for records, lineage, ledger, and compliance.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x5cce9f22"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.vyasa.types.errors import (
     ErrorCategory,
     ErrorCode,

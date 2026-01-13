@@ -3,6 +3,11 @@ ARCHIVIST Observer Tool
 Reads and monitors Twitter timeline for HERALD broadcasts
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe00c46c1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

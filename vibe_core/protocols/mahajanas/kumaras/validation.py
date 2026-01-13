@@ -30,7 +30,13 @@ VALIDATION TYPES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0x8e660f70"  # GenesisByte: parampara % 37 == 0
 
 import re
 from dataclasses import dataclass, field

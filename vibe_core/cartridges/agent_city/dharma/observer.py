@@ -27,6 +27,11 @@ ARCHITECTURE (GAD-000 Compliant):
 The Self-Correction Loop: Observe → Detect → Repair
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x91d0ddbe"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

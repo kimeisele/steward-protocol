@@ -21,6 +21,11 @@ Architecture:
 "From understanding flows action. From action flows change."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8fe66b28"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import re

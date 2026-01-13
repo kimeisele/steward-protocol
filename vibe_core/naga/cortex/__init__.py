@@ -15,6 +15,11 @@ Usage:
     from vibe_core.naga.cortex import NagaCortex
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0xfb6e818f"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

@@ -7,6 +7,11 @@ Just a VIEW into what exists - connecting the cables.
 Uses CircuitLoader/PlaybookLoader caching - no duplicate work.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8d545ee1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List

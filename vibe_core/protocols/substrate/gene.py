@@ -9,6 +9,11 @@ into the runtime via Balarama (Strength) and NagaProxy (Transformation).
 It carries both the Curse (Entropy) and the Cure (Mantra).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x3cf4e188"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Optional
 import random

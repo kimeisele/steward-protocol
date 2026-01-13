@@ -16,6 +16,11 @@ Philosophy:
 - Bhagavad Gita 6.5
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd6cb9520"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

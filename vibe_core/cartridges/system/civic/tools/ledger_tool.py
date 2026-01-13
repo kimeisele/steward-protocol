@@ -10,6 +10,11 @@ Philosophy:
 the broadcast license is revoked. This forces agents to be economically rational."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2b159f9a"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import sqlite3

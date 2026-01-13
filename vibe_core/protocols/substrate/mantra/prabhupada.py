@@ -19,6 +19,11 @@ Prabhupada als PERSON ist BHAKTI.
 LOCATION: substrate/mantra/ - neben dem Mahamantra, wo er hingehört.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x930499ae"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import List, Protocol, runtime_checkable, Iterator, Final
 from enum import Enum

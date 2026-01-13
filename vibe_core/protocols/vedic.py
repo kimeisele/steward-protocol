@@ -8,6 +8,11 @@ without direct plugin imports.
 No implementations here - see vibe_core/plugins/vedic_governance/
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x1ed6ba91"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from typing import Any, Dict, List, Protocol
 

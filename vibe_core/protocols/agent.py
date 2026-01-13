@@ -5,7 +5,13 @@ All agents running in VibeOS must implement this protocol.
 This is the contract between the kernel and cartridges.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x953bedaa"  # GenesisByte: parampara % 37 == 0
 
 import asyncio
 import logging

@@ -12,6 +12,11 @@ NAGA Assignment:
 - TAKSHAKA: Validate manifests and plugin code
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x131e5e2c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, List, Optional

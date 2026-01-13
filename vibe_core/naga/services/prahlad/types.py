@@ -4,6 +4,11 @@ PRAHLAD Types - TypedDicts, Protocols, and Dataclasses.
 Extracted to reduce service.py below 800 lines.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x8f715b2e"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime

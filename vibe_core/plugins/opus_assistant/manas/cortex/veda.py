@@ -48,6 +48,11 @@ Architecture:
 then trust is established (Pratyaya), and only then can action flow (Karma)."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0bcd4ded"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass, field

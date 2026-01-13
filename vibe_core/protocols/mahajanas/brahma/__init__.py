@@ -18,7 +18,13 @@ He is the first created being, not the creator.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x1d0ff049"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime

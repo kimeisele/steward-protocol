@@ -14,6 +14,11 @@ Usage:
     steward genesis templates            List available templates
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x8853e258"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

@@ -16,6 +16,11 @@ INHERITANCE:
 STATUS: DEVOTEE / ACTIVE CARRIER
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x62a2019b"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import socket

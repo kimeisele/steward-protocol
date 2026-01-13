@@ -15,6 +15,11 @@ Mahamantra IST:
 ALLES GLEICHZEITIG.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7340d7d6"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.kernel.singularity import (
     Mahamantra,
     ProtocolRouter,

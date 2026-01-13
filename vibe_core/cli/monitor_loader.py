@@ -11,6 +11,11 @@ VEDA-4 Pattern:
   KARMA    → Return discoverable monitors
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7defd610"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Dict, List, Optional
 

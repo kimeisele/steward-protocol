@@ -38,6 +38,11 @@ Usage:
     results = orchestrator.detect_and_heal(strategy=HealingStrategy.AUTO)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x3f666f50"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 import uuid

@@ -13,6 +13,11 @@ NAGA Assignment:
 - CHITRAGUPTA: Performance profiling and metrics
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x800c4391"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from pathlib import Path

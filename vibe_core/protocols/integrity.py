@@ -14,6 +14,11 @@ Usage:
             logger.warning(f"🔥 {issue.component}: {issue.error}")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0x8748110e"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

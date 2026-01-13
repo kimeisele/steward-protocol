@@ -12,6 +12,11 @@ The Market doesn't debate prices. It executes trades.
 This is the Vaishya function: Exchange, commerce, resource distribution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf99257e7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from enum import Enum

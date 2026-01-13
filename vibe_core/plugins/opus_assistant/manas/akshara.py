@@ -43,6 +43,11 @@ This creates a phonetically-grounded computation where:
 - Cross-layer connections are weighted by articulatory distance
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe23471c9"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass

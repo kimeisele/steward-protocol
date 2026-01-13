@@ -17,6 +17,11 @@ Design Philosophy:
     "The Weaver doesn't create the threads - it reveals the fabric that was always there."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xfa14814b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path

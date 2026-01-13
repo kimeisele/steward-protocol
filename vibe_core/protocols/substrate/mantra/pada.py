@@ -19,6 +19,11 @@ STRUCTURE:
 - The fractal: Varna → Aksara → Pada → Vakya (Mantra)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x0016d728"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, Tuple, List
 from enum import IntEnum

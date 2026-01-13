@@ -19,6 +19,11 @@ ZERO MANUAL REGISTRATION:
     Access via config.section_id → works!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x2d18a205"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

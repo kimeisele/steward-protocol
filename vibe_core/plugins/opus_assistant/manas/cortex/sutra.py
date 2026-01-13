@@ -32,6 +32,11 @@ Wiki Pages Generated:
 "The wiki is the visible thread - what MANAS thinks, the wiki reflects."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb98e092c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 # subprocess removed
 import tempfile

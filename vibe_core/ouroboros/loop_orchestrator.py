@@ -16,6 +16,11 @@ Usage:
     # result.ingested_count = 42
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x0d00d566"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

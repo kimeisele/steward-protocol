@@ -8,6 +8,11 @@ THE 12 MAHAJANAS TEST SUITE:
 The 12th Test (Yamaraja) PROVES that the system fails without Grace.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xa1316135"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, Any
 from vibe_core.protocols.testable import BaseTestable
 from vibe_core.protocols.substrate.byte import MANTRA_SEQUENCE

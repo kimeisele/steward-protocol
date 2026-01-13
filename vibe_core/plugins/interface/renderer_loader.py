@@ -10,6 +10,11 @@ Specifics for Renderers:
 - Returns sorted by priority
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x4b5b92c9"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 from pathlib import Path

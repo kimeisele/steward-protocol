@@ -7,6 +7,11 @@ Er verbindet Identity (Layer 0) mit Action (Layer 2).
 Er ruft Yamaraja an, bevor er handelt.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x75ecc23f"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 

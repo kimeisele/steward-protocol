@@ -15,6 +15,11 @@ Supported formats:
 - SVG: Scalable, web-ready, metadata-rich
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x638f28f8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

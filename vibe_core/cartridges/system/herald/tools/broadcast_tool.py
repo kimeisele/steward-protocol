@@ -5,6 +5,11 @@ OPUS-307 D.2: Full DI via ServiceRegistry. No legacy fallback.
 Dependencies come from TwitterProtocol/RedditProtocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc131dbad"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Optional
 

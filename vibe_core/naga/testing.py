@@ -37,6 +37,11 @@ Usage:
         assert naga_harness.sesha.get_top_hash() == ""
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7c20ef97"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, List, Optional
 

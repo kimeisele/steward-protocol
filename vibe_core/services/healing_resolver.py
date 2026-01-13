@@ -13,6 +13,11 @@ No hardcoded thresholds - resonance determines manifestation.
 OPUS-LZ3: All resonance decisions are now recorded to Ledger for audit trail.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x199b6fa8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime

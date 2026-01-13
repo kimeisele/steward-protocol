@@ -11,6 +11,11 @@ Er bewegt große Datenmengen (Universen/State) durch das System.
 Er hält sich nicht an 'Timeouts'. Er kommt an, wenn er ankommt.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x36f10b63"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Any, List, Protocol, runtime_checkable
 

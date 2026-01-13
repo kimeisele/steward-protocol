@@ -37,6 +37,11 @@ Example (in playbook node):
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb0d86bf3"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import shutil

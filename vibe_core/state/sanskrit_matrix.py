@@ -21,6 +21,11 @@ Philosophical Foundation:
 OPUS Reference: docs/architecture/OPUS/OPUS-140-SANSKRIT-MATRIX.md
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x28163cf8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections import Counter
 from dataclasses import asdict, dataclass, field

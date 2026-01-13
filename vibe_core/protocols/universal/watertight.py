@@ -19,6 +19,11 @@ Usage:
         ...
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xf350a01f"  # GenesisByte: parampara % 37 == 0
+
 import inspect
 import typing
 from enum import Enum

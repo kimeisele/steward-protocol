@@ -29,6 +29,11 @@ TIME DIMENSION:
     - 16 rounds: ~3.5 hours
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x5a87cf17"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, Tuple, List, Iterator, Optional
 from datetime import datetime, timedelta

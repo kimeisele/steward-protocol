@@ -19,6 +19,11 @@ MAHAMANTRA SYLLABLES:
 - राम (rāma): रा (rā) + म (ma)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x189f9444"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, Tuple, List, Optional
 from .varna import Varna, VarnaType, VYANJANA, SVARA, MATRA, VIRAMA

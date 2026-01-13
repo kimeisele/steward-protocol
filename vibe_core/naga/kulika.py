@@ -43,6 +43,11 @@ Usage:
         ...
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xbf3d4290"  # GenesisByte: parampara % 37 == 0
+
 import inspect
 import logging
 from dataclasses import dataclass, field

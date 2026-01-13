@@ -16,6 +16,11 @@ The structure mirrors the cosmic geography of Bhu-mandala:
 This module visualizes and manages the topological structure of Agent City.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xe84c4ee3"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from enum import Enum

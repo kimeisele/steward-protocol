@@ -19,6 +19,11 @@ OPUS-106 Additions:
 - GunaClassifier: State Tri-Guna diagnosis
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x1f10b83d"  # GenesisByte: parampara % 37 == 0
+
 from .cognitive_weaver import (
     CognitiveContext,
     CognitiveWeaver,

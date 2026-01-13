@@ -6,6 +6,11 @@ Interceptors the execution flow.
 Applies the 'iGene' logic to mutate the outcome.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x246a3973"  # GenesisByte: parampara % 37 == 0
+
 import functools
 from typing import Any, Callable
 from vibe_core.protocols.substrate.gene import iGene

@@ -17,6 +17,11 @@ LOCATION: vibe_core/steward/oath_mixin.py
 ORIGINAL: steward/oath_mixin.py (kept for backwards compatibility)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x32010c77"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional, Tuple
 

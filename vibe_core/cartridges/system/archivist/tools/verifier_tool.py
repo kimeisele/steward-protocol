@@ -13,6 +13,11 @@ Implementation:
 3. Signatures verified cryptographically - invalid signatures are rejected
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x855c1c6d"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 from datetime import datetime

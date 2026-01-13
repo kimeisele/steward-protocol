@@ -6,6 +6,11 @@ Verifies events from other agents (like HERALD) and creates attestations.
 OPUS-307: Real ECDSA signature verification implemented.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa0c2dd5c"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime, timezone

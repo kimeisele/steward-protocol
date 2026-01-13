@@ -11,6 +11,11 @@ Usage:
     steward create plugin <name>
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xbb74657f"  # GenesisByte: parampara % 37 == 0
+
 import sys
 from pathlib import Path
 from typing import List

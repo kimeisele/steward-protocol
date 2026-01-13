@@ -9,6 +9,11 @@ Handles:
 - plan_strategy, review_todos (SANKALPA)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0e5fd6a5"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Dict
 

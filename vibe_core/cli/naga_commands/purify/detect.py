@@ -26,6 +26,11 @@ Usage:
     naga detect --intent <msg>    # Detect intent from message
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x36d7aa6b"  # GenesisByte: parampara % 37 == 0
+
 import subprocess
 from pathlib import Path
 from typing import List, Tuple, Optional

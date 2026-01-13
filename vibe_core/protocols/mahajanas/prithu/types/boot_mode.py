@@ -29,6 +29,11 @@ Architecture:
     Each Sarga phase checks boot_mode to decide what to skip.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xd8219fcb"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 
 

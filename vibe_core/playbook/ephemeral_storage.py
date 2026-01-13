@@ -21,6 +21,11 @@ USAGE:
     results = storage.query_by_tag("status")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xd177108f"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import time

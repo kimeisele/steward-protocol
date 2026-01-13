@@ -5,6 +5,11 @@ Finds orphaned files, unused imports, and dead databases.
 Uses the audit infrastructure from OPUS-307.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x76a45acc"  # GenesisByte: parampara % 37 == 0
+
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List

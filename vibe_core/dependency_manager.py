@@ -17,6 +17,11 @@ Usage:
 Critical: Uses tomlkit (NOT standard toml) to preserve formatting and comments.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xc014828c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional

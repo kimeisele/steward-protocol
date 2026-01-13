@@ -10,6 +10,11 @@ The ARCHIVIST is an autonomous agent that:
 This demonstrates multi-agent federation in the Steward Protocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xff2acd37"  # GenesisByte: parampara % 37 == 0
+
 __version__ = "1.0.0"
 __all__ = ["ArchivistCartridge"]
 

@@ -17,6 +17,11 @@ ARCH-050: STEWARD Protocol Agent Identity & Capabilities
 GAD-XXXX: REVOKE_MANDATE Implementation (Phase 2)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x08a07b46"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Dict, FrozenSet, List, Optional, Protocol, Set
 

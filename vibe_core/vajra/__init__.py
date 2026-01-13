@@ -34,6 +34,11 @@ Usage:
 CANONICAL LOCATION: vibe_core/vajra/__init__.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x71a76595"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.vajra.auto_wire import auto_wire, wire_all
 from vibe_core.vajra.enforcement import (
     VajraEnforcer,

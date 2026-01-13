@@ -14,6 +14,11 @@ Usage:
     from vibe_core.protocols.primal import watertight, MantraOpCode, Resonance
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0x7c825997"  # GenesisByte: parampara % 37 == 0
+
 import inspect
 import typing
 from dataclasses import dataclass, field

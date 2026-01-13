@@ -13,7 +13,13 @@ WRAPPED: vibe_core.semantic_syscalls.SemanticSyscallExecutor
 this service executes karma (action) with precision."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x88c86a07"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from typing import Dict, List, Optional

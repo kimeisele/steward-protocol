@@ -92,7 +92,13 @@ adharadhara-tatas tu brahma-madhyam vibhuh svayam"
 The Lord is the support of all supports.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc3c54ca8"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

@@ -10,6 +10,11 @@ In Vedic terms: This is the library of Dharma (cosmic law) application.
 Tool Protocol Compliant (Kernel-Managed).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x562da5c0"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import uuid

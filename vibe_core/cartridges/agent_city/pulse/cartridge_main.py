@@ -12,6 +12,11 @@ PULSE is the voice of Steward Protocol on Twitter/X.
 Inherits from VibeAgent + OathMixin for kernel integration.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x708bc521"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict

@@ -49,6 +49,11 @@ GAD-000 COMPLIANT:
 - Recoverability: Fallback handling
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xdcf02af3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Dict, Iterator, List, Optional, Protocol, runtime_checkable
 from datetime import datetime

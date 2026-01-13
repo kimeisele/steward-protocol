@@ -8,6 +8,11 @@ Refined Logic (Siddhanta):
 - Mantra/Krishna: Sattva=0, Rajas=0, Tamas=0, Visuddha=1.0 (Transzendental Saguna).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x67c10a26"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from dataclasses import dataclass
 from decimal import Decimal

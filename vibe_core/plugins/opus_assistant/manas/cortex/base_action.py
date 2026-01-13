@@ -22,6 +22,11 @@ KEY DESIGN:
     No more hardcoded mappings in IntentRouter.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7cae03ed"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path

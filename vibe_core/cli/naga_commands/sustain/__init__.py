@@ -15,6 +15,11 @@ SUSTAIN PHASE COMPLETE - All 4 positions filled.
 """
 
 # Import commands to trigger registration (Balarama pattern)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf2f4234d"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cli.naga_commands.sustain.cache import CacheCommand
 from vibe_core.cli.naga_commands.sustain.optimize import OptimizeCommand
 from vibe_core.cli.naga_commands.sustain.yield_cmd import YieldCommand

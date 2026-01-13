@@ -16,6 +16,11 @@ Every method is READ-ONLY. No side effects.
 Tool Protocol Compliant (Kernel-Managed).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc79985d6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

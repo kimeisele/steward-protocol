@@ -28,6 +28,11 @@ GENESIS OATH INTEGRATION:
 - Ledger records the binding
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe87bfb8a"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

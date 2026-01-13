@@ -35,6 +35,11 @@ This is Agent #5 in the STEWARD Protocol - The Immutable Reference.
 The system's North Star.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7fb4d9a6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List

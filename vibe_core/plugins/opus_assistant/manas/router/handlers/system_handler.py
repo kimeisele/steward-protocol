@@ -13,6 +13,11 @@ Handles:
 - review_todos: Review and prioritize TODOs in codebase
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa50d312d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import shutil
 import subprocess

@@ -7,6 +7,11 @@ It allows the kernel and executors to emit structured events that can be:
 3. Persisted to Ledger (for history)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x81f6ae7e"  # GenesisByte: parampara % 37 == 0
+
 import time
 import uuid
 from dataclasses import dataclass, field

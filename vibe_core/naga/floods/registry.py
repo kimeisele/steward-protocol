@@ -12,6 +12,11 @@ Architecture:
 "Das Wasser ersetzt den Stein, ohne dass der Stein es merkt."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xb618ca57"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Dict, Type
 

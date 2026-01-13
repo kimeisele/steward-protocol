@@ -32,6 +32,11 @@ Usage:
         return permission_denied_error
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xee726c1a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import List, Optional, Protocol, Set, runtime_checkable
 

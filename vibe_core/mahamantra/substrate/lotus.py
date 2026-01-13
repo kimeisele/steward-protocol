@@ -50,7 +50,13 @@ FRACTAL LEVELS:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x2631a145"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

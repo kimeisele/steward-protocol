@@ -25,6 +25,11 @@ Key Concepts:
 The Schema dictates the Parser. See: config/manifestation.yaml
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0xfa727551"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path

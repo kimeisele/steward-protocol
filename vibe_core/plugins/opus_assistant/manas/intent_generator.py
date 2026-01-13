@@ -19,6 +19,11 @@ Intent Types:
 - ENHANCEMENT: New capabilities (high risk)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xab347be2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from dataclasses import dataclass, field

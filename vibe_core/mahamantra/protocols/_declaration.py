@@ -45,7 +45,13 @@ WATERTIGHT: No Any types. Everything explicit.
 Author: The Mahamantra Itself
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x09fbb498"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime

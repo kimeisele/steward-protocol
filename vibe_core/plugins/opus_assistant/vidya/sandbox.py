@@ -17,6 +17,11 @@ This is the "Ordeal" phase of VIDYA - code must prove itself
 in the sandbox before it can enter the kingdom.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xae73178f"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import os

@@ -4,6 +4,11 @@ PING Agent - Minimal agent to prove the system works.
 50 lines. No bullshit. Uses ContextAwareAgent + DegradationChain.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf79d1ae4"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

@@ -67,21 +67,9 @@ logger = logging.getLogger("SANKIRTAN")
 # CONSTANTS
 # =============================================================================
 
-# Directories to scan
-SCAN_DIRECTORIES: Final[Tuple[str, ...]] = (
-    "protocols",
-    "naga",
-    "cli",
-    "plugins",
-    "cartridges",
-    "services",
-    "runtime",
-    "state",
-    "ouroboros",
-    "shuddhi",
-    "mahamantra",
-    "phoenix",
-)
+# NOTE: SCAN_DIRECTORIES is now DERIVED from FOLDER_MAHAJANA_MAP (see below)
+# This is PROTOCOL-DRIVEN, not hardcoded.
+# The map defines ownership, the scan follows ownership.
 
 # Skip patterns
 SKIP_PATTERNS: Final[Tuple[str, ...]] = (
@@ -93,8 +81,9 @@ SKIP_PATTERNS: Final[Tuple[str, ...]] = (
 )
 
 # Folder-to-Mahajana mapping heuristics
+# THIS IS THE SSOT - SCAN_DIRECTORIES is derived from this map
 FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
-    # Direct mahajana folders
+    # === DIRECT MAHAJANA FOLDERS ===
     "mahajanas/prithu": "prithu",
     "mahajanas/brahma": "brahma",
     "mahajanas/narada": "narada",
@@ -111,25 +100,74 @@ FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     "mahajanas/bali": "bali",
     "mahajanas/shuka": "shuka",
     "mahajanas/yamaraja": "yamaraja",
-    # Domain-based mapping
-    "naga": "yamaraja",  # Security/Judgment
-    "cli": "narada",  # Communication
-    "plugins": "prahlada",  # Devotion/Extensions
-    "cartridges": "prahlada",  # Modular capabilities
-    "state": "bhishma",  # Immutable state
-    "runtime": "brahma",  # Creation/Bootstrap
-    "phoenix": "brahma",  # Resurrection
-    "shuddhi": "kapila",  # Analysis/Purification
-    "services": "janaka",  # Duty/Service
-    "ouroboros": "shambhu",  # Destruction/Cycle
-    "governance": "manu",  # Law/Rules
-    "cortex": "shuka",  # Vision/Intelligence
+    # === DOMAIN-BASED MAPPING (16 quarters of the kingdom) ===
+    # GENESIS Quarter (Creation/Bootstrap)
+    "runtime": "brahma",         # Creation/Bootstrap
+    "phoenix": "brahma",         # Resurrection
+    "genesis": "brahma",         # Creation scripts
+    # DHARMA Quarter (Law/Structure)
+    "protocols": "vyasa",        # Compilation/Knowledge
+    "governance": "manu",        # Law/Rules
+    "state": "bhishma",          # Immutable state
+    # KARMA Quarter (Action/Service)
+    "cli": "narada",             # Communication
+    "services": "janaka",        # Duty/Service
+    "plugins": "prahlada",       # Devotion/Extensions
+    "cartridges": "prahlada",    # Modular capabilities
+    "agents": "prahlada",        # Agent execution
+    # MOKSHA Quarter (Liberation/Intelligence)
+    "naga": "yamaraja",          # Security/Judgment
+    "ouroboros": "shambhu",      # Destruction/Cycle
+    "cortex": "shuka",           # Vision/Intelligence
+    "shuddhi": "kapila",         # Analysis/Purification
+    # === INFRASTRUCTURE (Foundation Layer) ===
+    "mahamantra": "prithu",      # Foundation of all
+    "loaders": "brahma",         # Bootstrap loaders
+    "config": "manu",            # Configuration = Law
+    "settings": "manu",          # Settings = Rules
+    # === TOOLS & UTILITIES ===
+    "tools": "parashurama",      # Tools = Weapons
+    "utils": "kumaras",          # Pure utilities
+    "scripts": "parashurama",    # Execution scripts
+    # === KNOWLEDGE & STORAGE ===
+    "knowledge": "vyasa",        # Knowledge = Vyasa's domain
+    "store": "bali",             # Storage = Sacrifice (give up)
+    "llm": "shuka",              # LLM = Transcendent vision
+    # === ORCHESTRATION ===
+    "reactor": "shambhu",        # Reaction = Transformation
+    "scheduling": "yamaraja",    # Time/Death = Yamaraja
+    "task_management": "janaka", # Tasks = Duty
+    "steward": "janaka",         # Stewardship = Service
+    # === GATEWAY & COMMUNICATION ===
+    "gateway": "narada",         # Gateway = Travel/Communication
+    "playbook": "narada",        # Playbooks = Instructions
+    # === SPECIAL DOMAINS ===
+    "specialists": "kapila",     # Specialists = Analysis
+    "vajra": "nrisimha",         # Vajra = Protection/Power
+    # === MAHAMANTRA SUBFOLDERS (more specific = higher priority) ===
     "mahamantra/substrate": "prithu",  # Foundation
-    "mahamantra/kernel": "brahma",  # Genesis
-    "mahamantra/cli": "narada",  # Communication
-    "protocols/universal": "vyasa",  # Compilation
-    "protocols/substrate": "prithu",  # Foundation
+    "mahamantra/kernel": "brahma",     # Genesis
+    "mahamantra/cli": "narada",        # Communication
+    "mahamantra/protocols": "vyasa",   # Compilation
+    "protocols/universal": "vyasa",    # Universal compilation
+    "protocols/substrate": "prithu",   # Substrate foundation
 }
+
+# DERIVED: Scan directories come from the map (protocol-driven, not hardcoded)
+# Extract top-level directories from FOLDER_MAHAJANA_MAP
+def _derive_scan_directories() -> Tuple[str, ...]:
+    """Derive scan directories from FOLDER_MAHAJANA_MAP keys."""
+    dirs = set()
+    for folder in FOLDER_MAHAJANA_MAP.keys():
+        # Get top-level directory (before first /)
+        top_level = folder.split("/")[0]
+        if top_level != "mahajanas":  # mahajanas is a special folder
+            dirs.add(top_level)
+    # Add root "." for root-level files
+    dirs.add(".")
+    return tuple(sorted(dirs))
+
+SCAN_DIRECTORIES: Final[Tuple[str, ...]] = _derive_scan_directories()
 
 
 # =============================================================================
@@ -291,8 +329,11 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
     """
     Inject DNA declaration into file content.
 
-    Inserts after module docstring and before imports.
+    Inserts after module docstring AND after from __future__ imports.
     Includes GenesisByte hash (parampara % 37 == 0).
+
+    IMPORTANT: Python requires `from __future__` to be at the very beginning
+    (after docstring). We MUST respect this.
     """
     lines = content.split('\n')
     insert_idx = 0
@@ -319,8 +360,12 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
                 continue
             elif stripped == '':
                 continue
+            elif stripped.startswith('from __future__'):
+                # MUST skip from __future__ imports - Python requirement!
+                insert_idx = i + 1
+                continue
             else:
-                # Found non-docstring, non-comment, non-empty line
+                # Found non-docstring, non-comment, non-empty, non-future line
                 insert_idx = i
                 break
         else:

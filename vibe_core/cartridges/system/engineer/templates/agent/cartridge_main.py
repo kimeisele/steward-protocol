@@ -16,6 +16,11 @@ ARCHITECTURE:
 - Tools accessed via self.system.execute_tool() - NEVER import tools directly
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0a67b66f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional
 

@@ -5,6 +5,11 @@ Provides safe, auditable file read/write operations for LLM agents.
 Supports VirtualFileSystem (VFS) for strict sandboxing.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x06b9aa50"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Optional

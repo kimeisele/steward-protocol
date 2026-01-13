@@ -15,6 +15,11 @@ Layer 4: Fallback (Default)
 OPUS-154: Added Akshara layer for experience-based routing with PRANA.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x05b5ddcd"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass, field

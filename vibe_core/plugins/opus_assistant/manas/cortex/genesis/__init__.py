@@ -9,6 +9,11 @@ The Agent Virus Pattern:
 "Jedes Haus bekommt einen Briefkasten. Jede Strase ein Schild."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8447279c"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.genesis.types import ModuleType
 
 from .classifier import InfrastructureClassifier

@@ -38,7 +38,13 @@ FRACTAL ARCHITECTURE:
     — Bhagavad Gita 7.7
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import importlib
 from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING, TypedDict

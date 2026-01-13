@@ -15,6 +15,11 @@ SERVE PHASE COMPLETE - All 4 positions filled.
 """
 
 # Import commands to trigger registration (Balarama pattern)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xd73acabf"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cli.naga_commands.serve.chat import ChatCommand
 from vibe_core.cli.naga_commands.serve.intel import IntelCommand
 from vibe_core.cli.naga_commands.serve.validate import ValidateCommand

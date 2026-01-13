@@ -12,6 +12,11 @@ LENS provides quantitative insights into campaign performance.
 Inherits from VibeAgent + OathMixin for kernel integration.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb04e98d6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List

@@ -20,6 +20,11 @@ Architecture: OPUS RUNTIME SEPARATION (docs/architecture/OPUS/OPUS_RUNTIME_SEPAR
 Pattern: Same as StewardProtocolPlugin (the Golden Plugin Standard)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x36857f32"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from pathlib import Path

@@ -28,6 +28,11 @@ Architecture (Fractal Holon):
 This is a HOLON - self-contained, self-similar, composable.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8ff2593f"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

@@ -5,6 +5,11 @@ Implements MantraProtocol by executing the 16-step MAHAMANTRA_SEQUENCE.
 This is the heartbeat that keeps the system from drifting into Maya.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xf6ce09be"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from datetime import datetime

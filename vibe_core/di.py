@@ -49,6 +49,11 @@ Usage:
     ServiceRegistry.reset()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xaf8092c8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import threading
 from typing import Any, Callable, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable

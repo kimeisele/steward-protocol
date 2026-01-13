@@ -18,7 +18,13 @@ His word is his bond. The log is the law.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x2f865d53"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime

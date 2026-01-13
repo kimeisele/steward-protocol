@@ -9,6 +9,11 @@ Models (preference order):
 2. SmolLM-360M-Instruct-Q4 (~360MB)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xe49b072e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from pathlib import Path

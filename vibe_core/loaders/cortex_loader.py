@@ -20,6 +20,11 @@ COMPLETES THE VEDA-4 STACK:
 "The cortex modules are the organs of MANAS - each specialized for a domain."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa22fa34a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type

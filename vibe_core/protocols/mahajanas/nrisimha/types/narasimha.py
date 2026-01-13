@@ -37,6 +37,11 @@ TRIGGERS:
 - Direct user command (Emergency Protocol)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0xe5f8b717"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import time

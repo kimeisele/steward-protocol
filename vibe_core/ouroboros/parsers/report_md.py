@@ -9,6 +9,11 @@ Supported patterns:
     - PROMPT.md violations from summary tables
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xfa0621ac"  # GenesisByte: parampara % 37 == 0
+
 import re
 from pathlib import Path
 from typing import List

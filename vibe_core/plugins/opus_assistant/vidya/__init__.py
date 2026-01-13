@@ -21,6 +21,11 @@ In Vedic philosophy, VIDYA is the path to Moksha (liberation).
 Without VIDYA, action is blind. With VIDYA, action is enlightened.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x858fb186"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.plugins.opus_assistant.vidya.critic import Critic, CriticResult
 from vibe_core.plugins.opus_assistant.vidya.library_interface import LibraryInterface
 from vibe_core.plugins.opus_assistant.vidya.research_interface import ResearchInterface

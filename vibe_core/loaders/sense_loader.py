@@ -17,6 +17,11 @@ PATTERN:
     Discovers: Classes inheriting from BaseSense
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7835a605"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

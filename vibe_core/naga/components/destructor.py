@@ -9,6 +9,11 @@ It ensures that when the system dies, memory is preserved (Ouroboros).
 It ensures no loose threads remain (Flood).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x0bff2241"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Optional
 

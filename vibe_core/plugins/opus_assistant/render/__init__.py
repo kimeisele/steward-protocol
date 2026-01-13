@@ -8,6 +8,11 @@ ARCHITECTURE:
 Legacy opus_md_writer.py DELETED - no split-brain!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x3d4b6208"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
     OpusDashboardRenderer,
 )

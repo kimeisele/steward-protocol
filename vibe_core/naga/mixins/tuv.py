@@ -10,6 +10,11 @@ Responsibilities:
 - Raise Alert if expired (Self-Policing)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x5b3d0b80"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional

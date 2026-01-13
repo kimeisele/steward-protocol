@@ -4,6 +4,11 @@ List Directory Tool for vibe-agency OS (ARCH-042).
 Empowers the agent to explore the filesystem "Senses".
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xaf79bdcf"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any

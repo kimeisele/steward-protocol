@@ -3,6 +3,11 @@
 Composes task playbook + context → enriched prompt for STEWARD
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x8ebca34e"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import Any
 

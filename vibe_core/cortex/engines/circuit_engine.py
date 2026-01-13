@@ -19,6 +19,11 @@ syscall completion.
 This is the runtime for "ML Light" - deterministic execution of neural output.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x8db6c27c"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import re

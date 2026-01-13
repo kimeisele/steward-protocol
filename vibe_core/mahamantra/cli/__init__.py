@@ -16,6 +16,11 @@ CLI IST ein Ausdruck des Mahamantra.
 """
 
 # Protocol (Types and Results)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7838b130"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.cli.protocol import (
     CLIErrorCode,
     OutputFormat,

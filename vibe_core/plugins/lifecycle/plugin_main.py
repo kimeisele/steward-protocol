@@ -23,6 +23,11 @@ GAD-000 Compliant:
 - All state changes logged to ledger
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x359983e1"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

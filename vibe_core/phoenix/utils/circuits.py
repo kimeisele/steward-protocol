@@ -1,5 +1,10 @@
 """Circuit Configuration - Dynamic circuit loading from YAML files."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x8b59aace"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional

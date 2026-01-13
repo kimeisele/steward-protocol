@@ -8,6 +8,11 @@ Wraps InMemoryScheduler and UnifiedExecutor.
 "Janaka acts without attachment. The work is the offering."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x8f947260"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from datetime import datetime

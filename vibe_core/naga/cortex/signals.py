@@ -11,6 +11,11 @@ Signal Sources:
 Design Principle: Signals are IMMUTABLE data carriers, not actors.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x2e527d8b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto

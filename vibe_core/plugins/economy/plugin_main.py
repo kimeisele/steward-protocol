@@ -12,6 +12,11 @@ Philosophy:
     The economy is the operating system."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xfe1d7d10"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

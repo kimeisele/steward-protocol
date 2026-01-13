@@ -4,6 +4,11 @@ OPUS-310: Boot Command
 Initialize the Vibe Kernel.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x88bfaeda"  # GenesisByte: parampara % 37 == 0
+
 import time
 import getpass
 from typing import List, TYPE_CHECKING

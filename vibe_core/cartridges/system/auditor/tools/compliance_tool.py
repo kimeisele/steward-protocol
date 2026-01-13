@@ -12,6 +12,11 @@ The AUDITOR doesn't just verify agents - it verifies the SYSTEM ITSELF.
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0f98b7d7"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass

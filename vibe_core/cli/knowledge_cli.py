@@ -24,6 +24,11 @@ Usage:
     steward knowledge query <term>            # Search knowledge base
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xe9b71af5"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

@@ -14,6 +14,11 @@ Responsibilities:
 - Obfuscation (transform data to hide patterns)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7f3a8c22"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import List, Optional, Protocol, runtime_checkable
 

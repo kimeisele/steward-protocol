@@ -10,6 +10,11 @@ and persistence across sessions.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x55cd269d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional

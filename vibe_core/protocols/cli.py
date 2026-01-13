@@ -25,6 +25,11 @@ PROMPT.md Compliance:
 - "Wir akzeptieren keine 'ungefähren' Lösungen"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x8769946e"  # GenesisByte: parampara % 37 == 0
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Protocol, Type, TypedDict, Union, runtime_checkable

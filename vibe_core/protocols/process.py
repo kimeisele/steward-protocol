@@ -10,6 +10,11 @@ This enables swappable execution backends:
 - Test: MockProcessManager (no-op logging)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7b6b4556"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Tuple, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:

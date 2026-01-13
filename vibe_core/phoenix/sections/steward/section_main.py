@@ -9,6 +9,11 @@ Implements SPECIFICATION.md:
 Source: config/steward.yaml
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xe7a196ce"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 

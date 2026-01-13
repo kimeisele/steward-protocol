@@ -6,6 +6,11 @@ MANU - The Lawgiver.
 Types for pulse/sync operations.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xc5704348"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.manu.types.pulse import (
     SystemState,
     PulseFrequency,

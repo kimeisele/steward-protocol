@@ -17,6 +17,11 @@ Usage:
             self.merge_and_write(content)  # preserves AI/HUMAN sections
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1b495ef3"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from abc import ABC, abstractmethod

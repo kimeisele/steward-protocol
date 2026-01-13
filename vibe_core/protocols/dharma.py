@@ -16,6 +16,11 @@ This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x38d1f2f6"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.manu.dharma import (
     ProtocolLayer,
     PROTOCOL_MAP,

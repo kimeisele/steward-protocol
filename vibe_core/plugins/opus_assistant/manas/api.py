@@ -30,6 +30,11 @@ Usage:
     print(f"Advice: {recommendation.advice}")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xfb42af30"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

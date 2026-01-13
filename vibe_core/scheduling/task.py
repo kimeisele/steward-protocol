@@ -18,6 +18,11 @@ These are semantically different - DispatchTask is a "message envelope",
 ManagedTask is a "project card".
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xd330a4aa"  # GenesisByte: parampara % 37 == 0
+
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime

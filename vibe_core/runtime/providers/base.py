@@ -20,6 +20,11 @@ Design Principles:
 Version: 1.0 (GAD-511)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x88303873"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime

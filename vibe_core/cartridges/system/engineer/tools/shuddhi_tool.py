@@ -5,6 +5,11 @@ Allows the Engineer to perform structural code healing using the Kernel's Shuddh
 This tool bridges the gap between the 'HEAL_CODEBASE' circuit and the Core Shuddhi Engine.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x3b0628b3"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional

@@ -14,6 +14,11 @@ Supports:
 Version: 1.0 (GAD-511)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc6307399"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import Any

@@ -19,6 +19,11 @@ Components:
 - RitualOrchestrator: Daily ritual phases (moved from daily_ritual.py)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xecb99a3f"  # GenesisByte: parampara % 37 == 0
+
 from .plugin_main import KalaPlugin
 
 __all__ = ["KalaPlugin"]

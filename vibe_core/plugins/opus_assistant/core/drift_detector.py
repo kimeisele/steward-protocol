@@ -19,6 +19,11 @@ Integration with Prakriti:
 - This keeps us within the AOS architecture
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x407ecd88"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Set

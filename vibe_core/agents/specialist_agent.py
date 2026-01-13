@@ -18,6 +18,11 @@ All specialists (Planning, Coding, Testing, Deployment, Maintenance) can now
 be orchestrated by the Kernel using the same dispatch mechanism as LLM agents.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x23cc02e1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 

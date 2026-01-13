@@ -14,6 +14,11 @@ Updated for Safe Evolution Loop (GAD-5500):
 This is the Conscience that guards the Commit Gate.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xba20248f"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import os

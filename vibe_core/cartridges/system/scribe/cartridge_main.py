@@ -10,6 +10,11 @@ The actual markdown file rendering happens via the Interface Plugin's
 renderer system (vibe_core/plugins/interface/renderers/).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0990c7f7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional
 

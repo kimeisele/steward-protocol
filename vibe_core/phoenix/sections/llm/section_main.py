@@ -8,6 +8,11 @@ VEDA-4 Pattern:
     KARMA: Instantiated as LLMConfig dataclass
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x19f53a32"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 

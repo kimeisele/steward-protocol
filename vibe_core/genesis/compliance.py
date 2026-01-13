@@ -13,6 +13,11 @@ The 7-Point DNA:
 7. Identity - signatures (future: GAD-1000)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xdae9870d"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

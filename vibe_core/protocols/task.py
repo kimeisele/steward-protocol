@@ -16,6 +16,11 @@ This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x185e95f9"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.janaka import (
     # Protocol Base
     JanakaProtocolBase,

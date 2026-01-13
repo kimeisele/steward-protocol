@@ -10,6 +10,11 @@ Provides:
 - Architecture hubs (most depended-upon modules)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x65b832de"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from collections import defaultdict

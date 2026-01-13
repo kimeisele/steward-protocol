@@ -15,6 +15,11 @@ CRITICAL: This tool must NOT use Raw I/O! It receives the system interface
 from the kernel and uses it for all file operations.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xebc82ff6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional

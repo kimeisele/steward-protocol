@@ -20,6 +20,11 @@ POSITIONEN:
 LEVEL: +5 (AVATARAS) für HEAD, +12 (MAHAJANAS) für Workers
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x3e0b8988"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.substrate import (
     Mahajana,
     Avatara,

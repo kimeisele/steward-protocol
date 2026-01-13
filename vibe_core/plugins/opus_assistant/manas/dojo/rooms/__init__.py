@@ -28,6 +28,11 @@ files:
 -->
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1a25ea6d"  # GenesisByte: parampara % 37 == 0
+
 from .arena import Arena
 from .library import Library
 from .meditation import (

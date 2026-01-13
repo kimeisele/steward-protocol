@@ -13,5 +13,10 @@ Will be removed in future version.
 """
 
 # Re-export from canonical location (PRITHU owns system wake/boot)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x279cfd4b"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.prithu.types.boot_mode import *
 from vibe_core.protocols.mahajanas.prithu.types.boot_mode import BootMode
