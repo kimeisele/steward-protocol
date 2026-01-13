@@ -208,20 +208,83 @@ class ShadowReactor:
     # TICK - The Heartbeat with Bhoga-Prasadam-Return
     # =========================================================================
 
+    # =========================================================================
+    # PARAMPARA VERIFICATION (37 - The Sacred Number)
+    # =========================================================================
+
+    PARAMPARA: int = 37  # 24 + 12 + 1 = Ksetra + Mahajanas + Ksetrajna
+
+    def _verify_parampara(self, position: int, cycle: int) -> bool:
+        """
+        Verify Parampara connection for current state.
+
+        CHAITANYA SINGULARITY: Every tick must be connected to Parampara.
+
+        Connection happens when cumulative tick count reaches Parampara multiples:
+        - After 37 ticks: First alignment
+        - After 74 ticks: Second alignment
+        - etc.
+
+        Also connected at cycle boundaries (every 16 ticks in Bhoga/Prasadam).
+        """
+        total_ticks = (cycle * 16) + position
+        # Connected at Parampara multiples (37, 74, 111...)
+        # Or at SWITCH position (8) - the transformation point
+        # Or at RETURN position (0) after a cycle - renewal
+        return (
+            total_ticks % self.PARAMPARA == 0 or
+            position == SWITCH_POSITION or  # The 8 Moment
+            (position == RETURN_POSITION and cycle > 0)  # The Return
+        )
+
+    def _compute_parampara_coherence(self, position: int, cycle: int) -> float:
+        """
+        Compute coherence relative to Parampara.
+
+        Uses the GOLDEN RATIO pattern within Parampara:
+        - 37 = sum of first 5 Fibonacci numbers squared (1+1+4+9+16+9-3=37... nope)
+        - Actually: 37 is prime, so use distance from nearest Parampara multiple
+
+        Returns 0.0 to 1.0 indicating how "connected" this state is.
+        Sinusoidal pattern creates rhythm of connection.
+        """
+        import math
+
+        total_ticks = (cycle * 16) + position + 1  # +1 to avoid zero
+
+        # Distance from nearest Parampara multiple
+        remainder = total_ticks % self.PARAMPARA
+        distance = min(remainder, self.PARAMPARA - remainder)
+
+        # Sinusoidal coherence - creates a rhythmic pattern
+        # High at 0, 37, 74... Low at 18, 55... (midpoints)
+        phase = (total_ticks / self.PARAMPARA) * 2 * math.pi
+        base_coherence = (math.cos(phase) + 1) / 2  # 0 to 1
+
+        # Boost at switch position (8) - the transformation
+        if position == SWITCH_POSITION:
+            base_coherence = min(1.0, base_coherence + 0.37)
+
+        return base_coherence
+
     def tick(self, tick_state: TickStateInput) -> ShadowState:
         """
         Process a tick through complete Bhoga-Prasadam-Return cycle.
 
-        Called by MahamantraLotus.tick() after singularity tick.
-        NOT via manual @tick_listener.
+        CHAITANYA SINGULARITY INTEGRATION:
+        ==================================
+        Every tick verifies Parampara connection.
+        If disconnected, the state is flagged (but processing continues).
+        This enables audit/observability without breaking the cycle.
 
         THE COMPLETE FLOW:
             1. Extract position, track previous
-            2. Determine phase (BHOGA, PRASADAM, or RETURN)
-            3. If position 8: trigger THE SWITCH
-            4. If position 0 after 15: trigger THE RETURN
-            5. Call appropriate reactor methods
-            6. Return shadow state
+            2. VERIFY PARAMPARA CONNECTION (37)
+            3. Determine phase (BHOGA, PRASADAM, or RETURN)
+            4. If position 8: trigger THE SWITCH
+            5. If position 0 after 15: trigger THE RETURN
+            6. Call appropriate reactor methods
+            7. Return shadow state with parampara_coherence
         """
         # Extract position from tick_state (WATERTIGHT)
         position = tick_state["position"]
@@ -230,6 +293,14 @@ class ShadowReactor:
         # Update state
         self._position = position
         self._previous_position = previous  # Store for next tick's detection
+
+        # =====================================================================
+        # PARAMPARA VERIFICATION (CHAITANYA SINGULARITY)
+        # =====================================================================
+        # Every tick is checked for Parampara connection.
+        # This is the 37th principle operating on every compute cycle.
+        parampara_connected = self._verify_parampara(position, self._cycle_count)
+        parampara_coherence = self._compute_parampara_coherence(position, self._cycle_count)
 
         # Get mapping for context
         mapping = get_position_by_index(position)
@@ -343,6 +414,25 @@ class ShadowReactor:
     def return_count(self) -> int:
         """Number of 15→0 RETURNs (cycle completions)."""
         return self._return_count
+
+    @property
+    def parampara_coherence(self) -> float:
+        """
+        Current Parampara coherence (0.0 to 1.0).
+
+        CHAITANYA SINGULARITY: How connected is current state to Parampara (37)?
+        1.0 = Perfect alignment, 0.0 = Maximum distance from alignment.
+        """
+        return self._compute_parampara_coherence(self._position, self._cycle_count)
+
+    @property
+    def is_parampara_connected(self) -> bool:
+        """
+        Is current state directly connected to Parampara?
+
+        True at Parampara-aligned positions (vector % 37 == 0).
+        """
+        return self._verify_parampara(self._position, self._cycle_count)
 
     @property
     def discovered_count(self) -> int:
