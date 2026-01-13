@@ -18,11 +18,11 @@ Config IS cached state.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+from __future__ import annotations
+
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shuka"
 __position__ = 14
-
-from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

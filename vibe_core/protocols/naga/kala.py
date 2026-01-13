@@ -19,6 +19,11 @@ WATERTIGHT STANDARD:
 - Deterministic State Transitions.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x6e43006e"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum

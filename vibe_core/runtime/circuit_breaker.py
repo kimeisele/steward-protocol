@@ -20,6 +20,11 @@ Implementation of the "Final Straw Defense" - prevents system collapse during:
 Version: 1.0 (GAD-509)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa8ae9e28"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from collections.abc import Callable

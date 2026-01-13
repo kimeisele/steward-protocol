@@ -8,6 +8,11 @@ By doing this in the IntegrityGuard (Priority 0), we ensure that all
 subsequent plugins and agents have access to the unified state protocols.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8e98fa91"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING
 

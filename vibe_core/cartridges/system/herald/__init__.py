@@ -18,6 +18,11 @@ Standalone Execution:
     python herald/shim.py --action publish
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbb702914"  # GenesisByte: parampara % 37 == 0
+
 from .cartridge_main import HeraldCartridge
 from .tools import BroadcastTool, IdentityTool, ResearchTool, ScoutTool, Scribe
 

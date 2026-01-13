@@ -1,5 +1,10 @@
 """Task archival functionality."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd4334d39"  # GenesisByte: parampara % 37 == 0
+
 import json
 from datetime import datetime
 from pathlib import Path

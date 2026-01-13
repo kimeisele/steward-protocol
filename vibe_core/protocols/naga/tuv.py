@@ -17,6 +17,11 @@ SCALING PATTERN:
 - Generic FindingRegistry handles storage/filtering (PROTOCOL-FIRST naming)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4df4f3cd"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum

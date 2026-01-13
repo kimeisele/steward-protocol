@@ -28,6 +28,11 @@ This appears at every level of the fractal.
 """
 
 # Varna - Individual letters
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xb5a85607"  # GenesisByte: parampara % 37 == 0
+
 from .varna import (
     VarnaType,
     Varna,

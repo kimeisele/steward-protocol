@@ -13,6 +13,11 @@ Philosophy:
 The Mind generates its own input. It doesn't wait.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd3ee1826"  # GenesisByte: parampara % 37 == 0
+
 from .api import AnalysisResult, ManasOracle
 from .cognitive_kernel import CognitiveKernel, ManasConfig
 from .intent_generator import Intent, IntentPriority

@@ -38,6 +38,11 @@ Architecture:
     └─────────────────────────────────┘
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbb43e6d7"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import Dict, List
 

@@ -24,6 +24,11 @@ Layer: 0 (The Absolute)
 Status: WATERTIGHT / LAYER 0 INTEGRATION
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x5d70c20d"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 from decimal import Decimal, getcontext
 from enum import Enum

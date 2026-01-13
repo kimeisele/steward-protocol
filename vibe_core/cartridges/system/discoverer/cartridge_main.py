@@ -16,6 +16,11 @@ NOT a citizen agent. The Discoverer is "The First Citizen" - the guardian
 that enables all other agents to exist.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x394330c0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

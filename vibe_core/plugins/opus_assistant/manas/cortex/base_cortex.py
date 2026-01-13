@@ -32,6 +32,11 @@ ADAPTER PATTERN:
 "The cortex is the thinking layer - where intention becomes action."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd51c69be"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, TypedDict

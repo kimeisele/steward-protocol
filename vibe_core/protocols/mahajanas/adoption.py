@@ -23,6 +23,11 @@ THE PIPELINE:
 WATERTIGHT: All types explicit, no Any.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xe5db6bcc"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

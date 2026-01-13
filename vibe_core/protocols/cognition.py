@@ -16,6 +16,11 @@ This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x5d2e4e4a"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.kapila import (
     # Protocol Base - THE ONLY SOURCE
     KapilaProtocolBase,

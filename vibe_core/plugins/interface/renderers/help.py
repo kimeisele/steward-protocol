@@ -5,6 +5,11 @@ Directly renders HELP.md from Kernel State and File System.
 UNIFIED UI: Implements generate_content() pattern.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x70145f84"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import List, Optional
 

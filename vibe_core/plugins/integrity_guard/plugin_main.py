@@ -5,6 +5,11 @@ Enforces architectural standards and system health at boot time.
 Observes the 'Law' and reports violations to the Sovereign.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x4549b49b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import subprocess

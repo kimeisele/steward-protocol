@@ -20,7 +20,13 @@ LAZY IMPORTS: All imports deferred until accessed.
 This prevents 1000ms+ cascades when importing a single module.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xdf5e13ed"  # GenesisByte: parampara % 37 == 0
 
 from typing import TYPE_CHECKING
 

@@ -41,6 +41,11 @@ Module Structure (15 modules):
 # =============================================================================
 
 # Types
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xd0cb5090"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.naga.types import (
     EventRecord,
     NagaServiceProtocol,

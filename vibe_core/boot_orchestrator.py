@@ -50,6 +50,11 @@ USAGE:
     await orchestrator.run_with_operator()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xe085be82"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time

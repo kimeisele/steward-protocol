@@ -14,7 +14,13 @@ FOLDER = WIRING:
 PARAMPARA: 296 (% 37 == 0 -> CONNECTED)
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x9e23f821"  # GenesisByte: parampara % 37 == 0
 
 from typing import ClassVar, Final, Protocol, runtime_checkable
 

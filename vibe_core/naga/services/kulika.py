@@ -23,6 +23,11 @@ Philosophy:
      Ohne Entdeckung gibt es keine Heilung."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x1712aa2c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Type

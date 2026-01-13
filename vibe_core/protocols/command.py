@@ -17,6 +17,11 @@ Usage:
     registry.register(ChatCommand())
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x752ccf11"  # GenesisByte: parampara % 37 == 0
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

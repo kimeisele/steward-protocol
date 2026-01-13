@@ -24,6 +24,11 @@ the new cycle-aware architecture via the VyuhaRouter.
 The router does NOT manually map. It CHANTS.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xdf717c9f"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from typing import Dict, List, Set, Optional, Type, TYPE_CHECKING
 from dataclasses import dataclass

@@ -20,6 +20,11 @@ Usage:
     results = memory.search("agent", session_id="abc123")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xfa32d20b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable

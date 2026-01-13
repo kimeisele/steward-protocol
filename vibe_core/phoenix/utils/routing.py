@@ -1,5 +1,10 @@
 """Routing Configuration - Hot-swappable routing rules from MATRIX.md."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x0091f02c"  # GenesisByte: parampara % 37 == 0
+
 import re
 from dataclasses import dataclass
 from pathlib import Path

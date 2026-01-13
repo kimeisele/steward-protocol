@@ -21,6 +21,11 @@ Usage:
     test_circuits = CircuitLoader.get_circuits_for_trigger("file_modified")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xd106030b"  # GenesisByte: parampara % 37 == 0
+
 from .action_loader import ActionLoader, ActionLoadError, ActionMetadata, ActionRegistry, IntentHandlerMap
 from .analyzer_loader import AnalyzerLoader, AnalyzerLoadError, AnalyzerMetadata, AnalyzerRegistry
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader

@@ -35,6 +35,11 @@ files:
 
 # v2: YAML Curricula
 # v2: MANAS Agency
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x6b2e9ca8"  # GenesisByte: parampara % 37 == 0
+
 from .agency import (
     CuriosityTracker,
     DojoAgency,

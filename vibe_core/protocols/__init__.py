@@ -16,6 +16,11 @@ All wiring belongs in Layer 3 (runtime/).
 BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x388bbf83"  # GenesisByte: parampara % 37 == 0
+
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 
 # OPUS-307 Phase E+: CLI Protocol (Anti-God-Object)

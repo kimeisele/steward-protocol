@@ -47,6 +47,11 @@ Usage:
     # Returns: [DharmicRecommendation(action="action:run_tests", weight=0.9, resonance=0.8, dharmic_score=0.72)]
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2df550f9"  # GenesisByte: parampara % 37 == 0
+
 import fnmatch
 import logging
 import re

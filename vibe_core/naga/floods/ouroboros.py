@@ -16,6 +16,11 @@ NAGA Assignment:
 - TAKSHAKA: Validate external CI data before ingestion
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xece0140d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional

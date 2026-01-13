@@ -31,6 +31,11 @@ Philosophy:
     Git is Truth. If Git says "no changes", the "commit changes" thought is illusion.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x14e2bbd6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from dataclasses import dataclass

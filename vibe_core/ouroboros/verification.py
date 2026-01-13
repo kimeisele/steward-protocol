@@ -29,6 +29,11 @@ Verification Statuses:
     - MAYA: Claim was false (file/line doesn't match, violation fixed)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x7af56767"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass, field

@@ -15,6 +15,11 @@ All new code should import from:
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xb9c327f9"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.yamaraja.correction import (
     # Ownership
     OWNER,

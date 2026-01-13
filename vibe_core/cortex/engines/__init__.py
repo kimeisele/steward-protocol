@@ -8,6 +8,11 @@ Each engine is a specialized processor:
 - playbook_engine: DAG workflows (TODO: migrate)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xda025e9c"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cortex.engines.circuit_engine import (
     CircuitExecutionResult,
     CircuitState,

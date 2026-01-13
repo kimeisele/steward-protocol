@@ -27,6 +27,11 @@ Architecture:
 Version: 1.0 (ARCH-033C)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x99cca128"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import sys
 

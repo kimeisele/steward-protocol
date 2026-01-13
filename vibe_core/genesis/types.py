@@ -6,6 +6,11 @@ Core types for the vibe_core Genesis service.
 ModuleType enum and result dataclasses for the Stadtamt.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xcea720e9"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path

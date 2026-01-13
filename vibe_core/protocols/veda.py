@@ -41,7 +41,13 @@ USAGE:
 WATERTIGHT: All typed. No Any. Protocol-first.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0xe8dbfd14"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from typing import (

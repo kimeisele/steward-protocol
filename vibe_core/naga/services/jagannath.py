@@ -8,6 +8,11 @@ Implementation of the IJagannath Protocol.
 He rides the Chariot (Ratha Yatra) to purify the system.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4d0c13b2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Optional

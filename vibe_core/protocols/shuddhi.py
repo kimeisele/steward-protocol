@@ -13,6 +13,11 @@ OR:
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x2601cafe"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.kumaras.shuddhi import (
     ShuddhiProtocolBase,
     ShuddhiStatus,

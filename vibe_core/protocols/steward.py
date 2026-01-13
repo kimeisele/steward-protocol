@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x0d97ae20"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Protocol, runtime_checkable
 
 from .identity import IdentityProtocol

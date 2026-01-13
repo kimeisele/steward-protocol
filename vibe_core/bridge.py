@@ -15,6 +15,11 @@ Architecture:
 """
 
 # Import Constitutional Oath verification (Governance Gate)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x43cd6552"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.steward.constitutional_oath import ConstitutionalOath
 from vibe_core.steward.crypto import sign_content, verify_signature
 from vibe_core.steward.oath_mixin import OathMixin

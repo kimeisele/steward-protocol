@@ -34,6 +34,11 @@ Usage:
     steward stop
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x38cc828c"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import hashlib
 import json

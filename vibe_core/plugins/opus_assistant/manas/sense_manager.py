@@ -33,7 +33,13 @@ VEDA-4 PATTERN:
     KARMA    (कर्म)    → Instantiates with workspace
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x55f98147"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from dataclasses import dataclass

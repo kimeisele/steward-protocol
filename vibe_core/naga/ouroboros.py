@@ -25,6 +25,11 @@ Integration:
     cortex.set_ouroboros(ouroboros)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x3bbe1255"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import time

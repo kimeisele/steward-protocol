@@ -30,6 +30,11 @@ Philosophy:
     "Documents that cannot verify themselves are fiction."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa56cd39d"  # GenesisByte: parampara % 37 == 0
+
 import re
 from dataclasses import dataclass, field
 from pathlib import Path

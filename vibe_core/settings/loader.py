@@ -6,6 +6,11 @@ Mirrors plugin_loader.py pattern for consistency.
 Discovers sections from vibe_core/settings/sections/
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x13a4d915"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 from pathlib import Path

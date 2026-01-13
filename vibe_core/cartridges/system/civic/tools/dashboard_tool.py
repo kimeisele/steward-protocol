@@ -13,6 +13,11 @@ Philosophy:
 This is the 'pulse' of Agent City."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbb95b56b"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass

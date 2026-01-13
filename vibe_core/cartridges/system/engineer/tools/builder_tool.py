@@ -9,6 +9,11 @@ All agent scaffolding goes through the central Genesis service.
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x45a2498f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional

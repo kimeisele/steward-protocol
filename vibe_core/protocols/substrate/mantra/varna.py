@@ -19,6 +19,11 @@ TRIPLE ENCODING:
 - Roman: Western approximation
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x321c4a3e"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Final, Tuple, Optional, List

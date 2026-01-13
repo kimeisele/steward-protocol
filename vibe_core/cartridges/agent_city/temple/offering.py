@@ -12,6 +12,11 @@ The Output becomes Sacred through the Ritual Process:
 "Work becomes Worship. Output becomes Prasadam."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8e0e9d23"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple

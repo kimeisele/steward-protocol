@@ -15,6 +15,11 @@ This makes the system a "Living Constitution" - change the file, change the agen
 The agent is DEPENDENT on the constitutional file, not the other way around.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x82e0c65a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from abc import ABC, abstractmethod

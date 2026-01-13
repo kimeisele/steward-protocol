@@ -15,7 +15,13 @@ REVERTED TO TRUTH (Post-Legacy Clean Slate).
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xa2b509db"  # GenesisByte: parampara % 37 == 0
 
 from enum import IntEnum
 from typing import Dict, Final, FrozenSet

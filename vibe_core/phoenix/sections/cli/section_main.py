@@ -1,5 +1,10 @@
 """CLI Configuration - Fractal CLI System settings from cli.yaml."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc17e3e2d"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 

@@ -23,6 +23,11 @@ Usage:
     # Cortex auto-correlates and dispatches when threshold met
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x6dd8f3d3"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 from collections import OrderedDict, deque

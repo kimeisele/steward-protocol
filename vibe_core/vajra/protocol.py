@@ -7,6 +7,11 @@ Defines what it means to be a "wirable" component in the Steward Protocol.
 Any component that needs kernel access MUST implement this protocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x273588cf"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Optional, Protocol, runtime_checkable
 
 if TYPE_CHECKING:

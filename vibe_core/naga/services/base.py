@@ -16,6 +16,11 @@ Every NAGA service inherits from NagaBaseService to get:
 This is the OUROBOROS pattern: NAGAs eat their own tail.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x6070fc2e"  # GenesisByte: parampara % 37 == 0
+
 import functools
 import logging
 import sys

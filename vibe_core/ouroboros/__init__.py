@@ -30,6 +30,11 @@ GAD-000 Compliance:
 """
 
 # Substrate Bridge (Layer -1)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x64039375"  # GenesisByte: parampara % 37 == 0
+
 from .ananta_shesha import AnantaShesha, SystemEvent, get_system_anchor, reset_system_anchor
 
 # Violation Processing

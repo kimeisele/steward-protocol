@@ -36,7 +36,13 @@ The GPU computes this interference pattern.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x0ca3720d"  # GenesisByte: parampara % 37 == 0
 
 import math
 from concurrent.futures import ThreadPoolExecutor, Future

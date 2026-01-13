@@ -9,6 +9,11 @@ is eternally recorded. In the context of MANAS, it serves as the
 Learning Store - preventing the repetition of mistakes (Karma).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0xfbff20af"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Optional, Protocol, runtime_checkable, Dict, Any
 
 

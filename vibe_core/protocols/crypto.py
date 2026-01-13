@@ -5,6 +5,11 @@ GAD-000 v2.0: The 37th Principle requires signature verification.
 This protocol enables hot-swap of crypto implementations.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0x772b60e4"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 

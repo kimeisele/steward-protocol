@@ -19,6 +19,11 @@ GAD-000 Compliant:
 - Structured errors for unknown syscalls
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x48de3c34"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 

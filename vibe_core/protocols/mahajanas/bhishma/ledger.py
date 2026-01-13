@@ -35,7 +35,13 @@ ARCHITECTURE:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x27025da7"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 import json

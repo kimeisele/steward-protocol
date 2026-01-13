@@ -12,6 +12,11 @@ PROMPT.md: "Protocol statt konkrete Klassen"
 This is the default implementation of IntentMatcherProtocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x145ce973"  # GenesisByte: parampara % 37 == 0
+
 import re
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional, Set

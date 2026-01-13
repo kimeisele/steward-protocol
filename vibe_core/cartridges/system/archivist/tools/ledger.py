@@ -26,6 +26,11 @@ Architecture:
     └─────────────────────────────────────────────────────────────┘
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xdf4e2e5c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 

@@ -26,6 +26,11 @@ Our mapping:
 "Don't implement what's already defined. WIRE IT."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4d90a661"  # GenesisByte: parampara % 37 == 0
+
 from .living_tests import LivingTestFramework, TestEvolution
 from .seed_generator import NaradaSeedGenerator, inject_seeds_from_narada
 from .seed_loader import AttackSeed, SeedLoader

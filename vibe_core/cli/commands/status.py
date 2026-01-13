@@ -4,6 +4,11 @@ OPUS-310: Status Command
 Show current system status.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xaa3df2fd"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.command import (

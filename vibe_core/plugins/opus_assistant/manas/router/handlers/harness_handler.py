@@ -14,6 +14,11 @@ Handles:
 - create_opus_doc, consolidate_docs, rename_doc
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb28b23b6"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from pathlib import Path

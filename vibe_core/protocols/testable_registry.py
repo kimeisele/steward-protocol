@@ -31,6 +31,11 @@ USAGE:
         print(f"{testable.testable_id}: {len(testable.get_test_cases())} tests")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xbc5d2515"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 

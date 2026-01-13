@@ -27,6 +27,11 @@ Design Principles:
 See: docs/architecture/SPECIALIST_AGENT_CONTRACT.md for implementation guide
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x55f4e0fd"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from abc import ABC, abstractmethod

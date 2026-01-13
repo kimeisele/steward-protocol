@@ -14,6 +14,11 @@ varnashrama.py = Social Law (roles, capabilities)
 IMPORTS GunaProfile from universal/guna.py - NO DUPLICATION!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x9e5fbecf"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from dataclasses import dataclass
 from typing import Dict, Final, Optional

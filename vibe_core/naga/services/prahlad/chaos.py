@@ -4,6 +4,11 @@ PRAHLAD Chaos Probing - Mixin for chaos engineering.
 Extracted to reduce service.py below 800 lines.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x43423d67"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from datetime import datetime

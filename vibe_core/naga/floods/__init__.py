@@ -19,6 +19,11 @@ Usage:
     # Same interface, protected execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4f9ea9db"  # GenesisByte: parampara % 37 == 0
+
 from .ingestion import FloodedViolationIngester
 from .loop_orchestrator import FloodedOuroborosLoopOrchestrator
 from .ouroboros import FloodedCISyncService

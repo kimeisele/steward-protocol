@@ -16,6 +16,11 @@ Integration:
 - Heals by flagging anomalous components
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf0b9b646"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Protocol, runtime_checkable

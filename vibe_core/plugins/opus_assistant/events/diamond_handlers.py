@@ -33,6 +33,11 @@ Architecture:
 The Diamond is forged under pressure.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x9e377172"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path

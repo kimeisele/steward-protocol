@@ -4,6 +4,11 @@ Responsible for system integrity, self-diagnosis, self-healing, and lifecycle ma
 Runs BEFORE kernel boot in standalone mode.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xff0218cd"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 import os

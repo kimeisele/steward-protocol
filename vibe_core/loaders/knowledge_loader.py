@@ -9,6 +9,11 @@ Fractal Pattern:
     Scan Path: knowledge/
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x2097d262"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path

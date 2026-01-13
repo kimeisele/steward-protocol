@@ -16,6 +16,11 @@ Rules (Non-negotiable):
 Version: 1.0 (GAD-509 Extension - Operation Iron Dome)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa4f7c359"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

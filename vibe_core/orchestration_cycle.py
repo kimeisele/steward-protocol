@@ -30,6 +30,11 @@ Architecture:
           └── StewardContext: Dependency injection (Soul, Ledger, etc.)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x360a308f"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

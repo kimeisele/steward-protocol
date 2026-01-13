@@ -36,6 +36,11 @@ Architecture (Spaghetti Prevention):
 If you need analysis logic, put it in a SEPARATE AnomalyDetector!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0c78ee45"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass, field

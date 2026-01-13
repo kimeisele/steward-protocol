@@ -19,6 +19,11 @@ Philosophy:
 Every commit is a verse. Every branch is a possible universe."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5501ec91"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

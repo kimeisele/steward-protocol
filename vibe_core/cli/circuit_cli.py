@@ -11,6 +11,11 @@ Usage:
     steward circuit status <execution_id>          # Check execution status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x7192eadb"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

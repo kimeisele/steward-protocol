@@ -30,6 +30,11 @@ Usage:
     from vibe_core.naga.services.sesha import SeshaService
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x10e0e33b"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any
 
 # TYPE_CHECKING imports for type hints only (not runtime)

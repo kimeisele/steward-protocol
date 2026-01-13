@@ -17,6 +17,11 @@ Usage:
     result = await research.query("Best practices for Python plugin architecture")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa5e6eeb0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xcf14bfd2"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, Protocol, runtime_checkable
 
 from .types import SovereignContext, SyncResult, SyncStatus

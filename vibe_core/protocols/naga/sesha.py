@@ -16,6 +16,11 @@ INHERITANCE:
 STATUS: DEVOTEE / ACTIVE STORAGE
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf7b908da"  # GenesisByte: parampara % 37 == 0
+
 import threading
 from typing import Any, Dict, Optional, Tuple, TypedDict, List
 

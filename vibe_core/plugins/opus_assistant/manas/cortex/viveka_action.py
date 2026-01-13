@@ -53,6 +53,11 @@ wiring:
 -->
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5d62be35"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import json
 import logging

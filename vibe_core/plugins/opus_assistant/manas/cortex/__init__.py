@@ -28,6 +28,11 @@ The cortex modules provide MANAS with interfaces to the external world:
 # OPUS-099: BaseSense (VEDA-4 auto-discovery)
 # OPUS-041: VAK (The Voice)
 # OPUS-052: AKASHA (The Cosmic Ether)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xde97569d"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
     AkashaContext,
     AkashaNode,

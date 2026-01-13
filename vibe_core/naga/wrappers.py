@@ -6,6 +6,11 @@ Layer: -1 (Naga Loka / Substrate Enforcement)
 Strict Mode: No Any.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xfec408c5"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, Generic, Optional, TypeVar, Union
 
 # Defense Implementations

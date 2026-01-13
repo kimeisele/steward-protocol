@@ -15,6 +15,11 @@ RELATIONSHIPS:
 - SUBHADRA (The Yogamaya): The connection between them.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x386870f6"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 from vibe_core.protocols.substrate import SubstrateStatus

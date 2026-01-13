@@ -32,6 +32,11 @@ Without diksha, Om redirects to Mahamantra (Prabhupada's mercy).
 See: substrate/mantra/diksha.py for the DikshaCertificate protocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xd38ce30c"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 from vibe_core.protocols.substrate import MantraProtocol

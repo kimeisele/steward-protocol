@@ -13,6 +13,11 @@ Key concepts:
 - Severity: Determines auto-fix eligibility
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x5ba9c813"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Dict, Optional

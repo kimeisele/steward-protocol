@@ -33,6 +33,11 @@ Tattva Mapping (OPUS-097):
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-097-SAMKHYA-ARCHITECTURE-MAP
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x11d18c22"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import atexit
 import json

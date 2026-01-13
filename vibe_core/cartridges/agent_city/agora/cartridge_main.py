@@ -12,6 +12,11 @@ AGORA is the one-way communication system for the Steward Protocol federation.
 This is NOT a chatroom. This is Parampara (chain of transmission).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc0a79687"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from enum import Enum

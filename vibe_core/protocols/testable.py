@@ -47,6 +47,11 @@ use the adapter pattern:
     test_cases = adapter.get_test_cases()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x4f13d296"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

@@ -19,6 +19,11 @@ Hot-swap capability:
 - No restart needed = LIVING system
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x82f4092e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from dataclasses import dataclass, field

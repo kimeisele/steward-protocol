@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xbb8000ea"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import uuid

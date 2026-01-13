@@ -2,6 +2,11 @@
 OPUS-212: CSTRemedy - The Base Class for Structural Healers.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xf228a759"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from typing import List, Optional
 

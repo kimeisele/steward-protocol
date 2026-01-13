@@ -10,6 +10,11 @@ Philosophy:
 the Watchman's sword falls swift and merciless. No exceptions."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x583f0eba"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from pathlib import Path

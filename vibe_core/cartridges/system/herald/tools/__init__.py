@@ -11,6 +11,11 @@ Each tool encapsulates a capability:
 Note: ContentTool was removed - content generation moved to Marketer.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x63497696"  # GenesisByte: parampara % 37 == 0
+
 from .broadcast_tool import BroadcastTool
 from .identity_tool import IdentityTool
 from .research_tool import ResearchTool

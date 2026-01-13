@@ -8,6 +8,11 @@ VEDA-4 Pattern:
     KARMA: Instantiated as QuotasConfig dataclass
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x1b37973a"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 

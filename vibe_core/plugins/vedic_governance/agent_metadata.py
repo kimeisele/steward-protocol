@@ -6,6 +6,11 @@ Biological taxonomy of all 18 agents in Agent City.
 Maps each agent to its Varna (species) and current Ashrama (lifecycle stage).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xc17b90f4"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 

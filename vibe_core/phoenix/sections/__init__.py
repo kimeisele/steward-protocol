@@ -1,5 +1,10 @@
 """Phoenix Config Sections - Typed configuration components."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xa839a0ae"  # GenesisByte: parampara % 37 == 0
+
 from ..utils.circuits import CircuitConfig
 from ..utils.routing import RoutingRule
 from .city.section_main import AgentsConfig, CityConfig, EconomyConfig, GovernanceConfig

@@ -9,6 +9,11 @@ These functions are called by the DeterministicExecutor when running audit phase
 Designed by Opus (Senior Audit Sprint)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x165696e9"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 import subprocess

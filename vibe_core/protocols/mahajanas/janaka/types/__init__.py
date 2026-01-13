@@ -6,6 +6,11 @@ JANAKA - The Self-Realized King.
 Types for lifecycle and cycle management.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x34a86a3e"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.janaka.types.prana import (
     SessionStartConfig,
     HeartbeatConfig,

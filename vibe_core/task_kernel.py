@@ -49,6 +49,11 @@ Usage:
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x6e54aa3c"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time

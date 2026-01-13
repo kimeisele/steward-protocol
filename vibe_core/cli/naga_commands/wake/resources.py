@@ -25,6 +25,11 @@ Usage:
     naga resources --pools        # Resource pool status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xbccdfe91"  # GenesisByte: parampara % 37 == 0
+
 import os
 import sys
 from pathlib import Path

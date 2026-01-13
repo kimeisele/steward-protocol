@@ -15,6 +15,11 @@ The lineage is eternal.
 This is the SOUL of the system.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x448bce13"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

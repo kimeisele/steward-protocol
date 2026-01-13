@@ -30,6 +30,11 @@ This is "ML Light" - we use deterministic structures to channel neural output.
 GAD-5500: Safe Evolution Loop / Cognitive Circuits
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xca89c7c1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum

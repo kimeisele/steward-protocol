@@ -9,6 +9,11 @@ It enforces the STD_1972 standard (the Original Bhagavad Gita as-is).
 STRICT TYPING: No Any allowed.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xf26c0971"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from typing import Optional
 

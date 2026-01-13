@@ -20,6 +20,11 @@ GAD-000 COMPLIANCE:
 - Phoenix: Serializable for persistence
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0xf9715c19"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

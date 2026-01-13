@@ -19,6 +19,11 @@ Security Model:
 - Logging: All file access is logged for audit
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xcb6df787"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from pathlib import Path

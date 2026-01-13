@@ -37,6 +37,11 @@ Risk Classification:
 "The sculptor reveals the statue hidden within the stone."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x974dda05"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import hashlib
 import logging

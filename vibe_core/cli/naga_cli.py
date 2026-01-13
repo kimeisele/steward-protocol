@@ -8,6 +8,11 @@ FRACTAL NAGA CLI (Operation Kurukshetra):
 "The Balarama Pattern: He becomes the bed, the throne, and the shoes."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7e1f86e8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import List, Optional

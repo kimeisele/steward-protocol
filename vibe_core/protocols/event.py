@@ -16,6 +16,11 @@ This file is a bridge for backward compatibility only.
 """
 
 # Re-export from canonical Mahajana location
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x9bec8331"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.narada.events import (
     EventType,
     EventData,

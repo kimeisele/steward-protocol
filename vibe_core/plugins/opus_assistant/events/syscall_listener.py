@@ -32,6 +32,11 @@ The system learns from its own successes.
 Successful syscalls become few-shot examples for future executions.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x71f7dd9f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional

@@ -22,6 +22,11 @@ Hooks:
 SAFETY: Fail-open pattern. If NAGAs aren't available, allow and log.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x59918cdf"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass, field

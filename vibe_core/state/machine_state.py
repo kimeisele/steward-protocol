@@ -4,6 +4,11 @@ MachineState - The SQLite Persistence Layer for Vibe OS.
 Provides durable state storage for the Prakriti engine.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x2aab841c"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

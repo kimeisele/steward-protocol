@@ -10,6 +10,11 @@ This separates the judiciary from the executive, enabling:
 - Optional verification (NullAuditor for dev mode)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xcf8e912f"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Dict, List, Protocol, runtime_checkable
 
 

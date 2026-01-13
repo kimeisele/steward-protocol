@@ -20,6 +20,11 @@ ORIGINAL: protocols/shuddhi.py
 MIGRATED: protocols/mahajanas/kumaras/shuddhi.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0x49395271"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path

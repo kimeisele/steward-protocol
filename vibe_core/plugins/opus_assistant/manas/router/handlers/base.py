@@ -25,6 +25,11 @@ AGENT-FIRST ROUTING (Future):
     specialized agents (Holons) that contain multiple handlers.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe37f60f2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path

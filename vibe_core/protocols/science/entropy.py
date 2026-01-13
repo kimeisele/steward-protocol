@@ -8,6 +8,11 @@ Dieses Modul simuliert den Zerfall. Es beweist, dass "Material Objects"
 ohne spirituelle Anbindung (Mantra) nicht überleben können.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0x56784b3d"  # GenesisByte: parampara % 37 == 0
+
 import time
 import random
 from dataclasses import dataclass

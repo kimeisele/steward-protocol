@@ -34,7 +34,13 @@ is ACINTYA - like iron becoming fire, indistinguishable.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x3759b5bf"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum

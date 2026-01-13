@@ -12,6 +12,11 @@ HARDENING:
 3. Jagannath (Der Herr des Universums) hat Vorfahrt.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x9a15eb7b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

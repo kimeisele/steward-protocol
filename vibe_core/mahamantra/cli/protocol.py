@@ -20,7 +20,13 @@ GAD-000 COMPLIANCE CHECKLIST:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb16f7b2a"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -39,6 +45,45 @@ from typing import (
     Union,
     runtime_checkable,
 )
+
+# =============================================================================
+# CHAITANYA LILA BOUNDARIES - Protocol-Based Enforcement
+# =============================================================================
+#
+# "In the age of Kali there is no other way, no other way, no other way
+# for self-realization than chanting the holy name."
+#
+# ENFORCEMENT via LilaProtocol (protocols/_lila.py):
+#   - LilaBoundary with strict=True THROWS at 24 items
+#   - No silent truncation - explicit rejection
+#   - Parampara verification (signature % 37 == 0)
+#
+# USAGE:
+#   from vibe_core.mahamantra.protocols._lila import (
+#       LilaBoundary,
+#       LilaBoundedOutput,
+#       LilaBoundaryViolation,
+#   )
+#
+#   boundary = LilaBoundary[str](signature=37)
+#   boundary.add(item, strict=True)  # THROWS if > 24
+
+# Import from LilaProtocol (THE SSOT for boundaries)
+from vibe_core.mahamantra.protocols._lila import (
+    LILA_BOUNDARY,
+    LILA_LIMIT,
+    LilaPhase,
+    LilaBoundary,
+    LilaBoundedOutput,
+    LilaBoundaryViolation,
+    ParamparaDisconnection,
+)
+from vibe_core.mahamantra.protocols._core import PARAMPARA
+
+# Re-export for backward compatibility (but prefer direct import from _lila)
+NAVADVIPA_LIMIT: Final[int] = LILA_BOUNDARY    # 24 = Strict boundary
+PURI_LIMIT: Final[int] = LILA_BOUNDARY         # 24 = Second phase
+PARAMPARA_PRIME: Final[int] = PARAMPARA        # 37 = Lineage verification
 
 
 # =============================================================================
@@ -138,7 +183,7 @@ class CLIOutputItem:
 @dataclass
 class CLIOutput:
     """
-    Structured CLI output.
+    Structured CLI output with Protocol-Based Lila Boundaries.
 
     GAD-000: "Does output match input schemas of dependent tools?"
 
@@ -147,6 +192,12 @@ class CLIOutput:
     - Piped to next command
     - Parsed by AI
     - Stored in logs
+
+    LILA ENFORCEMENT (via LilaProtocol):
+        - Uses LilaBoundary internally for real enforcement
+        - strict_mode=True: THROWS at 24 items (no silent truncation)
+        - strict_mode=False: Allows pagination with overflow tracking
+        - Parampara verified (signature % 37 == 0)
     """
     items: List[CLIOutputItem] = field(default_factory=list)
     format: OutputFormat = OutputFormat.JSON
@@ -157,6 +208,17 @@ class CLIOutput:
 
     # For streaming
     stream_complete: bool = True
+
+    # LILA BOUNDARY (Protocol-based enforcement)
+    _boundary: LilaBoundary[CLIOutputItem] = field(
+        default_factory=lambda: LilaBoundary(signature=PARAMPARA)
+    )
+    strict_mode: bool = False  # Set True for CLI output that MUST be bounded
+
+    def __post_init__(self) -> None:
+        """Initialize with Parampara-verified boundary."""
+        # Boundary is created by default_factory, Parampara checked there
+        pass
 
     def to_dict(self) -> Dict[str, Union[str, int, float, bool, List[Dict[str, str]]]]:
         """Convert to dictionary for JSON serialization."""
@@ -169,17 +231,98 @@ class CLIOutput:
             "columns": self.columns,
             "rows": self.rows,
             "stream_complete": self.stream_complete,
+            # Lila pagination metadata (from protocol)
+            "lila_phase": self._boundary.phase.value,
+            "has_more": self._boundary.has_overflow,
+            "count": len(self.items),
+            "total_attempted": len(self.items) + self._boundary.overflow_count,
+            "boundary": LILA_BOUNDARY,
+            "parampara_verified": True,
         }
 
-    def add(self, key: str, value: Union[str, int, float, bool, None], **metadata: str) -> "CLIOutput":
-        """Add an item (fluent API for composability)."""
-        self.items.append(CLIOutputItem(key=key, value=value, metadata=metadata))
+    def add(
+        self,
+        key: str,
+        value: Union[str, int, float, bool, None],
+        **metadata: str,
+    ) -> "CLIOutput":
+        """
+        Add an item with Protocol-based boundary enforcement.
+
+        STRICT MODE (strict_mode=True):
+            THROWS LilaBoundaryViolation at 24 items.
+            Use for CLI output that MUST be bounded.
+
+        NON-STRICT MODE (strict_mode=False):
+            Allows pagination. Overflow tracked separately.
+            Use for internal processing.
+
+        Raises:
+            LilaBoundaryViolation: If strict_mode and boundary exceeded
+        """
+        item = CLIOutputItem(key=key, value=value, metadata=metadata)
+
+        # Delegate to LilaBoundary (the real enforcer)
+        self._boundary.add(item, strict=self.strict_mode)
+
+        # Keep items list in sync with boundary
+        self.items = list(self._boundary.items)
+
         return self
 
     def add_row(self, *values: str) -> "CLIOutput":
-        """Add a table row."""
+        """
+        Add a table row with Protocol-based boundary.
+
+        Same enforcement rules as add().
+        """
+        if self.strict_mode and len(self.rows) >= LILA_BOUNDARY:
+            raise LilaBoundaryViolation(
+                "Table row limit exceeded",
+                current_count=len(self.rows),
+                boundary=LILA_BOUNDARY,
+                phase=LilaPhase.NAVADVIPA,
+            )
+
+        if len(self.rows) >= LILA_LIMIT:
+            # Beyond full cycle - silently ignore in non-strict
+            return self
+
         self.rows.append(list(values))
         return self
+
+    def next_phase(self) -> "CLIOutput":
+        """Advance to next Lila phase for pagination."""
+        self._boundary.advance_phase()
+        return self
+
+    @property
+    def lila_phase(self) -> LilaPhase:
+        """Current Lila phase."""
+        return self._boundary.phase
+
+    @property
+    def has_more(self) -> bool:
+        """Check if there are items beyond boundary."""
+        return self._boundary.has_overflow
+
+    @property
+    def total_count(self) -> int:
+        """Total items including overflow."""
+        return self._boundary.count + self._boundary.overflow_count
+
+    @property
+    def is_at_capacity(self) -> bool:
+        """Check if at current phase boundary."""
+        return self._boundary.is_at_boundary
+
+    def validate(self) -> Tuple[bool, List[str]]:
+        """Validate boundary state."""
+        return self._boundary.validate()
+
+    def validate_strict(self) -> None:
+        """Validate and THROW on violation."""
+        self._boundary.validate_strict()
 
 
 # =============================================================================
@@ -606,6 +749,18 @@ class CLIExecutableBase(ABC):
 # =============================================================================
 
 __all__ = [
+    # Chaitanya Lila Protocol (imported from protocols/_lila.py)
+    "LILA_BOUNDARY",
+    "LILA_LIMIT",
+    "LilaPhase",
+    "LilaBoundary",
+    "LilaBoundedOutput",
+    "LilaBoundaryViolation",
+    "ParamparaDisconnection",
+    # Backward compatibility aliases
+    "NAVADVIPA_LIMIT",
+    "PURI_LIMIT",
+    "PARAMPARA_PRIME",
     # Error codes
     "CLIErrorCode",
     # Output types

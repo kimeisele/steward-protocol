@@ -7,6 +7,11 @@ Handles:
 - Rich rendering (default) for human consumption
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x07721959"  # GenesisByte: parampara % 37 == 0
+
 import json
 import sys
 from dataclasses import asdict, is_dataclass

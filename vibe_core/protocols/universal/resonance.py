@@ -22,6 +22,11 @@ Das Ziel ist TRANSFORMATION (Transparenz), nicht nur "Pass".
 Nur Code im Zustand 1+1i darf auf die SATTVA-Lane der Vajra-Autobahn.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x8b05fdaf"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

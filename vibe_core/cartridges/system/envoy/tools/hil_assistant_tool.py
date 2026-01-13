@@ -13,6 +13,11 @@ Architecture:
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xdfa30d99"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Optional

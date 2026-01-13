@@ -18,6 +18,11 @@ FUTURE: If cold start becomes a problem, implement YAML-dict cache at
 SectionLoader level (cache the dicts before object creation, not after).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x0d1d04b0"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 from pathlib import Path
 

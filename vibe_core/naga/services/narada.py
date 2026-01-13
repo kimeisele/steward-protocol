@@ -16,6 +16,11 @@ Integration:
 - NOTE: Narada is GOVERNANCE, not a real Naga (no CorrectionHandler)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x86ded9a2"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import functools
 import hashlib

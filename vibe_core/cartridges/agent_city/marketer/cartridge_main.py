@@ -14,6 +14,11 @@ Architecture:
 - Separation of concerns: Business logic vs Infrastructure
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x327729b4"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional
 

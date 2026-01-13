@@ -5,6 +5,11 @@ Ported from GitHistoryPluginV2.
 UNIFIED UI: Implements generate_content() pattern.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x20006842"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 import subprocess

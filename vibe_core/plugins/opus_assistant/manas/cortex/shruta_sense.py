@@ -43,7 +43,13 @@ tests:
 -->
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0f6086ef"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import os

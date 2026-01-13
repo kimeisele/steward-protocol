@@ -16,6 +16,11 @@ INHERITANCE:
 STATUS: DEVOTEE / ACTIVE BINDER
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x1a990609"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import hmac
 import json

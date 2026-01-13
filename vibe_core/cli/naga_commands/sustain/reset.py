@@ -27,6 +27,11 @@ Usage:
     naga reset --cycle            # Show cycle position
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xd0612810"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import List, Tuple
 from datetime import datetime

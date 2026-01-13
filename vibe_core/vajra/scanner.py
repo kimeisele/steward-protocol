@@ -11,6 +11,11 @@ Used in:
 - Documentation generation
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x2ca7a41d"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import re

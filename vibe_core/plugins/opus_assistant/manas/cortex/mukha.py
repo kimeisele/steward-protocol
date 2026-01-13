@@ -21,6 +21,11 @@ Architecture:
 "Know thyself, and you shall know the universe."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xeeb0775d"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

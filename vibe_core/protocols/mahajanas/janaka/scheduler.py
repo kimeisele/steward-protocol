@@ -29,7 +29,13 @@ SCHEDULING ALGORITHMS:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x3e8ffa40"  # GenesisByte: parampara % 37 == 0
 
 import heapq
 import time

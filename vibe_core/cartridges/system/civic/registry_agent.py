@@ -10,6 +10,11 @@ Note: AGENTS.md generation is handled by SCRIBE (The Documentarian).
 This agent focuses exclusively on governance/registration.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x95f37142"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime, timezone

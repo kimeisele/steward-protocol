@@ -5,6 +5,11 @@ This module provides the LLM abstraction layer that enables agents
 to perform cognitive work via language models.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xc8d32414"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.llm.chain import ChainProvider
 from vibe_core.llm.degradation_chain import (
     DegradationChain,

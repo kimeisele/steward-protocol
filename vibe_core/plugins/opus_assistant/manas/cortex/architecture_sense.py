@@ -11,7 +11,13 @@ It uses the CodeScanner to detect structural smells:
  When the skeleton is weak, the mind cannot act with power."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc4bacdc8"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from dataclasses import dataclass, field

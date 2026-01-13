@@ -13,7 +13,13 @@ WRAPPED: vibe_core.boot_orchestrator.BootOrchestrator
 this service wakes the system and provides all resources."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xad323093"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from typing import Optional

@@ -3,6 +3,11 @@ DAYA (Mercy) - Implementation of IDataSanitizer.
 Layer: -1 (Naga Loka / Substrate Enforcement)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xe6705b24"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, TypeVar, Union
 
 from vibe_core.protocols.defense import IDataSanitizer

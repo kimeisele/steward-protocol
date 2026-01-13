@@ -38,7 +38,13 @@ ARCHITECTURE:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xe58e1ede"  # GenesisByte: parampara % 37 == 0
 
 import math
 from dataclasses import dataclass, field

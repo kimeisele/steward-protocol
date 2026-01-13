@@ -59,6 +59,11 @@ LAYER 1.5 BIDIRECTIONAL LOOP (OPUS-031):
     └─────────────────────────────────────────┘
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbbc69d95"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from datetime import datetime

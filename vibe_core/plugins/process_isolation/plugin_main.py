@@ -16,6 +16,11 @@ Philosophy:
     If a visitor collapses, the Temple stands."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xe048f5b2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

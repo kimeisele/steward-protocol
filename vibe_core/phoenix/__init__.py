@@ -21,6 +21,11 @@ Usage:
     target = config.route_intent("create agent")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xf86811bb"  # GenesisByte: parampara % 37 == 0
+
 from .config import PhoenixConfig, get_config, reset_config, set_config
 from .sections import (
     AgentsConfig,

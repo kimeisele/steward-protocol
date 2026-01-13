@@ -16,6 +16,11 @@ The system can now:
 4. Let the system write its own remedies (GAD-000)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x7e696b72"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import inspect
 import logging

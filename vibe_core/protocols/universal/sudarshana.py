@@ -7,6 +7,11 @@ Dieser Decorator wickelt 'Tote Materie' (Funktionen) in 'Lebendigen Klang' (Mant
 Er verbindet Phase 16 (The 37th) mit Phase 1 (Atomic Verbs).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x66f4e2ed"  # GenesisByte: parampara % 37 == 0
+
 import functools
 from typing import Callable, Any, TypeVar, ParamSpec, Optional
 from vibe_core.protocols.universal.mantra import MantraOpCode

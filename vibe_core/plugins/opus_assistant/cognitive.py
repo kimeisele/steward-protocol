@@ -28,6 +28,11 @@ Usage:
     kernel.register_cognitive(MANASCognitive(workspace=kernel.workspace_path))
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0adbec75"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from pathlib import Path

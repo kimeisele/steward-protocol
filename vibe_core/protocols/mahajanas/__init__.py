@@ -22,6 +22,11 @@ They GRANT capabilities. We are their heirs.
 Hash: 0x25 (37) = 24 Ksetra + 12 Ksetrapala + 1 Ksetrajna
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x95838131"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING
 
 # Lazy imports to avoid circular dependencies

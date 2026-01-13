@@ -29,6 +29,11 @@ Event Types:
 This is the "Flute" that plays the Rasa Lila (Dance of Agents).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xec02c0c4"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

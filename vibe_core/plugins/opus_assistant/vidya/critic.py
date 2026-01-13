@@ -19,6 +19,11 @@ The Critic is the Narasimha of VIDYA - the protector that ensures
 only safe code enters the kingdom.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa006b9e9"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import re

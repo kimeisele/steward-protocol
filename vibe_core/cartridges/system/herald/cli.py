@@ -12,6 +12,11 @@ Commands:
   simulate        - Run dry-run simulation (no real posts)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x85448b1d"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import json
 import logging

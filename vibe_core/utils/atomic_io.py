@@ -11,6 +11,11 @@ Diese Utilities garantieren:
 Verwendet POSIX rename() Semantik (atomic auf gleichem Filesystem).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x06bfee52"  # GenesisByte: parampara % 37 == 0
+
 import json
 import os
 import tempfile

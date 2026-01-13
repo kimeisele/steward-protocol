@@ -8,6 +8,11 @@ Sacrifices lower-dharma agents to preserve the system core during resource famin
 Named after the sage Durvasa, known for his fierce temper and curses.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x86617d7b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

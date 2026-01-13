@@ -17,7 +17,13 @@ This protocol wraps the existing WatchmanCartridge as a thin interface.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x3039c8a2"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum

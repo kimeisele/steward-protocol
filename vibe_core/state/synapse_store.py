@@ -44,7 +44,13 @@ Pattern: Singleton with caching (follows triggers.py pattern)
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-171
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x5965378e"  # GenesisByte: parampara % 37 == 0
 
 import json
 import logging

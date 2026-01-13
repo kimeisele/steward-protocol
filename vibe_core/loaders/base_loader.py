@@ -10,6 +10,11 @@ VEDA-4 PATTERN:
 All loaders (Plugin, Agent, Section, Workflow) MUST inherit from this.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc4959217"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import inspect
 import json

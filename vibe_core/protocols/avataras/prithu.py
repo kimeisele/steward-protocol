@@ -80,7 +80,13 @@ KRISHNA → VISHNU → PRITHU → SERVICES → JIVAS
 Each level can use the Milking Protocol to extract from the level below.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0xb8e52fec"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime

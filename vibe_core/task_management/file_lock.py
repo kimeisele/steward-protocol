@@ -1,5 +1,10 @@
 """File-based locking for concurrent access."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x5bfca3ea"  # GenesisByte: parampara % 37 == 0
+
 import json
 import os
 import time

@@ -7,6 +7,11 @@ This is the "steward commands" that reveals everything.
 For MANAS to see the full map of capabilities.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xbd3d4769"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.command import (

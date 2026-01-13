@@ -21,6 +21,11 @@ Our mapping:
 - Immunity = Tests that catch all attacks
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x11f6a264"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import subprocess

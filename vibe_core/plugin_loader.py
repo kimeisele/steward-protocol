@@ -10,6 +10,11 @@ Specifics for Plugins:
 - Returns sorted by priority
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x6fce4331"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 import zipfile

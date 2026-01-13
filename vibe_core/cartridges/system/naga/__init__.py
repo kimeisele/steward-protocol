@@ -15,6 +15,11 @@ Tools:
 - naga.audit: Ledger audit trail
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8dabeae8"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cartridges.system.naga.cartridge_main import NagaCartridge
 
 __all__ = ["NagaCartridge"]

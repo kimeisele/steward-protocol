@@ -13,6 +13,11 @@ STRUCTURE:
 - PrahladMemory: The Active Devotee (Implementation).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xb73a5c21"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, Optional, runtime_checkable, Dict, Any, TypeVar, Generic
 from dataclasses import dataclass, field
 import time

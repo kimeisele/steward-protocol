@@ -7,6 +7,11 @@ Uses path patterns to determine what infrastructure is needed.
 Sanskrit: वर्गीकरण (Vargeekarana) = Classification
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xcc3f1406"  # GenesisByte: parampara % 37 == 0
+
 import fnmatch
 import logging
 from pathlib import Path

@@ -23,6 +23,11 @@ Usage:
     manifest = ManifestRegistry.get("opus_assistant")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x6b5f7c70"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

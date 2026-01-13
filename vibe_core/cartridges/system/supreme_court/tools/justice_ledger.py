@@ -15,6 +15,11 @@ for the Supreme Court's actions.
 Tool Protocol Compliant (Kernel-Managed).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x47d8fdb1"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

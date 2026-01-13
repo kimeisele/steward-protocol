@@ -17,6 +17,11 @@ Workflow:
     NARADA discovers → ANANTA proposes → PRAHLAD vetoes/approves → CHITRAGUPTA monitors
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xdfd48807"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

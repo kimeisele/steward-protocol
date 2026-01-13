@@ -19,7 +19,13 @@ The operator SEES the whole system.
 WATERTIGHT: No Any types.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xc0994a6b"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, Final, List, Optional, TypedDict
 

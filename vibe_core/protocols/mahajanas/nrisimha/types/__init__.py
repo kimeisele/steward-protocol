@@ -6,6 +6,11 @@ NRISIMHA - The Half-Man Half-Lion Protector.
 Types for security, protection, and threat handling.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x2ba4a873"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.nrisimha.types.narasimha import (
     ThreatLevel,
     ThreatIndicator,

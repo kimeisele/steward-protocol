@@ -55,6 +55,11 @@ Auto-Discovery (Balarama Pattern):
     Use the @naga_command decorator with owner=Owner.X to register.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x5e6cdfed"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.naga.cli_command import (

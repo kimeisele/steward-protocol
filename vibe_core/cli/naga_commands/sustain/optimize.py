@@ -25,6 +25,11 @@ Usage:
     naga optimize --dead-code     # Find dead code
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x87951c14"  # GenesisByte: parampara % 37 == 0
+
 import subprocess
 from pathlib import Path
 from typing import List, Tuple

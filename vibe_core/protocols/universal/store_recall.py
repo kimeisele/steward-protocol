@@ -7,6 +7,11 @@ SHADOW REFACTOR (Phase 27):
 - Mantra Binding: Explicit requirement.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x69b231c4"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, Optional, runtime_checkable
 from vibe_core.protocols.substrate.byte import MantraByte
 from .types import ProtectedMemory

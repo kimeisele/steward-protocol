@@ -17,6 +17,11 @@ Usage:
     from vibe_core.plugins.opus_assistant.manas.router.handlers import SutraHandler
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0bc1c3b5"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 

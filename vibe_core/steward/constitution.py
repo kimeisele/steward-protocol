@@ -14,6 +14,11 @@ LOCATION: vibe_core/steward/constitution.py
 ORIGINAL: steward/constitutional_oath.py (kept for backwards compatibility)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xaaa1b437"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import os

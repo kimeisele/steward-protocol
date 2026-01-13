@@ -25,6 +25,11 @@ Usage:
     naga identity --root          # Show root paths
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x79a4fa88"  # GenesisByte: parampara % 37 == 0
+
 import os
 from pathlib import Path
 from typing import List, Tuple

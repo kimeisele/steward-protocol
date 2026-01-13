@@ -9,6 +9,11 @@ Architecture:
 - VibeAligner: Governance enforcement
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2098758f"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

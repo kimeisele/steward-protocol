@@ -21,6 +21,11 @@ Vedic Time Units:
 - Yuga: Epoch (Satya, Treta, Dvapara, Kali)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x744b97d1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import math
 from dataclasses import dataclass

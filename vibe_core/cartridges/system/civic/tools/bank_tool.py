@@ -17,6 +17,11 @@ are gone, broadcast license is revoked. This forces agents to be
 economically rational and earn through productive work."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7920d283"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import sqlite3

@@ -29,7 +29,13 @@ WATERTIGHT: No Any types. All explicitly typed.
 OWNED BY: Mahajana.SHUKA (Config is Vision/Knowledge)
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x5a41e785"  # GenesisByte: parampara % 37 == 0
 
 import functools
 import hashlib

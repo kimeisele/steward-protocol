@@ -19,6 +19,11 @@ Security Model:
 - Logging: All requests logged with agent_id, URL, timestamp
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x2846bba0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional

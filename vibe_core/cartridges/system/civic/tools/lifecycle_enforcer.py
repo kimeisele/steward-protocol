@@ -22,6 +22,11 @@ The philosophy:
 trying to teach before learning. The KERNEL says NO."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xd55ccc3b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone

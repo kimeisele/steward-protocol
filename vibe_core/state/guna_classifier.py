@@ -15,6 +15,11 @@ NOTE: This is about STATE oscillation, not about agents.
 See OPUS-086 for agent-level Guna classification.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x20b3938a"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import os

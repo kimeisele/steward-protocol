@@ -17,6 +17,11 @@ Design:
 - No side effects, pure detection logic
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x26b2e03b"  # GenesisByte: parampara % 37 == 0
+
 import os
 import sys
 from enum import Enum

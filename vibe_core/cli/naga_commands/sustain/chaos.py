@@ -11,6 +11,11 @@ Usage:
     naga chaos run <type>   - Run attacks by type
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xb310ef29"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Tuple
 from pathlib import Path
 from vibe_core.protocols.naga.cli_command import (

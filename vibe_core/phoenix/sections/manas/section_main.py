@@ -16,6 +16,11 @@ MANAS reads these values at boot and adheres to them.
 Vajra uses these values to enforce consistency against drift.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xf727cff2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List

@@ -8,6 +8,11 @@ CANONICAL LOCATIONS:
 - ToolResult: vibe_core/tools/tool_protocol.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc2699a5d"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 __all__ = ["Tool", "ToolResult"]

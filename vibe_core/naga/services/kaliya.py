@@ -16,6 +16,11 @@ Integration:
 - Auto-discovered by Narada via @naga_service decorator
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4726ed42"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

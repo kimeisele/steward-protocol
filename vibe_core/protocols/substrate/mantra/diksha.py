@@ -25,6 +25,11 @@ MATHEMATICAL BASIS:
 LOCATION: substrate/mantra/ - near Prabhupada and Mahamantra where it belongs.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x2b996bfd"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable, Optional, Final
 from enum import Enum, auto

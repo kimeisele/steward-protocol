@@ -8,6 +8,11 @@ Capabilities:
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x78e5c2aa"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from pathlib import Path

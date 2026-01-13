@@ -15,6 +15,11 @@ GAD-000 COMPLIANT:
 - Recoverability: cancel_dharma() for cleanup
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x3c85b504"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Iterator, List, Optional, Protocol, TypedDict, runtime_checkable

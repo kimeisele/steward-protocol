@@ -5,6 +5,11 @@ The actual construction worker.
 Uses templates to generate infrastructure.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x156c3782"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from datetime import datetime

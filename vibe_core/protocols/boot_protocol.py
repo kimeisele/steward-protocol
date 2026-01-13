@@ -10,6 +10,11 @@ Enforces the 'Ignite' verb over the '__init__' noun.
 The Kernel requires a GenesisByte (16-bit resonance) to manifest.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x37faf1fe"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable, Any, Optional
 
 from vibe_core.protocols.substrate.byte import GenesisByte

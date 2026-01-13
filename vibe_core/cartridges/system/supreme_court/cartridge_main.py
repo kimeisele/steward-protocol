@@ -26,6 +26,11 @@ LAYERS:
 This is Agent #4 in the STEWARD Protocol - The Appellate Guardian.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x07e2fb37"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional

@@ -13,6 +13,11 @@ Philosophy:
 - Fractal: broker agent wants bitcoin UI? Add to custom_renderers
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x9031c52a"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional

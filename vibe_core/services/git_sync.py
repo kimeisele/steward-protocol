@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x51cc3e82"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from datetime import datetime

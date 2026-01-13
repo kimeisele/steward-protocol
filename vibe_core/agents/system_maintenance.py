@@ -13,6 +13,11 @@ Responsibilities:
 This agent implements the VibeAgent protocol for kernel-based dispatch.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4232ea24"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from pathlib import Path

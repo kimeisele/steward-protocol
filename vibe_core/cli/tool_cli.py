@@ -11,6 +11,11 @@ Usage:
     steward tool run <name> --json              # JSON output
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x12c80c36"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import json
 import sys

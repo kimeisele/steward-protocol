@@ -21,6 +21,11 @@ OPUS-167 KEY CHANGE: Senses now generate their own intents.
 This restores the fractal architecture where each layer is autonomous.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1529826b"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

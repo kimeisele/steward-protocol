@@ -16,6 +16,11 @@ Usage:
     all_cartridges = registry.list_cartridges()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xab79cf2a"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import logging
 from pathlib import Path

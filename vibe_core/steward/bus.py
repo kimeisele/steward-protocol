@@ -14,6 +14,11 @@ Future roadmap:
 - Signal authentication and verification
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xf43b7810"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone

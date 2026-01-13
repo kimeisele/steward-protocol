@@ -4,6 +4,11 @@ Multi-channel publishing to Twitter, LinkedIn, etc.
 Kernel-compatible module (configured via system.yaml).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8b00411a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from pathlib import Path

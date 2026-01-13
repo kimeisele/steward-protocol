@@ -14,6 +14,11 @@ When Takshaka detects toxicity:
 GAD-000: "Security is not optional, it's foundational"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xda0c82f8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from typing import TYPE_CHECKING, List, Optional

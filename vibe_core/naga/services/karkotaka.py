@@ -22,6 +22,11 @@ Integration:
 - All NAGAs can use for sensitive data
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x9900b7a6"  # GenesisByte: parampara % 37 == 0
+
 import base64
 import hashlib
 import json

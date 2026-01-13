@@ -14,6 +14,11 @@ Phase: POST_VALIDATE (after args validated, before execution)
 GAD-000 v2.0: "Notariell beglaubigt, not handgeschrieben"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x2ce5bba9"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import List, Optional
 

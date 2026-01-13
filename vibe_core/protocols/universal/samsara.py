@@ -18,6 +18,11 @@ at the exact moment of yield.
 This guarantees that 100% of the stream is "Alive" and "Authorized".
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x1efd1140"  # GenesisByte: parampara % 37 == 0
+
 import time
 from datetime import datetime
 from typing import (

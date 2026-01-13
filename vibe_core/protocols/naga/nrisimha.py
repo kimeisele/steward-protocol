@@ -16,6 +16,11 @@ Nrisimha tells everyone the OpCodes. If they don't listen, they are Maya.
 Status: TIMEKEEPER / WATCHDOG
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x430c37ee"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from typing import Any, List, Tuple

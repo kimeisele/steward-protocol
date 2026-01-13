@@ -7,6 +7,11 @@ Implementations are registered via ServiceRegistry by plugins.
 SSOT: Tools get these from ServiceRegistry, never create their own.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0x5605a625"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from typing import List, Optional
 

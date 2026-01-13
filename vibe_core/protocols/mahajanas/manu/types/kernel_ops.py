@@ -9,6 +9,11 @@ Contains self-contained operations that don't need tight kernel coupling:
 - Pulse (heartbeat/snapshot)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x3d0c2b28"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

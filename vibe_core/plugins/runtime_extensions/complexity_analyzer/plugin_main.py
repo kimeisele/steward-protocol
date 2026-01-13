@@ -6,6 +6,11 @@ Calculate McCabe cyclomatic complexity for Python files.
 GENERATED CODE - VIDYA VALIDATED
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x9817ceba"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 from typing import TYPE_CHECKING, Any, Dict

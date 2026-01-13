@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x4908bc3a"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import inspect
 from dataclasses import dataclass, field

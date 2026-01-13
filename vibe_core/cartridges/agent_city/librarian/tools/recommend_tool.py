@@ -4,6 +4,11 @@ Recommend Books Tool - Recommend books based on preferences.
 Implements Tool Protocol (vibe_core.tools.tool_protocol.Tool).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa94d3340"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import random

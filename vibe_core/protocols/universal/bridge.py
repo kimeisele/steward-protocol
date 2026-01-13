@@ -9,6 +9,11 @@ STRICT TYPING ENFORCEMENT:
 - NO 'Any'. NO 'unknown_wanderer'.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x651ead35"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Union
 

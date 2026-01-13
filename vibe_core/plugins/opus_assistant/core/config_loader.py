@@ -11,6 +11,11 @@ Config Hierarchy (later overrides earlier):
 This follows Phoenix config pattern - no hardcoding.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x3dfbd51b"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import Any, Dict, Optional
 

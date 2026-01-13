@@ -7,6 +7,11 @@ Mirrors CartridgeProtocol pattern.
 GAD-000: One protocol, one service, via DI.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kumaras"
+__position__ = 5
+__genesis__ = "0xe115f851"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable

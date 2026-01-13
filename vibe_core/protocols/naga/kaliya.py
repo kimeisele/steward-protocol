@@ -11,6 +11,11 @@ Responsibilities:
 - Escalate to sovereign (37th) after repeated quarantines
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc6253f3b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Optional, Protocol, runtime_checkable
 

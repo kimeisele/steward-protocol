@@ -16,6 +16,11 @@ Implements:
 - SQLiteLedger: Persistent, hash-chained + signed ledger (for production)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xf9a27e38"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

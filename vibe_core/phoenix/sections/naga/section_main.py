@@ -10,6 +10,11 @@ Environment Variables:
     NAGA_TOXICITY_THRESHOLD: float (default: 0.3)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xafc5c566"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from dataclasses import dataclass, field

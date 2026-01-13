@@ -14,6 +14,11 @@ The Three Deadly Risks Avoided:
 - Signal Noise (bus pollution)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf3e91e03"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time

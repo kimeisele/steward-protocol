@@ -24,6 +24,11 @@ Philosophy:
     (stateless processor, no repeating loop)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7fb6912b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional

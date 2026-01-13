@@ -14,7 +14,13 @@ ARCHITECTURE: Uses Kernel I/O Service when available, falls back to direct write
               for standalone execution. See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x535c975a"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import os

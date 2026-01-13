@@ -28,6 +28,11 @@ All agent access goes through kernel.agent_registry.
 Protected agents (narasimha, auditor, etc.) cannot be triggered via Envoy.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x810beaee"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

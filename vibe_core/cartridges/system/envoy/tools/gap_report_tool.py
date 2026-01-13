@@ -12,6 +12,11 @@ This tool generates a comprehensive report documenting:
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x4809492f"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

@@ -29,7 +29,13 @@ MEMORY MODEL:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xdd80ea4e"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 import time

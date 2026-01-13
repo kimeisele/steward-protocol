@@ -12,6 +12,11 @@ SECURITY MODEL:
 "The system that cannot test itself cannot trust itself."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2e37ad9c"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import subprocess

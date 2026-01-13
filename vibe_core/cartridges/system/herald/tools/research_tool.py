@@ -12,6 +12,11 @@ Fallback order:
 This tool implements the Tool Protocol for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc77d3efd"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import TYPE_CHECKING, Any, Dict, Optional

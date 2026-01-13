@@ -37,7 +37,13 @@ USAGE:
     report = ProtocolBridge.audit()  # → GovernanceAudit
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x48420a30"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum

@@ -12,6 +12,11 @@ Architecture:
 - Resonant: Alloc -> Compute -> Re-Seed (Spiritual Logic)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xb7146442"  # GenesisByte: parampara % 37 == 0
+
 import time
 import hashlib
 from typing import Any, Protocol, List

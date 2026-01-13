@@ -30,6 +30,11 @@ THE ENTROPY PRINCIPLE:
 WATERTIGHT: All types explicit, no Any.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x47a3c427"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, auto

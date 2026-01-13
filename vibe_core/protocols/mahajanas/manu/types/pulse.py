@@ -16,6 +16,11 @@ Frequencies:
 - STRESS (5Hz): Emergency/High load (Gajendra Protocol)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x5086207d"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import json
 import logging

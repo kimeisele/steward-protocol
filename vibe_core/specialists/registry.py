@@ -21,6 +21,11 @@ Future Evolution (5D/6D):
 - Registry will support multi-specialist coordination (6D: cross-phase)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xf8dc4243"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from enum import Enum
 

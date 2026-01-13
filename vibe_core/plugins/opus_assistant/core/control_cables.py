@@ -36,6 +36,11 @@ Design Decisions (OPUS-031/032):
 - DD7: Volition - Intent approval triggers execution (OPUS-032)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf4698633"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

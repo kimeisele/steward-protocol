@@ -8,6 +8,11 @@ Manages Economic Substrate (Bank/Vault).
 "Bali gave everything. In surrender, there is infinite resource."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bali"
+__position__ = 13
+__genesis__ = "0x6d73ff78"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional
 from datetime import datetime

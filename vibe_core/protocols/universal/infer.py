@@ -10,6 +10,11 @@ GAD-000 COMPLIANT:
 - Recoverability: fallback parameter ← RED-004 FIX
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xe2e1ed0f"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, Protocol, runtime_checkable
 
 from .types import Classification, ClassifyInput, Evaluation, Inference, InferenceInput, SovereignContext

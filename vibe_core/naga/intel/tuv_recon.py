@@ -5,6 +5,11 @@ Target: Gateway & State.
 Mission: Trace heritage to protocols.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf221f354"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

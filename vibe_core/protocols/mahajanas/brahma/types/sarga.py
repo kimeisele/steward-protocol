@@ -29,6 +29,11 @@ This module coordinates the boot sequence as a poetic evolution,
 making the system's "birth" visible to users and agents.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc99d1a3b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass

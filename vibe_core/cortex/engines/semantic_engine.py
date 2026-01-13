@@ -17,6 +17,11 @@ Architecture:
 5. Route based on confidence thresholds
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x83add033"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from dataclasses import dataclass

@@ -14,6 +14,11 @@ Output:
 - The Status of the Arsenal (UnifiedRegistry).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x6a488d9e"  # GenesisByte: parampara % 37 == 0
+
 import inspect
 import logging
 from typing import Any, Dict, List, Set, Tuple

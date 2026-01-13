@@ -33,6 +33,11 @@ Usage:
     # 4. Cortex: StateChangeSignal emitted
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x13aece09"  # GenesisByte: parampara % 37 == 0
+
 import functools
 import logging
 import re

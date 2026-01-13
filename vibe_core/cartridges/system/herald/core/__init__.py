@@ -7,6 +7,11 @@ This module implements the core infrastructure for HERALD:
 - Cryptographic Proof: All events are signed with HERALD's identity
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x775c85c2"  # GenesisByte: parampara % 37 == 0
+
 from .memory import Event, EventLog
 
 __all__ = [

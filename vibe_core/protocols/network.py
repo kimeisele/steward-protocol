@@ -5,6 +5,11 @@ Defines the interface for network gateway implementations.
 This allows the kernel to depend on the protocol, not the concrete implementation.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x2eec50ac"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 

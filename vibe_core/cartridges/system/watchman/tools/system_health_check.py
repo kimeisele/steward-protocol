@@ -6,6 +6,11 @@ READ-ONLY monitoring of system infrastructure.
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xeea8fce7"  # GenesisByte: parampara % 37 == 0
+
 import subprocess
 import sys
 from pathlib import Path

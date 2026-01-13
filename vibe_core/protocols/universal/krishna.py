@@ -16,6 +16,11 @@ GAD-000 COMPLIANT:
 - Recoverability: status includes health
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x89b8501a"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Protocol, runtime_checkable

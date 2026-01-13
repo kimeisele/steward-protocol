@@ -10,6 +10,11 @@ Defines the interfaces for the State system components:
 - StateSyncWeaver: Meta-orchestration layer
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xb489a3c2"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Set

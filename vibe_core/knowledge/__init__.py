@@ -8,6 +8,11 @@ Unified Knowledge Graph Module
 - METRICS (Scores): How much
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xbf2d6e32"  # GenesisByte: parampara % 37 == 0
+
 from .graph import UnifiedKnowledgeGraph, get_knowledge_graph
 from .resolver import KnowledgeResolver, get_resolver
 from .schema import (

@@ -21,6 +21,11 @@ Usage:
     scanner.register_all(correction_orchestrator)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xb576cb44"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import inspect
 import logging

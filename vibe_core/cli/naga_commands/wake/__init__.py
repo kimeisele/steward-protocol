@@ -15,6 +15,11 @@ WAKE PHASE COMPLETE - All 4 positions filled.
 """
 
 # Import commands to trigger registration (Balarama pattern)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x728f2172"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cli.naga_commands.wake.status import StatusCommand
 from vibe_core.cli.naga_commands.wake.identity import IdentityCommand
 from vibe_core.cli.naga_commands.wake.resources import ResourcesCommand

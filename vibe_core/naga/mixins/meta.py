@@ -8,6 +8,11 @@ The pattern: All Active Gene metaclasses inherit from NagaActiveMixinMeta,
 which allows Python to resolve the MRO correctly.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xcb27dba3"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Dict, Tuple
 
 

@@ -39,6 +39,11 @@ Integration point:
     - Variable dict (for traditional playbook execution)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb968dd3c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 from dataclasses import dataclass

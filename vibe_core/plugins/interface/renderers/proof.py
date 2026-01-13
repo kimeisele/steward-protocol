@@ -3,6 +3,11 @@ Proof Renderer.
 Placeholder for verification proofs.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x81de8fd4"  # GenesisByte: parampara % 37 == 0
+
 from .base import BaseRenderer
 
 

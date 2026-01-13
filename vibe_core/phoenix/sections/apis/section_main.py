@@ -11,6 +11,11 @@ Keys stay in environment variables - this section defines
 WHERE to find them (which env var names).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x69936d1a"  # GenesisByte: parampara % 37 == 0
+
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional

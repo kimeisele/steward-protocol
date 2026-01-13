@@ -12,6 +12,11 @@ Backward Compatibility:
     from vibe_core.naga.services.prahlad import PrahladService
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4e43658d"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.naga.services.prahlad.service import PrahladService
 from vibe_core.naga.services.prahlad.types import (
     ChaosProbeResult,

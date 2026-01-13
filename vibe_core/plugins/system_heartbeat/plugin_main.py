@@ -7,6 +7,11 @@ This plugin nationalizes the pulse logic previously held in legacy scripts.
 It provides a unified breathing cycle for snapshots, state sync, and cognition.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xb31779d8"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from datetime import datetime

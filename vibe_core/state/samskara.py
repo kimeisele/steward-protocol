@@ -15,6 +15,11 @@ The consolidation preserves:
 OPUS Reference: P0-STATE-AUDIT.md, Phase 2
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x2f998c35"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field

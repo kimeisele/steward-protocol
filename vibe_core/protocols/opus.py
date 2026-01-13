@@ -4,6 +4,11 @@ OPUS ASSISTANT PROTOCOL - Layer 1: Interfaces Only
 Defines the interface for the OPUS Assistant components to resolve circular imports.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x53207ddb"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 

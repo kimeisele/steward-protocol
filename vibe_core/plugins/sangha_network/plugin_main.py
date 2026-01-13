@@ -12,6 +12,11 @@ The name "Sangha" comes from Sanskrit meaning "community/assembly" -
 the network layer that connects the vibe ecosystem.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x558fe1a6"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import threading

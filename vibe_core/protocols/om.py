@@ -36,6 +36,11 @@ Layer: Singularity (Root Entry Point, SUBORDINATE to Krishna)
 Status: OPERATIONAL / NOT ABSOLUTE
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x027ef96f"  # GenesisByte: parampara % 37 == 0
+
 import sys
 from typing import TYPE_CHECKING, Optional
 

@@ -12,6 +12,11 @@ The Temple doesn't give answers. It gives status: "System is Pure" or "System is
 This is the Brahmin function: Discernment, verification, spiritual authority.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0f011b6b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict

@@ -23,6 +23,11 @@ Directory Structure:
     └── drafts/           # Work in progress
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa06b0246"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

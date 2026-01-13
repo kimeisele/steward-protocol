@@ -8,6 +8,11 @@ OPUS-307 D.1: Supports dependency injection via ServiceRegistry.
 Tools that accept a 'services' parameter will receive the global registry.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd8e9e19b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional

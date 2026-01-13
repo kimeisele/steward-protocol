@@ -16,6 +16,11 @@ GAD-000 Compliance:
     - Composability: Multiple parsers can handle a single file
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x4e064b83"  # GenesisByte: parampara % 37 == 0
+
 import fnmatch
 import logging
 from abc import ABC, abstractmethod

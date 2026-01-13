@@ -33,6 +33,11 @@ STRICT TYPING (NO ANY):
 Per PROMPT.md §IV.1 - All types are explicit.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x696a79f6"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 from datetime import datetime

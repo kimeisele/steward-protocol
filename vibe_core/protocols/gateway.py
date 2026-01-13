@@ -38,7 +38,13 @@ ROBUSTNESS:
 WATERTIGHT: No Any types. Protocol-first.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xa6e9bcf8"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum

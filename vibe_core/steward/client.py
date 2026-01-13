@@ -3,6 +3,11 @@ StewardClient: The Runtime Interface for Autonomous Agents
 Allows agents to sign their work and prove their identity.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x9f8062fd"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 
 from vibe_core.steward import crypto

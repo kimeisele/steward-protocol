@@ -18,6 +18,11 @@ This section eliminates 38 inline f-string prompt violations:
 Prompts are loaded from knowledge/prompts/*.yaml or *.j2
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x80b8b1b9"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

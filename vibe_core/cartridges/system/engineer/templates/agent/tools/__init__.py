@@ -13,4 +13,9 @@ To add a new tool:
 3. Register in the kernel's tool discovery
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x756d76ee"  # GenesisByte: parampara % 37 == 0
+
 __all__ = []

@@ -20,6 +20,11 @@ Key Insight (ARCH REALIGNMENT):
 The kernel is the source of truth. CIVIC is the bureaucracy layer.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x2e37fd1a"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

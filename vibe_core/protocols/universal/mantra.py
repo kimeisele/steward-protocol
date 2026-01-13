@@ -8,6 +8,11 @@ NOTE: MantraOpCode is CANONICAL in substrate/__init__.py (Layer -1).
 This module re-exports it for backward compatibility.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x8eb2d076"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable, TypeVar
 
 from vibe_core.protocols.substrate import MantraOpCode, MAHAMANTRA_SEQUENCE

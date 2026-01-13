@@ -22,6 +22,11 @@ Layer: 1.5 (Between Universal and Implementation)
 Status: INDUSTRIAL / BATTLEFIELD GRADE
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xec103767"  # GenesisByte: parampara % 37 == 0
+
 import random
 import time
 import traceback

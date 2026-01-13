@@ -29,6 +29,11 @@ Usage in Plugins:
     def on_boot(self, kernel: KernelProtocol): ...
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xc74b83aa"  # GenesisByte: parampara % 37 == 0
+
 from typing import (
     TYPE_CHECKING,
     Dict,

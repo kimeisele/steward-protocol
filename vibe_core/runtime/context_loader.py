@@ -8,6 +8,11 @@ Loads project context from multiple sources:
 - Environment checks
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x6dea1228"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import subprocess

@@ -32,6 +32,11 @@ STRICT TYPING (NO ANY):
 Per PROMPT.md §IV.1 - All mappings are explicit, no wildcards.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xedcdfef7"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional, Union, List

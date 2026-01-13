@@ -22,6 +22,11 @@ Usage:
     steward standards check <file>            # Check file for violations
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xafb869ef"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

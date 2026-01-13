@@ -1,5 +1,10 @@
 """Data export engine for tasks."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xdb259287"  # GenesisByte: parampara % 37 == 0
+
 import csv
 import json
 from pathlib import Path

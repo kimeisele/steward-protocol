@@ -10,6 +10,11 @@ Specifics for Sections:
 - Returns instances populated with config values
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x9d7ab3ed"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import logging
 from dataclasses import dataclass

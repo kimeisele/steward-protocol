@@ -27,6 +27,11 @@ STRICT TYPING (NO ANY):
 Per PROMPT.md §IV.1 - All types explicit.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x87fddfe0"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable

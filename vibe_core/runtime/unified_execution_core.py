@@ -16,6 +16,11 @@ Full (unified_execution_full.py) contains:
 This reduces boot time by ~265ms by deferring executor imports.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xf638e5ef"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional
 

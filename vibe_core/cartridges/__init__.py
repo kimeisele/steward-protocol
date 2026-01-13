@@ -19,6 +19,11 @@ Design Philosophy:
 - Cartridges prioritize offline operation (SmartLocalProvider first)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1c88f811"  # GenesisByte: parampara % 37 == 0
+
 from .base import CartridgeBase, CartridgeConfig, CartridgeSpec
 from .registry import CartridgeRegistry, get_default_cartridge_registry
 

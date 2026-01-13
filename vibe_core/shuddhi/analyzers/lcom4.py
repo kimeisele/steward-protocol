@@ -15,6 +15,11 @@ The connected components returned by the analysis provide the exact
 refactoring roadmap: each component becomes a new class.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xe7a1a0a2"  # GenesisByte: parampara % 37 == 0
+
 import ast
 from collections import defaultdict
 from dataclasses import dataclass

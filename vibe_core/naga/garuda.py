@@ -6,6 +6,11 @@ GARUDA - The Eagle. Controller of Nagas.
 Implementation of GarudaProtocol using ContextVars.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x7e28ddbe"  # GenesisByte: parampara % 37 == 0
+
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Generator

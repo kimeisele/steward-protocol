@@ -10,6 +10,11 @@ Provides:
 - Entry points and main modules
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc61b1be2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 from collections import defaultdict

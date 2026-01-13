@@ -14,7 +14,13 @@ NO MANUAL WIRING. Declare INTENT. Krishna resolves.
 WATERTIGHT: No Any types. All typed with Union/TypedDict/Final.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x445329d5"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum, auto

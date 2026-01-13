@@ -30,6 +30,11 @@ Usage:
             ...
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa87ddad9"  # GenesisByte: parampara % 37 == 0
+
 from datetime import datetime
 from enum import Enum
 from typing import Literal, Optional, Protocol, runtime_checkable

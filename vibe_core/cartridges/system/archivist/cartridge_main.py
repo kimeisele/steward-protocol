@@ -10,6 +10,11 @@ Updated for Safe Evolution Loop (GAD-5500):
 This is the Hand that writes to Git. The Auditor is the Conscience.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa9582c12"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import shutil

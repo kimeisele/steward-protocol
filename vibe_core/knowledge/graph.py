@@ -13,6 +13,11 @@ Query Pattern:
 - Deterministic: No ML, no embeddings, pure logic
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x95ae9c27"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections import defaultdict, deque
 from pathlib import Path

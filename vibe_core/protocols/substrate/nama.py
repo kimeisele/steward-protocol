@@ -20,6 +20,11 @@ hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare | hare rāma
 Hare Krishna Hare Krishna Krishna Krishna Hare Hare | Hare Rama Hare Rama Rama Rama Hare Hare
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xb765fced"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final, Tuple, List, TYPE_CHECKING
 
 if TYPE_CHECKING:

@@ -19,6 +19,11 @@ The 37 Formula at each level:
 24 Varnas (field) + 12 Aksaras (protectors) + 1 Pada (knower) = 37
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xdc43f18c"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final, Tuple, List, Iterator, Optional
 from enum import IntEnum

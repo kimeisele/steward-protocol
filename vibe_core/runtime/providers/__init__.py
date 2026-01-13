@@ -22,6 +22,11 @@ exported here to avoid heavy import chains. Use create_provider() instead.
 Version: 1.1 (Lean Kernel)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xd02e8cdc"  # GenesisByte: parampara % 37 == 0
+
 from .base import (
     LLMProvider,
     LLMProviderError,

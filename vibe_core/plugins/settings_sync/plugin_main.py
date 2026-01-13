@@ -12,6 +12,11 @@ PATTERN: Plugin calls sync_all() on each tick_post, which:
   3. Syncs ENVOY.md for interface state
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x61d9c1ac"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict, Optional
 

@@ -5,6 +5,11 @@ This module provides concrete agent implementations that integrate
 with the kernel via the VibeAgent protocol.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x8fc1025f"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.agents.context_aware_agent import ContextAwareAgent, OfflineCapableMixin
 from vibe_core.agents.llm_agent import SimpleLLMAgent
 from vibe_core.agents.specialist_agent import SpecialistAgent

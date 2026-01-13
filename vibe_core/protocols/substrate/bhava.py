@@ -18,6 +18,11 @@ These are OBSERVABLE STATES in the system.
 They manifest as side-effects of chanting.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x1cf32409"  # GenesisByte: parampara % 37 == 0
+
 from enum import IntEnum
 from typing import List, Final
 

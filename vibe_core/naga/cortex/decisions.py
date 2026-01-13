@@ -14,6 +14,11 @@ GAD-000 Compliance:
 - 37th Principle: All decisions can be cryptographically signed
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0xd59526e8"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto

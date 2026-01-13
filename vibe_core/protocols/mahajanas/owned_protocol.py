@@ -29,6 +29,11 @@ if it chants the Holy Name, it receives MERCY.
 In Kali Yuga, this is the ONLY way.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x1bba16e7"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime

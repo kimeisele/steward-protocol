@@ -27,6 +27,11 @@ See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x38c8c370"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

@@ -26,6 +26,11 @@ Position determines ENERGY:
 - Nasal (4): Resonance, continuity
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x6c915fc2"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 from dataclasses import dataclass
 from enum import IntEnum

@@ -8,6 +8,11 @@ Handles Operator Input Processing and Cognition.
 "Kapila analyzes the 24 elements to find the One."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xb35505a1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime

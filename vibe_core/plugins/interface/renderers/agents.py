@@ -8,6 +8,11 @@ Architecture Pattern:
 - Fallback to generate_content() if no sections defined
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x75265efa"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vibe_core.io_service import DocumentType

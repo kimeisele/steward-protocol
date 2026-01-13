@@ -42,6 +42,11 @@ ORIGINAL: protocols/correction.py
 MIGRATED: protocols/mahajanas/yamaraja/correction.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xa49e7c55"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

@@ -19,6 +19,11 @@ Like Hiranyakashipu's boons, we generate conditions that SEEM impenetrable,
 but Narasimha (the test framework) finds the edge cases.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xfa3bfdcf"  # GenesisByte: parampara % 37 == 0
+
 import inspect
 import logging
 from dataclasses import dataclass, field

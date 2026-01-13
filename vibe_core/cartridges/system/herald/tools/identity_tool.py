@@ -15,6 +15,11 @@ SECURITY NOTE: Private key writes intentionally bypass the I/O Service.
               See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x37ae3c88"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional

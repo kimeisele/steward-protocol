@@ -23,6 +23,11 @@ Priority: 4 (after KALA which is 3)
 PulsePhase: ACTUATORS (writes state after sensors collect)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x63e4a87e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional

@@ -7,6 +7,11 @@ into the Knowledge Graph through this interface.
 Pattern: Uses ServiceRegistry for KG access (injected by Prakriti on boot).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xa2c0c9d7"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass

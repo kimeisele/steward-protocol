@@ -11,6 +11,11 @@ This tool implements the Tool Protocol for kernel-managed execution.
 Moved from HERALD (system agent) to MARKETER (citizen agent) on 2025-11-29.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x33738d3e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import Any, Dict, Optional

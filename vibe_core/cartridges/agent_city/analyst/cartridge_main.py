@@ -32,6 +32,11 @@ CRITICAL: NO TOOL INSTANCES OWNED
 Tools are accessed via self.system.execute_tool()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x24b80600"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from enum import Enum, auto

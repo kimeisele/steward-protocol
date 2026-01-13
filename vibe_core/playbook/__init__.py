@@ -16,6 +16,11 @@ The key insight: INTENT (what to do) is separate from EXECUTION (how to do it).
 This enables dynamic agent assignment, custom domains, and reusable workflows.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xe696aa74"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.playbook.executor import GraphExecutor
 
 # Alias for backward compatibility (Phase 2 compatibility)

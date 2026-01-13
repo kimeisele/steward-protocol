@@ -19,6 +19,11 @@ Usage:
         # Full verification triggered
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0xb470ff42"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, Protocol, TypedDict, runtime_checkable

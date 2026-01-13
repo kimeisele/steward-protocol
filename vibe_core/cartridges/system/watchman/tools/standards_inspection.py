@@ -7,6 +7,11 @@ Declarative AST analysis for architectural compliance.
 Part of the VibeOS Core (System Agent: Watchman).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc094022f"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import json
 import logging

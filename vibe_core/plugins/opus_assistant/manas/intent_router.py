@@ -39,6 +39,11 @@ VAJRA Compliance:
     - Unknown intents are safely queued for manual handling
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf8b88ba6"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from dataclasses import dataclass, field

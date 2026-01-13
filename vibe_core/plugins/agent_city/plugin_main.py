@@ -10,6 +10,11 @@ Like Sim City for AI Agents:
 GAD-000 Compliant: Discoverability + Observability
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x496c4d2e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List

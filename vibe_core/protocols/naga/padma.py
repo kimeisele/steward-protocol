@@ -17,6 +17,11 @@ Integration:
 - Chitragupta monitors cache performance
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x6964d5a9"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Callable, Dict, Generic, List, Optional, Protocol, TypeVar, runtime_checkable
 

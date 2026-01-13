@@ -20,7 +20,13 @@ Usage:
         kernel.io.write_document("MY_OUTPUT.md", content, DocumentType.READONLY)
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0xee227649"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import os

@@ -15,6 +15,11 @@ Strategy per file type:
 This implements the UntotbarMergeEngine from OPUS-009 philosophy.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x3335d12f"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import time

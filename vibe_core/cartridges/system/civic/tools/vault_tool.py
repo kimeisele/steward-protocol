@@ -14,6 +14,11 @@ The cryptography library uses Rust (via PyO3). If it panics, we catch it
 with BaseException and return ToolResult(success=False). The system continues.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa75fe42e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from datetime import datetime

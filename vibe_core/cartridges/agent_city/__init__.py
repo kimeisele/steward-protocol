@@ -17,6 +17,11 @@ The 13 agent_city agents (installable, sandboxed):
 - temple: Spiritual/philosophical
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc89ce740"  # GenesisByte: parampara % 37 == 0
+
 __all__ = [
     "agora",
     "ambassador",

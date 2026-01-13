@@ -18,7 +18,13 @@ they don't change arbitrarily.
 ANTI-MAYAVAD: Types have IDENTITY. `Any` is impersonalism.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x4ce7206a"  # GenesisByte: parampara % 37 == 0
 
 import ast
 import sys

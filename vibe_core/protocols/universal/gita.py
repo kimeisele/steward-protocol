@@ -9,6 +9,11 @@ Every Agent claiming to be "Divine" (System Critical) MUST implement this.
 STATUS: HARDENED (Phases 25 & 26)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xfadcba00"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 from typing_extensions import Final
 

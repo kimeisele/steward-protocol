@@ -20,6 +20,11 @@ Error Handling:
     - CompositionError: Failed to compose prompt
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xf0eb92d7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from importlib.util import module_from_spec, spec_from_file_location

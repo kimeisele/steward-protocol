@@ -25,7 +25,13 @@ wiring:
 -->
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf28ae8b3"  # GenesisByte: parampara % 37 == 0
 
 import json
 import logging

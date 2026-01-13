@@ -12,6 +12,11 @@ Usage:
     naga audit --limit <n>        # Limit number of results
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xf6ee477d"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Tuple
 from vibe_core.protocols.naga.cli_command import (
     NagaCommandBase,

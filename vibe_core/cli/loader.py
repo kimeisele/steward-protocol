@@ -17,6 +17,11 @@ SELF-MANIFESTING:
   The truth is IN the module, not in the router.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x16d5c44f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from pathlib import Path

@@ -4,6 +4,11 @@ Search Books Tool - Search the library catalog.
 Implements Tool Protocol (vibe_core.tools.tool_protocol.Tool).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x6bc36ba0"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 from pathlib import Path

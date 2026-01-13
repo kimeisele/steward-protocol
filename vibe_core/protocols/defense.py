@@ -6,6 +6,11 @@ DEFENSE PROTOCOLS (The 4 Regulating Principles)
 Layer: 0 (Bhu Mandala / Universal Law)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x27d2bf20"  # GenesisByte: parampara % 37 == 0
+
 from abc import abstractmethod
 from typing import Optional, Protocol, TypeVar, Union, runtime_checkable
 

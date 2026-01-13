@@ -10,6 +10,11 @@ Specifics for Agents:
 - Validates agents with is_valid_agent()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd5e11d27"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import logging
 import zipfile

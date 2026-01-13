@@ -15,6 +15,11 @@ CONFIG (SHABDA/PRATYAYA) and produces RUNTIME (KARMA) state.
 """
 
 # Re-export from engines (which handles optional semantic imports)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4fd33b4e"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.cortex.engines import (
     SEMANTIC_AVAILABLE,
     CircuitExecutionResult,

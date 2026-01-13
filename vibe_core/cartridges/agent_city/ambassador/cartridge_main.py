@@ -15,6 +15,11 @@ GOLDEN TEMPLATE COMPLIANT:
 - NO deprecated router imports
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x00b4fe68"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List

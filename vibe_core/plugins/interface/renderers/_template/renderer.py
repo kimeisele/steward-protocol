@@ -22,6 +22,11 @@ Example: Create a "status" renderer for STATUS.md
     #              owner: ai
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x81ed7446"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from ..base import BaseRenderer

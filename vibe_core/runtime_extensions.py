@@ -13,6 +13,11 @@ Usage (in boot.py, BEFORE any heavy imports):
     extend_runtime()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x5abac32e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import sys
 from pathlib import Path

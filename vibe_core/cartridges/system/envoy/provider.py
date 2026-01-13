@@ -17,6 +17,11 @@ Architecture:
 - Karma: Executes routed action with perfect determinism
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xdca47f92"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass

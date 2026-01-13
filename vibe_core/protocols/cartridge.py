@@ -7,6 +7,11 @@ Replaces fragmented: ManifestRegistry, CartridgeRegistry, LazyCartridgeRegistry.
 GAD-000: One protocol, one service, via DI.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x45b06237"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, Type, runtime_checkable

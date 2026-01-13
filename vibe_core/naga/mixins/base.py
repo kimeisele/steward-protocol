@@ -33,6 +33,11 @@ Usage (Legacy - Backward Compatible):
     service.sesha.record(...)  # Falls back to ServiceRegistry
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x523c6819"  # GenesisByte: parampara % 37 == 0
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 

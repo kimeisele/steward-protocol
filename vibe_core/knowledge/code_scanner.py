@@ -27,6 +27,11 @@ OPUS-155: The Nervous System
     This enables pre-cognitive wiring awareness in Akasha.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x9b2dd001"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 from collections import defaultdict

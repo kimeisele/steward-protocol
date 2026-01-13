@@ -10,6 +10,11 @@ Provides:
 - File-level analysis
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1465d4e6"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import re

@@ -8,6 +8,11 @@ Tool Protocol compliant for kernel-managed execution.
 "Der Wächter-Pattern" - NAGAs notice when things go wrong.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x40fa6cd1"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

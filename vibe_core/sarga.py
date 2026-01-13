@@ -13,6 +13,11 @@ Will be removed in future version.
 """
 
 # Re-export from canonical location (BRAHMA owns creation/sarga)
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xf501cdbf"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.protocols.mahajanas.brahma.types.sarga import *
 from vibe_core.protocols.mahajanas.brahma.types.sarga import (
     Element,

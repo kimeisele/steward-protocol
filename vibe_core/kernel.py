@@ -12,6 +12,11 @@ GAP-018 FIX: All kernel ABCs now re-exported from canonical source (protocols.le
 
 # Re-export from canonical source (protocols module)
 # This eliminates duplication while maintaining backwards compatibility
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xd3728bcc"  # GenesisByte: parampara % 37 == 0
+
 from .protocols.ledger import (
     KernelStatus,
     VibeKernel,

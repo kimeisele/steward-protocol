@@ -17,6 +17,11 @@ INHERITANCE:
 STATUS: DEVOTEE / ACTIVE SERVICE (Security + Architect)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x6603f990"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import re

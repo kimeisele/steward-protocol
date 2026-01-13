@@ -22,6 +22,11 @@ GAD-510.1: Dynamic Quota Configuration
 Version: 1.1 (GAD-510 + GAD-510.1)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x61442db5"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass, field

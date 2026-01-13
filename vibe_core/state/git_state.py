@@ -10,6 +10,11 @@ GAD-000 Compliant:
 - get_capabilities() for discoverability
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x5041d84d"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 import threading

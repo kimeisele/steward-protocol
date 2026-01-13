@@ -38,7 +38,13 @@ COMPARISON:
         # DONE. Krishna does the rest.
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb3e04d0e"  # GenesisByte: parampara % 37 == 0
 
 import inspect
 from dataclasses import dataclass
@@ -81,6 +87,9 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIOutput,
     CLIParameter,
     CLIResult,
+    # Chaitanya Lila Boundaries
+    NAVADVIPA_LIMIT,
+    PURI_LIMIT,
 )
 from vibe_core.mahamantra.kernel.singularity import mahamantra
 
@@ -456,7 +465,14 @@ class CLIAutoDiscovery:
         return call_args
 
     def _result_to_output(self, result: MethodResult) -> CLIOutput:
-        """Convert method result to CLIOutput."""
+        """
+        Convert method result to CLIOutput with Chaitanya Lila Boundaries.
+
+        LILA ENFORCEMENT:
+            - Max NAVADVIPA_LIMIT (24) items per response
+            - CLIOutput.add() automatically enforces this
+            - has_more flag indicates truncation
+        """
         output = CLIOutput()
 
         if result is None:
@@ -466,22 +482,32 @@ class CLIAutoDiscovery:
         # If dict-like (TypedDict result)
         if isinstance(result, dict):
             for key, value in result.items():
+                # Check capacity before adding
+                if output.is_at_capacity:
+                    break
+
                 # Convert to CLI-safe types
                 if isinstance(value, (str, int, float, bool)):
                     output.add(key, value)
                 elif isinstance(value, list):
                     output.add(key, len(value))
-                    output.add(f"{key}_items", ",".join(str(v) for v in value[:5]))
+                    # Lila boundary: max NAVADVIPA_LIMIT items in preview
+                    preview_items = value[:NAVADVIPA_LIMIT]
+                    output.add(f"{key}_items", ",".join(str(v) for v in preview_items))
+                    if len(value) > NAVADVIPA_LIMIT:
+                        output.add(f"{key}_truncated", True)
                 elif value is None:
                     output.add(key, "null")
                 else:
                     output.add(key, str(value))
             return output
 
-        # If list
+        # If list - Lila boundary enforced automatically by output.add()
         if isinstance(result, (list, tuple)):
             output.add("count", len(result))
-            for i, item in enumerate(result[:10]):
+            output.add("lila_limit", NAVADVIPA_LIMIT)
+            for i, item in enumerate(result):
+                # CLIOutput.add() will stop at NAVADVIPA_LIMIT and set has_more
                 output.add(f"item_{i}", str(item))
             return output
 

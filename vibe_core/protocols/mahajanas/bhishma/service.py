@@ -8,6 +8,11 @@ Wraps the Ledger implementation.
 "Bhishma's vow is unbreakable. The Log is the Law."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xea56f10e"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 from datetime import datetime

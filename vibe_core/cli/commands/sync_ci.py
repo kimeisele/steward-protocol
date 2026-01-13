@@ -10,6 +10,11 @@ Usage:
     steward sync-ci --status     # Show sync status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xbeef97d5"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.command import (

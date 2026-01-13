@@ -9,6 +9,11 @@ Fallback order:
 5. Error with guidance -> Tell user what to install
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xaabc1957"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from enum import Enum

@@ -7,6 +7,11 @@ HARDENED (Phase 28):
 - You cannot simply 'Pass' or 'Fail'. You generate Karma, Akarma, or Vikarma.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x87f518fe"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Protocol, runtime_checkable
 from vibe_core.protocols.substrate.byte import HolyName
 from .types import EnforceContext, Rule, Verdict, SovereignContext

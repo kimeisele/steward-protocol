@@ -6,6 +6,11 @@ into the local Knowledge Graph, enabling the Ouroboros loop to learn
 from remote failures.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x396110c4"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import subprocess

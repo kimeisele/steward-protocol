@@ -11,6 +11,11 @@ When an agent boots, it must:
 This is the "Genesis Ceremony" – the moment an agent binds itself to Truth.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x04f66d47"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import os

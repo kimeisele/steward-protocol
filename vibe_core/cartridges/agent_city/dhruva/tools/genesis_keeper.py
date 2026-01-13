@@ -12,6 +12,11 @@ This block is read-only once created.
 Any attempt to modify it is a CRITICAL violation.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x52ee2c38"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

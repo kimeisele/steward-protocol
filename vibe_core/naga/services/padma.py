@@ -17,6 +17,11 @@ Integration:
 - Chitragupta monitors cache hit rates
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x490301d0"  # GenesisByte: parampara % 37 == 0
+
 import fnmatch
 import json
 import logging

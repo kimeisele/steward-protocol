@@ -15,6 +15,11 @@ Integration:
 - All services MUST register with Kulika
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x1620ace6"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Optional, Protocol, runtime_checkable
 
 # Import types for ANY-elimination

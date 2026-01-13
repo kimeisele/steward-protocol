@@ -20,6 +20,11 @@ Usage:
     steward cartridges                 List all cartridges
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x0ea4b31f"  # GenesisByte: parampara % 37 == 0
+
 import importlib.util
 import inspect
 import json

@@ -27,6 +27,11 @@ Usage:
         print("Intent manifested!")
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x26d9a67e"  # GenesisByte: parampara % 37 == 0
+
 from .matrix import (
     # Data
     PHONEME_MATRIX,

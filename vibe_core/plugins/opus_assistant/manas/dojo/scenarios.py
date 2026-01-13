@@ -14,7 +14,13 @@ Curricula Types:
  sondern sich selbst zu meistern."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x9dffcec2"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import uuid

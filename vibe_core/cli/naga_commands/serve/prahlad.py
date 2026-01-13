@@ -12,6 +12,11 @@ Usage:
     naga prahlad verify     - Run NAGA self-verification
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x9ccb973f"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Tuple
 from vibe_core.protocols.naga.cli_command import (
     NagaCommandBase,

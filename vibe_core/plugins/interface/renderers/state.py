@@ -13,6 +13,11 @@ Architecture Pattern:
 - NO hardcoded generate_content() - sections come from interface.yaml
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x8317cc5e"  # GenesisByte: parampara % 37 == 0
+
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 

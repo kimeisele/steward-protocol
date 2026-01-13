@@ -14,6 +14,11 @@ As above, so below. The metaphysical becomes the practical.
 The Vedic becomes the algorithmic. The sacred becomes the system.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x4a37c27c"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import sys
 from typing import Optional

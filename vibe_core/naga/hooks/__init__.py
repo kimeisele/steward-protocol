@@ -12,6 +12,11 @@ These hooks wrap CLI execution at Level -2, enabling:
 SAMUDRA MANTHAN: Each NAGA pulls the rope (HookChain) in coordination.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xaa64d241"  # GenesisByte: parampara % 37 == 0
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

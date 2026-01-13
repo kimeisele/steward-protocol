@@ -9,6 +9,11 @@ Bridge: CSTLocator
 Surgery: This CSTRemedy
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x7fefa160"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Set, Union
 
 import libcst as cst

@@ -18,6 +18,11 @@ Key differences from Circuits:
 - Playbooks: DAG with stages/depends_on/agents
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xc9639a28"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path

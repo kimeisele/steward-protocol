@@ -6,6 +6,11 @@ Read-only monitoring of NAGA Federation health.
 Tool Protocol compliant for kernel-managed execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xcc25b789"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

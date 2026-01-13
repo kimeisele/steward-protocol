@@ -5,6 +5,11 @@ Implements compliance tests by inspecting the kernel from the OUTSIDE.
 This preserves the "Eternal Kernel" architecture.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x917dd925"  # GenesisByte: parampara % 37 == 0
+
 import time
 from typing import TYPE_CHECKING, Any, Dict
 

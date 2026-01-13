@@ -24,6 +24,11 @@ These are semantically different and intentionally parallel.
 Do NOT merge them - they serve different layers of the system.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xce00df59"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional

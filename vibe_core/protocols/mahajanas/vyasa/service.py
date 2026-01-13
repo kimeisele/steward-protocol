@@ -15,7 +15,13 @@ WRAPPED:
 this service asserts and validates truth."
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x257a4aa0"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from pathlib import Path

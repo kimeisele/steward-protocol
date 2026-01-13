@@ -7,6 +7,11 @@ This is the implementation of The37th Principle.
 It represents the "System Owner" or "Divine Will".
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0x5779bb2d"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Set, List
 from dataclasses import dataclass, field
 from vibe_core.protocols.universal.the_37th import The37th

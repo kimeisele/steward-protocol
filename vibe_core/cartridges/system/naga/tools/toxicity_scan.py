@@ -8,6 +8,11 @@ Tool Protocol compliant for kernel-managed execution.
 "Takshaka beißt ohne Warnung" - No mercy for toxic content.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x1b9c137a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

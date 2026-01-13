@@ -38,7 +38,13 @@ Tattva Mapping (OPUS-097):
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-009, OPUS-097
 """
 
+
 from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xdce694f4"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 import json

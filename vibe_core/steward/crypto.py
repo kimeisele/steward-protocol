@@ -6,6 +6,11 @@ Using pure Python ECDSA library for maximum compatibility
 NOTE: ecdsa imports are LAZY (inside functions) to prevent crashes when lib is missing.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x3dd12fcb"  # GenesisByte: parampara % 37 == 0
+
 import base64
 import hashlib
 import logging

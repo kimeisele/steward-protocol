@@ -26,6 +26,11 @@ NEW PATTERN (This Agent):
             pass
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xca85608e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

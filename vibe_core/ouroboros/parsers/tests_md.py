@@ -5,6 +5,11 @@ Parses TESTS.md format for modules lacking test coverage.
 These become training scenarios for "write more tests" patterns.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0x0aebe1a2"  # GenesisByte: parampara % 37 == 0
+
 import re
 from pathlib import Path
 from typing import List

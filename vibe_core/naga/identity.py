@@ -11,6 +11,11 @@ that signs its decisions. This enables:
 - Audit trail with cryptographic proof
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xe8554552"  # GenesisByte: parampara % 37 == 0
+
 import base64
 import hashlib
 import logging

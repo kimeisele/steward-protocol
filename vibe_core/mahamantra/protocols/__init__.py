@@ -45,6 +45,11 @@ USAGE:
 # CORE - The Protocol Protocol
 # =============================================================================
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xbe27e031"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.protocols._core import (
     # Constants - The 37 Formula
     KSETRA_COUNT,

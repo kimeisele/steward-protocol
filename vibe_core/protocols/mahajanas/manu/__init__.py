@@ -14,6 +14,11 @@ DERIVED FROM MAHAMANTRA:
 Manu establishes ORDER. Without Manu = Anarchy.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = 7
+__genesis__ = "0x895599ae"  # GenesisByte: parampara % 37 == 0
+
 from typing import ClassVar, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 from dataclasses import dataclass
 

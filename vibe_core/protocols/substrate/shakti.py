@@ -16,6 +16,11 @@ When the superior marginal energy (Jiva) is in contact with
 the superior energy (Hara), it is established in its happy, normal condition.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x00251fcc"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from typing import Final
 

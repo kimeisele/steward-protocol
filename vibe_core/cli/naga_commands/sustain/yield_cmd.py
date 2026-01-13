@@ -25,6 +25,11 @@ Usage:
     naga yield --cooperative      # Cooperative yielding status
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xb821957b"  # GenesisByte: parampara % 37 == 0
+
 import os
 import sys
 from typing import List, Tuple

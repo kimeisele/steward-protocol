@@ -8,6 +8,11 @@ Defines the 4 dimensions of the Unified Knowledge Graph:
 - METRICS (Scores): How much
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 4
+__genesis__ = "0xba5e6dd3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List

@@ -28,6 +28,11 @@ Section Markers:
     <!-- @AI END -->
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x73b1c66c"  # GenesisByte: parampara % 37 == 0
+
 import re
 from dataclasses import dataclass, field
 from datetime import datetime

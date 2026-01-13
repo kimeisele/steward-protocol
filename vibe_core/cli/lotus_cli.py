@@ -24,6 +24,11 @@ USAGE:
     steward chat --table           # Show full routing table
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xac560f43"  # GenesisByte: parampara % 37 == 0
+
 from typing import List
 
 from vibe_core.protocols.cli import CLIMeta, register_cli

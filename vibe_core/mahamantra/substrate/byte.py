@@ -10,6 +10,11 @@ IMPLEMENTATION DETAILS:
 - Performance: O(1) Bitwise operations, O(1) Memory.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x0752f8c3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import IntEnum, IntFlag
 from typing import NewType, List, Final, Union, Optional, Tuple, TYPE_CHECKING

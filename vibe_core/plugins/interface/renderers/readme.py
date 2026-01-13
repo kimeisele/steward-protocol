@@ -10,6 +10,11 @@ Template: knowledge/interface/templates/readme.md.j2
 Zero Hardcoding: All data from existing sources.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xbb96f4fa"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from collections import defaultdict
 from pathlib import Path

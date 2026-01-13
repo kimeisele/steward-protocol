@@ -41,6 +41,11 @@ Everything rests upon Me, as pearls are strung on a thread."
 "I am the source of Brahman."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0x18aa5d64"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final, Protocol, runtime_checkable, Union
 from enum import IntEnum

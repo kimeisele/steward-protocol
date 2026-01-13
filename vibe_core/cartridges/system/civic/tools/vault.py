@@ -13,6 +13,11 @@ Implementation:
 - Immutable audit trail of every access
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xf3fbe1a7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from datetime import datetime

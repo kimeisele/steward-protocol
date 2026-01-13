@@ -13,6 +13,11 @@ Role:
 INTEGRATION: Uses vibe_core.steward.AgentLoader for all discovery.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xa8dfa2f0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import threading
 import time

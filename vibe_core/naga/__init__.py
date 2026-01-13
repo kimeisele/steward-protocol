@@ -37,6 +37,11 @@ Usage:
 # NagaOrchestrator is loaded on first access via __getattr__
 
 # Lazy imports for optional components
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x92c01c73"  # GenesisByte: parampara % 37 == 0
+
 __all__ = [
     "NagaOrchestrator",
     # Services (Infrastructure Layer - 8)

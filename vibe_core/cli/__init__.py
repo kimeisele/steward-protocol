@@ -4,6 +4,11 @@ Fractal CLI System - Auto-discoverable, plugin-based commands.
 GAD-000 Compliant: All handlers return data, CLI handles rendering.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x717c7f16"  # GenesisByte: parampara % 37 == 0
+
 from .executor import CLIExecutor
 from .legacy import StewardCLI
 from .loader import CLILoader

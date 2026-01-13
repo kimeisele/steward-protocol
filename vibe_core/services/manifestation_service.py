@@ -33,6 +33,11 @@ Usage:
         return {"status": {...}, "capabilities": [...]}
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x605082be"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import re

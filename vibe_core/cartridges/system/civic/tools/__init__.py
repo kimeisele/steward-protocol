@@ -11,6 +11,11 @@ Access via kernel routing: system.execute_tool("civic.tool_name", params)
 # =============================================================================
 # TOOL IMPORTS
 # =============================================================================
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x3a8fdae6"  # GenesisByte: parampara % 37 == 0
+
 from .bank_tool import BankTool
 from .exceptions import InsufficientFundsError, SecretNotFoundError
 from .ledger_tool import LedgerTool

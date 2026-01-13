@@ -1,3 +1,8 @@
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x05c532fb"  # GenesisByte: parampara % 37 == 0
+
 import logging
 
 from vibe_core.plugin_protocol import KernelPlugin

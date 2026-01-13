@@ -13,6 +13,11 @@ This service implements TÜVProtocol and UnionProtocol:
 SCALABILITY: Patterns and critical gaps are loaded from Phoenix config.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x1ab76131"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import inspect
 import json

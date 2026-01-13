@@ -11,6 +11,11 @@ Philosophy:
 "Satyam Eva Jayate" (Only Truth Prevails) - No silent failures.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xedc294fa"  # GenesisByte: parampara % 37 == 0
+
 from typing import List, Sequence, Union
 
 import libcst as cst

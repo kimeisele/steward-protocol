@@ -23,6 +23,11 @@ Registration:
     ServiceRegistry.register(KernelFactoryProtocol, KernelFactory())
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0xc84aa350"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Optional
 from vibe_core.factory import VibeFactory as StaticFactory

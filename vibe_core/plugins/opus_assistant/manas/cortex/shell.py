@@ -18,6 +18,11 @@ OPUS-058 PRATYAHARA: All commands are now:
 "The voice must speak truth, not chaos."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x5f2530e6"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import logging
 import subprocess

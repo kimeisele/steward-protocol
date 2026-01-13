@@ -25,6 +25,11 @@ Usage:
     naga commit --diff            # Show diff of staged
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xa74c7c10"  # GenesisByte: parampara % 37 == 0
+
 import subprocess
 from pathlib import Path
 from typing import List, Tuple

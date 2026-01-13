@@ -13,6 +13,11 @@ Like the ledger, facts are never deleted, only added.
 If a fact is found false, a new fact is recorded stating that.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xc0e86520"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import uuid

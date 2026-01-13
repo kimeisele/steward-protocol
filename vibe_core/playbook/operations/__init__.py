@@ -15,6 +15,11 @@ AIRLOCK PATTERN:
     This prevents data loss when the ephemeral kernel is terminated.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb0c0ea1a"  # GenesisByte: parampara % 37 == 0
+
 from .kernel_spawn import HarvestedArtifact, SpawnCityResult, spawn_city
 
 __all__ = ["spawn_city", "SpawnCityResult", "HarvestedArtifact"]

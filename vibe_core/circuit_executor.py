@@ -34,6 +34,11 @@ Both work. The new path is preferred for new code.
 # =============================================================================
 
 # Re-export canonical types
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x6fa06373"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.circuit_types import (  # noqa: F401
     CircuitExecutionResult,
     CircuitState,

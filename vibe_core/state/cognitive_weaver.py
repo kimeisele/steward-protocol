@@ -53,6 +53,11 @@ Philosophy: "The Cognitive Weaver doesn't replace - it CONNECTS."
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-106, OPUS-097
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xaee7c17f"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from dataclasses import dataclass, field

@@ -8,6 +8,11 @@ Supports:
 - HYBRID: Try RPC, fallback to BOOT
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xac85ce20"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import inspect
 import logging

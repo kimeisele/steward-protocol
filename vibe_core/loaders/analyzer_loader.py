@@ -11,6 +11,11 @@ PATTERN:
     Discovers: Classes inheriting from BaseAnalyzer
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xf9ae37b3"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, List, Optional

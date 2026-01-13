@@ -30,6 +30,11 @@ STRICT TYPING (NO ANY):
 Per PROMPT.md IV.1 - All types explicit, no Any allowed.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xe2a1d086"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable

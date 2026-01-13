@@ -8,6 +8,11 @@ actual implementation from vibe_core.kernel.
 This stub allows cartridges to be type-checked and developed standalone.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x3399c877"  # GenesisByte: parampara % 37 == 0
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict, runtime_checkable

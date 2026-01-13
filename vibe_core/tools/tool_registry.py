@@ -10,6 +10,11 @@ SECURITY (ARCH-HARDENING):
 - No tool execution without proper authorization
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x0871ec12"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING, Callable, Optional
 

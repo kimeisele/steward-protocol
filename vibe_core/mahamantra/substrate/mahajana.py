@@ -31,6 +31,11 @@ Sie sind die PROTOKOLL-BESITZER im System.
 LEVEL: +12 (MAHAJANAS)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 0
+__genesis__ = "0xc5899adb"  # GenesisByte: parampara % 37 == 0
+
 from enum import Enum
 from typing import Final
 

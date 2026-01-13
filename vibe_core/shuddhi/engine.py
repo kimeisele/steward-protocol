@@ -5,6 +5,11 @@ OPUS-307: No more hardcoded remedies!
 Remedies are auto-discovered via RemedyLoader (VEDA-4 pattern).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xef438df2"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Type

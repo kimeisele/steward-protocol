@@ -16,6 +16,11 @@ Integration:
 - Enables proactive drift detection
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xbeff6e39"  # GenesisByte: parampara % 37 == 0
+
 from typing import Callable, Dict, List, ParamSpec, Protocol, TypeVar, runtime_checkable
 
 from vibe_core.protocols.naga.types import EventDict, NagaStatus, NagaType, ObservationDict

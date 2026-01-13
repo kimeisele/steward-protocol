@@ -17,6 +17,11 @@ Note: vibe_core/cartridges/system/auditor/tools/invariant_tool.py has
       type for a different purpose (auditing events vs circuit state).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xfee7c54f"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 

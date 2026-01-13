@@ -16,6 +16,11 @@ The "Agent-First" pattern prepares for multi-agent routing where
 specialized agents handle their domain of intents.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0285ef12"  # GenesisByte: parampara % 37 == 0
+
 from .handlers import (
     AgentType,
     BaseHandler,

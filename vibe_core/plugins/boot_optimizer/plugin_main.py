@@ -1,5 +1,10 @@
 """Boot Optimizer Plugin - Defers heavy initialization."""
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xcd2ac39b"  # GenesisByte: parampara % 37 == 0
+
 import logging
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin

@@ -11,6 +11,11 @@ with metadata) share a coordinate system:
 - LibCST Coordinates: CodePosition(line, column)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xa62f3594"  # GenesisByte: parampara % 37 == 0
+
 from typing import Optional, Type
 
 import libcst as cst

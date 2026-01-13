@@ -10,6 +10,11 @@ Handles:
 - run_mutation_tests, mutation_protocol
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x13e36363"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Dict

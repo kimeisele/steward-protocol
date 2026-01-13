@@ -16,6 +16,11 @@ NAGA HARDENING (Gemini Prescription):
     - Takshaka: Validates plugin paths (path traversal protection)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x1a57370a"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional

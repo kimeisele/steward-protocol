@@ -21,6 +21,11 @@ Enhancements (GOLDEN SHOT):
 - State Persistence: Save/restore execution state across restarts
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0xfd2147eb"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import re

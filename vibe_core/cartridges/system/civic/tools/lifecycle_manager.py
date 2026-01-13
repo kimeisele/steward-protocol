@@ -18,6 +18,11 @@ Key Concept: This is KARMA as Code
 - Varna assignment = responsibility level
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x77343c96"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone

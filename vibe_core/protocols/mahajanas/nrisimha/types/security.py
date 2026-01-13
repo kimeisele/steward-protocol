@@ -33,6 +33,11 @@ GAD-000 ACTIVE SECURITY (Vajra Intent):
     The HIL (Sovereign) then "Clicks Accept" (Requests Execution).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x51a6b9d4"  # GenesisByte: parampara % 37 == 0
+
 import hashlib
 import json
 import logging

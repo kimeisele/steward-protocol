@@ -11,6 +11,11 @@ Contains runtime components for the orchestrator:
 - prompt_context.py: Dynamic context engine for prompt injection (GAD-909)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xc95b2d2c"  # GenesisByte: parampara % 37 == 0
+
 from .llm_client import CostTracker, LLMClient, NoOpClient
 from .prompt_context import PromptContext, get_prompt_context
 from .prompt_registry import PromptRegistry

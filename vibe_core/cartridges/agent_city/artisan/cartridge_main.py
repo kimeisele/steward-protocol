@@ -10,6 +10,11 @@ REFACTORED: Tool Protocol Compliant
 - ALL tools accessed via kernel (self.system.execute_tool)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x0fa535bd"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Any, Dict
 

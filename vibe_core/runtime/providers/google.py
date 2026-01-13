@@ -22,6 +22,11 @@ Pricing (as of 2025-11-19):
 Version: 1.2 (Updated for Gemini 2.5)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x589e191e"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import time
 from datetime import datetime

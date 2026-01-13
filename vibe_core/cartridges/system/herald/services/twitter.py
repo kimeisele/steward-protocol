@@ -5,6 +5,11 @@ Implementation of TwitterProtocol.
 Registered in ServiceRegistry for DI.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 9
+__genesis__ = "0x7fbb98a7"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 from typing import List, Optional
