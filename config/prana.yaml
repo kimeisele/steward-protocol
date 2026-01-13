@@ -15,7 +15,9 @@
 # SessionStart Hook Configuration
 session_start:
   # Auto-boot kernel when Claude Code Web session starts
-  auto_boot_kernel: true
+  # Set to false to prevent automatic kernel boot in Dev Container/Cloud Code Web
+  # (avoids commit-loop issues with stop hook)
+  auto_boot_kernel: false
 
   # Boot in background (non-blocking) - recommended for fast session start
   background_boot: true
