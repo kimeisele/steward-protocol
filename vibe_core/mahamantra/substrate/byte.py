@@ -26,6 +26,15 @@ if TYPE_CHECKING:
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
 
+# =============================================================================
+# MATHEMATICAL CONSTANTS (SSOT)
+# =============================================================================
+# These are the canonical values. pancha_tattva.py imports from here.
+
+MAHAMANTRA_DIMENSION: Final[int] = 16          # The 16 words of Mahamantra
+LILA_CYCLES: Final[int] = 3                    # Trinity (Hare, Krishna, Rama)
+LILA_LIMIT: Final[int] = MAHAMANTRA_DIMENSION * LILA_CYCLES  # 48 = 16 × 3
+
 class HolyName(IntEnum):
     """The Ternary Basis of Reality."""
     HARE = 0    # 00
@@ -342,8 +351,8 @@ class GenesisByte:
     """
     signature: str = ""
     resonance: Union[MantraByte, "MantraBit", int] = field(default_factory=lambda: MantraByte.standard_16())
-    dimension: int = 16           # Mahamantra words
-    lila_limit: int = 48          # CHAITANYA_LILA = 16 × 3 (Manifest Structure)
+    dimension: int = MAHAMANTRA_DIMENSION   # Mahamantra words (SSOT)
+    lila_limit: int = LILA_LIMIT            # Chaitanya's Lila = 16 × 3 (SSOT)
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     parampara_hash: str = "0x25"  # 37 (Hidden Signature)
 
