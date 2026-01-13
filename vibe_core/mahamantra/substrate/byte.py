@@ -330,12 +330,22 @@ class GenesisByte:
     """
     The Seed (Bijam).
     Now supports packed ternary resonance and 16-bit MantraBit flags.
+
+    MATHEMATICAL CONSTANTS (PUBLIC API):
+        dimension = 16      (Mahamantra words)
+        lila_limit = 48     (Chaitanya's Lila = 16 × 3)
+        parampara_hash % 37 (Lineage verification)
+
+    LEBENSZYKLUS:
+        0-24: Navadvipa Phase (Build/__init__)
+        24-48: Puri Phase (Runtime/yield)
     """
     signature: str = ""
     resonance: Union[MantraByte, "MantraBit", int] = field(default_factory=lambda: MantraByte.standard_16())
-    dimension: int = 16
+    dimension: int = 16           # Mahamantra words
+    lila_limit: int = 48          # CHAITANYA_LILA = 16 × 3 (Manifest Structure)
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
-    parampara_hash: str = "0x25" # 37
+    parampara_hash: str = "0x25"  # 37 (Hidden Signature)
 
     def validate(self) -> bool:
         # Handle MantraBit/int resonance
@@ -362,6 +372,13 @@ class GenesisByte:
         if not self._verify_lineage():
             raise ConnectionError("Sahajiya Fault: Invalid Parampara Hash.")
 
+        # 5. Chaitanya Lila Check (48 = 16 × 3)
+        if self.lila_limit != self.dimension * 3:
+            raise ValueError(
+                f"Chaitanya Lila Violation: lila_limit must be dimension × 3. "
+                f"Expected {self.dimension * 3}, got {self.lila_limit}"
+            )
+
         return True
         
     @property
@@ -376,6 +393,32 @@ class GenesisByte:
             return (int(self.parampara_hash, 16) % 37) == 0
         except ValueError:
             return False
+
+    def get_lila_phase(self, tick: int) -> str:
+        """
+        Get Lila phase for a tick.
+
+        Returns:
+            "navadvipa" (0 to lila_limit/2 - 1)
+            "puri" (lila_limit/2 to lila_limit - 1)
+        """
+        if not 0 <= tick < self.lila_limit:
+            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
+        midpoint = self.lila_limit // 2  # 24 for standard 48
+        return "navadvipa" if tick < midpoint else "puri"
+
+    def get_mantra_position(self, tick: int) -> int:
+        """Get Mahamantra position (0-15) for a tick."""
+        if not 0 <= tick < self.lila_limit:
+            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
+        return tick % self.dimension
+
+    def get_mantra_cycle(self, tick: int) -> int:
+        """Get Mahamantra cycle (1-3) for a tick."""
+        if not 0 <= tick < self.lila_limit:
+            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
+        return (tick // self.dimension) + 1
+
 
 # Global Default
 MANTRA_SEQUENCE: Final[MantraByte] = MantraByte.standard_16()

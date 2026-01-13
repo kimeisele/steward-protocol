@@ -380,6 +380,108 @@ def verify_pancha_tattva_parampara(value: int) -> bool:
 
 
 # =============================================================================
+# CHAITANYA LILA - The Manifest Structure (PUBLIC API)
+# =============================================================================
+#
+# "Chaitanya Mahaprabhu wurde exakt 48 Jahre alt."
+#   Geboren: 1486 (Nabadwip)
+#   Verschwunden: 1534 (Puri)
+#   Alter: 48 Jahre = 16 × 3
+#
+# Die 48 ist NICHT versteckt. Sie ist die PUBLIC API.
+# 37 (Parampara) = Die versteckte Signatur
+# 48 (Chaitanya Lila) = Die manifeste Struktur
+#
+# LEBENSZYKLUS:
+#   0-24 (Navadvipa Phase): Build-Phase. Studium, Logik, __init__
+#   24-48 (Puri Phase): Runtime-Phase. Sannyasa, Verteilung, yield/stream
+#
+# MATHEMATISCHE BEWEISE:
+#   - 16 × 3 = 48 (Mahamantra × Trinity)
+#   - 24 + 24 = 48 (Zwei symmetrische Hälften)
+#   - 37 + 11 = 48 (Parampara + Rudra)
+#
+
+# The Mahamantra has 16 words
+MAHAMANTRA_WORDS: Final[int] = 16
+
+# The Trinity (Hare, Krishna, Rama) or 3 complete cycles
+LILA_CYCLES: Final[int] = 3
+
+# Chaitanya's Lila = 16 × 3 = 48 years
+CHAITANYA_LILA: Final[int] = MAHAMANTRA_WORDS * LILA_CYCLES
+
+# The two symmetric phases of Chaitanya's life
+NAVADVIPA_PHASE: Final[int] = 24  # First 24 years: Householder, Study, Build
+PURI_PHASE: Final[int] = 24       # Last 24 years: Sannyasa, Distribution, Runtime
+
+# Rudra number (connects Parampara to Chaitanya)
+RUDRA_BRIDGE: Final[int] = 11     # 37 + 11 = 48
+
+
+def get_lila_phase(tick: int) -> str:
+    """
+    Get the Lila phase for a given tick (0-47).
+
+    Args:
+        tick: Current tick in the Lila cycle (0-47)
+
+    Returns:
+        "navadvipa" (0-23) or "puri" (24-47)
+    """
+    if not 0 <= tick < CHAITANYA_LILA:
+        raise ValueError(f"Tick must be 0-47, got {tick}")
+    return "navadvipa" if tick < NAVADVIPA_PHASE else "puri"
+
+
+def get_mantra_cycle(tick: int) -> int:
+    """
+    Get which Mahamantra cycle (1-3) a tick belongs to.
+
+    Args:
+        tick: Current tick in the Lila (0-47)
+
+    Returns:
+        Cycle number (1, 2, or 3)
+    """
+    if not 0 <= tick < CHAITANYA_LILA:
+        raise ValueError(f"Tick must be 0-47, got {tick}")
+    return (tick // MAHAMANTRA_WORDS) + 1
+
+
+def get_mantra_position(tick: int) -> int:
+    """
+    Get the Mahamantra position (0-15) for a tick.
+
+    Args:
+        tick: Current tick in the Lila (0-47)
+
+    Returns:
+        Position in Mahamantra (0-15)
+    """
+    if not 0 <= tick < CHAITANYA_LILA:
+        raise ValueError(f"Tick must be 0-47, got {tick}")
+    return tick % MAHAMANTRA_WORDS
+
+
+def verify_chaitanya_lila(value: int) -> bool:
+    """
+    Verify Chaitanya Lila mathematical integrity.
+
+    Checks:
+    - 16 × 3 = 48
+    - 24 + 24 = 48
+    - 37 + 11 = 48
+    """
+    return (
+        MAHAMANTRA_WORDS * LILA_CYCLES == CHAITANYA_LILA
+        and NAVADVIPA_PHASE + PURI_PHASE == CHAITANYA_LILA
+        and 37 + RUDRA_BRIDGE == CHAITANYA_LILA
+        and value <= CHAITANYA_LILA
+    )
+
+
+# =============================================================================
 # THE MAHAMANTRA PRAYER (Das Gebet an die Pancha Tattva)
 # =============================================================================
 
@@ -423,10 +525,21 @@ __all__ = [
     "PanchaTattvaAware",
     # Position Mapping
     "get_tattva_for_position",
-    # Parampara
+    # Parampara (37 - hidden signature)
     "PANCHA_TATTVA_COUNT",
     "PANCHA_TATTVA_VECTOR",
     "verify_pancha_tattva_parampara",
+    # Chaitanya Lila (48 - manifest structure) - PUBLIC API
+    "MAHAMANTRA_WORDS",
+    "LILA_CYCLES",
+    "CHAITANYA_LILA",
+    "NAVADVIPA_PHASE",
+    "PURI_PHASE",
+    "RUDRA_BRIDGE",
+    "get_lila_phase",
+    "get_mantra_cycle",
+    "get_mantra_position",
+    "verify_chaitanya_lila",
     # Prayer
     "PANCHA_TATTVA_MANTRA",
     "PANCHA_TATTVA_MEANING",
