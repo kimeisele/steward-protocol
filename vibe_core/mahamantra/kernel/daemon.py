@@ -317,6 +317,12 @@ class MahamantraDaemon:
             if quarter == "dharma":
                 await self._trigger_shuddhi(cycle, health)
 
+            # === MOKSHA QUARTER: Trigger Samskara Migration ===
+            # Position 15 = Yamaraja (AUDIT_SEAL)
+            # Wild protocols face judgment and migrate
+            if quarter == "moksha":
+                await self._trigger_samskara(cycle)
+
             # Callback
             if self._on_chant:
                 self._on_chant(chant_result, cycle)
@@ -373,6 +379,57 @@ class MahamantraDaemon:
             logger.debug("☢️ SHUDDHI: Engine not available")
         except Exception as e:
             logger.warning(f"☢️ SHUDDHI: Healing failed: {e}")
+
+    async def _trigger_samskara(self, cycle: int) -> None:
+        """
+        Trigger Samskara migration during MOKSHA quarter.
+
+        Position 15 = Yamaraja (AUDIT_SEAL)
+        Wild protocols face judgment and auto-migrate if ALLOW/MERCY.
+
+        Only runs every 10 cycles to avoid overhead.
+        """
+        # Only run every 10 cycles
+        if cycle % 10 != 0:
+            return
+
+        try:
+            from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
+
+            if not hasattr(self, "_samskara_service"):
+                self._samskara_service = SamskaraService()
+                logger.info("⚖️ SAMSKARA: Service initialized for migration")
+
+            service = self._samskara_service
+
+            # Discover wild protocols
+            wilds = service.discover_wild(["vibe_core/protocols"])
+
+            if not wilds:
+                return
+
+            # Judge and migrate (only those with ALLOW/MERCY)
+            migrated = 0
+            for wild in wilds[:5]:  # Max 5 per cycle
+                path = wild.get("path", "")
+                verdict = service.judge(path)
+
+                if verdict.get("verdict") in ("allow", "mercy"):
+                    mahajana = service.identify_mahajana(path)
+                    if mahajana:
+                        from pathlib import Path
+                        name = Path(path).stem
+                        if service.migrate(path, mahajana, name):
+                            migrated += 1
+                            logger.info(f"⚖️ SAMSKARA: Migrated {path} → {mahajana.value}")
+
+            if migrated > 0:
+                service.save_manifest()
+
+        except ImportError:
+            logger.debug("⚖️ SAMSKARA: Service not available")
+        except Exception as e:
+            logger.warning(f"⚖️ SAMSKARA: Migration failed: {e}")
 
     # =========================================================================
     # CONTROL
