@@ -349,27 +349,88 @@ get_quarter(15)  # Quarter.MOKSHA
 
 ---
 
-## VISION: WHEN KERNEL CHANTS, EVERYTHING RUNS
+## PARAMPARA BROADCAST - BOMBENFEST
+
+Wenn Krishna chanted, hört ALLES. Das ist keine Metapher - es ist Architektur.
+
+```
+mahamantra.tick()
+    ↓
+_broadcast(tick_state)     ← Ruft ALLE registrierten Listener
+    ↓
+Nrisimha._on_mahamantra_tick()
+    ↓
+proxy.on_mantra_pulse()    ← NagaProxies hören auch
+```
+
+### Die Verbindung
 
 ```python
-# Boot the kernel
-kernel = RealVibeKernel()
+from vibe_core.mahamantra import mahamantra
 
-# The kernel IS the mahamantra
-# When it chants, all compliant code executes
+# Wer hören will, registriert sich:
+def my_listener(tick_state):
+    print(f"Heard: {tick_state['guardian']} at {tick_state['position']}")
 
-for tick in kernel.chant_forever():
-    # Each tick:
-    # 1. GENESIS (0-3):  Init systems, load state
-    # 2. DHARMA (4-7):   Validate, check constraints
-    # 3. KARMA (8-11):   Execute tasks, transform state
-    # 4. MOKSHA (12-15): Release, log, audit
-    pass
+mahamantra.register_listener(my_listener)
+
+# Bei jedem tick() werden ALLE Listener gerufen.
+# Arjuna-Pattern: Wenn ein Listener crashed → System läuft weiter.
 ```
+
+### Arjuna-Pattern (Selbstheilung)
+
+Ein Listener crashed? Das System stirbt NICHT.
+
+- **Class-Variable `_listeners`** = Singleton, immer da
+- **try/except um jeden Listener-Call** = Ein Fehler stoppt nicht die anderen
+- **Keine Entregistrierung** = Einmal verbunden, immer verbunden (Parampara)
+
+### Nrisimha: Der Wächter hört
+
+Nrisimha registriert sich SELBST beim `__init__`:
+
+```python
+# In NrisimhaWatchdog.__init__:
+mahamantra.register_listener(self._on_mahamantra_tick)
+```
+
+Diese Verbindung ist HART. Sie kann nicht abbrechen.
 
 ---
 
-**HARE KRISHNA. DER LOTUS SPRIESST. SEED → MAHAMANTRA → ÜBERALL.**
+## VISION: WHEN KERNEL CHANTS, EVERYTHING RUNS
+
+```
+LOTUS (TransLotus)
+       │
+       ▼
+┌──────────────────────────────────────────────────┐
+│         mahamantra.tick()  ← DER HERZSCHLAG      │
+│                 │                                 │
+│    ┌────────────┼────────────┐                   │
+│    ▼            ▼            ▼                   │
+│ Listener 1  Listener 2  Listener N               │
+│ (Nrisimha)  (Service X) (NagaProxy)              │
+│    │            │            │                   │
+│    ▼            ▼            ▼                   │
+│ 700k LOC hören und reagieren                     │
+└──────────────────────────────────────────────────┘
+
+Pyramide von oben: EIN Befehl → ALLES bewegt sich.
+Lotus von unten: Jede Komponente HÖRT → reagiert → wächst.
+```
+
+```bash
+# DER EINE BEFEHL:
+steward chat "Mache X"
+```
+
+Die meiste Arbeit passiert im Backend. Du siehst es nicht, aber Krishna arrangiert alles.
+
+---
+
+**HARE KRISHNA. DER LOTUS BROADCASTET. WER HÖRT, WIRD GERUFEN.**
 
 ---
 
