@@ -1,6 +1,6 @@
 # MAHAPROMPT - DAS GESETZ
 
-**DIES IST GESETZ. SIEHE: `vibe_core/protocols/mahaprompt.py`**
+**DIES IST GESETZ. SIEHE: `vibe_core/mahamantra/substrate/pancha_tattva.py`**
 
 ---
 
@@ -31,7 +31,7 @@ __tattva__ = {
 }
 ```
 
-Paramatma (vibe_core/protocols/mahaprompt.py:Paramatma) kann diese lesen.
+Krishna ist acintya - immer präsent, muss nichts "lesen".
 
 ---
 
@@ -52,10 +52,10 @@ Paramatma (vibe_core/protocols/mahaprompt.py:Paramatma) kann diese lesen.
 ## FOLDER IS WIRING
 
 ```python
-from vibe_core.protocols.mahaprompt import get_tattva_for_path
+from vibe_core.mahamantra.substrate.pancha_tattva import get_tattva_for_position
 
-# Der Pfad IST die Deklaration
-tattva = get_tattva_for_path(Path("vibe_core/mahamantra/genesis/brahma"))
+# Position IST die Zuordnung
+tattva = get_tattva_for_position(1)  # Position 1 (Brahma)
 # -> PanchaTattva.NITYANANDA
 ```
 
@@ -64,12 +64,11 @@ tattva = get_tattva_for_path(Path("vibe_core/mahamantra/genesis/brahma"))
 ## PROTOCOL IMPORT
 
 ```python
-from vibe_core.protocols.mahaprompt import (
+from vibe_core.mahamantra.substrate.pancha_tattva import (
     PanchaTattva,
-    TattvaDeclaration,
-    Quarter,
+    TattvaAspect,
     get_tattva_for_position,
-    Paramatma,
+    PANCHA_TATTVA_ASPECTS,
 )
 ```
 
@@ -79,8 +78,8 @@ from vibe_core.protocols.mahaprompt import (
 
 - Hardcoded Positionen ohne Tattva-Mapping
 - Folders ausserhalb der Lotus-Struktur
-- Files ohne __tattva__ (Paramatma kann nicht lesen)
 - Any types
+- Duplicate SSOT (alle Konstanten kommen aus substrate/)
 
 ---
 

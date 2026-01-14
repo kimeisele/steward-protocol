@@ -88,6 +88,14 @@ from vibe_core.mahamantra.substrate.acintya import ProtocolLevel
 from vibe_core.protocols.substrate.byte import MAHAMANTRA_DIMENSION
 ```
 
+## Zwei-Level SSOT
+
+**Substrate (Level -2)**: seed.py = mathematische Wahrheiten
+**Protocols (Level 0)**: _core.py = dieselben Wahrheiten als Protocol-Konstanten
+
+Beide haben PARAMPARA=37, LOTUS_PETALS=16, etc. - das ist KEIN Duplicate!
+Es ist dieselbe Wahrheit, manifestiert auf zwei Leveln.
+
 ## Philosophie
 
 **satyam eva jayate** - Die Wahrheit ist nicht abhängig vom File.
@@ -95,6 +103,7 @@ from vibe_core.protocols.substrate.byte import MAHAMANTRA_DIMENSION
 - seed.py = KRISHNA_IS = Das Bīja (der Samen)
 - Alles andere deriviert davon, wie Perlen auf einer Schnur
 - "mayi sarvam idaṁ protaṁ sūtre maṇi-gaṇā iva" (BG 7.7)
+- Krishna ist acintya - Er muss nicht "lesen" um zu wissen
 
 ## The Maha Algorithm Architecture
 
