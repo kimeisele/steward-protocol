@@ -1,14 +1,17 @@
 """
-SAMSKARA CLI - Wild Protocol Migration
-======================================
+SAMSKARA CLI - THIN Gateway Delegate
+=====================================
 
-Integrated with UnifiedCLI via @register_cli.
+ROCKET SOLID: Minimal logic. Gateway routes everything.
 
-Usage:
-    steward samskara           → Status
-    steward samskara discover  → Find wild protocols
-    steward samskara judge X   → Yamaraja verdict
-    steward samskara migrate X → Move to mahajana folder
+    steward samskara status   → gateway → mahamantra → cli_auto → Yamaraja
+    steward samskara discover → gateway → mahamantra → cli_auto → Yamaraja
+    steward samskara judge    → gateway → mahamantra → cli_auto → Yamaraja
+    steward samskara migrate  → gateway → mahamantra → cli_auto → Yamaraja
+
+Flow: CLI → Gateway → Mahamantra → cli_auto → YamarajaProtocol → SamskaraService
+
+NO SPAGHETTI. PROTOCOL FIRST. SSOT.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -16,15 +19,77 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0x8a3c5f92"
 
-from pathlib import Path
-from typing import List
+import ast
+from typing import Dict, List
 
 from vibe_core.protocols import register_cli, CLIMeta
 
 
+def _format_output(cmd: str, output: str) -> str:
+    """Format cli_auto output nicely."""
+    try:
+        # Parse the dict string
+        data = ast.literal_eval(output)
+        if not isinstance(data, dict):
+            return output
+
+        items = data.get("items", [])
+        if not items:
+            return output
+
+        # Format based on command
+        if cmd == "samskara_status":
+            lines = ["SAMSKARA STATUS", "=" * 40]
+            for item in items:
+                key = item.get("key", "?")
+                val = item.get("value", "?")
+                lines.append(f"{key.replace('_', ' ').title():12} {val}")
+            return "\n".join(lines)
+
+        elif cmd == "samskara_discover":
+            count = next((i["value"] for i in items if i["key"] == "count"), 0)
+            # cli_auto flattens lists - look for protocols_items string
+            protocols_str = next((i["value"] for i in items if i["key"] == "protocols_items"), "")
+            lines = [f"Found {count} wild protocols:\n"]
+            if protocols_str:
+                # Parse the flattened list string
+                import re
+                for m in re.finditer(r"\{'path': '([^']+)', 'target': '([^']+)', 'has_chanting': '([^']+)'\}", protocols_str):
+                    path, target, chant = m.groups()
+                    mark = "✓" if chant == "yes" else "○"
+                    lines.append(f"  {mark} {path} → {target}")
+                    if len(lines) > 22:
+                        lines.append(f"  ... and more")
+                        break
+            return "\n".join(lines)
+
+        elif cmd == "samskara_judge":
+            verdict = next((i["value"] for i in items if i["key"] == "verdict"), "?")
+            reason = next((i["value"] for i in items if i["key"] == "reason"), "")
+            target = next((i["value"] for i in items if i["key"] == "target_path"), "")
+            icons = {"allow": "✓", "mercy": "♡", "atone": "~", "deny": "✗"}
+            return f"{icons.get(verdict, '?')} {verdict.upper()}\n  Reason: {reason}\n  Target: {target}"
+
+        elif cmd == "samskara_migrate":
+            success = next((i["value"] for i in items if i["key"] == "success"), False)
+            msg = next((i["value"] for i in items if i["key"] == "message"), "")
+            to_path = next((i["value"] for i in items if i["key"] == "to_path"), "")
+            icon = "✓" if success else "✗"
+            return f"{icon} {msg}\n  Destination: {to_path}" if to_path else f"{icon} {msg}"
+
+    except Exception:
+        pass
+
+    return output
+
+
 @register_cli
 class SamskaraCLI:
-    """Wild protocol migration via Yamaraja."""
+    """
+    THIN CLI - Delegates to Gateway.
+
+    Formats cli_auto output for human readability.
+    """
 
     @property
     def meta(self) -> CLIMeta:
@@ -37,108 +102,34 @@ class SamskaraCLI:
         )
 
     def run(self, args: List[str]) -> int:
-        """Execute samskara command. Returns exit code."""
+        """Route to gateway, format output."""
+        from vibe_core.gateway import execute
+
         if not args:
-            return self._status()
+            args = ["status"]
 
         cmd = args[0]
         rest = args[1:]
 
-        if cmd == "status":
-            return self._status()
-        elif cmd == "discover":
-            return self._discover(rest)
-        elif cmd == "judge":
-            return self._judge(rest)
-        elif cmd == "migrate":
-            return self._migrate(rest)
-        else:
+        # Map subcommand to gateway command
+        cmd_map = {
+            "status": "samskara_status",
+            "discover": "samskara_discover",
+            "judge": "samskara_judge",
+            "migrate": "samskara_migrate",
+        }
+
+        gateway_cmd = cmd_map.get(cmd)
+        if not gateway_cmd:
             print(f"Unknown: {cmd}. Use: status, discover, judge, migrate")
             return 1
 
-    def _status(self) -> int:
-        """Show samskara status."""
-        from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
+        # Execute via gateway
+        result = execute(gateway_cmd, rest)
 
-        service = SamskaraService()
-        state = service.get_state()
+        # Format and print output
+        if result["output"]:
+            formatted = _format_output(gateway_cmd, result["output"])
+            print(formatted)
 
-        print("SAMSKARA STATUS")
-        print("=" * 40)
-        print(f"Health:   {state['health']}")
-        print(f"Wild:     {state['wild_count']}")
-        print(f"Blessed:  {state['blessed_count']}")
-        print(f"Mercy:    {state['mercy_count']}")
-        print(f"Migrated: {state['total_migrated']}")
-        return 0
-
-    def _discover(self, args: List[str]) -> int:
-        """Discover wild protocols."""
-        from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
-
-        paths = args if args else ["vibe_core/protocols"]
-        service = SamskaraService()
-        wilds = service.discover_wild(paths)
-
-        print(f"Found {len(wilds)} wild protocols:\n")
-        for w in wilds[:20]:
-            mark = "✓" if w.get("has_chanting") else "○"
-            print(f"  {mark} {w['path']} → {w['target_mahajana']}")
-
-        if len(wilds) > 20:
-            print(f"  ... and {len(wilds) - 20} more")
-
-        service.save_manifest()
-        return 0
-
-    def _judge(self, args: List[str]) -> int:
-        """Judge a protocol."""
-        if not args:
-            print("Usage: samskara judge <path>")
-            return 1
-
-        from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
-
-        path = args[0]
-        service = SamskaraService()
-        verdict = service.judge(path)
-
-        v = verdict.get("verdict", "?")
-        icons = {"allow": "✓", "mercy": "♡", "atone": "~", "deny": "✗"}
-
-        print(f"{icons.get(v, '?')} {v.upper()}: {path}")
-        print(f"  Reason: {verdict.get('reason')}")
-        print(f"  Target: {verdict.get('target_path')}")
-
-        return 0 if v in ("allow", "mercy") else 1
-
-    def _migrate(self, args: List[str]) -> int:
-        """Migrate a protocol."""
-        if not args:
-            print("Usage: samskara migrate <path>")
-            return 1
-
-        from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
-
-        path = args[0]
-        service = SamskaraService()
-
-        verdict = service.judge(path)
-        v = verdict.get("verdict")
-
-        if v not in ("allow", "mercy"):
-            print(f"✗ Cannot migrate: {verdict.get('reason')}")
-            return 1
-
-        mahajana = service.identify_mahajana(path)
-        if not mahajana:
-            print("✗ Cannot identify mahajana")
-            return 1
-
-        name = Path(path).stem
-        if service.migrate(path, mahajana, name):
-            print(f"✓ Migrated to {verdict.get('target_path')}")
-            return 0
-        else:
-            print("✗ Migration failed")
-            return 1
+        return result["exit_code"]

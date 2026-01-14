@@ -38,10 +38,44 @@ import time
 import functools
 from typing import (
     Protocol, runtime_checkable, List, Union, ClassVar,
-    TypeVar, ParamSpec, Callable, Set, Optional, Dict,
+    TypeVar, ParamSpec, Callable, Set, Optional, Dict, TypedDict,
 )
 from dataclasses import dataclass
 from enum import Enum
+
+
+# =============================================================================
+# SAMSKARA RESULT TYPES (TypedDict for cli_auto introspection)
+# =============================================================================
+
+class SamskaraStatusResult(TypedDict):
+    """Status result for cli_auto."""
+    health: str
+    wild_count: int
+    blessed_count: int
+    mercy_count: int
+    migrated: int
+
+
+class SamskaraDiscoverResult(TypedDict):
+    """Discover result for cli_auto."""
+    count: int
+    protocols: List[Dict[str, str]]
+
+
+class SamskaraJudgeResult(TypedDict):
+    """Judge result for cli_auto."""
+    verdict: str
+    reason: str
+    target_path: str
+
+
+class SamskaraMigrateResult(TypedDict):
+    """Migrate result for cli_auto."""
+    success: bool
+    message: str
+    from_path: str
+    to_path: str
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
@@ -194,6 +228,26 @@ class YamarajaProtocol(Protocol):
         """
         ...
 
+    # =========================================================================
+    # SAMSKARA METHODS - Wild Protocol Migration
+    # =========================================================================
+
+    def samskara_status(self) -> SamskaraStatusResult:
+        """Get samskara migration status."""
+        ...
+
+    def samskara_discover(self, path: str = "vibe_core") -> SamskaraDiscoverResult:
+        """Discover wild protocols."""
+        ...
+
+    def samskara_judge(self, path: str) -> SamskaraJudgeResult:
+        """Judge a protocol for migration."""
+        ...
+
+    def samskara_migrate(self, path: str) -> SamskaraMigrateResult:
+        """Migrate a protocol to its mahajana folder."""
+        ...
+
 
 class NullYamaraja(YamarajaProtocolBase):
     """
@@ -230,6 +284,68 @@ class NullYamaraja(YamarajaProtocolBase):
             reason="NullYamaraja grants mercy",
             karma_balance=self.get_karma_balance(),
         )
+
+    # =========================================================================
+    # SAMSKARA METHODS - Wild Protocol Migration (cli_auto discovery)
+    # =========================================================================
+
+    def _get_samskara_service(self):
+        """Lazy load SamskaraService."""
+        if not hasattr(self, "_samskara_svc"):
+            from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
+            self._samskara_svc = SamskaraService()
+        return self._samskara_svc
+
+    def samskara_status(self) -> "SamskaraStatusResult":
+        """Get samskara migration status."""
+        svc = self._get_samskara_service()
+        state = svc.get_state()
+        return SamskaraStatusResult(
+            health=state["health"],
+            wild_count=state["wild_count"],
+            blessed_count=state["blessed_count"],
+            mercy_count=state["mercy_count"],
+            migrated=state["total_migrated"],
+        )
+
+    def samskara_discover(self, path: str = "vibe_core") -> "SamskaraDiscoverResult":
+        """Discover wild protocols."""
+        svc = self._get_samskara_service()
+        wilds = svc.discover_wild([path])
+        svc.save_manifest()
+        return SamskaraDiscoverResult(
+            count=len(wilds),
+            protocols=[
+                {"path": w["path"], "target": w["target_mahajana"], "has_chanting": "yes" if w.get("has_chanting") else "no"}
+                for w in wilds[:50]
+            ],
+        )
+
+    def samskara_judge(self, path: str) -> "SamskaraJudgeResult":
+        """Judge a protocol for migration."""
+        svc = self._get_samskara_service()
+        v = svc.judge(path)
+        return SamskaraJudgeResult(
+            verdict=v.get("verdict", "unknown"),
+            reason=v.get("reason", ""),
+            target_path=v.get("target_path", ""),
+        )
+
+    def samskara_migrate(self, path: str) -> "SamskaraMigrateResult":
+        """Migrate a protocol to its mahajana folder."""
+        from pathlib import Path as P
+        svc = self._get_samskara_service()
+        v = svc.judge(path)
+        if v.get("verdict") not in ("allow", "mercy"):
+            return SamskaraMigrateResult(success=False, message=f"Cannot migrate: {v.get('reason')}", from_path=path, to_path="")
+        mahajana = svc.identify_mahajana(path)
+        if not mahajana:
+            return SamskaraMigrateResult(success=False, message="Cannot identify mahajana", from_path=path, to_path="")
+        name = P(path).stem
+        target = v.get("target_path", "")
+        if svc.migrate(path, mahajana, name):
+            return SamskaraMigrateResult(success=True, message="Migration complete", from_path=path, to_path=target)
+        return SamskaraMigrateResult(success=False, message="Migration failed", from_path=path, to_path=target)
 
 
 # =============================================================================
