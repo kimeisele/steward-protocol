@@ -28,11 +28,11 @@ import math
 # "bījaṁ māṁ sarva-bhūtānāṁ" - I am the seed of all existences.
 
 from vibe_core.mahamantra.substrate.seed import (
-    # Mathematical constants - THE SSOT
-    MAHAMANTRA_DIMENSION,
-    LILA_CYCLES,
-    LILA_LIMIT,
-    PARAMPARA,
+    # Mathematical constants - THE SSOT (seed.py is THE source)
+    WORDS as MAHAMANTRA_DIMENSION,  # 16
+    TRINITY as LILA_CYCLES,          # 3
+    LILA as LILA_LIMIT,              # 48
+    PARAMPARA,                        # 37
 )
 
 # Strict Typing

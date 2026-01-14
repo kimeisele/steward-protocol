@@ -44,8 +44,8 @@ from typing import Final
 
 from vibe_core.mahamantra.substrate.seed import (
     WORDS as TOTAL_POSITIONS,
-    MAHAJANAS as MAHAJANA_COUNT,
-    AVATARS as AVATARA_COUNT,
+    MAHAJANA_COUNT,
+    AVATAR_COUNT as AVATARA_COUNT,
 )
 
 
@@ -106,8 +106,8 @@ class Sampradaya(str, Enum):
 
 # Konstanten (derived from seed.py SSOT)
 from vibe_core.mahamantra.substrate.seed import (
-    MAHAJANAS as MAHAJANA_COUNT,
-    AVATARS as AVATARA_COUNT,
+    MAHAJANA_COUNT,
+    AVATAR_COUNT as AVATARA_COUNT,
     WORDS as TOTAL_POSITIONS,
 )
 
