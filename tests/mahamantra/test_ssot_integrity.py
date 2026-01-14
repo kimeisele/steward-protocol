@@ -143,33 +143,33 @@ class TestOpcodeIntegrity:
 
 
 class TestGADIntegrity:
-    """Verify that _gad.py reflects the Sad-Aishvarya."""
+    """Verify that _gad.py reflects Sharanagati (Surrender)."""
 
     def test_gad_criteria_mapping(self) -> None:
-        """GAD criteria must map to the 6 Opulences."""
-        # 1. Discoverability = Yashas (Fame)
+        """GAD criteria must map to the 6 Limbs of Surrender."""
+        # 1. Discoverability = Varanam (Acceptance of Guardianship)
         assert _gad.GADCriterion.DISCOVERABILITY.name == "DISCOVERABILITY"
-        assert _gad.SadAishvarya.YASHAS == "yashas"
+        assert _gad.Sharanagati.VARANAM == "goptritve_varanam"
 
-        # 2. Observability = Jnana (Knowledge)
+        # 2. Observability = Nikshepa (Self-Surrender)
         assert _gad.GADCriterion.OBSERVABILITY.name == "OBSERVABILITY"
-        assert _gad.SadAishvarya.JNANA == "jnana"
+        assert _gad.Sharanagati.NIKSHEPA == "atma_nikshepa"
 
-        # 3. Parseability = Vairagya (Renunciation)
+        # 3. Parseability = Pratikulya (Rejection of Unfavorable)
         assert _gad.GADCriterion.PARSEABILITY.name == "PARSEABILITY"
-        assert _gad.SadAishvarya.VAIRAGYA == "vairagya"
+        assert _gad.Sharanagati.PRATIKULYA == "pratikulyasya_varjanam"
 
-        # 4. Composability = Shri (Beauty)
+        # 4. Composability = Anukulya (Acceptance of Favorable)
         assert _gad.GADCriterion.COMPOSABILITY.name == "COMPOSABILITY"
-        assert _gad.SadAishvarya.SHRI == "shri"
+        assert _gad.Sharanagati.ANUKULYA == "anukulyasya_sankalpa"
 
-        # 5. Idempotency = Aishvarya (Control)
+        # 5. Idempotency = Karpanya (Humility/No Separate Endeavor)
         assert _gad.GADCriterion.IDEMPOTENCY.name == "IDEMPOTENCY"
-        assert _gad.SadAishvarya.AISHVARYA == "aishvarya"
+        assert _gad.Sharanagati.KARPANYA == "karpanya"
 
-        # 6. Recoverability = Virya (Strength)
+        # 6. Recoverability = Vishvasa (Faith in Protection)
         assert _gad.GADCriterion.RECOVERABILITY.name == "RECOVERABILITY"
-        assert _gad.SadAishvarya.VIRYA == "virya"
+        assert _gad.Sharanagati.VISHVASA == "raksisyati_iti_vishvasa"
 
     def test_gad_counts(self) -> None:
         """Must have exactly 6 criteria."""
