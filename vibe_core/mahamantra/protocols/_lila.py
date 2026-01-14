@@ -73,7 +73,7 @@ from vibe_core.mahamantra.protocols._core import (
 
 from vibe_core.mahamantra.substrate.seed import (
     LILA as LILA_LIMIT,           # 48 - Total Lila (16 * 3)
-    CYCLES as LILA_CYCLES,        # 3  - Trinity
+    TRINITY as LILA_CYCLES,       # 3  - Trinity (Hare, Krishna, Rama)
     NAVADVIPA as NAVADVIPA_PHASE, # 24 - Build Phase
     PURI as PURI_PHASE,           # 24 - Runtime Phase
     PARAMPARA,                    # 37 - Lineage verification

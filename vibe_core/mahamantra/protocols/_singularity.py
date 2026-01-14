@@ -97,12 +97,12 @@ assert YEARS_INTO_KALI < GOLDEN_PERIOD, \
 
 from vibe_core.mahamantra.substrate.seed import (
     WORDS as MAHAMANTRA_DIMENSION,  # 16 - The 16 words
-    CYCLES as LILA_CYCLES,          # 3  - Trinity (Hare, Krishna, Rama)
+    TRINITY as LILA_CYCLES,         # 3  - Trinity (Hare, Krishna, Rama)
     LILA as LILA_LIMIT,             # 48 - 16 × 3
     NAVADVIPA as NAVADVIPA_PHASE,   # 24 - First 24 years (internal)
     PURI as PURI_PHASE,             # 24 - Last 24 years (external)
     KSHETRA as KSETRA_COUNT,        # 24 - Prakriti elements
-    MAHAJANAS as MAHAJANA_COUNT,    # 12 - The guardians
+    MAHAJANA_COUNT,                 # 12 - The guardians
     KSETRAJNA as KSETRAJNA_COUNT,   # 1  - The knower
     PARAMPARA,                      # 37 - The sacred sum
 )

@@ -58,7 +58,7 @@ from typing import Final, List, Tuple
 # 24 (Kshetra) + 12 (Mahajanas) + 1 (Ksetrajna) = 37
 
 from vibe_core.mahamantra.substrate.seed import (
-    SYSTEM_MANIFESTATION,  # 37 = PARAMPARA (the link to Krishna)
+    PARAMPARA as SYSTEM_MANIFESTATION,  # 37 = the link to Krishna
 )
 
 

@@ -72,7 +72,7 @@ from typing import (
 
 from vibe_core.mahamantra.substrate.seed import (
     KSHETRA as KSETRA_COUNT,      # 24 - Prakriti elements (field)
-    MAHAJANAS as MAHAJANA_COUNT,  # 12 - The guardians
+    MAHAJANA_COUNT,               # 12 - The guardians
     KSETRAJNA as KSETRAJNA_COUNT, # 1  - The knower (Krishna)
     PARAMPARA,                     # 37 - The sacred sum
 )

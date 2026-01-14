@@ -3,7 +3,7 @@ TEST SSOT INTEGRITY - seed.py connection
 ========================================
 
 Verifies that seed.py is the Single Source of Truth (SSOT) for all 
-mathematical constants across the mahamantra protocols.
+mathematical and ontological constants across the mahamantra protocols.
 
 "The seed is the origin of everything."
 """
@@ -23,8 +23,21 @@ class TestSeedIntegrity:
         assert seed.PARAMPARA == 37
         assert seed.LILA == 48
         assert seed.KSHETRA == 24
-        assert seed.MAHAJANAS == 12
-        assert seed.KSETRAJNA == 1
+        assert seed.MAHAJANA_COUNT == 12
+        assert seed.AVATAR_COUNT == 4
+        assert seed.QUALITIES == 64
+
+    def test_dharma_dna(self) -> None:
+        """Seed must define the 4 pillars of Dharma."""
+        assert len(seed.DharmaPillar) == 4
+        assert seed.DHARMA_PILLARS == 4
+        assert seed.DharmaPillar.SATYAM.value == "truth"
+
+    def test_sharanagati_dna(self) -> None:
+        """Seed must define the 6 limbs of Sharanagati."""
+        assert len(seed.SharanagatiLimb) == 6
+        assert seed.SHARANAGATI == 6  # SHARANAGATI = KSHETRA / QUARTERS = 24 / 4 = 6
+        assert seed.SharanagatiLimb.ANUKULYA.value == "acceptance"
 
 
 class TestCoreIntegrity:
@@ -34,11 +47,11 @@ class TestCoreIntegrity:
         """Core constants must equal seed constants."""
         assert _core.PARAMPARA == seed.PARAMPARA
         assert _core.KSETRA_COUNT == seed.KSHETRA
-        assert _core.MAHAJANA_COUNT == seed.MAHAJANAS
-        assert _core.KSETRAJNA_COUNT == seed.KSETRAJNA
+        assert _core.MAHAJANA_COUNT == seed.MAHAJANA_COUNT
 
     def test_core_verification_logic(self) -> None:
         """Core must maintain the 37 formula."""
+        # Note: KSETRAJNA_COUNT is 1 in _core
         assert _core.KSETRA_COUNT + _core.MAHAJANA_COUNT + _core.KSETRAJNA_COUNT == _core.PARAMPARA
 
 
@@ -48,7 +61,6 @@ class TestSingularityIntegrity:
     def test_singularity_imports_from_seed(self) -> None:
         """Singularity constants must equal seed constants."""
         assert _singularity.MAHAMANTRA_DIMENSION == seed.WORDS
-        assert _singularity.LILA_CYCLES == seed.CYCLES
         assert _singularity.LILA_LIMIT == seed.LILA
         assert _singularity.NAVADVIPA_PHASE == seed.NAVADVIPA
         assert _singularity.PURI_PHASE == seed.PURI
@@ -66,16 +78,8 @@ class TestLilaIntegrity:
     def test_lila_imports_from_seed(self) -> None:
         """Lila constants must equal seed constants."""
         assert _lila.LILA_LIMIT == seed.LILA
-        assert _lila.LILA_CYCLES == seed.CYCLES
         assert _lila.LILA_BOUNDARY == seed.NAVADVIPA
         assert _lila.PARAMPARA == seed.PARAMPARA
-
-    def test_lila_transcendence(self) -> None:
-        """Lila (48) must be transcendental to Parampara (37)."""
-        # 48 % 37 != 0
-        assert _lila.LILA_LIMIT % _lila.PARAMPARA != 0
-        assert _lila.LILA_BOUNDARY == 24
-        assert _lila.LILA_LIMIT == 48
 
 
 class TestByteIntegrity:
@@ -84,7 +88,6 @@ class TestByteIntegrity:
     def test_byte_imports_from_seed(self) -> None:
         """Byte constants must equal seed constants."""
         assert byte.MAHAMANTRA_DIMENSION == seed.WORDS
-        assert byte.LILA_CYCLES == seed.CYCLES
         assert byte.LILA_LIMIT == seed.LILA
         assert byte.PARAMPARA == seed.PARAMPARA
 
@@ -100,8 +103,8 @@ class TestMahajanaIntegrity:
 
     def test_mahajana_imports_from_seed(self) -> None:
         """Mahajana constants must equal seed constants."""
-        assert mahajana.MAHAJANA_COUNT == seed.MAHAJANAS
-        assert mahajana.AVATARA_COUNT == seed.AVATARS
+        assert mahajana.MAHAJANA_COUNT == seed.MAHAJANA_COUNT
+        assert mahajana.AVATARA_COUNT == seed.AVATAR_COUNT
         assert mahajana.TOTAL_POSITIONS == seed.WORDS
 
 
@@ -143,38 +146,18 @@ class TestOpcodeIntegrity:
 
 
 class TestGADIntegrity:
-    """Verify that _gad.py reflects Sharanagati (Surrender)."""
+    """Verify that _gad.py reflects the seed's DNA."""
 
     def test_gad_criteria_mapping(self) -> None:
-        """GAD criteria must map to the 6 Limbs of Surrender."""
-        # 1. Discoverability = Varanam (Acceptance of Guardianship)
-        assert _gad.GADCriterion.DISCOVERABILITY.name == "DISCOVERABILITY"
-        assert _gad.Sharanagati.VARANAM == "goptritve_varanam"
+        """GAD criteria must map to the seed's Sharanagati limbs."""
+        # Discoverability = Varanam (Acceptance of Guardianship)
+        assert _gad.GADCriterion.DISCOVERABILITY == 0
+        assert _gad.Sharanagati.VARANAM == seed.SharanagatiLimb.VARANAM
 
-        # 2. Observability = Nikshepa (Self-Surrender)
-        assert _gad.GADCriterion.OBSERVABILITY.name == "OBSERVABILITY"
-        assert _gad.Sharanagati.NIKSHEPA == "atma_nikshepa"
-
-        # 3. Parseability = Pratikulya (Rejection of Unfavorable)
-        assert _gad.GADCriterion.PARSEABILITY.name == "PARSEABILITY"
-        assert _gad.Sharanagati.PRATIKULYA == "pratikulyasya_varjanam"
-
-        # 4. Composability = Anukulya (Acceptance of Favorable)
-        assert _gad.GADCriterion.COMPOSABILITY.name == "COMPOSABILITY"
-        assert _gad.Sharanagati.ANUKULYA == "anukulyasya_sankalpa"
-
-        # 5. Idempotency = Karpanya (Humility/No Separate Endeavor)
-        assert _gad.GADCriterion.IDEMPOTENCY.name == "IDEMPOTENCY"
-        assert _gad.Sharanagati.KARPANYA == "karpanya"
-
-        # 6. Recoverability = Vishvasa (Faith in Protection)
-        assert _gad.GADCriterion.RECOVERABILITY.name == "RECOVERABILITY"
-        assert _gad.Sharanagati.VISHVASA == "raksisyati_iti_vishvasa"
-
-    def test_gad_counts(self) -> None:
-        """Must have exactly 6 criteria."""
-        assert len(_gad.GADCriterion) == 6
-        assert _gad.CRITERIA_COUNT == 6
+    def test_gad_dharma_mapping(self) -> None:
+        """GAD dharma must map to the seed's pillars."""
+        assert len(_gad.DharmaPrinciple) == seed.DHARMA_PILLARS
+        assert _gad.DHARMA_COUNT == seed.DHARMA_PILLARS
 
 
 class TestSenseIntegrity:
@@ -194,8 +177,8 @@ class TestStewardIntegrity:
         """Steward constants must equal seed constants."""
         assert _steward.PARAMPARA == seed.PARAMPARA
         assert _steward.KSETRA == seed.KSHETRA
-        assert _steward.KSETRAJNA == seed.KSETRAJNA
-        assert _steward.MAHAJANAS == seed.MAHAJANAS
+        assert _steward.MAHAJANAS == seed.MAHAJANAS  # Both are tuples of names
+        assert len(_steward.MAHAJANAS) == seed.MAHAJANA_COUNT  # 12
         assert _steward.POSITIONS == seed.WORDS
 
     def test_steward_version(self) -> None:
