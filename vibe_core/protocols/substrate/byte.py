@@ -8,6 +8,9 @@ IMPLEMENTATION DETAILS:
 - Storage: Packed Integers (2 bits per Trit).
 - Encoding: 00=HARE, 01=KRISHNA, 10=RAMA, 11=VOID.
 - Performance: O(1) Bitwise operations, O(1) Memory.
+
+SSOT: Mathematical constants live in vibe_core.mahamantra.substrate.byte
+This file re-exports them and adds fractal integration.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -20,6 +23,15 @@ from enum import IntEnum, IntFlag
 from typing import NewType, List, Final, Union, Optional, Tuple, TYPE_CHECKING
 from datetime import datetime
 import math
+
+# =============================================================================
+# RE-EXPORT FROM SSOT (mahamantra.substrate.byte)
+# =============================================================================
+from vibe_core.mahamantra.substrate.byte import (
+    MAHAMANTRA_DIMENSION,  # 16 - The 16 words
+    LILA_CYCLES,           # 3 - Trinity (Hare, Krishna, Rama)
+    LILA_LIMIT,            # 48 = 16 × 3 (Chaitanya Lila)
+)
 
 # Lazy import to avoid circular dependency
 if TYPE_CHECKING:
