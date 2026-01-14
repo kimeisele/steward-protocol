@@ -65,15 +65,19 @@ from typing import (
 
 
 # =============================================================================
-# THE 37 FORMULA - Sacred Mathematics
+# THE 37 FORMULA - From seed.py (THE SSOT)
 # =============================================================================
+# seed.py = Chaitanya = Position 0 = THE ONE ORIGIN
+# _core.py = Contracts that SERVE the origin, not duplicate it
 
-KSETRA_COUNT: int = 24      # Prakriti elements (field)
-MAHAJANA_COUNT: int = 12    # The 12 guardians
-KSETRAJNA_COUNT: int = 1    # The knower (Krishna)
-PARAMPARA: int = 37         # 24 + 12 + 1 = Sacred sum
+from vibe_core.mahamantra.substrate.seed import (
+    KSHETRA as KSETRA_COUNT,      # 24 - Prakriti elements (field)
+    MAHAJANAS as MAHAJANA_COUNT,  # 12 - The guardians
+    KSETRAJNA as KSETRAJNA_COUNT, # 1  - The knower (Krishna)
+    PARAMPARA,                     # 37 - The sacred sum
+)
 
-# Verification
+# Verification (seed.py already asserts this, but we verify import worked)
 assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == PARAMPARA, \
     "The 37 formula is eternal and unchanging"
 

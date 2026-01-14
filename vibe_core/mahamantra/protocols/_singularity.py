@@ -56,10 +56,6 @@ from typing import (
 from vibe_core.mahamantra.protocols._core import (
     Level,
     Quarter,
-    PARAMPARA,
-    KSETRA_COUNT,
-    MAHAJANA_COUNT,
-    KSETRAJNA_COUNT,
     MahamantraProtocolBase,
     ProtocolIdentity,
     ProtocolCapability,
@@ -96,21 +92,26 @@ assert YEARS_INTO_KALI < GOLDEN_PERIOD, \
 
 
 # =============================================================================
-# CHAITANYA LILA CONSTANTS (48 = 16 × 3)
+# CHAITANYA LILA CONSTANTS (48 = 16 × 3) - From seed.py (THE SSOT)
 # =============================================================================
 
-# From byte.py (SSOT)
-MAHAMANTRA_DIMENSION: Final[int] = 16  # The 16 words
-LILA_CYCLES: Final[int] = 3            # Trinity (Hare, Krishna, Rama)
-LILA_LIMIT: Final[int] = MAHAMANTRA_DIMENSION * LILA_CYCLES  # 48
+from vibe_core.mahamantra.substrate.seed import (
+    WORDS as MAHAMANTRA_DIMENSION,  # 16 - The 16 words
+    CYCLES as LILA_CYCLES,          # 3  - Trinity (Hare, Krishna, Rama)
+    LILA as LILA_LIMIT,             # 48 - 16 × 3
+    NAVADVIPA as NAVADVIPA_PHASE,   # 24 - First 24 years (internal)
+    PURI as PURI_PHASE,             # 24 - Last 24 years (external)
+    KSHETRA as KSETRA_COUNT,        # 24 - Prakriti elements
+    MAHAJANAS as MAHAJANA_COUNT,    # 12 - The guardians
+    KSETRAJNA as KSETRAJNA_COUNT,   # 1  - The knower
+    PARAMPARA,                      # 37 - The sacred sum
+)
 
-# Chaitanya Mahaprabhu's life phases
-NAVADVIPA_PHASE: Final[int] = 24       # First 24 years (internal)
-PURI_PHASE: Final[int] = 24            # Last 24 years (external)
+# Chaitanya Mahaprabhu's life
 CHAITANYA_LILA: Final[int] = NAVADVIPA_PHASE + PURI_PHASE  # 48 years
 
 # Rudra bridge (connects Parampara to Chaitanya)
-RUDRA_BRIDGE: Final[int] = 11          # 37 + 11 = 48
+RUDRA_BRIDGE: Final[int] = LILA_LIMIT - PARAMPARA  # 48 - 37 = 11
 
 # Mathematical verifications
 assert CHAITANYA_LILA == LILA_LIMIT == 48, "Chaitanya Lila must be 48"

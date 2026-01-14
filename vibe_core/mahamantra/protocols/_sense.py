@@ -95,11 +95,14 @@ from typing import (
 from vibe_core.mahamantra.protocols._core import (
     Level,
     Quarter,
-    PARAMPARA,
-    KSETRA_COUNT,  # 24 = The Tattvas!
     MahamantraProtocolBase,
     ProtocolIdentity,
     ProtocolCapability,
+)
+
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    KSHETRA as KSETRA_COUNT,  # 24 = The Tattvas!
 )
 
 

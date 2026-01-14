@@ -35,7 +35,11 @@ from vibe_core.mahamantra.substrate.mahajana import (
 )
 from vibe_core.mahamantra.substrate.byte import HolyName
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-from vibe_core.mahamantra.substrate.acintya import PARAMPARA
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    WORDS,
+    WORDS_PER_QUARTER,
+)
 
 
 # =============================================================================
@@ -233,8 +237,8 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
 
 def get_position(index: int) -> MantraPosition:
     """Get position by index (0-15)."""
-    if not 0 <= index <= 15:
-        raise ValueError(f"Position index must be 0-15, got {index}")
+    if not 0 <= index < WORDS:
+        raise ValueError(f"Position index must be 0-{WORDS-1}, got {index}")
     return MAHAMANTRA_POSITIONS[index]
 
 
@@ -263,21 +267,21 @@ QUARTER_INDEX: dict = {
 def get_positions_by_quarter(quarter: Quarter) -> Tuple[MantraPosition, ...]:
     """Get all positions in a quarter."""
     idx = QUARTER_INDEX[quarter]
-    start = idx * 4
-    return MAHAMANTRA_POSITIONS[start:start + 4]
+    start = idx * WORDS_PER_QUARTER
+    return MAHAMANTRA_POSITIONS[start:start + WORDS_PER_QUARTER]
 
 
 def get_head_position(quarter: Quarter) -> MantraPosition:
     """Get the HEAD position for a quarter."""
     idx = QUARTER_INDEX[quarter]
-    return MAHAMANTRA_POSITIONS[idx * 4]
+    return MAHAMANTRA_POSITIONS[idx * WORDS_PER_QUARTER]
 
 
 def get_worker_positions_for_quarter(quarter: Quarter) -> Tuple[MantraPosition, ...]:
     """Get the WORKER positions for a quarter (3 per quarter)."""
     idx = QUARTER_INDEX[quarter]
-    start = idx * 4
-    return MAHAMANTRA_POSITIONS[start + 1:start + 4]
+    start = idx * WORDS_PER_QUARTER
+    return MAHAMANTRA_POSITIONS[start + 1:start + WORDS_PER_QUARTER]
 
 
 # Alias for backward compatibility

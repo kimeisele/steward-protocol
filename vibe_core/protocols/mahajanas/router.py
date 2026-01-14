@@ -270,7 +270,7 @@ class MahajanaRouter:
         # Returns: True
     """
 
-    def __init__(self, legacy: bool = True) -> None:
+    def __init__(self, legacy: bool = False) -> None:
         """
         Initialize the router.
 

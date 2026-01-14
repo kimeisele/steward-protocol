@@ -64,14 +64,18 @@ from typing import (
 from vibe_core.mahamantra.protocols._core import (
     Level,
     Quarter,
-    PARAMPARA,
-    KSETRA_COUNT,
-    MAHAJANA_COUNT,
-    KSETRAJNA_COUNT,
     MahamantraProtocol,
     MahamantraProtocolBase,
     ProtocolIdentity,
     ProtocolCapability,
+)
+
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    KSHETRA as KSETRA,       # 24 - The field (prakriti elements)
+    KSETRAJNA,               # 1 - The knower (Krishna)
+    MAHAJANAS,               # 12 - The authorities
+    WORDS as POSITIONS,      # 16 - Total positions
 )
 from vibe_core.mahamantra.protocols._declaration import (
     MahajanaCard,
@@ -99,15 +103,7 @@ from vibe_core.mahamantra.protocols._bridge import (
 STEWARD_NAME: Final[str] = "Steward"
 
 # System version (semantic)
-STEWARD_VERSION: Final[str] = "0.37.0"  # 37 = Parampara
-
-# The sacred formula: 24 + 12 + 1 = 37
-KSETRA: Final[int] = KSETRA_COUNT       # 24 - The field (prakriti elements)
-KSETRAJNA: Final[int] = KSETRAJNA_COUNT # 1 - The knower (Krishna)
-MAHAJANAS: Final[int] = MAHAJANA_COUNT  # 12 - The authorities
-
-# Total positions in the Lotus
-POSITIONS: Final[int] = LOTUS_PETALS    # 16
+STEWARD_VERSION: Final[str] = f"0.{PARAMPARA}.0"  # 37 = Parampara
 
 
 # =============================================================================
