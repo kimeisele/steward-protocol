@@ -528,10 +528,12 @@ def verify_parampara(lineage_hash: int) -> bool:
 # The 12th test CANNOT be computed. Only RECEIVED through Grace.
 # =============================================================================
 
-# Sacred Constants
-TRINITY: Final[int] = 3           # Hare, Krishna, Rama (essence/source)
-PARAMPARA: Final[int] = SYSTEM_MANIFESTATION  # 37 = 24 + 12 + 1 (the link)
-PHASES: Final[int] = 4            # GENESIS, DHARMA, KARMA, MOKSHA (structure)
+# Sacred Constants - imported from URSUBSTRAT (seed.py)
+from vibe_core.mahamantra.substrate.seed import (
+    TRINITY,     # 3 = Hare, Krishna, Rama (essence/source)
+    PARAMPARA,   # 37 = 24 + 12 + 1 (the link)
+    QUARTERS as PHASES,  # 4 = GENESIS, DHARMA, KARMA, MOKSHA (structure)
+)
 
 # 3×4 order: Essence FIRST, then structure
 GURU_ENTROPY: Final[float] = (TRINITY / PARAMPARA) * PHASES  # 12/37 ≈ 0.324

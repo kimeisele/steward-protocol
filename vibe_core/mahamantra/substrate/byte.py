@@ -22,29 +22,36 @@ from datetime import datetime
 import math
 
 # =============================================================================
-# NOTE: The fractal mantra system lives in vibe_core/protocols/substrate/mantra/
-# This file is SSOT for mathematical constants only.
-# For Pada, Aksara, FractalLevel etc. → import from protocols.substrate.mantra
+# IMPORT FROM URSUBSTRAT (seed.py)
 # =============================================================================
+# seed.py is THE source. All constants derive from there.
+# "bījaṁ māṁ sarva-bhūtānāṁ" - I am the seed of all existences.
+
+from vibe_core.mahamantra.substrate.seed import (
+    # Mathematical constants - THE SSOT
+    MAHAMANTRA_DIMENSION,
+    LILA_CYCLES,
+    LILA_LIMIT,
+)
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
 
-# =============================================================================
-# MATHEMATICAL CONSTANTS (SSOT)
-# =============================================================================
-# These are the canonical values. pancha_tattva.py imports from here.
-
-MAHAMANTRA_DIMENSION: Final[int] = 16          # The 16 words of Mahamantra
-LILA_CYCLES: Final[int] = 3                    # Trinity (Hare, Krishna, Rama)
-LILA_LIMIT: Final[int] = MAHAMANTRA_DIMENSION * LILA_CYCLES  # 48 = 16 × 3
 
 class HolyName(IntEnum):
-    """The Ternary Basis of Reality."""
-    HARE = 0    # 00
-    KRISHNA = 1 # 01
-    RAMA = 2    # 10
-    VOID = 3    # 11 (Maya/Error)
+    """
+    The Ternary Basis of Reality + Maya.
+
+    seed.py defines the pure TRUTH (3 holy names).
+    byte.py extends with VOID for binary encoding necessity.
+
+    "māyā tatam idaṁ sarvaṁ" - Maya pervades this world.
+    VOID is not truth, but computation requires error states.
+    """
+    HARE = 0    # 00 - Radha, the energy
+    KRISHNA = 1 # 01 - The all-attractive
+    RAMA = 2    # 10 - Reservoir of pleasure
+    VOID = 3    # 11 - Maya/Error (not in seed.py - that's TRUTH only)
 
 
 class MantraBit(IntFlag):
