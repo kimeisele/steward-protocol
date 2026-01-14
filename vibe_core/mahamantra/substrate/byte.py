@@ -17,16 +17,15 @@ __genesis__ = "0x0752f8c3"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import IntEnum, IntFlag
-from typing import NewType, List, Final, Union, Optional, Tuple, TYPE_CHECKING
+from typing import NewType, List, Final, Union, Optional, Tuple
 from datetime import datetime
 import math
 
-# Lazy import to avoid circular dependency
-if TYPE_CHECKING:
-    from .nama import to_devanagari, to_iast, to_roman
-    from .mantra.pada import Pada, PadaType, PADA_BY_TYPE
-    from .mantra.aksara import Aksara
-    from .mantra.routing import FractalLevel, FractalRoute
+# =============================================================================
+# NOTE: The fractal mantra system lives in vibe_core/protocols/substrate/mantra/
+# This file is SSOT for mathematical constants only.
+# For Pada, Aksara, FractalLevel etc. → import from protocols.substrate.mantra
+# =============================================================================
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
