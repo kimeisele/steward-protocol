@@ -41,10 +41,36 @@ class LazyProtocol(Protocol):
 
 @runtime_checkable
 class SealedProtocol(Protocol):
-    """I am Watertight."""
+    """
+    I am Watertight - the perfect protocol.
 
-    def clean(self, x: int) -> int:
-        """I have meaning."""
+    Demonstrates all 6 Opulences:
+    - JNANA: Full docstrings
+    - SHRI: No Any types
+    - YASHAS: Identity context
+    - VIRYA: Raises/Returns spec
+    - VAIRAGYA: Cleanup method
+    - AISHVARYA: Implicit
+    """
+
+    def clean(self, x: int, context: str = "") -> int:
+        """
+        Clean operation with identity.
+
+        Args:
+            x: The value to clean
+            context: The caller identity
+
+        Returns:
+            int: The cleaned value
+
+        Raises:
+            ValueError: If x is negative
+        """
+        ...
+
+    def close(self) -> None:
+        """Release resources (VAIRAGYA)."""
         ...
 
 
@@ -59,12 +85,12 @@ def test_watertight_validator_logic():
     # 1. Leaky
     result_leaky = WatertightValidator.inspect(LeakyProtocol)
     assert result_leaky["sealed"] is False
-    assert any("Leak detected" in msg for msg in result_leaky["leaks"])
+    assert any("leaks detected" in msg for msg in result_leaky["leaks"])
 
     # 2. Lazy (No Docstring)
     result_lazy = WatertightValidator.inspect(LazyProtocol)
     assert result_lazy["sealed"] is False
-    assert any("Missing" in msg for msg in result_lazy["leaks"])
+    assert any("missing" in msg.lower() for msg in result_lazy["leaks"])
 
     # 3. Sealed
     result_sealed = WatertightValidator.inspect(SealedProtocol)

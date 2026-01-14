@@ -51,14 +51,15 @@ from dataclasses import dataclass
 from enum import IntEnum, Enum
 from typing import Final, List, Tuple
 
-
 # =============================================================================
-# SYSTEM MANIFESTATION - SSOT for 37 (Parampara Link)
+# IMPORT FROM URSUBSTRAT (seed.py)
 # =============================================================================
+# "bījaṁ māṁ sarva-bhūtānāṁ" - I am the seed of all existences.
 # 24 (Kshetra) + 12 (Mahajanas) + 1 (Ksetrajna) = 37
-# This is the MANIFESTATION of Krishna in the system, not Krishna Himself.
-# Krishna transcends this arithmetic (acintya).
-SYSTEM_MANIFESTATION: Final[int] = 37
+
+from vibe_core.mahamantra.substrate.seed import (
+    SYSTEM_MANIFESTATION,  # 37 = PARAMPARA (the link to Krishna)
+)
 
 
 # =============================================================================

@@ -955,11 +955,26 @@ lotus = mahamantra  # THE STANDARD EXPORT
 # LAZY: Only imported when accessed, not at module load time.
 # This prevents 500ms+ import cascades.
 
+# =============================================================================
+# IMPORT FROM URSUBSTRAT (seed.py) - THE LOTUS SPROUTS FROM HERE
+# =============================================================================
+from vibe_core.mahamantra.substrate.seed import (
+    Quarter,
+    QUARTER_NAMES,
+    get_quarter,
+    get_quarter_name,
+    get_positions_in_quarter,
+    lotus_declaration,
+    verify_lotus,
+    PARAMPARA,
+    WORDS,
+)
+
 _SUBSTRATE_LAZY_IMPORTS = {
     # === MAHAJANA ===
     "Mahajana": "mahajana",
     "Avatara": "mahajana",
-    "Quarter": "mahajana",
+    # Quarter now imported from seed.py above
     "Sampradaya": "mahajana",
     # === ACINTYA ===
     "KRISHNA": "acintya",
