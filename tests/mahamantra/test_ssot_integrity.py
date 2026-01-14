@@ -10,7 +10,7 @@ mathematical constants across the mahamantra protocols.
 
 import pytest
 from vibe_core.mahamantra.substrate import seed, byte, mahajana, wiring, position, opcode
-from vibe_core.mahamantra.protocols import _core, _singularity, _lila, _sense, _steward, _lotus
+from vibe_core.mahamantra.protocols import _core, _singularity, _lila, _sense, _steward, _lotus, _gad
 from vibe_core.mahamantra.kernel import singularity
 
 
@@ -140,6 +140,41 @@ class TestOpcodeIntegrity:
     def test_opcode_count(self) -> None:
         """Must have exactly WORDS opcodes."""
         assert len(opcode.MantraOpCode) == seed.WORDS
+
+
+class TestGADIntegrity:
+    """Verify that _gad.py reflects the Sad-Aishvarya."""
+
+    def test_gad_criteria_mapping(self) -> None:
+        """GAD criteria must map to the 6 Opulences."""
+        # 1. Discoverability = Yashas (Fame)
+        assert _gad.GADCriterion.DISCOVERABILITY.name == "DISCOVERABILITY"
+        assert _gad.SadAishvarya.YASHAS == "yashas"
+
+        # 2. Observability = Jnana (Knowledge)
+        assert _gad.GADCriterion.OBSERVABILITY.name == "OBSERVABILITY"
+        assert _gad.SadAishvarya.JNANA == "jnana"
+
+        # 3. Parseability = Vairagya (Renunciation)
+        assert _gad.GADCriterion.PARSEABILITY.name == "PARSEABILITY"
+        assert _gad.SadAishvarya.VAIRAGYA == "vairagya"
+
+        # 4. Composability = Shri (Beauty)
+        assert _gad.GADCriterion.COMPOSABILITY.name == "COMPOSABILITY"
+        assert _gad.SadAishvarya.SHRI == "shri"
+
+        # 5. Idempotency = Aishvarya (Control)
+        assert _gad.GADCriterion.IDEMPOTENCY.name == "IDEMPOTENCY"
+        assert _gad.SadAishvarya.AISHVARYA == "aishvarya"
+
+        # 6. Recoverability = Virya (Strength)
+        assert _gad.GADCriterion.RECOVERABILITY.name == "RECOVERABILITY"
+        assert _gad.SadAishvarya.VIRYA == "virya"
+
+    def test_gad_counts(self) -> None:
+        """Must have exactly 6 criteria."""
+        assert len(_gad.GADCriterion) == 6
+        assert _gad.CRITERIA_COUNT == 6
 
 
 class TestSenseIntegrity:
