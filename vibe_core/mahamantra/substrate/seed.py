@@ -114,6 +114,15 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
 
 
 # =============================================================================
+# QUALITIES (64 = The Ultimate Test Suite)
+# =============================================================================
+# The 64 transcendental qualities of Krishna (Chaitanya).
+# This is the DEFINITION of completeness (Purnam).
+
+QUALITIES: Final[int] = 64   # 50 (Jiva) + 5 (Shiva) + 5 (Vishnu) + 4 (Krishna)
+
+
+# =============================================================================
 # THE EQUATIONS (Verification - these MUST hold)
 # =============================================================================
 
@@ -251,6 +260,8 @@ __all__ = [
     "MALA",
     "ROUNDS",
     "DAILY_MANTRAS",
+    # Qualities
+    "QUALITIES",
     # Quarter Routing (FOLDER IS WIRING)
     "Quarter",
     "QUARTER_NAMES",
