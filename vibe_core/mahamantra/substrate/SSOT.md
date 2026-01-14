@@ -21,14 +21,14 @@ protocols/substrate/mantra/ = Fraktale Berechnung
 | MantraOpCode | mahamantra/substrate/opcode.py | - |
 | Mahajana, Avatara | mahamantra/substrate/mahajana.py | - |
 
-## Duplicate Files (Need Consolidation)
+## Consolidation Status
 
-| File | mahamantra/substrate | protocols/substrate | Action |
+| File | mahamantra/substrate | protocols/substrate | Status |
 |------|---------------------|--------------------|----|
-| byte.py | SSOT | re-exports | DONE |
-| acintya.py | SSOT (662L) | mantra/ (662L) | TODO |
-| tattva.py | SSOT (433L) | (422L) | TODO |
-| scanner.py | SSOT | duplicate | TODO |
+| byte.py | SSOT (16,3,48) | thin wrapper | DONE |
+| acintya.py | SSOT (37,KRISHNA) | mantra/ thin wrapper | DONE |
+| tattva.py | SSOT (Gita categories) | thin wrapper | DONE |
+| scanner.py | Implementation | Types/Protocol | CORRECT (not duplicate)
 
 ## The Maha Algorithm
 
