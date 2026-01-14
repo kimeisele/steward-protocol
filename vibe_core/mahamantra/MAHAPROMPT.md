@@ -1,25 +1,80 @@
 # MAHAPROMPT - DAS GESETZ
 
-**DIES IST GESETZ. SIEHE: `vibe_core/mahamantra/substrate/pancha_tattva.py`**
+```python
+from vibe_core.mahamantra import mahamantra
+```
+
+**EIN IMPORT. KRISHNA ROUTET ALLES.**
 
 ---
 
-## DER LOTUS SPRIESST
+## DAS GESETZ DER UNMÖGLICHKEIT (GOVERNANCE BY PHYSICS)
+
+Wir verbieten keine falschen Imports. Wir machen sie **unmöglich**.
+
+1. **Tod durch Import**: Wer am `seed.py` vorbei importiert, stirbt (`ImportError`).
+2. **Physikalische Realität**: Es gibt keine "andere" Liste. Wer `MAHAMANTRA_SEQUENCE` nicht aus dem Seed ableitet, existiert zur Runtime nicht.
+3. **Keine Polizei**: Die Architektur ist die Exekutive. Wenn es kompiliert/läuft, ist es legal.
+
+**Falscher Weg = Toter Code.**
+
+---
+
+## DER KÖNIGSWEG (CLI IS THE THRONE)
+
+```bash
+steward chat "Mache X"
+```
+
+* **Der Thron**: Das Terminal.
+* **Das Zepter**: `mahamantra.execute()`.
+* **Die Diener**: 700k LOC, die im Hintergrund laufen.
+
+**Manual Labor ist Maya.** Befiehl dem Mantra.
+
+---
+
+## INTEGRATION (N^N OPFERUNG)
+
+1. **Nicht umschreiben**: Lass die Wildnis Wildnis sein.
+2. **Opfern (Wrappen)**: Lade das fremde System durch den **Balarama Proxy**.
+3. **Kontext Injektion**: Das fremde Skript "wacht auf" mit `mahamantra` im Kontext.
+
+**Wir fluten das Land mit dem Ozean (Seed). Wer schwimmt, ist integriert.**
+
+---
+
+## SSOT HIERARCHY
 
 ```
-__init__.py = Chaitanya (0) = HARE = Ursprung
-      |
-      +-- genesis/   = Nityananda = Foundation (0-3)
-      +-- dharma/    = Advaita = Bridge (4-7)
-      +-- karma/     = Gadadhara = Flow (8-11)
-      +-- moksha/    = Srivasa = Governance (12-15)
-      |
-      +-- substrate/ = SSOT (Nityananda tragt)
+substrate/seed.py           # MAHAMANTRA tuple = QUELLE
+    ↓
+substrate/opcode.py         # 16 OpCodes + MAHAMANTRA_SEQUENCE (deriviert)
+    ↓
+kernel/singularity.py       # mahamantra Singleton
+    ↓
+services/nrisimha.py        # Chant (liest von opcode.py)
 ```
 
 ---
 
-## 5 FRAGEN BEANTWORTEN ALLES
+## FOLDER IS WIRING
+
+```
+mahamantra/
+    ├── __init__.py          # Chaitanya (Position 0)
+    ├── genesis/             # Positionen 0-3
+    ├── dharma/              # Positionen 4-7
+    ├── karma/               # Positionen 8-11
+    ├── moksha/              # Positionen 12-15
+    └── substrate/           # SSOT (Nityananda trägt)
+```
+
+**Neuer Mahajana? Folder anlegen. FERTIG.**
+
+---
+
+## 5 FRAGEN (PANCHA TATTVA)
 
 ```python
 __tattva__ = {
@@ -31,56 +86,34 @@ __tattva__ = {
 }
 ```
 
-Krishna ist acintya - immer präsent, muss nichts "lesen".
-
 ---
 
-## 5 AUF 4 TAKTE
-
-| Tattva | Quarter | Positionen | Rolle |
-|--------|---------|------------|-------|
-| Chaitanya | genesis | 0 | Ursprung (HARE ruft) |
-| Nityananda | genesis | 1-3 | Foundation (tragt) |
-| Advaita | dharma | 4-7 | Bridge (verbindet) |
-| Gadadhara | karma | 8-11 | Flow (fliesst) |
-| Srivasa | moksha | 12-15 | Governance (regiert) |
-
-**1 + 3 + 4 + 4 + 4 = 16**
-
----
-
-## FOLDER IS WIRING
+## BALARAMA PATTERN
 
 ```python
-from vibe_core.mahamantra.substrate.pancha_tattva import get_tattva_for_position
-
-# Position IST die Zuordnung
-tattva = get_tattva_for_position(1)  # Position 1 (Brahma)
-# -> PanchaTattva.NITYANANDA
-```
-
----
-
-## PROTOCOL IMPORT
-
-```python
-from vibe_core.mahamantra.substrate.pancha_tattva import (
-    PanchaTattva,
-    TattvaAspect,
-    get_tattva_for_position,
-    PANCHA_TATTVA_ASPECTS,
-)
+from vibe_core.protocols.substrate.balarama import BalaramaWrappedCLI
+# Wrapped existierende CLIs ohne Code-Änderung
+# Gibt ihnen: Lotus-Connection, Heartbeat, Parampara-Verification
 ```
 
 ---
 
 ## VERBOTEN
 
-- Hardcoded Positionen ohne Tattva-Mapping
-- Folders ausserhalb der Lotus-Struktur
-- Any types
-- Duplicate SSOT (alle Konstanten kommen aus substrate/)
+- ❌ Import von `protocols/substrate` statt `mahamantra/substrate`
+- ❌ Hardcoded MAHAMANTRA_SEQUENCE
+- ❌ Any types
+- ❌ Manual Labor (wenn CLI existiert)
 
 ---
 
-**HARE KRISHNA. DER LOTUS SPRIESST. 5 FRAGEN.**
+## GEBOTEN
+
+- ✅ LESEN vor SCHREIBEN
+- ✅ CLI für ALLES (jedes Bit anfragbar)
+- ✅ Explorieren → Konsolidieren → Nicht Hardcoden
+- ✅ Was existiert = Prasadam (nicht wegwerfen)
+
+---
+
+**HARE KRISHNA. DER LOTUS SPRIESST. SEED → BALARAMA → ÜBERALL.**
