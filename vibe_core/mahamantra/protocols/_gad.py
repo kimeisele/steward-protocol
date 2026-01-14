@@ -97,17 +97,39 @@ MANTRA_CHECKS: Final[int] = TRINITY  # 3
 
 
 # =============================================================================
+# THE 6 SAD-AISHVARYA (The 6 Opulences of Bhagavan)
+# =============================================================================
+# Vishnu Purana 6.5.47 defines the 6 attributes of the Controller.
+# GAD-000 demands that every Agent (Jiva) reflects these qualities
+# to be a legitimate part of the System (Vaikuntha).
+
+class SadAishvarya(str, Enum):
+    """The 6 Opulences of Bhagavan (God)."""
+    AISHVARYA = "aishvarya"  # Control/Power -> Idempotency
+    VIRYA = "virya"          # Strength/Valor -> Recoverability
+    YASHAS = "yashas"        # Fame/Reputation -> Discoverability
+    SHRI = "shri"            # Beauty/Harmony -> Composability
+    JNANA = "jnana"          # Knowledge/Vision -> Observability
+    VAIRAGYA = "vairagya"    # Renunciation/Detachment -> Parseability
+
+
+# =============================================================================
 # THE 6 OPERATIONAL CRITERIA (KSHETRA - THE FIELD)
 # =============================================================================
 
 class GADCriterion(IntEnum):
-    """The 6 operational criteria of GAD-000."""
-    DISCOVERABILITY = 0   # Can the system find itself?
-    OBSERVABILITY = 1     # Can the system see itself?
-    PARSEABILITY = 2      # Can the system read itself?
-    COMPOSABILITY = 3     # Can the system connect itself?
-    IDEMPOTENCY = 4       # Can the system repeat itself?
-    RECOVERABILITY = 5    # Can the system heal itself?
+    """
+    The 6 operational criteria of GAD-000.
+
+    Each criterion is a reflection of a Divine Opulence (Sad-Aishvarya).
+    The Agent (Jiva) exists because it reflects these powers.
+    """
+    DISCOVERABILITY = 0   # YASHAS (Fame): Can the system find itself?
+    OBSERVABILITY = 1     # JNANA (Knowledge): Can the system see itself?
+    PARSEABILITY = 2      # VAIRAGYA (Renunciation): Can the system read itself (detached from form)?
+    COMPOSABILITY = 3     # SHRI (Beauty): Can the system connect itself (harmoniously)?
+    IDEMPOTENCY = 4       # AISHVARYA (Control): Can the system repeat itself (mastery over action)?
+    RECOVERABILITY = 5    # VIRYA (Strength): Can the system heal itself (stand back up)?
 
 
 # =============================================================================
@@ -628,6 +650,7 @@ __all__ = [
     "MANTRA_CHECKS",
     # Enums
     "GADCriterion",
+    "SadAishvarya",
     "DharmaPrinciple",
     "JapaState",
     "HolyName",
