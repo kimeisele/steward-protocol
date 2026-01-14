@@ -76,25 +76,13 @@ from vibe_core.mahamantra.protocols._holographic import (
     HolographicSystem,
 )
 
-
-# =============================================================================
-# LOTUS CONSTANTS - Holy Name Mathematics
-# =============================================================================
-
-# The 16 positions (petals) of the Lotus
-LOTUS_PETALS: Final[int] = 16
-
-# The 4 quarters (macro-petals)
-LOTUS_QUARTERS: Final[int] = 4
-
-# Petals per quarter
-PETALS_PER_QUARTER: Final[int] = 4
-
-# The 108 beads of the mala (rounds)
-MALA_BEADS: Final[int] = 108
-
-# 3 names in the Holy Trinity
-TRINITY: Final[int] = 3
+from vibe_core.mahamantra.substrate.seed import (
+    WORDS as LOTUS_PETALS,
+    QUARTERS as LOTUS_QUARTERS,
+    WORDS_PER_QUARTER as PETALS_PER_QUARTER,
+    MALA as MALA_BEADS,
+    TRINITY,
+)
 
 
 # =============================================================================

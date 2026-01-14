@@ -1,4 +1,3 @@
-
 import pytest
 from vibe_core.protocols.substrate import MantraOpCode as LegacyOpCode
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode as NewOpCode
@@ -29,19 +28,19 @@ def test_opcode_unity_parampara():
         0: ("SYS_WAKE", LegacyOpCode.SYS_WAKE),
         1: ("LOAD_ROOT", LegacyOpCode.LOAD_ROOT),
         2: ("ALLOC_MEM", LegacyOpCode.ALLOC_MEM),
-        3: ("BIND_CTX", LegacyOpCode.BIND_CTX),
-        4: ("ASSERT_TRUTH", LegacyOpCode.ASSERT_TRUTH),
-        5: ("RESOLVE_REQ", LegacyOpCode.RESOLVE_REQ),
-        6: ("GARBAGE_COLLECT", LegacyOpCode.GARBAGE_COLLECT),
-        7: ("PULSE_SYNC", LegacyOpCode.PULSE_SYNC),
-        8: ("FETCH_RES", LegacyOpCode.FETCH_RES),
-        9: ("EXEC_SERVICE", LegacyOpCode.EXEC_SERVICE),
-        10: ("CHECK_DHARMA", LegacyOpCode.CHECK_DHARMA),
-        11: ("COMMIT_LOG", LegacyOpCode.COMMIT_LOG),
-        12: ("CACHE_STATE", LegacyOpCode.CACHE_STATE),
-        13: ("OPTIMIZE", LegacyOpCode.OPTIMIZE),
-        14: ("YIELD_CPU", LegacyOpCode.YIELD_CPU),
-        15: ("RESET_IP", LegacyOpCode.RESET_IP),
+        3: ("INIT_THREAD", LegacyOpCode.INIT_THREAD),
+        4: ("COMPILE_AST", LegacyOpCode.COMPILE_AST),
+        5: ("BIND_SYMBOL", LegacyOpCode.BIND_SYMBOL),
+        6: ("TYPE_CHECK", LegacyOpCode.TYPE_CHECK),
+        7: ("DHARMA_TEST", LegacyOpCode.DHARMA_TEST),
+        8: ("EXEC_OP", LegacyOpCode.EXEC_OP),
+        9: ("EXTEND_CAP", LegacyOpCode.EXTEND_CAP),
+        10: ("STATE_SYNC", LegacyOpCode.STATE_SYNC),
+        11: ("LEDGER_SIGN", LegacyOpCode.LEDGER_SIGN),
+        12: ("YIELD_CPU", LegacyOpCode.YIELD_CPU),
+        13: ("IO_FLUSH", LegacyOpCode.IO_FLUSH),
+        14: ("LOG_EMIT", LegacyOpCode.LOG_EMIT),
+        15: ("AUDIT_SEAL", LegacyOpCode.AUDIT_SEAL),
     }
     
     for pos, (name, legacy_op) in truth_table.items():
@@ -52,16 +51,13 @@ def test_opcode_unity_parampara():
             mapping_failures.append(f"Position {pos}: Legacy={name} != New={new_op.name}")
             
         # Check Value Match (Technical Unity)
-        # This will fail because str != int
-        if legacy_op.value != pos and legacy_op.name != new_op.name:
-             # If names match, we might forgive value mismatch for now (String vs Int)
-             # But strictly, they should be interchangeable or mappable.
-             pass
+        # Note: Values might differ (str vs int), but they should represent the same logical step.
 
     if mapping_failures:
         pytest.fail(f"OpCode Identity Crisis detected:\n" + "\n".join(mapping_failures))
         
     print("✅ OpCode Names Aligned")
+
 
 def test_router_integration():
     """
@@ -69,17 +65,20 @@ def test_router_integration():
     This simulates the 'mahamantra.execute()' routing logic.
     """
     from vibe_core.protocols.mahajanas.router import MahajanaRouter, Mahajana
-    from vibe_core.mahamantra.substrate.wiring import get_position_by_opcode
+    from vibe_core.mahamantra.substrate.position import get_position_by_opcode
     
     router = MahajanaRouter()
     
     # Legacy Route (String Enum)
-    legacy_mahajana = router.route(LegacyOpCode.EXEC_SERVICE)
+    legacy_mahajana = router.route(LegacyOpCode.EXTEND_CAP)
+    # With legacy=False default (or updated table), this should be PRAHLADA.
+    # If legacy=True is still active or table is old, it might be JANAKA.
+    # Let's align with the NEW truth: EXTEND_CAP -> PRAHLADA
     assert legacy_mahajana == Mahajana.PRAHLADA
     
     # New Route (Int Enum) - Does the router support it?
     # Or do we need a bridge?
-    new_op = NewOpCode(9) # EXEC_SERVICE
+    new_op = NewOpCode(9) # EXTEND_CAP
     
     try:
         # The router expects MantraOpCode (Legacy) which is str-based.

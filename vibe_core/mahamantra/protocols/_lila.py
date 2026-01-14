@@ -61,8 +61,6 @@ from typing import (
 from vibe_core.mahamantra.protocols._core import (
     Level,
     Quarter,
-    PARAMPARA,
-    KSETRA_COUNT,  # 24 - THE BOUNDARY
     MahamantraProtocolBase,
     ProtocolIdentity,
     ProtocolCapability,
@@ -70,22 +68,25 @@ from vibe_core.mahamantra.protocols._core import (
 
 
 # =============================================================================
-# LILA CONSTANTS - From Sacred Mathematics
+# LILA CONSTANTS - From Sacred Mathematics (seed.py is SSOT)
 # =============================================================================
+
+from vibe_core.mahamantra.substrate.seed import (
+    LILA as LILA_LIMIT,           # 48 - Total Lila (16 * 3)
+    CYCLES as LILA_CYCLES,        # 3  - Trinity
+    NAVADVIPA as NAVADVIPA_PHASE, # 24 - Build Phase
+    PURI as PURI_PHASE,           # 24 - Runtime Phase
+    PARAMPARA,                    # 37 - Lineage verification
+    KSHETRA as KSETRA_COUNT,      # 24 - Boundary (Prakriti)
+)
 
 # From _core.py: KSETRA_COUNT = 24 (Prakriti elements)
 # This IS the Navadvipa/Puri boundary
-LILA_BOUNDARY: Final[int] = KSETRA_COUNT  # 24
-
-# Trinity cycles (Hare, Krishna, Rama)
-LILA_CYCLES: Final[int] = 3
-
-# Total Lila (Chaitanya's life span in units)
-LILA_LIMIT: Final[int] = LILA_BOUNDARY * 2  # 48 = 24 + 24
+LILA_BOUNDARY: Final[int] = NAVADVIPA_PHASE  # 24
 
 # Verification assertion
-assert LILA_BOUNDARY == 24, "Lila boundary must equal Ksetra count (24)"
-assert LILA_LIMIT == 48, "Lila limit must be 48 (24 + 24)"
+assert LILA_BOUNDARY == 24, "Lila boundary must equal 24"
+assert LILA_LIMIT == 48, "Lila limit must be 48"
 assert LILA_LIMIT % PARAMPARA != 0, "48 % 37 != 0 - Lila is transcendental to Parampara"
 
 

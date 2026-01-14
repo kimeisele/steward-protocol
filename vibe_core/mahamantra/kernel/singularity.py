@@ -88,10 +88,13 @@ from vibe_core.mahamantra.substrate import (
     Quarter,
     # OpCode
     MantraOpCode,
-    # Acintya
-    PARAMPARA,
     # Protocol
     ProtocolRegistry,
+)
+
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    WORDS,
 )
 
 # Governance Bridge (lazy import to avoid circular deps)
@@ -112,7 +115,7 @@ def _get_guardian_name(index: int) -> str:
 
     NO hardcoded mappings. The truth table IS the source.
     """
-    if 0 <= index < 16:
+    if 0 <= index < WORDS:
         return MAHAMANTRA_POSITIONS[index].guardian.value
     raise IndexError(f"Invalid position index: {index}")
 
@@ -186,7 +189,7 @@ class ProtocolRouter:
 
     def __getitem__(self, index: int) -> Type["MantraProtocol"]:
         """Get protocol base by position index."""
-        if not (0 <= index < 16):
+        if not (0 <= index < WORDS):
             raise KeyError(f"No protocol base at position {index}")
         return self._load_base(index)
 
@@ -367,7 +370,7 @@ class ModuleRouter:
 
         FRACTAL: Uses substrate lookup. NO hardcoded index dict.
         """
-        if not (0 <= index < 16):
+        if not (0 <= index < WORDS):
             raise KeyError(f"No mahajana at position {index}")
         guardian_name = _get_guardian_name(index)
         return self._load_module(guardian_name)
@@ -426,7 +429,7 @@ class Mahamantra:
 
     def __len__(self) -> int:
         """16 positions."""
-        return 16
+        return WORDS
 
     def __iter__(self) -> Iterator[MantraPosition]:
         """Iterate through all 16 positions."""
@@ -748,7 +751,7 @@ class Mahamantra:
         This is the HEARTBEAT of the Mahamantra.
         """
         # Advance counter
-        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % 16
+        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
 
         current = Mahamantra._tick_counter
         position = MAHAMANTRA_POSITIONS[current]
@@ -874,7 +877,7 @@ class Mahamantra:
     def __contains__(self, item: Union[int, str, Mahajana, Avatara]) -> bool:
         """Check if guardian or index is in Mahamantra."""
         if isinstance(item, int):
-            return 0 <= item < 16
+            return 0 <= item < WORDS
         if isinstance(item, (Mahajana, Avatara)):
             return True  # All guardians are in Mahamantra
         if isinstance(item, str):

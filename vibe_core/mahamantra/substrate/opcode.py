@@ -27,7 +27,7 @@ from enum import IntEnum
 from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter
-from vibe_core.mahamantra.substrate.acintya import PARAMPARA
+from vibe_core.mahamantra.substrate.seed import PARAMPARA
 
 
 # =============================================================================

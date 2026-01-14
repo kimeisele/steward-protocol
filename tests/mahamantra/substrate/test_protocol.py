@@ -21,6 +21,14 @@ from vibe_core.mahamantra.substrate import (
 )
 
 
+@pytest.fixture(autouse=True)
+def clean_registry():
+    """Ensure registry is clean before and after each test."""
+    ProtocolRegistry.clear()
+    yield
+    ProtocolRegistry.clear()
+
+
 class TestMantraProtocol:
     """Test MantraProtocol base class."""
 

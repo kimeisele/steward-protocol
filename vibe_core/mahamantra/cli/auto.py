@@ -92,6 +92,7 @@ from vibe_core.mahamantra.cli.protocol import (
     PURI_LIMIT,
 )
 from vibe_core.mahamantra.kernel.singularity import mahamantra
+from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA
 
 
 # =============================================================================
@@ -153,7 +154,7 @@ class CLIAutoDiscovery:
             return sum(len(m) for m in self._methods.values())
 
         total = 0
-        for position in range(16):
+        for position in range(WORDS):
             count = self._discover_position(position)
             total += count
 
@@ -169,7 +170,8 @@ class CLIAutoDiscovery:
         # Get module
         try:
             module = mahamantra.mod[position]
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: Failed to load module for position {position}: {e}")
             return 0
 
         # Find Null implementation
@@ -183,12 +185,14 @@ class CLIAutoDiscovery:
                     break
 
         if null_class is None:
+            print(f"DEBUG: No Null class for position {position} ({guardian_name})")
             return 0
 
         # Instantiate null implementation
         try:
             self._nulls[position] = null_class()
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: Failed to instantiate Null class for position {position}: {e}")
             return 0
 
         # Find Protocol class
@@ -406,14 +410,15 @@ class CLIAutoDiscovery:
         if command in self._keywords:
             return self._keywords[command]
 
-        # Substring match
-        for kw, pos in self._keywords.items():
-            if kw in command or command.startswith(kw):
-                return pos
+        # Substring match (command in keyword)
+        # Sort keywords by length to match most specific first
+        for kw in sorted(self._keywords.keys(), key=len, reverse=True):
+            if command in kw:
+                return self._keywords[kw]
 
         # Parampara fallback (hash-based)
         mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command))
-        return (mutation_vector % 37) % 16
+        return (mutation_vector % PARAMPARA) % WORDS
 
     def _get_method_name(self, position: int, command: str) -> Optional[str]:
         """Get method name for a command at a position."""
@@ -526,7 +531,7 @@ class CLIAutoDiscovery:
 
         capabilities: List[CLICapability] = []
 
-        positions = [position] if position is not None else range(16)
+        positions = [position] if position is not None else range(WORDS)
 
         for pos in positions:
             methods = self._methods.get(pos, {})

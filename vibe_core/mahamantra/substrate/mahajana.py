@@ -39,7 +39,14 @@ __genesis__ = "0xc5899adb"  # GenesisByte: parampara % 37 == 0
 from enum import Enum
 from typing import Final
 
-from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION
+from enum import Enum
+from typing import Final
+
+from vibe_core.mahamantra.substrate.seed import (
+    WORDS as TOTAL_POSITIONS,
+    MAHAJANAS as MAHAJANA_COUNT,
+    AVATARS as AVATARA_COUNT,
+)
 
 
 class Mahajana(str, Enum):
@@ -97,10 +104,12 @@ class Sampradaya(str, Enum):
     RUDRA = "rudra"       # Shiva → Vishnuswami → Vallabha (MOKSHA)
 
 
-# Konstanten
-MAHAJANA_COUNT: Final[int] = 12
-AVATARA_COUNT: Final[int] = 4
-TOTAL_POSITIONS: Final[int] = MAHAMANTRA_DIMENSION  # 4 Avataras + 12 Mahajanas = 16 (from byte.py SSOT)
+# Konstanten (derived from seed.py SSOT)
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAJANAS as MAHAJANA_COUNT,
+    AVATARS as AVATARA_COUNT,
+    WORDS as TOTAL_POSITIONS,
+)
 
 
 __all__ = [

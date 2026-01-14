@@ -32,6 +32,7 @@ from vibe_core.mahamantra.substrate.seed import (
     MAHAMANTRA_DIMENSION,
     LILA_CYCLES,
     LILA_LIMIT,
+    PARAMPARA,
 )
 
 # Strict Typing
@@ -254,8 +255,6 @@ class MantraByte:
         # Mercy boost is bounded by 0.037 (1/PARAMPARA) per unit
         # This ensures Grace operates within the Parampara framework.
 
-        PARAMPARA = 37  # The sacred number
-
         if self._length > 0:  # Chanting is happening (f > 0)
             # Chanting frequency: how much of the standard are we chanting?
             chanting_frequency = min(1.0, self._length / MAHAMANTRA_DIMENSION)
@@ -466,7 +465,7 @@ class GenesisByte:
 
     def _verify_lineage(self) -> bool:
         try:
-            return (int(self.parampara_hash, 16) % 37) == 0
+            return (int(self.parampara_hash, 16) % PARAMPARA) == 0
         except ValueError:
             return False
 

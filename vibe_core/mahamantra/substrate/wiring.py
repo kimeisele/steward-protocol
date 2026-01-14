@@ -51,9 +51,13 @@ from vibe_core.mahamantra.substrate.mahajana import (
     Mahajana,
     Avatara,
     Quarter,
-    TOTAL_POSITIONS,
 )
-from vibe_core.mahamantra.substrate.acintya import PARAMPARA
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    WORDS as TOTAL_POSITIONS,
+    QUARTERS as QUARTER_COUNT,
+    WORDS_PER_QUARTER as POSITIONS_PER_QUARTER,
+)
 
 
 # =============================================================================
@@ -64,8 +68,6 @@ FOLDER_IS_WIRING: Final[bool] = True
 NO_FOLDER_NO_EXISTENCE: Final[bool] = True
 
 # Fractal constants (derived from SSOT)
-POSITIONS_PER_QUARTER: Final[int] = 4
-QUARTER_COUNT: Final[int] = 4
 FRACTAL_BASE: Final[int] = TOTAL_POSITIONS  # 16^n scaling
 
 
