@@ -318,11 +318,33 @@ class ModuleRouter:
         """
         Load a mahajana module by name.
 
-        FRACTAL: NO hardcoded validation. Uses substrate as truth.
+        MAHAMANTRA-AWARE ROUTING:
+            1. First: Try mahamantra/{quarter}/{name}/ (canonical location)
+            2. Fallback: protocols/mahajanas/{name}/ (legacy location)
+
+        The Lotus structure IS the truth. Samskara migrates over time.
         """
         if name in self._modules:
             return self._modules[name]
 
+        # Get quarter from substrate (SSOT)
+        quarter = None
+        for pos in MAHAMANTRA_POSITIONS:
+            if pos.guardian.value == name:
+                quarter = pos.quarter.value
+                break
+
+        # 1. TRY MAHAMANTRA STRUCTURE (canonical)
+        if quarter:
+            try:
+                module_path = f"vibe_core.mahamantra.{quarter}.{name}"
+                module = importlib.import_module(module_path)
+                self._modules[name] = module
+                return module
+            except ImportError:
+                pass  # Fallback to legacy
+
+        # 2. FALLBACK: PROTOCOLS/MAHAJANAS (legacy)
         module_path = f"vibe_core.protocols.mahajanas.{name}"
         module = importlib.import_module(module_path)
         self._modules[name] = module

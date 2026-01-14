@@ -70,9 +70,11 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
 )
 
 from vibe_core.mahamantra.substrate.wiring import (
-    POSITION_MAPPINGS,
-    PositionMapping,
     get_position_by_index,
+)
+from vibe_core.mahamantra.substrate.position import (
+    MAHAMANTRA_POSITIONS,
+    MantraPosition,
 )
 
 
@@ -159,17 +161,18 @@ class ShadowReactor:
         - Looks for __mahajana__ declaration
         - If has on_bhoga/on_switch/on_prasadam → registers
         """
-        for mapping in POSITION_MAPPINGS:
+        for mapping in MAHAMANTRA_POSITIONS:
             self._discover_position(mapping)
 
-    def _discover_position(self, mapping: PositionMapping) -> None:
+    def _discover_position(self, mapping: MantraPosition) -> None:
         """
         Discover reactor for a specific position.
 
         Checks: mahamantra/{quarter}/{mahajana}/__init__.py
         For: __mahajana__ declaration and reactor methods
         """
-        folder_path = self._BASE_PATH / mapping.quarter.value / mapping.folder_name
+        guardian_name = mapping.guardian.value
+        folder_path = self._BASE_PATH / mapping.quarter.value / guardian_name
 
         if not folder_path.exists():
             return
@@ -180,7 +183,7 @@ class ShadowReactor:
 
         # Try to import the module
         try:
-            module_name = f"vibe_core.mahamantra.{mapping.quarter.value}.{mapping.folder_name}"
+            module_name = f"vibe_core.mahamantra.{mapping.quarter.value}.{guardian_name}"
             module = importlib.import_module(module_name)
 
             # Check for __mahajana__ declaration
@@ -196,10 +199,10 @@ class ShadowReactor:
             )
 
             if has_reactor:
-                if mapping.position not in self._listeners:
-                    self._listeners[mapping.position] = []
+                if mapping.index not in self._listeners:
+                    self._listeners[mapping.index] = []
                 # Store module as reactor
-                self._listeners[mapping.position].append(module)
+                self._listeners[mapping.index].append(module)
 
         except ImportError:
             pass  # Folder exists but module can't import - that's ok
@@ -305,7 +308,7 @@ class ShadowReactor:
         # Get mapping for context
         mapping = get_position_by_index(position)
         if mapping is None:
-            mapping = POSITION_MAPPINGS[0]
+            mapping = MAHAMANTRA_POSITIONS[0]
 
         # Determine phase with RETURN detection
         phase = get_phase(position, previous)
@@ -316,8 +319,8 @@ class ShadowReactor:
             previous=previous,
             phase=phase.value,
             quarter=mapping.quarter.value,
-            guardian=mapping.owner,
-            opcode=mapping.opcode,
+            guardian=mapping.guardian.value,
+            opcode=mapping.opcode.name,
             cycle_count=self._cycle_count,
             switch_count=self._switch_count,
             return_count=self._return_count,
@@ -443,15 +446,15 @@ class ShadowReactor:
         """Get current state."""
         mapping = get_position_by_index(self._position)
         if mapping is None:
-            mapping = POSITION_MAPPINGS[0]
+            mapping = MAHAMANTRA_POSITIONS[0]
 
         return ShadowState(
             position=self._position,
             previous=self._previous_position,
             phase=self.phase.value,
             quarter=mapping.quarter.value,
-            guardian=mapping.owner,
-            opcode=mapping.opcode,
+            guardian=mapping.guardian.value,
+            opcode=mapping.opcode.name,
             cycle_count=self._cycle_count,
             switch_count=self._switch_count,
             return_count=self._return_count,

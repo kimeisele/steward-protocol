@@ -1,15 +1,14 @@
 """
 NRISIMHA - Position 12
-=======================
+======================
 
 Quarter: MOKSHA
 OpCode: YIELD_CPU
 Type: HEAD
-Role: Avatar
 
-MANTRA PROTOCOL DERIVATION:
-    Position index is the ONLY configuration.
-    All properties derived from MAHAMANTRA_POSITIONS.
+MAHAMANTRA AS LENS:
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 481 (% 37 == 0 -> CONNECTED)
 """
@@ -20,63 +19,28 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
 __position__ = 12
-__genesis__ = "0x7ac86006"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x7ac86006"  # GenesisByte
 
-from typing import Final, Protocol, runtime_checkable
+# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
+from vibe_core.protocols.mahajanas.nrisimha import *
 
-from vibe_core.mahamantra.substrate.protocol import HeadProtocol
+# Re-export __all__ from protocols
+from vibe_core.protocols.mahajanas.nrisimha import __all__
 
-# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
+# Backward-compat constants
+from typing import Final
 POSITION: Final[int] = 12
 QUARTER: Final[str] = "moksha"
 OPCODE: Final[str] = "YIELD_CPU"
 PARAMPARA_VECTOR: Final[int] = 481
 
-
-@runtime_checkable
-class NrisimhaProtocol(Protocol):
-    """
-    Protocol for Nrisimha (YIELD_CPU).
-
-    Position 12 in the Mahamantra.
-    """
-
-    @classmethod
-    def position_index(cls) -> int:
-        """Get position index."""
-        ...
-
-    @classmethod
-    def opcode_name(cls) -> str:
-        """Get opcode name."""
-        ...
+# NrisimhaBase alias for backward compat
+NrisimhaBase = NrisimhaProtocolBase
 
 
-class NrisimhaBase(HeadProtocol):
-    """
-    Base class for Nrisimha implementations.
-
-    MANTRA PROTOCOL DERIVATION:
-        _position_index = 12  # That's ALL!
-        Everything else derived from MAHAMANTRA_POSITIONS.
-    """
-
-    _position_index = 12
-
-
-class NullNrisimha(NrisimhaBase):
-    """Null implementation for testing."""
-    pass
-
-
-__all__ = [
-    # Backward-compatible constants
-    "POSITION",
-    "QUARTER",
-    "OPCODE",
-    "PARAMPARA_VECTOR",
-    # Protocol classes
-    "NrisimhaProtocol",
-    "NrisimhaBase",
-    "NullNrisimha",
-]
+def __getattr__(name: str):
+    """Lazy import for NrisimhaService to avoid circular import."""
+    if name == "NrisimhaService":
+        from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
+        return NrisimhaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

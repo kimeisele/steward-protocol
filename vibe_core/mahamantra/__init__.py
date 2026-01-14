@@ -646,7 +646,7 @@ class MahamantraLotus(LotusNode):
         from vibe_core.mahamantra.substrate.wiring import get_position_by_index
         mapping = get_position_by_index(position)
         if mapping:
-            guardian = mapping.owner  # e.g., "prithu", "brahma"
+            guardian = mapping.guardian.value  # e.g., "prithu", "brahma"
             quarter = mapping.quarter.value  # e.g., "genesis"
         else:
             guardian = "unknown"
