@@ -15,7 +15,8 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, MantraOpCode
+# LIVING SOURCE - Nrisimha springt aus der Säule
+from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE, MantraOpCode
 from vibe_core.protocols.universal import (
     AlignmentScore,
     DriftContext,

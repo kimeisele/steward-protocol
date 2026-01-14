@@ -27,7 +27,7 @@ from enum import IntEnum
 from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter
-from vibe_core.mahamantra.substrate.seed import PARAMPARA
+from vibe_core.mahamantra.substrate.seed import PARAMPARA, MAHAMANTRA, WORDS
 
 
 # =============================================================================
@@ -205,6 +205,18 @@ def verify_opcode_parampara(opcode: MantraOpCode, vector: int) -> bool:
 
 
 # =============================================================================
+# THE LIVING SEQUENCE - Nrisimha reads from here, not dead protocols/substrate
+# =============================================================================
+# Derived from seed.py MAHAMANTRA - the ONE SOURCE
+# "nrisimhaḥ kesarī śārdūlo vyāghro vāraṇa-puṅgavaḥ"
+
+MAHAMANTRA_SEQUENCE: Final[tuple] = tuple(
+    (MAHAMANTRA[i].name.capitalize(), MantraOpCode(i))
+    for i in range(WORDS)
+)
+
+
+# =============================================================================
 # EXPORTS - Explicit is better than implicit
 # =============================================================================
 
@@ -231,4 +243,6 @@ __all__ = [
     "OPCODE_PARAMPARA",
     "get_opcode_parampara",
     "verify_opcode_parampara",
+    # The Living Sequence
+    "MAHAMANTRA_SEQUENCE",
 ]
