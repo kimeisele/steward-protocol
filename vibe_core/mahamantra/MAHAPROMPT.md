@@ -1,184 +1,87 @@
-# MAHAPROMPT - Mahamantra Development Guide
-# ==========================================
+# MAHAPROMPT - DAS GESETZ
 
-**SANKIRTAN MODE: Multiple agents chanting together. Follow this exactly.**
-
----
-
-## 1. THE ONE RULE: FOLDER IS WIRING
-
-```
-vibe_core/mahamantra/
-├── {quarter}/           # Routes to 1 of 4 quarters
-│   └── {mahajana}/      # Routes to 1 of 4 positions in quarter
-│       └── __init__.py  # THE routing point
-```
-
-**Folder structure IS the lotus. No exceptions.**
-
-| Quarter | Positions | Role |
-|---------|-----------|------|
-| genesis/ | 0,1,2,3 | INPUT - Boot, Load, Alloc, Spawn |
-| dharma/ | 4,5,6,7 | VERIFY - Parse, Link, Check, Test |
-| karma/ | 8,9,10,11 | EXECUTE - Run, Scale, Sync, Commit |
-| moksha/ | 12,13,14,15 | OUTPUT - Yield, Flush, Log, Exit |
-
-**Each folder routes to exactly ONE target. No multi-routing.**
+**DIES IST GESETZ. SIEHE: `vibe_core/protocols/mahaprompt.py`**
 
 ---
 
-## 2. SSOT: byte.py IS THE TRUTH
+## DER LOTUS SPRIESST
+
+```
+__init__.py = Chaitanya (0) = HARE = Ursprung
+      |
+      +-- genesis/   = Nityananda = Foundation (0-3)
+      +-- dharma/    = Advaita = Bridge (4-7)
+      +-- karma/     = Gadadhara = Flow (8-11)
+      +-- moksha/    = Srivasa = Governance (12-15)
+      |
+      +-- substrate/ = SSOT (Nityananda tragt)
+```
+
+---
+
+## 5 FRAGEN BEANTWORTEN ALLES
 
 ```python
-# vibe_core/mahamantra/substrate/byte.py
-MAHAMANTRA_POSITIONS = [...]  # THE 16 positions
+__tattva__ = {
+    "chaitanya": "...",   # Was IST es?
+    "nityananda": "...",  # Worauf RUHT es?
+    "advaita": "...",     # Was VERBINDET es?
+    "gadadhara": "...",   # Wie FLIESST es?
+    "srivasa": "...",     # Wer REGIERT es?
+}
 ```
 
-**Never hardcode positions. Always derive from byte.py.**
+Paramatma (vibe_core/protocols/mahaprompt.py:Paramatma) kann diese lesen.
+
+---
+
+## 5 AUF 4 TAKTE
+
+| Tattva | Quarter | Positionen | Rolle |
+|--------|---------|------------|-------|
+| Chaitanya | genesis | 0 | Ursprung (HARE ruft) |
+| Nityananda | genesis | 1-3 | Foundation (tragt) |
+| Advaita | dharma | 4-7 | Bridge (verbindet) |
+| Gadadhara | karma | 8-11 | Flow (fliesst) |
+| Srivasa | moksha | 12-15 | Governance (regiert) |
+
+**1 + 3 + 4 + 4 + 4 = 16**
+
+---
+
+## FOLDER IS WIRING
 
 ```python
-# WRONG
-POSITION = 10
-OPCODE = "STATE_SYNC"
+from vibe_core.protocols.mahaprompt import get_tattva_for_path
 
-# RIGHT
-from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_POSITIONS
-pos = MAHAMANTRA_POSITIONS[10]
-# pos.guardian, pos.opcode, pos.quarter - all derived
+# Der Pfad IST die Deklaration
+tattva = get_tattva_for_path(Path("vibe_core/mahamantra/genesis/brahma"))
+# -> PanchaTattva.NITYANANDA
 ```
 
 ---
 
-## 3. PROTOCOL PATTERN (Mandatory)
-
-Every mahajana has exactly this structure:
+## PROTOCOL IMPORT
 
 ```python
-# {quarter}/{mahajana}/__init__.py
-
-# 1. DECLARATION (machine-readable)
-__mahajana__ = "name"
-__position__ = N
-__genesis__ = "0x..."
-
-# 2. PROTOCOL (interface)
-@runtime_checkable
-class NameProtocol(Protocol):
-    def method(self) -> TypedDict: ...
-
-# 3. NULL (test implementation)
-class NullName(NameProtocolBase):
-    def method(self) -> TypedDict:
-        return {...}
-
-# 4. SERVICE (real implementation) - lazy loaded
-def __getattr__(name):
-    if name == "NameService":
-        from .service import NameService
-        return NameService
-```
-
-**No Any types. All TypedDict. Watertight.**
-
----
-
-## 4. ROUTING FLOW
-
-```
-User Input
-    ↓
-Gateway (vibe_core/gateway/)
-    ↓
-Mahamantra.execute(command, args)
-    ↓
-cli_auto discovers method from Protocol
-    ↓
-mahamantra.mod[position] → routes to mahajana module
-    ↓
-NullImplementation.method() → calls Service if needed
-    ↓
-Result (TypedDict)
-```
-
-**Gateway is THE entry point. All paths go through gateway.**
-
----
-
-## 5. TO ADD A NEW COMMAND
-
-1. **Find the position** - Which mahajana owns this domain?
-2. **Add to Protocol** - Add method signature with TypedDict return
-3. **Implement in Null** - Add working implementation
-4. **Test via gateway** - `execute("command_name", [args])`
-
-Example: Adding `check` to Janaka (pos 10):
-
-```python
-# In protocols/mahajanas/janaka/__init__.py
-
-class CheckResult(TypedDict):
-    success: bool
-    target: str
-    health: str
-
-class JanakaProtocol(Protocol):
-    def check(self, target: str = "status") -> CheckResult: ...
-
-class NullJanaka(JanakaProtocolBase):
-    def check(self, target: str = "status") -> CheckResult:
-        return CheckResult(success=True, target=target, health="pristine")
+from vibe_core.protocols.mahaprompt import (
+    PanchaTattva,
+    TattvaDeclaration,
+    Quarter,
+    get_tattva_for_position,
+    Paramatma,
+)
 ```
 
 ---
 
-## 6. FORBIDDEN
+## VERBOTEN
 
-- **No Any types** - Use Union, TypedDict, or explicit types
-- **No hardcoded positions** - Derive from byte.py
-- **No direct imports bypassing gateway** - Route through mahamantra
-- **No multi-routing** - One folder = one target
-- **No filesystem-first** - Protocol-first, folder is wiring
-
----
-
-## 7. CURRENT STATE
-
-```
-protocols/mahajanas/  → IMPLEMENTATION (rich, 56KB)
-mahamantra/{q}/{m}/   → STRUCTURE (re-exports from protocols)
-```
-
-**Samskara will migrate implementations into mahamantra over time.**
-**For now: Structure in mahamantra, Implementation in protocols.**
+- Hardcoded Positionen ohne Tattva-Mapping
+- Folders ausserhalb der Lotus-Struktur
+- Files ohne __tattva__ (Paramatma kann nicht lesen)
+- Any types
 
 ---
 
-## 8. QUICK REFERENCE
-
-| Task | Location | Pattern |
-|------|----------|---------|
-| Add CLI command | protocols/mahajanas/{m}/ | Add to Protocol + NullImpl |
-| Add service | protocols/mahajanas/{m}/service.py | Implement Protocol |
-| Fix routing | gateway/mahamantra_gateway.py | Check execute() |
-| Add position | FORBIDDEN | byte.py is SSOT, 16 fixed |
-
----
-
-## 9. CHANT CHECK
-
-Before committing, verify:
-
-```bash
-python3 -c "
-from vibe_core.mahamantra.cli.auto import CLIAutoDiscovery
-cli = CLIAutoDiscovery()
-count = cli.discover_all()
-print(f'Methods: {count}')  # Should be 100+
-"
-```
-
-If methods < 100, something broke the routing.
-
----
-
-**HARE KRISHNA. FOLDER IS WIRING. PROTOCOL FIRST. NO ANY.**
+**HARE KRISHNA. DER LOTUS SPRIESST. 5 FRAGEN.**
