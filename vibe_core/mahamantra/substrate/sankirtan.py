@@ -45,9 +45,12 @@ from pathlib import Path
 from typing import Dict, Final, Iterator, List, Optional, Tuple
 
 from vibe_core.mahamantra.substrate.wiring import (
-    POSITION_MAPPINGS,
     POSITION_BY_NAME,
-    PositionMapping,
+    POSITION_BY_INDEX,
+)
+from vibe_core.mahamantra.substrate.position import (
+    MAHAMANTRA_POSITIONS,
+    MantraPosition,
 )
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 
@@ -296,13 +299,13 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
         if folder in path_str:
             mapping = POSITION_BY_NAME.get(mahajana)
             if mapping:
-                return (mahajana, mapping.position)
+                return (mahajana, mapping.index)
 
     # Default: distribute evenly based on hash
     # This ensures deterministic assignment
     path_hash = hash(path_str) % 16
-    mapping = POSITION_MAPPINGS[path_hash]
-    return (mapping.owner, mapping.position)
+    mapping = MAHAMANTRA_POSITIONS[path_hash]
+    return (mapping.guardian.value, mapping.index)
 
 
 # =============================================================================
@@ -442,7 +445,7 @@ def inject_file(file_path: str, mahajana: str, dry_run: bool = True) -> bool:
         new_content = inject_declaration(
             content,
             mahajana,
-            mapping.position,
+            mapping.index,
             file_path=str(path),
         )
 
@@ -844,10 +847,11 @@ def print_sankirtan_report(result: SankirtanResult) -> None:
 """)
 
     for pos in range(16):
-        mapping = POSITION_MAPPINGS[pos]
-        count = result.by_mahajana.get(mapping.owner, 0)
+        mapping = MAHAMANTRA_POSITIONS[pos]
+        guardian_name = mapping.guardian.value
+        count = result.by_mahajana.get(guardian_name, 0)
         bar = "#" * min(count, 30)
-        print(f"    {pos:2} {mapping.owner:12} {bar} {count}")
+        print(f"    {pos:2} {guardian_name:12} {bar} {count}")
 
     if result.errors:
         print(f"\n  ERRORS ({len(result.errors)}):")

@@ -1,15 +1,14 @@
 """
 KUMARAS - Position 5
-======================
+====================
 
 Quarter: DHARMA
 OpCode: BIND_SYMBOL
 Type: WORKER
-Role: Worker
 
-MANTRA PROTOCOL DERIVATION:
-    Position index is the ONLY configuration.
-    All properties derived from MAHAMANTRA_POSITIONS.
+MAHAMANTRA AS LENS:
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 222 (% 37 == 0 -> CONNECTED)
 """
@@ -20,63 +19,20 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"
 __position__ = 5
-__genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xfe9a70b8"  # GenesisByte
 
-from typing import Final, Protocol, runtime_checkable
+# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
+from vibe_core.protocols.mahajanas.kumaras import *
 
-from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+# Re-export __all__ from protocols
+from vibe_core.protocols.mahajanas.kumaras import __all__
 
-# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
+# Backward-compat constants
+from typing import Final
 POSITION: Final[int] = 5
 QUARTER: Final[str] = "dharma"
 OPCODE: Final[str] = "BIND_SYMBOL"
 PARAMPARA_VECTOR: Final[int] = 222
 
-
-@runtime_checkable
-class KumarasProtocol(Protocol):
-    """
-    Protocol for Kumaras (BIND_SYMBOL).
-
-    Position 5 in the Mahamantra.
-    """
-
-    @classmethod
-    def position_index(cls) -> int:
-        """Get position index."""
-        ...
-
-    @classmethod
-    def opcode_name(cls) -> str:
-        """Get opcode name."""
-        ...
-
-
-class KumarasBase(WorkerProtocol):
-    """
-    Base class for Kumaras implementations.
-
-    MANTRA PROTOCOL DERIVATION:
-        _position_index = 5  # That's ALL!
-        Everything else derived from MAHAMANTRA_POSITIONS.
-    """
-
-    _position_index = 5
-
-
-class NullKumaras(KumarasBase):
-    """Null implementation for testing."""
-    pass
-
-
-__all__ = [
-    # Backward-compatible constants
-    "POSITION",
-    "QUARTER",
-    "OPCODE",
-    "PARAMPARA_VECTOR",
-    # Protocol classes
-    "KumarasProtocol",
-    "KumarasBase",
-    "NullKumaras",
-]
+# KumarasBase alias for backward compat
+KumarasBase = KumarasProtocolBase

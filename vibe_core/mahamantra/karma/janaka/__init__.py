@@ -7,9 +7,9 @@ OpCode: STATE_SYNC
 Type: WORKER
 Role: Worker
 
-MANTRA PROTOCOL DERIVATION:
-    Position index is the ONLY configuration.
-    All properties derived from MAHAMANTRA_POSITIONS.
+MAHAMANTRA AS LENS:
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 407 (% 37 == 0 -> CONNECTED)
 """
@@ -22,52 +22,72 @@ __mahajana__ = "janaka"
 __position__ = 10
 __genesis__ = "0xe12cdf3a"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, Protocol, runtime_checkable
+# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
+# Mahamantra provides STRUCTURE. protocols/mahajanas has IMPLEMENTATION.
+# Samskara will migrate over time.
+from vibe_core.protocols.mahajanas.janaka import (
+    # Protocol Base
+    JanakaProtocolBase,
+    # State Types (WATERTIGHT)
+    TaskValue,
+    TaskStatus,
+    TaskPriority,
+    Task,
+    ExecutionResult,
+    ExecutionState,
+    CheckResult,
+    # Handler Protocol
+    TaskHandler,
+    # Protocol
+    JanakaProtocol,
+    # Implementations
+    NullJanaka,
+    # Instructions
+    SankalpaInstruction,
+    # Cycle Protocol (WATERTIGHT)
+    CyclePhase,
+    CycleStatus,
+    CycleElement,
+    PhaseResult,
+    CycleContextState,
+    RetentionConfig,
+    CycleRegistryStats,
+    CycleState,
+    CognitiveCycleProtocol,
+    CycleRegistryProtocol,
+    CycleOwnedProtocol,
+    NullCognitiveCycle,
+    NullCycleRegistry,
+    # Scheduler (Task Scheduling)
+    SchedulingAlgorithm,
+    ScheduledTask,
+    TaskExecutor,
+    SchedulerProtocol,
+    Scheduler,
+    NullScheduler,
+    # === MIGRATED TYPES ===
+    SessionStartConfig,
+    HeartbeatConfig,
+    KernelConfig,
+    OpusConfig,
+    LimitsConfig,
+    PranaConfig,
+    load_config,
+    is_kernel_running,
+    ensure_kernel_running,
+    get_last_heartbeat,
+    record_heartbeat,
+)
 
-from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
-
-# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
+# Backward-compat constants - derived from mahamantra position 10
+from typing import Final
 POSITION: Final[int] = 10
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "STATE_SYNC"
 PARAMPARA_VECTOR: Final[int] = 407
 
-
-@runtime_checkable
-class JanakaProtocol(Protocol):
-    """
-    Protocol for Janaka (STATE_SYNC).
-
-    Position 10 in the Mahamantra.
-    """
-
-    @classmethod
-    def position_index(cls) -> int:
-        """Get position index."""
-        ...
-
-    @classmethod
-    def opcode_name(cls) -> str:
-        """Get opcode name."""
-        ...
-
-
-class JanakaBase(WorkerProtocol):
-    """
-    Base class for Janaka implementations.
-
-    MANTRA PROTOCOL DERIVATION:
-        _position_index = 10  # That's ALL!
-        Everything else derived from MAHAMANTRA_POSITIONS.
-    """
-
-    _position_index = 10
-
-
-class NullJanaka(JanakaBase):
-    """Null implementation for testing."""
-    pass
-
+# JanakaBase for backward compat (alias to JanakaProtocolBase)
+JanakaBase = JanakaProtocolBase
 
 __all__ = [
     # Backward-compatible constants
@@ -75,8 +95,64 @@ __all__ = [
     "QUARTER",
     "OPCODE",
     "PARAMPARA_VECTOR",
-    # Protocol classes
-    "JanakaProtocol",
+    # Protocol Base
+    "JanakaProtocolBase",
     "JanakaBase",
+    # State Types (WATERTIGHT)
+    "TaskValue",
+    "TaskStatus",
+    "TaskPriority",
+    "Task",
+    "ExecutionResult",
+    "ExecutionState",
+    "CheckResult",
+    # Handler Protocol
+    "TaskHandler",
+    # Protocol
+    "JanakaProtocol",
+    # Implementations
     "NullJanaka",
+    # Instructions
+    "SankalpaInstruction",
+    # Cycle Protocol (WATERTIGHT)
+    "CyclePhase",
+    "CycleStatus",
+    "CycleElement",
+    "PhaseResult",
+    "CycleContextState",
+    "RetentionConfig",
+    "CycleRegistryStats",
+    "CycleState",
+    "CognitiveCycleProtocol",
+    "CycleRegistryProtocol",
+    "CycleOwnedProtocol",
+    "NullCognitiveCycle",
+    "NullCycleRegistry",
+    # Scheduler (Task Scheduling)
+    "SchedulingAlgorithm",
+    "ScheduledTask",
+    "TaskExecutor",
+    "SchedulerProtocol",
+    "Scheduler",
+    "NullScheduler",
+    # === MIGRATED TYPES ===
+    "SessionStartConfig",
+    "HeartbeatConfig",
+    "KernelConfig",
+    "OpusConfig",
+    "LimitsConfig",
+    "PranaConfig",
+    "load_config",
+    "is_kernel_running",
+    "ensure_kernel_running",
+    "get_last_heartbeat",
+    "record_heartbeat",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for JanakaService to avoid circular import."""
+    if name == "JanakaService":
+        from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+        return JanakaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

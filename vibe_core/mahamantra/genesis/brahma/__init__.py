@@ -1,15 +1,14 @@
 """
 BRAHMA - Position 1
-=====================
+===================
 
 Quarter: GENESIS
 OpCode: LOAD_ROOT
 Type: WORKER
-Role: Worker
 
-MANTRA PROTOCOL DERIVATION:
-    Position index is the ONLY configuration.
-    All properties derived from MAHAMANTRA_POSITIONS.
+MAHAMANTRA AS LENS:
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 74 (% 37 == 0 -> CONNECTED)
 """
@@ -20,63 +19,28 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = 1
-__genesis__ = "0x96910869"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x96910869"  # GenesisByte
 
-from typing import Final, Protocol, runtime_checkable
+# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
+from vibe_core.protocols.mahajanas.brahma import *
 
-from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
+# Re-export __all__ from protocols
+from vibe_core.protocols.mahajanas.brahma import __all__
 
-# === BACKWARD-COMPATIBLE CONSTANTS (derived from MantraProtocol) ===
+# Backward-compat constants
+from typing import Final
 POSITION: Final[int] = 1
 QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "LOAD_ROOT"
 PARAMPARA_VECTOR: Final[int] = 74
 
-
-@runtime_checkable
-class BrahmaProtocol(Protocol):
-    """
-    Protocol for Brahma (LOAD_ROOT).
-
-    Position 1 in the Mahamantra.
-    """
-
-    @classmethod
-    def position_index(cls) -> int:
-        """Get position index."""
-        ...
-
-    @classmethod
-    def opcode_name(cls) -> str:
-        """Get opcode name."""
-        ...
+# BrahmaBase alias for backward compat
+BrahmaBase = BrahmaProtocolBase
 
 
-class BrahmaBase(WorkerProtocol):
-    """
-    Base class for Brahma implementations.
-
-    MANTRA PROTOCOL DERIVATION:
-        _position_index = 1  # That's ALL!
-        Everything else derived from MAHAMANTRA_POSITIONS.
-    """
-
-    _position_index = 1
-
-
-class NullBrahma(BrahmaBase):
-    """Null implementation for testing."""
-    pass
-
-
-__all__ = [
-    # Backward-compatible constants
-    "POSITION",
-    "QUARTER",
-    "OPCODE",
-    "PARAMPARA_VECTOR",
-    # Protocol classes
-    "BrahmaProtocol",
-    "BrahmaBase",
-    "NullBrahma",
-]
+def __getattr__(name: str):
+    """Lazy import for BrahmaService to avoid circular import."""
+    if name == "BrahmaService":
+        from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+        return BrahmaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

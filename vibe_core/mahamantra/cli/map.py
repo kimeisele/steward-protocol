@@ -29,7 +29,7 @@ __genesis__ = "0xc0994a6b"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, Final, List, Optional, TypedDict
 
-from vibe_core.mahamantra.substrate.wiring import POSITION_MAPPINGS
+from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
 from vibe_core.mahamantra.substrate.guna import (
     Guna,
     get_guna_by_position,
@@ -143,8 +143,8 @@ def build_map() -> MapResult:
     total_declared = 0
     positions_with_content = 0
 
-    for mapping in POSITION_MAPPINGS:
-        pos = mapping.position
+    for mapping in MAHAMANTRA_POSITIONS:
+        pos = mapping.index
         guna = get_guna_by_position(pos)
         cli_commands = get_cli_commands_for_position(pos)
         declared = get_declared_files_for_position(pos)
@@ -157,10 +157,10 @@ def build_map() -> MapResult:
 
         positions.append(PositionInfo(
             position=pos,
-            guardian=mapping.owner,
+            guardian=mapping.guardian.value,
             quarter=mapping.quarter.value,
             guna=guna.name.lower(),
-            opcode=mapping.opcode,
+            opcode=mapping.opcode.name,
             cli_commands=cli_commands,
             declared_files=declared,
         ))
