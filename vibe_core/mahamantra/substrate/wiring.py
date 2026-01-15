@@ -52,6 +52,7 @@ from vibe_core.mahamantra.substrate.mahajana import (
     Avatara,
     Quarter,
 )
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
     WORDS as TOTAL_POSITIONS,
@@ -137,6 +138,18 @@ def get_position_from_name(name: str) -> Optional[MantraPosition]:
 def get_position_by_index(index: int) -> Optional[MantraPosition]:
     """Get position by index (0-15). DERIVED from SSOT."""
     return POSITION_BY_INDEX.get(index)
+
+
+def get_position_by_opcode(opcode: MantraOpCode) -> Optional[MantraPosition]:
+    """
+    Get position by OpCode. DERIVED from SSOT.
+    
+    Routes operation to guardian.
+    """
+    for pos in MAHAMANTRA_POSITIONS:
+        if pos.opcode == opcode:
+            return pos
+    return None
 
 
 # =============================================================================
