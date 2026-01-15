@@ -24,6 +24,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, TypedDict
 
+# Import Protocol Interface
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+
 # Local imports only - no circular deps
 from vibe_core.mahamantra.kernel.singularity import (
     MAHAMANTRA_POSITIONS,
@@ -37,6 +40,24 @@ from vibe_core.mahamantra.substrate.sankirtan import (
     get_mahajana_for_path,
 )
 
+
+class MahamantraObserver(PanchaTattvaProtocol):
+    """
+    The Observer (Narada).
+    Sees the state of the Mahamantra.
+    """
+    @property
+    def __tattva__(self) -> TattvaDict:
+        return {
+            "chaitanya": "Observation Service",
+            "nityananda": "Filesystem Scanner",
+            "advaita": "Status Aggregation",
+            "gadadhara": "Report Flow",
+            "srivasa": "Observability Governance",
+        }
+
+# Singleton instance
+observer = MahamantraObserver()
 
 # =============================================================================
 # OBSERVATION TYPES

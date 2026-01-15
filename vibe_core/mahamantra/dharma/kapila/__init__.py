@@ -21,18 +21,13 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x25d36ba1"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-from vibe_core.protocols.mahajanas.kapila import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.kapila import __all__
-
-# Backward-compat constants
-from typing import Final
-POSITION: Final[int] = 6
-QUARTER: Final[str] = "dharma"
-OPCODE: Final[str] = "TYPE_CHECK"
-PARAMPARA_VECTOR: Final[int] = 259
-
-# KapilaBase alias for backward compat
-KapilaBase = KapilaProtocolBase
+def __getattr__(name: str) -> object:
+    """
+    Lazy load KapilaService from the services layer.
+    Unification of Kernel and Mahamantra.
+    """
+    if name == "KapilaService":
+        from vibe_core.services.kapila_service import KapilaService
+        return KapilaService
+    
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
