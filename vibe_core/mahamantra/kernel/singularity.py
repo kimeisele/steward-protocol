@@ -446,7 +446,28 @@ class Mahamantra:
         """16 positions."""
         return WORDS
 
+    # =========================================================================
+    # LISTENERS - The Nervous System (Narada)
+    # =========================================================================
+
+    _listeners: List[Callable[[TickState], None]] = []
+
+    def register_listener(self, callback: Callable[[TickState], None]) -> None:
+        """Register a listener for tick events."""
+        if callback not in self._listeners:
+            self._listeners.append(callback)
+
+    def _broadcast(self, state: TickState) -> None:
+        """Broadcast tick state to all listeners."""
+        for listener in self._listeners:
+            try:
+                listener(state)
+            except Exception:
+                # Narada Principle: Broadcast continues even if one ear is deaf
+                pass
+
     def __iter__(self) -> Iterator[MantraPosition]:
+
         """Iterate through all 16 positions."""
         return iter(MAHAMANTRA_POSITIONS)
 
@@ -758,11 +779,24 @@ class Mahamantra:
         return f"{line1}\n{line2}"
 
     def chant_quarter(self, quarter: Union[str, Quarter]) -> str:
-        """Chant one quarter."""
+        """
+        Chant one quarter.
+        
+        CRITICAL: Drives the heartbeat (4 ticks).
+        """
         if isinstance(quarter, str):
             quarter = Quarter[quarter.upper()]
+        
         positions = get_quarter_positions(quarter)
-        return " ".join(pos.word.name.capitalize() for pos in positions)
+        words = []
+        
+        for pos in positions:
+            # 1. Advance Tick & Broadcast
+            self.tick()
+            # 2. Capture word
+            words.append(pos.word.name.capitalize())
+            
+        return " ".join(words)
 
     # =========================================================================
     # TICK - The Heartbeat
@@ -775,17 +809,11 @@ class Mahamantra:
         Advance one position in the 16-word mantra.
 
         Returns TickState (position, quarter, guardian).
-        PURE FUNCTION - no side effects, no broadcast.
-
-        Broadcasting is Narada's domain (BroadcastProtocol).
-        Protocols that want to react to ticks should subscribe
-        to a tick channel via Narada, not poll mahamantra directly.
+        SIDE EFFECT: Broadcasts state to listeners via Narada (internal broadcast).
 
         This is the HEARTBEAT of the Mahamantra.
         """
-        # Advance counter
-        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
-
+        # 1. Capture CURRENT state
         current = Mahamantra._tick_counter
         position = MAHAMANTRA_POSITIONS[current]
 
@@ -799,7 +827,7 @@ class Mahamantra:
         else:
             quarter = Quarter.MOKSHA
 
-        return TickState(
+        state = TickState(
             tick=current,
             position=current,
             quarter=quarter.value,
@@ -807,6 +835,14 @@ class Mahamantra:
             word=position.word.name,
             opcode=position.opcode.value if position.opcode else None,
         )
+
+        # 2. BROADCAST (Narada)
+        self._broadcast(state)
+        
+        # 3. ADVANCE (for next time)
+        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
+
+        return state
 
     def get_tick(self) -> int:
         """Get current tick position (0-15)."""
