@@ -1030,12 +1030,20 @@ lotus = mahamantra  # THE STANDARD EXPORT
 # This prevents 500ms+ import cascades.
 
 # =============================================================================
-# IMPORT FROM URSUBSTRAT (seed.py) - THE LOTUS SPROUTS FROM HERE
+# IMPORT FROM URSUBSTRAT - THE LOTUS SPROUTS FROM THE PROTOCOL
 # =============================================================================
-from vibe_core.mahamantra.substrate.seed import (
+from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,
-    QUARTER_NAMES,
     WORDS,
+    QUARTERS,
+    LILA,
+    MALA,
+    ROUNDS,
+)
+
+# Functions remain in substrate (Reality)
+from vibe_core.mahamantra.substrate.seed import (
+    QUARTER_NAMES,
     Quarter,
     get_positions_in_quarter,
     get_quarter,
