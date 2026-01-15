@@ -116,11 +116,18 @@ class MantraProtocol(ABC):
         1.0 = Exact Match (or phrase contains intent as a whole word)
         0.5 = Partial Match
         0.0 = No Resonance
+        
+        SSOT: Reads from central INTENT_MAP, falls back to _intents for legacy.
         """
+        from vibe_core.mahamantra.substrate.intents import get_intents
+        
+        # Get intents from CENTRAL map (SSOT), fallback to class-level _intents
+        intents = get_intents(cls._position_index) or tuple(cls._intents)
+        
         phrase_lower = phrase.lower()
         phrase_words = phrase_lower.split()
         
-        for intent in cls._intents:
+        for intent in intents:
             intent_lower = intent.lower()
             # Exact Match or Word Match
             if intent_lower == phrase_lower or intent_lower in phrase_words:
