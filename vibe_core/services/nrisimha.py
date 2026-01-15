@@ -6,9 +6,9 @@ This is the heartbeat that keeps the system from drifting into Maya.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0xf6ce09be"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "nrisimha"
+__position__ = 12
+__genesis__ = "0x7ac86006"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import time
@@ -24,11 +24,12 @@ from vibe_core.protocols.universal import (
     Resonance,
     SovereignContext,
 )
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("NRISIMHA_WATCHDOG")
 
 
-class NrisimhaWatchdog(MantraProtocol):
+class NrisimhaWatchdog(MantraProtocol, PanchaTattvaProtocol):
     """
     The Nrisimha Watchdog Service.
     Implements the 16-Step Vishnu Clock for Agentic Alignment.
@@ -37,6 +38,17 @@ class NrisimhaWatchdog(MantraProtocol):
 
     ORIGIN: "Nrisimha" - The Personal Protector.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Nrisimha Watchdog."""
+        return {
+            "chaitanya": "Security & Heartbeat Service",
+            "nityananda": "Mantra Sequence Implementation",
+            "advaita": "OpCode Execution Logic",
+            "gadadhara": "Pulse & Broadcast Flow",
+            "srivasa": "Alignment Governance",
+        }
 
     def __init__(
         self,

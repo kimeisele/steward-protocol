@@ -9,9 +9,9 @@ Wraps ManifestRegistry and CapabilityRegistry.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0x4ea47c97"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x96910869"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from datetime import datetime
@@ -29,15 +29,27 @@ from vibe_core.protocols.mahajanas.brahma import (
     GenesisState,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("BRAHMA_SERVICE")
 
 
-class BrahmaService(BrahmaProtocol):
+class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
     """
     BrahmaService - The Creator.
     Manages system genesis, manifest registry, capability registry, and initial memory allocation.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Brahma Service."""
+        return {
+            "chaitanya": "Registry & Creation Service",
+            "nityananda": "InMemoryManifestRegistry & CapabilityRegistry",
+            "advaita": "Agent Registration Logic",
+            "gadadhara": "Bootstrap & Boot Orchestration Flow",
+            "srivasa": "Capability Enforcement Gate",
+        }
 
     def __init__(self, ledger: VibeLedger):
         self._phase = GenesisPhase.DORMANT

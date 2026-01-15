@@ -9,9 +9,9 @@ Wraps the Ledger implementation.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0x6c78658d"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0x030295b1"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 import logging
@@ -19,24 +19,36 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from vibe_core.ledger import VibeLedger
-from vibe_core.protocols.mahajanas.bhishma import (
+# NEW PROTOCOL IMPORT (The Law)
+from vibe_core.mahamantra.karma.bhishma.protocol import (
     BhishmaProtocol,
     CommitEntry,
     CommitResult,
-    CommitState,
     VerificationResult,
 )
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols.mahajanas.router import Mahajana
 
 logger = logging.getLogger("BHISHMA_SERVICE")
 
 
-class BhishmaService(BhishmaProtocol):
+class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol):
     """
     BhishmaService - The Grandsire.
     Manages the immutable ledger and audit trail.
     Wraps the underlying VibeLedger implementation.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Bhishma Service."""
+        return {
+            "chaitanya": "Ledger & Commitment Service",
+            "nityananda": "VibeLedger Implementation",
+            "advaita": "Event Recording Logic",
+            "gadadhara": "Commit & Verification Flow",
+            "srivasa": "Immutable History Governance",
+        }
 
     def __init__(self, ledger: VibeLedger):
         self._ledger = ledger
@@ -53,9 +65,12 @@ class BhishmaService(BhishmaProtocol):
     def commit(self, entry: CommitEntry, sovereign_id: str) -> CommitResult:
         """COMMIT_LOG: Commit an entry to the ledger."""
         try:
-            event_type = "COMMIT"
-            agent_id = sovereign_id or "SYSTEM"
-            details = {"entry": entry} if not isinstance(entry, dict) else entry
+            event_type = entry.get("event_type", "COMMIT")
+            agent_id = sovereign_id or entry.get("agent_id", "SYSTEM")
+            # We must ensure details is a dict for the underlying ledger
+            details = entry.get("details", {})
+            if not isinstance(details, dict):
+                 details = {"raw": str(details)}
 
             event_id = self._ledger.record_event(event_type=event_type, agent_id=agent_id, details=details)
 
@@ -70,6 +85,9 @@ class BhishmaService(BhishmaProtocol):
             logger.error(f"❌ BHISHMA: Commit failed: {e}")
             return {
                 "success": False,
+                "commit_id": "",
+                "timestamp": "",
+                "previous_id": "",
                 "error_message": str(e),
             }
 
