@@ -62,6 +62,10 @@ class TickState(TypedDict):
     guardian: str
     word: str
     opcode: Optional[int]
+    # KALA (Time)
+    mala: int
+    mantra: int
+    lila: int
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
 from vibe_core.protocols.veda import (
@@ -98,6 +102,7 @@ from vibe_core.mahamantra.substrate.seed import (
 )
 from vibe_core.mahamantra.protocols._proxy import MahamantraProxy
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
+from vibe_core.mahamantra.protocols._kala import KalaTime
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
@@ -694,6 +699,26 @@ class Mahamantra:
                 _ = _module_router[i]
 
     # =========================================================================
+    # KALA - Time Keeping
+    # =========================================================================
+
+    @property
+    def kala(self) -> "TimeKeeper":
+        """
+        Access the TimeKeeper (Gearbox of Time).
+        Manages Ticks -> Mantras -> Lilas -> Malas.
+        """
+        if not hasattr(self, "_time_keeper"):
+            from vibe_core.mahamantra.substrate.kala import TimeKeeper
+            # Start from current tick counter if it exists
+            self._time_keeper = TimeKeeper(start_ticks=self._tick_counter)
+        return self._time_keeper
+
+    def get_time(self) -> KalaTime:
+        """Get current Cosmic Time."""
+        return self.kala.get_time()
+
+    # =========================================================================
     # GOVERNANCE - Bridge to Protocol Ownership
     # =========================================================================
 
@@ -767,16 +792,23 @@ class Mahamantra:
 
     def chant(self, separator: str = " ") -> str:
         """
-        Chant the Mahamantra.
-
-        Returns: "Hare Krishna Hare Krishna Krishna Krishna Hare Hare
-                  Hare Rama Hare Rama Rama Rama Hare Hare"
+        Chant the COMPLETE Mahamantra (16 Words).
+        
+        Drives the clock: 16 Ticks (4 Quarters).
+        
+        Returns: The full mantra string.
         """
-        words = [pos.word.name.capitalize() for pos in MAHAMANTRA_POSITIONS]
-        # Split into two lines of 8
-        line1 = separator.join(words[:8])
-        line2 = separator.join(words[8:])
-        return f"{line1}\n{line2}"
+        quarters = [Quarter.GENESIS, Quarter.DHARMA, Quarter.KARMA, Quarter.MOKSHA]
+        chanted_quarters = []
+        
+        for q in quarters:
+            chanted_quarters.append(self.chant_quarter(q))
+            
+        full_chant = separator.join(chanted_quarters)
+        
+        # Format nice output (2 lines of 8 is standard, but here we just return the string)
+        # If specific formatting is needed, we can adjust, but raw string is safer for now.
+        return full_chant
 
     def chant_quarter(self, quarter: Union[str, Quarter]) -> str:
         """
@@ -813,11 +845,21 @@ class Mahamantra:
 
         This is the HEARTBEAT of the Mahamantra.
         """
-        # 1. Capture CURRENT state
+        # 1. Advance Time (Kala)
+        time_state = self.kala.advance()
+        
+        # Sync local counter (legacy support/caching)
+        Mahamantra._tick_counter = time_state.total_ticks % WORDS
+        
         current = Mahamantra._tick_counter
         position = MAHAMANTRA_POSITIONS[current]
 
-        # Determine quarter
+        # Determine quarter from Time (Lila Position)
+        # Note: position.quarter is static based on index 0-15
+        # We can also derive it from time_state.lila_position if needed
+        # But for now, trust the static map for the "Word Property"
+        
+        # Quarter based on index 0-15
         if current < 4:
             quarter = Quarter.GENESIS
         elif current < 8:
@@ -834,13 +876,17 @@ class Mahamantra:
             guardian=position.guardian.value,
             word=position.word.name,
             opcode=position.opcode.value if position.opcode else None,
+            # KALA Info
+            mala=time_state.mala_count,
+            mantra=time_state.mantra_in_mala,
+            lila=time_state.lila_position
         )
 
         # 2. BROADCAST (Narada)
         self._broadcast(state)
         
-        # 3. ADVANCE (for next time)
-        Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
+        # 3. ADVANCE (Managed by Kala above)
+        # Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
 
         return state
 
