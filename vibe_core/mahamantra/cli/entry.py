@@ -53,15 +53,26 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIResult,
     CLIState,
 )
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 
-class MahamantraCLIEntry:
+class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
     """
     THE entry point. Krishna routes everything.
 
     Implements CLIEntryProtocol.
     ZERO manual wiring - everything via cli_auto.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        return {
+            "chaitanya": "CLI Entry Point",
+            "nityananda": "CLI State & Health",
+            "advaita": "Command Dispatch (Run)",
+            "gadadhara": "Args Flow",
+            "srivasa": "CLI Governance",
+        }
 
     def __init__(self) -> None:
         # Discover ALL on init - Krishna knows everything
