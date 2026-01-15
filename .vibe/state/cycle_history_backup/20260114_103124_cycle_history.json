@@ -2,9 +2,9 @@
   "completed": [],
   "errors": [
     {
-      "cycle_id": "bb8416ac",
+      "cycle_id": "6460dd8d",
       "parent_cycle_id": null,
-      "trace_id": "<MagicMock name='mock.start()' id='4536957712'>",
+      "trace_id": "<MagicMock name='mock.start()' id='4491316368'>",
       "cycle_name": "boot_sequence",
       "phase": "perceive",
       "observations_count": 0,
@@ -14,12 +14,12 @@
       "errors": {
         "orchestrate": "'MantraByte' object is not subscriptable"
       },
-      "timestamp": "2026-01-12T09:06:24.436091"
+      "timestamp": "2026-01-14T10:31:24.303078"
     },
     {
-      "cycle_id": "b40f14ed",
+      "cycle_id": "64b1c8c4",
       "parent_cycle_id": null,
-      "trace_id": "60256a14",
+      "trace_id": "09292407",
       "cycle_name": "boot_sequence",
       "phase": "perceive",
       "observations_count": 0,
@@ -29,8 +29,8 @@
       "errors": {
         "orchestrate": "'MantraByte' object is not subscriptable"
       },
-      "timestamp": "2026-01-12T09:06:24.436111"
+      "timestamp": "2026-01-14T10:31:24.303105"
     }
   ],
-  "last_updated": "2026-01-12T09:06:24.436115"
+  "last_updated": "2026-01-14T10:31:24.303109"
 }
