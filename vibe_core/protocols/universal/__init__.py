@@ -23,7 +23,6 @@ from .infer import InferProtocol
 from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
 from .krishna import IdentityStatus, KrishnaProtocol
 from .mantra import MantraOpCode, MantraProtocol
-from .om import OmProtocol
 # PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
 from vibe_core.protocols.substrate.mantra.prabhupada import (
     PRABHUPADA,
