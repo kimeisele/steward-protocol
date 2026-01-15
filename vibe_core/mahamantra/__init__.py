@@ -785,208 +785,45 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def route(self, command: str) -> "RouteResult":
         """
-        Route a command through the mahamantra.
-
-        THE MAHAMANTRA IS COMPUTE:
-            Every command hashes to a position (0-15).
-            Every position has a guardian.
-            The guardian handles the command.
-
-        PRIORITY:
-            1. Canonical Registry (Naga Commands) - If defined
-            2. Parampara Hash - Fallback resonance
-
-        Args:
-            command: The command string to route
-
-        Returns:
-            RouteResult with position, guardian, quarter
-
-        Example:
-            result = mahamantra.route("status")
-            print(f"Position {result.position}: {result.guardian}")
+        Route a command through the lotus via fractal resonance.
         """
-        if not command:
-            return RouteResult(position=0, guardian="prithu", quarter="genesis")
-
-        position = -1
-
-        # 1. CANONICAL REGISTRY (The Truth)
-        try:
-            # Import ONLY from protocols (SAFE)
-            from vibe_core.mahamantra.substrate import get_position_by_opcode
-            from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
-
-            # We assume the registry is populated by the bootloader/CLI entry point.
-            # Mahamantra does not scan CLI folders itself (Upward Dependency Violation).
-
-            cmd_obj = NAGA_COMMAND_REGISTRY.get(command)
-            if cmd_obj:
-                # Found explicit mapping!
-                pos_mapping = get_position_by_opcode(cmd_obj.opcode)
-                if pos_mapping:
-                    position = pos_mapping.index
-        except ImportError:
-            pass
-        except Exception:
-            pass
-
-        # 2. PARAMPARA HASH (Fallback Resonance)
-        if position == -1:
-            # Parampara vector - weighted sum mod WORDS
-            mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
-            position = mutation_vector % WORDS
-
-        # Get guardian/quarter from substrate (SSOT)
-        from vibe_core.mahamantra.substrate.wiring import get_position_by_index
-
-        mapping = get_position_by_index(position)
-        if mapping:
-            guardian = mapping.guardian.value  # e.g., "prithu", "brahma"
-            quarter = mapping.quarter.value  # e.g., "genesis"
-        else:
-            guardian = "unknown"
-            quarter = "unknown"
-
-        return RouteResult(position=position, guardian=guardian, quarter=quarter)
+        score, winner = self.resonate(command)
+        if winner and score > 0:
+            return RouteResult(
+                position=int(getattr(winner, "__position__", -1)),
+                guardian=winner.path.segments[-1],
+                quarter=winner.path.segments[0]
+            )
+        return RouteResult(position=2, guardian="narada", quarter="genesis")
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
         """
-        Execute a command through the mahamantra.
-
-        THE SIMPLEST INTERFACE:
-            result = mahamantra.execute("status")
-
-        This does EVERYTHING:
-            1. Route command to position/guardian
-            2. Try protocol execution (auto-discovered)
-            3. Fallback to legacy if needed
-            4. Return structured result
-
-        No manual wiring. No complexity. Just execute.
-
-        Args:
-            command: The command to execute
-            args: Optional arguments
-
-        Returns:
-            ExecuteResult with success, exit_code, output, etc.
+        Execute a command through the fractal lotus.
         """
-        args = args or []
+        # 1. ROUTE - Get winning node via fractal resonance
+        score, winner = self.resonate(command)
+        
+        # 2. GUNA - transcendental by default for Holy Name
+        guna_name = "vishuddha"
+        requires_confirmation = False
 
-        # 1. ROUTE - Get position and guardian
-        route = self.route(command)
-        position = route["position"]
-        guardian = route["guardian"]
-        quarter = route["quarter"]
-
-        # 2. GUNA - Derive QoS from position (BG 14)
-        #    BUT: The Holy Name itself is VISHUDDHA SATTVA (transcendental)
-        from vibe_core.mahamantra.substrate.guna import (
-            VISHUDDHA_SATTVA,
-            Guna,
-            GunaQoS,
-            get_guna_by_position,
-            is_vishuddha,
-        )
-
-        # Check if this IS the Holy Name (transcendental)
-        if is_vishuddha(command):
-            guna_name = VISHUDDHA_SATTVA  # "vishuddha"
-            requires_confirmation = False  # Grace needs no permission
-        else:
-            # Material operation - derive from position
-            guna = get_guna_by_position(position)
-            guna_name = guna.name.lower()  # sattva/rajas/tamas
-            requires_confirmation = GunaQoS.requires_confirmation(guna)
-
-        # 3. TRY PROTOCOL EXECUTION (cli_auto)
-        # Only use cli_auto if it SUCCEEDS with meaningful output.
-        # Legacy is battle-tested. Protocol layer is still growing.
-        # SANKIRTAN: Don't force cli_auto. Let legacy handle what works.
-        try:
-            from vibe_core.mahamantra.cli.auto import cli_auto
-
-            cli_result = cli_auto.execute(command, args)
-
-            # Check for REAL success: must succeed AND have meaningful output
-            # {"result": False} is NOT meaningful - it's a Null implementation stub
-            if cli_result.success and cli_result.output:
-                output_dict = cli_result.output.to_dict()
-                items = output_dict.get("items", [])
-                # Real output has more than just {"result": False}
-                is_meaningful = len(items) > 1 or (len(items) == 1 and items[0].get("value") is not False)
-                if is_meaningful:
-                    return ExecuteResult(
-                        success=cli_result.success,
-                        exit_code=cli_result.exit_code,
-                        position=position,
-                        guardian=guardian,
-                        quarter=quarter,
-                        guna=guna_name,
-                        requires_confirmation=requires_confirmation,
-                        output=str(output_dict),
-                        error=cli_result.error.message if cli_result.error else None,
-                    )
-        except ImportError:
-            pass  # Protocol layer not available
-        except Exception:
-            pass  # Protocol error - try legacy
-
-        # 3. FALLBACK TO LEGACY
-        try:
-            import io
-            import sys
-
-            from vibe_core.cli.unified_cli import UnifiedCLI
-
-            # Capture output
-            old_stdout = sys.stdout
-            sys.stdout = captured = io.StringIO()
-
-            try:
-                cli = UnifiedCLI()
-                exit_code = cli.run([command] + args)
-                output = captured.getvalue()
-
-                return ExecuteResult(
-                    success=exit_code == 0,
-                    exit_code=exit_code,
-                    position=position,
-                    guardian=guardian,
-                    quarter=quarter,
-                    guna=guna_name,
-                    requires_confirmation=requires_confirmation,
-                    output=output,
-                    error=None if exit_code == 0 else f"Exit code {exit_code}",
-                )
-            finally:
-                sys.stdout = old_stdout
-
-        except ImportError:
+        if winner and score > 0:
+            # 3. EXECUTE on the winning node
+            res = winner.execute(command, args)
             return ExecuteResult(
-                success=False,
-                exit_code=1,
-                position=position,
-                guardian=guardian,
-                quarter=quarter,
+                success=res.get("success", False),
+                exit_code=0 if res.get("success") else 1,
+                position=int(getattr(winner, "__position__", -1)),
+                guardian=winner.path.segments[-1],
+                quarter=winner.path.segments[0],
                 guna=guna_name,
                 requires_confirmation=requires_confirmation,
-                output="",
-                error="CLI system not available",
+                output=res.get("output", ""),
+                error=None if res.get("success") else res.get("output")
             )
-        except Exception as e:
-            return ExecuteResult(
-                success=False,
-                exit_code=1,
-                position=position,
-                guardian=guardian,
-                quarter=quarter,
-                guna=guna_name,
-                requires_confirmation=requires_confirmation,
-                output="",
-                error=str(e),
-            )
+
+        # Fallback to Narada
+        return getattr(self.genesis, "narada").execute(command, args)
 
     def __getattr__(self, name: str) -> LotusNode:
         """
@@ -1024,93 +861,74 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         raise AttributeError(f"'{name}' not found in lotus (tried guardian, folder, and alias)")
 
     # =========================================================================
-    # VEDA-4 PROTOCOL - Pythonic Elegance
+    # VEDA-4 PROTOCOL - Pythonic Elegance (Fractal Mapping)
     # =========================================================================
     #
-    # SHABDA   → __call__  : mahamantra() chants, mahamantra(5) returns position
-    # ARTHA    → __repr__  : "mahamantra" (identity)
-    # PRATYAYA → __bool__  : Always True (Krishna IS)
-    # KARMA    → __iter__  : for pos in mahamantra (16 positions)
+    # SHABDA   → __call__  : mahamantra() chants, mahamantra("gita") executes
+    # ARTHA    → __repr__  : identity
+    #          → __getitem__ : mahamantra[5] -> Position 5
+    # PRATYAYA → __bool__  : Always True
+    # KARMA    → __iter__  : for petal in mahamantra (16 positions)
     #
 
-    def __call__(self, index_or_guardian: Union[int, str, None] = None) -> Union["TickState", str, object]:
+    def __call__(self, command: Optional[str] = None) -> Union[str, dict]:
         """
         SHABDA: Call the Mahamantra.
-
-        mahamantra()          → Chant (the Holy Name)
-        mahamantra(5)         → Position 5
-        mahamantra("kumaras") → Kumaras position
+        
+        mahamantra()          → Chant (The Holy Name)
+        mahamantra("gita")    → Execute fractal resonance
         """
-        if index_or_guardian is None:
+        if command is None:
             return self.chant()
-        if isinstance(index_or_guardian, int):
-            from vibe_core.mahamantra.substrate.clock import get_tick_info
-
-            return get_tick_info(index_or_guardian)
-        # By guardian name
-        from vibe_core.mahamantra.substrate.clock import get_position_by_guardian
-
-        return get_position_by_guardian(index_or_guardian)
+        return self.execute(command)
 
     def __bool__(self) -> bool:
-        """
-        PRATYAYA: Krishna IS. Always True.
-
-        "asato ma sad gamaya" - Lead me from unreal to real.
-        """
+        """PRATYAYA: Krishna IS."""
         return True
 
     def __eq__(self, other: object) -> bool:
-        """
-        PRATYAYA: Identity comparison.
-
-        All Mahamantra instances are equal (there is only one Krishna).
-        """
-        if isinstance(other, MahamantraLotus):
-            return True
-        return False
+        """PRATYAYA: All Mahamantra instances are equal."""
+        return isinstance(other, MahamantraLotus)
 
     def __hash__(self) -> int:
-        """PRATYAYA: Krishna's hash is the Parampara (37)."""
-        # PARAMPARA imported at module level from protocols._seed (line 1180)
-        return PARAMPARA
+        """PRATYAYA: 37."""
+        return 37
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[LotusNode]:
         """
-        KARMA: Iterate through all 16 positions.
-
-        for pos in mahamantra: ...
+        KARMA: Iterate through all 16 positions (Petals).
         """
-        from vibe_core.mahamantra.substrate.clock import MANTRA_LENGTH, get_tick_info
-
-        return (get_tick_info(i) for i in range(MANTRA_LENGTH))
+        for i in range(16):
+            yield self[i]
 
     def __len__(self) -> int:
-        """WORDS positions in the Mahamantra."""
-        return WORDS
+        """16 positions."""
+        return 16
 
-    def __getitem__(self, index: int) -> object:
+    def __getitem__(self, index: Union[int, str]) -> LotusNode:
         """
-        ARTHA: Access position by index.
-
-        mahamantra[5] → Position 5 (KUMARAS)
+        ARTHA: Access petal by index or guardian name.
+        
+        mahamantra[5] -> Kapila
+        mahamantra["vyasa"] -> Vyasa
         """
-        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
-        if not 0 <= index < WORDS:
-            raise IndexError(f"Position index out of range: {index}")
-        return MAHAMANTRA_POSITIONS[index]
-
-    def __contains__(self, item: Union[int, str]) -> bool:
-        """Check if guardian or index is in Mahamantra."""
-        from vibe_core.mahamantra.substrate.clock import MANTRA_LENGTH
-
-        if isinstance(item, int):
-            return 0 <= item < MANTRA_LENGTH
-        # Check guardian name
-        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
-
-        guardian_names = [pos.guardian.value for pos in MAHAMANTRA_POSITIONS]
-        return item in guardian_names
+        from vibe_core.mahamantra.substrate.position import get_position_mahajana
+        
+        if isinstance(index, int):
+            if not 0 <= index < 16:
+                raise IndexError(f"Lotus position {index} out of range.")
+            guardian = get_position_mahajana(index)
+            # Route via Quarter logic
+            if index < 4: return getattr(self.genesis, guardian)
+            if index < 8: return getattr(self.dharma, guardian)
+            if index < 12: return getattr(self.karma, guardian)
+            return getattr(self.moksha, guardian)
+            
+        if isinstance(index, str):
+            # Resolve via alias or direct name
+            return self.resolve(index)
+            
+        raise TypeError(f"Invalid lotus index type: {type(index)}")
 
 
 # =============================================================================
