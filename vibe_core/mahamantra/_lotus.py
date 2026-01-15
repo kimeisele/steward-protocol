@@ -26,13 +26,14 @@ import importlib
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Tuple
 
-
 # =============================================================================
 # THE LOTUS PATH
 # =============================================================================
 
+
 class LotusPath:
     """Path through the lotus."""
+
     __slots__ = ("_segments",)
 
     def __init__(self, segments: Tuple[str, ...] = ()) -> None:
@@ -71,6 +72,7 @@ class LotusPath:
 # THE LOTUS NODE - Auto-Discovery
 # =============================================================================
 
+
 class LotusNode:
     """
     A node in Krishna's Lotus.
@@ -78,6 +80,7 @@ class LotusNode:
     Auto-discovers children from folder structure.
     FOLDER = EXISTENCE = WIRING.
     """
+
     __slots__ = ("_path", "_base", "_cache", "_module")
 
     # Base path for the mahamantra package
@@ -114,9 +117,50 @@ class LotusNode:
         if module is not None and hasattr(module, name):
             return getattr(module, name)
 
-        raise AttributeError(
-            f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'"
-        )
+        # SCANNER FALLBACK: Find across whole codebase via __mahajana__ tags
+        # This connects the 93% of files outside mahamantra/ folder
+        found = self._scanner_fallback(name)
+        if found is not None:
+            return found
+
+        raise AttributeError(f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'")
+
+    def _scanner_fallback(self, name: str) -> Optional[object]:
+        """
+        Scanner-based fallback for cross-codebase routing.
+
+        When a mahajana claims files outside mahamantra/, this finds them.
+        Uses __mahajana__ declarations from Scanner to locate exports.
+
+        ARJUNA-PATTERN: Fails silently if scanner unavailable.
+        """
+        # Only for mahajana-level nodes (e.g., genesis.brahma, dharma.vyasa)
+        if self._path.depth != 2:
+            return None
+
+        mahajana = self._path.segments[1]  # e.g., "brahma"
+
+        try:
+            from vibe_core.mahamantra.substrate.scanner import get_scanner
+
+            scanner = get_scanner()
+            scanner.scan()
+            files = scanner.get_by_mahajana(mahajana)
+
+            for f in files:
+                module_path = f.get("module_path", "")
+                if not module_path:
+                    continue
+                try:
+                    mod = importlib.import_module(module_path)
+                    if hasattr(mod, name):
+                        return getattr(mod, name)
+                except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+                    continue
+        except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+            pass
+
+        return None
 
     def _discover(self, name: str) -> Optional["LotusNode"]:
         """
@@ -210,10 +254,7 @@ class LotusNode:
             module = self._get_module()
             if module is not None:
                 remaining = NAVADVIPA_LIMIT - len(items)
-                module_items = [
-                    name for name in dir(module)
-                    if not name.startswith("_")
-                ]
+                module_items = [name for name in dir(module) if not name.startswith("_")]
                 items.extend(module_items[:remaining])
 
         result = sorted(set(items))
@@ -244,10 +285,7 @@ class LotusNode:
 
         module = self._get_module()
         if module is not None:
-            items.extend(
-                name for name in dir(module)
-                if not name.startswith("_")
-            )
+            items.extend(name for name in dir(module) if not name.startswith("_"))
 
         return sorted(set(items))
 
