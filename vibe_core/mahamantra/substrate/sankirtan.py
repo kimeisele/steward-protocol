@@ -68,6 +68,7 @@ from vibe_core.mahamantra.protocols._sankirtan import (
     SankirtanProtocol,
     GenesisByte,
     InjectionRequest,
+    WiringStats,
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
@@ -1010,6 +1011,12 @@ class SankirtanSamskara:
             dry_run=self._dry_run
         )
 
+    def heal_wiring(self, base_path: Optional[str] = None, dry_run: bool = True) -> WiringStats:
+        """Heal filesystem wiring (Protocol Implementation)."""
+        # Convert str to Path if needed
+        path_obj = Path(base_path) if base_path else None
+        return heal_wiring(path_obj, dry_run=dry_run)
+
     def genesis(self, input_data: object) -> SamskaraPipelineContext[FilePayload]:
         """
         GENESIS: Init & Load the file.
@@ -1191,4 +1198,113 @@ __all__ = [
     "cli_sankirtan",
     # Constants
     "FOLDER_MAHAJANA_MAP",
+    "heal_wiring",
 ]
+
+# =============================================================================
+# HEAL WIRING - The Royal Decree
+# =============================================================================
+
+def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[str, int]:
+    """
+    HEAL WIRING: The King manages his territory.
+    
+    Scans all 16 Mahajana folders.
+    Generates perfect __init__.py from StandardBlueprint.
+    Overwrites if incorrect or missing.
+    
+    Args:
+        base_path: Base path to vibe_core (default: auto-detect)
+        dry_run: If True, only report.
+    
+    Returns:
+        Stats dict (checked, healed, skipped, failed)
+    """
+    from vibe_core.mahamantra.protocols._blueprint import StandardBlueprint
+    from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+    
+    if base_path is None:
+        base_path = Path(__file__).parent.parent.parent
+        
+    stats = {"checked": 0, "healed": 0, "skipped": 0, "failed": 0}
+    blueprint = StandardBlueprint()
+    template = blueprint.get_template("__init__")
+    
+    logger.info(f"👑 HEAL WIRING (dry_run={dry_run})")
+    
+    for pos in MAHAMANTRA_POSITIONS:
+        stats["checked"] += 1
+        
+        # Determine paths
+        guardian = pos.guardian.value
+        quarter = pos.quarter.value
+        folder_path = base_path / "mahamantra" / quarter / guardian
+        init_path = folder_path / "__init__.py"
+        
+        try:
+            # Create folder if missing
+            if not folder_path.exists():
+                if not dry_run:
+                    folder_path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"  Created folder: {quarter}/{guardian}")
+            
+            # Determine Service Class (Mapping Logic)
+            # This logic maps guardian to service class/module
+            service_class = f"{guardian.capitalize()}Service"
+            # Special cases or standard mapping?
+            # Standard: vibe_core.services.{guardian}_service
+            service_module = f"vibe_core.services.{guardian}_service"
+            
+            # Special case: Nrisimha -> NrisimhaWatchdog
+            if guardian == "nrisimha":
+                service_class = "NrisimhaWatchdog" # But we alias it as NrisimhaService in __init__ usually?
+                # In previous patch we used:
+                # if name == "NrisimhaService": from ... import NrisimhaWatchdog return NrisimhaWatchdog
+                # So the class name exported is NrisimhaWatchdog, but accessed as Service?
+                # Let's stick to the pattern I established: Alias = Service Name
+                service_class = "NrisimhaService"
+                service_module = "vibe_core.services.nrisimha" 
+            
+            # Calculate Genesis Hash
+            # Virtual path for hash calculation (relative to root)
+            rel_path = f"vibe_core/mahamantra/{quarter}/{guardian}/__init__.py"
+            genesis_hash = compute_genesis_hash(guardian, pos.index, rel_path)
+            
+            # Generate Content
+            content = template["content_pattern"].format(
+                mahajana_upper=guardian.upper(),
+                position=pos.index,
+                quarter_upper=quarter.upper(),
+                opcode=pos.opcode.name if pos.opcode else "UNKNOWN",
+                guardian_type="HEAD" if pos.is_head else "WORKER",
+                vector=pos.parampara_vector,
+                mahajana=guardian,
+                quarter=quarter,
+                genesis_hash=genesis_hash,
+                service_class=service_class,
+                service_module=service_module
+            )
+            
+            # Check existing
+            needs_update = True
+            if init_path.exists():
+                current_content = init_path.read_text()
+                # Simple check: if content is identical (ignoring whitespace maybe?)
+                if current_content.strip() == content.strip():
+                    needs_update = False
+            
+            if needs_update:
+                if not dry_run:
+                    init_path.write_text(content)
+                    logger.info(f"  ✨ Healed: {quarter}/{guardian}/__init__.py")
+                else:
+                    logger.info(f"  Would heal: {quarter}/{guardian}/__init__.py")
+                stats["healed"] += 1
+            else:
+                stats["skipped"] += 1
+                
+        except Exception as e:
+            logger.error(f"  ❌ Failed {guardian}: {e}")
+            stats["failed"] += 1
+            
+    return stats
