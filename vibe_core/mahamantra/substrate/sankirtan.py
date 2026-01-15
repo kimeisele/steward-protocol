@@ -63,6 +63,15 @@ from vibe_core.protocols.substrate.samskara import (
     PipelineExecutor,
 )
 
+# Import SankirtanProtocol (THE LAW)
+from vibe_core.mahamantra.protocols._sankirtan import (
+    SankirtanProtocol,
+    GenesisByte,
+    InjectionRequest,
+)
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
+
 logger = logging.getLogger("SANKIRTAN")
 
 
@@ -943,7 +952,9 @@ class SankirtanSamskara:
     """
     Protocol-based Sankirtan implementation.
 
-    IMPLEMENTS: SamskaraProtocol[FilePayload, InjectionResult]
+    IMPLEMENTS:
+        - SamskaraProtocol[FilePayload, InjectionResult] (Lifecycle)
+        - SankirtanProtocol (Capability)
 
     This class wraps the 4-phase functions in a proper protocol implementation.
     Use this instead of the raw functions for type-safe pipeline execution.
@@ -962,6 +973,42 @@ class SankirtanSamskara:
 
     def __init__(self, dry_run: bool = True) -> None:
         self._dry_run = dry_run
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """Pancha Tattva definition."""
+        return {
+            "chaitanya": "Sankirtan Implementation",
+            "nityananda": "Seed Protocol",
+            "advaita": "Injection Logic",
+            "gadadhara": "File Flow",
+            "srivasa": "Permission Governance",
+        }
+
+    def calculate_genesis_byte(self, path: str, position: int) -> GenesisByte:
+        """Calculate GenesisByte (Protocol Implementation)."""
+        # Determine Mahajana from path if possible, or use unknown
+        # This is a simplification, ideally we pass mahajana too
+        mahajana = "unknown"
+        mapping = get_mahajana_for_path(Path(path))
+        if mapping:
+            mahajana = mapping[0]
+
+        hash_str = compute_genesis_hash(mahajana, position, path)
+        vector = int(hash_str, 16)
+        return {
+            "hash": hash_str,
+            "vector": vector,
+            "is_valid": vector % PARAMPARA == 0
+        }
+
+    def inject(self, request: InjectionRequest) -> bool:
+        """Inject DNA (Protocol Implementation)."""
+        return inject_file(
+            request["path"],
+            request["mahajana"],
+            dry_run=self._dry_run
+        )
 
     def genesis(self, input_data: object) -> SamskaraPipelineContext[FilePayload]:
         """
