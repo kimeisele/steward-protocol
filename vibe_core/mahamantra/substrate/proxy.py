@@ -232,8 +232,10 @@ class BalaramaProxy(GADBase, GADProtocol):
         Raises:
             ImportError: If module cannot be imported
         """
-        super().__init__()  # Init GADBase
-        
+
+        # CRITICAL: Initialize local state BEFORE super().__init__
+        # GADBase.__init__ calls verify_link(), which inspects this object.
+        # If attributes are missing, __getattr__ is called, causing RecursionError.
         self.module_name = module_name
         self.module = None
         self.is_wrapped = False
@@ -242,6 +244,9 @@ class BalaramaProxy(GADBase, GADProtocol):
         self._mahajana: str = "unknown"
         self._position: int = -1
         self._genesis: str = ""
+        
+        # Init GADBase (triggers verify_link)
+        super().__init__()
 
         # Heartbeat (Puri Connector)
         self._attached_to_heartbeat: bool = False
@@ -344,7 +349,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         We replace: module.__dict__['Path'] = _GovernedPath
 
         Service continues using: path = Path("foo.txt")
-        But now it's governed (routes through bridge).
+        But now it is governed (routes through bridge).
         """
         # Check if Path is in module namespace
         if "Path" in self.module.__dict__:
@@ -488,7 +493,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         Delegate attribute access to wrapped module.
 
         This makes the proxy transparent:
-            proxy.some_function() → module.some_function()
+            proxy.some_function() -> module.some_function()
 
         Args:
             name: Attribute name
@@ -676,7 +681,6 @@ class BalaramaProxy(GADBase, GADProtocol):
                 pass
 
     def __repr__(self) -> str:
-        """String representation with identity."""
         orbit_info = f", Orbit={self._reactor.lagna}" if self._reactor else ""
         if self.has_identity:
             return f"BalaramaProxy({self._mahajana}@{self._position}, {self.module_name}{orbit_info})"
@@ -689,33 +693,6 @@ class BalaramaProxy(GADBase, GADProtocol):
 # =============================================================================
 
 def wrap_service(module_name: str, *, silent: bool = False) -> BalaramaProxy:
-    """
-    Wrap a service module with Balarama Proxy.
-
-    CONVENIENCE WRAPPER:
-    --------------------
-    Instead of: proxy = BalaramaProxy("vibe_core.services.foo")
-    Use: service = wrap_service("vibe_core.services.foo")
-
-    NAVADVIPA IDENTITY:
-    -------------------
-    The proxy automatically extracts __mahajana__ and __position__.
-    Access via: service.mahajana, service.position
-
-    Args:
-        module_name: Full module path to wrap
-        silent: If True, suppress embrace logging
-
-    Returns:
-        BalaramaProxy instance with identity awareness
-
-    Example:
-        >>> manifestation = wrap_service("vibe_core.services.manifestation_service")
-        >>> manifestation.mahajana  # "janaka"
-        >>> manifestation.position  # 10
-        >>> # manifestation now has mahamantra in namespace
-        >>> # All Path operations governed
-    """
     return BalaramaProxy(module_name, silent=silent)
 
 
@@ -738,28 +715,6 @@ AUTO_WRAP_SERVICES = [
 
 
 def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
-    """
-    Auto-wrap services listed in AUTO_WRAP_SERVICES.
-
-    NAVADVIPA SANKIRTAN:
-    --------------------
-    Each service is embraced and welcomed by identity.
-    The log shows WHO joined the dance:
-
-        🙏 JANAKA (Position 10) embraced: manifestation_service
-        🙏 PRITHU (Position 0) embraced: prakriti_binding
-
-    Args:
-        silent: If True, suppress individual embrace logs (default for bootstrap)
-
-    Returns:
-        Dict mapping module name → BalaramaProxy (with identity)
-
-    Example:
-        >>> proxies = auto_wrap_services(silent=False)
-        >>> for name, proxy in proxies.items():
-        ...     print(f"{proxy.mahajana}: {proxy.position}")
-    """
     import logging
     logger = logging.getLogger("BALARAMA")
 

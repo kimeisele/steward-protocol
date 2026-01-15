@@ -500,6 +500,12 @@ class GADBase(ABC):
 
     def __init__(self) -> None:
         self._heartbeat = MantraHeartbeat()
+        
+        # PRABHUPADA INTEGRATION:
+        # The Link validates the connection at birth (Creation).
+        # We inject this truth into the Heartbeat state.
+        is_bona_fide = acharya.verify_link(self)
+        self._heartbeat.jiva_connected = is_bona_fide
 
     @property
     def heartbeat(self) -> MantraHeartbeat:
@@ -553,13 +559,12 @@ class GADBase(ABC):
         """
         Perform GAD-000 audit.
         
-        NOW WITH PRABHUPADA INTEGRATION:
-        The Link (Acharya) validates the signature.
-        We do not self-validate. We consult the Link.
-        """
-        # Ask Prabhupada: Is this component valid?
-        link_verified = acharya.verify_link(self)
+        PRABHUPADA INTEGRATION:
+        The Link verification is now stored in the Heartbeat (`jiva_connected`).
+        We read from the Heartbeat to ensure Consistency.
         
+        signature_valid = krishna_present (Source) AND jiva_connected (Link)
+        """
         return GADAudit(
             discoverability=bool(self.discover()),
             observability=bool(self.get_state()),
@@ -568,9 +573,9 @@ class GADBase(ABC):
             idempotency=self.is_idempotent,
             recoverability=len(self.detect_drift()) == 0,
             
-            # The 37th - Verified by The Link
-            sovereign_present=link_verified,
-            signature_valid=link_verified,
+            # The 37th - Verified by The Link (via Heartbeat)
+            sovereign_present=self._heartbeat.jiva_connected,
+            signature_valid=self._heartbeat.krishna_present and self._heartbeat.jiva_connected,
             
             daya=self.test_daya(),
             satyam=self.test_satyam(),
