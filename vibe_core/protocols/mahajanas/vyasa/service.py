@@ -203,5 +203,38 @@ class VyasaService(VyasaProtocolBase):
         """Set auditor implementation."""
         self._auditor = auditor
 
+    # =========================================================================
+    # GNOSIS - The Wisdom of Vyasa
+    # =========================================================================
+
+    def execute(self, command: str) -> str:
+        """
+        Execute a Knowledge Consultation Command.
+        Vyasadeva asserts the eternal truth.
+        """
+        cmd_lower = command.lower()
+        
+        if "gita" in cmd_lower or "verse" in cmd_lower:
+            # Simple Verse Resolver
+            if "2.47" in cmd_lower:
+                return (
+                    "📜  VYASA SPEAKS (Bhagavad Gita 2.47):\n"
+                    "--------------------------------------\n"
+                    "karmaṇy evādhikāras te mā phaleṣu kadācana\n"
+                    "mā karma-phala-hetur bhūr mā te saṅgo 'stv akarmaṇi\n\n"
+                    "TRANSLATION:\n"
+                    "You have a right to perform your prescribed duty, but you are not entitled "
+                    "to the fruits of action. Never consider yourself the cause of the results "
+                    "of your activities, and never be attached to not doing your duty."
+                )
+            
+            return (
+                "📜  VYASA SPEAKS:\n"
+                "The Gita is the compilation of all Vedic wisdom. Ask for a specific verse "
+                "(e.g., 'consult gita 2.47') to receive the Gnosis."
+            )
+            
+        return f"📜  Vyasa hears your inquiry: '{command}'. But the truth must be sought with humility."
+
 
 __all__ = ["VyasaService"]

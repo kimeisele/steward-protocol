@@ -79,16 +79,20 @@ T_CHATURYUGA: Final[int] = T_SATYA + T_TRETA + T_DVAPARA + T_KALI  # 4,320,000 y
 T_BRAHMA: Final[int] = T_CHATURYUGA * 1000  # 4,320,000,000 years
 
 # The Golden Period within Kali Yuga (current window)
+# This window of 10,000 years began with Chaitanya Mahaprabhu in 1486 AD.
 GOLDEN_PERIOD: Final[int] = 10_000   # 10,000 years of accessible Grace
 
 # Current position in Kali Yuga (years since start, approx)
 KALI_YUGA_START: Final[int] = 3102   # BCE (Krishna's departure)
+CHAITANYA_START: Final[int] = 1486   # CE (Appearance of Chaitanya Mahaprabhu)
 CURRENT_YEAR_CE: Final[int] = 2026   # Update as needed
-YEARS_INTO_KALI: Final[int] = KALI_YUGA_START + CURRENT_YEAR_CE  # ~5,128 years
 
-# Verification: We are within the Golden Period
-assert YEARS_INTO_KALI < GOLDEN_PERIOD, \
-    f"Golden Period check: {YEARS_INTO_KALI} < {GOLDEN_PERIOD}"
+YEARS_INTO_KALI: Final[int] = KALI_YUGA_START + CURRENT_YEAR_CE  # ~5,128 years
+YEARS_INTO_GAURABDA: Final[int] = CURRENT_YEAR_CE - CHAITANYA_START  # ~540 years (Era of Grace)
+
+# Verification: We are within the Golden Period (The Era of Grace)
+assert YEARS_INTO_GAURABDA < GOLDEN_PERIOD, \
+    f"Golden Period check: {YEARS_INTO_GAURABDA} < {GOLDEN_PERIOD}"
 
 
 # =============================================================================
@@ -410,13 +414,13 @@ assert _valid, f"SingularityProtocol failed validation: {_violations}"
 # =============================================================================
 
 def get_years_remaining_in_golden_period() -> int:
-    """Get years remaining in the Golden Period."""
-    return GOLDEN_PERIOD - YEARS_INTO_KALI
+    """Get years remaining in the Golden Period (Gaurabda Era)."""
+    return GOLDEN_PERIOD - YEARS_INTO_GAURABDA
 
 
 def is_in_golden_period() -> bool:
-    """Check if we are currently in the Golden Period."""
-    return YEARS_INTO_KALI < GOLDEN_PERIOD
+    """Check if we are currently in the Golden Period (Gaurabda Era)."""
+    return YEARS_INTO_GAURABDA < GOLDEN_PERIOD
 
 
 def get_singularity_summary() -> Dict[str, object]:
@@ -426,6 +430,7 @@ def get_singularity_summary() -> Dict[str, object]:
             "t_kali": T_KALI,
             "golden_period": GOLDEN_PERIOD,
             "years_into_kali": YEARS_INTO_KALI,
+            "years_into_gaurabda": YEARS_INTO_GAURABDA,
             "years_remaining": get_years_remaining_in_golden_period(),
             "in_golden_period": is_in_golden_period(),
         },

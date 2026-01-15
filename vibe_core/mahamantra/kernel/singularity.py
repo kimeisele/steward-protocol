@@ -1013,77 +1013,99 @@ class Mahamantra:
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> dict:
         """
-        Execute a Natural Language Command.
+        Execute a Natural Language Command via Lotus Discovery.
         
-        "The Scepter". Maps Intention -> Action.
+        "The Scepter". Maps Intention -> Action through Resonance.
         
         The Logic:
-            1. Input: "scan disk"
-            2. Resolution: 
-               - Subject: "disk" -> PRITHU
-               - Verb: "scan" -> RESOLVE_REQ (or similar)
-            3. Action: prithu.scan()
+            1. Discovery: Ask all 16 Mahajanas for their Resonance Score.
+            2. Selection: The Node with the highest score (Resonance > 0) wins.
+            3. Dispatch: Awakening and Execution.
             
         Args:
             command: The raw command string.
-            args: Optional arguments (ignored for NL, used for strict CLI).
+            args: Optional arguments.
             
         Returns:
             Dict execution result (success, output, metadata).
         """
-        # Merge args if present (Natural Language is holistic)
+        # Merge args if present
         full_command = command
         if args:
             full_command = f"{command} {' '.join(args)}"
             
         cmd_lower = full_command.lower()
         
-        # 0. SPECIAL: BOOTSTRAP
+        # 0. SPECIAL: BOOTSTRAP (Built-in King's Rite)
         if "bootstrap" in cmd_lower:
             from vibe_core.mahamantra import bootstrap
             success = bootstrap()
             return {
                 "success": success,
-                "output": "Bootstrap initiated.",
+                "output": "Bootstrap initiated via Singularity.",
                 "mahajana": "brahma",
                 "opcode": "SYS_WAKE"
             }
 
-        # 1. RESOLUTION (Keyword Map - "The Lens")
-        # TODO: Move this to a Protocol (e.g., TranslationProtocol) for robustness?
-        # For now, we implement the "Simple Map" as requested.
+        # 1. DISCOVERY (Resonance Routing)
+        # Ensure all protocols are registered for discovery
+        self._ensure_all_registered()
         
-        subject_map = {
-            # PRITHU (Infrastructure)
-            "disk": "prithu", "file": "prithu", "store": "prithu",
-            # BRAHMA (Creation)
-            "create": "brahma", "spawn": "brahma", "new": "brahma",
-            # NARADA (Communication)
-            "chat": "narada", "msg": "narada", "say": "narada",
-            # YAMARAJA (Judgment/Time)
-            "time": "yamaraja", "clock": "yamaraja", "judge": "yamaraja",
-            # KAPILA (Analysis)
-            "analyze": "kapila", "logic": "kapila", # Removed generic 'scan' which conflicted
-        }
+        best_guardian = "narada" # Default fallback
+        max_resonance = 0.0
         
-        target_name = "narada" # Default
-        for key, name in subject_map.items():
-            if key in cmd_lower:
-                target_name = name
-                # If we found a specific subject like 'disk', break immediately
-                # This prevents 'scan' (if present) from overriding 'disk'
-                break
+        # Poll all 16 positions via the Registry
+        for idx in range(16):
+            protocol_cls = self.registry.get(idx)
+            if protocol_cls and hasattr(protocol_cls, "get_resonance"):
+                resonance = protocol_cls.get_resonance(cmd_lower)
+                if resonance > max_resonance:
+                    max_resonance = resonance
+                    best_guardian = _get_guardian_name(idx)
+                    # If perfect match found, we could break, 
+                    # but polling all allows for future weighted matching.
+                    if max_resonance >= 1.0:
+                        break
+        
+        target_name = best_guardian
                 
-        # 2. DISPATCH (The Action)
-        # mahajana_obj might be the MODULE (e.g. wiring.py) or the INSTANCE
-        mahajana_obj = getattr(self.mod, target_name)
+        # 2. DISPATCH (The Royal Hunt)
+        target_instance = None
+        service_class = None
+        service_class_name = f"{target_name.capitalize()}Service"
         
-        # SANKIRTAN: Unwrap the Avatar if hidden in the module
-        # If we got 'wiring' module for 'prithu', we need wiring.prithu
-        if hasattr(mahajana_obj, target_name):
-             mahajana_obj = getattr(mahajana_obj, target_name)
-             
-        mahajana = mahajana_obj # usage standard
+        # Jungle List: Where could the service hide?
+        # Ordered by priority (canonical first)
+        jungles = [
+            f"vibe_core.mahamantra.{self.by_guardian(target_name).quarter.name.lower()}.{target_name}",
+            f"vibe_core.protocols.mahajanas.{target_name}.service",
+            f"vibe_core.naga.services.{target_name}",
+            f"vibe_core.services.{target_name}",
+            f"vibe_core.protocols.mahajanas.{target_name}",
+        ]
+        
+        for jungle in jungles:
+            try:
+                module = importlib.import_module(jungle)
+                candidate = getattr(module, service_class_name, None)
+                if candidate and isinstance(candidate, type):
+                    service_class = candidate
+                    break
+            except ImportError:
+                continue
+        
+        if service_class:
+            # Found the Class! The King's Touch awakens the Service.
+            target_instance = service_class()
+            # Wrap to ensure GAD compliance during execution
+            if not hasattr(target_instance, "__tattva__"):
+                pos_idx = _get_index_by_guardian_name(target_name) or 0
+                target_instance = MahamantraProxy(target_instance, pos_idx, target_name)
+        else:
+            # Fallback to the module itself (wrapped in proxy)
+            target_instance = getattr(self.mod, target_name)
+        
+        mahajana = target_instance
 
         # Try to find a fitting method based on the verb
         
@@ -1091,15 +1113,15 @@ class Mahamantra:
         success = True
         
         try:
-             # If target supports 'execute' (Standard Command Interface)
-            if hasattr(mahajana, "execute"):
-                output = mahajana.execute(command)
-            # If target supports 'chat' (Conversational Interface)
-            elif hasattr(mahajana, "chat"):
+             # Use the 'chat' method of the Proxy or the Instance 
+             # (The Proxy now delegates to 'execute' or 'chat' correctly)
+            if hasattr(mahajana, "chat"):
                 output = mahajana.chat(command)
+            elif hasattr(mahajana, "execute"):
+                output = mahajana.execute(command)
             # Fallback: Identity
             else:
-                output = f"🕉️ {target_name.upper()} hears you but has no 'execute' method."
+                output = f"🕉️ {target_name.upper()} resonated ({max_resonance}) but has no execution method."
                 success = False
         except Exception as e:
             output = f"Execution Error: {e}"
@@ -1107,9 +1129,10 @@ class Mahamantra:
             
         return {
             "success": success,
+            "resonance": max_resonance,
             "output": output,
             "mahajana": target_name,
-            "opcode": "EXEC_SERVICE" # Generic for now
+            "opcode": "EXEC_SERVICE"
         }
 
     def chat(self, message: str) -> str:

@@ -74,6 +74,7 @@ class VyasaProtocolBase(HeadProtocol):
         parampara_vector() -> 185 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 4  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["gita", "verse", "knowledge", "wisdom", "consult"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[4]

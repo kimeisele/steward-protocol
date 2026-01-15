@@ -1247,6 +1247,7 @@ _SINGULARITY_LAZY_IMPORTS = {
     "T_BRAHMA": "_singularity",
     "GOLDEN_PERIOD": "_singularity",
     "YEARS_INTO_KALI": "_singularity",
+    "YEARS_INTO_GAURABDA": "_singularity",
     # === CHAITANYA LILA ===
     "MAHAMANTRA_DIMENSION": "_singularity",
     "LILA_CYCLES": "_singularity",

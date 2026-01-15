@@ -77,17 +77,26 @@ class MahamantraProxy(PanchaTattvaProtocol):
         Returns:
             Response string.
         """
-        # 1. Try Target Implementation
-        handler = getattr(self._target, "on_chat", None)
+        # 1. GATEWAY DELEGATION (The Iron Scepter)
+        # We look for explicit execution interfaces on the target.
+        # This is NOT a blind passthrough; we only honor governed verbs.
+        handler = getattr(self._target, "execute", None)
+        if not callable(handler):
+            handler = getattr(self._target, "chat", None)
+        if not callable(handler):
+            handler = getattr(self._target, "on_chat", None)
+            
         if callable(handler):
             try:
+                # The target handles the message, but the Proxy 
+                # still owns the context (Guardian/Position).
                 response = handler(message)
                 if isinstance(response, str):
                     return response
-            except Exception:
-                pass # Fallback to Identity
+            except Exception as e:
+                return f"⚠️ Proxy Execution Error (at {self._guardian}): {e}"
 
-        # 2. Fallback: Identity Response
+        # 2. Fallback: Identity Response (The Balarama Mantel)
         return (
             f"🕉️  [PROXY RESPONSE] I am {type(self._target).__name__}.\n"
             f"    Identity: {self._guardian.upper()} (Pos {self._position})\n"
