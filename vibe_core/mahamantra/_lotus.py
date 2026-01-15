@@ -273,6 +273,130 @@ class LotusNode:
 
         return sorted(set(items))
 
+    # === Resonance & Execution (Node-to-Node Lotus) ===
+
+    def resonate(self, command: str) -> tuple[float, Optional["LotusNode"]]:
+        """
+        Calculate resonance for a command through the fractal tree.
+        
+        Returns: (resonance_score, winning_node)
+        """
+        cmd_lower = command.lower()
+        
+        # 1. Check direct module resonance (Leaf Level)
+        # If this node represents a Mahajana (depth 2), check its protocol
+        if self._path.depth == 2:
+            try:
+                guardian = self._path.segments[1]
+                from vibe_core.mahamantra.substrate import ProtocolRegistry
+                protocol_cls = ProtocolRegistry.get_by_guardian(guardian)
+                if protocol_cls and hasattr(protocol_cls, "get_resonance"):
+                    score = protocol_cls.get_resonance(cmd_lower)
+                    if score > 0:
+                        return score, self
+            except Exception:
+                pass
+
+        # 2. Delegate to children (Tree Level)
+        max_score = 0.0
+        best_node = None
+        
+        # We only walk children if we are root or quarter level
+        if self._path.depth < 2:
+            for child_name in self._dir_full():
+                # Avoid infinite recursion and non-folder attributes
+                if child_name.startswith("_") or child_name == "mod" or child_name == "shadow":
+                    continue
+                try:
+                    child = getattr(self, child_name)
+                    if isinstance(child, LotusNode):
+                        score, node = child.resonate(command)
+                        if score > max_score:
+                            max_score = score
+                            best_node = node
+                            if max_score >= 1.0:
+                                break
+                except Exception:
+                    continue
+                    
+        return max_score, best_node
+
+    def execute(self, command: str, args: Optional[list[str]] = None) -> dict:
+        """
+        Execute a command on this node.
+        
+        If this is the root, it performs resonance discovery first.
+        If this is a leaf (Mahajana), it awakens the service and executes.
+        """
+        if self._path.is_root:
+            score, winner = self.resonate(command)
+            if winner and score > 0:
+                return winner.execute(command, args)
+            
+            # Fallback to Narada if no resonance
+            return getattr(self.genesis, "narada").execute(command, args)
+
+        # Leaf Level Execution
+        if self._path.depth == 2:
+            guardian = self._path.segments[1]
+            # Use the Singularity's Royal Hunt to awaken the service
+            from vibe_core.mahamantra import mahamantra
+            # We bypass the resonance check here because we ARE the winner
+            return self._awaken_and_execute(guardian, command, args)
+
+        return {"success": False, "output": f"Node {self} cannot execute directly."}
+
+    def _awaken_and_execute(self, guardian: str, command: str, args: Optional[list[str]]) -> dict:
+        """Awaken the service at this node and execute the command."""
+        import importlib
+        from vibe_core.mahamantra.protocols._proxy import MahamantraProxy
+        
+        # Royal Hunt logic encapsulated for the node
+        service_class = None
+        service_class_name = f"{guardian.capitalize()}Service"
+        
+        jungles = [
+            f"vibe_core.mahamantra.{self._path.segments[0]}.{guardian}",
+            f"vibe_core.protocols.mahajanas.{guardian}.service",
+            f"vibe_core.naga.services.{guardian}",
+            f"vibe_core.services.{guardian}",
+        ]
+        
+        for jungle in jungles:
+            try:
+                module = importlib.import_module(jungle)
+                candidate = getattr(module, service_class_name, None)
+                if candidate and isinstance(candidate, type):
+                    service_class = candidate
+                    break
+            except ImportError:
+                continue
+        
+        if not service_class:
+            return {"success": False, "output": f"Could not awaken {guardian} Service."}
+
+        # Awaken
+        instance = service_class()
+        # Wrap
+        if not hasattr(instance, "__tattva__"):
+            # Get position from substrate
+            from vibe_core.mahamantra.substrate import get_position_by_guardian
+            pos = get_position_by_guardian(guardian)
+            instance = MahamantraProxy(instance, pos.index, guardian)
+            
+        # Execute
+        try:
+            if hasattr(instance, "chat"):
+                output = instance.chat(command)
+            elif hasattr(instance, "execute"):
+                output = instance.execute(command)
+            else:
+                output = f"🕉️ {guardian.upper()} awakened but is mute."
+            
+            return {"success": True, "output": output, "mahajana": guardian}
+        except Exception as e:
+            return {"success": False, "output": f"Execution Error: {e}"}
+
     # === Iteration ===
 
     def _walk(self, depth: int = 1) -> Iterator[Tuple[LotusPath, "LotusNode"]]:
