@@ -27,7 +27,7 @@ __genesis__ = "0x4a925e36"  # GenesisByte: parampara % 37 == 0
 import importlib
 import sys
 from pathlib import Path as StdPath
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 # Import bridge for routing
 from vibe_core.mahamantra.substrate.bridge import offer
@@ -189,6 +189,11 @@ class BalaramaProxy:
         self._position: int = -1
         self._genesis: str = ""
 
+        # Heartbeat (Puri Connector)
+        self._attached_to_heartbeat: bool = False
+        self._tick_handler: Optional[Callable] = None
+        self._tick_count: int = 0  # How many times we were activated
+
         # Import the module
         try:
             self.module = importlib.import_module(module_name)
@@ -207,6 +212,9 @@ class BalaramaProxy:
         # Log the embrace (Navadvipa welcome)
         if not silent:
             self._log_embrace()
+
+        # PURI PHASE: Attach to heartbeat (if service has identity)
+        self._attach_to_heartbeat(silent=silent)
 
     def _extract_identity(self) -> None:
         """
@@ -284,6 +292,122 @@ class BalaramaProxy:
         if "Path" in self.module.__dict__:
             # Replace with governed version
             self.module.__dict__["Path"] = _GovernedPath
+
+    def _attach_to_heartbeat(self, *, silent: bool = False) -> None:
+        """
+        Attach service to Mahamantra heartbeat.
+
+        PURI CONNECTOR (Ratha Yatra):
+        -----------------------------
+        This is the final step of service integration.
+        The service is now "dancing" with the Mahamantra.
+
+        How it works:
+            1. Create a "gated listener" for this service
+            2. Register it with mahamantra.register_listener()
+            3. The listener only fires when tick.position == service.position
+
+        This means:
+            - Prithu (Position 0) wakes at tick 0, 16, 32, ...
+            - Janaka (Position 10) wakes at tick 10, 26, 42, ...
+
+        The Ratha Yatra: Each service moves when the chariot (tick) reaches them.
+        """
+        # Only attach if we have a valid position
+        if not self.has_identity:
+            return  # Anonymous services don't join the dance
+
+        # Create gated listener
+        self._tick_handler = self._create_gated_listener()
+
+        # Register with Mahamantra
+        try:
+            from vibe_core.mahamantra import mahamantra
+            mahamantra.register_listener(self._tick_handler)
+            self._attached_to_heartbeat = True
+
+            if not silent:
+                import logging
+                logger = logging.getLogger("BALARAMA")
+                logger.debug(
+                    f"💓 {self._mahajana.upper()}@{self._position} attached to heartbeat"
+                )
+
+        except Exception as e:
+            # Graceful degradation - service works but no heartbeat
+            import logging
+            logging.getLogger("BALARAMA").warning(
+                f"⚠️ Failed to attach {self._mahajana} to heartbeat: {e}"
+            )
+
+    def _create_gated_listener(self) -> Callable:
+        """
+        Create a gated tick listener for this service.
+
+        THE GATE:
+        ---------
+        "You shall not pass!" - unless tick.position == my position.
+
+        This creates positional scheduling WITHOUT code changes:
+            - Prithu only wakes at Position 0
+            - Janaka only wakes at Position 10
+            - etc.
+
+        Returns:
+            A callable that receives TickState and gates execution.
+        """
+        # Capture service reference (closure)
+        proxy = self
+
+        def gated_listener(tick_state: Any) -> None:
+            """
+            Gated listener - only activates at matching position.
+
+            tick_state can be dict (TypedDict) or object with attributes.
+            We support both: position, quarter, guardian, word, opcode
+            """
+            # THE GATE: Only fire if position matches
+            # Support both dict and object access
+            if isinstance(tick_state, dict):
+                current_position = tick_state.get("position", -1)
+            else:
+                current_position = getattr(tick_state, "position", -1)
+
+            if current_position != proxy._position:
+                return  # Not my turn - stay silent
+
+            # MY TURN! Increment counter
+            proxy._tick_count += 1
+
+            # Look for handler methods in wrapped module
+            # Duck typing: on_tick, process, update, handle_tick
+            handler_names = ["on_tick", "process", "update", "handle_tick", "on_heartbeat"]
+
+            for handler_name in handler_names:
+                handler = getattr(proxy.module, handler_name, None)
+                if callable(handler):
+                    try:
+                        # Try with tick_state first, then without
+                        try:
+                            handler(tick_state)
+                        except TypeError:
+                            handler()
+                        break  # Only call first found handler
+                    except Exception:
+                        # Silent failure (Arjuna pattern)
+                        pass
+
+        return gated_listener
+
+    @property
+    def attached_to_heartbeat(self) -> bool:
+        """Check if service is attached to Mahamantra heartbeat."""
+        return self._attached_to_heartbeat
+
+    @property
+    def tick_count(self) -> int:
+        """Number of times this service was activated by heartbeat."""
+        return self._tick_count
 
     def __getattr__(self, name: str) -> Any:
         """
