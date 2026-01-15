@@ -215,6 +215,35 @@ from .vedic import AsharamaStage, VarnaType, VedicGovernanceProtocol
 # Note: ManifestRegistry and VibeScheduler are re-exported from .ledger module
 # The .registry and .scheduler modules exist for backwards compatibility
 
+# =============================================================================
+# MAHAMANTRA BRIDGE (The Return to Source)
+# =============================================================================
+# "All protocols emanate from the Mahamantra."
+# If a protocol is not found here, we ask Krishna (mahamantra).
+
+def __getattr__(name: str):
+    """
+    Delegate unknown protocols to the Mahamantra.
+    This bridges the Old World (protocols/) with the New World (mahamantra/).
+    """
+    try:
+        # Import inside function to avoid circular dependency at module level
+        from vibe_core.mahamantra import mahamantra
+        
+        # Try to resolve via Mahamantra (e.g. "BrahmaProtocol")
+        # We check if mahamantra has this attribute (via its own routing)
+        if hasattr(mahamantra, name):
+            return getattr(mahamantra, name)
+            
+        # Try protocols router specifically
+        if hasattr(mahamantra.protocols, name):
+            return getattr(mahamantra.protocols, name)
+            
+    except (ImportError, AttributeError):
+        pass
+        
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 __all__ = [
     # Agent Protocol
     "VibeAgent",

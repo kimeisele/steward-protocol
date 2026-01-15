@@ -108,9 +108,12 @@ class MahamantraLotus(LotusNode):
     # =========================================================================
     # Substrate = stateless map (answers "what WOULD be at tick X?")
     # Lotus = stateful reactor (answers "where am I NOW?")
+    #
+    # PHOENIX GUARANTEE: State restored from disk on module load.
+    # Survives kill -9. Restored AFTER class definition to avoid circular imports.
 
-    _tick: int = 0  # Current position (0-15) - shared across instances
-    _lila_tick: int = 0  # Current lila position (0-47) - Chaitanya's complete cycle
+    _tick: int = 0  # Current position (0-15) - PHOENIX RESTORED after class init
+    _lila_tick: int = 0  # Current lila position (0-47) - PHOENIX RESTORED after class init
 
     # =========================================================================
     # PARAMPARA LISTENERS - Wer hört, wird gerufen (BOMBENFEST)
@@ -272,6 +275,10 @@ class MahamantraLotus(LotusNode):
         # Advance to next position (for next call)
         MahamantraLotus._tick = next_position(MahamantraLotus._tick)
 
+        # PHOENIX: Persist state after advance (survives kill -9)
+        from vibe_core.mahamantra.kernel.phoenix import save_state
+        save_state(MahamantraLotus._tick, MahamantraLotus._lila_tick)
+
         return result
 
     def chant(self, separator: str = " ") -> str:
@@ -377,6 +384,10 @@ class MahamantraLotus(LotusNode):
 
         # Advance to next lila position
         MahamantraLotus._lila_tick = next_lila_position(MahamantraLotus._lila_tick)
+
+        # PHOENIX: Persist state after advance (survives kill -9)
+        from vibe_core.mahamantra.kernel.phoenix import save_state
+        save_state(MahamantraLotus._tick, MahamantraLotus._lila_tick)
 
         return result
 
@@ -1020,6 +1031,25 @@ class MahamantraLotus(LotusNode):
 # =============================================================================
 
 mahamantra = MahamantraLotus()
+
+# =============================================================================
+# PHOENIX RESTORATION - Load persisted state after class instantiation
+# =============================================================================
+# This MUST happen after class definition to avoid circular imports.
+# The kernel.phoenix module imports from protocols._seed (safe).
+# But kernel.__init__ imports fractal, which triggers the whole cascade.
+#
+# SOLUTION: Restore state AFTER the mahamantra instance exists.
+
+try:
+    from vibe_core.mahamantra.kernel.phoenix import init_phoenix
+    _phoenix_tick, _phoenix_lila = init_phoenix()
+    MahamantraLotus._tick = _phoenix_tick
+    MahamantraLotus._lila_tick = _phoenix_lila
+except Exception:
+    # GRACEFUL DEGRADATION: If Phoenix fails, start from 0
+    # This is acceptable - state loss is better than import failure
+    pass
 
 # =============================================================================
 # LOTUS - THE STANDARD IMPORT
