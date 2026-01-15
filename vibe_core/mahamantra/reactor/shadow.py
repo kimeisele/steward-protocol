@@ -139,6 +139,25 @@ class ShadowReactor:
         if auto_discover:
             self._discover_all()
 
+        # =====================================================================
+        # ORBITAL MECHANICS (JYOTISHA)
+        # =====================================================================
+        from vibe_core.mahamantra.substrate.orbit import OrbitCalculator
+        
+        orbit_calc = OrbitCalculator()
+        # Lagna: Personal Phase Offset
+        # "My Prithu (0) aligns with Global Tick X"
+        self._lagna = orbit_calc.get_phase_offset(self._reactor_id, modulus=16)
+
+    # =========================================================================
+    # PROTOCOL PROPERTIES
+    # =========================================================================
+
+    @property
+    def lagna(self) -> int:
+        """The Phase Offset (Lagna) of this reactor."""
+        return self._lagna
+
     # =========================================================================
     # PROTOCOL PROPERTIES
     # =========================================================================
@@ -290,23 +309,32 @@ class ShadowReactor:
             7. Return shadow state with parampara_coherence
         """
         # Extract position from tick_state (WATERTIGHT)
-        position = tick_state["position"]
-        previous = self._position  # Current position IS the previous for this tick
-
-        # Update state
-        self._position = position
-        self._previous_position = previous  # Store for next tick's detection
+        global_position = tick_state["position"]
+        
+        # APPLY ORBITAL LAGNA (Phase Shift)
+        # effective_pos = (global - lagna) % 16
+        # Example: Global 8, Lagna 8 -> Effective 0 (Prithu)
+        # So at Parashurama's time (8), this reactor serves Prithu (0).
+        effective_position = (global_position - self._lagna) % 16
+        
+        previous = self._position  # Current internal position is standard
+        
+        # Update state with EFFECTIVE position
+        self._position = effective_position
+        self._previous_position = previous
+        
+        # Local alias for downstream logic (fixes NameError)
+        position = effective_position
 
         # =====================================================================
         # PARAMPARA VERIFICATION (CHAITANYA SINGULARITY)
         # =====================================================================
-        # Every tick is checked for Parampara connection.
-        # This is the 37th principle operating on every compute cycle.
-        parampara_connected = self._verify_parampara(position, self._cycle_count)
-        parampara_coherence = self._compute_parampara_coherence(position, self._cycle_count)
+        # Verified against EFFECTIVE position (Personal Parampara)
+        parampara_connected = self._verify_parampara(self._position, self._cycle_count)
+        parampara_coherence = self._compute_parampara_coherence(self._position, self._cycle_count)
 
-        # Get mapping for context
-        mapping = get_position_by_index(position)
+        # Get mapping for context (Effective Position)
+        mapping = get_position_by_index(self._position)
         if mapping is None:
             mapping = MAHAMANTRA_POSITIONS[0]
 
@@ -315,7 +343,7 @@ class ShadowReactor:
 
         # Build state (WATERTIGHT TypedDict)
         state = ShadowState(
-            position=position,
+            position=self._position,  # EFFECTIVE
             previous=previous,
             phase=phase.value,
             quarter=mapping.quarter.value,
@@ -326,13 +354,13 @@ class ShadowReactor:
             return_count=self._return_count,
         )
 
-        # THE 8 MOMENT - Bhoga → Prasadam switch
-        if position == SWITCH_POSITION and previous == 7:
+        # THE 8 MOMENT - Bhoga → Prasadam switch (Effective Position)
+        if self._position == SWITCH_POSITION and previous == 7:
             self._switch_count += 1
             self._trigger_switch(state)
 
-        # THE RETURN - 15→0 (prasadam becomes next bhoga)
-        if position == RETURN_POSITION and previous == 15:
+        # THE RETURN - 15→0 (prasadam becomes next bhoga) (Effective Position)
+        if self._position == RETURN_POSITION and previous == 15:
             self._return_count += 1
             self._cycle_count += 1
             self._trigger_return(state)
@@ -461,7 +489,7 @@ class ShadowReactor:
         )
 
     def __repr__(self) -> str:
-        return f"ShadowReactor(id={self._reactor_id}, position={self._position}, phase={self.phase.value}, listeners={self.discovered_count})"
+        return f"OrbitalShadowReactor(id={self._reactor_id}, lagna={self._lagna}, position={self._position})"
 
     # =========================================================================
     # LISTENER MANAGEMENT (Protocol implementation)
