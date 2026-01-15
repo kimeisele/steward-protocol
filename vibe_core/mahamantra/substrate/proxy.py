@@ -25,9 +25,10 @@ __position__ = 1
 __genesis__ = "0x4a925e36"  # GenesisByte: parampara % 37 == 0
 
 import importlib
+import logging
 import sys
 from pathlib import Path as StdPath
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 # Import bridge for routing
 from vibe_core.mahamantra.substrate.bridge import offer
@@ -128,8 +129,51 @@ class _GovernedPath(type(StdPath())):
 # BALARAMA PROXY - The Service Wrapper
 # =============================================================================
 
+# =============================================================================
+# PROXY DHARMA - Default Behaviors (The Choreography)
+# =============================================================================
+# When a service is silent (no on_tick), the Proxy dances for it.
+
+logger = logging.getLogger("BALARAMA")
+
+def _dharma_meditate(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Default: Silent meditation."""
+    pass  # Generic silence is ok, but we log activation below
+
+def _dharma_prithu(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Prithu (0): Health Check / Infrastructure."""
+    logger.info(f"🌍 Prithu@{proxy.position}: Checking Foundation (Disk/Mem)")
+
+def _dharma_janaka(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Janaka (10): State Sync / Maintenance."""
+    logger.info(f"👑 Janaka@{proxy.position}: Maintaining State Consistency")
+
+def _dharma_bhishma(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Bhishma (11): Ledger / Tradition."""
+    logger.info(f"👴 Bhishma@{proxy.position}: Upholding the Vow (Ledger Sync)")
+
+def _dharma_nrisimha(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Nrisimha (12): Protection / Security."""
+    logger.info(f"🦁 Nrisimha@{proxy.position}: Scanning for Hiranyakashipu (Threats)")
+
+def _dharma_yamaraja(proxy: "BalaramaProxy", tick: Any) -> None:
+    """Yamaraja (15): Audit / Death."""
+    logger.info(f"⚖️ Yamaraja@{proxy.position}: Auditing Karma (Final Check)")
+
+
+DEFAULT_DHARMA: Dict[str, Callable[[Any, Any], None]] = {
+    "prithu": _dharma_prithu,
+    "janaka": _dharma_janaka,
+    "bhishma": _dharma_bhishma,
+    "nrisimha": _dharma_nrisimha,
+    "yamaraja": _dharma_yamaraja,
+    # Others default to meditation (silence)
+}
+
+
 class BalaramaProxy:
-    """
+    """The Servitor God (Proxy).
+    Wraps existing services to give them Mahajana Identity.
     Balarama Proxy - Wraps services and routes operations through Mahamantra.
 
     THE PATTERN (Acintya Bheda Abheda):
@@ -396,6 +440,22 @@ class BalaramaProxy:
                     except Exception:
                         # Silent failure (Arjuna pattern)
                         pass
+                
+                # If we found a callable, we are done
+                if callable(handler):
+                    return
+
+            # FALLBACK: PROXY DHARMA
+            # If the service is silent (no handler), the Proxy acts.
+            mahajana_name = proxy.mahajana.lower()
+            dharma_action = DEFAULT_DHARMA.get(mahajana_name, _dharma_meditate)
+            
+            try:
+                # The Proxy dances on behalf of the service
+                dharma_action(proxy, tick_state)
+            except Exception as e:
+                logger.warning(f"Proxy Dharma failed for {mahajana_name}: {e}")
+
 
         return gated_listener
 

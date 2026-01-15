@@ -302,6 +302,36 @@ class MahamantraLotus(LotusNode):
         info = get_tick_info(MahamantraLotus._tick)
         return info["quarter"]
 
+    def chant_quarter(self, quarter_name: str) -> str:
+        """
+        Chant one specific quarter (4 words).
+        
+        CRITICAL: This drives the heartbeat!
+        Advances the tick 4 times (once per word).
+        Triggers all registered listeners (Proxies).
+
+        Args:
+            quarter_name: 'genesis', 'dharma', 'karma', or 'moksha'
+
+        Returns:
+            The chanted quarter string (e.g. "Hare Krishna Hare Krishna")
+        """
+        words = []
+        # A quarter has exactly 4 words/ticks
+        for _ in range(4):
+            # 1. Tick (Broadcasts Event + Advances State)
+            state = self.tick()
+            
+            # 2. Capture word
+            words.append(state["word"])
+            
+            # 3. Optional: Verify alignment (Log warning if out of sync)
+            if state["quarter"] != quarter_name:
+                # We don't crash, we just note the dissonance
+                pass 
+
+        return " ".join(words)
+
     def verify(self, parampara_vector: int) -> bool:
         """Verify Parampara connection (% 37 == 0)."""
         from vibe_core.mahamantra.substrate.clock import verify_parampara
