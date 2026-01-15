@@ -32,6 +32,13 @@ class InjectionRequest(TypedDict):
     mahajana: str
     position: int
 
+class WiringStats(TypedDict):
+    """Statistics from wiring healing."""
+    checked: int
+    healed: int
+    skipped: int
+    failed: int
+
 @runtime_checkable
 class SankirtanProtocol(PanchaTattvaProtocol, Protocol):
     """
@@ -63,6 +70,13 @@ class SankirtanProtocol(PanchaTattvaProtocol, Protocol):
         """
         ...
 
+    def heal_wiring(self, base_path: Optional[str] = None, dry_run: bool = True) -> WiringStats:
+        """
+        Heal the filesystem wiring (The Royal Decree).
+        Ensures __init__.py files match the Blueprint.
+        """
+        ...
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
@@ -70,5 +84,6 @@ class SankirtanProtocol(PanchaTattvaProtocol, Protocol):
 __all__ = [
     "GenesisByte",
     "InjectionRequest",
+    "WiringStats",
     "SankirtanProtocol",
 ]
