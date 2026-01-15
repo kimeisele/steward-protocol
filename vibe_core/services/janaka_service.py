@@ -28,16 +28,28 @@ from vibe_core.protocols.mahajanas.janaka import (
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.scheduling.in_memory import InMemoryScheduler
 from vibe_core.scheduling.task import Task as SchedulerTask
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("JANAKA_SERVICE")
 
 
-class JanakaService(JanakaProtocol):
+class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
     """
     JanakaService - The Executor.
     Manages task scheduling and execution.
     Wraps InMemoryScheduler.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Janaka Service."""
+        return {
+            "chaitanya": "Execution & Scheduling Service",
+            "nityananda": "InMemoryScheduler Implementation",
+            "advaita": "Task Lifecycle & Orchestration Logic",
+            "gadadhara": "Command Execution Flow",
+            "srivasa": "Sovereign Task Governance",
+        }
 
     def __init__(self):
         self._scheduler = InMemoryScheduler()

@@ -9,9 +9,9 @@ Handles Operator Input Processing and Cognition.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0xb35505a1"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xc30db303"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from typing import Dict, List, Optional, Any
@@ -32,14 +32,26 @@ from vibe_core.protocols.cognition import (
     SignedOperatorInput,
     NullCognitive
 )
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("KAPILA_SERVICE")
 
-class KapilaService(KapilaProtocol):
+class KapilaService(KapilaProtocol, PanchaTattvaProtocol):
     """
     KapilaService - The Analyzer.
     Manages cognition, intent resolution, and system metrics.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Kapila Service."""
+        return {
+            "chaitanya": "Analysis & Cognition Service",
+            "nityananda": "Cognitive Protocol Hook",
+            "advaita": "Inference & Optimization Logic",
+            "gadadhara": "Operator Input Flow",
+            "srivasa": "Metrics & Health Governance",
+        }
 
     def __init__(self):
         self._analyses_performed = 0
