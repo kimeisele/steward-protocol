@@ -70,7 +70,7 @@ from typing import (
 # seed.py = Chaitanya = Position 0 = THE ONE ORIGIN
 # _core.py = Contracts that SERVE the origin, not duplicate it
 
-from vibe_core.mahamantra.substrate.seed import (
+from vibe_core.mahamantra.protocols._seed import (
     KSHETRA as KSETRA_COUNT,      # 24 - Prakriti elements (field)
     MAHAJANA_COUNT,               # 12 - The guardians
     KSETRAJNA as KSETRAJNA_COUNT, # 1  - The knower (Krishna)
