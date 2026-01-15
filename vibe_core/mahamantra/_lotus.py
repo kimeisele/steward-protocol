@@ -26,13 +26,14 @@ import importlib
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Tuple
 
-
 # =============================================================================
 # THE LOTUS PATH
 # =============================================================================
 
+
 class LotusPath:
     """Path through the lotus."""
+
     __slots__ = ("_segments",)
 
     def __init__(self, segments: Tuple[str, ...] = ()) -> None:
@@ -71,6 +72,7 @@ class LotusPath:
 # THE LOTUS NODE - Auto-Discovery
 # =============================================================================
 
+
 class LotusNode:
     """
     A node in Krishna's Lotus.
@@ -78,6 +80,7 @@ class LotusNode:
     Auto-discovers children from folder structure.
     FOLDER = EXISTENCE = WIRING.
     """
+
     __slots__ = ("_path", "_base", "_cache", "_module")
 
     # Base path for the mahamantra package
@@ -114,9 +117,34 @@ class LotusNode:
         if module is not None and hasattr(module, name):
             return getattr(module, name)
 
-        raise AttributeError(
-            f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'"
-        )
+        # REGISTRY FALLBACK: Delegate to DeclarationRegistry (Senior Architect pattern)
+        # Registry is the single source of truth for cross-codebase routing
+        if self._path.depth == 2:  # mahajana-level (e.g., genesis.brahma)
+            found = self._registry_resolve(name)
+            if found is not None:
+                return found
+
+        raise AttributeError(f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'")
+
+    def _registry_resolve(self, name: str) -> Optional[object]:
+        """
+        Resolve via DeclarationRegistry (singleton, proper separation of concerns).
+
+        The registry handles:
+        - Scanner loading (once)
+        - Module path caching
+        - Export caching (O(1) for repeated lookups)
+
+        Lotus stays pure: folder discovery + registry delegation.
+        """
+        try:
+            from vibe_core.mahamantra.protocols._declaration import DeclarationRegistry
+
+            mahajana = self._path.segments[1]  # e.g., "brahma"
+            registry = DeclarationRegistry()
+            return registry.resolve_export(mahajana, name)
+        except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+            return None
 
     def _discover(self, name: str) -> Optional["LotusNode"]:
         """
@@ -210,10 +238,7 @@ class LotusNode:
             module = self._get_module()
             if module is not None:
                 remaining = NAVADVIPA_LIMIT - len(items)
-                module_items = [
-                    name for name in dir(module)
-                    if not name.startswith("_")
-                ]
+                module_items = [name for name in dir(module) if not name.startswith("_")]
                 items.extend(module_items[:remaining])
 
         result = sorted(set(items))
@@ -244,10 +269,7 @@ class LotusNode:
 
         module = self._get_module()
         if module is not None:
-            items.extend(
-                name for name in dir(module)
-                if not name.startswith("_")
-            )
+            items.extend(name for name in dir(module) if not name.startswith("_"))
 
         return sorted(set(items))
 

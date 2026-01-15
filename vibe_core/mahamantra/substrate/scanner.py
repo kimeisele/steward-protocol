@@ -48,24 +48,23 @@ from typing import (
     Tuple,
 )
 
+from vibe_core.mahamantra.substrate.acintya import PARAMPARA
+from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana, Quarter
+
 # Import from substrate protocol - THE SOURCE OF TRUTH
 from vibe_core.protocols.substrate.scanner import (
     Declaration,
     DeclarationType,
     FileStatus,
     ScanConfig,
+    ScannedFile,
     ScannerProtocol,
     ScanProgress,
     ScanResult,
-    ScannedFile,
     extract_declarations,
     get_default_config,
     path_to_module,
 )
-
-from vibe_core.mahamantra.substrate.mahajana import Mahajana, Avatara, Quarter
-from vibe_core.mahamantra.substrate.acintya import PARAMPARA
-
 
 # =============================================================================
 # CONSTANTS (Only declaration attribute name - not paths!)
@@ -78,6 +77,7 @@ DECLARATION_ATTR: Final[str] = "__mahajana_card__"
 # MAHAJANA ALIAS - Translation Layer (Mahamantra-specific)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MahajanaAlias:
     """
@@ -86,10 +86,11 @@ class MahajanaAlias:
     Maps Sanskrit names to English/German aliases and back.
     Supports position-based lookup.
     """
-    name: str                    # Primary name (Sanskrit)
-    position: int                # Position 0-15
-    aliases: Tuple[str, ...]     # Alternative names
-    description: str = ""        # What this mahajana does
+
+    name: str  # Primary name (Sanskrit)
+    position: int  # Position 0-15
+    aliases: Tuple[str, ...]  # Alternative names
+    description: str = ""  # What this mahajana does
 
     @property
     def all_names(self) -> Tuple[str, ...]:
@@ -124,19 +125,19 @@ MAHAJANA_ALIASES: Final[Tuple[MahajanaAlias, ...]] = (
         aliases=("destroyer", "zerstörer", "cleanup", "gc"),
         description="Destruction and garbage collection",
     ),
-
     # === DHARMA Quarter (4-7) ===
+    # Position 4 is HEAD (Vyasa) per seed.py AVATARAS
     MahajanaAlias(
-        name="kumaras",
+        name="vyasa",
         position=4,
-        aliases=("sages", "weisen", "knowledge", "wisdom"),
-        description="Knowledge and wisdom",
+        aliases=("compiler", "compiler", "document", "record"),
+        description="Documentation and recording (DHARMA HEAD)",
     ),
     MahajanaAlias(
-        name="manu",
+        name="kumaras",
         position=5,
-        aliases=("lawgiver", "gesetzgeber", "rules", "policy"),
-        description="Laws and policies",
+        aliases=("sages", "weisen", "knowledge", "wisdom"),
+        description="Knowledge and wisdom",
     ),
     MahajanaAlias(
         name="kapila",
@@ -145,12 +146,11 @@ MAHAJANA_ALIASES: Final[Tuple[MahajanaAlias, ...]] = (
         description="Analysis and philosophy",
     ),
     MahajanaAlias(
-        name="vyasa",
+        name="manu",
         position=7,
-        aliases=("compiler", "compiler", "document", "record"),
-        description="Documentation and recording",
+        aliases=("lawgiver", "gesetzgeber", "rules", "policy"),
+        description="Laws and policies",
     ),
-
     # === KARMA Quarter (8-11) ===
     MahajanaAlias(
         name="parashurama",
@@ -176,7 +176,6 @@ MAHAJANA_ALIASES: Final[Tuple[MahajanaAlias, ...]] = (
         aliases=("patriarch", "patriarch", "commit", "vow"),
         description="Commitment and immutability",
     ),
-
     # === MOKSHA Quarter (12-15) ===
     MahajanaAlias(
         name="nrisimha",
@@ -268,6 +267,7 @@ def get_name(position_or_alias: int | str) -> str:
 # SIMPLE DECLARATION - For backward compatibility
 # =============================================================================
 
+
 @dataclass
 class SimpleDeclaration:
     """
@@ -277,6 +277,7 @@ class SimpleDeclaration:
     - __mahajana__ = "brahma"
     - __position__ = 1
     """
+
     file_path: Path
     module_path: str
     mahajana: Optional[str] = None
@@ -299,6 +300,7 @@ class SimpleDeclaration:
 # =============================================================================
 # MAHAJANA SCANNER - Implements ScannerProtocol
 # =============================================================================
+
 
 class MahajanaScanner:
     """
@@ -361,11 +363,14 @@ class MahajanaScanner:
         # Scan directories from config
         include_dirs = self._config.get("include_dirs", [])
         exclude_patterns = self._config.get("exclude_patterns", [])
-        detect_types = self._config.get("detect_declarations", [
-            DeclarationType.MAHAJANA.value,
-            DeclarationType.POSITION.value,
-            DeclarationType.GENESIS.value,
-        ])
+        detect_types = self._config.get(
+            "detect_declarations",
+            [
+                DeclarationType.MAHAJANA.value,
+                DeclarationType.POSITION.value,
+                DeclarationType.GENESIS.value,
+            ],
+        )
 
         for dir_name in include_dirs:
             scan_dir = base_path / dir_name
@@ -385,15 +390,17 @@ class MahajanaScanner:
 
                 if skip:
                     files_skipped += 1
-                    self._files_cache.append(ScannedFile(
-                        path=str(file_path),
-                        relative_path=str(file_path.relative_to(base_path)),
-                        module_path=path_to_module(file_path, base_path),
-                        status=FileStatus.SKIPPED.value,
-                        size_bytes=0,
-                        declarations=[],
-                        scanned_at=datetime.now().isoformat(),
-                    ))
+                    self._files_cache.append(
+                        ScannedFile(
+                            path=str(file_path),
+                            relative_path=str(file_path.relative_to(base_path)),
+                            module_path=path_to_module(file_path, base_path),
+                            status=FileStatus.SKIPPED.value,
+                            size_bytes=0,
+                            declarations=[],
+                            scanned_at=datetime.now().isoformat(),
+                        )
+                    )
                     continue
 
                 # Scan the file
@@ -484,11 +491,14 @@ class MahajanaScanner:
             )
 
         # Use shared extraction utility
-        detect_types = self._config.get("detect_declarations", [
-            DeclarationType.MAHAJANA.value,
-            DeclarationType.POSITION.value,
-            DeclarationType.GENESIS.value,
-        ])
+        detect_types = self._config.get(
+            "detect_declarations",
+            [
+                DeclarationType.MAHAJANA.value,
+                DeclarationType.POSITION.value,
+                DeclarationType.GENESIS.value,
+            ],
+        )
         declarations = extract_declarations(source, file_path, detect_types)
 
         status = FileStatus.OWNED.value if declarations else FileStatus.ORPHAN.value
@@ -559,7 +569,8 @@ class MahajanaScanner:
         if not self._files_cache:
             self.scan()
         return [
-            f for f in self._files_cache
+            f
+            for f in self._files_cache
             if any(
                 d.get("type") == DeclarationType.MAHAJANA.value and d.get("value") == mahajana
                 for d in f.get("declarations", [])
@@ -571,7 +582,8 @@ class MahajanaScanner:
         if not self._files_cache:
             self.scan()
         return [
-            f for f in self._files_cache
+            f
+            for f in self._files_cache
             if any(
                 d.get("type") == DeclarationType.POSITION.value and d.get("value") == str(position)
                 for d in f.get("declarations", [])
@@ -662,12 +674,14 @@ def get_registry():
     This is the main entry point for the ONE IMPORT pattern.
     """
     from vibe_core.mahamantra.protocols._declaration import DeclarationRegistry
+
     return DeclarationRegistry()
 
 
 # =============================================================================
 # CLI INTEGRATION - For governance CLI
 # =============================================================================
+
 
 def scan_for_governance() -> Dict:
     """
@@ -693,16 +707,16 @@ def print_scan_report() -> None:
     result = scan_all()
 
     print(f"""
-{'='*60}
+{"=" * 60}
   MAHAJANA DECLARATION SCAN
-{'='*60}
+{"=" * 60}
 
-  Files total:         {result.get('files_total', 0)}
-  Files scanned:       {result.get('files_scanned', 0)}
-  Files owned:         {result.get('files_owned', 0)}
-  Files orphan:        {result.get('files_orphan', 0)}
-  Files skipped:       {result.get('files_skipped', 0)}
-  Declarations found:  {result.get('declarations_found', 0)}
+  Files total:         {result.get("files_total", 0)}
+  Files scanned:       {result.get("files_scanned", 0)}
+  Files owned:         {result.get("files_owned", 0)}
+  Files orphan:        {result.get("files_orphan", 0)}
+  Files skipped:       {result.get("files_skipped", 0)}
+  Declarations found:  {result.get("declarations_found", 0)}
 
   BY MAHAJANA:
 """)
