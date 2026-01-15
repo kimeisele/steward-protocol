@@ -210,6 +210,14 @@ class MahamantraLotus(LotusNode):
         if callback not in cls._listeners:
             cls._listeners.append(callback)
 
+        # BRIDGE TO SINGULARITY (The Real Heart)
+        # Ensure the Kernel Heartbeat also notifies this listener
+        try:
+            from vibe_core.mahamantra.kernel.singularity import mahamantra as _core
+            _core.register_listener(callback)
+        except ImportError:
+            pass
+
     @classmethod
     def _broadcast(cls, tick_state: "TickState") -> None:
         """
