@@ -125,6 +125,10 @@ class LotusNode:
 
         raise AttributeError(f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'")
 
+    # Class-level cache for scanner results (SINGLETON pattern)
+    _scanner_cache: Dict[str, list] = {}  # mahajana → list of module_paths
+    _scanner_initialized: bool = False
+
     def _scanner_fallback(self, name: str) -> Optional[object]:
         """
         Scanner-based fallback for cross-codebase routing.
@@ -132,6 +136,7 @@ class LotusNode:
         When a mahajana claims files outside mahamantra/, this finds them.
         Uses __mahajana__ declarations from Scanner to locate exports.
 
+        SINGLETON CACHE: Scanner runs ONCE, results cached forever.
         ARJUNA-PATTERN: Fails silently if scanner unavailable.
         """
         # Only for mahajana-level nodes (e.g., genesis.brahma, dharma.vyasa)
@@ -140,27 +145,58 @@ class LotusNode:
 
         mahajana = self._path.segments[1]  # e.g., "brahma"
 
+        # Initialize cache ONCE (singleton pattern)
+        if not LotusNode._scanner_initialized:
+            self._init_scanner_cache()
+
+        # Get cached module paths for this mahajana
+        module_paths = LotusNode._scanner_cache.get(mahajana, [])
+
+        for module_path in module_paths:
+            try:
+                mod = importlib.import_module(module_path)
+                if hasattr(mod, name):
+                    return getattr(mod, name)
+            except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+                continue
+
+        return None
+
+    @classmethod
+    def _init_scanner_cache(cls) -> None:
+        """
+        Initialize scanner cache ONCE at first access.
+
+        Scans entire codebase and caches module_paths by mahajana.
+        This is the ONLY place where scanner.scan() is called.
+        """
+        if cls._scanner_initialized:
+            return
+
         try:
             from vibe_core.mahamantra.substrate.scanner import get_scanner
 
             scanner = get_scanner()
-            scanner.scan()
-            files = scanner.get_by_mahajana(mahajana)
+            result = scanner.scan()  # ONE scan
 
-            for f in files:
-                module_path = f.get("module_path", "")
-                if not module_path:
-                    continue
-                try:
-                    mod = importlib.import_module(module_path)
-                    if hasattr(mod, name):
-                        return getattr(mod, name)
-                except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
-                    continue
+            # Build cache: mahajana → [module_paths]
+            for f in result.get("files", []):
+                for decl in f.get("declarations", []):
+                    if decl.get("type") == "mahajana":
+                        mahajana = decl.get("value", "")
+                        module_path = f.get("module_path", "")
+                        if mahajana and module_path:
+                            # Ensure full module path (scanner returns relative)
+                            if not module_path.startswith("vibe_core."):
+                                module_path = f"vibe_core.{module_path}"
+                            if mahajana not in cls._scanner_cache:
+                                cls._scanner_cache[mahajana] = []
+                            if module_path not in cls._scanner_cache[mahajana]:
+                                cls._scanner_cache[mahajana].append(module_path)
+
+            cls._scanner_initialized = True
         except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
-            pass
-
-        return None
+            cls._scanner_initialized = True  # Don't retry on failure
 
     def _discover(self, name: str) -> Optional["LotusNode"]:
         """
