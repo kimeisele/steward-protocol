@@ -630,6 +630,24 @@ class Mahamantra:
         return _module_router
 
     @property
+    def shadow(self) -> "ShadowReactorFactory":
+        """
+        Access the Shadow Reactor Factory.
+
+        SANKIRTAN PATTERN: Spawn parallel reactors.
+        
+        USAGE:
+            reactor = mahamantra.shadow.spawn()
+            reactor.tick(tick_state)
+
+        This connects the Lotus (Static Identity) with the Shadow (Dynamic Process).
+        """
+        if not hasattr(self, "_shadow_factory"):
+            from vibe_core.mahamantra.reactor.shadow import shadow_reactor_factory
+            self._shadow_factory = shadow_reactor_factory
+        return self._shadow_factory
+
+    @property
     def registry(self) -> type:
         """
         Access the Protocol Registry.
