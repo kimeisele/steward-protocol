@@ -361,7 +361,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def chant_quarter(self, quarter_name: str) -> str:
         """
         Chant one specific quarter (4 words).
-        
+
         CRITICAL: This drives the heartbeat!
         Advances the tick 4 times (once per word).
         Triggers all registered listeners (Proxies).
@@ -373,8 +373,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             The chanted quarter string (e.g. "Hare Krishna Hare Krishna")
         """
         words = []
-        # A quarter has exactly 4 words/ticks
-        for _ in range(4):
+        # A quarter has exactly QUARTERS words/ticks
+        for _ in range(QUARTERS):
             # 1. Tick (Broadcasts Event + Advances State)
             state = self.tick()
             
@@ -483,7 +483,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def get_lila_phase(self) -> str:
         """Current lila phase (navadvipa/puri)."""
-        return "navadvipa" if MahamantraLotus._lila_tick < 24 else "puri"
+        return "navadvipa" if MahamantraLotus._lila_tick < LILA // 2 else "puri"
 
     # === Quarter Shortcuts ===
 
@@ -769,11 +769,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         # Route to correct quarter/mahajana
         pos = alias.position
-        if pos < 4:
+        quarter_size = WORDS // QUARTERS  # 16 // 4 = 4
+        if pos < quarter_size:
             return getattr(self.genesis, name)
-        elif pos < 8:
+        elif pos < quarter_size * 2:
             return getattr(self.dharma, name)
-        elif pos < 12:
+        elif pos < quarter_size * 3:
             return getattr(self.karma, name)
         else:
             return getattr(self.moksha, name)
@@ -832,9 +833,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         # 2. PARAMPARA HASH (Fallback Resonance)
         if position == -1:
-            # Parampara vector - weighted sum mod 16
+            # Parampara vector - weighted sum mod WORDS
             mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command.lower()))
-            position = mutation_vector % 16
+            position = mutation_vector % WORDS
 
         # Get guardian/quarter from substrate (SSOT)
         from vibe_core.mahamantra.substrate.wiring import get_position_by_index
@@ -1071,8 +1072,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def __hash__(self) -> int:
         """PRATYAYA: Krishna's hash is the Parampara (37)."""
-        # PARAMPARA imported at module level from substrate.seed
-        return 37  # PARAMPARA constant
+        # PARAMPARA imported at module level from protocols._seed (line 1180)
+        return PARAMPARA
 
     def __iter__(self) -> Iterator:
         """
@@ -1085,8 +1086,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return (get_tick_info(i) for i in range(MANTRA_LENGTH))
 
     def __len__(self) -> int:
-        """16 positions in the Mahamantra."""
-        return 16
+        """WORDS positions in the Mahamantra."""
+        return WORDS
 
     def __getitem__(self, index: int) -> object:
         """
@@ -1095,7 +1096,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         mahamantra[5] → Position 5 (KUMARAS)
         """
         from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
-        if not 0 <= index < 16:
+        if not 0 <= index < WORDS:
             raise IndexError(f"Position index out of range: {index}")
         return MAHAMANTRA_POSITIONS[index]
 
@@ -1368,6 +1369,12 @@ def bootstrap(*, silent: bool = False) -> bool:
             import logging
             logger = logging.getLogger("MAHAMANTRA")
             logger.info("🌊 Initiating Nityananda Embrace (Proxy Activation)...")
+
+        # 0. THE GREAT CENSUS - Scan the universe
+        from vibe_core.mahamantra.substrate.scanner import scan_all
+        census = scan_all()
+        if not silent:
+            logger.info(f"📜 Great Census: Scanned {census.get('files_scanned')} files. Found {census.get('files_owned')} Declarations, {census.get('files_inferred')} Inferred Friends.")
 
         # 1. THE ACT OF SURRENDER - wrap all registered services
         proxies = auto_wrap_services(silent=silent)
