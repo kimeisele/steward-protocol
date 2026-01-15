@@ -27,8 +27,12 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     PANCHA,
     SHARANAGATI,
+    NAVA,  # 9 Islands (Navadvipa)
     LILA,
     MALA,
+    MAHAJANA_COUNT,  # 12 Mahajanas
+    AVATAR_COUNT,  # 4 Avataras
+    PHASE_DURATION,  # 12 (LILA // QUARTERS)
 )
 
 # =============================================================================
@@ -177,7 +181,7 @@ KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36
 # - Sharanagati-Weg: KSHETRA_GAD + KSETRAJNA = 36 + 1 = 37
 
 KSETRAJNA: Final[int] = 1  # Der Knower (Krishna)
-MAHAJANA_COUNT: Final[int] = 12  # Die 12 Mahajanas
+# MAHAJANA_COUNT imported from protocols/_seed.py (SSOT)
 
 PARAMPARA: Final[int] = KSHETRA_GAD + KSETRAJNA  # 36 + 1 = 37
 
@@ -190,7 +194,7 @@ assert KSHETRA_GAD + KSETRAJNA == PARAMPARA  # 36 + 1 = 37
 # DERIVED: GUARDIANS (16) - 4 Avataras + 12 Mahajanas
 # =============================================================================
 
-AVATAR_COUNT: Final[int] = QUARTERS  # 4 Heads
+# AVATAR_COUNT imported from protocols/_seed.py (SSOT)
 
 # Die 4 Avataras (Heads) - Geben was fehlt (Yoga-Kshema)
 AVATARAS: Final[Tuple[str, ...]] = (
