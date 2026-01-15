@@ -24,6 +24,7 @@ from vibe_core.mahamantra.karma.bhishma.protocol import (
     BhishmaProtocol,
     CommitEntry,
     CommitResult,
+    CommitState,
     VerificationResult,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
