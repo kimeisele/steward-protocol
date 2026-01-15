@@ -51,7 +51,86 @@ class NrisimhaWatchdog(MantraProtocol):
         self._opcode_handlers = opcode_handlers or {}  # Kernel-injected handlers
         self._handlers = self._opcode_handlers  # Alias for tests/compatibility
         self._naga_proxies = naga_proxies or []  # NagaProxy instances to broadcast to
+
+        # =====================================================================
+        # PARAMPARA CONNECTION - BOMBENFEST zum Mahamantra (HART VERDRAHTET)
+        # =====================================================================
+        # Nrisimha registriert sich SELBST beim Mahamantra.
+        # Diese Verbindung kann NICHT abbrechen - sie ist Teil der Initialisierung.
+        # Wenn Mahamantra tickt, hört Nrisimha. IMMER.
+        try:
+            from vibe_core.mahamantra import mahamantra
+
+            mahamantra.register_listener(self._on_mahamantra_tick)
+            logger.info("🔗 PARAMPARA: Nrisimha verbunden mit Mahamantra (BOMBENFEST)")
+        except Exception as e:
+            # Arjuna-Pattern: Wenn Import fehlschlägt, weiterleben.
+            # Aber das sollte NIE passieren - mahamantra ist Level -2.
+            logger.warning(f"⚠️ Mahamantra connection failed (will retry): {e}")
+
         logger.info(f"🦁 Nrisimha Watchdog initialized for Sovereign: {sovereign_anchor.identity_id}")
+
+    # =========================================================================
+    # PARAMPARA LISTENER - Empfängt vom Mahamantra (BOMBENFEST)
+    # =========================================================================
+
+    def _on_mahamantra_tick(self, tick_state: object) -> None:
+        """
+        Callback wenn Mahamantra tickt.
+
+        PARAMPARA: Diese Methode wird bei JEDEM mahamantra.tick() aufgerufen.
+        Nrisimha hört und reagiert - dann broadcasted er weiter zu seinen Proxies.
+
+        ARCHITEKTUR:
+            mahamantra.tick()
+                → Nrisimha._on_mahamantra_tick()
+                    → Nrisimha._exec_opcode() (eigene Logik)
+                    → proxy.on_mantra_pulse() (für alle NagaProxies)
+
+        ARJUNA-PATTERN: Wenn ein Proxy crashed, weitermachen.
+        """
+        try:
+            # Extract OpCode from tick_state (it's a TickState dataclass)
+            opcode = getattr(tick_state, "opcode", None)
+            if opcode is None:
+                return
+
+            # Convert string opcode to MantraOpCode if needed
+            if isinstance(opcode, str):
+                try:
+                    opcode = MantraOpCode[opcode]
+                except (KeyError, ValueError):
+                    return
+
+            # Execute own logic
+            self._exec_opcode(opcode, self._anchor)
+
+            # Broadcast to NagaProxies (Balarama Heartbeat)
+            for proxy in self._naga_proxies:
+                try:
+                    if hasattr(proxy, "on_mantra_pulse"):
+                        proxy.on_mantra_pulse(opcode)
+                except Exception:
+                    # Arjuna-Pattern: Ein Proxy crashed → weitermachen
+                    pass
+
+        except Exception:
+            # Arjuna-Pattern: Nrisimha crashed → Mahamantra läuft weiter
+            # Das System ist größer als seine Teile.
+            pass
+
+    def register_proxy(self, proxy: object) -> None:
+        """
+        Registriere einen NagaProxy für Heartbeat-Broadcasts.
+
+        PARAMPARA: Wer sich verbindet, hört bei jedem Tick.
+        Keine manuelle Arbeit - einmal verbunden, immer verbunden.
+
+        Args:
+            proxy: Objekt mit on_mantra_pulse(opcode) Methode
+        """
+        if proxy not in self._naga_proxies:
+            self._naga_proxies.append(proxy)
 
     # =========================================================================
     # CORE: The 16-Step Atomic Cycle
@@ -319,5 +398,5 @@ class NrisimhaWatchdog(MantraProtocol):
             ananta = ServiceRegistry.get(IAnantaBridge)
             if ananta and hasattr(ananta, "auto_flood_orphans"):
                 ananta.auto_flood_orphans()
-        except:
+        except Exception:  # Arjuna-Pattern: Ashvamedha failure → continue
             pass

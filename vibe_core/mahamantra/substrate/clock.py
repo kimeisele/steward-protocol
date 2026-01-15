@@ -31,47 +31,49 @@ __mahajana__ = "prithu"
 __position__ = 0
 __genesis__ = "0xa7c3d2e1"  # GenesisByte: parampara % 37 == 0
 
-from typing import TypedDict, Optional, Tuple
+from typing import Optional, Tuple, TypedDict
 
+from vibe_core.mahamantra.substrate.pancha_tattva import (
+    CHAITANYA_LILA,  # 48
+    MAHAMANTRA_WORDS,  # 16
+    NAVADVIPA_PHASE,  # 24
+    get_lila_phase,  # tick → "navadvipa" / "puri"
+    get_mantra_cycle,  # tick → 1, 2, 3
+    get_mantra_position,  # tick → 0-15
+)
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     MantraPosition,
 )
-from vibe_core.mahamantra.substrate.pancha_tattva import (
-    CHAITANYA_LILA,      # 48
-    NAVADVIPA_PHASE,     # 24
-    MAHAMANTRA_WORDS,    # 16
-    get_lila_phase,      # tick → "navadvipa" / "puri"
-    get_mantra_cycle,    # tick → 1, 2, 3
-    get_mantra_position, # tick → 0-15
-)
-
 
 # =============================================================================
 # WATERTIGHT TYPES
 # =============================================================================
 
+
 class TickInfo(TypedDict):
     """Info about a mantra position (0-15). STATELESS."""
-    position: int       # 0-15
-    quarter: str        # genesis/dharma/karma/moksha
-    guardian: str       # The mahajana/avatara name
-    word: str           # HARE/KRISHNA/RAMA
+
+    position: int  # 0-15
+    quarter: str  # genesis/dharma/karma/moksha
+    guardian: str  # The mahajana/avatara name
+    word: str  # HARE/KRISHNA/RAMA
     opcode: Optional[int]
 
 
 class LilaInfo(TypedDict):
     """Info about a lila position (0-47). STATELESS."""
+
     # Mantra level
-    position: int       # 0-15 (derived from lila)
-    quarter: str        # genesis/dharma/karma/moksha
+    position: int  # 0-15 (derived from lila)
+    quarter: str  # genesis/dharma/karma/moksha
     guardian: str
     word: str
     opcode: Optional[int]
     # Lila level
     lila_position: int  # 0-47
-    phase: str          # "navadvipa" or "puri"
-    cycle: int          # 1, 2, or 3
+    phase: str  # "navadvipa" or "puri"
+    cycle: int  # 1, 2, or 3
     is_navadvip: bool
     is_puri: bool
 
@@ -79,6 +81,7 @@ class LilaInfo(TypedDict):
 # =============================================================================
 # PURE FUNCTIONS - Mantra (0-15)
 # =============================================================================
+
 
 def get_tick_info(position: int) -> TickInfo:
     """
@@ -101,7 +104,7 @@ def get_tick_info(position: int) -> TickInfo:
         quarter=pos.quarter.name.lower(),
         guardian=pos.guardian.value,
         word=pos.word.name,
-        opcode=pos.opcode.value if pos.opcode else None,
+        opcode=pos.opcode.value if pos.opcode is not None else None,  # BOMBENFEST: 0 is valid!
     )
 
 
@@ -134,6 +137,7 @@ def previous_position(position: int) -> int:
 # PURE FUNCTIONS - Lila (0-47)
 # =============================================================================
 
+
 def get_lila_info(lila_position: int) -> LilaInfo:
     """
     Get info for a lila position (0-47).
@@ -162,7 +166,7 @@ def get_lila_info(lila_position: int) -> LilaInfo:
         quarter=pos.quarter.name.lower(),
         guardian=pos.guardian.value,
         word=pos.word.name,
-        opcode=pos.opcode.value if pos.opcode else None,
+        opcode=pos.opcode.value if pos.opcode is not None else None,  # BOMBENFEST: 0 is valid!
         # Lila level
         lila_position=lila_position,
         phase=phase,
@@ -204,14 +208,15 @@ def lila_to_mantra(lila_position: int) -> Tuple[int, int, str]:
 # =============================================================================
 
 MANTRA_LENGTH = MAHAMANTRA_WORDS  # 16
-LILA_LENGTH = CHAITANYA_LILA      # 48
-NAVADVIP_END = NAVADVIPA_PHASE    # 24 (exclusive)
-PURI_START = NAVADVIPA_PHASE      # 24 (inclusive)
+LILA_LENGTH = CHAITANYA_LILA  # 48
+NAVADVIP_END = NAVADVIPA_PHASE  # 24 (exclusive)
+PURI_START = NAVADVIPA_PHASE  # 24 (inclusive)
 
 
 # =============================================================================
 # CHANT - The Holy Name
 # =============================================================================
+
 
 def get_chant(separator: str = " ") -> str:
     """Get the complete Mahamantra as string. PURE."""
@@ -222,6 +227,7 @@ def get_chant(separator: str = " ") -> str:
 # =============================================================================
 # VERIFICATION
 # =============================================================================
+
 
 def verify_parampara(value: int) -> bool:
     """Verify Parampara connection (% 37 == 0). PURE."""

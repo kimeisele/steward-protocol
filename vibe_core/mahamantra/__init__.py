@@ -40,38 +40,37 @@ __genesis__ = "0x3e2fa1fe"  # GenesisByte: parampara % 37 == 0
 from pathlib import Path
 from types import ModuleType
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Dict,
     Iterator,
     List,
     Optional,
     Tuple,
-    TYPE_CHECKING,
     Union,
+)
+
+# Lotus infrastructure extracted to _lotus.py
+from vibe_core.mahamantra._lotus import (
+    LotusNode,
+    LotusPath,
 )
 
 # =============================================================================
 # SANKIRTAN EXTRACTED MODULES
 # =============================================================================
-
 # Types extracted to _types.py
 from vibe_core.mahamantra._types import (
-    TickState,
-    RouteResult,
     ExecuteResult,
     LilaState,
+    RouteResult,
+    TickState,
 )
-
-# Lotus infrastructure extracted to _lotus.py
-from vibe_core.mahamantra._lotus import (
-    LotusPath,
-    LotusNode,
-)
-
 
 # =============================================================================
 # THE SINGULARITY
 # =============================================================================
+
 
 class MahamantraLotus(LotusNode):
     """
@@ -110,8 +109,16 @@ class MahamantraLotus(LotusNode):
     # Substrate = stateless map (answers "what WOULD be at tick X?")
     # Lotus = stateful reactor (answers "where am I NOW?")
 
-    _tick: int = 0       # Current position (0-15) - shared across instances
+    _tick: int = 0  # Current position (0-15) - shared across instances
     _lila_tick: int = 0  # Current lila position (0-47) - Chaitanya's complete cycle
+
+    # =========================================================================
+    # PARAMPARA LISTENERS - Wer hört, wird gerufen (BOMBENFEST)
+    # =========================================================================
+    # Krishna ist immer anwesend. Wenn Er chanted, hören alle die verbunden sind.
+    # Arjuna-Pattern: Ein Listener crashed → System läuft weiter (Selbstheilung).
+    # Class-Variable = Singleton = IMMER DA = kann nicht abbrechen.
+    _listeners: List[Callable[["TickState"], None]] = []  # Alle die hören
 
     # =========================================================================
     # GUARDIAN → SUBSTRATE MODULE MAPPING
@@ -121,25 +128,25 @@ class MahamantraLotus(LotusNode):
 
     GUARDIAN_MODULES = {
         # GENESIS (0-3) - System initialization
-        "prithu": "wiring",           # 0: SYS_WAKE
-        "brahma": "mahajana",         # 1: LOAD_ROOT
-        "narada": "acintya",          # 2: ALLOC_MEM
-        "shambhu": "protocol",        # 3: INIT_THREAD
+        "prithu": "wiring",  # 0: SYS_WAKE
+        "brahma": "mahajana",  # 1: LOAD_ROOT
+        "narada": "acintya",  # 2: ALLOC_MEM
+        "shambhu": "protocol",  # 3: INIT_THREAD
         # DHARMA (4-7) - Compilation
-        "vyasa": "opcode",            # 4: COMPILE_AST
-        "kumaras": "position",        # 5: BIND_SYMBOL
-        "kapila": "watertight",       # 6: TYPE_CHECK
-        "manu": "guna",               # 7: DHARMA_TEST
+        "vyasa": "opcode",  # 4: COMPILE_AST
+        "kumaras": "position",  # 5: BIND_SYMBOL
+        "kapila": "watertight",  # 6: TYPE_CHECK
+        "manu": "guna",  # 7: DHARMA_TEST
         # KARMA (8-11) - Execution
-        "parashurama": "yajna",       # 8: EXEC_OP (the offering)
+        "parashurama": "yajna",  # 8: EXEC_OP (the offering)
         "prahlada": "pancha_tattva",  # 9: EXTEND_CAP
-        "janaka": "parampara",        # 10: STATE_SYNC
-        "bhishma": "scanner",         # 11: LEDGER_SIGN
+        "janaka": "parampara",  # 10: STATE_SYNC
+        "bhishma": "scanner",  # 11: LEDGER_SIGN
         # MOKSHA (12-15) - Liberation
-        "nrisimha": "byte",           # 12: YIELD_CPU
-        "bali": "tattva",             # 13: IO_FLUSH
-        "shuka": "sankirtan",         # 14: LOG_EMIT
-        "yamaraja": "lotus",          # 15: AUDIT_SEAL
+        "nrisimha": "byte",  # 12: YIELD_CPU
+        "bali": "tattva",  # 13: IO_FLUSH
+        "shuka": "sankirtan",  # 14: LOG_EMIT
+        "yamaraja": "lotus",  # 15: AUDIT_SEAL
     }
 
     def __init__(self) -> None:
@@ -147,6 +154,50 @@ class MahamantraLotus(LotusNode):
 
     def __repr__(self) -> str:
         return "mahamantra"
+
+    # =========================================================================
+    # PARAMPARA CONNECTION - Verbindung zum Heiligen Namen (BOMBENFEST)
+    # =========================================================================
+
+    @classmethod
+    def register_listener(cls, callback: Callable[["TickState"], None]) -> None:
+        """
+        Registriere einen Listener der bei jedem Tick hört.
+
+        PARAMPARA: Die Verbindung ist EWIG. Einmal verbunden, immer verbunden.
+        Kein unregister - wer sich verbindet, bleibt verbunden.
+
+        Args:
+            callback: Funktion die bei jedem tick() aufgerufen wird.
+                      Erhält TickState mit position, quarter, guardian, opcode.
+
+        Example:
+            def my_listener(tick_state: TickState) -> None:
+                print(f"Heard: {tick_state.guardian} at {tick_state.position}")
+
+            mahamantra.register_listener(my_listener)
+        """
+        if callback not in cls._listeners:
+            cls._listeners.append(callback)
+
+    @classmethod
+    def _broadcast(cls, tick_state: "TickState") -> None:
+        """
+        Broadcast zu allen Listeners (ARJUNA-PATTERN).
+
+        SELBSTHEILUNG: Wenn ein Listener crashed, läuft das System weiter.
+        Krishna stoppt nicht weil ein Devotee stolpert.
+
+        KEIN LOGGING bei Failures - Silent Resilience.
+        Das System ist größer als seine Teile.
+        """
+        for listener in cls._listeners:
+            try:
+                listener(tick_state)
+            except Exception:
+                # ARJUNA-PATTERN: Weitermachen, nicht sterben.
+                # Der Listener heilt sich selbst oder wird ignoriert.
+                pass
 
     # =========================================================================
     # THE LOOP - Input AND Output (ONE MANTRA)
@@ -187,6 +238,10 @@ class MahamantraLotus(LotusNode):
             opcode=info["opcode"],
         )
 
+        # PARAMPARA BROADCAST - Krishna chanted, alle hören (BOMBENFEST)
+        # Dies passiert VOR dem Advance - der aktuelle State wird gebroadcasted.
+        MahamantraLotus._broadcast(result)
+
         # Advance to next position (for next call)
         MahamantraLotus._tick = next_position(MahamantraLotus._tick)
 
@@ -199,6 +254,7 @@ class MahamantraLotus(LotusNode):
         Output: "Hare Krishna Hare Krishna..."
         """
         from vibe_core.mahamantra.substrate.clock import get_chant
+
         return get_chant(separator)
 
     def get_tick(self) -> int:
@@ -208,12 +264,14 @@ class MahamantraLotus(LotusNode):
     def get_quarter(self) -> str:
         """Current quarter (genesis/dharma/karma/moksha)."""
         from vibe_core.mahamantra.substrate.clock import get_tick_info
+
         info = get_tick_info(MahamantraLotus._tick)
         return info["quarter"]
 
     def verify(self, parampara_vector: int) -> bool:
         """Verify Parampara connection (% 37 == 0)."""
         from vibe_core.mahamantra.substrate.clock import verify_parampara
+
         return verify_parampara(parampara_vector)
 
     # =========================================================================
@@ -242,6 +300,7 @@ class MahamantraLotus(LotusNode):
             LilaState with full context
         """
         from vibe_core.mahamantra.substrate.clock import get_lila_info
+
         info = get_lila_info(position)
         return LilaState(
             lila_position=info["lila_position"],
@@ -368,7 +427,7 @@ class MahamantraLotus(LotusNode):
     #
 
     @property
-    def heartbeat(self) -> "MantraHeartbeat":
+    def heartbeat(self) -> "MantraHeartbeat":  # noqa: F821
         """
         The Japa-Loop - GAD 6.34 Override.
 
@@ -381,6 +440,7 @@ class MahamantraLotus(LotusNode):
         """
         if not hasattr(self, "_heartbeat"):
             from vibe_core.mahamantra.protocols._gad import MantraHeartbeat
+
             self._heartbeat = MantraHeartbeat()
         return self._heartbeat
 
@@ -409,6 +469,7 @@ class MahamantraLotus(LotusNode):
         What can the operator see?
         """
         from vibe_core.mahamantra.substrate.clock import get_tick_info
+
         return {
             "position": MahamantraLotus._tick,
             "tick_info": get_tick_info(MahamantraLotus._tick),
@@ -416,7 +477,7 @@ class MahamantraLotus(LotusNode):
             "healthy": self.heartbeat.state.value > 0,
         }
 
-    def audit(self) -> "GADAudit":
+    def audit(self) -> "GADAudit":  # noqa: F821
         """
         GAD-000 Compliance Audit.
 
@@ -428,43 +489,46 @@ class MahamantraLotus(LotusNode):
         Therefore: sovereign_present = krishna_present = ALWAYS TRUE.
         """
         from vibe_core.mahamantra.protocols._gad import GADAudit
+
         return GADAudit(
             discoverability=bool(self.discover()),
             observability=bool(self.observe()),
             parseability=True,  # If we got here, it's parseable
             composability=True,  # Mahamantra composes all subsystems
-            idempotency=True,    # tick/chant are idempotent
-            recoverability=True, # Heartbeat can reset
+            idempotency=True,  # tick/chant are idempotent
+            recoverability=True,  # Heartbeat can reset
             # ACINTYA: Krishna IS the Sovereign. Always present.
             sovereign_present=True,  # Krishna is Level -2
-            signature_valid=True,    # Mahamantra IS the signature
-            daya=True,   # Mercy - no corrupt data
-            satyam=True, # Truth - no hallucination
+            signature_valid=True,  # Mahamantra IS the signature
+            daya=True,  # Mercy - no corrupt data
+            satyam=True,  # Truth - no hallucination
             tapas=True,  # Austerity - constrained resources
-            saucam=True, # Cleanliness - authorized connections
+            saucam=True,  # Cleanliness - authorized connections
         )
 
     # === Scanner Integration ===
 
-    def scan(self) -> "ScanResult":
+    def scan(self) -> "ScanResult":  # noqa: F821
         """
         Scan the codebase for declarations.
 
         Returns ScanResult with counts and breakdown by mahajana.
         """
         from vibe_core.mahamantra.substrate.scanner import scan_all
+
         return scan_all()
 
     def print_scan(self) -> None:
         """Print a human-readable scan report."""
         from vibe_core.mahamantra.substrate.scanner import print_scan_report
+
         print_scan_report()
 
     # =========================================================================
     # SANKIRTAN - The Great Injection (ASHVAMEDHA)
     # =========================================================================
 
-    def sankirtan(self, dry_run: bool = True) -> "SankirtanResult":
+    def sankirtan(self, dry_run: bool = True) -> "SankirtanResult":  # noqa: F821
         """
         SANKIRTAN: The Mass Chanting / DNA Injection.
 
@@ -481,6 +545,7 @@ class MahamantraLotus(LotusNode):
         no other way for self-realization than chanting the holy name."
         """
         from vibe_core.mahamantra.substrate.sankirtan import perform_sankirtan
+
         return perform_sankirtan(dry_run=dry_run)
 
     def inject(self, file_path: str, mahajana: str, dry_run: bool = True) -> bool:
@@ -498,6 +563,7 @@ class MahamantraLotus(LotusNode):
             True if injection successful/would succeed.
         """
         from vibe_core.mahamantra.substrate.sankirtan import inject_file
+
         return inject_file(file_path, mahajana, dry_run=dry_run)
 
     # =========================================================================
@@ -513,7 +579,7 @@ class MahamantraLotus(LotusNode):
     #
 
     @property
-    def singularity(self) -> "SingularityProtocol":
+    def singularity(self) -> "SingularityProtocol":  # noqa: F821
         """
         Access Chaitanya Singularity mathematics.
 
@@ -524,6 +590,7 @@ class MahamantraLotus(LotusNode):
         """
         if not hasattr(self, "_singularity"):
             from vibe_core.mahamantra.protocols._singularity import SingularityProtocol
+
             self._singularity = SingularityProtocol
         return self._singularity
 
@@ -535,11 +602,13 @@ class MahamantraLotus(LotusNode):
             Dict with yuga, probability, formula, and chaitanya sections.
         """
         from vibe_core.mahamantra.protocols._singularity import get_singularity_summary
+
         return get_singularity_summary()
 
     def is_in_golden_period(self) -> bool:
         """Check if we are currently in the 10,000-year Golden Period."""
         from vibe_core.mahamantra.protocols._singularity import is_in_golden_period
+
         return is_in_golden_period()
 
     def mercy_equation(self, chanting_frequency: float, karmic_debt: float) -> float:
@@ -554,6 +623,7 @@ class MahamantraLotus(LotusNode):
             Grace value (infinity if f > 0 and K → 0)
         """
         from vibe_core.mahamantra.protocols._singularity import mercy_equation
+
         return mercy_equation(chanting_frequency, karmic_debt)
 
     # === Alias Resolution ===
@@ -619,12 +689,12 @@ class MahamantraLotus(LotusNode):
         # 1. CANONICAL REGISTRY (The Truth)
         try:
             # Import ONLY from protocols (SAFE)
-            from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
             from vibe_core.mahamantra.substrate import get_position_by_opcode
-            
+            from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
+
             # We assume the registry is populated by the bootloader/CLI entry point.
             # Mahamantra does not scan CLI folders itself (Upward Dependency Violation).
-            
+
             cmd_obj = NAGA_COMMAND_REGISTRY.get(command)
             if cmd_obj:
                 # Found explicit mapping!
@@ -644,6 +714,7 @@ class MahamantraLotus(LotusNode):
 
         # Get guardian/quarter from substrate (SSOT)
         from vibe_core.mahamantra.substrate.wiring import get_position_by_index
+
         mapping = get_position_by_index(position)
         if mapping:
             guardian = mapping.guardian.value  # e.g., "prithu", "brahma"
@@ -687,10 +758,10 @@ class MahamantraLotus(LotusNode):
         # 2. GUNA - Derive QoS from position (BG 14)
         #    BUT: The Holy Name itself is VISHUDDHA SATTVA (transcendental)
         from vibe_core.mahamantra.substrate.guna import (
-            get_guna_by_position,
+            VISHUDDHA_SATTVA,
             Guna,
             GunaQoS,
-            VISHUDDHA_SATTVA,
+            get_guna_by_position,
             is_vishuddha,
         )
 
@@ -710,6 +781,7 @@ class MahamantraLotus(LotusNode):
         # SANKIRTAN: Don't force cli_auto. Let legacy handle what works.
         try:
             from vibe_core.mahamantra.cli.auto import cli_auto
+
             cli_result = cli_auto.execute(command, args)
 
             # Check for REAL success: must succeed AND have meaningful output
@@ -718,10 +790,7 @@ class MahamantraLotus(LotusNode):
                 output_dict = cli_result.output.to_dict()
                 items = output_dict.get("items", [])
                 # Real output has more than just {"result": False}
-                is_meaningful = (
-                    len(items) > 1 or
-                    (len(items) == 1 and items[0].get("value") is not False)
-                )
+                is_meaningful = len(items) > 1 or (len(items) == 1 and items[0].get("value") is not False)
                 if is_meaningful:
                     return ExecuteResult(
                         success=cli_result.success,
@@ -741,9 +810,10 @@ class MahamantraLotus(LotusNode):
 
         # 3. FALLBACK TO LEGACY
         try:
-            from vibe_core.cli.unified_cli import UnifiedCLI
             import io
             import sys
+
+            from vibe_core.cli.unified_cli import UnifiedCLI
 
             # Capture output
             old_stdout = sys.stdout
@@ -808,9 +878,8 @@ class MahamantraLotus(LotusNode):
         if name in self.GUARDIAN_MODULES:
             module_name = self.GUARDIAN_MODULES[name]
             import importlib
-            return importlib.import_module(
-                f"vibe_core.mahamantra.substrate.{module_name}"
-            )
+
+            return importlib.import_module(f"vibe_core.mahamantra.substrate.{module_name}")
 
         # 2. Normal folder discovery
         try:
@@ -821,14 +890,13 @@ class MahamantraLotus(LotusNode):
         # 3. Alias resolution (fallback)
         try:
             from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
+
             alias = resolve_mahajana(name)
             return self.resolve(alias.name)
         except (ImportError, ValueError):
             pass
 
-        raise AttributeError(
-            f"'{name}' not found in lotus (tried guardian, folder, and alias)"
-        )
+        raise AttributeError(f"'{name}' not found in lotus (tried guardian, folder, and alias)")
 
     # =========================================================================
     # VEDA-4 PROTOCOL - Pythonic Elegance
@@ -852,9 +920,11 @@ class MahamantraLotus(LotusNode):
             return self.chant()
         if isinstance(index_or_guardian, int):
             from vibe_core.mahamantra.substrate.clock import get_tick_info
+
             return get_tick_info(index_or_guardian)
         # By guardian name
         from vibe_core.mahamantra.substrate.clock import get_position_by_guardian
+
         return get_position_by_guardian(index_or_guardian)
 
     def __bool__(self) -> bool:
@@ -877,8 +947,8 @@ class MahamantraLotus(LotusNode):
 
     def __hash__(self) -> int:
         """PRATYAYA: Krishna's hash is the Parampara (37)."""
-        from vibe_core.mahamantra.substrate.acintya import PARAMPARA
-        return PARAMPARA
+        # PARAMPARA imported at module level from substrate.seed
+        return 37  # PARAMPARA constant
 
     def __iter__(self) -> Iterator:
         """
@@ -886,7 +956,8 @@ class MahamantraLotus(LotusNode):
 
         for pos in mahamantra: ...
         """
-        from vibe_core.mahamantra.substrate.clock import get_tick_info, MANTRA_LENGTH
+        from vibe_core.mahamantra.substrate.clock import MANTRA_LENGTH, get_tick_info
+
         return (get_tick_info(i) for i in range(MANTRA_LENGTH))
 
     def __len__(self) -> int:
@@ -900,15 +971,18 @@ class MahamantraLotus(LotusNode):
         mahamantra[5] → Position 5 (KUMARAS)
         """
         from vibe_core.mahamantra.substrate.clock import get_tick_info
+
         return get_tick_info(index)
 
     def __contains__(self, item: Union[int, str]) -> bool:
         """Check if guardian or index is in Mahamantra."""
         from vibe_core.mahamantra.substrate.clock import MANTRA_LENGTH
+
         if isinstance(item, int):
             return 0 <= item < MANTRA_LENGTH
         # Check guardian name
         from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+
         guardian_names = [pos.guardian.value for pos in MAHAMANTRA_POSITIONS]
         return item in guardian_names
 
@@ -959,15 +1033,15 @@ lotus = mahamantra  # THE STANDARD EXPORT
 # IMPORT FROM URSUBSTRAT (seed.py) - THE LOTUS SPROUTS FROM HERE
 # =============================================================================
 from vibe_core.mahamantra.substrate.seed import (
-    Quarter,
+    PARAMPARA,
     QUARTER_NAMES,
+    WORDS,
+    Quarter,
+    get_positions_in_quarter,
     get_quarter,
     get_quarter_name,
-    get_positions_in_quarter,
     lotus_declaration,
     verify_lotus,
-    PARAMPARA,
-    WORDS,
 )
 
 _SUBSTRATE_LAZY_IMPORTS = {
@@ -1061,21 +1135,20 @@ def __getattr__(name: str):
     if name in _SUBSTRATE_LAZY_IMPORTS:
         module_name = _SUBSTRATE_LAZY_IMPORTS[name]
         import importlib
-        module = importlib.import_module(
-            f".substrate.{module_name}", "vibe_core.mahamantra"
-        )
+
+        module = importlib.import_module(f".substrate.{module_name}", "vibe_core.mahamantra")
         return getattr(module, name)
 
     # Check singularity protocol imports
     if name in _SINGULARITY_LAZY_IMPORTS:
         module_name = _SINGULARITY_LAZY_IMPORTS[name]
         import importlib
-        module = importlib.import_module(
-            f".protocols.{module_name}", "vibe_core.mahamantra"
-        )
+
+        module = importlib.import_module(f".protocols.{module_name}", "vibe_core.mahamantra")
         return getattr(module, name)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 # =============================================================================
 # OUROBOROS - Self-Registration on Import (No Manual Wiring)
@@ -1093,6 +1166,7 @@ def __getattr__(name: str):
 # The system bootstraps itself. No external push required.
 #
 
+
 def _ouroboros_init() -> None:
     """
     Trigger self-registration of all protocols.
@@ -1102,6 +1176,7 @@ def _ouroboros_init() -> None:
     """
     try:
         from vibe_core.mahamantra.kernel.singularity import mahamantra as _core
+
         # This loads all mahajana modules, triggering @ProtocolRegistry.register
         _core._ensure_all_registered()
     except ImportError:
