@@ -38,6 +38,16 @@ class VerificationResult(TypedDict):
     lineage_intact: bool
     error_message: str
 
+
+class CommitState(TypedDict):
+    """Current state of the commitment ledger."""
+    total_commits: int
+    last_commit_id: str
+    last_commit_time: str
+    lineage_length: int
+    lineage_hash: str
+    health: str
+
 @runtime_checkable
 class BhishmaProtocol(PanchaTattvaProtocol, Protocol):
     """
@@ -80,6 +90,8 @@ class BhishmaProtocol(PanchaTattvaProtocol, Protocol):
 
 __all__ = [
     "BhishmaProtocol",
+    "CommitEntry",
     "CommitResult",
+    "CommitState",
     "VerificationResult",
 ]

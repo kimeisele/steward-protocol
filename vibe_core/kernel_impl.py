@@ -148,6 +148,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         load_plugins: bool = True,
         test_mode: bool = False,
     ):
+        # === SHARANAGATI - THE ONE LINE OF TRUTH ===
+        # The Kernel surrenders to Mahamantra BEFORE loading services.
+        # This wraps ManifestationService and PrakritiBinding with BalaramaProxy.
+        # All file writes will route through bridge.offer() → Dharmic governance.
+        mahamantra.bootstrap(silent=True)
+
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
         ServiceRegistry.enable_narasimha()
