@@ -11,8 +11,8 @@ This is the Hand that writes to Git. The Auditor is the Conscience.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prahlada"
-__position__ = 9
+__mahajana__ = "bhishma"
+__position__ = 11
 __genesis__ = "0xa9582c12"  # GenesisByte: parampara % 37 == 0
 
 import logging
@@ -24,6 +24,7 @@ from typing import Any, Dict, Optional
 from vibe_core.config import CityConfig
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -34,7 +35,7 @@ from vibe_core.steward import OathMixin
 logger = logging.getLogger("ARCHIVIST_CARTRIDGE")
 
 
-class ArchivistCartridge(VibeAgent, OathMixin):
+class ArchivistCartridge(VibeAgent, OathMixin, PanchaTattvaProtocol):
     """
     ARCHIVIST - The History Keeper Agent.
 
@@ -43,6 +44,17 @@ class ArchivistCartridge(VibeAgent, OathMixin):
 
     CRITICAL: Only commits if audit_result.passed == true
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of the Archivist (Bhishma)."""
+        return {
+            "chaitanya": "History Keeper (Archivist)",
+            "nityananda": "Git & Filesystem Substrate",
+            "advaita": "Commit & Seal Logic",
+            "gadadhara": "Immutable Event Flow",
+            "srivasa": "Lineage Integrity Governance",
+        }
 
     def __init__(self, config: Optional[CityConfig] = None):
         """Initialize ARCHIVIST as a VibeAgent."""
