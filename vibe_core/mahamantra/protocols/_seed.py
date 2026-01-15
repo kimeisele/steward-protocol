@@ -40,6 +40,9 @@ PANCHA: Final[int] = 5
 # The 6 Limbs (Sharanagati)
 SHARANAGATI: Final[int] = 6
 
+# The 9 Islands (Navadvipa) & 9 Processes (Navadha Bhakti)
+NAVA: Final[int] = 9
+
 # The 48 Lila (16 * 3)
 LILA: Final[int] = 48
 
@@ -69,18 +72,37 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
 assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, "37 Formula Check Failed"
 
 # =============================================================================
+# THE HIDDEN BRIDGE (Dvadasa - The 12)
+# =============================================================================
+# Time (Lila phases) = Space (Mahajana authorities)
+# The 12 is the common denominator between Time, Space, and Work.
+
+# Phase duration derived from Lila structure (NOT hardcoded)
+PHASE_DURATION: Final[int] = LILA // QUARTERS  # 48 / 4 = 12
+
+# WATERTIGHT INTEGRITY CHECKS:
+# 1. Holographic Principle: Time matches Authority
+assert PHASE_DURATION == MAHAJANA_COUNT, "Integrity Error: Time/Person mismatch (12 != 12)"
+
+# 2. Geometry of the Mala: 12 Guardians * 9 Islands = 108 Beads
+assert MALA == MAHAJANA_COUNT * NAVA, "Integrity Error: Mala geometry mismatch (108 != 12*9)"
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
+    # Sacred Constants
     "WORDS",
     "PARAMPARA",
     "TRINITY",
     "QUARTERS",
     "PANCHA",
     "SHARANAGATI",
+    "NAVA",
     "LILA",
     "MALA",
+    # Derived Constants
     "HARE_COUNT",
     "KRISHNA_COUNT",
     "RAMA_COUNT",
@@ -92,4 +114,6 @@ __all__ = [
     "KSHETRA_GAD",
     "ROUNDS",
     "DAILY_MANTRAS",
+    # The Hidden Bridge
+    "PHASE_DURATION",
 ]
