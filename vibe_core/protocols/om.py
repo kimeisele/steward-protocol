@@ -497,8 +497,6 @@ from .universal.enforce import EnforceProtocol
 from .universal.infer import InferProtocol
 from .universal.krishna import KrishnaProtocol
 
-# The unified OmProtocol interface (for structural typing)
-from .universal.om import OmProtocol
 from .universal.rama import RamaProtocol
 from .universal.read_write import ReadWriteProtocol
 from .universal.store_recall import StoreRecallProtocol
@@ -510,7 +508,6 @@ from .universal.sync import SyncProtocol
 
 __all__ = [
     "OM",
-    "OmProtocol",
     # Sub-protocols
     "RamanujanProtocol",
     "YamarajaProtocol",
