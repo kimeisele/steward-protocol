@@ -60,6 +60,15 @@ from vibe_core.mahamantra.substrate.seed import (
     WORDS_PER_QUARTER as POSITIONS_PER_QUARTER,
 )
 
+# === EXPOSE PRITHU IMPLEMENTATION (The Avatar) ===
+from vibe_core.mahamantra.genesis.prithu import PrithuService
+
+# THE AVATAR MANIFESTS (Singleton)
+# This allows mahamantra.mod.prithu to have .execute()
+prithu = PrithuService()
+
+
+
 
 # =============================================================================
 # THE LAW: FOLDER = WIRING

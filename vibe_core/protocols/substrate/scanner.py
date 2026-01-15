@@ -67,6 +67,7 @@ class FileStatus(str, Enum):
     PENDING = "pending"
     SCANNED = "scanned"
     OWNED = "owned"           # Has mahajana declaration
+    INFERRED = "inferred"     # Heuristically identified (Census)
     ORPHAN = "orphan"         # No declaration
     SKIPPED = "skipped"       # Test file, __pycache__, etc.
     ERROR = "error"           # Failed to parse
@@ -120,6 +121,7 @@ class ScannedFile(TypedDict, total=False):
     declarations: List[Declaration]     # Found declarations
     error_message: str                  # Error if status == ERROR
     scanned_at: str                     # ISO timestamp
+    inference: Dict[str, object]        # Heuristic analysis results (identity, score)
 
 
 class ScanResult(TypedDict, total=False):
@@ -130,6 +132,7 @@ class ScanResult(TypedDict, total=False):
     files_total: int                        # Total files found
     files_scanned: int                      # Successfully scanned
     files_owned: int                        # With declarations
+    files_inferred: int                     # Heuristically identified
     files_orphan: int                       # Without declarations
     files_skipped: int                      # Skipped (tests, etc.)
     files_error: int                        # Failed to parse

@@ -65,6 +65,7 @@ from vibe_core.protocols.substrate.scanner import (
     get_default_config,
     path_to_module,
 )
+from vibe_core.mahamantra.lila.adoption import analyze_source
 
 # =============================================================================
 # CONSTANTS (Only declaration attribute name - not paths!)
@@ -354,7 +355,9 @@ class MahajanaScanner:
 
         files_total = 0
         files_scanned = 0
+        files_scanned = 0
         files_owned = 0
+        files_inferred = 0
         files_orphan = 0
         files_skipped = 0
         files_error = 0
@@ -412,6 +415,9 @@ class MahajanaScanner:
                 elif scanned.get("status") == FileStatus.OWNED.value:
                     files_owned += 1
                     files_scanned += 1
+                elif scanned.get("status") == FileStatus.INFERRED.value:
+                    files_inferred += 1
+                    files_scanned += 1
                 else:
                     files_orphan += 1
                     files_scanned += 1
@@ -451,6 +457,7 @@ class MahajanaScanner:
             files_total=files_total,
             files_scanned=files_scanned,
             files_owned=files_owned,
+            files_inferred=files_inferred,
             files_orphan=files_orphan,
             files_skipped=files_skipped,
             files_error=files_error,
@@ -490,7 +497,6 @@ class MahajanaScanner:
                 scanned_at=datetime.now().isoformat(),
             )
 
-        # Use shared extraction utility
         detect_types = self._config.get(
             "detect_declarations",
             [
@@ -501,7 +507,16 @@ class MahajanaScanner:
         )
         declarations = extract_declarations(source, file_path, detect_types)
 
-        status = FileStatus.OWNED.value if declarations else FileStatus.ORPHAN.value
+        status = FileStatus.ORPHAN.value
+        inference = {}
+
+        if declarations:
+            status = FileStatus.OWNED.value
+        else:
+            # TRY INFERENCE (The Great Census)
+            inference = analyze_source(source)
+            if inference.get("score", 0.0) >= 0.3:
+                status = FileStatus.INFERRED.value
 
         return ScannedFile(
             path=str(path),
@@ -510,6 +525,7 @@ class MahajanaScanner:
             status=status,
             size_bytes=size_bytes,
             declarations=declarations,
+            inference=inference,
             scanned_at=datetime.now().isoformat(),
         )
 
