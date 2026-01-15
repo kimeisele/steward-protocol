@@ -58,6 +58,7 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIResult,
     CLIState,
 )
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 
 # =============================================================================
@@ -100,7 +101,7 @@ class MahajanaCliRegistration:
 # CLI ENGINE - The Singleton
 # =============================================================================
 
-class CLIEngine:
+class CLIEngine(PanchaTattvaProtocol):
     """
     The CLI Engine - Krishna does the work.
 
@@ -114,6 +115,16 @@ class CLIEngine:
     - Output standardization
     - Identity verification (37th)
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        return {
+            "chaitanya": "CLI Engine",
+            "nityananda": "CLI State Map",
+            "advaita": "Command Routing",
+            "gadadhara": "User Interaction Flow",
+            "srivasa": "Command Governance",
+        }
 
     def __init__(self) -> None:
         # Registry: position -> registration
