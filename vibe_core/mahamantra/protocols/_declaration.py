@@ -45,7 +45,6 @@ WATERTIGHT: No Any types. Everything explicit.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -70,18 +69,18 @@ from typing import (
 )
 
 from vibe_core.mahamantra.protocols._core import (
-    Level,
-    Quarter,
     PARAMPARA,
-    ProtocolIdentity,
-    ProtocolCapability,
+    Level,
     MahamantraProtocolBase,
+    ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-
 
 # =============================================================================
 # DECLARATION TYPE - What kind of thing is being declared?
 # =============================================================================
+
 
 class DeclarationType(str, Enum):
     """
@@ -89,18 +88,20 @@ class DeclarationType(str, Enum):
 
     Different types have different requirements and capabilities.
     """
-    MODULE = "module"           # A Python module (.py file)
-    CLASS = "class"             # A class within a module
-    PROTOCOL = "protocol"       # A protocol definition
-    SERVICE = "service"         # A service implementation
-    TYPE = "type"               # A type definition (dataclass, TypedDict, etc.)
-    FUNCTION = "function"       # A standalone function
-    CONSTANT = "constant"       # A constant value
+
+    MODULE = "module"  # A Python module (.py file)
+    CLASS = "class"  # A class within a module
+    PROTOCOL = "protocol"  # A protocol definition
+    SERVICE = "service"  # A service implementation
+    TYPE = "type"  # A type definition (dataclass, TypedDict, etc.)
+    FUNCTION = "function"  # A standalone function
+    CONSTANT = "constant"  # A constant value
 
 
 # =============================================================================
 # MAHAJANA CARD - The Identity Declaration
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class MahajanaCard:
@@ -120,13 +121,13 @@ class MahajanaCard:
     """
 
     # === IDENTITY (WHO) ===
-    name: str                           # Unique name within mahajana
-    mahajana: str                       # Owner mahajana (e.g., "brahma")
-    position: int                       # Position in mahamantra (0-15)
-    declaration_type: DeclarationType   # What type of entity
+    name: str  # Unique name within mahajana
+    mahajana: str  # Owner mahajana (e.g., "brahma")
+    position: int  # Position in mahamantra (0-15)
+    declaration_type: DeclarationType  # What type of entity
 
     # === LOCATION (WHERE) ===
-    level: Level = Level.CONTRACT       # Default to contract level
+    level: Level = Level.CONTRACT  # Default to contract level
     quarter: Quarter = field(init=False)  # Derived from position
 
     # === CAPABILITY (WHAT CAN I DO) ===
@@ -151,21 +152,13 @@ class MahajanaCard:
     def __post_init__(self) -> None:
         """Compute derived fields and validate."""
         # Compute quarter from position
-        object.__setattr__(self, 'quarter', Quarter.from_position(self.position))
+        object.__setattr__(self, "quarter", Quarter.from_position(self.position))
 
         # Compute parampara vector
-        object.__setattr__(
-            self,
-            'parampara_vector',
-            (self.position + 1) * PARAMPARA
-        )
+        object.__setattr__(self, "parampara_vector", (self.position + 1) * PARAMPARA)
 
         # Compute full name
-        object.__setattr__(
-            self,
-            'full_name',
-            f"{self.mahajana}.{self.name}"
-        )
+        object.__setattr__(self, "full_name", f"{self.mahajana}.{self.name}")
 
         # Validate position
         if not 0 <= self.position < 16:
@@ -280,6 +273,7 @@ class MahajanaCard:
 # MODULE DECLARATION - For .py files
 # =============================================================================
 
+
 @dataclass
 class ModuleDeclaration:
     """
@@ -320,6 +314,7 @@ class ModuleDeclaration:
 # DECLARATION REGISTRY - Tracks all declarations
 # =============================================================================
 
+
 class DeclarationRegistry:
     """
     Registry of all declarations in the system.
@@ -328,6 +323,10 @@ class DeclarationRegistry:
     Other components query it to find things.
 
     SINGLETON: Only one registry exists.
+
+    EXTENDED (Senior Architect):
+        Also caches module exports for cross-codebase routing.
+        resolve_export() provides O(1) lookup for Lotus fallback.
     """
 
     _instance: ClassVar[Optional["DeclarationRegistry"]] = None
@@ -340,6 +339,10 @@ class DeclarationRegistry:
             cls._instance._by_mahajana = {}
             cls._instance._by_position = {}
             cls._instance._by_capability = {}
+            # Extended: module exports cache for Lotus routing
+            cls._instance._mahajana_modules: Dict[str, List[str]] = {}  # mahajana → [module_paths]
+            cls._instance._export_cache: Dict[str, object] = {}  # "mahajana.ExportName" → object
+            cls._instance._scanner_loaded = False
         return cls._instance
 
     def __init__(self) -> None:
@@ -350,6 +353,9 @@ class DeclarationRegistry:
     _by_mahajana: Dict[str, List[MahajanaCard]]
     _by_position: Dict[int, List[MahajanaCard]]
     _by_capability: Dict[str, List[MahajanaCard]]
+    _mahajana_modules: Dict[str, List[str]]
+    _export_cache: Dict[str, object]
+    _scanner_loaded: bool
 
     def register(self, card: MahajanaCard) -> None:
         """Register a mahajana card."""
@@ -403,11 +409,95 @@ class DeclarationRegistry:
         self._by_mahajana.clear()
         self._by_position.clear()
         self._by_capability.clear()
+        self._mahajana_modules.clear()
+        self._export_cache.clear()
+        self._scanner_loaded = False
+
+    # =========================================================================
+    # EXTENDED: Cross-Codebase Export Resolution (Senior Architect)
+    # =========================================================================
+
+    def _ensure_scanner_loaded(self) -> None:
+        """
+        Lazy-load scanner results ONCE.
+
+        Called by resolve_export() on first access.
+        Populates _mahajana_modules from scanner.
+        """
+        if self._scanner_loaded:
+            return
+
+        try:
+            from vibe_core.mahamantra.substrate.scanner import get_scanner
+
+            scanner = get_scanner()
+            result = scanner.scan()
+
+            for f in result.get("files", []):
+                for decl in f.get("declarations", []):
+                    if decl.get("type") == "mahajana":
+                        mahajana = decl.get("value", "")
+                        module_path = f.get("module_path", "")
+                        if mahajana and module_path:
+                            if not module_path.startswith("vibe_core."):
+                                module_path = f"vibe_core.{module_path}"
+                            if mahajana not in self._mahajana_modules:
+                                self._mahajana_modules[mahajana] = []
+                            if module_path not in self._mahajana_modules[mahajana]:
+                                self._mahajana_modules[mahajana].append(module_path)
+
+            self._scanner_loaded = True
+        except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+            self._scanner_loaded = True
+
+    def resolve_export(self, mahajana: str, name: str) -> Optional[object]:
+        """
+        Resolve an export by mahajana and name.
+
+        O(1) for cached results, O(n) for first lookup of uncached export.
+        Used by Lotus for cross-codebase routing.
+
+        Args:
+            mahajana: The mahajana name (e.g., "brahma")
+            name: The export name (e.g., "BrahmaService")
+
+        Returns:
+            The exported object, or None if not found
+        """
+        # Check cache first (O(1))
+        cache_key = f"{mahajana}.{name}"
+        if cache_key in self._export_cache:
+            return self._export_cache[cache_key]
+
+        # Ensure scanner data is loaded
+        self._ensure_scanner_loaded()
+
+        # Search modules for this mahajana
+        import importlib
+
+        for module_path in self._mahajana_modules.get(mahajana, []):
+            try:
+                mod = importlib.import_module(module_path)
+                if hasattr(mod, name):
+                    obj = getattr(mod, name)
+                    # Cache for next time (O(1))
+                    self._export_cache[cache_key] = obj
+                    return obj
+            except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
+                continue
+
+        return None
+
+    def get_mahajana_modules(self, mahajana: str) -> List[str]:
+        """Get all module paths for a mahajana."""
+        self._ensure_scanner_loaded()
+        return self._mahajana_modules.get(mahajana, [])
 
 
 # =============================================================================
 # DECLARATION PROTOCOL - Self-reference
 # =============================================================================
+
 
 class DeclarationProtocol(MahamantraProtocolBase):
     """
@@ -449,6 +539,7 @@ assert _valid, f"DeclarationProtocol failed validation: {_violations}"
 # HELPER: Read declaration from a module
 # =============================================================================
 
+
 def read_declaration(module_path: str) -> Optional[MahajanaCard]:
     """
     Read the __mahajana_card__ from a module.
@@ -459,7 +550,7 @@ def read_declaration(module_path: str) -> Optional[MahajanaCard]:
 
     try:
         module = importlib.import_module(module_path)
-        card = getattr(module, '__mahajana_card__', None)
+        card = getattr(module, "__mahajana_card__", None)
         if isinstance(card, MahajanaCard):
             return card
         return None
