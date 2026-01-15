@@ -679,6 +679,51 @@ class BalaramaProxy(GADBase, GADProtocol):
                 handler(state)
             except Exception:
                 pass
+    
+    # =========================================================================
+    # UNIVERSAL SANKIRTAN (CHAT BRIDGE)
+    # =========================================================================
+    
+    def chat(self, message: str) -> str:
+        """
+        Speak to the Service (Sankirtan).
+        
+        SANKIRTAN PATTERN:
+        ------------------
+        1. Try module.on_chat(message) -> str
+        2. Fallback: Proxy speaks on behalf (Identity/Status)
+        
+        Args:
+            message: The input string from the user/CLI.
+            
+        Returns:
+            The response string.
+        """
+        # 1. Try Service Implementation
+        handler = getattr(self.module, "on_chat", None)
+        if callable(handler):
+            try:
+                response = handler(message)
+                if isinstance(response, str):
+                    return response
+            except Exception as e:
+                # Log error but don't crash the chat
+                logger.warning(f"Transformation failed in {self.module_name}: {e}")
+                return f"⚠️ [Transformation Error] My internal speech failed: {e}"
+
+        # 2. Fallback: Proxy Dharma (Who am I?)
+        status = "🟢 Active" if self.is_healthy() else "🔴 Unhealthy"
+        identity = f"{self.mahajana.upper()}@{self.position}" if self.has_identity else "Unknown Service"
+        orbit = f"(Orbit {self.reactor.lagna})" if self.reactor else "(No Orbit)"
+        
+        return (
+            f"🕉️  [PROXY RESPONSE] I am {self.module_name}.\n"
+            f"    Identity: {identity} {orbit}\n"
+            f"    Status:   {status}\n"
+            f"    Genesis:  {self.genesis or 'None'}\n"
+            f"\n"
+            f"    (I do not speak 'chat' natively yet, but I am listening.)"
+        )
 
     def __repr__(self) -> str:
         orbit_info = f", Orbit={self._reactor.lagna}" if self._reactor else ""
