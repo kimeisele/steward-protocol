@@ -997,9 +997,10 @@ class MahamantraLotus(LotusNode):
 
         mahamantra[5] → Position 5 (KUMARAS)
         """
-        from vibe_core.mahamantra.substrate.clock import get_tick_info
-
-        return get_tick_info(index)
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        if not 0 <= index < 16:
+            raise IndexError(f"Position index out of range: {index}")
+        return MAHAMANTRA_POSITIONS[index]
 
     def __contains__(self, item: Union[int, str]) -> bool:
         """Check if guardian or index is in Mahamantra."""
