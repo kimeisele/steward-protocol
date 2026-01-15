@@ -23,6 +23,10 @@ from typing import Final
 # =============================================================================
 
 # The 16 words of the Mahamantra
+# THE ATOMIC STEP (0.0625)
+# 1 / 16 = 0.0625
+# Bhagavad Gita 6.25: "sanaih sanaih" (step by step)
+# This is the harmonic frequency of focus (Dharana).
 WORDS: Final[int] = 16
 
 # The 37 Formula (24 Kshetra + 12 Mahajanas + 1 Knower)
