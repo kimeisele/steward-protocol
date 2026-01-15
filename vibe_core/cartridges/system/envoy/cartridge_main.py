@@ -17,8 +17,8 @@ The Envoy was the missing link. Now it's truly wired in.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prahlada"
-__position__ = 9
+__mahajana__ = "narada"
+__position__ = 2
 __genesis__ = "0xc5e664b6"  # GenesisByte: parampara % 37 == 0
 
 import json
@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional
 # VibeOS Integration
 from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 # OPUS-307 Phase I.2: ExecutorSingularity replaces DeterministicExecutor
 from vibe_core.cartridges.system.envoy.executor_singularity import (
@@ -57,7 +58,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENVOY_CARTRIDGE")
 
 
-class EnvoyCartridge(ContextAwareAgent, OathMixin):
+class EnvoyCartridge(ContextAwareAgent, OathMixin, PanchaTattvaProtocol):
     """
     The ENVOY Agent Cartridge - Brain of Agent City
 
@@ -71,6 +72,17 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
     When a user types a command, it becomes a Task for the Envoy.
     The Envoy.process() method decides what to do.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of the Envoy (Narada)."""
+        return {
+            "chaitanya": "Universal Operator Interface (Envoy)",
+            "nityananda": "ContextAwareAgent Foundation",
+            "advaita": "Unified Routing Logic",
+            "gadadhara": "Bidirectional Intent Flow",
+            "srivasa": "Sovereign Oath Enforcement",
+        }
 
     def __init__(self, config: Optional[CityConfig] = None):
         """Initialize the ENVOY as a VibeAgent."""

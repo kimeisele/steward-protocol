@@ -15,8 +15,8 @@ This is the Conscience that guards the Commit Gate.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prahlada"
-__position__ = 9
+__mahajana__ = "yamaraja"
+__position__ = 15
 __genesis__ = "0xba20248f"  # GenesisByte: parampara % 37 == 0
 
 import ast
@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional
 from vibe_core.config import CityConfig
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
@@ -35,7 +36,7 @@ from vibe_core.steward import OathMixin
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
-class AuditorCartridge(VibeAgent, OathMixin):
+class AuditorCartridge(VibeAgent, OathMixin, PanchaTattvaProtocol):
     """
     AUDITOR - The Quality Gate Agent.
 
@@ -47,6 +48,17 @@ class AuditorCartridge(VibeAgent, OathMixin):
     - NO tool instances in __init__
     - Tools accessed via self.system.execute_tool()
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of the Auditor (Yamaraja)."""
+        return {
+            "chaitanya": "Quality & Governance Gate (Auditor)",
+            "nityananda": "AST & Linting Substrate",
+            "advaita": "Judgment & Verdict Logic",
+            "gadadhara": "Compliance Report Flow",
+            "srivasa": "Constitutional Integrity Enforcement",
+        }
 
     def __init__(self, config: Optional[CityConfig] = None):
         """Initialize AUDITOR as a VibeAgent."""
