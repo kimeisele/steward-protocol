@@ -110,14 +110,14 @@ mahamantra/
 
 ---
 
-## VI. DIE VIER PHASEN
+## VI. DIE VIER PHASEN (MantraOpCode)
 
-| Phase | Positionen | Funktion | OpCodes |
-|-------|------------|----------|---------|
-| **GENESIS** | 0-3 | INPUT | Boot, Load, Alloc, Spawn |
-| **DHARMA** | 4-7 | VERIFY | Parse, Link, Check, Test |
-| **KARMA** | 8-11 | EXECUTE | Run, Scale, Sync, Commit |
-| **MOKSHA** | 12-15 | OUTPUT | Yield, Flush, Log, Exit |
+| Phase | Positionen | Funktion | OpCodes (aus substrate/opcode.py) |
+|-------|------------|----------|-----------------------------------|
+| **GENESIS** | 0-3 | INPUT | SYS_WAKE, LOAD_ROOT, ALLOC_MEM, INIT_THREAD |
+| **DHARMA** | 4-7 | VERIFY | COMPILE_AST, BIND_SYMBOL, TYPE_CHECK, DHARMA_TEST |
+| **KARMA** | 8-11 | EXECUTE | EXEC_OP, EXTEND_CAP, STATE_SYNC, LEDGER_SIGN |
+| **MOKSHA** | 12-15 | OUTPUT | YIELD_CPU, IO_FLUSH, LOG_EMIT, AUDIT_SEAL |
 
 Jeder Tick durchläuft alle 4 Phasen.
 
