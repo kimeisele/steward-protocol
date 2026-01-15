@@ -137,11 +137,18 @@ class BalaramaProxy:
     Service code remains unchanged (Wildnis).
     Proxy injects mahamantra context and governed operations.
 
+    NAVADVIPA IDENTITY AWARENESS:
+    -----------------------------
+    The proxy reads __mahajana__ and __position__ from the module.
+    Services are no longer anonymous - they know WHO they are.
+
     "Wir fluten das Land mit dem Ozean (Seed). Wer schwimmt, ist integriert."
     — MAHAPROMPT.md
 
     Usage:
         >>> proxy = BalaramaProxy("vibe_core.services.manifestation_service")
+        >>> proxy.mahajana  # "janaka"
+        >>> proxy.position  # 10
         >>> # Service now has mahamantra in namespace
         >>> # Service's Path is now _GovernedPath
         >>> # All writes route through bridge.offer()
@@ -149,15 +156,26 @@ class BalaramaProxy:
     Attributes:
         module: The wrapped service module
         module_name: Name of the wrapped module
+        mahajana: The Mahajana identity (e.g., "janaka", "prithu")
+        position: The Mahamantra position (0-15)
         is_wrapped: Whether wrapping succeeded
     """
 
-    def __init__(self, module_name: str):
+    def __init__(self, module_name: str, *, silent: bool = False):
         """
         Initialize Balarama Proxy for a service module.
 
+        NAVADVIPA EMBRACE:
+        ------------------
+        1. Import the module
+        2. Extract identity (__mahajana__, __position__)
+        3. Inject mahamantra context
+        4. Replace Path with _GovernedPath
+        5. Log the embrace (unless silent)
+
         Args:
             module_name: Full module path (e.g., "vibe_core.services.foo")
+            silent: If True, suppress logging (for bootstrap)
 
         Raises:
             ImportError: If module cannot be imported
@@ -166,17 +184,70 @@ class BalaramaProxy:
         self.module = None
         self.is_wrapped = False
 
+        # Identity (Navadvipa Awareness)
+        self._mahajana: str = "unknown"
+        self._position: int = -1
+        self._genesis: str = ""
+
         # Import the module
         try:
             self.module = importlib.import_module(module_name)
         except ImportError as e:
             raise ImportError(f"Cannot import module {module_name}: {e}")
 
+        # Extract identity from module (THE AWAKENING)
+        self._extract_identity()
+
         # Apply wrapping
         self._inject_mahamantra_context()
         self._replace_path()
 
         self.is_wrapped = True
+
+        # Log the embrace (Navadvipa welcome)
+        if not silent:
+            self._log_embrace()
+
+    def _extract_identity(self) -> None:
+        """
+        Extract Mahajana identity from module.
+
+        NAVADVIPA AWAKENING:
+        --------------------
+        Read __mahajana__, __position__, __genesis__ from module.
+        If not present, the service remains "unknown" (amnesia).
+
+        "Who am I? Where do I belong in the Mahamantra?"
+        """
+        if self.module is None:
+            return
+
+        # Read identity declarations
+        self._mahajana = getattr(self.module, "__mahajana__", "unknown")
+        self._position = getattr(self.module, "__position__", -1)
+        self._genesis = getattr(self.module, "__genesis__", "")
+
+    def _log_embrace(self) -> None:
+        """
+        Log the Navadvipa embrace.
+
+        SANKIRTAN ANNOUNCEMENT:
+        -----------------------
+        When a service is embraced, we announce its identity.
+        This is the service "joining the dance".
+        """
+        import logging
+        logger = logging.getLogger("BALARAMA")
+
+        if self._mahajana != "unknown" and self._position >= 0:
+            # Service has identity - welcome by name
+            logger.info(
+                f"🙏 {self._mahajana.upper()} (Position {self._position}) embraced: "
+                f"{self.module_name.split('.')[-1]}"
+            )
+        else:
+            # Anonymous service - still welcomed
+            logger.debug(f"🤝 Anonymous service embraced: {self.module_name}")
 
     def _inject_mahamantra_context(self) -> None:
         """
@@ -232,8 +303,30 @@ class BalaramaProxy:
 
         return getattr(self.module, name)
 
+    @property
+    def mahajana(self) -> str:
+        """The Mahajana identity of this service."""
+        return self._mahajana
+
+    @property
+    def position(self) -> int:
+        """The Mahamantra position (0-15) of this service."""
+        return self._position
+
+    @property
+    def genesis(self) -> str:
+        """The GenesisByte hash of this service."""
+        return self._genesis
+
+    @property
+    def has_identity(self) -> bool:
+        """Check if service has Mahajana identity."""
+        return self._mahajana != "unknown" and self._position >= 0
+
     def __repr__(self) -> str:
-        """String representation."""
+        """String representation with identity."""
+        if self.has_identity:
+            return f"BalaramaProxy({self._mahajana}@{self._position}, {self.module_name})"
         status = "wrapped" if self.is_wrapped else "unwrapped"
         return f"BalaramaProxy({self.module_name}, {status})"
 
@@ -242,7 +335,7 @@ class BalaramaProxy:
 # CONVENIENCE FUNCTION
 # =============================================================================
 
-def wrap_service(module_name: str) -> BalaramaProxy:
+def wrap_service(module_name: str, *, silent: bool = False) -> BalaramaProxy:
     """
     Wrap a service module with Balarama Proxy.
 
@@ -251,19 +344,26 @@ def wrap_service(module_name: str) -> BalaramaProxy:
     Instead of: proxy = BalaramaProxy("vibe_core.services.foo")
     Use: service = wrap_service("vibe_core.services.foo")
 
+    NAVADVIPA IDENTITY:
+    -------------------
+    The proxy automatically extracts __mahajana__ and __position__.
+    Access via: service.mahajana, service.position
+
     Args:
         module_name: Full module path to wrap
+        silent: If True, suppress embrace logging
 
     Returns:
-        BalaramaProxy instance (transparent access to module)
+        BalaramaProxy instance with identity awareness
 
     Example:
         >>> manifestation = wrap_service("vibe_core.services.manifestation_service")
+        >>> manifestation.mahajana  # "janaka"
+        >>> manifestation.position  # 10
         >>> # manifestation now has mahamantra in namespace
         >>> # All Path operations governed
-        >>> # Use as normal: manifestation.some_function()
     """
-    return BalaramaProxy(module_name)
+    return BalaramaProxy(module_name, silent=silent)
 
 
 # =============================================================================
@@ -284,24 +384,55 @@ AUTO_WRAP_SERVICES = [
 ]
 
 
-def auto_wrap_services() -> dict[str, BalaramaProxy]:
+def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
     """
     Auto-wrap services listed in AUTO_WRAP_SERVICES.
 
+    NAVADVIPA SANKIRTAN:
+    --------------------
+    Each service is embraced and welcomed by identity.
+    The log shows WHO joined the dance:
+
+        🙏 JANAKA (Position 10) embraced: manifestation_service
+        🙏 PRITHU (Position 0) embraced: prakriti_binding
+
+    Args:
+        silent: If True, suppress individual embrace logs (default for bootstrap)
+
     Returns:
-        Dict mapping module name → BalaramaProxy
+        Dict mapping module name → BalaramaProxy (with identity)
 
     Example:
-        >>> proxies = auto_wrap_services()
-        >>> # All listed services now governed
+        >>> proxies = auto_wrap_services(silent=False)
+        >>> for name, proxy in proxies.items():
+        ...     print(f"{proxy.mahajana}: {proxy.position}")
     """
+    import logging
+    logger = logging.getLogger("BALARAMA")
+
     proxies = {}
+    embraced_count = 0
+    identity_count = 0
+
     for service_name in AUTO_WRAP_SERVICES:
         try:
-            proxies[service_name] = wrap_service(service_name)
-        except Exception:
+            proxy = wrap_service(service_name, silent=silent)
+            proxies[service_name] = proxy
+            embraced_count += 1
+
+            if proxy.has_identity:
+                identity_count += 1
+
+        except Exception as e:
             # Graceful degradation - continue with other services
-            pass
+            logger.warning(f"⚠️ Failed to embrace {service_name}: {e}")
+
+    # Summary log (always shown)
+    if embraced_count > 0:
+        logger.info(
+            f"🎵 Sankirtan: {embraced_count} services embraced, "
+            f"{identity_count} with Mahajana identity"
+        )
 
     return proxies
 
