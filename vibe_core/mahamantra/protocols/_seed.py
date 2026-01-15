@@ -61,7 +61,8 @@ HALVES: Final[int] = 2           # 2 Halves
 HALF_SIZE: Final[int] = 8        # WORDS // HALVES
 
 KSETRAJNA: Final[int] = 1        # The Knower (Krishna)
-MAHAJANA_COUNT: Final[int] = 12  # The Guardians
+MAHAJANA_COUNT: Final[int] = 12  # The 12 Mahajanas (Limbs/Workers)
+AVATAR_COUNT: Final[int] = QUARTERS  # The 4 Avataras (Heads of Quarters)
 KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24 (Field)
 KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36 (6x6 Matrix)
 
@@ -87,6 +88,9 @@ assert PHASE_DURATION == MAHAJANA_COUNT, "Integrity Error: Time/Person mismatch 
 # 2. Geometry of the Mala: 12 Guardians * 9 Islands = 108 Beads
 assert MALA == MAHAJANA_COUNT * NAVA, "Integrity Error: Mala geometry mismatch (108 != 12*9)"
 
+# 3. Guardian Completeness: 4 Avatars + 12 Mahajanas = 16 Words
+assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "Guardian count mismatch (4+12 != 16)"
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
@@ -110,6 +114,7 @@ __all__ = [
     "HALF_SIZE",
     "KSETRAJNA",
     "MAHAJANA_COUNT",
+    "AVATAR_COUNT",
     "KSHETRA",
     "KSHETRA_GAD",
     "ROUNDS",
