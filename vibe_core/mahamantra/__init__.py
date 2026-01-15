@@ -149,6 +149,33 @@ class MahamantraLotus(LotusNode):
         "yamaraja": "lotus",  # 15: AUDIT_SEAL
     }
 
+    @property
+    def mod(self) -> "ModuleRouter":
+        """
+        Access the ModuleRouter (Mahajana Modules).
+        Lazy load from singularity to avoid circular imports.
+        """
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as real_mahamantra
+        return real_mahamantra.mod
+
+    @property
+    def protocols(self) -> "ProtocolRouter":
+        """
+        Access the ProtocolRouter (Protocol Classes).
+        Lazy load from singularity to avoid circular imports.
+        """
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as real_mahamantra
+        return real_mahamantra.protocols
+
+    @property
+    def shadow(self) -> "ShadowReactorFactory":
+        """
+        Access the Shadow Reactor Factory.
+        Lazy load from singularity to avoid circular imports.
+        """
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as real_mahamantra
+        return real_mahamantra.shadow
+
     def __init__(self) -> None:
         super().__init__(LotusPath())
 
