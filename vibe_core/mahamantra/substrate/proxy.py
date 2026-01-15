@@ -272,9 +272,15 @@ def wrap_service(module_name: str) -> BalaramaProxy:
 
 # Services that should be auto-wrapped on import
 # Add service names here to auto-govern them
+#
+# NITYANANDA STRATEGY: Jagai & Madhai are embraced, not killed.
+# These services are powerful but "wild" - they write directly to disk.
+# The proxy wraps them, replacing Path with _GovernedPath.
+# All writes now flow through bridge.offer() → Dharmic governance.
+#
 AUTO_WRAP_SERVICES = [
-    # "vibe_core.services.manifestation_service",
-    # Disabled by default - enable per deployment
+    "vibe_core.services.manifestation_service",  # Jagai: Markdown manifestation
+    "vibe_core.protocols.prakriti_binding",  # Madhai: File blessing/signature
 ]
 
 
