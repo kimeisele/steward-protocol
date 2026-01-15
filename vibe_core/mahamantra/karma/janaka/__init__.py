@@ -150,9 +150,14 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
-    """Lazy import for JanakaService to avoid circular import."""
+def __getattr__(name: str) -> object:
+    """
+    Lazy load JanakaService from the services layer.
+    Unification of Kernel and Mahamantra.
+    """
     if name == "JanakaService":
-        from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+        from vibe_core.services.janaka_service import JanakaService
         return JanakaService
+    
+    # Legacy fallbacks might be needed for types, handled by static imports above
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -38,9 +38,13 @@ PARAMPARA_VECTOR: Final[int] = 481
 NrisimhaBase = NrisimhaProtocolBase
 
 
-def __getattr__(name: str):
-    """Lazy import for NrisimhaService to avoid circular import."""
+def __getattr__(name: str) -> object:
+    """
+    Lazy load NrisimhaWatchdog (aliased as NrisimhaService) from services.
+    Unification of Kernel and Mahamantra.
+    """
     if name == "NrisimhaService":
-        from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
-        return NrisimhaService
+        from vibe_core.services.nrisimha import NrisimhaWatchdog
+        return NrisimhaWatchdog  # Return the new class as the old name
+    
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
