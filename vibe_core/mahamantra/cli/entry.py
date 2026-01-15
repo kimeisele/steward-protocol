@@ -44,7 +44,7 @@ import json
 import sys
 from datetime import datetime
 from typing import List, Optional
-
+from vibe_core.gateway import chat as gateway_chat
 from vibe_core.mahamantra.cli.auto import cli_auto
 from vibe_core.mahamantra.cli.entry_protocol import CLIEntryProtocol
 from vibe_core.mahamantra.cli.protocol import (
@@ -103,6 +103,23 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
 
         if command == "routes":
             return self._show_routes()
+
+        if command == "chat":
+            if not remaining:
+                print("Usage: steward chat <message>")
+                return 1
+            # Combine all remaining args into message
+            message = " ".join(remaining)
+            response = gateway_chat(message)
+            
+            # Print output from GatewayResponse
+            print()
+            if response.success:
+                 print(response.output)
+            else:
+                 print(f"Error: {response.error}")
+            print()
+            return response.exit_code
 
         # Route via mahamantra
         self._state.busy = True

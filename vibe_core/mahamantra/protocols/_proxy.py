@@ -63,6 +63,39 @@ class MahamantraProxy(PanchaTattvaProtocol):
             return self._target(*args, **kwargs)
         raise TypeError(f"Target {type(self._target)} is not callable")
 
+    # =========================================================================
+    # UNIVERSAL SANKIRTAN (CHAT BRIDGE)
+    # =========================================================================
+
+    def chat(self, message: str) -> str:
+        """
+        Speak to the Proxied Service.
+        
+        Args:
+            message: Input string.
+            
+        Returns:
+            Response string.
+        """
+        # 1. Try Target Implementation
+        handler = getattr(self._target, "on_chat", None)
+        if callable(handler):
+            try:
+                response = handler(message)
+                if isinstance(response, str):
+                    return response
+            except Exception:
+                pass # Fallback to Identity
+
+        # 2. Fallback: Identity Response
+        return (
+            f"🕉️  [PROXY RESPONSE] I am {type(self._target).__name__}.\n"
+            f"    Identity: {self._guardian.upper()} (Pos {self._position})\n"
+            f"    Status:   Wrapped/Active\n"
+            f"\n"
+            f"    (I do not speak 'chat' natively yet, but I am listening via the Lotus.)"
+        )
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
