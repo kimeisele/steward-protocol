@@ -50,6 +50,36 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0xbe27e031"  # GenesisByte: parampara % 37 == 0
 
+# =============================================================================
+# SEED - The Mathematical Constitution
+# =============================================================================
+
+from vibe_core.mahamantra.protocols._seed import (
+    # Sacred Constants
+    WORDS,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    SHARANAGATI,
+    NAVA,
+    LILA,
+    MALA,
+    # Resolution Constants (COSMIC_FRAME)
+    COSMIC_FRAME,
+    NAKSHATRA_UNIT,
+    TITHI_UNIT,
+    PADA_UNIT,
+    QUARTER_UNIT,
+    # Derived Constants
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    RAMA_COUNT,
+    KSHETRA,
+    KSHETRA_GAD,
+    MAHAJANA_COUNT,
+    AVATAR_COUNT,
+)
+
 from vibe_core.mahamantra.protocols._core import (
     # Constants - The 37 Formula
     KSETRA_COUNT,
@@ -331,6 +361,25 @@ __all__ = [
     "LOTUS_QUARTERS",
     "PETALS_PER_QUARTER",
     "MALA_BEADS",
+    "COSMIC_FRAME",
+    "NAKSHATRA_UNIT",
+    "TITHI_UNIT",
+    "PADA_UNIT",
+    "QUARTER_UNIT",
+    "WORDS",
+    "TRINITY",
+    "QUARTERS",
+    "PANCHA",
+    "SHARANAGATI",
+    "NAVA",
+    "LILA",
+    "MALA",
+    "HARE_COUNT",
+    "KRISHNA_COUNT",
+    "RAMA_COUNT",
+    "KSHETRA",
+    "KSHETRA_GAD",
+    "AVATAR_COUNT",
     "MAHAJANA_POSITIONS",
     "POSITION_MAHAJANAS",
     "get_mahajana_position",

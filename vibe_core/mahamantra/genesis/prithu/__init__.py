@@ -35,12 +35,4 @@ OPCODE: Final[str] = "SYS_WAKE"
 PARAMPARA_VECTOR: Final[int] = 37
 
 # PrithuBase alias for backward compat
-PrithuBase = PrithuProtocolBase
-
-
-def __getattr__(name: str):
-    """Lazy import for PrithuService to avoid circular import."""
-    if name == "PrithuService":
-        from vibe_core.protocols.mahajanas.prithu.service import PrithuService
-        return PrithuService
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+PradaBase = PrithuProtocolBase

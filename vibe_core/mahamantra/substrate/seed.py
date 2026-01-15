@@ -33,6 +33,12 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT,  # 12 Mahajanas
     AVATAR_COUNT,  # 4 Avataras
     PHASE_DURATION,  # 12 (LILA // QUARTERS)
+    # The Cosmic Frame (Resolution)
+    COSMIC_FRAME,
+    NAKSHATRA_UNIT,
+    TITHI_UNIT,
+    PADA_UNIT,
+    QUARTER_UNIT,
 )
 
 # =============================================================================
@@ -451,6 +457,12 @@ __all__ = [
     "MALA",
     "ROUNDS",
     "DAILY_MANTRAS",
+    # The Cosmic Frame (Resolution)
+    "COSMIC_FRAME",
+    "NAKSHATRA_UNIT",
+    "TITHI_UNIT",
+    "PADA_UNIT",
+    "QUARTER_UNIT",
     # Lotus Functions
     "get_quarter",
     "get_quarter_name",

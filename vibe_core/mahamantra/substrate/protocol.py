@@ -102,6 +102,28 @@ class MantraProtocol(ABC):
     # =========================================================================
 
     _position_index: ClassVar[int] = -1  # Must be overridden (0-15)
+    _intents: ClassVar[List[str]] = []   # List of keywords/intents this protocol handles
+
+    # =========================================================================
+    # INTENT DISCOVERY - Resonance Routing
+    # =========================================================================
+
+    @classmethod
+    def get_resonance(cls, phrase: str) -> float:
+        """
+        Calculate resonance score for a given phrase.
+        
+        0.0 = No Resonance
+        1.0 = Perfect Match
+        
+        Default: Simple keyword matching against _intents.
+        Future: Semantic matching via iGene/MANAS.
+        """
+        phrase_lower = phrase.lower()
+        for intent in cls._intents:
+            if intent.lower() in phrase_lower:
+                return 1.0
+        return 0.0
 
     # =========================================================================
     # DERIVED PROPERTIES - All from truth table

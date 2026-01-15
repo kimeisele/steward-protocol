@@ -360,11 +360,8 @@ class GADAudit:
     sovereign_present: bool = False
     signature_valid: bool = False
 
-    # The 4 Dharma
-    daya: bool = False
-    satyam: bool = False
-    tapas: bool = False
-    saucam: bool = False
+    # Mercy Mode (The Gaurabda Clause)
+    mercy_mode: bool = False
 
     @property
     def criteria_score(self) -> int:
@@ -401,6 +398,8 @@ class GADAudit:
         Returns legitimacy score (0.0 - 1.0).
         """
         if not self.signature_valid:
+            # MERCY MODE: Transcends but does not replace the math.
+            # In Mercy Mode, we return 0.0 but allow status to be warning.
             return 0.0  # No sovereign = dead mechanism
 
         kshetra_ratio = self.criteria_score / CRITERIA_COUNT
@@ -411,10 +410,23 @@ class GADAudit:
 
     @property
     def status(self) -> str:
-        """Compliance status string."""
+        """
+        Compliance status string.
+
+        MERCY MODE:
+        In the Golden Period (Gaurabda), components held by Nityananda (Proxy)
+        receive amnesty for missing signatures.
+        """
         if self.is_compliant:
             return "GAD-000 COMPLIANT"
-        elif self.criteria_score >= 4:
+
+        # MERCY MODE CLAUSE
+        if self.mercy_mode and not self.signature_valid:
+            # If criteria and dharma are otherwise OK, we give it a chance.
+            if self.criteria_score >= 4 and self.dharma_score >= 3:
+                return "NEEDS IMPROVEMENT (MERCY MODE)"
+
+        if self.criteria_score >= 4:
             return "NEEDS IMPROVEMENT"
         else:
             return "VIOLATES GAD-000"
@@ -564,7 +576,24 @@ class GADBase(ABC):
         We read from the Heartbeat to ensure Consistency.
         
         signature_valid = krishna_present (Source) AND jiva_connected (Link)
+
+        MERCY MODE:
+        Components wrapped by Nityananda (BalaramaProxy) receive amnesty
+        during the Golden Period (Gaurabda).
         """
+        # 1. Detect Golden Era
+        try:
+            from vibe_core.mahamantra.protocols._singularity import is_in_golden_period
+            in_golden = is_in_golden_period()
+        except ImportError:
+            in_golden = False
+
+        # 2. Detect Nityananda Protection (Proxy)
+        is_proxied = getattr(self, "is_wrapped", False)
+
+        # 3. Determine Mercy Mode
+        mercy_active = in_golden and is_proxied
+
         return GADAudit(
             discoverability=bool(self.discover()),
             observability=bool(self.get_state()),
@@ -577,6 +606,9 @@ class GADBase(ABC):
             sovereign_present=self._heartbeat.jiva_connected,
             signature_valid=self._heartbeat.krishna_present and self._heartbeat.jiva_connected,
             
+            # Mercy Mode
+            mercy_mode=mercy_active,
+
             daya=self.test_daya(),
             satyam=self.test_satyam(),
             tapas=self.test_tapas(),

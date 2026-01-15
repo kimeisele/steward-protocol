@@ -54,6 +54,28 @@ LILA: Final[int] = 48
 MALA: Final[int] = 108
 
 # =============================================================================
+# THE COSMIC FRAME (The 21600 Resolution)
+# =============================================================================
+# "Lipta" (Minutes of Arc) / "Prana" (Breath) instead of Degrees.
+# This eliminates floating point errors and aligns Time (Breath) with Space (Arc).
+# Base: 360 Degrees * 60 Minutes = 21,600 Units.
+
+COSMIC_FRAME: Final[int] = 21600     # The Perfect Circle (The Whole)
+
+# The Units (All Perfect Integers!)
+NAKSHATRA_UNIT: Final[int] = 800     # 21600 // 27 (The Lunar Mansions)
+TITHI_UNIT: Final[int] = 720         # 21600 // 30 (The Lunar Days)
+PADA_UNIT: Final[int] = 200          # 21600 // 108 (The Steps/Beads)
+QUARTER_UNIT: Final[int] = 5400      # 21600 // 4   (The Quadrants)
+
+# WATERTIGHT INTEGRITY CHECKS:
+# The resolution must perfectly uphold the divisions without remainder (Sandhi).
+assert COSMIC_FRAME % NAKSHATRA_UNIT == 0, "Resolution Error: Nakshatra must be integer"
+assert COSMIC_FRAME % TITHI_UNIT == 0,     "Resolution Error: Tithi must be integer"
+assert COSMIC_FRAME % PADA_UNIT == 0,      "Resolution Error: Pada must be integer"
+assert COSMIC_FRAME % QUARTER_UNIT == 0,   "Resolution Error: Quarter must be integer"
+
+# =============================================================================
 # DERIVED CONSTANTS (Required by Core Protocol)
 # =============================================================================
 
@@ -110,6 +132,12 @@ __all__ = [
     "NAVA",
     "LILA",
     "MALA",
+    # The Cosmic Frame (New Resolution)
+    "COSMIC_FRAME",
+    "NAKSHATRA_UNIT",
+    "TITHI_UNIT",
+    "PADA_UNIT",
+    "QUARTER_UNIT",
     # Derived Constants
     "HARE_COUNT",
     "KRISHNA_COUNT",
