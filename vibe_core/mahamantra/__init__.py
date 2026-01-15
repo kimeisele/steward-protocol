@@ -1217,6 +1217,98 @@ def __getattr__(name: str):
 
 
 # =============================================================================
+# BOOTSTRAP - The Sharanagati Gate (Kernel Surrender Point)
+# =============================================================================
+#
+# "sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja"
+# "Abandon all varieties of religion and just surrender unto Me."
+# — Bhagavad Gita 18.66
+#
+# THE DESIGN:
+# -----------
+# The Kernel (Old World) does NOT know HOW the Nityananda embrace works.
+# The Kernel only knows THAT it must surrender.
+#
+# mahamantra.bootstrap()  ←  THE ONE LINE OF TRUTH
+#
+# This function:
+# 1. Activates Balarama Proxies for registered legacy services
+# 2. Routes all file writes through bridge.offer()
+# 3. Injects mahamantra context into service namespaces
+#
+# The river does not determine the composition of the ocean.
+# It only opens itself to flow into it.
+#
+
+_bootstrapped: bool = False  # Prevent double-bootstrap
+
+
+def bootstrap(*, silent: bool = False) -> bool:
+    """
+    Initialize the Nityananda Strategy.
+
+    THE SHARANAGATI GATE:
+    ---------------------
+    The Kernel calls ONLY this function to surrender to Mahamantra.
+    No knowledge of proxies, bridges, or governance required.
+    Just surrender.
+
+    What happens:
+        1. Balarama Proxies wrap registered legacy services
+        2. Path operations route through bridge.offer()
+        3. mahamantra context injected into service namespaces
+
+    Args:
+        silent: If True, suppress startup messages
+
+    Returns:
+        True if bootstrap successful, False if already bootstrapped
+
+    Example:
+        >>> import vibe_core.mahamantra as mahamantra
+        >>> mahamantra.bootstrap()  # THE ONE LINE
+        True
+    """
+    global _bootstrapped
+
+    if _bootstrapped:
+        return False  # Idempotent - already surrendered
+
+    try:
+        from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+
+        if not silent:
+            import logging
+            logger = logging.getLogger("MAHAMANTRA")
+            logger.info("🌊 Initiating Nityananda Embrace (Proxy Activation)...")
+
+        # THE ACT OF SURRENDER - wrap all registered services
+        proxies = auto_wrap_services()
+
+        if not silent:
+            wrapped_count = len(proxies)
+            logger.info(f"🙏 {wrapped_count} services wrapped via Bridge")
+
+        _bootstrapped = True
+        return True
+
+    except ImportError as e:
+        # Graceful degradation if substrate not available
+        import logging
+        logging.getLogger("MAHAMANTRA").warning(f"Bootstrap skipped: {e}")
+        return False
+    except Exception as e:
+        import logging
+        logging.getLogger("MAHAMANTRA").error(f"Bootstrap failed: {e}")
+        return False
+
+
+def is_bootstrapped() -> bool:
+    """Check if Mahamantra bootstrap has been called."""
+    return _bootstrapped
+
+
+# =============================================================================
 # OUROBOROS - Self-Registration on Import (No Manual Wiring)
 # =============================================================================
 #
