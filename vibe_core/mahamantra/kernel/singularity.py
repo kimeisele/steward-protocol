@@ -1007,6 +1007,119 @@ class Mahamantra:
     # CALL - The Ultimate Simplicity
     # =========================================================================
 
+    # =========================================================================
+    # EXECUTION - THE KING'S SCEPTER
+    # =========================================================================
+
+    def execute(self, command: str, args: Optional[List[str]] = None) -> dict:
+        """
+        Execute a Natural Language Command.
+        
+        "The Scepter". Maps Intention -> Action.
+        
+        The Logic:
+            1. Input: "scan disk"
+            2. Resolution: 
+               - Subject: "disk" -> PRITHU
+               - Verb: "scan" -> RESOLVE_REQ (or similar)
+            3. Action: prithu.scan()
+            
+        Args:
+            command: The raw command string.
+            args: Optional arguments (ignored for NL, used for strict CLI).
+            
+        Returns:
+            Dict execution result (success, output, metadata).
+        """
+        # Merge args if present (Natural Language is holistic)
+        full_command = command
+        if args:
+            full_command = f"{command} {' '.join(args)}"
+            
+        cmd_lower = full_command.lower()
+        
+        # 0. SPECIAL: BOOTSTRAP
+        if "bootstrap" in cmd_lower:
+            from vibe_core.mahamantra import bootstrap
+            success = bootstrap()
+            return {
+                "success": success,
+                "output": "Bootstrap initiated.",
+                "mahajana": "brahma",
+                "opcode": "SYS_WAKE"
+            }
+
+        # 1. RESOLUTION (Keyword Map - "The Lens")
+        # TODO: Move this to a Protocol (e.g., TranslationProtocol) for robustness?
+        # For now, we implement the "Simple Map" as requested.
+        
+        subject_map = {
+            # PRITHU (Infrastructure)
+            "disk": "prithu", "file": "prithu", "store": "prithu",
+            # BRAHMA (Creation)
+            "create": "brahma", "spawn": "brahma", "new": "brahma",
+            # NARADA (Communication)
+            "chat": "narada", "msg": "narada", "say": "narada",
+            # YAMARAJA (Judgment/Time)
+            "time": "yamaraja", "clock": "yamaraja", "judge": "yamaraja",
+            # KAPILA (Analysis)
+            "analyze": "kapila", "logic": "kapila", # Removed generic 'scan' which conflicted
+        }
+        
+        target_name = "narada" # Default
+        for key, name in subject_map.items():
+            if key in cmd_lower:
+                target_name = name
+                # If we found a specific subject like 'disk', break immediately
+                # This prevents 'scan' (if present) from overriding 'disk'
+                break
+                
+        # 2. DISPATCH (The Action)
+        # mahajana_obj might be the MODULE (e.g. wiring.py) or the INSTANCE
+        mahajana_obj = getattr(self.mod, target_name)
+        
+        # SANKIRTAN: Unwrap the Avatar if hidden in the module
+        # If we got 'wiring' module for 'prithu', we need wiring.prithu
+        if hasattr(mahajana_obj, target_name):
+             mahajana_obj = getattr(mahajana_obj, target_name)
+             
+        mahajana = mahajana_obj # usage standard
+
+        # Try to find a fitting method based on the verb
+        
+        output = ""
+        success = True
+        
+        try:
+             # If target supports 'execute' (Standard Command Interface)
+            if hasattr(mahajana, "execute"):
+                output = mahajana.execute(command)
+            # If target supports 'chat' (Conversational Interface)
+            elif hasattr(mahajana, "chat"):
+                output = mahajana.chat(command)
+            # Fallback: Identity
+            else:
+                output = f"🕉️ {target_name.upper()} hears you but has no 'execute' method."
+                success = False
+        except Exception as e:
+            output = f"Execution Error: {e}"
+            success = False
+            
+        return {
+            "success": success,
+            "output": output,
+            "mahajana": target_name,
+            "opcode": "EXEC_SERVICE" # Generic for now
+        }
+
+    def chat(self, message: str) -> str:
+        """Alias for execute (for backward compatibility)."""
+        result = self.execute(message)
+        # Format for chat interface
+        header = f"🌺 {result['mahajana'].upper()} RESPONDS (via Universal Bridge):"
+        return f"{header}\n{'-' * len(header)}\n{result['output']}"
+
+
     def __call__(self, index_or_guardian: Union[int, str] = None) -> Union[MantraPosition, str]:
         """
         SHABDA: Call the Mahamantra.

@@ -174,8 +174,17 @@ class PrithuProtocol(Protocol):
         """Graceful shutdown (return to dormant)."""
         ...
 
-    def get_state(self) -> WakeState:
-        """Get wake state. WATERTIGHT."""
+    def execute(self, command: str) -> str:
+        """
+        Execute an Infrastructure Command.
+        The Scepter's interface to Matter.
+        """
+        ...
+
+    def scan(self, path: str = ".") -> str:
+        """
+        Scan the filesystem.
+        """
         ...
 
 
