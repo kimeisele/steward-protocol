@@ -120,6 +120,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         auto_discover: bool = True,
         initial_position: int = 0,
         reactor_id: Optional[str] = None,
+        forced_lagna: Optional[int] = None,
     ) -> None:
         """
         Initialize ShadowReactor.
@@ -131,6 +132,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             auto_discover: If True, discover listeners from folders
             initial_position: Starting position (0-15)
             reactor_id: Optional fixed ID (for deterministic orbit)
+            forced_lagna: Optional fixed lagna (for testing)
         """
         super().__init__()  # Init GADBase (Heartbeat)
         # Identity
@@ -153,12 +155,14 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # =====================================================================
         # ORBITAL MECHANICS (JYOTISHA)
         # =====================================================================
-        from vibe_core.mahamantra.substrate.orbit import OrbitCalculator
-        
-        orbit_calc = OrbitCalculator()
-        # Lagna: Personal Phase Offset
-        # "My Prithu (0) aligns with Global Tick X"
-        self._lagna = orbit_calc.get_phase_offset(self._reactor_id, modulus=16)
+        if forced_lagna is not None:
+            self._lagna = forced_lagna
+        else:
+            from vibe_core.mahamantra.substrate.orbit import OrbitCalculator
+            
+            orbit_calc = OrbitCalculator()
+            # Lagna: Personal Phase Offset
+            self._lagna = orbit_calc.get_phase_offset(self._reactor_id, modulus=16)
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -627,6 +631,7 @@ class ShadowReactorFactory:
         auto_discover: bool = True,
         initial_position: int = 0,
         reactor_id: Optional[str] = None,
+        forced_lagna: Optional[int] = None,
     ) -> ShadowReactor:
         """
         Spawn a new ShadowReactor instance.
@@ -638,6 +643,7 @@ class ShadowReactorFactory:
             auto_discover: If True, discover listeners from folders
             initial_position: Starting position (0-15)
             reactor_id: Optional fixed ID (Orbital determinism)
+            forced_lagna: Optional fixed lagna (For testing)
 
         Returns:
             New ShadowReactor instance
@@ -646,6 +652,7 @@ class ShadowReactorFactory:
             auto_discover=auto_discover,
             initial_position=initial_position,
             reactor_id=reactor_id,
+            forced_lagna=forced_lagna,
         )
 
 

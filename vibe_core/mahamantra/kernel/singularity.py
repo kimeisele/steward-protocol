@@ -692,11 +692,19 @@ class Mahamantra:
         return ProtocolRegistry
 
     def _ensure_all_registered(self) -> None:
-        """Load all mahajana modules to trigger @ProtocolRegistry.register decorators."""
+        """Load all mahajana protocol modules to trigger @ProtocolRegistry.register decorators."""
         if ProtocolRegistry.coverage()[0] < 16:
-            # Load all modules - this triggers decorators
-            for i in range(16):
-                _ = _module_router[i]
+            # Load all protocol modules - this is where the intents and registration live
+            for idx in range(16):
+                guardian_name = _get_guardian_name(idx)
+                try:
+                    # Load the protocol module (contains the base class with intents)
+                    module_path = f"vibe_core.protocols.mahajanas.{guardian_name}"
+                    importlib.import_module(module_path)
+                except ImportError:
+                    # Fallback to loading the Mahamantra folder module 
+                    # (which might also trigger the protocol load)
+                    _ = _module_router[idx]
 
     # =========================================================================
     # KALA - Time Keeping

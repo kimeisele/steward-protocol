@@ -262,15 +262,15 @@ class NaradaProtocol(Protocol):
         """
         ...
 
-    # =========================================================================
-    # Observability
-    # =========================================================================
-
     def get_state(self) -> ObserverState:
         """
         Get complete observer state.
         WATERTIGHT: Returns ObserverState TypedDict, not Dict[str, Any].
         """
+        ...
+
+    def broadcast_cli(self, message: str = "pulse") -> BroadcastCliResult:
+        """CLI: Broadcast a message. WATERTIGHT."""
         ...
 
 

@@ -49,6 +49,12 @@ class MantraProtocol(GunaProtocol, Protocol):
         """
         ...
 
+    def resonate(self, phrase: str) -> float:
+        """
+        Calculate resonance score for a given phrase (Legacy).
+        """
+        ...
+
     def surrender(self, context: ContextT) -> None:
         """
         Immediate cessation of logic (Neti Neti).

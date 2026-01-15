@@ -162,41 +162,69 @@ class CLIAutoDiscovery:
         return total
 
     def _discover_position(self, position: int) -> int:
-        """Discover methods for a single position."""
+        """Discover methods for a single position via Royal Hunt."""
+        import importlib
         # Get guardian name from truth table
-        pos = mahamantra[position]
-        guardian_name = pos.guardian.value
+        pos_info = mahamantra[position]
+        guardian_name = pos_info.guardian.value
+        
+        # 1. THE ROYAL HUNT - Find the service class and its module
+        service_class = None
+        service_class_name = f"{guardian_name.capitalize()}Service"
+        
+        jungles = [
+            f"vibe_core.mahamantra.{pos_info.quarter.name.lower()}.{guardian_name}",
+            f"vibe_core.protocols.mahajanas.{guardian_name}.service",
+            f"vibe_core.naga.services.{guardian_name}",
+            f"vibe_core.services.{guardian_name}",
+            f"vibe_core.protocols.mahajanas.{guardian_name}",
+        ]
+        
+        target_module = None
+        for jungle in jungles:
+            try:
+                module = importlib.import_module(jungle)
+                candidate = getattr(module, service_class_name, None)
+                if candidate and isinstance(candidate, type):
+                    service_class = candidate
+                    target_module = module
+                    break
+                # If no class found, maybe it's a protocol module
+                if not target_module:
+                    target_module = module
+            except ImportError:
+                continue
 
-        # Get module
-        try:
-            module = mahamantra.mod[position]
-        except Exception as e:
-            print(f"DEBUG: Failed to load module for position {position}: {e}")
+        if not target_module:
+            print(f"DEBUG: Failed to load module for position {position}: {guardian_name}")
             return 0
 
-        # Find Null implementation
+        # 2. Find Null implementation (for CLI execution without side effects)
         null_class_name = f"Null{guardian_name.capitalize()}"
-        null_class = getattr(module, null_class_name, None)
+        null_class = getattr(target_module, null_class_name, None)
         if null_class is None:
             # Try alternate naming
-            for name in dir(module):
+            for name in dir(target_module):
                 if name.startswith("Null") and name != "NullCognitive":
-                    null_class = getattr(module, name)
+                    null_class = getattr(target_module, name)
                     break
 
-        if null_class is None:
-            print(f"DEBUG: No Null class for position {position} ({guardian_name})")
-            return 0
+        if null_class is not None:
+            try:
+                self._nulls[position] = null_class()
+            except Exception as e:
+                print(f"DEBUG: Failed to instantiate Null class for position {position}: {e}")
 
-        # Instantiate null implementation
-        try:
-            self._nulls[position] = null_class()
-        except Exception as e:
-            print(f"DEBUG: Failed to instantiate Null class for position {position}: {e}")
-            return 0
+        # 3. Find Protocol class
+        protocol_class = self._find_protocol(target_module, guardian_name)
+        if protocol_class is None:
+            # Try finding protocol in the protocol base module explicitly
+            try:
+                proto_base_mod = importlib.import_module(f"vibe_core.protocols.mahajanas.{guardian_name}")
+                protocol_class = self._find_protocol(proto_base_mod, guardian_name)
+            except ImportError:
+                pass
 
-        # Find Protocol class
-        protocol_class = self._find_protocol(module, guardian_name)
         if protocol_class is None:
             return 0
 
@@ -213,7 +241,10 @@ class CLIAutoDiscovery:
             )
             if method_info:
                 self._methods[position][method_name] = method_info
-                self._keywords[method_name] = position
+                # Priority Routing: If multiple Mahajanas have the same intent,
+                # the one earlier in the 16-step cycle wins (unless weighted).
+                if method_name not in self._keywords:
+                    self._keywords[method_name] = position
                 count += 1
 
         return count

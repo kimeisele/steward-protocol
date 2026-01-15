@@ -64,6 +64,7 @@ class BaliProtocolBase(WorkerProtocol):
         parampara_vector() → 518 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 13  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["yield", "surrender", "release", "optimize", "flush"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[13]

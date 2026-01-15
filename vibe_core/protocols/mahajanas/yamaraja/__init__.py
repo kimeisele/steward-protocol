@@ -105,6 +105,7 @@ class YamarajaProtocolBase(WorkerProtocol):
         parampara_vector() -> 592 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 15  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["judge", "audit", "seal", "verdict", "death", "finish"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[15]

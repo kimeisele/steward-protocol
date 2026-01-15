@@ -63,12 +63,13 @@ class ShukaProtocolBase(WorkerProtocol):
 
     DERIVED PROPERTIES:
         guardian()  -> Mahajana.SHUKA
-        opcode()    -> MantraOpCode.YIELD_CPU
+        opcode()    -> MantraOpCode.LOG_EMIT
         quarter()   -> Quarter.MOKSHA
         is_head()   -> False (Worker position)
         parampara_vector() -> 555 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 14  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["narrate", "report", "log", "emit", "vision", "monitor"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[14]
@@ -384,13 +385,22 @@ class ShukaProtocol(Protocol):
         """
         ...
 
-    def view(self, key: str) -> Optional[CachedValue]:
-        """
-        View cached value.
-        Returns None if not cached.
-        WATERTIGHT: Returns CachedValue, not Any.
-        """
+    def view(self, target_id: str) -> str:
+        """View a target from a high perspective."""
         ...
+
+    def render_file(self, content: str, path: str) -> bool:
+        """Render markdown content to file."""
+        ...
+
+    def check_manifest_health(self) -> dict[str, object]:
+        """Check manifestation system health."""
+        ...
+
+    def get_state(self) -> dict[str, object]:
+        """Get state."""
+        ...
+
 
     def invalidate(self, key: str) -> bool:
         """

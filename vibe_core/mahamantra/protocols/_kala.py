@@ -56,6 +56,10 @@ class KalaProtocol(Protocol):
         """Advance time by one tick."""
         ...
 
+    def tick(self) -> KalaTime:
+        """Alias for advance() - The Heartbeat."""
+        ...
+
     def get_time(self) -> KalaTime:
         """Get current cosmic time."""
         ...

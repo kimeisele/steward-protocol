@@ -16,7 +16,7 @@ __genesis__ = "0x8f947260"  # GenesisByte: parampara % 37 == 0
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 from vibe_core.protocols.mahajanas.janaka import (
     ExecutionResult,
@@ -171,603 +171,98 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         }
 
     # =========================================================================
-    # Extended Capabilities
+    # Kernel Orchestration (Delegated from RealVibeKernel)
     # =========================================================================
 
-    def manifest(self, intent: str, agent_id: str, salt: str, reactor: object) -> Tuple[object, str]:
-        """Manifest an intent through resonance."""
-        from vibe_core.runtime.unified_execution import ExecutionRequest
+    def get_reactor(self, kernel: object) -> Optional[object]:
+        """Get or initialize the Quantum Reactor. Delegated from Kernel."""
+        current_reactor = getattr(kernel, "_reactor", None)
+        if current_reactor is None:
+            try:
+                from vibe_core.reactor import QuantumReactor
+                current_reactor = QuantumReactor(initial_inertia=0.5)
+                logger.info("☢️ JANAKA: QuantumReactor loaded as execution primitive")
+                setattr(kernel, "_reactor", current_reactor)
+            except ImportError:
+                pass
+        return current_reactor
 
+    def get_akasha_hash(self, kernel: object) -> str:
+        """Get current akasha hash. Delegated from Kernel."""
+        reactor = self.get_reactor(kernel)
+        if reactor is not None:
+            return str(getattr(reactor, "_chain_hash", lambda: "")())
+        return str(getattr(kernel, "_akasha_field", ""))
+
+    def compute_capability_resonance(self, kernel: object, agent_id: str, capability: str) -> float:
+        """Compute resonance for capability check. Delegated from Kernel."""
+        reactor = self.get_reactor(kernel)
         if reactor is None:
-            logger.warning("☢️ JANAKA: QuantumReactor not available.")
-            return ExecutionRequest(user_input=intent, source=agent_id), ""
+            checker = getattr(kernel, "_check_agent_capability", lambda a, c: False)
+            return 1.0 if checker(agent_id, capability) else 0.0
 
         try:
             from vibe_core.reactor import encode
+            akasha = self.get_akasha_hash(kernel)
+            agent_tensor = encode(f"agent:{agent_id}", akasha)
+            cap_tensor = encode(f"capability:{capability}", akasha)
+            field = reactor.resonate(agent_tensor, cap_tensor) # type: ignore
+            return float(min(1.0, field.total_energy))
+        except Exception:
+            return 0.0
 
-            intent_tensor = encode(f"intent:{intent}", salt)
-            field = reactor.resonate(intent_tensor)  # type: ignore
+    async def pulse_orchestration(self, kernel: object, plugins: List[object]) -> Dict[str, object]:
+        """💓 THE ASYNC PULSE ORCHESTRATION. Delegated from Kernel."""
+        # This matches the call in kernel_impl.py
+        return {"status": "pulsed", "timestamp": datetime.now().isoformat()}
 
-            request = ExecutionRequest(user_input=intent, source=agent_id)
-            request.mark_resonance(
-                energy=field.total_energy,
-                inertia=getattr(reactor, "_inertia", 0.5),
-                field_hash=field.field_hash,
-            )
+    async def tick_orchestration(self, kernel: object) -> None:
+        """💓 THE ASYNC TICK ORCHESTRATION. Delegated from Kernel."""
+        status = getattr(kernel, "_status", "STOPPED")
+        if str(status) != "RUNNING":
+            return
 
-            status = "MANIFEST" if request.manifests else "PENDING"
-            logger.info(f"☢️ JANAKA: {intent[:30]}... → E={request.resonance_energy:.3f} ({status})")
-
-            return request, field.field_hash
-
-        except Exception as e:
-            logger.warning(f"☢️ JANAKA: Manifestation failed: {e}")
-            request = ExecutionRequest(user_input=intent, source=agent_id)
-            request.mark_failed(str(e))
-            return request, ""
-
-    def get_operations_data(self, kernel: object) -> Dict[str, object]:
-        """Gather operations dashboard data."""
-        agent_registry = getattr(kernel, "_agent_registry", {})
         plugins = getattr(kernel, "_plugins", [])
-        status_value = str(getattr(kernel, "status", "UNKNOWN"))
+        for plugin in plugins:
+            if hasattr(plugin, "on_tick_pre"):
+                plugin.on_tick_pre(kernel)
 
-        queue_status = self._scheduler.get_queue_status()
+        task = self._scheduler.next_task()
+        if task:
+            logger.info(f"👑 JANAKA: Executing {task.task_id}")
+            # Task execution logic would go here
 
-        metrics = {
-            "Kernel Status": status_value,
-            "Agents": len(agent_registry),
-            "Queue Length": queue_status.get("queue_length", 0),
-            "Plugins": len(plugins),
-        }
+        for plugin in plugins:
+            if hasattr(plugin, "on_tick_post"):
+                plugin.on_tick_post(kernel)
 
-        agent_list = []
-        for agent_id in sorted(agent_registry.keys()):
-            agent_list.append({"Agent": agent_id, "Status": "ACTIVE"})
+    def submit_task(self, kernel: object, task: Any) -> str:
+        """Submit a task. Delegated from Kernel."""
+        plugins = getattr(kernel, "_plugins", [])
+        for plugin in plugins:
+            if hasattr(plugin, "on_task_submit"):
+                plugin.on_task_submit(kernel, task)
+        return self._scheduler.submit_task(task)
 
-        return {
-            "metrics": metrics,
-            "status": agent_list,
-            "details": [],
-        }
+    def get_task_result(self, kernel: object, task_id: str) -> Optional[Dict[str, object]]:
+        """Get task result. Delegated from Kernel."""
+        completed = getattr(kernel, "_completed_tasks", {})
+        if task_id in completed:
+            return completed[task_id]
+
+        ledger = getattr(kernel, "ledger", None)
+        if ledger:
+            event = ledger.get_task(task_id)
+            if event:
+                return {"status": "COMPLETED", "task_id": task_id, "result": event.get("result")}
+        return None
 
     async def run_loop(self, kernel: object) -> None:
-        """🔄 MAIN KERNEL LOOP - Delegates to MahamantraDaemon (SSOT).
+        """🔄 MAIN KERNEL LOOP. Delegated from Kernel."""
+        while str(getattr(kernel, "_status", "")) == "RUNNING":
+            if hasattr(kernel, "tick_async"):
+                await kernel.tick_async() # type: ignore
+            await asyncio.sleep(0.1)
 
-        The actual chanting loop lives in daemon.py.
-        Janaka just delegates to it.
-        """
-        from vibe_core.mahamantra.kernel.daemon import MahamantraDaemon
 
-        logger.info("👑 JANAKA: Delegating to MahamantraDaemon (SSOT)...")
-        daemon = MahamantraDaemon()
-        await daemon.start()
-
-    # === DEAD CODE BELOW (nested functions from corrupted file) ===
-    # These methods are unreachable due to indent bug - kept for reference
-
-        def get_reactor(self, kernel: object) -> Optional[object]:
-
-            """Get or initialize the Quantum Reactor. Delegated from Kernel."""
-
-            current_reactor = getattr(kernel, "_reactor", None)
-
-            if current_reactor is None:
-
-                try:
-
-                    from vibe_core.reactor import QuantumReactor
-
-                    current_reactor = QuantumReactor(initial_inertia=0.5)
-
-                    logger.info("☢️ JANAKA: QuantumReactor loaded as execution primitive")
-
-                    setattr(kernel, "_reactor", current_reactor)
-
-                except ImportError:
-
-                    pass
-
-            return current_reactor
-
-    
-
-            def get_akasha_hash(self, kernel: object) -> str:
-
-    
-
-                """Get current akasha hash. Delegated from Kernel."""
-
-    
-
-                reactor = self.get_reactor(kernel)
-
-    
-
-                if reactor is not None:
-
-    
-
-                    return str(getattr(reactor, "_chain_hash", lambda: "")())
-
-    
-
-                return str(getattr(kernel, "_akasha_field", ""))
-
-    
-
-        
-
-    
-
-            def compute_capability_resonance(self, kernel: object, agent_id: str, capability: str) -> float:
-
-    
-
-                """Compute resonance for capability check. Delegated from Kernel."""
-
-    
-
-                reactor = self.get_reactor(kernel)
-
-    
-
-                if reactor is None:
-
-    
-
-                    return 1.0 if getattr(kernel, "_check_agent_capability")(agent_id, capability) else 0.0
-
-    
-
-        
-
-    
-
-                try:
-
-    
-
-                    from vibe_core.reactor import encode
-
-    
-
-                    akasha = self.get_akasha_hash(kernel)
-
-    
-
-                    agent_tensor = encode(f"agent:{agent_id}", akasha)
-
-    
-
-                    cap_tensor = encode(f"capability:{capability}", akasha)
-
-    
-
-                    field = reactor.resonate(agent_tensor, cap_tensor) # type: ignore
-
-    
-
-                    return float(min(1.0, field.total_energy))
-
-    
-
-                except Exception:
-
-    
-
-                    return 0.0
-
-    
-
-        
-
-    
-
-                async def tick_orchestration(self, kernel: object) -> None:
-
-    
-
-        
-
-    
-
-                    """💓 THE ASYNC TICK ORCHESTRATION. Delegated from Kernel."""
-
-    
-
-        
-
-    
-
-                    from vibe_core.protocols.substrate import MantraOpCode
-
-    
-
-        
-
-    
-
-                    
-
-    
-
-        
-
-    
-
-                    status = getattr(kernel, "_status", "STOPPED")
-
-    
-
-        
-
-    
-
-                    if str(status) != "RUNNING":
-
-    
-
-        
-
-    
-
-                        return
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    plugins = getattr(kernel, "_plugins", [])
-
-    
-
-        
-
-    
-
-                    for plugin in plugins:
-
-    
-
-        
-
-    
-
-                        if hasattr(plugin, "on_tick_pre"):
-
-    
-
-        
-
-    
-
-                            plugin.on_tick_pre(kernel)
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                    task = self._scheduler.next_task()
-
-    
-
-        
-
-    
-
-                    if task:
-
-    
-
-        
-
-    
-
-                        # Task Execution loop
-
-    
-
-        
-
-    
-
-                        logger.info(f"👑 JANAKA: Executing {task.task_id}")
-
-    
-
-        
-
-    
-
-                        # ... native execution logic ...
-
-    
-
-        
-
-    
-
-                        
-
-    
-
-        
-
-    
-
-                    for plugin in plugins:
-
-    
-
-        
-
-    
-
-                        if hasattr(plugin, "on_tick_post"):
-
-    
-
-        
-
-    
-
-                            plugin.on_tick_post(kernel)
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                def submit_task(self, kernel: object, task: any) -> str:
-
-    
-
-        
-
-    
-
-                    """Submit a task. Delegated from Kernel."""
-
-    
-
-        
-
-    
-
-                    plugins = getattr(kernel, "_plugins", [])
-
-    
-
-        
-
-    
-
-                    for plugin in plugins:
-
-    
-
-        
-
-    
-
-                        if hasattr(plugin, "on_task_submit"):
-
-    
-
-        
-
-    
-
-                            plugin.on_task_submit(kernel, task)
-
-    
-
-        
-
-    
-
-                    return self._scheduler.submit_task(task)
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                def get_task_result(self, kernel: object, task_id: str) -> Optional[Dict[str, object]]:
-
-    
-
-        
-
-    
-
-                    """Get task result. Delegated from Kernel."""
-
-    
-
-        
-
-    
-
-                    completed = getattr(kernel, "_completed_tasks", {})
-
-    
-
-        
-
-    
-
-                    if task_id in completed:
-
-    
-
-        
-
-    
-
-                        return completed[task_id]
-
-    
-
-        
-
-    
-
-                    
-
-    
-
-        
-
-    
-
-                    ledger = getattr(kernel, "ledger", None)
-
-    
-
-        
-
-    
-
-                    if ledger:
-
-    
-
-        
-
-    
-
-                        event = ledger.get_task(task_id)
-
-    
-
-        
-
-    
-
-                        if event:
-
-    
-
-        
-
-    
-
-                            return {"status": "COMPLETED", "task_id": task_id, "result": event.get("result")}
-
-    
-
-        
-
-    
-
-                    return None
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
-
-                async def run_loop(self, kernel: object) -> None:
-
-    
-
-        
-
-    
-
-                    """🔄 MAIN KERNEL LOOP. Delegated from Kernel."""
-
-    
-
-        
-
-    
-
-                    while str(getattr(kernel, "_status", "")) == "RUNNING":
-
-    
-
-        
-
-    
-
-                        if hasattr(kernel, "tick_async"):
-
-    
-
-        
-
-    
-
-                            await kernel.tick_async() # type: ignore
-
-    
-
-        
-
-    
-
-                        await asyncio.sleep(0.1)
-
-    
-
-        
-
-    
-
-            
-
-    
-
-        
-
-    
+__all__ = ["JanakaService"]
