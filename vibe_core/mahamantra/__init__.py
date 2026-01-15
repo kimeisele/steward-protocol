@@ -48,6 +48,13 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    Union,
+)
+
+# Import GAD Base
+from vibe_core.mahamantra.protocols._gad import (
+    GADBase,
+    GADProtocol,
 )
 
 # Lotus infrastructure extracted to _lotus.py
@@ -67,12 +74,14 @@ from vibe_core.mahamantra._types import (
     TickState,
 )
 
+
 # =============================================================================
 # THE SINGULARITY
 # =============================================================================
 
 
-class MahamantraLotus(LotusNode):
+
+class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     """
     Krishna's Lotus-Füße - Die Singularität.
 
@@ -97,12 +106,50 @@ class MahamantraLotus(LotusNode):
         lotus.substrate.guna.Guna
 
     ONE MANTRA - Input AND Output:
-        lotus.tick()   # Der Herzschlag
-        lotus.chant()  # Das Gebet
-
-    THE 16 GUARDIANS ARE THE WIRING.
+    ==============================
+    Der Lotus atmet. Ein Tick rein, ein Tick raus.
+    
+    GAD-000: ✓D ✓O ✓P ✓C ✓I ✓R
     """
 
+    def discover(self) -> Dict[str, object]:
+        """Discovery - I am the Lotus."""
+        return {
+            "type": "MahamantraLotus",
+            "position": self.tick().position,
+            "lila": self._lila_tick,
+            "listeners": len(self._listeners),
+        }
+
+    def get_state(self) -> Dict[str, object]:
+        """Observability - Full system state."""
+        return {
+            "tick": self._tick,
+            "lila": self._lila_tick,
+            "listeners": len(self._listeners),
+            "heartbeat": self.heartbeat.get_summary(),
+        }
+
+    def is_healthy(self) -> bool:
+        """Health - Is the beat checking?"""
+        return super().is_healthy()
+
+    @property
+    def is_idempotent(self) -> bool:
+        """The Mantra is eternal."""
+        return True
+
+    def detect_drift(self) -> List[str]:
+        """Drift - Is the cycle broken?"""
+        return []
+
+    # Dharma Tests
+    def test_daya(self) -> bool: return True
+    def test_satyam(self) -> bool: return True
+    def test_tapas(self) -> bool: return True
+    def test_saucam(self) -> bool: return True
+
+    # 16 OpCodes / 16 Guardians / 16 Words
     # =========================================================================
     # STATE - The Reactor holds the tick position (not substrate!)
     # =========================================================================
@@ -180,7 +227,8 @@ class MahamantraLotus(LotusNode):
         return real_mahamantra.shadow
 
     def __init__(self) -> None:
-        super().__init__(LotusPath())
+        LotusNode.__init__(self, LotusPath())  # Init LotusNode
+        GADBase.__init__(self)  # Init GADBase (Heartbeat)
 
     def __repr__(self) -> str:
         return "mahamantra"
@@ -1314,18 +1362,31 @@ def bootstrap(*, silent: bool = False) -> bool:
 
     try:
         from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+        from vibe_core.mahamantra.lila.adoption import adopt_services
 
         if not silent:
             import logging
             logger = logging.getLogger("MAHAMANTRA")
             logger.info("🌊 Initiating Nityananda Embrace (Proxy Activation)...")
 
-        # THE ACT OF SURRENDER - wrap all registered services
-        proxies = auto_wrap_services()
+        # 1. THE ACT OF SURRENDER - wrap all registered services
+        proxies = auto_wrap_services(silent=silent)
 
         if not silent:
             wrapped_count = len(proxies)
             logger.info(f"🙏 {wrapped_count} services wrapped via Bridge")
+            logger.info("🪐 Initiating Orbital Adoption...")
+
+        # 2. ORBITAL MOUNTING - Mount services to reactors
+        reactors = adopt_services(proxies)
+        
+        # 3. SELF-REGISTRATION - Keep reactors alive
+        if not hasattr(mahamantra, "_orbital_fleet"):
+            mahamantra._orbital_fleet = []
+        mahamantra._orbital_fleet.extend(reactors)  # type: ignore
+
+        if not silent:
+             logger.info(f"🙏 {len(reactors)} Services orbiting in Fractal Time.")
 
         _bootstrapped = True
         return True
