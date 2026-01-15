@@ -18,6 +18,20 @@ from enum import IntEnum, Enum
 from collections import Counter
 
 # =============================================================================
+# IMPORT FROM PROTOCOL (THE LAW)
+# =============================================================================
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,
+    PARAMPARA,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    SHARANAGATI,
+    LILA,
+    MALA,
+)
+
+# =============================================================================
 # LEVEL -2: KRISHNA = MAHAMANTRA (The Source - Acintya)
 # =============================================================================
 # "nāma cintāmaṇiḥ kṛṣṇaś caitanya-rasa-vigrahaḥ"
