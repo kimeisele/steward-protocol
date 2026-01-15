@@ -96,6 +96,8 @@ from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
     WORDS,
 )
+from vibe_core.mahamantra.protocols._proxy import MahamantraProxy
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
@@ -342,6 +344,13 @@ class ModuleRouter:
             try:
                 module_path = f"vibe_core.mahamantra.{quarter}.{name}"
                 module = importlib.import_module(module_path)
+                
+                # BALARAMA PROXY: Wrap if not compliant
+                if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
+                    # Find position
+                    pos_idx = _get_index_by_guardian_name(name) or 0
+                    module = MahamantraProxy(module, pos_idx, name)
+                
                 self._modules[name] = module
                 return module
             except ImportError:
@@ -350,6 +359,12 @@ class ModuleRouter:
         # 2. FALLBACK: PROTOCOLS/MAHAJANAS (legacy)
         module_path = f"vibe_core.protocols.mahajanas.{name}"
         module = importlib.import_module(module_path)
+        
+        # BALARAMA PROXY: Wrap legacy modules too
+        if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
+            pos_idx = _get_index_by_guardian_name(name) or 0
+            module = MahamantraProxy(module, pos_idx, name)
+            
         self._modules[name] = module
         return module
 
