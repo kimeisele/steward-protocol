@@ -34,8 +34,8 @@ This is NOT a mock. This is real execution context for cartridges.
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
+__mahajana__ = "brahma"
+__position__ = 1
 __genesis__ = "0xfc269a74"  # GenesisByte: parampara % 37 == 0
 
 import asyncio
@@ -81,6 +81,7 @@ from .protocols.substrate import MantraOpCode
 
 # Phase 2: ONE IMPORT - KRISHNA ROUTES ALLES
 from vibe_core.mahamantra import mahamantra
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 # Services accessed via: mahamantra.mod[position].Service
 # Position 1 = Brahma, 6 = Kapila, 10 = Janaka, 11 = Bhishma, 13 = Bali
 
@@ -118,7 +119,7 @@ def _get_config():
     except Exception:
         return None
 
-class RealVibeKernel(VibeKernel, VajraGuarded):
+class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     """
     🩸 THE REAL VIBE KERNEL (VISHNU/JAGANNATH) 🩸
     Refactored to 1008 LOC target (Acintya-Bheda-Abheda).
@@ -127,6 +128,17 @@ class RealVibeKernel(VibeKernel, VajraGuarded):
     MAX_ENTROPY_EVENTS = 1000
     watchdog: NrisimhaWatchdog = None
     chaitanya: NrisimhaWatchdog = None
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of the Kernel."""
+        return {
+            "chaitanya": "Sovereign Kernel",
+            "nityananda": "Physical Machine (Sthula)",
+            "advaita": "Task Scheduling",
+            "gadadhara": "Event Bus Flow",
+            "srivasa": "Constitutional Oath",
+        }
 
     def __init__(
         self,
