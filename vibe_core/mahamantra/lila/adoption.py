@@ -1,96 +1,73 @@
 """
-LILA ADOPTION - The Sacred Migration
-====================================
+ADOPTION - The Mounting of the Golden Orbits
+============================================
 
-"sarva-dharman parityajya..."
+"ye yathā māṁ prapadyante"
+"As they surrender unto Me, I reward them accordingly."
+— Bhagavad Gita 4.11
 
-This module implements the Protocol Adoption Logic for the Mahamantra.
-It analyzes code, determines its true nature (OpCode), and assigns it to a Mahajana.
+This module handles the "Mounting" (Adoption) of legacy services into Orbital Reactors.
+It takes a BalaramaProxy (The Passenger) and mounts it onto a ShadowReactor (The Vehicle).
 
-SOURCE OF TRUTH:
-- protocols._seed (Constants)
-- protocols._pancha (Structure)
-- protocols._sankirtan (Injection)
+MECHANICS:
+    1. Spawn a UNIQUE OrbitalReactor for each service.
+    2. Reactor ID is derived from Service Name → Deterministic Lagna.
+    3. Proxy is registered as a listener on the Reactor.
+    4. Reactor drives the Proxy via on_bhoga/on_prasadam interfaces.
 
-LOGIC EXTRACTED FROM: vibe_core/protocols/mahajanas/adoption.py (Legacy)
 """
 
-from typing import List, Optional, Dict, TypedDict, Set
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-from vibe_core.mahamantra.substrate.wiring import get_position_by_opcode
+import logging
+from typing import Dict, List
 
-# Heuristic Mapping (from Legacy Knowledge)
-OPCODE_KEYWORDS: Dict[str, Set[str]] = {
-    "SYS_WAKE": {"wake", "init", "bootstrap", "start"},
-    "LOAD_ROOT": {"load", "root", "create", "inject"},
-    "ALLOC_MEM": {"alloc", "memory", "buffer"},
-    "INIT_THREAD": {"bind", "context"},
-    "COMPILE_AST": {"assert", "verify", "validate"},
-    "BIND_SYMBOL": {"resolve", "query", "lookup"},
-    "TYPE_CHECK": {"garbage", "collect", "cleanup"},
-    "DHARMA_TEST": {"pulse", "sync", "event"},
-    "EXEC_OP": {"fetch", "resource", "get"},
-    "EXTEND_CAP": {"exec", "execute", "run"},
-    "STATE_SYNC": {"dharma", "rule", "policy"},
-    "LEDGER_SIGN": {"commit", "log", "record"},
-    "CACHE_STATE": {"cache", "store", "memoize"},
-    "OPTIMIZE": {"optimize", "tune"},
-    "YIELD_CPU": {"yield", "wait", "suspend"},
-    "AUDIT_SEAL": {"reset", "recover", "audit"},
-}
+from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
+# Import OrbitalShadowReactor via convenience factory or direct
+from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
 
-class AnalysisResult(TypedDict):
-    opcode: str
-    mahajana: str
-    position: int
-    confidence: float
-    is_mayavad: bool
+logger = logging.getLogger("MAHAMANTRA.ADOPTION")
 
-def analyze_source(source_code: str) -> AnalysisResult:
+def adopt_services(proxies: Dict[str, BalaramaProxy]) -> List[ShadowReactor]:
     """
-    Analyze source code to determine its Mahamantra Identity.
+    HARD ENGINEERING: Mounts legacy services into Orbital Reactors.
+    
+    1. Iterates all wrapped proxies (Jagai/Madhai/etc).
+    2. Spawns a UNIQUE OrbitalReactor for each.
+    3. Calculates LAGNA (Phase Shift) based on Service Name.
+    4. Connects Service to Reactor.
     """
-    source_lower = source_code.lower()
+    reactors: List[ShadowReactor] = []
     
-    # 1. Mayavad Check
-    mayavad_triggers = ["i am god", "all is one", "void"]
-    is_mayavad = any(t in source_lower for t in mayavad_triggers)
-    
-    # 2. OpCode Detection
-    scores: Dict[str, int] = {}
-    for op_name, keywords in OPCODE_KEYWORDS.items():
-        count = sum(source_lower.count(kw) for kw in keywords)
-        if count > 0:
-            scores[op_name] = count
-            
-    best_op = "SYS_WAKE" # Default
-    if scores:
-        best_op = max(scores, key=scores.get)
+    for name, proxy in proxies.items():
+        # 1. Spawn Reactor (The Container)
+        # reactor_id derived from name ensures consistent Orbit!
+        # Use simple name hash for ID to guarantee stability
+        # 1. Spawn Reactor (The Container)
+        # reactor_id derived from name ensures consistent Orbit!
+        # Use simple name hash for ID to guarantee stability
+        reactor = OrbitalShadowReactor(
+            auto_discover=False, # We are manually wiring
+            initial_position=0,  # Everyone starts at "Global 0" (but shifted by Lagna)
+            reactor_id=name      # Cleanly inject ID for deterministic Lagna
+        )
         
-    # 3. Determine Mahajana (via substrate lookup)
-    try:
-        opcode_enum = MantraOpCode[best_op]
-        pos = get_position_by_opcode(opcode_enum)
-        mahajana = pos.guardian.value
-        position = pos.index
-    except (KeyError, ValueError, AttributeError):
-        mahajana = "prithu"
-        position = 0
+        # 2. Mount Service (The Passenger)
+        # We inject the Reactor into the Proxy so the Proxy knows where it lives.
+        proxy.set_reactor(reactor)
         
-    return {
-        "opcode": best_op,
-        "mahajana": mahajana,
-        "position": position,
-        "confidence": 0.8 if scores else 0.1,
-        "is_mayavad": is_mayavad
-    }
-
-# =============================================================================
-# EXPORTS
-# =============================================================================
-
-__all__ = [
-    "analyze_source",
-    "AnalysisResult",
-]
+        # 3. Register Listeners (The Wire)
+        # When the Reactor ticks, it calls the Proxy.
+        # WICHTIG: Reactor ticks RELATIV (Lagna), not ABSOLUT.
+        # We register on "effective position" 0?
+        # No, we register on the Proxy's declared position.
+        # If Prithu is Position 0, we register at 0.
+        # The OrbitalReactor only fires Position 0 when (Global - Lagna) == 0.
+        # So Prithu only runs when it is HIS time.
+        
+        if proxy.has_identity:
+            reactor.register_listener(proxy.position, proxy)
+            logger.info(f"🚀 ORBIT: {name.split('.')[-1]} mounted on Reactor[{reactor.lagna}] (Phase {reactor.lagna})")
+            reactors.append(reactor)
+        else:
+             logger.debug(f"⚠️ {name} has no identity, skipping orbital mount.")
+        
+    return reactors
