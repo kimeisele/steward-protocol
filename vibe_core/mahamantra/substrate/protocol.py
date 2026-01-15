@@ -113,16 +113,21 @@ class MantraProtocol(ABC):
         """
         Calculate resonance score for a given phrase.
         
+        1.0 = Exact Match (or phrase contains intent as a whole word)
+        0.5 = Partial Match
         0.0 = No Resonance
-        1.0 = Perfect Match
-        
-        Default: Simple keyword matching against _intents.
-        Future: Semantic matching via iGene/MANAS.
         """
         phrase_lower = phrase.lower()
+        phrase_words = phrase_lower.split()
+        
         for intent in cls._intents:
-            if intent.lower() in phrase_lower:
+            intent_lower = intent.lower()
+            # Exact Match or Word Match
+            if intent_lower == phrase_lower or intent_lower in phrase_words:
                 return 1.0
+            # Partial Match
+            if intent_lower in phrase_lower:
+                return 0.5
         return 0.0
 
     # =========================================================================

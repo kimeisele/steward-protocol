@@ -31,8 +31,8 @@ def test_shadow_spawn_via_mahamantra():
 
 def test_shadow_tick_cycle():
     """Test that the reactor can tick and calculate Parampara."""
-    reactor = mahamantra.shadow.spawn(auto_discover=False)
-    
+    reactor = mahamantra.shadow.spawn(auto_discover=False, forced_lagna=0)
+
     # Tick 0
     tick_state = {
         "tick": 0,
@@ -42,9 +42,9 @@ def test_shadow_tick_cycle():
         "word": "HARE",
         "opcode": "SYS_WAKE"
     }
-    
+
     state = reactor.tick(tick_state)
-    
+
     # Verify State
     assert state["position"] == 0
     assert state["phase"] == YajnaPhase.BHOGA.value

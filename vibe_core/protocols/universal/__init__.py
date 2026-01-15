@@ -66,6 +66,10 @@ from .types import (
     SyncResult,
     SyncStatus,
     TranscendentalQuality,  # The 64 Qualities
+    ProtectedMemory,
+    SankhyaDualism,
+    KarmaCounter,
+    VisvarupaSnapshot,
 )
 from .types import (
     Verdict as TypeVerdict,

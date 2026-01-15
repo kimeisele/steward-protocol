@@ -62,13 +62,14 @@ class KumarasProtocolBase(WorkerProtocol):
         Everything else derived from truth table.
 
     DERIVED PROPERTIES:
-        guardian()  → Mahajana.KUMARAS
-        opcode()    → MantraOpCode.BIND_SYMBOL
-        quarter()   → Quarter.DHARMA
-        is_head()   → False (Worker position)
-        parampara_vector() → 222 (% 37 == 0)
+        guardian()  -> Mahajana.KUMARAS
+        opcode()    -> MantraOpCode.BIND_SYMBOL
+        quarter()   -> Quarter.DHARMA
+        is_head()   -> False (Worker position)
+        parampara_vector() -> 222 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["purify", "isolate", "sandbox", "clean", "virgin", "brahmacarya"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[5]

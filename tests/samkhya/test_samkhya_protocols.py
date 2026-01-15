@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, List, Protocol, runtime_checkable
+from typing import Any, List, Protocol, runtime_checkable, Dict, Optional
 
 import pytest
 
@@ -22,7 +22,10 @@ from vibe_core.protocols.universal import (
     SyncResult,
     SyncStatus,
     Verdict,
+    SovereignContext,
+    ProtectedMemory,
 )
+from vibe_core.protocols.substrate.byte import HolyName, MantraByte
 
 # =============================================================================
 # MOCK IMPLEMENTATIONS (The "Varieties" of species)
@@ -35,50 +38,56 @@ class MockCityConfig:
     def __init__(self):
         self.data = {}
 
-    def read(self, key: str) -> Any:
+    def read(self, key: str, context: Optional[SovereignContext] = None) -> Any:
         return self.data.get(key)
 
-    def write(self, key: str, value: Any) -> None:
+    def write(self, key: str, value: Any, context: Optional[SovereignContext] = None) -> None:
         self.data[key] = value
 
-    def exists(self, key: str) -> bool:
+    def exists(self, key: str, context: Optional[SovereignContext] = None) -> bool:
         return key in self.data
 
 
 class MockCivicConfig:
     """Also implements ReadWriteProtocol (Demonstrates Polymorphism)."""
 
-    def read(self, key: str) -> Any:
+    def read(self, key: str, context: Optional[SovereignContext] = None) -> Any:
         return "civic"
 
-    def write(self, key: str, value: Any) -> None:
+    def write(self, key: str, value: Any, context: Optional[SovereignContext] = None) -> None:
         pass
 
-    def exists(self, key: str) -> bool:
+    def exists(self, key: str, context: Optional[SovereignContext] = None) -> bool:
         return True
 
 
 class MockCISync:
     """Implements SyncProtocol."""
 
-    def sync(self) -> SyncResult:
+    def sync(self, context: Optional[SovereignContext] = None) -> SyncResult:
         return SyncResult(True, 1)
 
-    def get_sync_status(self) -> SyncStatus:
+    def get_sync_status(self, context: Optional[SovereignContext] = None) -> SyncStatus:
         return SyncStatus(True, datetime.now(), 0)
 
-    def is_synced(self) -> bool:
+    def is_synced(self, context: Optional[SovereignContext] = None) -> bool:
         return True
 
 
 class MockGuardian:
     """Implements EnforceProtocol."""
 
+    def verify_action(self, action: str, ctx: SovereignContext) -> HolyName:
+        return HolyName.KRISHNA
+
     def enforce(self, action: str, context: EnforceContext) -> Verdict:
         return Verdict.ALLOW
 
-    def check(self, action: str) -> bool:
+    def check(self, action: str, context: EnforceContext) -> bool:
         return True
+
+    def calculate_merkle_root(self, ctx: SovereignContext, action: str) -> str:
+        return "root"
 
     def get_rules(self) -> List[Rule]:
         return []
@@ -93,21 +102,30 @@ class MockBrain:
     def classify(self, input: ClassifyInput) -> Classification:
         return Classification("A", 0.9, [])
 
-    def evaluate(self, claim: str) -> Evaluation:
+    def evaluate(self, claim: str, context: Optional[SovereignContext] = None) -> Evaluation:
         return Evaluation(True, 1.0, [])
 
 
 class MockMemory:
     """Implements StoreRecallProtocol."""
 
-    def store(self, key: str, value: MemoryValue) -> None:
+    def remember(self, key: str, memory: ProtectedMemory, mantra: MantraByte, context: SovereignContext) -> bool:
+        return True
+
+    def store(self, key: str, value: object, context: SovereignContext) -> bool:
         pass
 
-    def recall(self, key: str) -> MemoryValue | None:
+    def recall(self, key: str, mantra: MantraByte, context: SovereignContext) -> Optional[ProtectedMemory]:
         return None
 
-    def forget(self, key: str) -> bool:
+    def forget(self, key: str, context: SovereignContext) -> bool:
         return True
+
+    def list_keys(self, pattern: str = "*", context: SovereignContext = None) -> List[str]:
+        return []
+
+    def get_memory_stats(self, context: SovereignContext = None) -> Dict[str, object]:
+        return {}
 
 
 # =============================================================================
@@ -184,9 +202,10 @@ class TestSamkhyaTypes:
 
     def test_enforce_context_integrity(self):
         """EnforceContext defaults."""
-        ctx = EnforceContext("agent1", "db", "write")
-        assert ctx.metadata == {}
-        assert isinstance(ctx.timestamp, datetime)
+        from vibe_core.protocols.universal.types import SovereignContext
+        sov = SovereignContext(identity_id="test", signature="sig")
+        ctx = EnforceContext("agent1", "db", "write", sovereign=sov)
+        assert ctx.caller_id == "agent1"
 
 
 @pytest.mark.unit

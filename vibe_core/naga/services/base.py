@@ -346,7 +346,7 @@ def naga_governed(
                     steward = NullSteward()
 
                 # FAST CHECK (Budget/Rate Only)
-                if not steward.check_limits(op_name):
+                if steward and not steward.check_limits(op_name):
                     msg = f"⛔ INTERNAL LIMIT: Steward blocked internal call '{op_name}'"
                     sys.stderr.write(f"{msg}\n")
                     raise SovereignInterrupt(msg)

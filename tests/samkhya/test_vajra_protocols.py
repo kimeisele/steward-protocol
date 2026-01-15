@@ -120,7 +120,8 @@ class TestVajraHardening:
 
     def test_vajra_enforce_protocol(self):
         """Verify Enforce Protocol Context."""
-        from vibe_core.protocols.universal.types import EnforceContext
-
-        ctx = EnforceContext(caller_id="me", resource="file", action="read")
-        assert hasattr(ctx, "sovereign")
+        from vibe_core.protocols.universal.types import EnforceContext, SovereignContext
+    
+        sov = SovereignContext(identity_id="me", signature="sig")
+        ctx = EnforceContext(caller_id="me", resource="file", action="read", sovereign=sov)
+        assert ctx.caller_id == "me"

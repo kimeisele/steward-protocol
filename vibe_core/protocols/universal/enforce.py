@@ -46,6 +46,13 @@ class EnforceProtocol(Protocol):
         """
         ...
 
+    def check(self, action: str, context: EnforceContext) -> bool:
+        """
+        Lightweight check (Legacy).
+        Returns True if ALLOWed.
+        """
+        ...
+
     def calculate_merkle_root(self, ctx: SovereignContext, action: str) -> str:
         """
         Berechnet den neuen Hash für den Ledger basierend auf:

@@ -23,6 +23,7 @@ from typing import ClassVar, Dict, List, Optional, Protocol, TypedDict, runtime_
 from dataclasses import dataclass
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
+from vibe_core.protocols.universal import EnforceContext, Verdict, SovereignContext
 
 
 # =============================================================================
@@ -46,6 +47,7 @@ class ManuProtocolBase(WorkerProtocol):
         parampara_vector() -> 296 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 7  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["law", "policy", "enforce", "rule", "governance", "dharma"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[7]
@@ -100,11 +102,24 @@ class ManuProtocol(Protocol):
         """
         ...
 
-    def get_ruling(self, action: str) -> Optional[str]:
-        """
-        Get the ruling/law for an action.
-        Returns None if no ruling exists.
-        """
+    def get_ruling(self, context_id: str) -> str:
+        """Get the current ruling for a context."""
+        ...
+
+    def enforce(self, action: str, context: EnforceContext) -> Verdict:
+        """Enforce rules on an action."""
+        ...
+
+    def check(self, action: str, context: EnforceContext) -> bool:
+        """Lightweight check."""
+        ...
+
+    def calculate_merkle_root(self, ctx: SovereignContext, action: str) -> str:
+        """Calculate Merkle root."""
+        ...
+
+    def get_state(self) -> dict[str, object]:
+        """Get state."""
         ...
 
 

@@ -79,6 +79,7 @@ class NrisimhaProtocolBase(HeadProtocol):
         parampara_vector() -> 481 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 12  # THE ONLY CONFIGURATION
+    _intents: ClassVar[List[str]] = ["protect", "kill", "emergency", "security", "guard", "watchdog"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[12]

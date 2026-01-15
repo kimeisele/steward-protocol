@@ -194,6 +194,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
             opcode_handlers={
                 MantraOpCode.INIT_THREAD: lambda ctx: self.bind_genes(["scribe"]),
                 MantraOpCode.COMPILE_AST: lambda ctx: True,
+                MantraOpCode.EXTEND_CAP: lambda ctx: True,
             }
         )
         self.chaitanya = self.nrisimha
@@ -212,6 +213,14 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
         self._status = KernelStatus.STOPPED
         self.vajra_seal()
+
+    def grant_capability(self, agent_id: str, capability: str) -> bool:
+        """Grant a capability to an agent. Delegated to Brahma."""
+        return self.brahma.register_capabilities(agent_id, [capability]) is None
+
+    def revoke_capability(self, agent_id: str, capability: str) -> bool:
+        """Revoke a capability from an agent. Delegated to Brahma."""
+        return self.brahma.terminate_agent(agent_id, f"Revoking {capability}")
 
     @property
     def ledger(self) -> VibeLedger:
