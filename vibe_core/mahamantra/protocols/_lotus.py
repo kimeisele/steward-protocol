@@ -76,13 +76,22 @@ from vibe_core.mahamantra.protocols._holographic import (
     HolographicSystem,
 )
 
-from vibe_core.mahamantra.substrate.seed import (
+from vibe_core.mahamantra.protocols._seed import (
     WORDS as LOTUS_PETALS,
     QUARTERS as LOTUS_QUARTERS,
-    WORDS_PER_QUARTER as PETALS_PER_QUARTER,
+    HALF_SIZE as PETALS_PER_QUARTER,  # WORDS // QUARTERS = 4. HALF_SIZE = 8. Wait. 16/4 = 4.
     MALA as MALA_BEADS,
     TRINITY,
 )
+# Re-calculate or import correct constant for PETALS_PER_QUARTER if HALF_SIZE is wrong.
+# In seed.py: WORDS_PER_QUARTER = WORDS // QUARTERS = 4.
+# In _seed.py I exported WORDS, QUARTERS. I should calc it or import if exported.
+# I did NOT export WORDS_PER_QUARTER in _seed.py explicitly? Let me check.
+# Checking _seed.py content from memory/previous step... 
+# I exported: WORDS, PARAMPARA, TRINITY, QUARTERS, PANCHA, SHARANAGATI, LILA, MALA, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, HALVES, HALF_SIZE, KSETRAJNA, MAHAJANA_COUNT, KSHETRA, KSHETRA_GAD, ROUNDS, DAILY_MANTRAS.
+# WORDS_PER_QUARTER was NOT exported.
+# So I must calculate it here:
+PETALS_PER_QUARTER: Final[int] = LOTUS_PETALS // LOTUS_QUARTERS
 
 
 # =============================================================================
