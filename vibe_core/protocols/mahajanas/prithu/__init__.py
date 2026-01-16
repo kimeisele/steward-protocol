@@ -71,7 +71,6 @@ class PrithuProtocolBase(HeadProtocol):
         parampara_vector() -> 37 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 0  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["disk", "file", "store", "infra", "hardware", "scan", "bootstrap"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[0]

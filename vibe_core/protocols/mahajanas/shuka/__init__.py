@@ -69,7 +69,6 @@ class ShukaProtocolBase(WorkerProtocol):
         parampara_vector() -> 555 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 14  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["narrate", "report", "log", "emit", "vision", "monitor"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[14]

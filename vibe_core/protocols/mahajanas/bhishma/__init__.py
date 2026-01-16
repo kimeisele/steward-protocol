@@ -64,7 +64,6 @@ class BhishmaProtocolBase(WorkerProtocol):
         parampara_vector() → 444 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 11  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["commit", "ledger", "log", "vow", "history", "immutable"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[11]

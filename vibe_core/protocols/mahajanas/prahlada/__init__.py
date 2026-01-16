@@ -71,7 +71,6 @@ class PrahladaProtocolBase(WorkerProtocol):
         parampara_vector() → 370 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 9  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["devotion", "resilience", "faith", "protect", "extend", "plugin"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[9]

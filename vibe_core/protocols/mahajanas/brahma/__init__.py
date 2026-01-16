@@ -65,7 +65,6 @@ class BrahmaProtocolBase(WorkerProtocol):
         parampara_vector() -> 74 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 1  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["create", "spawn", "genesis", "new", "born"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[1]

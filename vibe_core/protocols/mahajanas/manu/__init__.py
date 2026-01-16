@@ -47,7 +47,6 @@ class ManuProtocolBase(WorkerProtocol):
         parampara_vector() -> 296 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 7  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["law", "policy", "enforce", "rule", "governance", "dharma"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[7]

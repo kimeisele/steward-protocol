@@ -64,7 +64,6 @@ class ShambhuProtocolBase(WorkerProtocol):
         parampara_vector() -> 148 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 3  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["destroy", "cleanup", "delete", "reset", "transform", "garbage"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[3]

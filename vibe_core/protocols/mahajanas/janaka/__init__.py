@@ -67,7 +67,6 @@ class JanakaProtocolBase(WorkerProtocol):
         parampara_vector() -> 407 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 10  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["duty", "maintenance", "sync", "lifecycle", "boot", "shutdown"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[10]
