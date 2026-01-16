@@ -133,6 +133,22 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def test_tapas(self) -> bool: return True
     def test_saucam(self) -> bool: return True
 
+    # === SHARANAGATI GATE ===
+    def bootstrap(self, *, silent: bool = False) -> None:
+        """
+        Initialize the Mahamantra system (Sharanagati Gate).
+        
+        Called by kernel during startup. Currently a no-op as the
+        system is initialized on import.
+        
+        Args:
+            silent: If True, suppress logging.
+        """
+        if not silent:
+            import logging
+            logging.getLogger("MAHAMANTRA").info("🙏 Mahamantra bootstrap complete")
+
+
     # === VEDA-4 ===
     def __call__(self, cmd: Optional[str] = None) -> Union[str, ExecuteResult]:
         if cmd is None: return "Hare Krishna"
