@@ -39,7 +39,7 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.protocols.substrate.mantra.acintya import (
+from vibe_core.mahamantra.substrate.acintya import (
     PARAMPARA,
     ParamparaConnection,
     verify_parampara,
