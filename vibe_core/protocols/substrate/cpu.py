@@ -58,7 +58,7 @@ from typing import (
 )
 
 # Import fractal levels
-from vibe_core.protocols.substrate.byte import HolyName, MantraByte, MantraTrit
+from vibe_core.protocols.substrate.byte import HolyName, MantraByte
 from vibe_core.protocols.substrate.mantra.varna import Varna, VarnaType
 from vibe_core.protocols.substrate.mantra.aksara import (
     Aksara,

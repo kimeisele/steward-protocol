@@ -131,14 +131,19 @@ class MantraByte:
 
     @classmethod
     def standard_16(cls) -> "MantraByte":
-        """Returns the Standard 16-Word Instruction Set (Optimized)."""
-        # H K H K K K H H H R H R R R H H
-        seq = [
-            HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA,
-            HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE,
-            HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA,
-            HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE
-        ]
+        """
+        Returns the Standard 16-Word Instruction Set (Optimized).
+        
+        DERIVED FROM SEED (PHYSICS):
+        "Wer MAHAMANTRA_SEQUENCE nicht aus dem Seed ableitet, existiert nicht."
+        """
+        # Import SSOT Sequence
+        from vibe_core.mahamantra.substrate.seed import MAHAMANTRA
+        
+        # Map Seed-HolyName to Byte-HolyName (Values match: 0, 1, 2)
+        # seed.HolyName -> byte.HolyName
+        seq = [HolyName(name.value) for name in MAHAMANTRA]
+        
         return cls.from_trits(seq)
 
     def get_trit(self, index: int) -> HolyName:
