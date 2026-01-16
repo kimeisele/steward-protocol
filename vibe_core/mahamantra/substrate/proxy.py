@@ -28,7 +28,7 @@ import importlib
 import logging
 import sys
 from pathlib import Path as StdPath
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional, TYPE_CHECKING, TypedDict, Union
 
 # Import bridge for routing
 from vibe_core.mahamantra.substrate.bridge import offer
@@ -38,6 +38,24 @@ from vibe_core.mahamantra.protocols._gad import (
     GADBase,
     GADProtocol,
 )
+
+
+# =============================================================================
+# TYPE DEFINITIONS (WATERTIGHT - No Any)
+# =============================================================================
+
+class TickState(TypedDict, total=False):
+    """State passed on each Mahamantra tick. WATERTIGHT: No Any."""
+    tick: int
+    position: int
+    quarter: str
+    guardian: str
+    word: str
+    opcode: int
+
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor
 
 
 # =============================================================================
@@ -142,27 +160,27 @@ class _GovernedPath(type(StdPath())):
 
 logger = logging.getLogger("BALARAMA")
 
-def _dharma_meditate(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_meditate(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Default: Silent meditation."""
     pass  # Generic silence is ok, but we log activation below
 
-def _dharma_prithu(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_prithu(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Prithu (0): Health Check / Infrastructure."""
     logger.info(f"🌍 Prithu@{proxy.position}: Checking Foundation (Disk/Mem)")
 
-def _dharma_janaka(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_janaka(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Janaka (10): State Sync / Maintenance."""
     logger.info(f"👑 Janaka@{proxy.position}: Maintaining State Consistency")
 
-def _dharma_bhishma(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_bhishma(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Bhishma (11): Ledger / Tradition."""
     logger.info(f"👴 Bhishma@{proxy.position}: Upholding the Vow (Ledger Sync)")
 
-def _dharma_nrisimha(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_nrisimha(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Nrisimha (12): Protection / Security."""
     logger.info(f"🦁 Nrisimha@{proxy.position}: Scanning for Hiranyakashipu (Threats)")
 
-def _dharma_yamaraja(proxy: "BalaramaProxy", tick: Any) -> None:
+def _dharma_yamaraja(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Yamaraja (15): Audit / Death."""
     logger.info(f"⚖️ Yamaraja@{proxy.position}: Auditing Karma (Final Check)")
 
@@ -422,7 +440,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         # Capture service reference (closure)
         proxy = self
 
-        def gated_listener(tick_state: Any) -> None:
+        def gated_listener(tick_state: TickState) -> None:
             """
             Gated listener - only activates at matching position.
 
@@ -600,7 +618,7 @@ class BalaramaProxy(GADBase, GADProtocol):
     # ORBITAL REACTOR MOUNTING (Adoption)
     # =========================================================================
 
-    def set_reactor(self, reactor: Any) -> None:
+    def set_reactor(self, reactor: "OrbitalShadowReactor") -> None:
         """
         Mount this service onto an Orbital Reactor.
         
@@ -621,7 +639,7 @@ class BalaramaProxy(GADBase, GADProtocol):
     # These methods allow the proxy to be driven by the Orbital Reactor.
     # They delegate to the wrapped module if possible.
     
-    def on_bhoga(self, state: Any) -> None:
+    def on_bhoga(self, state: TickState) -> None:
         """
         React to BHOGA phase (Offering).
         Delegate to module.on_bhoga or generic on_tick.
@@ -653,7 +671,7 @@ class BalaramaProxy(GADBase, GADProtocol):
              dharma = DEFAULT_DHARMA.get(name, _dharma_meditate)
              dharma(self, state)
 
-    def on_switch(self, state: Any) -> None:
+    def on_switch(self, state: TickState) -> None:
         """React to SWITCH phase (Parashurama)."""
         handler = getattr(self.module, "on_switch", None)
         if callable(handler):
@@ -662,7 +680,7 @@ class BalaramaProxy(GADBase, GADProtocol):
             except Exception:
                 pass
 
-    def on_prasadam(self, state: Any) -> None:
+    def on_prasadam(self, state: TickState) -> None:
         """React to PRASADAM phase (Distribution)."""
         handler = getattr(self.module, "on_prasadam", None)
         if callable(handler):
@@ -671,7 +689,7 @@ class BalaramaProxy(GADBase, GADProtocol):
             except Exception:
                 pass
 
-    def on_return(self, state: Any) -> None:
+    def on_return(self, state: TickState) -> None:
         """React to RETURN phase (Cycle Complete)."""
         handler = getattr(self.module, "on_return", None)
         if callable(handler):

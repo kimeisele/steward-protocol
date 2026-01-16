@@ -24,7 +24,7 @@ __mahajana__ = "janaka"
 __position__ = 10
 __genesis__ = "0x255aaf58"  # GenesisByte: parampara % 37 == 0
 
-from typing import Any, Dict, Optional, Final
+from typing import Dict, Optional, Final, Union
 
 # =============================================================================
 # IMPORT FROM SSOT (seed.py) - NO MAGIC NUMBERS ALLOWED
@@ -85,13 +85,13 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
 # OFFER - The Gate (Der einzige legitime Zugang)
 # =============================================================================
 
-class OfferResult(Dict[str, Any]):
-    """Result of an offer() call. TypedDict alternative for simplicity."""
+class OfferResult(Dict[str, object]):
+    """Result of an offer() call. WATERTIGHT: object instead of Any."""
     pass
 
 
 def offer(
-    content: Any,
+    content: Union[str, bytes, Dict[str, object], object],
     purpose: str,
     actor: Optional[str] = None,
     parampara_vector: Optional[int] = None,
@@ -196,7 +196,7 @@ def offer(
 # QUERY - Inspect routing without execution
 # =============================================================================
 
-def query_purpose(purpose: str) -> Optional[Dict[str, Any]]:
+def query_purpose(purpose: str) -> Optional[Dict[str, object]]:
     """
     Query which Position/Mahajana handles a given purpose.
 
