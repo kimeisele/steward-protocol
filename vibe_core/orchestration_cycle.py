@@ -48,9 +48,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.protocols.event import EventBusProtocol, EventType, emit_event
+from vibe_core.protocols.substrate.byte import MANTRA_SEQUENCE, MantraByte
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.state.schema import CyclePhase
-from vibe_core.protocols.substrate.byte import MantraTrit, MantraByte, MANTRA_SEQUENCE
+
+# MantraTrit DELETED in Phase 7 (Operation Penance) - was performance liability
 
 logger = logging.getLogger("ORCHESTRATION.CYCLE")
 
@@ -287,21 +289,9 @@ class CognitiveCycle(ABC):
         if context.has_errors():
             logger.warning(f"⚠️  {self.cycle_name} encountered errors: {context.errors}")
         return True
-        
-    def _inject_mantra_trit(self, trit: MantraTrit) -> None:
-        """
-        Injects a MantraTrit into the system (EntropyShell), if available.
-        This closes the loop between The Chant (Orchestration) and The Container (Entropy).
-        """
-        # Try to find kernel in self (BootOrchestrator scenario)
-        kernel = getattr(self, "kernel", None)
-        # TODO: Kernel needs to implement receive_trit or generic receive_mantra
-        # For now we just pass it if it exists
-        if kernel and hasattr(kernel, "receive_mantra_trit"):
-             kernel.receive_mantra_trit(trit)
-            
-        # Try to find kernel in self._steward_context (Plugin/Prana scenario)
-        # TODO: Implement Standard Stewardship Context Access
+
+    # DELETED: _inject_mantra_trit - MantraTrit removed in Phase 7 (Operation Penance)
+    # Was a TODO that never worked. Entropy injection needs to be redesigned with V2 substrate.
 
     # ========================================================================
     # THE SADHANA LOOP (16-Step Mantra Sequencing)
@@ -310,10 +300,10 @@ class CognitiveCycle(ABC):
     async def orchestrate(self, force: bool = False) -> Optional[CycleContext]:
         """
         RUN THE SADHANA LOOP: The Orchestration IS the Mantra.
-        
+
         The execution iterates through the 16-bit DNA Sequence.
         Each phase corresponds to a quarter (Pada) of the Mantra.
-        
+
         1. INVOCATION (Bits 0-3): _perceive()
         2. VERIFICATION (Bits 4-7): _orient() -> HARE_4 (Pulse Sync)
         3. EXECUTION (Bits 8-11): _decide()
@@ -363,74 +353,68 @@ class CognitiveCycle(ABC):
             # We iterate through the 16-bit DNA
             # But the logic is chunked by Phase.
             # We perform the Injection at the end of each Phase's chunk.
-            
+
             # --- PADA 1: INVOCATION (Bits 0-3) -> PERCEIVE ---
             # HARE, KRISHNA, HARE, KRISHNA
-            for trit in MANTRA_SEQUENCE[0:4]:
-                self._inject_mantra_trit(trit) # Chant
-                
+            # DELETED: MantraTrit injection loop - removed in Phase 7
+
             context.phase = CyclePhase.PERCEIVE
             context.phase_start_time = time.time()
             self._trace.emit(trace_id, self.cycle_name, "perceive_start")
-            
+
             observations, perceive_errors = await self._perceive()
             context.observations = observations
-            if perceive_errors: 
+            if perceive_errors:
                 context.errors.update(perceive_errors)
-            
+
             self._trace.emit(trace_id, self.cycle_name, "perceive_complete", {"observations": len(observations)})
-            
-            
+
             # --- PADA 2: VERIFICATION (Bits 4-7) -> ORIENT ---
             # KRISHNA, KRISHNA, HARE, HARE
-            for trit in MANTRA_SEQUENCE[4:8]:
-                self._inject_mantra_trit(trit)
-                
+            # DELETED: MantraTrit injection loop - removed in Phase 7
+
             context.phase = CyclePhase.ORIENT
             context.phase_start_time = time.time()
             self._trace.emit(trace_id, self.cycle_name, "orient_start")
-            
+
             orientations, orient_errors = await self._orient(observations)
             context.orientations = orientations
             if orient_errors:
-                 context.errors.update(orient_errors)
-                 
-            self._trace.emit(trace_id, self.cycle_name, "orient_complete", {"orientations": len(orientations)})
+                context.errors.update(orient_errors)
 
+            self._trace.emit(trace_id, self.cycle_name, "orient_complete", {"orientations": len(orientations)})
 
             # --- PADA 3: EXECUTION (Bits 8-11) -> DECIDE ---
             # HARE, RAMA, HARE, RAMA
-            for trit in MANTRA_SEQUENCE[8:12]:
-                self._inject_mantra_trit(trit)
+            # DELETED: MantraTrit injection loop - removed in Phase 7
 
             context.phase = CyclePhase.DECIDE
             context.phase_start_time = time.time()
             self._trace.emit(trace_id, self.cycle_name, "decide_start")
-            
+
             decisions, decide_errors = await self._decide(orientations)
             context.decisions = decisions
             if decide_errors:
                 context.errors.update(decide_errors)
-                
-            self._trace.emit(trace_id, self.cycle_name, "decide_complete", {"decisions": len(decisions)})
 
+            self._trace.emit(trace_id, self.cycle_name, "decide_complete", {"decisions": len(decisions)})
 
             # --- PADA 4: CONCLUSION (Bits 12-15) -> ACT ---
             # RAMA, RAMA, HARE, HARE
-            for trit in MANTRA_SEQUENCE[12:16]:
-                self._inject_mantra_trit(trit)
+            # DELETED: MantraTrit injection loop - removed in Phase 7
 
             context.phase = CyclePhase.ACT
             context.phase_start_time = time.time()
             self._trace.emit(trace_id, self.cycle_name, "act_start")
-            
+
             results, act_errors = await self._act(decisions)
             context.results = results
             if act_errors:
                 context.errors.update(act_errors)
-                
-            self._trace.emit(trace_id, self.cycle_name, "act_complete", {"actions_executed": len(decisions) if results else 0})
 
+            self._trace.emit(
+                trace_id, self.cycle_name, "act_complete", {"actions_executed": len(decisions) if results else 0}
+            )
 
             # --- PERSIST & COMPLETE ---
             # (No new mantra bits, the cycle is complete at HARE_8)
@@ -453,7 +437,7 @@ class CognitiveCycle(ABC):
             # Cycle Complete
             self._trace.complete(trace_id, {"cycle_name": self.cycle_name})
             registry.complete_cycle(context)
-            
+
             logger.info(f"✅ {self.cycle_name} cycle sealed (Sadhana Complete)")
             return context
 
@@ -619,7 +603,7 @@ class CycleRegistry:
             }
             # Use StateService to save (handles locking, paths, backups)
             self._state_service.save(self._history_filename, data)
-                
+
         except Exception as e:
             logger.warning(f"Failed to save cycle history: {e}")
 
