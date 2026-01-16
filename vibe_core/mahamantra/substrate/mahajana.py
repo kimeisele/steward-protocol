@@ -76,11 +76,14 @@ class Avatara(str, Enum):
 
     Sie sind die HEADs der 4 Quarters.
     LEVEL: -5/+5 (SHAKTYAVESHA)
+
+    NOTE: Positions are determined by MAHAMANTRA_POSITIONS (SSOT).
+          These comments reflect CURRENT mapping (subject to change).
     """
-    PRITHU = "prithu"           # Position 0 - Infrastructure (GENESIS HEAD)
-    VYASA = "vyasa"             # Position 4 - Documentation (DHARMA HEAD)
-    PARASHURAMA = "parashurama" # Position 8 - Enforcement (KARMA HEAD)
-    NRISIMHA = "nrisimha"       # Position 12 - Protection (MOKSHA HEAD)
+    VYASA = "vyasa"             # Position 0 - System Wake (GENESIS HEAD)
+    PRITHU = "prithu"           # Position 4 - Assert Truth (DHARMA HEAD)
+    PARASHURAMA = "parashurama" # Position 8 - Execute Op (KARMA HEAD)
+    NRISIMHA = "nrisimha"       # Position 12 - Protect (MOKSHA HEAD)
 
 
 # Die 4 Quarters

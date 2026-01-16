@@ -32,7 +32,7 @@ __genesis__ = "0x00000000"  # GenesisByte (Position 0)
 
 from typing import Any
 
-from vibe_core.mahamantra.substrate.registry import MahajanaRegistry
+from vibe_core.mahamantra.substrate.registry import GuardianRegistry
 
 # =============================================================================
 # DYNAMIC DISPATCH - The Lotus Level
@@ -58,13 +58,13 @@ def __getattr__(name: str) -> Any:
         AttributeError: If attribute not found
     """
     # Load from position 0's types module
-    attr = MahajanaRegistry.load_type(position=0, type_name=name)
+    attr = GuardianRegistry.load_type(position=0, type_name=name)
 
     if attr is not None:
         return attr
 
     # Fallback: Try loading entire types module and get any attribute
-    types_module = MahajanaRegistry.load_module(index=0, component="types")
+    types_module = GuardianRegistry.load_module(index=0, component="types")
     if types_module is not None:
         try:
             return getattr(types_module, name)
