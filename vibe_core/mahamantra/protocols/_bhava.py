@@ -38,13 +38,21 @@ But Bhava without Sharanagati is pretension (prakrita-sahajiya).
 from enum import IntEnum
 from typing import Final, Protocol, runtime_checkable
 
-from vibe_core.mahamantra.protocols._seed import SHARANAGATI, PANCHA
+from vibe_core.mahamantra.protocols._seed import SHARANAGATI, PANCHA, COSMIC_FRAME
 
 # =============================================================================
 # VERIFICATION
 # =============================================================================
 assert SHARANAGATI == 6, "Sharanagati must have 6 limbs"
 assert PANCHA == 5, "There must be 5 Bhavas (like 5 Tattvas)"
+assert COSMIC_FRAME % SHARANAGATI == 0, "COSMIC_FRAME must be divisible by SHARANAGATI"
+
+# =============================================================================
+# SHARANAGATI UNIT (WATERTIGHT INTEGER)
+# =============================================================================
+# 21600 / 6 = 3600 (perfect integer, no float errors)
+# Each limb = 3600 units of compliance
+SHARANAGATI_UNIT: Final[int] = COSMIC_FRAME // SHARANAGATI  # 3600
 
 
 # =============================================================================
@@ -114,9 +122,16 @@ class SharanagatiLimb(IntEnum):
 assert len(SharanagatiLimb) == SHARANAGATI, "There must be exactly 6 limbs"
 
 
+# -----------------------------------------------------------------------------
+# FLOAT VERSION (legacy, for backward compatibility)
+# -----------------------------------------------------------------------------
+
 def calculate_sharanagati_compliance(limbs_fulfilled: set[SharanagatiLimb]) -> float:
     """
     Calculate Sharanagati compliance as a ratio (0.0 - 1.0).
+    
+    WARNING: Uses float division (1/6 = 0.1666... is not exact).
+    For watertight calculations, use calculate_sharanagati_scaled().
     
     Args:
         limbs_fulfilled: Set of fulfilled Sharanagati limbs
@@ -125,6 +140,31 @@ def calculate_sharanagati_compliance(limbs_fulfilled: set[SharanagatiLimb]) -> f
         Compliance ratio (fulfilled / 6)
     """
     return len(limbs_fulfilled) / SHARANAGATI
+
+
+# -----------------------------------------------------------------------------
+# INTEGER VERSION (WATERTIGHT - No Float Errors)
+# -----------------------------------------------------------------------------
+
+def calculate_sharanagati_scaled(limbs_fulfilled: set[SharanagatiLimb]) -> int:
+    """
+    Calculate Sharanagati compliance as COSMIC_FRAME-scaled integer.
+    
+    WATERTIGHT: No float errors! 21600 / 6 = 3600 exactly.
+    
+    Args:
+        limbs_fulfilled: Set of fulfilled Sharanagati limbs
+        
+    Returns:
+        Scaled compliance (0 to 21600, step of 3600)
+        
+    Example:
+        0 limbs = 0
+        1 limb  = 3600
+        3 limbs = 10800
+        6 limbs = 21600 (full compliance)
+    """
+    return len(limbs_fulfilled) * SHARANAGATI_UNIT
 
 
 # =============================================================================
@@ -158,6 +198,43 @@ def calculate_grace(
     sharanagati_compliance = calculate_sharanagati_compliance(limbs_fulfilled)
     
     return frequency * bhava_multiplier * sharanagati_compliance
+
+
+def calculate_grace_scaled(
+    frequency_scaled: int,
+    bhava: Bhava,
+    limbs_fulfilled: set[SharanagatiLimb],
+) -> int:
+    """
+    Calculate effective grace using WATERTIGHT integer arithmetic.
+    
+    G_scaled = (f_scaled × B.value × S_scaled) // (COSMIC_FRAME × 10)
+    
+    This eliminates ALL float errors by keeping everything in integer space.
+    
+    Args:
+        frequency_scaled: Base frequency scaled to COSMIC_FRAME (0 - 21600)
+        bhava: The spiritual emotion
+        limbs_fulfilled: Set of fulfilled Sharanagati limbs
+        
+    Returns:
+        Scaled grace value (integer)
+        
+    Example:
+        frequency_scaled = 16474 (76.2% of COSMIC_FRAME)
+        bhava = MADHURYA (value=30, i.e., 3.0x)
+        limbs = 3 (scaled = 10800)
+        
+        Result = (16474 × 30 × 10800) // (21600 × 10) = 24710
+    """
+    sharanagati_scaled = calculate_sharanagati_scaled(limbs_fulfilled)
+    
+    # Bhava enum value is multiplier × 10 (e.g., MADHURYA = 30 for 3.0x)
+    # So we divide by 10 at the end
+    numerator = frequency_scaled * bhava.value * sharanagati_scaled
+    denominator = COSMIC_FRAME * 10  # 216000
+    
+    return numerator // denominator
 
 
 # =============================================================================
@@ -196,12 +273,17 @@ __all__ = [
     # Enums
     "Bhava",
     "SharanagatiLimb",
-    # Constants
+    # Constants (WATERTIGHT)
     "BHAVA_MULTIPLIER",
-    # Functions
+    "SHARANAGATI_UNIT",
+    # Float Functions (legacy)
     "get_bhava_multiplier",
     "calculate_sharanagati_compliance",
     "calculate_grace",
+    # Integer Functions (WATERTIGHT)
+    "calculate_sharanagati_scaled",
+    "calculate_grace_scaled",
     # Protocol
     "BhavaProtocol",
 ]
+
