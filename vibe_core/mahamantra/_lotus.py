@@ -349,7 +349,7 @@ class LotusNode:
     def _awaken_and_execute(self, guardian: str, command: str, args: Optional[list[str]]) -> dict:
         """Awaken the service at this node and execute the command."""
         import importlib
-        from vibe_core.mahamantra.protocols._proxy import MahamantraProxy
+        from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
         
         # Royal Hunt logic encapsulated for the node
         service_class = None

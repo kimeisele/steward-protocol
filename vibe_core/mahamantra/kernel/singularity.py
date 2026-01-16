@@ -100,7 +100,7 @@ from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
     WORDS,
 )
-from vibe_core.mahamantra.protocols._proxy import MahamantraProxy
+from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
 from vibe_core.mahamantra.protocols._kala import KalaTime
 
