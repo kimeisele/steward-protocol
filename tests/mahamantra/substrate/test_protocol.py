@@ -8,16 +8,16 @@ Tests for MantraProtocol base classes (SSOT).
 import pytest
 
 from vibe_core.mahamantra.substrate import (
-    MantraProtocol,
-    WorkerProtocol,
-    HeadProtocol,
-    MantraAware,
-    ProtocolRegistry,
-    MantraOpCode,
-    Mahajana,
-    Avatara,
-    Quarter,
     PARAMPARA,
+    Avatara,
+    HeadProtocol,
+    Mahajana,
+    MantraAware,
+    MantraOpCode,
+    MantraProtocol,
+    ProtocolRegistry,
+    Quarter,
+    WorkerProtocol,
 )
 
 
@@ -34,6 +34,7 @@ class TestMantraProtocol:
 
     def test_position_index_required(self) -> None:
         """Subclass must set _position_index."""
+
         class BadProtocol(MantraProtocol):
             pass  # No _position_index
 
@@ -42,6 +43,7 @@ class TestMantraProtocol:
 
     def test_derived_properties(self) -> None:
         """All properties derive from position."""
+
         class TestProtocol(MantraProtocol):
             _position_index = 5  # Kumaras
 
@@ -54,6 +56,7 @@ class TestMantraProtocol:
 
     def test_validate_valid(self) -> None:
         """validate returns True for valid protocol."""
+
         class ValidProtocol(MantraProtocol):
             _position_index = 7
 
@@ -61,6 +64,7 @@ class TestMantraProtocol:
 
     def test_validate_invalid(self) -> None:
         """validate returns False for invalid position."""
+
         class InvalidProtocol(MantraProtocol):
             _position_index = 99
 
@@ -68,6 +72,7 @@ class TestMantraProtocol:
 
     def test_protocol_id(self) -> None:
         """protocol_id returns formatted identifier."""
+
         class TestProtocol(MantraProtocol):
             _position_index = 11  # Bhishma
 
@@ -81,6 +86,7 @@ class TestWorkerProtocol:
 
     def test_worker_position(self) -> None:
         """WorkerProtocol works at worker positions."""
+
         class BrahmaProtocol(WorkerProtocol):
             _position_index = 1
 
@@ -89,6 +95,7 @@ class TestWorkerProtocol:
 
     def test_worker_at_head_fails(self) -> None:
         """WorkerProtocol at HEAD position raises."""
+
         class BadWorker(WorkerProtocol):
             _position_index = 0  # HEAD position
 
@@ -97,6 +104,7 @@ class TestWorkerProtocol:
 
     def test_worker_validate_head_fails(self) -> None:
         """WorkerProtocol.validate fails at HEAD position."""
+
         class BadWorker(WorkerProtocol):
             _position_index = 4  # HEAD position
 
@@ -108,14 +116,17 @@ class TestHeadProtocol:
 
     def test_head_position(self) -> None:
         """HeadProtocol works at HEAD positions."""
-        class PrithuProtocol(HeadProtocol):
+
+        # TRUTH: Position 0 = VYASA (Genesis HEAD)
+        class VyasaProtocol(HeadProtocol):
             _position_index = 0
 
-        assert PrithuProtocol.avatara() == Avatara.PRITHU
-        assert PrithuProtocol.validate()
+        assert VyasaProtocol.avatara() == Avatara.VYASA
+        assert VyasaProtocol.validate()
 
     def test_head_at_worker_fails(self) -> None:
         """HeadProtocol at WORKER position raises."""
+
         class BadHead(HeadProtocol):
             _position_index = 1  # WORKER position
 
@@ -124,6 +135,7 @@ class TestHeadProtocol:
 
     def test_head_validate_worker_fails(self) -> None:
         """HeadProtocol.validate fails at WORKER position."""
+
         class BadHead(HeadProtocol):
             _position_index = 5  # WORKER position
 
@@ -139,6 +151,7 @@ class TestProtocolRegistry:
 
     def test_register(self) -> None:
         """Register adds protocol to registry."""
+
         @ProtocolRegistry.register
         class TestProtocol(WorkerProtocol):
             _position_index = 1
@@ -147,17 +160,20 @@ class TestProtocolRegistry:
 
     def test_register_duplicate_fails(self) -> None:
         """Cannot register two protocols at same position."""
+
         @ProtocolRegistry.register
         class FirstProtocol(WorkerProtocol):
             _position_index = 2
 
         with pytest.raises(ValueError):
+
             @ProtocolRegistry.register
             class SecondProtocol(WorkerProtocol):
                 _position_index = 2
 
     def test_get_by_guardian(self) -> None:
         """get_by_guardian finds protocol by guardian."""
+
         @ProtocolRegistry.register
         class NaradaProtocol(WorkerProtocol):
             _position_index = 2
@@ -167,6 +183,7 @@ class TestProtocolRegistry:
 
     def test_coverage(self) -> None:
         """coverage returns registration stats."""
+
         @ProtocolRegistry.register
         class P1(WorkerProtocol):
             _position_index = 1
@@ -181,6 +198,7 @@ class TestProtocolRegistry:
 
     def test_missing_positions(self) -> None:
         """missing_positions returns unregistered positions."""
+
         @ProtocolRegistry.register
         class P0(HeadProtocol):
             _position_index = 0
@@ -196,12 +214,13 @@ class TestMantraAware:
 
     def test_protocol_is_mantra_aware(self) -> None:
         """MantraProtocol implements MantraAware."""
+
         class TestProtocol(MantraProtocol):
             _position_index = 3
 
         # Runtime check
         assert isinstance(TestProtocol, type)
         # Has required methods
-        assert hasattr(TestProtocol, 'position')
-        assert hasattr(TestProtocol, 'guardian')
-        assert hasattr(TestProtocol, 'opcode')
+        assert hasattr(TestProtocol, "position")
+        assert hasattr(TestProtocol, "guardian")
+        assert hasattr(TestProtocol, "opcode")

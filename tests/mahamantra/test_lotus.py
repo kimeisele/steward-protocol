@@ -52,15 +52,17 @@ class TestPositionAutoDiscovery:
     """Test position auto-discovery from folder structure."""
 
     def test_genesis_positions(self) -> None:
-        """Can auto-discover genesis positions."""
-        assert mahamantra.genesis.prithu is not None
+        """Can auto-discover genesis positions (0-3)."""
+        # TRUTH from seed.py: GENESIS = vyasa, brahma, narada, shambhu
+        assert mahamantra.genesis.vyasa is not None
         assert mahamantra.genesis.brahma is not None
         assert mahamantra.genesis.narada is not None
         assert mahamantra.genesis.shambhu is not None
 
     def test_dharma_positions(self) -> None:
-        """Can auto-discover dharma positions."""
-        assert mahamantra.dharma.vyasa is not None
+        """Can auto-discover dharma positions (4-7)."""
+        # TRUTH from seed.py: DHARMA = prithu, kumaras, kapila, manu
+        assert mahamantra.dharma.prithu is not None
         assert mahamantra.dharma.kumaras is not None
         assert mahamantra.dharma.kapila is not None
         assert mahamantra.dharma.manu is not None
@@ -87,21 +89,21 @@ class TestPositionModuleExports:
         """Position modules have POSITION constant."""
         brahma = mahamantra.genesis.brahma._get_module()
         assert brahma is not None
-        assert hasattr(brahma, 'POSITION')
+        assert hasattr(brahma, "POSITION")
         assert brahma.POSITION == 1
 
     def test_opcode_constants(self) -> None:
         """Position modules have OPCODE constant."""
         yamaraja = mahamantra.moksha.yamaraja._get_module()
         assert yamaraja is not None
-        assert hasattr(yamaraja, 'OPCODE')
+        assert hasattr(yamaraja, "OPCODE")
         assert yamaraja.OPCODE == "AUDIT_SEAL"
 
     def test_parampara_vectors(self) -> None:
         """Position modules have correct PARAMPARA_VECTOR."""
         bali = mahamantra.moksha.bali._get_module()
         assert bali is not None
-        assert hasattr(bali, 'PARAMPARA_VECTOR')
+        assert hasattr(bali, "PARAMPARA_VECTOR")
         # Position 13: (13+1) * 37 = 518
         assert bali.PARAMPARA_VECTOR == 518
         assert bali.PARAMPARA_VECTOR % 37 == 0
@@ -121,8 +123,9 @@ class TestTabCompletion:
 
     def test_quarter_dir(self) -> None:
         """Quarter has positions in dir."""
+        # TRUTH from seed.py: GENESIS = vyasa, brahma, narada, shambhu
         items = dir(mahamantra.genesis)
-        assert "prithu" in items
+        assert "vyasa" in items
         assert "brahma" in items
         assert "narada" in items
         assert "shambhu" in items
@@ -134,12 +137,14 @@ class TestNonExistentPath:
     def test_invalid_quarter_raises(self) -> None:
         """Invalid quarter raises AttributeError."""
         import pytest
+
         with pytest.raises(AttributeError):
             _ = mahamantra.nonexistent
 
     def test_invalid_position_raises(self) -> None:
         """Invalid position raises AttributeError."""
         import pytest
+
         with pytest.raises(AttributeError):
             _ = mahamantra.genesis.nonexistent
 
