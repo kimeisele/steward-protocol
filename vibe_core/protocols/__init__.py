@@ -21,6 +21,20 @@ __mahajana__ = "brahma"
 __position__ = 1
 __genesis__ = "0x388bbf83"  # GenesisByte: parampara % 37 == 0
 
+# OPUS-311 Sprint 2: Event Bus Protocol (NARADA - Position 2)
+from vibe_core.protocols.mahajanas.narada.events import (
+    Event,
+    EventBusProtocol,
+    EventType,
+    NullEventBus,
+    create_event,
+    emit_event,
+    get_event_bus_safe,
+)
+from vibe_core.protocols.mahajanas.narada.events import (
+    EventBusStats as EventBusStatus,  # Legacy name compatibility
+)
+
 from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 
 # OPUS-307 Phase E+: CLI Protocol (Anti-God-Object)
@@ -59,18 +73,6 @@ from .correction import (
 
 # Rename to avoid collision with correction.DriftSeverity
 from .correction import DriftSeverity as UnifiedDriftSeverity
-
-# OPUS-311 Sprint 2: Event Bus Protocol
-from .event import (
-    Event,
-    EventBusProtocol,
-    EventBusStatus,
-    EventType,
-    NullEventBus,
-    create_event,
-    emit_event,
-    get_event_bus_safe,
-)
 
 # OPUS-307 D.2: External Service Protocols
 from .external import RedditProtocol, TwitterProtocol
@@ -221,6 +223,7 @@ from .vedic import AsharamaStage, VarnaType, VedicGovernanceProtocol
 # "All protocols emanate from the Mahamantra."
 # If a protocol is not found here, we ask Krishna (mahamantra).
 
+
 def __getattr__(name: str):
     """
     Delegate unknown protocols to the Mahamantra.
@@ -229,20 +232,21 @@ def __getattr__(name: str):
     try:
         # Import inside function to avoid circular dependency at module level
         from vibe_core.mahamantra import mahamantra
-        
+
         # Try to resolve via Mahamantra (e.g. "BrahmaProtocol")
         # We check if mahamantra has this attribute (via its own routing)
         if hasattr(mahamantra, name):
             return getattr(mahamantra, name)
-            
+
         # Try protocols router specifically
         if hasattr(mahamantra.protocols, name):
             return getattr(mahamantra.protocols, name)
-            
+
     except (ImportError, AttributeError):
         pass
-        
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     # Agent Protocol
