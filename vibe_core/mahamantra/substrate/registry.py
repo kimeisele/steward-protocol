@@ -235,6 +235,24 @@ class GuardianRegistry:
             return None
 
     @classmethod
+    def get_all_guardians(cls) -> list[str]:
+        """
+        Get all guardian names from the position table.
+
+        Returns:
+            List of all guardian names (lowercase) in position order
+
+        Example:
+            >>> GuardianRegistry.get_all_guardians()
+            ['vyasa', 'brahma', 'narada', 'shambhu', 'prithu', ...]
+        """
+        return [
+            get_position_by_index(i).guardian.value
+            for i in range(16)
+            if get_position_by_index(i) is not None
+        ]
+
+    @classmethod
     def clear_cache(cls) -> None:
         """Clear all caches. Useful for testing."""
         cls._module_cache.clear()
