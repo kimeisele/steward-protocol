@@ -76,7 +76,6 @@ class ParashuramaProtocolBase(HeadProtocol):
         parampara_vector() -> 333 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 8  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["execute", "weapon", "fight", "force", "justice", "action"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[8]

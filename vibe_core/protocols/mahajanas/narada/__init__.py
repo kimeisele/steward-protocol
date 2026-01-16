@@ -66,7 +66,6 @@ class NaradaProtocolBase(WorkerProtocol):
         parampara_vector() -> 111 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 2  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["chat", "hello", "status", "msg", "say", "broadcast"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[2]

@@ -65,7 +65,6 @@ class KapilaProtocolBase(WorkerProtocol):
         parampara_vector() -> 259 (% 37 == 0)
     """
     _position_index: ClassVar[int] = 6  # THE ONLY CONFIGURATION
-    _intents: ClassVar[List[str]] = ["analyze", "resolve", "enumerate", "logic", "inference"]
 
 
 # NO MANUAL WIRING - Everything derived from mahamantra[6]
