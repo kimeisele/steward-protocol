@@ -18,7 +18,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from vibe_core.ledger import VibeLedger
 # NEW PROTOCOL IMPORT (The Law)
 from vibe_core.mahamantra.karma.bhishma.protocol import (
     BhishmaProtocol,
@@ -28,6 +27,7 @@ from vibe_core.mahamantra.karma.bhishma.protocol import (
     VerificationResult,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
 
 logger = logging.getLogger("BHISHMA_SERVICE")
@@ -71,7 +71,7 @@ class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol):
             # We must ensure details is a dict for the underlying ledger
             details = entry.get("details", {})
             if not isinstance(details, dict):
-                 details = {"raw": str(details)}
+                details = {"raw": str(details)}
 
             event_id = self._ledger.record_event(event_type=event_type, agent_id=agent_id, details=details)
 
@@ -148,7 +148,6 @@ class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol):
 
     def get_ledger_hash(self) -> str:
         """Get cryptographic hash of ledger state."""
-        import hashlib
 
         # Get all entries from underlying ledger
         entries = self._ledger.get_all_events() if hasattr(self._ledger, "get_all_events") else []
@@ -173,7 +172,7 @@ class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol):
     ) -> str:
         """Record an event with identity verification."""
         agent_registry = getattr(kernel, "_agent_registry", {})
-        
+
         # Validate agent exists
         if agent_id != "kernel" and agent_id not in agent_registry:
             raise PermissionError(f"IDENTITY_SPOOFING_BLOCKED: Agent '{agent_id}' not registered.")
