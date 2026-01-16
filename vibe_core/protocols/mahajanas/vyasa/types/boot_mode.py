@@ -30,7 +30,7 @@ Architecture:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prithu"
+__mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xd8219fcb"  # GenesisByte: parampara % 37 == 0
 

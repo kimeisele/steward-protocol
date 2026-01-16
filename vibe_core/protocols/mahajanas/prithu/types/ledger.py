@@ -17,7 +17,7 @@ Implements:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
+__mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0xf9a27e38"  # GenesisByte: parampara % 37 == 0
 

@@ -15,7 +15,7 @@ If a visitor collapses, the Temple stands."
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prithu"
+__mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x70acde90"  # GenesisByte: parampara % 37 == 0
 

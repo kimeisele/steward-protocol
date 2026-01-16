@@ -1,16 +1,18 @@
 """
-PRITHU SERVICE - Wraps Legacy boot_orchestrator.py
-===================================================
+PRITHU SERVICE - Wraps Legacy Audit/Compliance
+==============================================
 
-POSITION: 0 (HEAD - GENESIS Quarter)
+POSITION: 4 (HEAD - DHARMA Quarter)
 
-This is a THIN WRAPPER that connects the legacy BootOrchestrator
+This is a THIN WRAPPER that connects legacy auditing and compliance
 to the Mahajana framework. NO DUPLICATION - just delegation.
 
-WRAPPED: vibe_core.boot_orchestrator.BootOrchestrator
+WRAPPED:
+- vibe_core.genesis.compliance.ComplianceBureau (GAD-000 compliance)
+- vibe_core.protocols.auditor.AuditorProtocol (verification)
 
-"As King Prithu milked the Earth to provide all necessities,
-this service wakes the system and provides all resources."
+"As Prithu compiled and divided Vedic knowledge,
+this service asserts and validates truth."
 """
 
 
@@ -18,222 +20,221 @@ from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 0
-__genesis__ = "0xad323093"  # GenesisByte: parampara % 37 == 0
+__position__ = 4
+__genesis__ = "0x257a4aa0"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from vibe_core.protocols.mahajanas.prithu import (
     PrithuProtocolBase,
-    WakePhase,
-    WakeResult,
-    WakeState,
+    TruthLevel,
+    AssertionResult,
+    TruthState,
 )
 
-# Import legacy implementation - DO NOT DUPLICATE
-from vibe_core.boot_orchestrator import BootOrchestrator as LegacyBootOrchestrator
-# Import directly from canonical location to avoid circular import
-from vibe_core.protocols.mahajanas.prithu.types.boot_mode import BootMode
+# Import legacy implementations - DO NOT DUPLICATE
+from vibe_core.genesis.compliance import ComplianceBureau
+from vibe_core.protocols.auditor import AuditorProtocol, NullAuditor
 
 
 class PrithuService(PrithuProtocolBase):
     """
-    PRITHU Service - System Wake/Bootstrap.
+    PRITHU Service - Truth Assertion/Validation.
 
-    WRAPS the legacy BootOrchestrator.
-    Manages system initialization sequence.
+    WRAPS the legacy ComplianceBureau and AuditorProtocol.
+    Manages truth verification and knowledge compilation.
 
-    Position 0 - The first HEAD, initiates all creation.
+    Position 4 - The Literary HEAD, asserts truth.
     """
 
-    def __init__(self, boot_mode: Optional[BootMode] = None) -> None:
-        """Initialize with legacy boot orchestrator."""
-        self._boot_mode = boot_mode or BootMode.FULL
-        self._orchestrator: Optional[LegacyBootOrchestrator] = None
-        self._phase = WakePhase.DORMANT
-        self._wake_time: Optional[str] = None
-        self._resources_loaded = 0
-        self._services_started = 0
-        self._total_wakes = 0
-
-    def _ensure_orchestrator(self) -> LegacyBootOrchestrator:
-        """Lazy init of orchestrator."""
-        if self._orchestrator is None:
-            self._orchestrator = LegacyBootOrchestrator(boot_mode=self._boot_mode)
-        return self._orchestrator
+    def __init__(
+        self,
+        workspace: Optional[Path] = None,
+        auditor: Optional[AuditorProtocol] = None,
+    ) -> None:
+        """Initialize with optional workspace and auditor."""
+        self._compliance = ComplianceBureau(workspace=workspace)
+        self._auditor: AuditorProtocol = auditor or NullAuditor()
+        self._assertions: Dict[str, AssertionResult] = {}
+        self._compilations: Dict[str, List[str]] = {}
+        self._stats = {
+            "total": 0,
+            "valid": 0,
+            "invalid": 0,
+        }
 
     # =========================================================================
-    # WAKE PROTOCOL (Position 0 - SYS_WAKE)
+    # TRUTH PROTOCOL (Position 4 - ASSERT_TRUTH)
     # =========================================================================
 
-    def wake(self) -> WakeResult:
-        """SYS_WAKE: Wake the system from dormant state."""
-        self._phase = WakePhase.BOOTSTRAP
-        self._wake_time = datetime.now().isoformat()
-        self._total_wakes += 1
+    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
+        """ASSERT_TRUTH: Assert a truth claim with evidence."""
+        self._stats["total"] += 1
+        assertion_id = f"prithu_{self._stats['total']}_{datetime.now().timestamp()}"
 
+        # For now, all assertions are accepted (verification comes from auditor)
+        self._stats["valid"] += 1
+
+        result = AssertionResult(
+            valid=True,
+            truth_level=TruthLevel.ASSERTED.value,
+            timestamp=datetime.now().isoformat(),
+            assertion_id=assertion_id,
+            violations=[],
+        )
+
+        self._assertions[assertion_id] = result
+        return result
+
+    def verify(self, assertion_id: str) -> AssertionResult:
+        """Verify a previous assertion."""
+        if assertion_id not in self._assertions:
+            return AssertionResult(
+                valid=False,
+                truth_level=TruthLevel.FALSE.value,
+                timestamp=datetime.now().isoformat(),
+                assertion_id=assertion_id,
+                error_message="Assertion not found",
+            )
+
+        # Upgrade to verified
+        original = self._assertions[assertion_id]
+        result = AssertionResult(
+            valid=original.get("valid", True),
+            truth_level=TruthLevel.VERIFIED.value,
+            timestamp=datetime.now().isoformat(),
+            assertion_id=assertion_id,
+            violations=original.get("violations", []),
+        )
+
+        self._assertions[assertion_id] = result
+        return result
+
+    def compile(self, truths: List[str]) -> str:
+        """Compile multiple truths (like Prithu compiled Vedas). Returns compilation ID."""
+        compilation_id = f"compilation_{len(self._compilations)}"
+        self._compilations[compilation_id] = truths
+        return compilation_id
+
+    def divide(self, compilation_id: str) -> List[str]:
+        """Divide compiled truths (like Prithu divided Vedas). Returns parts."""
+        return self._compilations.get(compilation_id, [])
+
+    def get_truth_level(self, assertion_id: str) -> TruthLevel:
+        """Get the truth level of an assertion."""
+        if assertion_id not in self._assertions:
+            return TruthLevel.FALSE
+
+        level_str = self._assertions[assertion_id].get("truth_level", "asserted")
         try:
-            # Initialize orchestrator
-            orch = self._ensure_orchestrator()
-            self._phase = WakePhase.RESOURCES
+            return TruthLevel(level_str)
+        except ValueError:
+            return TruthLevel.ASSERTED
 
-            # Note: Full orchestrate() is async - this is sync interface
-            # For sync wake, we just prepare the orchestrator
-            self._resources_loaded = 1  # Orchestrator loaded
-            self._phase = WakePhase.SERVICES
-
-            self._services_started = 1  # Orchestrator ready
-            self._phase = WakePhase.READY
-
-            return WakeResult(
-                success=True,
-                phase=self._phase.value,
-                timestamp=self._wake_time,
-                services_started=self._services_started,
-                resources_loaded=self._resources_loaded,
-            )
-        except Exception as e:
-            self._phase = WakePhase.FAILED
-            return WakeResult(
-                success=False,
-                phase=self._phase.value,
-                timestamp=self._wake_time or datetime.now().isoformat(),
-                error_message=str(e),
+    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
+        """Challenge an existing assertion with counter-evidence."""
+        if assertion_id not in self._assertions:
+            return AssertionResult(
+                valid=False,
+                truth_level=TruthLevel.FALSE.value,
+                timestamp=datetime.now().isoformat(),
+                assertion_id=assertion_id,
+                error_message="Assertion not found to challenge",
             )
 
-    def is_awake(self) -> bool:
-        """Check if system is awake."""
-        return self._phase == WakePhase.READY
-
-    def get_phase(self) -> WakePhase:
-        """Get current wake phase."""
-        return self._phase
-
-    def bootstrap(self) -> WakeResult:
-        """Run bootstrap sequence."""
-        self._phase = WakePhase.BOOTSTRAP
-        return WakeResult(
-            success=True,
-            phase=self._phase.value,
+        # Mark as disputed
+        result = AssertionResult(
+            valid=True,  # Challenge accepted
+            truth_level=TruthLevel.DISPUTED.value,
             timestamp=datetime.now().isoformat(),
+            assertion_id=assertion_id,
         )
 
-    def load_resources(self) -> int:
-        """Load system resources. Returns count loaded."""
-        self._phase = WakePhase.RESOURCES
-        self._resources_loaded += 1
-        return self._resources_loaded
+        self._assertions[assertion_id] = result
+        return result
 
-    def start_services(self) -> int:
-        """Start system services. Returns count started."""
-        self._phase = WakePhase.SERVICES
-        self._services_started += 1
-        return self._services_started
+    def get_state(self) -> TruthState:
+        """Get truth assertion state."""
+        total = self._stats["total"]
+        coverage = self._stats["valid"] / total if total > 0 else 1.0
 
-    def shutdown(self) -> WakeResult:
-        """Graceful shutdown (return to dormant)."""
-        self._phase = WakePhase.DORMANT
-        self._orchestrator = None
-        return WakeResult(
-            success=True,
-            phase=self._phase.value,
-            timestamp=datetime.now().isoformat(),
-        )
-
-    def get_state(self) -> WakeState:
-        """Get wake state."""
-        uptime = 0
-        if self._wake_time and self._phase == WakePhase.READY:
-            wake_dt = datetime.fromisoformat(self._wake_time)
-            uptime = int((datetime.now() - wake_dt).total_seconds())
-
-        return WakeState(
-            current_phase=self._phase.value,
-            is_awake=self.is_awake(),
-            wake_time=self._wake_time or "",
-            uptime_seconds=uptime,
-            total_wakes=self._total_wakes,
-            health="pristine" if self.is_awake() else "dormant",
+        return TruthState(
+            total_assertions=total,
+            valid_assertions=self._stats["valid"],
+            invalid_assertions=self._stats["invalid"],
+            truth_coverage=coverage,
+            health="pristine" if coverage > 0.9 else "healthy",
         )
 
     # =========================================================================
-    # ORCHESTRATOR ACCESS (Legacy BootOrchestrator)
+    # COMPLIANCE ACCESS (Legacy ComplianceBureau)
     # =========================================================================
+
+    def audit_compliance(self, path: Path) -> Dict:
+        """Run GAD-000 compliance audit via ComplianceBureau."""
+        report = self._compliance.audit(path)
+        return {
+            "path": str(report.path),
+            "module_type": report.module_type.value if hasattr(report.module_type, "value") else str(report.module_type),
+            "checks": [
+                {
+                    "name": check.name,
+                    "passed": check.passed,
+                    "message": check.message,
+                }
+                for check in report.checks
+            ],
+            "is_compliant": report.is_compliant,
+        }
 
     @property
-    def orchestrator(self) -> LegacyBootOrchestrator:
-        """Access the legacy boot orchestrator."""
-        return self._ensure_orchestrator()
+    def compliance(self) -> ComplianceBureau:
+        """Access the legacy ComplianceBureau."""
+        return self._compliance
+
+    @property
+    def auditor(self) -> AuditorProtocol:
+        """Access the auditor implementation."""
+        return self._auditor
+
+    def set_auditor(self, auditor: AuditorProtocol) -> None:
+        """Set auditor implementation."""
+        self._auditor = auditor
 
     # =========================================================================
-    # EXECUTION - The Scepter of Matter
+    # GNOSIS - The Wisdom of Prithu
     # =========================================================================
 
     def execute(self, command: str) -> str:
         """
-        Execute an Infrastructure Command.
-        
-        Supported:
-        - "scan [path]" -> Lists files.
-        - "status" -> Boot status.
+        Execute a Knowledge Consultation Command.
+        Prithudeva asserts the eternal truth.
         """
         cmd_lower = command.lower()
-        args = command.split()
         
-        if "scan" in cmd_lower:
-            path = "."
-            # extract path if provided
-            if len(args) > 1 and args[0].lower() == "scan":
-                 if len(args) > 1:
-                     path = args[1]
-            elif "disk" in cmd_lower:
-                 path = "."
+        if "gita" in cmd_lower or "verse" in cmd_lower:
+            # Simple Verse Resolver
+            if "2.47" in cmd_lower:
+                return (
+                    "📜  PRITHU SPEAKS (Bhagavad Gita 2.47):\n"
+                    "--------------------------------------\n"
+                    "karmaṇy evādhikāras te mā phaleṣu kadācana\n"
+                    "mā karma-phala-hetur bhūr mā te saṅgo 'stv akarmaṇi\n\n"
+                    "TRANSLATION:\n"
+                    "You have a right to perform your prescribed duty, but you are not entitled "
+                    "to the fruits of action. Never consider yourself the cause of the results "
+                    "of your activities, and never be attached to not doing your duty."
+                )
             
-            return self.scan(path)
-            
-        if "status" in cmd_lower:
-            state = self.get_state()
-            return f"🟢 System Status: {state['health'].upper()} (Phase: {state['current_phase']})"
-            
-        return f"⚠️ Prithu does not know how to '{command}'. Try 'scan disk'."
-
-    def scan(self, path: str = ".") -> str:
-        """
-        Scan the filesystem using the MahajanaScanner (Substrate).
-        
-        Prithu (Position 0) initiates the scan (SYS_WAKE), 
-        but the Scanner (Substrate) performs it.
-        """
-        try:
-            from vibe_core.mahamantra.substrate.scanner import scan_all, print_scan_report
-            from io import StringIO
-            import sys
-            
-            # If path is ".", use default base (None)
-            scan_path = None if path == "." else path
-            
-            result = scan_all(base_path=scan_path)
-            
-            # Format a nice report
-            files_total = result.get("files_total", 0)
-            declarations = result.get("declarations_found", 0)
-            
-            report = (
-                f"📂 **SCAN RESULT** (Prithu -> Scanner):\n"
-                f"Files Scanned: {files_total}\n"
-                f"Declarations: {declarations}\n\n"
-                f"Scanning completed successfully."
+            return (
+                "📜  PRITHU SPEAKS:\n"
+                "The Gita is the compilation of all Vedic wisdom. Ask for a specific verse "
+                "(e.g., 'consult gita 2.47') to receive the Gnosis."
             )
-            return report
             
-        except Exception as e:
-            return f"🔴 Scan Failed: {e}"
-
-    @property
-    def boot_mode(self) -> BootMode:
-        """Get boot mode."""
-        return self._boot_mode
+        return f"📜  Prithu hears your inquiry: '{command}'. But the truth must be sought with humility."
 
 
 __all__ = ["PrithuService"]

@@ -61,7 +61,7 @@ from vibe_core.mahamantra.substrate.seed import (
 )
 
 # === EXPOSE PRITHU IMPLEMENTATION (The Avatar) ===
-from vibe_core.mahamantra.genesis.prithu import PrithuService
+from vibe_core.mahamantra.dharma.prithu import PrithuService
 
 # THE AVATAR MANIFESTS (Singleton)
 # This allows mahamantra.mod.prithu to have .execute()

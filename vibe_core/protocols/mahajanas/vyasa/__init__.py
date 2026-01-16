@@ -1,15 +1,15 @@
 """
-VYASA - The 2nd Avatara (Assert Truth)
+VYASA - The 1st Avatara (System Wake)
 ======================================
 
-POSITION: 4 (DHARMA Quarter HEAD, ASSERT_TRUTH OpCode)
+POSITION: 0 (GENESIS Quarter HEAD, SYS_WAKE OpCode)
 
-Vyasadeva - The Literary Incarnation.
-Divided the Vedas, compiled Mahabharata, authored Srimad Bhagavatam.
-The supreme authority on Vedic truth.
+Sage Vyasa - The First Revealer.
+Wakes the system by reciting the Eternal Truth (Config).
+The original author who compiles the reality.
 
 DERIVED FROM MAHAMANTRA:
-    Position 4 -> guardian=VYASA, opcode=ASSERT_TRUTH, quarter=DHARMA
+    Position 0 -> guardian=VYASA, opcode=SYS_WAKE, quarter=GENESIS
     All properties derived from truth table. No manual wiring.
 
 HEAD POSITION:
@@ -18,13 +18,10 @@ HEAD POSITION:
     They initiate action; Workers execute.
 
 DOMAIN:
-- Truth Verification (ASSERT_TRUTH)
-- Schema Validation
-- Dharma Enforcement
-- Knowledge Compilation
-
-"vyasam vasistha-naptaram sakteh pautram akalmasam"
-"Vyasa is the great-grandson of Vasistha, grandson of Sakti, and is sinless."
+- System Initialization (Knowledge Injection)
+- Resource Allocation (Distributing the Vedas/Config)
+- Infrastructure Setup (The Library of Reality)
+- Bootstrap Sequence
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -34,8 +31,8 @@ from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
-__position__ = 4
-__genesis__ = "0x9f080c96"  # GenesisByte: parampara % 37 == 0
+__position__ = 0
+__genesis__ = "0x00000000"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -54,75 +51,76 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 
 
 # =============================================================================
-# VYASA PROTOCOL BASE - Derives from MantraPosition 4
+# VYASA PROTOCOL BASE - Derives from MantraPosition 0
 # =============================================================================
 
 @ProtocolRegistry.register
 class VyasaProtocolBase(HeadProtocol):
     """
-    Vyasa protocol ownership - DERIVED from Mahamantra position 4.
+    Vyasa protocol ownership - DERIVED from Mahamantra position 0.
 
     NO MANUAL WIRING:
-        _position_index = 4 is the ONLY configuration.
+        _position_index = 0 is the ONLY configuration.
         Everything else derived from truth table.
 
     DERIVED PROPERTIES:
         guardian()  -> Avatara.VYASA
-        opcode()    -> MantraOpCode.COMPILE_AST
-        quarter()   -> Quarter.DHARMA
+        opcode()    -> MantraOpCode.SYS_WAKE
+        quarter()   -> Quarter.GENESIS
         is_head()   -> True (HEAD position)
-        parampara_vector() -> 185 (% 37 == 0)
+        parampara_vector() -> 37 (% 37 == 0)
     """
-    _position_index: ClassVar[int] = 4  # THE ONLY CONFIGURATION
+    _position_index: ClassVar[int] = 0  # THE ONLY CONFIGURATION
 
 
-# NO MANUAL WIRING - Everything derived from mahamantra[4]
+# NO MANUAL WIRING - Everything derived from mahamantra[0]
 
 
 # =============================================================================
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
-class TruthLevel(str, Enum):
-    """Levels of truth assertion."""
-    ABSOLUTE = "absolute"     # Vedic truth - cannot be questioned
-    VERIFIED = "verified"     # Verified against schema
-    ASSERTED = "asserted"     # Asserted but not verified
-    DISPUTED = "disputed"     # Multiple conflicting claims
-    FALSE = "false"           # Proven false
+class WakePhase(str, Enum):
+    """Phases of system wake."""
+    DORMANT = "dormant"       # Not started
+    BOOTSTRAP = "bootstrap"   # Initial bootstrap
+    RESOURCES = "resources"   # Loading resources
+    SERVICES = "services"     # Starting services
+    READY = "ready"           # System ready
+    FAILED = "failed"         # Wake failed
 
 
-class AssertionResult(TypedDict, total=False):
+class WakeResult(TypedDict, total=False):
     """
-    Result of truth assertion.
+    Result of wake operation.
     WATERTIGHT - no Any!
     """
-    valid: bool
-    truth_level: str          # TruthLevel value
+    success: bool
+    phase: str                # WakePhase value
     timestamp: str            # ISO timestamp
-    assertion_id: str
-    violations: List[str]
+    services_started: int
+    resources_loaded: int
     error_message: str
 
 
-class TruthState(TypedDict, total=False):
+class WakeState(TypedDict, total=False):
     """
-    State of truth assertions.
+    State of system wake.
     WATERTIGHT - no Any!
     """
-    total_assertions: int
-    valid_assertions: int
-    invalid_assertions: int
-    last_assertion: str       # ISO timestamp
-    truth_coverage: float     # 0.0-1.0
+    current_phase: str        # WakePhase value
+    is_awake: bool
+    wake_time: str            # ISO timestamp
+    uptime_seconds: int
+    total_wakes: int
     health: str               # "pristine", "healthy", "degraded"
 
 
-class AssertCliResult(TypedDict):
-    """Result of CLI assert operation. WATERTIGHT - no Any!"""
+class WakeCliResult(TypedDict):
+    """Result of CLI wake operation. WATERTIGHT - no Any!"""
     success: bool
-    claim: str
-    truth_level: str
+    phase: str
+    is_awake: bool
     health: str
 
 
@@ -134,46 +132,59 @@ class AssertCliResult(TypedDict):
 @runtime_checkable
 class VyasaProtocol(Protocol):
     """
-    The Truth Assertion Protocol - Vyasa's domain.
+    The System Wake Protocol - Vyasa's domain.
 
-    DERIVED: Position 4 -> VYASA, ASSERT_TRUTH, DHARMA
+    DERIVED: Position 0 -> VYASA, SYS_WAKE, GENESIS
     WATERTIGHT - no Any types!
 
-    As Vyasa compiled and divided Vedic knowledge,
-    this protocol asserts and validates truth.
+    As Vyasa milked the Earth to provide all necessities,
+    this protocol wakes the system and provides all resources.
     """
 
     @classmethod
     def position_index(cls) -> int:
-        """Position 4 in the Mahamantra."""
+        """Position 0 in the Mahamantra."""
         ...
 
-    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
-        """ASSERT_TRUTH: Assert a truth claim with evidence."""
+    def wake(self) -> WakeResult:
+        """SYS_WAKE: Wake the system from dormant state."""
         ...
 
-    def verify(self, assertion_id: str) -> AssertionResult:
-        """Verify a previous assertion."""
+    def is_awake(self) -> bool:
+        """Check if system is awake."""
         ...
 
-    def compile(self, truths: List[str]) -> str:
-        """Compile multiple truths (like Vyasa compiled Vedas). Returns compilation ID."""
+    def get_phase(self) -> WakePhase:
+        """Get current wake phase."""
         ...
 
-    def divide(self, compilation_id: str) -> List[str]:
-        """Divide compiled truths (like Vyasa divided Vedas). Returns parts."""
+    def bootstrap(self) -> WakeResult:
+        """Run bootstrap sequence."""
         ...
 
-    def get_truth_level(self, assertion_id: str) -> TruthLevel:
-        """Get the truth level of an assertion."""
+    def load_resources(self) -> int:
+        """Load system resources. Returns count loaded."""
         ...
 
-    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
-        """Challenge an existing assertion with counter-evidence."""
+    def start_services(self) -> int:
+        """Start system services. Returns count started."""
         ...
 
-    def get_state(self) -> TruthState:
-        """Get truth assertion state. WATERTIGHT."""
+    def shutdown(self) -> WakeResult:
+        """Graceful shutdown (return to dormant)."""
+        ...
+
+    def execute(self, command: str) -> str:
+        """
+        Execute an Infrastructure Command.
+        The Scepter's interface to Matter.
+        """
+        ...
+
+    def scan(self, path: str = ".") -> str:
+        """
+        Scan the filesystem.
+        """
         ...
 
 
@@ -184,64 +195,63 @@ class VyasaProtocol(Protocol):
 
 class NullVyasa(VyasaProtocolBase):
     """
-    The Unverified.
-    Accepts all truths without verification (for testing).
+    The Sleeping One.
+    No real system wake (for testing without infrastructure).
 
-    Inherits from VyasaProtocolBase -> position 4 -> VYASA.
+    Inherits from VyasaProtocolBase -> position 0 -> VYASA.
     """
 
-    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
-        return AssertionResult(
-            valid=True,
-            truth_level=TruthLevel.ASSERTED.value,
+    def wake(self) -> WakeResult:
+        return WakeResult(
+            success=True,
+            phase=WakePhase.READY.value,
             timestamp=datetime.now().isoformat(),
-            assertion_id="null_assertion",
-            violations=[],
+            services_started=0,
+            resources_loaded=0,
         )
 
-    def verify(self, assertion_id: str) -> AssertionResult:
-        return AssertionResult(
-            valid=True,
-            truth_level=TruthLevel.VERIFIED.value,
+    def is_awake(self) -> bool:
+        return True  # Always "awake" in null mode
+
+    def get_phase(self) -> WakePhase:
+        return WakePhase.READY
+
+    def bootstrap(self) -> WakeResult:
+        return WakeResult(
+            success=True,
+            phase=WakePhase.BOOTSTRAP.value,
             timestamp=datetime.now().isoformat(),
-            assertion_id=assertion_id,
-            violations=[],
         )
 
-    def compile(self, truths: List[str]) -> str:
-        return "null_compilation"
+    def load_resources(self) -> int:
+        return 0
 
-    def divide(self, compilation_id: str) -> List[str]:
-        return []
+    def start_services(self) -> int:
+        return 0
 
-    def get_truth_level(self, assertion_id: str) -> TruthLevel:
-        return TruthLevel.ASSERTED
-
-    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
-        return AssertionResult(
-            valid=True,  # Challenge always accepted in null mode
-            truth_level=TruthLevel.DISPUTED.value,
+    def shutdown(self) -> WakeResult:
+        return WakeResult(
+            success=True,
+            phase=WakePhase.DORMANT.value,
             timestamp=datetime.now().isoformat(),
-            assertion_id=assertion_id,
         )
 
-    def get_state(self) -> TruthState:
-        return TruthState(
-            total_assertions=0,
-            valid_assertions=0,
-            invalid_assertions=0,
-            truth_coverage=1.0,
+    def get_state(self) -> WakeState:
+        return WakeState(
+            current_phase=WakePhase.READY.value,
+            is_awake=True,
+            total_wakes=0,
             health="pristine",
         )
 
-    def assert_cli(self, claim: str = "truth") -> AssertCliResult:
-        """CLI: Assert a truth claim. WATERTIGHT."""
-        result = self.assert_truth(claim, "cli_evidence")
+    def wake_cli(self, target: str = "system") -> WakeCliResult:
+        """CLI: Wake the system. WATERTIGHT."""
+        result = self.wake()
         state = self.get_state()
-        return AssertCliResult(
-            success=result.get("valid", True),
-            claim=claim,
-            truth_level=result.get("truth_level", "asserted"),
+        return WakeCliResult(
+            success=result.get("success", True),
+            phase=result.get("phase", "ready"),
+            is_awake=self.is_awake(),
             health=state.get("health", "pristine"),
         )
 
@@ -251,51 +261,33 @@ class NullVyasa(VyasaProtocolBase):
 # =============================================================================
 
 # =============================================================================
-# VYASA SERVICE - The Real Implementation (wraps legacy compliance/auditor)
+# VYASA SERVICE - The Real Implementation (wraps legacy boot_orchestrator.py)
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.vyasa.service import VyasaService
+# LAZY IMPORT to avoid circular dependency with boot_mode migration
+# VyasaService is loaded on first access via __getattr__
 
 # =============================================================================
 # MIGRATED TYPES - Accessed via mahamantra.mod.vyasa
 # =============================================================================
 
 from vibe_core.protocols.mahajanas.vyasa.types import (
-    # errors.py
-    ErrorCategory,
-    ErrorCode,
-    StructuredError,
-    # lineage.py (lazy loaded)
-    LineageBlock,
-    LineageChain,
-    LineageEventType,
-    # ledger.py (lazy loaded)
-    InMemoryLedger,
-    SQLiteLedger,
-    ArchiveAttachment,
-)
-
-# =============================================================================
-# KNOWLEDGE GRAPH PROTOCOL - Universal Knowledge Interface
-# =============================================================================
-
-from vibe_core.protocols.mahajanas.vyasa.knowledge import (
-    KnowledgeGraphProtocolBase,
-    KnowledgeGraphProtocol,
-    NullKnowledgeGraph,
-    NodeType as KGNodeType,
-    RelationType as KGRelationType,
-    ViolationNode,
+    # boot_mode.py
+    BootMode,
+    # process_manager.py
+    ProcessStatus,
+    ProcessManager,
+    AgentProcessInfo,
 )
 
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "VyasaProtocolBase",
     # State Types (WATERTIGHT)
-    "TruthLevel",
-    "AssertionResult",
-    "TruthState",
-    "AssertCliResult",
+    "WakePhase",
+    "WakeResult",
+    "WakeState",
+    "WakeCliResult",
     # Protocol
     "VyasaProtocol",
     # Implementations
@@ -303,23 +295,18 @@ __all__ = [
     # Service (Real Implementation)
     "VyasaService",
     # === MIGRATED TYPES (mahamantra.mod.vyasa) ===
-    # errors.py
-    "ErrorCategory",
-    "ErrorCode",
-    "StructuredError",
-    # lineage.py
-    "LineageBlock",
-    "LineageChain",
-    "LineageEventType",
-    # ledger.py
-    "InMemoryLedger",
-    "SQLiteLedger",
-    "ArchiveAttachment",
-    # === KNOWLEDGE GRAPH PROTOCOL ===
-    "KnowledgeGraphProtocolBase",
-    "KnowledgeGraphProtocol",
-    "NullKnowledgeGraph",
-    "KGNodeType",
-    "KGRelationType",
-    "ViolationNode",
+    # boot_mode.py
+    "BootMode",
+    # process_manager.py
+    "ProcessStatus",
+    "ProcessManager",
+    "AgentProcessInfo",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for VyasaService to avoid circular import."""
+    if name == "VyasaService":
+        from vibe_core.protocols.mahajanas.vyasa.service import VyasaService
+        return VyasaService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

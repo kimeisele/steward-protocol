@@ -16,7 +16,7 @@ This is the SOUL of the system.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
+__mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0x448bce13"  # GenesisByte: parampara % 37 == 0
 

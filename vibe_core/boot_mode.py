@@ -1,22 +1,22 @@
 """
 DEPRECATED: Use mahajana import.
 
-ONE IMPORT, PRITHU OWNS:
-    from vibe_core.protocols.mahajanas.prithu.types.boot_mode import BootMode
+ONE IMPORT, VYASA OWNS:
+    from vibe_core.protocols.mahajanas.vyasa.types.boot_mode import BootMode
 
 Or via mahamantra:
     from vibe_core.mahamantra import mahamantra
-    BootMode = mahamantra.mod.prithu.types.boot_mode.BootMode
+    BootMode = mahamantra.genesis.vyasa.BootMode
 
 This file is a BRIDGE for backward compatibility.
 Will be removed in future version.
 """
 
-# Re-export from canonical location (PRITHU owns system wake/boot)
+# Re-export from canonical location (VYASA owns system wake/boot)
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0x279cfd4b"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x00000000"  # GenesisByte
 
-from vibe_core.protocols.mahajanas.prithu.types.boot_mode import *
-from vibe_core.protocols.mahajanas.prithu.types.boot_mode import BootMode
+from vibe_core.protocols.mahajanas.vyasa.types.boot_mode import *
+from vibe_core.protocols.mahajanas.vyasa.types.boot_mode import BootMode

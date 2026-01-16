@@ -13,7 +13,7 @@ See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
+__mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0xf9a40bd3"  # GenesisByte: parampara % 37 == 0
 
