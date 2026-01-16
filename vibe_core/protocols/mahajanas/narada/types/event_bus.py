@@ -41,13 +41,91 @@ import time as time_module
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, List, Optional, Set, TypedDict, Union
 from uuid import uuid4
 
 from vibe_core.mahamantra.substrate.mahajana import Mahajana
-from vibe_core.protocols.mahajanas.narada.events import EventBusProtocol
+from vibe_core.protocols.mahajanas.narada.events import (
+    EventBusProtocol,
+    EventBusStats,
+    EventBusState,
+    SubscriberInfo,
+)
 
 logger = logging.getLogger("EVENT_BUS")
+
+
+# =============================================================================
+# WATERTIGHT TYPEDDICTS (NO ANY!)
+# =============================================================================
+
+
+class MetricsEntry(TypedDict):
+    """Internal metrics for a single callback. WATERTIGHT - no Any!"""
+    events_sent: int
+    events_completed: int
+    last_complete_time: float
+    total_duration: float
+
+
+class ZombieInfo(TypedDict):
+    """Info about a zombie subscriber. WATERTIGHT - no Any!"""
+    callback_id: str
+    events_sent: int
+    events_completed: int
+    ack_rate: float
+    status: str
+
+
+class StalledInfo(TypedDict):
+    """Info about a stalled handler. WATERTIGHT - no Any!"""
+    callback_id: str
+    seconds_since_complete: float
+    events_pending: int
+    status: str
+
+
+class RateLimitStats(TypedDict):
+    """Rate limiting statistics. WATERTIGHT - no Any!"""
+    allowed: int
+    blocked: int
+    active_buckets: int
+    enabled: bool
+
+
+class EventDetails(TypedDict, total=False):
+    """Event details dictionary. WATERTIGHT - no Any!"""
+    message: str
+    target_id: str
+    syscall_type: str
+    result_summary: str
+    error_message: str
+
+
+class SubscriberCounts(TypedDict):
+    """Subscriber counts by category. WATERTIGHT - no Any!"""
+    global_count: int
+    by_type: Dict[str, int]
+
+
+class SubscriberHealth(TypedDict):
+    """Subscriber health metrics. WATERTIGHT - no Any!"""
+    total_tracked: int
+    zombies_detected: int
+    stalled_detected: int
+
+
+class EventBusStatus(TypedDict):
+    """Full event bus status. WATERTIGHT - no Any!"""
+    total_events: int
+    dropped_events: int
+    type_counts: Dict[str, int]
+    history_size: int
+    subscribers: SubscriberCounts
+    rate_limiting: RateLimitStats
+    zombie_subscribers: List[ZombieInfo]
+    stalled_handlers: List[StalledInfo]
+    subscriber_health: SubscriberHealth
 
 
 # =============================================================================
@@ -66,8 +144,8 @@ class SubscriberMetrics:
     """
 
     def __init__(self):
-        # {callback_id: {events_sent, events_completed, last_complete_time, avg_duration}}
-        self._metrics: Dict[str, Dict[str, Any]] = {}
+        # {callback_id: MetricsEntry}
+        self._metrics: Dict[str, MetricsEntry] = {}
         self._zombie_threshold_events = 10  # Events sent without completion
         self._zombie_threshold_rate = 0.5  # ACK rate below this = zombie
         self._stall_threshold_seconds = 30  # No completion in this time = stalled
@@ -90,7 +168,7 @@ class SubscriberMetrics:
             self._metrics[callback_id]["last_complete_time"] = time_module.time()
             self._metrics[callback_id]["total_duration"] += duration
 
-    def get_zombie_subscribers(self) -> List[Dict[str, Any]]:
+    def get_zombie_subscribers(self) -> List[ZombieInfo]:
         """
         Identify subscribers exhibiting zombie behavior.
 
@@ -116,7 +194,7 @@ class SubscriberMetrics:
                 )
         return zombies
 
-    def get_stalled_handlers(self) -> List[Dict[str, Any]]:
+    def get_stalled_handlers(self) -> List[StalledInfo]:
         """
         Identify handlers that haven't completed anything recently.
         """
@@ -136,8 +214,8 @@ class SubscriberMetrics:
                     )
         return stalled
 
-    def get_all_metrics(self) -> Dict[str, Any]:
-        """Get all subscriber metrics."""
+    def get_all_metrics(self) -> Dict[str, MetricsEntry]:
+        """Get all subscriber metrics. WATERTIGHT - no Any!"""
         return dict(self._metrics)
 
 
@@ -297,7 +375,7 @@ class SudarshanaGuard:
         self._allowed_count += 1
         return True
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> RateLimitStats:
         """Get rate limiting statistics."""
         return {
             "allowed": self._allowed_count,
@@ -322,7 +400,7 @@ class Event:
     agent_id: str = ""
     task_id: Optional[str] = None
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: EventDetails = field(default_factory=dict)
 
     def to_json(self) -> str:
         """Serialize event to JSON"""
@@ -513,7 +591,7 @@ class EventBus(EventBusProtocol):
         event_type: EventType,
         agent_id: str,
         message: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: Optional[EventDetails] = None,
     ) -> str:
         """
         Emit an event synchronously.
@@ -552,7 +630,7 @@ class EventBus(EventBusProtocol):
 
         return event_id
 
-    def get_subscribers(self) -> List[Dict[str, Any]]:
+    def get_subscribers(self) -> List[SubscriberInfo]:
         """
         Get info about all subscribers.
 
@@ -563,7 +641,7 @@ class EventBus(EventBusProtocol):
         # For now, return basic info
         return []
 
-    def get_zombie_subscribers(self) -> List[Dict[str, Any]]:
+    def get_zombie_subscribers(self) -> List[ZombieInfo]:
         """
         Get subscribers exhibiting zombie behavior.
 
@@ -572,7 +650,7 @@ class EventBus(EventBusProtocol):
         """
         return self._subscriber_metrics.get_zombie_subscribers()
 
-    def get_stalled_subscribers(self) -> List[Dict[str, Any]]:
+    def get_stalled_subscribers(self) -> List[StalledInfo]:
         """
         Get subscribers that haven't completed recently.
 
@@ -581,7 +659,7 @@ class EventBus(EventBusProtocol):
         """
         return self._subscriber_metrics.get_stalled_handlers()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> EventBusStats:
         """
         Get event bus statistics.
 
@@ -600,7 +678,7 @@ class EventBus(EventBusProtocol):
             "rate_limited_count": self._dropped_count,
         }
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> EventBusState:
         """
         Get full event bus state.
 
@@ -655,7 +733,7 @@ class EventBus(EventBusProtocol):
 
         return history[-limit:] if limit else history
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> EventBusStatus:
         """Get event bus status including rate limiting and zombie detection stats."""
         zombie_subscribers = self._subscriber_metrics.get_zombie_subscribers()
         stalled_handlers = self._subscriber_metrics.get_stalled_handlers()
@@ -731,7 +809,7 @@ async def emit_event(
     agent_id: str,
     message: str = "",
     task_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[EventDetails] = None,
 ):
     """
     Convenience function to emit an event from anywhere in the codebase
