@@ -32,15 +32,9 @@ from .varna import Varna, VYANJANA, SVARA
 from .aksara import Aksara, MAHAMANTRA_AKSARAS
 from .pada import Pada, PadaType, MAHAMANTRA_SEQUENCE, PADA_HARE, PADA_KRISHNA, PADA_RAMA
 
-
-class FractalLevel(IntEnum):
-    """The levels of the fractal hierarchy."""
-    VARNA = 0    # Letter (smallest)
-    AKSARA = 1   # Syllable
-    PADA = 2     # Word
-    VAKYA = 3    # Sentence/Mantra (16 words)
-    MALA = 4     # Round (108 mantras)
-    SADHANA = 5  # Session (16 rounds)
+# FractalLevel imported from SSOT (mahamantra/substrate)
+# This inverts the dependency: protocols → mahamantra (correct DAG)
+from vibe_core.mahamantra.substrate.fractal import FractalLevel
 
 
 @dataclass(frozen=True)

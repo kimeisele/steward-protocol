@@ -323,29 +323,8 @@ from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
 # THE GENETIC SEQUENCE (IMMUTABLE DNA)
 # This tuple IS the "Binding Strip" for the Turing Machine.
-# SSOT: Uses MantraOpCode from mahamantra/substrate/opcode.py
-MAHAMANTRA_SEQUENCE: List[Tuple[str, MantraOpCode]] = [
-    # === GENESIS Quarter (Hare Krishna Hare Krishna) ===
-    ("Hare", MantraOpCode.SYS_WAKE),       # 0: Prithu
-    ("Krishna", MantraOpCode.LOAD_ROOT),   # 1: Brahma
-    ("Hare", MantraOpCode.ALLOC_MEM),      # 2: Narada
-    ("Krishna", MantraOpCode.INIT_THREAD), # 3: Shambhu
-    # === DHARMA Quarter (Krishna Krishna Hare Hare) ===
-    ("Krishna", MantraOpCode.COMPILE_AST), # 4: Vyasa
-    ("Krishna", MantraOpCode.BIND_SYMBOL), # 5: Kumaras
-    ("Hare", MantraOpCode.TYPE_CHECK),     # 6: Kapila
-    ("Hare", MantraOpCode.DHARMA_TEST),    # 7: Manu
-    # === KARMA Quarter (Hare Rama Hare Rama) ===
-    ("Hare", MantraOpCode.EXEC_OP),        # 8: Parashurama
-    ("Rama", MantraOpCode.EXTEND_CAP),     # 9: Prahlada
-    ("Hare", MantraOpCode.STATE_SYNC),     # 10: Janaka
-    ("Rama", MantraOpCode.LEDGER_SIGN),    # 11: Bhishma
-    # === MOKSHA Quarter (Rama Rama Hare Hare) ===
-    ("Rama", MantraOpCode.YIELD_CPU),      # 12: Nrisimha
-    ("Rama", MantraOpCode.IO_FLUSH),       # 13: Bali
-    ("Hare", MantraOpCode.LOG_EMIT),       # 14: Shuka
-    ("Hare", MantraOpCode.AUDIT_SEAL),     # 15: Yamaraja
-]
+# SSOT: Imported from mahamantra/substrate/opcode.py (derived from seed.py)
+from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
 
 
 # =============================================================================

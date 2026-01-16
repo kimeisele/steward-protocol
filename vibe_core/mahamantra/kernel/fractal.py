@@ -51,7 +51,7 @@ from vibe_core.mahamantra.substrate.acintya import (
     SYSTEM_MANIFESTATION,
     ParamparaConnection,
 )
-from vibe_core.protocols.substrate.mantra.routing import FractalLevel
+from vibe_core.mahamantra.substrate.fractal import FractalLevel
 
 
 # =============================================================================
