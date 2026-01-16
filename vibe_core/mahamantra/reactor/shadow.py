@@ -460,12 +460,15 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             return  # BLOCKED: Insufficient Mahajana signatures
         
         position = state["position"]
-        for reactor in self._listeners.get(position, []):
+        listeners = self._listeners.get(position, [])
+
+        for reactor in listeners:
             if hasattr(reactor, "on_bhoga"):
                 try:
                     reactor.on_bhoga(state)
                 except Exception:
                     pass  # Reactor error doesn't break the cycle
+
 
     def _trigger_switch(self, state: ShadowState) -> None:
         """
@@ -671,11 +674,45 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """
         Check if current authorization bundle has sufficient signatures.
         
+        CONTEXT AWARE:
+        Verifies that the bundle matches the CURRENT quarter of the reactor.
+        This prevents "Stale Auth" attacks (using Genesis auth for Dharma ops).
+        
         Returns:
-            True if authorized (enough Mahajana signatures)
+            True if authorized (enough signatures AND correct quarter)
         """
         if self._authorization is None:
             return False
+
+        # 1. Get current context (Quarter)
+        mapping = get_position_by_index(self._position)
+        if mapping is None:
+            # Fallback for transient states? Should not happen in valid cycle.
+            return False
+            
+        current_quarter_str = mapping.quarter.value  # "genesis", "dharma", etc.
+
+        # 2. Map Substrate (str) to Protocol (IntEnum)
+        # _adhikara.Quarter is IntEnum (0,1,2,3)
+        # mahajana.Quarter is StrEnum ("genesis", "dharma"...)
+        quarter_map = {
+            "genesis": AdhikaraQuarter.GENESIS,
+            "dharma": AdhikaraQuarter.DHARMA,
+            "karma": AdhikaraQuarter.KARMA,
+            "moksha": AdhikaraQuarter.MOKSHA,
+        }
+        
+        expected_quarter = quarter_map.get(current_quarter_str)
+        if expected_quarter is None:
+            return False
+
+        # 3. Context Check: Does bundle match reality?
+        if self._authorization.quarter != expected_quarter:
+            # STALE AUTH DETECTED!
+            # e.g. Bundle is GENESIS (0), but we are in DHARMA (1)
+            return False
+
+        # 4. Signature Count Check (Delegated to Bundle)
         return self._authorization.is_authorized()
 
     def get_state(self) -> ShadowState:
