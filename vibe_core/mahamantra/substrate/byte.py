@@ -86,60 +86,8 @@ class MantraBit(IntFlag):
         """Return full 16-bit resonance (0xFFFF)."""
         return cls(0xFFFF)
 
-@dataclass(frozen=True)
-class MantraTrit:
-    """
-    A single vibration unit - The Transcendental Seed.
-    Kept for backward compatibility and explicit instantiation,
-    but MantraByte now packs these values efficiently.
-    """
-    value: HolyName
-    intensity: float = 1.0  # Amplitude (Bhakti intensity)
-
-    @property
-    def devanagari(self) -> str:
-        """Original Sanskrit script."""
-        from .nama import to_devanagari
-        return to_devanagari(self.value.value)
-
-    @property
-    def iast(self) -> str:
-        """IAST transliteration with diacritics."""
-        from .nama import to_iast
-        return to_iast(self.value.value)
-
-    @property
-    def roman(self) -> str:
-        """Western/English representation."""
-        from .nama import to_roman
-        return to_roman(self.value.value)
-
-    # =========================================================================
-    # FRACTAL INTEGRATION (via mantra/)
-    # =========================================================================
-
-    @property
-    def pada(self) -> "Pada":
-        """Full Pada object with aksaras and meaning."""
-        from .mantra.pada import PADA_BY_TYPE, PadaType
-        return PADA_BY_TYPE.get(PadaType(self.value.value))
-
-    @property
-    def aksaras(self) -> Tuple["Aksara", ...]:
-        """Component syllables of this word."""
-        return self.pada.aksaras if self.value != HolyName.VOID else ()
-
-    @property
-    def meaning(self) -> str:
-        """Philosophical meaning of this word."""
-        return self.pada.meaning if self.value != HolyName.VOID else ""
-
-    def __repr__(self) -> str:
-        return f"{self.value.name}({self.intensity:.2f})"
-
-    def __str__(self) -> str:
-        """Default to IAST for string output."""
-        return self.iast
+# MantraTrit REMOVED (Legacy Purge 2026-01-16)
+# Use MantraByte (packed) or HolyName (enum) instead.
 
 class MantraByte:
     """
@@ -202,12 +150,11 @@ class MantraByte:
         return HolyName(val)
     
     @property
-    def sequence(self) -> List[MantraTrit]:
+    def sequence(self) -> List[HolyName]:
         """
-        Reconstructs objects for backward compatibility / inspection.
-        Expensive! Use iteration or bitwise ops preferred.
+        Reconstructs HolyName list (unpacked).
         """
-        return [MantraTrit(self.get_trit(i)) for i in range(self._length)]
+        return [self.get_trit(i) for i in range(self._length)]
 
     @property
     def dimension(self) -> int:
@@ -299,9 +246,9 @@ class MantraByte:
         return self._length
 
     def __iter__(self):
-        """Yields MantraTrit objects to satisfy external consumers expecting objects."""
+        """Yields HolyName objects."""
         for i in range(self._length):
-            yield MantraTrit(self.get_trit(i))
+            yield self.get_trit(i)
 
     # =========================================================================
     # TRIPLE ENCODING (via nama.py)

@@ -36,7 +36,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"
 __position__ = 8
-__genesis__ = "0xd2f4c8a1"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xd2f4c898"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -129,6 +129,7 @@ class ShadowState(TypedDict):
     cycle_count: int       # How many full cycles completed
     switch_count: int      # How many Bhoga→Prasadam switches
     return_count: int      # How many 15→0 RETURNs (cycle completions)
+    dissonance_report: Optional[str]  # Audit log for silent failures (Aparadha)
 
 
 @dataclass
