@@ -75,6 +75,31 @@ from vibe_core.mahamantra.protocols._gad import (
     GADProtocol,
 )
 
+# =============================================================================
+# SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
+# =============================================================================
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
+
+# Bhava Protocol - Intent Vector (Grace Scaling)
+from vibe_core.mahamantra.protocols._bhava import (
+    Bhava,
+    SharanagatiLimb,
+    calculate_grace,
+    get_bhava_multiplier,
+)
+
+# Adhikara Protocol - Authorization Chain (Mahajana Signatures)
+from vibe_core.mahamantra.protocols._adhikara import (
+    Mahajana,
+    Quarter as AdhikaraQuarter,
+    QUARTER_MAHAJANAS,
+    SIGNATURES_REQUIRED,
+    create_signature,
+    verify_authorization,
+    AuthorizationBundle,
+    MahajanaSignature,
+)
+
 from vibe_core.mahamantra.substrate.wiring import (
     get_position_by_index,
 )
@@ -164,6 +189,22 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             # Lagna: Personal Phase Offset
             self._lagna = orbit_calc.get_phase_offset(self._reactor_id, modulus=16)
 
+        # =====================================================================
+        # BHAVA STATE (Intent Vector - Grace Scaling)
+        # =====================================================================
+        # Default: SHANTA (neutral, 1.0x multiplier)
+        self._bhava: Bhava = Bhava.SHANTA
+        # Default: No limbs fulfilled (compliance = 0)
+        self._sharanagati_limbs: set[SharanagatiLimb] = set()
+        # Latest computed grace
+        self._effective_grace: float = 0.0
+
+        # =====================================================================
+        # ADHIKARA STATE (Authorization Chain - Mahajana Signatures)
+        # =====================================================================
+        # Current authorization bundle (starts empty)
+        self._authorization: AuthorizationBundle | None = None
+
     # =========================================================================
     # PROTOCOL PROPERTIES
     # =========================================================================
@@ -249,7 +290,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     # PARAMPARA VERIFICATION (37 - The Sacred Number)
     # =========================================================================
 
-    PARAMPARA: int = 37  # 24 + 12 + 1 = Ksetra + Mahajanas + Ksetrajna
+    # PARAMPARA imported from protocols/_seed.py (SSOT)
+    # PARAMPARA = 37 (24 Kshetra + 12 Mahajanas + 1 Ksetrajna)
 
     def _verify_parampara(self, position: int, cycle: int) -> bool:
         """
@@ -269,7 +311,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # Or at SWITCH position (8) - the transformation point
         # Or at RETURN position (0) after a cycle - renewal
         return (
-            total_ticks % self.PARAMPARA == 0 or
+            total_ticks % PARAMPARA == 0 or
             position == SWITCH_POSITION or  # The 8 Moment
             (position == RETURN_POSITION and cycle > 0)  # The Return
         )
@@ -290,12 +332,12 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         total_ticks = (cycle * 16) + position + 1  # +1 to avoid zero
 
         # Distance from nearest Parampara multiple
-        remainder = total_ticks % self.PARAMPARA
-        distance = min(remainder, self.PARAMPARA - remainder)
+        remainder = total_ticks % PARAMPARA
+        distance = min(remainder, PARAMPARA - remainder)
 
         # Sinusoidal coherence - creates a rhythmic pattern
         # High at 0, 37, 74... Low at 18, 55... (midpoints)
-        phase = (total_ticks / self.PARAMPARA) * 2 * math.pi
+        phase = (total_ticks / PARAMPARA) * 2 * math.pi
         base_coherence = (math.cos(phase) + 1) / 2  # 0 to 1
 
         # Boost at switch position (8) - the transformation
@@ -347,6 +389,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # Verified against EFFECTIVE position (Personal Parampara)
         parampara_connected = self._verify_parampara(self._position, self._cycle_count)
         parampara_coherence = self._compute_parampara_coherence(self._position, self._cycle_count)
+
+        # =====================================================================
+        # BHAVA INTEGRATION (Grace Scaling)
+        # =====================================================================
+        # G = f × B × S (Frequency × Bhava × Sharanagati)
+        self._effective_grace = calculate_grace(
+            frequency=parampara_coherence,
+            bhava=self._bhava,
+            limbs_fulfilled=self._sharanagati_limbs,
+        )
 
         # Get mapping for context (Effective Position)
         mapping = get_position_by_index(self._position)
@@ -484,6 +536,113 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     def discovered_count(self) -> int:
         """Number of discovered reactors."""
         return sum(len(r) for r in self._listeners.values())
+
+    # =========================================================================
+    # BHAVA STATE (Intent Vector - Grace Scaling)
+    # =========================================================================
+
+    @property
+    def bhava(self) -> Bhava:
+        """Current Bhava (spiritual emotion)."""
+        return self._bhava
+
+    @bhava.setter
+    def bhava(self, value: Bhava) -> None:
+        """Set Bhava (intent intensity)."""
+        self._bhava = value
+
+    @property
+    def sharanagati_limbs(self) -> set[SharanagatiLimb]:
+        """Current fulfilled Sharanagati limbs."""
+        return self._sharanagati_limbs
+
+    def fulfill_limb(self, limb: SharanagatiLimb) -> None:
+        """Fulfill a Sharanagati limb (increases grace)."""
+        self._sharanagati_limbs.add(limb)
+
+    def unfulfill_limb(self, limb: SharanagatiLimb) -> None:
+        """Remove a Sharanagati limb (decreases grace)."""
+        self._sharanagati_limbs.discard(limb)
+
+    @property
+    def effective_grace(self) -> float:
+        """
+        Current effective grace (G = f × B × S).
+        
+        Computed from:
+        - f: parampara_coherence (0.0 - 1.0)
+        - B: bhava_multiplier (1.0 - 3.0)  
+        - S: sharanagati_compliance (0.0 - 1.0)
+        """
+        return self._effective_grace
+
+    @property
+    def bhava_multiplier(self) -> float:
+        """Current Bhava multiplier (1.0x to 3.0x)."""
+        return get_bhava_multiplier(self._bhava)
+
+    # =========================================================================
+    # ADHIKARA STATE (Authorization Chain - Mahajana Signatures)
+    # =========================================================================
+
+    @property
+    def authorization(self) -> AuthorizationBundle | None:
+        """Current authorization bundle (if any)."""
+        return self._authorization
+
+    def request_authorization(self, quarter: AdhikaraQuarter, operation_id: str) -> AuthorizationBundle:
+        """
+        Request authorization for operations in a quarter.
+        
+        Creates a new AuthorizationBundle that must be signed by
+        the appropriate Mahajanas for the quarter.
+        
+        Args:
+            quarter: The quarter in which operations will occur
+            operation_id: Unique identifier for this operation
+            
+        Returns:
+            New AuthorizationBundle (needs signatures)
+        """
+        import hashlib
+        payload_hash = hashlib.sha256(operation_id.encode()).hexdigest()
+        self._authorization = AuthorizationBundle(
+            quarter=quarter,
+            operation_id=operation_id,
+            payload_hash=payload_hash,
+        )
+        return self._authorization
+
+    def sign_authorization(self, mahajana: Mahajana, payload: bytes) -> bool:
+        """
+        Sign the current authorization bundle with a Mahajana.
+        
+        Args:
+            mahajana: The signing Mahajana
+            payload: Operation payload to sign
+            
+        Returns:
+            True if signature was added successfully
+        """
+        if self._authorization is None:
+            return False
+        
+        sig = create_signature(mahajana, payload)
+        if sig is None:
+            return False
+        
+        return self._authorization.add_signature(sig)
+
+    def is_authorized(self) -> bool:
+        """
+        Check if current authorization bundle has sufficient signatures.
+        
+        Returns:
+            True if authorized (enough Mahajana signatures)
+        """
+        if self._authorization is None:
+            return False
+        return self._authorization.is_authorized()
 
     def get_state(self) -> ShadowState:
         """Get current state."""
