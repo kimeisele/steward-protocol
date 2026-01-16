@@ -30,8 +30,6 @@ __mahajana__ = "dynamic"  # Resolved at runtime from SSOT
 __position__ = 2
 __genesis__ = "0x000000aa"  # GenesisByte (Position 2)
 
-from typing import Any
-
 from vibe_core.mahamantra.substrate.registry import GuardianRegistry
 
 # =============================================================================
@@ -39,7 +37,7 @@ from vibe_core.mahamantra.substrate.registry import GuardianRegistry
 # =============================================================================
 
 
-def __getattr__(name: str) -> Any:
+def __getattr__(name: str) -> object:
     """
     Dynamic attribute lookup from registry.
 
