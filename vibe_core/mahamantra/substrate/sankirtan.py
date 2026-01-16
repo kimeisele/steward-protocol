@@ -93,27 +93,19 @@ SKIP_PATTERNS: Final[Tuple[str, ...]] = (
     "tests/",
 )
 
-# Folder-to-Mahajana mapping heuristics
-# THIS IS THE SSOT - SCAN_DIRECTORIES is derived from this map
+# Folder-to-Guardian GOVERNANCE mapping
+#
+# NOTE: Trivial entries like "mahajanas/vyasa" -> "vyasa" are NO LONGER NEEDED.
+#       Auto-detection handles any path containing a guardian name.
+#
+# This map contains ONLY semantic governance decisions:
+# - Which guardian owns which domain/folder?
+# - This is POLICY, not ontology.
+#
+# The ontology (Position -> Guardian) lives in MAHAMANTRA_POSITIONS (SSOT).
+# This map defines WHO is responsible for WHAT folder.
 FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
-    # === DIRECT MAHAJANA FOLDERS ===
-    "mahajanas/prithu": "prithu",
-    "mahajanas/brahma": "brahma",
-    "mahajanas/narada": "narada",
-    "mahajanas/shambhu": "shambhu",
-    "mahajanas/vyasa": "vyasa",
-    "mahajanas/kumaras": "kumaras",
-    "mahajanas/kapila": "kapila",
-    "mahajanas/manu": "manu",
-    "mahajanas/parashurama": "parashurama",
-    "mahajanas/prahlada": "prahlada",
-    "mahajanas/janaka": "janaka",
-    "mahajanas/bhishma": "bhishma",
-    "mahajanas/nrisimha": "nrisimha",
-    "mahajanas/bali": "bali",
-    "mahajanas/shuka": "shuka",
-    "mahajanas/yamaraja": "yamaraja",
-    # === DOMAIN-BASED MAPPING (16 quarters of the kingdom) ===
+    # === DOMAIN-BASED MAPPING (Semantic Governance) ===
     # GENESIS Quarter (Creation/Bootstrap)
     "runtime": "brahma",         # Creation/Bootstrap
     "phoenix": "brahma",         # Resurrection
@@ -158,10 +150,11 @@ FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     "specialists": "kapila",     # Specialists = Analysis
     "vajra": "nrisimha",         # Vajra = Protection/Power
     # === MAHAMANTRA SUBFOLDERS (more specific = higher priority) ===
-    "mahamantra/substrate": "prithu",  # Foundation
-    "mahamantra/kernel": "brahma",     # Genesis
-    "mahamantra/cli": "narada",        # Communication
-    "mahamantra/protocols": "vyasa",   # Compilation
+    # NOTE: Guardian names in these paths will auto-detect, but we keep
+    #       domain-level mappings for semantic clarity
+    "mahamantra/substrate": "prithu",  # Foundation (when no specific guardian)
+    "mahamantra/kernel": "brahma",     # Genesis (when no specific guardian)
+    "mahamantra/protocols": "vyasa",   # Compilation protocols
     "protocols/universal": "vyasa",    # Universal compilation
     "protocols/substrate": "prithu",   # Substrate foundation
     # === PHOENIX SECTIONS (config domains) ===
@@ -185,6 +178,7 @@ FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     "phoenix/sections/manas": "kapila",            # Mind/analysis config
     "phoenix/sections/city": "janaka",             # City/matrix config
 }
+
 
 # DERIVED: Scan directories come from the map (protocol-driven, not hardcoded)
 # Extract top-level directories from FOLDER_MAHAJANA_MAP
@@ -289,9 +283,61 @@ class SankirtanResult:
 # FOLDER-TO-MAHAJANA MAPPING
 # =============================================================================
 
+# Cache for guardian names (loaded once from Registry)
+_GUARDIAN_NAMES_CACHE: Optional[List[str]] = None
+
+
+def _get_all_guardian_names() -> List[str]:
+    """
+    Get all guardian names from the Registry.
+
+    Cached for performance (loaded once at module import).
+
+    Returns:
+        List of all guardian names (lowercase)
+    """
+    global _GUARDIAN_NAMES_CACHE
+    if _GUARDIAN_NAMES_CACHE is None:
+        from vibe_core.mahamantra.substrate.registry import GuardianRegistry
+        _GUARDIAN_NAMES_CACHE = GuardianRegistry.get_all_guardians()
+    return _GUARDIAN_NAMES_CACHE
+
+
+# =============================================================================
+# VALIDATION - Ensure map guardians exist in Registry
+# =============================================================================
+
+def _validate_governance_map() -> None:
+    """
+    Validate that all guardians in FOLDER_MAHAJANA_MAP exist in the Registry.
+
+    Raises:
+        ValueError: If any guardian in the map doesn't exist in the position table.
+    """
+    valid_guardians = set(_get_all_guardian_names())
+    map_guardians = set(FOLDER_MAHAJANA_MAP.values())
+
+    invalid = map_guardians - valid_guardians
+    if invalid:
+        raise ValueError(
+            f"GOVERNANCE MAP VALIDATION FAILED: "
+            f"Unknown guardians in FOLDER_MAHAJANA_MAP: {invalid}. "
+            f"Valid guardians from MAHAMANTRA_POSITIONS: {sorted(valid_guardians)}"
+        )
+
+
+# Run validation at module import time (fail fast!)
+_validate_governance_map()
+
+
 def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
     """
     Determine Mahajana for a file based on FOLDER_IS_WIRING.
+
+    STRATEGY (Priority order):
+    1. AUTO-DETECT: Guardian name in path (e.g., "mahajanas/vyasa" -> vyasa)
+    2. GOVERNANCE MAP: Explicit folder ownership (e.g., "protocols" -> vyasa)
+    3. HASH FALLBACK: Deterministic distribution
 
     Args:
         file_path: Path to the file
@@ -301,7 +347,15 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
     """
     path_str = str(file_path).lower()
 
-    # Check explicit mappings (longest match first)
+    # STEP 1: AUTO-DETECT - Check if any guardian name is in the path
+    # This eliminates the need for trivial entries like "mahajanas/vyasa" -> "vyasa"
+    for guardian_name in _get_all_guardian_names():
+        if guardian_name in path_str:
+            mapping = POSITION_BY_NAME.get(guardian_name)
+            if mapping:
+                return (guardian_name, mapping.index)
+
+    # STEP 2: GOVERNANCE MAP - Check explicit mappings (longest match first)
     for folder, mahajana in sorted(
         FOLDER_MAHAJANA_MAP.items(),
         key=lambda x: -len(x[0])
@@ -311,8 +365,8 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
             if mapping:
                 return (mahajana, mapping.index)
 
-    # Default: distribute evenly based on hash
-    # This ensures deterministic assignment
+    # STEP 3: HASH FALLBACK - Deterministic assignment
+    # This ensures deterministic assignment for unknown paths
     path_hash = hash(path_str) % 16
     mapping = MAHAMANTRA_POSITIONS[path_hash]
     return (mapping.guardian.value, mapping.index)
