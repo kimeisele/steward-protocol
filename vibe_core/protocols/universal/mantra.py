@@ -14,10 +14,20 @@ __position__ = 4
 __genesis__ = "0x8eb2d076"  # GenesisByte: parampara % 37 == 0
 
 from typing import Protocol, runtime_checkable, TypeVar
+import warnings
 
-from vibe_core.protocols.substrate import MantraOpCode, MAHAMANTRA_SEQUENCE
+# NOTE: SSOT for OpCodes is vibe_core.mahamantra.substrate.opcode
+# We do NOT re-export them here anymore to prevent Split Brain.
+
 from vibe_core.protocols.substrate.byte import MantraByte
 from vibe_core.protocols.universal.guna import GunaProtocol, GunaProfile, ZERO, ONE
+
+warnings.warn(
+    "vibe_core.protocols.universal.mantra is DEPRECATED for OpCodes. "
+    "Use vibe_core.mahamantra.substrate.opcode instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 ContextT = TypeVar("ContextT")
 
@@ -108,9 +118,6 @@ class MantraProtocol(GunaProtocol, Protocol):
 # =============================================================================
 
 __all__ = [
-    # Re-exported from substrate (CANONICAL source)
-    "MantraOpCode",
-    "MAHAMANTRA_SEQUENCE",
     # This module's definitions
     "MantraProtocol",
 ]

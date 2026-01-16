@@ -697,7 +697,7 @@ class MantraProcessor:
             return None
 
         try:
-            from vibe_core.protocols.universal.mantra import MantraOpCode
+            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
             opcode = MantraOpCode(opcode_value)
             return self._router.route(opcode).value
         except (ValueError, AttributeError):
@@ -710,7 +710,7 @@ class MantraProcessor:
             return False
 
         try:
-            from vibe_core.protocols.universal.mantra import MantraOpCode
+            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
             from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
             opcode = MantraOpCode(opcode_value)
             return opcode in HEAD_OPCODES
@@ -750,7 +750,7 @@ class MantraProcessor:
             )
 
         try:
-            from vibe_core.protocols.universal.mantra import MantraOpCode
+            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
             from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
 
             opcode = MantraOpCode(opcode_value)
@@ -792,7 +792,7 @@ class MantraProcessor:
         commands = []
         for cmd, opcode_value in self._opcode_map.items():
             try:
-                from vibe_core.protocols.universal.mantra import MantraOpCode
+                from vibe_core.mahamantra.substrate.opcode import MantraOpCode
                 from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
 
                 opcode = MantraOpCode(opcode_value)

@@ -33,7 +33,7 @@ from typing import Protocol, runtime_checkable, Any, List, Optional, TypeVar, Ge
 from dataclasses import dataclass
 from enum import Enum
 
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.mahajanas.router import Mahajana, route
 
 

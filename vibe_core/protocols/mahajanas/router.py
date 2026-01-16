@@ -33,7 +33,7 @@ from enum import Enum
 from typing import Dict, List, Set, Optional, Type, TYPE_CHECKING
 from dataclasses import dataclass
 
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
 if TYPE_CHECKING:
     from vibe_core.protocols.mahajanas.brahma import BrahmaProtocol

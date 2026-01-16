@@ -47,7 +47,7 @@ from vibe_core.protocols.cognition import (
     CognitiveContext,
     IntentType,
 )
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.universal.intent_bridge import (
     IntentOpCodeBridge,
     BridgeResult,
