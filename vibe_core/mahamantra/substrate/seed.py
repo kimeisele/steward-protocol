@@ -21,15 +21,15 @@ from collections import Counter
 # IMPORT FROM PROTOCOL (THE LAW)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,
-    PARAMPARA,
-    TRINITY,
-    QUARTERS,
-    PANCHA,
-    SHARANAGATI,
+    WORDS as _PROTO_WORDS,
+    PARAMPARA as _PROTO_PARAMPARA,
+    TRINITY as _PROTO_TRINITY,
+    QUARTERS as _PROTO_QUARTERS,
+    PANCHA as _PROTO_PANCHA,
+    SHARANAGATI as _PROTO_SHARANAGATI,
     NAVA,  # 9 Islands (Navadvipa)
-    LILA,
-    MALA,
+    LILA as _PROTO_LILA,
+    MALA as _PROTO_MALA,
     MAHAJANA_COUNT,  # 12 Mahajanas
     AVATAR_COUNT,  # 4 Avataras
     PHASE_DURATION,  # 12 (LILA // QUARTERS)
@@ -39,6 +39,9 @@ from vibe_core.mahamantra.protocols._seed import (
     TITHI_UNIT,
     PADA_UNIT,
     QUARTER_UNIT,
+    # New: The fractal levels
+    AKSARA_COUNT as _PROTO_AKSARA_COUNT,
+    QUALITIES as _PROTO_QUALITIES,
 )
 
 # =============================================================================
@@ -290,6 +293,23 @@ assert PARAMPARA == 37, "Parampara = 36 + 1"
 assert LILA == 48, "Chaitanya Lila = 16 × 3"
 assert QUALITIES == 64, "Qualities = 16 × 4"
 
+# =============================================================================
+# SSOT CROSS-CHECK: Derivations must match The Law (_seed.py)
+# =============================================================================
+assert WORDS == _PROTO_WORDS, "SSOT violation: WORDS != protocols/_seed.py"
+assert TRINITY == _PROTO_TRINITY, "SSOT violation: TRINITY != protocols/_seed.py"
+assert PANCHA == _PROTO_PANCHA, "SSOT violation: PANCHA != protocols/_seed.py"
+assert SHARANAGATI == _PROTO_SHARANAGATI, "SSOT violation: SHARANAGATI != protocols/_seed.py"
+assert QUARTERS == _PROTO_QUARTERS, "SSOT violation: QUARTERS != protocols/_seed.py"
+assert PARAMPARA == _PROTO_PARAMPARA, "SSOT violation: PARAMPARA != protocols/_seed.py"
+assert LILA == _PROTO_LILA, "SSOT violation: LILA != protocols/_seed.py"
+assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
+assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
+
+# AKSARA_COUNT: 32 syllables (2 per word)
+AKSARA_COUNT: Final[int] = WORDS * 2  # 32
+assert AKSARA_COUNT == _PROTO_AKSARA_COUNT, "SSOT violation: AKSARA_COUNT != protocols/_seed.py"
+
 
 # =============================================================================
 # LOTUS FUNCTIONS - Routing durch den Lotus
@@ -453,6 +473,7 @@ __all__ = [
     "DHARMA_PILLARS",
     # Qualities (64)
     "QUALITIES",
+    "AKSARA_COUNT",
     # Mala (108)
     "MALA",
     "ROUNDS",
