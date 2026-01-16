@@ -6,20 +6,20 @@ Tests for the 16 MantraPositions (SSOT - Truth Table).
 """
 
 from vibe_core.mahamantra.substrate import (
-    MantraPosition,
     MAHAMANTRA_POSITIONS,
-    MantraOpCode,
-    Mahajana,
+    PARAMPARA,
     Avatara,
-    Quarter,
     Guardian,
-    get_position_by_index,
+    Mahajana,
+    MantraOpCode,
+    MantraPosition,
+    Quarter,
+    get_head_position,
     get_position_by_guardian,
+    get_position_by_index,
     get_position_by_opcode,
     get_positions_by_quarter,
-    get_head_position,
     get_worker_positions,
-    PARAMPARA,
 )
 
 
@@ -85,10 +85,11 @@ class TestPositionGuardians:
             assert isinstance(pos.guardian, Mahajana)
 
     def test_specific_guardians(self) -> None:
-        """Verify specific guardian assignments."""
-        assert MAHAMANTRA_POSITIONS[0].guardian == Avatara.PRITHU
+        """Verify specific guardian assignments (seed.py truth)."""
+        # TRUTH: GENESIS=vyasa(0), DHARMA=prithu(4)
+        assert MAHAMANTRA_POSITIONS[0].guardian == Avatara.VYASA
         assert MAHAMANTRA_POSITIONS[1].guardian == Mahajana.BRAHMA
-        assert MAHAMANTRA_POSITIONS[4].guardian == Avatara.VYASA
+        assert MAHAMANTRA_POSITIONS[4].guardian == Avatara.PRITHU
         assert MAHAMANTRA_POSITIONS[15].guardian == Mahajana.YAMARAJA
 
 
@@ -133,6 +134,7 @@ class TestPositionLookup:
     def test_get_position_by_index_invalid(self) -> None:
         """get_position_by_index raises for invalid index."""
         import pytest
+
         with pytest.raises(ValueError):
             get_position_by_index(16)
 
