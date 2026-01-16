@@ -92,6 +92,14 @@ AVATAR_COUNT: Final[int] = QUARTERS  # The 4 Avataras (Heads of Quarters)
 KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24 (Field)
 KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36 (6x6 Matrix)
 
+# The 32 Syllables (Aksara) - 32-Bit Alignment
+# Each of the 16 words has 2 syllables (Ha-re, Krish-na, Ra-ma)
+AKSARA_COUNT: Final[int] = WORDS * 2  # 32
+
+# The 64 Qualities - 64-Bit Alignment
+# WORDS × QUARTERS = 16 × 4 = 64 (Varna level)
+QUALITIES: Final[int] = WORDS * QUARTERS  # 64
+
 ROUNDS: Final[int] = WORDS       # 16 rounds per day (minimum)
 DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
 
@@ -149,6 +157,8 @@ __all__ = [
     "AVATAR_COUNT",
     "KSHETRA",
     "KSHETRA_GAD",
+    "AKSARA_COUNT",
+    "QUALITIES",
     "ROUNDS",
     "DAILY_MANTRAS",
     # The Hidden Bridge
