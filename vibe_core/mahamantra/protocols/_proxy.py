@@ -16,7 +16,7 @@ SCALABILITY:
 LOCATION: vibe_core.mahamantra.protocols._proxy (THE LAW)
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Optional, Union
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.protocols._seed import WORDS
 
@@ -26,7 +26,7 @@ class MahamantraProxy(PanchaTattvaProtocol):
     Wraps a target and provides the 5 Tattva answers.
     """
     
-    def __init__(self, target: Any, position: int, guardian: str):
+    def __init__(self, target: object, position: int, guardian: str):
         self._target = target
         self._position = position
         self._guardian = guardian
@@ -50,14 +50,14 @@ class MahamantraProxy(PanchaTattvaProtocol):
             "srivasa": f"Guarded by {self._guardian}",
         }
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         """Forward everything to the target."""
         return getattr(self._target, name)
 
     def __repr__(self) -> str:
         return f"MahamantraProxy({self._target!r}, pos={self._position})"
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: object, **kwargs: object) -> object:
         """Forward calls if target is callable."""
         if callable(self._target):
             return self._target(*args, **kwargs)
