@@ -17,19 +17,18 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from vibe_core.protocols.capability import CapabilityModifyResult
-
 from vibe_core.capability_registry import CapabilityRegistry
-from vibe_core.ledger import VibeLedger
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.manifest_registry import InMemoryManifestRegistry
+from vibe_core.protocols.capability import CapabilityModifyResult
 from vibe_core.protocols.mahajanas.brahma import (
     AllocationResult,
     BrahmaProtocol,
     GenesisPhase,
     GenesisState,
 )
+from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("BRAHMA_SERVICE")
 
@@ -195,6 +194,7 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
         """
         # Using importlib to avoid Mayavad scanner detection of direct import
         import importlib
+
         factory_mod = importlib.import_module("vibe_core.services.kernel_factory")
         factory = getattr(factory_mod, "kernel_factory")
 
@@ -314,8 +314,8 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
         import os
         from pathlib import Path
 
-        from vibe_core.plugin_loader import PluginLoader
         from vibe_core.loaders.manifest_registry import ManifestRegistry
+        from vibe_core.plugin_loader import PluginLoader
 
         # OPUS-307 Phase F: Ensure manifests are scanned
         ManifestRegistry.scan_all()
