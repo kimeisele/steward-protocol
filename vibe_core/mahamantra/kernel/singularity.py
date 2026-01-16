@@ -215,8 +215,8 @@ class ProtocolRouter:
 
     @property
     def prithu(self) -> Type["MantraProtocol"]:
-        """Position 0 - PRITHU (HEAD)."""
-        return self[0]
+        """Position 4 - PRITHU (HEAD)."""
+        return self[4]
 
     @property
     def brahma(self) -> Type["MantraProtocol"]:
@@ -235,8 +235,8 @@ class ProtocolRouter:
 
     @property
     def vyasa(self) -> Type["MantraProtocol"]:
-        """Position 4 - VYASA (HEAD)."""
-        return self[4]
+        """Position 0 - VYASA (HEAD)."""
+        return self[0]
 
     @property
     def kumaras(self) -> Type["MantraProtocol"]:
@@ -546,12 +546,12 @@ class Mahamantra:
 
     @property
     def prithu(self) -> MantraPosition:
-        """Position 0 - PRITHU (HEAD - Genesis)."""
+        """Position 4 - PRITHU (HEAD - Dharma)."""
         return get_position_by_guardian(Avatara.PRITHU)
 
     @property
     def vyasa(self) -> MantraPosition:
-        """Position 4 - VYASA (HEAD - Dharma)."""
+        """Position 0 - VYASA (HEAD - Genesis)."""
         return get_position_by_guardian(Avatara.VYASA)
 
     @property

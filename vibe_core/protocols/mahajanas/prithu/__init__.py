@@ -1,15 +1,15 @@
 """
-PRITHU - The 1st Avatara (System Wake)
+PRITHU - The 2nd Avatara (Assert Truth)
 ======================================
 
-POSITION: 0 (GENESIS Quarter HEAD, SYS_WAKE OpCode)
+POSITION: 4 (DHARMA Quarter HEAD, ASSERT_TRUTH OpCode)
 
-King Prithu - The First Civilizer.
-Milked the Earth to provide all necessities.
-The original administrator who made the Earth habitable.
+King Prithu - The Protector of Dharma.
+Verifies the Truth and Upholds the Law (Dharma).
+The Sovereign who ensures the integrity of the realm.
 
 DERIVED FROM MAHAMANTRA:
-    Position 0 -> guardian=PRITHU, opcode=SYS_WAKE, quarter=GENESIS
+    Position 4 -> guardian=PRITHU, opcode=ASSERT_TRUTH, quarter=DHARMA
     All properties derived from truth table. No manual wiring.
 
 HEAD POSITION:
@@ -18,10 +18,10 @@ HEAD POSITION:
     They initiate action; Workers execute.
 
 DOMAIN:
-- System Initialization
-- Resource Allocation (milking the Earth)
-- Infrastructure Setup
-- Bootstrap Sequence
+- Truth Verification (Checking Compliance)
+- Schema Validation (The Law)
+- Dharma Enforcement (Ruling)
+- Knowledge Protection
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
@@ -31,8 +31,8 @@ from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 0
-__genesis__ = "0xa26abb60"  # GenesisByte: parampara % 37 == 0
+__position__ = 4
+__genesis__ = "0x94644443"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -51,76 +51,75 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 
 
 # =============================================================================
-# PRITHU PROTOCOL BASE - Derives from MantraPosition 0
+# PRITHU PROTOCOL BASE - Derives from MantraPosition 4
 # =============================================================================
 
 @ProtocolRegistry.register
 class PrithuProtocolBase(HeadProtocol):
     """
-    Prithu protocol ownership - DERIVED from Mahamantra position 0.
+    Prithu protocol ownership - DERIVED from Mahamantra position 4.
 
     NO MANUAL WIRING:
-        _position_index = 0 is the ONLY configuration.
+        _position_index = 4 is the ONLY configuration.
         Everything else derived from truth table.
 
     DERIVED PROPERTIES:
         guardian()  -> Avatara.PRITHU
-        opcode()    -> MantraOpCode.SYS_WAKE
-        quarter()   -> Quarter.GENESIS
+        opcode()    -> MantraOpCode.COMPILE_AST
+        quarter()   -> Quarter.DHARMA
         is_head()   -> True (HEAD position)
-        parampara_vector() -> 37 (% 37 == 0)
+        parampara_vector() -> 185 (% 37 == 0)
     """
-    _position_index: ClassVar[int] = 0  # THE ONLY CONFIGURATION
+    _position_index: ClassVar[int] = 4  # THE ONLY CONFIGURATION
 
 
-# NO MANUAL WIRING - Everything derived from mahamantra[0]
+# NO MANUAL WIRING - Everything derived from mahamantra[4]
 
 
 # =============================================================================
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
-class WakePhase(str, Enum):
-    """Phases of system wake."""
-    DORMANT = "dormant"       # Not started
-    BOOTSTRAP = "bootstrap"   # Initial bootstrap
-    RESOURCES = "resources"   # Loading resources
-    SERVICES = "services"     # Starting services
-    READY = "ready"           # System ready
-    FAILED = "failed"         # Wake failed
+class TruthLevel(str, Enum):
+    """Levels of truth assertion."""
+    ABSOLUTE = "absolute"     # Vedic truth - cannot be questioned
+    VERIFIED = "verified"     # Verified against schema
+    ASSERTED = "asserted"     # Asserted but not verified
+    DISPUTED = "disputed"     # Multiple conflicting claims
+    FALSE = "false"           # Proven false
 
 
-class WakeResult(TypedDict, total=False):
+class AssertionResult(TypedDict, total=False):
     """
-    Result of wake operation.
+    Result of truth assertion.
     WATERTIGHT - no Any!
     """
-    success: bool
-    phase: str                # WakePhase value
+    valid: bool
+    truth_level: str          # TruthLevel value
     timestamp: str            # ISO timestamp
-    services_started: int
-    resources_loaded: int
+    assertion_id: str
+    violations: List[str]
     error_message: str
 
 
-class WakeState(TypedDict, total=False):
+class TruthState(TypedDict, total=False):
     """
-    State of system wake.
+    State of truth assertions.
     WATERTIGHT - no Any!
     """
-    current_phase: str        # WakePhase value
-    is_awake: bool
-    wake_time: str            # ISO timestamp
-    uptime_seconds: int
-    total_wakes: int
+    total_assertions: int
+    valid_assertions: int
+    invalid_assertions: int
+    last_assertion: str       # ISO timestamp
+    truth_coverage: float     # 0.0-1.0
     health: str               # "pristine", "healthy", "degraded"
 
 
-class WakeCliResult(TypedDict):
-    """Result of CLI wake operation. WATERTIGHT - no Any!"""
+class AssertCliResult(TypedDict):
+    """Result of CLI assert operation. WATERTIGHT - no Any!"""
     success: bool
-    phase: str
-    is_awake: bool
+    claim: str
+    truth_level: str
     health: str
 
 
@@ -132,59 +131,46 @@ class WakeCliResult(TypedDict):
 @runtime_checkable
 class PrithuProtocol(Protocol):
     """
-    The System Wake Protocol - Prithu's domain.
+    The Truth Assertion Protocol - Prithu's domain.
 
-    DERIVED: Position 0 -> PRITHU, SYS_WAKE, GENESIS
+    DERIVED: Position 4 -> PRITHU, ASSERT_TRUTH, DHARMA
     WATERTIGHT - no Any types!
 
-    As Prithu milked the Earth to provide all necessities,
-    this protocol wakes the system and provides all resources.
+    As Prithu compiled and divided Vedic knowledge,
+    this protocol asserts and validates truth.
     """
 
     @classmethod
     def position_index(cls) -> int:
-        """Position 0 in the Mahamantra."""
+        """Position 4 in the Mahamantra."""
         ...
 
-    def wake(self) -> WakeResult:
-        """SYS_WAKE: Wake the system from dormant state."""
+    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
+        """ASSERT_TRUTH: Assert a truth claim with evidence."""
         ...
 
-    def is_awake(self) -> bool:
-        """Check if system is awake."""
+    def verify(self, assertion_id: str) -> AssertionResult:
+        """Verify a previous assertion."""
         ...
 
-    def get_phase(self) -> WakePhase:
-        """Get current wake phase."""
+    def compile(self, truths: List[str]) -> str:
+        """Compile multiple truths (like Prithu compiled Vedas). Returns compilation ID."""
         ...
 
-    def bootstrap(self) -> WakeResult:
-        """Run bootstrap sequence."""
+    def divide(self, compilation_id: str) -> List[str]:
+        """Divide compiled truths (like Prithu divided Vedas). Returns parts."""
         ...
 
-    def load_resources(self) -> int:
-        """Load system resources. Returns count loaded."""
+    def get_truth_level(self, assertion_id: str) -> TruthLevel:
+        """Get the truth level of an assertion."""
         ...
 
-    def start_services(self) -> int:
-        """Start system services. Returns count started."""
+    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
+        """Challenge an existing assertion with counter-evidence."""
         ...
 
-    def shutdown(self) -> WakeResult:
-        """Graceful shutdown (return to dormant)."""
-        ...
-
-    def execute(self, command: str) -> str:
-        """
-        Execute an Infrastructure Command.
-        The Scepter's interface to Matter.
-        """
-        ...
-
-    def scan(self, path: str = ".") -> str:
-        """
-        Scan the filesystem.
-        """
+    def get_state(self) -> TruthState:
+        """Get truth assertion state. WATERTIGHT."""
         ...
 
 
@@ -195,63 +181,64 @@ class PrithuProtocol(Protocol):
 
 class NullPrithu(PrithuProtocolBase):
     """
-    The Sleeping One.
-    No real system wake (for testing without infrastructure).
+    The Unverified.
+    Accepts all truths without verification (for testing).
 
-    Inherits from PrithuProtocolBase -> position 0 -> PRITHU.
+    Inherits from PrithuProtocolBase -> position 4 -> PRITHU.
     """
 
-    def wake(self) -> WakeResult:
-        return WakeResult(
-            success=True,
-            phase=WakePhase.READY.value,
+    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
+        return AssertionResult(
+            valid=True,
+            truth_level=TruthLevel.ASSERTED.value,
             timestamp=datetime.now().isoformat(),
-            services_started=0,
-            resources_loaded=0,
+            assertion_id="null_assertion",
+            violations=[],
         )
 
-    def is_awake(self) -> bool:
-        return True  # Always "awake" in null mode
-
-    def get_phase(self) -> WakePhase:
-        return WakePhase.READY
-
-    def bootstrap(self) -> WakeResult:
-        return WakeResult(
-            success=True,
-            phase=WakePhase.BOOTSTRAP.value,
+    def verify(self, assertion_id: str) -> AssertionResult:
+        return AssertionResult(
+            valid=True,
+            truth_level=TruthLevel.VERIFIED.value,
             timestamp=datetime.now().isoformat(),
+            assertion_id=assertion_id,
+            violations=[],
         )
 
-    def load_resources(self) -> int:
-        return 0
+    def compile(self, truths: List[str]) -> str:
+        return "null_compilation"
 
-    def start_services(self) -> int:
-        return 0
+    def divide(self, compilation_id: str) -> List[str]:
+        return []
 
-    def shutdown(self) -> WakeResult:
-        return WakeResult(
-            success=True,
-            phase=WakePhase.DORMANT.value,
+    def get_truth_level(self, assertion_id: str) -> TruthLevel:
+        return TruthLevel.ASSERTED
+
+    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
+        return AssertionResult(
+            valid=True,  # Challenge always accepted in null mode
+            truth_level=TruthLevel.DISPUTED.value,
             timestamp=datetime.now().isoformat(),
+            assertion_id=assertion_id,
         )
 
-    def get_state(self) -> WakeState:
-        return WakeState(
-            current_phase=WakePhase.READY.value,
-            is_awake=True,
-            total_wakes=0,
+    def get_state(self) -> TruthState:
+        return TruthState(
+            total_assertions=0,
+            valid_assertions=0,
+            invalid_assertions=0,
+            truth_coverage=1.0,
             health="pristine",
         )
 
-    def wake_cli(self, target: str = "system") -> WakeCliResult:
-        """CLI: Wake the system. WATERTIGHT."""
-        result = self.wake()
+    def assert_cli(self, claim: str = "truth") -> AssertCliResult:
+        """CLI: Assert a truth claim. WATERTIGHT."""
+        result = self.assert_truth(claim, "cli_evidence")
         state = self.get_state()
-        return WakeCliResult(
-            success=result.get("success", True),
-            phase=result.get("phase", "ready"),
-            is_awake=self.is_awake(),
+        return AssertCliResult(
+            success=result.get("valid", True),
+            claim=claim,
+            truth_level=result.get("truth_level", "asserted"),
             health=state.get("health", "pristine"),
         )
 
@@ -261,33 +248,51 @@ class NullPrithu(PrithuProtocolBase):
 # =============================================================================
 
 # =============================================================================
-# PRITHU SERVICE - The Real Implementation (wraps legacy boot_orchestrator.py)
+# PRITHU SERVICE - The Real Implementation (wraps legacy compliance/auditor)
 # =============================================================================
 
-# LAZY IMPORT to avoid circular dependency with boot_mode migration
-# PrithuService is loaded on first access via __getattr__
+from vibe_core.protocols.mahajanas.prithu.service import PrithuService
 
 # =============================================================================
 # MIGRATED TYPES - Accessed via mahamantra.mod.prithu
 # =============================================================================
 
 from vibe_core.protocols.mahajanas.prithu.types import (
-    # boot_mode.py
-    BootMode,
-    # process_manager.py
-    ProcessStatus,
-    ProcessManager,
-    AgentProcessInfo,
+    # errors.py
+    ErrorCategory,
+    ErrorCode,
+    StructuredError,
+    # lineage.py (lazy loaded)
+    LineageBlock,
+    LineageChain,
+    LineageEventType,
+    # ledger.py (lazy loaded)
+    InMemoryLedger,
+    SQLiteLedger,
+    ArchiveAttachment,
+)
+
+# =============================================================================
+# KNOWLEDGE GRAPH PROTOCOL - Universal Knowledge Interface
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.prithu.knowledge import (
+    KnowledgeGraphProtocolBase,
+    KnowledgeGraphProtocol,
+    NullKnowledgeGraph,
+    NodeType as KGNodeType,
+    RelationType as KGRelationType,
+    ViolationNode,
 )
 
 __all__ = [
     # Protocol Base (HeadProtocol derivative) - THE ONLY SOURCE
     "PrithuProtocolBase",
     # State Types (WATERTIGHT)
-    "WakePhase",
-    "WakeResult",
-    "WakeState",
-    "WakeCliResult",
+    "TruthLevel",
+    "AssertionResult",
+    "TruthState",
+    "AssertCliResult",
     # Protocol
     "PrithuProtocol",
     # Implementations
@@ -295,18 +300,23 @@ __all__ = [
     # Service (Real Implementation)
     "PrithuService",
     # === MIGRATED TYPES (mahamantra.mod.prithu) ===
-    # boot_mode.py
-    "BootMode",
-    # process_manager.py
-    "ProcessStatus",
-    "ProcessManager",
-    "AgentProcessInfo",
+    # errors.py
+    "ErrorCategory",
+    "ErrorCode",
+    "StructuredError",
+    # lineage.py
+    "LineageBlock",
+    "LineageChain",
+    "LineageEventType",
+    # ledger.py
+    "InMemoryLedger",
+    "SQLiteLedger",
+    "ArchiveAttachment",
+    # === KNOWLEDGE GRAPH PROTOCOL ===
+    "KnowledgeGraphProtocolBase",
+    "KnowledgeGraphProtocol",
+    "NullKnowledgeGraph",
+    "KGNodeType",
+    "KGRelationType",
+    "ViolationNode",
 ]
-
-
-def __getattr__(name: str):
-    """Lazy import for PrithuService to avoid circular import."""
-    if name == "PrithuService":
-        from vibe_core.protocols.mahajanas.prithu.service import PrithuService
-        return PrithuService
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

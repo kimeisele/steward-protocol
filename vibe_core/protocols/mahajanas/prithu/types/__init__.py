@@ -1,31 +1,53 @@
 """
-PRITHU Types - Position 0 (GENESIS Quarter HEAD, SYS_WAKE)
-==========================================================
+PRITHU Types - Position 4 (DHARMA Quarter, ASSERT_TRUTH)
+========================================================
 
-PRITHU - The King who leveled the Earth.
-Types for boot, system, and process management.
+PRITHU - The Compiler of the Vedas.
+Types for records, lineage, ledger, and compliance.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 0
-__genesis__ = "0xcbb6664f"  # GenesisByte: parampara % 37 == 0
+__position__ = 4
+__genesis__ = "0x94644443"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.protocols.mahajanas.prithu.types.boot_mode import (
-    BootMode,
+from vibe_core.protocols.mahajanas.prithu.types.errors import (
+    ErrorCategory,
+    ErrorCode,
+    StructuredError,
 )
 
-from vibe_core.protocols.mahajanas.prithu.types.process_manager import (
-    ProcessStatus,
-    ProcessManager,
-    AgentProcessInfo,
-)
-
+# Lazy imports to avoid circular dependencies
 __all__ = [
-    # boot_mode.py
-    "BootMode",
-    # process_manager.py
-    "ProcessStatus",
-    "ProcessManager",
-    "AgentProcessInfo",
+    # errors.py
+    "ErrorCategory",
+    "ErrorCode",
+    "StructuredError",
+    # lineage.py
+    "LineageBlock",
+    "LineageChain",
+    "LineageEventType",
+    # ledger.py
+    "InMemoryLedger",
+    "SQLiteLedger",
+    "ArchiveAttachment",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import for lineage and ledger to avoid circular dependencies."""
+    if name in ("LineageBlock", "LineageChain", "LineageEventType"):
+        from vibe_core.protocols.mahajanas.prithu.types.lineage import (
+            LineageBlock,
+            LineageChain,
+            LineageEventType,
+        )
+        return {"LineageBlock": LineageBlock, "LineageChain": LineageChain, "LineageEventType": LineageEventType}[name]
+    if name in ("InMemoryLedger", "SQLiteLedger", "ArchiveAttachment"):
+        from vibe_core.protocols.mahajanas.prithu.types.ledger import (
+            InMemoryLedger,
+            SQLiteLedger,
+            ArchiveAttachment,
+        )
+        return {"InMemoryLedger": InMemoryLedger, "SQLiteLedger": SQLiteLedger, "ArchiveAttachment": ArchiveAttachment}[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

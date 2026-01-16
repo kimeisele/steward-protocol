@@ -204,10 +204,10 @@ assert KSHETRA_GAD + KSETRAJNA == PARAMPARA  # 36 + 1 = 37
 
 # Die 4 Avataras (Heads) - Geben was fehlt (Yoga-Kshema)
 AVATARAS: Final[Tuple[str, ...]] = (
-    "prithu",      # Genesis Head: Infrastruktur
-    "vyasa",       # Dharma Head: Wissen/Docs
-    "parashurama", # Karma Head: Durchsetzung
-    "nrisimha",    # Moksha Head: Schutz
+    "vyasa",       # Genesis Head: Wissen/Docs (Brahmana)
+    "prithu",      # Dharma Head: Ordnung/Struktur (Kshatriya)
+    "parashurama", # Karma Head: Durchsetzung (Vaishya/Action)
+    "nrisimha",    # Moksha Head: Schutz (Shudra/Service)
 )
 
 # Die 12 Mahajanas (Workers) - Bewahren was ist
@@ -333,9 +333,9 @@ def verify_parampara(value: int) -> bool:
 # Alle 16 Guardians in Order
 ALL_GUARDIANS: Final[Tuple[str, ...]] = (
     # Genesis Quarter (0-3)
-    "prithu", "brahma", "narada", "shambhu",
+    "vyasa", "brahma", "narada", "shambhu",
     # Dharma Quarter (4-7)
-    "vyasa", "kumaras", "kapila", "manu",
+    "prithu", "kumaras", "kapila", "manu",
     # Karma Quarter (8-11)
     "parashurama", "prahlada", "janaka", "bhishma",
     # Moksha Quarter (12-15)

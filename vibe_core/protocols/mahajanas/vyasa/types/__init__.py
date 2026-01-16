@@ -1,53 +1,31 @@
 """
-VYASA Types - Position 13 (MOKSHA Quarter, COMPILE_RECORD)
+VYASA Types - Position 0 (GENESIS Quarter HEAD, SYS_WAKE)
 ==========================================================
 
-VYASA - The Compiler of the Vedas.
-Types for records, lineage, ledger, and compliance.
+VYASA - The King who leveled the Earth.
+Types for boot, system, and process management.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
-__position__ = 4
-__genesis__ = "0x5cce9f22"  # GenesisByte: parampara % 37 == 0
+__position__ = 0
+__genesis__ = "0xcbb6664f"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.protocols.mahajanas.vyasa.types.errors import (
-    ErrorCategory,
-    ErrorCode,
-    StructuredError,
+from vibe_core.protocols.mahajanas.vyasa.types.boot_mode import (
+    BootMode,
 )
 
-# Lazy imports to avoid circular dependencies
+from vibe_core.protocols.mahajanas.vyasa.types.process_manager import (
+    ProcessStatus,
+    ProcessManager,
+    AgentProcessInfo,
+)
+
 __all__ = [
-    # errors.py
-    "ErrorCategory",
-    "ErrorCode",
-    "StructuredError",
-    # lineage.py
-    "LineageBlock",
-    "LineageChain",
-    "LineageEventType",
-    # ledger.py
-    "InMemoryLedger",
-    "SQLiteLedger",
-    "ArchiveAttachment",
+    # boot_mode.py
+    "BootMode",
+    # process_manager.py
+    "ProcessStatus",
+    "ProcessManager",
+    "AgentProcessInfo",
 ]
-
-
-def __getattr__(name: str):
-    """Lazy import for lineage and ledger to avoid circular dependencies."""
-    if name in ("LineageBlock", "LineageChain", "LineageEventType"):
-        from vibe_core.protocols.mahajanas.vyasa.types.lineage import (
-            LineageBlock,
-            LineageChain,
-            LineageEventType,
-        )
-        return {"LineageBlock": LineageBlock, "LineageChain": LineageChain, "LineageEventType": LineageEventType}[name]
-    if name in ("InMemoryLedger", "SQLiteLedger", "ArchiveAttachment"):
-        from vibe_core.protocols.mahajanas.vyasa.types.ledger import (
-            InMemoryLedger,
-            SQLiteLedger,
-            ArchiveAttachment,
-        )
-        return {"InMemoryLedger": InMemoryLedger, "SQLiteLedger": SQLiteLedger, "ArchiveAttachment": ArchiveAttachment}[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

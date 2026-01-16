@@ -103,7 +103,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         quarter=Quarter.GENESIS,
         is_head=True,
         opcode=MantraOpCode.SYS_WAKE,
-        guardian=Avatara.PRITHU,
+        guardian=Avatara.VYASA,
     ),
     MantraPosition(
         index=1,
@@ -136,7 +136,7 @@ MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
         quarter=Quarter.DHARMA,
         is_head=True,
         opcode=MantraOpCode.COMPILE_AST,  # Fixed: ASSERT_TRUTH -> COMPILE_AST
-        guardian=Avatara.VYASA,
+        guardian=Avatara.PRITHU,
     ),
     MantraPosition(
         index=5,

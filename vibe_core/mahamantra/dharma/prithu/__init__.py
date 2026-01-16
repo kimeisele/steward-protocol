@@ -1,16 +1,16 @@
 """
-PRITHU - Position 0
+PRITHU - Position 4
 ===================
 
-Quarter: GENESIS
-OpCode: SYS_WAKE
+Quarter: DHARMA
+OpCode: ASSERT_TRUTH
 Type: HEAD
 
 MAHAMANTRA AS LENS:
     Structure defined here. Implementation re-exported from protocols/mahajanas.
     Samskara will migrate implementations over time.
 
-PARAMPARA: 37 (% 37 == 0 -> CONNECTED)
+PARAMPARA: 185 (% 37 == 0 -> CONNECTED)
 """
 
 
@@ -18,8 +18,8 @@ from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 0
-__genesis__ = "0x2f04d413"  # GenesisByte
+__position__ = 4
+__genesis__ = "0x94644443"  # GenesisByte
 
 # === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
 from vibe_core.protocols.mahajanas.prithu import *
@@ -29,10 +29,10 @@ from vibe_core.protocols.mahajanas.prithu import __all__
 
 # Backward-compat constants
 from typing import Final
-POSITION: Final[int] = 0
-QUARTER: Final[str] = "genesis"
-OPCODE: Final[str] = "SYS_WAKE"
-PARAMPARA_VECTOR: Final[int] = 37
+POSITION: Final[int] = 4
+QUARTER: Final[str] = "dharma"
+OPCODE: Final[str] = "ASSERT_TRUTH"
+PARAMPARA_VECTOR: Final[int] = 185
 
 # PrithuBase alias for backward compat
-PradaBase = PrithuProtocolBase
+PrithuBase = PrithuProtocolBase

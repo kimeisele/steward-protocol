@@ -2,13 +2,13 @@
 KNOWLEDGE GRAPH PROTOCOL - The Universal Knowledge Interface
 =============================================================
 
-POSITION: 4 (VYASA - DHARMA Quarter HEAD)
+POSITION: 4 (PRITHU - DHARMA Quarter HEAD)
 
 The KnowledgeGraph is the universal repository of knowledge.
 This protocol defines the interface - implementations live elsewhere.
 
 DERIVED FROM MAHAMANTRA:
-    Position 4 -> guardian=VYASA, opcode=ASSERT_TRUTH, quarter=DHARMA
+    Position 4 -> guardian=PRITHU, opcode=ASSERT_TRUTH, quarter=DHARMA
 
 ANTI-MAYAVAD:
     - No Any types
@@ -23,7 +23,7 @@ OUROBOROS INTEGRATION:
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
+__mahajana__ = "prithu"
 __position__ = 4
 __genesis__ = "0x7f3a2c91"  # GenesisByte: parampara % 37 == 0
 
@@ -48,7 +48,7 @@ class KnowledgeGraphProtocolBase(HeadProtocol):
         Everything else derived from truth table.
 
     DERIVED PROPERTIES:
-        guardian()  -> Avatara.VYASA
+        guardian()  -> Avatara.PRITHU
         opcode()    -> MantraOpCode.COMPILE_AST
         quarter()   -> Quarter.DHARMA
         is_head()   -> True (HEAD position)
@@ -126,7 +126,7 @@ class KnowledgeGraphProtocol(Protocol):
     """
     The Universal Knowledge Graph Interface.
 
-    DERIVED: Position 4 -> VYASA, ASSERT_TRUTH, DHARMA
+    DERIVED: Position 4 -> PRITHU, ASSERT_TRUTH, DHARMA
 
     4 Dimensions:
     - ONTOLOGY (Nodes): What exists
@@ -241,7 +241,7 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     The Empty Graph - no knowledge loaded.
     Used for testing and when knowledge is not available.
 
-    Inherits from KnowledgeGraphProtocolBase -> position 4 -> VYASA.
+    Inherits from KnowledgeGraphProtocolBase -> position 4 -> PRITHU.
     """
 
     def __init__(self) -> None:

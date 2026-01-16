@@ -1,15 +1,15 @@
 """
 DEPRECATED: Use mahajana import.
 
-VYASA OWNS (Position 13 - COMPILE_RECORD):
-    from vibe_core.protocols.mahajanas.vyasa.types.ledger import SQLiteLedger, InMemoryLedger
+PRITHU OWNS (Position 4 - ASSERT_TRUTH):
+    from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger, InMemoryLedger
 
 This file is a BRIDGE for backward compatibility.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
-__genesis__ = "0x2a93739c"  # GenesisByte: parampara % 37 == 0
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x94644443"  # GenesisByte
 
-from vibe_core.protocols.mahajanas.vyasa.types.ledger import *
+from vibe_core.protocols.mahajanas.prithu.types.ledger import *
