@@ -28,7 +28,7 @@ class TestBalaramaProxyBasics:
     def setup_method(self):
         """Create a test service module."""
         # Create test module code
-        test_code = '''
+        test_code = """
 from pathlib import Path
 
 def get_path_class():
@@ -38,7 +38,7 @@ def write_file(path_str, content):
     path = Path(path_str)
     path.write_text(content)
     return True
-'''
+"""
         # Create module
         self.test_mod = types.ModuleType("test_service_basic")
         exec(test_code, self.test_mod.__dict__)
@@ -64,10 +64,11 @@ def write_file(path_str, content):
         # Check mahamantra in module dict
         assert "mahamantra" in proxy.module.__dict__
 
-        # Verify it's the real mahamantra
+        # Verify it's the real mahamantra (SANKIRTAN PATTERN)
         mahamantra = proxy.module.__dict__["mahamantra"]
-        assert hasattr(mahamantra, "tick")
-        assert hasattr(mahamantra, "chant")
+        assert hasattr(mahamantra, "shadow")  # ShadowReactorFactory
+        assert hasattr(mahamantra, "execute")  # Execute command
+        assert hasattr(mahamantra, "resonate")  # Resonance routing
 
     def test_path_replaced(self):
         """pathlib.Path replaced with _GovernedPath."""
@@ -161,10 +162,10 @@ class TestWrapServiceFunction:
 
     def setup_method(self):
         """Create test module."""
-        test_code = '''
+        test_code = """
 def hello():
     return "world"
-'''
+"""
         self.test_mod = types.ModuleType("test_service_wrap")
         exec(test_code, self.test_mod.__dict__)
         sys.modules["test_service_wrap"] = self.test_mod
@@ -193,10 +194,10 @@ class TestProxyErrorHandling:
 
     def test_module_without_path_import(self):
         """Module without Path import doesn't break."""
-        test_code = '''
+        test_code = """
 def foo():
     return 42
-'''
+"""
         test_mod = types.ModuleType("test_no_path")
         exec(test_code, test_mod.__dict__)
         sys.modules["test_no_path"] = test_mod
@@ -214,18 +215,20 @@ class TestContextInjection:
     """Test mahamantra context injection patterns."""
 
     def setup_method(self):
-        """Create service that uses mahamantra."""
+        """Create service that uses mahamantra (SANKIRTAN PATTERN)."""
         test_code = '''
-def use_mahamantra_tick():
-    """Use mahamantra if available."""
+def use_mahamantra_shadow():
+    """Use mahamantra shadow reactor if available."""
     if 'mahamantra' in globals():
-        return mahamantra.tick()
+        reactor = mahamantra.shadow.spawn()
+        return {"reactor_id": reactor.reactor_id, "position": reactor.position}
     return None
 
-def use_mahamantra_chant():
-    """Use mahamantra chant."""
+def use_mahamantra_execute():
+    """Use mahamantra execute."""
     if 'mahamantra' in globals():
-        return mahamantra.chant()
+        result = mahamantra.execute("test")
+        return result.output if hasattr(result, 'output') else str(result)
     return None
 '''
         self.test_mod = types.ModuleType("test_service_context")
@@ -238,17 +241,17 @@ def use_mahamantra_chant():
             del sys.modules["test_service_context"]
 
     def test_service_can_use_mahamantra(self):
-        """Service can use injected mahamantra."""
+        """Service can use injected mahamantra (SANKIRTAN PATTERN)."""
         proxy = BalaramaProxy("test_service_context")
 
-        # Service can now call mahamantra
-        tick_result = proxy.use_mahamantra_tick()
-        assert tick_result is not None
-        assert "position" in tick_result
+        # Service can now use shadow reactor
+        shadow_result = proxy.use_mahamantra_shadow()
+        assert shadow_result is not None
+        assert "reactor_id" in shadow_result
 
-        chant_result = proxy.use_mahamantra_chant()
-        assert chant_result is not None
-        assert "Hare" in chant_result or "Krishna" in chant_result or "Rama" in chant_result
+        # Service can use execute
+        execute_result = proxy.use_mahamantra_execute()
+        assert execute_result is not None
 
 
 class TestProxyTransparency:
@@ -256,7 +259,7 @@ class TestProxyTransparency:
 
     def setup_method(self):
         """Create service with various attributes."""
-        test_code = '''
+        test_code = """
 CONSTANT = 42
 
 class ServiceClass:
@@ -267,7 +270,7 @@ def function():
     return "function_result"
 
 value = "value_result"
-'''
+"""
         self.test_mod = types.ModuleType("test_service_transparent")
         exec(test_code, self.test_mod.__dict__)
         sys.modules["test_service_transparent"] = self.test_mod
