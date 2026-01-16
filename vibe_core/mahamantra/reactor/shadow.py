@@ -67,6 +67,7 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowReactorListenerProtocol,
     ShadowReactorProtocol,
     ShadowReactorFactoryProtocol,
+    __genesis__,
 )
 
 # Import GAD Base
@@ -425,7 +426,21 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             cycle_count=self._cycle_count,
             switch_count=self._switch_count,
             return_count=self._return_count,
+            dissonance_report=None,  # Init as clean
         )
+
+        # =====================================================================
+        # STATE HYGIENE (QUARTER-FENCE) - Agni Phase
+        # =====================================================================
+        # If we crossed a quarter boundary, we MUST clear old authorization.
+        if previous != -1:
+            prev_mapping = get_position_by_index(previous)
+            # Verify both exist to avoid AttributeError
+            if prev_mapping and mapping:
+                if prev_mapping.quarter != mapping.quarter:
+                    # TRANSITION DETECTED (e.g. Genesis -> Dharma)
+                    # The old bundle is now "Stale". Burn it.
+                    self._authorization = None
 
         # THE 8 MOMENT - Bhoga → Prasadam switch (Effective Position)
         if self._position == SWITCH_POSITION and previous == 7:
@@ -466,8 +481,9 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             if hasattr(reactor, "on_bhoga"):
                 try:
                     reactor.on_bhoga(state)
-                except Exception:
-                    pass  # Reactor error doesn't break the cycle
+                except Exception as e:
+                    # APARADHA AUDIT: No silent failures
+                    state['dissonance_report'] = f"APARADHA [BHOGA @ {position}]: {str(e)}"
 
 
     def _trigger_switch(self, state: ShadowState) -> None:
@@ -483,8 +499,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             if hasattr(reactor, "on_switch"):
                 try:
                     reactor.on_switch(state)
-                except Exception:
-                    pass
+                except Exception as e:
+                     state['dissonance_report'] = f"APARADHA [SWITCH]: {str(e)}"
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """
@@ -500,8 +516,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             if hasattr(reactor, "on_prasadam"):
                 try:
                     reactor.on_prasadam(state)
-                except Exception:
-                    pass
+                except Exception as e:
+                    state['dissonance_report'] = f"APARADHA [PRASADAM @ {position}]: {str(e)}"
 
     def _trigger_return(self, state: ShadowState) -> None:
         """
@@ -519,8 +535,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             if hasattr(reactor, "on_return"):
                 try:
                     reactor.on_return(state)
-                except Exception:
-                    pass
+                except Exception as e:
+                    state['dissonance_report'] = f"APARADHA [RETURN]: {str(e)}"
 
     # =========================================================================
     # STATE ACCESS
@@ -669,6 +685,51 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             return False
         
         return self._authorization.add_signature(sig)
+
+    # =========================================================================
+    # GAD COMPLIANCE (REAL TESTS - NO MAYA)
+    # =========================================================================
+
+    def test_satyam(self) -> bool:
+        """
+        Truthfulness: Verifies Parampara connection (37).
+        
+        "Satyam param dhimahi" - We meditate on the Absolute Truth.
+        Verifies that the Genesis Hash is mathematically connected to the Seed.
+        """
+        # Fix: Check static integrity (Hash) using global import
+        try:
+            return int(__genesis__, 16) % PARAMPARA == 0
+        except Exception:
+            return False
+
+    def test_saucam(self) -> bool:
+        """
+        Cleanliness: Verifies all listeners are valid Mahajanas.
+        
+        Ensures no unauthorized agents are listening on the channel.
+        """
+        for position_listeners in self._listeners.values():
+            for listener in position_listeners:
+                 if not hasattr(listener, "__mahajana__"):
+                     return False
+        return True
+
+    def test_tapas(self) -> bool:
+        """
+        Austerity: Verifies Grace Logic is within bounds.
+        
+        Ensures resources (integer space) are not exhausted.
+        """
+        return self._effective_grace >= 0 and isinstance(self._effective_grace, int)
+
+    def test_daya(self) -> bool:
+        """
+        Mercy: Verifies Bhava (Intent) capability.
+        
+        Ensures the reactor is capable of feeling (Bhava).
+        """
+        return isinstance(self._bhava, Bhava)
 
     def is_authorized(self) -> bool:
         """
@@ -825,17 +886,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return drift
 
     # The 4 Dharma Tests
-    def test_daya(self) -> bool:
-        return True  # Reactor is merciful (doesn't crash on listener error)
 
-    def test_satyam(self) -> bool:
-        return self._verify_parampara(self._position, self._cycle_count)
-
-    def test_tapas(self) -> bool:
-        return True  # No resource leaks known
-
-    def test_saucam(self) -> bool:
-        return True  # Only registers valid listeners
 # =============================================================================
 # SHADOW REACTOR FACTORY - Implements ShadowReactorFactoryProtocol
 # =============================================================================
