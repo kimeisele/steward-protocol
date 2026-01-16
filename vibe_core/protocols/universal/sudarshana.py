@@ -13,15 +13,6 @@ __position__ = 4
 __genesis__ = "0x66f4e2ed"  # GenesisByte: parampara % 37 == 0
 
 import functools
-from typing import Callable, Any, TypeVar, ParamSpec, Optional
-from vibe_core.protocols.universal.mantra import MantraOpCode
-from vibe_core.protocols.universal.types import SovereignContext, AccessDeniedError
-from vibe_core.protocols.universal.the_37th import The37th
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-import functools
 import multiprocessing
 import uuid
 import logging
@@ -31,7 +22,7 @@ from enum import Enum, auto
 from dataclasses import dataclass
 from multiprocessing.pool import AsyncResult
 
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.universal.types import SovereignContext, AccessDeniedError
 from vibe_core.protocols.universal.the_37th import The37th
 

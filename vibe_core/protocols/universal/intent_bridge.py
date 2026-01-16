@@ -42,7 +42,7 @@ from enum import Enum
 from typing import Dict, Optional, Union, List
 
 from vibe_core.protocols.cognition import IntentType, CognitiveResult
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.semantic_syscalls import SyscallType
 
 

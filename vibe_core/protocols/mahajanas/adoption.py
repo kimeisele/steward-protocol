@@ -45,7 +45,7 @@ from typing import (
 from pathlib import Path
 import inspect
 
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.mahajanas.router import (
     Mahajana,
     MahajanaRouter,

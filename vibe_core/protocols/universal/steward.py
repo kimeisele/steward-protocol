@@ -20,11 +20,17 @@ from .types import SovereignContext, TranscendentalQuality
 # Defer import to break cycle with universal/__init__ -> cli -> steward -> mahajanas
 # from vibe_core.protocols.mahajanas.yamaraja import Verdict, YamarajaGate
 
+# V2 SYSTEM REFERENCE
+# The V2 Steward System (System Lifecycle & Identity) is defined in _steward.py
+from vibe_core.mahamantra.protocols._steward import StewardSystem, get_steward
 
 @runtime_checkable
 class StewardProtocol(Protocol):
     """
-    Interface für den Agenten-Kern.
+    [LEGACY] Interface für den Agenten-Kern (Command Execution).
+    
+    NOTE: This is the 'Command Executor' capability, not the System Protocol.
+    For System Identity & Lifecycle, see vibe_core.mahamantra.protocols._steward.
     """
 
     def execute_command(self, command: str, payload: Any) -> Any: ...
