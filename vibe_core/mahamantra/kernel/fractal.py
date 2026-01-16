@@ -46,7 +46,7 @@ from typing import (
     Union,
 )
 
-from vibe_core.protocols.substrate.mantra.acintya import (
+from vibe_core.mahamantra.substrate.acintya import (
     PARAMPARA,
     SYSTEM_MANIFESTATION,
     ParamparaConnection,
