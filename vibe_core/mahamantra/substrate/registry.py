@@ -1,5 +1,5 @@
 """
-MAHAJANA REGISTRY - Dynamic Dispatch from SSOT
+GUARDIAN REGISTRY - Dynamic Dispatch from SSOT
 ===============================================
 
 "yato vā imāni bhūtāni jāyante, yena jātāni jīvanti"
@@ -14,12 +14,14 @@ Der Code weiß nur "Index 0".
 Die SSOT (MAHAMANTRA_POSITIONS) bestimmt zur Laufzeit,
 welcher Guardian an welcher Position sitzt.
 
-**ZER manual imports. ZERO hardcoded names.**
+**ZERO manual imports. ZERO hardcoded names.**
+
+GUARDIANS = 12 Mahajanas (Workers) + 4 Avataras (Heads) = 16 Total
 
 Usage:
-    from vibe_core.mahamantra.substrate.registry import MahajanaRegistry
+    from vibe_core.mahamantra.substrate.registry import GuardianRegistry
 
-    registry = MahajanaRegistry()
+    registry = GuardianRegistry()
     BootMode = registry.load_type(position=0, type_name="BootMode")
     ProcessManager = registry.load_type(position=0, type_name="ProcessManager")
 
@@ -34,7 +36,7 @@ __position__ = 4
 __genesis__ = "0x94644443"  # GenesisByte: parampara % 37 == 0
 
 import importlib
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, Protocol as TypingProtocol, TypeVar, cast
 from types import ModuleType
 
 from vibe_core.mahamantra.substrate.position import MantraPosition
@@ -45,18 +47,31 @@ from vibe_core.mahamantra.substrate.wiring import (
 
 
 # =============================================================================
-# MAHAJANA REGISTRY - Dynamic Component Loader
+# TYPE VARIABLES
+# =============================================================================
+
+T = TypeVar("T")
+P = TypeVar("P")  # Protocol type variable (for future protocol enforcement)
+
+
+# =============================================================================
+# GUARDIAN REGISTRY - Dynamic Component Loader
 # =============================================================================
 
 
-class MahajanaRegistry:
+class GuardianRegistry:
     """
-    Registry for dynamic loading of Mahajana components.
+    Registry for dynamic loading of Guardian components.
 
     **LOTUS LEVEL (-1):**
     The code doesn't know WHO is at a position, only WHAT position does.
 
     When you change the SSOT (position.py), this automatically adapts.
+
+    **GUARDIANS:**
+    - 12 Mahajanas (Workers at positions 1,2,3,5,6,7,9,10,11,13,14,15)
+    - 4 Avataras (Heads at positions 0,4,8,12)
+    - Total: 16 positions in the Mahamantra
 
     Zero manual imports. Zero hardcoded names.
     Single Source of Truth: MAHAMANTRA_POSITIONS.
@@ -90,10 +105,12 @@ class MahajanaRegistry:
             Guardian name (lowercase) or None
 
         Example:
-            >>> MahajanaRegistry.get_guardian_name(0)
+            >>> GuardianRegistry.get_guardian_name(0)
             'vyasa'
-            >>> MahajanaRegistry.get_guardian_name(4)
+            >>> GuardianRegistry.get_guardian_name(4)
             'prithu'
+            >>> GuardianRegistry.get_guardian_name(1)
+            'brahma'
         """
         position = cls.get_position(index)
         if position is None:
@@ -117,6 +134,8 @@ class MahajanaRegistry:
         Example:
             >>> cls._get_module_path(0, "types")
             'vibe_core.protocols.mahajanas.vyasa.types'
+            >>> cls._get_module_path(1, "types")
+            'vibe_core.protocols.mahajanas.brahma.types'
         """
         guardian = cls.get_guardian_name(index)
         if guardian is None:
@@ -137,7 +156,7 @@ class MahajanaRegistry:
             Module object or None if not found
 
         Example:
-            >>> types_module = MahajanaRegistry.load_module(0, "types")
+            >>> types_module = GuardianRegistry.load_module(0, "types")
             >>> BootMode = types_module.BootMode
         """
         module_path = cls._get_module_path(index, component)
@@ -157,7 +176,12 @@ class MahajanaRegistry:
             return None
 
     @classmethod
-    def load_type(cls, position: int, type_name: str) -> Optional[Type[Any]]:
+    def load_type(
+        cls,
+        position: int,
+        type_name: str,
+        protocol: Optional[Type[P]] = None,
+    ) -> Optional[Type[Any]]:
         """
         Load a type from the guardian's types module.
 
@@ -170,14 +194,20 @@ class MahajanaRegistry:
         Args:
             position: Position index (0-15)
             type_name: Name of the type class
+            protocol: Optional protocol to validate against (future use)
 
         Returns:
             Type class or None if not found
 
         Example:
-            >>> BootMode = MahajanaRegistry.load_type(0, "BootMode")
-            >>> ProcessManager = MahajanaRegistry.load_type(0, "ProcessManager")
-            >>> ErrorCode = MahajanaRegistry.load_type(4, "ErrorCode")
+            >>> BootMode = GuardianRegistry.load_type(0, "BootMode")
+            >>> ProcessManager = GuardianRegistry.load_type(0, "ProcessManager")
+            >>> ErrorCode = GuardianRegistry.load_type(4, "ErrorCode")
+
+        Protocol Enforcement (Future):
+            >>> from vibe_core.protocols import IBootMode
+            >>> BootMode = GuardianRegistry.load_type(0, "BootMode", protocol=IBootMode)
+            >>> # Will assert that BootMode implements IBootMode
         """
         cache_key = f"{position}:{type_name}"
 
@@ -193,6 +223,12 @@ class MahajanaRegistry:
         # Get type from module
         try:
             type_class = getattr(types_module, type_name)
+
+            # TODO: Protocol enforcement (future implementation)
+            # if protocol is not None:
+            #     if not isinstance(type_class, protocol):
+            #         raise TypeError(f"{type_class} doesn't implement {protocol}")
+
             cls._type_cache[cache_key] = type_class
             return type_class
         except AttributeError:
@@ -218,4 +254,4 @@ def load_type_from_position(position: int, type_name: str) -> Optional[Type[Any]
         >>> from vibe_core.mahamantra.substrate.registry import load_type_from_position
         >>> BootMode = load_type_from_position(0, "BootMode")
     """
-    return MahajanaRegistry.load_type(position, type_name)
+    return GuardianRegistry.load_type(position, type_name)
