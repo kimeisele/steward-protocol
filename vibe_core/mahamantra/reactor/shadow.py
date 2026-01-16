@@ -78,13 +78,14 @@ from vibe_core.mahamantra.protocols._gad import (
 # =============================================================================
 # SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
 # =============================================================================
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.protocols._seed import PARAMPARA, COSMIC_FRAME
 
-# Bhava Protocol - Intent Vector (Grace Scaling)
+# Bhava Protocol - Intent Vector (Grace Scaling) - WATERTIGHT INTEGER VERSION
 from vibe_core.mahamantra.protocols._bhava import (
     Bhava,
     SharanagatiLimb,
-    calculate_grace,
+    calculate_grace_scaled,  # Integer version, no float drift
+    SHARANAGATI_UNIT,
     get_bhava_multiplier,
 )
 
@@ -196,8 +197,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         self._bhava: Bhava = Bhava.SHANTA
         # Default: No limbs fulfilled (compliance = 0)
         self._sharanagati_limbs: set[SharanagatiLimb] = set()
-        # Latest computed grace
-        self._effective_grace: float = 0.0
+        # Latest computed grace (Scaled Integer)
+        self._effective_grace: int = 0
 
         # =====================================================================
         # ADHIKARA STATE (Authorization Chain - Mahajana Signatures)
@@ -391,11 +392,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         parampara_coherence = self._compute_parampara_coherence(self._position, self._cycle_count)
 
         # =====================================================================
-        # BHAVA INTEGRATION (Grace Scaling)
+        # BHAVA INTEGRATION (Grace Scaling) - WATERTIGHT INTEGER
         # =====================================================================
-        # G = f × B × S (Frequency × Bhava × Sharanagati)
-        self._effective_grace = calculate_grace(
-            frequency=parampara_coherence,
+        # 1. Scale frequency (coherence) to COSMIC_FRAME
+        # parampara_coherence (0.0-1.0) -> frequency_scaled (0-21600)
+        frequency_scaled = int(parampara_coherence * COSMIC_FRAME)
+        
+        # 2. Calculate Grace using integer arithmetic
+        # G = f × B × S (scaled)
+        self._effective_grace = calculate_grace_scaled(
+            frequency_scaled=frequency_scaled,
             bhava=self._bhava,
             limbs_fulfilled=self._sharanagati_limbs,
         )
@@ -442,7 +448,17 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return state
 
     def _trigger_bhoga(self, state: ShadowState) -> None:
-        """Trigger on_bhoga for all reactors at current position."""
+        """
+        Trigger on_bhoga for all reactors at current position.
+        
+        ADHIKARA GUARD: Callbacks blocked if not authorized.
+        """
+        # =====================================================================
+        # ADHIKARA GUARD - No signature = No execution
+        # =====================================================================
+        if not self.is_authorized():
+            return  # BLOCKED: Insufficient Mahajana signatures
+        
         position = state["position"]
         for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_bhoga"):
@@ -452,7 +468,14 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                     pass  # Reactor error doesn't break the cycle
 
     def _trigger_switch(self, state: ShadowState) -> None:
-        """Trigger on_switch for position 8 (THE 8 MOMENT)."""
+        """
+        Trigger on_switch for position 8 (THE 8 MOMENT).
+        
+        ADHIKARA GUARD: Callbacks blocked if not authorized.
+        """
+        if not self.is_authorized():
+            return  # BLOCKED: Insufficient Mahajana signatures
+        
         for reactor in self._listeners.get(SWITCH_POSITION, []):
             if hasattr(reactor, "on_switch"):
                 try:
@@ -461,7 +484,14 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                     pass
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
-        """Trigger on_prasadam for all reactors at current position."""
+        """
+        Trigger on_prasadam for all reactors at current position.
+        
+        ADHIKARA GUARD: Callbacks blocked if not authorized.
+        """
+        if not self.is_authorized():
+            return  # BLOCKED: Insufficient Mahajana signatures
+        
         position = state["position"]
         for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_prasadam"):
@@ -476,7 +506,12 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         15→0: Prasadam ready for distribution/acceptance.
         Agent receives sanctified output. Acintya.
+        
+        ADHIKARA GUARD: Callbacks blocked if not authorized.
         """
+        if not self.is_authorized():
+            return  # BLOCKED: Insufficient Mahajana signatures
+            
         for reactor in self._listeners.get(RETURN_POSITION, []):
             if hasattr(reactor, "on_return"):
                 try:
@@ -565,14 +600,13 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         self._sharanagati_limbs.discard(limb)
 
     @property
-    def effective_grace(self) -> float:
+    def effective_grace(self) -> int:
         """
         Current effective grace (G = f × B × S).
         
-        Computed from:
-        - f: parampara_coherence (0.0 - 1.0)
-        - B: bhava_multiplier (1.0 - 3.0)  
-        - S: sharanagati_compliance (0.0 - 1.0)
+        Computed via WATERTIGHT INTEGER SCALING:
+        - Returns integer value (e.g. 24710)
+        - Base: COSMIC_FRAME (21600)
         """
         return self._effective_grace
 
