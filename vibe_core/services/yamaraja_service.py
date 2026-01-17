@@ -45,13 +45,13 @@ from datetime import datetime, timedelta
 from threading import RLock
 from typing import Dict, FrozenSet, List, Optional, Set, Union
 
-from vibe_core.ledger import VibeLedger
 from vibe_core.protocols.defense import (
     IDataSanitizer,
     INetworkGuard,
     IOutputVerifier,
     IResourceManager,
 )
+from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja import (
     Judgeable,
@@ -186,9 +186,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
 
             # Cannot lower to SUBSTRATE without explicit authorization
             if level == SecurityLevel.SUBSTRATE and old_level != SecurityLevel.SUBSTRATE:
-                logger.warning(
-                    f"⚖️  YAMARAJA: SUBSTRATE level requires sovereign authorization"
-                )
+                logger.warning("⚖️  YAMARAJA: SUBSTRATE level requires sovereign authorization")
                 self._record_audit(
                     operation="set_level_denied",
                     subject=f"{old_level.name} -> {level.name}",
@@ -209,9 +207,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
                 reason=reason,
             )
 
-            logger.info(
-                f"⚖️  YAMARAJA: Security level changed from {old_level.name} to {level.name}: {reason}"
-            )
+            logger.info(f"⚖️  YAMARAJA: Security level changed from {old_level.name} to {level.name}: {reason}")
             return True
 
     def enforce_level(self, minimum: SecurityLevel) -> None:
@@ -247,9 +243,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
         with self._lock:
             # Check if subject is quarantined
             if subject_id in self._quarantine:
-                logger.warning(
-                    f"⚖️  YAMARAJA: Cannot grant to quarantined subject {subject_id}"
-                )
+                logger.warning(f"⚖️  YAMARAJA: Cannot grant to quarantined subject {subject_id}")
                 raise SecurityError(f"Subject {subject_id} is quarantined")
 
             # Initialize capability sets if needed
@@ -294,9 +288,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
                 reason=f"Granted by {granter_id}",
             )
 
-            logger.info(
-                f"⚖️  YAMARAJA: Granted '{capability}' to '{subject_id}' by '{granter_id}'"
-            )
+            logger.info(f"⚖️  YAMARAJA: Granted '{capability}' to '{subject_id}' by '{granter_id}'")
             return cap_record
 
     def revoke_capability(
@@ -323,9 +315,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
 
             # Remove from records
             self._capability_records[subject_id] = [
-                cap
-                for cap in self._capability_records[subject_id]
-                if cap["name"] != capability
+                cap for cap in self._capability_records[subject_id] if cap["name"] != capability
             ]
 
             # Record in ledger
@@ -350,9 +340,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
                 reason=reason,
             )
 
-            logger.info(
-                f"⚖️  YAMARAJA: Revoked '{capability}' from '{subject_id}' by '{revoker_id}': {reason}"
-            )
+            logger.info(f"⚖️  YAMARAJA: Revoked '{capability}' from '{subject_id}' by '{revoker_id}': {reason}")
             return True
 
     def check_capability(self, subject_id: str, capability: str) -> bool:
@@ -587,9 +575,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
             # Execute response
             self._execute_response(response, level, source, target, details, violation_type)
 
-            logger.warning(
-                f"⚖️  YAMARAJA VIOLATION [{level.name}]: {violation_type} - {source} -> {target}: {details}"
-            )
+            logger.warning(f"⚖️  YAMARAJA VIOLATION [{level.name}]: {violation_type} - {source} -> {target}: {details}")
 
             return violation
 
@@ -607,17 +593,11 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
         )
 
         records: List[SecurityAuditRecord] = []
-        cutoff = (
-            datetime.fromisoformat(since)
-            if since
-            else datetime.now() - timedelta(hours=24)
-        )
+        cutoff = datetime.fromisoformat(since) if since else datetime.now() - timedelta(hours=24)
 
         for event in events:
             details = event.get("details", {})
-            event_time = datetime.fromisoformat(
-                details.get("timestamp", datetime.now().isoformat())
-            )
+            event_time = datetime.fromisoformat(details.get("timestamp", datetime.now().isoformat()))
 
             # Filter by time
             if event_time < cutoff:
@@ -725,8 +705,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
         """
         if to_level.value >= violation["level"]:
             logger.warning(
-                f"⚖️  YAMARAJA: Cannot escalate to same or higher level "
-                f"({to_level.name} >= level {violation['level']})"
+                f"⚖️  YAMARAJA: Cannot escalate to same or higher level ({to_level.name} >= level {violation['level']})"
             )
             return
 
@@ -751,10 +730,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
             details=f"Escalated from level {violation['level']}: {violation['details']}",
         )
 
-        logger.warning(
-            f"⚖️  YAMARAJA ESCALATION: {violation['violation_id']} "
-            f"escalated to {to_level.name}"
-        )
+        logger.warning(f"⚖️  YAMARAJA ESCALATION: {violation['violation_id']} escalated to {to_level.name}")
 
     def quarantine(
         self,
@@ -799,9 +775,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
                 },
             )
 
-            logger.warning(
-                f"⚖️  YAMARAJA QUARANTINE: '{subject_id}' quarantined for {duration_seconds}s: {reason}"
-            )
+            logger.warning(f"⚖️  YAMARAJA QUARANTINE: '{subject_id}' quarantined for {duration_seconds}s: {reason}")
             return True
 
     # =========================================================================
@@ -852,16 +826,12 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
     ) -> None:
         """Execute the determined response."""
         if response == "SYSTEM_HALT":
-            logger.critical(
-                f"⚖️  YAMARAJA: SYSTEM_HALT triggered by {level.name} violation"
-            )
+            logger.critical(f"⚖️  YAMARAJA: SYSTEM_HALT triggered by {level.name} violation")
             # In production, this would trigger graceful shutdown
             # For now, just log critically
 
         elif response == "KERNEL_PANIC":
-            logger.critical(
-                f"⚖️  YAMARAJA: KERNEL_PANIC triggered - {source} -> {target}"
-            )
+            logger.critical(f"⚖️  YAMARAJA: KERNEL_PANIC triggered - {source} -> {target}")
             # Would trigger kernel-level recovery
 
         elif response == "AUTO_HEAL":
@@ -869,7 +839,7 @@ class YamarajaService(SecurityProtocol, YamarajaProtocol):
             # Would trigger Ouroboros healing loop
 
         elif response == "NAGA_RESPONSE":
-            logger.warning(f"⚖️  YAMARAJA: NAGA_RESPONSE - activating threat response")
+            logger.warning("⚖️  YAMARAJA: NAGA_RESPONSE - activating threat response")
             # Would notify NAGA services
 
         elif response == "LOG_ALERT":

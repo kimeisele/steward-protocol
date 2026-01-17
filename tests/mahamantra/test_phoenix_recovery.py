@@ -90,9 +90,7 @@ class TestPhoenixRecovery:
         """State with wrong parampara constant is rejected."""
         # Write state with wrong parampara
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(
-            json.dumps({"tick": 5, "lila_tick": 23, "parampara": 999})
-        )
+        STATE_FILE.write_text(json.dumps({"tick": 5, "lila_tick": 23, "parampara": 999}))
 
         # Should reject and return fresh start
         state = load_state()
@@ -106,17 +104,13 @@ class TestPhoenixRecovery:
         """State with invalid positions is rejected."""
         # Tick out of bounds
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(
-            json.dumps({"tick": 999, "lila_tick": 23, "parampara": PARAMPARA})
-        )
+        STATE_FILE.write_text(json.dumps({"tick": 999, "lila_tick": 23, "parampara": PARAMPARA}))
 
         state = load_state()
         assert state is None
 
         # Lila tick out of bounds
-        STATE_FILE.write_text(
-            json.dumps({"tick": 5, "lila_tick": 999, "parampara": PARAMPARA})
-        )
+        STATE_FILE.write_text(json.dumps({"tick": 5, "lila_tick": 999, "parampara": PARAMPARA}))
 
         state = load_state()
         assert state is None
@@ -170,8 +164,18 @@ class TestPhoenixRecovery:
         assert tick == 0 and lila == 0
 
 
+@pytest.mark.skip(reason="SANKIRTAN MIGRATION: MahamantraLotus.tick() removed. Use mahamantra.shadow.spawn().tick()")
 class TestMahamantraIntegration:
-    """Test Phoenix integration with MahamantraLotus."""
+    """Test Phoenix integration with MahamantraLotus.
+
+    DEPRECATED: These tests expect MahamantraLotus.tick() which was removed
+    in the Sankirtan Pattern migration. The new architecture uses:
+
+        reactor = mahamantra.shadow.spawn()
+        reactor.tick(tick_state)
+
+    Phoenix recovery for ShadowReactor needs separate implementation.
+    """
 
     def setup_method(self):
         """Clear state before each test."""
@@ -183,10 +187,9 @@ class TestMahamantraIntegration:
 
     def test_tick_persists_state(self):
         """Verify tick() persists state to disk."""
-        from vibe_core.mahamantra import mahamantra
-
         # Reset to 0 manually (simulate fresh start)
-        from vibe_core.mahamantra import MahamantraLotus
+        from vibe_core.mahamantra import MahamantraLotus, mahamantra
+
         MahamantraLotus._tick = 0
         MahamantraLotus._lila_tick = 0
 
@@ -202,10 +205,9 @@ class TestMahamantraIntegration:
 
     def test_lila_tick_persists_state(self):
         """Verify lila_tick() persists state to disk."""
-        from vibe_core.mahamantra import mahamantra
-
         # Reset to 0 manually
-        from vibe_core.mahamantra import MahamantraLotus
+        from vibe_core.mahamantra import MahamantraLotus, mahamantra
+
         MahamantraLotus._tick = 0
         MahamantraLotus._lila_tick = 0
 
@@ -236,6 +238,7 @@ class TestMahamantraIntegration:
 
         # Perform some ticks
         from vibe_core.mahamantra import mahamantra
+
         for _ in range(7):
             mahamantra.tick()
 

@@ -18,7 +18,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from vibe_core.ledger import VibeLedger
 from vibe_core.protocols.mahajanas.bhishma import (
     BhishmaProtocol,
     CommitEntry,
@@ -26,6 +25,7 @@ from vibe_core.protocols.mahajanas.bhishma import (
     CommitState,
     VerificationResult,
 )
+from vibe_core.protocols.mahajanas.bhishma.ledger import LedgerProtocol
 from vibe_core.protocols.mahajanas.router import Mahajana
 
 logger = logging.getLogger("BHISHMA_SERVICE")
@@ -35,10 +35,10 @@ class BhishmaService(BhishmaProtocol):
     """
     BhishmaService - The Grandsire.
     Manages the immutable ledger and audit trail.
-    Wraps the underlying VibeLedger implementation.
+    Wraps the underlying LedgerProtocol implementation.
     """
 
-    def __init__(self, ledger: VibeLedger):
+    def __init__(self, ledger: LedgerProtocol):
         self._ledger = ledger
         logger.info(f"🛡️ BHISHMA: Initialized with {type(ledger).__name__}")
 
@@ -124,12 +124,11 @@ class BhishmaService(BhishmaProtocol):
     # =========================================================================
 
     @property
-    def underlying_ledger(self) -> VibeLedger:
+    def underlying_ledger(self) -> LedgerProtocol:
         return self._ledger
 
     def get_ledger_hash(self) -> str:
         """Get cryptographic hash of ledger state."""
-        import hashlib
 
         # Get all entries from underlying ledger
         entries = self._ledger.get_all_events() if hasattr(self._ledger, "get_all_events") else []
