@@ -75,4 +75,4 @@ def __getattr__(name: str) -> Any:
 # __all__ for explicit exports (optional, for IDE support)
 # =============================================================================
 
-__all__ = ["ErrorCode", "StructuredError", "ErrorCategory"]
+__all__ = ["ErrorCode", "StructuredError", "ErrorCategory", "kernel_fault"]  # noqa: F822

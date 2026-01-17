@@ -15,6 +15,7 @@ from vibe_core.protocols.mahajanas.prithu.types.errors import (
     ErrorCategory,
     ErrorCode,
     StructuredError,
+    kernel_fault,
 )
 
 # Lazy imports to avoid circular dependencies
@@ -23,6 +24,7 @@ __all__ = [
     "ErrorCategory",
     "ErrorCode",
     "StructuredError",
+    "kernel_fault",
     # lineage.py
     "LineageBlock",
     "LineageChain",
@@ -42,12 +44,16 @@ def __getattr__(name: str):
             LineageChain,
             LineageEventType,
         )
+
         return {"LineageBlock": LineageBlock, "LineageChain": LineageChain, "LineageEventType": LineageEventType}[name]
     if name in ("InMemoryLedger", "SQLiteLedger", "ArchiveAttachment"):
         from vibe_core.protocols.mahajanas.prithu.types.ledger import (
+            ArchiveAttachment,
             InMemoryLedger,
             SQLiteLedger,
-            ArchiveAttachment,
         )
-        return {"InMemoryLedger": InMemoryLedger, "SQLiteLedger": SQLiteLedger, "ArchiveAttachment": ArchiveAttachment}[name]
+
+        return {"InMemoryLedger": InMemoryLedger, "SQLiteLedger": SQLiteLedger, "ArchiveAttachment": ArchiveAttachment}[
+            name
+        ]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
