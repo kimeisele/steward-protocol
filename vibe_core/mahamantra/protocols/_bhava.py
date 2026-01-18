@@ -40,9 +40,6 @@ from typing import Final, Protocol, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PANCHA, SHARANAGATI
 
-# SSOT: SharanagatiLimb from substrate/seed.py
-from vibe_core.mahamantra.substrate.seed import SharanagatiLimb
-
 # =============================================================================
 # VERIFICATION
 # =============================================================================
@@ -104,9 +101,27 @@ def get_bhava_multiplier(bhava: Bhava) -> float:
 
 
 # =============================================================================
-# SHARANAGATI COMPLIANCE (The 6 Limbs) - SSOT: substrate/seed.py
+# SHARANAGATI COMPLIANCE (The 6 Limbs)
 # =============================================================================
-# SharanagatiLimb imported from seed.py above
+
+
+class SharanagatiLimb(IntEnum):
+    """
+    The 6 limbs of surrender that validate Bhava authenticity.
+
+    From Hari-bhakti-vilasa:
+    "There are six symptoms of surrender: acceptance of the favorable,
+    rejection of the unfavorable, faith in protection, acceptance of
+    guardianship, self-surrender, and humility."
+    """
+
+    ANUKULYA = 0  # Accept what is favorable
+    PRATIKULYA = 1  # Reject what is unfavorable
+    VISHVASA = 2  # Faith in protection
+    VARANAM = 3  # Accept the Lord as guardian
+    NIKSHEPA = 4  # Self-surrender
+    KARPANYA = 5  # Humility (no independent karma)
+
 
 assert len(SharanagatiLimb) == SHARANAGATI, "There must be exactly 6 limbs"
 

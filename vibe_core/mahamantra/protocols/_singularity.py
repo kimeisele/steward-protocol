@@ -232,14 +232,36 @@ def mercy_transcends_justice(chanting_frequency: float) -> bool:
 
 
 # =============================================================================
-# THE 12 MAHAJANAS (SB 6.3.20) - SSOT: substrate/mahajana.py
+# THE 12 MAHAJANAS (SB 6.3.20)
 # =============================================================================
 #
 # The 12 Mahajanas are the guardians who test the system.
 # Per SAMKHYA.md §10.1.1
 #
 
-from vibe_core.mahamantra.substrate.mahajana import Mahajana
+
+class Mahajana(IntEnum):
+    """
+    The 12 Mahajanas - The Testers of the System.
+
+    From Srimad Bhagavatam 6.3.20:
+    "dharmaṁ tu sākṣād bhagavat-praṇītam"
+
+    Each represents a testing principle in the system.
+    """
+
+    BRAHMA = 1  # Creation - Init-Check, Bootstrap
+    NARADA = 2  # Devotion - Event Bus, Messaging
+    SHAMBHU = 3  # Destruction - Garbage Collection, Cleanup
+    KUMARAS = 4  # Celibacy - Isolation, Sandboxing
+    KAPILA = 5  # Analysis - Sankhya Validation, Type Checking
+    MANU = 6  # Law - Policy Enforcement
+    PRAHLADA = 7  # Faith - Resilience, Fault Tolerance
+    JANAKA = 8  # Duty - Work Execution, Service
+    BHISHMA = 9  # Vow - Commitment, Transactions
+    BALI = 10  # Surrender - Resource Sacrifice, Donation
+    SHUKA = 11  # Transcendence - State Observation, Monitoring
+    YAMARAJA = 12  # Judgment - Final Testing
 
 
 @dataclass(frozen=True)

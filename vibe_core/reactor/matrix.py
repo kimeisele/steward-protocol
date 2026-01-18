@@ -36,9 +36,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import List, Tuple
 
-# SSOT: Guna from substrate/guna.py
-from vibe_core.mahamantra.substrate.guna import Guna
-
 
 class Varga(IntEnum):
     """
@@ -68,7 +65,15 @@ class Sthana(IntEnum):
     ANUNASIKA = 4  # Nasal - Resonant, continuous
 
 
-# Guna imported from SSOT: vibe_core.mahamantra.substrate.guna
+class Guna(IntEnum):
+    """
+    The 3 Modes of Nature - Quality of action.
+    """
+
+    TAMAS = -1  # Inertia, storage, read
+    SATTVA = 0  # Balance, observe, maintain
+    RAJAS = 1  # Activity, execute, transform
+
 
 # =============================================================================
 # THE PHONEME MATRIX - Based on Sanskrit Varnamala

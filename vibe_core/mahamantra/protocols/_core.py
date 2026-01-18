@@ -84,10 +84,33 @@ assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == PARAMPARA, "The 37 for
 
 
 # =============================================================================
-# QUARTER - The Four Divisions (SSOT: mahajana.py)
+# QUARTER - The Four Divisions
 # =============================================================================
 
-from vibe_core.mahamantra.substrate.mahajana import Quarter
+
+class Quarter(str, Enum):
+    """
+    The four quarters of the Mahamantra.
+
+    Hare Krishna Hare Krishna Krishna Krishna Hare Hare
+    Hare Rama Hare Rama Rama Rama Hare Hare
+
+    16 words = 4 quarters of 4 words each.
+    """
+
+    GENESIS = "genesis"  # Positions 0-3:  Creation, Birth
+    DHARMA = "dharma"  # Positions 4-7:  Law, Truth
+    KARMA = "karma"  # Positions 8-11: Action, Work
+    MOKSHA = "moksha"  # Positions 12-15: Liberation, Return
+
+    @classmethod
+    def from_position(cls, position: int) -> "Quarter":
+        """Derive quarter from position (0-15)."""
+        if not 0 <= position < 16:
+            raise ValueError(f"Position must be 0-15, got {position}")
+        quarter_index = position // 4
+        return [cls.GENESIS, cls.DHARMA, cls.KARMA, cls.MOKSHA][quarter_index]
+
 
 # =============================================================================
 # LEVEL - The Vertical Hierarchy

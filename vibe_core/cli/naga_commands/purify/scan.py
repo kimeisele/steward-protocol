@@ -85,21 +85,10 @@ class ScanCommand(NagaCommandBase):
                 return self.failure("Invalid --path flag. Usage: --path <directory>", exit_code=1)
 
         target_path = Path(target_path_str).absolute()
-        path_exists = target_path.exists()
+        if not target_path.exists():
+            return self.failure(f"Path not found: {target_path}", exit_code=1)
 
         try:
-            # Determine scan mode
-            if quick:
-                scan_mode = "quick"
-            elif deep:
-                scan_mode = "deep"
-            elif toxicity_only:
-                scan_mode = "toxicity"
-            elif protocols_only:
-                scan_mode = "protocols"
-            else:
-                scan_mode = "full"
-
             scan_type = "all"
             if toxicity_only:
                 scan_type = "security"
@@ -114,93 +103,52 @@ class ScanCommand(NagaCommandBase):
                 "security_issues": [],
             }
 
-            py_files = []
-            if path_exists:
-                py_files = list(target_path.rglob("*.py"))
-                if not py_files and target_path.is_file() and target_path.suffix == ".py":
-                    py_files = [target_path]
+            py_files = list(target_path.rglob("*.py"))
+            if not py_files and target_path.is_file() and target_path.suffix == ".py":
+                py_files = [target_path]
 
-            # Quick scan limits to first 10 files for speed
-            files_to_scan = py_files[:10] if scan_mode == "quick" else py_files
-
-            for py_file in files_to_scan:
+            for py_file in py_files:
                 try:
                     content = py_file.read_text(encoding="utf-8", errors="ignore")
 
-                    # Quick scan only checks security (most critical)
-                    if scan_mode == "quick":
+                    if scan_type in ["all", "silent"]:
+                        results["silent_failures"].extend(self._find_silent_failures(content, py_file))
+
+                    if scan_type in ["all", "vfs"]:
+                        results["vfs_bypasses"].extend(self._find_vfs_bypasses(content, py_file))
+
+                    if scan_type in ["all", "types"]:
+                        results["any_types"].extend(self._find_any_types(content, py_file))
+
+                    if scan_type in ["all", "security"]:
                         results["security_issues"].extend(self._find_security_issues(content, py_file))
-                    else:
-                        if scan_type in ["all", "silent"]:
-                            results["silent_failures"].extend(self._find_silent_failures(content, py_file))
-
-                        if scan_type in ["all", "vfs"]:
-                            results["vfs_bypasses"].extend(self._find_vfs_bypasses(content, py_file))
-
-                        if scan_type in ["all", "types"]:
-                            results["any_types"].extend(self._find_any_types(content, py_file))
-
-                        if scan_type in ["all", "security"]:
-                            results["security_issues"].extend(self._find_security_issues(content, py_file))
 
                 except Exception as e:
                     if verbose:
                         print(f"    Error scanning {py_file}: {e}")
 
             # Format output
-            mode_label = {
-                "quick": "Quick Scan",
-                "deep": "Deep Scan",
-                "full": "Full Scan",
-                "toxicity": "Toxicity Scan",
-                "protocols": "Protocol Scan",
-            }[scan_mode]
+            output_lines = [
+                f"[VYASA] Codebase Scan: {target_path}",
+                "=" * 60,
+                f"    Scanned {len(py_files)} Python files",
+                "-" * 60,
+            ]
 
-            # Quick scan has minimal output
-            if scan_mode == "quick":
-                total_issues = len(results["security_issues"])
-                output_lines = [
-                    f"[VYASA] {mode_label}: {len(files_to_scan)} files, {total_issues} issues",
-                ]
-            else:
-                output_lines = [
-                    f"[VYASA] Codebase {mode_label}: {target_path}",
-                    "=" * 60,
-                    f"    Scanned {len(py_files)} Python files",
-                ]
+            total_issues = 0
+            for key, issues in results.items():
+                if issues:
+                    count = len(issues)
+                    total_issues += count
+                    output_lines.append(f"    {key.upper().replace('_', ' ')}: {count}")
+                    if verbose:
+                        for issue in issues[:5]:
+                            output_lines.append(f"      {issue['file']}:{issue['line']}")
 
-                # Deep scan adds extra sections
-                if scan_mode == "deep":
-                    output_lines.append("    TOXICITY SCAN: Enabled")
-                    output_lines.append("    PROTOCOL SCAN: Enabled")
-
-                # Toxicity scan adds TAKSHAKA reference (guardian of security)
-                if scan_mode == "toxicity":
-                    output_lines.append("    TAKSHAKA: Security Guardian Active")
-                    output_lines.append("    VAJRA: Penetration Shield Enabled")
-
-                # Protocol scan adds coverage info
-                if scan_mode == "protocols":
-                    output_lines.append("    COVERAGE: Protocol Compliance Check")
-                    output_lines.append("    GAPS: Missing Protocol Detection")
-                    output_lines.append("    MAHAJANA: Guardian Coverage Analysis")
-
-                output_lines.append("-" * 60)
-
-                total_issues = 0
-                for key, issues in results.items():
-                    if issues:
-                        count = len(issues)
-                        total_issues += count
-                        output_lines.append(f"    {key.upper().replace('_', ' ')}: {count}")
-                        if verbose:
-                            for issue in issues[:5]:
-                                output_lines.append(f"      {issue['file']}:{issue['line']}")
-
-                output_lines.append("-" * 60)
-                output_lines.append(f"    TOTAL ISSUES: {total_issues}")
-                output_lines.append("=" * 60)
-                output_lines.append("ASSERT_TRUTH: COMPLETED")
+            output_lines.append("-" * 60)
+            output_lines.append(f"    TOTAL ISSUES: {total_issues}")
+            output_lines.append("=" * 60)
+            output_lines.append("ASSERT_TRUTH: COMPLETED")
 
             return self.success(
                 "\n".join(output_lines),
@@ -208,9 +156,8 @@ class ScanCommand(NagaCommandBase):
                     ("phase", "purify"),
                     ("position", "4"),
                     ("mahajana", "vyasa"),
-                    ("mode", scan_mode),
                     ("total_issues", str(total_issues)),
-                    ("path", target_path_str),
+                    ("path", str(target_path)),
                 ),
             )
         except Exception as e:
