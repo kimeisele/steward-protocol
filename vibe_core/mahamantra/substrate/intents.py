@@ -14,7 +14,7 @@ STRUKTUR:
 WATERTIGHT: No hardcoded intents in mahajana files.
 """
 
-from typing import Final, Dict, List, Tuple
+from typing import Dict, Final, List, Tuple
 
 # =============================================================================
 # THE INTENT MAP (SSOT)
@@ -23,37 +23,36 @@ from typing import Final, Dict, List, Tuple
 
 INTENT_MAP: Final[Dict[int, Tuple[str, ...]]] = {
     # === GENESIS QUARTER (0-3) ===
-    0: ("scan", "disk", "infrastructure", "file", "filesystem"),      # PRITHU - Earth/Infrastructure
-    1: ("create", "spawn", "genesis", "new", "born", "init"),         # BRAHMA - Creation
-    2: ("broadcast", "message", "communicate", "narada", "news"),     # NARADA - Communication
-    3: ("destroy", "dissolve", "transform", "shiva", "cleanup"),      # SHAMBHU - Transformation
-    
+    0: ("scan", "disk", "infrastructure", "file", "filesystem"),  # PRITHU - Earth/Infrastructure
+    1: ("create", "spawn", "genesis", "new", "born", "init", "boot", "start"),  # BRAHMA - Creation
+    2: ("broadcast", "message", "communicate", "narada", "news"),  # NARADA - Communication
+    3: ("destroy", "dissolve", "transform", "shiva", "cleanup"),  # SHAMBHU - Transformation
     # === DHARMA QUARTER (4-7) ===
-    4: ("document", "compile", "knowledge", "vyasa", "write"),        # VYASA - Documentation
-    5: ("purify", "cleanse", "shuddhi", "format", "lint"),            # KUMARAS - Purification
-    6: ("analyze", "resolve", "enumerate", "logic", "inference"),     # KAPILA - Analysis
-    7: ("rule", "law", "govern", "manu", "policy"),                   # MANU - Governance
-    
+    4: ("document", "compile", "knowledge", "vyasa", "write"),  # VYASA - Documentation
+    5: ("purify", "cleanse", "shuddhi", "format", "lint"),  # KUMARAS - Purification
+    6: ("analyze", "resolve", "enumerate", "logic", "inference"),  # KAPILA - Analysis
+    7: ("rule", "law", "govern", "manu", "policy"),  # MANU - Governance
     # === KARMA QUARTER (8-11) ===
-    8: ("execute", "run", "enforce", "parashurama", "action"),        # PARASHURAMA - Execution
-    9: ("protect", "defend", "prahlada", "devotion", "faith"),        # PRAHLADA - Protection
-    10: ("schedule", "task", "janaka", "dharma", "duty"),             # JANAKA - Scheduling
-    11: ("persist", "commit", "ledger", "bhishma", "store"),          # BHISHMA - Persistence
-    
+    8: ("execute", "run", "enforce", "parashurama", "action"),  # PARASHURAMA - Execution
+    9: ("protect", "defend", "prahlada", "devotion", "faith"),  # PRAHLADA - Protection
+    10: ("schedule", "task", "janaka", "dharma", "duty"),  # JANAKA - Scheduling
+    11: ("persist", "commit", "ledger", "bhishma", "store"),  # BHISHMA - Persistence
     # === MOKSHA QUARTER (12-15) ===
-    12: ("guard", "kill", "security", "nrisimha", "terminate"),       # NRISIMHA - Security
-    13: ("resource", "allocate", "bali", "give", "surrender"),        # BALI - Resources
-    14: ("observe", "log", "shuka", "report", "narrate"),             # SHUKA - Observation
-    15: ("judge", "audit", "yamaraja", "verdict", "death"),           # YAMARAJA - Judgment
+    12: ("guard", "kill", "security", "nrisimha", "terminate"),  # NRISIMHA - Security
+    13: ("resource", "allocate", "bali", "give", "surrender"),  # BALI - Resources
+    14: ("observe", "log", "shuka", "report", "narrate", "status"),  # SHUKA - Observation
+    15: ("judge", "audit", "yamaraja", "verdict", "death"),  # YAMARAJA - Judgment
 }
 
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 
+
 def get_intents(position: int) -> Tuple[str, ...]:
     """Get intents for a position. Returns empty tuple if invalid."""
     return INTENT_MAP.get(position, ())
+
 
 def get_position_for_intent(intent: str) -> int:
     """Find which position handles an intent. Returns -1 if not found."""
@@ -62,6 +61,7 @@ def get_position_for_intent(intent: str) -> int:
         if intent_lower in intents:
             return pos
     return -1
+
 
 # =============================================================================
 # EXPORTS

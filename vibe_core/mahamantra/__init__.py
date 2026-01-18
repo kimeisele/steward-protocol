@@ -63,8 +63,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         from vibe_core.mahamantra.substrate import ProtocolRegistry
 
-        # 1. Lazy Diksha: Ensure protocols are loaded
-        if ProtocolRegistry.coverage()[0] == 0:
+        # 1. Lazy Diksha: Ensure ALL protocols are loaded
+        if ProtocolRegistry.coverage()[0] < 16:
             for guardian in ALL_GUARDIANS:
                 try:
                     # Direct module load bypasses the lotus navigation to avoid loops
@@ -122,12 +122,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def resolve(self, name: str) -> LotusNode:
         """Helper to find a node by guardian name."""
-        from vibe_core.mahamantra.substrate.seed import get_guardian_quarter
+        from vibe_core.mahamantra.substrate.parampara import Mahajana, get_quarter
 
-        q = get_guardian_quarter(name)
-        if q:
-            return getattr(getattr(self, q.lower()), name)
-        return getattr(self, name)
+        try:
+            # Mahajana values are lowercase
+            mahajana = Mahajana(name.lower())
+            q = get_quarter(mahajana)
+            return getattr(getattr(self, q.name.lower()), name)
+        except (ValueError, AttributeError):
+            return getattr(self, name)
 
     # === GAD-000 Compliance ===
     def discover(self) -> Dict[str, object]:
