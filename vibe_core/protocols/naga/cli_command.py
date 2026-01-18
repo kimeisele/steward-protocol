@@ -39,22 +39,22 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
 
-from vibe_core.protocols.substrate import MantraOpCode
-
 # =============================================================================
 # IMPORT FROM REAL INFRASTRUCTURE
 # =============================================================================
 # Avatara from avataras (4 HEADs)
 from vibe_core.protocols.avataras import Avatara
+from vibe_core.protocols.mahajanas.router import (
+    HEAD_OPCODES,
+    MahajanaRouter,
+    get_router,
+)
 
 # Core Mahajana (12 Workers) - for internal use
 from vibe_core.protocols.mahajanas.router import (
     Mahajana as CoreMahajana,
-    MahajanaRouter,
-    get_router,
-    HEAD_OPCODES,
 )
-
+from vibe_core.protocols.substrate import MantraOpCode
 
 # =============================================================================
 # CLI MAHAJANA (16 Positions - Unified for CLI)
@@ -74,34 +74,36 @@ class Mahajana(str, Enum):
     - vibe_core.protocols.avataras (4 HEADs)
     - vibe_core.protocols.mahajanas.router (12 Workers)
     """
+
+    # === ALIGNED WITH seed.py ALL_GUARDIANS (SSOT) ===
     # Quarter 1: WAKE (Genesis)
-    PRITHU = "prithu"       # 00 - HEAD (Avatara) - SYS_WAKE
-    BRAHMA = "brahma"       # 01 - Worker - LOAD_ROOT
-    NARADA = "narada"       # 02 - Worker - ALLOC_MEM
-    SHAMBHU = "shambhu"     # 03 - Worker - BIND_CTX
+    VYASA = "vyasa"  # 00 - HEAD (Avatara) - SYS_WAKE
+    BRAHMA = "brahma"  # 01 - Worker - LOAD_ROOT
+    NARADA = "narada"  # 02 - Worker - ALLOC_MEM
+    SHAMBHU = "shambhu"  # 03 - Worker - INIT_THREAD
     # Quarter 2: PURIFY (Dharma)
-    VYASA = "vyasa"         # 04 - HEAD (Avatara) - ASSERT_TRUTH
-    KUMARAS = "kumaras"     # 05 - Worker - RESOLVE_REQ
-    KAPILA = "kapila"       # 06 - Worker - GARBAGE_COLLECT
-    MANU = "manu"           # 07 - Worker - PULSE_SYNC
+    PRITHU = "prithu"  # 04 - HEAD (Avatara) - COMPILE_AST
+    KUMARAS = "kumaras"  # 05 - Worker - BIND_SYMBOL
+    KAPILA = "kapila"  # 06 - Worker - TYPE_CHECK
+    MANU = "manu"  # 07 - Worker - DHARMA_TEST
     # Quarter 3: SERVE (Karma)
     PARASHURAMA = "parashurama"  # 08 - HEAD (Avatara) - FETCH_RES
-    PRAHLADA = "prahlada"   # 09 - Worker - EXEC_SERVICE
-    JANAKA = "janaka"       # 10 - Worker - CHECK_DHARMA
-    BHISHMA = "bhishma"     # 11 - Worker - COMMIT_LOG
+    PRAHLADA = "prahlada"  # 09 - Worker - EXEC_SERVICE
+    JANAKA = "janaka"  # 10 - Worker - CHECK_DHARMA
+    BHISHMA = "bhishma"  # 11 - Worker - COMMIT_LOG
     # Quarter 4: SUSTAIN (Moksha)
-    NRISIMHA = "nrisimha"   # 12 - HEAD (Avatara) - CACHE_STATE
-    BALI = "bali"           # 13 - Worker - OPTIMIZE
-    SHUKA = "shuka"         # 14 - Worker - YIELD_CPU
-    YAMARAJA = "yamaraja"   # 15 - Worker - RESET_IP
+    NRISIMHA = "nrisimha"  # 12 - HEAD (Avatara) - CACHE_STATE
+    BALI = "bali"  # 13 - Worker - OPTIMIZE
+    SHUKA = "shuka"  # 14 - Worker - YIELD_CPU
+    YAMARAJA = "yamaraja"  # 15 - Worker - RESET_IP
+
 
 # Vyuha routing - THE SOURCE OF TRUTH
 from vibe_core.protocols.mahajanas.vyuha import (
-    get_entity_for_opcode,
-    get_cycle_for_opcode,
     CyclePhase,
+    get_cycle_for_opcode,
+    get_entity_for_opcode,
 )
-
 
 # =============================================================================
 # OWNER TYPE (Union of Avatara and Mahajana)
@@ -115,12 +117,14 @@ Owner = Union[Avatara, Mahajana]
 # PHASE ENUM (Maps to CyclePhase for CLI layer)
 # =============================================================================
 
+
 class Phase(str, Enum):
     """The 4 Phases of the Mahamantra CPU."""
-    WAKE = "wake"       # Q1: Genesis (SYS_WAKE + 3 workers)
-    PURIFY = "purify"   # Q2: Dharma (ASSERT_TRUTH + 3 workers)
-    SERVE = "serve"     # Q3: Karma (FETCH_RES + 3 workers)
-    SUSTAIN = "sustain" # Q4: Moksha (CACHE_STATE + 3 workers)
+
+    WAKE = "wake"  # Q1: Genesis (SYS_WAKE + 3 workers)
+    PURIFY = "purify"  # Q2: Dharma (ASSERT_TRUTH + 3 workers)
+    SERVE = "serve"  # Q3: Karma (FETCH_RES + 3 workers)
+    SUSTAIN = "sustain"  # Q4: Moksha (CACHE_STATE + 3 workers)
 
 
 # CyclePhase → Phase mapping
@@ -142,6 +146,7 @@ def get_phase_for_opcode(opcode: MantraOpCode) -> Phase:
 # ROUTING (Derived from vyuha.py - "The Mahamantra links back")
 # =============================================================================
 
+
 def route_opcode(opcode: MantraOpCode) -> Owner:
     """
     Route an OpCode to its Owner (Avatara or Mahajana).
@@ -153,13 +158,9 @@ def route_opcode(opcode: MantraOpCode) -> Owner:
 
 
 # Convenience tables (generated from vyuha)
-OPCODE_TO_OWNER: Dict[MantraOpCode, Owner] = {
-    opcode: route_opcode(opcode) for opcode in MantraOpCode
-}
+OPCODE_TO_OWNER: Dict[MantraOpCode, Owner] = {opcode: route_opcode(opcode) for opcode in MantraOpCode}
 
-OPCODE_TO_PHASE: Dict[MantraOpCode, Phase] = {
-    opcode: get_phase_for_opcode(opcode) for opcode in MantraOpCode
-}
+OPCODE_TO_PHASE: Dict[MantraOpCode, Phase] = {opcode: get_phase_for_opcode(opcode) for opcode in MantraOpCode}
 
 # =============================================================================
 # CLI MAHAJANA MAPPINGS (16-fold)
@@ -186,9 +187,7 @@ OPCODE_TO_MAHAJANA: Dict[MantraOpCode, Mahajana] = {
 }
 
 # Reverse mapping
-MAHAJANA_TO_OPCODE: Dict[Mahajana, MantraOpCode] = {
-    mahajana: opcode for opcode, mahajana in OPCODE_TO_MAHAJANA.items()
-}
+MAHAJANA_TO_OPCODE: Dict[Mahajana, MantraOpCode] = {mahajana: opcode for opcode, mahajana in OPCODE_TO_MAHAJANA.items()}
 
 
 def get_mahajana_for_opcode(opcode: MantraOpCode) -> Mahajana:
@@ -200,6 +199,7 @@ def get_mahajana_for_opcode(opcode: MantraOpCode) -> Mahajana:
 # COMMAND RESULT (STRICT TYPING)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class NagaCommandResult:
     """
@@ -210,6 +210,7 @@ class NagaCommandResult:
     - No Any types
     - Frozen (immutable)
     """
+
     success: bool
     exit_code: int
     output: str = ""
@@ -237,6 +238,7 @@ class NagaCommandResult:
 # =============================================================================
 # NAGA COMMAND PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class INagaCommand(Protocol):
@@ -306,6 +308,7 @@ class INagaCommand(Protocol):
 # =============================================================================
 # BASE IMPLEMENTATION
 # =============================================================================
+
 
 class NagaCommandBase:
     """
@@ -383,6 +386,7 @@ class NagaCommandBase:
 # =============================================================================
 # COMMAND REGISTRY (BALARAMA PATTERN)
 # =============================================================================
+
 
 class NagaCommandRegistry:
     """
@@ -483,6 +487,7 @@ def naga_command(
             def execute(self, args: List[str]) -> NagaCommandResult:
                 return self.success("Hello!")
     """
+
     def decorator(cls):
         cls._opcode = opcode
         cls._name = name
@@ -490,6 +495,7 @@ def naga_command(
         # Auto-register
         NAGA_COMMAND_REGISTRY.register(cls())
         return cls
+
     return decorator
 
 
@@ -499,10 +505,10 @@ def naga_command(
 
 __all__ = [
     # Types (from real infrastructure)
-    "Avatara",       # From protocols/avataras (4 HEADs)
-    "Mahajana",      # CLI Mahajana (16-member unified enum)
-    "Owner",         # Union[Avatara, CoreMahajana]
-    "Phase",         # 4 CLI Phases
+    "Avatara",  # From protocols/avataras (4 HEADs)
+    "Mahajana",  # CLI Mahajana (16-member unified enum)
+    "Owner",  # Union[Avatara, CoreMahajana]
+    "Phase",  # 4 CLI Phases
     # Router bridge
     "MahajanaRouter",
     "get_router",

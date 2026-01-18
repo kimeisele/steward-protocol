@@ -36,7 +36,6 @@ The Mantra IS the thread. The protocols are the pearls.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -66,48 +65,46 @@ from typing import (
     runtime_checkable,
 )
 
+# Import MantraHeartbeat - THE heartbeat (not duplicate!)
+from vibe_core.protocols.gad import JapaState, MantraHeartbeat
+
 # =============================================================================
 # MANTRA SUBSTRATE - The Lotus IS the Mantra
 # =============================================================================
-
 # Import from acintya - Krishna is the doer (Level -2)
 from vibe_core.protocols.substrate.mantra.acintya import (
-    PARAMPARA,
-    SYSTEM_MANIFESTATION,
-    ProtocolLevel,
-    ParamparaConnection,
-    verify_parampara,
-    TRINITY,
-    PHASES,
     KRISHNA,  # Krishna IS always present
-)
-
-# Import from vakya - The Mahamantra structure
-from vibe_core.protocols.substrate.mantra.vakya import (
-    QuarterType,  # THE quarters (not LotusQuarter duplicate!)
-    Quarter,      # THE quarter structure
-    MAHAMANTRA,   # THE complete mantra
+    PARAMPARA,
+    PHASES,
+    SYSTEM_MANIFESTATION,
+    TRINITY,
+    ParamparaConnection,
+    ProtocolLevel,
+    verify_parampara,
 )
 
 # Import from pada - The words
 from vibe_core.protocols.substrate.mantra.pada import (
-    PadaType,
-    Pada,
     MAHAMANTRA_SEQUENCE,  # THE 16-word sequence
+    Pada,
+    PadaType,
 )
 
 # Import from routing - the fractal structure
 from vibe_core.protocols.substrate.mantra.routing import (
+    QUARTERS,
     FractalLevel,
     FractalRoute,
-    QUARTERS,
     get_quarter,
     route_index_to_pada,
 )
 
-# Import MantraHeartbeat - THE heartbeat (not duplicate!)
-from vibe_core.protocols.gad import MantraHeartbeat, JapaState
-
+# Import from vakya - The Mahamantra structure
+from vibe_core.protocols.substrate.mantra.vakya import (
+    MAHAMANTRA,  # THE complete mantra
+    Quarter,  # THE quarter structure
+    QuarterType,  # THE quarters (not LotusQuarter duplicate!)
+)
 
 # =============================================================================
 # PROTOCOL OWNERSHIP (Governed by CLI)
@@ -115,7 +112,6 @@ from vibe_core.protocols.gad import MantraHeartbeat, JapaState
 # NOTE: Using string literal to avoid circular import with mahajanas.router
 
 OWNER: Final[str] = "brahma"
-
 
 
 # =============================================================================
@@ -136,7 +132,7 @@ LOTUS_PARAMPARA: Final[int] = PARAMPARA  # 37
 
 # 3×4 = ALIVE (essence first)
 LOTUS_TRINITY: Final[int] = TRINITY  # 3
-LOTUS_PHASES: Final[int] = PHASES    # 4
+LOTUS_PHASES: Final[int] = PHASES  # 4
 
 # The 108 beads of the mala
 LOTUS_MALA: Final[int] = 108
@@ -149,10 +145,11 @@ LOTUS_MALA: Final[int] = 108
 
 class LotusMode(str, Enum):
     """The modes of Lotus operation."""
-    SEED = "seed"           # Template mode - providing blueprint
-    STENGEL = "stengel"     # Bridge mode - connecting levels
-    BLÜTE = "blüte"         # Blossom mode - unfolding 1→N
-    GARUDA = "garuda"       # Execute mode - transport/action
+
+    SEED = "seed"  # Template mode - providing blueprint
+    STENGEL = "stengel"  # Bridge mode - connecting levels
+    BLÜTE = "blüte"  # Blossom mode - unfolding 1→N
+    GARUDA = "garuda"  # Execute mode - transport/action
 
 
 class LotusQuarter(str, Enum):
@@ -163,10 +160,11 @@ class LotusQuarter(str, Enum):
     These map directly to QuarterType from vakya.py.
     The Lotus IS the Mantra unfolding.
     """
-    GENESIS = "genesis"     # Q1 = QuarterType.KRISHNA_ADDRESS (Hare Krishna Hare Krishna)
-    DHARMA = "dharma"       # Q2 = QuarterType.KRISHNA_GLORIFY (Krishna Krishna Hare Hare)
-    KARMA = "karma"         # Q3 = QuarterType.RAMA_ADDRESS (Hare Rama Hare Rama)
-    MOKSHA = "moksha"       # Q4 = QuarterType.RAMA_GLORIFY (Rama Rama Hare Hare)
+
+    GENESIS = "genesis"  # Q1 = QuarterType.KRISHNA_ADDRESS (Hare Krishna Hare Krishna)
+    DHARMA = "dharma"  # Q2 = QuarterType.KRISHNA_GLORIFY (Krishna Krishna Hare Hare)
+    KARMA = "karma"  # Q3 = QuarterType.RAMA_ADDRESS (Hare Rama Hare Rama)
+    MOKSHA = "moksha"  # Q4 = QuarterType.RAMA_GLORIFY (Rama Rama Hare Hare)
 
 
 # =============================================================================
@@ -182,9 +180,7 @@ LOTUS_TO_MANTRA_QUARTER: Dict[LotusQuarter, QuarterType] = {
 }
 
 # QuarterType → LotusQuarter (Mantra IS the Lotus)
-MANTRA_TO_LOTUS_QUARTER: Dict[QuarterType, LotusQuarter] = {
-    v: k for k, v in LOTUS_TO_MANTRA_QUARTER.items()
-}
+MANTRA_TO_LOTUS_QUARTER: Dict[QuarterType, LotusQuarter] = {v: k for k, v in LOTUS_TO_MANTRA_QUARTER.items()}
 
 
 def get_lotus_quarter(position: int) -> LotusQuarter:
@@ -208,9 +204,10 @@ class LotusPetal(TypedDict, total=False):
     A single petal of the Lotus (one quarter).
     WATERTIGHT - no Any!
     """
-    quarter: str            # LotusQuarter value
-    positions: List[int]    # 4 positions (0-3, 4-7, 8-11, 12-15)
-    head_avatara: str       # The HEAD Avatara for this quarter
+
+    quarter: str  # LotusQuarter value
+    positions: List[int]  # 4 positions (0-3, 4-7, 8-11, 12-15)
+    head_avatara: str  # The HEAD Avatara for this quarter
     worker_mahajanas: List[str]  # The 3 worker Mahajanas
 
 
@@ -219,16 +216,17 @@ class LotusNode(TypedDict, total=False):
     A node in the Lotus (a discovered protocol).
     WATERTIGHT - no Any!
     """
-    path: str               # File path
-    name: str               # Protocol name
-    position: int           # Mahamantra position (0-15)
-    quarter: str            # LotusQuarter value
-    owner_type: str         # "avatara" or "mahajana"
-    owner_name: str         # Name of owner
-    parampara_hash: int     # For % 37 check
-    is_connected: bool      # parampara_hash % 37 == 0
-    is_chanting: bool       # Has active heartbeat
-    discovered_at: str      # ISO timestamp
+
+    path: str  # File path
+    name: str  # Protocol name
+    position: int  # Mahamantra position (0-15)
+    quarter: str  # LotusQuarter value
+    owner_type: str  # "avatara" or "mahajana"
+    owner_name: str  # Name of owner
+    parampara_hash: int  # For % 37 check
+    is_connected: bool  # parampara_hash % 37 == 0
+    is_chanting: bool  # Has active heartbeat
+    discovered_at: str  # ISO timestamp
 
 
 class LotusState(TypedDict, total=False):
@@ -236,15 +234,16 @@ class LotusState(TypedDict, total=False):
     Full state of the Lotus.
     WATERTIGHT - no Any!
     """
-    mode: str               # LotusMode value
+
+    mode: str  # LotusMode value
     total_nodes: int
     connected_nodes: int
     disconnected_nodes: int
     chanting_nodes: int
     petals: List[LotusPetal]
-    health: str             # "pristine", "healthy", "degraded", "wilted"
-    last_pulse: str         # ISO timestamp
-    mala_count: int         # How many 108-rounds completed
+    health: str  # "pristine", "healthy", "degraded", "wilted"
+    last_pulse: str  # ISO timestamp
+    mala_count: int  # How many 108-rounds completed
 
 
 class LotusRoute(TypedDict, total=False):
@@ -252,12 +251,13 @@ class LotusRoute(TypedDict, total=False):
     A routing decision made by the Lotus.
     WATERTIGHT - no Any!
     """
+
     source_position: int
     target_position: int
     source_quarter: str
     target_quarter: str
-    route_type: str         # "intra-quarter", "inter-quarter", "cross-world"
-    via_stengel: bool       # Does it go through the stem?
+    route_type: str  # "intra-quarter", "inter-quarter", "cross-world"
+    via_stengel: bool  # Does it go through the stem?
     parampara_verified: bool
 
 
@@ -333,11 +333,7 @@ class LotusHeartbeat:
 
     def get_parampara_hash(self) -> int:
         """Calculate Parampara hash. Connected if % 37 == 0."""
-        raw = (
-            self.position
-            + self.mantra_count * LOTUS_POSITIONS
-            + self.mala_count * LOTUS_MALA
-        )
+        raw = self.position + self.mantra_count * LOTUS_POSITIONS + self.mala_count * LOTUS_MALA
         return raw * LOTUS_PARAMPARA
 
     def verify_connection(self) -> bool:
@@ -661,10 +657,10 @@ class LotusRegistry:
 
     def _initialize_petals(self) -> None:
         """Initialize the 4 petals (quarters)."""
-        # Quarter assignments (from vyuha.py)
+        # Quarter assignments (ALIGNED WITH seed.py ALL_GUARDIANS)
         petal_config = [
-            (LotusQuarter.GENESIS, [0, 1, 2, 3], "prithu", ["brahma", "narada", "shambhu"]),
-            (LotusQuarter.DHARMA, [4, 5, 6, 7], "vyasa", ["kumaras", "kapila", "manu"]),
+            (LotusQuarter.GENESIS, [0, 1, 2, 3], "vyasa", ["brahma", "narada", "shambhu"]),
+            (LotusQuarter.DHARMA, [4, 5, 6, 7], "prithu", ["kumaras", "kapila", "manu"]),
             (LotusQuarter.KARMA, [8, 9, 10, 11], "parashurama", ["prahlada", "janaka", "bhishma"]),
             (LotusQuarter.MOKSHA, [12, 13, 14, 15], "nrisimha", ["bali", "shuka", "yamaraja"]),
         ]

@@ -39,9 +39,8 @@ USAGE:
 
 WATERTIGHT: No Any types. All typed explicitly.
 
-Author: The Mahamantra Itself (Position 0 - Prithu)
+Author: The Mahamantra Itself (Position 0 - VYASA)
 """
-
 
 from __future__ import annotations
 
@@ -67,7 +66,6 @@ from typing import (
     runtime_checkable,
 )
 
-
 # =============================================================================
 # CONSTANTS - The Sacred Numbers
 # =============================================================================
@@ -81,6 +79,7 @@ POSITIONS_PER_PHASE: Final[int] = 4
 # PHASE ENUM - The 4 Quarters as Process Phases
 # =============================================================================
 
+
 class Phase(str, Enum):
     """
     The 4 phases of the Samskara (purification) process.
@@ -91,10 +90,11 @@ class Phase(str, Enum):
         KARMA   = Quarter 2 (Hare Rama Hare Rama)
         MOKSHA  = Quarter 3 (Rama Rama Hare Hare)
     """
-    GENESIS = "genesis"   # Init & Load
-    DHARMA = "dharma"     # Validate & Align
-    KARMA = "karma"       # Execute & Transform
-    MOKSHA = "moksha"     # Release & Return
+
+    GENESIS = "genesis"  # Init & Load
+    DHARMA = "dharma"  # Validate & Align
+    KARMA = "karma"  # Execute & Transform
+    MOKSHA = "moksha"  # Release & Return
 
     @property
     def quarter_index(self) -> int:
@@ -117,8 +117,10 @@ class Phase(str, Enum):
 # PHASE RESULT - Typed Result for Each Phase
 # =============================================================================
 
+
 class PhaseStatus(str, Enum):
     """Status of a phase execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -134,6 +136,7 @@ class PhaseResult:
 
     WATERTIGHT: All fields explicitly typed.
     """
+
     phase: Phase
     status: PhaseStatus
     message: str
@@ -166,6 +169,7 @@ class PipelineContext(Generic[C]):
 
     Generic over the payload type C.
     """
+
     payload: C
     phases: List[PhaseResult] = field(default_factory=list)
     is_valid: bool = True
@@ -180,13 +184,15 @@ class PipelineContext(Generic[C]):
         data: Optional[Dict[str, object]] = None,
     ) -> None:
         """Log a phase result."""
-        self.phases.append(PhaseResult(
-            phase=phase,
-            status=status,
-            message=message,
-            duration_ms=duration_ms,
-            data=data,
-        ))
+        self.phases.append(
+            PhaseResult(
+                phase=phase,
+                status=status,
+                message=message,
+                duration_ms=duration_ms,
+                data=data,
+            )
+        )
 
     @property
     def current_phase(self) -> Optional[Phase]:
@@ -203,15 +209,13 @@ class PipelineContext(Generic[C]):
     @property
     def phase_summary(self) -> str:
         """Get a summary string of all phases."""
-        return " → ".join(
-            f"{p.phase.value.upper()}:{'✓' if p.success else '✗'}"
-            for p in self.phases
-        )
+        return " → ".join(f"{p.phase.value.upper()}:{'✓' if p.success else '✗'}" for p in self.phases)
 
 
 # =============================================================================
 # SAMSKARA PROTOCOL - The 4-Phase Pipeline Interface
 # =============================================================================
+
 
 @runtime_checkable
 class SamskaraProtocol(Protocol[C, R]):
@@ -323,6 +327,7 @@ class SamskaraProtocol(Protocol[C, R]):
 # =============================================================================
 # PIPELINE EXECUTOR - Runs the 4-Phase Pipeline
 # =============================================================================
+
 
 class PipelineExecutor(Generic[C, R]):
     """
@@ -475,14 +480,16 @@ class PipelineExecutor(Generic[C, R]):
         start = time.perf_counter()
         try:
             ctx = self._samskara.genesis(input_data)
-            ctx.log_phase(Phase.GENESIS, PhaseStatus.SUCCESS, "Initialized",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.GENESIS, PhaseStatus.SUCCESS, "Initialized", duration_ms=(time.perf_counter() - start) * 1000
+            )
         except Exception as e:
             ctx = PipelineContext(payload=input_data)  # type: ignore
             ctx.is_valid = False
             ctx.error = str(e)
-            ctx.log_phase(Phase.GENESIS, PhaseStatus.FAILED, f"Init failed: {e}",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.GENESIS, PhaseStatus.FAILED, f"Init failed: {e}", duration_ms=(time.perf_counter() - start) * 1000
+            )
         yield (Phase.GENESIS, ctx)
 
         if not ctx.is_valid:
@@ -502,12 +509,20 @@ class PipelineExecutor(Generic[C, R]):
             is_valid = self._samskara.dharma(ctx)
             ctx.is_valid = is_valid
             status = PhaseStatus.SUCCESS if is_valid else PhaseStatus.GRACEFUL
-            ctx.log_phase(Phase.DHARMA, status, "Validated" if is_valid else "Skipped (graceful)",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.DHARMA,
+                status,
+                "Validated" if is_valid else "Skipped (graceful)",
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
         except Exception as e:
             ctx.is_valid = False
-            ctx.log_phase(Phase.DHARMA, PhaseStatus.GRACEFUL, f"Validation error: {e}",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.DHARMA,
+                PhaseStatus.GRACEFUL,
+                f"Validation error: {e}",
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
         yield (Phase.DHARMA, ctx)
 
         # KARMA
@@ -515,12 +530,14 @@ class PipelineExecutor(Generic[C, R]):
         if ctx.is_valid:
             try:
                 result = self._samskara.karma(ctx)
-                ctx.log_phase(Phase.KARMA, PhaseStatus.SUCCESS, "Executed",
-                             duration_ms=(time.perf_counter() - start) * 1000)
+                ctx.log_phase(
+                    Phase.KARMA, PhaseStatus.SUCCESS, "Executed", duration_ms=(time.perf_counter() - start) * 1000
+                )
             except Exception as e:
                 ctx.error = str(e)
-                ctx.log_phase(Phase.KARMA, PhaseStatus.FAILED, f"Failed: {e}",
-                             duration_ms=(time.perf_counter() - start) * 1000)
+                ctx.log_phase(
+                    Phase.KARMA, PhaseStatus.FAILED, f"Failed: {e}", duration_ms=(time.perf_counter() - start) * 1000
+                )
         else:
             ctx.log_phase(Phase.KARMA, PhaseStatus.SKIPPED, "Skipped (not valid)")
         yield (Phase.KARMA, ctx)
@@ -529,17 +546,26 @@ class PipelineExecutor(Generic[C, R]):
         start = time.perf_counter()
         try:
             self._samskara.moksha(ctx, result)
-            ctx.log_phase(Phase.MOKSHA, PhaseStatus.SUCCESS, f"Released [{ctx.phase_summary}]",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.MOKSHA,
+                PhaseStatus.SUCCESS,
+                f"Released [{ctx.phase_summary}]",
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
         except Exception as e:
-            ctx.log_phase(Phase.MOKSHA, PhaseStatus.FAILED, f"Cleanup failed: {e}",
-                         duration_ms=(time.perf_counter() - start) * 1000)
+            ctx.log_phase(
+                Phase.MOKSHA,
+                PhaseStatus.FAILED,
+                f"Cleanup failed: {e}",
+                duration_ms=(time.perf_counter() - start) * 1000,
+            )
         yield (Phase.MOKSHA, ctx)
 
 
 # =============================================================================
 # NULL IMPLEMENTATION - For Testing
 # =============================================================================
+
 
 class NullSamskara(SamskaraProtocol[str, str]):
     """

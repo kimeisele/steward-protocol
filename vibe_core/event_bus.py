@@ -86,4 +86,5 @@ __all__ = [
     "VibeEvent",
     "Event",
     "EventBusProtocol",
+    "get_event_bus",
 ]

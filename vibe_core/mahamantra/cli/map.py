@@ -19,7 +19,6 @@ The operator SEES the whole system.
 WATERTIGHT: No Any types.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -29,20 +28,21 @@ __genesis__ = "0xc0994a6b"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, Final, List, Optional, TypedDict
 
-from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
 from vibe_core.mahamantra.substrate.guna import (
+    VISHUDDHA_SATTVA,
     Guna,
     get_guna_by_position,
-    VISHUDDHA_SATTVA,
 )
-
+from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
 
 # =============================================================================
 # TYPES
 # =============================================================================
 
+
 class PositionInfo(TypedDict):
     """Info about a position - WATERTIGHT."""
+
     position: int
     guardian: str
     quarter: str
@@ -54,6 +54,7 @@ class PositionInfo(TypedDict):
 
 class MapResult(TypedDict):
     """Result of map command - WATERTIGHT."""
+
     total_positions: int
     positions: List[PositionInfo]
     total_cli_commands: int
@@ -66,15 +67,16 @@ class MapResult(TypedDict):
 # =============================================================================
 
 GUNA_SYMBOLS: Final[Dict[str, str]] = {
-    "sattva": "●",   # Safe (read)
-    "rajas": "◐",    # Active (write)
-    "tamas": "○",    # Destroy (confirm)
+    "sattva": "●",  # Safe (read)
+    "rajas": "◐",  # Active (write)
+    "tamas": "○",  # Destroy (confirm)
 }
 
 
 # =============================================================================
 # MAP FUNCTIONS
 # =============================================================================
+
 
 def get_all_cli_commands() -> Dict[str, int]:
     """
@@ -87,6 +89,7 @@ def get_all_cli_commands() -> Dict[str, int]:
     try:
         # Get UnifiedCLI commands (cmd_* methods)
         from vibe_core.cli.unified_cli import UnifiedCLI
+
         cli = UnifiedCLI()
 
         for attr in dir(cli):
@@ -102,6 +105,7 @@ def get_all_cli_commands() -> Dict[str, int]:
     try:
         # Get cartridge commands
         from vibe_core.cartridges.bridge import CartridgeBridge
+
         bridge = CartridgeBridge()
 
         for name in bridge._cli_stubs.keys() if hasattr(bridge, "_cli_stubs") else []:
@@ -126,6 +130,7 @@ def get_declared_files_for_position(position: int) -> int:
     """Get count of files declared at a position."""
     try:
         from vibe_core.mahamantra.substrate.scanner import scan_all
+
         result = scan_all()
         return result.get("by_position", {}).get(position, 0)
     except ImportError:
@@ -155,15 +160,17 @@ def build_map() -> MapResult:
         if cli_commands or declared:
             positions_with_content += 1
 
-        positions.append(PositionInfo(
-            position=pos,
-            guardian=mapping.guardian.value,
-            quarter=mapping.quarter.value,
-            guna=guna.name.lower(),
-            opcode=mapping.opcode.name,
-            cli_commands=cli_commands,
-            declared_files=declared,
-        ))
+        positions.append(
+            PositionInfo(
+                position=pos,
+                guardian=mapping.guardian.value,
+                quarter=mapping.quarter.value,
+                guna=guna.name.lower(),
+                opcode=mapping.opcode.name,
+                cli_commands=cli_commands,
+                declared_files=declared,
+            )
+        )
 
     coverage = (positions_with_content / 16) * 100 if positions else 0
 
@@ -183,7 +190,9 @@ def format_map(result: MapResult, verbose: bool = False) -> str:
     lines.append("MAHAMANTRA SYSTEM MAP")
     lines.append("=" * 60)
     lines.append("")
-    lines.append(f"Coverage: {result['coverage_percent']:.0f}% ({result['total_cli_commands']} CLI commands, {result['total_declared_files']} declared files)")
+    lines.append(
+        f"Coverage: {result['coverage_percent']:.0f}% ({result['total_cli_commands']} CLI commands, {result['total_declared_files']} declared files)"
+    )
     lines.append("")
 
     # Group by quarter
@@ -191,7 +200,9 @@ def format_map(result: MapResult, verbose: bool = False) -> str:
 
     for quarter in quarters:
         quarter_positions = [p for p in result["positions"] if p["quarter"] == quarter]
-        lines.append(f"{quarter.upper()} (positions {quarter_positions[0]['position']}-{quarter_positions[-1]['position']}):")
+        lines.append(
+            f"{quarter.upper()} (positions {quarter_positions[0]['position']}-{quarter_positions[-1]['position']}):"
+        )
 
         for pos in quarter_positions:
             guna_sym = GUNA_SYMBOLS.get(pos["guna"], "?")
@@ -242,10 +253,23 @@ def map_command(args: Optional[List[str]] = None) -> str:
 # =============================================================================
 
 GUARDIAN_NAMES: Final[Dict[str, int]] = {
-    "prithu": 0, "brahma": 1, "narada": 2, "shambhu": 3,
-    "vyasa": 4, "kumaras": 5, "kapila": 6, "manu": 7,
-    "parashurama": 8, "prahlada": 9, "janaka": 10, "bhishma": 11,
-    "nrisimha": 12, "bali": 13, "shuka": 14, "yamaraja": 15,
+    # ALIGNED WITH seed.py ALL_GUARDIANS (SSOT)
+    "vyasa": 0,
+    "brahma": 1,
+    "narada": 2,
+    "shambhu": 3,
+    "prithu": 4,
+    "kumaras": 5,
+    "kapila": 6,
+    "manu": 7,
+    "parashurama": 8,
+    "prahlada": 9,
+    "janaka": 10,
+    "bhishma": 11,
+    "nrisimha": 12,
+    "bali": 13,
+    "shuka": 14,
+    "yamaraja": 15,
 }
 
 
@@ -264,7 +288,7 @@ def guardian_command(guardian: str, args: Optional[List[str]] = None) -> Optiona
         return None
 
     position = GUARDIAN_NAMES[guardian_lower]
-    mapping = POSITION_MAPPINGS[position]
+    mapping = MAHAMANTRA_POSITIONS[position]
     guna = get_guna_by_position(position)
     cli_commands = get_cli_commands_for_position(position)
     declared = get_declared_files_for_position(position)
