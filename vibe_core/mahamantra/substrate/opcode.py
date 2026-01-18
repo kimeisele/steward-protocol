@@ -15,7 +15,6 @@ REVERTED TO TRUTH (Post-Legacy Clean Slate).
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -27,12 +26,12 @@ from enum import IntEnum
 from typing import Dict, Final, FrozenSet
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter
-from vibe_core.mahamantra.substrate.seed import PARAMPARA, MAHAMANTRA, WORDS
-
+from vibe_core.mahamantra.substrate.seed import MAHAMANTRA, PARAMPARA, WORDS
 
 # =============================================================================
 # THE 16 OPCODES - SSOT (The New Truth)
 # =============================================================================
+
 
 class MantraOpCode(IntEnum):
     """
@@ -46,29 +45,30 @@ class MantraOpCode(IntEnum):
     KARMA Quarter (8-11): Aktion, Execution, Commitment
     MOKSHA Quarter (12-15): Befreiung, Output, Completion
     """
+
     # === GENESIS Quarter (Hare Krishna Hare Krishna) ===
-    SYS_WAKE = 0       # Prithu: System awakening, boot
-    LOAD_ROOT = 1      # Brahma: Load root configuration, DI
-    ALLOC_MEM = 2      # Narada: Allocate memory, communication
-    INIT_THREAD = 3    # Shambhu: Initialize thread, destruction ready
+    SYS_WAKE = 0  # VYASA: System awakening, boot (Genesis HEAD)
+    LOAD_ROOT = 1  # Brahma: Load root configuration, DI
+    ALLOC_MEM = 2  # Narada: Allocate memory, communication
+    INIT_THREAD = 3  # Shambhu: Initialize thread, destruction ready
 
     # === DHARMA Quarter (Krishna Krishna Hare Hare) ===
-    COMPILE_AST = 4    # Vyasa: Compile AST, encode knowledge
-    BIND_SYMBOL = 5    # Kumaras: Bind symbol, memory, cognition
-    TYPE_CHECK = 6     # Kapila: Type check, analysis
-    DHARMA_TEST = 7    # Manu: Dharma test, law check
+    COMPILE_AST = 4  # PRITHU: Compile AST, encode knowledge (Dharma HEAD)
+    BIND_SYMBOL = 5  # Kumaras: Bind symbol, memory, cognition
+    TYPE_CHECK = 6  # Kapila: Type check, analysis
+    DHARMA_TEST = 7  # Manu: Dharma test, law check
 
     # === KARMA Quarter (Hare Rama Hare Rama) ===
-    EXEC_OP = 8        # Parashurama: Execute operation
-    EXTEND_CAP = 9     # Prahlada: Extend capability, plugins
-    STATE_SYNC = 10    # Janaka: Sync state, kernel
-    LEDGER_SIGN = 11   # Bhishma: Sign ledger, commitment
+    EXEC_OP = 8  # Parashurama: Execute operation
+    EXTEND_CAP = 9  # Prahlada: Extend capability, plugins
+    STATE_SYNC = 10  # Janaka: Sync state, kernel
+    LEDGER_SIGN = 11  # Bhishma: Sign ledger, commitment
 
     # === MOKSHA Quarter (Rama Rama Hare Hare) ===
-    YIELD_CPU = 12     # Nrisimha: Yield CPU, protection
-    IO_FLUSH = 13      # Bali: Flush I/O, resources
-    LOG_EMIT = 14      # Shuka: Emit log, output
-    AUDIT_SEAL = 15    # Yamaraja: Seal audit, judgment
+    YIELD_CPU = 12  # Nrisimha: Yield CPU, protection
+    IO_FLUSH = 13  # Bali: Flush I/O, resources
+    LOG_EMIT = 14  # Shuka: Emit log, output
+    AUDIT_SEAL = 15  # Yamaraja: Seal audit, judgment
 
 
 # =============================================================================
@@ -83,22 +83,27 @@ OPCODE_NAMES: Final[Dict[int, str]] = {op.value: op.name for op in MantraOpCode}
 # =============================================================================
 
 MAHAJANA_OPCODES: Final[Dict[str, MantraOpCode]] = {
-    "prithu": MantraOpCode.SYS_WAKE,
-    "brahma": MantraOpCode.LOAD_ROOT,
-    "narada": MantraOpCode.ALLOC_MEM,
-    "shambhu": MantraOpCode.INIT_THREAD,
-    "vyasa": MantraOpCode.COMPILE_AST,
-    "kumaras": MantraOpCode.BIND_SYMBOL,
-    "kapila": MantraOpCode.TYPE_CHECK,
-    "manu": MantraOpCode.DHARMA_TEST,
-    "parashurama": MantraOpCode.EXEC_OP,
-    "prahlada": MantraOpCode.EXTEND_CAP,
-    "janaka": MantraOpCode.STATE_SYNC,
-    "bhishma": MantraOpCode.LEDGER_SIGN,
-    "nrisimha": MantraOpCode.YIELD_CPU,
-    "bali": MantraOpCode.IO_FLUSH,
-    "shuka": MantraOpCode.LOG_EMIT,
-    "yamaraja": MantraOpCode.AUDIT_SEAL,
+    # === Aligned with seed.py ALL_GUARDIANS (SSOT) ===
+    # Genesis Quarter (0-3)
+    "vyasa": MantraOpCode.SYS_WAKE,  # Position 0 - Genesis HEAD
+    "brahma": MantraOpCode.LOAD_ROOT,  # Position 1
+    "narada": MantraOpCode.ALLOC_MEM,  # Position 2
+    "shambhu": MantraOpCode.INIT_THREAD,  # Position 3
+    # Dharma Quarter (4-7)
+    "prithu": MantraOpCode.COMPILE_AST,  # Position 4 - Dharma HEAD
+    "kumaras": MantraOpCode.BIND_SYMBOL,  # Position 5
+    "kapila": MantraOpCode.TYPE_CHECK,  # Position 6
+    "manu": MantraOpCode.DHARMA_TEST,  # Position 7
+    # Karma Quarter (8-11)
+    "parashurama": MantraOpCode.EXEC_OP,  # Position 8 - Karma HEAD
+    "prahlada": MantraOpCode.EXTEND_CAP,  # Position 9
+    "janaka": MantraOpCode.STATE_SYNC,  # Position 10
+    "bhishma": MantraOpCode.LEDGER_SIGN,  # Position 11
+    # Moksha Quarter (12-15)
+    "nrisimha": MantraOpCode.YIELD_CPU,  # Position 12 - Moksha HEAD
+    "bali": MantraOpCode.IO_FLUSH,  # Position 13
+    "shuka": MantraOpCode.LOG_EMIT,  # Position 14
+    "yamaraja": MantraOpCode.AUDIT_SEAL,  # Position 15
 }
 
 
@@ -106,33 +111,41 @@ MAHAJANA_OPCODES: Final[Dict[str, MantraOpCode]] = {
 # QUARTER TO OPCODES - By Quarter
 # =============================================================================
 
-GENESIS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.SYS_WAKE,
-    MantraOpCode.LOAD_ROOT,
-    MantraOpCode.ALLOC_MEM,
-    MantraOpCode.INIT_THREAD,
-})
+GENESIS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.SYS_WAKE,
+        MantraOpCode.LOAD_ROOT,
+        MantraOpCode.ALLOC_MEM,
+        MantraOpCode.INIT_THREAD,
+    }
+)
 
-DHARMA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.COMPILE_AST,
-    MantraOpCode.BIND_SYMBOL,
-    MantraOpCode.TYPE_CHECK,
-    MantraOpCode.DHARMA_TEST,
-})
+DHARMA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.COMPILE_AST,
+        MantraOpCode.BIND_SYMBOL,
+        MantraOpCode.TYPE_CHECK,
+        MantraOpCode.DHARMA_TEST,
+    }
+)
 
-KARMA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.EXEC_OP,
-    MantraOpCode.EXTEND_CAP,
-    MantraOpCode.STATE_SYNC,
-    MantraOpCode.LEDGER_SIGN,
-})
+KARMA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.EXEC_OP,
+        MantraOpCode.EXTEND_CAP,
+        MantraOpCode.STATE_SYNC,
+        MantraOpCode.LEDGER_SIGN,
+    }
+)
 
-MOKSHA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.YIELD_CPU,
-    MantraOpCode.IO_FLUSH,
-    MantraOpCode.LOG_EMIT,
-    MantraOpCode.AUDIT_SEAL,
-})
+MOKSHA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.YIELD_CPU,
+        MantraOpCode.IO_FLUSH,
+        MantraOpCode.LOG_EMIT,
+        MantraOpCode.AUDIT_SEAL,
+    }
+)
 
 QUARTER_OPCODES: Final[Dict[Quarter, FrozenSet[MantraOpCode]]] = {
     Quarter.GENESIS: GENESIS_OPCODES,
@@ -145,6 +158,7 @@ QUARTER_OPCODES: Final[Dict[Quarter, FrozenSet[MantraOpCode]]] = {
 # =============================================================================
 # FUNCTIONS - Pure, typed, no side effects
 # =============================================================================
+
 
 def get_opcode(position: int) -> MantraOpCode:
     """Get the opcode for a position (0-15)."""
@@ -187,10 +201,7 @@ def get_quarter_opcodes(quarter: Quarter) -> FrozenSet[MantraOpCode]:
 # PARAMPARA VECTORS - For each opcode (PARAMPARA imported from acintya.py SSOT)
 # =============================================================================
 
-OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {
-    opcode: (opcode.value + 1) * PARAMPARA
-    for opcode in MantraOpCode
-}
+OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {opcode: (opcode.value + 1) * PARAMPARA for opcode in MantraOpCode}
 
 
 def get_opcode_parampara(opcode: MantraOpCode) -> int:
@@ -210,10 +221,7 @@ def verify_opcode_parampara(opcode: MantraOpCode, vector: int) -> bool:
 # Derived from seed.py MAHAMANTRA - the ONE SOURCE
 # "nrisimhaḥ kesarī śārdūlo vyāghro vāraṇa-puṅgavaḥ"
 
-MAHAMANTRA_SEQUENCE: Final[tuple] = tuple(
-    (MAHAMANTRA[i].name.capitalize(), MantraOpCode(i))
-    for i in range(WORDS)
-)
+MAHAMANTRA_SEQUENCE: Final[tuple] = tuple((MAHAMANTRA[i].name.capitalize(), MantraOpCode(i)) for i in range(WORDS))
 
 
 # =============================================================================

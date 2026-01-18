@@ -48,6 +48,7 @@ from typing import (
     Tuple,
 )
 
+from vibe_core.mahamantra.lila.adoption import analyze_source
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana, Quarter
 
@@ -65,7 +66,6 @@ from vibe_core.protocols.substrate.scanner import (
     get_default_config,
     path_to_module,
 )
-from vibe_core.mahamantra.lila.adoption import analyze_source
 
 # =============================================================================
 # CONSTANTS (Only declaration attribute name - not paths!)
@@ -100,13 +100,14 @@ class MahajanaAlias:
 
 
 # The 16 Mahajana aliases (12 Mahajanas + 4 Avataras)
+# ALIGNED WITH seed.py ALL_GUARDIANS (SSOT)
 MAHAJANA_ALIASES: Final[Tuple[MahajanaAlias, ...]] = (
     # === GENESIS Quarter (0-3) ===
     MahajanaAlias(
-        name="prithu",
+        name="vyasa",
         position=0,
-        aliases=("boot", "bootstrap", "starter", "init"),
-        description="System bootstrap and initialization",
+        aliases=("boot", "bootstrap", "wake", "system"),
+        description="System wake and initialization (GENESIS HEAD)",
     ),
     MahajanaAlias(
         name="brahma",
@@ -127,12 +128,11 @@ MAHAJANA_ALIASES: Final[Tuple[MahajanaAlias, ...]] = (
         description="Destruction and garbage collection",
     ),
     # === DHARMA Quarter (4-7) ===
-    # Position 4 is HEAD (Vyasa) per seed.py AVATARAS
     MahajanaAlias(
-        name="vyasa",
+        name="prithu",
         position=4,
-        aliases=("compiler", "compiler", "document", "record"),
-        description="Documentation and recording (DHARMA HEAD)",
+        aliases=("scan", "compile", "structure", "document"),
+        description="Compile and structure (DHARMA HEAD)",
     ),
     MahajanaAlias(
         name="kumaras",

@@ -15,7 +15,6 @@ That's it. One import. One method. Everything flows through.
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -65,6 +64,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # =========================================================================
     try:
         from vibe_core.cli.naga_commands import discover_commands
+
         discover_commands()
     except ImportError:
         pass
@@ -91,6 +91,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         # Mahamantra not available - direct legacy fallback
         try:
             from vibe_core.cli.unified_cli import UnifiedCLI
+
             cli = UnifiedCLI()
             return cli.run(argv)
         except ImportError:
@@ -110,6 +111,7 @@ def _show_guardian(command: str, args: List[str]) -> Optional[int]:
     """
     try:
         from vibe_core.mahamantra.cli.map import guardian_command
+
         result = guardian_command(command, args)
         if result is not None:
             print(result)
@@ -129,6 +131,7 @@ def _show_map(args: List[str]) -> int:
     """
     try:
         from vibe_core.mahamantra.cli.map import map_command
+
         print(map_command(args))
         return EXIT_SUCCESS
     except ImportError as e:
@@ -149,9 +152,9 @@ THE SIMPLEST INTERFACE:
     from vibe_core.mahamantra import mahamantra
     result = mahamantra.execute("status")
 
-THE 16 POSITIONS:
-    GENESIS (0-3):  prithu, brahma, narada, shambhu
-    DHARMA  (4-7):  vyasa, kumaras, kapila, manu
+THE 16 POSITIONS (seed.py ALL_GUARDIANS):
+    GENESIS (0-3):  vyasa, brahma, narada, shambhu
+    DHARMA  (4-7):  prithu, kumaras, kapila, manu
     KARMA   (8-11): parashurama, prahlada, janaka, bhishma
     MOKSHA (12-15): nrisimha, bali, shuka, yamaraja
 
