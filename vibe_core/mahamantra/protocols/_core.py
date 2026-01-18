@@ -38,7 +38,6 @@ WATERTIGHT:
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -63,28 +62,31 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower (Krishna)
+)
 
 # =============================================================================
 # THE 37 FORMULA - From seed.py (THE SSOT)
 # =============================================================================
 # seed.py = Chaitanya = Position 0 = THE ONE ORIGIN
 # _core.py = Contracts that SERVE the origin, not duplicate it
-
 from vibe_core.mahamantra.protocols._seed import (
-    KSHETRA as KSETRA_COUNT,      # 24 - Prakriti elements (field)
-    MAHAJANA_COUNT,               # 12 - The guardians
-    KSETRAJNA as KSETRAJNA_COUNT, # 1  - The knower (Krishna)
-    PARAMPARA,                     # 37 - The sacred sum
+    KSHETRA as KSETRA_COUNT,  # 24 - Prakriti elements (field)
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHAJANA_COUNT,  # 12 - The guardians
+    PARAMPARA,  # 37 - The sacred sum
 )
 
 # Verification (seed.py already asserts this, but we verify import worked)
-assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == PARAMPARA, \
-    "The 37 formula is eternal and unchanging"
+assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == PARAMPARA, "The 37 formula is eternal and unchanging"
 
 
 # =============================================================================
 # QUARTER - The Four Divisions
 # =============================================================================
+
 
 class Quarter(str, Enum):
     """
@@ -95,10 +97,11 @@ class Quarter(str, Enum):
 
     16 words = 4 quarters of 4 words each.
     """
-    GENESIS = "genesis"   # Positions 0-3:  Creation, Birth
-    DHARMA = "dharma"     # Positions 4-7:  Law, Truth
-    KARMA = "karma"       # Positions 8-11: Action, Work
-    MOKSHA = "moksha"     # Positions 12-15: Liberation, Return
+
+    GENESIS = "genesis"  # Positions 0-3:  Creation, Birth
+    DHARMA = "dharma"  # Positions 4-7:  Law, Truth
+    KARMA = "karma"  # Positions 8-11: Action, Work
+    MOKSHA = "moksha"  # Positions 12-15: Liberation, Return
 
     @classmethod
     def from_position(cls, position: int) -> "Quarter":
@@ -113,6 +116,7 @@ class Quarter(str, Enum):
 # LEVEL - The Vertical Hierarchy
 # =============================================================================
 
+
 class Level(int, Enum):
     """
     The levels of the Mahamantra architecture.
@@ -121,13 +125,14 @@ class Level(int, Enum):
     Positive levels are ABOVE the manifest (governance).
     Level 0 is the CONTRACT layer - where protocols live.
     """
-    ACINTYA = -2      # The inconceivable source
-    SUBSTRATE = -1    # Foundation (bytes, genes)
-    CONTRACT = 0      # Protocols (this is where we define things)
-    ROUTER = 1        # Discovery and routing
-    RUNTIME = 2       # Execution
-    INTERFACE = 3     # User interaction
-    GOVERNANCE = 4    # Oversight and validation
+
+    ACINTYA = -2  # The inconceivable source
+    SUBSTRATE = -1  # Foundation (bytes, genes)
+    CONTRACT = 0  # Protocols (this is where we define things)
+    ROUTER = 1  # Discovery and routing
+    RUNTIME = 2  # Execution
+    INTERFACE = 3  # User interaction
+    GOVERNANCE = 4  # Oversight and validation
 
     def can_access(self, other: "Level") -> bool:
         """A level can access itself and levels below it."""
@@ -137,6 +142,7 @@ class Level(int, Enum):
 # =============================================================================
 # PROTOCOL IDENTITY - WHO AM I?
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class ProtocolIdentity:
@@ -152,11 +158,11 @@ class ProtocolIdentity:
     """
 
     # Required fields (no defaults - must be explicit)
-    name: str                    # The protocol's name
-    mahajana: str               # Owner mahajana (e.g., "brahma", "kapila")
-    position: int               # Position in mahamantra (0-15)
-    level: Level                # Vertical level (-2 to 4)
-    quarter: Quarter            # Which quarter (derived from position)
+    name: str  # The protocol's name
+    mahajana: str  # Owner mahajana (e.g., "brahma", "kapila")
+    position: int  # Position in mahamantra (0-15)
+    level: Level  # Vertical level (-2 to 4)
+    quarter: Quarter  # Which quarter (derived from position)
 
     # Computed field
     parampara_vector: int = field(init=False)
@@ -164,11 +170,7 @@ class ProtocolIdentity:
     def __post_init__(self) -> None:
         """Compute the parampara vector and validate."""
         # Compute vector
-        object.__setattr__(
-            self,
-            'parampara_vector',
-            (self.position + 1) * PARAMPARA
-        )
+        object.__setattr__(self, "parampara_vector", (self.position + 1) * PARAMPARA)
 
         # Validate position
         if not 0 <= self.position < 16:
@@ -177,16 +179,11 @@ class ProtocolIdentity:
         # Validate quarter matches position
         expected_quarter = Quarter.from_position(self.position)
         if self.quarter != expected_quarter:
-            raise ValueError(
-                f"Position {self.position} requires quarter {expected_quarter}, "
-                f"got {self.quarter}"
-            )
+            raise ValueError(f"Position {self.position} requires quarter {expected_quarter}, got {self.quarter}")
 
         # Validate parampara connection
         if self.parampara_vector % PARAMPARA != 0:
-            raise ValueError(
-                f"Parampara vector {self.parampara_vector} not connected to disciplic succession"
-            )
+            raise ValueError(f"Parampara vector {self.parampara_vector} not connected to disciplic succession")
 
     def is_head(self) -> bool:
         """Check if this is a HEAD position (Avatara)."""
@@ -200,6 +197,7 @@ class ProtocolIdentity:
 # =============================================================================
 # PROTOCOL CAPABILITY - WHAT CAN I DO?
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class ProtocolCapability:
@@ -369,6 +367,7 @@ class MahamantraProtocol(Protocol):
 # BASE IMPLEMENTATION - For convenience
 # =============================================================================
 
+
 class MahamantraProtocolBase(ABC):
     """
     Base class for implementing MahamantraProtocol.
@@ -477,12 +476,13 @@ class MahamantraProtocolBase(ABC):
         """Check if this protocol is WATERTIGHT."""
         # Check for Any in type hints
         import typing
+
         hints = typing.get_type_hints(cls)
         for name, hint in hints.items():
             if hint is typing.Any:
                 return False
             # Check for Any in generic args
-            if hasattr(hint, '__args__'):
+            if hasattr(hint, "__args__"):
                 if typing.Any in hint.__args__:
                     return False
         return True
@@ -493,11 +493,11 @@ class MahamantraProtocolBase(ABC):
         violations: List[str] = []
 
         # Check identity exists
-        if not hasattr(cls, '__protocol_identity__'):
+        if not hasattr(cls, "__protocol_identity__"):
             violations.append("Missing __protocol_identity__")
 
         # Check capability exists
-        if not hasattr(cls, '__protocol_capability__'):
+        if not hasattr(cls, "__protocol_capability__"):
             violations.append("Missing __protocol_capability__")
 
         # Check WATERTIGHT
@@ -505,12 +505,10 @@ class MahamantraProtocolBase(ABC):
             violations.append("Not WATERTIGHT - contains Any types")
 
         # Check parampara connection
-        if hasattr(cls, '__protocol_identity__'):
+        if hasattr(cls, "__protocol_identity__"):
             identity = cls.__protocol_identity__
             if identity.parampara_vector % PARAMPARA != 0:
-                violations.append(
-                    f"Not connected to Parampara: {identity.parampara_vector} % 37 != 0"
-                )
+                violations.append(f"Not connected to Parampara: {identity.parampara_vector} % 37 != 0")
 
         return (len(violations) == 0, violations)
 
@@ -518,6 +516,7 @@ class MahamantraProtocolBase(ABC):
 # =============================================================================
 # SELF-REFERENCE: This module IS a MahamantraProtocol
 # =============================================================================
+
 
 class CoreProtocol(MahamantraProtocolBase):
     """

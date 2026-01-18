@@ -29,46 +29,48 @@ __mahajana__ = "vyasa"
 __position__ = 4
 __genesis__ = "0xdf717c9f"  # GenesisByte: parampara % 37 == 0
 
-from enum import Enum
-from typing import Dict, List, Set, Optional, Type, TYPE_CHECKING
 from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Type
 
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.mahajanas.brahma import BrahmaProtocol
-    from vibe_core.protocols.mahajanas.narada import NaradaProtocol
-    from vibe_core.protocols.mahajanas.shambhu import ShambhuProtocol
-    from vibe_core.protocols.mahajanas.kumaras import KumarasProtocol
-    from vibe_core.protocols.mahajanas.kapila import KapilaProtocol
-    from vibe_core.protocols.mahajanas.manu import ManuProtocol
-    from vibe_core.protocols.mahajanas.prahlada import PrahladaProtocol
-    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
-    from vibe_core.protocols.mahajanas.bhishma import BhishmaProtocol
     from vibe_core.protocols.mahajanas.bali import BaliProtocol
+    from vibe_core.protocols.mahajanas.bhishma import BhishmaProtocol
+    from vibe_core.protocols.mahajanas.brahma import BrahmaProtocol
+    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
+    from vibe_core.protocols.mahajanas.kapila import KapilaProtocol
+    from vibe_core.protocols.mahajanas.kumaras import KumarasProtocol
+    from vibe_core.protocols.mahajanas.manu import ManuProtocol
+    from vibe_core.protocols.mahajanas.narada import NaradaProtocol
+    from vibe_core.protocols.mahajanas.prahlada import PrahladaProtocol
+    from vibe_core.protocols.mahajanas.shambhu import ShambhuProtocol
     from vibe_core.protocols.mahajanas.shuka import ShukaProtocol
     from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocol
 
 
 class Mahajana(str, Enum):
     """The 12 Mahajanas - Protocol Owners."""
-    BRAHMA = "brahma"       # 01 - Creation
-    NARADA = "narada"       # 02 - Devotion
-    SHAMBHU = "shambhu"     # 03 - Destruction
-    KUMARAS = "kumaras"     # 04 - Purity
-    KAPILA = "kapila"       # 05 - Analysis
-    MANU = "manu"           # 06 - Law
-    PRAHLADA = "prahlada"   # 07 - Resilience
-    JANAKA = "janaka"       # 08 - Duty
-    BHISHMA = "bhishma"     # 09 - Vow
-    BALI = "bali"           # 10 - Surrender
-    SHUKA = "shuka"         # 11 - Vision
-    YAMARAJA = "yamaraja"   # 12 - Judgment
+
+    BRAHMA = "brahma"  # 01 - Creation
+    NARADA = "narada"  # 02 - Devotion
+    SHAMBHU = "shambhu"  # 03 - Destruction
+    KUMARAS = "kumaras"  # 04 - Purity
+    KAPILA = "kapila"  # 05 - Analysis
+    MANU = "manu"  # 06 - Law
+    PRAHLADA = "prahlada"  # 07 - Resilience
+    JANAKA = "janaka"  # 08 - Duty
+    BHISHMA = "bhishma"  # 09 - Vow
+    BALI = "bali"  # 10 - Surrender
+    SHUKA = "shuka"  # 11 - Vision
+    YAMARAJA = "yamaraja"  # 12 - Judgment
 
 
 @dataclass(frozen=True)
 class MahajanaRoute:
     """A route from OpCode to Mahajana."""
+
     opcode: MantraOpCode
     mahajana: Mahajana
     quarter: int  # 1-4 (Which quarter of the Mahamantra)
@@ -107,57 +109,30 @@ class MahajanaRoute:
 
 _VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
     # --- QUARTER 1: GENESIS (Workers only) ---
-    MantraOpCode.LOAD_ROOT: MahajanaRoute(
-        MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2
-    ),
-    MantraOpCode.ALLOC_MEM: MahajanaRoute(
-        MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3
-    ),
-    MantraOpCode.INIT_THREAD: MahajanaRoute(
-        MantraOpCode.INIT_THREAD, Mahajana.SHAMBHU, quarter=1, position=4
-    ),
-
+    MantraOpCode.LOAD_ROOT: MahajanaRoute(MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2),
+    MantraOpCode.ALLOC_MEM: MahajanaRoute(MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3),
+    MantraOpCode.INIT_THREAD: MahajanaRoute(MantraOpCode.INIT_THREAD, Mahajana.SHAMBHU, quarter=1, position=4),
     # --- QUARTER 2: DHARMA (Workers only) ---
-    MantraOpCode.BIND_SYMBOL: MahajanaRoute(
-        MantraOpCode.BIND_SYMBOL, Mahajana.KUMARAS, quarter=2, position=6
-    ),
-    MantraOpCode.TYPE_CHECK: MahajanaRoute(
-        MantraOpCode.TYPE_CHECK, Mahajana.KAPILA, quarter=2, position=7
-    ),
-    MantraOpCode.DHARMA_TEST: MahajanaRoute(
-        MantraOpCode.DHARMA_TEST, Mahajana.MANU, quarter=2, position=8
-    ),
-
+    MantraOpCode.BIND_SYMBOL: MahajanaRoute(MantraOpCode.BIND_SYMBOL, Mahajana.KUMARAS, quarter=2, position=6),
+    MantraOpCode.TYPE_CHECK: MahajanaRoute(MantraOpCode.TYPE_CHECK, Mahajana.KAPILA, quarter=2, position=7),
+    MantraOpCode.DHARMA_TEST: MahajanaRoute(MantraOpCode.DHARMA_TEST, Mahajana.MANU, quarter=2, position=8),
     # --- QUARTER 3: KARMA (Workers only) ---
-    MantraOpCode.EXTEND_CAP: MahajanaRoute(
-        MantraOpCode.EXTEND_CAP, Mahajana.PRAHLADA, quarter=3, position=10
-    ),
-    MantraOpCode.STATE_SYNC: MahajanaRoute(
-        MantraOpCode.STATE_SYNC, Mahajana.JANAKA, quarter=3, position=11
-    ),
-    MantraOpCode.LEDGER_SIGN: MahajanaRoute(
-        MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12
-    ),
-
+    MantraOpCode.EXTEND_CAP: MahajanaRoute(MantraOpCode.EXTEND_CAP, Mahajana.PRAHLADA, quarter=3, position=10),
+    MantraOpCode.STATE_SYNC: MahajanaRoute(MantraOpCode.STATE_SYNC, Mahajana.JANAKA, quarter=3, position=11),
+    MantraOpCode.LEDGER_SIGN: MahajanaRoute(MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12),
     # --- QUARTER 4: MOKSHA (R R H H) - Vyuha 1:1 mapping ---
     # HEAD: Nrisimha → YIELD_CPU (not in this table)
-    MantraOpCode.IO_FLUSH: MahajanaRoute(
-        MantraOpCode.IO_FLUSH, Mahajana.BALI, quarter=4, position=14
-    ),
-    MantraOpCode.LOG_EMIT: MahajanaRoute(
-        MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15
-    ),
-    MantraOpCode.AUDIT_SEAL: MahajanaRoute(
-        MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16
-    ),
+    MantraOpCode.IO_FLUSH: MahajanaRoute(MantraOpCode.IO_FLUSH, Mahajana.BALI, quarter=4, position=14),
+    MantraOpCode.LOG_EMIT: MahajanaRoute(MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15),
+    MantraOpCode.AUDIT_SEAL: MahajanaRoute(MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16),
 }
 
 # HEAD OpCodes (owned by Avataras, not Mahajanas)
 HEAD_OPCODES: set = {
-    MantraOpCode.SYS_WAKE,      # Q1 HEAD: Prithu
+    MantraOpCode.SYS_WAKE,  # Q1 HEAD: Prithu
     MantraOpCode.COMPILE_AST,  # Q2 HEAD: Vyasa
-    MantraOpCode.EXEC_OP,     # Q3 HEAD: Parashurama
-    MantraOpCode.YIELD_CPU,   # Q4 HEAD: Nrisimha
+    MantraOpCode.EXEC_OP,  # Q3 HEAD: Parashurama
+    MantraOpCode.YIELD_CPU,  # Q4 HEAD: Nrisimha
 }
 
 # -----------------------------------------------------------------------------
@@ -186,66 +161,32 @@ _ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
     #   YAMARAJA (Judge)    → ASSERT_TRUTH (final judgment)
     #
     # --- QUARTER 1: GENESIS (H K H K) ---
-    MantraOpCode.SYS_WAKE: MahajanaRoute(
-        MantraOpCode.SYS_WAKE, Mahajana.BRAHMA, quarter=1, position=1
-    ),
-    MantraOpCode.LOAD_ROOT: MahajanaRoute(
-        MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2
-    ),
-    MantraOpCode.ALLOC_MEM: MahajanaRoute(
-        MantraOpCode.ALLOC_MEM, Mahajana.BRAHMA, quarter=1, position=3
-    ),
-    MantraOpCode.INIT_THREAD: MahajanaRoute(
-        MantraOpCode.INIT_THREAD, Mahajana.MANU, quarter=1, position=4
-    ),
-
+    MantraOpCode.SYS_WAKE: MahajanaRoute(MantraOpCode.SYS_WAKE, Mahajana.BRAHMA, quarter=1, position=1),
+    MantraOpCode.LOAD_ROOT: MahajanaRoute(MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2),
+    MantraOpCode.ALLOC_MEM: MahajanaRoute(MantraOpCode.ALLOC_MEM, Mahajana.BRAHMA, quarter=1, position=3),
+    MantraOpCode.INIT_THREAD: MahajanaRoute(MantraOpCode.INIT_THREAD, Mahajana.MANU, quarter=1, position=4),
     # --- QUARTER 2: DHARMA (K K H H) ---
-    MantraOpCode.COMPILE_AST: MahajanaRoute(
-        MantraOpCode.COMPILE_AST, Mahajana.YAMARAJA, quarter=2, position=5
-    ),
-    MantraOpCode.BIND_SYMBOL: MahajanaRoute(
-        MantraOpCode.BIND_SYMBOL, Mahajana.KAPILA, quarter=2, position=6
-    ),
-    MantraOpCode.TYPE_CHECK: MahajanaRoute(
-        MantraOpCode.TYPE_CHECK, Mahajana.SHAMBHU, quarter=2, position=7
-    ),
-    MantraOpCode.DHARMA_TEST: MahajanaRoute(
-        MantraOpCode.DHARMA_TEST, Mahajana.NARADA, quarter=2, position=8
-    ),
-
+    MantraOpCode.COMPILE_AST: MahajanaRoute(MantraOpCode.COMPILE_AST, Mahajana.YAMARAJA, quarter=2, position=5),
+    MantraOpCode.BIND_SYMBOL: MahajanaRoute(MantraOpCode.BIND_SYMBOL, Mahajana.KAPILA, quarter=2, position=6),
+    MantraOpCode.TYPE_CHECK: MahajanaRoute(MantraOpCode.TYPE_CHECK, Mahajana.SHAMBHU, quarter=2, position=7),
+    MantraOpCode.DHARMA_TEST: MahajanaRoute(MantraOpCode.DHARMA_TEST, Mahajana.NARADA, quarter=2, position=8),
     # --- QUARTER 3: KARMA (H R H R) ---
-    MantraOpCode.EXEC_OP: MahajanaRoute(
-        MantraOpCode.EXEC_OP, Mahajana.PRAHLADA, quarter=3, position=9
-    ),
-    MantraOpCode.EXTEND_CAP: MahajanaRoute(
-        MantraOpCode.EXTEND_CAP, Mahajana.JANAKA, quarter=3, position=10
-    ),
-    MantraOpCode.STATE_SYNC: MahajanaRoute(
-        MantraOpCode.STATE_SYNC, Mahajana.MANU, quarter=3, position=11
-    ),
-    MantraOpCode.LEDGER_SIGN: MahajanaRoute(
-        MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12
-    ),
-
+    MantraOpCode.EXEC_OP: MahajanaRoute(MantraOpCode.EXEC_OP, Mahajana.PRAHLADA, quarter=3, position=9),
+    MantraOpCode.EXTEND_CAP: MahajanaRoute(MantraOpCode.EXTEND_CAP, Mahajana.JANAKA, quarter=3, position=10),
+    MantraOpCode.STATE_SYNC: MahajanaRoute(MantraOpCode.STATE_SYNC, Mahajana.MANU, quarter=3, position=11),
+    MantraOpCode.LEDGER_SIGN: MahajanaRoute(MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12),
     # --- QUARTER 4: MOKSHA (R R H H) ---
-    MantraOpCode.YIELD_CPU: MahajanaRoute(
-        MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=13
-    ),
-    MantraOpCode.IO_FLUSH: MahajanaRoute(
-        MantraOpCode.IO_FLUSH, Mahajana.KAPILA, quarter=4, position=14
-    ),
-    MantraOpCode.LOG_EMIT: MahajanaRoute(
-        MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15
-    ),
-    MantraOpCode.AUDIT_SEAL: MahajanaRoute(
-        MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16
-    ),
+    MantraOpCode.YIELD_CPU: MahajanaRoute(MantraOpCode.YIELD_CPU, Mahajana.BALI, quarter=4, position=13),
+    MantraOpCode.IO_FLUSH: MahajanaRoute(MantraOpCode.IO_FLUSH, Mahajana.KAPILA, quarter=4, position=14),
+    MantraOpCode.LOG_EMIT: MahajanaRoute(MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15),
+    MantraOpCode.AUDIT_SEAL: MahajanaRoute(MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16),
 }
 
 
 # =============================================================================
 # ROUTER CLASS - The Chanting Engine
 # =============================================================================
+
 
 class MahajanaRouter:
     """
@@ -343,6 +284,7 @@ class MahajanaRouter:
 
 _router: Optional[MahajanaRouter] = None
 
+
 def get_router() -> MahajanaRouter:
     """Get the global Mahajana router."""
     global _router
@@ -364,6 +306,7 @@ def get_opcodes(mahajana: Mahajana) -> List[MantraOpCode]:
 # =============================================================================
 # VERIFICATION - The Router Must Be Complete
 # =============================================================================
+
 
 def verify_router() -> bool:
     """

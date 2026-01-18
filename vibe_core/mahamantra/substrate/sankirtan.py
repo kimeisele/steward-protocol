@@ -44,34 +44,36 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Final, Iterator, List, Optional, Tuple
 
-from vibe_core.mahamantra.substrate.wiring import (
-    POSITION_BY_NAME,
-    POSITION_BY_INDEX,
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
+
+# Import SankirtanProtocol (THE LAW)
+from vibe_core.mahamantra.protocols._sankirtan import (
+    GenesisByte,
+    InjectionRequest,
+    SankirtanProtocol,
+    WiringStats,
 )
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.substrate.mahajana import Quarter
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     MantraPosition,
 )
-from vibe_core.mahamantra.substrate.mahajana import Quarter
+from vibe_core.mahamantra.substrate.wiring import (
+    POSITION_BY_INDEX,
+    POSITION_BY_NAME,
+)
 
 # Import SamskaraProtocol for proper protocol-based pipeline
 from vibe_core.protocols.substrate.samskara import (
     Phase,
     PhaseStatus,
-    PipelineContext as SamskaraPipelineContext,
-    SamskaraProtocol,
     PipelineExecutor,
+    SamskaraProtocol,
 )
-
-# Import SankirtanProtocol (THE LAW)
-from vibe_core.mahamantra.protocols._sankirtan import (
-    SankirtanProtocol,
-    GenesisByte,
-    InjectionRequest,
-    WiringStats,
+from vibe_core.protocols.substrate.samskara import (
+    PipelineContext as SamskaraPipelineContext,
 )
-from vibe_core.mahamantra.protocols._pancha import TattvaDict
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 logger = logging.getLogger("SANKIRTAN")
 
@@ -107,76 +109,76 @@ SKIP_PATTERNS: Final[Tuple[str, ...]] = (
 FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     # === DOMAIN-BASED MAPPING (Semantic Governance) ===
     # GENESIS Quarter (Creation/Bootstrap)
-    "runtime": "brahma",         # Creation/Bootstrap
-    "phoenix": "brahma",         # Resurrection
-    "genesis": "brahma",         # Creation scripts
+    "runtime": "brahma",  # Creation/Bootstrap
+    "phoenix": "brahma",  # Resurrection
+    "genesis": "brahma",  # Creation scripts
     # DHARMA Quarter (Law/Structure)
-    "protocols": "vyasa",        # Compilation/Knowledge
-    "governance": "manu",        # Law/Rules
-    "state": "bhishma",          # Immutable state
+    "protocols": "vyasa",  # Compilation/Knowledge
+    "governance": "manu",  # Law/Rules
+    "state": "bhishma",  # Immutable state
     # KARMA Quarter (Action/Service)
-    "cli": "narada",             # Communication
-    "services": "janaka",        # Duty/Service
-    "plugins": "prahlada",       # Devotion/Extensions
-    "cartridges": "prahlada",    # Modular capabilities
-    "agents": "prahlada",        # Agent execution
+    "cli": "narada",  # Communication
+    "services": "janaka",  # Duty/Service
+    "plugins": "prahlada",  # Devotion/Extensions
+    "cartridges": "prahlada",  # Modular capabilities
+    "agents": "prahlada",  # Agent execution
     # MOKSHA Quarter (Liberation/Intelligence)
-    "naga": "yamaraja",          # Security/Judgment
-    "ouroboros": "shambhu",      # Destruction/Cycle
-    "cortex": "shuka",           # Vision/Intelligence
-    "shuddhi": "kapila",         # Analysis/Purification
+    "naga": "yamaraja",  # Security/Judgment
+    "ouroboros": "shambhu",  # Destruction/Cycle
+    "cortex": "shuka",  # Vision/Intelligence
+    "shuddhi": "kapila",  # Analysis/Purification
     # === INFRASTRUCTURE (Foundation Layer) ===
-    "mahamantra": "prithu",      # Foundation of all
-    "loaders": "brahma",         # Bootstrap loaders
-    "config": "manu",            # Configuration = Law
-    "settings": "manu",          # Settings = Rules
+    "mahamantra": "prithu",  # Foundation of all
+    "loaders": "brahma",  # Bootstrap loaders
+    "config": "manu",  # Configuration = Law
+    "settings": "manu",  # Settings = Rules
     # === TOOLS & UTILITIES ===
-    "tools": "parashurama",      # Tools = Weapons
-    "utils": "kumaras",          # Pure utilities
-    "scripts": "parashurama",    # Execution scripts
+    "tools": "parashurama",  # Tools = Weapons
+    "utils": "kumaras",  # Pure utilities
+    "scripts": "parashurama",  # Execution scripts
     # === KNOWLEDGE & STORAGE ===
-    "knowledge": "vyasa",        # Knowledge = Vyasa's domain
-    "store": "bali",             # Storage = Sacrifice (give up)
-    "llm": "shuka",              # LLM = Transcendent vision
+    "knowledge": "vyasa",  # Knowledge = Vyasa's domain
+    "store": "bali",  # Storage = Sacrifice (give up)
+    "llm": "shuka",  # LLM = Transcendent vision
     # === ORCHESTRATION ===
-    "reactor": "shambhu",        # Reaction = Transformation
-    "scheduling": "yamaraja",    # Time/Death = Yamaraja
-    "task_management": "janaka", # Tasks = Duty
-    "steward": "janaka",         # Stewardship = Service
+    "reactor": "shambhu",  # Reaction = Transformation
+    "scheduling": "yamaraja",  # Time/Death = Yamaraja
+    "task_management": "janaka",  # Tasks = Duty
+    "steward": "janaka",  # Stewardship = Service
     # === GATEWAY & COMMUNICATION ===
-    "gateway": "narada",         # Gateway = Travel/Communication
-    "playbook": "narada",        # Playbooks = Instructions
+    "gateway": "narada",  # Gateway = Travel/Communication
+    "playbook": "narada",  # Playbooks = Instructions
     # === SPECIAL DOMAINS ===
-    "specialists": "kapila",     # Specialists = Analysis
-    "vajra": "nrisimha",         # Vajra = Protection/Power
+    "specialists": "kapila",  # Specialists = Analysis
+    "vajra": "nrisimha",  # Vajra = Protection/Power
     # === MAHAMANTRA SUBFOLDERS (more specific = higher priority) ===
     # NOTE: Guardian names in these paths will auto-detect, but we keep
     #       domain-level mappings for semantic clarity
     "mahamantra/substrate": "prithu",  # Foundation (when no specific guardian)
-    "mahamantra/kernel": "brahma",     # Genesis (when no specific guardian)
-    "mahamantra/protocols": "vyasa",   # Compilation protocols
-    "protocols/universal": "vyasa",    # Universal compilation
-    "protocols/substrate": "prithu",   # Substrate foundation
+    "mahamantra/kernel": "brahma",  # Genesis (when no specific guardian)
+    "mahamantra/protocols": "vyasa",  # Compilation protocols
+    "protocols/universal": "vyasa",  # Universal compilation
+    "protocols/substrate": "prithu",  # Substrate foundation
     # === PHOENIX SECTIONS (config domains) ===
-    "phoenix/sections/naga": "yamaraja",           # Security config
-    "phoenix/sections/agents": "prahlada",         # Agent config
-    "phoenix/sections/quality": "kumaras",         # Quality config
-    "phoenix/sections/guardrails": "kumaras",      # Guardrails config
-    "phoenix/sections/test_governance": "yamaraja", # Test governance
-    "phoenix/sections/llm": "shuka",               # LLM config
-    "phoenix/sections/prompts": "shuka",           # Prompts config
-    "phoenix/sections/providers": "shuka",         # Provider config
-    "phoenix/sections/quotas": "manu",             # Quotas/limits
-    "phoenix/sections/runtime": "brahma",          # Runtime config
-    "phoenix/sections/paths": "brahma",            # Paths config
-    "phoenix/sections/templates": "brahma",        # Templates config
-    "phoenix/sections/kernel": "brahma",           # Kernel config
-    "phoenix/sections/cli": "narada",              # CLI config
-    "phoenix/sections/interface": "narada",        # Interface config
-    "phoenix/sections/apis": "narada",             # APIs config
-    "phoenix/sections/steward": "janaka",          # Steward config
-    "phoenix/sections/manas": "kapila",            # Mind/analysis config
-    "phoenix/sections/city": "janaka",             # City/matrix config
+    "phoenix/sections/naga": "yamaraja",  # Security config
+    "phoenix/sections/agents": "prahlada",  # Agent config
+    "phoenix/sections/quality": "kumaras",  # Quality config
+    "phoenix/sections/guardrails": "kumaras",  # Guardrails config
+    "phoenix/sections/test_governance": "yamaraja",  # Test governance
+    "phoenix/sections/llm": "shuka",  # LLM config
+    "phoenix/sections/prompts": "shuka",  # Prompts config
+    "phoenix/sections/providers": "shuka",  # Provider config
+    "phoenix/sections/quotas": "manu",  # Quotas/limits
+    "phoenix/sections/runtime": "brahma",  # Runtime config
+    "phoenix/sections/paths": "brahma",  # Paths config
+    "phoenix/sections/templates": "brahma",  # Templates config
+    "phoenix/sections/kernel": "brahma",  # Kernel config
+    "phoenix/sections/cli": "narada",  # CLI config
+    "phoenix/sections/interface": "narada",  # Interface config
+    "phoenix/sections/apis": "narada",  # APIs config
+    "phoenix/sections/steward": "janaka",  # Steward config
+    "phoenix/sections/manas": "kapila",  # Mind/analysis config
+    "phoenix/sections/city": "janaka",  # City/matrix config
 }
 
 
@@ -194,6 +196,7 @@ def _derive_scan_directories() -> Tuple[str, ...]:
     dirs.add(".")
     return tuple(sorted(dirs))
 
+
 SCAN_DIRECTORIES: Final[Tuple[str, ...]] = _derive_scan_directories()
 
 
@@ -201,9 +204,11 @@ SCAN_DIRECTORIES: Final[Tuple[str, ...]] = _derive_scan_directories()
 # 4-PHASE PIPELINE (Chatuh-Sutra)
 # =============================================================================
 
+
 @dataclass
 class PhaseResult:
     """Result of a single phase in the pipeline."""
+
     phase: Quarter
     success: bool
     message: str
@@ -217,6 +222,7 @@ class PipelineContext:
 
     Contains all state needed for processing a single file.
     """
+
     file_path: Path
     content: Optional[str] = None
     mahajana: Optional[str] = None
@@ -254,9 +260,11 @@ class PipelineContext:
 # RESULT TYPES
 # =============================================================================
 
+
 @dataclass
 class InjectionResult:
     """Result of injecting one file."""
+
     file_path: str
     mahajana: str
     position: int
@@ -268,6 +276,7 @@ class InjectionResult:
 @dataclass
 class SankirtanResult:
     """Result of mass sankirtan injection."""
+
     files_scanned: int = 0
     files_injected: int = 0
     files_skipped: int = 0
@@ -299,6 +308,7 @@ def _get_all_guardian_names() -> List[str]:
     global _GUARDIAN_NAMES_CACHE
     if _GUARDIAN_NAMES_CACHE is None:
         from vibe_core.mahamantra.substrate.registry import GuardianRegistry
+
         _GUARDIAN_NAMES_CACHE = GuardianRegistry.get_all_guardians()
     return _GUARDIAN_NAMES_CACHE
 
@@ -306,6 +316,7 @@ def _get_all_guardian_names() -> List[str]:
 # =============================================================================
 # VALIDATION - Ensure map guardians exist in Registry
 # =============================================================================
+
 
 def _validate_governance_map() -> None:
     """
@@ -339,13 +350,21 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
     2. GOVERNANCE MAP: Explicit folder ownership (e.g., "protocols" -> vyasa)
     3. HASH FALLBACK: Deterministic distribution
 
+    SECURITY: Path is normalized FIRST to prevent traversal attacks.
+    "protocols/../naga/evil.py" -> "naga/evil.py" (maps to yamaraja, not vyasa)
+
     Args:
         file_path: Path to the file
 
     Returns:
         Tuple of (mahajana_name, position) or None if cannot determine.
     """
-    path_str = str(file_path).lower()
+    import os
+
+    # SECURITY: Normalize path to prevent traversal attacks like "../"
+    # This ensures "protocols/../naga/evil.py" becomes "naga/evil.py"
+    normalized_path = os.path.normpath(str(file_path))
+    path_str = normalized_path.lower()
 
     # STEP 1: AUTO-DETECT - Check if any guardian name is in the path
     # This eliminates the need for trivial entries like "mahajanas/vyasa" -> "vyasa"
@@ -356,10 +375,7 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
                 return (guardian_name, mapping.index)
 
     # STEP 2: GOVERNANCE MAP - Check explicit mappings (longest match first)
-    for folder, mahajana in sorted(
-        FOLDER_MAHAJANA_MAP.items(),
-        key=lambda x: -len(x[0])
-    ):
+    for folder, mahajana in sorted(FOLDER_MAHAJANA_MAP.items(), key=lambda x: -len(x[0])):
         if folder in path_str:
             mapping = POSITION_BY_NAME.get(mahajana)
             if mapping:
@@ -376,11 +392,11 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
 # DNA INJECTION (Balarama Pattern - Static)
 # =============================================================================
 
-DNA_TEMPLATE: Final[str] = '''# === MAHAJANA DECLARATION (machine-readable) ===
+DNA_TEMPLATE: Final[str] = """# === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "{mahajana}"
 __position__ = {position}
 __genesis__ = "{genesis_hash}"  # GenesisByte: parampara % 37 == 0
-'''
+"""
 
 
 def compute_genesis_hash(mahajana: str, position: int, file_path: str) -> str:
@@ -422,11 +438,11 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
     IMPORTANT: Python requires `from __future__` to be at the very beginning
     (after docstring). We MUST respect this.
     """
-    lines = content.split('\n')
+    lines = content.split("\n")
     insert_idx = 0
 
     # Skip shebang
-    if lines and lines[0].startswith('#!'):
+    if lines and lines[0].startswith("#!"):
         insert_idx = 1
 
     # Skip module docstring
@@ -443,11 +459,11 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
                     insert_idx = i + 1
                     continue
                 in_docstring = True
-            elif stripped.startswith('#'):
+            elif stripped.startswith("#"):
                 continue
-            elif stripped == '':
+            elif stripped == "":
                 continue
-            elif stripped.startswith('from __future__'):
+            elif stripped.startswith("from __future__"):
                 # MUST skip from __future__ imports - Python requirement!
                 insert_idx = i + 1
                 continue
@@ -472,7 +488,7 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
 
     # Insert
     lines.insert(insert_idx, dna_block)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def inject_file(file_path: str, mahajana: str, dry_run: bool = True) -> bool:
@@ -689,10 +705,7 @@ def _moksha_phase(ctx: PipelineContext) -> PipelineContext:
     # (Python handles this automatically)
 
     # LOG_EMIT: Create summary
-    phase_summary = " → ".join(
-        f"{p.phase.value.upper()}:{'✓' if p.success else '✗'}"
-        for p in ctx.phases
-    )
+    phase_summary = " → ".join(f"{p.phase.value.upper()}:{'✓' if p.success else '✗'}" for p in ctx.phases)
 
     # AUDIT_SEAL: Final status
     if ctx.was_already_owned:
@@ -796,6 +809,7 @@ def iterate_sankirtan(
 # SANKIRTAN - MASS INJECTION
 # =============================================================================
 
+
 def perform_sankirtan(
     base_path: Optional[Path] = None,
     dry_run: bool = True,
@@ -870,14 +884,16 @@ def perform_sankirtan(
                     if ctx.mahajana:
                         result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + 1
 
-                    result.injections.append(InjectionResult(
-                        file_path=str(file_path),
-                        mahajana=ctx.mahajana or "unknown",
-                        position=ctx.position or 0,
-                        success=True,
-                        was_dry_run=dry_run,
-                        message=f"{'Would inject' if dry_run else 'Injected'} {ctx.mahajana}",
-                    ))
+                    result.injections.append(
+                        InjectionResult(
+                            file_path=str(file_path),
+                            mahajana=ctx.mahajana or "unknown",
+                            position=ctx.position or 0,
+                            success=True,
+                            was_dry_run=dry_run,
+                            message=f"{'Would inject' if dry_run else 'Injected'} {ctx.mahajana}",
+                        )
+                    )
                 else:
                     result.files_skipped += 1
             elif ctx.error:
@@ -887,7 +903,9 @@ def perform_sankirtan(
                 result.files_skipped += 1
 
     logger.info("=" * 60)
-    logger.info(f"SANKIRTAN complete: {result.files_injected} injected, {result.files_already_owned} owned, {result.files_failed} failed")
+    logger.info(
+        f"SANKIRTAN complete: {result.files_injected} injected, {result.files_already_owned} owned, {result.files_failed} failed"
+    )
 
     return result
 
@@ -897,9 +915,9 @@ def print_sankirtan_report(result: SankirtanResult) -> None:
     mode = "[DRY-RUN]" if result.was_dry_run else "[LIVE]"
 
     print(f"""
-{'='*60}
+{"=" * 60}
   SANKIRTAN REPORT {mode}
-{'='*60}
+{"=" * 60}
 
   Files scanned:      {result.files_scanned}
   Files injected:     {result.files_injected}
@@ -925,9 +943,9 @@ def print_sankirtan_report(result: SankirtanResult) -> None:
             print(f"    ... and {len(result.errors) - 5} more")
 
     print(f"""
-{'='*60}
+{"=" * 60}
   {"READY TO INJECT" if result.was_dry_run else "INJECTION COMPLETE"}
-{'='*60}
+{"=" * 60}
 """)
 
 
@@ -996,6 +1014,7 @@ def cli_sankirtan(
 @dataclass
 class FilePayload:
     """Payload for file injection pipeline."""
+
     file_path: Path
     content: Optional[str] = None
     mahajana: Optional[str] = None
@@ -1051,19 +1070,11 @@ class SankirtanSamskara:
 
         hash_str = compute_genesis_hash(mahajana, position, path)
         vector = int(hash_str, 16)
-        return {
-            "hash": hash_str,
-            "vector": vector,
-            "is_valid": vector % PARAMPARA == 0
-        }
+        return {"hash": hash_str, "vector": vector, "is_valid": vector % PARAMPARA == 0}
 
     def inject(self, request: InjectionRequest) -> bool:
         """Inject DNA (Protocol Implementation)."""
-        return inject_file(
-            request["path"],
-            request["mahajana"],
-            dry_run=self._dry_run
-        )
+        return inject_file(request["path"], request["mahajana"], dry_run=self._dry_run)
 
     def heal_wiring(self, base_path: Optional[str] = None, dry_run: bool = True) -> WiringStats:
         """Heal filesystem wiring (Protocol Implementation)."""
@@ -1219,10 +1230,7 @@ class SankirtanSamskara:
         """
         payload = ctx.payload
         if result:
-            logger.debug(
-                f"[MOKSHA] {payload.file_path.name}: "
-                f"{result.message} [{ctx.phase_summary}]"
-            )
+            logger.debug(f"[MOKSHA] {payload.file_path.name}: {result.message} [{ctx.phase_summary}]")
 
 
 # =============================================================================
@@ -1259,71 +1267,72 @@ __all__ = [
 # HEAL WIRING - The Royal Decree
 # =============================================================================
 
+
 def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[str, int]:
     """
     HEAL WIRING: The King manages his territory.
-    
+
     Scans all 16 Mahajana folders.
     Generates perfect __init__.py from StandardBlueprint.
     Overwrites if incorrect or missing.
-    
+
     Args:
         base_path: Base path to vibe_core (default: auto-detect)
         dry_run: If True, only report.
-    
+
     Returns:
         Stats dict (checked, healed, skipped, failed)
     """
     from vibe_core.mahamantra.protocols._blueprint import StandardBlueprint
     from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
-    
+
     if base_path is None:
         base_path = Path(__file__).parent.parent.parent
-        
+
     stats = {"checked": 0, "healed": 0, "skipped": 0, "failed": 0}
     blueprint = StandardBlueprint()
     template = blueprint.get_template("__init__")
-    
+
     logger.info(f"👑 HEAL WIRING (dry_run={dry_run})")
-    
+
     for pos in MAHAMANTRA_POSITIONS:
         stats["checked"] += 1
-        
+
         # Determine paths
         guardian = pos.guardian.value
         quarter = pos.quarter.value
         folder_path = base_path / "mahamantra" / quarter / guardian
         init_path = folder_path / "__init__.py"
-        
+
         try:
             # Create folder if missing
             if not folder_path.exists():
                 if not dry_run:
                     folder_path.mkdir(parents=True, exist_ok=True)
                 logger.info(f"  Created folder: {quarter}/{guardian}")
-            
+
             # Determine Service Class (Mapping Logic)
             # This logic maps guardian to service class/module
             service_class = f"{guardian.capitalize()}Service"
             # Special cases or standard mapping?
             # Standard: vibe_core.services.{guardian}_service
             service_module = f"vibe_core.services.{guardian}_service"
-            
+
             # Special case: Nrisimha -> NrisimhaWatchdog
             if guardian == "nrisimha":
-                service_class = "NrisimhaWatchdog" # But we alias it as NrisimhaService in __init__ usually?
+                service_class = "NrisimhaWatchdog"  # But we alias it as NrisimhaService in __init__ usually?
                 # In previous patch we used:
                 # if name == "NrisimhaService": from ... import NrisimhaWatchdog return NrisimhaWatchdog
                 # So the class name exported is NrisimhaWatchdog, but accessed as Service?
                 # Let's stick to the pattern I established: Alias = Service Name
                 service_class = "NrisimhaService"
-                service_module = "vibe_core.services.nrisimha" 
-            
+                service_module = "vibe_core.services.nrisimha"
+
             # Calculate Genesis Hash
             # Virtual path for hash calculation (relative to root)
             rel_path = f"vibe_core/mahamantra/{quarter}/{guardian}/__init__.py"
             genesis_hash = compute_genesis_hash(guardian, pos.index, rel_path)
-            
+
             # Generate Content
             content = template["content_pattern"].format(
                 mahajana_upper=guardian.upper(),
@@ -1336,9 +1345,9 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
                 quarter=quarter,
                 genesis_hash=genesis_hash,
                 service_class=service_class,
-                service_module=service_module
+                service_module=service_module,
             )
-            
+
             # Check existing
             needs_update = True
             if init_path.exists():
@@ -1346,7 +1355,7 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
                 # Simple check: if content is identical (ignoring whitespace maybe?)
                 if current_content.strip() == content.strip():
                     needs_update = False
-            
+
             if needs_update:
                 if not dry_run:
                     init_path.write_text(content)
@@ -1356,9 +1365,9 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
                 stats["healed"] += 1
             else:
                 stats["skipped"] += 1
-                
+
         except Exception as e:
             logger.error(f"  ❌ Failed {guardian}: {e}")
             stats["failed"] += 1
-            
+
     return stats
