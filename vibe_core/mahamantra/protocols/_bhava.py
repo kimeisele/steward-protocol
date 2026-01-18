@@ -38,7 +38,10 @@ But Bhava without Sharanagati is pretension (prakrita-sahajiya).
 from enum import IntEnum
 from typing import Final, Protocol, runtime_checkable
 
-from vibe_core.mahamantra.protocols._seed import SHARANAGATI, PANCHA, COSMIC_FRAME
+from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PANCHA, SHARANAGATI
+
+# SSOT: SharanagatiLimb from substrate/seed.py
+from vibe_core.mahamantra.substrate.seed import SharanagatiLimb
 
 # =============================================================================
 # VERIFICATION
@@ -59,21 +62,23 @@ SHARANAGATI_UNIT: Final[int] = COSMIC_FRAME // SHARANAGATI  # 3600
 # THE 5 BHAVAS (Spiritual Emotions)
 # =============================================================================
 
+
 class Bhava(IntEnum):
     """
     The 5 progressive stages of spiritual emotion.
-    
+
     Each stage intensifies the connection to the Singularity.
     The values correspond to the amplification factor × 10.
-    
+
     From Bhakti-rasamrta-sindhu (Nectar of Devotion):
     "The five primary rasas are shanta, dasya, sakhya, vatsalya and madhurya."
     """
-    SHANTA = 10     # 1.0x - Neutral/Peaceful
-    DASYA = 15      # 1.5x - Servitude
-    SAKHYA = 20     # 2.0x - Friendship
-    VATSALYA = 25   # 2.5x - Parental
-    MADHURYA = 30   # 3.0x - Conjugal (highest)
+
+    SHANTA = 10  # 1.0x - Neutral/Peaceful
+    DASYA = 15  # 1.5x - Servitude
+    SAKHYA = 20  # 2.0x - Friendship
+    VATSALYA = 25  # 2.5x - Parental
+    MADHURYA = 30  # 3.0x - Conjugal (highest)
 
 
 # Verification: Exactly 5 Bhavas (corresponding to Pancha Tattva)
@@ -99,25 +104,9 @@ def get_bhava_multiplier(bhava: Bhava) -> float:
 
 
 # =============================================================================
-# SHARANAGATI COMPLIANCE (The 6 Limbs)
+# SHARANAGATI COMPLIANCE (The 6 Limbs) - SSOT: substrate/seed.py
 # =============================================================================
-
-class SharanagatiLimb(IntEnum):
-    """
-    The 6 limbs of surrender that validate Bhava authenticity.
-    
-    From Hari-bhakti-vilasa:
-    "There are six symptoms of surrender: acceptance of the favorable,
-    rejection of the unfavorable, faith in protection, acceptance of
-    guardianship, self-surrender, and humility."
-    """
-    ANUKULYA = 0     # Accept what is favorable
-    PRATIKULYA = 1   # Reject what is unfavorable
-    VISHVASA = 2     # Faith in protection
-    VARANAM = 3      # Accept the Lord as guardian
-    NIKSHEPA = 4     # Self-surrender
-    KARPANYA = 5     # Humility (no independent karma)
-
+# SharanagatiLimb imported from seed.py above
 
 assert len(SharanagatiLimb) == SHARANAGATI, "There must be exactly 6 limbs"
 
@@ -126,16 +115,17 @@ assert len(SharanagatiLimb) == SHARANAGATI, "There must be exactly 6 limbs"
 # FLOAT VERSION (legacy, for backward compatibility)
 # -----------------------------------------------------------------------------
 
+
 def calculate_sharanagati_compliance(limbs_fulfilled: set[SharanagatiLimb]) -> float:
     """
     Calculate Sharanagati compliance as a ratio (0.0 - 1.0).
-    
+
     WARNING: Uses float division (1/6 = 0.1666... is not exact).
     For watertight calculations, use calculate_sharanagati_scaled().
-    
+
     Args:
         limbs_fulfilled: Set of fulfilled Sharanagati limbs
-        
+
     Returns:
         Compliance ratio (fulfilled / 6)
     """
@@ -146,18 +136,19 @@ def calculate_sharanagati_compliance(limbs_fulfilled: set[SharanagatiLimb]) -> f
 # INTEGER VERSION (WATERTIGHT - No Float Errors)
 # -----------------------------------------------------------------------------
 
+
 def calculate_sharanagati_scaled(limbs_fulfilled: set[SharanagatiLimb]) -> int:
     """
     Calculate Sharanagati compliance as COSMIC_FRAME-scaled integer.
-    
+
     WATERTIGHT: No float errors! 21600 / 6 = 3600 exactly.
-    
+
     Args:
         limbs_fulfilled: Set of fulfilled Sharanagati limbs
-        
+
     Returns:
         Scaled compliance (0 to 21600, step of 3600)
-        
+
     Example:
         0 limbs = 0
         1 limb  = 3600
@@ -171,6 +162,7 @@ def calculate_sharanagati_scaled(limbs_fulfilled: set[SharanagatiLimb]) -> int:
 # THE GRACE EQUATION
 # =============================================================================
 
+
 def calculate_grace(
     frequency: float,
     bhava: Bhava,
@@ -178,17 +170,17 @@ def calculate_grace(
 ) -> float:
     """
     Calculate effective grace using the Grace Equation.
-    
+
     G = f × B × S
-    
+
     Args:
         frequency: Base frequency (ticks per mala, normalized 0.0 - 1.0)
         bhava: The spiritual emotion
         limbs_fulfilled: Set of fulfilled Sharanagati limbs
-        
+
     Returns:
         Effective grace (amplified frequency)
-        
+
     Note:
         Bhava without Sharanagati is prakrita-sahajiya (pretension).
         Sharanagati without Bhava is karma-kanda (dry duty).
@@ -196,7 +188,7 @@ def calculate_grace(
     """
     bhava_multiplier = get_bhava_multiplier(bhava)
     sharanagati_compliance = calculate_sharanagati_compliance(limbs_fulfilled)
-    
+
     return frequency * bhava_multiplier * sharanagati_compliance
 
 
@@ -207,33 +199,33 @@ def calculate_grace_scaled(
 ) -> int:
     """
     Calculate effective grace using WATERTIGHT integer arithmetic.
-    
+
     G_scaled = (f_scaled × B.value × S_scaled) // (COSMIC_FRAME × 10)
-    
+
     This eliminates ALL float errors by keeping everything in integer space.
-    
+
     Args:
         frequency_scaled: Base frequency scaled to COSMIC_FRAME (0 - 21600)
         bhava: The spiritual emotion
         limbs_fulfilled: Set of fulfilled Sharanagati limbs
-        
+
     Returns:
         Scaled grace value (integer)
-        
+
     Example:
         frequency_scaled = 16474 (76.2% of COSMIC_FRAME)
         bhava = MADHURYA (value=30, i.e., 3.0x)
         limbs = 3 (scaled = 10800)
-        
+
         Result = (16474 × 30 × 10800) // (21600 × 10) = 24710
     """
     sharanagati_scaled = calculate_sharanagati_scaled(limbs_fulfilled)
-    
+
     # Bhava enum value is multiplier × 10 (e.g., MADHURYA = 30 for 3.0x)
     # So we divide by 10 at the end
     numerator = frequency_scaled * bhava.value * sharanagati_scaled
     denominator = COSMIC_FRAME * 10  # 216000
-    
+
     return numerator // denominator
 
 
@@ -241,25 +233,26 @@ def calculate_grace_scaled(
 # BHAVA PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class BhavaProtocol(Protocol):
     """
     Protocol for entities that operate with spiritual intent.
-    
+
     Any component that wishes to benefit from grace amplification
     must declare its Bhava and demonstrate Sharanagati compliance.
     """
-    
+
     @property
     def bhava(self) -> Bhava:
         """The spiritual emotion of this entity."""
         ...
-    
+
     @property
     def sharanagati_limbs(self) -> set[SharanagatiLimb]:
         """The fulfilled Sharanagati limbs."""
         ...
-    
+
     def get_effective_grace(self, frequency: float) -> float:
         """Calculate effective grace for a given frequency."""
         ...
@@ -286,4 +279,3 @@ __all__ = [
     # Protocol
     "BhavaProtocol",
 ]
-
