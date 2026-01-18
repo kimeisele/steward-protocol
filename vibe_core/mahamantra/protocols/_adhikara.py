@@ -39,15 +39,15 @@ their operations have greater impact on the substrate.
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Final, FrozenSet, Protocol, Set, runtime_checkable
 from hashlib import sha256
+from typing import Final, FrozenSet, Protocol, Set, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA,
+    KSHETRA,
     MAHAJANA_COUNT,
     PARAMPARA,
     QUARTERS,
-    KSHETRA,
-    KSETRAJNA,
 )
 
 # =============================================================================
@@ -59,45 +59,12 @@ assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, "37 Formula"
 
 
 # =============================================================================
-# THE 12 MAHAJANAS (Authorizers)
+# SSOT IMPORTS - Mahajana and Quarter from substrate/mahajana.py
 # =============================================================================
 
-class Mahajana(IntEnum):
-    """
-    The 12 Mahajanas - Authorities who can sign mutations.
-    
-    From Srimad Bhagavatam 6.3.20-21:
-    "Lord Brahma, Bhagavan Narada, Lord Shiva, the four Kumaras,
-    Lord Kapila, Svayambhuva Manu, Prahlada Maharaja, Janaka Maharaja,
-    Grandfather Bhisma, Bali Maharaja, Sukadeva Gosvami and myself (Yamaraja)."
-    """
-    BRAHMA = 0      # Genesis Quarter, Worker 1
-    NARADA = 1      # Genesis Quarter, Worker 2
-    SHAMBHU = 2     # Genesis Quarter, Worker 3
-    KUMARAS = 3     # Dharma Quarter, Worker 1
-    KAPILA = 4      # Dharma Quarter, Worker 2
-    MANU = 5        # Dharma Quarter, Worker 3
-    PRAHLADA = 6    # Karma Quarter, Worker 1
-    JANAKA = 7      # Karma Quarter, Worker 2
-    BHISHMA = 8     # Karma Quarter, Worker 3
-    BALI = 9        # Moksha Quarter, Worker 1
-    SHUKA = 10      # Moksha Quarter, Worker 2
-    YAMARAJA = 11   # Moksha Quarter, Worker 3
-
+from vibe_core.mahamantra.substrate.mahajana import Mahajana, Quarter
 
 assert len(Mahajana) == MAHAJANA_COUNT, "Must have exactly 12 Mahajanas"
-
-
-# =============================================================================
-# QUARTER AUTHORIZATION REQUIREMENTS
-# =============================================================================
-
-class Quarter(IntEnum):
-    """The 4 Quarters with increasing authorization requirements."""
-    GENESIS = 0  # Boot/Load - 1 signature required
-    DHARMA = 1   # Verify/Check - 2 signatures required  
-    KARMA = 2    # Execute/Commit - 2 signatures required
-    MOKSHA = 3   # Yield/Exit - 3 signatures required
 
 
 # Signatures required per quarter (increasing risk = increasing auth)
@@ -122,18 +89,20 @@ QUARTER_MAHAJANAS: Final[dict[Quarter, FrozenSet[Mahajana]]] = {
 # SIGNATURE STRUCTURE
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MahajanaSignature:
     """
     A cryptographic signature from a Mahajana.
-    
+
     The signature is a hash of (mahajana_id, payload, nonce) that
     must satisfy the Parampara constraint (hash % 37 == 0).
     """
+
     mahajana: Mahajana
     signature_hash: str  # Hex string
     nonce: int
-    
+
     def verify_parampara(self) -> bool:
         """Verify that the signature satisfies Parampara constraint."""
         try:
@@ -148,55 +117,52 @@ class AuthorizationBundle:
     """
     A bundle of Mahajana signatures authorizing an operation.
     """
+
     quarter: Quarter
     operation_id: str
     payload_hash: str
     signatures: Set[MahajanaSignature] = field(default_factory=set)
-    
+
     def add_signature(self, sig: MahajanaSignature) -> bool:
         """
         Add a signature to the bundle.
-        
+
         Returns:
             True if signature is valid and from authorized Mahajana
         """
         # Check if Mahajana is authorized for this quarter
         if sig.mahajana not in QUARTER_MAHAJANAS[self.quarter]:
             return False
-        
+
         # Check Parampara constraint
         if not sig.verify_parampara():
             return False
-        
+
         self.signatures.add(sig)
         return True
-    
+
     def is_authorized(self) -> bool:
         """
         Check if bundle has enough valid signatures.
         """
         required = SIGNATURES_REQUIRED[self.quarter]
         valid_signatures = [
-            s for s in self.signatures
-            if s.mahajana in QUARTER_MAHAJANAS[self.quarter]
-            and s.verify_parampara()
+            s for s in self.signatures if s.mahajana in QUARTER_MAHAJANAS[self.quarter] and s.verify_parampara()
         ]
         return len(valid_signatures) >= required
-    
+
     @property
     def missing_signatures(self) -> int:
         """Number of additional signatures needed."""
         required = SIGNATURES_REQUIRED[self.quarter]
-        have = len([
-            s for s in self.signatures
-            if s.mahajana in QUARTER_MAHAJANAS[self.quarter]
-        ])
+        have = len([s for s in self.signatures if s.mahajana in QUARTER_MAHAJANAS[self.quarter]])
         return max(0, required - have)
 
 
 # =============================================================================
 # SIGNING FUNCTIONS
 # =============================================================================
+
 
 def create_signature(
     mahajana: Mahajana,
@@ -205,15 +171,15 @@ def create_signature(
 ) -> MahajanaSignature | None:
     """
     Create a Parampara-compliant signature.
-    
+
     The nonce is adjusted until hash % 37 == 0.
     This is the "proof of work" that validates the Parampara connection.
-    
+
     Args:
         mahajana: The signing Mahajana
         payload: The data being signed
         max_attempts: Maximum nonce attempts
-        
+
     Returns:
         MahajanaSignature if successful, None if failed
     """
@@ -221,14 +187,14 @@ def create_signature(
         data = f"{mahajana.value}:{payload.hex()}:{nonce}".encode()
         sig_hash = sha256(data).hexdigest()
         hash_int = int(sig_hash[:16], 16)
-        
+
         if hash_int % PARAMPARA == 0:
             return MahajanaSignature(
                 mahajana=mahajana,
                 signature_hash=sig_hash,
                 nonce=nonce,
             )
-    
+
     return None  # Failed to find valid nonce
 
 
@@ -239,12 +205,12 @@ def verify_authorization(
 ) -> bool:
     """
     Verify that an operation is properly authorized.
-    
+
     Args:
         quarter: The quarter in which the operation occurs
         payload: The operation payload
         signatures: Set of Mahajana signatures
-        
+
     Returns:
         True if operation is authorized
     """
@@ -261,29 +227,30 @@ def verify_authorization(
 # ADHIKARA PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class AdhikaraProtocol(Protocol):
     """
     Protocol for entities that require Parampara authorization.
-    
+
     Any operation that mutates substrate state MUST implement this
     protocol to demonstrate proper chain of custody.
     """
-    
+
     @property
     def quarter(self) -> Quarter:
         """The quarter in which this entity operates."""
         ...
-    
+
     @property
     def authorization(self) -> AuthorizationBundle:
         """The current authorization bundle."""
         ...
-    
+
     def request_signature(self, mahajana: Mahajana) -> bool:
         """Request a signature from a Mahajana."""
         ...
-    
+
     def is_authorized(self) -> bool:
         """Check if entity has sufficient authorization."""
         ...
