@@ -75,7 +75,10 @@ class TestPositionRegistryAttacks:
 
     def test_all_mahajana_enum_values_have_positions(self):
         """
-        INVARIANT: Every Mahajana enum value must have a position.
+        INVARIANT: Every Mahajana (WORKER) enum value must have a position.
+
+        NOTE: Mahajanas occupy positions 1,2,3 / 5,6,7 / 9,10,11 / 13,14,15
+        (NON-HEAD positions). Avataras occupy HEAD positions 0,4,8,12.
         """
         missing = []
 
@@ -85,15 +88,26 @@ class TestPositionRegistryAttacks:
 
         assert len(missing) == 0, f"MAHAJANAS WITHOUT POSITIONS: {missing}"
 
-    def test_position_count_equals_mahajana_count(self):
+    def test_position_count_equals_guardians_count(self):
         """
-        INVARIANT: Number of positions must equal number of Mahajanas.
+        INVARIANT: 16 positions = 12 Mahajanas + 4 Avataras
+
+        THE ARCHITECTURE:
+        - 4 Avataras (HEADs) at positions 0, 4, 8, 12
+        - 12 Mahajanas (WORKERs) at positions 1-3, 5-7, 9-11, 13-15
         """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
         position_count = len(MAHAMANTRA_POSITIONS)
         mahajana_count = len(Mahajana)
+        avatara_count = len(Avatara)
 
-        assert position_count == mahajana_count, (
-            f"COUNT MISMATCH: {position_count} positions vs {mahajana_count} mahajanas"
+        assert position_count == 16, f"Expected 16 positions, got {position_count}"
+        assert mahajana_count == 12, f"Expected 12 Mahajanas, got {mahajana_count}"
+        assert avatara_count == 4, f"Expected 4 Avataras, got {avatara_count}"
+        assert position_count == mahajana_count + avatara_count, (
+            f"GUARDIAN MATH VIOLATION: {position_count} positions != "
+            f"{mahajana_count} mahajanas + {avatara_count} avataras"
         )
 
 
@@ -348,12 +362,30 @@ class TestCrossReferenceIntegrity:
 class TestEnumIntegrity:
     """Are the enums properly defined?"""
 
-    def test_mahajana_enum_has_16_members(self):
+    def test_mahajana_enum_has_12_members(self):
         """
-        INVARIANT: Mahajana enum must have exactly 16 members.
+        INVARIANT: Mahajana enum must have exactly 12 members.
+
+        SB 6.3.20: "The 12 who know Dharma" - these are the WORKERS.
+        Avataras (4) are separate - they are the HEADs.
         """
         count = len(Mahajana)
-        assert count == 16, f"Mahajana has {count} members, expected 16"
+        assert count == 12, f"Mahajana has {count} members, expected 12 (SB 6.3.20)"
+
+    def test_avatara_enum_has_4_members(self):
+        """
+        INVARIANT: Avatara enum must have exactly 4 members.
+
+        The 4 Shaktyavesha Avataras are the HEADs of each Quarter:
+        - VYASA (pos 0) - GENESIS HEAD
+        - PRITHU (pos 4) - DHARMA HEAD
+        - PARASHURAMA (pos 8) - KARMA HEAD
+        - NRISIMHA (pos 12) - MOKSHA HEAD
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
+        count = len(Avatara)
+        assert count == 4, f"Avatara has {count} members, expected 4"
 
     def test_quarter_enum_has_4_members(self):
         """
@@ -365,6 +397,8 @@ class TestEnumIntegrity:
     def test_mantra_opcode_enum_has_16_members(self):
         """
         INVARIANT: MantraOpCode enum must have exactly 16 members.
+
+        One opcode per position (0-15).
         """
         count = len(MantraOpCode)
         assert count == 16, f"MantraOpCode has {count} members, expected 16"
@@ -373,9 +407,15 @@ class TestEnumIntegrity:
         """
         CHECK: Enum values should be consistent types.
         """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
         # Mahajana should be strings (guardian names)
         for m in Mahajana:
             assert isinstance(m.value, str), f"Mahajana.{m.name}.value is not str"
+
+        # Avatara should be strings (guardian names)
+        for a in Avatara:
+            assert isinstance(a.value, str), f"Avatara.{a.name}.value is not str"
 
         # Quarter should be strings
         for q in Quarter:
@@ -384,6 +424,23 @@ class TestEnumIntegrity:
         # MantraOpCode should be ints (for position mapping)
         for op in MantraOpCode:
             assert isinstance(op.value, int), f"MantraOpCode.{op.name}.value is not int"
+
+    def test_guardians_total_count(self):
+        """
+        INVARIANT: 12 Mahajanas + 4 Avataras = 16 Guardians = 16 Positions
+
+        This is the FUNDAMENTAL EQUATION of the system.
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+        from vibe_core.mahamantra.substrate.seed import (
+            AVATAR_COUNT,
+            MAHAJANA_COUNT,
+            WORDS,
+        )
+
+        assert len(Mahajana) == MAHAJANA_COUNT == 12
+        assert len(Avatara) == AVATAR_COUNT == 4
+        assert MAHAJANA_COUNT + AVATAR_COUNT == WORDS == 16
 
 
 # =============================================================================
@@ -415,6 +472,310 @@ class TestImmutability:
         keys2 = set(POSITION_BY_NAME.keys())
 
         assert keys1 == keys2, "POSITION_BY_NAME keys changed"
+
+
+# =============================================================================
+# ATTACK 8: HEAD/WORKER ROLE INTEGRITY
+# =============================================================================
+
+
+class TestHeadWorkerRoleIntegrity:
+    """
+    Verify the HEAD/WORKER architecture is correct.
+
+    - HEADs (positions 0,4,8,12) must be Avataras
+    - WORKERs (all other positions) must be Mahajanas
+    """
+
+    def test_heads_are_avataras(self):
+        """
+        INVARIANT: All HEAD positions must be occupied by Avataras.
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
+        head_positions = [0, 4, 8, 12]
+        violations = []
+
+        for pos in MAHAMANTRA_POSITIONS:
+            if pos.index in head_positions:
+                if not pos.is_head:
+                    violations.append(f"Position {pos.index} should be marked as HEAD but is_head=False")
+                if not isinstance(pos.guardian, Avatara):
+                    violations.append(f"Position {pos.index} is HEAD but guardian {pos.guardian} is not Avatara")
+
+        assert len(violations) == 0, "HEAD ROLE VIOLATIONS:\n" + "\n".join(violations)
+
+    def test_workers_are_mahajanas(self):
+        """
+        INVARIANT: All WORKER positions must be occupied by Mahajanas.
+        """
+        worker_positions = [i for i in range(16) if i not in [0, 4, 8, 12]]
+        violations = []
+
+        for pos in MAHAMANTRA_POSITIONS:
+            if pos.index in worker_positions:
+                if pos.is_head:
+                    violations.append(f"Position {pos.index} should NOT be marked as HEAD but is_head=True")
+                if not isinstance(pos.guardian, Mahajana):
+                    violations.append(f"Position {pos.index} is WORKER but guardian {pos.guardian} is not Mahajana")
+
+        assert len(violations) == 0, "WORKER ROLE VIOLATIONS:\n" + "\n".join(violations)
+
+    def test_each_quarter_has_one_avatara_and_three_mahajanas(self):
+        """
+        INVARIANT: Each quarter has exactly 1 Avatara (HEAD) and 3 Mahajanas (WORKERS).
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
+        for quarter in Quarter:
+            quarter_positions = [p for p in MAHAMANTRA_POSITIONS if p.quarter == quarter]
+
+            avatara_count = sum(1 for p in quarter_positions if isinstance(p.guardian, Avatara))
+            mahajana_count = sum(1 for p in quarter_positions if isinstance(p.guardian, Mahajana))
+
+            assert avatara_count == 1, f"Quarter {quarter.value}: expected 1 Avatara, got {avatara_count}"
+            assert mahajana_count == 3, f"Quarter {quarter.value}: expected 3 Mahajanas, got {mahajana_count}"
+
+    def test_avatara_guardian_names_match_ssot(self):
+        """
+        INVARIANT: Avatara at each HEAD position must match seed.py AVATARAS.
+        """
+        from vibe_core.mahamantra.substrate.seed import AVATARAS
+
+        head_positions = [0, 4, 8, 12]
+        violations = []
+
+        for i, head_pos in enumerate(head_positions):
+            pos = MAHAMANTRA_POSITIONS[head_pos]
+            expected_avatara = AVATARAS[i]
+
+            if pos.guardian.value != expected_avatara:
+                violations.append(
+                    f"Position {head_pos}: expected Avatara '{expected_avatara}', got '{pos.guardian.value}'"
+                )
+
+        assert len(violations) == 0, "AVATARA SSOT VIOLATIONS:\n" + "\n".join(violations)
+
+
+# =============================================================================
+# ATTACK 9: SSOT DERIVATION INTEGRITY
+# =============================================================================
+
+
+class TestSSOTDerivationIntegrity:
+    """
+    Verify everything derives correctly from seed.py.
+
+    The hierarchy: protocols/_seed.py → seed.py → position.py → wiring.py
+    """
+
+    def test_all_guardians_matches_positions(self):
+        """
+        INVARIANT: seed.py ALL_GUARDIANS must match MAHAMANTRA_POSITIONS order.
+        """
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
+        assert len(ALL_GUARDIANS) == len(MAHAMANTRA_POSITIONS), (
+            f"ALL_GUARDIANS has {len(ALL_GUARDIANS)} entries, MAHAMANTRA_POSITIONS has {len(MAHAMANTRA_POSITIONS)}"
+        )
+
+        violations = []
+        for i, pos in enumerate(MAHAMANTRA_POSITIONS):
+            if pos.guardian.value != ALL_GUARDIANS[i]:
+                violations.append(
+                    f"Position {i}: MAHAMANTRA_POSITIONS has {pos.guardian.value}, ALL_GUARDIANS has {ALL_GUARDIANS[i]}"
+                )
+
+        assert len(violations) == 0, "ALL_GUARDIANS MISMATCH:\n" + "\n".join(violations)
+
+    def test_mahajana_to_position_mapping_is_correct(self):
+        """
+        INVARIANT: seed.py MAHAJANA_TO_POSITION must be inverse of ALL_GUARDIANS.
+        """
+        from vibe_core.mahamantra.substrate.seed import (
+            ALL_GUARDIANS,
+            MAHAJANA_TO_POSITION,
+        )
+
+        violations = []
+
+        for name, pos in MAHAJANA_TO_POSITION.items():
+            if ALL_GUARDIANS[pos] != name:
+                violations.append(
+                    f"MAHAJANA_TO_POSITION['{name}'] = {pos}, but ALL_GUARDIANS[{pos}] = '{ALL_GUARDIANS[pos]}'"
+                )
+
+        assert len(violations) == 0, "MAHAJANA_TO_POSITION VIOLATIONS:\n" + "\n".join(violations)
+
+    def test_position_by_index_matches_mahamantra_positions(self):
+        """
+        INVARIANT: POSITION_BY_INDEX[i] must equal MAHAMANTRA_POSITIONS[i].
+        """
+        violations = []
+
+        for i, pos in enumerate(MAHAMANTRA_POSITIONS):
+            by_index = POSITION_BY_INDEX.get(i)
+            if by_index is None:
+                violations.append(f"Position {i} not in POSITION_BY_INDEX")
+            elif by_index.guardian != pos.guardian:
+                violations.append(
+                    f"Position {i}: MAHAMANTRA_POSITIONS has {pos.guardian}, POSITION_BY_INDEX has {by_index.guardian}"
+                )
+
+        assert len(violations) == 0, "POSITION_BY_INDEX VIOLATIONS:\n" + "\n".join(violations)
+
+    def test_position_by_name_contains_all_guardians(self):
+        """
+        INVARIANT: POSITION_BY_NAME must contain all 16 guardians.
+        """
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
+        missing = []
+        for guardian in ALL_GUARDIANS:
+            if guardian not in POSITION_BY_NAME:
+                missing.append(guardian)
+
+        assert len(missing) == 0, f"GUARDIANS MISSING FROM POSITION_BY_NAME: {missing}"
+
+
+# =============================================================================
+# ATTACK 10: GUARDIAN NAMESPACE INTEGRITY
+# =============================================================================
+
+
+class TestGuardianNamespaceIntegrity:
+    """
+    Verify Mahajana and Avatara namespaces are disjoint.
+    """
+
+    def test_no_overlap_between_mahajana_and_avatara(self):
+        """
+        INVARIANT: No guardian can be both Mahajana and Avatara.
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
+        mahajana_values = {m.value for m in Mahajana}
+        avatara_values = {a.value for a in Avatara}
+
+        overlap = mahajana_values & avatara_values
+        assert len(overlap) == 0, f"NAMESPACE COLLISION: {overlap} is both Mahajana and Avatara"
+
+    def test_all_guardians_are_either_mahajana_or_avatara(self):
+        """
+        INVARIANT: Every guardian must be exactly Mahajana OR Avatara, never both, never neither.
+        """
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+
+        mahajana_values = {m.value for m in Mahajana}
+        avatara_values = {a.value for a in Avatara}
+        all_guardians_values = mahajana_values | avatara_values
+
+        violations = []
+        for pos in MAHAMANTRA_POSITIONS:
+            if pos.guardian.value not in all_guardians_values:
+                violations.append(
+                    f"Position {pos.index}: guardian '{pos.guardian.value}' is neither Mahajana nor Avatara"
+                )
+
+        assert len(violations) == 0, "ORPHAN GUARDIAN VIOLATIONS:\n" + "\n".join(violations)
+
+    def test_guardian_names_are_unique_across_all_positions(self):
+        """
+        INVARIANT: No guardian name appears at more than one position.
+        """
+        seen = {}
+        violations = []
+
+        for pos in MAHAMANTRA_POSITIONS:
+            name = pos.guardian.value
+            if name in seen:
+                violations.append(f"Guardian '{name}' appears at both position {seen[name]} and {pos.index}")
+            else:
+                seen[name] = pos.index
+
+        assert len(violations) == 0, "DUPLICATE GUARDIAN VIOLATIONS:\n" + "\n".join(violations)
+
+
+# =============================================================================
+# ATTACK 11: MATHEMATICAL INVARIANTS
+# =============================================================================
+
+
+class TestMathematicalInvariants:
+    """
+    Test the mathematical relationships that MUST hold.
+    """
+
+    def test_parampara_is_37(self):
+        """
+        INVARIANT: PARAMPARA must equal 37.
+
+        This is the divine constant: 36 (kshetra_gad) + 1 (ksetrajna) = 37
+        """
+        from vibe_core.mahamantra.substrate.seed import PARAMPARA
+
+        assert PARAMPARA == 37, f"PARAMPARA must be 37, got {PARAMPARA}"
+
+    def test_fundamental_equation(self):
+        """
+        INVARIANT: 12 + 4 = 16 (Mahajanas + Avataras = Positions = Words)
+        """
+        from vibe_core.mahamantra.substrate.seed import (
+            AVATAR_COUNT,
+            MAHAJANA_COUNT,
+            WORDS,
+        )
+
+        assert MAHAJANA_COUNT == 12
+        assert AVATAR_COUNT == 4
+        assert WORDS == 16
+        assert MAHAJANA_COUNT + AVATAR_COUNT == WORDS
+
+    def test_kshetra_derivation(self):
+        """
+        INVARIANT: KSHETRA = WORDS + HARE_COUNT = 16 + 8 = 24
+        """
+        from vibe_core.mahamantra.substrate.seed import (
+            HARE_COUNT,
+            KSHETRA,
+            WORDS,
+        )
+
+        assert HARE_COUNT == 8
+        assert KSHETRA == WORDS + HARE_COUNT == 24
+
+    def test_sharanagati_derivation(self):
+        """
+        INVARIANT: SHARANAGATI = KSHETRA / QUARTERS = 24 / 4 = 6
+        """
+        from vibe_core.mahamantra.substrate.seed import (
+            KSHETRA,
+            QUARTERS,
+            SHARANAGATI,
+        )
+
+        assert SHARANAGATI == KSHETRA // QUARTERS == 6
+
+    def test_acintya_paths(self):
+        """
+        INVARIANT: Two paths to 37 (Acintya - inconceivably one and different):
+        - Sankhya path: KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 24 + 12 + 1 = 37
+        - Sharanagati path: KSHETRA_GAD + KSETRAJNA = 36 + 1 = 37
+        """
+        from vibe_core.mahamantra.substrate.seed import (
+            KSETRAJNA,
+            KSHETRA,
+            KSHETRA_GAD,
+            MAHAJANA_COUNT,
+            PARAMPARA,
+        )
+
+        sankhya_path = KSHETRA + MAHAJANA_COUNT + KSETRAJNA
+        sharanagati_path = KSHETRA_GAD + KSETRAJNA
+
+        assert sankhya_path == 37, f"Sankhya path: {sankhya_path} != 37"
+        assert sharanagati_path == 37, f"Sharanagati path: {sharanagati_path} != 37"
+        assert sankhya_path == sharanagati_path == PARAMPARA
 
 
 # =============================================================================
