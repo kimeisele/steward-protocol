@@ -114,6 +114,9 @@ from typing import (
     runtime_checkable,
 )
 
+# SSOT: Avatara from substrate/mahajana.py (the 4 HEADs of CHATUR-VYUHA)
+from vibe_core.mahamantra.substrate.mahajana import Avatara
+
 # =============================================================================
 # SHAKTI TYPES (Power Categories)
 # =============================================================================
@@ -121,29 +124,15 @@ from typing import (
 
 class Shakti(str, Enum):
     """
-    The Powers that Avataras wield.
+    The 4 Powers that the 4 Avataras wield.
     Each Shakti is a specific capability delegation from Vishnu.
+    Maps 1:1 to the 4 Avatara HEADs.
     """
 
-    # Infrastructure & Governance
     PALANA = "palana"  # Ruling/Maintenance (Prithu)
-    DHARANA = "dharana"  # Support/Foundation (Kurma)
-
-    # Knowledge & Communication
     JNANA = "jnana"  # Knowledge/Compilation (Vyasa)
-    VEDA = "veda"  # Scriptural knowledge (Hayagriva)
-
-    # Protection & Defense
     KSHATRA = "kshatra"  # Warrior/Defense (Parashurama)
     RAKSHANA = "rakshana"  # Protection (Nrisimha)
-
-    # Transformation
-    TYAGA = "tyaga"  # Renunciation/Simplification (Rsabhadeva)
-    UDDHARA = "uddhara"  # Rescue/Recovery (Varaha)
-
-    # Special
-    BHAKTI = "bhakti"  # Devotion (unique - Narada is also Mahajana)
-    YOGA = "yoga"  # Union/Connection (Kapila - also Mahajana)
 
 
 class AvatarType(str, Enum):
@@ -461,36 +450,15 @@ class BaseAvatara(ABC):
 
 
 # =============================================================================
-# KNOWN AVATARAS (Registry)
+# SHAKTI → AVATARA MAPPING (The 4 HEADs)
 # =============================================================================
+# Avatara imported from SSOT: vibe_core.mahamantra.substrate.mahajana
 
-
-class Avatara(str, Enum):
-    """
-    The known Avataras in this system.
-    Similar to Mahajana enum for type safety.
-    """
-
-    PRITHU = "prithu"  # Infrastructure/Resource Manager
-    VYASA = "vyasa"  # Documentation/Compilation
-    PARASHURAMA = "parashurama"  # Security/Defense
-    RSABHADEVA = "rsabhadeva"  # Simplification/Optimization
-    HAYAGRIVA = "hayagriva"  # Knowledge Retrieval
-    KURMA = "kurma"  # Foundation/Support
-    VARAHA = "varaha"  # Rescue/Recovery
-    NRISIMHA = "nrisimha"  # Protection/Security
-
-
-# Shakti → Avatara mapping
 SHAKTI_OWNERS: Final[dict[Shakti, Avatara]] = {
-    Shakti.PALANA: Avatara.PRITHU,
-    Shakti.JNANA: Avatara.VYASA,
-    Shakti.KSHATRA: Avatara.PARASHURAMA,
-    Shakti.TYAGA: Avatara.RSABHADEVA,
-    Shakti.VEDA: Avatara.HAYAGRIVA,
-    Shakti.DHARANA: Avatara.KURMA,
-    Shakti.UDDHARA: Avatara.VARAHA,
-    Shakti.RAKSHANA: Avatara.NRISIMHA,
+    Shakti.PALANA: Avatara.PRITHU,  # Q2 DHARMA HEAD (Position 4)
+    Shakti.JNANA: Avatara.VYASA,  # Q1 GENESIS HEAD (Position 0)
+    Shakti.KSHATRA: Avatara.PARASHURAMA,  # Q3 KARMA HEAD (Position 8)
+    Shakti.RAKSHANA: Avatara.NRISIMHA,  # Q4 MOKSHA HEAD (Position 12)
 }
 
 
