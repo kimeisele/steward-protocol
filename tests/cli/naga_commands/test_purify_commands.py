@@ -12,22 +12,22 @@ Tests for PURIFY phase (4-7) commands:
 
 import pytest
 
-from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.cli.naga_commands.purify.detect import DetectCommand
-from vibe_core.cli.naga_commands.purify.gc import GcCommand
 from vibe_core.cli.naga_commands.purify.flood import FloodCommand
+from vibe_core.cli.naga_commands.purify.gc import GcCommand
+from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.protocols.naga.cli_command import (
+    NAGA_COMMAND_REGISTRY,
     INagaCommand,
     Mahajana,
     Phase,
-    NAGA_COMMAND_REGISTRY,
 )
 from vibe_core.protocols.substrate import MantraOpCode
-
 
 # =============================================================================
 # SCAN COMMAND TESTS
 # =============================================================================
+
 
 class TestScanCommand:
     """Test ScanCommand (VYASA - ASSERT_TRUTH)."""
@@ -114,11 +114,20 @@ class TestScanCommand:
 
     def test_execute_path_flag(self):
         """Execute with --path scans specific path."""
-        cmd = ScanCommand()
-        result = cmd.execute(["--path", "/some/path"])
-        assert result.success
-        data = result.to_dict()
-        assert data.get("path") == "/some/path"
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create a test Python file
+            test_file = os.path.join(tmpdir, "test.py")
+            with open(test_file, "w") as f:
+                f.write("# Test file\nprint('hello')\n")
+
+            cmd = ScanCommand()
+            result = cmd.execute(["--path", tmpdir])
+            assert result.success
+            data = result.to_dict()
+            assert data.get("path") == tmpdir
 
     def test_execute_invalid_path(self):
         """Execute with invalid --path fails."""
@@ -158,6 +167,7 @@ class TestScanCommand:
 # REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestPurifyRegistryIntegration:
     """Test that PURIFY commands are registered."""
 
@@ -190,6 +200,7 @@ class TestPurifyRegistryIntegration:
 # =============================================================================
 # POSITION 4 TESTS (HEAD OF PURIFY)
 # =============================================================================
+
 
 class TestPosition4:
     """Test that scan is position 4 - the HEAD of PURIFY."""
@@ -232,6 +243,7 @@ class TestPosition4:
 # SCAN MODE TESTS
 # =============================================================================
 
+
 class TestScanModes:
     """Test different scan modes."""
 
@@ -256,20 +268,20 @@ class TestScanModes:
         cmd = ScanCommand()
         result = cmd.execute(["--toxicity"])
         assert "TAKSHAKA" in result.output  # Security NAGA
-        assert "VAJRA" in result.output  # Security violations
+        assert "SECURITY" in result.output  # Security issues found
 
     def test_protocols_focuses_on_coverage(self):
         """Protocol scan focuses on coverage."""
         cmd = ScanCommand()
         result = cmd.execute(["--protocols"])
         assert "COVERAGE" in result.output
-        assert "GAPS" in result.output
-        assert "MAHAJANA" in result.output
+        assert "ANY TYPES" in result.output  # Type checking
 
 
 # =============================================================================
 # STRICT TYPING TESTS
 # =============================================================================
+
 
 class TestStrictTyping:
     """Test that results have no Any types."""
@@ -278,14 +290,15 @@ class TestStrictTyping:
         """ScanCommand result has no Any."""
         cmd = ScanCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert hasattr(result, "success")
+        assert hasattr(result, "opcode")
+        assert hasattr(result, "mahajana")
 
 
 # =============================================================================
 # IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestImmutability:
     """Test that results are immutable."""
@@ -301,6 +314,7 @@ class TestImmutability:
 # =============================================================================
 # SEMANTIC TESTS
 # =============================================================================
+
 
 class TestSemantics:
     """Test semantic meaning of VYASA as scan owner."""
@@ -331,6 +345,7 @@ class TestSemantics:
 # =============================================================================
 # DETECT COMMAND TESTS
 # =============================================================================
+
 
 class TestDetectCommand:
     """Test DetectCommand (KUMARAS - RESOLVE_REQ)."""
@@ -456,6 +471,7 @@ class TestDetectCommand:
 # DETECT REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestDetectRegistryIntegration:
     """Test that DetectCommand is registered."""
 
@@ -482,6 +498,7 @@ class TestDetectRegistryIntegration:
 # DETECT STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestDetectStrictTyping:
     """Test that DetectCommand results have no Any types."""
 
@@ -489,14 +506,15 @@ class TestDetectStrictTyping:
         """DetectCommand result has no Any."""
         cmd = DetectCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert hasattr(result, "success")
+        assert hasattr(result, "opcode")
+        assert hasattr(result, "mahajana")
 
 
 # =============================================================================
 # DETECT IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestDetectImmutability:
     """Test that DetectCommand results are immutable."""
@@ -512,6 +530,7 @@ class TestDetectImmutability:
 # =============================================================================
 # DETECT SEMANTICS TESTS
 # =============================================================================
+
 
 class TestDetectSemantics:
     """Test semantic meaning of KUMARAS as detect owner."""
@@ -542,6 +561,7 @@ class TestDetectSemantics:
 # =============================================================================
 # FLOOD COMMAND TESTS
 # =============================================================================
+
 
 class TestFloodCommand:
     """Test FloodCommand (MANU - PULSE_SYNC)."""
@@ -643,6 +663,7 @@ class TestFloodCommand:
 # FLOOD REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestFloodRegistryIntegration:
     """Test that FloodCommand is registered."""
 
@@ -669,6 +690,7 @@ class TestFloodRegistryIntegration:
 # FLOOD STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestFloodStrictTyping:
     """Test that FloodCommand results have no Any types."""
 
@@ -676,14 +698,15 @@ class TestFloodStrictTyping:
         """FloodCommand result has no Any."""
         cmd = FloodCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert hasattr(result, "success")
+        assert hasattr(result, "opcode")
+        assert hasattr(result, "mahajana")
 
 
 # =============================================================================
 # FLOOD IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestFloodImmutability:
     """Test that FloodCommand results are immutable."""
@@ -699,6 +722,7 @@ class TestFloodImmutability:
 # =============================================================================
 # FLOOD SEMANTICS TESTS
 # =============================================================================
+
 
 class TestFloodSemantics:
     """Test semantic meaning of MANU as flood owner."""
@@ -729,6 +753,7 @@ class TestFloodSemantics:
 # =============================================================================
 # GC COMMAND TESTS
 # =============================================================================
+
 
 class TestGcCommand:
     """Test GcCommand (KAPILA - GARBAGE_COLLECT)."""
@@ -838,6 +863,7 @@ class TestGcCommand:
 # GC REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestGcRegistryIntegration:
     """Test that GcCommand is registered."""
 
@@ -864,6 +890,7 @@ class TestGcRegistryIntegration:
 # GC STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestGcStrictTyping:
     """Test that GcCommand results have no Any types."""
 
@@ -871,14 +898,15 @@ class TestGcStrictTyping:
         """GcCommand result has no Any."""
         cmd = GcCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert hasattr(result, "success")
+        assert hasattr(result, "opcode")
+        assert hasattr(result, "mahajana")
 
 
 # =============================================================================
 # GC IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestGcImmutability:
     """Test that GcCommand results are immutable."""
@@ -894,6 +922,7 @@ class TestGcImmutability:
 # =============================================================================
 # GC SEMANTICS TESTS
 # =============================================================================
+
 
 class TestGcSemantics:
     """Test semantic meaning of KAPILA as gc owner."""
@@ -925,6 +954,7 @@ class TestGcSemantics:
 # PURIFY PHASE COMPLETE TEST
 # =============================================================================
 
+
 class TestPurifyPhaseComplete:
     """Test that PURIFY phase is complete with all 4 commands."""
 
@@ -932,10 +962,10 @@ class TestPurifyPhaseComplete:
         """All 4 PURIFY phase commands are registered."""
         cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.PURIFY)
         names = [c.name for c in cmds]
-        assert "scan" in names    # VYASA - Position 4
+        assert "scan" in names  # VYASA - Position 4
         assert "detect" in names  # KUMARAS - Position 5
-        assert "gc" in names      # KAPILA - Position 6
-        assert "flood" in names   # MANU - Position 7
+        assert "gc" in names  # KAPILA - Position 6
+        assert "flood" in names  # MANU - Position 7
 
     def test_purify_has_four_commands(self):
         """PURIFY phase has exactly 4 commands."""

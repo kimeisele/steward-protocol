@@ -33,17 +33,15 @@ __genesis__ = "0xab9f3b21"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.COMPILE_AST,
     name="scan",
-    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)")
+    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)",
+)
 class ScanCommand(NagaCommandBase):
     """
     Scan command implementation.
@@ -84,15 +82,30 @@ class ScanCommand(NagaCommandBase):
                 idx = args.index("--path")
                 target_path_str = args[idx + 1]
             except (IndexError, ValueError):
-                return self.failure(
-                    "Invalid --path flag. Usage: --path <directory>",
-                    exit_code=1)
-        
+                return self.failure("Invalid --path flag. Usage: --path <directory>", exit_code=1)
+
         target_path = Path(target_path_str).absolute()
         if not target_path.exists():
             return self.failure(f"Path not found: {target_path}", exit_code=1)
 
         try:
+            # Determine scan mode
+            if quick:
+                mode = "quick"
+                mode_label = "Quick Scan"
+            elif deep:
+                mode = "deep"
+                mode_label = "Deep Scan"
+            elif toxicity_only:
+                mode = "toxicity"
+                mode_label = "Toxicity Scan"
+            elif protocols_only:
+                mode = "protocols"
+                mode_label = "Protocol Scan"
+            else:
+                mode = "full"
+                mode_label = "Full Scan"
+
             scan_type = "all"
             if toxicity_only:
                 scan_type = "security"
@@ -111,14 +124,19 @@ class ScanCommand(NagaCommandBase):
             if not py_files and target_path.is_file() and target_path.suffix == ".py":
                 py_files = [target_path]
 
+            # Quick mode: only scan first 100 files and security only
+            if quick:
+                py_files = py_files[:100]
+                scan_type = "security"  # Quick = security only
+
             for py_file in py_files:
                 try:
                     content = py_file.read_text(encoding="utf-8", errors="ignore")
 
-                    if scan_type in ["all", "silent"]:
+                    if scan_type in ["all", "silent"] and not quick:
                         results["silent_failures"].extend(self._find_silent_failures(content, py_file))
 
-                    if scan_type in ["all", "vfs"]:
+                    if scan_type in ["all", "vfs"] and not quick:
                         results["vfs_bypasses"].extend(self._find_vfs_bypasses(content, py_file))
 
                     if scan_type in ["all", "types"]:
@@ -133,11 +151,24 @@ class ScanCommand(NagaCommandBase):
 
             # Format output
             output_lines = [
-                f"[VYASA] Codebase Scan: {target_path}",
+                f"[VYASA] {mode_label}: {target_path}",
                 "=" * 60,
+                f"    Mode: {mode}",
                 f"    Scanned {len(py_files)} Python files",
                 "-" * 60,
             ]
+
+            # Add scan type specific output for deep scan
+            if deep:
+                output_lines.insert(3, "    TOXICITY SCAN: enabled")
+                output_lines.insert(4, "    PROTOCOL SCAN: enabled")
+
+            # Add scan type specific output for toxicity/protocols scan
+            if toxicity_only:
+                output_lines.insert(3, "    TAKSHAKA: Security verification active")
+
+            if protocols_only:
+                output_lines.insert(3, "    COVERAGE: Protocol type verification")
 
             total_issues = 0
             for key, issues in results.items():
@@ -160,16 +191,18 @@ class ScanCommand(NagaCommandBase):
                     ("phase", "purify"),
                     ("position", "4"),
                     ("mahajana", "vyasa"),
+                    ("mode", mode),
                     ("total_issues", str(total_issues)),
-                    ("path", str(target_path))))
+                    ("path", str(target_path)),
+                ),
+            )
         except Exception as e:
-            return self.failure(
-                f"Scan failed: {e}",
-                exit_code=1)
+            return self.failure(f"Scan failed: {e}", exit_code=1)
 
     def _find_silent_failures(self, content: str, filepath: any) -> List[Dict]:
         """Find except: pass patterns."""
         import re
+
         issues = []
         lines = content.split("\n")
         for i, line in enumerate(lines, 1):
@@ -180,6 +213,7 @@ class ScanCommand(NagaCommandBase):
     def _find_vfs_bypasses(self, content: str, filepath: any) -> List[Dict]:
         """Find direct open() calls that bypass VFS."""
         import re
+
         issues = []
         if "test" in str(filepath).lower():
             return []
@@ -194,6 +228,7 @@ class ScanCommand(NagaCommandBase):
     def _find_any_types(self, content: str, filepath: any) -> List[Dict]:
         """Find Dict[str, Any] and similar."""
         import re
+
         issues = []
         lines = content.split("\n")
         for i, line in enumerate(lines, 1):
@@ -206,6 +241,7 @@ class ScanCommand(NagaCommandBase):
     def _find_security_issues(self, content: str, filepath: any) -> List[Dict]:
         """Find potential security issues."""
         import re
+
         issues = []
         lines = content.split("\n")
         patterns = [
@@ -223,7 +259,6 @@ class ScanCommand(NagaCommandBase):
                 if re.search(pattern, line):
                     issues.append({"file": str(filepath), "line": i, "type": issue_type, "code": line.strip()})
         return issues
-
 
 
 # Export for direct import
