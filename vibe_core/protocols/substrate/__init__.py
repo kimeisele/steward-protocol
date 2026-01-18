@@ -43,7 +43,6 @@ Usage:
                 gene.bind(self)  # Top-down injection
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -68,6 +67,9 @@ from typing import (
     TypeVar,
     runtime_checkable,
 )
+
+# SSOT: HolyName from byte.py (IntEnum with VOID for binary encoding)
+from vibe_core.mahamantra.substrate.byte import HolyName
 
 # =============================================================================
 # TYPE VARIABLES (Generic Support)
@@ -214,25 +216,19 @@ class SubstrateHealth(str, Enum):
     COLLAPSED = "collapsed"  # System failure
 
 
-class HolyName(str, Enum):
-    """
-    The Three Holy Names in the Mahamantra.
-    ANTI-MAYAVADI: These are PERSONS, not just strings.
-    """
+# HolyName imported from byte.py (SSOT) - IntEnum with VOID for binary encoding
+# See vibe_core.mahamantra.substrate.byte for the canonical definition
 
-    HARE = "Hare"  # Shakti - The Energy (Radha)
-    KRISHNA = "Krishna"  # Source - The All-Attractive (God)
-    RAMA = "Rama"  # Strength - The Enjoyer/Service (Balarama/Vishnu)
 
-    @property
-    def meaning(self) -> str:
-        """The personal meaning behind each Name."""
-        meanings = {
-            "Hare": "O Energy of the Lord! Please engage me in service.",
-            "Krishna": "O All-Attractive One! You are my anchor.",
-            "Rama": "O Source of Bliss! Give me strength to serve.",
-        }
-        return meanings.get(self.value, "Unknown")
+def get_holy_name_meaning(name: HolyName) -> str:
+    """Get the spiritual meaning of a Holy Name."""
+    meanings = {
+        HolyName.HARE: "O Energy of the Lord! Please engage me in service.",
+        HolyName.KRISHNA: "O All-Attractive One! You are my anchor.",
+        HolyName.RAMA: "O Source of Bliss! Give me strength to serve.",
+        HolyName.VOID: "Maya - The illusory state.",
+    }
+    return meanings.get(name, "Unknown")
 
 
 class Tattva(str, Enum):
@@ -312,20 +308,15 @@ class AlignmentScore:
 # DO NOT DEFINE HERE. IMPORT FROM SSOT.
 # This ensures ONE set of names across the entire system.
 
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-
 # Legacy alias mapping for backward compatibility (if needed)
 # The SSOT names are: SYS_WAKE, LOAD_ROOT, ALLOC_MEM, INIT_THREAD,
 #                     COMPILE_AST, BIND_SYMBOL, TYPE_CHECK, DHARMA_TEST,
 #                     EXEC_OP, EXTEND_CAP, STATE_SYNC, LEDGER_SIGN,
 #                     YIELD_CPU, IO_FLUSH, LOG_EMIT, AUDIT_SEAL
-
-
 # THE GENETIC SEQUENCE (IMMUTABLE DNA)
 # This tuple IS the "Binding Strip" for the Turing Machine.
 # SSOT: Imported from mahamantra/substrate/opcode.py (derived from seed.py)
-from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
-
+from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE, MantraOpCode
 
 # =============================================================================
 # DATA CLASSES (Pure Data, No Behavior)
@@ -1505,6 +1496,7 @@ __all__ = [
     "SubstrateHealth",
     "MantraOpCode",
     "HolyName",
+    "get_holy_name_meaning",
     "Tattva",
     # Mantra measurement types
     "Resonance",
@@ -1652,36 +1644,34 @@ __all__ = [
 # =============================================================================
 # These are imported lazily to avoid circular dependency issues
 
-from vibe_core.protocols.substrate.resonance import (
-    PhoneticClass,
-    ResonanceEngine,
-    ResonanceEntry,
-    ResonanceMatrix,
-    ResonanceProtocol,
-    ResonanceVector,
-    compute_resonance_matrix,
-    compute_resonance_vector,
-    get_resonance_engine,
-    resonate,
-    resolve,
-    resolve_position,
+# =============================================================================
+# LAZY IMPORT: CLI LOADER PROTOCOL (Substrate-Level CLI Discovery)
+# =============================================================================
+from vibe_core.protocols.substrate.cli_loader import (
+    CLILoaderConfig,
+    CLILoaderProtocol,
+    CommandArgument,
+    DiscoveredCommand,
+    LoaderProgress,
+    LoaderResult,
+    NullCLILoader,
+    parse_manifest,
 )
 
 # =============================================================================
 # LAZY IMPORT: CPU PROTOCOL (Fractal Processor)
 # =============================================================================
-
 from vibe_core.protocols.substrate.cpu import (
+    INSTRUCTION_SET,
+    OPCODE_NAMES,
+    OWNER_NAMES,
     CPURegisters,
     CPUState,
     FractalLevel,
-    INSTRUCTION_SET,
     Instruction,
     InstructionResult,
     MantraCPU,
     MantraCPUProtocol,
-    OPCODE_NAMES,
-    OWNER_NAMES,
     ProgramCounter,
     get_cpu,
     get_instruction,
@@ -1690,7 +1680,6 @@ from vibe_core.protocols.substrate.cpu import (
 # =============================================================================
 # LAZY IMPORT: GPU PROTOCOL (Parallel Resonance Processor)
 # =============================================================================
-
 from vibe_core.protocols.substrate.gpu import (
     BlockState,
     GPUBlock,
@@ -1705,56 +1694,55 @@ from vibe_core.protocols.substrate.gpu import (
     get_gpu,
     sankirtan,
 )
+from vibe_core.protocols.substrate.resonance import (
+    PhoneticClass,
+    ResonanceEngine,
+    ResonanceEntry,
+    ResonanceMatrix,
+    ResonanceProtocol,
+    ResonanceVector,
+    compute_resonance_matrix,
+    compute_resonance_vector,
+    get_resonance_engine,
+    resolve,
+    resolve_position,
+    resonate,
+)
+
+# =============================================================================
+# LAZY IMPORT: SAMSKARA PROTOCOL (4-Phase Pipeline)
+# =============================================================================
+from vibe_core.protocols.substrate.samskara import (
+    PARAMPARA as SAMSKARA_PARAMPARA,
+)
+from vibe_core.protocols.substrate.samskara import (
+    PHASES,
+    POSITIONS_PER_PHASE,
+    NullSamskara,
+    Phase,
+    PhaseResult,
+    PhaseStatus,
+    PipelineContext,
+    PipelineExecutor,
+    SamskaraProtocol,
+)
 
 # =============================================================================
 # LAZY IMPORT: SCANNER PROTOCOL (Substrate-Level Code Discovery)
 # =============================================================================
-
 from vibe_core.protocols.substrate.scanner import (
     Declaration,
     DeclarationType,
     FileStatus,
     NullScanner,
     ScanConfig,
+    ScannedFile,
     ScannerProtocol,
     ScanProgress,
     ScanResult,
-    ScannedFile,
     extract_declarations,
     get_default_config,
     path_to_module,
-)
-
-# =============================================================================
-# LAZY IMPORT: CLI LOADER PROTOCOL (Substrate-Level CLI Discovery)
-# =============================================================================
-
-from vibe_core.protocols.substrate.cli_loader import (
-    CLILoaderConfig,
-    CLILoaderProtocol,
-    CommandArgument,
-    DiscoveredCommand,
-    LoaderProgress,
-    LoaderResult,
-    NullCLILoader,
-    parse_manifest,
-)
-
-# =============================================================================
-# LAZY IMPORT: SAMSKARA PROTOCOL (4-Phase Pipeline)
-# =============================================================================
-
-from vibe_core.protocols.substrate.samskara import (
-    PARAMPARA as SAMSKARA_PARAMPARA,
-    PHASES,
-    POSITIONS_PER_PHASE,
-    Phase,
-    PhaseStatus,
-    PhaseResult,
-    PipelineContext,
-    SamskaraProtocol,
-    PipelineExecutor,
-    NullSamskara,
 )
 
 # =============================================================================

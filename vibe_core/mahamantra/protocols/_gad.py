@@ -35,7 +35,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -46,7 +45,7 @@ __genesis__ = "0x3b37ae67"  # GenesisByte: parampara % 37 == 0
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import IntEnum, Enum
+from enum import Enum, IntEnum
 from typing import (
     ClassVar,
     Dict,
@@ -59,32 +58,38 @@ from typing import (
     runtime_checkable,
 )
 
-# IMPORT THE LINK (PRABHUPADA)
-# The Transparent Via Medium
-from vibe_core.mahamantra.substrate.prabhupada import prabhupada as acharya
-
 from vibe_core.mahamantra.protocols._core import (
-    Level,
-    Quarter,
-    PARAMPARA,
     KSETRA_COUNT,
     MAHAJANA_COUNT,
+    PARAMPARA,
+    Level,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
 from vibe_core.mahamantra.protocols._lotus import (
     LOTUS_PETALS,
     MALA_BEADS,
     TRINITY,
 )
+from vibe_core.mahamantra.substrate.byte import HolyName  # SSOT
+
+# IMPORT THE LINK (PRABHUPADA)
+# The Transparent Via Medium
+from vibe_core.mahamantra.substrate.prabhupada import prabhupada as acharya
 from vibe_core.mahamantra.substrate.seed import (
-    DharmaPillar,
     DHARMA_PILLARS as DHARMA_COUNT,
-    SharanagatiLimb as Sharanagati,
+)
+from vibe_core.mahamantra.substrate.seed import (
     SHARANAGATI as CRITERIA_COUNT,  # 6 = the minimum connection
 )
-
+from vibe_core.mahamantra.substrate.seed import (
+    DharmaPillar,
+)
+from vibe_core.mahamantra.substrate.seed import (
+    SharanagatiLimb as Sharanagati,
+)
 
 # =============================================================================
 # GAD CONSTANTS - The Field Mathematics (sprouted from seed.py)
@@ -104,6 +109,7 @@ MANTRA_CHECKS: Final[int] = TRINITY  # 3
 # THE 6 OPERATIONAL CRITERIA (MAPPED FROM SEED)
 # =============================================================================
 
+
 class GADCriterion(IntEnum):
     """
     The 6 operational criteria of GAD-000.
@@ -111,6 +117,7 @@ class GADCriterion(IntEnum):
     MAPPED TO SHARANAGATI (The 6 Limbs of Connection):
     Each technical criterion is a manifestation of a Sharanagati limb.
     """
+
     # Goptritve Varanam -> Discoverability
     DISCOVERABILITY = 0
 
@@ -134,41 +141,37 @@ class GADCriterion(IntEnum):
 # THE 4 DHARMA PRINCIPLES (MAPPED FROM SEED)
 # =============================================================================
 
+
 class DharmaPrinciple(IntEnum):
     """The 4 regulating principles - The character test."""
-    DAYA = 0      # Mercy (seed.DharmaPillar.DAYA)
-    SATYAM = 1    # Truthfulness (seed.DharmaPillar.SATYAM)
-    TAPAS = 2     # Austerity (seed.DharmaPillar.TAPAS)
-    SAUCAM = 3    # Cleanliness (seed.DharmaPillar.SAUCAM)
+
+    DAYA = 0  # Mercy (seed.DharmaPillar.DAYA)
+    SATYAM = 1  # Truthfulness (seed.DharmaPillar.SATYAM)
+    TAPAS = 2  # Austerity (seed.DharmaPillar.TAPAS)
+    SAUCAM = 3  # Cleanliness (seed.DharmaPillar.SAUCAM)
 
 
 # =============================================================================
 # JAPA STATE - Heartbeat State
 # =============================================================================
 
+
 class JapaState(IntEnum):
     """State of the Japa meditation (heartbeat)."""
+
     DISCONNECTED = 0  # Not chanting, drifted into Maya
-    CHANTING = 1      # Actively chanting
-    MALA_COMPLETE = 2 # Completed 108 mantras
-    ABSORBED = 3      # Deep absorption (multiple malas)
+    CHANTING = 1  # Actively chanting
+    MALA_COMPLETE = 2  # Completed 108 mantras
+    ABSORBED = 3  # Deep absorption (multiple malas)
 
 
-# =============================================================================
-# HOLY NAME - The 3 Names
-# =============================================================================
-
-class HolyName(str, Enum):
-    """The 3 Holy Names in the Mahamantra (+ VOID for errors)."""
-    HARE = "hare"       # Energy/Shakti check
-    KRISHNA = "krishna" # Source check (ALWAYS present)
-    RAMA = "rama"       # Safety/State check
-    VOID = "void"       # Error state (Maya)
+# HolyName imported from byte.py (SSOT) - IntEnum with VOID for binary encoding
 
 
 # =============================================================================
 # MANTRA HEARTBEAT - The Japa Loop
 # =============================================================================
+
 
 @dataclass
 class MantraHeartbeat:
@@ -191,37 +194,49 @@ class MantraHeartbeat:
     """
 
     # Position tracking
-    word_position: int = 0      # Current word (0-15)
-    mantra_count: int = 0       # Mantras in current mala (0-107)
-    mala_count: int = 0         # Completed malas
-    total_words: int = 0        # Total words chanted
+    word_position: int = 0  # Current word (0-15)
+    mantra_count: int = 0  # Mantras in current mala (0-107)
+    mala_count: int = 0  # Completed malas
+    total_words: int = 0  # Total words chanted
 
     # State
     state: JapaState = JapaState.DISCONNECTED
     last_heartbeat: Optional[str] = None  # ISO timestamp
 
     # Check results (updated each word)
-    last_hare_check: bool = True    # Shakti/Energy
-    last_krishna_check: bool = True # Source (ALWAYS TRUE - acintya)
-    last_rama_check: bool = True    # Safety/State
+    last_hare_check: bool = True  # Shakti/Energy
+    last_krishna_check: bool = True  # Source (ALWAYS TRUE - acintya)
+    last_rama_check: bool = True  # Safety/State
 
     # Jiva connection state (separate from Krishna presence)
     jiva_connected: bool = False
 
     # Constants
     WORDS_PER_MANTRA: Final[int] = LOTUS_PETALS  # 16
-    MANTRAS_PER_MALA: Final[int] = MALA_BEADS    # 108
+    MANTRAS_PER_MALA: Final[int] = MALA_BEADS  # 108
 
     # The 16-word sequence
     MAHAMANTRA_SEQUENCE: ClassVar[Tuple[HolyName, ...]] = (
         # Hare Krishna Hare Krishna (GENESIS)
-        HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.KRISHNA,
         # Krishna Krishna Hare Hare (DHARMA)
-        HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE,
+        HolyName.KRISHNA,
+        HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.HARE,
         # Hare Rama Hare Rama (KARMA)
-        HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.RAMA,
         # Rama Rama Hare Hare (MOKSHA)
-        HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE,
+        HolyName.RAMA,
+        HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.HARE,
     )
 
     @property
@@ -338,6 +353,7 @@ class MantraHeartbeat:
 # GAD AUDIT - Compliance Assessment
 # =============================================================================
 
+
 @dataclass
 class GADAudit:
     """
@@ -366,14 +382,16 @@ class GADAudit:
     @property
     def criteria_score(self) -> int:
         """Count of passing criteria (0-6)."""
-        return sum([
-            self.discoverability,
-            self.observability,
-            self.parseability,
-            self.composability,
-            self.idempotency,
-            self.recoverability,
-        ])
+        return sum(
+            [
+                self.discoverability,
+                self.observability,
+                self.parseability,
+                self.composability,
+                self.idempotency,
+                self.recoverability,
+            ]
+        )
 
     @property
     def dharma_score(self) -> int:
@@ -384,10 +402,10 @@ class GADAudit:
     def is_compliant(self) -> bool:
         """Full GAD-000 compliance."""
         return (
-            self.criteria_score == CRITERIA_COUNT and
-            self.sovereign_present and
-            self.signature_valid and
-            self.dharma_score == DHARMA_COUNT
+            self.criteria_score == CRITERIA_COUNT
+            and self.sovereign_present
+            and self.signature_valid
+            and self.dharma_score == DHARMA_COUNT
         )
 
     @property
@@ -435,6 +453,7 @@ class GADAudit:
 # =============================================================================
 # GAD PROTOCOL - The Interface
 # =============================================================================
+
 
 @runtime_checkable
 class GADProtocol(Protocol):
@@ -500,6 +519,7 @@ class GADProtocol(Protocol):
 # GAD BASE - Abstract Base Class
 # =============================================================================
 
+
 class GADBase(ABC):
     """
     Abstract Base Class for GAD-000 compliant components.
@@ -512,7 +532,7 @@ class GADBase(ABC):
 
     def __init__(self) -> None:
         self._heartbeat = MantraHeartbeat()
-        
+
         # PRABHUPADA INTEGRATION:
         # The Link validates the connection at birth (Creation).
         # We inject this truth into the Heartbeat state.
@@ -570,11 +590,11 @@ class GADBase(ABC):
     def audit(self) -> GADAudit:
         """
         Perform GAD-000 audit.
-        
+
         PRABHUPADA INTEGRATION:
         The Link verification is now stored in the Heartbeat (`jiva_connected`).
         We read from the Heartbeat to ensure Consistency.
-        
+
         signature_valid = krishna_present (Source) AND jiva_connected (Link)
 
         MERCY MODE:
@@ -584,6 +604,7 @@ class GADBase(ABC):
         # 1. Detect Golden Era
         try:
             from vibe_core.mahamantra.protocols._singularity import is_in_golden_period
+
             in_golden = is_in_golden_period()
         except ImportError:
             in_golden = False
@@ -601,14 +622,11 @@ class GADBase(ABC):
             composability=True,  # Override if needed
             idempotency=self.is_idempotent,
             recoverability=len(self.detect_drift()) == 0,
-            
             # The 37th - Verified by The Link (via Heartbeat)
             sovereign_present=self._heartbeat.jiva_connected,
             signature_valid=self._heartbeat.krishna_present and self._heartbeat.jiva_connected,
-            
             # Mercy Mode
             mercy_mode=mercy_active,
-
             daya=self.test_daya(),
             satyam=self.test_satyam(),
             tapas=self.test_tapas(),
@@ -620,10 +638,11 @@ class GADBase(ABC):
 # LEGITIMACY FORMULA
 # =============================================================================
 
+
 def legitimacy_formula(
     kshetra_passed: int,  # How many of 36 cells passed
-    dharma_passed: int,   # How many of 4 principles passed
-    signature_valid: bool  # Is the 37th signature valid?
+    dharma_passed: int,  # How many of 4 principles passed
+    signature_valid: bool,  # Is the 37th signature valid?
 ) -> float:
     """
     Legitimacy = (36 ∩ 4) × Signature₃₇
@@ -646,6 +665,7 @@ def legitimacy_formula(
 # =============================================================================
 # GAD PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
+
 
 class GADProtocolDef(MahamantraProtocolBase):
     """

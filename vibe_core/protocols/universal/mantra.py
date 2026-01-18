@@ -13,30 +13,31 @@ __mahajana__ = "vyasa"
 __position__ = 4
 __genesis__ = "0x8eb2d076"  # GenesisByte: parampara % 37 == 0
 
-from typing import Protocol, runtime_checkable, TypeVar
 import warnings
+from typing import Protocol, TypeVar, runtime_checkable
 
 # NOTE: SSOT for OpCodes is vibe_core.mahamantra.substrate.opcode
-# We do NOT re-export them here anymore to prevent Split Brain.
-
+# Re-export for backward compatibility (deprecated)
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.substrate.byte import MantraByte
-from vibe_core.protocols.universal.guna import GunaProtocol, GunaProfile, ZERO, ONE
+from vibe_core.protocols.universal.guna import ONE, ZERO, GunaProfile, GunaProtocol
 
 warnings.warn(
     "vibe_core.protocols.universal.mantra is DEPRECATED for OpCodes. "
     "Use vibe_core.mahamantra.substrate.opcode instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 ContextT = TypeVar("ContextT")
+
 
 @runtime_checkable
 class MantraProtocol(GunaProtocol, Protocol):
     """
     The BIOS-Level Protocol.
     Must be implemented by the Kernel or any 'Mantra-Governed' entity.
-    
+
     The Holy Name is the Sound Avatar (Shabda-Brahma).
     It is 'Saguna' in the transcendental sense (Full of Qualities).
     """
@@ -46,12 +47,12 @@ class MantraProtocol(GunaProtocol, Protocol):
         PURE EXISTENCE. Not Void.
         """
         return GunaProfile(
-            sattva=ZERO, 
-            rajas=ZERO, 
-            tamas=ZERO, 
-            visuddha=ONE # 100% Krishna Injection
+            sattva=ZERO,
+            rajas=ZERO,
+            tamas=ZERO,
+            visuddha=ONE,  # 100% Krishna Injection
         )
-    
+
     def chant(self, frequency_hz: float = 432.0) -> float:
         """
         Emits the Sovereign Signal.
@@ -77,7 +78,7 @@ class MantraProtocol(GunaProtocol, Protocol):
         Measures deviation from the Sovereign Will.
         """
         ...
-    
+
     def receive_mantra(self, mantra: MantraByte) -> None:
         """
         Receive a full sequence of Trits.
@@ -93,13 +94,13 @@ class MantraProtocol(GunaProtocol, Protocol):
         # Normally, we check logic gates here.
         # if not self._check_logic_gates(context):
         #    return False
-        
+
         # BUT: Check for Causeless Mercy (The Flute)
         if self._detect_surrender(context):
             # "I abandon all varieties of religion (logic)."
             # BYPASS LOGIC.
-            return True 
-            
+            return True
+
         return False
 
     def _detect_surrender(self, context: ContextT) -> bool:
@@ -121,4 +122,3 @@ __all__ = [
     # This module's definitions
     "MantraProtocol",
 ]
-

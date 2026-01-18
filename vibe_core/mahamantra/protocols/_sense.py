@@ -54,11 +54,11 @@ MAHAMANTRA MAPPING:
     Position 6 (Kapila) - TYPE_CHECK - Analysis/Sankhya
     → Kapila OWNS the sense protocol (he taught Sankhya!)
 
-    The 5 senses map to 5 positions in DHARMA quarter:
-        Srotra  → Position 4 (Vyasa)    - Hears the Veda
-        Tvak    → Position 5 (Kumaras)  - Feels purity
-        Caksu   → Position 6 (Kapila)   - Sees analysis
-        Jihva   → Position 7 (Manu)     - Tastes dharma
+    The 5 senses map to 5 positions in DHARMA/KARMA quarters:
+        Srotra  → Position 4 (PRITHU)      - Hears the structure
+        Tvak    → Position 5 (Kumaras)     - Feels purity
+        Caksu   → Position 6 (Kapila)      - Sees analysis
+        Jihva   → Position 7 (Manu)        - Tastes dharma
         Ghrana  → Position 8 (Parashurama) - Smells corruption
 
 WATERTIGHT: No Any types. All typed explicitly.
@@ -94,17 +94,17 @@ from typing import (
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-
 from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
     KSHETRA as KSETRA_COUNT,  # 24 = The Tattvas!
 )
-
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+)
 
 # =============================================================================
 # SHASTRA CONSTANTS
@@ -125,16 +125,17 @@ BG_SENSE_VERSE: Final[str] = "15.9"  # The 5 senses listed
 BG_KSETRA_VERSE: Final[str] = "13.6"  # 24 elements of the field
 
 # The Sacred Numbers
-JNANENDRIYA_COUNT: Final[int] = 5   # 5 knowledge senses
-KARMENDRIYA_COUNT: Final[int] = 5   # 5 action senses
-TANMATRA_COUNT: Final[int] = 5      # 5 subtle elements
-MAHABHUTA_COUNT: Final[int] = 5     # 5 gross elements
+JNANENDRIYA_COUNT: Final[int] = 5  # 5 knowledge senses
+KARMENDRIYA_COUNT: Final[int] = 5  # 5 action senses
+TANMATRA_COUNT: Final[int] = 5  # 5 subtle elements
+MAHABHUTA_COUNT: Final[int] = 5  # 5 gross elements
 TATTVA_COUNT: Final[int] = KSETRA_COUNT  # 24 = Prakriti elements
 
 
 # =============================================================================
 # TANMATRA (Subtle Elements) - The OBJECTS of perception
 # =============================================================================
+
 
 class Tanmatra(str, Enum):
     """
@@ -143,11 +144,12 @@ class Tanmatra(str, Enum):
     SB 3.26.34: "From the false ego of goodness, the mind is generated..."
     The tanmatras are the subtle objects that the senses perceive.
     """
-    SABDA = "sabda"      # Sound - perceived by ear
-    SPARSA = "sparsa"    # Touch - perceived by skin
-    RUPA = "rupa"        # Form - perceived by eye
-    RASA = "rasa"        # Taste - perceived by tongue
-    GANDHA = "gandha"    # Smell - perceived by nose
+
+    SABDA = "sabda"  # Sound - perceived by ear
+    SPARSA = "sparsa"  # Touch - perceived by skin
+    RUPA = "rupa"  # Form - perceived by eye
+    RASA = "rasa"  # Taste - perceived by tongue
+    GANDHA = "gandha"  # Smell - perceived by nose
 
     @property
     def sanskrit(self) -> str:
@@ -165,17 +167,19 @@ class Tanmatra(str, Enum):
 # MAHABHUTA (Gross Elements) - The MEDIUM of perception
 # =============================================================================
 
+
 class Mahabhuta(str, Enum):
     """
     The 5 Mahabhutas (Gross Elements) - Medium through which senses work.
 
     SB 3.26.32-46: Each element arises from its tanmatra.
     """
-    AKASA = "akasa"      # Ether/Space - carries sound
-    VAYU = "vayu"        # Air - carries touch
-    TEJAS = "tejas"      # Fire - carries form
-    JALA = "jala"        # Water - carries taste
-    PRTHVI = "prthvi"    # Earth - carries smell
+
+    AKASA = "akasa"  # Ether/Space - carries sound
+    VAYU = "vayu"  # Air - carries touch
+    TEJAS = "tejas"  # Fire - carries form
+    JALA = "jala"  # Water - carries taste
+    PRTHVI = "prthvi"  # Earth - carries smell
 
     @property
     def sanskrit(self) -> str:
@@ -193,6 +197,7 @@ class Mahabhuta(str, Enum):
 # JNANENDRIYA (Knowledge Sense) - The INSTRUMENTS of perception
 # =============================================================================
 
+
 class Jnanendriya(str, Enum):
     """
     The 5 Jnanendriyas (Knowledge-Acquiring Senses).
@@ -204,11 +209,12 @@ class Jnanendriya(str, Enum):
     - A Mahabhuta (gross element it works through)
     - A Mahamantra position (owner in the system)
     """
-    SROTRA = "srotra"    # Ear - hears Sabda through Akasa
-    TVAK = "tvak"        # Skin - feels Sparsa through Vayu
-    CAKSU = "caksu"      # Eye - sees Rupa through Tejas
-    JIHVA = "jihva"      # Tongue - tastes Rasa through Jala
-    GHRANA = "ghrana"    # Nose - smells Gandha through Prthvi
+
+    SROTRA = "srotra"  # Ear - hears Sabda through Akasa
+    TVAK = "tvak"  # Skin - feels Sparsa through Vayu
+    CAKSU = "caksu"  # Eye - sees Rupa through Tejas
+    JIHVA = "jihva"  # Tongue - tastes Rasa through Jala
+    GHRANA = "ghrana"  # Nose - smells Gandha through Prthvi
 
     @property
     def sanskrit(self) -> str:
@@ -247,11 +253,11 @@ class Jnanendriya(str, Enum):
     def mahamantra_position(self) -> int:
         """Get the Mahamantra position that owns this sense."""
         return {
-            Jnanendriya.SROTRA: 4,   # Vyasa - hears the Veda
-            Jnanendriya.TVAK: 5,     # Kumaras - feels purity
-            Jnanendriya.CAKSU: 6,    # Kapila - sees analysis
-            Jnanendriya.JIHVA: 7,    # Manu - tastes dharma
-            Jnanendriya.GHRANA: 8,   # Parashurama - smells corruption
+            Jnanendriya.SROTRA: 4,  # Vyasa - hears the Veda
+            Jnanendriya.TVAK: 5,  # Kumaras - feels purity
+            Jnanendriya.CAKSU: 6,  # Kapila - sees analysis
+            Jnanendriya.JIHVA: 7,  # Manu - tastes dharma
+            Jnanendriya.GHRANA: 8,  # Parashurama - smells corruption
         }[self]
 
     @property
@@ -265,6 +271,7 @@ class Jnanendriya(str, Enum):
 # SENSE PERCEPTION RESULT
 # =============================================================================
 
+
 @dataclass
 class SensePerception:
     """
@@ -276,6 +283,7 @@ class SensePerception:
     - Quality (sattva/rajas/tamas)
     - Timestamp
     """
+
     sense: Jnanendriya
     tanmatra: Tanmatra
     data: Dict[str, Union[str, int, float, bool, List[str]]]
@@ -356,6 +364,7 @@ class SenseProtocol(Protocol):
 # AGGREGATE PERCEPTION - Manas combines all senses
 # =============================================================================
 
+
 @dataclass
 class AggregatePerception:
     """
@@ -367,6 +376,7 @@ class AggregatePerception:
     SB 3.26.27: "The mind is the eleventh sense organ,
     which coordinates all other senses."
     """
+
     perceptions: Dict[Jnanendriya, SensePerception] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -416,6 +426,7 @@ class AggregatePerception:
 # MANAS PROTOCOL - The Mind that coordinates senses
 # =============================================================================
 
+
 @runtime_checkable
 class ManasProtocol(Protocol):
     """
@@ -454,6 +465,7 @@ class ManasProtocol(Protocol):
 # =============================================================================
 # SENSE PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
+
 
 class SenseProtocolDef(MahamantraProtocolBase):
     """

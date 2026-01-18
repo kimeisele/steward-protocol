@@ -12,35 +12,43 @@ Alles ruht auf Mir, wie Perlen auf einem Faden aufgereiht."
 DAS IST DER FADEN. DIE 16 POSITIONEN SIND DIE PERLEN.
 
 SINGLE SOURCE OF TRUTH:
-    from vibe_core.mahamantra.substrate.position import MantraPosition
+    MAHAMANTRA_POSITIONS is GENERATED from seed.py ALL_GUARDIANS.
+    NO HARDCODED VALUES.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prithu"
+__mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x2f45fe98"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, Tuple, Union
 
+from vibe_core.mahamantra.substrate.byte import HolyName
 from vibe_core.mahamantra.substrate.mahajana import (
-    Mahajana,
     Avatara,
+    Mahajana,
     Quarter,
 )
-from vibe_core.mahamantra.substrate.byte import HolyName
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
+# === IMPORT FROM SSOT (seed.py) ===
 from vibe_core.mahamantra.substrate.seed import (
+    # THE SSOT FOR GUARDIANS:
+    ALL_GUARDIANS,
+    AVATARAS,
     PARAMPARA,
     WORDS,
     WORDS_PER_QUARTER,
 )
-
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAMANTRA as SEED_MAHAMANTRA,
+)
+from vibe_core.mahamantra.substrate.seed import get_quarter as seed_get_quarter
 
 # =============================================================================
 # GUARDIAN TYPE - Union of Mahajana and Avatara
@@ -53,15 +61,13 @@ Guardian = Union[Mahajana, Avatara]
 # MANTRA POSITION - The Atomic Unit of Truth
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MantraPosition:
     """
     Eine einzelne Position im Mahamantra.
 
-    DAS IST DIE QUELLE DER WAHRHEIT.
-
-    Jedes Protokoll, jeder OpCode, jeder Guardian - ALLES leitet sich
-    vom Position Index ab. Kein manuelles Wiring.
+    GENERATED FROM seed.py ALL_GUARDIANS - NO HARDCODING.
 
     Properties:
         index: 0-15 (Position im 16-Wort-Mantra)
@@ -92,153 +98,100 @@ class MantraPosition:
 
 
 # =============================================================================
-# THE 16 POSITIONS - THE TRUTH TABLE
+# THE 16 POSITIONS - GENERATED FROM seed.py ALL_GUARDIANS
 # =============================================================================
 
-MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = (
-    # === GENESIS Quarter (0-3) ===
-    MantraPosition(
-        index=0,
-        word=HolyName.HARE,
-        quarter=Quarter.GENESIS,
-        is_head=True,
-        opcode=MantraOpCode.SYS_WAKE,
-        guardian=Avatara.VYASA,
-    ),
-    MantraPosition(
-        index=1,
-        word=HolyName.KRISHNA,
-        quarter=Quarter.GENESIS,
-        is_head=False,
-        opcode=MantraOpCode.LOAD_ROOT,
-        guardian=Mahajana.BRAHMA,
-    ),
-    MantraPosition(
-        index=2,
-        word=HolyName.HARE,
-        quarter=Quarter.GENESIS,
-        is_head=False,
-        opcode=MantraOpCode.ALLOC_MEM,
-        guardian=Mahajana.NARADA,
-    ),
-    MantraPosition(
-        index=3,
-        word=HolyName.KRISHNA,
-        quarter=Quarter.GENESIS,
-        is_head=False,
-        opcode=MantraOpCode.INIT_THREAD,  # Fixed: BIND_CTX -> INIT_THREAD
-        guardian=Mahajana.SHAMBHU,
-    ),
-    # === DHARMA Quarter (4-7) ===
-    MantraPosition(
-        index=4,
-        word=HolyName.KRISHNA,
-        quarter=Quarter.DHARMA,
-        is_head=True,
-        opcode=MantraOpCode.COMPILE_AST,  # Fixed: ASSERT_TRUTH -> COMPILE_AST
-        guardian=Avatara.PRITHU,
-    ),
-    MantraPosition(
-        index=5,
-        word=HolyName.KRISHNA,
-        quarter=Quarter.DHARMA,
-        is_head=False,
-        opcode=MantraOpCode.BIND_SYMBOL,  # Fixed: RESOLVE_REQ -> BIND_SYMBOL
-        guardian=Mahajana.KUMARAS,
-    ),
-    MantraPosition(
-        index=6,
-        word=HolyName.HARE,
-        quarter=Quarter.DHARMA,
-        is_head=False,
-        opcode=MantraOpCode.TYPE_CHECK,  # Fixed: GARBAGE_COLLECT -> TYPE_CHECK
-        guardian=Mahajana.KAPILA,
-    ),
-    MantraPosition(
-        index=7,
-        word=HolyName.HARE,
-        quarter=Quarter.DHARMA,
-        is_head=False,
-        opcode=MantraOpCode.DHARMA_TEST,  # Fixed: PULSE_SYNC -> DHARMA_TEST
-        guardian=Mahajana.MANU,
-    ),
-    # === KARMA Quarter (8-11) ===
-    MantraPosition(
-        index=8,
-        word=HolyName.HARE,
-        quarter=Quarter.KARMA,
-        is_head=True,
-        opcode=MantraOpCode.EXEC_OP,  # Fixed: FETCH_RES -> EXEC_OP
-        guardian=Avatara.PARASHURAMA,
-    ),
-    MantraPosition(
-        index=9,
-        word=HolyName.RAMA,
-        quarter=Quarter.KARMA,
-        is_head=False,
-        opcode=MantraOpCode.EXTEND_CAP,  # Fixed: EXEC_SERVICE -> EXTEND_CAP
-        guardian=Mahajana.PRAHLADA,
-    ),
-    MantraPosition(
-        index=10,
-        word=HolyName.HARE,
-        quarter=Quarter.KARMA,
-        is_head=False,
-        opcode=MantraOpCode.STATE_SYNC,  # Fixed: CHECK_DHARMA -> STATE_SYNC
-        guardian=Mahajana.JANAKA,
-    ),
-    MantraPosition(
-        index=11,
-        word=HolyName.RAMA,
-        quarter=Quarter.KARMA,
-        is_head=False,
-        opcode=MantraOpCode.LEDGER_SIGN,  # Fixed: COMMIT_LOG -> LEDGER_SIGN
-        guardian=Mahajana.BHISHMA,
-    ),
-    # === MOKSHA Quarter (12-15) ===
-    MantraPosition(
-        index=12,
-        word=HolyName.RAMA,
-        quarter=Quarter.MOKSHA,
-        is_head=True,
-        opcode=MantraOpCode.YIELD_CPU,  # Fixed: CACHE_STATE -> YIELD_CPU
-        guardian=Avatara.NRISIMHA,
-    ),
-    MantraPosition(
-        index=13,
-        word=HolyName.RAMA,
-        quarter=Quarter.MOKSHA,
-        is_head=False,
-        opcode=MantraOpCode.IO_FLUSH,  # Fixed: OPTIMIZE -> IO_FLUSH
-        guardian=Mahajana.BALI,
-    ),
-    MantraPosition(
-        index=14,
-        word=HolyName.HARE,
-        quarter=Quarter.MOKSHA,
-        is_head=False,
-        opcode=MantraOpCode.LOG_EMIT,  # Fixed: YIELD_CPU -> LOG_EMIT
-        guardian=Mahajana.SHUKA,
-    ),
-    MantraPosition(
-        index=15,
-        word=HolyName.HARE,
-        quarter=Quarter.MOKSHA,
-        is_head=False,
-        opcode=MantraOpCode.AUDIT_SEAL,  # Fixed: RESET_IP -> AUDIT_SEAL
-        guardian=Mahajana.YAMARAJA,
-    ),
-)
+
+def _resolve_guardian(name: str) -> Guardian:
+    """Resolve guardian name to Mahajana or Avatara enum."""
+    # Check if it's an Avatara (HEAD)
+    if name in AVATARAS:
+        return Avatara(name)
+    # Otherwise it's a Mahajana (WORKER)
+    return Mahajana(name)
+
+
+def _get_quarter_enum(index: int) -> Quarter:
+    """Get Quarter enum from seed.get_quarter."""
+    seed_quarter = seed_get_quarter(index)
+    # seed.Quarter and mahajana.Quarter have same values
+    return Quarter(seed_quarter.name.lower())
+
+
+def _build_mahamantra_positions() -> Tuple[MantraPosition, ...]:
+    """
+    BUILD MAHAMANTRA_POSITIONS FROM seed.py ALL_GUARDIANS.
+
+    This is the ONLY place where positions are defined.
+    Everything else DERIVES from here.
+    seed.py ALL_GUARDIANS is the SSOT.
+    """
+    positions = []
+
+    for i in range(WORDS):
+        # GET GUARDIAN FROM SSOT (seed.py ALL_GUARDIANS)
+        guardian_name = ALL_GUARDIANS[i]
+        guardian = _resolve_guardian(guardian_name)
+
+        # GET WORD FROM SSOT (seed.py MAHAMANTRA)
+        seed_word = SEED_MAHAMANTRA[i]
+        word = HolyName(seed_word.value)
+
+        # GET QUARTER FROM SSOT (seed.py get_quarter)
+        quarter = _get_quarter_enum(i)
+
+        # IS_HEAD: Positions 0, 4, 8, 12 are HEADs (Avataras)
+        is_head = i % WORDS_PER_QUARTER == 0
+
+        # OPCODE: Directly from position index
+        opcode = MantraOpCode(i)
+
+        positions.append(
+            MantraPosition(
+                index=i,
+                word=word,
+                quarter=quarter,
+                is_head=is_head,
+                opcode=opcode,
+                guardian=guardian,
+            )
+        )
+
+    return tuple(positions)
+
+
+# THE TRUTH TABLE - GENERATED, NOT HARDCODED
+MAHAMANTRA_POSITIONS: Final[Tuple[MantraPosition, ...]] = _build_mahamantra_positions()
+
+
+# =============================================================================
+# VERIFICATION - Ensure SSOT alignment
+# =============================================================================
+
+
+def _verify_ssot_alignment() -> None:
+    """Verify MAHAMANTRA_POSITIONS matches seed.py ALL_GUARDIANS."""
+    for i, pos in enumerate(MAHAMANTRA_POSITIONS):
+        expected_guardian = ALL_GUARDIANS[i]
+        actual_guardian = pos.guardian.value
+        assert actual_guardian == expected_guardian, (
+            f"SSOT VIOLATION at position {i}: expected {expected_guardian}, got {actual_guardian}"
+        )
+
+
+# Run verification at import time
+_verify_ssot_alignment()
 
 
 # =============================================================================
 # LOOKUP FUNCTIONS - Pure, typed, no side effects
 # =============================================================================
 
+
 def get_position(index: int) -> MantraPosition:
     """Get position by index (0-15)."""
     if not 0 <= index < WORDS:
-        raise ValueError(f"Position index must be 0-{WORDS-1}, got {index}")
+        raise ValueError(f"Position index must be 0-{WORDS - 1}, got {index}")
     return MAHAMANTRA_POSITIONS[index]
 
 
@@ -268,7 +221,7 @@ def get_positions_by_quarter(quarter: Quarter) -> Tuple[MantraPosition, ...]:
     """Get all positions in a quarter."""
     idx = QUARTER_INDEX[quarter]
     start = idx * WORDS_PER_QUARTER
-    return MAHAMANTRA_POSITIONS[start:start + WORDS_PER_QUARTER]
+    return MAHAMANTRA_POSITIONS[start : start + WORDS_PER_QUARTER]
 
 
 def get_head_position(quarter: Quarter) -> MantraPosition:
@@ -281,7 +234,7 @@ def get_worker_positions_for_quarter(quarter: Quarter) -> Tuple[MantraPosition, 
     """Get the WORKER positions for a quarter (3 per quarter)."""
     idx = QUARTER_INDEX[quarter]
     start = idx * WORDS_PER_QUARTER
-    return MAHAMANTRA_POSITIONS[start + 1:start + WORDS_PER_QUARTER]
+    return MAHAMANTRA_POSITIONS[start + 1 : start + WORDS_PER_QUARTER]
 
 
 # Alias for backward compatibility

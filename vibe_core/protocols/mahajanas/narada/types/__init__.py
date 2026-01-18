@@ -12,12 +12,13 @@ __position__ = 2
 __genesis__ = "0xfeda18e8"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.protocols.mahajanas.narada.types.event_bus import (
-    EventType,
-    EventColor,
     Event,
     EventBus,
+    EventColor,
+    EventType,
     SubscriberMetrics,
     SudarshanaGuard,
+    get_event_bus,
 )
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "EventBus",
     "SubscriberMetrics",
     "SudarshanaGuard",
+    "get_event_bus",
 ]

@@ -92,7 +92,6 @@ adharadhara-tatas tu brahma-madhyam vibhuh svayam"
 The Lord is the support of all supports.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -235,13 +234,15 @@ class MilkingSetup:
 
     def verify(self) -> bool:
         """Verify the setup is complete."""
-        return all([
-            self.kalb.identity,
-            self.melker.identity,
-            self.topf.identity,
-            self.resource,
-            self.source,
-        ])
+        return all(
+            [
+                self.kalb.identity,
+                self.melker.identity,
+                self.topf.identity,
+                self.resource,
+                self.source,
+            ]
+        )
 
 
 class MilkingResult(TypedDict, total=False):
@@ -498,52 +499,53 @@ SHAKTI_OWNERS: Final[dict[Shakti, Avatara]] = {
 # =============================================================================
 
 # Import the 4 HEAD protocols for each cycle
-# Q1 GENESIS: Prithu (PALANA - SYS_WAKE)
-from vibe_core.protocols.avataras.prithu import (
-    Prithu,
-    PrithuProtocol,
-    AllocationRequest,
-    AllocationResult,
-    ResourceType,
-)
-
-# Q2 DHARMA: Vyasa (JNANA - ASSERT_TRUTH)
-from vibe_core.protocols.avataras.vyasa import (
-    Vyasa,
-    NullVyasa,
-    VyasaProtocol,
-    TruthAssertion,
-    ValidationResult,
-    KnowledgeCompilation,
-    DharmaVerdict,
-)
-
-# Q3 KARMA: Parashurama (KSHATRA - FETCH_RES)
-from vibe_core.protocols.avataras.parashurama import (
-    Parashurama,
-    NullParashurama,
-    ParashuramaProtocol,
-    ResourceRequest,
-    FetchResult,
-    ExecutionRequest,
-    ExecutionResult,
-    ReclaimRequest,
-    ReclaimResult,
+# Q1 GENESIS: VYASA is HEAD (Position 0), but Prithu module still exports its functionality
+from vibe_core.protocols.avataras.nrisimha import (
+    CacheEntry as NrisimhaCacheEntry,
 )
 
 # Q4 MOKSHA: Nrisimha (RAKSHANA - CACHE_STATE)
 from vibe_core.protocols.avataras.nrisimha import (
-    Nrisimha,
-    NullNrisimha,
-    NrisimhaProtocol,
-    CacheEntry as NrisimhaCacheEntry,
     CacheResult,
+    Nrisimha,
+    NrisimhaProtocol,
+    NullNrisimha,
     ProtectionRequest,
     ProtectionResult,
     PurgeRequest,
     PurgeResult,
 )
 
+# Q3 KARMA: Parashurama (KSHATRA - FETCH_RES)
+from vibe_core.protocols.avataras.parashurama import (
+    ExecutionRequest,
+    ExecutionResult,
+    FetchResult,
+    NullParashurama,
+    Parashurama,
+    ParashuramaProtocol,
+    ReclaimRequest,
+    ReclaimResult,
+    ResourceRequest,
+)
+from vibe_core.protocols.avataras.prithu import (
+    AllocationRequest,
+    AllocationResult,
+    Prithu,
+    PrithuProtocol,
+    ResourceType,
+)
+
+# Q2 DHARMA: PRITHU is HEAD (Position 4), but Vyasa module still exports its functionality
+from vibe_core.protocols.avataras.vyasa import (
+    DharmaVerdict,
+    KnowledgeCompilation,
+    NullVyasa,
+    TruthAssertion,
+    ValidationResult,
+    Vyasa,
+    VyasaProtocol,
+)
 
 # =============================================================================
 # EXPORTS
@@ -568,7 +570,7 @@ __all__ = [
     # Registry
     "SHAKTI_OWNERS",
     # =========================================================================
-    # Q1 GENESIS: Prithu (HEAD - SYS_WAKE)
+    # Q1 GENESIS: VYASA (HEAD - SYS_WAKE) - Position 0 per seed.py
     # =========================================================================
     "Prithu",
     "PrithuProtocol",
@@ -576,7 +578,7 @@ __all__ = [
     "AllocationResult",
     "ResourceType",
     # =========================================================================
-    # Q2 DHARMA: Vyasa (HEAD - ASSERT_TRUTH)
+    # Q2 DHARMA: PRITHU (HEAD - COMPILE_AST) - Position 4 per seed.py
     # =========================================================================
     "Vyasa",
     "NullVyasa",
