@@ -22,26 +22,26 @@ from typing import Dict, Final, List, Tuple
 # Derived from each Guardian's Dharmic Function, not random keywords.
 
 INTENT_MAP: Final[Dict[int, Tuple[str, ...]]] = {
-    # === GENESIS QUARTER (0-3) ===
-    0: ("scan", "disk", "infrastructure", "file", "filesystem"),  # PRITHU - Earth/Infrastructure
-    1: ("create", "spawn", "genesis", "new", "born", "init", "boot", "start"),  # BRAHMA - Creation
-    2: ("broadcast", "message", "communicate", "narada", "news"),  # NARADA - Communication
-    3: ("destroy", "dissolve", "transform", "shiva", "cleanup"),  # SHAMBHU - Transformation
-    # === DHARMA QUARTER (4-7) ===
-    4: ("document", "compile", "knowledge", "vyasa", "write"),  # VYASA - Documentation
-    5: ("purify", "cleanse", "shuddhi", "format", "lint"),  # KUMARAS - Purification
-    6: ("analyze", "resolve", "enumerate", "logic", "inference"),  # KAPILA - Analysis
-    7: ("rule", "law", "govern", "manu", "policy"),  # MANU - Governance
-    # === KARMA QUARTER (8-11) ===
-    8: ("execute", "run", "enforce", "parashurama", "action"),  # PARASHURAMA - Execution
-    9: ("protect", "defend", "prahlada", "devotion", "faith"),  # PRAHLADA - Protection
-    10: ("schedule", "task", "janaka", "dharma", "duty"),  # JANAKA - Scheduling
-    11: ("persist", "commit", "ledger", "bhishma", "store"),  # BHISHMA - Persistence
-    # === MOKSHA QUARTER (12-15) ===
-    12: ("guard", "kill", "security", "nrisimha", "terminate"),  # NRISIMHA - Security
-    13: ("resource", "allocate", "bali", "give", "surrender"),  # BALI - Resources
-    14: ("observe", "log", "shuka", "report", "narrate", "status"),  # SHUKA - Observation
-    15: ("judge", "audit", "yamaraja", "verdict", "death"),  # YAMARAJA - Judgment
+    # === GENESIS QUARTER (0-3) - Boot/Load/Alloc/Init ===
+    0: ("wake", "boot", "start", "init", "up"),  # VYASA (SYS_WAKE) - Awakening
+    1: ("create", "spawn", "genesis", "new", "born", "load"),  # BRAHMA (LOAD_ROOT) - Creation
+    2: ("broadcast", "message", "communicate", "news"),  # NARADA (ALLOC_MEM) - Communication
+    3: ("destroy", "dissolve", "transform", "cleanup", "thread"),  # SHAMBHU (INIT_THREAD) - Transformation
+    # === DHARMA QUARTER (4-7) - Compile/Bind/Check/Test ===
+    4: ("compile", "scan", "infrastructure", "file", "disk"),  # PRITHU (COMPILE_AST) - Structure
+    5: ("purify", "cleanse", "format", "lint", "bind"),  # KUMARAS (BIND_SYMBOL) - Purification
+    6: ("analyze", "resolve", "enumerate", "logic", "type"),  # KAPILA (TYPE_CHECK) - Analysis
+    7: ("rule", "law", "govern", "policy", "test"),  # MANU (DHARMA_TEST) - Governance
+    # === KARMA QUARTER (8-11) - Exec/Extend/Sync/Sign ===
+    8: ("execute", "run", "enforce", "action"),  # PARASHURAMA (EXEC_OP) - Execution
+    9: ("protect", "defend", "devotion", "faith", "extend"),  # PRAHLADA (EXTEND_CAP) - Protection
+    10: ("schedule", "task", "duty", "sync"),  # JANAKA (STATE_SYNC) - Scheduling
+    11: ("persist", "commit", "ledger", "store", "sign"),  # BHISHMA (LEDGER_SIGN) - Persistence
+    # === MOKSHA QUARTER (12-15) - Yield/Flush/Log/Seal ===
+    12: ("guard", "kill", "security", "terminate", "yield"),  # NRISIMHA (YIELD_CPU) - Security
+    13: ("resource", "allocate", "give", "surrender", "flush"),  # BALI (IO_FLUSH) - Resources
+    14: ("observe", "log", "report", "narrate", "status"),  # SHUKA (LOG_EMIT) - Observation
+    15: ("judge", "audit", "verdict", "death", "seal"),  # YAMARAJA (AUDIT_SEAL) - Judgment
 }
 
 # =============================================================================

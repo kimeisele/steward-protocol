@@ -121,16 +121,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return ExecuteResult(success=False, output="No one heard your mantra.", guardian="narada", quarter="genesis")
 
     def resolve(self, name: str) -> LotusNode:
-        """Helper to find a node by guardian name."""
-        from vibe_core.mahamantra.substrate.parampara import Mahajana, get_quarter
+        """Helper to find a node by guardian name (Mahajana or Avatara)."""
+        from vibe_core.mahamantra.substrate.seed import get_mahajana_position, get_quarter_name
 
-        try:
-            # Mahajana values are lowercase
-            mahajana = Mahajana(name.lower())
-            q = get_quarter(mahajana)
-            return getattr(getattr(self, q.name.lower()), name)
-        except (ValueError, AttributeError):
-            return getattr(self, name)
+        name_lower = name.lower()
+        pos = get_mahajana_position(name_lower)
+
+        if pos >= 0:
+            # Found in registry - determine quarter from position
+            quarter_name = get_quarter_name(pos)
+            return getattr(getattr(self, quarter_name), name_lower)
+
+        # Fallback: direct attribute access
+        return getattr(self, name_lower)
 
     # === GAD-000 Compliance ===
     def discover(self) -> Dict[str, object]:
