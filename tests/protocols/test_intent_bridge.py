@@ -14,17 +14,17 @@ THE BRIDGE MUST:
 
 import pytest
 
-from vibe_core.protocols.cognition import IntentType, CognitiveResult
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.protocols.cognition import CognitiveResult, IntentType
 from vibe_core.protocols.universal.intent_bridge import (
-    IntentOpCodeBridge,
+    INTENT_TO_DEFAULT_OPCODE,
+    QUERY_TYPE_TO_OPCODE,
+    ROUTE_TARGET_TO_OPCODE,
+    SYSCALL_TO_OPCODE,
     BridgeResult,
+    IntentOpCodeBridge,
     get_bridge,
     translate,
-    INTENT_TO_DEFAULT_OPCODE,
-    SYSCALL_TO_OPCODE,
-    ROUTE_TARGET_TO_OPCODE,
-    QUERY_TYPE_TO_OPCODE,
 )
 from vibe_core.semantic_syscalls import SyscallType
 
@@ -83,11 +83,7 @@ class TestSyscallTypeTranslation:
 
     def test_spawn_cognition_maps_to_alloc_mem(self):
         """SPAWN_COGNITION → ALLOC_MEM (Brahma creates)."""
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="SPAWN_COGNITION"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="SPAWN_COGNITION")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.ALLOC_MEM
         assert bridge_result.confidence >= 0.9
@@ -95,41 +91,25 @@ class TestSyscallTypeTranslation:
 
     def test_destroy_cognition_maps_to_garbage_collect(self):
         """DESTROY_COGNITION → GARBAGE_COLLECT (Shambhu destroys)."""
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="DESTROY_COGNITION"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="DESTROY_COGNITION")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.TYPE_CHECK
 
     def test_grant_mandate_maps_to_bind_ctx(self):
         """GRANT_MANDATE → BIND_CTX (Manu binds permissions)."""
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="GRANT_MANDATE"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="GRANT_MANDATE")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.INIT_THREAD
 
     def test_swear_oath_maps_to_commit_log(self):
         """SWEAR_OATH → COMMIT_LOG (Bhishma commits vows)."""
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="SWEAR_OATH"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="SWEAR_OATH")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_broadcast_event_maps_to_pulse_sync(self):
         """BROADCAST_EVENT → PULSE_SYNC (Narada broadcasts)."""
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="BROADCAST_EVENT"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="BROADCAST_EVENT")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
@@ -139,42 +119,26 @@ class TestRouteTargetTranslation:
 
     def test_envoy_target_maps_to_exec_service(self):
         """Route to 'envoy' → EXEC_SERVICE."""
-        result = CognitiveResult(
-            intent_type=IntentType.ROUTE,
-            confidence=0.9,
-            target="envoy"
-        )
+        result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9, target="envoy")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.EXTEND_CAP
         assert "target:envoy" in bridge_result.source
 
     def test_kernel_target_maps_to_sys_wake(self):
         """Route to 'kernel' → SYS_WAKE."""
-        result = CognitiveResult(
-            intent_type=IntentType.ROUTE,
-            confidence=0.9,
-            target="kernel"
-        )
+        result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9, target="kernel")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.SYS_WAKE
 
     def test_herald_target_maps_to_pulse_sync(self):
         """Route to 'herald' → PULSE_SYNC (messenger)."""
-        result = CognitiveResult(
-            intent_type=IntentType.ROUTE,
-            confidence=0.9,
-            target="herald"
-        )
+        result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9, target="herald")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
     def test_unknown_target_falls_back_to_resolve_req(self):
         """Unknown target falls back to RESOLVE_REQ with low confidence."""
-        result = CognitiveResult(
-            intent_type=IntentType.ROUTE,
-            confidence=0.9,
-            target="unknown_agent_xyz"
-        )
+        result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9, target="unknown_agent_xyz")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.BIND_SYMBOL
         assert bridge_result.confidence <= 0.6  # Low confidence for fallback
@@ -186,31 +150,19 @@ class TestQueryTypeTranslation:
 
     def test_status_query_maps_to_fetch_res(self):
         """Query type 'status' → FETCH_RES."""
-        result = CognitiveResult(
-            intent_type=IntentType.QUERY,
-            confidence=0.9,
-            query_type="status"
-        )
+        result = CognitiveResult(intent_type=IntentType.QUERY, confidence=0.9, query_type="status")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.EXEC_OP
 
     def test_health_query_maps_to_assert_truth(self):
         """Query type 'health' → ASSERT_TRUTH (verification)."""
-        result = CognitiveResult(
-            intent_type=IntentType.QUERY,
-            confidence=0.9,
-            query_type="health"
-        )
+        result = CognitiveResult(intent_type=IntentType.QUERY, confidence=0.9, query_type="health")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.COMPILE_AST
 
     def test_config_query_maps_to_load_root(self):
         """Query type 'config' → LOAD_ROOT."""
-        result = CognitiveResult(
-            intent_type=IntentType.QUERY,
-            confidence=0.9,
-            query_type="config"
-        )
+        result = CognitiveResult(intent_type=IntentType.QUERY, confidence=0.9, query_type="config")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.LOAD_ROOT
 
@@ -222,22 +174,14 @@ class TestTranslationPriority:
         """SyscallType overrides default IntentType mapping."""
         # EXECUTE defaults to EXEC_SERVICE
         # But SPAWN_COGNITION should override to ALLOC_MEM
-        result = CognitiveResult(
-            intent_type=IntentType.EXECUTE,
-            confidence=0.9,
-            syscall_type="SPAWN_COGNITION"
-        )
+        result = CognitiveResult(intent_type=IntentType.EXECUTE, confidence=0.9, syscall_type="SPAWN_COGNITION")
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.ALLOC_MEM
         assert "syscall" in bridge_result.source
 
     def test_target_takes_priority_for_route(self):
         """Target overrides default for ROUTE intent."""
-        result = CognitiveResult(
-            intent_type=IntentType.ROUTE,
-            confidence=0.9,
-            target="herald"
-        )
+        result = CognitiveResult(intent_type=IntentType.ROUTE, confidence=0.9, target="herald")
         bridge_result = translate(result)
         # ROUTE defaults to RESOLVE_REQ, but herald → PULSE_SYNC
         assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
@@ -269,8 +213,7 @@ class TestBridgeDiscoverability:
 
         for category, items in mappings.items():
             for item in items:
-                assert item["opcode"] in valid_opcodes, \
-                    f"Invalid opcode {item['opcode']} in {category}"
+                assert item["opcode"] in valid_opcodes, f"Invalid opcode {item['opcode']} in {category}"
 
 
 class TestRawTranslation:
@@ -285,19 +228,13 @@ class TestRawTranslation:
     def test_translate_raw_with_syscall(self):
         """translate_raw() handles syscall_type parameter."""
         bridge = get_bridge()
-        result = bridge.translate_raw(
-            IntentType.EXECUTE,
-            syscall_type="RECORD_KARMA"
-        )
+        result = bridge.translate_raw(IntentType.EXECUTE, syscall_type="RECORD_KARMA")
         assert result.opcode == MantraOpCode.LEDGER_SIGN
 
     def test_translate_raw_with_target(self):
         """translate_raw() handles target parameter."""
         bridge = get_bridge()
-        result = bridge.translate_raw(
-            IntentType.ROUTE,
-            target="oracle"
-        )
+        result = bridge.translate_raw(IntentType.ROUTE, target="oracle")
         assert result.opcode == MantraOpCode.EXEC_OP
 
 
@@ -306,28 +243,17 @@ class TestBridgeResult:
 
     def test_bridge_result_is_frozen(self):
         """BridgeResult is immutable."""
-        result = BridgeResult(
-            opcode=MantraOpCode.EXTEND_CAP,
-            confidence=0.9,
-            source="test"
-        )
+        result = BridgeResult(opcode=MantraOpCode.EXTEND_CAP, confidence=0.9, source="test")
         with pytest.raises(Exception):  # FrozenInstanceError
             result.opcode = MantraOpCode.EXEC_OP
 
     def test_bridge_result_optional_notes(self):
         """BridgeResult.notes is optional."""
-        result = BridgeResult(
-            opcode=MantraOpCode.EXTEND_CAP,
-            confidence=0.9,
-            source="test"
-        )
+        result = BridgeResult(opcode=MantraOpCode.EXTEND_CAP, confidence=0.9, source="test")
         assert result.notes is None
 
         result_with_notes = BridgeResult(
-            opcode=MantraOpCode.EXTEND_CAP,
-            confidence=0.9,
-            source="test",
-            notes="Some explanation"
+            opcode=MantraOpCode.EXTEND_CAP, confidence=0.9, source="test", notes="Some explanation"
         )
         assert result_with_notes.notes == "Some explanation"
 

@@ -12,23 +12,24 @@ A system that creates but cannot destroy = ZOMBIES = MEMORY LEAKS.
 Without Shambhu, the system becomes Asuric (immortal ego).
 """
 
-import time
 import gc
-import pytest
+import time
 from typing import List, Protocol, runtime_checkable
 
-from vibe_core.protocols.universal.samsara import (
-    SamsaraProtocol,
-    SamsaraEngine,
-    NullSamsara,
-)
-from vibe_core.protocols.universal.mantra import MantraOpCode
-from vibe_core.protocols.universal.types import SovereignContext
+import pytest
 
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.protocols.universal.samsara import (
+    NullSamsara,
+    SamsaraEngine,
+    SamsaraProtocol,
+)
+from vibe_core.protocols.universal.types import SovereignContext
 
 # =============================================================================
 # TEST PROTOCOLS (Protocol-Based, No Mock)
 # =============================================================================
+
 
 @runtime_checkable
 class DestructibleProtocol(Protocol):
@@ -52,6 +53,7 @@ class MortalObject:
     An object that MUST be destroyable.
     If it cannot be destroyed, the system has a memory leak.
     """
+
     _instances: List["MortalObject"] = []
 
     def __init__(self, name: str) -> None:
@@ -72,6 +74,7 @@ class MortalObject:
 
     def get_reference_count(self) -> int:
         import sys
+
         return sys.getrefcount(self)
 
     @classmethod
@@ -105,12 +108,14 @@ class ImmortalObject:
 
     def get_reference_count(self) -> int:
         import sys
+
         return sys.getrefcount(self)
 
 
 # =============================================================================
 # THE TESTS (Shambhu's Judgment)
 # =============================================================================
+
 
 class TestShambhuDestruction:
     """
@@ -187,10 +192,8 @@ class TestShambhuDestruction:
             time.sleep(0.001)  # Ensure different timestamps
 
         # Each context should be DIFFERENT (Fresh)
-        assert contexts[0].signature != contexts[1].signature, \
-            "SamsaraEngine must create fresh signatures"
-        assert contexts[1].signature != contexts[2].signature, \
-            "SamsaraEngine must create fresh signatures"
+        assert contexts[0].signature != contexts[1].signature, "SamsaraEngine must create fresh signatures"
+        assert contexts[1].signature != contexts[2].signature, "SamsaraEngine must create fresh signatures"
 
     def test_05_breathe_creates_valid_context(self) -> None:
         """
@@ -210,8 +213,7 @@ class TestShambhuDestruction:
         This is the destruction gate in the Mahamantra.
         """
         opcodes = list(MantraOpCode)
-        assert opcodes[6] == MantraOpCode.TYPE_CHECK, \
-            "garbage_collect must be OpCode #7 (index 6)"
+        assert opcodes[6] == MantraOpCode.TYPE_CHECK, "garbage_collect must be OpCode #7 (index 6)"
 
     def test_07_instance_tracking_works(self) -> None:
         """
@@ -252,6 +254,7 @@ class TestShambhuDestruction:
 # SAMSARA CYCLE TESTS (Integration)
 # =============================================================================
 
+
 class TestSamsaraCycle:
     """
     Test the complete Samsara (Birth-Death-Rebirth) cycle.
@@ -277,8 +280,7 @@ class TestSamsaraCycle:
         assert not obj.is_alive(), "Death: Object is dead"
 
         # REBIRTH (in system terms: instance count reduced)
-        assert MortalObject.get_instance_count() < initial_count, \
-            "Rebirth: Instance released for next cycle"
+        assert MortalObject.get_instance_count() < initial_count, "Rebirth: Instance released for next cycle"
 
     def test_stream_lifecycle(self) -> None:
         """
@@ -296,13 +298,13 @@ class TestSamsaraCycle:
         assert results == [1, 2, 3, 4, 5], "All items processed"
         # Timestamps should be increasing (time moves forward)
         for i in range(len(timestamps) - 1):
-            assert timestamps[i] <= timestamps[i + 1], \
-                "Time must flow forward in Samsara"
+            assert timestamps[i] <= timestamps[i + 1], "Time must flow forward in Samsara"
 
 
 # =============================================================================
 # TANDAVA TEST (The Destruction Dance)
 # =============================================================================
+
 
 class TestTandava:
     """
@@ -330,8 +332,7 @@ class TestTandava:
             destruction_order.append(obj.name)
             obj.destroy()
 
-        assert destruction_order == ["third", "second", "first"], \
-            "Destruction must be in reverse order (Tandava)"
+        assert destruction_order == ["third", "second", "first"], "Destruction must be in reverse order (Tandava)"
 
     def test_gc_collect_after_destruction(self) -> None:
         """
@@ -349,5 +350,4 @@ class TestTandava:
 
         # GC should have run (collected >= 0 means it ran)
         assert collected >= 0, "GC must be able to run"
-        assert MortalObject.get_instance_count() == 0, \
-            "All instances should be cleaned up"
+        assert MortalObject.get_instance_count() == 0, "All instances should be cleaned up"

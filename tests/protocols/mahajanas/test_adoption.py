@@ -12,32 +12,32 @@ Tests verify:
 WATERTIGHT: All types explicit, no Any.
 """
 
-import pytest
 from typing import List
 
+import pytest
+
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.mahajanas.adoption import (
+    OPCODE_SIGNATURES,
+    AdoptionDecision,
+    # Pipeline
+    AdoptionPipeline,
+    AdoptionResult,
     # Enums
     AdoptionStatus,
-    AdoptionDecision,
     # Types
     ProtocolAnalysis,
-    AdoptionResult,
     # Shudhi
     ShudhiReport,
-    run_shudhi,
+    adopt,
+    analyze,
     # Detection
     detect_opcodes_from_source,
     detect_primary_opcode,
-    OPCODE_SIGNATURES,
-    # Pipeline
-    AdoptionPipeline,
     get_pipeline,
-    adopt,
-    analyze,
+    run_shudhi,
 )
-from vibe_core.protocols.universal.mantra import MantraOpCode
 from vibe_core.protocols.mahajanas.router import Mahajana
-
 
 # =============================================================================
 # TEST SOURCE CODE SAMPLES (for testing detection)
@@ -119,6 +119,7 @@ EMPTY_PROTOCOL = """
 # TEST OPCODE DETECTION
 # =============================================================================
 
+
 class TestOpcodeDetection:
     """Test MantraOpCode detection from source code."""
 
@@ -179,6 +180,7 @@ class TestOpcodeDetection:
 # TEST SHUDHI VERIFICATION
 # =============================================================================
 
+
 class TestShudhiVerification:
     """Test Shudhi (cleaning) verification."""
 
@@ -238,6 +240,7 @@ class TestShudhiVerification:
 # =============================================================================
 # TEST ADOPTION PIPELINE
 # =============================================================================
+
 
 class TestAdoptionPipeline:
     """Test the full adoption pipeline."""
@@ -317,6 +320,7 @@ class TestAdoptionPipeline:
 # TEST GLOBAL PIPELINE (SINGLETON)
 # =============================================================================
 
+
 class TestGlobalPipeline:
     """Test the global pipeline singleton."""
 
@@ -345,6 +349,7 @@ class TestGlobalPipeline:
 # =============================================================================
 # TEST BATCH OPERATIONS
 # =============================================================================
+
 
 class TestBatchOperations:
     """Test batch adoption operations."""
@@ -385,15 +390,13 @@ class TestBatchOperations:
         brahma_protocols = pipeline.get_by_mahajana(Mahajana.BRAHMA)
 
         assert len(brahma_protocols) >= 1
-        assert all(
-            r["assigned_mahajana"] == "brahma"
-            for r in brahma_protocols
-        )
+        assert all(r["assigned_mahajana"] == "brahma" for r in brahma_protocols)
 
 
 # =============================================================================
 # TEST WATERTIGHT TYPES
 # =============================================================================
+
 
 class TestWatertightTypes:
     """Test that all types are WATERTIGHT (no Any)."""
@@ -454,6 +457,7 @@ class TestWatertightTypes:
 # =============================================================================
 # TEST NO MANUAL WIRING
 # =============================================================================
+
 
 class TestNoManualWiring:
     """Test that there's NO MANUAL WIRING - Mahamantra decides everything."""
@@ -516,14 +520,14 @@ class TestNoManualWiring:
 # =============================================================================
 
 from vibe_core.protocols.mahajanas.adoption import (
-    ManifestResult,
-    manifest_protocol,
-    SyncResult,
-    sync_to_lotus,
     AttractionReport,
-    calculate_attraction,
     FullAdoptionResult,
+    ManifestResult,
+    SyncResult,
     adopt_full,
+    calculate_attraction,
+    manifest_protocol,
+    sync_to_lotus,
 )
 
 

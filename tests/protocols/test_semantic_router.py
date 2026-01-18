@@ -10,8 +10,8 @@ THE FLOW:
 
 import pytest
 
-from vibe_core.protocols.cognition import IntentType, CognitiveResult
-from vibe_core.protocols.universal.mantra import MantraOpCode
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.protocols.cognition import CognitiveResult, IntentType
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.universal.semantic_router import (
     SemanticRouter,
@@ -49,11 +49,7 @@ class TestFullRoutingFlow:
 
     def test_chat_routes_to_prahlada(self):
         """CHAT intent → EXEC_SERVICE → JANAKA (legacy) or PRAHLADA (vyuha)."""
-        cognitive = CognitiveResult(
-            intent_type=IntentType.CHAT,
-            confidence=0.9,
-            response="Hello, how can I help?"
-        )
+        cognitive = CognitiveResult(intent_type=IntentType.CHAT, confidence=0.9, response="Hello, how can I help?")
         result = route(cognitive)
 
         assert result.success
@@ -193,10 +189,7 @@ class TestRoutingPath:
         """Processing path includes mahajana step."""
         result = route_raw(IntentType.CHAT)
         # Either mahajana or head
-        assert any(
-            "mahajana:" in step or "head:" in step
-            for step in result.processing_path
-        )
+        assert any("mahajana:" in step or "head:" in step for step in result.processing_path)
 
 
 class TestRawRouting:
@@ -210,19 +203,13 @@ class TestRawRouting:
 
     def test_route_raw_with_syscall(self):
         """route_raw() handles syscall_type."""
-        result = route_raw(
-            IntentType.EXECUTE,
-            syscall_type="RECORD_KARMA"
-        )
+        result = route_raw(IntentType.EXECUTE, syscall_type="RECORD_KARMA")
         assert result.opcode == MantraOpCode.LEDGER_SIGN
         assert result.mahajana == Mahajana.BHISHMA
 
     def test_route_raw_with_target(self):
         """route_raw() handles target."""
-        result = route_raw(
-            IntentType.ROUTE,
-            target="scribe"
-        )
+        result = route_raw(IntentType.ROUTE, target="scribe")
         assert result.opcode == MantraOpCode.LEDGER_SIGN
 
 

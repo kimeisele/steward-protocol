@@ -9,38 +9,39 @@ Verifies:
 4. Orphan process prevention
 """
 
-import pytest
-from datetime import datetime
 import time
+from datetime import datetime
 
-from vibe_core.protocols.universal.mantra import MantraOpCode
+import pytest
+
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.protocols.avataras import Avatara
 from vibe_core.protocols.mahajanas.router import (
+    HEAD_OPCODES,
     Mahajana,
     MahajanaRouter,
-    HEAD_OPCODES,
 )
 from vibe_core.protocols.mahajanas.vyuha import (
-    Vyuha,
-    CyclePhase,
-    CycleSeal,
-    CycleDefinition,
-    SealStatus,
     CHATUR_VYUHA,
-    CYCLE_GENESIS,
     CYCLE_DHARMA,
+    CYCLE_GENESIS,
     CYCLE_KARMA,
     CYCLE_MOKSHA,
-    verify_chatur_vyuha,
-    get_cycle_for_opcode,
-    get_head_for_opcode,
-    get_entity_for_opcode,
-    get_mahajana_for_opcode,
-    get_cycle_for_mahajana,
-    get_opcodes_for_mahajana,
+    CycleDefinition,
+    CyclePhase,
+    CycleSeal,
+    SealStatus,
+    Vyuha,
     VyuhaRouter,
+    get_cycle_for_mahajana,
+    get_cycle_for_opcode,
+    get_entity_for_opcode,
+    get_head_for_opcode,
+    get_mahajana_for_opcode,
+    get_opcodes_for_mahajana,
     get_vyuha_router,
+    verify_chatur_vyuha,
 )
-from vibe_core.protocols.avataras import Avatara
 
 
 class TestChaturVyuhaStructure:

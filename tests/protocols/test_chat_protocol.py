@@ -10,22 +10,23 @@ PROTOCOL-FIRST TESTING:
 3. Test Mantra connection (EXEC_SERVICE, SERVE, RAMA)
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
+
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.chat import (
-    ChatProtocol,
-    ChatMode,
-    ChatMessage,
-    ChatResponse,
-    ChatContext,
     CHAT_OPCODE,
     CHAT_PHASE,
-    CHAT_WORD,
     CHAT_POSITION,
+    CHAT_WORD,
     DEFAULT_CHAT_CAPABILITIES,
+    ChatContext,
+    ChatMessage,
+    ChatMode,
+    ChatProtocol,
+    ChatResponse,
 )
-from vibe_core.protocols.universal.mantra import MantraOpCode
 from vibe_core.protocols.cognition import IntentType
 
 
@@ -183,26 +184,25 @@ class TestChatProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """ChatProtocol can be checked at runtime."""
-        assert hasattr(ChatProtocol, '__protocol_attrs__') or \
-               hasattr(ChatProtocol, '_is_protocol')
+        assert hasattr(ChatProtocol, "__protocol_attrs__") or hasattr(ChatProtocol, "_is_protocol")
 
     def test_protocol_has_mantra_properties(self):
         """ChatProtocol requires Mantra properties."""
         # These are defined in the Protocol
-        required_props = ['opcode', 'phase', 'word', 'position']
+        required_props = ["opcode", "phase", "word", "position"]
         for prop in required_props:
             # Protocol should define these
             assert prop in dir(ChatProtocol)
 
     def test_protocol_has_chat_methods(self):
         """ChatProtocol requires chat methods."""
-        required_methods = ['chat', 'chat_with_routing']
+        required_methods = ["chat", "chat_with_routing"]
         for method in required_methods:
             assert method in dir(ChatProtocol)
 
     def test_protocol_has_gad000_methods(self):
         """ChatProtocol requires GAD-000 compliance methods."""
-        required_methods = ['capabilities', 'status']
+        required_methods = ["capabilities", "status"]
         for method in required_methods:
             assert method in dir(ChatProtocol)
 
@@ -236,25 +236,25 @@ class TestStrictTyping:
 
     def test_chat_message_no_any_in_annotations(self):
         """ChatMessage has no Any in type hints."""
-        from typing import get_type_hints, Any
+        from typing import Any, get_type_hints
+
         hints = get_type_hints(ChatMessage)
         for field_name, field_type in hints.items():
             # Check that Any is not used directly
-            assert field_type is not Any, \
-                f"ChatMessage.{field_name} uses Any type"
+            assert field_type is not Any, f"ChatMessage.{field_name} uses Any type"
 
     def test_chat_response_no_any_in_annotations(self):
         """ChatResponse has no Any in type hints."""
-        from typing import get_type_hints, Any
+        from typing import Any, get_type_hints
+
         hints = get_type_hints(ChatResponse)
         for field_name, field_type in hints.items():
-            assert field_type is not Any, \
-                f"ChatResponse.{field_name} uses Any type"
+            assert field_type is not Any, f"ChatResponse.{field_name} uses Any type"
 
     def test_chat_context_no_any_in_annotations(self):
         """ChatContext has no Any in type hints."""
-        from typing import get_type_hints, Any
+        from typing import Any, get_type_hints
+
         hints = get_type_hints(ChatContext)
         for field_name, field_type in hints.items():
-            assert field_type is not Any, \
-                f"ChatContext.{field_name} uses Any type"
+            assert field_type is not Any, f"ChatContext.{field_name} uses Any type"

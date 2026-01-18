@@ -11,15 +11,16 @@ Tests that the router correctly maps:
 """
 
 import pytest
+
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.protocols.mahajanas import (
     Mahajana,
     MahajanaRoute,
+    get_opcodes,
     get_router,
     route,
-    get_opcodes,
     verify_router,
 )
-from vibe_core.protocols.universal.mantra import MantraOpCode
 
 
 class TestMahajanaRouter:

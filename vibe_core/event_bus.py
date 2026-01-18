@@ -74,16 +74,30 @@ def __getattr__(name: str) -> object:
 
 
 # =============================================================================
-# __all__ for explicit exports (optional, for IDE support)
+# EXPLICIT RE-EXPORTS (for `from ... import` syntax)
 # =============================================================================
+# Note: __getattr__ doesn't work with `from module import name` syntax.
+# These must be explicitly imported for that pattern to work.
 
-# Note: These are loaded dynamically via __getattr__ from GuardianRegistry
-# Explicitly listing them here helps IDEs with auto-completion
-# ruff: noqa: F822 (names loaded dynamically via __getattr__)
+from vibe_core.protocols.mahajanas.narada.types.event_bus import (
+    Event,
+    EventBus,
+    EventBusProtocol,
+    EventType,
+    get_event_bus,
+)
+
+# Alias for backward compatibility
+VibeEvent = Event
+
+# =============================================================================
+# __all__ for explicit exports
+# =============================================================================
 __all__ = [
     "EventBus",
     "EventType",
     "VibeEvent",
     "Event",
     "EventBusProtocol",
+    "get_event_bus",
 ]
