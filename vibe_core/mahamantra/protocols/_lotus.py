@@ -75,9 +75,6 @@ from vibe_core.mahamantra.protocols._holographic import (
     HolographicSystem,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    HALF_SIZE as PETALS_PER_QUARTER,
-)
-from vibe_core.mahamantra.protocols._seed import (
     MALA as MALA_BEADS,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -90,8 +87,8 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS as LOTUS_PETALS,
 )
 
-# PETALS_PER_QUARTER already imported from _seed.py as HALF_SIZE alias
-
+# SSOT: PETALS_PER_QUARTER from substrate/seed.py (4, not HALF_SIZE=8)
+from vibe_core.mahamantra.substrate.seed import WORDS_PER_QUARTER as PETALS_PER_QUARTER
 
 # =============================================================================
 # LOTUS MODES - How the Lotus operates

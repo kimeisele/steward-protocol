@@ -17,19 +17,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 
+# Import Layer -1 (Holy Name Maths) for Ternary Status
+# SSOT: byte.py defines HolyName with VOID for binary encoding
+from vibe_core.mahamantra.substrate.byte import HolyName
+
 from .agent import AgentManifest, VibeAgent
 from .registry import ManifestRegistry
-
-# Import Layer -1 (Holy Name Maths) for Ternary Status
-try:
-    from vibe_core.protocols.substrate.byte import HolyName
-except ImportError:
-    from enum import IntEnum
-    class HolyName(IntEnum):
-        HARE = 0
-        KRISHNA = 1
-        RAMA = 2
-        VOID = 3
 
 if TYPE_CHECKING:
     from vibe_core.protocols.kernel_types import KernelStatusReport, PluginProtocol
@@ -364,17 +357,13 @@ class LedgerProtocol(Protocol):
         ...
 
     # --- PHASE 29: DECAY INTEGRATION ---
-    
+
     def record_event_with_status(
-        self, 
-        event_type: str, 
-        agent_id: str, 
-        details: Dict[str, object],
-        status: "HolyName"
+        self, event_type: str, agent_id: str, details: Dict[str, object], status: "HolyName"
     ) -> str:
         """
         Record an event with explicit Karmic Status.
-        
+
         LOGIC (Decay):
         - KRISHNA (01): Store permanently (Merkle Tip Update).
         - RAMA (10):    Store with TTL (Time To Live = 24h).
@@ -387,7 +376,7 @@ class LedgerProtocol(Protocol):
         """
         Remove all entries that have exceeded their TTL.
         This is the 'Forgetting' mechanism (Kali Yuga Entropy).
-        
+
         Returns:
             Number of entries purged.
         """
