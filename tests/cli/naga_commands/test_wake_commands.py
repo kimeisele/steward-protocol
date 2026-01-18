@@ -18,22 +18,23 @@ WAKE PHASE COMPLETE - All 4 positions tested.
 
 import pytest
 
-from vibe_core.cli.naga_commands.wake.status import StatusCommand
+from vibe_core.cli.naga_commands.wake.context import ContextCommand
 from vibe_core.cli.naga_commands.wake.identity import IdentityCommand
 from vibe_core.cli.naga_commands.wake.resources import ResourcesCommand
-from vibe_core.cli.naga_commands.wake.context import ContextCommand
+from vibe_core.cli.naga_commands.wake.status import StatusCommand
 from vibe_core.protocols.naga.cli_command import (
+    NAGA_COMMAND_REGISTRY,
     INagaCommand,
     Mahajana,
+    NagaCommandResult,
     Phase,
-    NAGA_COMMAND_REGISTRY,
 )
 from vibe_core.protocols.substrate import MantraOpCode
-
 
 # =============================================================================
 # STATUS COMMAND TESTS
 # =============================================================================
+
 
 class TestStatusCommand:
     """Test StatusCommand (PRITHU - SYS_WAKE)."""
@@ -139,6 +140,7 @@ class TestStatusCommand:
 # REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestWakeRegistryIntegration:
     """Test that WAKE commands are registered."""
 
@@ -171,6 +173,7 @@ class TestWakeRegistryIntegration:
 # =============================================================================
 # POSITION 0 TESTS (HEAD OF WAKE)
 # =============================================================================
+
 
 class TestPosition0:
     """Test that status is position 0 - the HEAD."""
@@ -209,21 +212,33 @@ class TestPosition0:
 # STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestStrictTyping:
-    """Test that results have no Any types."""
+    """Test that results have no Any types - REAL checks."""
 
     def test_status_result_no_any(self):
-        """StatusCommand result has no Any."""
+        """StatusCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = StatusCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
 # IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestImmutability:
     """Test that results are immutable."""
@@ -239,6 +254,7 @@ class TestImmutability:
 # =============================================================================
 # SEMANTIC TESTS
 # =============================================================================
+
 
 class TestSemantics:
     """Test semantic meaning of PRITHU as status owner."""
@@ -542,10 +558,10 @@ class TestWakeRegistryComplete:
         cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.WAKE)
         assert len(cmds) == 4
         names = [c.name for c in cmds]
-        assert "status" in names     # Position 0
-        assert "identity" in names   # Position 1
+        assert "status" in names  # Position 0
+        assert "identity" in names  # Position 1
         assert "resources" in names  # Position 2
-        assert "context" in names    # Position 3
+        assert "context" in names  # Position 3
 
     def test_brahma_has_identity(self):
         """BRAHMA owns identity command."""
@@ -575,28 +591,52 @@ class TestWakeStrictTyping:
     """Test that WAKE commands have proper typing."""
 
     def test_identity_result_no_any(self):
-        """IdentityCommand result has no Any."""
+        """IdentityCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = IdentityCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
 
     def test_resources_result_no_any(self):
-        """ResourcesCommand result has no Any."""
+        """ResourcesCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = ResourcesCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
 
     def test_context_result_no_any(self):
-        """ContextCommand result has no Any."""
+        """ContextCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = ContextCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
 
 
 # =============================================================================
@@ -640,10 +680,10 @@ class TestWakePhaseComplete:
     def test_all_opcodes_covered(self):
         """All WAKE opcodes have commands."""
         wake_opcodes = [
-            MantraOpCode.SYS_WAKE,    # Position 0
-            MantraOpCode.LOAD_ROOT,   # Position 1
-            MantraOpCode.ALLOC_MEM,   # Position 2
-            MantraOpCode.INIT_THREAD,    # Position 3
+            MantraOpCode.SYS_WAKE,  # Position 0
+            MantraOpCode.LOAD_ROOT,  # Position 1
+            MantraOpCode.ALLOC_MEM,  # Position 2
+            MantraOpCode.INIT_THREAD,  # Position 3
         ]
         for opcode in wake_opcodes:
             cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)
@@ -652,9 +692,9 @@ class TestWakePhaseComplete:
     def test_all_mahajanas_covered(self):
         """All WAKE mahajanas have commands."""
         wake_mahajanas = [
-            Mahajana.PRITHU,   # SYS_WAKE (status)
-            Mahajana.BRAHMA,   # LOAD_ROOT (identity)
-            Mahajana.NARADA,   # ALLOC_MEM (resources)
+            Mahajana.PRITHU,  # SYS_WAKE (status)
+            Mahajana.BRAHMA,  # LOAD_ROOT (identity)
+            Mahajana.NARADA,  # ALLOC_MEM (resources)
             Mahajana.SHAMBHU,  # BIND_CTX (context)
         ]
         for mahajana in wake_mahajanas:
