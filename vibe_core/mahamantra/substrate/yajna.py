@@ -91,10 +91,17 @@ class ParamparaBreakError(ValueError):
 
 
 # =============================================================================
-# GUNA - Quality of Service (from BG 14) - SSOT: guna.py
+# GUNA - Quality of Service (from BG 14)
 # =============================================================================
 
-from vibe_core.mahamantra.substrate.guna import Guna
+
+class Guna(IntEnum):
+    """The three modes of material nature + transcendental."""
+
+    SATTVA = 0  # Safe (read) - ●
+    RAJAS = 1  # Active (write) - ◐
+    TAMAS = 2  # Destroy (needs confirmation) - ○
+
 
 # HolyName imported from byte.py (SSOT) - includes VOID for binary encoding
 

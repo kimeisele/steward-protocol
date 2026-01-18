@@ -33,8 +33,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Type
 
-# SSOT: Mahajana from substrate/mahajana.py
-from vibe_core.mahamantra.substrate.mahajana import Mahajana
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
 if TYPE_CHECKING:
@@ -50,6 +48,23 @@ if TYPE_CHECKING:
     from vibe_core.protocols.mahajanas.shambhu import ShambhuProtocol
     from vibe_core.protocols.mahajanas.shuka import ShukaProtocol
     from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocol
+
+
+class Mahajana(str, Enum):
+    """The 12 Mahajanas - Protocol Owners."""
+
+    BRAHMA = "brahma"  # 01 - Creation
+    NARADA = "narada"  # 02 - Devotion
+    SHAMBHU = "shambhu"  # 03 - Destruction
+    KUMARAS = "kumaras"  # 04 - Purity
+    KAPILA = "kapila"  # 05 - Analysis
+    MANU = "manu"  # 06 - Law
+    PRAHLADA = "prahlada"  # 07 - Resilience
+    JANAKA = "janaka"  # 08 - Duty
+    BHISHMA = "bhishma"  # 09 - Vow
+    BALI = "bali"  # 10 - Surrender
+    SHUKA = "shuka"  # 11 - Vision
+    YAMARAJA = "yamaraja"  # 12 - Judgment
 
 
 @dataclass(frozen=True)

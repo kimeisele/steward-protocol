@@ -54,10 +54,6 @@ from typing import (
     TypedDict,
 )
 
-# =============================================================================
-# SSOT IMPORTS - Quarter and Sampradaya from substrate/mahajana.py
-# =============================================================================
-from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
 from vibe_core.protocols.mahajanas.router import Mahajana
 
 # =============================================================================
@@ -65,6 +61,32 @@ from vibe_core.protocols.mahajanas.router import Mahajana
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.BHISHMA
+
+
+# =============================================================================
+# THE 4 SAMPRADAYAS (Authorized Disciplic Successions)
+# =============================================================================
+
+
+class Sampradaya(str, Enum):
+    """
+    The 4 authorized disciplic successions.
+    Each maps to a quarter of the Mahamantra.
+    """
+
+    BRAHMA = "brahma"  # Brahma → Madhva → Chaitanya (GENESIS)
+    KUMARA = "kumara"  # Four Kumaras → Nimbarka (DHARMA)
+    SRI = "sri"  # Lakshmi → Ramanuja (KARMA)
+    RUDRA = "rudra"  # Shiva → Vishnuswami → Vallabha (MOKSHA)
+
+
+class Quarter(str, Enum):
+    """The 4 quarters of the Mahamantra."""
+
+    GENESIS = "genesis"  # Hare Krishna Hare Krishna (Creation)
+    DHARMA = "dharma"  # Krishna Krishna Hare Hare (Law)
+    KARMA = "karma"  # Hare Rama Hare Rama (Action)
+    MOKSHA = "moksha"  # Rama Rama Hare Hare (Liberation)
 
 
 # =============================================================================

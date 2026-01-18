@@ -59,12 +59,49 @@ assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, "37 Formula"
 
 
 # =============================================================================
-# SSOT IMPORTS - Mahajana and Quarter from substrate/mahajana.py
+# THE 12 MAHAJANAS (Authorizers)
 # =============================================================================
 
-from vibe_core.mahamantra.substrate.mahajana import Mahajana, Quarter
+
+class Mahajana(IntEnum):
+    """
+    The 12 Mahajanas - Authorities who can sign mutations.
+
+    From Srimad Bhagavatam 6.3.20-21:
+    "Lord Brahma, Bhagavan Narada, Lord Shiva, the four Kumaras,
+    Lord Kapila, Svayambhuva Manu, Prahlada Maharaja, Janaka Maharaja,
+    Grandfather Bhisma, Bali Maharaja, Sukadeva Gosvami and myself (Yamaraja)."
+    """
+
+    BRAHMA = 0  # Genesis Quarter, Worker 1
+    NARADA = 1  # Genesis Quarter, Worker 2
+    SHAMBHU = 2  # Genesis Quarter, Worker 3
+    KUMARAS = 3  # Dharma Quarter, Worker 1
+    KAPILA = 4  # Dharma Quarter, Worker 2
+    MANU = 5  # Dharma Quarter, Worker 3
+    PRAHLADA = 6  # Karma Quarter, Worker 1
+    JANAKA = 7  # Karma Quarter, Worker 2
+    BHISHMA = 8  # Karma Quarter, Worker 3
+    BALI = 9  # Moksha Quarter, Worker 1
+    SHUKA = 10  # Moksha Quarter, Worker 2
+    YAMARAJA = 11  # Moksha Quarter, Worker 3
+
 
 assert len(Mahajana) == MAHAJANA_COUNT, "Must have exactly 12 Mahajanas"
+
+
+# =============================================================================
+# QUARTER AUTHORIZATION REQUIREMENTS
+# =============================================================================
+
+
+class Quarter(IntEnum):
+    """The 4 Quarters with increasing authorization requirements."""
+
+    GENESIS = 0  # Boot/Load - 1 signature required
+    DHARMA = 1  # Verify/Check - 2 signatures required
+    KARMA = 2  # Execute/Commit - 2 signatures required
+    MOKSHA = 3  # Yield/Exit - 3 signatures required
 
 
 # Signatures required per quarter (increasing risk = increasing auth)

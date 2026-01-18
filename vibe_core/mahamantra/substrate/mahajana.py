@@ -98,14 +98,6 @@ class Quarter(str, Enum):
     KARMA = "karma"  # Hare Rama Hare Rama (Handlung)
     MOKSHA = "moksha"  # Rama Rama Hare Hare (Befreiung)
 
-    @classmethod
-    def from_position(cls, position: int) -> "Quarter":
-        """Derive quarter from position (0-15)."""
-        if not 0 <= position < 16:
-            raise ValueError(f"Position must be 0-15, got {position}")
-        quarter_index = position // 4
-        return [cls.GENESIS, cls.DHARMA, cls.KARMA, cls.MOKSHA][quarter_index]
-
 
 # Die 4 Sampradayas
 class Sampradaya(str, Enum):
