@@ -21,7 +21,6 @@ ONE IMPORT, KRISHNA ROUTES:
     exit_code = cli_bridge.route("status", ["--verbose"])
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -35,7 +34,6 @@ from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union
 # ONE IMPORT - Krishna IS the router
 from vibe_core.mahamantra.kernel.singularity import mahamantra
 
-
 # =============================================================================
 # DOMAIN MAPPING - CLI Keywords → Mahajana Position
 # =============================================================================
@@ -44,51 +42,37 @@ from vibe_core.mahamantra.kernel.singularity import mahamantra
 # CLI commands are routed based on keyword matching
 
 DOMAIN_KEYWORDS: Final[Dict[int, Set[str]]] = {
-    # Position 0 - PRITHU (HEAD): Genesis/Bootstrap/System Wake
-    0: {"boot", "init", "wake", "start", "genesis", "prithu", "system"},
-
+    # === ALIGNED WITH seed.py ALL_GUARDIANS (SSOT) ===
+    # Position 0 - VYASA (HEAD): Genesis/Bootstrap/System Wake
+    0: {"boot", "init", "wake", "start", "genesis", "vyasa", "system"},
     # Position 1 - BRAHMA: Creation/Loading/Root
     1: {"create", "new", "load", "brahma", "root", "spawn", "allocate"},
-
     # Position 2 - NARADA: Broadcast/Events/Notifications
     2: {"broadcast", "notify", "event", "narada", "message", "signal", "emit"},
-
     # Position 3 - SHAMBHU: Destruction/Cleanup/Transformation
     3: {"destroy", "cleanup", "delete", "shambhu", "transform", "clear", "remove"},
-
-    # Position 4 - VYASA (HEAD): Dharma/Standards/Assertions
-    4: {"assert", "validate", "test", "vyasa", "standard", "verify", "dharma"},
-
+    # Position 4 - PRITHU (HEAD): Dharma/Structure/Compile
+    4: {"scan", "compile", "structure", "prithu", "document", "knowledge", "dharma"},
     # Position 5 - KUMARAS: Purification/Resolution/Requirements
     5: {"resolve", "purify", "check", "kumaras", "require", "depend", "shuddhi"},
-
     # Position 6 - KAPILA: Analysis/GC/Samkhya
     6: {"analyze", "gc", "samkhya", "kapila", "inspect", "profile", "debug"},
-
     # Position 7 - MANU: Law/Rules/Governance/Sync
     7: {"law", "rule", "govern", "manu", "sync", "pulse", "config"},
-
     # Position 8 - PARASHURAMA (HEAD): Karma/Execution/Fetch
     8: {"fetch", "execute", "karma", "parashurama", "run", "exec", "do"},
-
     # Position 9 - PRAHLADA: Resilience/Cache/Protection
     9: {"cache", "resilience", "protect", "prahlada", "retry", "fallback", "recover"},
-
     # Position 10 - JANAKA: Duty/Cycles/Cognition
     10: {"cycle", "duty", "janaka", "cognitive", "think", "loop", "iterate"},
-
     # Position 11 - BHISHMA: Vows/Commits/Logging
     11: {"commit", "vow", "promise", "bhishma", "log", "record", "persist"},
-
     # Position 12 - NRISIMHA (HEAD): Security/Guard/State
     12: {"security", "guard", "nrisimha", "state", "protect", "secure", "watch"},
-
     # Position 13 - BALI: Surrender/Resources/Optimization
     13: {"resource", "surrender", "optimize", "bali", "yield", "give", "allocate"},
-
     # Position 14 - SHUKA: Vision/Insight/Observation
     14: {"vision", "insight", "shuka", "observe", "see", "view", "status"},
-
     # Position 15 - YAMARAJA: Judgment/Correction/Reset
     15: {"judge", "correct", "yamaraja", "reset", "verdict", "audit", "karma"},
 }
@@ -104,6 +88,7 @@ for pos, keywords in DOMAIN_KEYWORDS.items():
 # CLI BRIDGE RESULT
 # =============================================================================
 
+
 @dataclass
 class BridgeResult:
     """Result from bridge routing."""
@@ -111,14 +96,15 @@ class BridgeResult:
     success: bool
     exit_code: int
     position: Optional[int] = None  # Mahajana position that handled it
-    handler: Optional[str] = None   # Handler name
-    fallback: bool = False          # True if fell back to CLIRegistry
+    handler: Optional[str] = None  # Handler name
+    fallback: bool = False  # True if fell back to CLIRegistry
     error: Optional[str] = None
 
 
 # =============================================================================
 # THE BRIDGE - Krishna Routes Everything
 # =============================================================================
+
 
 class MahamantraCLIBridge:
     """
@@ -226,9 +212,7 @@ class MahamantraCLIBridge:
             error=result.error.message if result.error else None,
         )
 
-    def _fallback_to_registry(
-        self, command: str, args: List[str], position: int
-    ) -> BridgeResult:
+    def _fallback_to_registry(self, command: str, args: List[str], position: int) -> BridgeResult:
         """
         Fallback to existing CLIRegistry.
 
@@ -247,33 +231,27 @@ class MahamantraCLIBridge:
                     exit_code=exit_code,
                     position=position,
                     handler=f"CLIRegistry[{command}]",
-                    fallback=True
+                    fallback=True,
                 )
         except ImportError:
             pass
         except Exception as e:
             return BridgeResult(
-                success=False,
-                exit_code=1,
-                position=position,
-                error=f"CLIRegistry fallback failed: {e}",
-                fallback=True
+                success=False, exit_code=1, position=position, error=f"CLIRegistry fallback failed: {e}", fallback=True
             )
 
         return BridgeResult(
             success=False,
             exit_code=127,  # Command not found
             position=position,
-            error=f"Command not found: {command}"
+            error=f"Command not found: {command}",
         )
 
     # =========================================================================
     # REGISTRATION (for gradual migration)
     # =========================================================================
 
-    def register_handler(
-        self, position: int, handler: Callable[[str, List[str]], int]
-    ) -> None:
+    def register_handler(self, position: int, handler: Callable[[str, List[str]], int]) -> None:
         """
         Register a CLI handler for a mahajana position.
 
@@ -328,6 +306,7 @@ cli_bridge = MahamantraCLIBridge()
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def route(command: str, args: Optional[List[str]] = None) -> BridgeResult:
     """

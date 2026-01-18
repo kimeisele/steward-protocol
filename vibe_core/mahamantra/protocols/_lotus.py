@@ -32,7 +32,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -59,12 +58,12 @@ from typing import (
 )
 
 from vibe_core.mahamantra.protocols._core import (
-    Level,
-    Quarter,
     PARAMPARA,
+    Level,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
 from vibe_core.mahamantra.protocols._fractal import (
     FractalAddress,
@@ -75,33 +74,43 @@ from vibe_core.mahamantra.protocols._holographic import (
     Hologram,
     HolographicSystem,
 )
-
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS as LOTUS_PETALS,
-    QUARTERS as LOTUS_QUARTERS,
     HALF_SIZE as PETALS_PER_QUARTER,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MALA as MALA_BEADS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    QUARTERS as LOTUS_QUARTERS,
+)
+from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS as LOTUS_PETALS,
+)
 
-PETALS_PER_QUARTER: Final[int] = LOTUS_PETALS // LOTUS_QUARTERS
+# PETALS_PER_QUARTER already imported from _seed.py as HALF_SIZE alias
 
 
 # =============================================================================
 # LOTUS MODES - How the Lotus operates
 # =============================================================================
 
+
 class LotusMode(str, Enum):
     """The modes of Lotus operation."""
-    SEED = "seed"           # Template mode - providing blueprint
-    STEM = "stem"           # Bridge mode - connecting levels
-    BLOOM = "bloom"         # Unfolding mode - manifesting 1 → N
-    GARUDA = "garuda"       # Execute mode - transport/action
+
+    SEED = "seed"  # Template mode - providing blueprint
+    STEM = "stem"  # Bridge mode - connecting levels
+    BLOOM = "bloom"  # Unfolding mode - manifesting 1 → N
+    GARUDA = "garuda"  # Execute mode - transport/action
 
 
 # =============================================================================
 # LOTUS PETAL - One of the 16 positions
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class LotusPetal:
@@ -115,21 +124,17 @@ class LotusPetal:
     WORKER positions: all others
     """
 
-    position: int           # 0-15
-    quarter: Quarter        # GENESIS, DHARMA, KARMA, MOKSHA
-    mahajana: str          # Name of the mahajana/avatara
-    is_head: bool          # True if HEAD position
+    position: int  # 0-15
+    quarter: Quarter  # GENESIS, DHARMA, KARMA, MOKSHA
+    mahajana: str  # Name of the mahajana/avatara
+    is_head: bool  # True if HEAD position
 
     # Fractal address within the Lotus
     address: FractalAddress = field(init=False)
 
     def __post_init__(self) -> None:
         """Compute the fractal address."""
-        object.__setattr__(
-            self,
-            'address',
-            FractalAddress.root(self.position)
-        )
+        object.__setattr__(self, "address", FractalAddress.root(self.position))
 
     @property
     def parampara_vector(self) -> int:
@@ -158,31 +163,28 @@ class LotusPetal:
 # THE 16 MAHAJANAS - The Lotus Structure
 # =============================================================================
 
-# Position → Mahajana mapping (canonical)
+# Position → Mahajana mapping (ALIGNED WITH seed.py ALL_GUARDIANS)
 MAHAJANA_POSITIONS: Dict[str, int] = {
     # GENESIS Quarter (0-3)
-    "prithu": 0,      # HEAD - Avatara
-    "brahma": 1,      # Worker
-    "narada": 2,      # Worker
-    "shambhu": 3,     # Worker (Shiva)
-
+    "vyasa": 0,  # HEAD - Avatara (Genesis HEAD)
+    "brahma": 1,  # Worker
+    "narada": 2,  # Worker
+    "shambhu": 3,  # Worker (Shiva)
     # DHARMA Quarter (4-7)
-    "vyasa": 4,       # HEAD - Avatara
-    "kumaras": 5,     # Worker
-    "kapila": 6,      # Worker
-    "manu": 7,        # Worker
-
+    "prithu": 4,  # HEAD - Avatara (Dharma HEAD)
+    "kumaras": 5,  # Worker
+    "kapila": 6,  # Worker
+    "manu": 7,  # Worker
     # KARMA Quarter (8-11)
-    "parashurama": 8, # HEAD - Avatara
-    "prahlada": 9,    # Worker
-    "janaka": 10,     # Worker
-    "bhishma": 11,    # Worker
-
+    "parashurama": 8,  # HEAD - Avatara
+    "prahlada": 9,  # Worker
+    "janaka": 10,  # Worker
+    "bhishma": 11,  # Worker
     # MOKSHA Quarter (12-15)
-    "nrisimha": 12,   # HEAD - Avatara
-    "bali": 13,       # Worker
-    "shuka": 14,      # Worker
-    "yamaraja": 15,   # Worker
+    "nrisimha": 12,  # HEAD - Avatara
+    "bali": 13,  # Worker
+    "shuka": 14,  # Worker
+    "yamaraja": 15,  # Worker
 }
 
 # Reverse mapping
@@ -203,6 +205,7 @@ def get_position_mahajana(position: int) -> str:
 # LOTUS STATE - Heartbeat and Rhythm
 # =============================================================================
 
+
 @dataclass
 class LotusState:
     """
@@ -211,9 +214,9 @@ class LotusState:
     Tracks the heartbeat position and rhythm.
     """
 
-    position: int = 0           # Current position (0-15)
-    mantra_count: int = 0       # Mantras chanted (0-107)
-    mala_count: int = 0         # Malas completed
+    position: int = 0  # Current position (0-15)
+    mantra_count: int = 0  # Mantras chanted (0-107)
+    mala_count: int = 0  # Malas completed
     mode: LotusMode = LotusMode.SEED
 
     def chant(self) -> int:
@@ -260,6 +263,7 @@ class LotusState:
 # LOTUS ROUTING - How things connect
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class LotusRoute:
     """
@@ -268,11 +272,11 @@ class LotusRoute:
     Describes how to get from one position to another.
     """
 
-    source: int             # Starting position
-    target: int             # Ending position
-    via_stem: bool          # Goes through the stem?
+    source: int  # Starting position
+    target: int  # Ending position
+    via_stem: bool  # Goes through the stem?
     crosses_quarters: bool  # Crosses quarter boundary?
-    path: Tuple[int, ...]   # The positions traversed
+    path: Tuple[int, ...]  # The positions traversed
 
     @classmethod
     def calculate(cls, source: int, target: int) -> "LotusRoute":
@@ -349,6 +353,7 @@ class LotusProtocol(Protocol):
 # LOTUS BASE - Abstract Base Class
 # =============================================================================
 
+
 class LotusBase(ABC):
     """
     Abstract Base Class for Lotus-aware components.
@@ -406,6 +411,7 @@ class LotusBase(ABC):
 # LOTUS TREE - The Fractal Structure
 # =============================================================================
 
+
 class LotusTree(Generic[T]):
     """
     The Lotus as a Fractal Tree.
@@ -456,6 +462,7 @@ class LotusTree(Generic[T]):
 # LOTUS HOLOGRAM - The Whole in Every Petal
 # =============================================================================
 
+
 class LotusHologram:
     """
     The Lotus as a Holographic System.
@@ -466,7 +473,7 @@ class LotusHologram:
 
     def __init__(self) -> None:
         self._system: HolographicSystem[LotusPetal] = HolographicSystem.create(
-            LotusPetal.create(0, "prithu")  # Center is position 0
+            LotusPetal.create(0, "vyasa")  # Center is position 0 = VYASA (Genesis HEAD)
         )
         self._initialize()
 
@@ -497,6 +504,7 @@ class LotusHologram:
 # =============================================================================
 # LOTUS PROTOCOL - Self-Reference
 # =============================================================================
+
 
 class LotusProtocolDef(MahamantraProtocolBase):
     """

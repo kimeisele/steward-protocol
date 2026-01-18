@@ -34,7 +34,6 @@ is ACINTYA - like iron becoming fire, indistinguishable.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -64,7 +63,6 @@ from vibe_core.protocols.mahajanas.router import Mahajana
 OWNER: Final[Mahajana] = Mahajana.BHISHMA
 
 
-
 # =============================================================================
 # THE 4 SAMPRADAYAS (Authorized Disciplic Successions)
 # =============================================================================
@@ -75,18 +73,20 @@ class Sampradaya(str, Enum):
     The 4 authorized disciplic successions.
     Each maps to a quarter of the Mahamantra.
     """
-    BRAHMA = "brahma"     # Brahma → Madhva → Chaitanya (GENESIS)
-    KUMARA = "kumara"     # Four Kumaras → Nimbarka (DHARMA)
-    SRI = "sri"           # Lakshmi → Ramanuja (KARMA)
-    RUDRA = "rudra"       # Shiva → Vishnuswami → Vallabha (MOKSHA)
+
+    BRAHMA = "brahma"  # Brahma → Madhva → Chaitanya (GENESIS)
+    KUMARA = "kumara"  # Four Kumaras → Nimbarka (DHARMA)
+    SRI = "sri"  # Lakshmi → Ramanuja (KARMA)
+    RUDRA = "rudra"  # Shiva → Vishnuswami → Vallabha (MOKSHA)
 
 
 class Quarter(str, Enum):
     """The 4 quarters of the Mahamantra."""
-    GENESIS = "genesis"   # Hare Krishna Hare Krishna (Creation)
-    DHARMA = "dharma"     # Krishna Krishna Hare Hare (Law)
-    KARMA = "karma"       # Hare Rama Hare Rama (Action)
-    MOKSHA = "moksha"     # Rama Rama Hare Hare (Liberation)
+
+    GENESIS = "genesis"  # Hare Krishna Hare Krishna (Creation)
+    DHARMA = "dharma"  # Krishna Krishna Hare Hare (Law)
+    KARMA = "karma"  # Hare Rama Hare Rama (Action)
+    MOKSHA = "moksha"  # Rama Rama Hare Hare (Liberation)
 
 
 # =============================================================================
@@ -107,6 +107,7 @@ class ParamparaNode:
     - guru: Their immediate predecessor in the chain
     - shishyas: Their disciples/successors
     """
+
     mahajana: Mahajana
     position: int
     quarter: Quarter
@@ -129,11 +130,9 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     # GENESIS QUARTER (Brahma Sampradaya - Creation)
     # "Hare Krishna Hare Krishna"
     # ==========================================================================
-
-    # Position 0: HEAD - Prithu Maharaja (Infrastructure Avatar)
-    # Note: Prithu is Shaktyavesha - not in standard Mahajana enum
-    # Handled separately as AVATAR
-
+    # Position 0: HEAD - VYASA (Genesis HEAD - System Wake)
+    # Note: Vyasa is Shaktyavesha Avatara - not in Mahajana enum
+    # Handled separately as AVATARA
     Mahajana.BRAHMA: ParamparaNode(
         mahajana=Mahajana.BRAHMA,
         position=1,
@@ -144,7 +143,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         shishyas=frozenset({Mahajana.NARADA}),
         serves=None,  # Brahma serves Vishnu directly
     ),
-
     Mahajana.NARADA: ParamparaNode(
         mahajana=Mahajana.NARADA,
         position=2,
@@ -154,7 +152,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         guru=Mahajana.BRAHMA,
         shishyas=frozenset(),  # Narada teaches many but not in this graph
     ),
-
     Mahajana.SHAMBHU: ParamparaNode(
         mahajana=Mahajana.SHAMBHU,
         position=3,
@@ -163,14 +160,12 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Shiva learns from Vishnu directly
     ),
-
     # ==========================================================================
     # DHARMA QUARTER (Kumara Sampradaya - Law/Purity)
     # "Krishna Krishna Hare Hare"
     # ==========================================================================
-
-    # Position 4: HEAD - Vyasadeva (Documentation Avatar)
-
+    # Position 4: HEAD - PRITHU (Dharma HEAD - Compile/Structure)
+    # Note: Prithu is Shaktyavesha Avatara - not in Mahajana enum
     Mahajana.KUMARAS: ParamparaNode(
         mahajana=Mahajana.KUMARAS,
         position=5,
@@ -179,7 +174,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Four Kumaras are eternally liberated
     ),
-
     Mahajana.KAPILA: ParamparaNode(
         mahajana=Mahajana.KAPILA,
         position=6,
@@ -188,7 +182,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Kapila is God Himself (avatara)
     ),
-
     Mahajana.MANU: ParamparaNode(
         mahajana=Mahajana.MANU,
         position=7,
@@ -197,14 +190,11 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=Mahajana.BRAHMA,
     ),
-
     # ==========================================================================
     # KARMA QUARTER (Sri Sampradaya - Action/Duty)
     # "Hare Rama Hare Rama"
     # ==========================================================================
-
     # Position 8: HEAD - Parashurama (Enforcement Avatar)
-
     Mahajana.PRAHLADA: ParamparaNode(
         mahajana=Mahajana.PRAHLADA,
         position=9,
@@ -213,7 +203,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=Mahajana.NARADA,  # Narada taught Prahlada in the womb!
     ),
-
     Mahajana.JANAKA: ParamparaNode(
         mahajana=Mahajana.JANAKA,
         position=10,
@@ -222,7 +211,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Janaka was self-realized
     ),
-
     Mahajana.BHISHMA: ParamparaNode(
         mahajana=Mahajana.BHISHMA,
         position=11,
@@ -231,14 +219,11 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Bhishma learned from many rishis
     ),
-
     # ==========================================================================
     # MOKSHA QUARTER (Rudra Sampradaya - Liberation)
     # "Rama Rama Hare Hare"
     # ==========================================================================
-
     # Position 12: HEAD - Nrisimhadeva (Protection Avatar)
-
     Mahajana.BALI: ParamparaNode(
         mahajana=Mahajana.BALI,
         position=13,
@@ -247,7 +232,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=Mahajana.PRAHLADA,  # Bali is grandson of Prahlada
     ),
-
     Mahajana.SHUKA: ParamparaNode(
         mahajana=Mahajana.SHUKA,
         position=14,
@@ -256,7 +240,6 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
         is_head=False,
         guru=None,  # Shuka was born liberated
     ),
-
     Mahajana.YAMARAJA: ParamparaNode(
         mahajana=Mahajana.YAMARAJA,
         position=15,
@@ -275,12 +258,13 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
 
 class PrakritiCategory(str, Enum):
     """Categories of the 24 Prakriti elements."""
-    ROOT = "root"           # 1: Prakriti itself
-    SUBTLE = "subtle"       # 2-4: Mahat, Ahankara, Manas
-    TANMATRA = "tanmatra"   # 5-9: Sound, Touch, Form, Taste, Smell
-    JNANENDRIYA = "jnana"   # 10-14: Ear, Skin, Eye, Tongue, Nose
-    KARMENDRIYA = "karma"   # 15-19: Speech, Hands, Feet, Excretion, Generation
-    MAHABHUTA = "bhuta"     # 20-24: Ether, Air, Fire, Water, Earth
+
+    ROOT = "root"  # 1: Prakriti itself
+    SUBTLE = "subtle"  # 2-4: Mahat, Ahankara, Manas
+    TANMATRA = "tanmatra"  # 5-9: Sound, Touch, Form, Taste, Smell
+    JNANENDRIYA = "jnana"  # 10-14: Ear, Skin, Eye, Tongue, Nose
+    KARMENDRIYA = "karma"  # 15-19: Speech, Hands, Feet, Excretion, Generation
+    MAHABHUTA = "bhuta"  # 20-24: Ether, Air, Fire, Water, Earth
 
 
 @dataclass(frozen=True)
@@ -291,16 +275,17 @@ class PrakritiElement:
     The 24 are NOT dead - they are ENLIVENED by the Mahamantra.
     Each element maps to a specific byte position.
     """
-    index: int              # 1-24
-    name: str               # Sanskrit name
+
+    index: int  # 1-24
+    name: str  # Sanskrit name
     category: PrakritiCategory
-    mantra_position: int    # Which of 16 positions (with overlap/rhythm)
-    byte_mask: int          # Bit mask for MantraByte
+    mantra_position: int  # Which of 16 positions (with overlap/rhythm)
+    byte_mask: int  # Bit mask for MantraByte
 
     # The rhythm: 24 = 3x8 = 4x6 = 2x12
     # This is the ACINTYA point - multiple valid decompositions
-    rhythm_3x8: Tuple[int, int]   # (group_of_3, position_in_8)
-    rhythm_4x6: Tuple[int, int]   # (group_of_4, position_in_6)
+    rhythm_3x8: Tuple[int, int]  # (group_of_3, position_in_8)
+    rhythm_4x6: Tuple[int, int]  # (group_of_4, position_in_6)
 
 
 # The 24 Prakriti with their Mantra mappings
@@ -308,33 +293,28 @@ class PrakritiElement:
 PRAKRITI_24: Final[List[PrakritiElement]] = [
     # ROOT (1)
     PrakritiElement(1, "prakriti", PrakritiCategory.ROOT, 0, 0b00000001, (0, 0), (0, 0)),
-
     # SUBTLE (2-4) - The three aspects of false ego
     PrakritiElement(2, "mahat", PrakritiCategory.SUBTLE, 1, 0b00000010, (0, 1), (0, 1)),
     PrakritiElement(3, "ahankara", PrakritiCategory.SUBTLE, 2, 0b00000100, (0, 2), (0, 2)),
     PrakritiElement(4, "manas", PrakritiCategory.SUBTLE, 3, 0b00001000, (0, 3), (0, 3)),
-
     # TANMATRA (5-9) - Subtle sense objects
     PrakritiElement(5, "shabda", PrakritiCategory.TANMATRA, 4, 0b00010000, (0, 4), (0, 4)),
     PrakritiElement(6, "sparsha", PrakritiCategory.TANMATRA, 5, 0b00100000, (0, 5), (0, 5)),
     PrakritiElement(7, "rupa", PrakritiCategory.TANMATRA, 6, 0b01000000, (0, 6), (1, 0)),
     PrakritiElement(8, "rasa", PrakritiCategory.TANMATRA, 7, 0b10000000, (0, 7), (1, 1)),
     PrakritiElement(9, "gandha", PrakritiCategory.TANMATRA, 8, 0b00000001, (1, 0), (1, 2)),
-
     # JNANENDRIYA (10-14) - Knowledge senses
     PrakritiElement(10, "shrotra", PrakritiCategory.JNANENDRIYA, 9, 0b00000010, (1, 1), (1, 3)),
     PrakritiElement(11, "tvak", PrakritiCategory.JNANENDRIYA, 10, 0b00000100, (1, 2), (1, 4)),
     PrakritiElement(12, "chakshus", PrakritiCategory.JNANENDRIYA, 11, 0b00001000, (1, 3), (1, 5)),
     PrakritiElement(13, "rasana", PrakritiCategory.JNANENDRIYA, 12, 0b00010000, (1, 4), (2, 0)),
     PrakritiElement(14, "ghrana", PrakritiCategory.JNANENDRIYA, 13, 0b00100000, (1, 5), (2, 1)),
-
     # KARMENDRIYA (15-19) - Action organs
     PrakritiElement(15, "vak", PrakritiCategory.KARMENDRIYA, 14, 0b01000000, (1, 6), (2, 2)),
     PrakritiElement(16, "pani", PrakritiCategory.KARMENDRIYA, 15, 0b10000000, (1, 7), (2, 3)),
     PrakritiElement(17, "pada", PrakritiCategory.KARMENDRIYA, 0, 0b00000001, (2, 0), (2, 4)),
     PrakritiElement(18, "payu", PrakritiCategory.KARMENDRIYA, 1, 0b00000010, (2, 1), (2, 5)),
     PrakritiElement(19, "upastha", PrakritiCategory.KARMENDRIYA, 2, 0b00000100, (2, 2), (3, 0)),
-
     # MAHABHUTA (20-24) - Gross elements
     PrakritiElement(20, "akasha", PrakritiCategory.MAHABHUTA, 3, 0b00001000, (2, 3), (3, 1)),
     PrakritiElement(21, "vayu", PrakritiCategory.MAHABHUTA, 4, 0b00010000, (2, 4), (3, 2)),
@@ -403,18 +383,12 @@ def get_mahajana_at_position(position: int) -> Optional[Mahajana]:
 
 def get_quarter_mahajanas(quarter: Quarter) -> List[Mahajana]:
     """Get all Mahajanas in a quarter."""
-    return [
-        m for m, node in PARAMPARA_GRAPH.items()
-        if node.quarter == quarter
-    ]
+    return [m for m, node in PARAMPARA_GRAPH.items() if node.quarter == quarter]
 
 
 def get_sampradaya_mahajanas(sampradaya: Sampradaya) -> List[Mahajana]:
     """Get all Mahajanas in a sampradaya."""
-    return [
-        m for m, node in PARAMPARA_GRAPH.items()
-        if node.sampradaya == sampradaya
-    ]
+    return [m for m, node in PARAMPARA_GRAPH.items() if node.sampradaya == sampradaya]
 
 
 # =============================================================================
@@ -429,9 +403,9 @@ def get_37_formula() -> Dict[str, int]:
     24 (Prakriti) + 12 (Mahajanas) + 1 (Krishna) = 37
     """
     return {
-        "prakriti": len(PRAKRITI_24),           # 24
-        "mahajanas": len(PARAMPARA_GRAPH),      # 12
-        "ksetrajna": 1,                          # Krishna (always 1)
+        "prakriti": len(PRAKRITI_24),  # 24
+        "mahajanas": len(PARAMPARA_GRAPH),  # 12
+        "ksetrajna": 1,  # Krishna (always 1)
         "total": len(PRAKRITI_24) + len(PARAMPARA_GRAPH) + 1,  # 37
     }
 

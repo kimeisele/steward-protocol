@@ -26,17 +26,16 @@ THE CRITICAL SEAL (Military-Grade):
     the Mahajanas (Judiciary) reject the entire cycle as 'Headless Noise'
     (Maya), making orphan processes physically impossible.
 
-THE FOUR VYUHAS:
+THE FOUR VYUHAS (ALIGNED WITH seed.py ALL_GUARDIANS):
     | Cycle  | Vyuha       | HEAD        | Workers                    | Phase       |
     |--------|-------------|-------------|----------------------------|-------------|
-    | 1      | Vasudeva    | PRITHU      | Brahma, Narada, Shambhu    | Genesis     |
-    | 2      | Sankarshana | VYASA       | Kumaras, Kapila, Manu      | Dharma      |
+    | 1      | Vasudeva    | VYASA       | Brahma, Narada, Shambhu    | Genesis     |
+    | 2      | Sankarshana | PRITHU      | Kumaras, Kapila, Manu      | Dharma      |
     | 3      | Pradyumna   | PARASHURAMA | Prahlada, Janaka, Bhishma  | Karma       |
     | 4      | Aniruddha   | NRISIMHA    | Bali, Shuka, Yamaraja      | Moksha      |
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 
 from __future__ import annotations
 
@@ -64,7 +63,6 @@ from typing import (
 from vibe_core.protocols.avataras import Avatara, Shakti
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
-
 # =============================================================================
 # CYCLE DEFINITIONS
 # =============================================================================
@@ -79,10 +77,11 @@ class Vyuha(str, Enum):
 
     Each Vyuha governs one phase of the cosmic cycle.
     """
-    VASUDEVA = "vasudeva"        # Cycle 1: Genesis (Consciousness)
+
+    VASUDEVA = "vasudeva"  # Cycle 1: Genesis (Consciousness)
     SANKARSHANA = "sankarshana"  # Cycle 2: Dharma (Existence/Ego)
-    PRADYUMNA = "pradyumna"      # Cycle 3: Karma (Intelligence)
-    ANIRUDDHA = "aniruddha"      # Cycle 4: Moksha (Mind)
+    PRADYUMNA = "pradyumna"  # Cycle 3: Karma (Intelligence)
+    ANIRUDDHA = "aniruddha"  # Cycle 4: Moksha (Mind)
 
 
 class CyclePhase(str, Enum):
@@ -90,15 +89,17 @@ class CyclePhase(str, Enum):
     The four phases of system operation.
     Maps 1:1 with the Mahamantra quarters.
     """
-    GENESIS = "genesis"    # Q1: Creation/Invocation (H K H K)
-    DHARMA = "dharma"      # Q2: Verification/Truth (K K H H)
-    KARMA = "karma"        # Q3: Execution/Action (H R H R)
-    MOKSHA = "moksha"      # Q4: Conclusion/Liberation (R R H H)
+
+    GENESIS = "genesis"  # Q1: Creation/Invocation (H K H K)
+    DHARMA = "dharma"  # Q2: Verification/Truth (K K H H)
+    KARMA = "karma"  # Q3: Execution/Action (H R H R)
+    MOKSHA = "moksha"  # Q4: Conclusion/Liberation (R R H H)
 
 
 class CyclePosition(IntEnum):
     """Position within a cycle (0-3)."""
-    HEAD = 0      # The Avatara (Executive HEAD)
+
+    HEAD = 0  # The Avatara (Executive HEAD)
     WORKER_1 = 1  # First Mahajana
     WORKER_2 = 2  # Second Mahajana
     WORKER_3 = 3  # Third Mahajana
@@ -111,10 +112,11 @@ class CyclePosition(IntEnum):
 
 class SealStatus(str, Enum):
     """Status of a cycle seal."""
-    VALID = "valid"          # Seal verified, cycle authorized
-    INVALID = "invalid"      # Seal failed, cycle rejected
-    MISSING = "missing"      # No seal provided (Headless Noise!)
-    EXPIRED = "expired"      # Seal timeout (stale execution)
+
+    VALID = "valid"  # Seal verified, cycle authorized
+    INVALID = "invalid"  # Seal failed, cycle rejected
+    MISSING = "missing"  # No seal provided (Headless Noise!)
+    EXPIRED = "expired"  # Seal timeout (stale execution)
 
 
 class CycleSealResult(TypedDict, total=False):
@@ -122,11 +124,12 @@ class CycleSealResult(TypedDict, total=False):
     Result of seal verification.
     WATERTIGHT - no Any!
     """
-    status: str              # SealStatus value
-    cycle_hash: str          # SHA-256 of cycle block
-    head_signature: str      # HEAD's salt contribution
-    timestamp: str           # ISO timestamp
-    error_message: str       # Empty if valid
+
+    status: str  # SealStatus value
+    cycle_hash: str  # SHA-256 of cycle block
+    head_signature: str  # HEAD's salt contribution
+    timestamp: str  # ISO timestamp
+    error_message: str  # Empty if valid
 
 
 @dataclass(frozen=True)
@@ -144,10 +147,11 @@ class CycleSeal:
     3. Mahajanas verify the seal before processing
     4. Invalid seal = orphan process = REJECTED
     """
+
     head: Avatara
     cycle: Vyuha
-    salt: str                  # Derived from HEAD's lineage_hash
-    block_hash: str            # SHA-256 of the 4-opcode block
+    salt: str  # Derived from HEAD's lineage_hash
+    block_hash: str  # SHA-256 of the 4-opcode block
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
 
     # Seal validity window (in seconds)
@@ -170,19 +174,14 @@ class CycleSeal:
         # Derive salt from lineage_hash (must be valid parampara)
         if lineage_hash % 37 != 0 and lineage_hash != 37:
             raise PermissionError(
-                f"Invalid parampara: {lineage_hash} % 37 != 0. "
-                "HEAD cannot provide seal without valid lineage."
+                f"Invalid parampara: {lineage_hash} % 37 != 0. HEAD cannot provide seal without valid lineage."
             )
 
-        salt = hashlib.sha256(
-            f"{head.value}:{lineage_hash}:{cycle.value}".encode()
-        ).hexdigest()[:16]
+        salt = hashlib.sha256(f"{head.value}:{lineage_hash}:{cycle.value}".encode()).hexdigest()[:16]
 
         # Hash the 4 opcodes with the salt
         opcode_string = ":".join(op.name for op in opcodes)
-        block_hash = hashlib.sha256(
-            f"{salt}:{opcode_string}".encode()
-        ).hexdigest()
+        block_hash = hashlib.sha256(f"{salt}:{opcode_string}".encode()).hexdigest()
 
         return cls(
             head=head,
@@ -210,9 +209,7 @@ class CycleSeal:
 
         # Recompute hash and compare
         opcode_string = ":".join(op.name for op in opcodes)
-        expected_hash = hashlib.sha256(
-            f"{self.salt}:{opcode_string}".encode()
-        ).hexdigest()
+        expected_hash = hashlib.sha256(f"{self.salt}:{opcode_string}".encode()).hexdigest()
 
         if expected_hash != self.block_hash:
             return CycleSealResult(
@@ -251,6 +248,7 @@ class CycleDefinition:
         Zoom in: Same pattern.
         Zoom out: Same pattern.
     """
+
     vyuha: Vyuha
     phase: CyclePhase
 
@@ -317,12 +315,13 @@ class CycleDefinition:
 # CYCLE 1: GENESIS (Vasudeva)
 # Quarter 1 of Mahamantra: H K H K
 # Phase: Creation/Invocation
+# ALIGNED WITH seed.py ALL_GUARDIANS: Position 0 = VYASA
 CYCLE_GENESIS: Final[CycleDefinition] = CycleDefinition(
     vyuha=Vyuha.VASUDEVA,
     phase=CyclePhase.GENESIS,
-    # HEAD: Prithu (Infrastructure/Palana)
-    head=Avatara.PRITHU,
-    head_shakti=Shakti.PALANA,
+    # HEAD: VYASA (Knowledge/Jnana) - Position 0 per seed.py ALL_GUARDIANS
+    head=Avatara.VYASA,
+    head_shakti=Shakti.JNANA,
     head_opcode=MantraOpCode.SYS_WAKE,
     # Worker 1: Brahma (Creation)
     worker_1=Mahajana.BRAHMA,
@@ -338,12 +337,13 @@ CYCLE_GENESIS: Final[CycleDefinition] = CycleDefinition(
 # CYCLE 2: DHARMA (Sankarshana)
 # Quarter 2 of Mahamantra: K K H H
 # Phase: Verification/Truth
+# ALIGNED WITH seed.py ALL_GUARDIANS: Position 4 = PRITHU
 CYCLE_DHARMA: Final[CycleDefinition] = CycleDefinition(
     vyuha=Vyuha.SANKARSHANA,
     phase=CyclePhase.DHARMA,
-    # HEAD: Vyasa (Knowledge/Jnana)
-    head=Avatara.VYASA,
-    head_shakti=Shakti.JNANA,
+    # HEAD: PRITHU (Infrastructure/Palana) - Position 4 per seed.py ALL_GUARDIANS
+    head=Avatara.PRITHU,
+    head_shakti=Shakti.PALANA,
     head_opcode=MantraOpCode.COMPILE_AST,
     # Worker 1: Kumaras (Purity)
     worker_1=Mahajana.KUMARAS,
@@ -407,13 +407,9 @@ CHATUR_VYUHA: Final[Tuple[CycleDefinition, ...]] = (
 )
 
 # Lookup tables
-CYCLE_BY_VYUHA: Final[Dict[Vyuha, CycleDefinition]] = {
-    c.vyuha: c for c in CHATUR_VYUHA
-}
+CYCLE_BY_VYUHA: Final[Dict[Vyuha, CycleDefinition]] = {c.vyuha: c for c in CHATUR_VYUHA}
 
-CYCLE_BY_PHASE: Final[Dict[CyclePhase, CycleDefinition]] = {
-    c.phase: c for c in CHATUR_VYUHA
-}
+CYCLE_BY_PHASE: Final[Dict[CyclePhase, CycleDefinition]] = {c.phase: c for c in CHATUR_VYUHA}
 
 
 # =============================================================================
