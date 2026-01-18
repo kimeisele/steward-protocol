@@ -12,22 +12,23 @@ Tests for PURIFY phase (4-7) commands:
 
 import pytest
 
-from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.cli.naga_commands.purify.detect import DetectCommand
-from vibe_core.cli.naga_commands.purify.gc import GcCommand
 from vibe_core.cli.naga_commands.purify.flood import FloodCommand
+from vibe_core.cli.naga_commands.purify.gc import GcCommand
+from vibe_core.cli.naga_commands.purify.scan import ScanCommand
 from vibe_core.protocols.naga.cli_command import (
+    NAGA_COMMAND_REGISTRY,
     INagaCommand,
     Mahajana,
+    NagaCommandResult,
     Phase,
-    NAGA_COMMAND_REGISTRY,
 )
 from vibe_core.protocols.substrate import MantraOpCode
-
 
 # =============================================================================
 # SCAN COMMAND TESTS
 # =============================================================================
+
 
 class TestScanCommand:
     """Test ScanCommand (VYASA - ASSERT_TRUTH)."""
@@ -158,6 +159,7 @@ class TestScanCommand:
 # REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestPurifyRegistryIntegration:
     """Test that PURIFY commands are registered."""
 
@@ -190,6 +192,7 @@ class TestPurifyRegistryIntegration:
 # =============================================================================
 # POSITION 4 TESTS (HEAD OF PURIFY)
 # =============================================================================
+
 
 class TestPosition4:
     """Test that scan is position 4 - the HEAD of PURIFY."""
@@ -232,6 +235,7 @@ class TestPosition4:
 # SCAN MODE TESTS
 # =============================================================================
 
+
 class TestScanModes:
     """Test different scan modes."""
 
@@ -271,21 +275,36 @@ class TestScanModes:
 # STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestStrictTyping:
-    """Test that results have no Any types."""
+    """Test that results have no Any types - REAL type checking."""
 
     def test_scan_result_no_any(self):
-        """ScanCommand result has no Any."""
+        """ScanCommand result has no Any types in annotations."""
+        from typing import Any, get_type_hints
+
+        # Check NagaCommandResult class has no Any in type hints
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any type: {field_type}"
+            )
+
+        # Check actual result values are not None when they shouldn't be
         cmd = ScanCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert result.success is not None, "success must be bool, not None"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
 
 
 # =============================================================================
 # IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestImmutability:
     """Test that results are immutable."""
@@ -301,6 +320,7 @@ class TestImmutability:
 # =============================================================================
 # SEMANTIC TESTS
 # =============================================================================
+
 
 class TestSemantics:
     """Test semantic meaning of VYASA as scan owner."""
@@ -331,6 +351,7 @@ class TestSemantics:
 # =============================================================================
 # DETECT COMMAND TESTS
 # =============================================================================
+
 
 class TestDetectCommand:
     """Test DetectCommand (KUMARAS - RESOLVE_REQ)."""
@@ -456,6 +477,7 @@ class TestDetectCommand:
 # DETECT REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestDetectRegistryIntegration:
     """Test that DetectCommand is registered."""
 
@@ -482,21 +504,33 @@ class TestDetectRegistryIntegration:
 # DETECT STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestDetectStrictTyping:
-    """Test that DetectCommand results have no Any types."""
+    """Test that DetectCommand results have no Any types - REAL checks."""
 
     def test_detect_result_no_any(self):
-        """DetectCommand result has no Any."""
+        """DetectCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = DetectCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
 # DETECT IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestDetectImmutability:
     """Test that DetectCommand results are immutable."""
@@ -512,6 +546,7 @@ class TestDetectImmutability:
 # =============================================================================
 # DETECT SEMANTICS TESTS
 # =============================================================================
+
 
 class TestDetectSemantics:
     """Test semantic meaning of KUMARAS as detect owner."""
@@ -542,6 +577,7 @@ class TestDetectSemantics:
 # =============================================================================
 # FLOOD COMMAND TESTS
 # =============================================================================
+
 
 class TestFloodCommand:
     """Test FloodCommand (MANU - PULSE_SYNC)."""
@@ -643,6 +679,7 @@ class TestFloodCommand:
 # FLOOD REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestFloodRegistryIntegration:
     """Test that FloodCommand is registered."""
 
@@ -669,21 +706,33 @@ class TestFloodRegistryIntegration:
 # FLOOD STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestFloodStrictTyping:
     """Test that FloodCommand results have no Any types."""
 
     def test_flood_result_no_any(self):
-        """FloodCommand result has no Any."""
+        """FloodCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = FloodCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
 # FLOOD IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestFloodImmutability:
     """Test that FloodCommand results are immutable."""
@@ -699,6 +748,7 @@ class TestFloodImmutability:
 # =============================================================================
 # FLOOD SEMANTICS TESTS
 # =============================================================================
+
 
 class TestFloodSemantics:
     """Test semantic meaning of MANU as flood owner."""
@@ -729,6 +779,7 @@ class TestFloodSemantics:
 # =============================================================================
 # GC COMMAND TESTS
 # =============================================================================
+
 
 class TestGcCommand:
     """Test GcCommand (KAPILA - GARBAGE_COLLECT)."""
@@ -838,6 +889,7 @@ class TestGcCommand:
 # GC REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestGcRegistryIntegration:
     """Test that GcCommand is registered."""
 
@@ -864,21 +916,33 @@ class TestGcRegistryIntegration:
 # GC STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestGcStrictTyping:
     """Test that GcCommand results have no Any types."""
 
     def test_gc_result_no_any(self):
-        """GcCommand result has no Any."""
+        """GcCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = GcCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
 # GC IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestGcImmutability:
     """Test that GcCommand results are immutable."""
@@ -894,6 +958,7 @@ class TestGcImmutability:
 # =============================================================================
 # GC SEMANTICS TESTS
 # =============================================================================
+
 
 class TestGcSemantics:
     """Test semantic meaning of KAPILA as gc owner."""
@@ -925,6 +990,7 @@ class TestGcSemantics:
 # PURIFY PHASE COMPLETE TEST
 # =============================================================================
 
+
 class TestPurifyPhaseComplete:
     """Test that PURIFY phase is complete with all 4 commands."""
 
@@ -932,10 +998,10 @@ class TestPurifyPhaseComplete:
         """All 4 PURIFY phase commands are registered."""
         cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.PURIFY)
         names = [c.name for c in cmds]
-        assert "scan" in names    # VYASA - Position 4
+        assert "scan" in names  # VYASA - Position 4
         assert "detect" in names  # KUMARAS - Position 5
-        assert "gc" in names      # KAPILA - Position 6
-        assert "flood" in names   # MANU - Position 7
+        assert "gc" in names  # KAPILA - Position 6
+        assert "flood" in names  # MANU - Position 7
 
     def test_purify_has_four_commands(self):
         """PURIFY phase has exactly 4 commands."""

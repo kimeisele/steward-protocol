@@ -18,29 +18,32 @@ SERVE PHASE COMPLETE - All 4 positions tested.
 import pytest
 
 # Import all phases to ensure commands are registered
-from vibe_core.cli.naga_commands import wake  # noqa: F401
-from vibe_core.cli.naga_commands import purify  # noqa: F401
+from vibe_core.cli.naga_commands import (
+    purify,  # noqa: F401
+    wake,  # noqa: F401
+)
 from vibe_core.cli.naga_commands.serve.chat import (
+    INTENT_PATTERNS,
     ChatCommand,
     detect_intent,
     extract_args,
-    INTENT_PATTERNS,
 )
+from vibe_core.cli.naga_commands.serve.commit import CommitCommand
 from vibe_core.cli.naga_commands.serve.intel import IntelCommand
 from vibe_core.cli.naga_commands.serve.validate import ValidateCommand
-from vibe_core.cli.naga_commands.serve.commit import CommitCommand
 from vibe_core.protocols.naga.cli_command import (
+    NAGA_COMMAND_REGISTRY,
     INagaCommand,
     Mahajana,
+    NagaCommandResult,
     Phase,
-    NAGA_COMMAND_REGISTRY,
 )
 from vibe_core.protocols.substrate import MantraOpCode
-
 
 # =============================================================================
 # CHAT COMMAND TESTS
 # =============================================================================
+
 
 class TestChatCommand:
     """Test ChatCommand (PRAHLADA - EXEC_SERVICE)."""
@@ -122,6 +125,7 @@ class TestChatCommand:
 # =============================================================================
 # INTEL COMMAND TESTS
 # =============================================================================
+
 
 class TestIntelCommand:
     """Test IntelCommand (SHUKA - FETCH_RES)."""
@@ -213,6 +217,7 @@ class TestIntelCommand:
 # REGISTRY INTEGRATION TESTS
 # =============================================================================
 
+
 class TestRegistryIntegration:
     """Test that commands are registered."""
 
@@ -253,30 +258,51 @@ class TestRegistryIntegration:
 # STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestStrictTyping:
-    """Test that results have no Any types."""
+    """Test that results have no Any types - REAL checks."""
 
     def test_chat_result_no_any(self):
-        """ChatCommand result has no Any."""
+        """ChatCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = ChatCommand()
         result = cmd.execute(["test"])
-        # Result is NagaCommandResult which is frozen dataclass
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
     def test_intel_result_no_any(self):
-        """IntelCommand result has no Any."""
+        """IntelCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = IntelCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
 # IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestImmutability:
     """Test that results are immutable."""
@@ -299,6 +325,7 @@ class TestImmutability:
 # =============================================================================
 # INTENT DETECTION TESTS
 # =============================================================================
+
 
 class TestIntentDetection:
     """Test intent detection for chat routing."""
@@ -335,6 +362,7 @@ class TestIntentDetection:
 # =============================================================================
 # ARGUMENT EXTRACTION TESTS
 # =============================================================================
+
 
 class TestArgumentExtraction:
     """Test argument extraction from natural language."""
@@ -373,6 +401,7 @@ class TestArgumentExtraction:
 # =============================================================================
 # CHAT ROUTING TESTS
 # =============================================================================
+
 
 class TestChatRouting:
     """Test chat command routing to other Mahajanas."""
@@ -437,6 +466,7 @@ class TestChatRouting:
 # =============================================================================
 # UNIVERSAL INTERFACE TESTS
 # =============================================================================
+
 
 class TestUniversalInterface:
     """Test chat as the universal operator interface."""
@@ -690,10 +720,10 @@ class TestServeRegistryComplete:
         cmds = NAGA_COMMAND_REGISTRY.get_by_phase(Phase.SERVE)
         assert len(cmds) == 4
         names = [c.name for c in cmds]
-        assert "intel" in names     # Position 8
-        assert "chat" in names      # Position 9
+        assert "intel" in names  # Position 8
+        assert "chat" in names  # Position 9
         assert "validate" in names  # Position 10
-        assert "commit" in names    # Position 11
+        assert "commit" in names  # Position 11
 
     def test_janaka_has_validate(self):
         """JANAKA owns validate command."""
@@ -717,20 +747,40 @@ class TestServeStrictTyping:
     """Test that SERVE commands have proper typing."""
 
     def test_validate_result_no_any(self):
-        """ValidateCommand result has no Any."""
+        """ValidateCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = ValidateCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
     def test_commit_result_no_any(self):
-        """CommitCommand result has no Any."""
+        """CommitCommand result has no Any types in annotations."""
+        from typing import get_type_hints
+
+        hints = get_type_hints(NagaCommandResult)
+        for field_name, field_type in hints.items():
+            type_str = str(field_type)
+            assert "Any" not in type_str, (
+                f"STRICT TYPING VIOLATION: NagaCommandResult.{field_name} uses Any: {field_type}"
+            )
+
         cmd = CommitCommand()
         result = cmd.execute([])
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'opcode')
-        assert hasattr(result, 'mahajana')
+        assert isinstance(result.success, bool), f"success must be bool, got {type(result.success)}"
+        assert isinstance(result.exit_code, int), f"exit_code must be int, got {type(result.exit_code)}"
+        assert result.opcode is not None, "opcode must be set"
+        assert result.mahajana is not None, "mahajana must be set"
 
 
 # =============================================================================
@@ -767,10 +817,10 @@ class TestServePhaseComplete:
     def test_all_opcodes_covered(self):
         """All SERVE opcodes have commands."""
         serve_opcodes = [
-            MantraOpCode.EXEC_OP,      # Position 8
-            MantraOpCode.EXTEND_CAP,   # Position 9
-            MantraOpCode.STATE_SYNC,   # Position 10
-            MantraOpCode.LEDGER_SIGN,     # Position 11
+            MantraOpCode.EXEC_OP,  # Position 8
+            MantraOpCode.EXTEND_CAP,  # Position 9
+            MantraOpCode.STATE_SYNC,  # Position 10
+            MantraOpCode.LEDGER_SIGN,  # Position 11
         ]
         for opcode in serve_opcodes:
             cmds = NAGA_COMMAND_REGISTRY.get_by_opcode(opcode)
@@ -779,10 +829,10 @@ class TestServePhaseComplete:
     def test_all_mahajanas_covered(self):
         """All SERVE mahajanas have commands."""
         serve_mahajanas = [
-            Mahajana.SHUKA,     # FETCH_RES (intel)
+            Mahajana.SHUKA,  # FETCH_RES (intel)
             Mahajana.PRAHLADA,  # EXEC_SERVICE (chat)
-            Mahajana.JANAKA,    # CHECK_DHARMA (validate)
-            Mahajana.BHISHMA,   # COMMIT_LOG (commit)
+            Mahajana.JANAKA,  # CHECK_DHARMA (validate)
+            Mahajana.BHISHMA,  # COMMIT_LOG (commit)
         ]
         for mahajana in serve_mahajanas:
             cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(mahajana)
