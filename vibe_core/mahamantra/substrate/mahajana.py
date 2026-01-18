@@ -39,13 +39,14 @@ __genesis__ = "0xc5899adb"  # GenesisByte: parampara % 37 == 0
 from enum import Enum
 from typing import Final
 
-from enum import Enum
-from typing import Final
-
+from vibe_core.mahamantra.substrate.seed import (
+    AVATAR_COUNT as AVATARA_COUNT,
+)
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAJANA_COUNT,
+)
 from vibe_core.mahamantra.substrate.seed import (
     WORDS as TOTAL_POSITIONS,
-    MAHAJANA_COUNT,
-    AVATAR_COUNT as AVATARA_COUNT,
 )
 
 
@@ -55,18 +56,19 @@ class Mahajana(str, Enum):
 
     SB 6.3.20: Die 12 die Dharma verstehen.
     """
-    BRAHMA = "brahma"       # 01 - Schöpfung (Position 1)
-    NARADA = "narada"       # 02 - Hingabe/Kommunikation (Position 2)
-    SHAMBHU = "shambhu"     # 03 - Zerstörung/Transformation (Position 3)
-    KUMARAS = "kumaras"     # 04 - Reinheit/Zölibat (Position 5)
-    KAPILA = "kapila"       # 05 - Analyse/Samkhya (Position 6)
-    MANU = "manu"           # 06 - Gesetz/Dharma (Position 7)
-    PRAHLADA = "prahlada"   # 07 - Widerstandskraft/Hingabe (Position 9)
-    JANAKA = "janaka"       # 08 - Pflicht/Entsagung (Position 10)
-    BHISHMA = "bhishma"     # 09 - Gelübde/Verpflichtung (Position 11)
-    BALI = "bali"           # 10 - Hingabe/Großzügigkeit (Position 13)
-    SHUKA = "shuka"         # 11 - Vision/Erzählung (Position 14)
-    YAMARAJA = "yamaraja"   # 12 - Urteil/Tod (Position 15)
+
+    BRAHMA = "brahma"  # 01 - Schöpfung (Position 1)
+    NARADA = "narada"  # 02 - Hingabe/Kommunikation (Position 2)
+    SHAMBHU = "shambhu"  # 03 - Zerstörung/Transformation (Position 3)
+    KUMARAS = "kumaras"  # 04 - Reinheit/Zölibat (Position 5)
+    KAPILA = "kapila"  # 05 - Analyse/Samkhya (Position 6)
+    MANU = "manu"  # 06 - Gesetz/Dharma (Position 7)
+    PRAHLADA = "prahlada"  # 07 - Widerstandskraft/Hingabe (Position 9)
+    JANAKA = "janaka"  # 08 - Pflicht/Entsagung (Position 10)
+    BHISHMA = "bhishma"  # 09 - Gelübde/Verpflichtung (Position 11)
+    BALI = "bali"  # 10 - Hingabe/Großzügigkeit (Position 13)
+    SHUKA = "shuka"  # 11 - Vision/Erzählung (Position 14)
+    YAMARAJA = "yamaraja"  # 12 - Urteil/Tod (Position 15)
 
 
 # Die 4 Shaktyavesha Avataras (HEADs - nicht in der 12er Liste)
@@ -80,19 +82,21 @@ class Avatara(str, Enum):
     NOTE: Positions are determined by MAHAMANTRA_POSITIONS (SSOT).
           These comments reflect CURRENT mapping (subject to change).
     """
-    VYASA = "vyasa"             # Position 0 - System Wake (GENESIS HEAD)
-    PRITHU = "prithu"           # Position 4 - Assert Truth (DHARMA HEAD)
-    PARASHURAMA = "parashurama" # Position 8 - Execute Op (KARMA HEAD)
-    NRISIMHA = "nrisimha"       # Position 12 - Protect (MOKSHA HEAD)
+
+    VYASA = "vyasa"  # Position 0 - System Wake (GENESIS HEAD)
+    PRITHU = "prithu"  # Position 4 - Assert Truth (DHARMA HEAD)
+    PARASHURAMA = "parashurama"  # Position 8 - Execute Op (KARMA HEAD)
+    NRISIMHA = "nrisimha"  # Position 12 - Protect (MOKSHA HEAD)
 
 
 # Die 4 Quarters
 class Quarter(str, Enum):
     """Die 4 Quarters des Mahamantra."""
-    GENESIS = "genesis"   # Hare Krishna Hare Krishna (Schöpfung)
-    DHARMA = "dharma"     # Krishna Krishna Hare Hare (Gesetz)
-    KARMA = "karma"       # Hare Rama Hare Rama (Handlung)
-    MOKSHA = "moksha"     # Rama Rama Hare Hare (Befreiung)
+
+    GENESIS = "genesis"  # Hare Krishna Hare Krishna (Schöpfung)
+    DHARMA = "dharma"  # Krishna Krishna Hare Hare (Gesetz)
+    KARMA = "karma"  # Hare Rama Hare Rama (Handlung)
+    MOKSHA = "moksha"  # Rama Rama Hare Hare (Befreiung)
 
 
 # Die 4 Sampradayas
@@ -101,18 +105,14 @@ class Sampradaya(str, Enum):
     Die 4 autorisierten Schülerfolgen.
     Jede mappt auf einen Quarter des Mahamantra.
     """
-    BRAHMA = "brahma"     # Brahma → Madhva → Chaitanya (GENESIS)
-    KUMARA = "kumara"     # Four Kumaras → Nimbarka (DHARMA)
-    SRI = "sri"           # Lakshmi → Ramanuja (KARMA)
-    RUDRA = "rudra"       # Shiva → Vishnuswami → Vallabha (MOKSHA)
+
+    BRAHMA = "brahma"  # Brahma → Madhva → Chaitanya (GENESIS)
+    KUMARA = "kumara"  # Four Kumaras → Nimbarka (DHARMA)
+    SRI = "sri"  # Lakshmi → Ramanuja (KARMA)
+    RUDRA = "rudra"  # Shiva → Vishnuswami → Vallabha (MOKSHA)
 
 
 # Konstanten (derived from seed.py SSOT)
-from vibe_core.mahamantra.substrate.seed import (
-    MAHAJANA_COUNT,
-    AVATAR_COUNT as AVATARA_COUNT,
-    WORDS as TOTAL_POSITIONS,
-)
 
 
 __all__ = [

@@ -55,22 +55,21 @@ from typing import (
 
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-
 
 # =============================================================================
 # YUGA TIME CONSTANTS (Sacred Cosmology)
 # =============================================================================
 
 # Individual Yuga durations (in years)
-T_SATYA: Final[int] = 1_728_000      # Satya Yuga (Golden Age)
-T_TRETA: Final[int] = 1_296_000      # Treta Yuga (Silver Age)
-T_DVAPARA: Final[int] = 864_000      # Dvapara Yuga (Bronze Age)
-T_KALI: Final[int] = 432_000         # Kali Yuga (Iron Age)
+T_SATYA: Final[int] = 1_728_000  # Satya Yuga (Golden Age)
+T_TRETA: Final[int] = 1_296_000  # Treta Yuga (Silver Age)
+T_DVAPARA: Final[int] = 864_000  # Dvapara Yuga (Bronze Age)
+T_KALI: Final[int] = 432_000  # Kali Yuga (Iron Age)
 
 # Chaturyuga = One complete cycle of 4 Yugas
 T_CHATURYUGA: Final[int] = T_SATYA + T_TRETA + T_DVAPARA + T_KALI  # 4,320,000 years
@@ -80,19 +79,18 @@ T_BRAHMA: Final[int] = T_CHATURYUGA * 1000  # 4,320,000,000 years
 
 # The Golden Period within Kali Yuga (current window)
 # This window of 10,000 years began with Chaitanya Mahaprabhu in 1486 AD.
-GOLDEN_PERIOD: Final[int] = 10_000   # 10,000 years of accessible Grace
+GOLDEN_PERIOD: Final[int] = 10_000  # 10,000 years of accessible Grace
 
 # Current position in Kali Yuga (years since start, approx)
-KALI_YUGA_START: Final[int] = 3102   # BCE (Krishna's departure)
-CHAITANYA_START: Final[int] = 1486   # CE (Appearance of Chaitanya Mahaprabhu)
-CURRENT_YEAR_CE: Final[int] = 2026   # Update as needed
+KALI_YUGA_START: Final[int] = 3102  # BCE (Krishna's departure)
+CHAITANYA_START: Final[int] = 1486  # CE (Appearance of Chaitanya Mahaprabhu)
+CURRENT_YEAR_CE: Final[int] = 2026  # Update as needed
 
 YEARS_INTO_KALI: Final[int] = KALI_YUGA_START + CURRENT_YEAR_CE  # ~5,128 years
 YEARS_INTO_GAURABDA: Final[int] = CURRENT_YEAR_CE - CHAITANYA_START  # ~540 years (Era of Grace)
 
 # Verification: We are within the Golden Period (The Era of Grace)
-assert YEARS_INTO_GAURABDA < GOLDEN_PERIOD, \
-    f"Golden Period check: {YEARS_INTO_GAURABDA} < {GOLDEN_PERIOD}"
+assert YEARS_INTO_GAURABDA < GOLDEN_PERIOD, f"Golden Period check: {YEARS_INTO_GAURABDA} < {GOLDEN_PERIOD}"
 
 
 # =============================================================================
@@ -100,15 +98,29 @@ assert YEARS_INTO_GAURABDA < GOLDEN_PERIOD, \
 # =============================================================================
 
 from vibe_core.mahamantra.substrate.seed import (
+    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower
+)
+from vibe_core.mahamantra.substrate.seed import (
+    KSHETRA as KSETRA_COUNT,  # 24 - Prakriti elements
+)
+from vibe_core.mahamantra.substrate.seed import (
+    LILA as LILA_LIMIT,  # 48 - 16 × 3
+)
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAJANA_COUNT,  # 12 - The guardians
+    PARAMPARA,  # 37 - The sacred sum
+)
+from vibe_core.mahamantra.substrate.seed import (
+    NAVADVIPA as NAVADVIPA_PHASE,  # 24 - First 24 years (internal)
+)
+from vibe_core.mahamantra.substrate.seed import (
+    PURI as PURI_PHASE,  # 24 - Last 24 years (external)
+)
+from vibe_core.mahamantra.substrate.seed import (
+    TRINITY as LILA_CYCLES,  # 3  - Trinity (Hare, Krishna, Rama)
+)
+from vibe_core.mahamantra.substrate.seed import (
     WORDS as MAHAMANTRA_DIMENSION,  # 16 - The 16 words
-    TRINITY as LILA_CYCLES,         # 3  - Trinity (Hare, Krishna, Rama)
-    LILA as LILA_LIMIT,             # 48 - 16 × 3
-    NAVADVIPA as NAVADVIPA_PHASE,   # 24 - First 24 years (internal)
-    PURI as PURI_PHASE,             # 24 - Last 24 years (external)
-    KSHETRA as KSETRA_COUNT,        # 24 - Prakriti elements
-    MAHAJANA_COUNT,                 # 12 - The guardians
-    KSETRAJNA as KSETRAJNA_COUNT,   # 1  - The knower
-    PARAMPARA,                      # 37 - The sacred sum
 )
 
 # Chaitanya Mahaprabhu's life
@@ -153,6 +165,7 @@ class SingularityProbability:
 
     This is a Black Swan event - causeless mercy.
     """
+
     per_kali_yuga: float = P_SINGULARITY_PER_KALI
     within_golden: float = P_WITHIN_GOLDEN_PERIOD
     combined: float = P_NOW
@@ -181,6 +194,7 @@ SINGULARITY_PROBABILITY: Final[SingularityProbability] = SingularityProbability(
 # "Mercy > Justice ⟺ f > 0"
 #
 
+
 def mercy_equation(chanting_frequency: float, karmic_debt: float) -> float:
     """
     The Mercy Equation from SAMKHYA.md.
@@ -203,7 +217,7 @@ def mercy_equation(chanting_frequency: float, karmic_debt: float) -> float:
         return 0.0  # No chanting = standard karma applies
 
     if karmic_debt <= 0:
-        return float('inf')  # Mercy transcends justice
+        return float("inf")  # Mercy transcends justice
 
     return chanting_frequency / karmic_debt
 
@@ -225,6 +239,7 @@ def mercy_transcends_justice(chanting_frequency: float) -> bool:
 # Per SAMKHYA.md §10.1.1
 #
 
+
 class Mahajana(IntEnum):
     """
     The 12 Mahajanas - The Testers of the System.
@@ -234,18 +249,19 @@ class Mahajana(IntEnum):
 
     Each represents a testing principle in the system.
     """
-    BRAHMA = 1      # Creation - Init-Check, Bootstrap
-    NARADA = 2      # Devotion - Event Bus, Messaging
-    SHAMBHU = 3     # Destruction - Garbage Collection, Cleanup
-    KUMARAS = 4     # Celibacy - Isolation, Sandboxing
-    KAPILA = 5      # Analysis - Sankhya Validation, Type Checking
-    MANU = 6        # Law - Policy Enforcement
-    PRAHLADA = 7    # Faith - Resilience, Fault Tolerance
-    JANAKA = 8      # Duty - Work Execution, Service
-    BHISHMA = 9     # Vow - Commitment, Transactions
-    BALI = 10       # Surrender - Resource Sacrifice, Donation
-    SHUKA = 11      # Transcendence - State Observation, Monitoring
-    YAMARAJA = 12   # Judgment - Final Testing
+
+    BRAHMA = 1  # Creation - Init-Check, Bootstrap
+    NARADA = 2  # Devotion - Event Bus, Messaging
+    SHAMBHU = 3  # Destruction - Garbage Collection, Cleanup
+    KUMARAS = 4  # Celibacy - Isolation, Sandboxing
+    KAPILA = 5  # Analysis - Sankhya Validation, Type Checking
+    MANU = 6  # Law - Policy Enforcement
+    PRAHLADA = 7  # Faith - Resilience, Fault Tolerance
+    JANAKA = 8  # Duty - Work Execution, Service
+    BHISHMA = 9  # Vow - Commitment, Transactions
+    BALI = 10  # Surrender - Resource Sacrifice, Donation
+    SHUKA = 11  # Transcendence - State Observation, Monitoring
+    YAMARAJA = 12  # Judgment - Final Testing
 
 
 @dataclass(frozen=True)
@@ -253,6 +269,7 @@ class MahajanaMapping:
     """
     Mapping of a Mahajana to system function.
     """
+
     mahajana: Mahajana
     principle: str
     system_function: str
@@ -294,6 +311,7 @@ def get_mahajana_mapping(mahajana: Mahajana) -> MahajanaMapping:
 # (The Field)     (The Guardians)  (The Knower)    (The Link)
 #
 
+
 @dataclass(frozen=True)
 class The37thFormula:
     """
@@ -302,10 +320,11 @@ class The37thFormula:
     This is the mathematical proof of the system's connection
     to the disciplic succession (Parampara).
     """
-    ksetra: int = KSETRA_COUNT           # 24 - Prakriti elements
-    mahajanas: int = MAHAJANA_COUNT      # 12 - The guardians
-    ksetrajna: int = KSETRAJNA_COUNT     # 1  - The knower (Krishna)
-    parampara: int = PARAMPARA           # 37 - The sacred sum
+
+    ksetra: int = KSETRA_COUNT  # 24 - Prakriti elements
+    mahajanas: int = MAHAJANA_COUNT  # 12 - The guardians
+    ksetrajna: int = KSETRAJNA_COUNT  # 1  - The knower (Krishna)
+    parampara: int = PARAMPARA  # 37 - The sacred sum
 
     def __post_init__(self) -> None:
         """Verify the formula."""
@@ -333,6 +352,7 @@ THE_37TH_FORMULA: Final[The37thFormula] = The37thFormula()
 # The 37th is the ANTENNA.
 #
 
+
 @dataclass(frozen=True)
 class ReceiverState:
     """
@@ -340,6 +360,7 @@ class ReceiverState:
 
     The system's ability to receive the Chaitanya Singularity.
     """
+
     # Is MantraProtocol active? (f > 0)
     is_chanting: bool
 
@@ -370,6 +391,7 @@ class ReceiverState:
 # =============================================================================
 # THE SINGULARITY PROTOCOL - Self-Definition
 # =============================================================================
+
 
 class SingularityProtocol(MahamantraProtocolBase):
     """
@@ -412,6 +434,7 @@ assert _valid, f"SingularityProtocol failed validation: {_violations}"
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def get_years_remaining_in_golden_period() -> int:
     """Get years remaining in the Golden Period (Gaurabda Era)."""

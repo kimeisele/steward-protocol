@@ -33,17 +33,15 @@ __genesis__ = "0xab9f3b21"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.COMPILE_AST,
     name="scan",
-    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)")
+    help_text="Scan and verify system integrity (VYASA's truth - HEAD of PURIFY phase)",
+)
 class ScanCommand(NagaCommandBase):
     """
     Scan command implementation.
@@ -84,10 +82,8 @@ class ScanCommand(NagaCommandBase):
                 idx = args.index("--path")
                 target_path_str = args[idx + 1]
             except (IndexError, ValueError):
-                return self.failure(
-                    "Invalid --path flag. Usage: --path <directory>",
-                    exit_code=1)
-        
+                return self.failure("Invalid --path flag. Usage: --path <directory>", exit_code=1)
+
         target_path = Path(target_path_str).absolute()
         if not target_path.exists():
             return self.failure(f"Path not found: {target_path}", exit_code=1)
@@ -161,15 +157,16 @@ class ScanCommand(NagaCommandBase):
                     ("position", "4"),
                     ("mahajana", "vyasa"),
                     ("total_issues", str(total_issues)),
-                    ("path", str(target_path))))
+                    ("path", str(target_path)),
+                ),
+            )
         except Exception as e:
-            return self.failure(
-                f"Scan failed: {e}",
-                exit_code=1)
+            return self.failure(f"Scan failed: {e}", exit_code=1)
 
     def _find_silent_failures(self, content: str, filepath: any) -> List[Dict]:
         """Find except: pass patterns."""
         import re
+
         issues = []
         lines = content.split("\n")
         for i, line in enumerate(lines, 1):
@@ -180,6 +177,7 @@ class ScanCommand(NagaCommandBase):
     def _find_vfs_bypasses(self, content: str, filepath: any) -> List[Dict]:
         """Find direct open() calls that bypass VFS."""
         import re
+
         issues = []
         if "test" in str(filepath).lower():
             return []
@@ -194,6 +192,7 @@ class ScanCommand(NagaCommandBase):
     def _find_any_types(self, content: str, filepath: any) -> List[Dict]:
         """Find Dict[str, Any] and similar."""
         import re
+
         issues = []
         lines = content.split("\n")
         for i, line in enumerate(lines, 1):
@@ -206,6 +205,7 @@ class ScanCommand(NagaCommandBase):
     def _find_security_issues(self, content: str, filepath: any) -> List[Dict]:
         """Find potential security issues."""
         import re
+
         issues = []
         lines = content.split("\n")
         patterns = [
@@ -223,7 +223,6 @@ class ScanCommand(NagaCommandBase):
                 if re.search(pattern, line):
                     issues.append({"file": str(filepath), "line": i, "type": issue_type, "code": line.strip()})
         return issues
-
 
 
 # Export for direct import
