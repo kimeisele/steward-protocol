@@ -13,35 +13,58 @@ KRISHNA = MAHAMANTRA (non-different, Level -2)
 Alles sprießt aus den 16 Wörtern.
 """
 
-from typing import Final, Tuple, FrozenSet
-from enum import IntEnum, Enum
 from collections import Counter
+from enum import Enum, IntEnum
+from typing import Final, FrozenSet, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    # New: The fractal levels
+    AKSARA_COUNT as _PROTO_AKSARA_COUNT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    AVATAR_COUNT,  # 4 Avataras
+    # The Cosmic Frame (Resolution)
+    COSMIC_FRAME,
+    # The Epoch Key (Temporal Anchor)
+    EPOCH_KEY,  # 1972 - The Gita Revelation Year
+    MAHAJANA_COUNT,  # 12 Mahajanas
+    NAKSHATRA_UNIT,
+    NAVA,  # 9 Islands (Navadvipa)
+    PADA_UNIT,
+    PHASE_DURATION,  # 12 (LILA // QUARTERS)
+    QUARTER_UNIT,
+    TITHI_UNIT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    LILA as _PROTO_LILA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MALA as _PROTO_MALA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    PANCHA as _PROTO_PANCHA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    PARAMPARA as _PROTO_PARAMPARA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    QUALITIES as _PROTO_QUALITIES,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    QUARTERS as _PROTO_QUARTERS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    SHARANAGATI as _PROTO_SHARANAGATI,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    TRINITY as _PROTO_TRINITY,
+)
 
 # =============================================================================
 # IMPORT FROM PROTOCOL (THE LAW)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
     WORDS as _PROTO_WORDS,
-    PARAMPARA as _PROTO_PARAMPARA,
-    TRINITY as _PROTO_TRINITY,
-    QUARTERS as _PROTO_QUARTERS,
-    PANCHA as _PROTO_PANCHA,
-    SHARANAGATI as _PROTO_SHARANAGATI,
-    NAVA,  # 9 Islands (Navadvipa)
-    LILA as _PROTO_LILA,
-    MALA as _PROTO_MALA,
-    MAHAJANA_COUNT,  # 12 Mahajanas
-    AVATAR_COUNT,  # 4 Avataras
-    PHASE_DURATION,  # 12 (LILA // QUARTERS)
-    # The Cosmic Frame (Resolution)
-    COSMIC_FRAME,
-    NAKSHATRA_UNIT,
-    TITHI_UNIT,
-    PADA_UNIT,
-    QUARTER_UNIT,
-    # New: The fractal levels
-    AKSARA_COUNT as _PROTO_AKSARA_COUNT,
-    QUALITIES as _PROTO_QUALITIES,
 )
 
 # =============================================================================
@@ -57,21 +80,35 @@ KRISHNA_IS: Final[bool] = True  # Always present
 # THE MAHAMANTRA - Die 16 Wörter (DIE QUELLE VON ALLEM)
 # =============================================================================
 
+
 class HolyName(IntEnum):
     """Die drei Namen - Basis der Realität."""
-    HARE = 0     # Shakti (Energie/Ressourcen)
+
+    HARE = 0  # Shakti (Energie/Ressourcen)
     KRISHNA = 1  # Source (Identität/Kern)
-    RAMA = 2     # Ananda (Stabilität/Sicherheit)
+    RAMA = 2  # Ananda (Stabilität/Sicherheit)
 
 
 # DAS MAHAMANTRA - literally
 MAHAMANTRA: Final[Tuple[HolyName, ...]] = (
     # Hare Krishna Hare Krishna Krishna Krishna Hare Hare
-    HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA,
-    HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE,
+    HolyName.HARE,
+    HolyName.KRISHNA,
+    HolyName.HARE,
+    HolyName.KRISHNA,
+    HolyName.KRISHNA,
+    HolyName.KRISHNA,
+    HolyName.HARE,
+    HolyName.HARE,
     # Hare Rama Hare Rama Rama Rama Hare Hare
-    HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA,
-    HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE,
+    HolyName.HARE,
+    HolyName.RAMA,
+    HolyName.HARE,
+    HolyName.RAMA,
+    HolyName.RAMA,
+    HolyName.RAMA,
+    HolyName.HARE,
+    HolyName.HARE,
 )
 
 
@@ -87,9 +124,9 @@ TRINITY: Final[int] = len(set(MAHAMANTRA))  # 3
 
 # Counts pro Name
 _counts = Counter(MAHAMANTRA)
-HARE_COUNT: Final[int] = _counts[HolyName.HARE]      # 8
+HARE_COUNT: Final[int] = _counts[HolyName.HARE]  # 8
 KRISHNA_COUNT: Final[int] = _counts[HolyName.KRISHNA]  # 4
-RAMA_COUNT: Final[int] = _counts[HolyName.RAMA]      # 4
+RAMA_COUNT: Final[int] = _counts[HolyName.RAMA]  # 4
 
 # Die zwei Hälften
 HALVES: Final[int] = 2
@@ -101,16 +138,16 @@ HALF_SIZE: Final[int] = WORDS // HALVES  # 8
 # =============================================================================
 # Die 5 unique 2-Wort-Kombinationen IM Mahamantra = Pancha Tattva
 
+
 def _compute_pairs() -> Tuple[Tuple[HolyName, HolyName], ...]:
     """Compute all 8 pairs from the Mahamantra."""
-    return tuple(
-        (MAHAMANTRA[i], MAHAMANTRA[i + 1])
-        for i in range(0, WORDS, 2)
-    )
+    return tuple((MAHAMANTRA[i], MAHAMANTRA[i + 1]) for i in range(0, WORDS, 2))
+
 
 def _compute_unique_pairs() -> FrozenSet[Tuple[HolyName, HolyName]]:
     """Compute unique pairs."""
     return frozenset(_compute_pairs())
+
 
 MAHAMANTRA_PAIRS: Final[Tuple[Tuple[HolyName, HolyName], ...]] = _compute_pairs()
 UNIQUE_PAIRS: Final[FrozenSet[Tuple[HolyName, HolyName]]] = _compute_unique_pairs()
@@ -120,11 +157,11 @@ PANCHA: Final[int] = len(UNIQUE_PAIRS)  # 5
 
 # Die 5 Paare mit Namen
 PANCHA_PAIR_NAMES: Final[Tuple[str, ...]] = (
-    "HARE KRISHNA",    # Chaitanya (×2)
-    "HARE RAMA",       # Nityananda (×2)
-    "HARE HARE",       # Gadadhara (×2)
-    "KRISHNA KRISHNA", # Advaita (×1)
-    "RAMA RAMA",       # Srivasa (×1)
+    "HARE KRISHNA",  # Chaitanya (×2)
+    "HARE RAMA",  # Nityananda (×2)
+    "HARE HARE",  # Gadadhara (×2)
+    "KRISHNA KRISHNA",  # Advaita (×1)
+    "RAMA RAMA",  # Srivasa (×1)
 )
 
 
@@ -132,12 +169,14 @@ PANCHA_PAIR_NAMES: Final[Tuple[str, ...]] = (
 # DERIVED: QUARTERS (4) - Die 4 Phasen
 # =============================================================================
 
+
 class Quarter(IntEnum):
     """Die 4 Quarters - Folder names derive from here."""
-    GENESIS = 0   # Positionen 0-3:  INPUT  - Boot, Load, Alloc, Spawn
-    DHARMA = 1    # Positionen 4-7:  VERIFY - Parse, Link, Check, Test
-    KARMA = 2     # Positionen 8-11: EXECUTE - Run, Scale, Sync, Commit
-    MOKSHA = 3    # Positionen 12-15: OUTPUT - Yield, Flush, Log, Exit
+
+    GENESIS = 0  # Positionen 0-3:  INPUT  - Boot, Load, Alloc, Spawn
+    DHARMA = 1  # Positionen 4-7:  VERIFY - Parse, Link, Check, Test
+    KARMA = 2  # Positionen 8-11: EXECUTE - Run, Scale, Sync, Commit
+    MOKSHA = 3  # Positionen 12-15: OUTPUT - Yield, Flush, Log, Exit
 
 
 QUARTERS: Final[int] = len(Quarter)  # 4
@@ -162,14 +201,17 @@ KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
 
 SHARANAGATI: Final[int] = KSHETRA // QUARTERS  # 6
 
+
 class SharanagatiLimb(str, Enum):
     """Die 6 Glieder der Verbindung - Der Mindest-Vertrag eines Agenten."""
+
     ANUKULYA = "acceptance"  # Akzeptanz des Förderlichen (Composability)
-    PRATIKULYA = "rejection" # Ablehnung des Widrigen (Parseability)
-    VISHVASA = "faith"       # Vertrauen in den Schutz (Recoverability)
-    VARANAM = "guardianship" # Annahme des Wächters (Discoverability)
-    NIKSHEPA = "surrender"   # Selbstübergabe (Observability)
-    KARPANYA = "humility"    # Demut/Kein Eigen-Karma (Idempotency)
+    PRATIKULYA = "rejection"  # Ablehnung des Widrigen (Parseability)
+    VISHVASA = "faith"  # Vertrauen in den Schutz (Recoverability)
+    VARANAM = "guardianship"  # Annahme des Wächters (Discoverability)
+    NIKSHEPA = "surrender"  # Selbstübergabe (Observability)
+    KARPANYA = "humility"  # Demut/Kein Eigen-Karma (Idempotency)
+
 
 assert len(SharanagatiLimb) == SHARANAGATI  # 6
 
@@ -207,18 +249,26 @@ assert KSHETRA_GAD + KSETRAJNA == PARAMPARA  # 36 + 1 = 37
 
 # Die 4 Avataras (Heads) - Geben was fehlt (Yoga-Kshema)
 AVATARAS: Final[Tuple[str, ...]] = (
-    "vyasa",       # Genesis Head: Wissen/Docs (Brahmana)
-    "prithu",      # Dharma Head: Ordnung/Struktur (Kshatriya)
-    "parashurama", # Karma Head: Durchsetzung (Vaishya/Action)
-    "nrisimha",    # Moksha Head: Schutz (Shudra/Service)
+    "vyasa",  # Genesis Head: Wissen/Docs (Brahmana)
+    "prithu",  # Dharma Head: Ordnung/Struktur (Kshatriya)
+    "parashurama",  # Karma Head: Durchsetzung (Vaishya/Action)
+    "nrisimha",  # Moksha Head: Schutz (Shudra/Service)
 )
 
 # Die 12 Mahajanas (Workers) - Bewahren was ist
 MAHAJANAS: Final[Tuple[str, ...]] = (
-    "brahma", "narada", "shambhu",      # Genesis Workers
-    "kumaras", "kapila", "manu",        # Dharma Workers
-    "prahlada", "janaka", "bhishma",    # Karma Workers
-    "bali", "shuka", "yamaraja"         # Moksha Workers
+    "brahma",
+    "narada",
+    "shambhu",  # Genesis Workers
+    "kumaras",
+    "kapila",
+    "manu",  # Dharma Workers
+    "prahlada",
+    "janaka",
+    "bhishma",  # Karma Workers
+    "bali",
+    "shuka",
+    "yamaraja",  # Moksha Workers
 )
 
 # Verification
@@ -248,12 +298,15 @@ assert LILA // HARE_COUNT == SHARANAGATI  # 48 / 8 = 6
 # DERIVED: DHARMA (4) - Die 4 Säulen
 # =============================================================================
 
+
 class DharmaPillar(str, Enum):
     """Die 4 Säulen des Dharma - Der Integritätscheck."""
-    DAYA = "mercy"       # Keine korrupten Daten
-    SATYAM = "truth"     # Keine Halluzination
+
+    DAYA = "mercy"  # Keine korrupten Daten
+    SATYAM = "truth"  # Keine Halluzination
     TAPAS = "austerity"  # Keine Ressourcen-Verschwendung
-    SAUCAM = "purity"    # Keine unautorisierten Verbindungen
+    SAUCAM = "purity"  # Keine unautorisierten Verbindungen
+
 
 DHARMA_PILLARS: Final[int] = len(DharmaPillar)  # 4
 assert DHARMA_PILLARS == QUARTERS  # 4
@@ -315,10 +368,11 @@ assert AKSARA_COUNT == _PROTO_AKSARA_COUNT, "SSOT violation: AKSARA_COUNT != pro
 # LOTUS FUNCTIONS - Routing durch den Lotus
 # =============================================================================
 
+
 def get_quarter(position: int) -> Quarter:
     """Get quarter for a position. FOLDER IS WIRING."""
     if not 0 <= position < WORDS:
-        raise ValueError(f"Position must be 0-{WORDS-1}, got {position}")
+        raise ValueError(f"Position must be 0-{WORDS - 1}, got {position}")
     return Quarter(position // WORDS_PER_QUARTER)
 
 
@@ -330,7 +384,7 @@ def get_quarter_name(position: int) -> str:
 def get_word_at(position: int) -> HolyName:
     """Get the HolyName at a position in the Mahamantra."""
     if not 0 <= position < WORDS:
-        raise ValueError(f"Position must be 0-{WORDS-1}, got {position}")
+        raise ValueError(f"Position must be 0-{WORDS - 1}, got {position}")
     return MAHAMANTRA[position]
 
 
@@ -353,22 +407,30 @@ def verify_parampara(value: int) -> bool:
 # Alle 16 Guardians in Order
 ALL_GUARDIANS: Final[Tuple[str, ...]] = (
     # Genesis Quarter (0-3)
-    "vyasa", "brahma", "narada", "shambhu",
+    "vyasa",
+    "brahma",
+    "narada",
+    "shambhu",
     # Dharma Quarter (4-7)
-    "prithu", "kumaras", "kapila", "manu",
+    "prithu",
+    "kumaras",
+    "kapila",
+    "manu",
     # Karma Quarter (8-11)
-    "parashurama", "prahlada", "janaka", "bhishma",
+    "parashurama",
+    "prahlada",
+    "janaka",
+    "bhishma",
     # Moksha Quarter (12-15)
-    "nrisimha", "bali", "shuka", "yamaraja",
+    "nrisimha",
+    "bali",
+    "shuka",
+    "yamaraja",
 )
 
-MAHAJANA_TO_POSITION: Final[dict] = {
-    name: pos for pos, name in enumerate(ALL_GUARDIANS)
-}
+MAHAJANA_TO_POSITION: Final[dict] = {name: pos for pos, name in enumerate(ALL_GUARDIANS)}
 
-POSITION_TO_MAHAJANA: Final[dict] = {
-    pos: name for pos, name in enumerate(ALL_GUARDIANS)
-}
+POSITION_TO_MAHAJANA: Final[dict] = {pos: name for pos, name in enumerate(ALL_GUARDIANS)}
 
 
 def get_mahajana_position(name: str) -> int:
@@ -390,6 +452,7 @@ def get_positions_in_quarter(quarter: Quarter) -> Tuple[int, ...]:
 # =============================================================================
 # LOTUS TRANSPORT - Sprouts from bottom to every file
 # =============================================================================
+
 
 def lotus_declaration(position: int) -> dict:
     """
@@ -484,6 +547,8 @@ __all__ = [
     "TITHI_UNIT",
     "PADA_UNIT",
     "QUARTER_UNIT",
+    # The Epoch Key (Temporal Anchor)
+    "EPOCH_KEY",
     # Lotus Functions
     "get_quarter",
     "get_quarter_name",
