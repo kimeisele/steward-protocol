@@ -29,7 +29,6 @@ WATERTIGHT:
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -50,18 +49,17 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
-
+from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION, HolyName
 
 # =============================================================================
 # CONSTANTS - The Sacred Numbers (derived from SSOT: byte.py, acintya.py)
 # =============================================================================
 
-PRIME_SIGNATURE: Final[int] = PARAMPARA       # Shcherbak's Arithmetic - The Key (from SSOT)
+PRIME_SIGNATURE: Final[int] = PARAMPARA  # Shcherbak's Arithmetic - The Key (from SSOT)
 MAHA_POSITIONS: Final[int] = MAHAMANTRA_DIMENSION  # 16 words (from SSOT)
-MALA_ROUNDS: Final[int] = 108     # Beads in a mala
-TRINITY: Final[int] = 3           # Hare, Krishna, Rama
+MALA_ROUNDS: Final[int] = 108  # Beads in a mala
+TRINITY: Final[int] = 3  # Hare, Krishna, Rama
 
 # Standard Mahamantra pattern (packed as 2 bits per name)
 # H K H K | K K H H | H R H R | R R H H
@@ -73,18 +71,22 @@ STD_MANTRA_PATTERN: Final[int] = 0b00_00_10_10_10_00_10_00_00_00_01_01_01_00_01_
 # EXCEPTIONS - Spiritual Errors
 # =============================================================================
 
+
 class DissonanceError(ValueError):
     """Raised when spiritual frequency is too low (entropy)."""
+
     pass
 
 
 class TamasBlockError(PermissionError):
     """Raised when TAMAS operation attempted without confirmation."""
+
     pass
 
 
 class ParamparaBreakError(ValueError):
     """Raised when lineage signature is invalid (not % 37 == 0)."""
+
     pass
 
 
@@ -92,23 +94,16 @@ class ParamparaBreakError(ValueError):
 # GUNA - Quality of Service (from BG 14)
 # =============================================================================
 
+
 class Guna(IntEnum):
     """The three modes of material nature + transcendental."""
-    SATTVA = 0   # Safe (read) - ●
-    RAJAS = 1    # Active (write) - ◐
-    TAMAS = 2    # Destroy (needs confirmation) - ○
+
+    SATTVA = 0  # Safe (read) - ●
+    RAJAS = 1  # Active (write) - ◐
+    TAMAS = 2  # Destroy (needs confirmation) - ○
 
 
-# =============================================================================
-# HOLY NAME - The Three Names
-# =============================================================================
-
-class HolyName(IntEnum):
-    """The 3 Holy Names in the Mahamantra (+ VOID for errors)."""
-    HARE = 0     # 00 - Energy/Shakti
-    KRISHNA = 1  # 01 - Source (always present)
-    RAMA = 2     # 10 - Pleasure/Safety
-    VOID = 3     # 11 - Error state (Maya)
+# HolyName imported from byte.py (SSOT) - includes VOID for binary encoding
 
 
 # =============================================================================
@@ -127,10 +122,11 @@ class Bhoga(Generic[T]):
     __slots__ for memory efficiency.
     frozen for immutability (offering cannot change).
     """
-    operation: str          # Command/operation name
-    payload: T              # The actual data
-    position: int           # Mahamantra position (0-15)
-    guna: Guna              # Quality of service
+
+    operation: str  # Command/operation name
+    payload: T  # The actual data
+    position: int  # Mahamantra position (0-15)
+    guna: Guna  # Quality of service
     timestamp: float = field(default_factory=time.time)
 
     @property
@@ -147,14 +143,15 @@ class Prasadam(Generic[R]):
     __slots__ for memory efficiency.
     frozen for immutability (blessing is eternal).
     """
+
     success: bool
     result: Optional[R]
     error: Optional[str]
-    position: int           # Which mahajana processed
-    guardian: str           # Guardian name
-    guna: Guna              # Quality applied
-    parampara_valid: bool   # Lineage verified (% 37)
-    coherence: float        # Spiritual frequency (0.0-1.0)
+    position: int  # Which mahajana processed
+    guardian: str  # Guardian name
+    guna: Guna  # Quality applied
+    parampara_valid: bool  # Lineage verified (% 37)
+    coherence: float  # Spiritual frequency (0.0-1.0)
     timestamp: float = field(default_factory=time.time)
 
     @classmethod
@@ -205,6 +202,7 @@ class Prasadam(Generic[R]):
 # MANTRA BYTE - O(1) Packed Representation
 # =============================================================================
 
+
 class MantraByte:
     """
     True Optimized Fractal Container.
@@ -213,6 +211,7 @@ class MantraByte:
     Bitwise operations for O(1) coherence check.
     Generator for lazy iteration (no list allocation).
     """
+
     __slots__ = ("_packed", "_len")
 
     def __init__(self, packed_val: int = STD_MANTRA_PATTERN, length: int = MAHA_POSITIONS):
@@ -288,6 +287,7 @@ class MantraByte:
 # YAJNA PROTOCOL - The Sacrifice Interface
 # =============================================================================
 
+
 @runtime_checkable
 class YajnaProtocol(Protocol[T, R]):
     """
@@ -335,6 +335,7 @@ class YajnaProtocol(Protocol[T, R]):
 # YAJNA - The Implementation
 # =============================================================================
 
+
 class Yajna(Generic[T, R]):
     """
     The Sacrifice - Core Implementation.
@@ -348,6 +349,7 @@ class Yajna(Generic[T, R]):
 
     __slots__ for memory efficiency.
     """
+
     __slots__ = ("_mantra", "_position", "_confirmed_tamas")
 
     def __init__(self) -> None:
@@ -403,21 +405,16 @@ class Yajna(Generic[T, R]):
         # 1. VALIDATE PARAMPARA (lineage)
         parampara_vector = (bhoga.position + 1) * PRIME_SIGNATURE
         if not self._mantra.validate_parampara(parampara_vector):
-            raise ParamparaBreakError(
-                f"Position {bhoga.position} has invalid parampara"
-            )
+            raise ParamparaBreakError(f"Position {bhoga.position} has invalid parampara")
 
         # 2. CHECK COHERENCE (spiritual frequency)
         if self.coherence < 0.5:
-            raise DissonanceError(
-                f"Coherence too low: {self.coherence:.2f}. Chant more."
-            )
+            raise DissonanceError(f"Coherence too low: {self.coherence:.2f}. Chant more.")
 
         # 3. CHECK TAMAS PERMISSION
         if bhoga.guna == Guna.TAMAS and not self._confirmed_tamas:
             raise TamasBlockError(
-                f"TAMAS operation '{bhoga.operation}' requires confirmation. "
-                f"Call confirm_tamas() first."
+                f"TAMAS operation '{bhoga.operation}' requires confirmation. Call confirm_tamas() first."
             )
 
         # 4. CHANT (heartbeat)
@@ -435,10 +432,22 @@ class Yajna(Generic[T, R]):
 
             # Get guardian name from position
             guardians = [
-                "prithu", "brahma", "narada", "shambhu",
-                "vyasa", "kumaras", "kapila", "manu",
-                "parashurama", "prahlada", "janaka", "bhishma",
-                "nrisimha", "bali", "shuka", "yamaraja",
+                "prithu",
+                "brahma",
+                "narada",
+                "shambhu",
+                "vyasa",
+                "kumaras",
+                "kapila",
+                "manu",
+                "parashurama",
+                "prahlada",
+                "janaka",
+                "bhishma",
+                "nrisimha",
+                "bali",
+                "shuka",
+                "yamaraja",
             ]
             guardian = guardians[bhoga.position % MAHA_POSITIONS]
 

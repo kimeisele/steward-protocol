@@ -111,7 +111,7 @@ def test_ananta_execution():
 
     assert result is True
     assert len(processor.sequence_log) == 16
-    assert processor.sequence_log == MAHAMANTRA_SEQUENCE
+    assert tuple(processor.sequence_log) == MAHAMANTRA_SEQUENCE
     print("✅ Ananta Processor danced perfectly to the Mantra.")
 
 
