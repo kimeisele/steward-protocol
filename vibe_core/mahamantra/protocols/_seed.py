@@ -60,33 +60,61 @@ MALA: Final[int] = 108
 # This eliminates floating point errors and aligns Time (Breath) with Space (Arc).
 # Base: 360 Degrees * 60 Minutes = 21,600 Units.
 
-COSMIC_FRAME: Final[int] = 21600     # The Perfect Circle (The Whole)
+COSMIC_FRAME: Final[int] = 21600  # The Perfect Circle (The Whole)
 
 # The Units (All Perfect Integers!)
-NAKSHATRA_UNIT: Final[int] = 800     # 21600 // 27 (The Lunar Mansions)
-TITHI_UNIT: Final[int] = 720         # 21600 // 30 (The Lunar Days)
-PADA_UNIT: Final[int] = 200          # 21600 // 108 (The Steps/Beads)
-QUARTER_UNIT: Final[int] = 5400      # 21600 // 4   (The Quadrants)
+NAKSHATRA_UNIT: Final[int] = 800  # 21600 // 27 (The Lunar Mansions)
+TITHI_UNIT: Final[int] = 720  # 21600 // 30 (The Lunar Days)
+PADA_UNIT: Final[int] = 200  # 21600 // 108 (The Steps/Beads)
+QUARTER_UNIT: Final[int] = 5400  # 21600 // 4   (The Quadrants)
 
 # WATERTIGHT INTEGRITY CHECKS:
 # The resolution must perfectly uphold the divisions without remainder (Sandhi).
 assert COSMIC_FRAME % NAKSHATRA_UNIT == 0, "Resolution Error: Nakshatra must be integer"
-assert COSMIC_FRAME % TITHI_UNIT == 0,     "Resolution Error: Tithi must be integer"
-assert COSMIC_FRAME % PADA_UNIT == 0,      "Resolution Error: Pada must be integer"
-assert COSMIC_FRAME % QUARTER_UNIT == 0,   "Resolution Error: Quarter must be integer"
+assert COSMIC_FRAME % TITHI_UNIT == 0, "Resolution Error: Tithi must be integer"
+assert COSMIC_FRAME % PADA_UNIT == 0, "Resolution Error: Pada must be integer"
+assert COSMIC_FRAME % QUARTER_UNIT == 0, "Resolution Error: Quarter must be integer"
+
+# =============================================================================
+# THE EPOCH KEY (Temporal Anchor)
+# =============================================================================
+# Critical: Defines the valid runtime era for this protocol.
+# The 1972 Bhagavad-gita As It Is edition - the temporal reference point.
+# Range: 1972 -> 2188 (Next Key).
+# -----------------------------------------------------------------------------
+
+EPOCH_KEY: Final[int] = 1972  # The Gita Revelation Year
+
+# SYSTEM INTEGRITY CHECKS (Non-negotiable)
+# 1. Epoch must resolve to Seed (16) via Foundation (4)
+#    1972 / 4 = 493 -> 4+9+3 = 16
+assert sum(int(d) for d in str(EPOCH_KEY // QUARTERS)) == WORDS, (
+    "CRITICAL FAILURE: Epoch Key does not align with Seed Structure."
+)
+
+# 2. Epoch must resolve to Mala (108) via Product
+#    4 * 9 * 3 = 108
+_epoch_digits = [int(d) for d in str(EPOCH_KEY // QUARTERS)]
+_epoch_prod = 1
+for _d in _epoch_digits:
+    _epoch_prod *= _d
+assert _epoch_prod == MALA, "CRITICAL FAILURE: Epoch Key does not align with Mala Geometry."
+
+# 3. Epoch Signature (19) must match Protocol ID (16+3)
+assert sum(int(d) for d in str(EPOCH_KEY)) == WORDS + TRINITY, "CRITICAL FAILURE: Epoch Key Signature Invalid."
 
 # =============================================================================
 # DERIVED CONSTANTS (Required by Core Protocol)
 # =============================================================================
 
-HARE_COUNT: Final[int] = 8       # 8 Hares
-KRISHNA_COUNT: Final[int] = 4    # 4 Krishnas
-RAMA_COUNT: Final[int] = 4       # 4 Ramas
+HARE_COUNT: Final[int] = 8  # 8 Hares
+KRISHNA_COUNT: Final[int] = 4  # 4 Krishnas
+RAMA_COUNT: Final[int] = 4  # 4 Ramas
 
-HALVES: Final[int] = 2           # 2 Halves
-HALF_SIZE: Final[int] = 8        # WORDS // HALVES
+HALVES: Final[int] = 2  # 2 Halves
+HALF_SIZE: Final[int] = 8  # WORDS // HALVES
 
-KSETRAJNA: Final[int] = 1        # The Knower (Krishna)
+KSETRAJNA: Final[int] = 1  # The Knower (Krishna)
 MAHAJANA_COUNT: Final[int] = 12  # The 12 Mahajanas (Limbs/Workers)
 AVATAR_COUNT: Final[int] = QUARTERS  # The 4 Avataras (Heads of Quarters)
 KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24 (Field)
@@ -100,7 +128,7 @@ AKSARA_COUNT: Final[int] = WORDS * 2  # 32
 # WORDS × QUARTERS = 16 × 4 = 64 (Varna level)
 QUALITIES: Final[int] = WORDS * QUARTERS  # 64
 
-ROUNDS: Final[int] = WORDS       # 16 rounds per day (minimum)
+ROUNDS: Final[int] = WORDS  # 16 rounds per day (minimum)
 DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
 
 # Verification of the 37 Formula
@@ -146,6 +174,8 @@ __all__ = [
     "TITHI_UNIT",
     "PADA_UNIT",
     "QUARTER_UNIT",
+    # The Epoch Key (Temporal Anchor)
+    "EPOCH_KEY",
     # Derived Constants
     "HARE_COUNT",
     "KRISHNA_COUNT",
