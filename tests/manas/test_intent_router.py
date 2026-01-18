@@ -120,10 +120,14 @@ class TestIntentRouterSafety:
         try:
             if hasattr(router, "gate"):
                 result = router.gate(intent)
+                # REAL ASSERTION: gate should return a decision
+                assert result is not None, "gate() must return a result, not None"
             elif hasattr(router, "route"):
                 result = router.route(intent)
-            # If we get here, router handled it gracefully
-            assert True
+                # REAL ASSERTION: route should return something
+                assert result is not None, "route() must return a result, not None"
+            else:
+                pytest.fail("Router has neither gate() nor route() method")
         except Exception as e:
             # Router should never crash
             pytest.fail(f"Router crashed on unknown intent: {e}")
