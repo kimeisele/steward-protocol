@@ -47,8 +47,8 @@ from uuid import uuid4
 from vibe_core.mahamantra.substrate.mahajana import Mahajana
 from vibe_core.protocols.mahajanas.narada.events import (
     EventBusProtocol,
-    EventBusStats,
     EventBusState,
+    EventBusStats,
     SubscriberInfo,
 )
 
@@ -62,6 +62,7 @@ logger = logging.getLogger("EVENT_BUS")
 
 class MetricsEntry(TypedDict):
     """Internal metrics for a single callback. WATERTIGHT - no Any!"""
+
     events_sent: int
     events_completed: int
     last_complete_time: float
@@ -70,6 +71,7 @@ class MetricsEntry(TypedDict):
 
 class ZombieInfo(TypedDict):
     """Info about a zombie subscriber. WATERTIGHT - no Any!"""
+
     callback_id: str
     events_sent: int
     events_completed: int
@@ -79,6 +81,7 @@ class ZombieInfo(TypedDict):
 
 class StalledInfo(TypedDict):
     """Info about a stalled handler. WATERTIGHT - no Any!"""
+
     callback_id: str
     seconds_since_complete: float
     events_pending: int
@@ -87,6 +90,7 @@ class StalledInfo(TypedDict):
 
 class RateLimitStats(TypedDict):
     """Rate limiting statistics. WATERTIGHT - no Any!"""
+
     allowed: int
     blocked: int
     active_buckets: int
@@ -95,6 +99,7 @@ class RateLimitStats(TypedDict):
 
 class EventDetails(TypedDict, total=False):
     """Event details dictionary. WATERTIGHT - no Any!"""
+
     message: str
     target_id: str
     syscall_type: str
@@ -104,12 +109,14 @@ class EventDetails(TypedDict, total=False):
 
 class SubscriberCounts(TypedDict):
     """Subscriber counts by category. WATERTIGHT - no Any!"""
+
     global_count: int
     by_type: Dict[str, int]
 
 
 class SubscriberHealth(TypedDict):
     """Subscriber health metrics. WATERTIGHT - no Any!"""
+
     total_tracked: int
     zombies_detected: int
     stalled_detected: int
@@ -117,6 +124,7 @@ class SubscriberHealth(TypedDict):
 
 class EventBusStatus(TypedDict):
     """Full event bus status. WATERTIGHT - no Any!"""
+
     total_events: int
     dropped_events: int
     type_counts: Dict[str, int]
@@ -793,7 +801,8 @@ def get_event_bus() -> EventBus:
         # OPUS-311: Auto-register so get_event_bus_safe() also finds it
         try:
             from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.event import EventBusProtocol
+            # NOTE: EventBusProtocol is already module-level imported (line 49)
+            # DO NOT re-import here - causes UnboundLocalError on line 784
 
             ServiceRegistry.register(EventBusProtocol, _event_bus_instance)
         except ImportError as e:
