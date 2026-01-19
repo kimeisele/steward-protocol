@@ -10,7 +10,7 @@
     "decisions_by_action": {}
   },
   "dispatched": {
-    "5ea9636cd79cf6eb": "2026-01-11T23:36:26.695424"
+    "5ea9636cd79cf6eb": "2026-01-19T16:05:43.712382"
   },
   "config": {
     "enabled": true,
@@ -20,5 +20,5 @@
     "auto_dispatch": false,
     "log_decisions": true
   },
-  "snapshot_at": "2026-01-11T23:36:26.695451"
+  "snapshot_at": "2026-01-19T16:05:43.712417"
 }

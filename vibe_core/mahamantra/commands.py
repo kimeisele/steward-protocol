@@ -274,4 +274,104 @@ def cli_listen(
     )
 
 
-__all__ = ["cli_chant", "ChantResult", "cli_listen", "ListenResult", "EventEntry"]
+# =============================================================================
+# RESOLVE - Mahajana Lookup (Vandanam - Praying/Requesting)
+# =============================================================================
+
+
+class ResolveResult(TypedDict):
+    """Typed result for cli_resolve command (VANDANAM - Praying)."""
+    success: bool
+    bhakti: str  # NavaBhakti.VANDANAM
+    name: str
+    position: int
+    aliases: tuple  # Tuple[str, ...]
+    description: str
+    quarter: str
+
+
+def cli_resolve(
+    name: str,
+    json: bool = False,
+) -> ResolveResult:
+    """
+    CLI Entry Point for Resolve command.
+
+    VANDANAM (Praying) - Humbly requesting knowledge.
+    "Who is this Mahajana? What is their position?"
+
+    Args:
+        name: Mahajana name, alias, or position (0-15)
+        json: Output as JSON
+
+    Returns:
+        ResolveResult with mahajana details.
+    """
+    # SSOT imports from seed.py
+    from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
+    # Core logic from scanner.py (Separation of Concerns)
+    from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
+
+    try:
+        alias = resolve_mahajana(name)
+        quarter = get_quarter_name(alias.position)
+
+        result = ResolveResult(
+            success=True,
+            bhakti=NavaBhakti.VANDANAM.value,
+            name=alias.name,
+            position=alias.position,
+            aliases=alias.aliases,
+            description=alias.description,
+            quarter=quarter,
+        )
+
+        if not json:
+            print("=" * 60)
+            print(f"MAHAMANTRA RESOLVE - Vandanam (query={name})")
+            print("=" * 60)
+            print(f"  Name:        {alias.name}")
+            print(f"  Position:    {alias.position}")
+            print(f"  Quarter:     {quarter.upper()}")
+            print(f"  Description: {alias.description}")
+            print(f"  Aliases:     {', '.join(alias.aliases)}")
+            print("-" * 60)
+            # Parampara context (circular: pos 0 wraps to pos 15)
+            prev_pos = (alias.position - 1) % 16
+            next_pos = (alias.position + 1) % 16
+            print(f"  Parampara:   ...{ALL_GUARDIANS[prev_pos]} -> [{alias.name}] -> {ALL_GUARDIANS[next_pos]}...")
+            print("=" * 60)
+
+        return result
+
+    except ValueError as e:
+        result = ResolveResult(
+            success=False,
+            bhakti=NavaBhakti.VANDANAM.value,
+            name=name,
+            position=-1,
+            aliases=(),
+            description=str(e),
+            quarter="unknown",
+        )
+
+        if not json:
+            print("=" * 60)
+            print(f"MAHAMANTRA RESOLVE - Vandanam (query={name})")
+            print("=" * 60)
+            print(f"  ERROR: {e}")
+            print("-" * 60)
+            print("  Valid inputs:")
+            print("    - Sanskrit name: brahma, narada, vyasa, ...")
+            print("    - English alias: creator, messenger, boot, ...")
+            print("    - Position: 0-15")
+            print("=" * 60)
+
+        return result
+
+
+__all__ = [
+    "cli_chant", "ChantResult",
+    "cli_listen", "ListenResult", "EventEntry",
+    "cli_resolve", "ResolveResult",
+]
