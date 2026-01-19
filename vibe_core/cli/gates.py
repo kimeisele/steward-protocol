@@ -235,13 +235,15 @@ def execute_gate(
     The position IS the truth - from byte.py/mantra structure.
     No hashing needed - direct routing via mahamantra.
     """
-    # Get protocol module directly from mahamantra (THE SOURCE OF TRUTH)
+    # Get protocol module directly from mahajana path (THE SOURCE OF TRUTH)
     try:
-        from vibe_core.mahamantra import mahamantra
+        import importlib
 
-        # Get null implementation from mahamantra
-        module = mahamantra.mod[position]
-        guardian_name = mahamantra[position].guardian.value
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
+        # Get guardian name from position and load module
+        guardian_name = ALL_GUARDIANS[position]
+        module = importlib.import_module(f"vibe_core.protocols.mahajanas.{guardian_name}")
 
         # Find Null class
         null_class_name = f"Null{guardian_name.capitalize()}"
