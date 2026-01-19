@@ -265,6 +265,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         """Internal ledger access (for tests)."""
         return self.__ledger
 
+    @property
+    def _capability_registry(self) -> CapabilityRegistry:
+        """Capability registry access (delegated to Brahma)."""
+        return self.brahma._capability_registry
+
     def bind_genes(self, gene_names: List[str]) -> bool:
         return self.brahma.register_capabilities("kernel", gene_names) is None
 
