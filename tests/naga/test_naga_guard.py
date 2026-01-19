@@ -54,6 +54,8 @@ class MockSesha:
     def __init__(self):
         self._ledger = MagicMock()
         self._ledger.record_event = MagicMock()
+        # Plugin calls sesha.record_event(), not sesha._ledger.record_event()
+        self.record_event = MagicMock()
 
 
 class MockKernel:
@@ -297,7 +299,7 @@ class TestToolExecutedHook:
         )
 
         assert plugin._stats.audit_events == 1
-        sesha._ledger.record_event.assert_called_once()
+        sesha.record_event.assert_called_once()
 
 
 class TestFailOpenBehavior:

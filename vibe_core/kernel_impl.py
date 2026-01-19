@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.boot_mode import BootMode
+    from vibe_core.naga import NagaOrchestrator
     from vibe_core.phoenix import PhoenixConfig
     from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
@@ -219,7 +220,32 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         from vibe_core.lineage import LineageChain
         self._lineage: LineageChain = LineageChain()
 
-        # 7. BOOTSTRAP
+        # 7. NAGA FEDERATION (Level -1 Foundation) - The Invisible Guardians
+        # NAGA lives IN the kernel, not as a plugin. Uses kernel.ledger (PUBLIC).
+        self._naga: Optional["NagaOrchestrator"] = None
+        if not test_mode:
+            try:
+                from vibe_core.naga import NagaOrchestrator
+                from vibe_core.services.correction_dispatcher import (
+                    BasicCorrectionDispatcher,
+                    BasicCorrectionOrchestrator,
+                )
+
+                # Create correction infrastructure
+                dispatcher = BasicCorrectionDispatcher()
+                correction_orchestrator = BasicCorrectionOrchestrator(dispatcher=dispatcher)
+
+                # Bootstrap NAGA with kernel's ledger (PUBLIC property)
+                self._naga = NagaOrchestrator.bootstrap(
+                    ledger=self.ledger,  # PUBLIC, not __ledger
+                    correction_orchestrator=correction_orchestrator,
+                )
+                logger.info(f"🐍 NAGA Federation active - identity: {self._naga._identity.fingerprint}")
+            except Exception as e:
+                logger.warning(f"🐍 NAGA Federation failed to bootstrap: {e}")
+                # Non-fatal - kernel works without NAGA
+
+        # 8. BOOTSTRAP
         if load_plugins:
             self.brahma.bootstrap(self, self._config)
 
@@ -454,6 +480,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def lineage(self):
         """Get the Parampara lineage chain. KernelProtocol requirement."""
         return self._lineage
+
+    @property
+    def naga(self):
+        """Get the NAGA Federation. KernelProtocol requirement."""
+        return self._naga
 
     def register_cognitive(self, cognitive) -> None:
         """Register a cognitive plugin. KernelProtocol requirement."""

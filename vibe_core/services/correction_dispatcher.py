@@ -50,7 +50,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 from vibe_core.protocols.correction import (
     CorrectionDispatcherProtocol,
@@ -165,12 +165,19 @@ class BasicCorrectionDispatcher:
 
     def register_handler(
         self,
-        source: DriftSource,
+        source: Union[DriftSource, str],
         handler: CorrectionHandler,
         handler_id: str = "",
         priority: int = 0,
     ) -> None:
         """Register a correction handler."""
+        # Handle string input (legacy NAGA bootloader compatibility)
+        if isinstance(source, str):
+            try:
+                source = DriftSource(source)
+            except ValueError:
+                # Use STATE as default for NAGA services
+                source = DriftSource.STATE
         if not handler_id:
             handler_id = f"{source.value}_handler_{uuid.uuid4().hex[:8]}"
 

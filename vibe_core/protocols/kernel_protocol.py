@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from vibe_core.protocols.event import EventBusProtocol
     from vibe_core.protocols.ledger import VibeLedger
     from vibe_core.protocols.manifestation import ManifestationProtocol
+    from vibe_core.protocols.naga import NagaFederationProtocol
     from vibe_core.protocols.state import PrakritiProtocol
     from vibe_core.scheduling import Task
 
@@ -253,6 +254,17 @@ class KernelProtocol(Protocol):
     @property
     def lineage(self) -> "LineageChain":
         """Get the Parampara lineage chain."""
+        ...
+
+    @property
+    def naga(self) -> Optional["NagaFederationProtocol"]:
+        """
+        Get the NAGA Federation (Level -1 Foundation).
+
+        The Invisible Guardians - observation, security, audit.
+        NAGA lives IN the kernel, not as a plugin.
+        Returns None in test mode or if NAGA is disabled.
+        """
         ...
 
     # =========================================================================
