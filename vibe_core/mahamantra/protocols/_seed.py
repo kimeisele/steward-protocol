@@ -76,6 +76,34 @@ assert COSMIC_FRAME % PADA_UNIT == 0, "Resolution Error: Pada must be integer"
 assert COSMIC_FRAME % QUARTER_UNIT == 0, "Resolution Error: Quarter must be integer"
 
 # =============================================================================
+# THE JIVA (The Soul's Portion - Part and Parcel of Krishna)
+# =============================================================================
+# "mamaivāṁśo jīva-loke jīva-bhūtaḥ sanātanaḥ" (BG 15.7)
+# "The living entities are My eternal fragmental parts."
+#
+# Bhakti-rasamrita-sindhu: Jiva possesses 50 qualities in MINUTE quantity
+# (out of Krishna's 64). The 50 is the COUNT of qualities, not the magnitude.
+# Krishna has 64 qualities in FULL, Jiva has 50 in minute.
+#
+# DERIVATION (not hardcoded!):
+# JIVA_CYCLE = MALA × QUARTERS = 108 × 4 = 432 (The Harmonic Frequency)
+# JIVA_QUALITIES = COSMIC_FRAME / JIVA_CYCLE = 21600 / 432 = 50
+#
+# The 432 is the cosmic frequency, verified multiple ways:
+# - MALA × QUARTERS = 108 × 4 = 432
+# - LILA × NAVA = 48 × 9 = 432
+# - WORDS × 27 = 16 × 27 = 432 (Nakshatra connection: 432/16 = 27)
+# -----------------------------------------------------------------------------
+
+JIVA_CYCLE: Final[int] = MALA * QUARTERS  # 108 × 4 = 432
+JIVA_QUALITIES: Final[int] = COSMIC_FRAME // JIVA_CYCLE  # 21600 / 432 = 50
+
+# WATERTIGHT INTEGRITY CHECKS:
+assert COSMIC_FRAME % JIVA_CYCLE == 0, "Resolution Error: Jiva must divide cosmic frame evenly"
+assert JIVA_QUALITIES == 50, "Derivation Error: Jiva qualities must be 50"
+assert JIVA_CYCLE == LILA * NAVA, "Integrity Error: JIVA_CYCLE must equal LILA × NAVA (48 × 9)"
+
+# =============================================================================
 # THE EPOCH KEY (Temporal Anchor)
 # =============================================================================
 # Critical: Defines the valid runtime era for this protocol.
@@ -185,6 +213,9 @@ __all__ = [
     "TITHI_UNIT",
     "PADA_UNIT",
     "QUARTER_UNIT",
+    # The Jiva (Part and Parcel of Krishna)
+    "JIVA_CYCLE",
+    "JIVA_QUALITIES",
     # The Epoch Key (Temporal Anchor)
     "EPOCH_KEY",
     # Derived Constants
