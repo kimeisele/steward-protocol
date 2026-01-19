@@ -109,4 +109,163 @@ def cli_chant(
     )
 
 
-__all__ = ["cli_chant", "ChantResult"]
+# =============================================================================
+# LISTEN - Event Visibility (Shravanam before Kirtanam)
+# =============================================================================
+
+
+class EventEntry(TypedDict, total=False):
+    """Single event entry from any source."""
+    timestamp: str
+    source: str
+    severity: str
+    message: str
+    file_path: str
+    rule_id: str
+    syscall_type: str
+    result: str
+
+
+class ListenResult(TypedDict):
+    """Typed result for cli_listen command."""
+    success: bool
+    source: str
+    total_entries: int
+    filtered_entries: int
+    entries: List[EventEntry]
+
+
+def cli_listen(
+    source: str = "all",
+    tail: int = 10,
+    severity: str = "",
+    json: bool = False,
+) -> ListenResult:
+    """
+    CLI Entry Point for Listen command.
+
+    SHRAVANAM (Hearing) - The first process of devotional service.
+    Before you chant, you must hear.
+
+    Reads from:
+    - violations.jsonl (Watchman code violations)
+    - syscalls.jsonl (System calls log)
+
+    Args:
+        source: Event source (violations, syscalls, all)
+        tail: Number of entries to show (default: 10)
+        severity: Filter by severity (CRITICAL, HIGH, MEDIUM, LOW)
+        json: Output as JSON
+
+    Returns:
+        ListenResult with event entries.
+    """
+    import json as json_module
+    from pathlib import Path
+
+    # JSONL file locations
+    vibe_state = Path(".vibe/state")
+    sources_map = {
+        "violations": vibe_state / "ouroboros" / "violations.jsonl",
+        "syscalls": vibe_state / "plugins" / "opus_assistant" / "syscalls.jsonl",
+    }
+
+    entries: List[EventEntry] = []
+
+    # Determine which sources to read
+    if source == "all":
+        sources_to_read = list(sources_map.keys())
+    elif source in sources_map:
+        sources_to_read = [source]
+    else:
+        sources_to_read = list(sources_map.keys())
+
+    # Read from each source
+    for src_name in sources_to_read:
+        src_path = sources_map[src_name]
+        if not src_path.exists():
+            continue
+
+        try:
+            with open(src_path, "r") as f:
+                lines = f.readlines()
+
+            # Parse JSONL
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    data = json_module.loads(line)
+
+                    # Normalize to EventEntry format
+                    entry: EventEntry = {
+                        "source": src_name,
+                        "timestamp": data.get("ingested_at") or data.get("timestamp", ""),
+                    }
+
+                    if src_name == "violations":
+                        entry["severity"] = data.get("severity", "")
+                        entry["message"] = data.get("message", "")
+                        entry["file_path"] = data.get("file_path", "")
+                        entry["rule_id"] = data.get("rule_id", "")
+                    elif src_name == "syscalls":
+                        entry["syscall_type"] = data.get("syscall_type", "")
+                        entry["result"] = data.get("result", "")
+                        entry["message"] = data.get("intent", "")
+
+                    entries.append(entry)
+                except json_module.JSONDecodeError:
+                    continue
+        except Exception:
+            continue
+
+    total_entries = len(entries)
+
+    # Filter by severity if specified
+    if severity:
+        severity_upper = severity.upper()
+        entries = [e for e in entries if e.get("severity", "").upper() == severity_upper]
+
+    # Sort by timestamp (newest first) and take tail
+    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+    entries = entries[:tail]
+
+    # Output
+    if not json:
+        print("=" * 70)
+        print(f"MAHAMANTRA LISTEN - Shravanam (source={source}, tail={tail})")
+        print("=" * 70)
+
+        if not entries:
+            print("No entries found.")
+        else:
+            for entry in entries:
+                src = entry.get("source", "?")[:4]
+                ts = entry.get("timestamp", "")[:19]
+                sev = entry.get("severity", "")
+                msg = entry.get("message", "")[:50]
+
+                if sev:
+                    sev_symbol = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}.get(sev, "⚪")
+                    print(f"[{src}] {ts} {sev_symbol} {sev:8s} | {msg}")
+                else:
+                    syscall = entry.get("syscall_type", "")
+                    result = entry.get("result", "")
+                    result_symbol = "✓" if result == "SUCCESS" else "✗"
+                    print(f"[{src}] {ts} {result_symbol} {syscall:20s} | {msg}")
+
+        print("-" * 70)
+        print(f"Total: {total_entries} | Shown: {len(entries)}")
+        print("=" * 70)
+
+    return ListenResult(
+        success=True,
+        source=source,
+        total_entries=total_entries,
+        filtered_entries=len(entries),
+        entries=entries,
+    )
+
+
+__all__ = ["cli_chant", "ChantResult", "cli_listen", "ListenResult", "EventEntry"]
