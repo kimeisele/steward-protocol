@@ -33,10 +33,21 @@ from vibe_core.naga.ouroboros import NagaOuroboros
 from vibe_core.naga.services.chitragupta import ChitraguptaService
 from vibe_core.naga.services.kaliya import KaliyaService
 from vibe_core.naga.services.karkotaka import KarkotakaService
+from vibe_core.naga.services.narada import NaradaService
 from vibe_core.naga.services.prahlad.service import PrahladService
 from vibe_core.naga.services.sesha import SeshaService
 from vibe_core.naga.services.takshaka import TakshakaService
 from vibe_core.naga.services.vasuki import VasukiService
+
+# Protocols (for ServiceRegistry binding)
+from vibe_core.protocols.naga import (
+    ChitraguptaProtocol,
+    KaliyaProtocol,
+    NaradaProtocol,
+    SeshaProtocol,
+    TakshakaProtocol,
+    VasukiProtocol,
+)
 from vibe_core.phoenix.sections.naga.section_main import NagaConfig
 from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
 from vibe_core.protocols.identity import IdentityProtocol, KeyStoreProtocol
@@ -206,6 +217,14 @@ class NagaBootloader:
             if correction_orchestrator:
                 correction_orchestrator.dispatcher.register_handler("chitragupta", chitragupta)
 
+        # Narada (Observer - The Cosmic Journalist)
+        # NOTE: Narada is GOVERNANCE, not Infrastructure - no CorrectionHandler
+        narada = None
+        if getattr(config, "narada_enabled", True):
+            narada = NaradaService(cortex=cortex, identity=identity)
+            registry.register(narada, force=True)
+            logger.info("🎵 NARADA activated - The Observer sees all")
+
         # Prahlad (Resilience)
         prahlad = None
         if config.prahlad.enabled:
@@ -243,6 +262,24 @@ class NagaBootloader:
                 sesha=sesha, takshaka=takshaka, enabled=config.commit_watcher.enabled, config=config.commit_watcher
             )
 
+        # 4.5 PROTOCOL REGISTRATION (ServiceRegistry Binding)
+        # ---------------------------------------------------
+        # NagaProxy._resolve_nagas() needs Protocol-keyed services.
+        # Without this, observations are created but NOT routed to NAGA services.
+        if sesha:
+            ServiceRegistry.register(SeshaProtocol, sesha)
+        if takshaka:
+            ServiceRegistry.register(TakshakaProtocol, takshaka)
+        if vasuki:
+            ServiceRegistry.register(VasukiProtocol, vasuki)
+        if kaliya:
+            ServiceRegistry.register(KaliyaProtocol, kaliya)
+        if chitragupta:
+            ServiceRegistry.register(ChitraguptaProtocol, chitragupta)
+        if narada:
+            ServiceRegistry.register(NaradaProtocol, narada)
+        logger.info("🐍 BRAHMA: Protocol bindings complete - NAGA services observable")
+
         # 5. Assemble Kernel
         kernel = NagaKernel(
             identity=identity,
@@ -253,6 +290,7 @@ class NagaBootloader:
             karkotaka=karkotaka,
             kaliya=kaliya,
             chitragupta=chitragupta,
+            narada=narada,
             cortex=cortex,
             ouroboros=ouroboros,
             flood_manager=flood,

@@ -97,6 +97,10 @@ class NagaOrchestrator:
         orchestrator._run_boot_integrity_check(config)
         orchestrator._generate_boot_matrix(config)
 
+        # 5. Register in ServiceRegistry for protocol-based access
+        from vibe_core.di import ServiceRegistry
+        ServiceRegistry.register(NagaFederationProtocol, orchestrator)
+
         sys.stderr.write(">>> BOOTSTRAP: Operation Trimurti Complete. Vishnu reigns.\n")
         return orchestrator
 
@@ -129,6 +133,10 @@ class NagaOrchestrator:
     @property
     def _chitragupta(self) -> Optional["ChitraguptaService"]:
         return self._kernel.chitragupta if self._kernel else None
+
+    @property
+    def _narada(self) -> Optional[Any]:
+        return self._kernel.narada if self._kernel else None
 
     @property
     def _cortex(self) -> Optional["NagaCortex"]:
