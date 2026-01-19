@@ -169,10 +169,12 @@ def cli_listen(
     from pathlib import Path
 
     # JSONL file locations
-    vibe_state = Path(".vibe/state")
+    # NOTE: Violations are written to data/ledger/ by watchdog_tool.py
+    # Syscalls are written to .vibe/state/plugins/ by state_manager.py
+    # TODO: Consolidate to StateService for unified event hub (Naga 2060)
     sources_map = {
-        "violations": vibe_state / "ouroboros" / "violations.jsonl",
-        "syscalls": vibe_state / "plugins" / "opus_assistant" / "syscalls.jsonl",
+        "violations": Path("data/ledger/violations.jsonl"),
+        "syscalls": Path(".vibe/state/plugins/opus_assistant/syscalls.jsonl"),
     }
 
     entries: List[EventEntry] = []
