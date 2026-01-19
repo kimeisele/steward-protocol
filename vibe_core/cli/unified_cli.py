@@ -382,11 +382,16 @@ class UnifiedCLI:
                 handler_instance=cli_handler,
             )
 
-        # 3. Check Plugin Commands
+        # 3. Check Plugin Commands (FOLDER_IS_WIRING - auto-discovered from cli.yaml)
         commands = self._loader.discover_commands()
         if command_name in commands:
             cmd_def = commands[command_name]
             return self._dispatch_plugin(cmd_def, remaining_args)
+
+        # Also try short-name lookup (user types "chant", matches "mahamantra:chant")
+        for full_name, cmd in commands.items():
+            if cmd.name == command_name:
+                return self._dispatch_plugin(cmd, remaining_args)
 
         # 3. PRAKRITI Commands - Wired to Unified State
         if command_name in self._prakriti_cmds:
@@ -508,19 +513,45 @@ class UnifiedCLI:
             return 1
 
     def _dispatch_plugin(self, cmd: CLICommand, args: List[str]) -> int:
-        """Dispatch to Fractal CLIExecutor."""
+        """Dispatch to plugin command handler."""
         # Parse args based on cmd definition
         parsed_args = self._parse_plugin_args(cmd, args)
         if parsed_args is None:
             return 1
 
+        # FOLDER_IS_WIRING: Direct handler call for module:function format
+        # This is simpler and avoids async issues for sync handlers
+        if cmd.handler and ":" in cmd.handler:
+            try:
+                import importlib
+                module_path, func_name = cmd.handler.rsplit(":", 1)
+                module = importlib.import_module(module_path)
+                handler_func = getattr(module, func_name)
+
+                # Call handler with parsed args
+                result = handler_func(**parsed_args)
+
+                # Handle result
+                if isinstance(result, dict):
+                    if result.get("success", True):
+                        return 0
+                    else:
+                        if "error" in result:
+                            print(f"❌ {result['error']}")
+                        return 1
+                return 0
+            except Exception as e:
+                print(f"❌ Handler error: {e}")
+                import traceback
+                traceback.print_exc()
+                return 1
+
+        # Fallback to async executor (legacy plugin execution)
         response = asyncio.run(self._executor.execute(cmd, parsed_args))
 
         if response.success:
             if response.data is not None:
-                # formatting should be handled by a renderer, but for now print
                 import json
-
                 print(json.dumps(response.data, indent=2, default=str))
             return 0
         else:
@@ -532,30 +563,31 @@ class UnifiedCLI:
         parser = argparse.ArgumentParser(prog=f"steward {cmd.name}", description=cmd.help)
 
         for arg in cmd.args:
-            kwargs = {
-                "help": arg.help,
-                "type": arg.type,
-                "default": arg.default,
-            }
-            if arg.required:
-                kwargs["required"] = True
+            # Handle boolean flags (type=bool means store_true action)
+            if arg.type is bool:
+                kwargs = {
+                    "help": arg.help,
+                    "action": "store_true",
+                    "default": arg.default if arg.default is not None else False,
+                }
+            else:
+                kwargs = {
+                    "help": arg.help,
+                    "type": arg.type,
+                    "default": arg.default,
+                }
+                if arg.required:
+                    kwargs["required"] = True
+
             if arg.nargs:
                 kwargs["nargs"] = arg.nargs
             if arg.choices:
                 kwargs["choices"] = arg.choices
 
-            # If default is None and not required, it's optional
-            # In argparse, positionals are required unless nargs='?' or default set
-
+            # Get argument name - don't add -- if already present
             name = arg.name
             if not arg.required and not name.startswith("-"):
-                # Make it optional flag if not required? Or optional positional?
-                # For CLI simplicity, let's assume manifest args are flags if optional
-                pass
-
-            # Simple mapping for now
-            if not arg.required:
-                name = f"--{arg.name}"
+                name = f"--{name}"
 
             parser.add_argument(name, **kwargs)
 
