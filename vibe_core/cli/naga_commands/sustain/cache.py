@@ -34,17 +34,15 @@ import shutil
 from pathlib import Path
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.YIELD_CPU,
     name="cache",
-    help_text="Cache state management (NRISIMHA's protection - SUSTAIN phase)")
+    help_text="Cache state management (NRISIMHA's protection - SUSTAIN phase)",
+)
 class CacheCommand(NagaCommandBase):
     """
     Cache command implementation.
@@ -124,9 +122,7 @@ class CacheCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("CACHE_STATE: State preserved")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_cache_info(self) -> dict:
         """Get cache overview information."""

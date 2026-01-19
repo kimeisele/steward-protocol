@@ -41,23 +41,27 @@ from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkab
 # LANGUAGE LEVELS
 # =============================================================================
 
+
 class LanguageLevel(str, Enum):
     """The three levels of text reality."""
-    WESTERN = "western"        # ASCII/English (Level 1)
-    SANSKRIT = "sanskrit"      # Devanagari script (Level 2)
+
+    WESTERN = "western"  # ASCII/English (Level 1)
+    SANSKRIT = "sanskrit"  # Devanagari script (Level 2)
     DIACRITICS = "diacritics"  # IAST transliteration (Level 3)
 
 
 class ScriptType(str, Enum):
     """Script encoding types."""
-    ASCII = "ascii"            # Basic ASCII (A-Z, a-z)
+
+    ASCII = "ascii"  # Basic ASCII (A-Z, a-z)
     DEVANAGARI = "devanagari"  # Sanskrit script (Unicode block)
-    IAST = "iast"              # International Alphabet of Sanskrit Transliteration
+    IAST = "iast"  # International Alphabet of Sanskrit Transliteration
 
 
 # =============================================================================
 # CHARACTER MAPPING (1:1 Fractal)
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class CharacterMapping:
@@ -68,13 +72,14 @@ class CharacterMapping:
     One meaning, three expressions.
     Each maps 1:1 to the others.
     """
-    western: str       # ASCII representation
-    sanskrit: str      # Devanagari character
-    diacritics: str    # IAST character
+
+    western: str  # ASCII representation
+    sanskrit: str  # Devanagari character
+    diacritics: str  # IAST character
 
     # Phonetic info
     phoneme: str = ""  # IPA or simplified phonetic
-    category: str = "" # vowel, consonant, etc.
+    category: str = ""  # vowel, consonant, etc.
 
     def __str__(self) -> str:
         return f"{self.western}/{self.sanskrit}/{self.diacritics}"
@@ -134,6 +139,7 @@ SPECIAL_MAPPINGS: List[CharacterMapping] = [
 # WORD REPRESENTATION
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MultiLevelWord:
     """
@@ -142,6 +148,7 @@ class MultiLevelWord:
     Example:
         western="Krishna", sanskrit="कृष्ण", diacritics="Kṛṣṇa"
     """
+
     western: str
     sanskrit: str
     diacritics: str
@@ -171,21 +178,21 @@ HOLY_NAME_WORDS: Dict[str, MultiLevelWord] = {
         sanskrit="हरे",
         diacritics="Hare",
         meaning="O Hari (energy of the Lord)",
-        etymology="vocative of Harā (Rādhā)"
+        etymology="vocative of Harā (Rādhā)",
     ),
     "krishna": MultiLevelWord(
         western="Krishna",
         sanskrit="कृष्ण",
         diacritics="Kṛṣṇa",
         meaning="The All-Attractive One",
-        etymology="kṛṣ (to attract) + ṇa (suffix)"
+        etymology="kṛṣ (to attract) + ṇa (suffix)",
     ),
     "rama": MultiLevelWord(
         western="Rama",
         sanskrit="राम",
         diacritics="Rāma",
         meaning="The Source of All Pleasure",
-        etymology="ram (to enjoy) + a (suffix)"
+        etymology="ram (to enjoy) + a (suffix)",
     ),
 }
 
@@ -193,6 +200,7 @@ HOLY_NAME_WORDS: Dict[str, MultiLevelWord] = {
 # =============================================================================
 # LANGUAGE PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class LanguageProtocol(Protocol):
@@ -204,12 +212,7 @@ class LanguageProtocol(Protocol):
     No information loss between levels.
     """
 
-    def translate(
-        self,
-        text: str,
-        from_level: LanguageLevel,
-        to_level: LanguageLevel
-    ) -> str:
+    def translate(self, text: str, from_level: LanguageLevel, to_level: LanguageLevel) -> str:
         """
         Translate text between levels.
 
@@ -255,27 +258,18 @@ class LanguageProtocol(Protocol):
 # MAHAMANTRA IN THREE LEVELS
 # =============================================================================
 
-MAHAMANTRA_WESTERN = (
-    "Hare Krishna Hare Krishna Krishna Krishna Hare Hare "
-    "Hare Rama Hare Rama Rama Rama Hare Hare"
-)
+MAHAMANTRA_WESTERN = "Hare Krishna Hare Krishna Krishna Krishna Hare Hare Hare Rama Hare Rama Rama Rama Hare Hare"
 
-MAHAMANTRA_SANSKRIT = (
-    "हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे "
-    "हरे राम हरे राम राम राम हरे हरे"
-)
+MAHAMANTRA_SANSKRIT = "हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे हरे राम हरे राम राम राम हरे हरे"
 
-MAHAMANTRA_DIACRITICS = (
-    "Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare "
-    "Hare Rāma Hare Rāma Rāma Rāma Hare Hare"
-)
+MAHAMANTRA_DIACRITICS = "Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare Hare Rāma Hare Rāma Rāma Rāma Hare Hare"
 
 MAHAMANTRA = MultiLevelWord(
     western=MAHAMANTRA_WESTERN,
     sanskrit=MAHAMANTRA_SANSKRIT,
     diacritics=MAHAMANTRA_DIACRITICS,
     meaning="The Great Mantra for Deliverance",
-    etymology="mahā (great) + mantra (sacred utterance)"
+    etymology="mahā (great) + mantra (sacred utterance)",
 )
 
 

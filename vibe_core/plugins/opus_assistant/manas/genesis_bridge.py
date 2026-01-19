@@ -11,7 +11,6 @@ The bridge delegates to:
 "Jedes Haus bekommt einen Briefkasten. Jede Straße ein Schild."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

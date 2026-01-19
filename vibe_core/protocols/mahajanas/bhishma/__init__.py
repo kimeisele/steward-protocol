@@ -18,7 +18,6 @@ His word is his bond. The log is the law.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -47,6 +46,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # BHISHMA PROTOCOL BASE - Derives from MantraPosition 11
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class BhishmaProtocolBase(WorkerProtocol):
     """
@@ -63,6 +63,7 @@ class BhishmaProtocolBase(WorkerProtocol):
         is_head()   → False (Worker position)
         parampara_vector() → 444 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 11  # THE ONLY CONFIGURATION
 
 
@@ -82,10 +83,11 @@ class CommitResult(TypedDict, total=False):
     Result of a commit operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    commit_id: str            # Hash/ID of the commit
-    timestamp: str            # ISO timestamp
-    previous_id: str          # Hash of previous commit (for lineage)
+    commit_id: str  # Hash/ID of the commit
+    timestamp: str  # ISO timestamp
+    previous_id: str  # Hash of previous commit (for lineage)
     error_message: str
 
 
@@ -94,6 +96,7 @@ class VerificationResult(TypedDict, total=False):
     Result of lineage verification.
     WATERTIGHT - no Any!
     """
+
     valid: bool
     commit_id: str
     lineage_intact: bool
@@ -105,16 +108,18 @@ class CommitState(TypedDict, total=False):
     State of commitment/ledger.
     WATERTIGHT - no Any!
     """
+
     total_commits: int
     last_commit_id: str
-    last_commit_time: str     # ISO timestamp
+    last_commit_time: str  # ISO timestamp
     lineage_length: int
-    lineage_hash: str         # Hash of entire lineage
-    health: str               # "pristine", "healthy", "degraded"
+    lineage_hash: str  # Hash of entire lineage
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class CommitCliResult(TypedDict):
     """Result of CLI commit operation. WATERTIGHT - no Any!"""
+
     success: bool
     commit_id: str
     timestamp: str
@@ -269,9 +274,13 @@ __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BhishmaProtocolBase",
     # Bhishma Protocol (WATERTIGHT)
-    "CommitEntry", "CommitResult", "VerificationResult", "CommitState",
+    "CommitEntry",
+    "CommitResult",
+    "VerificationResult",
+    "CommitState",
     "CommitCliResult",
-    "BhishmaProtocol", "NullBhishma",
+    "BhishmaProtocol",
+    "NullBhishma",
     # Ledger
     "GENESIS_HASH",
     "LedgerEntry",

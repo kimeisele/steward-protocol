@@ -47,8 +47,10 @@ from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaD
 # TYPE DEFINITIONS (WATERTIGHT - No Any)
 # =============================================================================
 
+
 class TickState(TypedDict, total=False):
     """State passed on each Mahamantra tick. WATERTIGHT: No Any."""
+
     tick: int
     position: int
     quarter: str
@@ -64,6 +66,7 @@ if TYPE_CHECKING:
 # =============================================================================
 # GOVERNED PATH - Internal class (not exported)
 # =============================================================================
+
 
 class _GovernedPath(type(StdPath())):
     """
@@ -109,9 +112,7 @@ class _GovernedPath(type(StdPath())):
         )
 
         if not result["success"]:
-            raise PermissionError(
-                f"Bridge rejected write to {self}: {result['error']}"
-            )
+            raise PermissionError(f"Bridge rejected write to {self}: {result['error']}")
 
         # Bridge approved - execute original write
         return super().write_text(
@@ -144,9 +145,7 @@ class _GovernedPath(type(StdPath())):
         )
 
         if not result["success"]:
-            raise PermissionError(
-                f"Bridge rejected write to {self}: {result['error']}"
-            )
+            raise PermissionError(f"Bridge rejected write to {self}: {result['error']}")
 
         # Bridge approved - execute original write
         return super().write_bytes(data)
@@ -163,25 +162,31 @@ class _GovernedPath(type(StdPath())):
 
 logger = logging.getLogger("BALARAMA")
 
+
 def _dharma_meditate(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Default: Silent meditation."""
     pass  # Generic silence is ok, but we log activation below
+
 
 def _dharma_prithu(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Prithu (0): Health Check / Infrastructure."""
     logger.info(f"🌍 Prithu@{proxy.position}: Checking Foundation (Disk/Mem)")
 
+
 def _dharma_janaka(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Janaka (10): State Sync / Maintenance."""
     logger.info(f"👑 Janaka@{proxy.position}: Maintaining State Consistency")
+
 
 def _dharma_bhishma(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Bhishma (11): Ledger / Tradition."""
     logger.info(f"👴 Bhishma@{proxy.position}: Upholding the Vow (Ledger Sync)")
 
+
 def _dharma_nrisimha(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Nrisimha (12): Protection / Security."""
     logger.info(f"🦁 Nrisimha@{proxy.position}: Scanning for Hiranyakashipu (Threats)")
+
 
 def _dharma_yamaraja(proxy: "BalaramaProxy", tick: TickState) -> None:
     """Yamaraja (15): Audit / Death."""
@@ -230,7 +235,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         mahajana: The Mahajana identity (e.g., "janaka", "prithu")
         position: The Mahamantra position (0-15)
         is_wrapped: Whether wrapping succeeded
-        
+
     GAD-000: ✓D ✓O ✓P ✓C ✓I ✓R
     """
 
@@ -265,7 +270,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         self._mahajana: str = "unknown"
         self._position: int = -1
         self._genesis: str = ""
-        
+
         # Init GADBase (triggers verify_link)
         super().__init__()
 
@@ -329,13 +334,13 @@ class BalaramaProxy(GADBase, GADProtocol):
         This is the service "joining the dance".
         """
         import logging
+
         logger = logging.getLogger("BALARAMA")
 
         if self._mahajana != "unknown" and self._position >= 0:
             # Service has identity - welcome by name
             logger.info(
-                f"🙏 {self._mahajana.upper()} (Position {self._position}) embraced: "
-                f"{self.module_name.split('.')[-1]}"
+                f"🙏 {self._mahajana.upper()} (Position {self._position}) embraced: {self.module_name.split('.')[-1]}"
             )
         else:
             # Anonymous service - still welcomed
@@ -407,22 +412,21 @@ class BalaramaProxy(GADBase, GADProtocol):
         # Register with Mahamantra
         try:
             from vibe_core.mahamantra import mahamantra
+
             mahamantra.register_listener(self._tick_handler)
             self._attached_to_heartbeat = True
 
             if not silent:
                 import logging
+
                 logger = logging.getLogger("BALARAMA")
-                logger.debug(
-                    f"💓 {self._mahajana.upper()}@{self._position} attached to heartbeat"
-                )
+                logger.debug(f"💓 {self._mahajana.upper()}@{self._position} attached to heartbeat")
 
         except Exception as e:
             # Graceful degradation - service works but no heartbeat
             import logging
-            logging.getLogger("BALARAMA").warning(
-                f"⚠️ Failed to attach {self._mahajana} to heartbeat: {e}"
-            )
+
+            logging.getLogger("BALARAMA").warning(f"⚠️ Failed to attach {self._mahajana} to heartbeat: {e}")
 
     def _create_gated_listener(self) -> Callable:
         """
@@ -480,7 +484,7 @@ class BalaramaProxy(GADBase, GADProtocol):
                     except Exception:
                         # Silent failure (Arjuna pattern)
                         pass
-                
+
                 # If we found a callable, we are done
                 if callable(handler):
                     return
@@ -489,13 +493,12 @@ class BalaramaProxy(GADBase, GADProtocol):
             # If the service is silent (no handler), the Proxy acts.
             mahajana_name = proxy.mahajana.lower()
             dharma_action = DEFAULT_DHARMA.get(mahajana_name, _dharma_meditate)
-            
+
             try:
                 # The Proxy dances on behalf of the service
                 dharma_action(proxy, tick_state)
             except Exception as e:
                 logger.warning(f"Proxy Dharma failed for {mahajana_name}: {e}")
-
 
         return gated_listener
 
@@ -547,7 +550,6 @@ class BalaramaProxy(GADBase, GADProtocol):
         """Check if service has Mahajana identity."""
         return self._mahajana != "unknown" and self._position >= 0
 
-
     # =========================================================================
     # GAD-000 COMPLIANCE
     # =========================================================================
@@ -585,11 +587,11 @@ class BalaramaProxy(GADBase, GADProtocol):
         base_health = super().is_healthy()
         if not self.is_wrapped:
             return False
-            
+
         if self.has_identity and not self._attached_to_heartbeat:
             # Should be attached if it has identity
             return False
-            
+
         return base_health
 
     @property
@@ -617,6 +619,7 @@ class BalaramaProxy(GADBase, GADProtocol):
 
     def test_saucam(self) -> bool:
         return self.is_wrapped
+
     # =========================================================================
     # ORBITAL REACTOR MOUNTING (Adoption)
     # =========================================================================
@@ -624,13 +627,13 @@ class BalaramaProxy(GADBase, GADProtocol):
     def set_reactor(self, reactor: "OrbitalShadowReactor") -> None:
         """
         Mount this service onto an Orbital Reactor.
-        
+
         Args:
             reactor: The OrbitalShadowReactor instance.
         """
         self._reactor = reactor
         self._reactor_mounted = True
-        
+
     @property
     def reactor(self) -> Optional["OrbitalShadowReactor"]:
         """Get the mounted reactor."""
@@ -641,7 +644,7 @@ class BalaramaProxy(GADBase, GADProtocol):
     # =========================================================================
     # These methods allow the proxy to be driven by the Orbital Reactor.
     # They delegate to the wrapped module if possible.
-    
+
     def on_bhoga(self, state: TickState) -> None:
         """
         React to BHOGA phase (Offering).
@@ -655,12 +658,12 @@ class BalaramaProxy(GADBase, GADProtocol):
                 return
             except Exception:
                 pass
-        
+
         # Fallback to generic tick handler logic (reuse gated logic but force execution)
         # Or just do nothing?
         # User said: "ManifestationService hört Tick 4... arbeitet".
         # This implies standard work happens here.
-        
+
         # Reuse existing discovery logic from _create_gated_listener but simplified
         handler = getattr(self.module, "on_tick", None)
         if callable(handler):
@@ -669,10 +672,10 @@ class BalaramaProxy(GADBase, GADProtocol):
             except Exception:
                 pass
         elif self.has_identity:
-             # Proxy Dharma Fallback
-             name = self.mahajana.lower()
-             dharma = DEFAULT_DHARMA.get(name, _dharma_meditate)
-             dharma(self, state)
+            # Proxy Dharma Fallback
+            name = self.mahajana.lower()
+            dharma = DEFAULT_DHARMA.get(name, _dharma_meditate)
+            dharma(self, state)
 
     def on_switch(self, state: TickState) -> None:
         """React to SWITCH phase (Parashurama)."""
@@ -700,23 +703,23 @@ class BalaramaProxy(GADBase, GADProtocol):
                 handler(state)
             except Exception:
                 pass
-    
+
     # =========================================================================
     # UNIVERSAL SANKIRTAN (CHAT BRIDGE)
     # =========================================================================
-    
+
     def chat(self, message: str) -> str:
         """
         Speak to the Service (Sankirtan).
-        
+
         SANKIRTAN PATTERN:
         ------------------
         1. Try module.on_chat(message) -> str
         2. Fallback: Proxy speaks on behalf (Identity/Status)
-        
+
         Args:
             message: The input string from the user/CLI.
-            
+
         Returns:
             The response string.
         """
@@ -736,7 +739,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         status = "🟢 Active" if self.is_healthy() else "🔴 Unhealthy"
         identity = f"{self.mahajana.upper()}@{self.position}" if self.has_identity else "Unknown Service"
         orbit = f"(Orbit {self.reactor.lagna})" if self.reactor else "(No Orbit)"
-        
+
         return (
             f"🕉️  [PROXY RESPONSE] I am {self.module_name}.\n"
             f"    Identity: {identity} {orbit}\n"
@@ -757,6 +760,7 @@ class BalaramaProxy(GADBase, GADProtocol):
 # =============================================================================
 # CONVENIENCE FUNCTION
 # =============================================================================
+
 
 def wrap_service(module_name: str, *, silent: bool = False) -> BalaramaProxy:
     return BalaramaProxy(module_name, silent=silent)
@@ -782,6 +786,7 @@ AUTO_WRAP_SERVICES = [
 
 def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
     import logging
+
     logger = logging.getLogger("BALARAMA")
 
     proxies = {}
@@ -803,10 +808,7 @@ def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
 
     # Summary log (always shown)
     if embraced_count > 0:
-        logger.info(
-            f"🎵 Sankirtan: {embraced_count} services embraced, "
-            f"{identity_count} with Mahajana identity"
-        )
+        logger.info(f"🎵 Sankirtan: {embraced_count} services embraced, {identity_count} with Mahajana identity")
 
     return proxies
 
@@ -815,12 +817,13 @@ def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
 # MAHAMANTRA PROXY - The Object Wrapper
 # =============================================================================
 
+
 class MahamantraProxy(PanchaTattvaProtocol):
     """
     The Balarama Proxy (Object Wrapper).
     Wraps a target object and provides the 5 Tattva answers.
     """
-    
+
     def __init__(self, target: object, position: int, guardian: str):
         self._target = target
         self._position = position
@@ -835,7 +838,7 @@ class MahamantraProxy(PanchaTattvaProtocol):
         """
         if hasattr(self._target, "__tattva__"):
             return self._target.__tattva__  # type: ignore
-            
+
         # Default Tattva derived from the Lotus Position
         return {
             "chaitanya": f"Proxied {type(self._target).__name__}",
@@ -872,7 +875,7 @@ class MahamantraProxy(PanchaTattvaProtocol):
             handler = getattr(self._target, "chat", None)
         if not callable(handler):
             handler = getattr(self._target, "on_chat", None)
-            
+
         if callable(handler):
             try:
                 response = handler(message)

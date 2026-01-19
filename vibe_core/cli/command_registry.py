@@ -275,6 +275,7 @@ class CommandRegistry:
 
     def __init__(self):
         import warnings
+
         warnings.warn(
             "CommandRegistry is being replaced by mahamantra cli_bridge. "
             "Use 'from vibe_core.mahamantra import cli_bridge' for new implementations.",
@@ -1033,6 +1034,7 @@ class CommandRegistry:
             # FALLBACK: Try mahamantra cli_bridge routing
             try:
                 from vibe_core.mahamantra import cli_bridge
+
                 bridge_result = cli_bridge.route(name, args)
                 if bridge_result.exit_code != 127:  # Not "command not found"
                     return CommandResult(

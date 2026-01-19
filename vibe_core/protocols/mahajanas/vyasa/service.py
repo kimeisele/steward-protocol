@@ -13,7 +13,6 @@ WRAPPED: vibe_core.boot_orchestrator.BootOrchestrator
 this service wakes the system and provides all resources."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -33,6 +32,7 @@ from vibe_core.protocols.mahajanas.vyasa import (
 
 # Import legacy implementation - DO NOT DUPLICATE
 from vibe_core.boot_orchestrator import BootOrchestrator as LegacyBootOrchestrator
+
 # Import directly from canonical location to avoid circular import
 from vibe_core.protocols.mahajanas.vyasa.types.boot_mode import BootMode
 
@@ -173,52 +173,52 @@ class VyasaService(VyasaProtocolBase):
     def execute(self, command: str) -> str:
         """
         Execute an Infrastructure Command.
-        
+
         Supported:
         - "scan [path]" -> Lists files.
         - "status" -> Boot status.
         """
         cmd_lower = command.lower()
         args = command.split()
-        
+
         if "scan" in cmd_lower:
             path = "."
             # extract path if provided
             if len(args) > 1 and args[0].lower() == "scan":
-                 if len(args) > 1:
-                     path = args[1]
+                if len(args) > 1:
+                    path = args[1]
             elif "disk" in cmd_lower:
-                 path = "."
-            
+                path = "."
+
             return self.scan(path)
-            
+
         if "status" in cmd_lower:
             state = self.get_state()
             return f"🟢 System Status: {state['health'].upper()} (Phase: {state['current_phase']})"
-            
+
         return f"⚠️ Vyasa does not know how to '{command}'. Try 'scan disk'."
 
     def scan(self, path: str = ".") -> str:
         """
         Scan the filesystem using the MahajanaScanner (Substrate).
-        
-        Vyasa (Position 0) initiates the scan (SYS_WAKE), 
+
+        Vyasa (Position 0) initiates the scan (SYS_WAKE),
         but the Scanner (Substrate) performs it.
         """
         try:
             from vibe_core.mahamantra.substrate.scanner import scan_all, print_scan_report
             from io import StringIO
             import sys
-            
+
             # If path is ".", use default base (None)
             scan_path = None if path == "." else path
-            
+
             result = scan_all(base_path=scan_path)
-            
+
             # Format a nice report
             files_total = result.get("files_total", 0)
             declarations = result.get("declarations_found", 0)
-            
+
             report = (
                 f"📂 **SCAN RESULT** (Vyasa -> Scanner):\n"
                 f"Files Scanned: {files_total}\n"
@@ -226,7 +226,7 @@ class VyasaService(VyasaProtocolBase):
                 f"Scanning completed successfully."
             )
             return report
-            
+
         except Exception as e:
             return f"🔴 Scan Failed: {e}"
 

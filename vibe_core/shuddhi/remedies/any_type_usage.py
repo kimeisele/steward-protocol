@@ -71,9 +71,7 @@ class AnyTypeRemedy(CSTRemedy):
 
             for name in node.names:
                 if isinstance(name, cst.ImportAlias):
-                    name_value = (
-                        name.name.value if isinstance(name.name, cst.Name) else None
-                    )
+                    name_value = name.name.value if isinstance(name.name, cst.Name) else None
                     if name_value == "Any":
                         self._any_imported = True
                         self._any_import_node = node
@@ -133,9 +131,7 @@ class AnyTypeRemedy(CSTRemedy):
         new_names = []
         for name in updated_node.names:
             if isinstance(name, cst.ImportAlias):
-                name_value = (
-                    name.name.value if isinstance(name.name, cst.Name) else None
-                )
+                name_value = name.name.value if isinstance(name.name, cst.Name) else None
                 if name_value != "Any":
                     new_names.append(name)
 
@@ -184,9 +180,7 @@ class AnyTypeUsageDetector(CSTRemedy):
         if node.value == "Any":
             pos = self.get_metadata(cst.metadata.PositionProvider, node, None)
             if pos:
-                self._any_locations.append(
-                    (pos.start.line, pos.start.column, "bare Any")
-                )
+                self._any_locations.append((pos.start.line, pos.start.column, "bare Any"))
                 self.violation_found = True
         return True
 
@@ -198,13 +192,9 @@ class AnyTypeUsageDetector(CSTRemedy):
                 if isinstance(element.slice, cst.Index):
                     if isinstance(element.slice.value, cst.Name):
                         if element.slice.value.value == "Any":
-                            pos = self.get_metadata(
-                                cst.metadata.PositionProvider, node, None
-                            )
+                            pos = self.get_metadata(cst.metadata.PositionProvider, node, None)
                             if pos:
-                                self._any_locations.append(
-                                    (pos.start.line, pos.start.column, "generic Any")
-                                )
+                                self._any_locations.append((pos.start.line, pos.start.column, "generic Any"))
                                 self.violation_found = True
         return True
 

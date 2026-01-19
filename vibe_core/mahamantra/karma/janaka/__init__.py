@@ -14,7 +14,6 @@ MAHAMANTRA AS LENS:
 PARAMPARA: 407 (% 37 == 0 -> CONNECTED)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -81,6 +80,7 @@ from vibe_core.protocols.mahajanas.janaka import (
 
 # Backward-compat constants - derived from mahamantra position 10
 from typing import Final
+
 POSITION: Final[int] = 10
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "STATE_SYNC"
@@ -157,7 +157,8 @@ def __getattr__(name: str) -> object:
     """
     if name == "JanakaService":
         from vibe_core.services.janaka_service import JanakaService
+
         return JanakaService
-    
+
     # Legacy fallbacks might be needed for types, handled by static imports above
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -14,7 +14,6 @@ NOTE: State commits are handled by StateService (OPUS-306).
 "Gedächtnis ohne Wissen ist blind. Wissen ohne Gedächtnis ist vergesslich."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

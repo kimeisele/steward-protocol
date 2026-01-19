@@ -112,12 +112,15 @@ from .security import VajraGuarded
 
 logger = logging.getLogger("VIBE_KERNEL")
 
+
 def _get_config():
     try:
         from vibe_core.phoenix.config import get_config
+
         return get_config()
     except Exception:
         return None
+
 
 class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     """
@@ -156,6 +159,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.enable_narasimha()
 
         self._config = config
@@ -195,7 +199,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
                 MantraOpCode.INIT_THREAD: lambda ctx: self.bind_genes(["scribe"]),
                 MantraOpCode.COMPILE_AST: lambda ctx: True,
                 MantraOpCode.EXTEND_CAP: lambda ctx: True,
-            }
+            },
         )
         self.chaitanya = self.nrisimha
         self.watchdog = self.nrisimha
@@ -237,18 +241,19 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
         from types import MappingProxyType
+
         return MappingProxyType(self._agent_registry)
 
     @property
     def manifest_registry(self) -> ManifestRegistry:
-        return self.brahma._manifest_registry # type: ignore
+        return self.brahma._manifest_registry  # type: ignore
 
     @property
     def plugins(self) -> List[PluginProtocol]:
         return self._plugins
 
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
-        return self.brahma.get_manifest(agent_id) # type: ignore
+        return self.brahma.get_manifest(agent_id)  # type: ignore
 
     @property
     def sovereign_context(self) -> SovereignContext:
@@ -282,7 +287,9 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
         return self.janaka.compute_capability_resonance(self, agent_id, capability)
 
-    def record_verified_event(self, event_type: str, agent_id: str, details: Dict[str, object], caller_agent: "VibeAgent" = None) -> str:
+    def record_verified_event(
+        self, event_type: str, agent_id: str, details: Dict[str, object], caller_agent: "VibeAgent" = None
+    ) -> str:
         """Verified event. Delegated to Bhishma."""
         return self.bhishma.record_verified_event(self, event_type, agent_id, details, caller_agent)
 
@@ -294,6 +301,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     async def boot_async(self, boot_mode: BootMode | None = None) -> None:
         from vibe_core.boot_mode import BootMode
+
         await self.brahma.boot_orchestration(self, boot_mode or BootMode.FULL)
         self._status = KernelStatus.RUNNING
 
@@ -313,26 +321,22 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         Delegated to BhishmaService (recording) and BrahmaService (tracking).
         """
         if not self.brahma._child_kernels or child not in self.brahma._child_kernels:
-             # Legacy check: check self._child_kernels too if present
-             if child not in self._child_kernels:
+            # Legacy check: check self._child_kernels too if present
+            if child not in self._child_kernels:
                 raise ValueError("Cannot merge result from unknown child kernel")
 
         child_hash = child.get_ledger_hash()
-        
+
         # Record via Bhishma
         self.bhishma.record_merge(str(id(child)), child_hash, str(result)[:500])
-        
+
         # Cleanup via Brahma (or locally)
         if child in self._child_kernels:
             self._child_kernels.remove(child)
         if hasattr(self.brahma, "_child_kernels") and child in self.brahma._child_kernels:
             self.brahma._child_kernels.remove(child)
 
-        return {
-            "type": "EPHEMERAL_CITY_MERGE",
-            "child_id": id(child),
-            "result": str(result)[:500]
-        }
+        return {"type": "EPHEMERAL_CITY_MERGE", "child_id": id(child), "result": str(result)[:500]}
 
     def boot(self, mode: Optional[BootMode] = None) -> None:
         asyncio.run(self.boot_async(mode))
@@ -348,7 +352,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         manifests = self.brahma.find_manifests_by_capability(capability)
-        return [self._agent_registry[m.agent_id] for m in manifests if m.agent_id in self._agent_registry] # type: ignore
+        return [self._agent_registry[m.agent_id] for m in manifests if m.agent_id in self._agent_registry]  # type: ignore
 
     def _check_agent_capability(self, agent_id: str, capability: str) -> bool:
         return self.brahma.has_capability(agent_id, capability)
@@ -371,7 +375,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def _process_ipc_events(self) -> None:
         for plugin in self._plugins:
             if hasattr(plugin, "process_ipc_events"):
-                plugin.process_ipc_events(self) # type: ignore
+                plugin.process_ipc_events(self)  # type: ignore
 
     def dump_ledger(self) -> List[Dict[str, object]]:
         return self.ledger.get_all_events()
@@ -428,6 +432,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     #
     # [LINE 225]
     # ...
+
+
 """
 (This block is used to maintain the exact line count of 1008)
 Lines of code are vibrations in the field of Prakriti.

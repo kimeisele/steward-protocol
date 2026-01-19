@@ -35,7 +35,6 @@ ARCHITECTURE:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -80,6 +79,7 @@ GENESIS_HASH: Final[str] = "0" * 64  # 64 zeros = SHA-256 of nothing
 # LEDGER ENTRY - Single immutable record
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class LedgerEntry:
     """
@@ -88,14 +88,15 @@ class LedgerEntry:
     Frozen dataclass = immutable after creation.
     Like Bhishma's vow - once made, cannot change.
     """
-    commit_id: str           # SHA-256 hash of this entry
-    previous_id: str         # Hash of previous entry (chain link)
-    timestamp: str           # ISO timestamp
-    sovereign_id: str        # Who committed this
-    payload_type: str        # Type of payload
-    payload_repr: str        # String representation of payload
-    payload_hash: str        # Hash of payload for integrity
-    sequence: int            # Position in ledger (0-indexed)
+
+    commit_id: str  # SHA-256 hash of this entry
+    previous_id: str  # Hash of previous entry (chain link)
+    timestamp: str  # ISO timestamp
+    sovereign_id: str  # Who committed this
+    payload_type: str  # Type of payload
+    payload_repr: str  # String representation of payload
+    payload_hash: str  # Hash of payload for integrity
+    sequence: int  # Position in ledger (0-indexed)
 
     @classmethod
     def create(
@@ -154,6 +155,7 @@ class LedgerEntry:
 # =============================================================================
 # LEDGER PROTOCOL - Immutable Commit Interface
 # =============================================================================
+
 
 @runtime_checkable
 class LedgerProtocol(Protocol):
@@ -243,6 +245,7 @@ class LedgerProtocol(Protocol):
 # =============================================================================
 # LEDGER IMPLEMENTATION - Immutable Append-Only Log
 # =============================================================================
+
 
 class Ledger:
     """
@@ -440,6 +443,7 @@ class Ledger:
 # =============================================================================
 # NULL LEDGER - For testing
 # =============================================================================
+
 
 class NullLedger:
     """

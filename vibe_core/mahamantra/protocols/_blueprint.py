@@ -14,12 +14,15 @@ LOCATION: vibe_core.mahamantra.protocols._blueprint (THE LAW)
 from typing import Protocol, TypedDict, runtime_checkable, Dict, Optional
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
+
 class ModuleTemplate(TypedDict):
     """Template for a Python module."""
+
     filename: str
     content_pattern: str  # Format string
     imports: Dict[str, str]
     exports: Dict[str, str]
+
 
 @runtime_checkable
 class BlueprintProtocol(PanchaTattvaProtocol, Protocol):
@@ -45,6 +48,7 @@ class BlueprintProtocol(PanchaTattvaProtocol, Protocol):
     def verify_structure(self, path: str) -> bool:
         """Verify if a path matches the blueprint."""
         ...
+
 
 class StandardBlueprint(BlueprintProtocol):
     """
@@ -110,12 +114,13 @@ def __getattr__(name: str) -> object:
 __all__ = ["{service_class}", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]
 ''',
                 "imports": {},
-                "exports": {}
+                "exports": {},
             }
         raise ValueError(f"Unknown role: {role}")
 
     def verify_structure(self, path: str) -> bool:
         return True  # Placeholder
+
 
 # =============================================================================
 # EXPORTS

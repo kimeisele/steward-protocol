@@ -15,7 +15,6 @@ IMPLEMENTATION:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -104,6 +103,7 @@ class EventData(TypedDict, total=False):
     Data payload for an event.
     WATERTIGHT - no Any!
     """
+
     message: str
     agent_id: str
     target_id: str
@@ -118,6 +118,7 @@ class Event(TypedDict, total=False):
     A structured event.
     WATERTIGHT - no Any!
     """
+
     id: str
     type: str  # EventType value
     agent_id: str
@@ -132,6 +133,7 @@ class SubscriberInfo(TypedDict, total=False):
     Info about a subscriber.
     WATERTIGHT - no Any!
     """
+
     callback_id: str
     event_types: List[str]  # EventType values subscribed to
     events_received: int
@@ -146,6 +148,7 @@ class EventBusStats(TypedDict, total=False):
     Statistics about the event bus.
     WATERTIGHT - no Any!
     """
+
     total_events_emitted: int
     total_subscribers: int
     active_subscribers: int
@@ -159,6 +162,7 @@ class EventBusState(TypedDict, total=False):
     Full state of the event bus.
     WATERTIGHT - no Any!
     """
+
     protocol_name: str
     owner: str
     is_chanting: bool
@@ -176,14 +180,14 @@ class EventBusState(TypedDict, total=False):
 
 class SyncEventCallback(Protocol):
     """Synchronous event callback."""
-    def __call__(self, event: Event) -> None:
-        ...
+
+    def __call__(self, event: Event) -> None: ...
 
 
 class AsyncEventCallback(Protocol):
     """Asynchronous event callback."""
-    def __call__(self, event: Event) -> Awaitable[None]:
-        ...
+
+    def __call__(self, event: Event) -> Awaitable[None]: ...
 
 
 # Union of both callback types

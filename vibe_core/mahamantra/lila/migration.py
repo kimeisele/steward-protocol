@@ -21,6 +21,7 @@ from typing import Protocol, runtime_checkable
 # BASE LEGACY SERVICE PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class LegacyServiceProtocol(Protocol):
     """
@@ -55,6 +56,7 @@ class LegacyServiceProtocol(Protocol):
 # SPECIFIC SERVICE PROTOCOLS (Position-Based)
 # =============================================================================
 
+
 @runtime_checkable
 class BrahmaServiceProtocol(LegacyServiceProtocol, Protocol):
     """
@@ -63,12 +65,7 @@ class BrahmaServiceProtocol(LegacyServiceProtocol, Protocol):
     Brahma erschafft. Explizite Methoden, keine Magie.
     """
 
-    def register_agent(
-        self,
-        kernel: object,
-        agent: object,
-        spawn_process: bool = True
-    ) -> None:
+    def register_agent(self, kernel: object, agent: object, spawn_process: bool = True) -> None:
         """
         Register an agent with the kernel.
 
@@ -189,6 +186,7 @@ class ManifestationServiceProtocol(LegacyServiceProtocol, Protocol):
 # =============================================================================
 # PROTOCOL VERIFICATION
 # =============================================================================
+
 
 def verify_brahma_protocol(service: object) -> bool:
     """

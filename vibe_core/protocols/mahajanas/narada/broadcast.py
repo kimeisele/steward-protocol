@@ -28,7 +28,6 @@ DELIVERY MODES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -69,20 +68,24 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # DELIVERY MODE
 # =============================================================================
 
+
 class DeliveryMode(str, Enum):
     """Message delivery guarantees."""
-    AT_MOST_ONCE = "at_most_once"     # Fire and forget
-    AT_LEAST_ONCE = "at_least_once"   # Retry until ack
-    EXACTLY_ONCE = "exactly_once"     # Deduplicated
+
+    AT_MOST_ONCE = "at_most_once"  # Fire and forget
+    AT_LEAST_ONCE = "at_least_once"  # Retry until ack
+    EXACTLY_ONCE = "exactly_once"  # Deduplicated
 
 
 # =============================================================================
 # CHANNEL
 # =============================================================================
 
+
 @dataclass
 class Channel:
     """A broadcast channel."""
+
     name: str
     created_at: datetime = field(default_factory=datetime.now)
     message_count: int = 0
@@ -95,6 +98,7 @@ BroadcastHandler = Callable[[str, MessagePayload], bool]
 @dataclass
 class Subscription:
     """A channel subscription."""
+
     subscriber_id: str
     channel: str
     handler: BroadcastHandler
@@ -104,6 +108,7 @@ class Subscription:
 # =============================================================================
 # BROADCAST PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class BroadcastProtocol(Protocol):
@@ -146,7 +151,9 @@ class BroadcastProtocol(Protocol):
         ...
 
     # Broadcast
-    def broadcast(self, channel: str, payload: MessagePayload, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE) -> BroadcastResult:
+    def broadcast(
+        self, channel: str, payload: MessagePayload, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE
+    ) -> BroadcastResult:
         """Broadcast to all subscribers of a channel."""
         ...
 
@@ -158,6 +165,7 @@ class BroadcastProtocol(Protocol):
 # =============================================================================
 # BROADCASTER IMPLEMENTATION
 # =============================================================================
+
 
 class Broadcaster:
     """
@@ -312,6 +320,7 @@ class Broadcaster:
 # NULL BROADCASTER
 # =============================================================================
 
+
 class NullBroadcaster:
     """Null broadcaster - no delivery."""
 
@@ -334,7 +343,9 @@ class NullBroadcaster:
     def unsubscribe(self, channel: str, subscriber_id: str) -> bool:
         return True
 
-    def broadcast(self, channel: str, payload: MessagePayload, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE) -> BroadcastResult:
+    def broadcast(
+        self, channel: str, payload: MessagePayload, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE
+    ) -> BroadcastResult:
         return BroadcastResult(success=True, recipients_count=0, failed_count=0, message_id="null")
 
     def broadcast_all(self, payload: MessagePayload) -> BroadcastResult:
@@ -346,7 +357,15 @@ class NullBroadcaster:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "DeliveryMode", "Channel", "Subscription", "BroadcastHandler",
-    "BroadcastProtocol", "Broadcaster", "NullBroadcaster",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "DeliveryMode",
+    "Channel",
+    "Subscription",
+    "BroadcastHandler",
+    "BroadcastProtocol",
+    "Broadcaster",
+    "NullBroadcaster",
 ]

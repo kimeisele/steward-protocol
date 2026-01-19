@@ -29,7 +29,6 @@ MEMORY MODEL:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -74,12 +73,14 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # CHITTA CONFIGURATION
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class ChittaConfig:
     """Configuration for Chitta working memory."""
-    max_entries: int = 1000           # Maximum entries before LRU eviction
-    default_ttl_seconds: int = 3600   # 1 hour default TTL
-    redundancy_copies: int = 2        # Copies for attack survival
+
+    max_entries: int = 1000  # Maximum entries before LRU eviction
+    default_ttl_seconds: int = 3600  # 1 hour default TTL
+    redundancy_copies: int = 2  # Copies for attack survival
     integrity_check_interval: int = 60  # Seconds between integrity checks
 
 
@@ -87,9 +88,11 @@ class ChittaConfig:
 # INTERNAL STORAGE ENTRY
 # =============================================================================
 
+
 @dataclass
 class ChittaEntry:
     """Internal storage for a memory entry."""
+
     key: str
     value: MemoryValue
     value_type: str
@@ -193,6 +196,7 @@ class ChittaEntry:
 # =============================================================================
 # CHITTA PROTOCOL - Working Memory Interface
 # =============================================================================
+
 
 @runtime_checkable
 class ChittaProtocol(Protocol):
@@ -307,6 +311,7 @@ class ChittaProtocol(Protocol):
 # =============================================================================
 # CHITTA IMPLEMENTATION - Working Memory
 # =============================================================================
+
 
 class Chitta:
     """
@@ -587,6 +592,7 @@ class Chitta:
 # CHITTA OWNED PROTOCOL - With OwnedProtocol integration
 # =============================================================================
 
+
 class ChittaOwnedProtocol(Chitta):
     """
     Chitta with full OwnedProtocol integration.
@@ -611,6 +617,7 @@ class ChittaOwnedProtocol(Chitta):
 # =============================================================================
 # NULL CHITTA - For testing
 # =============================================================================
+
 
 class NullChitta:
     """

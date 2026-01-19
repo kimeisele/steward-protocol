@@ -191,7 +191,9 @@ class ResourceManager:
         except Exception as e:
             return {"agent_id": agent_id, "error": str(e)}
 
-    def get_all_usage(self, process_manager: ProcessManagerProtocol) -> Dict[str, Dict[str, Union[str, float, int, bool]]]:
+    def get_all_usage(
+        self, process_manager: ProcessManagerProtocol
+    ) -> Dict[str, Dict[str, Union[str, float, int, bool]]]:
         """
         Get resource usage for all agents.
 

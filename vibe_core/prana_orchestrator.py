@@ -40,7 +40,6 @@ from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.runtime.unified_trace import UnifiedTrace
 
 
-
 logger = logging.getLogger("PRANA_ORCHESTRATOR")
 
 # =============================================================================

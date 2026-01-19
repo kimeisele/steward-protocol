@@ -39,6 +39,7 @@ from vibe_core.mahamantra import HeadProtocol, MantraOpCode
 # KNOWLEDGE GRAPH PROTOCOL BASE - Derives from MantraPosition 4
 # =============================================================================
 
+
 class KnowledgeGraphProtocolBase(HeadProtocol):
     """
     Knowledge Graph protocol ownership - DERIVED from Mahamantra position 4.
@@ -54,6 +55,7 @@ class KnowledgeGraphProtocolBase(HeadProtocol):
         is_head()   -> True (HEAD position)
         parampara_vector() -> 185 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 4  # THE ONLY CONFIGURATION
 
 
@@ -61,8 +63,10 @@ class KnowledgeGraphProtocolBase(HeadProtocol):
 # NODE TYPES - WATERTIGHT (No Any!)
 # =============================================================================
 
+
 class NodeType(str, Enum):
     """Types of nodes in the knowledge graph."""
+
     FILE = "file"
     FUNCTION = "function"
     CLASS = "class"
@@ -75,6 +79,7 @@ class NodeType(str, Enum):
 
 class RelationType(str, Enum):
     """Types of relationships between nodes."""
+
     IMPORTS = "imports"
     CALLS = "calls"
     INHERITS = "inherits"
@@ -88,12 +93,14 @@ class RelationType(str, Enum):
 # VIOLATION NODE - WATERTIGHT (No Any!)
 # =============================================================================
 
+
 @dataclass
 class ViolationNode:
     """
     A violation detected in the codebase.
     WATERTIGHT - explicit types only.
     """
+
     id: str
     file_path: str
     line: int
@@ -120,6 +127,7 @@ class ViolationNode:
 # =============================================================================
 # KNOWLEDGE GRAPH PROTOCOL - The Universal Interface
 # =============================================================================
+
 
 @runtime_checkable
 class KnowledgeGraphProtocol(Protocol):
@@ -154,7 +162,9 @@ class KnowledgeGraphProtocol(Protocol):
         """Get a node by ID."""
         ...
 
-    def query_nodes(self, node_type: NodeType, filters: Optional[Dict[str, str | int | bool]] = None) -> List[ViolationNode]:
+    def query_nodes(
+        self, node_type: NodeType, filters: Optional[Dict[str, str | int | bool]] = None
+    ) -> List[ViolationNode]:
         """Query nodes by type and optional filters."""
         ...
 
@@ -236,6 +246,7 @@ class KnowledgeGraphProtocol(Protocol):
 # NULL KNOWLEDGE GRAPH - For testing
 # =============================================================================
 
+
 class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     """
     The Empty Graph - no knowledge loaded.
@@ -253,7 +264,9 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     def get_node(self, node_id: str) -> Optional[ViolationNode]:
         return self._violations.get(node_id)
 
-    def query_nodes(self, node_type: NodeType, filters: Optional[Dict[str, str | int | bool]] = None) -> List[ViolationNode]:
+    def query_nodes(
+        self, node_type: NodeType, filters: Optional[Dict[str, str | int | bool]] = None
+    ) -> List[ViolationNode]:
         return []
 
     def add_edge(self, source_id: str, target_id: str, relation: RelationType) -> None:

@@ -30,7 +30,6 @@ CACHE STRATEGIES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -76,21 +75,25 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # CACHE STRATEGY
 # =============================================================================
 
+
 class CacheStrategy(str, Enum):
     """Eviction strategies for the cache."""
-    LRU = "lru"       # Least Recently Used
-    LFU = "lfu"       # Least Frequently Used
-    TTL = "ttl"       # Time-based only
-    FIFO = "fifo"     # First In First Out
+
+    LRU = "lru"  # Least Recently Used
+    LFU = "lfu"  # Least Frequently Used
+    TTL = "ttl"  # Time-based only
+    FIFO = "fifo"  # First In First Out
 
 
 # =============================================================================
 # SMRITI ENTRY
 # =============================================================================
 
+
 @dataclass
 class SmritiEntry:
     """A long-term memory entry."""
+
     key: str
     value: MemoryValue
     value_type: str
@@ -166,6 +169,7 @@ class SmritiEntry:
 # SMRITI PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class SmritiProtocol(Protocol):
     """
@@ -231,6 +235,7 @@ class SmritiProtocol(Protocol):
 # =============================================================================
 # SMRITI IMPLEMENTATION
 # =============================================================================
+
 
 class Smriti:
     """
@@ -373,7 +378,7 @@ class Smriti:
 
         elif self._strategy == CacheStrategy.LFU:
             # Evict least frequently used
-            min_count = float('inf')
+            min_count = float("inf")
             min_key = None
             for key, entry in self._storage.items():
                 if entry.access_count < min_count:
@@ -429,6 +434,7 @@ class Smriti:
 # NULL SMRITI
 # =============================================================================
 
+
 class NullSmriti:
     """Null long-term memory - no persistence."""
 
@@ -475,7 +481,10 @@ class NullSmriti:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
     "CacheStrategy",
     "SmritiEntry",
     "SmritiProtocol",

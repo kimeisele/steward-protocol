@@ -24,7 +24,6 @@ He is the Patron Saint of Memory.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -54,6 +53,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # PRAHLADA PROTOCOL BASE - Derives from MantraPosition 9
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class PrahladaProtocolBase(WorkerProtocol):
     """
@@ -70,6 +70,7 @@ class PrahladaProtocolBase(WorkerProtocol):
         is_head()   → False (Worker position)
         parampara_vector() → 370 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 9  # THE ONLY CONFIGURATION
 
 
@@ -89,11 +90,12 @@ class MemoryEntry(TypedDict, total=False):
     A single memory entry with metadata.
     WATERTIGHT - no Any!
     """
+
     key: str
     value_type: str  # Python type name
     value_repr: str  # String representation (for observability)
     value_hash: str  # Hash for integrity
-    stored_at: str   # ISO timestamp
+    stored_at: str  # ISO timestamp
     expires_at: str  # ISO timestamp (empty = never)
     access_count: int
     last_accessed: str
@@ -104,6 +106,7 @@ class MemoryState(TypedDict, total=False):
     Complete memory state for observability.
     WATERTIGHT - no Any!
     """
+
     entries: Dict[str, MemoryEntry]
     total_count: int
     total_size_bytes: int
@@ -114,6 +117,7 @@ class MemoryState(TypedDict, total=False):
 
 class AttackType(str, Enum):
     """Types of attacks Prahlada can survive."""
+
     MEMORY_OVERFLOW = "memory_overflow"
     DATA_CORRUPTION = "data_corruption"
     CACHE_POISON = "cache_poison"
@@ -127,6 +131,7 @@ class SurvivalResult(TypedDict, total=False):
     Result of surviving an attack.
     WATERTIGHT - no Any!
     """
+
     survived: bool
     attack_type: str
     damage_mitigated: float  # 0.0-1.0
@@ -138,6 +143,7 @@ class SurvivalResult(TypedDict, total=False):
 
 class ExecuteCliResult(TypedDict):
     """Result of CLI execute operation. WATERTIGHT - no Any!"""
+
     success: bool
     service: str
     status: str
@@ -305,6 +311,7 @@ class NullPrahlada(PrahladaProtocolBase):
 # PRAHLADA'S INSTRUCTION (For Memory Access)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SmaranamInstruction:
     """
@@ -315,6 +322,7 @@ class SmaranamInstruction:
     This is the ATOMIC unit of memory operation.
     Used by ChittaProtocol and SmritiProtocol.
     """
+
     operation: str  # "store", "retrieve", "forget", "check"
     key: str
     value: Optional[MemoryValue] = None

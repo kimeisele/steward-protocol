@@ -18,7 +18,6 @@ He serves the Sovereign while ruling.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -50,6 +49,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # JANAKA PROTOCOL BASE - Derives from MantraPosition 10
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class JanakaProtocolBase(WorkerProtocol):
     """
@@ -66,6 +66,7 @@ class JanakaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 407 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 10  # THE ONLY CONFIGURATION
 
 
@@ -82,21 +83,23 @@ TaskValue = Union[str, int, float, bool, Dict[str, str], List[str], bytes, None]
 
 class TaskStatus(str, Enum):
     """Status of a task execution."""
-    PENDING = "pending"       # Waiting to start
-    RUNNING = "running"       # Currently executing
-    COMPLETED = "completed"   # Finished successfully
-    FAILED = "failed"         # Finished with error
-    CANCELLED = "cancelled"   # Stopped before completion
-    BLOCKED = "blocked"       # Waiting on dependency
+
+    PENDING = "pending"  # Waiting to start
+    RUNNING = "running"  # Currently executing
+    COMPLETED = "completed"  # Finished successfully
+    FAILED = "failed"  # Finished with error
+    CANCELLED = "cancelled"  # Stopped before completion
+    BLOCKED = "blocked"  # Waiting on dependency
 
 
 class TaskPriority(str, Enum):
     """Priority levels for tasks."""
-    CRITICAL = "critical"     # Immediate execution
-    HIGH = "high"             # Before normal tasks
-    NORMAL = "normal"         # Standard priority
-    LOW = "low"               # When resources available
-    BACKGROUND = "background" # Only when idle
+
+    CRITICAL = "critical"  # Immediate execution
+    HIGH = "high"  # Before normal tasks
+    NORMAL = "normal"  # Standard priority
+    LOW = "low"  # When resources available
+    BACKGROUND = "background"  # Only when idle
 
 
 class Task(TypedDict, total=False):
@@ -104,19 +107,20 @@ class Task(TypedDict, total=False):
     A task to be executed.
     WATERTIGHT - no Any!
     """
-    id: str                   # Unique task ID
-    name: str                 # Human-readable name
-    status: str               # TaskStatus value
-    priority: str             # TaskPriority value
-    input_type: str           # Python type of input
-    input_repr: str           # String representation of input
-    output_type: str          # Python type of output (if completed)
-    output_repr: str          # String representation of output
-    error_message: str        # Error if failed
-    created_at: str           # ISO timestamp
-    started_at: str           # ISO timestamp (empty if not started)
-    completed_at: str         # ISO timestamp (empty if not completed)
-    sovereign_id: str         # Who requested this task
+
+    id: str  # Unique task ID
+    name: str  # Human-readable name
+    status: str  # TaskStatus value
+    priority: str  # TaskPriority value
+    input_type: str  # Python type of input
+    input_repr: str  # String representation of input
+    output_type: str  # Python type of output (if completed)
+    output_repr: str  # String representation of output
+    error_message: str  # Error if failed
+    created_at: str  # ISO timestamp
+    started_at: str  # ISO timestamp (empty if not started)
+    completed_at: str  # ISO timestamp (empty if not completed)
+    sovereign_id: str  # Who requested this task
 
 
 class ExecutionResult(TypedDict, total=False):
@@ -124,12 +128,13 @@ class ExecutionResult(TypedDict, total=False):
     Result of executing a task.
     WATERTIGHT - no Any!
     """
+
     success: bool
     task_id: str
-    output_type: str          # Python type of output
-    output_repr: str          # String representation
+    output_type: str  # Python type of output
+    output_repr: str  # String representation
     execution_time_ms: int
-    error_message: str        # Empty if success
+    error_message: str  # Empty if success
 
 
 class ExecutionState(TypedDict, total=False):
@@ -137,17 +142,19 @@ class ExecutionState(TypedDict, total=False):
     Complete execution state for observability.
     WATERTIGHT - no Any!
     """
+
     pending_tasks: List[Task]
     running_tasks: List[Task]
     completed_count: int
     failed_count: int
-    total_karma: float        # Accumulated work debt
+    total_karma: float  # Accumulated work debt
     is_busy: bool
-    health: str               # "pristine", "healthy", "degraded", "blocked"
+    health: str  # "pristine", "healthy", "degraded", "blocked"
 
 
 class CheckResult(TypedDict):
     """Result of check operation. WATERTIGHT - no Any!"""
+
     success: bool
     target: str
     pending: int
@@ -160,8 +167,10 @@ class CheckResult(TypedDict):
 # TASK HANDLER TYPE (For type-safe execution)
 # =============================================================================
 
+
 class TaskHandler(Protocol):
     """Protocol for task handlers - WATERTIGHT."""
+
     def __call__(self, task_input: TaskValue) -> TaskValue:
         """Execute a task and return result."""
         ...
@@ -375,6 +384,7 @@ class NullJanaka(JanakaProtocolBase):
 # JANAKA'S INSTRUCTION (For Execution)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SankalpaInstruction:
     """
@@ -385,6 +395,7 @@ class SankalpaInstruction:
     This is the ATOMIC unit of execution intent.
     Used by SankalpaProtocol and task schedulers.
     """
+
     operation: str  # "submit", "execute", "cancel", "pause", "resume"
     task_name: str
     task_input: Optional[TaskValue] = None
@@ -533,9 +544,11 @@ __all__ = [
 # LAZY IMPORT to avoid circular dependency with scheduling/task.py
 # JanakaService is loaded on first access via __getattr__
 
+
 def __getattr__(name: str):
     """Lazy import for JanakaService to avoid circular import."""
     if name == "JanakaService":
         from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+
         return JanakaService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

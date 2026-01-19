@@ -225,6 +225,7 @@ class JanakaService(JanakaProtocol):
         if current_reactor is None:
             try:
                 from vibe_core.reactor import QuantumReactor
+
                 current_reactor = QuantumReactor(initial_inertia=0.5)
                 logger.info("☢️ JANAKA: QuantumReactor loaded as execution primitive")
                 setattr(kernel, "_reactor", current_reactor)
@@ -247,6 +248,7 @@ class JanakaService(JanakaProtocol):
 
         try:
             from vibe_core.reactor import encode
+
             akasha = self.get_akasha_hash(kernel)
             agent_tensor = encode(f"agent:{agent_id}", akasha)
             cap_tensor = encode(f"capability:{capability}", akasha)

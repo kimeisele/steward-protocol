@@ -17,17 +17,15 @@ __genesis__ = "0xf8f27f0f"  # GenesisByte: parampara % 37 == 0
 
 import json
 from typing import List, Tuple
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.AUDIT_SEAL,
     name="bite",
-    help_text="Record a violation to Ledger (TAKSHAKA bite / YAMARAJA judgment)")
+    help_text="Record a violation to Ledger (TAKSHAKA bite / YAMARAJA judgment)",
+)
 class BiteCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         if not args:

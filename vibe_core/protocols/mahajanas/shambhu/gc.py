@@ -25,7 +25,6 @@ COLLECTION STRATEGIES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -65,21 +64,25 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # GC STRATEGY
 # =============================================================================
 
+
 class GCStrategy(str, Enum):
     """Garbage collection strategies."""
-    MANUAL = "manual"               # Explicit cleanup
-    REFERENCE_COUNT = "ref_count"   # Reference counting
-    MARK_SWEEP = "mark_sweep"       # Mark and sweep
-    GENERATIONAL = "generational"   # Young/old generations
+
+    MANUAL = "manual"  # Explicit cleanup
+    REFERENCE_COUNT = "ref_count"  # Reference counting
+    MARK_SWEEP = "mark_sweep"  # Mark and sweep
+    GENERATIONAL = "generational"  # Young/old generations
 
 
 # =============================================================================
 # MANAGED OBJECT
 # =============================================================================
 
+
 @dataclass
 class ManagedObject:
     """An object tracked by the garbage collector."""
+
     object_id: str
     size_bytes: int
     created_at: datetime = field(default_factory=datetime.now)
@@ -92,6 +95,7 @@ class ManagedObject:
 @dataclass(frozen=True)
 class GCResult:
     """Result of a garbage collection cycle."""
+
     objects_collected: int
     bytes_freed: int
     duration_ms: int
@@ -102,6 +106,7 @@ class GCResult:
 @dataclass
 class GCStats:
     """GC statistics."""
+
     total_collections: int = 0
     total_objects_collected: int = 0
     total_bytes_freed: int = 0
@@ -113,6 +118,7 @@ class GCStats:
 # =============================================================================
 # GC PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class GCProtocol(Protocol):
@@ -172,6 +178,7 @@ class GCProtocol(Protocol):
 # =============================================================================
 # GC IMPLEMENTATION
 # =============================================================================
+
 
 class GarbageCollector:
     """
@@ -390,6 +397,7 @@ class GarbageCollector:
 # NULL GC
 # =============================================================================
 
+
 class NullGC:
     """Null garbage collector - no collection."""
 
@@ -428,7 +436,15 @@ class NullGC:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "GCStrategy", "ManagedObject", "GCResult", "GCStats",
-    "GCProtocol", "GarbageCollector", "NullGC",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "GCStrategy",
+    "ManagedObject",
+    "GCResult",
+    "GCStats",
+    "GCProtocol",
+    "GarbageCollector",
+    "NullGC",
 ]

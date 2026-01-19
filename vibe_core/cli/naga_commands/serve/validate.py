@@ -35,17 +35,13 @@ import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.STATE_SYNC,
-    name="validate",
-    help_text="Validate system dharma (JANAKA's test - SERVE phase)")
+    opcode=MantraOpCode.STATE_SYNC, name="validate", help_text="Validate system dharma (JANAKA's test - SERVE phase)"
+)
 class ValidateCommand(NagaCommandBase):
     """
     Validate command implementation.
@@ -142,9 +138,7 @@ class ValidateCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         all_passed = validations_passed == validations_run
         status = "DHARMIC" if all_passed else "ADHARMIC"
-        output_parts.append(
-            f"CHECK_DHARMA: {validations_passed}/{validations_run} validations passed - {status}"
-        )
+        output_parts.append(f"CHECK_DHARMA: {validations_passed}/{validations_run} validations passed - {status}")
 
         if issues:
             output_parts.append("")
@@ -158,20 +152,13 @@ class ValidateCommand(NagaCommandBase):
         data.append(("validations_passed", str(validations_passed)))
         data.append(("status", status))
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _validate_types(self, quick: bool = False) -> dict:
         """Run type checking with mypy."""
         try:
             cmd = ["python", "-m", "mypy", "--version"]
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=Path.cwd(),
-                timeout=5)
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd(), timeout=5)
 
             if result.returncode != 0:
                 return {
@@ -203,12 +190,7 @@ class ValidateCommand(NagaCommandBase):
                 "--ignore-missing-imports",
                 "--no-error-summary",
             ]
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=Path.cwd(),
-                timeout=60)
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd(), timeout=60)
 
             if result.returncode == 0:
                 return {"passed": True, "message": "No type errors found"}

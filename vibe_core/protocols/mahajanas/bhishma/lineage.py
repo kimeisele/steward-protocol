@@ -32,7 +32,6 @@ VERIFICATION:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -69,18 +68,21 @@ PARAMPARA_DIVISOR: Final[int] = 37  # 24 + 12 + 1 = 37
 # LINEAGE STATUS
 # =============================================================================
 
+
 class LineageStatus(str, Enum):
     """Status of a lineage chain."""
-    CONNECTED = "connected"       # % 37 == 0, valid chain
-    VALID = "valid"               # Valid chain, not connected
-    BROKEN = "broken"             # Chain has gaps
-    ORPHAN = "orphan"             # No ancestors
-    CORRUPTED = "corrupted"       # Hash mismatch
+
+    CONNECTED = "connected"  # % 37 == 0, valid chain
+    VALID = "valid"  # Valid chain, not connected
+    BROKEN = "broken"  # Chain has gaps
+    ORPHAN = "orphan"  # No ancestors
+    CORRUPTED = "corrupted"  # Hash mismatch
 
 
 # =============================================================================
 # LINEAGE NODE - Single node in the chain
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class LineageNode:
@@ -89,12 +91,13 @@ class LineageNode:
 
     Each node knows its parent (guru) and can verify the chain.
     """
-    node_id: str              # Unique identifier
+
+    node_id: str  # Unique identifier
     parent_id: Optional[str]  # Parent node (None for root)
-    node_type: str            # "mahajana", "protocol", "entity"
-    name: str                 # Human-readable name
-    created_at: str           # ISO timestamp
-    metadata_hash: str        # Hash of node metadata
+    node_type: str  # "mahajana", "protocol", "entity"
+    name: str  # Human-readable name
+    created_at: str  # ISO timestamp
+    metadata_hash: str  # Hash of node metadata
 
     @classmethod
     def create(
@@ -149,15 +152,17 @@ class LineageNode:
 # LINEAGE VERIFICATION RESULT
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class LineageVerification:
     """Result of lineage verification."""
+
     status: LineageStatus
     node_id: str
-    depth: int                    # Distance from root
-    parampara_hash: int           # Hash for % 37 check
-    is_connected: bool            # % 37 == 0
-    ancestors: List[str]          # Chain back to root
+    depth: int  # Distance from root
+    parampara_hash: int  # Hash for % 37 check
+    is_connected: bool  # % 37 == 0
+    ancestors: List[str]  # Chain back to root
     message: str
 
     @property
@@ -169,6 +174,7 @@ class LineageVerification:
 # =============================================================================
 # LINEAGE PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class LineageProtocol(Protocol):
@@ -241,6 +247,7 @@ class LineageProtocol(Protocol):
 # =============================================================================
 # LINEAGE IMPLEMENTATION
 # =============================================================================
+
 
 class Lineage:
     """
@@ -452,6 +459,7 @@ class Lineage:
 # =============================================================================
 # NULL LINEAGE - For testing
 # =============================================================================
+
 
 class NullLineage:
     """

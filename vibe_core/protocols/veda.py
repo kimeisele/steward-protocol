@@ -41,7 +41,6 @@ USAGE:
 WATERTIGHT: All typed. No Any. Protocol-first.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -68,10 +67,10 @@ from typing import (
 # TYPE VARIABLES
 # =============================================================================
 
-T = TypeVar("T")           # Input type
-R = TypeVar("R")           # Result type
-K = TypeVar("K")           # Key type for indexing
-V = TypeVar("V")           # Value type for indexing
+T = TypeVar("T")  # Input type
+R = TypeVar("R")  # Result type
+K = TypeVar("K")  # Key type for indexing
+V = TypeVar("V")  # Value type for indexing
 
 
 # =============================================================================
@@ -308,6 +307,7 @@ class VedaProtocol(
             for r in agent:             # KARMA
                 ...
     """
+
     pass
 
 
@@ -328,6 +328,7 @@ class VedaFullProtocol(
         - __hash__, __contains__ (extended Pratyaya)
         - __aiter__, __await__ (async Karma)
     """
+
     pass
 
 
@@ -431,6 +432,7 @@ class VedaMixin(ShabdaMixin, ArthaMixin, PratyayaMixin, KarmaMixin):
             def __bool__(self) -> bool:
                 return bool(self.name)  # Valid if has name
     """
+
     pass
 
 

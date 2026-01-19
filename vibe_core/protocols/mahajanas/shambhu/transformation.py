@@ -22,7 +22,6 @@ DESTRUCTION TYPES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -63,23 +62,25 @@ LOTUS_QUARTER: Final[str] = "genesis"
 
 class TransformationType(str, Enum):
     """Types of transformation operations."""
-    ANALYZE = "analyze"         # Identify mixed concerns
-    SPLIT = "split"             # Break apart file
-    ROUTE = "route"             # Send to proper owner
-    PURGE = "purge"             # Remove obsolete code
-    RENAME = "rename"           # Fix naming
-    MERGE = "merge"             # Combine fragments
+
+    ANALYZE = "analyze"  # Identify mixed concerns
+    SPLIT = "split"  # Break apart file
+    ROUTE = "route"  # Send to proper owner
+    PURGE = "purge"  # Remove obsolete code
+    RENAME = "rename"  # Fix naming
+    MERGE = "merge"  # Combine fragments
 
 
 class ConcernType(str, Enum):
     """Types of concerns in a file."""
-    PROTOCOL = "protocol"       # Interface definition
-    IMPLEMENTATION = "impl"     # Concrete implementation
-    TYPE = "type"               # TypedDict/dataclass
-    ENUM = "enum"               # Enumeration
-    CONSTANT = "constant"       # Final values
-    FUNCTION = "function"       # Helper functions
-    CLASS = "class"             # Classes
+
+    PROTOCOL = "protocol"  # Interface definition
+    IMPLEMENTATION = "impl"  # Concrete implementation
+    TYPE = "type"  # TypedDict/dataclass
+    ENUM = "enum"  # Enumeration
+    CONSTANT = "constant"  # Final values
+    FUNCTION = "function"  # Helper functions
+    CLASS = "class"  # Classes
 
 
 class MixedConcern(TypedDict, total=False):
@@ -87,14 +88,15 @@ class MixedConcern(TypedDict, total=False):
     A concern found in a mixed file.
     WATERTIGHT - no Any!
     """
-    name: str                   # Name of the class/function/type
-    concern_type: str           # ConcernType value
-    current_file: str           # Where it currently lives
-    proper_owner: str           # Mahajana who should own it
-    proper_location: str        # Where it should go
-    line_start: int             # Starting line number
-    line_end: int               # Ending line number
-    dependencies: List[str]     # What it depends on
+
+    name: str  # Name of the class/function/type
+    concern_type: str  # ConcernType value
+    current_file: str  # Where it currently lives
+    proper_owner: str  # Mahajana who should own it
+    proper_location: str  # Where it should go
+    line_start: int  # Starting line number
+    line_end: int  # Ending line number
+    dependencies: List[str]  # What it depends on
 
 
 class TransformationPlan(TypedDict, total=False):
@@ -102,12 +104,13 @@ class TransformationPlan(TypedDict, total=False):
     Plan for transforming a file.
     WATERTIGHT - no Any!
     """
+
     source_file: str
     concerns_found: int
     concerns: List[MixedConcern]
     recommended_splits: Dict[str, List[str]]  # owner -> [concern_names]
     can_transform: bool
-    blockers: List[str]         # Why it can't be transformed
+    blockers: List[str]  # Why it can't be transformed
 
 
 class TransformationResult(TypedDict, total=False):
@@ -115,8 +118,9 @@ class TransformationResult(TypedDict, total=False):
     Result of transformation.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    transformation_type: str    # TransformationType value
+    transformation_type: str  # TransformationType value
     source_file: str
     files_created: List[str]
     files_modified: List[str]
@@ -130,11 +134,12 @@ class TransformationState(TypedDict, total=False):
     State of transformation operations.
     WATERTIGHT - no Any!
     """
+
     transformations_performed: int
     files_analyzed: int
     files_split: int
     concerns_routed: int
-    last_transformation: str    # ISO timestamp
+    last_transformation: str  # ISO timestamp
     health: str
 
 
@@ -146,9 +151,9 @@ class TransformationState(TypedDict, total=False):
 MIXED_FILE_REGISTRY: Final[Dict[str, Dict[str, str]]] = {
     # ledger.py has VibeKernel, VibeScheduler, VibeLedger - ALL MIXED
     "vibe_core/protocols/ledger.py": {
-        "VibeKernel": "brahma",        # Creation → Brahma
-        "VibeScheduler": "janaka",     # Execution → Janaka
-        "VibeLedger": "bhishma",       # Commitment → Bhishma
+        "VibeKernel": "brahma",  # Creation → Brahma
+        "VibeScheduler": "janaka",  # Execution → Janaka
+        "VibeLedger": "bhishma",  # Commitment → Bhishma
         "LedgerProtocol": "bhishma",
         "SchedulerProtocol": "janaka",
         "QueueStatus": "janaka",

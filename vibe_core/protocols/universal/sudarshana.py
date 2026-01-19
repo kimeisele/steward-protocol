@@ -31,41 +31,50 @@ R = TypeVar("R")
 
 # --- 1. The Protocol Definition ---
 
+
 class SysState(Enum):
     DORMANT = 0
     AWAKE = 1
     ENTROPY_HIGH = 99  # Panic state
 
+
 @dataclass
 class PranaTask(Generic[R]):
     """The atom of work. The 'Fractal' unit."""
+
     id: str
     target: Callable[..., R]
     args: tuple
     kwargs: dict
     mantra_signature: str
 
+
 @dataclass
 class PranaFailure:
     """
-    Represents a failed manifestation. 
+    Represents a failed manifestation.
     Carries the trace of the entropy (Exception) back to the source.
     """
+
     error: Exception
     traceback: str
     task_id: str
+
 
 class MantraCrash(Exception):
     """
     Raised in the main thread when a worker dies.
     """
+
     pass
+
 
 class PranaFuture(Generic[R]):
     """
     The Nervous System (Nadi).
     Connects the separated Limb (Worker) back to the Brain (Main Thread).
     """
+
     def __init__(self, task_id: str, async_result: AsyncResult):
         self.task_id = task_id
         self._val = async_result
@@ -77,16 +86,16 @@ class PranaFuture(Generic[R]):
         """
         try:
             result = self._val.get(timeout=timeout)
-            
+
             # The Immune Check: Is it a Failure?
             if isinstance(result, PranaFailure):
                 # Re-raise it locally so logic can handle it
                 # We could log here, but the Kernel logs errors too.
                 # Just bridging the gap.
-                raise result.error 
-                
-            return result # type: ignore
-            
+                raise result.error
+
+            return result  # type: ignore
+
         except multiprocessing.TimeoutError:
             raise TimeoutError(f"Task {self.task_id} timed out.")
 
@@ -98,7 +107,7 @@ class PranaFuture(Generic[R]):
 
     def successful(self) -> bool:
         return self._val.successful()
-        
+
     def __repr__(self) -> str:
         state = "READY" if self.ready() else "PENDING"
         return f"<PranaFuture {self.task_id} [{state}]>"
@@ -107,6 +116,7 @@ class PranaFuture(Generic[R]):
 # --- 2. The Task Kernel (The State Organ) ---
 # MantraKernel: The Governor of Prana (Compute).
 # Distinct from 'TaskKernel' (Logical Sandbox).
+
 
 def _guarded_execution(task: PranaTask[R]) -> Any:
     """
@@ -121,27 +131,25 @@ def _guarded_execution(task: PranaTask[R]) -> Any:
         return task.target(*task.args, **task.kwargs)
     except Exception as e:
         # 2. Catch the Entropy
-        return PranaFailure(
-            error=e,
-            traceback=traceback.format_exc(),
-            task_id=task.id
-        )
+        return PranaFailure(error=e, traceback=traceback.format_exc(), task_id=task.id)
+
 
 class MantraKernel:
     """
     The Governor of Prana (Compute).
     This Kernel manages the Sudarshana Chakra (The Process Pool).
     """
+
     def __init__(self, core_count: Optional[int] = None):
         self.state = SysState.DORMANT
         self.core_count = core_count or multiprocessing.cpu_count()
         # LAZY INIT POOL? No, User wants it ready.
         self.pool = multiprocessing.Pool(processes=self.core_count)
-        self.active_manifestations: Dict[str, AsyncResult] = {} # Tracking running tasks
+        self.active_manifestations: Dict[str, AsyncResult] = {}  # Tracking running tasks
         self.logger = logging.getLogger("MantraKernel")
-        
+
         # Configure logging if not running under pytest capture issues
-        # logging.basicConfig(level=logging.INFO) 
+        # logging.basicConfig(level=logging.INFO)
         self.logger.info(f"🌀 MantraKernel Initialized. Cores aligned: {self.core_count}")
 
     def inject_prana(self, task: PranaTask[R]) -> PranaFuture[R]:
@@ -154,20 +162,20 @@ class MantraKernel:
             raise MantraCrash("MantraKernel Rejected Task: Entropy High")
 
         self.logger.info(f"⚡ Injecting Prana into Task {task.id} [{task.mantra_signature}]")
-        
+
         # Async execution on a real core
         # We wrap the call in _guarded_execution
         # Note: apply_async(func, args, kwds) arguments must be pickleable.
         # _guarded_execution is top level, so it is pickleable.
-        
+
         async_result = self.pool.apply_async(
-            _guarded_execution, 
-            args=(task,), # Pass the task object as the argument
+            _guarded_execution,
+            args=(task,),  # Pass the task object as the argument
             callback=self._on_complete,
-            error_callback=self._on_error
+            error_callback=self._on_error,
         )
         self.active_manifestations[task.id] = async_result
-        
+
         # Return the Nadi (Link)
         return PranaFuture(task.id, async_result)
 
@@ -175,9 +183,9 @@ class MantraKernel:
         """The Echo returns."""
         # This callback runs in the result thread (helper).
         if isinstance(result, PranaFailure):
-             self.logger.warning(f"💀 Task Failed (Caught by Immune System): {result.error}")
+            self.logger.warning(f"💀 Task Failed (Caught by Immune System): {result.error}")
         else:
-             self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
+            self.logger.info(f"✨ Karma Resolved: {str(result)[:50]}")
 
     def _on_error(self, error: BaseException) -> None:
         # This caches POOL level mechanism errors, or unchecked errors
@@ -194,45 +202,50 @@ class MantraKernel:
         self.pool.join()
         self.logger.info("🛑 Kali Yuga containment. System Halt.")
 
+
 # --- 3. The Sudarshana Chakra (Updated) ---
+
 
 class SudarshanaChakra:
     """
     Das drehende Rad. Es schneidet Karma (Latenz) und schützt Dharma (Integrität).
     """
-    
+
     @staticmethod
     def spin(opcode: MantraOpCode, context: Optional[SovereignContext]) -> bool:
         """
         Führt einen Takt-Zyklus aus.
         """
         # 1. 37th OVERRIDE (Venu-Gita Check)
-        if context and context.identity_id == "did:vibe:37:bija-akshara": # From purusha.py
-             return True
-        
+        if context and context.identity_id == "did:vibe:37:bija-akshara":  # From purusha.py
+            return True
+
         # 2. STANDARD MANTRA CHECK
         # print(f"🌀 SUDARSHANA SPIN: {opcode.name}")
         return True
+
 
 # GLOBAL KERNEL (The Living Spirit)
 # Warning: This spawns processes on import!
 KERNEL = MantraKernel()
 
+
 def mantra_governed(opcode: MantraOpCode):
     """
-    The updated decorator. instead of running immediately, 
+    The updated decorator. instead of running immediately,
     it submits to the Kernel for 'Real Core' processing.
     """
+
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> PranaFuture[R]: # Returns Future now!
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> PranaFuture[R]:  # Returns Future now!
             # 1. Context Extraktion (Suche nach SovereignContext in Args)
             context = None
             for arg in args:
                 if isinstance(arg, SovereignContext):
                     context = arg
                     break
-            
+
             if context is None:
                 for val in kwargs.values():
                     if isinstance(val, SovereignContext):
@@ -244,17 +257,18 @@ def mantra_governed(opcode: MantraOpCode):
 
             # 3. Packaging the Dead Matter into Living Task
             task_id = str(uuid.uuid4())[:8]
-            
+
             task = PranaTask(
                 id=task_id,
                 target=func,
-                args=args, # type: ignore
-                kwargs=kwargs, # type: ignore
-                mantra_signature=opcode.name
+                args=args,  # type: ignore
+                kwargs=kwargs,  # type: ignore
+                mantra_signature=opcode.name,
             )
-            
+
             # 4. Offload to the Kernel
             return KERNEL.inject_prana(task)
-            
+
         return wrapper
+
     return decorator

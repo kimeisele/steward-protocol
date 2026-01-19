@@ -18,17 +18,13 @@ __position__ = 15
 __genesis__ = "0x9ccb973f"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Tuple
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.EXTEND_CAP,
-    name="prahlad",
-    help_text="Access Prahlad Resilience Agent (PRAHLADA's resilience)")
+    opcode=MantraOpCode.EXTEND_CAP, name="prahlad", help_text="Access Prahlad Resilience Agent (PRAHLADA's resilience)"
+)
 class PrahladCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         if not args:

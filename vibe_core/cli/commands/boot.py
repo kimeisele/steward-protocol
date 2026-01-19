@@ -57,21 +57,19 @@ class BootCommand(BaseCommand):
             # 1. ACQUIRE IDENTITY (Sovereign Check)
             # In a real system, this pulls from the cryptographic keystore
             user_signature = f"sovereign:{getpass.getuser()}"
-            
+
             # 2. GENERATE GENESIS BYTE (The 16-Bit Spark)
             # We affirm the full cycle (Hare Krishna...) exists in intent
             genesis = GenesisByte(
                 signature=user_signature,
-                resonance=MantraBit.full_resonance(), # Sets 0xFFFF
-                timestamp=start
+                resonance=MantraBit.full_resonance(),  # Sets 0xFFFF
+                timestamp=start,
             )
-            
+
             # 3. INITIALIZE ORCHESTRATOR (The Machine)
             # No Kernel creation here! Just the empty shell.
-            orchestrator = BootOrchestrator(
-                boot_mode=BootMode.MINIMAL if minimal else BootMode.FULL
-            )
-            
+            orchestrator = BootOrchestrator(boot_mode=BootMode.MINIMAL if minimal else BootMode.FULL)
+
             # 4. IGNITE (The Spark)
             # Passes the GenesisByte. If valid, Orchestrator builds Kernel.
             kernel: "KernelProtocol" = orchestrator.ignite(genesis)

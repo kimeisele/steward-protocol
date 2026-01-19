@@ -78,6 +78,7 @@ class ValidatorStats(TypedDict):
     max_staleness_days: int
     known_patterns: int
 
+
 logger = logging.getLogger("OUROBOROS.SATYA")
 
 

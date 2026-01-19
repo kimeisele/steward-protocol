@@ -114,6 +114,7 @@ class StewardCLI:
 
     def __init__(self):
         import warnings
+
         warnings.warn(
             "StewardCLI is deprecated and wrapped by Balarama. "
             "Use 'from vibe_core.mahamantra import cli_bridge' for new CLI implementations.",

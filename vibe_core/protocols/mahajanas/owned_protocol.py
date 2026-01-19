@@ -106,6 +106,7 @@ def get_mahajana_lineage(mahajana_name: str) -> List[str]:
 # WATERTIGHT TYPES (NO ANY ALLOWED!)
 # =============================================================================
 
+
 class ProtocolState(TypedDict, total=False):
     """
     State of an owned protocol - WATERTIGHT, no Any!
@@ -113,6 +114,7 @@ class ProtocolState(TypedDict, total=False):
     Every protocol returns this structure for observability.
     Includes LOTUS integration fields for auto-routing.
     """
+
     protocol_name: str
     owner: str  # Mahajana name
     is_chanting: bool
@@ -122,10 +124,10 @@ class ProtocolState(TypedDict, total=False):
     gad_compliant: bool
     last_error: Optional[str]
     # LOTUS integration (auto-routing)
-    lotus_position: int        # Position in Mahamantra (0-15)
-    lotus_quarter: str         # LotusQuarter value
-    parampara_hash: int        # For % 37 verification
-    is_lotus_connected: bool   # parampara_hash % 37 == 0
+    lotus_position: int  # Position in Mahamantra (0-15)
+    lotus_quarter: str  # LotusQuarter value
+    parampara_hash: int  # For % 37 verification
+    is_lotus_connected: bool  # parampara_hash % 37 == 0
     # VEDIC GRAPH integration
     lineage_vector: List[str]  # Parampara trace to Krishna
 
@@ -134,17 +136,20 @@ class ProtocolState(TypedDict, total=False):
 # PROTOCOL OWNERSHIP STATUS
 # =============================================================================
 
+
 class OwnershipStatus(str, Enum):
     """Status of protocol ownership."""
-    OWNED = "owned"           # Has Mahajana owner
-    ORPHAN = "orphan"         # No owner (Mayavad!)
-    MIGRATING = "migrating"   # Being migrated to Mahajana
-    PERSONAL = "personal"     # Owned by Krishna/Rama directly
+
+    OWNED = "owned"  # Has Mahajana owner
+    ORPHAN = "orphan"  # No owner (Mayavad!)
+    MIGRATING = "migrating"  # Being migrated to Mahajana
+    PERSONAL = "personal"  # Owned by Krishna/Rama directly
 
 
 # =============================================================================
 # OWNED PROTOCOL METADATA
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class ProtocolMeta:
@@ -157,6 +162,7 @@ class ProtocolMeta:
     3. GAD-000 compliance status
     4. Link to Mahamantra
     """
+
     name: str
     owner: Mahajana
     opcodes: List[MantraOpCode]
@@ -172,6 +178,7 @@ class ProtocolMeta:
 # =============================================================================
 # THE OWNED PROTOCOL BASE
 # =============================================================================
+
 
 class OwnedProtocol(ABC):
     """
@@ -266,7 +273,7 @@ class OwnedProtocol(ABC):
 
     def _check_observability(self) -> bool:
         """Can an AI see the current state?"""
-        return hasattr(self, 'get_state')
+        return hasattr(self, "get_state")
 
     def _check_parseability(self) -> bool:
         """Can an AI understand errors?"""
@@ -282,7 +289,7 @@ class OwnedProtocol(ABC):
 
     def _check_recoverability(self) -> bool:
         """Can the system heal itself?"""
-        return hasattr(self, 'reset')
+        return hasattr(self, "reset")
 
     def _check_sovereign(self) -> bool:
         """Is there a sovereign?"""
@@ -337,6 +344,7 @@ class OwnedProtocol(ABC):
     def is_chanting(self) -> bool:
         """Is this protocol chanting?"""
         from vibe_core.protocols.gad import JapaState
+
         return self._heartbeat.state != JapaState.DISCONNECTED
 
     # =========================================================================

@@ -16,7 +16,6 @@ handles the data operations.
 Migration: .opus_state/ → .vibe/state/plugins/opus_assistant/ (2026-01-04)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

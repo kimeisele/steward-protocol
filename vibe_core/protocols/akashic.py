@@ -21,10 +21,10 @@ from typing import List, Optional, Protocol, runtime_checkable, Dict, Any
 class AkashicProtocol(Protocol):
     """
     The Protocol of Eternal Memory (Learning Store).
-    
+
     Distinct from MemoryProtocol (Short-term/Session Context),
     AkashicProtocol focuses on Long-term Wisdom and Outcome Analysis.
-    
+
     "Actions have consequences. We remember them."
     """
 
@@ -39,7 +39,7 @@ class AkashicProtocol(Protocol):
     ) -> None:
         """
         Record the Karmic Result of an action.
-        
+
         Args:
             intent_type: The bucket/category of the action
             description: Human readable details
@@ -53,7 +53,7 @@ class AkashicProtocol(Protocol):
     def get_success_rate(self, intent_type: str) -> float:
         """
         Calculate the Karmic Probability of success.
-        
+
         Returns:
             0.0 to 1.0 (Probability)
         """
@@ -62,17 +62,17 @@ class AkashicProtocol(Protocol):
     def is_in_cooldown(self, intent_type: str) -> bool:
         """
         Check if an action is currently forbidden due to recent failure.
-        
+
         ("The Burned Hand teaches best.")
         """
         ...
-        
+
     def get_successful_patterns(self, limit: int = 10) -> List[str]:
         """
         Retrieve patterns that have proven to be consistently Dharmic (Successful).
         """
         ...
-    
+
     def was_recently_rejected(self, intent_type: str, hours: int = 24) -> bool:
         """
         Check if the Sovereign (User) recently rejected this intent.

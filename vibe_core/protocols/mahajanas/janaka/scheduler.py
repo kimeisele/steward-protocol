@@ -29,7 +29,6 @@ SCHEDULING ALGORITHMS:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -74,12 +73,14 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # SCHEDULING ALGORITHM
 # =============================================================================
 
+
 class SchedulingAlgorithm(str, Enum):
     """Task scheduling algorithms."""
-    FIFO = "fifo"                 # First In First Out
-    PRIORITY = "priority"         # Priority-based
-    ROUND_ROBIN = "round_robin"   # Time-sliced
-    DEADLINE = "deadline"         # Earliest deadline first
+
+    FIFO = "fifo"  # First In First Out
+    PRIORITY = "priority"  # Priority-based
+    ROUND_ROBIN = "round_robin"  # Time-sliced
+    DEADLINE = "deadline"  # Earliest deadline first
 
 
 # =============================================================================
@@ -92,6 +93,7 @@ TaskExecutor = Callable[[TaskValue], TaskValue]
 @dataclass
 class ScheduledTask:
     """A task in the scheduler."""
+
     task_id: str
     name: str
     priority: TaskPriority
@@ -137,6 +139,7 @@ class ScheduledTask:
 # =============================================================================
 # SCHEDULER PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class SchedulerProtocol(Protocol):
@@ -202,6 +205,7 @@ class SchedulerProtocol(Protocol):
 # =============================================================================
 # SCHEDULER IMPLEMENTATION
 # =============================================================================
+
 
 class Scheduler:
     """
@@ -401,6 +405,7 @@ class Scheduler:
 # NULL SCHEDULER
 # =============================================================================
 
+
 class NullScheduler:
     """Null scheduler - instant execution."""
 
@@ -416,7 +421,14 @@ class NullScheduler:
     def pending_count(self) -> int:
         return 0
 
-    def schedule(self, name: str, executor: TaskExecutor, input_value: TaskValue, priority: TaskPriority = TaskPriority.NORMAL, deadline: Optional[datetime] = None) -> str:
+    def schedule(
+        self,
+        name: str,
+        executor: TaskExecutor,
+        input_value: TaskValue,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        deadline: Optional[datetime] = None,
+    ) -> str:
         return "null-task"
 
     def cancel(self, task_id: str) -> bool:
@@ -432,7 +444,15 @@ class NullScheduler:
         return []
 
     def get_state(self) -> ExecutionState:
-        return ExecutionState(pending_tasks=[], running_tasks=[], completed_count=0, failed_count=0, total_karma=0.0, is_busy=False, health="pristine")
+        return ExecutionState(
+            pending_tasks=[],
+            running_tasks=[],
+            completed_count=0,
+            failed_count=0,
+            total_karma=0.0,
+            is_busy=False,
+            health="pristine",
+        )
 
 
 # =============================================================================
@@ -440,7 +460,14 @@ class NullScheduler:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "SchedulingAlgorithm", "ScheduledTask", "TaskExecutor",
-    "SchedulerProtocol", "Scheduler", "NullScheduler",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "SchedulingAlgorithm",
+    "ScheduledTask",
+    "TaskExecutor",
+    "SchedulerProtocol",
+    "Scheduler",
+    "NullScheduler",
 ]

@@ -19,7 +19,6 @@ This module contains:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -60,10 +59,10 @@ LOTUS_QUARTER: Final[str] = "dharma"
 class IntentType(str, Enum):
     """Type of intent detected from natural language."""
 
-    CHAT = "chat"          # Conversational, needs LLM response
-    EXECUTE = "execute"    # Action, needs syscall execution
-    QUERY = "query"        # Information retrieval, needs data lookup
-    ROUTE = "route"        # Delegate to specific agent/tool
+    CHAT = "chat"  # Conversational, needs LLM response
+    EXECUTE = "execute"  # Action, needs syscall execution
+    QUERY = "query"  # Information retrieval, needs data lookup
+    ROUTE = "route"  # Delegate to specific agent/tool
 
 
 class SyscallParams(TypedDict, total=False):
@@ -71,6 +70,7 @@ class SyscallParams(TypedDict, total=False):
     WATERTIGHT syscall parameters.
     Replaces Dict[str, Any] in CognitiveResult.
     """
+
     agent_id: str
     target_id: str
     message: str
@@ -85,6 +85,7 @@ class QueryResult(TypedDict, total=False):
     WATERTIGHT query result.
     Replaces Dict[str, Any] in CognitiveResult.
     """
+
     result_type: str
     result_value: str
     result_count: int
@@ -97,9 +98,10 @@ class MessageRecord(TypedDict, total=False):
     WATERTIGHT message record.
     Replaces Dict[str, Any] in conversation history.
     """
-    role: str         # "user", "assistant", "system"
+
+    role: str  # "user", "assistant", "system"
     content: str
-    timestamp: str    # ISO format
+    timestamp: str  # ISO format
     intent_type: str  # IntentType value
 
 
@@ -108,6 +110,7 @@ class TickResult(TypedDict, total=False):
     WATERTIGHT tick result.
     Replaces Dict[str, Any] in tick().
     """
+
     tick_id: int
     timestamp: str
     needs_thinking: bool
@@ -120,6 +123,7 @@ class ThoughtResult(TypedDict, total=False):
     WATERTIGHT thought result.
     Replaces List[Any] in think().
     """
+
     intent_type: str
     confidence: float
     action: str
@@ -274,11 +278,7 @@ class CognitiveKernelProtocol(Protocol):
         """
         ...
 
-    def think(
-        self,
-        context: Optional[CognitiveContext] = None,
-        force: bool = False
-    ) -> List[ThoughtResult]:
+    def think(self, context: Optional[CognitiveContext] = None, force: bool = False) -> List[ThoughtResult]:
         """
         Executes a thought cycle (OODA loop).
         Generates intents based on perceived state.
@@ -294,6 +294,7 @@ class CognitiveKernelProtocol(Protocol):
 
 class HeartbeatResult(TypedDict, total=False):
     """WATERTIGHT heartbeat result."""
+
     pulse_id: int
     timestamp: str
     snapshot_taken: bool
@@ -332,11 +333,7 @@ class OperatorCognitiveProtocol(Protocol):
     WATERTIGHT - no Any types!
     """
 
-    async def process_intent(
-        self,
-        intent: str,
-        context: CognitiveContext
-    ) -> CognitiveResult:
+    async def process_intent(self, intent: str, context: CognitiveContext) -> CognitiveResult:
         """
         Process natural language intent.
 
@@ -352,11 +349,7 @@ class OperatorCognitiveProtocol(Protocol):
         """
         ...
 
-    async def generate_response(
-        self,
-        prompt: str,
-        context: CognitiveContext
-    ) -> str:
+    async def generate_response(self, prompt: str, context: CognitiveContext) -> str:
         """
         Generate intelligent response (for CHAT intents).
 
@@ -390,11 +383,7 @@ class NullCognitive:
     Routes everything directly to Envoy.
     """
 
-    async def process_intent(
-        self,
-        intent: str,
-        context: CognitiveContext
-    ) -> CognitiveResult:
+    async def process_intent(self, intent: str, context: CognitiveContext) -> CognitiveResult:
         """Fallback: Route everything to Envoy."""
         return CognitiveResult(
             intent_type=IntentType.ROUTE,
@@ -403,11 +392,7 @@ class NullCognitive:
             reasoning="No cognitive plugin registered, routing to Envoy",
         )
 
-    async def generate_response(
-        self,
-        prompt: str,
-        context: CognitiveContext
-    ) -> str:
+    async def generate_response(self, prompt: str, context: CognitiveContext) -> str:
         """Fallback: Cannot generate without cognitive layer."""
         return "[No cognitive layer available]"
 

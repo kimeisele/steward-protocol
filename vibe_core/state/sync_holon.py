@@ -38,7 +38,6 @@ Tattva Mapping (OPUS-097):
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-009, OPUS-097
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

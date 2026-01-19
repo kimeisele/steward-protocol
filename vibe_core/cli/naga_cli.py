@@ -40,9 +40,23 @@ class NagaCLI:
             description="NAGA Federation CLI - The Invisible Guardians",
             domain="security",
             subcommands=[
-                "status", "scan", "detect", "flood", "bite", "remediate", 
-                "audit", "prahlad", "chaos", "chat", "intel", "commit",
-                "validate", "gc", "reset", "optimize", "yield"
+                "status",
+                "scan",
+                "detect",
+                "flood",
+                "bite",
+                "remediate",
+                "audit",
+                "prahlad",
+                "chaos",
+                "chat",
+                "intel",
+                "commit",
+                "validate",
+                "gc",
+                "reset",
+                "optimize",
+                "yield",
             ],
             tags=["naga", "security", "guardian", "fractal", "executive", "intelligence"],
         )
@@ -113,12 +127,13 @@ class NagaCLI:
         """Print NAGA CLI usage via discovery."""
         print("\n    NAGA FEDERATION CLI (Protocol-First)")
         print("    " + "=" * 40)
-        
+
         try:
             from vibe_core.cli.naga_commands import discover_commands
             from vibe_core.protocols.naga.cli_command import NAGA_COMMAND_REGISTRY
+
             discover_commands()
-            
+
             print("\n    AVAILABLE COMMANDS:")
             for name in sorted(NAGA_COMMAND_REGISTRY.list_names()):
                 cmd = NAGA_COMMAND_REGISTRY.get(name)

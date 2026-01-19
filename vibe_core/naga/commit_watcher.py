@@ -87,6 +87,7 @@ class CommitStatsDict(TypedDict, total=False):
     last_success_ago: float
     uptime_seconds: float
 
+
 # Type aliases for callbacks (GAD-000 Typing Discipline)
 CortexCommitCallback = Callable[["CommitSignal"], None]
 AlertHandler = Callable[["CommitAlert"], None]
@@ -254,7 +255,7 @@ class NagaCommitWatcher:
     def _on_bridge_commit(self, event: Any) -> None:
         """
         Handle commit event from Ananta Shesha bridge.
-        
+
         Adapts schema.CommitResult (Prakriti) to commit_authority.CommitResult (Watcher).
         """
         try:
@@ -263,16 +264,16 @@ class NagaCommitWatcher:
             from vibe_core.state.commit_authority import CommitOutcome, CommitResult
 
             data = event.data
-            
+
             # Map schema.CommitResult -> commit_authority.CommitResult
             success = data.get("success", False)
             outcome = CommitOutcome.SUCCESS if success else CommitOutcome.PANIC_DUMPED
-            
+
             # If files_committed is empty and success is True, it might be SKIPPED
             files = data.get("files_committed", [])
             if success and not files:
                 outcome = CommitOutcome.SKIPPED
-                
+
             result = CommitResult(
                 outcome=outcome,
                 sha=data.get("git_sha") or data.get("commit_hash"),
@@ -280,9 +281,9 @@ class NagaCommitWatcher:
                 paths_committed=[Path(p) for p in files],
                 # Best effort mapping
             )
-            
+
             self.observe(result)
-            
+
         except Exception as e:
             logger.warning(f"[COMMIT_WATCHER] Failed to process bridge event: {e}")
 

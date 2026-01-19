@@ -35,9 +35,9 @@ if TYPE_CHECKING:
 from vibe_core.mahamantra.substrate.seed import (
     # Mathematical constants - THE SSOT (seed.py is THE source)
     WORDS as MAHAMANTRA_DIMENSION,  # 16
-    TRINITY as LILA_CYCLES,          # 3
-    LILA as LILA_LIMIT,              # 48
-    PARAMPARA,                        # 37
+    TRINITY as LILA_CYCLES,  # 3
+    LILA as LILA_LIMIT,  # 48
+    PARAMPARA,  # 37
 )
 
 # Strict Typing
@@ -54,10 +54,11 @@ class HolyName(IntEnum):
     "māyā tatam idaṁ sarvaṁ" - Maya pervades this world.
     VOID is not truth, but computation requires error states.
     """
-    HARE = 0    # 00 - Radha, the energy
-    KRISHNA = 1 # 01 - The all-attractive
-    RAMA = 2    # 10 - Reservoir of pleasure
-    VOID = 3    # 11 - Maya/Error (not in seed.py - that's TRUTH only)
+
+    HARE = 0  # 00 - Radha, the energy
+    KRISHNA = 1  # 01 - The all-attractive
+    RAMA = 2  # 10 - Reservoir of pleasure
+    VOID = 3  # 11 - Maya/Error (not in seed.py - that's TRUTH only)
 
 
 class MantraBit(IntFlag):
@@ -65,6 +66,7 @@ class MantraBit(IntFlag):
     The 16-Bit Mahamantra Resonance Flags.
     Each bit represents one word position in the mantra.
     """
+
     # Quarter 1: Genesis (Hare Krishna Hare Krishna)
     HARE_1 = 1 << 0
     KRISHNA_1 = 1 << 1
@@ -91,21 +93,26 @@ class MantraBit(IntFlag):
         """Return full 16-bit resonance (0xFFFF)."""
         return cls(0xFFFF)
 
+
 # MantraTrit REMOVED (Legacy Purge 2026-01-16)
 # Use MantraByte (packed) or HolyName (enum) instead.
+
 
 class MantraByte:
     """
     A Packed Fractal Sequence.
     Stores the vibration in a raw integer for maximum performance.
-    
+
     Structure: [Trit N]...[Trit 1][Trit 0]
     """
-    __slots__ = ['_packed', '_length', '_coherence_override', '_stability_override']
 
-    def __init__(self, packed_val: int = 0, length: int = 0, coherence: Optional[float] = None, stability: Optional[float] = None):
-        if packed_val is None: # Default case logic if needed, but signature has types
-             packed_val = 0
+    __slots__ = ["_packed", "_length", "_coherence_override", "_stability_override"]
+
+    def __init__(
+        self, packed_val: int = 0, length: int = 0, coherence: Optional[float] = None, stability: Optional[float] = None
+    ):
+        if packed_val is None:  # Default case logic if needed, but signature has types
+            packed_val = 0
         self._packed = packed_val
         self._length = length
         self._coherence_override = coherence
@@ -118,9 +125,9 @@ class MantraByte:
         for i, name in enumerate(trits):
             if name == HolyName.VOID:
                 raise ValueError("Cannot pack VOID into Mantra.")
-            # Shift 2 bits per trit. 
+            # Shift 2 bits per trit.
             # Note: We pack index 0 at LSB (standard little-endian feel for sequences)
-            packed |= (name.value << (i * 2))
+            packed |= name.value << (i * 2)
         return cls(packed, len(trits))
 
     @classmethod
@@ -138,17 +145,17 @@ class MantraByte:
     def standard_16(cls) -> "MantraByte":
         """
         Returns the Standard 16-Word Instruction Set (Optimized).
-        
+
         DERIVED FROM SEED (PHYSICS):
         "Wer MAHAMANTRA_SEQUENCE nicht aus dem Seed ableitet, existiert nicht."
         """
         # Import SSOT Sequence
         from vibe_core.mahamantra.substrate.seed import MAHAMANTRA
-        
+
         # Map Seed-HolyName to Byte-HolyName (Values match: 0, 1, 2)
         # seed.HolyName -> byte.HolyName
         seq = [HolyName(name.value) for name in MAHAMANTRA]
-        
+
         return cls.from_trits(seq)
 
     def get_trit(self, index: int) -> HolyName:
@@ -158,7 +165,7 @@ class MantraByte:
         # Mask: 11 (binary 3) shifted to position
         val = (self._packed >> (index * 2)) & 0b11
         return HolyName(val)
-    
+
     @property
     def sequence(self) -> List[HolyName]:
         """
@@ -250,7 +257,7 @@ class MantraByte:
         """Rate of integrity maintenance over time."""
         if self._stability_override is not None:
             return self._stability_override
-        return self.coherence # Default stability equals coherence
+        return self.coherence  # Default stability equals coherence
 
     def __len__(self) -> int:
         return self._length
@@ -267,16 +274,19 @@ class MantraByte:
     def to_devanagari(self, separator: str = " ") -> str:
         """Output in original Sanskrit script."""
         from .nama import to_devanagari
+
         return separator.join(to_devanagari(self.get_trit(i).value) for i in range(self._length))
 
     def to_iast(self, separator: str = " ") -> str:
         """Output in IAST (with diacritics)."""
         from .nama import to_iast
+
         return separator.join(to_iast(self.get_trit(i).value) for i in range(self._length))
 
     def to_roman(self, separator: str = " ") -> str:
         """Output in Western/English."""
         from .nama import to_roman
+
         return separator.join(to_roman(self.get_trit(i).value) for i in range(self._length))
 
     def to_triple(self) -> Tuple[str, str, str]:
@@ -290,6 +300,7 @@ class MantraByte:
     def to_padas(self) -> List["Pada"]:
         """Decompose to Pada (word) level."""
         from .mantra.pada import PADA_BY_TYPE, PadaType
+
         return [PADA_BY_TYPE.get(PadaType(self.get_trit(i).value)) for i in range(self._length)]
 
     def to_aksaras(self) -> List["Aksara"]:
@@ -311,6 +322,7 @@ class MantraByte:
             Items at that level
         """
         from .mantra.routing import FractalLevel
+
         if level == FractalLevel.PADA:
             yield from self.to_padas()
         elif level == FractalLevel.AKSARA:
@@ -323,6 +335,7 @@ class MantraByte:
     def get_fractal_path(self, pada_index: int, aksara_index: int = 0) -> List["FractalRoute"]:
         """Get the fractal path from Vakya down to Aksara for a position."""
         from .mantra.routing import get_fractal_path
+
         if 0 <= pada_index < self._length:
             return get_fractal_path(pada_index % 16, aksara_index)
         raise IndexError(f"Invalid pada index: {pada_index}")
@@ -330,11 +343,13 @@ class MantraByte:
     def get_quarter(self, index: int) -> int:
         """Get which quarter (0-3) a position belongs to."""
         from .mantra.routing import get_quarter
+
         return get_quarter(index % 16)
 
     def get_padas_in_quarter(self, quarter: int) -> Tuple["Pada", ...]:
         """Get all padas in a quarter from this MantraByte."""
         from .mantra.routing import QUARTERS
+
         if 0 <= quarter < 4:
             indices = QUARTERS[quarter]
             padas = self.to_padas()
@@ -357,6 +372,7 @@ class MantraByte:
             return self._packed == other._packed and self._length == other._length
         return False
 
+
 @dataclass(frozen=True)
 class GenesisByte:
     """
@@ -372,10 +388,11 @@ class GenesisByte:
         0-24: Navadvipa Phase (Build/__init__)
         24-48: Puri Phase (Runtime/yield)
     """
+
     signature: str = ""
     resonance: Union[MantraByte, "MantraBit", int] = field(default_factory=lambda: MantraByte.standard_16())
-    dimension: int = MAHAMANTRA_DIMENSION   # Mahamantra words (SSOT)
-    lila_limit: int = LILA_LIMIT            # Chaitanya's Lila = 16 × 3 (SSOT)
+    dimension: int = MAHAMANTRA_DIMENSION  # Mahamantra words (SSOT)
+    lila_limit: int = LILA_LIMIT  # Chaitanya's Lila = 16 × 3 (SSOT)
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     parampara_hash: str = "0x25"  # 37 (Hidden Signature)
 
@@ -390,7 +407,9 @@ class GenesisByte:
             # MantraByte handling
             # 1. Fractal Purnam Check
             if self.resonance.dimension < self.dimension:
-                raise SystemError(f"Fractal Fracture: Expected dimension {self.dimension}, got {self.resonance.dimension}")
+                raise SystemError(
+                    f"Fractal Fracture: Expected dimension {self.dimension}, got {self.resonance.dimension}"
+                )
 
             # 2. Coherence Check
             if self.resonance.coherence < 0.8:
@@ -412,7 +431,7 @@ class GenesisByte:
             )
 
         return True
-        
+
     @property
     def is_valid(self) -> bool:
         try:

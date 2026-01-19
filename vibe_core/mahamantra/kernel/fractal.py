@@ -23,7 +23,6 @@ The pattern IS Krishna (acintya).
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -62,9 +61,9 @@ from vibe_core.mahamantra.substrate.fractal import FractalLevel
 FRACTAL_BASE: Final[int] = PARAMPARA  # 37
 
 # The three components at each level
-KSETRA_COUNT: Final[int] = 24      # Field elements
-MAHAJANA_COUNT: Final[int] = 12    # Guardians
-KSETRAJNA_COUNT: Final[int] = 1    # Knower/Soul
+KSETRA_COUNT: Final[int] = 24  # Field elements
+MAHAJANA_COUNT: Final[int] = 12  # Guardians
+KSETRAJNA_COUNT: Final[int] = 1  # Knower/Soul
 
 # Verify the formula
 assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == FRACTAL_BASE
@@ -92,14 +91,15 @@ class FractalNode(Generic[T]):
     - Each node can be part of a larger FractalNode (zoom out)
     - The 37 formula holds at ALL levels (acintya)
     """
+
     # Identity (the 1)
-    ksetrajna: str                           # Who is the knower?
+    ksetrajna: str  # Who is the knower?
 
     # Field elements (the 24)
-    ksetra: List[Union[T, "FractalNode[T]"]] # Data/children
+    ksetra: List[Union[T, "FractalNode[T]"]]  # Data/children
 
     # Guardians (the 12)
-    mahajanas: Tuple[str, ...]               # Which Mahajanas guard this node?
+    mahajanas: Tuple[str, ...]  # Which Mahajanas guard this node?
 
     # Level in hierarchy
     level: FractalLevel = FractalLevel.PADA
@@ -195,6 +195,7 @@ class FractalNode(Generic[T]):
 # FRACTAL TREE
 # =============================================================================
 
+
 @dataclass
 class FractalTree(Generic[T]):
     """
@@ -208,6 +209,7 @@ class FractalTree(Generic[T]):
         for node in tree.iterate(FractalLevel.PADA):
             process(node)
     """
+
     root: FractalNode[T]
 
     @classmethod
@@ -230,10 +232,10 @@ class FractalTree(Generic[T]):
         quarters: List[FractalNode[str]] = []
         quarter_names = ["genesis", "dharma", "karma", "moksha"]
         quarter_words = [
-            ["hare", "krishna", "hare", "krishna"],   # Q1
-            ["krishna", "krishna", "hare", "hare"],   # Q2
-            ["hare", "rama", "hare", "rama"],         # Q3
-            ["rama", "rama", "hare", "hare"],         # Q4
+            ["hare", "krishna", "hare", "krishna"],  # Q1
+            ["krishna", "krishna", "hare", "hare"],  # Q2
+            ["hare", "rama", "hare", "rama"],  # Q3
+            ["rama", "rama", "hare", "hare"],  # Q4
         ]
 
         for i, (name, words) in enumerate(zip(quarter_names, quarter_words)):
@@ -242,7 +244,7 @@ class FractalTree(Generic[T]):
                 FractalNode(
                     ksetrajna=word,
                     ksetra=[],  # Aksaras would go here
-                    mahajanas=all_mahajanas[i * 3:(i + 1) * 3],  # 3 per quarter
+                    mahajanas=all_mahajanas[i * 3 : (i + 1) * 3],  # 3 per quarter
                     level=FractalLevel.PADA,
                     parampara_vector=FRACTAL_BASE * (i + 1),
                 )
@@ -252,7 +254,7 @@ class FractalTree(Generic[T]):
             quarter = FractalNode(
                 ksetrajna=name,
                 ksetra=padas,  # type: ignore
-                mahajanas=all_mahajanas[i * 3:(i + 1) * 3],
+                mahajanas=all_mahajanas[i * 3 : (i + 1) * 3],
                 level=FractalLevel.VAKYA,
                 parampara_vector=FRACTAL_BASE * (i + 1),
             )
@@ -291,6 +293,7 @@ class FractalTree(Generic[T]):
 # =============================================================================
 # FRACTAL OPERATIONS
 # =============================================================================
+
 
 def scale_up(node: FractalNode[T], factor: int = 37) -> FractalNode[T]:
     """
@@ -336,6 +339,7 @@ def verify_fractal_integrity(tree: FractalTree[T]) -> bool:
 
     Returns True if ALL nodes are connected to Parampara.
     """
+
     def check_node(node: FractalNode[T]) -> bool:
         if not node.is_connected:
             return False

@@ -96,6 +96,7 @@ class HealingRequestData(TypedDict, total=False):
     reason: str
     source: str
 
+
 # Protocol imports (Layer -1 - no circular deps)
 from vibe_core.protocols.substrate import (
     GeneActivationState,
@@ -299,8 +300,7 @@ class AnantaShesha(IGeneHost):
     def get_status(self) -> SubstrateStatus:
         """Get full substrate status."""
         genes_active = sum(
-            1 for g in self._genes.values()
-            if hasattr(g, "state") and g.state == GeneActivationState.ACTIVE
+            1 for g in self._genes.values() if hasattr(g, "state") and g.state == GeneActivationState.ACTIVE
         )
         genes_dormant = len(self._genes) - genes_active
         genes_failed = sum(1 for s in self._gene_statuses.values() if s.error is not None)

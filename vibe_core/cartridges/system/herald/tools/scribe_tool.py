@@ -11,7 +11,6 @@ ARCHITECTURE: Uses Kernel I/O Service for all file writes when available.
               See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

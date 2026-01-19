@@ -278,17 +278,18 @@ class LotusNode:
     def resonate(self, command: str) -> tuple[float, Optional["LotusNode"]]:
         """
         Calculate resonance for a command through the fractal tree.
-        
+
         Returns: (resonance_score, winning_node)
         """
         cmd_lower = command.lower()
-        
+
         # 1. Check direct module resonance (Leaf Level)
         # If this node represents a Mahajana (depth 2), check its protocol
         if self._path.depth == 2:
             try:
                 guardian = self._path.segments[1]
                 from vibe_core.mahamantra.substrate import ProtocolRegistry
+
                 protocol_cls = ProtocolRegistry.get_by_guardian(guardian)
                 if protocol_cls and hasattr(protocol_cls, "get_resonance"):
                     score = protocol_cls.get_resonance(cmd_lower)
@@ -300,7 +301,7 @@ class LotusNode:
         # 2. Delegate to children (Tree Level)
         max_score = 0.0
         best_node = None
-        
+
         # We only walk children if we are root or quarter level
         if self._path.depth < 2:
             for child_name in self._dir_full():
@@ -318,13 +319,13 @@ class LotusNode:
                                 break
                 except Exception:
                     continue
-                    
+
         return max_score, best_node
 
     def execute(self, command: str, args: Optional[list[str]] = None) -> dict:
         """
         Execute a command on this node.
-        
+
         If this is the root, it performs resonance discovery first.
         If this is a leaf (Mahajana), it awakens the service and executes.
         """
@@ -332,7 +333,7 @@ class LotusNode:
             score, winner = self.resonate(command)
             if winner and score > 0:
                 return winner.execute(command, args)
-            
+
             # Fallback to Narada if no resonance
             return getattr(self.genesis, "narada").execute(command, args)
 
@@ -341,6 +342,7 @@ class LotusNode:
             guardian = self._path.segments[1]
             # Use the Singularity's Royal Hunt to awaken the service
             from vibe_core.mahamantra import mahamantra
+
             # We bypass the resonance check here because we ARE the winner
             return self._awaken_and_execute(guardian, command, args)
 
@@ -350,18 +352,18 @@ class LotusNode:
         """Awaken the service at this node and execute the command."""
         import importlib
         from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
-        
+
         # Royal Hunt logic encapsulated for the node
         service_class = None
         service_class_name = f"{guardian.capitalize()}Service"
-        
+
         jungles = [
             f"vibe_core.mahamantra.{self._path.segments[0]}.{guardian}",
             f"vibe_core.protocols.mahajanas.{guardian}.service",
             f"vibe_core.naga.services.{guardian}",
             f"vibe_core.services.{guardian}",
         ]
-        
+
         for jungle in jungles:
             try:
                 module = importlib.import_module(jungle)
@@ -371,7 +373,7 @@ class LotusNode:
                     break
             except ImportError:
                 continue
-        
+
         if not service_class:
             return {"success": False, "output": f"Could not awaken {guardian} Service."}
 
@@ -381,9 +383,10 @@ class LotusNode:
         if not hasattr(instance, "__tattva__"):
             # Get position from substrate
             from vibe_core.mahamantra.substrate import get_position_by_guardian
+
             pos = get_position_by_guardian(guardian)
             instance = MahamantraProxy(instance, pos.index, guardian)
-            
+
         # Execute
         try:
             if hasattr(instance, "chat"):
@@ -392,7 +395,7 @@ class LotusNode:
                 output = instance.execute(command)
             else:
                 output = f"🕉️ {guardian.upper()} awakened but is mute."
-            
+
             return {"success": True, "output": output, "mahajana": guardian}
         except Exception as e:
             return {"success": False, "output": f"Execution Error: {e}"}

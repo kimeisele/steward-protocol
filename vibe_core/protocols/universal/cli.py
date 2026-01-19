@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 
 # IMPORTS (The Holy Trinity of Dependencies)
 from .bridge import MayavadError, SetuBandha
+
 # PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
 from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
 from .steward import VedicSteward
@@ -72,18 +73,16 @@ NavigationContent = Union[str, Dict[str, str], List[str], None]
 # =============================================================================
 
 # The Mahamantra - always available, always merciful
-MAHAMANTRA: str = (
-    "Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare / "
-    "Hare Rāma Hare Rāma Rāma Rāma Hare Hare"
-)
+MAHAMANTRA: str = "Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare / Hare Rāma Hare Rāma Rāma Rāma Hare Hare"
 
 
 class GraceType(str, Enum):
     """Types of grace in the Chaitanya paradigm."""
+
     MAHAMANTRA = "mahamantra"  # Default grace - everyone gets this
     NITYANANDA = "nityananda"  # Extra mercy for the fallen
     PRABHUPADA = "prabhupada"  # Instruction-based grace
-    CHAITANYA = "chaitanya"    # Direct grace from the source
+    CHAITANYA = "chaitanya"  # Direct grace from the source
 
 
 @dataclass
@@ -94,6 +93,7 @@ class MahamantraGrace:
     Even when everything fails, Mahamantra is always available.
     This is Nityananda's mercy pattern.
     """
+
     mantra: str = MAHAMANTRA
     grace_type: GraceType = GraceType.MAHAMANTRA
     message: str = "Hare Kṛṣṇa! The Mahamantra is always available."
@@ -278,6 +278,7 @@ class NavigationResult:
 
     NO ANY - content is strictly typed as NavigationContent.
     """
+
     path: str
     found: bool
     content: NavigationContent  # Union[str, Dict[str, str], List[str], None]
@@ -403,7 +404,7 @@ class ChaitanyaShell:
             grace=MahamantraGrace(
                 message=f"Navigation to '{path}' - full implementation coming soon!",
                 retry_allowed=True,
-            )
+            ),
         )
 
     def report(self, format: str = "json") -> str:
@@ -418,10 +419,7 @@ class ChaitanyaShell:
             "session": {
                 "commands_executed": len(self._history),
                 "grace_given": sum(1 for h in self._history if isinstance(h, MahamantraGrace)),
-                "success_count": sum(
-                    1 for h in self._history
-                    if isinstance(h, AnantaResponse) and h.success
-                ),
+                "success_count": sum(1 for h in self._history if isinstance(h, AnantaResponse) and h.success),
             },
             "mahamantra": MAHAMANTRA,
             "history": [
@@ -431,7 +429,7 @@ class ChaitanyaShell:
                     "message": h.message,
                 }
                 for h in self._history[-10:]  # Last 10 entries
-            ]
+            ],
         }
 
         if format == "json":
@@ -478,8 +476,9 @@ class CommandResult:
 
     NO ANY - all fields have explicit types.
     """
+
     success: bool
-    opcode: str                    # MantraOpCode value
+    opcode: str  # MantraOpCode value
     message: str
     data: Optional[Dict[str, Union[str, int, float, bool, List[str]]]] = None
     timestamp: datetime = field(default_factory=datetime.now)
@@ -495,13 +494,14 @@ class CommandHelp:
 
     D-O-P-C-I-R criteria documented.
     """
+
     opcode: str
     name: str
-    phase: str                      # WAKE, PURIFY, SERVE, SUSTAIN
-    word: str                       # HARE, KRISHNA, RAMA
+    phase: str  # WAKE, PURIFY, SERVE, SUSTAIN
+    word: str  # HARE, KRISHNA, RAMA
     description: str
-    input_type: str                 # Type name as string
-    output_type: str                # Type name as string
+    input_type: str  # Type name as string
+    output_type: str  # Type name as string
 
     # GAD-000 Criteria
     discoverability: str
@@ -553,11 +553,7 @@ class ICliCommand(Protocol):
         """Mahamantra word: HARE, KRISHNA, or RAMA."""
         ...
 
-    def execute(
-        self,
-        ctx: "SovereignContext",
-        payload: CliPayload
-    ) -> CliResult:
+    def execute(self, ctx: "SovereignContext", payload: CliPayload) -> CliResult:
         """
         Execute the command.
 
@@ -615,6 +611,7 @@ def _get_mahajana_router() -> "MahajanaRouter":
     global _MAHAJANA_ROUTER
     if _MAHAJANA_ROUTER is None:
         from vibe_core.protocols.mahajanas.router import MahajanaRouter
+
         _MAHAJANA_ROUTER = MahajanaRouter()
     return _MAHAJANA_ROUTER
 
@@ -659,6 +656,7 @@ class MantraProcessorResult:
 
     Contains both the CLI result and the routing metadata.
     """
+
     command: str
     opcode: str
     mahajana: str
@@ -702,6 +700,7 @@ class MantraProcessor:
 
         try:
             from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
             opcode = MantraOpCode(opcode_value)
             return self._router.route(opcode).value
         except (ValueError, AttributeError):
@@ -716,17 +715,13 @@ class MantraProcessor:
         try:
             from vibe_core.mahamantra.substrate.opcode import MantraOpCode
             from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
+
             opcode = MantraOpCode(opcode_value)
             return opcode in HEAD_OPCODES
         except (ValueError, ImportError):
             return False
 
-    def chant(
-        self,
-        command: str,
-        ctx: "SovereignContext",
-        payload: CliPayload = None
-    ) -> MantraProcessorResult:
+    def chant(self, command: str, ctx: "SovereignContext", payload: CliPayload = None) -> MantraProcessorResult:
         """
         Execute a CLI command through Mahajana routing.
 
@@ -803,23 +798,27 @@ class MantraProcessor:
                 is_head = opcode in HEAD_OPCODES
                 route = self._router.get_route(opcode)
 
-                commands.append({
-                    "command": cmd,
-                    "opcode": opcode_value,
-                    "mahajana": route.mahajana.value,
-                    "quarter": route.quarter,
-                    "position": route.position,
-                    "is_head": is_head,
-                })
+                commands.append(
+                    {
+                        "command": cmd,
+                        "opcode": opcode_value,
+                        "mahajana": route.mahajana.value,
+                        "quarter": route.quarter,
+                        "position": route.position,
+                        "is_head": is_head,
+                    }
+                )
             except Exception:
-                commands.append({
-                    "command": cmd,
-                    "opcode": opcode_value,
-                    "mahajana": "unknown",
-                    "quarter": 0,
-                    "position": 0,
-                    "is_head": False,
-                })
+                commands.append(
+                    {
+                        "command": cmd,
+                        "opcode": opcode_value,
+                        "mahajana": "unknown",
+                        "quarter": 0,
+                        "position": 0,
+                        "is_head": False,
+                    }
+                )
 
         return sorted(commands, key=lambda x: x["position"])
 
@@ -855,25 +854,26 @@ class GAD000Seal:
         - Legacy mode: 9 unique Mahajanas (some handle multiple opcodes)
         Both are valid - all 12 worker opcodes are handled.
     """
-    commands_mapped: int          # Should be 16
-    opcodes_routed: int           # Should be 16
-    worker_opcodes: int           # Should be 12 (non-HEAD opcodes)
-    heads_active: int             # Should be 4
-    unique_mahajanas: int         # 9-12 depending on mode
-    heartbeat_available: bool     # MantraHeartbeat accessible
-    krishna_present: bool         # Always True (acintya)
+
+    commands_mapped: int  # Should be 16
+    opcodes_routed: int  # Should be 16
+    worker_opcodes: int  # Should be 12 (non-HEAD opcodes)
+    heads_active: int  # Should be 4
+    unique_mahajanas: int  # 9-12 depending on mode
+    heartbeat_available: bool  # MantraHeartbeat accessible
+    krishna_present: bool  # Always True (acintya)
 
     @property
     def is_valid(self) -> bool:
         """Is the seal valid? All checks must pass."""
         return (
-            self.commands_mapped == 16 and
-            self.opcodes_routed == 16 and
-            self.worker_opcodes == 12 and
-            self.heads_active == 4 and
-            self.unique_mahajanas >= 9 and  # Legacy mode has 9, vyuha has 12
-            self.heartbeat_available and
-            self.krishna_present
+            self.commands_mapped == 16
+            and self.opcodes_routed == 16
+            and self.worker_opcodes == 12
+            and self.heads_active == 4
+            and self.unique_mahajanas >= 9  # Legacy mode has 9, vyuha has 12
+            and self.heartbeat_available
+            and self.krishna_present
         )
 
     @property
@@ -924,9 +924,7 @@ def verify_gad000() -> GAD000Seal:
 
     try:
         from vibe_core.protocols.universal.mantra import MantraOpCode
-        from vibe_core.protocols.mahajanas.router import (
-            MahajanaRouter, HEAD_OPCODES, Mahajana
-        )
+        from vibe_core.protocols.mahajanas.router import MahajanaRouter, HEAD_OPCODES, Mahajana
 
         router = MahajanaRouter()
 
@@ -950,6 +948,7 @@ def verify_gad000() -> GAD000Seal:
     heartbeat_available = False
     try:
         from vibe_core.protocols.gad import MantraHeartbeat
+
         hb = MantraHeartbeat()
         heartbeat_available = hb.krishna_present  # Always True
     except Exception:

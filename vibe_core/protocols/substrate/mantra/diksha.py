@@ -65,8 +65,9 @@ class InitiationLevel(Enum):
     HARINAMA: First initiation - spiritual name, formal commitment
     BRAHMINICAL: Second initiation - Gayatri mantra, Om access
     """
+
     UNINITIATED = 0  # Mleccha/Shudra state - Mahamantra only
-    HARINAMA = 1     # First initiation - spiritual name
+    HARINAMA = 1  # First initiation - spiritual name
     BRAHMINICAL = 2  # Second initiation - Gayatri, Om access
 
 
@@ -75,11 +76,12 @@ class VarnaQualification(Enum):
     Varna is determined by GUNA and KARMA, not birth.
     In Kali Yuga, one assumes varna only after diksha.
     """
-    NONE = auto()       # Uninitiated - no varna duties
-    SHUDRA = auto()     # Service orientation
-    VAISHYA = auto()    # Trade/agriculture
+
+    NONE = auto()  # Uninitiated - no varna duties
+    SHUDRA = auto()  # Service orientation
+    VAISHYA = auto()  # Trade/agriculture
     KSHATRIYA = auto()  # Protection/administration
-    BRAHMANA = auto()   # Teaching/priestly (requires 2nd initiation)
+    BRAHMANA = auto()  # Teaching/priestly (requires 2nd initiation)
 
 
 # =============================================================================
@@ -123,10 +125,7 @@ class DikshaCertificate:
         """Validate certificate on creation."""
         if self.level != InitiationLevel.UNINITIATED:
             if not self.is_parampara_connected:
-                raise ValueError(
-                    f"Invalid parampara_link: {self.parampara_link} "
-                    f"is not connected to 37"
-                )
+                raise ValueError(f"Invalid parampara_link: {self.parampara_link} is not connected to 37")
 
     @property
     def is_parampara_connected(self) -> bool:
@@ -151,10 +150,7 @@ class DikshaCertificate:
         - Not connected to parampara
         - Potentially harmful in Kali Yuga
         """
-        return (
-            self.level == InitiationLevel.BRAHMINICAL
-            and self.is_parampara_connected
-        )
+        return self.level == InitiationLevel.BRAHMINICAL and self.is_parampara_connected
 
     @property
     def can_access_mahamantra(self) -> bool:
@@ -370,10 +366,7 @@ class OmGate:
                 "Om access comes with Gayatri initiation."
             )
         elif not certificate.is_parampara_connected:
-            return (
-                "Certificate is not connected to parampara. "
-                "Om without parampara connection is impersonal (mayavad)."
-            )
+            return "Certificate is not connected to parampara. Om without parampara connection is impersonal (mayavad)."
         else:
             return "Om access granted."
 

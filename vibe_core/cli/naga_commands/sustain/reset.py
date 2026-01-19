@@ -36,17 +36,15 @@ from pathlib import Path
 from typing import List, Tuple
 from datetime import datetime
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.AUDIT_SEAL,
     name="reset",
-    help_text="System reset (YAMARAJA's judgment - SUSTAIN phase, final position)")
+    help_text="System reset (YAMARAJA's judgment - SUSTAIN phase, final position)",
+)
 class ResetCommand(NagaCommandBase):
     """
     Reset command implementation.
@@ -121,11 +119,9 @@ class ResetCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("RESET_IP: Cycle complete - ready for SYS_WAKE")
         output_parts.append("")
-        output_parts.append("\"From YAMARAJA back to PRITHU - the eternal cycle.\"")
+        output_parts.append('"From YAMARAJA back to PRITHU - the eternal cycle."')
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_cycle_info(self) -> dict:
         """Get Mahamantra cycle information."""

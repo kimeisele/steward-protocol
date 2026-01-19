@@ -35,7 +35,6 @@ SCHEDULING POLICIES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -75,12 +74,14 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # YIELD POLICY
 # =============================================================================
 
+
 class YieldPolicy(str, Enum):
     """Policies for CPU yielding."""
-    NEVER = "never"           # Hiranyakashipu mode (anti-pattern)
-    EXPLICIT = "explicit"     # Only yield when asked
+
+    NEVER = "never"  # Hiranyakashipu mode (anti-pattern)
+    EXPLICIT = "explicit"  # Only yield when asked
     COOPERATIVE = "cooperative"  # Yield every N operations
-    FAIR = "fair"             # Yield when others waiting
+    FAIR = "fair"  # Yield when others waiting
     AGGRESSIVE = "aggressive"  # Yield frequently
 
 
@@ -88,13 +89,15 @@ class YieldPolicy(str, Enum):
 # YIELD RESULT
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class YieldResult:
     """Result of a yield operation."""
-    yielded: bool             # Did we actually yield?
-    duration_ms: int          # How long we yielded
-    policy: YieldPolicy       # Policy that caused yield
-    waiting_count: int        # How many were waiting
+
+    yielded: bool  # Did we actually yield?
+    duration_ms: int  # How long we yielded
+    policy: YieldPolicy  # Policy that caused yield
+    waiting_count: int  # How many were waiting
     message: str
 
     def to_surrender_result(self) -> SurrenderResult:
@@ -112,9 +115,11 @@ class YieldResult:
 # YIELD STATS
 # =============================================================================
 
+
 @dataclass
 class YieldStats:
     """Statistics about yielding behavior."""
+
     total_yields: int = 0
     total_yield_time_ms: int = 0
     operations_since_yield: int = 0
@@ -126,6 +131,7 @@ class YieldStats:
 # =============================================================================
 # YIELD PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class YieldProtocol(Protocol):
@@ -217,6 +223,7 @@ class YieldProtocol(Protocol):
 # =============================================================================
 # YIELD SCHEDULER - Implementation
 # =============================================================================
+
 
 class YieldScheduler:
     """
@@ -405,6 +412,7 @@ class YieldScheduler:
 # HIRANYAKASHIPU - Anti-Pattern Implementation
 # =============================================================================
 
+
 class Hiranyakashipu:
     """
     The Hiranyakashipu Pattern - REFUSES to yield.
@@ -482,6 +490,7 @@ class Hiranyakashipu:
 # NULL YIELD - For testing
 # =============================================================================
 
+
 class NullYield:
     """
     Null Yield - instant yields (for testing).
@@ -496,7 +505,9 @@ class NullYield:
         return YieldPolicy.COOPERATIVE
 
     def yield_cpu(self, duration_ms: int = 0) -> YieldResult:
-        return YieldResult(yielded=True, duration_ms=0, policy=YieldPolicy.COOPERATIVE, waiting_count=0, message="NullYield")
+        return YieldResult(
+            yielded=True, duration_ms=0, policy=YieldPolicy.COOPERATIVE, waiting_count=0, message="NullYield"
+        )
 
     def maybe_yield(self) -> YieldResult:
         return self.yield_cpu(0)
@@ -520,7 +531,9 @@ class NullYield:
         return YieldStats(policy=YieldPolicy.COOPERATIVE)
 
     def get_state(self) -> SurrenderState:
-        return SurrenderState(can_surrender=True, is_surrendered=False, total_yields=0, total_releases=0, health="pristine")
+        return SurrenderState(
+            can_surrender=True, is_surrendered=False, total_yields=0, total_releases=0, health="pristine"
+        )
 
 
 # =============================================================================

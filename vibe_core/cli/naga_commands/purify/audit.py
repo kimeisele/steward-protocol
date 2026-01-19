@@ -18,17 +18,11 @@ __position__ = 15
 __genesis__ = "0xf6ee477d"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Tuple
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
-@naga_command(
-    opcode=MantraOpCode.COMPILE_AST,
-    name="audit",
-    help_text="Query Ledger audit trail (VYASA's records)")
+@naga_command(opcode=MantraOpCode.COMPILE_AST, name="audit", help_text="Query Ledger audit trail (VYASA's records)")
 class AuditCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         try:
@@ -66,7 +60,7 @@ class AuditCommand(NagaCommandBase):
                 output_lines.append(f"      Agent: {e.get('agent_id', 'unknown')}")
 
             output_lines.append("=" * 60)
-            
+
             return self.success("\n".join(output_lines))
         except Exception as e:
             return self.failure(f"Audit query failed: {e}", exit_code=1)

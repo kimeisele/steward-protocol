@@ -29,7 +29,6 @@ WATERTIGHT: No Any types. All explicitly typed.
 OWNED BY: Mahajana.SHUKA (Config is Vision/Knowledge)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -110,9 +109,7 @@ class ConfigGene:
     cache_reads: bool = True  # Cache read results
     cache_ttl_seconds: float = 300.0  # 5 minute default
 
-    def should_reject_write(
-        self, path: str, value: ConfigValue, sovereign_id: Optional[str]
-    ) -> Tuple[bool, str]:
+    def should_reject_write(self, path: str, value: ConfigValue, sovereign_id: Optional[str]) -> Tuple[bool, str]:
         """
         Check if a write should be rejected.
         Returns (should_reject, reason).
@@ -259,12 +256,14 @@ class ConfigNaga:
 
         # Audit write
         if self._gene.audit_writes:
-            self._write_log.append({
-                "path": path,
-                "value": str(value),
-                "sovereign_id": sovereign_id,
-                "timestamp": datetime.now().isoformat(),
-            })
+            self._write_log.append(
+                {
+                    "path": path,
+                    "value": str(value),
+                    "sovereign_id": sovereign_id,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
             logger.info(f"ConfigNaga WRITE: {path} = {value} (by {sovereign_id})")
 
         # Create sovereign context for target
@@ -391,17 +390,13 @@ class PhoenixConfigLike(Protocol):
 
     _sections: Dict[str, object]
 
-    def read(self, key: str, context: Optional[object] = None) -> object:
-        ...
+    def read(self, key: str, context: Optional[object] = None) -> object: ...
 
-    def write(self, key: str, value: object, context: Optional[object] = None) -> None:
-        ...
+    def write(self, key: str, value: object, context: Optional[object] = None) -> None: ...
 
-    def validate(self) -> List[str]:
-        ...
+    def validate(self) -> List[str]: ...
 
-    def save(self) -> bool:
-        ...
+    def save(self) -> bool: ...
 
 
 # =============================================================================

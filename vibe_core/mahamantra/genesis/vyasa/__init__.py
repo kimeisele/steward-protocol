@@ -13,7 +13,6 @@ MAHAMANTRA AS LENS:
 PARAMPARA: 37 (% 37 == 0 -> CONNECTED)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -29,6 +28,7 @@ from vibe_core.protocols.mahajanas.vyasa import __all__
 
 # Backward-compat constants
 from typing import Final
+
 POSITION: Final[int] = 0
 QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "SYS_WAKE"

@@ -71,40 +71,45 @@ from vibe_core.protocols.substrate.scanner import (
 # DISCOVERY STATUS
 # =============================================================================
 
+
 class DiscoveryStatus(str, Enum):
     """Status of a discovered file."""
-    PENDING = "pending"           # Found but not analyzed
-    ANALYZING = "analyzing"       # Currently being analyzed
-    OWNED = "owned"               # Already has Mahajana owner
-    ORPHAN = "orphan"             # No owner - candidate for adoption
-    ADOPTED = "adopted"           # Successfully adopted
-    REJECTED = "rejected"         # Could not be adopted
-    MERCY = "mercy"               # Adopted via Ajamil Exception
-    SKIPPED = "skipped"           # Test file, __pycache__, etc.
+
+    PENDING = "pending"  # Found but not analyzed
+    ANALYZING = "analyzing"  # Currently being analyzed
+    OWNED = "owned"  # Already has Mahajana owner
+    ORPHAN = "orphan"  # No owner - candidate for adoption
+    ADOPTED = "adopted"  # Successfully adopted
+    REJECTED = "rejected"  # Could not be adopted
+    MERCY = "mercy"  # Adopted via Ajamil Exception
+    SKIPPED = "skipped"  # Test file, __pycache__, etc.
 
 
 # =============================================================================
 # WATERTIGHT TYPES
 # =============================================================================
 
+
 class DiscoveredFile(TypedDict):
     """A discovered Python file. WATERTIGHT."""
+
     path: str
     name: str
-    status: str                   # DiscoveryStatus value
+    status: str  # DiscoveryStatus value
     size_bytes: int
-    detected_owner: Optional[str] # Mahajana if owned
+    detected_owner: Optional[str]  # Mahajana if owned
     discovered_at: str
 
 
 class DiscoveryProgress(TypedDict):
     """Progress of discovery operation. WATERTIGHT."""
+
     total_files: int
     scanned: int
     owned: int
     orphans: int
     adopted: int
-    mercy_cases: int              # Ajamil Exception saves
+    mercy_cases: int  # Ajamil Exception saves
     rejected: int
     skipped: int
     current_file: str
@@ -115,12 +120,13 @@ class DiscoveryProgress(TypedDict):
 
 class DiscoveryReport(TypedDict):
     """Final report of discovery operation. WATERTIGHT."""
+
     scan_path: str
     total_files: int
     owned_files: int
     orphan_files: int
     adopted_files: int
-    mercy_cases: int              # Saved by Holy Name alone
+    mercy_cases: int  # Saved by Holy Name alone
     rejected_files: int
     skipped_files: int
     # By Mahajana
@@ -137,6 +143,7 @@ class DiscoveryReport(TypedDict):
 
 class BatchAdoptionResult(TypedDict):
     """Result of batch adoption. WATERTIGHT."""
+
     total: int
     adopted: int
     mercy: int
@@ -260,6 +267,7 @@ def should_skip(path: Path) -> bool:
 # THE DISCOVERY ENGINE
 # =============================================================================
 
+
 class DiscoveryEngine:
     """
     The Protocol Discovery Engine.
@@ -308,6 +316,7 @@ class DiscoveryEngine:
         else:
             # Create scanner with config
             from vibe_core.mahamantra.substrate.scanner import MahajanaScanner
+
             scan_config = config or get_default_config()
             scan_config["base_path"] = str(self._base_path)
             self._scanner = MahajanaScanner(scan_config)
@@ -338,10 +347,12 @@ class DiscoveryEngine:
 
             # Map FileStatus → DiscoveryStatus
             if status_str == FileStatus.SKIPPED.value:
-                discovered.append(self._create_discovered(
-                    file_path,
-                    DiscoveryStatus.SKIPPED,
-                ))
+                discovered.append(
+                    self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.SKIPPED,
+                    )
+                )
             elif status_str == FileStatus.OWNED.value:
                 # Get mahajana from declarations
                 owner = None
@@ -349,35 +360,45 @@ class DiscoveryEngine:
                     if decl.get("type") == DeclarationType.MAHAJANA.value:
                         owner = decl.get("value")
                         break
-                discovered.append(self._create_discovered(
-                    file_path,
-                    DiscoveryStatus.OWNED,
-                    owner=owner,
-                ))
+                discovered.append(
+                    self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.OWNED,
+                        owner=owner,
+                    )
+                )
             elif status_str == FileStatus.ORPHAN.value:
-                discovered.append(self._create_discovered(
-                    file_path,
-                    DiscoveryStatus.ORPHAN,
-                ))
+                discovered.append(
+                    self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.ORPHAN,
+                    )
+                )
             elif status_str == FileStatus.ERROR.value:
-                discovered.append(self._create_discovered(
-                    file_path,
-                    DiscoveryStatus.SKIPPED,
-                ))
+                discovered.append(
+                    self._create_discovered(
+                        file_path,
+                        DiscoveryStatus.SKIPPED,
+                    )
+                )
             else:
                 # PENDING or SCANNED → check folder ownership
                 folder_owner = is_in_mahajana_folder(file_path)
                 if folder_owner:
-                    discovered.append(self._create_discovered(
-                        file_path,
-                        DiscoveryStatus.OWNED,
-                        owner=folder_owner,
-                    ))
+                    discovered.append(
+                        self._create_discovered(
+                            file_path,
+                            DiscoveryStatus.OWNED,
+                            owner=folder_owner,
+                        )
+                    )
                 else:
-                    discovered.append(self._create_discovered(
-                        file_path,
-                        DiscoveryStatus.PENDING,
-                    ))
+                    discovered.append(
+                        self._create_discovered(
+                            file_path,
+                            DiscoveryStatus.PENDING,
+                        )
+                    )
 
         # Store discovered files
         for df in discovered:
@@ -475,10 +496,7 @@ class DiscoveryEngine:
         self.analyze_all()
 
         # Return orphans
-        return [
-            entry for entry in self._discovered.values()
-            if entry["status"] == DiscoveryStatus.ORPHAN.value
-        ]
+        return [entry for entry in self._discovered.values() if entry["status"] == DiscoveryStatus.ORPHAN.value]
 
     # =========================================================================
     # ADOPT - Run orphans through adoption pipeline
@@ -589,14 +607,12 @@ class DiscoveryEngine:
             self._progress = DiscoveryProgress(
                 total_files=len(self._discovered),
                 scanned=len(self._discovered),
-                owned=sum(1 for d in self._discovered.values()
-                         if d["status"] == DiscoveryStatus.OWNED.value),
+                owned=sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.OWNED.value),
                 orphans=total,
                 adopted=adopted,
                 mercy_cases=mercy,
                 rejected=rejected,
-                skipped=sum(1 for d in self._discovered.values()
-                           if d["status"] == DiscoveryStatus.SKIPPED.value),
+                skipped=sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.SKIPPED.value),
                 current_file=orphan["path"],
                 percent_complete=(i / total) * 100 if total > 0 else 100,
                 started_at=self._start_time.isoformat() if self._start_time else "",
@@ -645,18 +661,12 @@ class DiscoveryEngine:
         duration = (end_time - self._start_time).total_seconds() if self._start_time else 0
 
         # Count by status
-        owned = sum(1 for d in self._discovered.values()
-                   if d["status"] == DiscoveryStatus.OWNED.value)
-        orphan = sum(1 for d in self._discovered.values()
-                    if d["status"] == DiscoveryStatus.ORPHAN.value)
-        adopted = sum(1 for d in self._discovered.values()
-                     if d["status"] == DiscoveryStatus.ADOPTED.value)
-        mercy = sum(1 for d in self._discovered.values()
-                   if d["status"] == DiscoveryStatus.MERCY.value)
-        rejected = sum(1 for d in self._discovered.values()
-                      if d["status"] == DiscoveryStatus.REJECTED.value)
-        skipped = sum(1 for d in self._discovered.values()
-                     if d["status"] == DiscoveryStatus.SKIPPED.value)
+        owned = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.OWNED.value)
+        orphan = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.ORPHAN.value)
+        adopted = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.ADOPTED.value)
+        mercy = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.MERCY.value)
+        rejected = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.REJECTED.value)
+        skipped = sum(1 for d in self._discovered.values() if d["status"] == DiscoveryStatus.SKIPPED.value)
 
         # Count by Mahajana
         by_mahajana: Dict[str, int] = {}
@@ -758,6 +768,7 @@ def get_engine(base_path: Optional[Path] = None) -> DiscoveryEngine:
 # =============================================================================
 # CONVENIENCE FUNCTIONS - ONE LINE DISCOVERY
 # =============================================================================
+
 
 def discover(path: Path) -> List[DiscoveredFile]:
     """

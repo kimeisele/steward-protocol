@@ -48,6 +48,7 @@ class KapilaService:
         self._analyses_performed = 0
         # Lazy import to avoid circular dependency
         from vibe_core.protocols.cognition import NullCognitive
+
         self._cognitive: "OperatorCognitiveProtocol" = NullCognitive()
 
     @property
@@ -62,7 +63,7 @@ class KapilaService:
             "conclusion": f"Kapila analyzed: {str(target)[:50]}",
             "confidence": 1.0,
             "duration_ms": 0,
-            "error_message": ""
+            "error_message": "",
         }
 
     def resolve(self, query: str) -> "AnalysisResult":
@@ -75,7 +76,7 @@ class KapilaService:
             "original_metric": 0.0,
             "optimized_metric": 0.0,
             "changes_made": [],
-            "error_message": ""
+            "error_message": "",
         }
 
     def enumerate(self, domain: str) -> List[str]:
@@ -85,7 +86,7 @@ class KapilaService:
         return {
             "metrics": {"analyses": float(self._analyses_performed)},
             "collected_at": datetime.now().isoformat(),
-            "sample_count": 1
+            "sample_count": 1,
         }
 
     def get_state(self) -> "AnalysisState":
@@ -94,7 +95,7 @@ class KapilaService:
             "optimizations_performed": 0,
             "total_improvement": 0.0,
             "last_analysis": datetime.now().isoformat(),
-            "health": "pristine"
+            "health": "pristine",
         }
 
     # --- Cognitive Delegation ---
@@ -120,11 +121,8 @@ class KapilaService:
         if signed_input and signed_input.is_signed():
             try:
                 from vibe_core.steward.crypto import verify_signature
-                is_valid = verify_signature(
-                    signed_input.message,
-                    signed_input.signature,
-                    signed_input.identity_id
-                )
+
+                is_valid = verify_signature(signed_input.message, signed_input.signature, signed_input.identity_id)
                 if is_valid:
                     sovereign_verified = True
                     logger.info(f"🛡️  KAPILA: Signature verified for {signed_input.identity_id}")
@@ -134,11 +132,7 @@ class KapilaService:
                 logger.error(f"❌ KAPILA: Signature verification error: {e}")
 
         # Route through registered cognitive plugin
-        result = await self._cognitive.process_input(
-            input_text,
-            session_id=session_id,
-            signed_input=signed_input
-        )
+        result = await self._cognitive.process_input(input_text, session_id=session_id, signed_input=signed_input)
 
         # Add metadata
         if hasattr(result, "metadata"):

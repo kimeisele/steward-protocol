@@ -36,7 +36,6 @@ USAGE:
 GAD-000 COMPLIANT: All 6 criteria + 37th handled by engine.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -73,6 +72,7 @@ CLIHandler = Callable[[CLIContext], CLIResult]
 # POSITION REGISTRATION
 # =============================================================================
 
+
 @dataclass
 class MahajanaCliRegistration:
     """
@@ -81,6 +81,7 @@ class MahajanaCliRegistration:
     This is ALL a Mahajana needs to define.
     Everything else is handled by the engine.
     """
+
     position: int
     capabilities: List[CLICapability]
     handlers: Dict[str, CLIHandler]
@@ -100,6 +101,7 @@ class MahajanaCliRegistration:
 # =============================================================================
 # CLI ENGINE - The Singleton
 # =============================================================================
+
 
 class CLIEngine(PanchaTattvaProtocol):
     """
@@ -267,6 +269,7 @@ class CLIEngine(PanchaTattvaProtocol):
             CLIResult with structured output
         """
         import time
+
         start = time.time()
 
         # Build context
@@ -328,9 +331,7 @@ class CLIEngine(PanchaTattvaProtocol):
         state.last_result = result
         return result
 
-    def _find_handler(
-        self, reg: MahajanaCliRegistration, command: str
-    ) -> Optional[CLIHandler]:
+    def _find_handler(self, reg: MahajanaCliRegistration, command: str) -> Optional[CLIHandler]:
         """Find handler for command."""
         cmd_lower = command.lower()
 
@@ -443,6 +444,7 @@ cli_engine = CLIEngine()
 # CONVENIENCE DECORATOR
 # =============================================================================
 
+
 def cli_command(
     position: int,
     name: str,
@@ -457,6 +459,7 @@ def cli_command(
         def handle_analyze(context: CLIContext) -> CLIResult:
             return CLIResult.ok(result="done")
     """
+
     def decorator(fn: CLIHandler) -> CLIHandler:
         cap = CLICapability(
             name=name,
@@ -466,6 +469,7 @@ def cli_command(
         )
         cli_engine.register_handler(position, name, fn, cap)
         return fn
+
     return decorator
 
 

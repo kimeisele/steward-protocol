@@ -79,42 +79,42 @@ class DriftSource(str, Enum):
 
     PERFORMANCE = "performance"  # ReactorProtocol - execution metrics
     RELIABILITY = "reliability"  # ReactorProtocol - failure rates
-    CONFIG = "config"            # VajraEnforcer - manifest mismatches
-    STRUCTURAL = "structural"    # Shuddhi - code violations
-    CODE_DOC = "code_doc"        # DriftDetector - code-documentation sync
-    COGNITIVE = "cognitive"      # dharma - agent behavior patterns
-    STATE = "state"              # GunaClassifier - state health
+    CONFIG = "config"  # VajraEnforcer - manifest mismatches
+    STRUCTURAL = "structural"  # Shuddhi - code violations
+    CODE_DOC = "code_doc"  # DriftDetector - code-documentation sync
+    COGNITIVE = "cognitive"  # dharma - agent behavior patterns
+    STATE = "state"  # GunaClassifier - state health
 
 
 class DriftSeverity(str, Enum):
     """Yamaraja's severity classification."""
 
-    INFO = "info"          # Observation only
-    WARNING = "warning"    # Attention needed
-    ERROR = "error"        # Correction required
+    INFO = "info"  # Observation only
+    WARNING = "warning"  # Attention needed
+    ERROR = "error"  # Correction required
     CRITICAL = "critical"  # Immediate action
 
 
 class HealingStrategy(str, Enum):
     """How Yamaraja should apply correction."""
 
-    AUTO = "auto"            # Apply immediately (earned trust)
-    DRY_RUN = "dry_run"      # Compute but don't apply (default)
-    MANUAL = "manual"        # Requires human approval
-    CIRCUIT = "circuit"      # Delegate to healing circuit
+    AUTO = "auto"  # Apply immediately (earned trust)
+    DRY_RUN = "dry_run"  # Compute but don't apply (default)
+    MANUAL = "manual"  # Requires human approval
+    CIRCUIT = "circuit"  # Delegate to healing circuit
     RESONANCE = "resonance"  # Use Quantum Reactor to determine
-    MERCY = "mercy"          # AJAMIL EXCEPTION - chanting overrides
+    MERCY = "mercy"  # AJAMIL EXCEPTION - chanting overrides
 
 
 class HealingStatus(str, Enum):
     """Outcome of Yamaraja's correction attempt."""
 
-    HEALED = "healed"              # Successfully corrected
-    SKIPPED = "skipped"            # No action needed
-    FAILED = "failed"              # Correction failed
-    DEFERRED = "deferred"          # Queued for later
+    HEALED = "healed"  # Successfully corrected
+    SKIPPED = "skipped"  # No action needed
+    FAILED = "failed"  # Correction failed
+    DEFERRED = "deferred"  # Queued for later
     MANUAL_REQUIRED = "manual_required"  # Needs human
-    MERCY_GRANTED = "mercy_granted"      # AJAMIL - saved by Holy Name
+    MERCY_GRANTED = "mercy_granted"  # AJAMIL - saved by Holy Name
 
 
 # =============================================================================
@@ -259,20 +259,15 @@ class DriftRegistryProtocol(Protocol):
         source: DriftSource,
         detector: DriftDetector,
         detector_id: str = "",
-    ) -> None:
-        ...
+    ) -> None: ...
 
-    def unregister_detector(self, detector_id: str) -> bool:
-        ...
+    def unregister_detector(self, detector_id: str) -> bool: ...
 
-    def detect(self, source: Optional[DriftSource] = None) -> List[UnifiedDriftReport]:
-        ...
+    def detect(self, source: Optional[DriftSource] = None) -> List[UnifiedDriftReport]: ...
 
-    def detect_all(self) -> List[UnifiedDriftReport]:
-        ...
+    def detect_all(self) -> List[UnifiedDriftReport]: ...
 
-    def get_detector_ids(self) -> List[str]:
-        ...
+    def get_detector_ids(self) -> List[str]: ...
 
 
 @runtime_checkable
@@ -290,34 +285,27 @@ class CorrectionDispatcherProtocol(Protocol):
         handler: CorrectionHandler,
         handler_id: str = "",
         priority: int = 0,
-    ) -> None:
-        ...
+    ) -> None: ...
 
-    def unregister_handler(self, handler_id: str) -> bool:
-        ...
+    def unregister_handler(self, handler_id: str) -> bool: ...
 
     def dispatch(
         self,
         drift: UnifiedDriftReport,
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
-    ) -> HealingResult:
-        ...
+    ) -> HealingResult: ...
 
     def dispatch_all(
         self,
         drifts: List[UnifiedDriftReport],
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
-    ) -> List[HealingResult]:
-        ...
+    ) -> List[HealingResult]: ...
 
-    def can_heal(self, drift: UnifiedDriftReport) -> bool:
-        ...
+    def can_heal(self, drift: UnifiedDriftReport) -> bool: ...
 
-    def get_handler_ids(self) -> List[str]:
-        ...
+    def get_handler_ids(self) -> List[str]: ...
 
-    def get_stats(self) -> CorrectionStats:
-        ...
+    def get_stats(self) -> CorrectionStats: ...
 
 
 @runtime_checkable
@@ -328,11 +316,9 @@ class HealingStrategyResolverProtocol(Protocol):
         self,
         agent_id: str,
         drift: UnifiedDriftReport,
-    ) -> HealingStrategy:
-        ...
+    ) -> HealingStrategy: ...
 
-    def get_trust_level(self, agent_id: str) -> float:
-        ...
+    def get_trust_level(self, agent_id: str) -> float: ...
 
 
 @runtime_checkable
@@ -340,29 +326,24 @@ class CorrectionOrchestratorProtocol(Protocol):
     """High-level orchestrator - Yamaraja's full court."""
 
     @property
-    def registry(self) -> DriftRegistryProtocol:
-        ...
+    def registry(self) -> DriftRegistryProtocol: ...
 
     @property
-    def dispatcher(self) -> CorrectionDispatcherProtocol:
-        ...
+    def dispatcher(self) -> CorrectionDispatcherProtocol: ...
 
     def detect_and_report(
         self,
         source: Optional[DriftSource] = None,
-    ) -> List[UnifiedDriftReport]:
-        ...
+    ) -> List[UnifiedDriftReport]: ...
 
     def detect_and_heal(
         self,
         source: Optional[DriftSource] = None,
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
         auto_only: bool = True,
-    ) -> List[HealingResult]:
-        ...
+    ) -> List[HealingResult]: ...
 
-    def get_healable_count(self) -> Dict[DriftSource, int]:
-        ...
+    def get_healable_count(self) -> Dict[DriftSource, int]: ...
 
 
 # =============================================================================

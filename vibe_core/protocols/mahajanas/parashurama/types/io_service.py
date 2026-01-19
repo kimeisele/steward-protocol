@@ -20,7 +20,6 @@ Usage:
         kernel.io.write_document("MY_OUTPUT.md", content, DocumentType.READONLY)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

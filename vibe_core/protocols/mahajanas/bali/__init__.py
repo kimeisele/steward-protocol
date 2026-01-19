@@ -18,7 +18,6 @@ Bali proves that even a demon can be liberated through surrender.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -47,6 +46,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # BALI PROTOCOL BASE - Derives from MantraPosition 13
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class BaliProtocolBase(WorkerProtocol):
     """
@@ -63,6 +63,7 @@ class BaliProtocolBase(WorkerProtocol):
         is_head()   → False (Worker position)
         parampara_vector() → 518 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 13  # THE ONLY CONFIGURATION
 
 
@@ -73,13 +74,15 @@ class BaliProtocolBase(WorkerProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class SurrenderType(str, Enum):
     """Types of surrender."""
-    YIELD = "yield"           # Temporary CPU yield
-    PAUSE = "pause"           # Pause execution
-    RELEASE = "release"       # Release resources
-    SHUTDOWN = "shutdown"     # Full graceful shutdown
-    PRAPATTI = "prapatti"     # Full surrender (irreversible)
+
+    YIELD = "yield"  # Temporary CPU yield
+    PAUSE = "pause"  # Pause execution
+    RELEASE = "release"  # Release resources
+    SHUTDOWN = "shutdown"  # Full graceful shutdown
+    PRAPATTI = "prapatti"  # Full surrender (irreversible)
 
 
 class SurrenderResult(TypedDict, total=False):
@@ -87,10 +90,11 @@ class SurrenderResult(TypedDict, total=False):
     Result of surrender operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    surrender_type: str       # SurrenderType value
+    surrender_type: str  # SurrenderType value
     resources_released: int
-    timestamp: str            # ISO timestamp
+    timestamp: str  # ISO timestamp
     message: str
 
 
@@ -99,16 +103,18 @@ class SurrenderState(TypedDict, total=False):
     State of surrender.
     WATERTIGHT - no Any!
     """
+
     can_surrender: bool
     is_surrendered: bool
     total_yields: int
     total_releases: int
-    last_surrender: str       # ISO timestamp
-    health: str               # "pristine", "healthy", "degraded"
+    last_surrender: str  # ISO timestamp
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class SurrenderCliResult(TypedDict):
     """Result of CLI surrender operation. WATERTIGHT - no Any!"""
+
     success: bool
     surrender_type: str
     can_surrender: bool
@@ -262,8 +268,12 @@ __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BaliProtocolBase",
     # Bali Protocol (WATERTIGHT)
-    "SurrenderType", "SurrenderResult", "SurrenderState", "SurrenderCliResult",
-    "BaliProtocol", "NullBali",
+    "SurrenderType",
+    "SurrenderResult",
+    "SurrenderState",
+    "SurrenderCliResult",
+    "BaliProtocol",
+    "NullBali",
     # Shutdown
     "ShutdownPhase",
     "ShutdownReason",

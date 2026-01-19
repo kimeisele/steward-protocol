@@ -24,7 +24,6 @@ DERIVES FROM SSOT:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -68,8 +67,6 @@ from vibe_core.mahamantra.dharma.prithu import PrithuService
 prithu = PrithuService()
 
 
-
-
 # =============================================================================
 # THE LAW: FOLDER = WIRING
 # =============================================================================
@@ -85,6 +82,7 @@ FRACTAL_BASE: Final[int] = TOTAL_POSITIONS  # 16^n scaling
 # DERIVED LOOKUPS (from SSOT: MAHAMANTRA_POSITIONS)
 # =============================================================================
 
+
 def _get_guardian_name(pos: MantraPosition) -> str:
     """Get guardian name from MantraPosition."""
     if isinstance(pos.guardian, Avatara):
@@ -98,22 +96,17 @@ def _get_folder_path(pos: MantraPosition) -> str:
 
 
 # Build lookup tables DERIVED from MAHAMANTRA_POSITIONS (SSOT)
-POSITION_BY_FOLDER: Final[Dict[str, MantraPosition]] = {
-    _get_folder_path(pos): pos for pos in MAHAMANTRA_POSITIONS
-}
+POSITION_BY_FOLDER: Final[Dict[str, MantraPosition]] = {_get_folder_path(pos): pos for pos in MAHAMANTRA_POSITIONS}
 
-POSITION_BY_NAME: Final[Dict[str, MantraPosition]] = {
-    _get_guardian_name(pos): pos for pos in MAHAMANTRA_POSITIONS
-}
+POSITION_BY_NAME: Final[Dict[str, MantraPosition]] = {_get_guardian_name(pos): pos for pos in MAHAMANTRA_POSITIONS}
 
-POSITION_BY_INDEX: Final[Dict[int, MantraPosition]] = {
-    pos.index: pos for pos in MAHAMANTRA_POSITIONS
-}
+POSITION_BY_INDEX: Final[Dict[int, MantraPosition]] = {pos.index: pos for pos in MAHAMANTRA_POSITIONS}
 
 
 # =============================================================================
 # FOLDER EXISTENCE CHECK
 # =============================================================================
+
 
 def folder_exists(folder_path: str) -> bool:
     """
@@ -152,7 +145,7 @@ def get_position_by_index(index: int) -> Optional[MantraPosition]:
 def get_position_by_opcode(opcode: MantraOpCode) -> Optional[MantraPosition]:
     """
     Get position by OpCode. DERIVED from SSOT.
-    
+
     Routes operation to guardian.
     """
     for pos in MAHAMANTRA_POSITIONS:
@@ -164,6 +157,7 @@ def get_position_by_opcode(opcode: MantraOpCode) -> Optional[MantraPosition]:
 # =============================================================================
 # WIRING PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class WiringProtocol(Protocol):
@@ -204,6 +198,7 @@ class WiringVerification:
     GAD-000:
         If it doesn't exist as protocol, it doesn't exist.
     """
+
     folder_path: str
     exists: bool
     position: Optional[int]
@@ -256,6 +251,7 @@ def verify_wiring(folder_path: str) -> WiringVerification:
 # FRACTAL GROWTH
 # =============================================================================
 
+
 def calculate_fractal_depth(total_nodes: int) -> int:
     """
     Calculate fractal depth from total nodes.
@@ -266,6 +262,7 @@ def calculate_fractal_depth(total_nodes: int) -> int:
     Level n: 16^n nodes
     """
     import math
+
     if total_nodes <= 4:
         return 0
     if total_nodes <= 16:
@@ -275,7 +272,7 @@ def calculate_fractal_depth(total_nodes: int) -> int:
 
 def calculate_total_nodes(depth: int) -> int:
     """Calculate total nodes at fractal depth."""
-    return FRACTAL_BASE ** depth
+    return FRACTAL_BASE**depth
 
 
 # =============================================================================

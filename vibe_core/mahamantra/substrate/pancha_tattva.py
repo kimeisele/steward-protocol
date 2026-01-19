@@ -35,7 +35,6 @@ ARCHITECTURAL MAPPING (Capability-First):
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -108,11 +107,12 @@ class PanchaTattva(str, Enum):
 
 class TattvaIndex(IntEnum):
     """Index der Pancha Tattva (0-4)."""
-    CHAITANYA = 0   # Der Erste - Krishna selbst
+
+    CHAITANYA = 0  # Der Erste - Krishna selbst
     NITYANANDA = 1  # Die Expansion
-    ADVAITA = 2     # Die Inkarnation
-    GADADHARA = 3   # Die innere Energie
-    SRIVASA = 4     # Die Rand-Energie
+    ADVAITA = 2  # Die Inkarnation
+    GADADHARA = 3  # Die innere Energie
+    SRIVASA = 4  # Die Rand-Energie
 
 
 # =============================================================================
@@ -284,11 +284,12 @@ def tattva_to_trit(tattva: PanchaTattva) -> int:
 
 class TattvaGate(IntEnum):
     """Die 5 Gates als Entry Points (Pancha Tattva Order)."""
-    PARSE = 0      # Chaitanya - Parse/Entry
-    VALIDATE = 1   # Nityananda - Validate/Foundation
-    EXECUTE = 2    # Advaita - Execute/Bridge
-    RESULT = 3     # Gadadhara - Result/Connection
-    SYNC = 4       # Srivasa - Sync/Parallel
+
+    PARSE = 0  # Chaitanya - Parse/Entry
+    VALIDATE = 1  # Nityananda - Validate/Foundation
+    EXECUTE = 2  # Advaita - Execute/Bridge
+    RESULT = 3  # Gadadhara - Result/Connection
+    SYNC = 4  # Srivasa - Sync/Parallel
 
 
 GATE_TO_TATTVA: Final[dict[TattvaGate, PanchaTattva]] = {
@@ -429,10 +430,10 @@ CHAITANYA_LILA: Final[int] = LILA_LIMIT  # SSOT: byte.py
 
 # The two symmetric phases of Chaitanya's life
 NAVADVIPA_PHASE: Final[int] = 24  # First 24 years: Householder, Study, Build
-PURI_PHASE: Final[int] = 24       # Last 24 years: Sannyasa, Distribution, Runtime
+PURI_PHASE: Final[int] = 24  # Last 24 years: Sannyasa, Distribution, Runtime
 
 # Rudra number (connects Parampara to Chaitanya)
-RUDRA_BRIDGE: Final[int] = 11     # 37 + 11 = 48
+RUDRA_BRIDGE: Final[int] = 11  # 37 + 11 = 48
 
 
 def get_lila_phase(tick: int) -> str:

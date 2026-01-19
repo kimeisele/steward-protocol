@@ -37,24 +37,24 @@ if TYPE_CHECKING:
 
 # Import HolyName values for indexing (0=HARE, 1=KRISHNA, 2=RAMA, 3=VOID)
 DEVANAGARI: Final[Tuple[str, ...]] = (
-    "हरे",      # HARE = 0
-    "कृष्ण",    # KRISHNA = 1
-    "राम",      # RAMA = 2
-    "शून्य",    # VOID = 3 (Maya/Error)
+    "हरे",  # HARE = 0
+    "कृष्ण",  # KRISHNA = 1
+    "राम",  # RAMA = 2
+    "शून्य",  # VOID = 3 (Maya/Error)
 )
 
 IAST: Final[Tuple[str, ...]] = (
-    "hare",     # HARE = 0
-    "kṛṣṇa",   # KRISHNA = 1
-    "rāma",    # RAMA = 2
-    "śūnya",   # VOID = 3
+    "hare",  # HARE = 0
+    "kṛṣṇa",  # KRISHNA = 1
+    "rāma",  # RAMA = 2
+    "śūnya",  # VOID = 3
 )
 
 ROMAN: Final[Tuple[str, ...]] = (
-    "Hare",     # HARE = 0
+    "Hare",  # HARE = 0
     "Krishna",  # KRISHNA = 1
-    "Rama",     # RAMA = 2
-    "Void",     # VOID = 3
+    "Rama",  # RAMA = 2
+    "Void",  # VOID = 3
 )
 
 
@@ -62,25 +62,19 @@ ROMAN: Final[Tuple[str, ...]] = (
 # THE COMPLETE MAHAMANTRA (16 words)
 # =============================================================================
 
-MAHAMANTRA_DEVANAGARI: Final[str] = (
-    "हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे । "
-    "हरे राम हरे राम राम राम हरे हरे ॥"
-)
+MAHAMANTRA_DEVANAGARI: Final[str] = "हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे । हरे राम हरे राम राम राम हरे हरे ॥"
 
-MAHAMANTRA_IAST: Final[str] = (
-    "hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare | "
-    "hare rāma hare rāma rāma rāma hare hare ||"
-)
+MAHAMANTRA_IAST: Final[str] = "hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare | hare rāma hare rāma rāma rāma hare hare ||"
 
 MAHAMANTRA_ROMAN: Final[str] = (
-    "Hare Krishna Hare Krishna Krishna Krishna Hare Hare | "
-    "Hare Rama Hare Rama Rama Rama Hare Hare"
+    "Hare Krishna Hare Krishna Krishna Krishna Hare Hare | Hare Rama Hare Rama Rama Rama Hare Hare"
 )
 
 
 # =============================================================================
 # ENCODING FUNCTIONS
 # =============================================================================
+
 
 def to_devanagari(value: int) -> str:
     """Convert HolyName value to Devanagari."""

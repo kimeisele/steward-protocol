@@ -16,7 +16,6 @@ He does NOT act - he OBSERVES and TRANSMITS.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -49,6 +48,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # NARADA PROTOCOL BASE - Derives from MantraPosition 2
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class NaradaProtocolBase(WorkerProtocol):
     """
@@ -65,6 +65,7 @@ class NaradaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 111 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 2  # THE ONLY CONFIGURATION
 
 
@@ -81,13 +82,14 @@ MessagePayload = Union[str, int, float, bool, Dict[str, str], List[str], None]
 
 class MessageType(str, Enum):
     """Types of messages Narada can transmit."""
-    EVENT = "event"           # Something happened
+
+    EVENT = "event"  # Something happened
     NOTIFICATION = "notification"  # FYI
-    REQUEST = "request"       # Asking for something
-    RESPONSE = "response"     # Answering a request
-    BROADCAST = "broadcast"   # To all listeners
-    WHISPER = "whisper"       # To specific target
-    PULSE = "pulse"           # Heartbeat sync
+    REQUEST = "request"  # Asking for something
+    RESPONSE = "response"  # Answering a request
+    BROADCAST = "broadcast"  # To all listeners
+    WHISPER = "whisper"  # To specific target
+    PULSE = "pulse"  # Heartbeat sync
 
 
 class Message(TypedDict, total=False):
@@ -95,14 +97,15 @@ class Message(TypedDict, total=False):
     A message structure for communication.
     WATERTIGHT - no Any!
     """
-    id: str                   # Unique message ID
-    type: str                 # MessageType value
-    source: str               # Sender identity
-    target: str               # Receiver identity (empty for broadcast)
-    payload_type: str         # Python type of payload
-    payload_repr: str         # String representation of payload
-    timestamp: str            # ISO timestamp
-    correlation_id: str       # For request/response pairing
+
+    id: str  # Unique message ID
+    type: str  # MessageType value
+    source: str  # Sender identity
+    target: str  # Receiver identity (empty for broadcast)
+    payload_type: str  # Python type of payload
+    payload_repr: str  # String representation of payload
+    timestamp: str  # ISO timestamp
+    correlation_id: str  # For request/response pairing
 
 
 class Observation(TypedDict, total=False):
@@ -110,11 +113,12 @@ class Observation(TypedDict, total=False):
     A recorded observation.
     WATERTIGHT - no Any!
     """
-    observed_at: str          # ISO timestamp
-    source: str               # What was observed
-    event_type: str           # Type of event
-    details: str              # String description
-    severity: str             # "debug", "info", "warning", "error"
+
+    observed_at: str  # ISO timestamp
+    source: str  # What was observed
+    event_type: str  # Type of event
+    details: str  # String description
+    severity: str  # "debug", "info", "warning", "error"
 
 
 class ObserverState(TypedDict, total=False):
@@ -122,13 +126,14 @@ class ObserverState(TypedDict, total=False):
     Complete observer state for observability.
     WATERTIGHT - no Any!
     """
+
     observations: List[Observation]
     total_observed: int
     listeners_count: int
     messages_sent: int
     messages_received: int
-    last_pulse: str           # ISO timestamp
-    health: str               # "pristine", "healthy", "degraded"
+    last_pulse: str  # ISO timestamp
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class BroadcastResult(TypedDict, total=False):
@@ -136,6 +141,7 @@ class BroadcastResult(TypedDict, total=False):
     Result of a broadcast operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     recipients_count: int
     failed_count: int
@@ -144,6 +150,7 @@ class BroadcastResult(TypedDict, total=False):
 
 class BroadcastCliResult(TypedDict):
     """Result of CLI broadcast operation. WATERTIGHT - no Any!"""
+
     success: bool
     message_type: str
     recipients: int
@@ -160,6 +167,7 @@ T = TypeVar("T")
 
 class ListenerCallback(Protocol):
     """Protocol for listener callbacks - WATERTIGHT."""
+
     def __call__(self, message: Message) -> None:
         """Receive a message."""
         ...
@@ -345,6 +353,7 @@ class NullNarada(NaradaProtocolBase):
 # NARADA'S INSTRUCTION (For Communication)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class KirtanamInstruction:
     """
@@ -355,6 +364,7 @@ class KirtanamInstruction:
     This is the ATOMIC unit of communication.
     Used by NadiProtocol and AkashaProtocol.
     """
+
     operation: str  # "observe", "broadcast", "whisper", "subscribe", "pulse"
     source: str
     target: Optional[str] = None

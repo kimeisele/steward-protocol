@@ -857,7 +857,7 @@ class SQLiteLedger(VibeLedger):
             event = dict(row)
             if event.get("payload") and event.get("details") is None:
                 try:
-                    event["details"] = json.loads(str(event["payload"])) # Added str() for consistency
+                    event["details"] = json.loads(str(event["payload"]))  # Added str() for consistency
                 except (json.JSONDecodeError, TypeError) as e:
                     # OPUS-312: Log JSON parse failures at debug (graceful degradation)
                     logger.debug(f"JSON parse failed for event payload: {e}")
@@ -908,7 +908,6 @@ class SQLiteLedger(VibeLedger):
     def batch_record(self, event_type: str, agent_id: str, details: Dict[str, object]):
         """Add an event to the batch buffer."""
         self._batch_buffer.append((event_type, agent_id, details))
-
 
     def batch_commit(self):
         """Commit all buffered events in a single transaction."""

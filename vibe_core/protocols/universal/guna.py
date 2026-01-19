@@ -21,22 +21,25 @@ from typing import Protocol, runtime_checkable
 ZERO = Decimal("0.0")
 ONE = Decimal("1.0")
 
+
 class GunaType(Enum):
-    SATTVA = "sattva"           # Material Goodness
-    RAJAS = "rajas"             # Material Passion
-    TAMAS = "tamas"             # Material Ignorance
-    VISUDDHA_SATTVA = "shuddha" # Pure Goodness (Transcendental Form)
+    SATTVA = "sattva"  # Material Goodness
+    RAJAS = "rajas"  # Material Passion
+    TAMAS = "tamas"  # Material Ignorance
+    VISUDDHA_SATTVA = "shuddha"  # Pure Goodness (Transcendental Form)
+
 
 @dataclass(frozen=True)
 class GunaProfile:
     """
     The Quality Matrix.
     """
+
     sattva: Decimal
     rajas: Decimal
     tamas: Decimal
-    visuddha: Decimal # The "S-Guna" (Spiritual Quality) factor
-    
+    visuddha: Decimal  # The "S-Guna" (Spiritual Quality) factor
+
     @property
     def is_material(self) -> bool:
         return self.visuddha == ZERO and (self.sattva + self.rajas + self.tamas > ZERO)
@@ -61,7 +64,7 @@ class GunaProfile:
             return "⚫ VOID (Mayavad)"
         return f"S:{self.sattva:.2f} R:{self.rajas:.2f} T:{self.tamas:.2f}"
 
+
 @runtime_checkable
 class GunaProtocol(Protocol):
-    def get_guna_profile(self) -> GunaProfile:
-        ...
+    def get_guna_profile(self) -> GunaProfile: ...

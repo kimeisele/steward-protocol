@@ -26,8 +26,8 @@ from vibe_core.cli.naga_commands.serve.validate import ValidateCommand
 from vibe_core.cli.naga_commands.serve.commit import CommitCommand
 
 __all__ = [
-    "IntelCommand",     # SHUKA - FETCH_RES (Position 8)
-    "ChatCommand",      # PRAHLADA - EXEC_SERVICE (Position 9)
+    "IntelCommand",  # SHUKA - FETCH_RES (Position 8)
+    "ChatCommand",  # PRAHLADA - EXEC_SERVICE (Position 9)
     "ValidateCommand",  # JANAKA - CHECK_DHARMA (Position 10)
-    "CommitCommand",    # BHISHMA - COMMIT_LOG (Position 11)
+    "CommitCommand",  # BHISHMA - COMMIT_LOG (Position 11)
 ]

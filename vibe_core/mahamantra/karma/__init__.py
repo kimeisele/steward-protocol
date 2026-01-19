@@ -64,11 +64,13 @@ WORKER_LEVEL: Final[ProtocolLevel] = ProtocolLevel.MAHAJANAS
 # OPCODES
 # =============================================================================
 
+
 class KarmaOpCode:
     """Die OpCodes des Karma Quarters."""
-    EXEC_OP = 8       # Parashurama (HEAD)
-    EXTEND_CAP = 9    # Prahlada
-    STATE_SYNC = 10   # Janaka
+
+    EXEC_OP = 8  # Parashurama (HEAD)
+    EXTEND_CAP = 9  # Prahlada
+    STATE_SYNC = 10  # Janaka
     LEDGER_SIGN = 11  # Bhishma
 
 

@@ -378,6 +378,7 @@ def _inject_ananta_heartbeat(cls: Type) -> None:
         """Emit heartbeat to AnantaShesha."""
         try:
             from vibe_core.protocols.substrate.cli_substrate import emit_cli_heartbeat
+
             command = self.meta.command
             emit_cli_heartbeat(command, exit_code=exit_code, duration_ms=duration_ms)
         except Exception:
@@ -452,6 +453,7 @@ def _inject_ananta_substrate(cls: Type) -> None:
         """Get the Ananta Substrate node for this CLI."""
         try:
             from vibe_core.protocols.substrate.cli_substrate import AnantaSubstrate
+
             return AnantaSubstrate.get(self.meta.command)
         except Exception:
             return None
@@ -493,10 +495,12 @@ def _inject_ananta_intelligence(cls: Type) -> None:
                     IntelBridgeProtocol,
                     NullIntelBridge,
                 )
+
                 bridge = ServiceRegistry.get(IntelBridgeProtocol)
                 self._ananta_intel = bridge if bridge is not None else NullIntelBridge()
             except Exception:
                 from vibe_core.protocols.naga.intel_bridge import NullIntelBridge
+
                 self._ananta_intel = NullIntelBridge()
         return self._ananta_intel
 

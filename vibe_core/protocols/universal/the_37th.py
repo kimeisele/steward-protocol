@@ -19,6 +19,7 @@ __genesis__ = "0xaa7dde62"  # GenesisByte: parampara % 37 == 0
 from typing import Protocol, runtime_checkable, Any, Optional
 from vibe_core.protocols.types import PersonProtocol
 
+
 @runtime_checkable
 class The37th(PersonProtocol, Protocol):
     """

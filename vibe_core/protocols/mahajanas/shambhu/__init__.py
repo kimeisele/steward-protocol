@@ -18,7 +18,6 @@ Destruction is SEVA - it makes room for new creation.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -47,6 +46,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # SHAMBHU PROTOCOL BASE - Derives from MantraPosition 3
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class ShambhuProtocolBase(WorkerProtocol):
     """
@@ -63,6 +63,7 @@ class ShambhuProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 148 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 3  # THE ONLY CONFIGURATION
 
 
@@ -73,13 +74,15 @@ class ShambhuProtocolBase(WorkerProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class DestructionType(str, Enum):
     """Types of destruction."""
-    GARBAGE = "garbage"       # Unused memory
-    ORPHAN = "orphan"         # Orphaned resources
-    EXPIRED = "expired"       # Timed-out entries
-    CORRUPTED = "corrupted"   # Damaged data
-    REQUESTED = "requested"   # Explicitly requested
+
+    GARBAGE = "garbage"  # Unused memory
+    ORPHAN = "orphan"  # Orphaned resources
+    EXPIRED = "expired"  # Timed-out entries
+    CORRUPTED = "corrupted"  # Damaged data
+    REQUESTED = "requested"  # Explicitly requested
 
 
 class DestructionResult(TypedDict, total=False):
@@ -87,6 +90,7 @@ class DestructionResult(TypedDict, total=False):
     Result of destruction/cleanup.
     WATERTIGHT - no Any!
     """
+
     success: bool
     items_destroyed: int
     bytes_freed: int
@@ -99,16 +103,18 @@ class DestructionState(TypedDict, total=False):
     State of destruction/cleanup.
     WATERTIGHT - no Any!
     """
-    last_collection: str      # ISO timestamp
+
+    last_collection: str  # ISO timestamp
     items_pending: int
     total_destroyed: int
     total_bytes_freed: int
     is_destroyed: bool
-    health: str               # "pristine", "healthy", "degraded"
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class DestroyCliResult(TypedDict):
     """Result of CLI destroy operation. WATERTIGHT - no Any!"""
+
     success: bool
     items_destroyed: int
     bytes_freed: int

@@ -13,7 +13,6 @@ MAHAMANTRA AS LENS:
 PARAMPARA: 555 (% 37 == 0 -> CONNECTED)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -29,6 +28,7 @@ from vibe_core.protocols.mahajanas.shuka import __all__
 
 # Backward-compat constants
 from typing import Final
+
 POSITION: Final[int] = 14
 QUARTER: Final[str] = "moksha"
 OPCODE: Final[str] = "LOG_EMIT"

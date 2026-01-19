@@ -33,7 +33,6 @@ The graph is not separate - it IS the Mantra unfolding.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -66,12 +65,12 @@ from math import gcd
 # No duplication - everything derives from acintya.
 
 from vibe_core.protocols.substrate.mantra.acintya import (
-    PARAMPARA,              # 37 = 24 + 12 + 1 (THE link)
-    SYSTEM_MANIFESTATION,   # 37
-    TRINITY,                # 3 (Hare, Krishna, Rama)
-    PHASES,                 # 4 (Genesis, Dharma, Karma, Moksha)
-    ProtocolLevel,          # The level system
-    verify_parampara,       # % 37 check
+    PARAMPARA,  # 37 = 24 + 12 + 1 (THE link)
+    SYSTEM_MANIFESTATION,  # 37
+    TRINITY,  # 3 (Hare, Krishna, Rama)
+    PHASES,  # 4 (Genesis, Dharma, Karma, Moksha)
+    ProtocolLevel,  # The level system
+    verify_parampara,  # % 37 check
 )
 
 # =============================================================================
@@ -87,11 +86,11 @@ from vibe_core.protocols.substrate.byte import HolyName
 # The Lotus IS the Mantra. Positions derive from here.
 
 from vibe_core.protocols.substrate.mantra.lotus import (
-    LOTUS_POSITIONS,        # 16 words
-    LOTUS_QUARTERS,         # 4 quarters
-    WORDS_PER_QUARTER,      # 4 words per quarter
-    LOTUS_PARAMPARA,        # 37 (re-exported from acintya)
-    LotusQuarter,           # The quarters enum
+    LOTUS_POSITIONS,  # 16 words
+    LOTUS_QUARTERS,  # 4 quarters
+    WORDS_PER_QUARTER,  # 4 words per quarter
+    LOTUS_PARAMPARA,  # 37 (re-exported from acintya)
+    LotusQuarter,  # The quarters enum
 )
 
 
@@ -110,31 +109,34 @@ OWNER: Final[str] = "kapila"
 
 class NodeType(str, Enum):
     """Types of nodes in the Vedic Graph."""
-    SOURCE = "source"           # Krishna - Level -2
-    AVATARA = "avatara"         # Direct incarnations
+
+    SOURCE = "source"  # Krishna - Level -2
+    AVATARA = "avatara"  # Direct incarnations
     SHAKTYAVESHA = "shaktyavesha"  # Empowered beings (Heads)
-    MAHAJANA = "mahajana"       # The 12 authorities
-    ACHARYA = "acharya"         # Teachers in the line
-    PRAKRITI = "prakriti"       # Material elements (24)
-    PROTOCOL = "protocol"       # Code protocols
+    MAHAJANA = "mahajana"  # The 12 authorities
+    ACHARYA = "acharya"  # Teachers in the line
+    PRAKRITI = "prakriti"  # Material elements (24)
+    PROTOCOL = "protocol"  # Code protocols
 
 
 class EdgeType(str, Enum):
     """Types of edges (relationships) in the Vedic Graph."""
-    DIKSHA = "diksha"           # Formal initiation
-    SIKSHA = "siksha"           # Instructing relationship
-    SERVES = "serves"           # Service relationship
-    MANIFESTS = "manifests"     # Manifestation/creation
-    ENLIVENS = "enlivens"       # Mantra contact with matter
-    OWNS = "owns"               # Protocol ownership
+
+    DIKSHA = "diksha"  # Formal initiation
+    SIKSHA = "siksha"  # Instructing relationship
+    SERVES = "serves"  # Service relationship
+    MANIFESTS = "manifests"  # Manifestation/creation
+    ENLIVENS = "enlivens"  # Mantra contact with matter
+    OWNS = "owns"  # Protocol ownership
 
 
 class Sampradaya(str, Enum):
     """The 4 authorized disciplic successions."""
-    BRAHMA = "brahma"           # Brahma → Madhva → Chaitanya
-    KUMARA = "kumara"           # Kumaras → Nimbarka
-    SRI = "sri"                 # Lakshmi → Ramanuja
-    RUDRA = "rudra"             # Shiva → Vishnuswami
+
+    BRAHMA = "brahma"  # Brahma → Madhva → Chaitanya
+    KUMARA = "kumara"  # Kumaras → Nimbarka
+    SRI = "sri"  # Lakshmi → Ramanuja
+    RUDRA = "rudra"  # Shiva → Vishnuswami
 
 
 # =============================================================================
@@ -150,6 +152,7 @@ class GraphNode:
     Nodes don't HAVE positions - they RECEIVE them through service.
     Position is calculated by graph traversal from SOURCE.
     """
+
     id: str
     node_type: NodeType
     sampradaya: Optional[Sampradaya] = None
@@ -164,11 +167,12 @@ class GraphNode:
 @dataclass(frozen=True)
 class GraphEdge:
     """An edge (relationship) in the Vedic Graph."""
-    source: str         # From node ID
-    target: str         # To node ID
+
+    source: str  # From node ID
+    target: str  # To node ID
     edge_type: EdgeType
     weight: float = 1.0  # Strength of connection
-    note: str = ""       # Shastric reference
+    note: str = ""  # Shastric reference
 
 
 # =============================================================================
@@ -203,12 +207,14 @@ class VedicGraph:
         # =================================================================
         # LEVEL -2: THE SOURCE
         # =================================================================
-        self.add_node(GraphNode(
-            id="KRISHNA",
-            node_type=NodeType.SOURCE,
-            mantra_affinity=HolyName.KRISHNA,
-            level=-2,
-        ))
+        self.add_node(
+            GraphNode(
+                id="KRISHNA",
+                node_type=NodeType.SOURCE,
+                mantra_affinity=HolyName.KRISHNA,
+                level=-2,
+            )
+        )
 
         # =================================================================
         # THE 4 SAMPRADAYA HEADS (Direct from Krishna)
@@ -300,28 +306,24 @@ class VedicGraph:
             ("MAHAT", "Cosmic intelligence"),
             ("AHANKARA", "False ego"),
             ("MANAS", "Mind"),
-
             # Tanmatras - subtle elements (5-9)
             ("SHABDA", "Sound"),
             ("SPARSHA", "Touch"),
             ("RUPA", "Form"),
             ("RASA", "Taste"),
             ("GANDHA", "Smell"),
-
             # Jnanendriyas - knowledge senses (10-14)
             ("SHROTRA", "Ear"),
             ("TVAK", "Skin"),
             ("CHAKSHUS", "Eye"),
             ("RASANA", "Tongue"),
             ("GHRANA", "Nose"),
-
             # Karmendriyas - action organs (15-19)
             ("VAK", "Speech"),
             ("PANI", "Hands"),
             ("PADA", "Feet"),
             ("PAYU", "Excretion"),
             ("UPASTHA", "Generation"),
-
             # Mahabhutas - gross elements (20-24)
             ("AKASHA", "Ether"),
             ("VAYU", "Air"),
@@ -331,18 +333,16 @@ class VedicGraph:
         ]
 
         for i, (name, note) in enumerate(prakriti_elements):
-            self.add_node(GraphNode(
-                id=f"PRAKRITI_{name}",
-                node_type=NodeType.PRAKRITI,
-                mantra_affinity=HolyName.VOID,  # Dead matter - needs enlivening
-                level=1,  # Material level
-            ))
+            self.add_node(
+                GraphNode(
+                    id=f"PRAKRITI_{name}",
+                    node_type=NodeType.PRAKRITI,
+                    mantra_affinity=HolyName.VOID,  # Dead matter - needs enlivening
+                    level=1,  # Material level
+                )
+            )
             # Prakriti emanates from Krishna's external energy
-            self.add_edge(GraphEdge(
-                "KRISHNA", f"PRAKRITI_{name}",
-                EdgeType.MANIFESTS,
-                note=f"Element {i+1}: {note}"
-            ))
+            self.add_edge(GraphEdge("KRISHNA", f"PRAKRITI_{name}", EdgeType.MANIFESTS, note=f"Element {i + 1}: {note}"))
 
     def _add_gaudiya_parampara(self) -> None:
         """Add the Gaudiya Vaishnava parampara."""
@@ -453,19 +453,16 @@ class VedicGraph:
             "BRAHMA": 1,
             "NARADA": 2,
             "SHIVA": 3,
-
             # DHARMA Quarter (4-7)
             "VYASA": 4,
             "KUMARAS": 5,
             "KAPILA": 6,
             "MANU": 7,
-
             # KARMA Quarter (8-11)
             "PARASHURAMA": 8,
             "PRAHLADA": 9,
             "JANAKA": 10,
             "BHISHMA": 11,
-
             # MOKSHA Quarter (12-15)
             "NRISIMHA": 12,
             "BALI": 13,
@@ -510,20 +507,34 @@ class RhythmEngine:
     # The 16-word Mahamantra sequence (HolyName from byte.py)
     MAHAMANTRA: Final[List[HolyName]] = [
         # Hare Krishna Hare Krishna (GENESIS quarter)
-        HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.KRISHNA,
         # Krishna Krishna Hare Hare (DHARMA quarter)
-        HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE,
+        HolyName.KRISHNA,
+        HolyName.KRISHNA,
+        HolyName.HARE,
+        HolyName.HARE,
         # Hare Rama Hare Rama (KARMA quarter)
-        HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.RAMA,
         # Rama Rama Hare Hare (MOKSHA quarter)
-        HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE,
+        HolyName.RAMA,
+        HolyName.RAMA,
+        HolyName.HARE,
+        HolyName.HARE,
     ]
 
     @classmethod
     def get_lcm(cls) -> int:
         """Get the Least Common Multiple of mantra and prakriti."""
+
         def lcm(a: int, b: int) -> int:
             return abs(a * b) // gcd(a, b)
+
         return lcm(cls.MANTRA_LENGTH, cls.PRAKRITI_COUNT)
 
     @classmethod

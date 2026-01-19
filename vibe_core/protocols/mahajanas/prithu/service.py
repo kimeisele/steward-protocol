@@ -15,7 +15,6 @@ WRAPPED:
 this service asserts and validates truth."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -177,7 +176,9 @@ class PrithuService(PrithuProtocolBase):
         report = self._compliance.audit(path)
         return {
             "path": str(report.path),
-            "module_type": report.module_type.value if hasattr(report.module_type, "value") else str(report.module_type),
+            "module_type": report.module_type.value
+            if hasattr(report.module_type, "value")
+            else str(report.module_type),
             "checks": [
                 {
                     "name": check.name,
@@ -213,7 +214,7 @@ class PrithuService(PrithuProtocolBase):
         Prithudeva asserts the eternal truth.
         """
         cmd_lower = command.lower()
-        
+
         if "gita" in cmd_lower or "verse" in cmd_lower:
             # Simple Verse Resolver
             if "2.47" in cmd_lower:
@@ -227,13 +228,13 @@ class PrithuService(PrithuProtocolBase):
                     "to the fruits of action. Never consider yourself the cause of the results "
                     "of your activities, and never be attached to not doing your duty."
                 )
-            
+
             return (
                 "📜  PRITHU SPEAKS:\n"
                 "The Gita is the compilation of all Vedic wisdom. Ask for a specific verse "
                 "(e.g., 'consult gita 2.47') to receive the Gnosis."
             )
-            
+
         return f"📜  Prithu hears your inquiry: '{command}'. But the truth must be sought with humility."
 
 

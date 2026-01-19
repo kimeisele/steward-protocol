@@ -44,6 +44,7 @@ class FractalRoute:
 
     Describes how to navigate from one level to another.
     """
+
     level: FractalLevel
     index: int  # Position at this level
     parent_index: Optional[int] = None  # Position in parent level
@@ -58,25 +59,26 @@ class FractalRoute:
 
 # How many units at each level
 DIMENSIONS: Final[dict] = {
-    FractalLevel.VARNA: 50,      # ~50 varnas in Sanskrit alphabet
-    FractalLevel.AKSARA: 6,      # 6 unique syllables in Mahamantra
-    FractalLevel.PADA: 3,        # 3 unique words (Hare, Krishna, Rama)
-    FractalLevel.VAKYA: 16,      # 16 words per mantra
-    FractalLevel.MALA: 108,      # 108 mantras per round
-    FractalLevel.SADHANA: 16,    # 16 rounds minimum
+    FractalLevel.VARNA: 50,  # ~50 varnas in Sanskrit alphabet
+    FractalLevel.AKSARA: 6,  # 6 unique syllables in Mahamantra
+    FractalLevel.PADA: 3,  # 3 unique words (Hare, Krishna, Rama)
+    FractalLevel.VAKYA: 16,  # 16 words per mantra
+    FractalLevel.MALA: 108,  # 108 mantras per round
+    FractalLevel.SADHANA: 16,  # 16 rounds minimum
 }
 
 # Total count in full Mahamantra
 MAHAMANTRA_COUNTS: Final[dict] = {
-    FractalLevel.PADA: 16,       # 16 words
-    FractalLevel.AKSARA: 32,     # ~2 syllables per word
-    FractalLevel.VARNA: 64,      # ~2 letters per syllable
+    FractalLevel.PADA: 16,  # 16 words
+    FractalLevel.AKSARA: 32,  # ~2 syllables per word
+    FractalLevel.VARNA: 64,  # ~2 letters per syllable
 }
 
 
 # =============================================================================
 # ROUTING FUNCTIONS
 # =============================================================================
+
 
 def route_pada_to_aksaras(pada: Pada) -> Tuple[Aksara, ...]:
     """Route from word level down to syllable level."""
@@ -142,8 +144,8 @@ def get_fractal_path(pada_index: int, aksara_index: int = 0) -> List[FractalRout
 # QUARTER ROUTING (4 quarters of 4 words each)
 # =============================================================================
 
-QUARTER_1: Final[Tuple[int, ...]] = (0, 1, 2, 3)    # Hare Krishna Hare Krishna
-QUARTER_2: Final[Tuple[int, ...]] = (4, 5, 6, 7)    # Krishna Krishna Hare Hare
+QUARTER_1: Final[Tuple[int, ...]] = (0, 1, 2, 3)  # Hare Krishna Hare Krishna
+QUARTER_2: Final[Tuple[int, ...]] = (4, 5, 6, 7)  # Krishna Krishna Hare Hare
 QUARTER_3: Final[Tuple[int, ...]] = (8, 9, 10, 11)  # Hare Rama Hare Rama
 QUARTER_4: Final[Tuple[int, ...]] = (12, 13, 14, 15)  # Rama Rama Hare Hare
 

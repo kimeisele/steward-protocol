@@ -29,7 +29,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -97,39 +96,44 @@ PRAKRITI_CYCLES: Final[int] = PURIFICATION_CYCLE // PRAKRITI_COUNT
 # NODE TYPES - What can be in the Graph
 # =============================================================================
 
+
 class NodeType(str, Enum):
     """Types of nodes in the Vedic Graph."""
-    SOURCE = "source"           # Krishna - Level -2
-    AVATARA = "avatara"         # Direct incarnations
+
+    SOURCE = "source"  # Krishna - Level -2
+    AVATARA = "avatara"  # Direct incarnations
     SHAKTYAVESHA = "shaktyavesha"  # Empowered beings (Heads)
-    MAHAJANA = "mahajana"       # The 12 authorities
-    ACHARYA = "acharya"         # Teachers in the line
-    PRAKRITI = "prakriti"       # Material elements (24)
-    PROTOCOL = "protocol"       # Code protocols
+    MAHAJANA = "mahajana"  # The 12 authorities
+    ACHARYA = "acharya"  # Teachers in the line
+    PRAKRITI = "prakriti"  # Material elements (24)
+    PROTOCOL = "protocol"  # Code protocols
 
 
 class EdgeType(str, Enum):
     """Types of edges (relationships) in the Vedic Graph."""
-    DIKSHA = "diksha"           # Formal initiation
-    SIKSHA = "siksha"           # Instructing relationship
-    SERVES = "serves"           # Service relationship
-    MANIFESTS = "manifests"     # Manifestation/creation
-    ENLIVENS = "enlivens"       # Mantra contact with matter
-    OWNS = "owns"               # Protocol ownership
-    DEPENDS = "depends"         # Protocol dependency
+
+    DIKSHA = "diksha"  # Formal initiation
+    SIKSHA = "siksha"  # Instructing relationship
+    SERVES = "serves"  # Service relationship
+    MANIFESTS = "manifests"  # Manifestation/creation
+    ENLIVENS = "enlivens"  # Mantra contact with matter
+    OWNS = "owns"  # Protocol ownership
+    DEPENDS = "depends"  # Protocol dependency
 
 
 class Sampradaya(str, Enum):
     """The 4 authorized disciplic successions."""
-    BRAHMA = "brahma"           # Brahma -> Madhva -> Chaitanya
-    KUMARA = "kumara"           # Kumaras -> Nimbarka
-    SRI = "sri"                 # Lakshmi -> Ramanuja
-    RUDRA = "rudra"             # Shiva -> Vishnuswami
+
+    BRAHMA = "brahma"  # Brahma -> Madhva -> Chaitanya
+    KUMARA = "kumara"  # Kumaras -> Nimbarka
+    SRI = "sri"  # Lakshmi -> Ramanuja
+    RUDRA = "rudra"  # Shiva -> Vishnuswami
 
 
 # =============================================================================
 # GRAPH NODE - A node in the Vedic Graph
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class GraphNode:
@@ -156,7 +160,7 @@ class GraphNode:
             # Try to derive from mahajana name
             pos = get_mahajana_position(self.id.lower())
             if pos >= 0:
-                object.__setattr__(self, 'lotus_position', pos)
+                object.__setattr__(self, "lotus_position", pos)
 
     @property
     def parampara_vector(self) -> int:
@@ -176,6 +180,7 @@ class GraphNode:
 # GRAPH EDGE - A relationship in the Graph
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class GraphEdge:
     """
@@ -187,11 +192,11 @@ class GraphEdge:
     WATERTIGHT - no Any types.
     """
 
-    source: str         # From node ID
-    target: str         # To node ID
+    source: str  # From node ID
+    target: str  # To node ID
     edge_type: EdgeType
     weight: float = 1.0  # Strength of connection
-    note: str = ""       # Shastric reference
+    note: str = ""  # Shastric reference
 
 
 # =============================================================================
@@ -243,6 +248,7 @@ class GraphProtocol(Protocol):
 # =============================================================================
 # VEDIC GRAPH - The Implementation
 # =============================================================================
+
 
 class VedicGraph:
     """
@@ -351,6 +357,7 @@ class VedicGraph:
 # GRAPH BUILDER - Fluent API for building graphs
 # =============================================================================
 
+
 class GraphBuilder:
     """
     Fluent builder for Vedic Graphs.
@@ -368,11 +375,13 @@ class GraphBuilder:
 
     def add_source(self) -> "GraphBuilder":
         """Add the SOURCE node (Krishna)."""
-        self._graph.add_node(GraphNode(
-            id="KRISHNA",
-            node_type=NodeType.SOURCE,
-            level=-2,
-        ))
+        self._graph.add_node(
+            GraphNode(
+                id="KRISHNA",
+                node_type=NodeType.SOURCE,
+                level=-2,
+            )
+        )
         return self
 
     def add_node(
@@ -383,12 +392,14 @@ class GraphBuilder:
         level: int = 0,
     ) -> "GraphBuilder":
         """Add a node."""
-        self._graph.add_node(GraphNode(
-            id=node_id,
-            node_type=node_type,
-            sampradaya=sampradaya,
-            level=level,
-        ))
+        self._graph.add_node(
+            GraphNode(
+                id=node_id,
+                node_type=node_type,
+                sampradaya=sampradaya,
+                level=level,
+            )
+        )
         return self
 
     def add_mahajana(
@@ -425,12 +436,14 @@ class GraphBuilder:
         note: str = "",
     ) -> "GraphBuilder":
         """Add an edge."""
-        self._graph.add_edge(GraphEdge(
-            source=source,
-            target=target,
-            edge_type=edge_type,
-            note=note,
-        ))
+        self._graph.add_edge(
+            GraphEdge(
+                source=source,
+                target=target,
+                edge_type=edge_type,
+                note=note,
+            )
+        )
         return self
 
     def diksha(self, guru: str, disciple: str, note: str = "") -> "GraphBuilder":
@@ -458,6 +471,7 @@ class GraphBuilder:
 # PROTOCOL GRAPH - Graph of Protocol Dependencies
 # =============================================================================
 
+
 class ProtocolGraph(VedicGraph):
     """
     A specialized graph for protocol dependencies.
@@ -474,20 +488,24 @@ class ProtocolGraph(VedicGraph):
     ) -> None:
         """Add a protocol with its capabilities."""
         position = get_mahajana_position(mahajana)
-        self.add_node(GraphNode(
-            id=name,
-            node_type=NodeType.PROTOCOL,
-            lotus_position=position if position >= 0 else None,
-            level=0,
-        ))
+        self.add_node(
+            GraphNode(
+                id=name,
+                node_type=NodeType.PROTOCOL,
+                lotus_position=position if position >= 0 else None,
+                level=0,
+            )
+        )
 
         # Add dependency edges
         for req in requires:
-            self.add_edge(GraphEdge(
-                source=name,
-                target=req,
-                edge_type=EdgeType.DEPENDS,
-            ))
+            self.add_edge(
+                GraphEdge(
+                    source=name,
+                    target=req,
+                    edge_type=EdgeType.DEPENDS,
+                )
+            )
 
     def get_dependencies(self, protocol: str) -> List[str]:
         """Get all dependencies of a protocol."""
@@ -527,6 +545,7 @@ class ProtocolGraph(VedicGraph):
 # =============================================================================
 # GRAPH PROTOCOL - Self-Reference
 # =============================================================================
+
 
 class GraphProtocolDef(MahamantraProtocolBase):
     """

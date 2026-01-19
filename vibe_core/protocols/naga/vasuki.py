@@ -38,6 +38,7 @@ VASUKI_CAPS = ("hash", "sign", "verify")
 
 class NodeAddress(TypedDict):
     """Network address of a node."""
+
     host: str
     port: int
     protocol: str
@@ -53,6 +54,7 @@ class SendStatus(str, Enum):
 
 class SendResult(TypedDict):
     """Result of a send operation."""
+
     status: SendStatus
     message_id: str
     timestamp: str
@@ -61,6 +63,7 @@ class SendResult(TypedDict):
 
 class SignedEnvelope(TypedDict):
     """A signed message envelope."""
+
     payload: str  # Serialized data
     signature: str
     hash: str
@@ -203,4 +206,3 @@ class NullVasuki:
 
 # PROTOCOL ALIAS (For strict typing compliance)
 VasukiProtocol = Vasuki
-

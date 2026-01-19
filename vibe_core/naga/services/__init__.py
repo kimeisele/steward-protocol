@@ -88,6 +88,7 @@ def __getattr__(name: str) -> Any:
         if name not in _loaded_services:
             module_path, class_name = _SERVICE_MAP[name]
             import importlib
+
             module = importlib.import_module(module_path)
             _loaded_services[name] = getattr(module, class_name)
         return _loaded_services[name]

@@ -26,7 +26,6 @@ DOMAIN:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -54,6 +53,7 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 # VYASA PROTOCOL BASE - Derives from MantraPosition 0
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class VyasaProtocolBase(HeadProtocol):
     """
@@ -70,6 +70,7 @@ class VyasaProtocolBase(HeadProtocol):
         is_head()   -> True (HEAD position)
         parampara_vector() -> 37 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 0  # THE ONLY CONFIGURATION
 
 
@@ -80,14 +81,16 @@ class VyasaProtocolBase(HeadProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class WakePhase(str, Enum):
     """Phases of system wake."""
-    DORMANT = "dormant"       # Not started
-    BOOTSTRAP = "bootstrap"   # Initial bootstrap
-    RESOURCES = "resources"   # Loading resources
-    SERVICES = "services"     # Starting services
-    READY = "ready"           # System ready
-    FAILED = "failed"         # Wake failed
+
+    DORMANT = "dormant"  # Not started
+    BOOTSTRAP = "bootstrap"  # Initial bootstrap
+    RESOURCES = "resources"  # Loading resources
+    SERVICES = "services"  # Starting services
+    READY = "ready"  # System ready
+    FAILED = "failed"  # Wake failed
 
 
 class WakeResult(TypedDict, total=False):
@@ -95,9 +98,10 @@ class WakeResult(TypedDict, total=False):
     Result of wake operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    phase: str                # WakePhase value
-    timestamp: str            # ISO timestamp
+    phase: str  # WakePhase value
+    timestamp: str  # ISO timestamp
     services_started: int
     resources_loaded: int
     error_message: str
@@ -108,16 +112,18 @@ class WakeState(TypedDict, total=False):
     State of system wake.
     WATERTIGHT - no Any!
     """
-    current_phase: str        # WakePhase value
+
+    current_phase: str  # WakePhase value
     is_awake: bool
-    wake_time: str            # ISO timestamp
+    wake_time: str  # ISO timestamp
     uptime_seconds: int
     total_wakes: int
-    health: str               # "pristine", "healthy", "degraded"
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class WakeCliResult(TypedDict):
     """Result of CLI wake operation. WATERTIGHT - no Any!"""
+
     success: bool
     phase: str
     is_awake: bool
@@ -308,5 +314,6 @@ def __getattr__(name: str):
     """Lazy import for VyasaService to avoid circular import."""
     if name == "VyasaService":
         from vibe_core.protocols.mahajanas.vyasa.service import VyasaService
+
         return VyasaService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

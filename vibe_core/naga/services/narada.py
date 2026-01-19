@@ -350,10 +350,10 @@ class NaradaService(NagaBaseService, ObserveProtocol):
         Narada hears everything and transmits As It Is.
         """
         cmd_lower = command.lower()
-        
+
         if "hello" in cmd_lower or "hi" in cmd_lower:
             return "🕉️  Narada Muni ki Jai! The Messenger is listening. How can I transmit your intent?"
-            
+
         if "status" in cmd_lower:
             status = self.get_status()
             return (
@@ -362,7 +362,7 @@ class NaradaService(NagaBaseService, ObserveProtocol):
                 f"Health:       {'✅ Healthy' if status.healthy else '❌ Degraded'}\n"
                 f"Last Pulse:   {status.last_heartbeat.strftime('%Y-%m-%d %H:%M:%S')}"
             )
-            
+
         return f"📡  Narada has recorded your message: '{command}'. It will be transmitted to the Lotus."
 
     def _route_to_chitragupta(self, observation: ObservationDict) -> None:

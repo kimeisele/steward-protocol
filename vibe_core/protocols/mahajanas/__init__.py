@@ -47,18 +47,18 @@ if TYPE_CHECKING:
 
 # The 12 Mahajanas in order (SB 6.3.20)
 MAHAJANA_ORDER = [
-    "brahma",      # 01 - Creation
-    "narada",      # 02 - Devotion
-    "shambhu",     # 03 - Destruction
-    "kumaras",     # 04 - Purity
-    "kapila",      # 05 - Analysis
-    "manu",        # 06 - Law
-    "prahlada",    # 07 - Resilience
-    "janaka",      # 08 - Duty
-    "bhishma",     # 09 - Vow
-    "bali",        # 10 - Surrender
-    "shuka",       # 11 - Vision
-    "yamaraja",    # 12 - Judgment
+    "brahma",  # 01 - Creation
+    "narada",  # 02 - Devotion
+    "shambhu",  # 03 - Destruction
+    "kumaras",  # 04 - Purity
+    "kapila",  # 05 - Analysis
+    "manu",  # 06 - Law
+    "prahlada",  # 07 - Resilience
+    "janaka",  # 08 - Duty
+    "bhishma",  # 09 - Vow
+    "bali",  # 10 - Surrender
+    "shuka",  # 11 - Vision
+    "yamaraja",  # 12 - Judgment
 ]
 
 # Router exports

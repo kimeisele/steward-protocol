@@ -26,13 +26,16 @@ from vibe_core.mahamantra.protocols._seed import PANCHA
 # Verification of constant from seed
 assert PANCHA == 5, "Pancha Tattva must be 5"
 
+
 class TattvaDict(TypedDict):
     """The 5-fold definition of an entity."""
-    chaitanya: str   # Identity / Definition
+
+    chaitanya: str  # Identity / Definition
     nityananda: str  # Substrate / Dependency
-    advaita: str     # Causality / Invocation
-    gadadhara: str   # Energy / Flow / Input-Output
-    srivasa: str     # Governance / Owner / Rules
+    advaita: str  # Causality / Invocation
+    gadadhara: str  # Energy / Flow / Input-Output
+    srivasa: str  # Governance / Owner / Rules
+
 
 @runtime_checkable
 class PanchaTattvaProtocol(Protocol):
@@ -45,6 +48,7 @@ class PanchaTattvaProtocol(Protocol):
     def __tattva__(self) -> TattvaDict:
         """Return the 5-fold truth of this entity."""
         ...
+
 
 # =============================================================================
 # EXPORTS

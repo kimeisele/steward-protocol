@@ -16,7 +16,6 @@ IMPLEMENTATION:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -48,8 +47,8 @@ from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol, Protocol
 OWNER: Final[Mahajana] = Mahajana.BRAHMA
 
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
-    MantraOpCode.LOAD_ROOT,   # Loading services into registry
-    MantraOpCode.ALLOC_MEM,   # Allocating service instances
+    MantraOpCode.LOAD_ROOT,  # Loading services into registry
+    MantraOpCode.ALLOC_MEM,  # Allocating service instances
 ]
 
 
@@ -65,11 +64,12 @@ class ServiceInfo(TypedDict, total=False):
     Info about a registered service.
     WATERTIGHT - no Any!
     """
-    name: str                 # Protocol/interface name
-    instance_type: str        # Actual class name
-    is_factory: bool          # Is it lazy-loaded via factory?
-    naga_blessed: bool        # Has NAGA blessing?
-    registered_at: str        # ISO timestamp
+
+    name: str  # Protocol/interface name
+    instance_type: str  # Actual class name
+    is_factory: bool  # Is it lazy-loaded via factory?
+    naga_blessed: bool  # Has NAGA blessing?
+    registered_at: str  # ISO timestamp
 
 
 class RegistryStats(TypedDict, total=False):
@@ -77,6 +77,7 @@ class RegistryStats(TypedDict, total=False):
     Statistics about the registry.
     WATERTIGHT - no Any!
     """
+
     total_services: int
     total_factories: int
     total_protocols: int
@@ -89,6 +90,7 @@ class DIProtocolState(TypedDict, total=False):
     Full state of the DI container.
     WATERTIGHT - no Any!
     """
+
     protocol_name: str
     owner: str
     is_chanting: bool

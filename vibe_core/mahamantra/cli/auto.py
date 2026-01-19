@@ -38,7 +38,6 @@ COMPARISON:
         # DONE. Krishna does the rest.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -99,6 +98,7 @@ from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA
 # AUTO-DISCOVERED METHOD INFO
 # =============================================================================
 
+
 @dataclass
 class DiscoveredMethod:
     """
@@ -106,6 +106,7 @@ class DiscoveredMethod:
 
     This is DERIVED, not configured.
     """
+
     name: str
     position: int
     guardian: str
@@ -117,6 +118,7 @@ class DiscoveredMethod:
 # =============================================================================
 # THE DISCOVERY ENGINE
 # =============================================================================
+
 
 class CLIAutoDiscovery:
     """
@@ -164,14 +166,15 @@ class CLIAutoDiscovery:
     def _discover_position(self, position: int) -> int:
         """Discover methods for a single position via Royal Hunt."""
         import importlib
+
         # Get guardian name from truth table
         pos_info = mahamantra[position]
         guardian_name = pos_info.guardian.value
-        
+
         # 1. THE ROYAL HUNT - Find the service class and its module
         service_class = None
         service_class_name = f"{guardian_name.capitalize()}Service"
-        
+
         jungles = [
             f"vibe_core.mahamantra.{pos_info.quarter.name.lower()}.{guardian_name}",
             f"vibe_core.protocols.mahajanas.{guardian_name}.service",
@@ -179,7 +182,7 @@ class CLIAutoDiscovery:
             f"vibe_core.services.{guardian_name}",
             f"vibe_core.protocols.mahajanas.{guardian_name}",
         ]
-        
+
         target_module = None
         for jungle in jungles:
             try:
@@ -269,9 +272,8 @@ class CLIAutoDiscovery:
 
     def _is_protocol(self, cls: Type) -> bool:
         """Check if class is a typing.Protocol."""
-        return (
-            hasattr(cls, "__protocol_attrs__") or
-            (hasattr(cls, "__mro__") and Protocol in getattr(cls, "__mro__", []))
+        return hasattr(cls, "__protocol_attrs__") or (
+            hasattr(cls, "__mro__") and Protocol in getattr(cls, "__mro__", [])
         )
 
     def _get_protocol_methods(self, protocol_class: Type) -> List[str]:
@@ -328,12 +330,14 @@ class CLIAutoDiscovery:
             required = param.default == inspect.Parameter.empty
             default = None if required else param.default
 
-            parameters.append(CLIParameter(
-                name=param_name,
-                param_type=param_type,
-                required=required,
-                default=default,
-            ))
+            parameters.append(
+                CLIParameter(
+                    name=param_name,
+                    param_type=param_type,
+                    required=required,
+                    default=default,
+                )
+            )
 
         # Get return type fields (if TypedDict)
         return_fields: List[str] = []
@@ -602,6 +606,7 @@ cli_auto = CLIAutoDiscovery()
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def discover() -> int:
     """Discover all CLI capabilities. Returns count."""

@@ -45,10 +45,11 @@ SUMERU_COUNT: Final[int] = 1  # The mount bead
 
 class MalaPhase(IntEnum):
     """Phases within a mala (for tracking progress)."""
-    BEGINNING = 0     # 1-27: Establishing connection
-    ASCENDING = 1     # 28-54: Building momentum
-    PEAK = 2          # 55-81: Deep absorption
-    COMPLETING = 3    # 82-108: Integration
+
+    BEGINNING = 0  # 1-27: Establishing connection
+    ASCENDING = 1  # 28-54: Building momentum
+    PEAK = 2  # 55-81: Deep absorption
+    COMPLETING = 3  # 82-108: Integration
 
 
 @dataclass
@@ -63,6 +64,7 @@ class Mala:
         current_count: Current position in the mala (1-108)
         completed: Whether this mala is finished
     """
+
     round_number: int = 1
     current_count: int = 0
     completed: bool = False
@@ -156,6 +158,7 @@ class Mala:
 # MALA METRICS
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MalaMetrics:
     """
@@ -164,12 +167,13 @@ class MalaMetrics:
     The 37 formula manifests here:
     - 108 mantras contain patterns of 37
     """
+
     total_mantras: int = BEADS_PER_MALA
-    total_words: int = BEADS_PER_MALA * 16      # 1728
+    total_words: int = BEADS_PER_MALA * 16  # 1728
     total_syllables: int = BEADS_PER_MALA * 32  # 3456
-    total_hare: int = BEADS_PER_MALA * 8        # 864
-    total_krishna: int = BEADS_PER_MALA * 4     # 432
-    total_rama: int = BEADS_PER_MALA * 4        # 432
+    total_hare: int = BEADS_PER_MALA * 8  # 864
+    total_krishna: int = BEADS_PER_MALA * 4  # 432
+    total_rama: int = BEADS_PER_MALA * 4  # 432
 
     @property
     def formula_37(self) -> dict:
@@ -177,7 +181,7 @@ class MalaMetrics:
         return {
             "mantras_div_3": self.total_mantras // 3,  # 36
             "plus_one": (self.total_mantras // 3) + 1,  # 37
-            "words_mod_37": self.total_words % 37,      # 1728 % 37 = 28
+            "words_mod_37": self.total_words % 37,  # 1728 % 37 = 28
             "syllables_mod_37": self.total_syllables % 37,  # 3456 % 37 = 13
         }
 
@@ -188,6 +192,7 @@ MALA_METRICS: Final[MalaMetrics] = MalaMetrics()
 # =============================================================================
 # FACTORY FUNCTIONS
 # =============================================================================
+
 
 def create_mala(round_number: int = 1) -> Mala:
     """Create a new mala for a specific round."""

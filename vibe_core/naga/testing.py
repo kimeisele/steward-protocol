@@ -111,6 +111,7 @@ class NullCorrectionOrchestrator:
             NullDriftRegistry,
             NullCorrectionDispatcher,
         )
+
         self._registry = NullDriftRegistry()
         self._dispatcher = NullCorrectionDispatcher()
 
@@ -235,6 +236,7 @@ class NagaTestHarness:
         # Create ledger if enabled
         if self._config.enable_ledger:
             from vibe_core.ledger import InMemoryLedger
+
             self._ledger = InMemoryLedger()
 
         # Create correction orchestrator if enabled
@@ -388,8 +390,7 @@ class NagaTestHarness:
         """
         if self._ledger is None:
             raise RuntimeError(
-                "Ledger not enabled. Use NagaTestHarness.for_orchestrator() "
-                "or set enable_ledger=True in config."
+                "Ledger not enabled. Use NagaTestHarness.for_orchestrator() or set enable_ledger=True in config."
             )
         return self._ledger
 

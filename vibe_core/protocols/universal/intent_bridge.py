@@ -52,10 +52,10 @@ from vibe_core.semantic_syscalls import SyscallType
 
 # IntentType is broad - these are the DEFAULT OpCodes when no specific target
 INTENT_TO_DEFAULT_OPCODE: Dict[IntentType, MantraOpCode] = {
-    IntentType.CHAT: MantraOpCode.EXTEND_CAP,      # Prahlada handles conversation
-    IntentType.EXECUTE: MantraOpCode.EXTEND_CAP,   # Janaka executes duty
-    IntentType.QUERY: MantraOpCode.EXEC_OP,        # Prahlada fetches resources
-    IntentType.ROUTE: MantraOpCode.BIND_SYMBOL,      # Kumaras resolve requests
+    IntentType.CHAT: MantraOpCode.EXTEND_CAP,  # Prahlada handles conversation
+    IntentType.EXECUTE: MantraOpCode.EXTEND_CAP,  # Janaka executes duty
+    IntentType.QUERY: MantraOpCode.EXEC_OP,  # Prahlada fetches resources
+    IntentType.ROUTE: MantraOpCode.BIND_SYMBOL,  # Kumaras resolve requests
 }
 
 
@@ -66,24 +66,20 @@ INTENT_TO_DEFAULT_OPCODE: Dict[IntentType, MantraOpCode] = {
 # When IntentType.EXECUTE, the SyscallType refines which OpCode
 SYSCALL_TO_OPCODE: Dict[SyscallType, MantraOpCode] = {
     # Agent Lifecycle (Creation = Brahma, Destruction = Shambhu)
-    SyscallType.SPAWN_COGNITION: MantraOpCode.ALLOC_MEM,     # Brahma creates
+    SyscallType.SPAWN_COGNITION: MantraOpCode.ALLOC_MEM,  # Brahma creates
     SyscallType.DESTROY_COGNITION: MantraOpCode.TYPE_CHECK,  # Shambhu destroys
-
     # Capability Management (Manu = Law)
-    SyscallType.GRANT_MANDATE: MantraOpCode.INIT_THREAD,        # Manu binds permissions
+    SyscallType.GRANT_MANDATE: MantraOpCode.INIT_THREAD,  # Manu binds permissions
     SyscallType.REVOKE_MANDATE: MantraOpCode.TYPE_CHECK,  # Shambhu removes
-
     # Resource Management (Allocation)
-    SyscallType.ALLOCATE_PRANA: MantraOpCode.ALLOC_MEM,      # Allocation
-    SyscallType.TRANSFER_PRANA: MantraOpCode.EXTEND_CAP,   # Transfer = service
-
+    SyscallType.ALLOCATE_PRANA: MantraOpCode.ALLOC_MEM,  # Allocation
+    SyscallType.TRANSFER_PRANA: MantraOpCode.EXTEND_CAP,  # Transfer = service
     # Governance (Bhishma = Vow)
-    SyscallType.SWEAR_OATH: MantraOpCode.LEDGER_SIGN,         # Bhishma commits vows
-    SyscallType.RECORD_KARMA: MantraOpCode.LEDGER_SIGN,       # Bhishma writes ledger
-
+    SyscallType.SWEAR_OATH: MantraOpCode.LEDGER_SIGN,  # Bhishma commits vows
+    SyscallType.RECORD_KARMA: MantraOpCode.LEDGER_SIGN,  # Bhishma writes ledger
     # Communication (Narada = Messenger)
-    SyscallType.DISPATCH_TASK: MantraOpCode.EXTEND_CAP,    # Janaka executes
-    SyscallType.BROADCAST_EVENT: MantraOpCode.DHARMA_TEST,    # Narada broadcasts
+    SyscallType.DISPATCH_TASK: MantraOpCode.EXTEND_CAP,  # Janaka executes
+    SyscallType.BROADCAST_EVENT: MantraOpCode.DHARMA_TEST,  # Narada broadcasts
 }
 
 
@@ -94,20 +90,18 @@ SYSCALL_TO_OPCODE: Dict[SyscallType, MantraOpCode] = {
 # When IntentType.ROUTE, the target determines OpCode
 ROUTE_TARGET_TO_OPCODE: Dict[str, MantraOpCode] = {
     # System targets
-    "envoy": MantraOpCode.EXTEND_CAP,       # AI envoy
-    "kernel": MantraOpCode.SYS_WAKE,          # System operations
-    "scheduler": MantraOpCode.EXTEND_CAP,   # Task dispatch
-
+    "envoy": MantraOpCode.EXTEND_CAP,  # AI envoy
+    "kernel": MantraOpCode.SYS_WAKE,  # System operations
+    "scheduler": MantraOpCode.EXTEND_CAP,  # Task dispatch
     # Agent targets (by role)
-    "watchman": MantraOpCode.COMPILE_AST,    # Verification
-    "herald": MantraOpCode.DHARMA_TEST,        # Communication
-    "scribe": MantraOpCode.LEDGER_SIGN,        # Recording
-    "auditor": MantraOpCode.STATE_SYNC,     # Audit
-    "artisan": MantraOpCode.EXTEND_CAP,     # Creation
-    "oracle": MantraOpCode.EXEC_OP,         # Data/insight
-    "engineer": MantraOpCode.ALLOC_MEM,       # Building
-    "civic": MantraOpCode.STATE_SYNC,       # Governance
-
+    "watchman": MantraOpCode.COMPILE_AST,  # Verification
+    "herald": MantraOpCode.DHARMA_TEST,  # Communication
+    "scribe": MantraOpCode.LEDGER_SIGN,  # Recording
+    "auditor": MantraOpCode.STATE_SYNC,  # Audit
+    "artisan": MantraOpCode.EXTEND_CAP,  # Creation
+    "oracle": MantraOpCode.EXEC_OP,  # Data/insight
+    "engineer": MantraOpCode.ALLOC_MEM,  # Building
+    "civic": MantraOpCode.STATE_SYNC,  # Governance
     # Generic fallbacks
     "chat": MantraOpCode.EXTEND_CAP,
     "help": MantraOpCode.EXEC_OP,
@@ -137,12 +131,14 @@ QUERY_TYPE_TO_OPCODE: Dict[str, MantraOpCode] = {
 # THE BRIDGE CLASS
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class BridgeResult:
     """Result of intent → opcode translation."""
+
     opcode: MantraOpCode
     confidence: float  # 0.0 - 1.0 (how certain the mapping is)
-    source: str        # What determined this mapping (intent/syscall/target/default)
+    source: str  # What determined this mapping (intent/syscall/target/default)
     notes: Optional[str] = None
 
 
@@ -185,7 +181,7 @@ class IntentOpCodeBridge:
                         opcode=SYSCALL_TO_OPCODE[syscall],
                         confidence=0.95,
                         source=f"syscall:{syscall.value}",
-                        notes=f"Mapped from SyscallType.{syscall.name}"
+                        notes=f"Mapped from SyscallType.{syscall.name}",
                     )
             except ValueError:
                 pass  # Unknown syscall, fall through
@@ -198,14 +194,14 @@ class IntentOpCodeBridge:
                     opcode=ROUTE_TARGET_TO_OPCODE[target],
                     confidence=0.85,
                     source=f"target:{target}",
-                    notes=f"Routed to {target}"
+                    notes=f"Routed to {target}",
                 )
             # Fallback for unknown targets
             return BridgeResult(
                 opcode=MantraOpCode.BIND_SYMBOL,
                 confidence=0.5,
                 source="target:unknown",
-                notes=f"Unknown target '{target}', using RESOLVE_REQ"
+                notes=f"Unknown target '{target}', using RESOLVE_REQ",
             )
 
         # Priority 3: Query with specific type
@@ -216,7 +212,7 @@ class IntentOpCodeBridge:
                     opcode=QUERY_TYPE_TO_OPCODE[query],
                     confidence=0.85,
                     source=f"query:{query}",
-                    notes=f"Query type: {query}"
+                    notes=f"Query type: {query}",
                 )
 
         # Priority 4: Default by IntentType
@@ -224,7 +220,7 @@ class IntentOpCodeBridge:
             opcode=INTENT_TO_DEFAULT_OPCODE.get(intent, MantraOpCode.EXTEND_CAP),
             confidence=0.7,
             source=f"intent:{intent.value}",
-            notes=f"Default opcode for {intent.value} intent"
+            notes=f"Default opcode for {intent.value} intent",
         )
 
     def translate_raw(
@@ -232,7 +228,7 @@ class IntentOpCodeBridge:
         intent_type: IntentType,
         syscall_type: Optional[str] = None,
         target: Optional[str] = None,
-        query_type: Optional[str] = None
+        query_type: Optional[str] = None,
     ) -> BridgeResult:
         """
         Translate raw intent components to MantraOpCode.
@@ -256,22 +252,10 @@ class IntentOpCodeBridge:
         GAD-000 Discoverability: AI can discover all possible translations.
         """
         return {
-            "intent_defaults": [
-                {"intent": k.value, "opcode": v.name}
-                for k, v in INTENT_TO_DEFAULT_OPCODE.items()
-            ],
-            "syscall_mappings": [
-                {"syscall": k.value, "opcode": v.name}
-                for k, v in SYSCALL_TO_OPCODE.items()
-            ],
-            "route_targets": [
-                {"target": k, "opcode": v.name}
-                for k, v in ROUTE_TARGET_TO_OPCODE.items()
-            ],
-            "query_types": [
-                {"query": k, "opcode": v.name}
-                for k, v in QUERY_TYPE_TO_OPCODE.items()
-            ],
+            "intent_defaults": [{"intent": k.value, "opcode": v.name} for k, v in INTENT_TO_DEFAULT_OPCODE.items()],
+            "syscall_mappings": [{"syscall": k.value, "opcode": v.name} for k, v in SYSCALL_TO_OPCODE.items()],
+            "route_targets": [{"target": k, "opcode": v.name} for k, v in ROUTE_TARGET_TO_OPCODE.items()],
+            "query_types": [{"query": k, "opcode": v.name} for k, v in QUERY_TYPE_TO_OPCODE.items()],
         }
 
 

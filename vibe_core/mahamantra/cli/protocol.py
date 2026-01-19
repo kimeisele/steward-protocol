@@ -20,7 +20,6 @@ GAD-000 COMPLIANCE CHECKLIST:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -81,14 +80,15 @@ from vibe_core.mahamantra.protocols._lila import (
 from vibe_core.mahamantra.protocols._core import PARAMPARA
 
 # Re-export for backward compatibility (but prefer direct import from _lila)
-NAVADVIPA_LIMIT: Final[int] = LILA_BOUNDARY    # 24 = Strict boundary
-PURI_LIMIT: Final[int] = LILA_BOUNDARY         # 24 = Second phase
-PARAMPARA_PRIME: Final[int] = PARAMPARA        # 37 = Lineage verification
+NAVADVIPA_LIMIT: Final[int] = LILA_BOUNDARY  # 24 = Strict boundary
+PURI_LIMIT: Final[int] = LILA_BOUNDARY  # 24 = Second phase
+PARAMPARA_PRIME: Final[int] = PARAMPARA  # 37 = Lineage verification
 
 
 # =============================================================================
 # ERROR CODES (Parseability - GAD-000)
 # =============================================================================
+
 
 class CLIErrorCode(IntEnum):
     """
@@ -104,6 +104,7 @@ class CLIErrorCode(IntEnum):
         300-399 = State errors (requires recovery)
         400+    = Fatal errors (not retryable)
     """
+
     # Success
     SUCCESS = 0
 
@@ -160,12 +161,14 @@ class CLIErrorCode(IntEnum):
 # OUTPUT TYPES (Composability - GAD-000)
 # =============================================================================
 
+
 class OutputFormat(str, Enum):
     """Output format for composability."""
-    JSON = "json"           # Machine-readable (default)
-    TABLE = "table"         # Structured table
-    LINES = "lines"         # Line-separated values
-    STREAM = "stream"       # Streaming output
+
+    JSON = "json"  # Machine-readable (default)
+    TABLE = "table"  # Structured table
+    LINES = "lines"  # Line-separated values
+    STREAM = "stream"  # Streaming output
 
 
 @dataclass
@@ -175,6 +178,7 @@ class CLIOutputItem:
 
     GAD-000: Output of one feeds input of next.
     """
+
     key: str
     value: Union[str, int, float, bool, None]
     metadata: Dict[str, str] = field(default_factory=dict)
@@ -199,6 +203,7 @@ class CLIOutput:
         - strict_mode=False: Allows pagination with overflow tracking
         - Parampara verified (signature % 37 == 0)
     """
+
     items: List[CLIOutputItem] = field(default_factory=list)
     format: OutputFormat = OutputFormat.JSON
 
@@ -210,9 +215,7 @@ class CLIOutput:
     stream_complete: bool = True
 
     # LILA BOUNDARY (Protocol-based enforcement)
-    _boundary: LilaBoundary[CLIOutputItem] = field(
-        default_factory=lambda: LilaBoundary(signature=PARAMPARA)
-    )
+    _boundary: LilaBoundary[CLIOutputItem] = field(default_factory=lambda: LilaBoundary(signature=PARAMPARA))
     strict_mode: bool = False  # Set True for CLI output that MUST be bounded
 
     def __post_init__(self) -> None:
@@ -224,10 +227,7 @@ class CLIOutput:
         """Convert to dictionary for JSON serialization."""
         return {
             "format": self.format.value,
-            "items": [
-                {"key": i.key, "value": i.value, "metadata": i.metadata}
-                for i in self.items
-            ],
+            "items": [{"key": i.key, "value": i.value, "metadata": i.metadata} for i in self.items],
             "columns": self.columns,
             "rows": self.rows,
             "stream_complete": self.stream_complete,
@@ -329,6 +329,7 @@ class CLIOutput:
 # ERROR TYPE (Parseability - GAD-000)
 # =============================================================================
 
+
 @dataclass
 class CLIError:
     """
@@ -342,6 +343,7 @@ class CLIError:
     - Context (what was being attempted)
     - Recovery hints (how AI can fix it)
     """
+
     code: CLIErrorCode
     message: str
     context: Dict[str, str] = field(default_factory=dict)
@@ -368,6 +370,7 @@ class CLIError:
 # RESULT TYPE (Idempotency - GAD-000)
 # =============================================================================
 
+
 @dataclass
 class CLIResult:
     """
@@ -381,15 +384,16 @@ class CLIResult:
     - Error (if failed)
     - Idempotency info (safe to retry?)
     """
+
     success: bool
     exit_code: int
     output: CLIOutput = field(default_factory=CLIOutput)
     error: Optional[CLIError] = None
 
     # Idempotency info
-    idempotent: bool = True              # Safe to retry?
+    idempotent: bool = True  # Safe to retry?
     retry_after_ms: Optional[int] = None  # Wait before retry
-    operation_id: Optional[str] = None    # For deduplication
+    operation_id: Optional[str] = None  # For deduplication
 
     # Timing
     duration_ms: int = 0
@@ -431,6 +435,7 @@ class CLIResult:
 # CAPABILITY (Discoverability - GAD-000)
 # =============================================================================
 
+
 @dataclass
 class CLIParameter:
     """
@@ -438,6 +443,7 @@ class CLIParameter:
 
     GAD-000: Machine-readable parameter schema.
     """
+
     name: str
     param_type: str  # "string", "integer", "boolean", "float"
     required: bool = False
@@ -455,15 +461,16 @@ class CLICapability:
 
     This is NOT a man page. This is MACHINE-READABLE metadata.
     """
-    name: str                           # Command name
-    purpose: str                        # What it does (1 sentence)
+
+    name: str  # Command name
+    purpose: str  # What it does (1 sentence)
     parameters: List[CLIParameter] = field(default_factory=list)
-    returns_success: str = ""           # What success looks like
-    returns_failure: str = ""           # What failure looks like
+    returns_success: str = ""  # What success looks like
+    returns_failure: str = ""  # What failure looks like
     examples: List[str] = field(default_factory=list)
 
     # Routing info
-    mahajana_position: int = -1         # Which mahajana handles this
+    mahajana_position: int = -1  # Which mahajana handles this
     keywords: List[str] = field(default_factory=list)
 
     # Idempotency
@@ -500,6 +507,7 @@ class CLICapability:
 # STATE (Observability - GAD-000)
 # =============================================================================
 
+
 @dataclass
 class CLIState:
     """
@@ -507,6 +515,7 @@ class CLIState:
 
     GAD-000: "Can an AI see the current state?"
     """
+
     ready: bool = True
     busy: bool = False
     last_command: Optional[str] = None
@@ -536,6 +545,7 @@ class CLIState:
 # HEALTH (Recoverability - GAD-000)
 # =============================================================================
 
+
 @dataclass
 class CLIHealth:
     """
@@ -543,6 +553,7 @@ class CLIHealth:
 
     GAD-000: "Can the system heal itself?"
     """
+
     healthy: bool = True
     drift_detected: bool = False
     violations: List[str] = field(default_factory=list)
@@ -564,6 +575,7 @@ class CLIHealth:
 # CONTEXT (37th - Identity)
 # =============================================================================
 
+
 @dataclass
 class CLIContext:
     """
@@ -571,6 +583,7 @@ class CLIContext:
 
     GAD-000 37th: "All operations must be signed by sovereign."
     """
+
     # Identity (The 37th)
     caller_id: str = "anonymous"
     signature: Optional[str] = None
@@ -604,6 +617,7 @@ class CLIContext:
 # =============================================================================
 # THE PROTOCOL (GAD-000 Compliant)
 # =============================================================================
+
 
 @runtime_checkable
 class CLIExecutable(Protocol):
@@ -675,6 +689,7 @@ class CLIExecutable(Protocol):
 # =============================================================================
 # BASE IMPLEMENTATION
 # =============================================================================
+
 
 class CLIExecutableBase(ABC):
     """

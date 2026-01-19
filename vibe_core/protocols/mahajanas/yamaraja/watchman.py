@@ -17,7 +17,6 @@ This protocol wraps the existing WatchmanCartridge as a thin interface.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -57,6 +56,7 @@ from vibe_core.protocols.mahajanas.yamaraja import YamarajaProtocolBase
 
 class ViolationSeverity(str, Enum):
     """Severity levels for violations."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -66,6 +66,7 @@ class ViolationSeverity(str, Enum):
 
 class ViolationPattern(str, Enum):
     """Types of violation patterns Watchman detects."""
+
     MOCK_RETURN = "mock_return"
     FAKE_SUCCESS = "fake_success"
     PLACEHOLDER_IMPL = "placeholder_impl"
@@ -81,6 +82,7 @@ class Violation(TypedDict, total=False):
     """
     A detected violation. WATERTIGHT - no Any!
     """
+
     agent_id: str
     file_path: str
     line_number: int
@@ -96,6 +98,7 @@ class PatrolResult(TypedDict, total=False):
     """
     Result of a patrol scan. WATERTIGHT - no Any!
     """
+
     status: str  # "clean", "VIOLATIONS_DETECTED"
     violations_found: int
     agents_frozen: List[str]
@@ -107,6 +110,7 @@ class InspectionResult(TypedDict, total=False):
     """
     Result of deep AST inspection. WATERTIGHT - no Any!
     """
+
     status: str  # "COMPLIANT", "WARNINGS_DETECTED", "VIOLATIONS_DETECTED"
     total_violations: int
     critical_count: int
@@ -122,6 +126,7 @@ class HealthResult(TypedDict, total=False):
     """
     Result of system health check. WATERTIGHT - no Any!
     """
+
     status: str  # "healthy", "degraded", "critical"
     git_hooks_installed: bool
     hooks_valid: bool
@@ -133,6 +138,7 @@ class WatchmanState(TypedDict, total=False):
     """
     Current state of Watchman. WATERTIGHT - no Any!
     """
+
     protocol_name: str
     owner: str
     is_chanting: bool

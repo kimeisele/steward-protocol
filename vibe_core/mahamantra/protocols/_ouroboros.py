@@ -35,7 +35,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -86,15 +85,16 @@ OUROBOROS_CYCLE: Final[int] = 108  # One mala = one complete cycle
 BODY_COUNT: Final[int] = 3
 
 # Layer positions
-LAYER_PRAKRITI: Final[int] = -2   # State Substrate
-LAYER_SHESHA: Final[int] = -1     # This bridge
-LAYER_OUROBOROS: Final[int] = 0   # System level
-LAYER_SERVICE: Final[int] = 1     # Application level
+LAYER_PRAKRITI: Final[int] = -2  # State Substrate
+LAYER_SHESHA: Final[int] = -1  # This bridge
+LAYER_OUROBOROS: Final[int] = 0  # System level
+LAYER_SERVICE: Final[int] = 1  # Application level
 
 
 # =============================================================================
 # THE THREE BODIES (Tri-Deha Doctrine)
 # =============================================================================
+
 
 class BodyType(str, Enum):
     """
@@ -102,26 +102,30 @@ class BodyType(str, Enum):
 
     Data must be correctly placed in one of these layers.
     """
-    STHULA = "sthula"     # Physical: Ledger + Git (immutable)
-    PRANA = "prana"       # Vital: Runtime state (snapshot-able)
-    PURUSHA = "purusha"   # Soul: Identity (eternal)
+
+    STHULA = "sthula"  # Physical: Ledger + Git (immutable)
+    PRANA = "prana"  # Vital: Runtime state (snapshot-able)
+    PURUSHA = "purusha"  # Soul: Identity (eternal)
 
 
 class BodyHealth(str, Enum):
     """Health state of a body."""
-    PRISTINE = "pristine"     # Perfect
-    HEALTHY = "healthy"       # Normal operation
-    DEGRADED = "degraded"     # Partial failure
-    CRITICAL = "critical"     # Near death
-    DISSOLVED = "dissolved"   # Pralaya state
+
+    PRISTINE = "pristine"  # Perfect
+    HEALTHY = "healthy"  # Normal operation
+    DEGRADED = "degraded"  # Partial failure
+    CRITICAL = "critical"  # Near death
+    DISSOLVED = "dissolved"  # Pralaya state
 
 
 # =============================================================================
 # WATERTIGHT TYPEDDICTS - No Dict[str, Any]
 # =============================================================================
 
+
 class GeneManifestData(TypedDict, total=False):
     """Manifest for a registered gene. WATERTIGHT."""
+
     name: str
     version: str
     capabilities: List[str]
@@ -131,6 +135,7 @@ class GeneManifestData(TypedDict, total=False):
 
 class GeneStatusData(TypedDict, total=False):
     """Status of a registered gene. WATERTIGHT."""
+
     name: str
     state: str  # GeneActivationState value
     health: str  # BodyHealth value
@@ -140,6 +145,7 @@ class GeneStatusData(TypedDict, total=False):
 
 class HeartbeatData(TypedDict):
     """System heartbeat result. WATERTIGHT."""
+
     uptime_seconds: float
     genes_registered: int
     capabilities_available: int
@@ -151,6 +157,7 @@ class HeartbeatData(TypedDict):
 
 class ViolationData(TypedDict, total=False):
     """Data for violation events. WATERTIGHT."""
+
     file: str
     rule: str
     line: int
@@ -162,15 +169,17 @@ class ViolationData(TypedDict, total=False):
 
 class HealingRequestData(TypedDict, total=False):
     """Data for healing request events. WATERTIGHT."""
+
     target: str
     reason: str
     source: str
     pattern: str  # Which pattern to apply (arjuna, pralaya)
-    body: str     # Which body needs healing
+    body: str  # Which body needs healing
 
 
 class LoopDetectionData(TypedDict, total=False):
     """Data for loop detection events. WATERTIGHT."""
+
     loop_id: str
     iterations: int
     pattern: str
@@ -180,6 +189,7 @@ class LoopDetectionData(TypedDict, total=False):
 
 class PralayaData(TypedDict, total=False):
     """Data for dissolution/shutdown events. WATERTIGHT."""
+
     reason: str
     bodies_saved: List[str]
     snapshot_path: str
@@ -190,19 +200,22 @@ class PralayaData(TypedDict, total=False):
 # GENE ACTIVATION STATES
 # =============================================================================
 
+
 class GeneActivationState(str, Enum):
     """Activation state of a gene (component)."""
-    DORMANT = "dormant"       # Registered but not active
-    ACTIVATING = "activating" # Starting up
-    ACTIVE = "active"         # Running normally
-    HEALING = "healing"       # Self-healing in progress
-    DISSOLVING = "dissolving" # Shutting down gracefully
-    DEAD = "dead"             # Failed, awaiting resurrection
+
+    DORMANT = "dormant"  # Registered but not active
+    ACTIVATING = "activating"  # Starting up
+    ACTIVE = "active"  # Running normally
+    HEALING = "healing"  # Self-healing in progress
+    DISSOLVING = "dissolving"  # Shutting down gracefully
+    DEAD = "dead"  # Failed, awaiting resurrection
 
 
 # =============================================================================
 # HEALING PATTERNS (from PROMPT.md)
 # =============================================================================
+
 
 class HealingPattern(str, Enum):
     """
@@ -223,8 +236,9 @@ class HealingPattern(str, Enum):
         - Snapshot valid → Restore and continue
         - No snapshot → Fresh genesis
     """
-    ARJUNA = "arjuna"           # Self-heal over crash
-    PRALAYA = "pralaya"         # Graceful degradation
+
+    ARJUNA = "arjuna"  # Self-heal over crash
+    PRALAYA = "pralaya"  # Graceful degradation
     RESURRECTION = "resurrection"  # Rise from death
 
 
@@ -232,8 +246,10 @@ class HealingPattern(str, Enum):
 # EVENT TYPES
 # =============================================================================
 
+
 class OuroborosEventType(str, Enum):
     """Typed events for the Ouroboros system."""
+
     # Lifecycle
     GENE_REGISTERED = "gene.registered"
     GENE_ACTIVATED = "gene.activated"
@@ -265,6 +281,7 @@ class OuroborosEventType(str, Enum):
 # SYSTEM EVENT (WATERTIGHT)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class OuroborosEvent:
     """
@@ -272,6 +289,7 @@ class OuroborosEvent:
 
     WATERTIGHT: No Any types. Event data is typed per event_type.
     """
+
     event_type: OuroborosEventType
     source: str  # Gene name or "system"
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -288,6 +306,7 @@ class OuroborosEvent:
 # =============================================================================
 # GENE PROTOCOL (What can be registered)
 # =============================================================================
+
 
 @runtime_checkable
 class OuroborosGene(Protocol):
@@ -339,6 +358,7 @@ class OuroborosGene(Protocol):
 # =============================================================================
 # HOST PROTOCOL (The Ouroboros itself)
 # =============================================================================
+
 
 @runtime_checkable
 class OuroborosHost(Protocol):
@@ -398,6 +418,7 @@ class OuroborosHost(Protocol):
 # BODY MANAGER PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class BodyManager(Protocol):
     """
@@ -433,6 +454,7 @@ class BodyManager(Protocol):
 # =============================================================================
 # HEALER PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class OuroborosHealer(Protocol):
@@ -481,6 +503,7 @@ class OuroborosHealer(Protocol):
 # NULL IMPLEMENTATIONS (for testing/fallback)
 # =============================================================================
 
+
 class NullGene:
     """Null implementation of OuroborosGene."""
 
@@ -526,6 +549,7 @@ class NullGene:
 # =============================================================================
 # THE OUROBOROS PROTOCOL - Self-Definition
 # =============================================================================
+
 
 class OuroborosProtocol(MahamantraProtocolBase):
     """

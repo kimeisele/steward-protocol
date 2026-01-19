@@ -26,8 +26,8 @@ from vibe_core.cli.naga_commands.purify.gc import GcCommand
 from vibe_core.cli.naga_commands.purify.flood import FloodCommand
 
 __all__ = [
-    "ScanCommand",   # VYASA - ASSERT_TRUTH (Position 4)
-    "DetectCommand", # KUMARAS - RESOLVE_REQ (Position 5)
-    "GcCommand",     # KAPILA - GARBAGE_COLLECT (Position 6)
+    "ScanCommand",  # VYASA - ASSERT_TRUTH (Position 4)
+    "DetectCommand",  # KUMARAS - RESOLVE_REQ (Position 5)
+    "GcCommand",  # KAPILA - GARBAGE_COLLECT (Position 6)
     "FloodCommand",  # MANU - PULSE_SYNC (Position 7)
 ]

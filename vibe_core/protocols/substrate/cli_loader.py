@@ -35,7 +35,6 @@ USAGE:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -65,35 +64,38 @@ from typing import (
 
 class ExecutionMode(str, Enum):
     """How a command should be executed."""
-    OFFLINE = "offline"    # No kernel needed
-    RPC = "rpc"            # Forward to running kernel
-    BOOT = "boot"          # Spin up ephemeral kernel
-    HYBRID = "hybrid"      # Try RPC, fallback BOOT
+
+    OFFLINE = "offline"  # No kernel needed
+    RPC = "rpc"  # Forward to running kernel
+    BOOT = "boot"  # Spin up ephemeral kernel
+    HYBRID = "hybrid"  # Try RPC, fallback BOOT
 
 
 class CommandArgument(TypedDict, total=False):
     """Definition of a CLI argument. WATERTIGHT."""
-    name: str              # Argument name (e.g., "--target")
-    type: str              # Type name: "str", "int", "bool", "float", "path"
-    help: str              # Help text
-    required: bool         # Is required?
-    default: str           # Default value (as string)
-    choices: List[str]     # Valid choices
-    flag: bool             # Is a boolean flag?
+
+    name: str  # Argument name (e.g., "--target")
+    type: str  # Type name: "str", "int", "bool", "float", "path"
+    help: str  # Help text
+    required: bool  # Is required?
+    default: str  # Default value (as string)
+    choices: List[str]  # Valid choices
+    flag: bool  # Is a boolean flag?
 
 
 class DiscoveredCommand(TypedDict, total=False):
     """A discovered CLI command. WATERTIGHT."""
-    name: str                       # Command name
-    namespace: str                  # Namespace (e.g., "mahamantra")
-    full_name: str                  # Full name (namespace:name)
-    handler: str                    # Handler path (module:function)
-    help: str                       # Help text
-    execution_mode: str             # ExecutionMode value
+
+    name: str  # Command name
+    namespace: str  # Namespace (e.g., "mahamantra")
+    full_name: str  # Full name (namespace:name)
+    handler: str  # Handler path (module:function)
+    help: str  # Help text
+    execution_mode: str  # ExecutionMode value
     arguments: List[CommandArgument]  # Command arguments
-    source_manifest: str            # Path to manifest file
-    source_module: str              # Module that provides this
-    discovered_at: str              # ISO timestamp
+    source_manifest: str  # Path to manifest file
+    source_module: str  # Module that provides this
+    discovered_at: str  # ISO timestamp
 
 
 class CLILoaderConfig(TypedDict, total=False):
@@ -102,16 +104,18 @@ class CLILoaderConfig(TypedDict, total=False):
 
     Injected via protocol - NO HARDCODING.
     """
-    scan_paths: List[str]           # Paths to scan for manifests
-    manifest_patterns: List[str]    # Patterns: ["cli.yaml", "manifest.yaml"]
-    exclude_patterns: List[str]     # Patterns to skip
-    namespace_from_folder: bool     # Derive namespace from folder name
-    recursive: bool                 # Scan recursively
-    max_depth: int                  # Max recursion depth (0 = unlimited)
+
+    scan_paths: List[str]  # Paths to scan for manifests
+    manifest_patterns: List[str]  # Patterns: ["cli.yaml", "manifest.yaml"]
+    exclude_patterns: List[str]  # Patterns to skip
+    namespace_from_folder: bool  # Derive namespace from folder name
+    recursive: bool  # Scan recursively
+    max_depth: int  # Max recursion depth (0 = unlimited)
 
 
 class LoaderProgress(TypedDict, total=False):
     """Progress during loading. WATERTIGHT."""
+
     paths_total: int
     paths_scanned: int
     commands_found: int
@@ -123,13 +127,14 @@ class LoaderProgress(TypedDict, total=False):
 
 class LoaderResult(TypedDict, total=False):
     """Result of a load operation. WATERTIGHT."""
+
     config: CLILoaderConfig
     paths_scanned: int
     commands_found: int
     commands_skipped: int
     commands_error: int
-    by_namespace: Dict[str, int]    # Count per namespace
-    by_mode: Dict[str, int]         # Count per execution mode
+    by_namespace: Dict[str, int]  # Count per namespace
+    by_mode: Dict[str, int]  # Count per execution mode
     commands: List[DiscoveredCommand]
     errors: List[str]
     started_at: str
@@ -238,30 +243,34 @@ def parse_manifest(
         arguments: List[CommandArgument] = []
         for arg_data in cmd_data.get("options", cmd_data.get("args", [])):
             if isinstance(arg_data, dict):
-                arguments.append(CommandArgument(
-                    name=arg_data.get("name", ""),
-                    type=arg_data.get("type", "str"),
-                    help=arg_data.get("help", ""),
-                    required=arg_data.get("required", False),
-                    default=str(arg_data.get("default", "")),
-                    choices=arg_data.get("choices", []),
-                    flag=arg_data.get("flag", False),
-                ))
+                arguments.append(
+                    CommandArgument(
+                        name=arg_data.get("name", ""),
+                        type=arg_data.get("type", "str"),
+                        help=arg_data.get("help", ""),
+                        required=arg_data.get("required", False),
+                        default=str(arg_data.get("default", "")),
+                        choices=arg_data.get("choices", []),
+                        flag=arg_data.get("flag", False),
+                    )
+                )
 
         full_name = f"{manifest_namespace}:{name}" if manifest_namespace else name
 
-        commands.append(DiscoveredCommand(
-            name=name,
-            namespace=manifest_namespace,
-            full_name=full_name,
-            handler=cmd_data.get("handler", ""),
-            help=cmd_data.get("help", ""),
-            execution_mode=cmd_data.get("execution_mode", ExecutionMode.HYBRID.value),
-            arguments=arguments,
-            source_manifest=str(manifest_path),
-            source_module=str(manifest_path.parent),
-            discovered_at=datetime.now().isoformat(),
-        ))
+        commands.append(
+            DiscoveredCommand(
+                name=name,
+                namespace=manifest_namespace,
+                full_name=full_name,
+                handler=cmd_data.get("handler", ""),
+                help=cmd_data.get("help", ""),
+                execution_mode=cmd_data.get("execution_mode", ExecutionMode.HYBRID.value),
+                arguments=arguments,
+                source_manifest=str(manifest_path),
+                source_module=str(manifest_path.parent),
+                discovered_at=datetime.now().isoformat(),
+            )
+        )
 
     return commands
 

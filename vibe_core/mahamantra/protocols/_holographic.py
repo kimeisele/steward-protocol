@@ -33,7 +33,6 @@ WATERTIGHT: No Any types. Everything explicit.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -131,11 +130,7 @@ class Hologram(Generic[T]):
         Returns all parts that start with the given prefix.
         Example: project("brahma.") returns all brahma parts.
         """
-        return {
-            name: part
-            for name, part in self._parts.items()
-            if name.startswith(prefix)
-        }
+        return {name: part for name, part in self._parts.items() if name.startswith(prefix)}
 
     @property
     def center(self) -> T:
@@ -155,16 +150,18 @@ class Hologram(Generic[T]):
 # COHERENCE - Keeping parts synchronized
 # =============================================================================
 
+
 class CoherenceLevel(str, Enum):
     """
     Levels of coherence between parts.
 
     Higher coherence = more synchronization = more consistency.
     """
-    NONE = "none"           # Parts are independent
-    EVENTUAL = "eventual"   # Parts eventually sync
-    STRONG = "strong"       # Parts always in sync
-    TOTAL = "total"         # Parts are ONE (non-dual)
+
+    NONE = "none"  # Parts are independent
+    EVENTUAL = "eventual"  # Parts eventually sync
+    STRONG = "strong"  # Parts always in sync
+    TOTAL = "total"  # Parts are ONE (non-dual)
 
 
 @dataclass
@@ -176,14 +173,15 @@ class CoherencePolicy:
     """
 
     level: CoherenceLevel
-    sync_on_read: bool = False   # Sync when reading
-    sync_on_write: bool = True   # Sync when writing
+    sync_on_read: bool = False  # Sync when reading
+    sync_on_write: bool = True  # Sync when writing
     propagation_delay_ms: int = 0  # Delay before propagation (0 = immediate)
 
 
 # =============================================================================
 # REFLECTION - Get the whole from a part
 # =============================================================================
+
 
 class Reflector(Generic[T]):
     """
@@ -234,10 +232,10 @@ class Reflector(Generic[T]):
 
         elif relation == "provides":
             # Parts that provide capabilities this one requires
-            if hasattr(current, '__protocol_capability__'):
+            if hasattr(current, "__protocol_capability__"):
                 cap = current.__protocol_capability__  # type: ignore
                 for name, part in parts.items():
-                    if hasattr(part, '__protocol_capability__'):
+                    if hasattr(part, "__protocol_capability__"):
                         other_cap = part.__protocol_capability__  # type: ignore
                         if cap.requires & other_cap.provides:
                             related.append(name)
@@ -248,6 +246,7 @@ class Reflector(Generic[T]):
 # =============================================================================
 # PROJECTION - Get a part from the whole
 # =============================================================================
+
 
 class Projector(Generic[T]):
     """
@@ -277,7 +276,7 @@ class Projector(Generic[T]):
         """
         results: List[Tuple[str, T]] = []
         for name, part in self._hologram.reflect().items():
-            if hasattr(part, '__protocol_capability__'):
+            if hasattr(part, "__protocol_capability__"):
                 cap = part.__protocol_capability__  # type: ignore
                 if capability in cap.provides:
                     results.append((name, part))
@@ -291,7 +290,7 @@ class Projector(Generic[T]):
         """
         results: List[Tuple[str, T]] = []
         for name, part in self._hologram.reflect().items():
-            if hasattr(part, '__protocol_identity__'):
+            if hasattr(part, "__protocol_identity__"):
                 identity = part.__protocol_identity__  # type: ignore
                 if identity.position == position:
                     results.append((name, part))
@@ -301,6 +300,7 @@ class Projector(Generic[T]):
 # =============================================================================
 # HOLOGRAPHIC SYSTEM - The complete implementation
 # =============================================================================
+
 
 @dataclass
 class HolographicSystem(Generic[T]):
@@ -319,9 +319,7 @@ class HolographicSystem(Generic[T]):
     hologram: Hologram[T]
     reflector: Reflector[T] = field(init=False)
     projector: Projector[T] = field(init=False)
-    coherence: CoherencePolicy = field(
-        default_factory=lambda: CoherencePolicy(level=CoherenceLevel.STRONG)
-    )
+    coherence: CoherencePolicy = field(default_factory=lambda: CoherencePolicy(level=CoherenceLevel.STRONG))
 
     def __post_init__(self) -> None:
         """Initialize reflector and projector."""
@@ -362,6 +360,7 @@ class HolographicSystem(Generic[T]):
 # =============================================================================
 # HOLOGRAPHIC PROTOCOL - Self-reference
 # =============================================================================
+
 
 class HolographicProtocol(MahamantraProtocolBase):
     """
@@ -419,6 +418,7 @@ def get_holographic_system() -> HolographicSystem[Type[MahamantraProtocol]]:
     if _system is None:
         # Initialize with CoreProtocol as center
         from vibe_core.mahamantra.protocols._core import CoreProtocol
+
         _system = HolographicSystem.create(CoreProtocol)
         _system.register("CoreProtocol", CoreProtocol)
         _system.register("HolographicProtocol", HolographicProtocol)

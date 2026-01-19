@@ -17,9 +17,9 @@ from vibe_core.mahamantra.protocols._kala import KalaProtocol, KalaTime
 from vibe_core.mahamantra.protocols._seed import WORDS  # 16
 
 # --- CONSTANTS ---
-LILA_TICKS: Final[int] = WORDS * 3      # 48
-MALA_MANTRAS: Final[int] = 108          # 108
-MALA_TICKS: Final[int] = WORDS * 108    # 1728
+LILA_TICKS: Final[int] = WORDS * 3  # 48
+MALA_MANTRAS: Final[int] = 108  # 108
+MALA_TICKS: Final[int] = WORDS * 108  # 1728
 
 
 class TimeKeeper(KalaProtocol):
@@ -60,7 +60,7 @@ class TimeKeeper(KalaProtocol):
             tick_in_mantra=tick_in_mantra,
             mantra_in_mala=mantra_in_mala,
             lila_position=lila_position,
-            mala_count=mala_count
+            mala_count=mala_count,
         )
 
     def set_ticks(self, ticks: int) -> None:

@@ -34,7 +34,7 @@ from vibe_core.mahamantra.substrate.seed import PARAMPARA
 class FractalLevel(IntEnum):
     """
     Die Hierarchie-Ebenen des fraktalen Systems.
-    
+
     COMPUTATIONAL MAPPING:
     - VARNA = Bit (smallest addressable unit)
     - AKSARA = Byte (pronounceable unit)
@@ -43,11 +43,12 @@ class FractalLevel(IntEnum):
     - MALA = Round (108 mantras)
     - SADHANA = Session (16 rounds minimum)
     """
-    VARNA = 0    # Letter (smallest)
-    AKSARA = 1   # Syllable
-    PADA = 2     # Word
-    VAKYA = 3    # Sentence/Mantra (16 words)
-    MALA = 4     # Round (108 mantras)
+
+    VARNA = 0  # Letter (smallest)
+    AKSARA = 1  # Syllable
+    PADA = 2  # Word
+    VAKYA = 3  # Sentence/Mantra (16 words)
+    MALA = 4  # Round (108 mantras)
     SADHANA = 5  # Session (16 rounds)
 
 
@@ -56,19 +57,19 @@ class FractalLevel(IntEnum):
 # =============================================================================
 
 DIMENSIONS: Final[dict[FractalLevel, int]] = {
-    FractalLevel.VARNA: 50,      # ~50 varnas in Sanskrit alphabet
-    FractalLevel.AKSARA: 6,      # 6 unique syllables in Mahamantra
-    FractalLevel.PADA: 3,        # 3 unique words (Hare, Krishna, Rama)
-    FractalLevel.VAKYA: 16,      # 16 words per mantra
-    FractalLevel.MALA: 108,      # 108 mantras per round
-    FractalLevel.SADHANA: 16,    # 16 rounds minimum
+    FractalLevel.VARNA: 50,  # ~50 varnas in Sanskrit alphabet
+    FractalLevel.AKSARA: 6,  # 6 unique syllables in Mahamantra
+    FractalLevel.PADA: 3,  # 3 unique words (Hare, Krishna, Rama)
+    FractalLevel.VAKYA: 16,  # 16 words per mantra
+    FractalLevel.MALA: 108,  # 108 mantras per round
+    FractalLevel.SADHANA: 16,  # 16 rounds minimum
 }
 
 # Total counts in full Mahamantra
 MAHAMANTRA_COUNTS: Final[dict[FractalLevel, int]] = {
-    FractalLevel.PADA: 16,       # 16 words
-    FractalLevel.AKSARA: 32,     # ~2 syllables per word
-    FractalLevel.VARNA: 64,      # ~2 letters per syllable
+    FractalLevel.PADA: 16,  # 16 words
+    FractalLevel.AKSARA: 32,  # ~2 syllables per word
+    FractalLevel.VARNA: 64,  # ~2 letters per syllable
 }
 
 # The 37 Formula at each level

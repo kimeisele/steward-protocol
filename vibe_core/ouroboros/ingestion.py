@@ -63,6 +63,7 @@ class PytestOutput(TypedDict, total=False):
     created: float
     duration: float
 
+
 logger = logging.getLogger("OUROBOROS")
 
 

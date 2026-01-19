@@ -23,7 +23,6 @@ A polluted system cannot function. Kumaras restore purity.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -52,6 +51,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # KUMARAS PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class KumarasProtocolBase(WorkerProtocol):
     """
@@ -68,6 +68,7 @@ class KumarasProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 222 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
 
 
@@ -84,11 +85,12 @@ PurifiableData = Union[str, int, float, bool, Dict[str, str], List[str], bytes]
 
 class PurityLevel(str, Enum):
     """Levels of purity."""
-    PRISTINE = "pristine"     # Perfectly pure
-    CLEAN = "clean"           # Cleaned/sanitized
-    TAINTED = "tainted"       # Needs purification
-    CORRUPTED = "corrupted"   # Seriously impure
-    MAYAVAD = "mayavad"       # Spiritually contaminated (Any types!)
+
+    PRISTINE = "pristine"  # Perfectly pure
+    CLEAN = "clean"  # Cleaned/sanitized
+    TAINTED = "tainted"  # Needs purification
+    CORRUPTED = "corrupted"  # Seriously impure
+    MAYAVAD = "mayavad"  # Spiritually contaminated (Any types!)
 
 
 class PurificationResult(TypedDict, total=False):
@@ -96,11 +98,12 @@ class PurificationResult(TypedDict, total=False):
     Result of purification.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    input_type: str           # Python type of input
-    output_type: str          # Python type of output
+    input_type: str  # Python type of input
+    output_type: str  # Python type of output
     impurities_removed: int
-    purity_level: str         # PurityLevel value
+    purity_level: str  # PurityLevel value
     error_message: str
 
 
@@ -109,10 +112,11 @@ class ResetResult(TypedDict, total=False):
     Result of reset operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     previous_state_hash: str
     new_state_hash: str
-    timestamp: str            # ISO timestamp
+    timestamp: str  # ISO timestamp
     error_message: str
 
 
@@ -121,16 +125,18 @@ class PurityState(TypedDict, total=False):
     State of purity.
     WATERTIGHT - no Any!
     """
+
     is_pure: bool
-    purity_level: str         # PurityLevel value
+    purity_level: str  # PurityLevel value
     total_purifications: int
     total_resets: int
-    last_purification: str    # ISO timestamp
+    last_purification: str  # ISO timestamp
     health: str
 
 
 class PurifyCliResult(TypedDict):
     """Result of CLI purify operation. WATERTIGHT - no Any!"""
+
     success: bool
     is_pure: bool
     purity_level: str
@@ -278,13 +284,21 @@ __all__ = [
     "KumarasProtocolBase",
     "ShuddhiProtocolBase",
     # Purity types (WATERTIGHT)
-    "PurifiableData", "PurityLevel", "PurificationResult",
-    "ResetResult", "PurityState", "PurifyCliResult",
+    "PurifiableData",
+    "PurityLevel",
+    "PurificationResult",
+    "ResetResult",
+    "PurityState",
+    "PurifyCliResult",
     # Kumaras Protocol
-    "KumarasProtocol", "NullKumaras",
+    "KumarasProtocol",
+    "NullKumaras",
     # Shuddhi Protocol (CST Surgery)
-    "ShuddhiStatus", "ShuddhiResult",
-    "ShuddhiProtocol", "RemedyProtocol", "NullShuddhi",
+    "ShuddhiStatus",
+    "ShuddhiResult",
+    "ShuddhiProtocol",
+    "RemedyProtocol",
+    "NullShuddhi",
     # Validation (Input Validation)
     "ValidationType",
     "ValidationRule",

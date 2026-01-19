@@ -34,17 +34,15 @@ import os
 from pathlib import Path
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.LOAD_ROOT,
     name="identity",
-    help_text="Load root identity and config (BRAHMA's creation - WAKE phase)")
+    help_text="Load root identity and config (BRAHMA's creation - WAKE phase)",
+)
 class IdentityCommand(NagaCommandBase):
     """
     Identity command implementation.
@@ -126,9 +124,7 @@ class IdentityCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("LOAD_ROOT: Identity established")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_identity(self) -> dict:
         """Get project identity."""
@@ -144,9 +140,9 @@ class IdentityCommand(NagaCommandBase):
                 content = pyproject.read_text()
                 for line in content.split("\n"):
                     if line.startswith("name"):
-                        name = line.split("=")[1].strip().strip('"\'')
+                        name = line.split("=")[1].strip().strip("\"'")
                     if line.startswith("version"):
-                        version = line.split("=")[1].strip().strip('"\'')
+                        version = line.split("=")[1].strip().strip("\"'")
             except Exception:
                 pass
 
@@ -186,11 +182,8 @@ class IdentityCommand(NagaCommandBase):
             import subprocess
 
             result = subprocess.run(
-                ["git", "remote", "get-url", "origin"],
-                capture_output=True,
-                text=True,
-                cwd=Path.cwd(),
-                timeout=5)
+                ["git", "remote", "get-url", "origin"], capture_output=True, text=True, cwd=Path.cwd(), timeout=5
+            )
             if result.returncode == 0:
                 lineage.append(f"Origin: {result.stdout.strip()}")
         except Exception:

@@ -65,6 +65,7 @@ from vibe_core.protocols.mahajanas.router import (
 # SEMANTIC ROUTE RESULT
 # =============================================================================
 
+
 @dataclass
 class SemanticRouteResult:
     """
@@ -111,6 +112,7 @@ class SemanticRouteResult:
 # =============================================================================
 # SEMANTIC ROUTER
 # =============================================================================
+
 
 class SemanticRouter:
     """
@@ -214,6 +216,7 @@ class SemanticRouter:
     def _is_head_opcode(self, opcode: MantraOpCode) -> bool:
         """Check if opcode is a HEAD (Avatara-owned)."""
         from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
+
         return opcode in HEAD_OPCODES
 
     def _get_head_handler(self, opcode: MantraOpCode) -> Mahajana:
@@ -260,39 +263,47 @@ class SemanticRouter:
             opcode = MantraOpCode(item["opcode"].lower())
             try:
                 route = self._router.get_route(opcode)
-                enhanced["intent_routes"].append({
-                    "intent": item["intent"],
-                    "opcode": item["opcode"],
-                    "mahajana": route.mahajana.value,
-                    "quarter": route.quarter,
-                })
+                enhanced["intent_routes"].append(
+                    {
+                        "intent": item["intent"],
+                        "opcode": item["opcode"],
+                        "mahajana": route.mahajana.value,
+                        "quarter": route.quarter,
+                    }
+                )
             except ValueError:
                 # HEAD opcode
-                enhanced["intent_routes"].append({
-                    "intent": item["intent"],
-                    "opcode": item["opcode"],
-                    "mahajana": self._get_head_handler(opcode).value,
-                    "quarter": 0,
-                    "is_head": True,
-                })
+                enhanced["intent_routes"].append(
+                    {
+                        "intent": item["intent"],
+                        "opcode": item["opcode"],
+                        "mahajana": self._get_head_handler(opcode).value,
+                        "quarter": 0,
+                        "is_head": True,
+                    }
+                )
 
         # Syscall routes
         for item in mappings["syscall_mappings"]:
             opcode = MantraOpCode(item["opcode"].lower())
             try:
                 route = self._router.get_route(opcode)
-                enhanced["syscall_routes"].append({
-                    "syscall": item["syscall"],
-                    "opcode": item["opcode"],
-                    "mahajana": route.mahajana.value,
-                })
+                enhanced["syscall_routes"].append(
+                    {
+                        "syscall": item["syscall"],
+                        "opcode": item["opcode"],
+                        "mahajana": route.mahajana.value,
+                    }
+                )
             except ValueError:
-                enhanced["syscall_routes"].append({
-                    "syscall": item["syscall"],
-                    "opcode": item["opcode"],
-                    "mahajana": self._get_head_handler(opcode).value,
-                    "is_head": True,
-                })
+                enhanced["syscall_routes"].append(
+                    {
+                        "syscall": item["syscall"],
+                        "opcode": item["opcode"],
+                        "mahajana": self._get_head_handler(opcode).value,
+                        "is_head": True,
+                    }
+                )
 
         return enhanced
 
@@ -324,9 +335,7 @@ def route_raw(
     query_type: Optional[str] = None,
 ) -> SemanticRouteResult:
     """Convenience function: Route from raw components."""
-    return get_semantic_router().route_raw(
-        intent_type, syscall_type, target, query_type
-    )
+    return get_semantic_router().route_raw(intent_type, syscall_type, target, query_type)
 
 
 # =============================================================================

@@ -65,12 +65,14 @@ WORKER_LEVEL: Final[ProtocolLevel] = ProtocolLevel.MAHAJANAS
 # OPCODES
 # =============================================================================
 
+
 class MokshaOpCode:
     """Die OpCodes des Moksha Quarters."""
-    YIELD_CPU = 12    # Nrisimha (HEAD)
-    IO_FLUSH = 13     # Bali
-    LOG_EMIT = 14     # Shuka
-    AUDIT_SEAL = 15   # Yamaraja
+
+    YIELD_CPU = 12  # Nrisimha (HEAD)
+    IO_FLUSH = 13  # Bali
+    LOG_EMIT = 14  # Shuka
+    AUDIT_SEAL = 15  # Yamaraja
 
 
 # =============================================================================

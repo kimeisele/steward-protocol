@@ -20,7 +20,6 @@ LAZY IMPORTS: All imports deferred until accessed.
 This prevents 1000ms+ cascades when importing a single module.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -45,6 +44,7 @@ if TYPE_CHECKING:
         Sampradaya,
         TOTAL_POSITIONS,
     )
+
     # TATTVA
     from vibe_core.mahamantra.substrate.tattva import (
         Purushottama,
@@ -54,6 +54,7 @@ if TYPE_CHECKING:
         GuruConnection,
         JIVA,
     )
+
     # ACINTYA
     from vibe_core.mahamantra.substrate.acintya import (
         SYSTEM_MANIFESTATION,
@@ -78,6 +79,7 @@ if TYPE_CHECKING:
         ParamparaProtocol,
         ParamparaConnection,
     )
+
     # BYTE
     from vibe_core.mahamantra.substrate.byte import (
         HolyName,
@@ -85,6 +87,7 @@ if TYPE_CHECKING:
         MantraByte,
         GenesisByte,
     )
+
     # WIRING
     from vibe_core.mahamantra.substrate.wiring import (
         FOLDER_IS_WIRING,
@@ -100,6 +103,7 @@ if TYPE_CHECKING:
         WiringProtocol,
         WiringVerification,
     )
+
     # OPCODE
     from vibe_core.mahamantra.substrate.opcode import (
         MantraOpCode,
@@ -112,12 +116,14 @@ if TYPE_CHECKING:
         QUARTER_OPCODES,
         OPCODE_PARAMPARA,
     )
+
     # POSITION
     from vibe_core.mahamantra.substrate.position import (
         Guardian,
         MantraPosition,
         MAHAMANTRA_POSITIONS,
     )
+
     # PROTOCOL
     from vibe_core.mahamantra.substrate.protocol import (
         MantraProtocol,
@@ -126,6 +132,7 @@ if TYPE_CHECKING:
         MantraAware,
         ProtocolRegistry,
     )
+
     # GUNA
     from vibe_core.mahamantra.substrate.guna import (
         Guna,
@@ -136,6 +143,7 @@ if TYPE_CHECKING:
         OPCODE_GUNA,
         GunaQoS,
     )
+
     # YAJNA
     from vibe_core.mahamantra.substrate.yajna import (
         PRIME_SIGNATURE,
@@ -361,6 +369,7 @@ def __getattr__(name: str):
     """Lazy import on attribute access. O(1) lookup."""
     if name in _LAZY_IMPORTS:
         import importlib
+
         module_name = _LAZY_IMPORTS[name]
         module = importlib.import_module(f".{module_name}", __package__)
 

@@ -30,6 +30,7 @@ from vibe_core.protocols.universal import EnforceContext, Verdict, SovereignCont
 # MANU PROTOCOL BASE - Derives from MantraPosition 7
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class ManuProtocolBase(WorkerProtocol):
     """
@@ -46,6 +47,7 @@ class ManuProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 296 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 7  # THE ONLY CONFIGURATION
 
 
@@ -56,9 +58,11 @@ class ManuProtocolBase(WorkerProtocol):
 # DHARMA CONTEXT - What Manu validates
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class DharmaContext:
     """The context for dharma checking - replaces Any."""
+
     sovereign_id: Optional[str] = None
     action: str = ""
     resource: str = ""
@@ -68,6 +72,7 @@ class DharmaContext:
 @dataclass(frozen=True)
 class ManuVerdict:
     """Manu's verdict on an action."""
+
     is_dharmic: bool
     reason: str
     ruling: Optional[str] = None
@@ -76,6 +81,7 @@ class ManuVerdict:
 # =============================================================================
 # PROTOCOL DEFINITION
 # =============================================================================
+
 
 @runtime_checkable
 class ManuProtocol(Protocol):
@@ -124,6 +130,7 @@ class ManuProtocol(Protocol):
 
 class SyncResult(TypedDict):
     """Result of sync operation. WATERTIGHT - no Any!"""
+
     success: bool
     target: str
     synced: bool

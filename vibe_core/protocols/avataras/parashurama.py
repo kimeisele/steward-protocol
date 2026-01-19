@@ -47,7 +47,6 @@ His workers are: PRAHLADA, JANAKA, BHISHMA
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -80,12 +79,13 @@ class ResourceRequest(TypedDict, total=False):
     A request to fetch a resource.
     WATERTIGHT - no Any!
     """
-    resource_id: str      # What to fetch
-    resource_type: str    # "data", "service", "asset", "compute"
-    requester_id: str     # Who is asking
-    priority: int         # 0-10, higher = more urgent
-    timeout_ms: int       # Max wait time
-    lineage_hash: int     # Parampara verification
+
+    resource_id: str  # What to fetch
+    resource_type: str  # "data", "service", "asset", "compute"
+    requester_id: str  # Who is asking
+    priority: int  # 0-10, higher = more urgent
+    timeout_ms: int  # Max wait time
+    lineage_hash: int  # Parampara verification
 
 
 class FetchResult(TypedDict, total=False):
@@ -93,13 +93,14 @@ class FetchResult(TypedDict, total=False):
     Result of a fetch operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     resource_id: str
     resource_type: str
-    data: str             # The fetched data (serialized)
+    data: str  # The fetched data (serialized)
     size_bytes: int
     fetch_time_ms: int
-    source: str           # Where it came from
+    source: str  # Where it came from
     lineage_verified: bool
     error_message: str
 
@@ -109,10 +110,11 @@ class ExecutionRequest(TypedDict, total=False):
     A request to execute an action.
     WATERTIGHT - no Any!
     """
-    action: str           # What to do
-    target: str           # What to act on
-    params: str           # JSON-encoded parameters
-    executor_id: str      # Who should execute
+
+    action: str  # What to do
+    target: str  # What to act on
+    params: str  # JSON-encoded parameters
+    executor_id: str  # Who should execute
     lineage_hash: int
 
 
@@ -121,10 +123,11 @@ class ExecutionResult(TypedDict, total=False):
     Result of an execution.
     WATERTIGHT - no Any!
     """
+
     success: bool
     action: str
     target: str
-    output: str           # Result of execution
+    output: str  # Result of execution
     duration_ms: int
     executor_id: str
     lineage_verified: bool
@@ -136,10 +139,11 @@ class ReclaimRequest(TypedDict, total=False):
     Request to reclaim a resource.
     WATERTIGHT - no Any!
     """
+
     resource_id: str
-    current_holder: str   # Who currently has it
-    reason: str           # Why reclaiming
-    force: bool           # Force reclamation?
+    current_holder: str  # Who currently has it
+    reason: str  # Why reclaiming
+    force: bool  # Force reclamation?
     lineage_hash: int
 
 
@@ -148,10 +152,11 @@ class ReclaimResult(TypedDict, total=False):
     Result of reclamation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     resource_id: str
     former_holder: str
-    reclaimed_at: str     # ISO timestamp
+    reclaimed_at: str  # ISO timestamp
     lineage_verified: bool
     error_message: str
 

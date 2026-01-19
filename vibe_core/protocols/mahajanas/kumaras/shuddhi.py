@@ -37,6 +37,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode
 # SHUDDHI PROTOCOL BASE - Derives from MantraPosition 5
 # =============================================================================
 
+
 class ShuddhiProtocolBase(WorkerProtocol):
     """
     Shuddhi protocol ownership - DERIVED from Mahamantra position 5.
@@ -52,6 +53,7 @@ class ShuddhiProtocolBase(WorkerProtocol):
         is_head()   → False (Worker position)
         parampara_vector() → 222 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
 
 
@@ -62,18 +64,20 @@ class ShuddhiProtocolBase(WorkerProtocol):
 # SHUDDHI STATUS - The state of purification
 # =============================================================================
 
+
 class ShuddhiStatus(str, Enum):
     """The state of a purification attempt."""
 
-    PURIFIED = "purified"        # Transformation successful and verified
-    SKIPPED = "skipped"          # No violation found in the file
-    FAILED = "failed"            # Error during transformation or verification
+    PURIFIED = "purified"  # Transformation successful and verified
+    SKIPPED = "skipped"  # No violation found in the file
+    FAILED = "failed"  # Error during transformation or verification
     OUT_OF_SCOPE = "out_of_scope"  # Heuristic: Required context missing
 
 
 # =============================================================================
 # SHUDDHI RESULT - WATERTIGHT (no Any!)
 # =============================================================================
+
 
 @dataclass
 class ShuddhiResult:
@@ -116,6 +120,7 @@ class ShuddhiResult:
 # =============================================================================
 # SHUDDHI PROTOCOL - The surgical self-healing interface
 # =============================================================================
+
 
 @runtime_checkable
 class ShuddhiProtocol(Protocol):
@@ -169,6 +174,7 @@ class ShuddhiProtocol(Protocol):
 # REMEDY PROTOCOL - Individual healing operations
 # =============================================================================
 
+
 @runtime_checkable
 class RemedyProtocol(Protocol):
     """
@@ -221,6 +227,7 @@ class RemedyProtocol(Protocol):
 # =============================================================================
 # NULL SHUDDHI - Already pure (for testing)
 # =============================================================================
+
 
 class NullShuddhi(ShuddhiProtocolBase):
     """

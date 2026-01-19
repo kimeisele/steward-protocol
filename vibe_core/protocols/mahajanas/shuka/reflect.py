@@ -30,7 +30,6 @@ REFLECTION TYPES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -68,22 +67,26 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # HEALTH STATUS
 # =============================================================================
 
+
 class HealthStatus(str, Enum):
     """System health status."""
-    PRISTINE = "pristine"     # Perfect health
-    HEALTHY = "healthy"       # Normal operation
-    DEGRADED = "degraded"     # Some issues
-    CRITICAL = "critical"     # Major issues
-    UNKNOWN = "unknown"       # Cannot determine
+
+    PRISTINE = "pristine"  # Perfect health
+    HEALTHY = "healthy"  # Normal operation
+    DEGRADED = "degraded"  # Some issues
+    CRITICAL = "critical"  # Major issues
+    UNKNOWN = "unknown"  # Cannot determine
 
 
 # =============================================================================
 # REFLECTION TYPES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class HealthCheck:
     """Result of a health check."""
+
     component: str
     status: HealthStatus
     message: str
@@ -93,6 +96,7 @@ class HealthCheck:
 @dataclass(frozen=True)
 class Capability:
     """A system capability."""
+
     name: str
     owner: str  # Mahajana name
     available: bool
@@ -102,6 +106,7 @@ class Capability:
 @dataclass(frozen=True)
 class Dependency:
     """A dependency between components."""
+
     source: str
     target: str
     dependency_type: str  # "requires", "uses", "optional"
@@ -110,6 +115,7 @@ class Dependency:
 @dataclass
 class SystemMetrics:
     """System performance metrics."""
+
     uptime_seconds: float = 0.0
     memory_used_bytes: int = 0
     active_tasks: int = 0
@@ -121,6 +127,7 @@ class SystemMetrics:
 @dataclass
 class SystemSnapshot:
     """Complete system snapshot."""
+
     timestamp: str
     health_status: HealthStatus
     health_checks: List[HealthCheck]
@@ -197,6 +204,7 @@ class ReflectProtocol(Protocol):
 # REFLECTOR IMPLEMENTATION
 # =============================================================================
 
+
 class Reflector:
     """
     Shuka's Reflector - System Introspection.
@@ -239,21 +247,25 @@ class Reflector:
                 try:
                     results.append(checker())
                 except Exception as e:
-                    results.append(HealthCheck(
-                        component=component,
-                        status=HealthStatus.UNKNOWN,
-                        message=f"Check failed: {e}",
-                    ))
+                    results.append(
+                        HealthCheck(
+                            component=component,
+                            status=HealthStatus.UNKNOWN,
+                            message=f"Check failed: {e}",
+                        )
+                    )
         else:
             for name, checker in self._health_checks.items():
                 try:
                     results.append(checker())
                 except Exception as e:
-                    results.append(HealthCheck(
-                        component=name,
-                        status=HealthStatus.UNKNOWN,
-                        message=f"Check failed: {e}",
-                    ))
+                    results.append(
+                        HealthCheck(
+                            component=name,
+                            status=HealthStatus.UNKNOWN,
+                            message=f"Check failed: {e}",
+                        )
+                    )
 
         return results
 
@@ -349,6 +361,7 @@ class Reflector:
 # NULL REFLECTOR
 # =============================================================================
 
+
 class NullReflector:
     """Null reflector - minimal introspection."""
 
@@ -396,8 +409,18 @@ class NullReflector:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "HealthStatus", "HealthCheck", "Capability", "Dependency",
-    "SystemMetrics", "SystemSnapshot", "HealthChecker",
-    "ReflectProtocol", "Reflector", "NullReflector",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "HealthStatus",
+    "HealthCheck",
+    "Capability",
+    "Dependency",
+    "SystemMetrics",
+    "SystemSnapshot",
+    "HealthChecker",
+    "ReflectProtocol",
+    "Reflector",
+    "NullReflector",
 ]

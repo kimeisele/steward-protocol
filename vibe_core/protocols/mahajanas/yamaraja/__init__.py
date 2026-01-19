@@ -37,8 +37,18 @@ __position__ = 15
 import time
 import functools
 from typing import (
-    Protocol, runtime_checkable, List, Union, ClassVar,
-    TypeVar, ParamSpec, Callable, Set, Optional, Dict, TypedDict,
+    Protocol,
+    runtime_checkable,
+    List,
+    Union,
+    ClassVar,
+    TypeVar,
+    ParamSpec,
+    Callable,
+    Set,
+    Optional,
+    Dict,
+    TypedDict,
 )
 from dataclasses import dataclass
 from enum import Enum
@@ -48,8 +58,10 @@ from enum import Enum
 # SAMSKARA RESULT TYPES (TypedDict for cli_auto introspection)
 # =============================================================================
 
+
 class SamskaraStatusResult(TypedDict):
     """Status result for cli_auto."""
+
     health: str
     wild_count: int
     blessed_count: int
@@ -59,12 +71,14 @@ class SamskaraStatusResult(TypedDict):
 
 class SamskaraDiscoverResult(TypedDict):
     """Discover result for cli_auto."""
+
     count: int
     protocols: List[Dict[str, str]]
 
 
 class SamskaraJudgeResult(TypedDict):
     """Judge result for cli_auto."""
+
     verdict: str
     reason: str
     target_path: str
@@ -72,10 +86,12 @@ class SamskaraJudgeResult(TypedDict):
 
 class SamskaraMigrateResult(TypedDict):
     """Migrate result for cli_auto."""
+
     success: bool
     message: str
     from_path: str
     to_path: str
+
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
 
@@ -87,6 +103,7 @@ R = TypeVar("R")
 # =============================================================================
 # YAMARAJA PROTOCOL BASE - Derives from MantraPosition 15
 # =============================================================================
+
 
 @ProtocolRegistry.register
 class YamarajaProtocolBase(WorkerProtocol):
@@ -104,6 +121,7 @@ class YamarajaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 592 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 15  # THE ONLY CONFIGURATION
 
 
@@ -114,13 +132,15 @@ class YamarajaProtocolBase(WorkerProtocol):
 # JUDGMENT TYPES
 # =============================================================================
 
+
 class Verdict(str, Enum):
     """The five possible verdicts."""
-    ALLOW = "allow"       # Vaikuntha - Passage granted
-    DENY = "deny"         # Naraka - Passage denied
-    ATONE = "atone"       # Prayascitta - Must purify first
-    ELEVATED = "elevated" # Grace - Beyond judgment
-    MERCY = "mercy"       # AJAMIL EXCEPTION - Holy Name overrides!
+
+    ALLOW = "allow"  # Vaikuntha - Passage granted
+    DENY = "deny"  # Naraka - Passage denied
+    ATONE = "atone"  # Prayascitta - Must purify first
+    ELEVATED = "elevated"  # Grace - Beyond judgment
+    MERCY = "mercy"  # AJAMIL EXCEPTION - Holy Name overrides!
 
 
 @dataclass(frozen=True)
@@ -132,18 +152,20 @@ class Judgeable:
     Note: Yamaraja CAN judge anything (acintya),
     but we provide structure for type safety.
     """
+
     subject_type: str  # "code", "action", "entity", "soul"
     subject_id: str
     karma_history: List[str] = None  # type: ignore
 
     def __post_init__(self) -> None:
         if self.karma_history is None:
-            object.__setattr__(self, 'karma_history', [])
+            object.__setattr__(self, "karma_history", [])
 
 
 @dataclass(frozen=True)
 class JudgmentRecord:
     """The record of Yamaraja's judgment."""
+
     subject: Judgeable
     verdict: Verdict
     reason: str
@@ -156,6 +178,7 @@ class Judgment:
     Governance judgment result (used by YamarajaGate).
     Lighter than JudgmentRecord - no subject tracking.
     """
+
     verdict: Verdict
     reason: str
     karma_cost: float
@@ -163,8 +186,10 @@ class Judgment:
 
 from typing import TypedDict
 
+
 class JudgeCliResult(TypedDict):
     """Result of CLI judge operation. WATERTIGHT - no Any!"""
+
     success: bool
     subject: str
     verdict: str
@@ -175,6 +200,7 @@ class JudgeCliResult(TypedDict):
 # =============================================================================
 # PROTOCOL DEFINITION
 # =============================================================================
+
 
 @runtime_checkable
 class YamarajaProtocol(Protocol):
@@ -293,6 +319,7 @@ class NullYamaraja(YamarajaProtocolBase):
         """Lazy load SamskaraService."""
         if not hasattr(self, "_samskara_svc"):
             from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
+
             self._samskara_svc = SamskaraService()
         return self._samskara_svc
 
@@ -316,7 +343,11 @@ class NullYamaraja(YamarajaProtocolBase):
         return SamskaraDiscoverResult(
             count=len(wilds),
             protocols=[
-                {"path": w["path"], "target": w["target_mahajana"], "has_chanting": "yes" if w.get("has_chanting") else "no"}
+                {
+                    "path": w["path"],
+                    "target": w["target_mahajana"],
+                    "has_chanting": "yes" if w.get("has_chanting") else "no",
+                }
                 for w in wilds[:50]
             ],
         )
@@ -334,10 +365,13 @@ class NullYamaraja(YamarajaProtocolBase):
     def samskara_migrate(self, path: str) -> "SamskaraMigrateResult":
         """Migrate a protocol to its mahajana folder."""
         from pathlib import Path as P
+
         svc = self._get_samskara_service()
         v = svc.judge(path)
         if v.get("verdict") not in ("allow", "mercy"):
-            return SamskaraMigrateResult(success=False, message=f"Cannot migrate: {v.get('reason')}", from_path=path, to_path="")
+            return SamskaraMigrateResult(
+                success=False, message=f"Cannot migrate: {v.get('reason')}", from_path=path, to_path=""
+            )
         mahajana = svc.identify_mahajana(path)
         if not mahajana:
             return SamskaraMigrateResult(success=False, message="Cannot identify mahajana", from_path=path, to_path="")
@@ -352,11 +386,13 @@ class NullYamaraja(YamarajaProtocolBase):
 # YAMARAJA PHYSICS - Performance Enforcement (Aspect 4)
 # =============================================================================
 
+
 class YamarajaPhysics:
     """
     Enforces the Laws of Thermodynamics & Singularity.
     Performance judgment - "Are you fast enough?"
     """
+
     MIN_RESONANCE_THRESHOLD = 1.08  # The Golden Ratio of Growth
 
     @staticmethod
@@ -379,6 +415,7 @@ def secure_contract(baseline_metric: float) -> Callable[[Callable[P, R]], Callab
 
     Strict Typing: Preserves the signature P -> R of the wrapped function.
     """
+
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -402,7 +439,7 @@ def secure_contract(baseline_metric: float) -> Callable[[Callable[P, R]], Callab
                 ops = float(getattr(result, "ops_per_sec"))
             else:
                 # Default observation (The 'Material' way)
-                ops = (1.0 / duration) if duration > 0 else float('inf')
+                ops = (1.0 / duration) if duration > 0 else float("inf")
 
             judgment = YamarajaPhysics.measure_kriya(func.__qualname__, baseline_metric, ops)
 
@@ -411,13 +448,16 @@ def secure_contract(baseline_metric: float) -> Callable[[Callable[P, R]], Callab
                 raise SystemError(f"YAMARAJA VIOLATION: {judgment.reason}")
 
             return result
+
         return wrapper
+
     return decorator
 
 
 # =============================================================================
 # YAMARAJA GATE - Governance Implementation (Aspect 3)
 # =============================================================================
+
 
 class YamarajaGate:
     """
@@ -428,14 +468,12 @@ class YamarajaGate:
     def __init__(self) -> None:
         # LAZY IMPORT to avoid circular dependency
         from vibe_core.protocols.universal.dharma import UniversalDharma
+
         self.dharma = UniversalDharma()
         self.ugra_karma: Set[str] = {"delete", "destroy", "kill", "wipe", "narasimha"}
 
     def judge_action(
-        self,
-        context: "SovereignContext",
-        command: str,
-        payload: Optional[Union[Judgeable, Dict[str, str]]] = None
+        self, context: "SovereignContext", command: str, payload: Optional[Union[Judgeable, Dict[str, str]]] = None
     ) -> Judgment:
         """
         Judge an action request.
@@ -480,6 +518,7 @@ class YamarajaGate:
 
 # Type hint for forward reference
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from vibe_core.protocols.universal.types import SovereignContext
 

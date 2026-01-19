@@ -34,10 +34,10 @@ from vibe_core.protocols.mahajanas.router import Mahajana
 OWNER: Final[Mahajana] = Mahajana.MANU
 
 
-
 # =============================================================================
 # VARNA - Function/Role (Based on Guna + Karma)
 # =============================================================================
+
 
 class Varna(str, Enum):
     """
@@ -45,38 +45,43 @@ class Varna(str, Enum):
 
     BG 4.13: guṇa-karma-vibhāgaśaḥ
     """
-    BRAHMANA = "brahmana"    # Teacher/Guide (sattva dominant)
+
+    BRAHMANA = "brahmana"  # Teacher/Guide (sattva dominant)
     KSHATRIYA = "kshatriya"  # Guardian/Protector (sattva+rajas)
-    VAISHYA = "vaishya"      # Producer/Trader (rajas dominant)
-    SHUDRA = "shudra"        # Worker/Servant (tamas+rajas)
-    MLECCHA = "mleccha"      # Outside system (unintegrated)
+    VAISHYA = "vaishya"  # Producer/Trader (rajas dominant)
+    SHUDRA = "shudra"  # Worker/Servant (tamas+rajas)
+    MLECCHA = "mleccha"  # Outside system (unintegrated)
 
 
 # =============================================================================
 # ASHRAMA - Lifecycle Stage
 # =============================================================================
 
+
 class Ashrama(str, Enum):
     """
     The four life stages.
     """
+
     BRAHMACHARYA = "brahmacharya"  # Student (learning)
-    GRIHASTHA = "grihastha"        # Householder (producing)
-    VANAPRASTHA = "vanaprastha"    # Retired (mentoring)
-    SANNYASA = "sannyasa"          # Renounced (transcendent)
-    ANTYA = "antya"                # Pre-birth (conceptual)
+    GRIHASTHA = "grihastha"  # Householder (producing)
+    VANAPRASTHA = "vanaprastha"  # Retired (mentoring)
+    SANNYASA = "sannyasa"  # Renounced (transcendent)
+    ANTYA = "antya"  # Pre-birth (conceptual)
 
 
 # =============================================================================
 # CERTIFICATION ↔ VARNA BRIDGE
 # =============================================================================
 
+
 class Certification(str, Enum):
     """TÜV badges map to Varna."""
-    NONE = "none"          # → MLECCHA
-    BRONZE = "bronze"      # → SHUDRA
-    SILVER = "silver"      # → VAISHYA
-    GOLD = "gold"          # → KSHATRIYA
+
+    NONE = "none"  # → MLECCHA
+    BRONZE = "bronze"  # → SHUDRA
+    SILVER = "silver"  # → VAISHYA
+    GOLD = "gold"  # → KSHATRIYA
     PLATINUM = "platinum"  # → BRAHMANA
 
 
@@ -93,9 +98,11 @@ CERT_TO_VARNA: Final[Dict[Certification, Varna]] = {
 # SOCIAL POSITION
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SocialPosition:
     """Complete social position of an entity."""
+
     varna: Varna
     ashrama: Ashrama
     guna: GunaProfile
@@ -110,9 +117,7 @@ class SocialPosition:
     @property
     def can_teach(self) -> bool:
         """Can teach others?"""
-        return self.varna == Varna.BRAHMANA or self.ashrama in (
-            Ashrama.VANAPRASTHA, Ashrama.SANNYASA
-        )
+        return self.varna == Varna.BRAHMANA or self.ashrama in (Ashrama.VANAPRASTHA, Ashrama.SANNYASA)
 
     @property
     def can_guard(self) -> bool:
@@ -123,6 +128,7 @@ class SocialPosition:
 # =============================================================================
 # DETERMINATION FUNCTIONS
 # =============================================================================
+
 
 def determine_varna(guna: GunaProfile) -> Varna:
     """

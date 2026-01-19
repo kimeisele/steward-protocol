@@ -118,10 +118,11 @@ class SilentWitness:
 
 class MercyType(Enum):
     """Die Arten von Mercy, die Prabhupada gibt."""
-    SILENT = "silent"       # Error wird absorbiert (SilentWitness)
+
+    SILENT = "silent"  # Error wird absorbiert (SilentWitness)
     CORRECTIVE = "corrective"  # Sanfte Korrektur
     INSTRUCTIVE = "instructive"  # Vani-basierte Lösung
-    SEVERE = "severe"       # Crash (für schwere Vergehen)
+    SEVERE = "severe"  # Crash (für schwere Vergehen)
 
 
 # =============================================================================
@@ -256,6 +257,7 @@ PRABHUPADA: Final[SrilaPrabhupada] = SrilaPrabhupada()
 # =============================================================================
 # PROTOCOL (for type checking - but NOT abstract "Guru")
 # =============================================================================
+
 
 @runtime_checkable
 class PrabhupadaAware(Protocol):

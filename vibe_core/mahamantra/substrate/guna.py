@@ -60,7 +60,6 @@ The Name itself (chant/tick) is above this classification.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -78,6 +77,7 @@ from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 # THE THREE GUNAS (Material)
 # =============================================================================
 
+
 class Guna(IntEnum):
     """
     The three modes of MATERIAL nature.
@@ -92,9 +92,10 @@ class Guna(IntEnum):
     NOTE: The Mahamantra ITSELF is VISHUDDHA SATTVA (transcendental),
     above these three modes. See VISHUDDHA_SATTVA below.
     """
-    SATTVA = 0   # Goodness - Pure, illuminating, safe
-    RAJAS = 1    # Passion - Active, modifying, transactional
-    TAMAS = 2    # Ignorance - Destructive, irreversible
+
+    SATTVA = 0  # Goodness - Pure, illuminating, safe
+    RAJAS = 1  # Passion - Active, modifying, transactional
+    TAMAS = 2  # Ignorance - Destructive, irreversible
 
 
 # =============================================================================
@@ -131,34 +132,40 @@ def is_vishuddha(operation: str) -> bool:
 
 # SATTVA: Pure observation, no side effects
 # Analysis, checking, logging, judgment
-SATTVA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.TYPE_CHECK,    # 6 - Kapila: Analysis (observation)
-    MantraOpCode.DHARMA_TEST,   # 7 - Manu: Law check (observation)
-    MantraOpCode.LOG_EMIT,      # 14 - Shuka: Output (observation)
-    MantraOpCode.AUDIT_SEAL,    # 15 - Yamaraja: Judgment (observation)
-})
+SATTVA_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.TYPE_CHECK,  # 6 - Kapila: Analysis (observation)
+        MantraOpCode.DHARMA_TEST,  # 7 - Manu: Law check (observation)
+        MantraOpCode.LOG_EMIT,  # 14 - Shuka: Output (observation)
+        MantraOpCode.AUDIT_SEAL,  # 15 - Yamaraja: Judgment (observation)
+    }
+)
 
 # RAJAS: Creation and modification, side effects
 # Boot, load, allocate, compile, bind, execute, sync, commit
-RAJAS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.SYS_WAKE,      # 0 - Prithu: System boot
-    MantraOpCode.LOAD_ROOT,     # 1 - Brahma: Load config
-    MantraOpCode.ALLOC_MEM,     # 2 - Narada: Allocate memory
-    MantraOpCode.COMPILE_AST,   # 4 - Vyasa: Compile
-    MantraOpCode.BIND_SYMBOL,   # 5 - Kumaras: Bind symbol
-    MantraOpCode.EXEC_OP,       # 8 - Parashurama: Execute
-    MantraOpCode.EXTEND_CAP,    # 9 - Prahlada: Extend capability
-    MantraOpCode.STATE_SYNC,    # 10 - Janaka: Sync state
-    MantraOpCode.LEDGER_SIGN,   # 11 - Bhishma: Sign ledger
-})
+RAJAS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.SYS_WAKE,  # 0 - Prithu: System boot
+        MantraOpCode.LOAD_ROOT,  # 1 - Brahma: Load config
+        MantraOpCode.ALLOC_MEM,  # 2 - Narada: Allocate memory
+        MantraOpCode.COMPILE_AST,  # 4 - Vyasa: Compile
+        MantraOpCode.BIND_SYMBOL,  # 5 - Kumaras: Bind symbol
+        MantraOpCode.EXEC_OP,  # 8 - Parashurama: Execute
+        MantraOpCode.EXTEND_CAP,  # 9 - Prahlada: Extend capability
+        MantraOpCode.STATE_SYNC,  # 10 - Janaka: Sync state
+        MantraOpCode.LEDGER_SIGN,  # 11 - Bhishma: Sign ledger
+    }
+)
 
 # TAMAS: Destruction and cleanup, irreversible
 # Thread init (destruction ready), yield, flush
-TAMAS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset({
-    MantraOpCode.INIT_THREAD,   # 3 - Shambhu: Destruction ready
-    MantraOpCode.YIELD_CPU,     # 12 - Nrisimha: Release/yield
-    MantraOpCode.IO_FLUSH,      # 13 - Bali: Flush (release resources)
-})
+TAMAS_OPCODES: Final[FrozenSet[MantraOpCode]] = frozenset(
+    {
+        MantraOpCode.INIT_THREAD,  # 3 - Shambhu: Destruction ready
+        MantraOpCode.YIELD_CPU,  # 12 - Nrisimha: Release/yield
+        MantraOpCode.IO_FLUSH,  # 13 - Bali: Flush (release resources)
+    }
+)
 
 
 # Lookup table
@@ -172,6 +179,7 @@ OPCODE_GUNA: Final[Dict[MantraOpCode, Guna]] = {
 # =============================================================================
 # FUNCTIONS - Pure, typed, no side effects
 # =============================================================================
+
 
 def get_guna(opcode: MantraOpCode) -> Guna:
     """
@@ -209,6 +217,7 @@ def is_tamas(opcode: MantraOpCode) -> bool:
 # QOS IMPLICATIONS (Engineering)
 # =============================================================================
 
+
 class GunaQoS:
     """
     Quality of Service implications of Guna.
@@ -230,19 +239,19 @@ class GunaQoS:
     """
 
     # Latency multipliers
-    SATTVA_LATENCY: Final[float] = 1.0   # Fast
-    RAJAS_LATENCY: Final[float] = 1.5    # Normal
-    TAMAS_LATENCY: Final[float] = 3.0    # Slow (intentional)
+    SATTVA_LATENCY: Final[float] = 1.0  # Fast
+    RAJAS_LATENCY: Final[float] = 1.5  # Normal
+    TAMAS_LATENCY: Final[float] = 3.0  # Slow (intentional)
 
     # Parallelism
-    SATTVA_PARALLEL: Final[bool] = True   # Can run in parallel
-    RAJAS_PARALLEL: Final[bool] = False   # Sequential for same resource
-    TAMAS_PARALLEL: Final[bool] = False   # Always sequential
+    SATTVA_PARALLEL: Final[bool] = True  # Can run in parallel
+    RAJAS_PARALLEL: Final[bool] = False  # Sequential for same resource
+    TAMAS_PARALLEL: Final[bool] = False  # Always sequential
 
     # Confirmation required
-    SATTVA_CONFIRM: Final[bool] = False   # No confirmation
-    RAJAS_CONFIRM: Final[bool] = False    # No confirmation (but logged)
-    TAMAS_CONFIRM: Final[bool] = True     # Must confirm destructive ops
+    SATTVA_CONFIRM: Final[bool] = False  # No confirmation
+    RAJAS_CONFIRM: Final[bool] = False  # No confirmation (but logged)
+    TAMAS_CONFIRM: Final[bool] = True  # Must confirm destructive ops
 
     @classmethod
     def get_latency_multiplier(cls, guna: Guna) -> float:

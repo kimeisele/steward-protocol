@@ -65,6 +65,7 @@ from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
 from vibe_core.event_bus import EventBus
 from vibe_core.protocols.event import EventBusProtocol
+
 # OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
 from vibe_core.protocols.kernel_protocol import KernelProtocol
 from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
@@ -153,7 +154,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         # FACTORY PATTERN (No more 'new RealVibeKernel()')
         # Inject factory or use default service
         self._kernel_factory: KernelFactoryProtocol = KernelFactory()
-        
+
         # KERNEL IS NOW LATENT (None) until ignited
         self.kernel: Optional[KernelProtocol] = None
 
@@ -194,7 +195,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         logger.info(f"🕉️  GENESIS ACCEPTED. Signature: {genesis.signature}")
         logger.info(f"   Resonance: 16-Bit Aligned ({genesis.resonance.name})")
-        
+
         # NOW we trigger the OODA Loop
         return self.boot()
 
@@ -285,16 +286,17 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         try:
             # AKASHA: Space - Create kernel via Factory
             logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
-            
+
             # THE FIX: No hardcoded class instantiation here
             # Use get_kernel (Singleton Access)
             raw_kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
-            
+
             # PHASE 6.1: WRAP IN ENTROPY SHELL (The Kurukshetra Field)
             # "The Field of Time surrounds the Immutable Core"
             from vibe_core.runtime.entropy_shell import EntropyShell
+
             self.kernel = EntropyShell(raw_kernel)
-            
+
             logger.info(f"      → Kernel space allocated & wrapped in EntropyShell (ledger: {self.ledger_path})")
 
             # VAYU: Air - Establish communication channels

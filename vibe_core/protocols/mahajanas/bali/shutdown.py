@@ -29,7 +29,6 @@ SHUTDOWN PHASES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -69,33 +68,38 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # SHUTDOWN PHASES
 # =============================================================================
 
+
 class ShutdownPhase(str, Enum):
     """Phases of graceful shutdown."""
-    RUNNING = "running"       # Normal operation
-    PREPARE = "prepare"       # Preparing for shutdown
-    DRAIN = "drain"           # Draining in-flight work
-    RELEASE = "release"       # Releasing resources
-    STOPPED = "stopped"       # Fully stopped
-    ABORTED = "aborted"       # Emergency abort
+
+    RUNNING = "running"  # Normal operation
+    PREPARE = "prepare"  # Preparing for shutdown
+    DRAIN = "drain"  # Draining in-flight work
+    RELEASE = "release"  # Releasing resources
+    STOPPED = "stopped"  # Fully stopped
+    ABORTED = "aborted"  # Emergency abort
 
 
 class ShutdownReason(str, Enum):
     """Reasons for shutdown."""
-    REQUESTED = "requested"   # User/admin requested
-    TIMEOUT = "timeout"       # Exceeded time limit
-    ERROR = "error"           # Unrecoverable error
-    RESOURCE = "resource"     # Resource exhaustion
-    SIGNAL = "signal"         # OS signal (SIGTERM, etc.)
-    PRAPATTI = "prapatti"     # Full surrender (like Bali)
+
+    REQUESTED = "requested"  # User/admin requested
+    TIMEOUT = "timeout"  # Exceeded time limit
+    ERROR = "error"  # Unrecoverable error
+    RESOURCE = "resource"  # Resource exhaustion
+    SIGNAL = "signal"  # OS signal (SIGTERM, etc.)
+    PRAPATTI = "prapatti"  # Full surrender (like Bali)
 
 
 # =============================================================================
 # SHUTDOWN RESULT
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class ShutdownResult:
     """Result of a shutdown operation."""
+
     success: bool
     phase: ShutdownPhase
     reason: ShutdownReason
@@ -125,16 +129,18 @@ ShutdownHook = Callable[[ShutdownPhase], bool]
 @dataclass
 class ShutdownHookEntry:
     """A registered shutdown hook."""
+
     name: str
     hook: ShutdownHook
     phase: ShutdownPhase  # Which phase to run in
-    priority: int = 0     # Higher = runs first
+    priority: int = 0  # Higher = runs first
     timeout_ms: int = 5000
 
 
 # =============================================================================
 # SHUTDOWN PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class ShutdownProtocol(Protocol):
@@ -239,6 +245,7 @@ class ShutdownProtocol(Protocol):
 # =============================================================================
 # SHUTDOWN COORDINATOR - Implementation
 # =============================================================================
+
 
 class ShutdownCoordinator:
     """
@@ -460,6 +467,7 @@ class ShutdownCoordinator:
 # NULL SHUTDOWN - For testing
 # =============================================================================
 
+
 class NullShutdown:
     """
     The Immortal Process - cannot be shut down.
@@ -505,7 +513,14 @@ class NullShutdown:
             message="NullShutdown - instant complete",
         )
 
-    def register_hook(self, name: str, hook: ShutdownHook, phase: ShutdownPhase = ShutdownPhase.RELEASE, priority: int = 0, timeout_ms: int = 5000) -> bool:
+    def register_hook(
+        self,
+        name: str,
+        hook: ShutdownHook,
+        phase: ShutdownPhase = ShutdownPhase.RELEASE,
+        priority: int = 0,
+        timeout_ms: int = 5000,
+    ) -> bool:
         return True
 
     def unregister_hook(self, name: str) -> bool:

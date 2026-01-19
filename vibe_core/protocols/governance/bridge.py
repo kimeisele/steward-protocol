@@ -37,7 +37,6 @@ USAGE:
     report = ProtocolBridge.audit()  # → GovernanceAudit
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -132,18 +131,16 @@ class ProtocolCategory(str, Enum):
 FOLDER_OWNERS: Final[Dict[str, Mahajana]] = {
     # === DIRECT MAHAJANA FOLDERS (mahajanas/<name>/) ===
     # Handled by FRACTAL LAW in get_owner() - no mapping needed here
-
     # === STRUCTURAL FOLDERS ===
     # Note: Avataras (Prithu, Vyasa, Parashurama, Nrisimha) are HEADs, not Mahajanas.
     # We use the closest Worker Mahajana for folder governance.
-    "governance": Mahajana.MANU,          # Law/Rules - Position 7
-    "substrate": Mahajana.BRAHMA,         # Foundation/Creation - Position 1
-    "naga": Mahajana.YAMARAJA,            # Security/Judgment - Position 15
-    "universal": Mahajana.BRAHMA,         # Universal Truth - Position 1 (Brahma compiles)
-    "avataras": Mahajana.BRAHMA,          # Avatara protocols - Genesis domain
-    "science": Mahajana.KAPILA,           # Analysis/Sankhya - Position 6
-    "lila": Mahajana.NARADA,              # Lifecycle/Communication - Position 2
-
+    "governance": Mahajana.MANU,  # Law/Rules - Position 7
+    "substrate": Mahajana.BRAHMA,  # Foundation/Creation - Position 1
+    "naga": Mahajana.YAMARAJA,  # Security/Judgment - Position 15
+    "universal": Mahajana.BRAHMA,  # Universal Truth - Position 1 (Brahma compiles)
+    "avataras": Mahajana.BRAHMA,  # Avatara protocols - Genesis domain
+    "science": Mahajana.KAPILA,  # Analysis/Sankhya - Position 6
+    "lila": Mahajana.NARADA,  # Lifecycle/Communication - Position 2
     # === ROOT LEVEL (protocols/*.py) ===
     # Files at root belong to GOVERNANCE (Manu) as migration/fallback
     # They await proper folder assignment via SANKIRTAN
@@ -151,9 +148,7 @@ FOLDER_OWNERS: Final[Dict[str, Mahajana]] = {
 }
 
 # Reverse lookup for audit reporting
-MAHAJANA_FOLDERS: Final[Dict[Mahajana, str]] = {
-    v: k for k, v in FOLDER_OWNERS.items() if k
-}
+MAHAJANA_FOLDERS: Final[Dict[Mahajana, str]] = {v: k for k, v in FOLDER_OWNERS.items() if k}
 
 
 # =============================================================================
@@ -166,402 +161,483 @@ _PROTOCOL_GOVERNANCE: Dict[str, Tuple[Mahajana, SecurityLevel, ProtocolCategory,
     # =========================================================================
     # YAMARAJA (Judgment/Security) - Level -1 to 0
     # =========================================================================
-    "defense.py": (Mahajana.YAMARAJA, SecurityLevel.SUBSTRATE, ProtocolCategory.CORE,
-                   "4 Regulating Principles (DAYA, SATYAM, TAPAS, SAUCAM)"),
-    "testable.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                    "Testing framework and assertions"),
-    "testable_registry.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                             "Test discovery and registration"),
-    "integrity.py": (Mahajana.YAMARAJA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                     "Data integrity verification"),
-    "shuddhi.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                   "Purification protocols"),
-
+    "defense.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.CORE,
+        "4 Regulating Principles (DAYA, SATYAM, TAPAS, SAUCAM)",
+    ),
+    "testable.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.CORE,
+        "Testing framework and assertions",
+    ),
+    "testable_registry.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.CORE,
+        "Test discovery and registration",
+    ),
+    "integrity.py": (Mahajana.YAMARAJA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Data integrity verification"),
+    "shuddhi.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "Purification protocols"),
     # =========================================================================
     # BHISHMA (Commitment/Vow) - Level 0
     # =========================================================================
-    "ledger.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                  "Immutable ledger protocol"),
-    "lineage.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                   "Parampara/lineage tracking"),
-    "crypto.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                  "Cryptographic operations"),
-
+    "ledger.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Immutable ledger protocol"),
+    "lineage.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Parampara/lineage tracking"),
+    "crypto.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Cryptographic operations"),
     # =========================================================================
     # JANAKA (State/Duty) - Level 0-1
     # =========================================================================
-    "kernel_protocol.py": (Mahajana.JANAKA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                           "Kernel interface protocol"),
-    "kernel_types.py": (Mahajana.JANAKA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                        "Kernel type definitions"),
-    "state.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                 "State management"),
-    "scheduler.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
-                     "Task scheduling"),
-    "process.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
-                   "Process management"),
-
+    "kernel_protocol.py": (Mahajana.JANAKA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Kernel interface protocol"),
+    "kernel_types.py": (Mahajana.JANAKA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Kernel type definitions"),
+    "state.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "State management"),
+    "scheduler.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE, "Task scheduling"),
+    "process.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE, "Process management"),
     # =========================================================================
     # BRAHMA (Creation) - Level 1-4
     # =========================================================================
-    "agent.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                 "Agent manifest and lifecycle"),
-    "manifestation.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                         "Entity manifestation"),
-    "boot_protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                         "System boot sequence"),
-    "registry.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                    "Manifest registry"),
-    "capability.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                      "Capability definitions"),
-    "plugin.py": (Mahajana.BRAHMA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                  "Plugin interface"),
-
+    "agent.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Agent manifest and lifecycle"),
+    "manifestation.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Entity manifestation"),
+    "boot_protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "System boot sequence"),
+    "registry.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Manifest registry"),
+    "capability.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "Capability definitions"),
+    "plugin.py": (Mahajana.BRAHMA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Plugin interface"),
     # =========================================================================
     # NARADA (Communication) - Level 2-4
     # =========================================================================
-    "synapse.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                   "Inter-component messaging"),
-    "event.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                 "Event protocol"),
-    "feedback.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                    "Feedback loops"),
-    "network.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.SERVICE,
-                   "Network protocol"),
-    "chat.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                "Chat protocol"),
-    "language.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                    "Language processing"),
-    "translation.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                       "Translation protocol"),
-
+    "synapse.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Inter-component messaging"),
+    "event.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Event protocol"),
+    "feedback.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Feedback loops"),
+    "network.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.SERVICE, "Network protocol"),
+    "chat.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Chat protocol"),
+    "language.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Language processing"),
+    "translation.py": (Mahajana.NARADA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Translation protocol"),
     # =========================================================================
     # SHAMBHU (Destruction/Cleanup) - Level 1-2
     # =========================================================================
-    "circuit.py": (Mahajana.SHAMBHU, SecurityLevel.DEFENSE, ProtocolCategory.UTILITY,
-                   "Circuit breaker pattern"),
-    "correction.py": (Mahajana.SHAMBHU, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
-                      "Error correction"),
-
+    "circuit.py": (Mahajana.SHAMBHU, SecurityLevel.DEFENSE, ProtocolCategory.UTILITY, "Circuit breaker pattern"),
+    "correction.py": (Mahajana.SHAMBHU, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE, "Error correction"),
     # =========================================================================
     # KUMARAS (Knowledge/Purity) - Level 2-4
     # =========================================================================
-    "cognition.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                     "Cognitive processing"),
-    "memory.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                  "Memory protocol"),
-    "reflection.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                      "Self-reflection"),
-    "akashic.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                   "Akashic records"),
-
+    "cognition.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Cognitive processing"),
+    "memory.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Memory protocol"),
+    "reflection.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Self-reflection"),
+    "akashic.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Akashic records"),
     # =========================================================================
     # KAPILA (Analysis/Sankhya) - Level 2-4
     # =========================================================================
-    "primal.py": (Mahajana.KAPILA, SecurityLevel.NAGA, ProtocolCategory.CORE,
-                  "Primal/fundamental analysis"),
-    "reactor.py": (Mahajana.KAPILA, SecurityLevel.NAGA, ProtocolCategory.SERVICE,
-                   "Reactive processing"),
-
+    "primal.py": (Mahajana.KAPILA, SecurityLevel.NAGA, ProtocolCategory.CORE, "Primal/fundamental analysis"),
+    "reactor.py": (Mahajana.KAPILA, SecurityLevel.NAGA, ProtocolCategory.SERVICE, "Reactive processing"),
     # =========================================================================
     # MANU (Law/Governance) - Level 0-2
     # =========================================================================
-    "dharma.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                  "Dharma protocol"),
-    "gad.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-               "Governance Architecture Document"),
-    "governance_gate.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                           "Governance gates"),
-    "governance/fractal_cli.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                                  "16-command fractal CLI protocol"),
-
+    "dharma.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "Dharma protocol"),
+    "gad.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Governance Architecture Document"),
+    "governance_gate.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Governance gates"),
+    "governance/fractal_cli.py": (
+        Mahajana.MANU,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "16-command fractal CLI protocol",
+    ),
     # =========================================================================
     # PRAHLADA (Devotion/Resilience) - Level 1-4
     # =========================================================================
-    "om.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-              "OM - The primordial sound"),
-    "vedic.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                 "Vedic protocols"),
-    "prakriti_binding.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                            "Prakriti (nature) binding"),
-
+    "om.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "OM - The primordial sound"),
+    "vedic.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "Vedic protocols"),
+    "prakriti_binding.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.CORE,
+        "Prakriti (nature) binding",
+    ),
     # =========================================================================
     # BALI (Surrender/Resources) - Level 2-4
     # =========================================================================
-    "resource.py": (Mahajana.BALI, SecurityLevel.NAGA, ProtocolCategory.SERVICE,
-                    "Resource management"),
-    "economy.py": (Mahajana.BALI, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE,
-                   "Economic protocols"),
-
+    "resource.py": (Mahajana.BALI, SecurityLevel.NAGA, ProtocolCategory.SERVICE, "Resource management"),
+    "economy.py": (Mahajana.BALI, SecurityLevel.PLUGIN, ProtocolCategory.SERVICE, "Economic protocols"),
     # =========================================================================
     # SHUKA (Vision/Narration) - Level 2-4
     # =========================================================================
-    "cli.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-               "CLI protocol"),
-    "cli_execution.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                         "CLI execution"),
-    "command.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                   "Command protocol"),
-    "llm.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-               "LLM interface"),
-    "opus.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                "Opus assistant protocol"),
-
+    "cli.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "CLI protocol"),
+    "cli_execution.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "CLI execution"),
+    "command.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Command protocol"),
+    "llm.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "LLM interface"),
+    "opus.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Opus assistant protocol"),
     # =========================================================================
     # UTILITY PROTOCOLS (Various owners) - Level 3-4
     # =========================================================================
-    "types.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UTILITY,
-                 "Common type definitions"),
-    "intent.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                  "Intent protocol"),
-    "task.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                "Task protocol"),
-    "cartridge.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                     "Cartridge protocol"),
-    "section.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.UTILITY,
-                   "Section protocol"),
-    "steward.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE,
-                   "Steward protocol"),
-    "external.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.SERVICE,
-                    "External integrations"),
-    "identity.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE,
-                    "Identity protocol"),
-    "auditor.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                   "Audit protocol"),
-    "operator_protocol.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
-                             "Operator protocol"),
-    "system_shell.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.SERVICE,
-                        "System shell"),
-
+    "types.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UTILITY, "Common type definitions"),
+    "intent.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Intent protocol"),
+    "task.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Task protocol"),
+    "cartridge.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Cartridge protocol"),
+    "section.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.UTILITY, "Section protocol"),
+    "steward.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.SERVICE, "Steward protocol"),
+    "external.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.SERVICE, "External integrations"),
+    "identity.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.CORE, "Identity protocol"),
+    "auditor.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Audit protocol"),
+    "operator_protocol.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE, "Operator protocol"),
+    "system_shell.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.SERVICE, "System shell"),
     # =========================================================================
     # SUBDIRECTORY PROTOCOLS
     # =========================================================================
-
     # --- governance/ ---
-    "governance/dwarapala.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                                 "Gatekeepers (Jaya & Vijaya)"),
-    "governance/yamaraja.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                                "Yamaraja gate"),
-    "governance/bridge.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                              "Protocol governance bridge (this file)"),
-
+    "governance/dwarapala.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Gatekeepers (Jaya & Vijaya)",
+    ),
+    "governance/yamaraja.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Yamaraja gate"),
+    "governance/bridge.py": (
+        Mahajana.MANU,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Protocol governance bridge (this file)",
+    ),
     # --- universal/ (Vishnu-level - transcends Mahajanas) ---
-    "universal/krishna.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                              "Krishna - The Supreme (Vishnu)"),
-    "universal/bhagavan.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                               "Bhagavan - 6 Opulences"),
-    "universal/purusha.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                              "Purusha - The Person"),
-    "universal/gita.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                           "Bhagavad Gita wisdom"),
-    "universal/dharma.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                             "Universal dharma"),
-    "universal/guna.py": (Mahajana.KAPILA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                           "Three gunas (modes)"),
-    "universal/kurukshetra.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                                  "Battle testing"),
-    "universal/mantra.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                             "Mantra protocol"),
-    "universal/ramanujan.py": (Mahajana.KAPILA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                                "Mathematical proof"),
-    "universal/types.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                            "Universal types"),
-    "universal/enforce.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                              "Enforcement"),
-    "universal/bridge.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                             "Universal bridge"),
-    "universal/sudarshana.py": (Mahajana.YAMARAJA, SecurityLevel.KERNEL, ProtocolCategory.UNIVERSAL,
-                                 "Sudarshana chakra (protection)"),
-    "universal/read_write.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                                 "Read/write operations"),
-    "universal/sync.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                           "Synchronization"),
-    "universal/autobahn.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                               "Fast message highway"),
-    "universal/semantic_router.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                                      "Semantic routing"),
-
+    "universal/krishna.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "Krishna - The Supreme (Vishnu)",
+    ),
+    "universal/bhagavan.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "Bhagavan - 6 Opulences",
+    ),
+    "universal/purusha.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "Purusha - The Person",
+    ),
+    "universal/gita.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL, "Bhagavad Gita wisdom"),
+    "universal/dharma.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL, "Universal dharma"),
+    "universal/guna.py": (Mahajana.KAPILA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL, "Three gunas (modes)"),
+    "universal/kurukshetra.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.UNIVERSAL,
+        "Battle testing",
+    ),
+    "universal/mantra.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL, "Mantra protocol"),
+    "universal/ramanujan.py": (
+        Mahajana.KAPILA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.UNIVERSAL,
+        "Mathematical proof",
+    ),
+    "universal/types.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL, "Universal types"),
+    "universal/enforce.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL, "Enforcement"),
+    "universal/bridge.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL, "Universal bridge"),
+    "universal/sudarshana.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.KERNEL,
+        ProtocolCategory.UNIVERSAL,
+        "Sudarshana chakra (protection)",
+    ),
+    "universal/read_write.py": (
+        Mahajana.JANAKA,
+        SecurityLevel.APPLICATION,
+        ProtocolCategory.UNIVERSAL,
+        "Read/write operations",
+    ),
+    "universal/sync.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL, "Synchronization"),
+    "universal/autobahn.py": (
+        Mahajana.NARADA,
+        SecurityLevel.PLUGIN,
+        ProtocolCategory.UNIVERSAL,
+        "Fast message highway",
+    ),
+    "universal/semantic_router.py": (
+        Mahajana.KUMARAS,
+        SecurityLevel.PLUGIN,
+        ProtocolCategory.UNIVERSAL,
+        "Semantic routing",
+    ),
     # --- substrate/ (Foundation - Mahamantra engine) ---
-    "substrate/byte.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                           "MantraByte - packed ternary"),
-    "substrate/engine.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                             "Mahamantra engine"),
-    "substrate/cpu.py": (Mahajana.JANAKA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                          "MantraCPU - execution"),
-    "substrate/gpu.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                          "MantraGPU - sankirtan"),
-    "substrate/resonance.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                "Phonetic resonance"),
-
+    "substrate/byte.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "MantraByte - packed ternary",
+    ),
+    "substrate/engine.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Mahamantra engine",
+    ),
+    "substrate/cpu.py": (Mahajana.JANAKA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE, "MantraCPU - execution"),
+    "substrate/gpu.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "MantraGPU - sankirtan",
+    ),
+    "substrate/resonance.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Phonetic resonance",
+    ),
     # --- naga/ (Threat detection - Shuka's vision) ---
-    "naga/takshaka.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                          "Input validation (Takshaka)"),
-    "naga/kaliya.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Output sanitization (Kaliya)"),
-    "naga/vasuki.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Threat coordination (Vasuki)"),
-    "naga/ananta.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Ananta Shesha (infinite support)"),
-    "naga/balarama.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                          "Balarama (strength)"),
-    "naga/base.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                      "Base NAGA protocol"),
-    "naga/chitragupta.py": (Mahajana.YAMARAJA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                             "Chitragupta (karma records)"),
-    "naga/cli_command.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                             "NAGA CLI commands"),
-    "naga/cortex.py": (Mahajana.KUMARAS, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "NAGA cortex (cognition)"),
-    "naga/federation.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                            "NAGA federation"),
-    "naga/flood.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                       "Flood detection"),
-    "naga/garuda.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Garuda (NAGA controller)"),
-    "naga/groups.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "NAGA groups"),
-    "naga/intel_bridge.py": (Mahajana.KUMARAS, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                              "Intelligence bridge"),
-    "naga/kala.py": (Mahajana.YAMARAJA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                      "Kala (time/death)"),
-    "naga/karkotaka.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                           "Karkotaka NAGA"),
-    "naga/kulika.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Kulika NAGA"),
-    "naga/narada.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                        "Narada integration"),
-    "naga/nrisimha.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                          "Nrisimha protection"),
-    "naga/padma.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                       "Padma NAGA"),
-    "naga/prahlad.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                         "Prahlad resilience"),
-    "naga/proxy.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                       "NAGA proxy"),
-    "naga/sesha.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                       "Sesha NAGA"),
-    "naga/shankha.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                         "Shankha NAGA"),
-    "naga/tuv.py": (Mahajana.YAMARAJA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                     "TÜV certification"),
-    "naga/types.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA,
-                       "NAGA type definitions"),
-
+    "naga/takshaka.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Input validation (Takshaka)"),
+    "naga/kaliya.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Output sanitization (Kaliya)"),
+    "naga/vasuki.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Threat coordination (Vasuki)"),
+    "naga/ananta.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Ananta Shesha (infinite support)"),
+    "naga/balarama.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Balarama (strength)"),
+    "naga/base.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Base NAGA protocol"),
+    "naga/chitragupta.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.NAGA,
+        ProtocolCategory.NAGA,
+        "Chitragupta (karma records)",
+    ),
+    "naga/cli_command.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA CLI commands"),
+    "naga/cortex.py": (Mahajana.KUMARAS, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA cortex (cognition)"),
+    "naga/federation.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA federation"),
+    "naga/flood.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Flood detection"),
+    "naga/garuda.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Garuda (NAGA controller)"),
+    "naga/groups.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA groups"),
+    "naga/intel_bridge.py": (Mahajana.KUMARAS, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Intelligence bridge"),
+    "naga/kala.py": (Mahajana.YAMARAJA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Kala (time/death)"),
+    "naga/karkotaka.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Karkotaka NAGA"),
+    "naga/kulika.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Kulika NAGA"),
+    "naga/narada.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Narada integration"),
+    "naga/nrisimha.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Nrisimha protection"),
+    "naga/padma.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Padma NAGA"),
+    "naga/prahlad.py": (Mahajana.PRAHLADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Prahlad resilience"),
+    "naga/proxy.py": (Mahajana.NARADA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA proxy"),
+    "naga/sesha.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Sesha NAGA"),
+    "naga/shankha.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "Shankha NAGA"),
+    "naga/tuv.py": (Mahajana.YAMARAJA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "TÜV certification"),
+    "naga/types.py": (Mahajana.SHUKA, SecurityLevel.NAGA, ProtocolCategory.NAGA, "NAGA type definitions"),
     # --- avataras/ (Vishnu's incarnations) ---
-    "avataras/nrisimha.py": (Mahajana.PRAHLADA, SecurityLevel.KERNEL, ProtocolCategory.AVATARA,
-                              "Nrisimha - Protection"),
-    "avataras/parashurama.py": (Mahajana.BHISHMA, SecurityLevel.DEFENSE, ProtocolCategory.AVATARA,
-                                 "Parashurama - Warrior"),
-    "avataras/prithu.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.AVATARA,
-                            "Prithu - First King"),
-    "avataras/vyasa.py": (Mahajana.SHUKA, SecurityLevel.DEFENSE, ProtocolCategory.AVATARA,
-                           "Vyasa - Compiler"),
-
+    "avataras/nrisimha.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.KERNEL,
+        ProtocolCategory.AVATARA,
+        "Nrisimha - Protection",
+    ),
+    "avataras/parashurama.py": (
+        Mahajana.BHISHMA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.AVATARA,
+        "Parashurama - Warrior",
+    ),
+    "avataras/prithu.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.AVATARA, "Prithu - First King"),
+    "avataras/vyasa.py": (Mahajana.SHUKA, SecurityLevel.DEFENSE, ProtocolCategory.AVATARA, "Vyasa - Compiler"),
     # --- lila/ (Divine play) ---
-    "lila/jagannath.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE,
-                           "Jagannath Puri lila"),
-
+    "lila/jagannath.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.SERVICE, "Jagannath Puri lila"),
     # --- mahajanas/ ROOT FILES ONLY (subfolders auto-governed by FRACTAL LAW) ---
     # Files at mahajanas/ root that aren't in a guardian subfolder
-    "mahajanas/owned_protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                                     "Owned protocol base"),
-    "mahajanas/protocol.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                               "Mahajana protocol base"),
-    "mahajanas/router.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                             "OpCode → Mahajana router"),
-    "mahajanas/sabha.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                            "Mahajana assembly"),
-    "mahajanas/vyuha.py": (Mahajana.JANAKA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                            "Chatur-Vyuha architecture"),
-    "mahajanas/adoption.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                               "Protocol adoption"),
-    "mahajanas/discovery.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                                "Mahajana discovery"),
-    "mahajanas/parampara.py": (Mahajana.BHISHMA, SecurityLevel.KERNEL, ProtocolCategory.GOVERNANCE,
-                                "Parampara (disciplic succession)"),
-    "mahajanas/vishnu.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.GOVERNANCE,
-                            "Vishnu source"),
-    "divine_base.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE,
-                       "Divine base protocol"),
-
+    "mahajanas/owned_protocol.py": (
+        Mahajana.BRAHMA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Owned protocol base",
+    ),
+    "mahajanas/protocol.py": (
+        Mahajana.BRAHMA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Mahajana protocol base",
+    ),
+    "mahajanas/router.py": (
+        Mahajana.MANU,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "OpCode → Mahajana router",
+    ),
+    "mahajanas/sabha.py": (Mahajana.MANU, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Mahajana assembly"),
+    "mahajanas/vyuha.py": (
+        Mahajana.JANAKA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Chatur-Vyuha architecture",
+    ),
+    "mahajanas/adoption.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Protocol adoption"),
+    "mahajanas/discovery.py": (
+        Mahajana.BRAHMA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.GOVERNANCE,
+        "Mahajana discovery",
+    ),
+    "mahajanas/parampara.py": (
+        Mahajana.BHISHMA,
+        SecurityLevel.KERNEL,
+        ProtocolCategory.GOVERNANCE,
+        "Parampara (disciplic succession)",
+    ),
+    "mahajanas/vishnu.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.GOVERNANCE, "Vishnu source"),
+    "divine_base.py": (Mahajana.BRAHMA, SecurityLevel.DEFENSE, ProtocolCategory.GOVERNANCE, "Divine base protocol"),
     # NOTE: All mahajanas/<NAME>/*.py files are AUTO-GOVERNED by FRACTAL LAW
     # NO MANUAL ENTRIES NEEDED - structure dictates ownership
-
     # --- science/ (Analysis) ---
-    "science/caitanya_kernel.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                                    "Caitanya consciousness kernel"),
-    "science/entropy.py": (Mahajana.KAPILA, SecurityLevel.DEFENSE, ProtocolCategory.CORE,
-                            "Entropy analysis"),
-
+    "science/caitanya_kernel.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.CORE,
+        "Caitanya consciousness kernel",
+    ),
+    "science/entropy.py": (Mahajana.KAPILA, SecurityLevel.DEFENSE, ProtocolCategory.CORE, "Entropy analysis"),
     # --- substrate/mantra/ (Sacred foundation) ---
-    "substrate/bhava.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                            "Bhava (emotional states)"),
-    "substrate/gene.py": (Mahajana.BRAHMA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                           "iGene protocol"),
-    "substrate/nama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                           "Holy Name"),
-    "substrate/shakti.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                             "Shakti (energy)"),
-    "substrate/tattva.py": (Mahajana.KAPILA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                             "Tattva (truth/elements)"),
-    "substrate/mantra/acintya.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                     "Acintya (inconceivable)"),
-    "substrate/mantra/aksara.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                    "Aksara (syllables)"),
-    "substrate/mantra/diksha.py": (Mahajana.NARADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                    "Diksha (initiation)"),
-    "substrate/mantra/mala.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                  "Mala (rosary/rounds)"),
-    "substrate/mantra/pada.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                  "Pada (word)"),
-    "substrate/mantra/prabhupada.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                        "Prabhupada (spiritual master)"),
-    "substrate/mantra/routing.py": (Mahajana.MANU, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                     "Mantra routing"),
-    "substrate/mantra/sadhana.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                     "Sadhana (practice)"),
-    "substrate/mantra/vakya.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                   "Vakya (sentence)"),
-    "substrate/mantra/varna.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                   "Varna (letters)"),
-    "substrate/balarama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                               "Balarama CLI wrapper"),
-    "substrate/cli_substrate.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.SUBSTRATE,
-                                    "CLI substrate"),
-    "substrate/mantra/graph.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                   "Mantra graph"),
-    "substrate/mantra/lotus.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE,
-                                   "16-petal lotus"),
-
+    "substrate/bhava.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Bhava (emotional states)",
+    ),
+    "substrate/gene.py": (Mahajana.BRAHMA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE, "iGene protocol"),
+    "substrate/nama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE, "Holy Name"),
+    "substrate/shakti.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE, "Shakti (energy)"),
+    "substrate/tattva.py": (
+        Mahajana.KAPILA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Tattva (truth/elements)",
+    ),
+    "substrate/mantra/acintya.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Acintya (inconceivable)",
+    ),
+    "substrate/mantra/aksara.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Aksara (syllables)",
+    ),
+    "substrate/mantra/diksha.py": (
+        Mahajana.NARADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Diksha (initiation)",
+    ),
+    "substrate/mantra/mala.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Mala (rosary/rounds)",
+    ),
+    "substrate/mantra/pada.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.SUBSTRATE, "Pada (word)"),
+    "substrate/mantra/prabhupada.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Prabhupada (spiritual master)",
+    ),
+    "substrate/mantra/routing.py": (
+        Mahajana.MANU,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Mantra routing",
+    ),
+    "substrate/mantra/sadhana.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Sadhana (practice)",
+    ),
+    "substrate/mantra/vakya.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Vakya (sentence)",
+    ),
+    "substrate/mantra/varna.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Varna (letters)",
+    ),
+    "substrate/balarama.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Balarama CLI wrapper",
+    ),
+    "substrate/cli_substrate.py": (
+        Mahajana.SHUKA,
+        SecurityLevel.APPLICATION,
+        ProtocolCategory.SUBSTRATE,
+        "CLI substrate",
+    ),
+    "substrate/mantra/graph.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "Mantra graph",
+    ),
+    "substrate/mantra/lotus.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.SUBSTRATE,
+        "16-petal lotus",
+    ),
     # --- universal/ (remaining) ---
-    "universal/cli.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                          "Universal CLI"),
-    "universal/infer.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                            "Inference engine"),
-    "universal/intent_bridge.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                                    "Intent bridge"),
-    "universal/jagannath.py": (Mahajana.PRAHLADA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                                "Jagannath protocol"),
-    "universal/om.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                         "OM - primordial sound"),
-    "universal/rama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                           "Rama protocol"),
-    "universal/resonance.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                                "Resonance protocol"),
-    "universal/samsara.py": (Mahajana.SHAMBHU, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                              "Samsara (cycle of birth/death)"),
-    "universal/steward.py": (Mahajana.JANAKA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                              "Steward protocol"),
-    "universal/store_recall.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                                   "Store/recall memory"),
-    "universal/synapse.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL,
-                              "Universal synapse"),
-    "universal/the_37th.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL,
-                               "The 37th Principle (Divine Override)"),
-    "universal/union.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL,
-                            "Union types"),
-    "universal/watertight.py": (Mahajana.YAMARAJA, SecurityLevel.DEFENSE, ProtocolCategory.UNIVERSAL,
-                                 "Watertight type checking"),
+    "universal/cli.py": (Mahajana.SHUKA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL, "Universal CLI"),
+    "universal/infer.py": (Mahajana.KUMARAS, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL, "Inference engine"),
+    "universal/intent_bridge.py": (Mahajana.KUMARAS, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL, "Intent bridge"),
+    "universal/jagannath.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.UNIVERSAL,
+        "Jagannath protocol",
+    ),
+    "universal/om.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "OM - primordial sound",
+    ),
+    "universal/rama.py": (Mahajana.PRAHLADA, SecurityLevel.SUBSTRATE, ProtocolCategory.UNIVERSAL, "Rama protocol"),
+    "universal/resonance.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "Resonance protocol",
+    ),
+    "universal/samsara.py": (
+        Mahajana.SHAMBHU,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.UNIVERSAL,
+        "Samsara (cycle of birth/death)",
+    ),
+    "universal/steward.py": (
+        Mahajana.JANAKA,
+        SecurityLevel.APPLICATION,
+        ProtocolCategory.UNIVERSAL,
+        "Steward protocol",
+    ),
+    "universal/store_recall.py": (
+        Mahajana.KUMARAS,
+        SecurityLevel.PLUGIN,
+        ProtocolCategory.UNIVERSAL,
+        "Store/recall memory",
+    ),
+    "universal/synapse.py": (Mahajana.NARADA, SecurityLevel.PLUGIN, ProtocolCategory.UNIVERSAL, "Universal synapse"),
+    "universal/the_37th.py": (
+        Mahajana.PRAHLADA,
+        SecurityLevel.SUBSTRATE,
+        ProtocolCategory.UNIVERSAL,
+        "The 37th Principle (Divine Override)",
+    ),
+    "universal/union.py": (Mahajana.BRAHMA, SecurityLevel.APPLICATION, ProtocolCategory.UNIVERSAL, "Union types"),
+    "universal/watertight.py": (
+        Mahajana.YAMARAJA,
+        SecurityLevel.DEFENSE,
+        ProtocolCategory.UNIVERSAL,
+        "Watertight type checking",
+    ),
 }
 
 
@@ -644,6 +720,7 @@ class ProtocolBridge:
             if file_path.exists():
                 content = file_path.read_text()
                 import re
+
                 match = re.search(r'__mahajana__\s*=\s*["\'](\w+)["\']', content)
                 if match:
                     mahajana_name = match.group(1)
@@ -697,15 +774,17 @@ class ProtocolBridge:
         result = []
         for path, (owner, level, category, desc) in _PROTOCOL_GOVERNANCE.items():
             if owner == mahajana:
-                result.append(ProtocolEntry(
-                    name=Path(path).name,
-                    path=path,
-                    owner=owner.value,
-                    level=level.value,
-                    category=category.value,
-                    description=desc,
-                    has_tests=cls._check_tests_exist(path),
-                ))
+                result.append(
+                    ProtocolEntry(
+                        name=Path(path).name,
+                        path=path,
+                        owner=owner.value,
+                        level=level.value,
+                        category=category.value,
+                        description=desc,
+                        has_tests=cls._check_tests_exist(path),
+                    )
+                )
         return result
 
     @classmethod
@@ -714,15 +793,17 @@ class ProtocolBridge:
         result = []
         for path, (owner, proto_level, category, desc) in _PROTOCOL_GOVERNANCE.items():
             if proto_level == level:
-                result.append(ProtocolEntry(
-                    name=Path(path).name,
-                    path=path,
-                    owner=owner.value,
-                    level=proto_level.value,
-                    category=category.value,
-                    description=desc,
-                    has_tests=cls._check_tests_exist(path),
-                ))
+                result.append(
+                    ProtocolEntry(
+                        name=Path(path).name,
+                        path=path,
+                        owner=owner.value,
+                        level=proto_level.value,
+                        category=category.value,
+                        description=desc,
+                        has_tests=cls._check_tests_exist(path),
+                    )
+                )
         return result
 
     @classmethod
@@ -731,15 +812,17 @@ class ProtocolBridge:
         result = []
         for path, (owner, level, proto_cat, desc) in _PROTOCOL_GOVERNANCE.items():
             if proto_cat == category:
-                result.append(ProtocolEntry(
-                    name=Path(path).name,
-                    path=path,
-                    owner=owner.value,
-                    level=level.value,
-                    category=proto_cat.value,
-                    description=desc,
-                    has_tests=cls._check_tests_exist(path),
-                ))
+                result.append(
+                    ProtocolEntry(
+                        name=Path(path).name,
+                        path=path,
+                        owner=owner.value,
+                        level=level.value,
+                        category=proto_cat.value,
+                        description=desc,
+                        has_tests=cls._check_tests_exist(path),
+                    )
+                )
         return result
 
     @classmethod

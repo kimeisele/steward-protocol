@@ -9,7 +9,6 @@ The actual logging is done by ObservationLogger from opus_assistant/core.
 This bridge just handles the wiring and provides kernel-friendly methods.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

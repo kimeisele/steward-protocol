@@ -45,7 +45,6 @@ The division by 108 ensures the total stays bounded but grows stronger.
 This is the "resonance field" - more Mantras = stronger protection.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

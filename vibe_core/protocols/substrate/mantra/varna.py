@@ -31,12 +31,13 @@ from typing import Final, Tuple, Optional, List
 
 class VarnaType(Enum):
     """Classification of varnas."""
-    SVARA = auto()      # Vowel
-    VYANJANA = auto()   # Consonant
-    ANUSVARA = auto()   # Nasal (ṁ)
-    VISARGA = auto()    # Aspiration (ḥ)
-    VIRAMA = auto()     # Vowel killer (्)
-    MATRA = auto()      # Vowel mark (diacritical)
+
+    SVARA = auto()  # Vowel
+    VYANJANA = auto()  # Consonant
+    ANUSVARA = auto()  # Nasal (ṁ)
+    VISARGA = auto()  # Aspiration (ḥ)
+    VIRAMA = auto()  # Vowel killer (्)
+    MATRA = auto()  # Vowel mark (diacritical)
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,7 @@ class Varna:
         varna_type: Classification
         position: Position in alphabet (1-based)
     """
+
     devanagari: str
     iast: str
     roman: str
@@ -178,6 +180,7 @@ VYANJANA: Final[Tuple[Varna, ...]] = KAVARGA + CAVARGA + TAVARGA + TAVARGA2 + PA
 # =============================================================================
 # LOOKUP FUNCTIONS
 # =============================================================================
+
 
 def get_varna_by_devanagari(char: str) -> Optional[Varna]:
     """Find varna by Devanagari character."""

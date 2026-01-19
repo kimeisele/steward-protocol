@@ -859,6 +859,7 @@ def migrate_service_to_mahamantra(interface: Type[T]) -> Optional[Any]:
 
     try:
         from vibe_core.mahamantra import mahamantra
+
         module = getattr(mahamantra.mod, mahajana, None)
         if module and hasattr(module, service_name):
             return getattr(module, service_name)

@@ -73,6 +73,7 @@ class MahamantraGateway(GatewayProtocol):
     def route(self, command: str) -> Dict[str, object]:
         """Route command to position/guardian."""
         from vibe_core.mahamantra import mahamantra
+
         return mahamantra.route(command)
 
 
@@ -94,6 +95,7 @@ def get_gateway() -> MahamantraGateway:
 # =============================================================================
 # CONVENIENCE FUNCTIONS - Thin wrappers
 # =============================================================================
+
 
 def execute(command: str, args: Optional[List[str]] = None) -> GatewayResponse:
     """

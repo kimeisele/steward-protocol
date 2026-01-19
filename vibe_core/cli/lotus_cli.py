@@ -164,6 +164,7 @@ class LotusCLI:
         guna_sym = "?"
         try:
             from vibe_core.mahamantra.substrate.guna import get_guna_by_position
+
             guna = get_guna_by_position(result.position)
             guna_name = guna.name
             guna_symbols = {"SATTVA": "●", "RAJAS": "◐", "TAMAS": "○"}
@@ -178,7 +179,7 @@ class LotusCLI:
         print("─" * 60)
         print("SEMANTIC ROUTE (The Invisible Backend)")
         print("─" * 60)
-        print(f"  Input:     \"{msg}\"")
+        print(f'  Input:     "{msg}"')
         print(f"  Hash:      {parampara_hash} (mod 16 = {parampara_hash % 16})")
         print()
         print("PROCESSING PATH:")

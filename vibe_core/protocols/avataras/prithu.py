@@ -80,7 +80,6 @@ KRISHNA → VISHNU → PRITHU → SERVICES → JIVAS
 Each level can use the Milking Protocol to extract from the level below.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -487,9 +486,7 @@ class Prithu(BaseAvatara):
         duration = request.get("duration_seconds", 0.0)
         expires = ""
         if duration > 0:
-            expires = (
-                datetime.now().isoformat()
-            )  # Simplified - would add duration in real impl
+            expires = datetime.now().isoformat()  # Simplified - would add duration in real impl
 
         result = AllocationResult(
             granted=True,
@@ -532,11 +529,7 @@ class Prithu(BaseAvatara):
         if owner_id is None:
             return list(self._allocations.values())
 
-        return [
-            a
-            for a in self._allocations.values()
-            if owner_id in a.get("allocation_id", "")
-        ]
+        return [a for a in self._allocations.values() if owner_id in a.get("allocation_id", "")]
 
     def establish_quota(
         self,
