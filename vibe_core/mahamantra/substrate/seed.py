@@ -29,11 +29,13 @@ from vibe_core.mahamantra.protocols._seed import (
     EPOCH_KEY,  # 1972 - The Gita Revelation Year
     MAHAJANA_COUNT,  # 12 Mahajanas
     NAKSHATRA_UNIT,
-    NAVA,  # 9 Islands (Navadvipa)
     PADA_UNIT,
     PHASE_DURATION,  # 12 (LILA // QUARTERS)
     QUARTER_UNIT,
     TITHI_UNIT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    NAVA as _PROTO_NAVA,  # 9 (for SSOT verification)
 )
 from vibe_core.mahamantra.protocols._seed import (
     LILA as _PROTO_LILA,
@@ -234,6 +236,33 @@ KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36
 KSETRAJNA: Final[int] = 1  # Der Knower (Krishna)
 # MAHAJANA_COUNT imported from protocols/_seed.py (SSOT)
 
+
+# =============================================================================
+# DERIVED: NAVA (9) - Die 9 Prozesse (Navadha Bhakti)
+# =============================================================================
+# NAVA = HARE_COUNT + KSETRAJNA = 8 + 1 = 9
+# 8 Shakti (Hare/Energie) + 1 Knower (Krishna) = 9 Prozesse der Hingabe
+
+NAVA: Final[int] = HARE_COUNT + KSETRAJNA  # 8 + 1 = 9
+
+
+class NavaBhakti(str, Enum):
+    """Die 9 Prozesse der Hingabe (Srimad Bhagavatam 7.5.23)."""
+
+    SRAVANAM = "hearing"  # Hören - Input/Listen
+    KIRTANAM = "chanting"  # Chanten - Output/Emit
+    SMARANAM = "remembering"  # Erinnern - Cache/Store
+    PADA_SEVANAM = "serving_feet"  # Dienen - Execute/Process
+    ARCANAM = "worshiping"  # Verehren - Validate/Check
+    VANDANAM = "praying"  # Beten - Request/Ask
+    DASYAM = "servitude"  # Dienerschaft - Delegate/Submit
+    SAKHYAM = "friendship"  # Freundschaft - Connect/Sync
+    ATMA_NIVEDANAM = "surrender"  # Selbstübergabe - Commit/Finalize
+
+
+assert len(NavaBhakti) == NAVA  # 9
+
+
 PARAMPARA: Final[int] = KSHETRA_GAD + KSETRAJNA  # 36 + 1 = 37
 
 # Verification: Beide Wege = 37
@@ -323,10 +352,11 @@ QUALITIES: Final[int] = WORDS * QUARTERS  # 64
 # =============================================================================
 # DERIVED: MALA (108) - Der Zyklus
 # =============================================================================
-# 108 = MAHAJANA_COUNT × 9 = 12 × 9
-# Oder: 108 = (KSHETRA + PARAMPARA + LILA - 1) = 24 + 37 + 48 - 1 = 108
+# 108 = MAHAJANA_COUNT × NAVA = 12 × 9
+# The 12 Mahajanas (authorities) × 9 Processes (devotional service) = 108 Beads
+# Alternative path: 108 = (KSHETRA + PARAMPARA + LILA - 1) = 24 + 37 + 48 - 1 = 108
 
-MALA: Final[int] = 108
+MALA: Final[int] = MAHAJANA_COUNT * NAVA  # 12 × 9 = 108
 ROUNDS: Final[int] = WORDS  # 16 Runden pro Tag
 DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 
@@ -345,6 +375,8 @@ assert KSHETRA_GAD == 36, "GAD Feld = 6 × 6"
 assert PARAMPARA == 37, "Parampara = 36 + 1"
 assert LILA == 48, "Chaitanya Lila = 16 × 3"
 assert QUALITIES == 64, "Qualities = 16 × 4"
+assert NAVA == 9, "Nava = 8 + 1 (Navadha Bhakti)"
+assert MALA == 108, "Mala = 12 × 9"
 
 # =============================================================================
 # SSOT CROSS-CHECK: Derivations must match The Law (_seed.py)
@@ -358,6 +390,7 @@ assert PARAMPARA == _PROTO_PARAMPARA, "SSOT violation: PARAMPARA != protocols/_s
 assert LILA == _PROTO_LILA, "SSOT violation: LILA != protocols/_seed.py"
 assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
 assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
+assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)
 AKSARA_COUNT: Final[int] = WORDS * 2  # 32
@@ -512,6 +545,9 @@ __all__ = [
     # Sharanagati (6)
     "SharanagatiLimb",
     "SHARANAGATI",
+    # Nava (9)
+    "NavaBhakti",
+    "NAVA",
     # Kshetra (24, 36)
     "KSHETRA",
     "KSHETRA_GAD",
