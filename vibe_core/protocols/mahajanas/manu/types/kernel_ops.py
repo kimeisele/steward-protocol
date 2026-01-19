@@ -466,9 +466,9 @@ def narasimha_destroy_agent(
         except Exception as e:
             logger.error(f"Process kill failed: {e}")
 
-    # 2. Revoke all capabilities (use CapabilityRegistry)
-    if kernel._capability_registry.is_registered(agent_id):
-        kernel._capability_registry.revoke_all(
+    # 2. Revoke all capabilities (via Brahma's registry)
+    if kernel.brahma._capability_registry.is_registered(agent_id):
+        kernel.brahma._capability_registry.revoke_all(
             agent_id=agent_id,
             revoker_id="NARASIMHA",
             reason=f"Kill-switch activated: {trigger.threat_type.value}",
