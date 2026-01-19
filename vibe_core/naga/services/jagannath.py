@@ -21,6 +21,7 @@ from vibe_core.di import ServiceRegistry
 from vibe_core.naga.kulika import NagaCapability, NagaLord, naga_service
 from vibe_core.naga.services.base import NagaBaseService
 from vibe_core.protocols.lila.jagannath import IJagannath
+from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.substrate import (
     IAnantaBridge,
     SubstrateHealth,
@@ -95,3 +96,21 @@ class JagannathService(NagaBaseService, IJagannath):
         # TODO: Implement strict checking logic
         # For now, we trust Ananta's work
         return True
+
+    def get_status(self) -> NagaStatus:
+        """
+        Get Jagannath's current status.
+
+        Required by NagaServiceProtocol - The common DNA of all NAGA services.
+        """
+        return NagaStatus(
+            naga_type=NagaType.PRAHLAD,  # Jagannath is part of Governance layer
+            healthy=True,
+            events_processed=self._total_blessings,
+            errors=0,
+            last_heartbeat=self._last_ratha_yatra,
+            message="The Lord's eyes are open",
+            details={
+                "total_blessings": self._total_blessings,
+            },
+        )

@@ -164,18 +164,6 @@ class NagaBootloader:
             else:
                 logger.warning("Vasuki disabled: Sesha and Takshaka are required.")
 
-        # ... (Karkotaka) ...
-
-        # Vasuki (Monitor)
-        vasuki = None
-        if config.vasuki.enabled:
-            # Vasuki needs Sesha and Takshaka
-            if sesha and takshaka:
-                vasuki = VasukiService(sesha=sesha, takshaka=takshaka)
-                registry.register(vasuki, force=True)
-            else:
-                logger.warning("Vasuki disabled: Sesha and Takshaka are required.")
-
         # Karkotaka (Secrets)
         karkotaka = None
         if config.karkotaka.enabled:
