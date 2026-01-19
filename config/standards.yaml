@@ -4,10 +4,20 @@
 # This file defines the "Cardinal Sins" (Todsünden) of the codebase.
 # The Watchman agent reads these rules and verifies compliance via AST.
 #
+# DHARMA PILLARS (from seed.py - DharmaPillar enum):
+# ==================================================
+# Each rule violates one of the 4 Dharma Pillars:
+#
+#   DAYA (mercy)      - No corrupt data, no hidden failures
+#   SATYAM (truth)    - No hallucination, no type lies (Any)
+#   TAPAS (austerity) - No resource waste, no DoS risks
+#   SAUCAM (purity)   - No unauthorized connections, no sandbox bypass
+#
 # Rule Schema:
 #   id: Unique identifier
 #   target: ast node type (Call, ExceptHandler, Assign, etc.)
 #   severity: CRITICAL | HIGH | MEDIUM | LOW
+#   dharma_pillar: DAYA | SATYAM | TAPAS | SAUCAM
 #   match:
 #     attr: Attribute name to check (optional)
 #     func: Function name to check (optional)
@@ -16,158 +26,157 @@
 #   fix_suggestion: Guidance for the Engineer agent
 
 rules:
-  # TODSÜNDE #2: Ghost State (Raw File Writes)
+  # ============================================================================
+  # SAUCAM (Purity) - No unauthorized connections, no sandbox bypass
+  # ============================================================================
+  # Ghost State (Raw File Writes)
   - id: "unsafe_io_write"
     target: "Call"
+    dharma_pillar: "SAUCAM"
     match:
       func: "open"
       args_contain: ["w", "a", "wb", "ab"]
     severity: "CRITICAL"
-    message: "Raw write-access detected. Bypasses VFS and KernelIO audit."
+    message: "Raw write-access detected. Violates SAUCAM (purity) - bypasses VFS audit."
     fix_suggestion: "Use self.system.write_file() or kernel.io.write_document()"
     has_sattva_remedy: true
 
-  # TODSÜNDE #2: Unsandboxed IO
+  # Unsandboxed IO
   - id: "unsafe_shutil"
     target: "Attribute"
+    dharma_pillar: "SAUCAM"
     match:
       object: "shutil"
     severity: "CRITICAL"
-    message: "Direct shutil usage detected. Bypasses sandbox isolation."
+    message: "Direct shutil usage detected. Violates SAUCAM (purity) - bypasses sandbox."
     fix_suggestion: "Use self.system.publish_artifact() for repo writes."
 
-  # TODSÜNDE #1: Silent Failures
+  # Hardcoded data/ path
+  - id: "direct_path_data"
+    target: "Call"
+    dharma_pillar: "SAUCAM"
+    match:
+      func: "Path"
+      args_starts_with: "data/"
+    severity: "CRITICAL"
+    message: "Hardcoded data/ path detected. Violates SAUCAM (purity) - breaks portability."
+    fix_suggestion: "Use self.system.get_sandbox_path() instead."
+
+  # ============================================================================
+  # DAYA (Mercy) - No corrupt data, no hidden failures
+  # ============================================================================
+
+  # Silent Failures
   - id: "silent_failure"
     target: "ExceptHandler"
+    dharma_pillar: "DAYA"
     condition: "is_pass_only"
     severity: "HIGH"
-    message: "Silent failure (except: pass) detected. Hides bugs."
+    message: "Silent failure (except: pass) detected. Violates DAYA (mercy) - hides bugs."
     fix_suggestion: "Add logging (logger.error) or proper exception handling."
     has_sattva_remedy: true
 
-  # TODSÜNDE #3: Subprocess without Timeout (DoS Risk)
+  # Hardcoded Path in constructor
+  - id: "hardcoded_path_in_init"
+    target: "Assign"
+    dharma_pillar: "DAYA"
+    context: "__init__"
+    match:
+      func: "Path"
+    severity: "MEDIUM"
+    message: "Hardcoded Path in constructor. Violates DAYA (mercy) - brittle config."
+    fix_suggestion: "Use lazy-loading @property pattern."
+
+  # ============================================================================
+  # TAPAS (Austerity) - No resource waste, no DoS risks
+  # ============================================================================
+
+  # Subprocess without Timeout (DoS Risk)
   - id: "subprocess_timeout"
     target: "Call"
+    dharma_pillar: "TAPAS"
     match:
       object: "subprocess"
       func_in: ["run", "call", "check_call", "check_output"]
       keyword_absent: "timeout"
     severity: "HIGH"
-    message: "subprocess call without timeout. Risk: DoS via hung process."
+    message: "subprocess call without timeout. Violates TAPAS (austerity) - DoS risk."
     fix_suggestion: "Add timeout=30 parameter to subprocess call."
     has_sattva_remedy: true
 
-  # NAKED AGENT PATTERN
-  - id: "direct_path_data"
-    target: "Call"
-    match:
-      func: "Path"
-      args_starts_with: "data/"
-    severity: "CRITICAL"
-    message: "Hardcoded data/ path detected. Breaks portability."
-    fix_suggestion: "Use self.system.get_sandbox_path() instead."
-
-  # HARDCODED CONFIG
-  - id: "hardcoded_path_in_init"
-    target: "Assign"
-    context: "__init__"
-    match:
-      func: "Path"
-    severity: "MEDIUM"
-    message: "Hardcoded Path in constructor."
-    fix_suggestion: "Use lazy-loading @property pattern."
-
-  # OPUS-306: STATE AUTHORITY VIOLATION
-  # NOTE: Disabled - the match criteria (attr, object_type, context) are not yet
-  # implemented in StandardsInspectionTool._matches_rule(). This caused 39K false positives.
-  # TODO: Implement attr/object_type matching in the tool before re-enabling.
-  # - id: "plugin_weaver_pulse"
-  #   target: "Call"
-  #   context: "vibe_core/plugins/"
-  #   match:
-  #     attr: "pulse"
-  #     object_type: "StateSyncWeaver"
-  #   severity: "CRITICAL"
-  #   message: "Plugin calls weaver.pulse() directly. Breaks state commit batching."
-  #   fix_suggestion: "Remove weaver.pulse(). StateService handles commits via background worker."
-
-  # ============================================================================
-  # OPUS-307 PHASE E+: ARCHITECTURAL PATTERN VIOLATIONS
-  # These patterns were discovered during blind spot analysis.
-  # The system must learn to detect AND heal these autonomously.
-  # ============================================================================
-
-  # ANTI-PATTERN: get_instance() statt ServiceRegistry
-  - id: "get_instance_antipattern"
-    target: "Call"
-    match:
-      attr: "get_instance"
-    severity: "HIGH"
-    message: "Using .get_instance() singleton instead of ServiceRegistry DI."
-    fix_suggestion: "Replace X.get_instance() with ServiceRegistry.get(XProtocol) or ServiceRegistry.require(XProtocol)"
-    has_sattva_remedy: true
-
-  # ANTI-PATTERN: Direct instantiation statt DI
-  - id: "direct_registry_instantiation"
-    target: "Call"
-    match:
-      func_in: ["ToolRegistry", "UnifiedRegistry", "CartridgeRegistry"]
-    severity: "MEDIUM"
-    message: "Direct instantiation of Registry class. Should be injected via ServiceRegistry."
-    fix_suggestion: "Use ServiceRegistry.get(ToolRegistry) instead of ToolRegistry()"
-    has_sattva_remedy: true
-
-  # ANTI-PATTERN: Path scanning for discovery
-  # OPUS-307 Phase F: iterdir() is TAMAS (blind darkness)
-  # The system must KNOW what's installed, not GUESS.
+  # iterdir() is TAMAS - blind filesystem scanning
   - id: "iterdir_discovery"
     target: "Call"
+    dharma_pillar: "TAPAS"
     match:
       attr: "iterdir"
     severity: "HIGH"
-    message: "iterdir() is TAMAS - blind filesystem scanning. Das System RATET statt zu WISSEN."
-    fix_suggestion: "Use ManifestRegistry.get_by_type() or discover_from_registry(). The ONLY allowed iterdir is in ManifestRegistry._scan_directory()."
+    message: "iterdir() is TAMAS. Violates TAPAS (austerity) - blind scanning wastes cycles."
+    fix_suggestion: "Use ManifestRegistry.get_by_type() or discover_from_registry()."
     has_sattva_remedy: true
     allowed_files: ["vibe_core/loaders/manifest_registry.py"]
 
-  # Legacy rule (softer version, kept for backwards compatibility)
+  # Path scanning for discovery (legacy, softer)
   - id: "path_scanning_discovery"
     target: "Call"
+    dharma_pillar: "TAPAS"
     match:
       attr: "iterdir"
       context_contains: ["discover", "load", "scan"]
     severity: "MEDIUM"
-    message: "Using filesystem scanning for discovery. Fragile and implicit."
-    fix_suggestion: "Use manifest-driven discovery via ManifestRegistry instead of path scanning."
+    message: "Filesystem scanning for discovery. Violates TAPAS (austerity) - fragile."
+    fix_suggestion: "Use manifest-driven discovery via ManifestRegistry instead."
     has_sattva_remedy: true
 
-  # ANTI-PATTERN: Global module-level singletons
+  # ============================================================================
+  # SATYAM (Truth) - No hallucination, no type lies
+  # ============================================================================
+
+  # get_instance() singleton statt ServiceRegistry
+  - id: "get_instance_antipattern"
+    target: "Call"
+    dharma_pillar: "SATYAM"
+    match:
+      attr: "get_instance"
+    severity: "HIGH"
+    message: "Using .get_instance() singleton. Violates SATYAM (truth) - hides dependencies."
+    fix_suggestion: "Replace X.get_instance() with ServiceRegistry.get(XProtocol)"
+    has_sattva_remedy: true
+
+  # Direct instantiation statt DI
+  - id: "direct_registry_instantiation"
+    target: "Call"
+    dharma_pillar: "SATYAM"
+    match:
+      func_in: ["ToolRegistry", "UnifiedRegistry", "CartridgeRegistry"]
+    severity: "MEDIUM"
+    message: "Direct Registry instantiation. Violates SATYAM (truth) - hidden coupling."
+    fix_suggestion: "Use ServiceRegistry.get(ToolRegistry) instead of ToolRegistry()"
+    has_sattva_remedy: true
+
+  # Global module-level singletons
   - id: "global_singleton_dict"
     target: "Assign"
+    dharma_pillar: "SATYAM"
     match:
       name_pattern: "_instances"
       value_type: "Dict"
       context: "module_level"
     severity: "LOW"
-    message: "Global _instances dict for singleton pattern. Legacy pattern."
+    message: "Global _instances dict. Violates SATYAM (truth) - hidden state."
     fix_suggestion: "Migrate to ServiceRegistry for consistent DI."
     has_sattva_remedy: false
 
-  # ============================================================================
-  # OPUS-XXX: TYPING DISCIPLINE (Yantra)
-  # "Any ist verboten. Wenn du Any schreibst, hast du das Datenmodell nicht verstanden."
-  # ============================================================================
-
-  # TODSÜNDE: Any Usage (SATYAM - Truth, no hallucination of types)
+  # Any type usage (SATYAM - no type hallucination)
   - id: "any_type_usage"
     target: "Name"
+    dharma_pillar: "SATYAM"
     match:
       name: "Any"
     severity: "MEDIUM"
-    message: "Any type usage detected. Violates DharmaPillar.SATYAM (truth in types)."
-    fix_suggestion: "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data."
-    has_sattva_remedy: true  # AnyTypeRemedy removes unused Any imports
-    # NOTE: Full Any replacement requires manual type inference - remedy only handles unused imports
+    message: "Any type usage detected. Violates SATYAM (truth) - type hallucination."
+    fix_suggestion: "Replace Any with concrete type, Protocol, or TypeVar."
+    has_sattva_remedy: true
 
   # ============================================================================
   # STRUCTURAL RULES (require semantic analysis, not just AST)
