@@ -153,6 +153,10 @@ class NagaProxy(Generic[T]):
             "_nagas_resolved",
             "_observation_buffer",
             "_audit_enabled",
+            # IDENTITY (Vedic Stack - introspected from target)
+            "_position",
+            "_guardian",
+            "_genesis",
         ]
     )
 
@@ -187,7 +191,27 @@ class NagaProxy(Generic[T]):
         # Observation buffer for batch reporting
         object.__setattr__(self, "_observation_buffer", [])
 
-        logger.debug(f"NagaProxy wrapping {self._service_name}")
+        # IDENTITY INTROSPECTION (Vedic Stack)
+        # NagaProxy "sees" the identity of its target if wrapped by MahamantraProxy
+        # or if target has __mahajana__/__position__ declarations.
+        position = getattr(wrapped, "_position", -1)
+        guardian = getattr(wrapped, "_guardian", "unknown")
+        genesis = getattr(wrapped, "_genesis", "")
+
+        # Also check module-level declarations (__mahajana__, __position__)
+        if position == -1 and hasattr(wrapped, "__position__"):
+            position = wrapped.__position__
+        if guardian == "unknown" and hasattr(wrapped, "__mahajana__"):
+            guardian = wrapped.__mahajana__
+        if not genesis and hasattr(wrapped, "__genesis__"):
+            genesis = wrapped.__genesis__
+
+        object.__setattr__(self, "_position", position)
+        object.__setattr__(self, "_guardian", guardian)
+        object.__setattr__(self, "_genesis", genesis)
+
+        identity_info = f" [{guardian}@{position}]" if position >= 0 else ""
+        logger.debug(f"NagaProxy wrapping {self._service_name}{identity_info}")
 
     def _resolve_nagas(self) -> None:
         """
@@ -355,6 +379,10 @@ class NagaProxy(Generic[T]):
                 "result_type": observation.result_type or "",
                 "exception_type": observation.exception_type or "",
                 "timestamp": observation.timestamp.isoformat(),
+                # IDENTITY (Vedic Stack - Narada sees WHO is acting)
+                "position": object.__getattribute__(self, "_position"),
+                "guardian": object.__getattribute__(self, "_guardian"),
+                "genesis": object.__getattribute__(self, "_genesis"),
             }
 
             # ONE call to Narada - Narada routes internally

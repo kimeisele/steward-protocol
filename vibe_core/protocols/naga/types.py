@@ -223,6 +223,10 @@ class ObservationDict(TypedDict, total=False):
 
     This is the ONE type that flows from proxy to Narada.
     Narada routes internally - proxy doesn't know about other NAGAs.
+
+    IDENTITY FIELDS (Vedic Stack Integration):
+    NagaProxy introspects its target for Mahajana identity.
+    If target is wrapped by MahamantraProxy, Narada sees WHO is acting.
     """
 
     service_type: str
@@ -233,6 +237,11 @@ class ObservationDict(TypedDict, total=False):
     result_type: str
     exception_type: str
     timestamp: str
+
+    # IDENTITY (from MahamantraProxy or __mahajana__ declarations)
+    position: int  # 0-15 Mahajana position (-1 = unknown)
+    guardian: str  # Mahajana name ("unknown" if not set)
+    genesis: str  # GenesisByte hash (empty if not set)
 
 
 class ErrorContext(TypedDict, total=False):

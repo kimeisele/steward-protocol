@@ -214,6 +214,79 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
     # Agent Registration (The Primary Creation Logic)
     # =========================================================================
 
+    def _born_agent(
+        self,
+        raw_agent: object,
+        *,
+        with_observation: bool = True,
+        with_vitality: bool = False,
+        entropy_load: float = 0.3,
+    ) -> object:
+        """
+        The Vedic Stack - Agent Birth Ceremony.
+
+        Stacks the three aspects onto a raw agent like armor pieces:
+        1. IDENTITY (MahamantraProxy) - "Who are you?" (position, guardian)
+        2. OBSERVATION (NagaProxy) - "What do you do?" (Narada sees all)
+        3. VITALITY (iGeneProxy) - "Do you live?" (entropy vs coherence) [OPTIONAL]
+
+        Args:
+            raw_agent: The naked agent instance
+            with_observation: Apply NagaProxy layer (default: True)
+            with_vitality: Apply iGeneProxy layer (default: False - immortal)
+            entropy_load: Initial entropy for mortal agents (0.0-1.0)
+
+        Returns:
+            The fully armored agent (stacked proxies)
+
+        Philosophy:
+            "We don't build monolithic citizens. We dress them in armor."
+            Modular: Skip layers for special agents (immortal, secret, etc.)
+        """
+        agent_id = getattr(raw_agent, "agent_id", "unknown")
+
+        # Extract identity from agent (if declared)
+        position = getattr(raw_agent, "__position__", -1)
+        guardian = getattr(raw_agent, "__mahajana__", "unknown")
+
+        # If no identity, assign "Gastarbeiter" status (Tamas lane, position -1)
+        if position == -1:
+            # Check manifest for hints
+            manifest = getattr(raw_agent, "get_manifest", lambda: None)()
+            if manifest:
+                # Could derive position from capabilities in future
+                pass
+            logger.debug(f"🚶 Agent '{agent_id}' has no Mahajana identity (Gastarbeiter)")
+
+        # LAYER 1: IDENTITY (MahamantraProxy)
+        from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
+
+        armored = MahamantraProxy(raw_agent, position=position, guardian=guardian)
+        logger.debug(f"🛡️ Layer 1: Identity [{guardian}@{position}] for '{agent_id}'")
+
+        # LAYER 2: OBSERVATION (NagaProxy) - Narada sees all
+        if with_observation:
+            from vibe_core.naga.proxy import NagaProxy
+
+            armored = NagaProxy(armored)
+            logger.debug(f"👁️ Layer 2: Observation (Narada) for '{agent_id}'")
+
+        # LAYER 3: VITALITY (iGeneProxy) - Can die from entropy [OPTIONAL]
+        if with_vitality:
+            from vibe_core.protocols.naga.proxy import NagaProxy as iGeneProxy
+            from vibe_core.protocols.substrate.gene import iGene
+            from vibe_core.mahamantra.substrate.byte import MantraByte
+
+            gene = iGene(
+                entropy_load=entropy_load,
+                mantra_shield=MantraByte.standard_16(),
+                mutation_vector=0,
+            )
+            armored = iGeneProxy(armored, gene)
+            logger.debug(f"💀 Layer 3: Vitality (entropy={entropy_load}) for '{agent_id}'")
+
+        return armored
+
     def register_agent(self, kernel: object, agent: object, spawn_process: bool = True) -> None:
         """
         Register an agent and inject kernel reference.
@@ -237,9 +310,19 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
                 if not plugin.on_agent_pre_register(kernel, agent):
                     raise PermissionError(f"PLUGIN_VETO: Agent '{agent_id}' registration denied")
 
-        # STEP 4: THE REGISTRATION
+        # VEDIC STACK: Birth ceremony - dress the agent in armor
+        # Layer 1: Identity (MahamantraProxy)
+        # Layer 2: Observation (NagaProxy) - Narada sees all
+        # Layer 3: Vitality (optional) - only for mortal agents
+        armored_agent = self._born_agent(
+            agent,
+            with_observation=True,
+            with_vitality=False,  # Agents are immortal by default
+        )
+
+        # STEP 4: THE REGISTRATION (now with armor)
         agent_registry = getattr(kernel, "_agent_registry", {})
-        agent_registry[agent_id] = agent
+        agent_registry[agent_id] = armored_agent
 
         # STEP 4.5: SECURITY - Register capabilities
         agent_caps = getattr(agent, "capabilities", [])

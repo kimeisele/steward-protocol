@@ -184,6 +184,23 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             logging.getLogger("MAHAMANTRA").info("🙏 Mahamantra bootstrap complete")
 
+    # === SINGULARITY ACCESS (Tick System) ===
+    @property
+    def _singularity(self):
+        """Lazy-load the Singularity for tick/listener operations."""
+        if not hasattr(self, "_singularity_instance"):
+            from vibe_core.mahamantra.kernel.singularity import Mahamantra as MahamantraSingularity
+            self._singularity_instance = MahamantraSingularity()
+        return self._singularity_instance
+
+    def register_listener(self, callback) -> None:
+        """Register a listener for tick events. Delegates to Singularity."""
+        self._singularity.register_listener(callback)
+
+    def tick(self):
+        """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
+        return self._singularity.tick()
+
     # === SHADOW REACTOR ACCESS ===
     @property
     def shadow(self) -> "ShadowReactorFactory":
