@@ -297,8 +297,123 @@ def cli_resolve(
         return result
 
 
+# =============================================================================
+# SERVE - Task Execution (Pada Sevanam - Serving the Feet)
+# =============================================================================
+
+
+class ServeResult(TypedDict):
+    """Typed result for cli_serve command (PADA_SEVANAM - Execution)."""
+    success: bool
+    bhakti: str  # NavaBhakti.PADA_SEVANAM
+    task_id: str
+    task_name: str
+    status: str  # "queued", "executed", "failed"
+    execution_time_ms: int
+    message: str
+
+
+def cli_serve(
+    task: str,
+    execute: bool = False,
+    priority: str = "",
+    json: bool = False,
+) -> ServeResult:
+    """
+    CLI Entry Point for Serve command.
+
+    PADA_SEVANAM (Serving the Feet) - Execution of duty.
+    "Janaka acts without attachment. The work is the offering."
+
+    Submits tasks to JanakaService for execution.
+    The task enters the queue and can be executed immediately.
+
+    Args:
+        task: Task description to execute
+        execute: If True, execute immediately (default: queue only)
+        priority: Task priority (critical, high, normal, low)
+        json: Output as JSON
+
+    Returns:
+        ServeResult with task status.
+    """
+    from datetime import datetime
+
+    from vibe_core.services.janaka_service import JanakaService
+    from vibe_core.protocols.mahajanas.janaka import TaskPriority
+
+    # Map priority string to enum (default to normal if empty)
+    priority = priority or "normal"
+    priority_map = {
+        "critical": TaskPriority.CRITICAL,
+        "high": TaskPriority.HIGH,
+        "normal": TaskPriority.NORMAL,
+        "low": TaskPriority.LOW,
+    }
+    task_priority = priority_map.get(priority.lower(), TaskPriority.NORMAL)
+
+    # Get JanakaService (The Executor)
+    janaka = JanakaService()
+
+    start_time = datetime.now()
+
+    # Submit the task
+    task_id = janaka.submit(
+        name=task[:50],  # Truncate long names
+        task_input=task,
+        priority=task_priority,
+        sovereign_id="cli_serve",
+    )
+
+    status = "queued"
+    message = f"Task queued with priority {priority}"
+    exec_time_ms = 0
+
+    # Execute if requested
+    if execute:
+        exec_result = janaka.execute(task_id)
+        exec_time_ms = exec_result.get("execution_time_ms", 0)
+
+        if exec_result.get("success"):
+            status = "executed"
+            message = exec_result.get("output_repr", "Task executed")
+        else:
+            status = "failed"
+            message = exec_result.get("error_message", "Execution failed")
+
+    end_time = datetime.now()
+    total_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+    result = ServeResult(
+        success=status != "failed",
+        bhakti=NavaBhakti.PADA_SEVANAM.value,
+        task_id=task_id,
+        task_name=task[:50],
+        status=status,
+        execution_time_ms=exec_time_ms or total_time_ms,
+        message=message,
+    )
+
+    # === PRESENTATION ===
+    if not json:
+        print("=" * 60)
+        print(f"MAHAMANTRA SERVE - Pada Sevanam")
+        print("=" * 60)
+        print(f"  Task:     {task[:50]}{'...' if len(task) > 50 else ''}")
+        print(f"  ID:       {task_id}")
+        print(f"  Priority: {priority.upper()}")
+        print(f"  Status:   {status.upper()}")
+        print(f"  Time:     {result['execution_time_ms']}ms")
+        print("-" * 60)
+        print(f"  {message}")
+        print("=" * 60)
+
+    return result
+
+
 __all__ = [
     "cli_chant", "ChantResult",
     "cli_listen", "ListenResult", "EventEntry",
     "cli_resolve", "ResolveResult",
+    "cli_serve", "ServeResult",
 ]
