@@ -53,6 +53,9 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES as _PROTO_QUALITIES,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    HIDDEN_RESERVE as _PROTO_HIDDEN_RESERVE,
+)
+from vibe_core.mahamantra.protocols._seed import (
     QUARTERS as _PROTO_QUARTERS,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -417,6 +420,7 @@ assert PARAMPARA == _PROTO_PARAMPARA, "SSOT violation: PARAMPARA != protocols/_s
 assert LILA == _PROTO_LILA, "SSOT violation: LILA != protocols/_seed.py"
 assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
 assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
+assert HIDDEN_RESERVE == _PROTO_HIDDEN_RESERVE, "SSOT violation: HIDDEN_RESERVE != protocols/_seed.py"
 assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)

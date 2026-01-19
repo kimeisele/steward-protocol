@@ -128,6 +128,11 @@ AKSARA_COUNT: Final[int] = WORDS * 2  # 32
 # WORDS × QUARTERS = 16 × 4 = 64 (Varna level)
 QUALITIES: Final[int] = WORDS * QUARTERS  # 64
 
+# The Hidden Reserve (64 - 48 = 16)
+# Full Potential - Manifest Runtime = The Seed Itself
+# In system terms: 64-bit capacity - 48-bit runtime = 16-bit kernel
+HIDDEN_RESERVE: Final[int] = QUALITIES - LILA  # 64 - 48 = 16
+
 ROUNDS: Final[int] = WORDS  # 16 rounds per day (minimum)
 DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
 
@@ -155,6 +160,9 @@ assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "Guardian count mismatch (4+12 !=
 
 # 4. Nava Derivation: 8 Shakti (Hare) + 1 Knower (Krishna) = 9 Processes (Navadha Bhakti)
 assert NAVA == HARE_COUNT + KSETRAJNA, "Integrity Error: Nava derivation mismatch (9 != 8+1)"
+
+# 5. Hidden Reserve: The difference between Full (64) and Manifest (48) = Seed (16)
+assert HIDDEN_RESERVE == WORDS, "Integrity Error: Hidden reserve must equal WORDS (16)"
 
 # =============================================================================
 # EXPORTS
@@ -192,6 +200,7 @@ __all__ = [
     "KSHETRA_GAD",
     "AKSARA_COUNT",
     "QUALITIES",
+    "HIDDEN_RESERVE",
     "ROUNDS",
     "DAILY_MANTRAS",
     # The Hidden Bridge
