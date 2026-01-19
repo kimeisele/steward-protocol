@@ -188,20 +188,29 @@ class MahamantraCLIBridge:
         Route and execute a CLI command.
 
         Flow:
-        1. Delegate to cli_engine.execute()
-        2. cli_engine handles routing, execution, state, health
+        1. Try cli_engine.execute() (new mahamantra handlers)
+        2. If not registered, fallback to CLIRegistry (legacy handlers)
         3. Return BridgeResult
 
-        Returns BridgeResult with execution details.
+        ROYAL DELEGATION: New handlers via cli_engine, legacy via CLIRegistry.
         """
         # Import cli_engine here to avoid circular import at module load
         from vibe_core.mahamantra.cli.engine import cli_engine
+        from vibe_core.mahamantra.cli.protocol import CLIErrorCode
 
         # Get position for reporting
         position = cli_engine.get_position(command)
 
         # Execute via cli_engine (Krishna does the work)
         result = cli_engine.execute(command, args)
+
+        # If not implemented in cli_engine, try legacy fallback
+        if (
+            self._fallback_enabled
+            and result.error
+            and result.error.code in (CLIErrorCode.NOT_IMPLEMENTED, CLIErrorCode.UNKNOWN_COMMAND)
+        ):
+            return self._fallback_to_registry(command, args, position)
 
         return BridgeResult(
             success=result.success,
