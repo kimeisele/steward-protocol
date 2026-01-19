@@ -606,7 +606,9 @@ class UnifiedCLI:
                     "type": arg.type,
                     "default": arg.default,
                 }
-                if arg.required:
+                # Only add 'required' for optional args (those with -- prefix)
+                # Positional args are inherently required in argparse
+                if arg.required and arg.name.startswith("-"):
                     kwargs["required"] = True
 
             if arg.nargs:
