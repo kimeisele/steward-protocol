@@ -88,3 +88,27 @@ commands:
       - name: "--verbose"
         flag: true
         help: "Show each step"
+
+  # ===========================================================================
+  # LISTEN - Event Visibility (Shravanam before Kirtanam)
+  # ===========================================================================
+  - name: listen
+    handler: "vibe_core.mahamantra.commands:cli_listen"
+    help: "Listen to system events (violations, syscalls, bus)"
+    execution_mode: offline
+    options:
+      - name: "--source"
+        type: str
+        help: "Event source: violations, syscalls, all (default: all)"
+        required: false
+      - name: "--tail"
+        type: int
+        help: "Show last N entries (default: 10)"
+        required: false
+      - name: "--severity"
+        type: str
+        help: "Filter by severity: CRITICAL, HIGH, MEDIUM, LOW"
+        required: false
+      - name: "--json"
+        flag: true
+        help: "Output as JSON"
