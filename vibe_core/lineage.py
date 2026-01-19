@@ -72,7 +72,5 @@ def __getattr__(name: str) -> Any:
 
 
 # =============================================================================
-# __all__ for explicit exports (optional, for IDE support)
+# NOTE: No __all__ - this is a dynamic proxy module using __getattr__
 # =============================================================================
-
-__all__ = ["LineageChain", "LineageBlock", "LineageEventType"]

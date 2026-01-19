@@ -76,7 +76,6 @@ def __getattr__(name: str) -> Any:
 
 
 # =============================================================================
-# __all__ for explicit exports (optional, for IDE support)
+# NOTE: No __all__ - this is a dynamic proxy module using __getattr__
+# Classes like BootMode are loaded at runtime from position 0's types module
 # =============================================================================
-
-__all__ = ["BootMode"]

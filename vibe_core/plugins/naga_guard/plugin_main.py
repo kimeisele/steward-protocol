@@ -218,7 +218,7 @@ class NagaGuardPlugin(KernelPlugin):
         except Exception as e:
             logger.debug(f"[NAGA] EventBus wiring failed: {e}")
 
-    def _wire_commit_watcher(self, kernel: "RealVibeKernel") -> None:
+    def _wire_commit_watcher(self, kernel: "KernelProtocol") -> None:
         """Wire CommitAuthority to CommitWatcher."""
         if not self._orchestrator or not self._orchestrator.commit_watcher:
             return
@@ -244,7 +244,7 @@ class NagaGuardPlugin(KernelPlugin):
         except Exception as e:
             logger.debug(f"[NAGA] CommitWatcher wiring failed: {e}")
 
-    def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+    def on_shutdown(self, kernel: "KernelProtocol") -> HookResult:
         """Log final stats on shutdown."""
         stats = self._stats.to_dict()
         logger.info(f"[NAGA] Shutdown stats: {stats}")
@@ -255,7 +255,7 @@ class NagaGuardPlugin(KernelPlugin):
 
         return HookResult.ok()
 
-    def on_tick_post(self, kernel: "RealVibeKernel") -> None:
+    def on_tick_post(self, kernel: "KernelProtocol") -> None:
         """
         Post-tick observation hook.
 
@@ -307,7 +307,7 @@ class NagaGuardPlugin(KernelPlugin):
     # AGENT REGISTRATION GATE
     # =========================================================================
 
-    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: object) -> bool:
+    def on_agent_pre_register(self, kernel: "KernelProtocol", agent: object) -> bool:
         """
         AGENT GATE: Scan agent for toxicity before registration.
 
@@ -374,7 +374,7 @@ class NagaGuardPlugin(KernelPlugin):
     # TASK SUBMISSION GATE
     # =========================================================================
 
-    def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
+    def on_task_submit(self, kernel: "KernelProtocol", task: "Task") -> bool:
         """
         COSMIC GATE: Scan task content before entering queue.
 
@@ -437,7 +437,7 @@ class NagaGuardPlugin(KernelPlugin):
 
     def on_task_pre_assign(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         agent_id: str,
         task: "Task",
     ) -> bool:
@@ -474,7 +474,7 @@ class NagaGuardPlugin(KernelPlugin):
 
     def on_tool_execute(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         agent_id: str,
         tool_name: str,
         parameters: dict,
@@ -526,7 +526,7 @@ class NagaGuardPlugin(KernelPlugin):
 
     def on_tool_executed(
         self,
-        kernel: "RealVibeKernel",
+        kernel: "KernelProtocol",
         agent_id: str,
         tool_name: str,
         parameters: dict,

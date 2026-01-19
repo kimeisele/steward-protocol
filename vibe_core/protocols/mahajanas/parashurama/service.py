@@ -22,7 +22,10 @@ __position__ = 8
 __genesis__ = "0x88c86a07"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.kernel_protocol import KernelProtocol
 
 from vibe_core.protocols.mahajanas.parashurama import (
     ParashuramaProtocolBase,
@@ -51,7 +54,7 @@ class ParashuramaService(ParashuramaProtocolBase):
     Position 8 - The warrior HEAD, executes decisive action.
     """
 
-    def __init__(self, kernel: Optional["RealVibeKernel"] = None) -> None:
+    def __init__(self, kernel: Optional["KernelProtocol"] = None) -> None:
         """Initialize with optional kernel for syscall execution."""
         self._kernel = kernel
         self._executor: Optional[SemanticSyscallExecutor] = None
@@ -191,7 +194,7 @@ class ParashuramaService(ParashuramaProtocolBase):
         """Access the legacy syscall executor."""
         return self._ensure_executor()
 
-    def set_kernel(self, kernel: "RealVibeKernel") -> None:
+    def set_kernel(self, kernel: "KernelProtocol") -> None:
         """Set kernel for syscall execution."""
         self._kernel = kernel
         self._executor = None  # Reset to pick up new kernel
