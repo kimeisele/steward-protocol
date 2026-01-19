@@ -153,6 +153,9 @@ assert MALA == MAHAJANA_COUNT * NAVA, "Integrity Error: Mala geometry mismatch (
 # 3. Guardian Completeness: 4 Avatars + 12 Mahajanas = 16 Words
 assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "Guardian count mismatch (4+12 != 16)"
 
+# 4. Nava Derivation: 8 Shakti (Hare) + 1 Knower (Krishna) = 9 Processes (Navadha Bhakti)
+assert NAVA == HARE_COUNT + KSETRAJNA, "Integrity Error: Nava derivation mismatch (9 != 8+1)"
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
