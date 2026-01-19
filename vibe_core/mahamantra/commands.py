@@ -117,17 +117,8 @@ def cli_chant(
 # LISTEN - Event Visibility (Shravanam before Kirtanam)
 # =============================================================================
 
-
-class EventEntry(TypedDict, total=False):
-    """Single event entry from any source."""
-    timestamp: str
-    source: str
-    severity: str
-    message: str
-    file_path: str
-    rule_id: str
-    syscall_type: str
-    result: str
+# EventEntry comes from the Priester (event_bridge) - no file I/O here
+from vibe_core.mahamantra.cli.event_bridge import EventEntry, get_events
 
 
 class ListenResult(TypedDict):
@@ -152,9 +143,8 @@ def cli_listen(
     SHRAVANAM (Hearing) - The first process of devotional service.
     Before you chant, you must hear.
 
-    Reads from:
-    - violations.jsonl (Watchman code violations)
-    - syscalls.jsonl (System calls log)
+    The Temple receives clean offerings from the Priest (event_bridge).
+    No file I/O here - that's the Priest's work.
 
     Args:
         source: Event source (violations, syscalls, all)
@@ -165,83 +155,18 @@ def cli_listen(
     Returns:
         ListenResult with event entries.
     """
-    import json as json_module
-    from pathlib import Path
+    # The Priest fetches the offerings (event_bridge handles all I/O)
+    entries, total_entries = get_events(
+        source=source,
+        limit=tail,
+        severity_filter=severity if severity else None,
+    )
 
-    # JSONL file locations
-    # NOTE: Violations are written to data/ledger/ by watchdog_tool.py
-    # Syscalls are written to .vibe/state/plugins/ by state_manager.py
-    # TODO: Consolidate to StateService for unified event hub (Naga 2060)
-    sources_map = {
-        "violations": Path("data/ledger/violations.jsonl"),
-        "syscalls": Path(".vibe/state/plugins/opus_assistant/syscalls.jsonl"),
-    }
-
-    entries: List[EventEntry] = []
-
-    # Determine which sources to read
-    if source == "all":
-        sources_to_read = list(sources_map.keys())
-    elif source in sources_map:
-        sources_to_read = [source]
-    else:
-        sources_to_read = list(sources_map.keys())
-
-    # Read from each source
-    for src_name in sources_to_read:
-        src_path = sources_map[src_name]
-        if not src_path.exists():
-            continue
-
-        try:
-            with open(src_path, "r") as f:
-                lines = f.readlines()
-
-            # Parse JSONL
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    data = json_module.loads(line)
-
-                    # Normalize to EventEntry format
-                    entry: EventEntry = {
-                        "source": src_name,
-                        "timestamp": data.get("ingested_at") or data.get("timestamp", ""),
-                    }
-
-                    if src_name == "violations":
-                        entry["severity"] = data.get("severity", "")
-                        entry["message"] = data.get("message", "")
-                        entry["file_path"] = data.get("file_path", "")
-                        entry["rule_id"] = data.get("rule_id", "")
-                    elif src_name == "syscalls":
-                        entry["syscall_type"] = data.get("syscall_type", "")
-                        entry["result"] = data.get("result", "")
-                        entry["message"] = data.get("intent", "")
-
-                    entries.append(entry)
-                except json_module.JSONDecodeError:
-                    continue
-        except Exception:
-            continue
-
-    total_entries = len(entries)
-
-    # Filter by severity if specified
-    if severity:
-        severity_upper = severity.upper()
-        entries = [e for e in entries if e.get("severity", "").upper() == severity_upper]
-
-    # Sort by timestamp (newest first) and take tail
-    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
-    entries = entries[:tail]
-
-    # Output
+    # === PRESENTATION ONLY (The Temple's work) ===
     if not json:
         print("=" * 70)
-        print(f"MAHAMANTRA LISTEN - Shravanam (source={source}, tail={tail})")
+        display_source = source if source else "all"
+        print(f"MAHAMANTRA LISTEN - Shravanam (source={display_source}, tail={tail})")
         print("=" * 70)
 
         if not entries:
