@@ -47,26 +47,8 @@ SHARANAGATI: Final[int] = 6
 # The 9 Islands (Navadvipa) & 9 Processes (Navadha Bhakti)
 NAVA: Final[int] = 9
 
-# The 48 Lila (16 * 3) - Chaitanya's Manifest
-# Sri Chaitanya lived 48 years: 24 Navadvipa + 24 Puri
+# The 48 Lila (16 * 3)
 LILA: Final[int] = 48
-
-# The 50 Jiva Qualities (out of Krishna's 64)
-# Bhakti-rasamrita-sindhu: Jiva possesses 50 qualities in minute quantity
-JIVA_QUALITIES: Final[int] = 50
-
-# The 2 Filter (Bhukti + Mukti)
-# To enter Lila (48), Jiva (50) must drop these 2:
-# - Bhukti (desire for material enjoyment)
-# - Mukti (desire for impersonal liberation)
-BHUKTI_MUKTI: Final[int] = 2
-
-# WATERTIGHT INTEGRITY CHECK:
-# Jiva (50) - Filter (2) = Lila (48)
-# The Jiva must shed Bhukti and Mukti to enter the divine Lila
-assert JIVA_QUALITIES - BHUKTI_MUKTI == LILA, (
-    "CRITICAL FAILURE: Jiva (50) - Filter (2) must equal Lila (48)"
-)
 
 # The 108 Mala (12 * 9)
 MALA: Final[int] = 108
@@ -196,8 +178,6 @@ __all__ = [
     "SHARANAGATI",
     "NAVA",
     "LILA",
-    "JIVA_QUALITIES",
-    "BHUKTI_MUKTI",
     "MALA",
     # The Cosmic Frame (New Resolution)
     "COSMIC_FRAME",
