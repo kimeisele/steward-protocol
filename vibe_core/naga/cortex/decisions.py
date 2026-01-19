@@ -51,6 +51,7 @@ class DecisionAction(Enum):
 
     NONE = auto()  # No action needed
     BITE = auto()  # Security threat → Takshaka
+    QUARANTINE = auto()  # Isolate component → Kaliya (SMART WIRING)
     HEAL = auto()  # Structural violation → Shuddhi
     ROUTE = auto()  # Routing adjustment → Envoy
     CONSULT = auto()  # Context update → Manas
@@ -70,6 +71,7 @@ class DecisionReasonCode(Enum):
     D004_COGNITIVE_UPDATE = "D004"
     D005_NO_ACTION = "D005"
     D006_ESCALATION_REQUIRED = "D006"
+    D007_QUARANTINE_REQUIRED = "D007"  # SMART WIRING: Isolation needed
 
 
 @dataclass
@@ -184,6 +186,17 @@ def decide_bite(source: str, reasoning: str = "") -> CortexDecision:
         reasoning=reasoning or f"Security threat from {source}",
         confidence=0.9,
         reason_code=DecisionReasonCode.D001_SECURITY_THREAT,
+    )
+
+
+def decide_quarantine(component_id: str, reasoning: str = "") -> CortexDecision:
+    """Component should be isolated - Kaliya should quarantine (SMART WIRING)."""
+    return CortexDecision(
+        action=DecisionAction.QUARANTINE,
+        target=component_id,
+        reasoning=reasoning or f"Isolation required for {component_id}",
+        confidence=0.85,
+        reason_code=DecisionReasonCode.D007_QUARANTINE_REQUIRED,
     )
 
 

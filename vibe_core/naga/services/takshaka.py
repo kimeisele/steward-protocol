@@ -427,6 +427,10 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
             # Track for deduplication
             self._seen_violations[violation_hash] = event_id
 
+            # SMART WIRING: Deliver criminal to Kaliya (Prison)
+            # Polizei verhaftet → Gefängnis übernimmt
+            self._deliver_to_kaliya(violation, event_id)
+
             # LRU: Trim oldest when exceeding max
             while len(self._seen_violations) > self._seen_violations_max:
                 self._seen_violations.popitem(last=False)
@@ -440,6 +444,37 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
             sys.stderr.write(f"!!! TAKSHAKA FATAL: BITE EXCEPTION: {e}\n")
             self._errors += 1
             return f"FATAL_EXCEPTION_{time.time()}"
+
+    def _deliver_to_kaliya(self, violation: VajraViolation, event_id: str) -> None:
+        """
+        SMART WIRING: Deliver bitten criminal to Kaliya (Prison).
+
+        Polizei (Takshaka) verhaftet → Gefängnis (Kaliya) übernimmt.
+        Uses ServiceRegistry, not hard import - future-proof for event-driven.
+
+        FAIL-OPEN: If Kaliya unavailable, log but don't crash.
+        The violation is already recorded in Sesha.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import KaliyaProtocol
+
+            kaliya = ServiceRegistry.get(KaliyaProtocol)
+            if not kaliya:
+                logger.debug("[TAKSHAKA] Kaliya not available - quarantine skipped")
+                return
+
+            # Quarantine the source of the violation
+            kaliya.quarantine(
+                component_id=violation.source,
+                reason=f"TAKSHAKA_BITE: {violation.violation_type} (ref: {event_id})",
+            )
+            logger.info(f"[TAKSHAKA] 🐍→🏛️ Delivered {violation.source} to Kaliya")
+
+        except Exception as e:
+            # FAIL-OPEN: Don't crash if Kaliya fails
+            # Violation is already in Sesha - that's the audit trail
+            logger.warning(f"[TAKSHAKA] Kaliya delivery failed: {e}")
 
     # =========================================================================
     # SecurityProtocol Implementation (Interface Group - Seva for Prahlad)

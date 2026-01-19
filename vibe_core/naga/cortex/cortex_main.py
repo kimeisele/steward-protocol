@@ -560,6 +560,9 @@ class NagaCortex:
         if decision.action == DecisionAction.BITE:
             result = self._dispatch_to_takshaka(decision)
             target = "takshaka"
+        elif decision.action == DecisionAction.QUARANTINE:
+            result = self._dispatch_to_kaliya(decision)
+            target = "kaliya"
         elif decision.action == DecisionAction.HEAL:
             result = self._dispatch_to_shuddhi(decision)
             target = "shuddhi"
@@ -701,6 +704,32 @@ class NagaCortex:
             status="ESCALATED",
             details={"reason": decision.reasoning},
         )
+
+    def _dispatch_to_kaliya(self, decision: CortexDecision) -> DispatchResult:
+        """
+        SMART WIRING: Quarantine component via Kaliya.
+
+        Uses ServiceRegistry, not hard import - future-proof for event-driven.
+        Cortex can directly order quarantine without going through Takshaka.
+        """
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.naga import KaliyaProtocol
+
+            kaliya = ServiceRegistry.get(KaliyaProtocol)
+            if not kaliya:
+                return DispatchResult(status="UNAVAILABLE")
+
+            kaliya.quarantine(
+                component_id=decision.target or "unknown",
+                reason=f"CORTEX_QUARANTINE: {decision.reasoning}",
+            )
+            logger.warning(f"[CORTEX] 🏛️ QUARANTINE executed: {decision.target}")
+            return DispatchResult(status="QUARANTINED", details={"target": decision.target})
+
+        except Exception as e:
+            logger.error(f"[CORTEX] QUARANTINE failed: {e}")
+            return DispatchResult(status="FAILED", details={"error": str(e)})
 
     # =========================================================================
     # API / STATUS
