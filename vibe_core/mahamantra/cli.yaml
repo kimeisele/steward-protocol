@@ -145,3 +145,27 @@ commands:
       - name: "--json"
         flag: true
         help: "Output as JSON"
+
+  # ===========================================================================
+  # VEDA - Veda-Explorer Interface (ATMA_NIVEDANAM - Self-Surrender)
+  # ===========================================================================
+  - name: veda
+    handler: "vibe_core.mahamantra.commands:cli_veda"
+    help: "Veda-Explorer - Neuro-Symbolic Chat Interface (steward chat → MANAS, steward veda → VedaExplorer)"
+    bhakti: atma_nivedanam
+    execution_mode: offline
+    options:
+      - name: "--message"
+        type: str
+        help: "Message to process (or use positional after options)"
+        required: false
+      - name: "--mode"
+        type: str
+        help: "Explorer mode: restricted, enhanced, creative (default: enhanced)"
+        required: false
+      - name: "--interactive"
+        flag: true
+        help: "Run in interactive REPL mode"
+      - name: "--json"
+        flag: true
+        help: "Output as JSON"

@@ -411,9 +411,128 @@ def cli_serve(
     return result
 
 
+# =============================================================================
+# VEDA - Veda-Explorer Interface (ATMA_NIVEDANAM - Complete Self-Surrender)
+# =============================================================================
+
+
+class VedaCLIResult(TypedDict):
+    """Typed result for cli_veda command (ATMA_NIVEDANAM - Self-Surrender)."""
+    success: bool
+    bhakti: str  # NavaBhakti.ATMA_NIVEDANAM
+    mode: str  # "restricted", "enhanced", "creative"
+    intent: str
+    response: str
+    llm_used: bool
+
+
+def cli_veda(
+    message: str = "",
+    mode: str = "enhanced",
+    interactive: bool = False,
+    json: bool = False,
+) -> VedaCLIResult:
+    """
+    CLI Entry Point for Veda command.
+
+    ATMA_NIVEDANAM (Self-Surrender) - Complete dedication.
+    "Whatever you do, offer it to Me." (BG 9.27)
+
+    The Veda-Explorer chat interface - neuro-symbolic processing.
+    Deterministic first, LLM fallback.
+
+    Args:
+        message: Message to process (ignored if interactive)
+        mode: Explorer mode (restricted, enhanced, creative)
+        interactive: Run in interactive REPL mode
+        json: Output as JSON
+
+    Returns:
+        VedaCLIResult with processed response.
+    """
+    from vibe_core.mahamantra.cli.veda_explorer import (
+        ExplorerMode,
+        VedaExplorer,
+    )
+
+    # Map mode string to enum
+    mode_map = {
+        "restricted": ExplorerMode.RESTRICTED,
+        "enhanced": ExplorerMode.ENHANCED,
+        "creative": ExplorerMode.CREATIVE,
+    }
+    explorer_mode = mode_map.get(mode.lower(), ExplorerMode.ENHANCED)
+
+    # Create explorer
+    explorer = VedaExplorer(mode=explorer_mode)
+
+    # Interactive mode
+    if interactive:
+        explorer.repl()
+        return VedaCLIResult(
+            success=True,
+            bhakti=NavaBhakti.ATMA_NIVEDANAM.value,
+            mode=explorer_mode.value,
+            intent="repl",
+            response="REPL session ended.",
+            llm_used=False,
+        )
+
+    # Single message mode
+    if not message:
+        result = VedaCLIResult(
+            success=False,
+            bhakti=NavaBhakti.ATMA_NIVEDANAM.value,
+            mode=explorer_mode.value,
+            intent="empty",
+            response="No message provided. Use --interactive for REPL mode.",
+            llm_used=False,
+        )
+        if not json:
+            print("=" * 60)
+            print("VEDA EXPLORER - Atma Nivedanam")
+            print("=" * 60)
+            print("  ERROR: No message provided.")
+            print("  Use --interactive for REPL mode.")
+            print("  Or: steward chat 'your message here'")
+            print("=" * 60)
+        return result
+
+    # Process message
+    veda_result = explorer.process(message)
+
+    result = VedaCLIResult(
+        success=veda_result.get("success", False),
+        bhakti=NavaBhakti.ATMA_NIVEDANAM.value,
+        mode=explorer_mode.value,
+        intent=veda_result.get("intent", "unknown"),
+        response=veda_result.get("response", ""),
+        llm_used=veda_result.get("llm_used", False),
+    )
+
+    # === PRESENTATION ===
+    if not json:
+        print("=" * 60)
+        print("VEDA EXPLORER - Atma Nivedanam")
+        print("=" * 60)
+        print(f"  Mode: {explorer_mode.value.upper()}")
+        print(f"  LLM:  {'Available' if explorer.llm_available else 'Not available'}")
+        print("-" * 60)
+        print(f"  Input: {message}")
+        print(f"  Intent: {result['intent']}")
+        print("-" * 60)
+        print(result["response"])
+        if result["llm_used"]:
+            print("  [LLM used]")
+        print("=" * 60)
+
+    return result
+
+
 __all__ = [
     "cli_chant", "ChantResult",
     "cli_listen", "ListenResult", "EventEntry",
     "cli_resolve", "ResolveResult",
     "cli_serve", "ServeResult",
+    "cli_veda", "VedaCLIResult",
 ]
