@@ -79,6 +79,30 @@ commands:
         help: "Output as JSON"
 
   # ===========================================================================
+  # SERVE - Task Execution (PADA_SEVANAM - Serving the Feet/Execution)
+  # ===========================================================================
+  - name: serve
+    handler: "vibe_core.mahamantra.commands:cli_serve"
+    help: "Submit and execute tasks via JanakaService"
+    bhakti: pada_sevanam
+    execution_mode: offline
+    options:
+      - name: "task"
+        type: str
+        help: "Task description to execute"
+        required: true
+      - name: "--execute"
+        flag: true
+        help: "Execute immediately (default: queue only)"
+      - name: "--priority"
+        type: str
+        help: "Task priority: critical, high, normal, low (default: normal)"
+        required: false
+      - name: "--json"
+        flag: true
+        help: "Output as JSON"
+
+  # ===========================================================================
   # CHANT - Execute Mahamantra Cycle (KIRTANAM - Chanting/Emit)
   # ===========================================================================
   - name: chant
