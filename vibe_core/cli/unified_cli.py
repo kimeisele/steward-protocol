@@ -513,49 +513,79 @@ class UnifiedCLI:
             return 1
 
     def _dispatch_plugin(self, cmd: CLICommand, args: List[str]) -> int:
-        """Dispatch to plugin command handler."""
-        # Parse args based on cmd definition
+        """
+        Dispatch to plugin command handler.
+
+        CLEAN DISPATCH based on execution_mode:
+        - OFFLINE: Direct handler call (no kernel needed)
+        - HYBRID/RPC/BOOT: Use CLIExecutor (kernel interaction)
+        """
+        from .protocol import ExecutionMode
+
         parsed_args = self._parse_plugin_args(cmd, args)
         if parsed_args is None:
             return 1
 
-        # FOLDER_IS_WIRING: Direct handler call for module:function format
-        # This is simpler and avoids async issues for sync handlers
-        if cmd.handler and ":" in cmd.handler:
-            try:
-                import importlib
-                module_path, func_name = cmd.handler.rsplit(":", 1)
-                module = importlib.import_module(module_path)
-                handler_func = getattr(module, func_name)
+        # OFFLINE mode: Direct handler call (Computation on Demand)
+        if cmd.execution_mode == ExecutionMode.OFFLINE:
+            return self._call_offline_handler(cmd, parsed_args)
 
-                # Call handler with parsed args
-                result = handler_func(**parsed_args)
+        # HYBRID/RPC/BOOT: Use async executor
+        return self._call_async_executor(cmd, parsed_args)
 
-                # Handle result
-                if isinstance(result, dict):
-                    if result.get("success", True):
-                        return 0
-                    else:
-                        if "error" in result:
-                            print(f"❌ {result['error']}")
-                        return 1
-                return 0
-            except Exception as e:
-                print(f"❌ Handler error: {e}")
-                import traceback
-                traceback.print_exc()
-                return 1
+    def _call_offline_handler(self, cmd: CLICommand, parsed_args: Dict[str, Any]) -> int:
+        """
+        Call OFFLINE handler directly.
 
-        # Fallback to async executor (legacy plugin execution)
+        Handler format: "module.path:function_name"
+        Returns: exit code (0=success, 1=error)
+        """
+        import importlib
+
+        if not cmd.handler or ":" not in cmd.handler:
+            logger.error(f"Invalid handler format: {cmd.handler}")
+            return 1
+
+        try:
+            module_path, func_name = cmd.handler.rsplit(":", 1)
+            module = importlib.import_module(module_path)
+            handler_func = getattr(module, func_name)
+
+            result = handler_func(**parsed_args)
+
+            # Handler returns dict with success field
+            if isinstance(result, dict):
+                return 0 if result.get("success", True) else 1
+
+            return 0
+
+        except ImportError as e:
+            logger.error(f"Module not found: {e}")
+            return 1
+        except AttributeError as e:
+            logger.error(f"Handler not found: {e}")
+            return 1
+        except TypeError as e:
+            logger.error(f"Handler argument error: {e}")
+            return 1
+        except Exception as e:
+            logger.error(f"Handler error: {e}")
+            return 1
+
+    def _call_async_executor(self, cmd: CLICommand, parsed_args: Dict[str, Any]) -> int:
+        """
+        Call handler via async CLIExecutor.
+
+        For HYBRID/RPC/BOOT modes that may need kernel interaction.
+        """
         response = asyncio.run(self._executor.execute(cmd, parsed_args))
 
         if response.success:
             if response.data is not None:
-                import json
                 print(json.dumps(response.data, indent=2, default=str))
             return 0
         else:
-            print(f"❌ Error: {response.error}")
+            print(f"Error: {response.error}")
             return 1
 
     def _parse_plugin_args(self, cmd: CLICommand, args: List[str]) -> Optional[Dict[str, Any]]:

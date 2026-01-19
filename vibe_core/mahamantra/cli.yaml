@@ -73,12 +73,12 @@ commands:
         required: true
 
   # ===========================================================================
-  # CHANT - Execute Mahamantra Cycle
+  # CHANT - Execute Mahamantra Cycle (Computation on Demand)
   # ===========================================================================
   - name: chant
-    handler: "vibe_core.mahamantra:cli_chant"
+    handler: "vibe_core.mahamantra.commands:cli_chant"
     help: "Execute a Mahamantra cycle (16-step atomic operation)"
-    execution_mode: hybrid
+    execution_mode: offline
     options:
       - name: "--rounds"
         type: int
