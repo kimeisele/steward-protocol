@@ -49,7 +49,6 @@ if TYPE_CHECKING:
     from vibe_core.phoenix import PhoenixConfig
     from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
-from .capability_registry import CapabilityRegistry
 from .errors import kernel_fault
 from .event_bus import Event, EventType, get_event_bus
 from .io_service import KernelIOService
@@ -218,13 +217,29 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self._status = KernelStatus.STOPPED
         self.vajra_seal()
 
-    def grant_capability(self, agent_id: str, capability: str) -> bool:
-        """Grant a capability to an agent. Delegated to Brahma."""
-        return self.brahma.register_capabilities(agent_id, [capability]) is None
+    def get_agent_capabilities(self, agent_id: str) -> List[str]:
+        """Get capabilities for an agent. KernelProtocol compliant."""
+        return self.brahma.get_agent_capabilities(agent_id)
 
-    def revoke_capability(self, agent_id: str, capability: str) -> bool:
-        """Revoke a capability from an agent. Delegated to Brahma."""
-        return self.brahma.terminate_agent(agent_id, f"Revoking {capability}")
+    def grant_capability(
+        self,
+        agent_id: str,
+        capabilities: List[str],
+        granter_id: str,
+        reason: Optional[str] = None,
+    ) -> Dict[str, object]:
+        """Grant capabilities to an agent. KernelProtocol compliant."""
+        return self.brahma.grant_capability(agent_id, capabilities, granter_id, reason)
+
+    def revoke_capability(
+        self,
+        agent_id: str,
+        capabilities: List[str],
+        revoker_id: str,
+        reason: Optional[str] = None,
+    ) -> Dict[str, object]:
+        """Revoke capabilities from an agent. KernelProtocol compliant."""
+        return self.brahma.revoke_capability(agent_id, capabilities, revoker_id, reason)
 
     @property
     def ledger(self) -> VibeLedger:
@@ -264,11 +279,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def _ledger(self):
         """Internal ledger access (for tests)."""
         return self.__ledger
-
-    @property
-    def _capability_registry(self) -> CapabilityRegistry:
-        """Capability registry access (delegated to Brahma)."""
-        return self.brahma._capability_registry
 
     def bind_genes(self, gene_names: List[str]) -> bool:
         return self.brahma.register_capabilities("kernel", gene_names) is None

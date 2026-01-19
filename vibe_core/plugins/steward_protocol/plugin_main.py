@@ -832,11 +832,11 @@ class StewardProtocolPlugin(KernelPlugin):
             logger.debug(f"📜 Agent '{agent_id}' has no capabilities in manifest")
             return
 
-        # Get current capabilities (from cartridge - potentially wrong)
-        current_caps = kernel._capability_registry.get_capabilities(agent_id)
+        # Get current capabilities (KernelProtocol compliant)
+        current_caps = kernel.get_agent_capabilities(agent_id)
 
-        # Grant manifest capabilities (SSOT)
-        result = kernel._capability_registry.grant(
+        # Grant manifest capabilities (SSOT) - KernelProtocol compliant
+        result = kernel.grant_capability(
             agent_id=agent_id,
             capabilities=manifest_caps,
             granter_id="steward_protocol",
