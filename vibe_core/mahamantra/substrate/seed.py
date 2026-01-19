@@ -41,6 +41,12 @@ from vibe_core.mahamantra.protocols._seed import (
     LILA as _PROTO_LILA,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    JIVA_CYCLE as _PROTO_JIVA_CYCLE,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    JIVA_QUALITIES as _PROTO_JIVA_QUALITIES,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MALA as _PROTO_MALA,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -392,6 +398,29 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 
 
 # =============================================================================
+# DERIVED: JIVA (50) - The Soul's Portion (Part and Parcel of Krishna)
+# =============================================================================
+# "mamaivāṁśo jīva-loke jīva-bhūtaḥ sanātanaḥ" (BG 15.7)
+# "The living entities are My eternal fragmental parts."
+#
+# Bhakti-rasamrita-sindhu: Jiva has 50 qualities in MINUTE quantity
+# (out of Krishna's 64). The 50 is the COUNT, not the magnitude.
+#
+# DERIVATION:
+# JIVA_CYCLE = MALA × QUARTERS = 108 × 4 = 432 (The Harmonic Frequency)
+# JIVA_QUALITIES = COSMIC_FRAME / JIVA_CYCLE = 21600 / 432 = 50
+#
+# 432 verified: MALA × QUARTERS = LILA × NAVA = WORDS × 27
+
+JIVA_CYCLE: Final[int] = MALA * QUARTERS  # 108 × 4 = 432
+JIVA_QUALITIES: Final[int] = COSMIC_FRAME // JIVA_CYCLE  # 21600 / 432 = 50
+
+# Verification: Multiple paths to 432
+assert JIVA_CYCLE == LILA * NAVA, "JIVA_CYCLE must equal LILA × NAVA (48 × 9)"
+assert JIVA_CYCLE // WORDS == 27, "JIVA_CYCLE / WORDS must equal 27 (Nakshatra)"
+
+
+# =============================================================================
 # VERIFICATION - Alle Ableitungen müssen stimmen
 # =============================================================================
 
@@ -407,6 +436,8 @@ assert LILA == 48, "Chaitanya Lila = 16 × 3"
 assert QUALITIES == 64, "Qualities = 16 × 4"
 assert NAVA == 9, "Nava = 8 + 1 (Navadha Bhakti)"
 assert MALA == 108, "Mala = 12 × 9"
+assert JIVA_CYCLE == 432, "Jiva Cycle = 108 × 4 = 432"
+assert JIVA_QUALITIES == 50, "Jiva Qualities = 21600 / 432 = 50"
 
 # =============================================================================
 # SSOT CROSS-CHECK: Derivations must match The Law (_seed.py)
@@ -422,6 +453,8 @@ assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
 assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
 assert HIDDEN_RESERVE == _PROTO_HIDDEN_RESERVE, "SSOT violation: HIDDEN_RESERVE != protocols/_seed.py"
 assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
+assert JIVA_CYCLE == _PROTO_JIVA_CYCLE, "SSOT violation: JIVA_CYCLE != protocols/_seed.py"
+assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)
 AKSARA_COUNT: Final[int] = WORDS * 2  # 32
@@ -610,6 +643,9 @@ __all__ = [
     "MALA",
     "ROUNDS",
     "DAILY_MANTRAS",
+    # Jiva (50) - Part and Parcel of Krishna
+    "JIVA_CYCLE",
+    "JIVA_QUALITIES",
     # The Cosmic Frame (Resolution)
     "COSMIC_FRAME",
     "NAKSHATRA_UNIT",
