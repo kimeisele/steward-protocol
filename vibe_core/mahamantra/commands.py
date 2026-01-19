@@ -21,10 +21,13 @@ __genesis__ = "0x7340d7d6"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, List, TypedDict
 
+from vibe_core.mahamantra.substrate.seed import NavaBhakti
+
 
 class ChantResult(TypedDict):
-    """Typed result for cli_chant command."""
+    """Typed result for cli_chant command (KIRTANAM - Chanting)."""
     success: bool
+    bhakti: str  # NavaBhakti.KIRTANAM
     rounds: int
     ticks: int
     final_position: int
@@ -99,6 +102,7 @@ def cli_chant(
 
     return ChantResult(
         success=True,
+        bhakti=NavaBhakti.KIRTANAM.value,
         rounds=rounds,
         ticks=total_ticks,
         final_position=results[-1]["position"] if results else 0,
@@ -127,8 +131,9 @@ class EventEntry(TypedDict, total=False):
 
 
 class ListenResult(TypedDict):
-    """Typed result for cli_listen command."""
+    """Typed result for cli_listen command (SRAVANAM - Hearing)."""
     success: bool
+    bhakti: str  # NavaBhakti.SRAVANAM
     source: str
     total_entries: int
     filtered_entries: int
@@ -261,6 +266,7 @@ def cli_listen(
 
     return ListenResult(
         success=True,
+        bhakti=NavaBhakti.SRAVANAM.value,
         source=source,
         total_entries=total_entries,
         filtered_entries=len(entries),

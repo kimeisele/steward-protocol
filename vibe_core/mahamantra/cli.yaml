@@ -22,11 +22,12 @@ description: "The Great Rhythm - Awakening Protocol Commands"
 
 commands:
   # ===========================================================================
-  # SANKIRTAN - Mass DNA Injection
+  # SANKIRTAN - Mass DNA Injection (DASYAM - Servitude/Delegate)
   # ===========================================================================
   - name: sankirtan
     handler: "vibe_core.mahamantra.substrate.sankirtan:cli_sankirtan"
     help: "Inject Mahajana DNA into orphan files (FOLDER_IS_WIRING)"
+    bhakti: dasyam
     execution_mode: offline
     options:
       - name: "--target"
@@ -41,11 +42,12 @@ commands:
         help: "Print detailed report after injection"
 
   # ===========================================================================
-  # SCAN - Code Discovery
+  # SCAN - Code Discovery (SMARANAM - Remembering/Store)
   # ===========================================================================
   - name: scan
     handler: "vibe_core.mahamantra.substrate.scanner:cli_scan"
     help: "Scan codebase for Mahajana declarations"
+    bhakti: smaranam
     execution_mode: offline
     options:
       - name: "--path"
@@ -60,11 +62,12 @@ commands:
         help: "Show only orphan files (no declaration)"
 
   # ===========================================================================
-  # RESOLVE - Mahajana Alias Resolution
+  # RESOLVE - Mahajana Alias Resolution (VANDANAM - Requesting/Asking)
   # ===========================================================================
   - name: resolve
     handler: "vibe_core.mahamantra.substrate.scanner:cli_resolve"
     help: "Resolve Mahajana by name, alias, or position"
+    bhakti: vandanam
     execution_mode: offline
     options:
       - name: "name"
@@ -73,11 +76,12 @@ commands:
         required: true
 
   # ===========================================================================
-  # CHANT - Execute Mahamantra Cycle (Computation on Demand)
+  # CHANT - Execute Mahamantra Cycle (KIRTANAM - Chanting/Emit)
   # ===========================================================================
   - name: chant
     handler: "vibe_core.mahamantra.commands:cli_chant"
     help: "Execute a Mahamantra cycle (16-step atomic operation)"
+    bhakti: kirtanam
     execution_mode: offline
     options:
       - name: "--rounds"
@@ -90,11 +94,12 @@ commands:
         help: "Show each step"
 
   # ===========================================================================
-  # LISTEN - Event Visibility (Shravanam before Kirtanam)
+  # LISTEN - Event Visibility (SRAVANAM - Hearing/Input)
   # ===========================================================================
   - name: listen
     handler: "vibe_core.mahamantra.commands:cli_listen"
     help: "Listen to system events (violations, syscalls, bus)"
+    bhakti: sravanam
     execution_mode: offline
     options:
       - name: "--source"
