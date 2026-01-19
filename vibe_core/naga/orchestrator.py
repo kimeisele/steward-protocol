@@ -88,7 +88,7 @@ class NagaOrchestrator:
         from vibe_core.naga.components.destructor import NagaDestructor
 
         # 1. BRAHMA creates the Kernel (Vishnu)
-        kernel = NagaBootloader.boot(config, correction_orchestrator)
+        kernel = NagaBootloader.boot(config, correction_orchestrator, ledger=ledger)
 
         # 2. SHIVA is prepared to destroy it
         destructor = NagaDestructor(kernel)

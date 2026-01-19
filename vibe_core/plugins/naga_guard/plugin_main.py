@@ -1,17 +1,20 @@
 """
-NAGA Guard Plugin - Federation Bootstrap + Gate Infiltration.
+NAGA Guard Plugin - Gate Infiltration (Federation lives IN kernel).
 
 "Niemand darf es merken" - they infiltrate invisibly.
 "Die Polizei, Wächter, Aufpasser" - at every gate.
 
+PHASE 1 REFACTOR: NAGA lives IN the kernel (Level -1 Foundation).
+This plugin NO LONGER bootstraps NAGA - it USES kernel.naga.
+NO SPLIT BRAIN - single NAGA instance owned by kernel.
+
 This plugin:
-1. BOOTS the NagaOrchestrator (Sesha, Takshaka, Vasuki, Cortex)
-2. WIRES EventBus -> FloodManager -> Cortex
-3. WIRES CommitAuthority -> CommitWatcher -> Cortex
-4. GUARDS every kernel hook with toxicity scanning
+1. WIRES EventBus -> FloodManager -> Cortex
+2. WIRES CommitAuthority -> CommitWatcher -> Cortex
+3. GUARDS every kernel hook with toxicity scanning
 
 Hooks:
-- on_boot: Bootstrap NAGA Federation
+- on_boot: Connect to kernel's NAGA Federation
 - on_tick_post: Cortex observation cycle
 - on_agent_pre_register: Scan agent oath for toxicity
 - on_task_submit: Scan task content for injection
@@ -122,67 +125,48 @@ class NagaGuardPlugin(KernelPlugin):
     # LIFECYCLE
     # =========================================================================
 
-    def on_init(
+    def on_boot(
         self,
         kernel: "KernelProtocol",
-        logger: Any,
-        config: Dict[str, Any],
     ) -> HookResult:
         """
-        Bootstrap NAGA Federation and connect to kernel infrastructure.
+        Connect to NAGA Federation (now bootstrapped IN the kernel).
+
+        PHASE 1 REFACTOR: NAGA lives IN the kernel, not as a plugin.
+        This plugin now USES kernel.naga instead of bootstrapping its own.
+        NO SPLIT BRAIN - single NAGA instance.
 
         Steps:
-        1. Get Ledger from kernel
-        2. Create CorrectionOrchestrator
-        3. Bootstrap NagaOrchestrator
-        4. Wire EventBus -> FloodManager
-        5. Wire CommitAuthority -> CommitWatcher (if available)
-        6. Connect services for gate guarding
+        1. Get NAGA from kernel (already bootstrapped)
+        2. Wire EventBus -> FloodManager
+        3. Wire CommitAuthority -> CommitWatcher (if available)
+        4. Connect services for gate guarding
         """
-        self._config = config
         try:
-            # 1. Get ledger from kernel
-            ledger = getattr(kernel, "ledger", None)
-            if ledger is None:
-                logger.warning("[NAGA] No ledger available - using in-memory")
-                from vibe_core.ledger import SQLiteLedger
+            # 1. Get NAGA from kernel (NO LONGER BOOTSTRAP - kernel owns NAGA)
+            self._orchestrator = getattr(kernel, "naga", None)
+            if self._orchestrator is None:
+                logger.warning("[NAGA.GUARD] No NAGA in kernel - guard disabled")
+                return HookResult(HookStatus.SUCCESS)
 
-                ledger = SQLiteLedger(":memory:")
+            logger.info(f"[NAGA.GUARD] Connected to kernel's NAGA - identity: {self._orchestrator._identity.fingerprint}")
 
-            # 2. Create CorrectionOrchestrator
-            from vibe_core.services.correction_dispatcher import (
-                BasicCorrectionDispatcher,
-                BasicCorrectionOrchestrator,
-            )
-
-            dispatcher = BasicCorrectionDispatcher()
-            correction_orchestrator = BasicCorrectionOrchestrator(dispatcher=dispatcher)
-
-            # 3. Bootstrap NagaOrchestrator
-            from vibe_core.naga import NagaOrchestrator
-
-            self._orchestrator = NagaOrchestrator.bootstrap(
-                ledger=ledger,
-                correction_orchestrator=correction_orchestrator,
-            )
-            logger.info(f"[NAGA] Federation bootstrapped - identity: {self._orchestrator.identity.fingerprint}")
-
-            # 4. Wire EventBus -> FloodManager -> Cortex
+            # 2. Wire EventBus -> FloodManager -> Cortex
             self._wire_eventbus(kernel)
 
-            # 5. Wire CommitAuthority -> CommitWatcher (if available)
+            # 3. Wire CommitAuthority -> CommitWatcher (if available)
             self._wire_commit_watcher(kernel)
 
-            # 6. Connect services for gate guarding
+            # 4. Connect services for gate guarding
             self._connect_services()
 
             if self._takshaka:
-                logger.info(f"[NAGA] Guard active (threshold={self._toxicity_threshold})")
+                logger.info(f"[NAGA.GUARD] Guard active (threshold={self._toxicity_threshold})")
 
             return HookResult(HookStatus.SUCCESS)
 
         except Exception as e:
-            logger.error(f"[NAGA] Bootstrap failed: {e}")
+            logger.error(f"[NAGA.GUARD] Connection failed: {e}")
             import traceback
 
             traceback.print_exc()
@@ -220,7 +204,7 @@ class NagaGuardPlugin(KernelPlugin):
 
     def _wire_commit_watcher(self, kernel: "KernelProtocol") -> None:
         """Wire CommitAuthority to CommitWatcher."""
-        if not self._orchestrator or not self._orchestrator.commit_watcher:
+        if not self._orchestrator or not self._orchestrator._commit_watcher:
             return
 
         try:
@@ -235,7 +219,7 @@ class NagaGuardPlugin(KernelPlugin):
                     commit_authority = state_service.commit_authority
 
             if commit_authority and hasattr(commit_authority, "add_observer"):
-                watcher = self._orchestrator.commit_watcher
+                watcher = self._orchestrator._commit_watcher
                 commit_authority.add_observer(watcher.observe)
                 logger.info("[NAGA] CommitAuthority -> CommitWatcher wired")
             else:

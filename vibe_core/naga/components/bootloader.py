@@ -17,7 +17,10 @@ __genesis__ = "0xba4beefb"  # GenesisByte: parampara % 37 == 0
 
 import logging
 import sys
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.ledger import VibeLedger
 
 from vibe_core.di import ServiceRegistry
 from vibe_core.naga.commit_watcher import NagaCommitWatcher as CommitWatcher
@@ -68,6 +71,7 @@ class NagaBootloader:
         config: Optional[NagaConfig],
         correction_orchestrator: "CorrectionOrchestratorProtocol" = None,
         key_store: Optional[KeyStoreProtocol] = None,
+        ledger: Optional["VibeLedger"] = None,
     ) -> "NagaKernel":
         """
         The Act of Creation.
@@ -139,6 +143,10 @@ class NagaBootloader:
             registry.register(sesha, force=True)
             if correction_orchestrator:
                 correction_orchestrator.dispatcher.register_handler("sesha", sesha)
+            # Inject kernel's ledger for 10,000-year persistence (NO SPLIT BRAIN)
+            if ledger:
+                sesha.inject_ledger(ledger)
+                logger.info("🐍 SESHA: Kernel ledger injected - Full persistence active")
 
         # Takshaka (Biter)
         takshaka = None
