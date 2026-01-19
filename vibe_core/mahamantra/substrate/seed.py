@@ -329,10 +329,20 @@ assert LILA // HARE_COUNT == SHARANAGATI  # 48 / 8 = 6
 
 
 class DharmaPillar(str, Enum):
-    """Die 4 Säulen des Dharma - Der Integritätscheck."""
+    """
+    Die 4 Säulen des Dharma - Der Integritätscheck.
+
+    THE DHARMA BULL (Srimad Bhagavatam 1.17):
+    In Satya Yuga the bull stands on 4 legs.
+    Each Yuga, one leg is cut by Kali.
+    In Kali Yuga, only SATYAM (truth) remains.
+
+    This is why SATYAM is the CRITICAL pillar.
+    All other pillars depend on truth first.
+    """
 
     DAYA = "mercy"  # Keine korrupten Daten
-    SATYAM = "truth"  # Keine Halluzination
+    SATYAM = "truth"  # Keine Halluzination (THE SURVIVING LEG)
     TAPAS = "austerity"  # Keine Ressourcen-Verschwendung
     SAUCAM = "purity"  # Keine unautorisierten Verbindungen
 
@@ -340,13 +350,30 @@ class DharmaPillar(str, Enum):
 DHARMA_PILLARS: Final[int] = len(DharmaPillar)  # 4
 assert DHARMA_PILLARS == QUARTERS  # 4
 
+# The Kali Yuga Reality: Only 1 pillar survives fully
+KALI_YUGA_LEG: Final[str] = DharmaPillar.SATYAM.value  # "truth"
+
 
 # =============================================================================
 # DERIVED: QUALITIES (64) - Die Vollständigkeit
 # =============================================================================
 # 64 = WORDS × QUARTERS = 16 × 4
+#
+# THE 48 vs 64 RELATIONSHIP (Chaitanya Lila vs Krishna Qualities):
+# - LILA = 48 = 16 × 3 (Manifest Runtime - what Chaitanya showed)
+# - QUALITIES = 64 = 16 × 4 (Full Potential - Krishna's complete qualities)
+# - Difference: 64 - 48 = 16 = WORDS (Hidden Reserve)
+#
+# In system terms:
+# - 48-bit: Active runtime operations
+# - 64-bit: Full system capacity
+# - 16-bit: Reserved/kernel space
 
 QUALITIES: Final[int] = WORDS * QUARTERS  # 64
+HIDDEN_RESERVE: Final[int] = QUALITIES - LILA  # 64 - 48 = 16
+
+# Verification: Hidden Reserve = WORDS (the seed itself)
+assert HIDDEN_RESERVE == WORDS, "Hidden reserve must equal WORDS (16)"
 
 
 # =============================================================================
@@ -567,10 +594,12 @@ __all__ = [
     "LILA",
     "NAVADVIPA",
     "PURI",
-    # Dharma (4)
+    # Dharma (4) + Kali Yuga
     "DharmaPillar",
     "DHARMA_PILLARS",
-    # Qualities (64)
+    "KALI_YUGA_LEG",
+    # Qualities (64) + Hidden Reserve
+    "HIDDEN_RESERVE",
     "QUALITIES",
     "AKSARA_COUNT",
     # Mala (108)
