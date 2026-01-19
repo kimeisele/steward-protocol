@@ -290,12 +290,16 @@ class CLILoader:
         # Parse args
         args: List[CLIArg] = []
         for arg_data in discovered.get("arguments", []):
+            # FOLDER_IS_WIRING: flag: true in yaml means type=bool
+            is_flag = arg_data.get("flag", False)
+            arg_type = bool if is_flag else cls._parse_type(arg_data.get("type", "str"))
+
             arg = CLIArg(
                 name=arg_data.get("name", ""),
-                type=cls._parse_type(arg_data.get("type", "str")),
+                type=arg_type,
                 help=arg_data.get("help", ""),
                 required=arg_data.get("required", False),
-                default=arg_data.get("default"),
+                default=arg_data.get("default", False if is_flag else None),
                 choices=arg_data.get("choices"),
             )
             args.append(arg)

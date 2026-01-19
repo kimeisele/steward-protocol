@@ -248,6 +248,84 @@ mahamantra = MahamantraLotus()
 lotus = mahamantra
 
 # =============================================================================
+# CLI ENTRY POINTS (Svatah-pramana - Truth is IN the module)
+# =============================================================================
+
+
+def cli_chant(
+    rounds: int = 1,
+    verbose: bool = False,
+) -> Dict[str, object]:
+    """
+    CLI Entry Point for Chant command.
+
+    Called by CLILoaderProtocol via mahamantra/cli.yaml manifest.
+    NO HARDCODING in UnifiedCLI - the truth is IN the module.
+
+    COMPUTATION ON DEMAND:
+        - Spawns Shadow Reactor
+        - Executes n rounds (1 round = 16 ticks = full Yajna cycle)
+        - Returns machine-readable state
+
+    Args:
+        rounds: Number of complete cycles (default: 1)
+        verbose: If True, print each tick
+
+    Returns:
+        Dict with cycle results (machine-readable).
+    """
+    from vibe_core.mahamantra.substrate.seed import WORDS
+
+    results: List[Dict[str, object]] = []
+    total_ticks = rounds * WORDS  # 1 round = 16 positions
+
+    # Spawn a Shadow Reactor (SANKIRTAN pattern - no singleton)
+    reactor = mahamantra.shadow.spawn(auto_discover=True)
+
+    if verbose:
+        print("=" * 60)
+        print("🕉️  MAHAMANTRA CHANT - Computation on Demand")
+        print("=" * 60)
+        print(f"Rounds: {rounds} | Ticks: {total_ticks}")
+        print("-" * 60)
+
+    for tick_num in range(total_ticks):
+        # Get tick state from Singularity clock
+        tick_state = mahamantra.tick()
+
+        # Process through Shadow Reactor (Yajna cycle)
+        shadow_state = reactor.tick(tick_state)
+
+        if verbose:
+            phase_emoji = "🔥" if shadow_state["phase"] == "bhoga" else "🙏" if shadow_state["phase"] == "prasadam" else "♻️"
+            print(
+                f"[{tick_num:02d}] {phase_emoji} {shadow_state['guardian']:12s} | "
+                f"{shadow_state['phase']:8s} | pos={shadow_state['position']:2d} | "
+                f"opcode={shadow_state['opcode']}"
+            )
+
+        results.append(dict(shadow_state))
+
+    if verbose:
+        print("-" * 60)
+        print(f"✅ Completed {rounds} round(s)")
+        print(f"   Cycles: {reactor._cycle_count} | Switches: {reactor._switch_count}")
+        print(f"   Parampara: {'✅ CONNECTED' if reactor.is_parampara_connected else '⚠️ DISCONNECTED'}")
+        print("=" * 60)
+
+    return {
+        "success": True,
+        "rounds": rounds,
+        "ticks": total_ticks,
+        "final_position": results[-1]["position"] if results else 0,
+        "final_guardian": results[-1]["guardian"] if results else "unknown",
+        "cycle_count": reactor._cycle_count,
+        "switch_count": reactor._switch_count,
+        "parampara_connected": reactor.is_parampara_connected,
+    }
+
+
+# =============================================================================
 # LAZY RE-EXPORT (Krishna routet alles)
 # =============================================================================
 # "from vibe_core.mahamantra import X" → delegates to substrate
@@ -261,4 +339,4 @@ def __getattr__(name: str):
     return getattr(substrate, name)
 
 
-__all__ = ["mahamantra", "lotus"]
+__all__ = ["mahamantra", "lotus", "cli_chant"]
