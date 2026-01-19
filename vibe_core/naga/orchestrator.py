@@ -35,9 +35,12 @@ if TYPE_CHECKING:
     from vibe_core.naga.flood import NagaFloodManager
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.ananta import AnantaService
     from vibe_core.naga.services.chitragupta import ChitraguptaService
     from vibe_core.naga.services.kaliya import KaliyaService
     from vibe_core.naga.services.karkotaka import KarkotakaService
+    from vibe_core.naga.services.narada import NaradaService
+    from vibe_core.naga.services.prahlad.service import PrahladService
 
     # Type aliases for properties
     from vibe_core.naga.services.sesha import SeshaService
@@ -135,7 +138,7 @@ class NagaOrchestrator:
         return self._kernel.chitragupta if self._kernel else None
 
     @property
-    def _narada(self) -> Optional[Any]:
+    def _narada(self) -> Optional["NaradaService"]:
         return self._kernel.narada if self._kernel else None
 
     @property
@@ -170,7 +173,7 @@ class NagaOrchestrator:
     # For `_run_boot_integrity_check`, we need `_prahlad`.
 
     @property
-    def _prahlad(self) -> Optional[Any]:
+    def _prahlad(self) -> Optional["PrahladService"]:
         """Prahlad access (Registry lookup with override support)."""
         if hasattr(self, "_prahlad_override"):
             return self._prahlad_override
@@ -185,24 +188,24 @@ class NagaOrchestrator:
             return None
 
     @_prahlad.setter
-    def _prahlad(self, value: Any) -> None:
+    def _prahlad(self, value: Optional["PrahladService"]) -> None:
         """Allow overriding Prahlad for tests."""
         self._prahlad_override = value
 
     @property
-    def sesha(self) -> Optional[Any]:
+    def sesha(self) -> Optional["SeshaService"]:
         return self._sesha
 
     @property
-    def takshaka(self) -> Optional[Any]:
+    def takshaka(self) -> Optional["TakshakaService"]:
         return self._takshaka
 
     @property
-    def vasuki(self) -> Optional[Any]:
+    def vasuki(self) -> Optional["VasukiService"]:
         return self._vasuki
 
     @property
-    def karkotaka(self) -> Optional[Any]:
+    def karkotaka(self) -> Optional["KarkotakaService"]:
         return self._karkotaka
 
     @property
@@ -214,17 +217,17 @@ class NagaOrchestrator:
         return self._chitragupta
 
     @property
-    def cortex(self) -> Optional[Any]:
+    def cortex(self) -> Optional["NagaCortex"]:
         return self._cortex
 
     @property
-    def _ananta(self) -> Optional[Any]:
+    def _ananta(self) -> Optional["AnantaService"]:
         if hasattr(self, "_ananta_override"):
             return self._ananta_override
         return None
 
     @_ananta.setter
-    def _ananta(self, value: Any) -> None:
+    def _ananta(self, value: Optional["AnantaService"]) -> None:
         self._ananta_override = value
 
     # =========================================================================
