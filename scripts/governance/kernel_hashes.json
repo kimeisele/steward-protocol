@@ -1,7 +1,7 @@
 {
-  "vibe_core/kernel_impl.py": "7efe0c5e017ac8c06e9abb67efb3fc0b66d71d250cfa95759424d0ece5be3fee",
+  "vibe_core/kernel_impl.py": "859d40068024efa89448e2ef055b0280a8d97ca23769afc990456eebeaa16046",
   "vibe_core/kernel_ops.py": "6a534cf9d2223afbb1e45a81b047305074389eea0bf80dc86c4d92aab641680a",
-  "vibe_core/ledger.py": "51908aa4920d050531c641a69fd5558a59d15dd05101f3948b5477fc4ad0e1aa",
+  "vibe_core/ledger.py": "00d22a5174521f23f2947da6690c41ca45d252076d33d3659044b4e40fabad81",
   "vibe_core/plugin_protocol.py": "d1809e9e733eacfed5ca3f66fe68245773181a6a965287650582fce164ad8057",
   "vibe_core/plugin_loader.py": "9c128fcedd4b79fd1bd3b5ba1dbf1692866d41b51d96d56bd83e46add0ee8d0c",
   "vibe_core/narasimha.py": "83cf86e74e4e41ddb56da01fd8714ce6143328e05446f2e05edac6b3896828c0",
@@ -22,5 +22,5 @@
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
   ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
   ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
-  "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171"
+  "scripts/governance/vishnu_guard.py": "98b1436638d405ede2fc082ddde086997364851737826c80862c424a2b2835a2"
 }
