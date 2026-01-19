@@ -62,7 +62,7 @@ class TestFullRoutingFlow:
         assert result.mahajana in (Mahajana.JANAKA, Mahajana.PRAHLADA)
 
     def test_spawn_cognition_routes_to_brahma(self):
-        """SPAWN_COGNITION → ALLOC_MEM → BRAHMA."""
+        """SPAWN_COGNITION → LOAD_ROOT → BRAHMA (Position 1 per SSOT)."""
         cognitive = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.95,
@@ -71,11 +71,11 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.ALLOC_MEM
+        assert result.opcode == MantraOpCode.LOAD_ROOT  # Position 1 = Brahma
         assert result.mahajana == Mahajana.BRAHMA
 
     def test_destroy_cognition_routes_to_shambhu(self):
-        """DESTROY_COGNITION → GARBAGE_COLLECT → SHAMBHU."""
+        """DESTROY_COGNITION → INIT_THREAD → SHAMBHU (Position 3 per SSOT)."""
         cognitive = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.95,
@@ -84,11 +84,11 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.TYPE_CHECK
+        assert result.opcode == MantraOpCode.INIT_THREAD  # Position 3 = Shambhu
         assert result.mahajana == Mahajana.SHAMBHU
 
     def test_swear_oath_routes_to_bhishma(self):
-        """SWEAR_OATH → COMMIT_LOG → BHISHMA."""
+        """SWEAR_OATH → LEDGER_SIGN → BHISHMA (Position 11 per SSOT)."""
         cognitive = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.95,
@@ -97,11 +97,11 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.LEDGER_SIGN
+        assert result.opcode == MantraOpCode.LEDGER_SIGN  # Position 11 = Bhishma
         assert result.mahajana == Mahajana.BHISHMA
 
     def test_broadcast_event_routes_to_narada(self):
-        """BROADCAST_EVENT → PULSE_SYNC → NARADA (legacy) or MANU (vyuha)."""
+        """BROADCAST_EVENT → ALLOC_MEM → NARADA (Position 2 per SSOT)."""
         cognitive = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.95,
@@ -110,9 +110,8 @@ class TestFullRoutingFlow:
         result = route(cognitive)
 
         assert result.success
-        assert result.opcode == MantraOpCode.DHARMA_TEST
-        # PULSE_SYNC maps to NARADA (legacy) or MANU (vyuha)
-        assert result.mahajana in (Mahajana.NARADA, Mahajana.MANU)
+        assert result.opcode == MantraOpCode.ALLOC_MEM  # Position 2 = Narada
+        assert result.mahajana == Mahajana.NARADA
 
 
 class TestRouteTargets:

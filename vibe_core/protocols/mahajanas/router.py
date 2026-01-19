@@ -78,61 +78,76 @@ class MahajanaRoute:
 
 
 # =============================================================================
-# THE ROUTING TABLE - Derived from the Mahamantra Sequence
+# THE ROUTING TABLE - DERIVED FROM SSOT (substrate/opcode.py + seed.py)
 # =============================================================================
 #
-# CHATUR-VYUHA ARCHITECTURE (NEW):
-# ================================
+# SSOT HIERARCHY (per MAHAPROMPT.md):
+#   substrate/seed.py → substrate/opcode.py → THIS FILE
+#
+# CHATUR-VYUHA ARCHITECTURE:
+# ==========================
 # Each quarter has 1 HEAD (Avatara) + 3 Workers (Mahajanas).
-# HEAD positions: 1, 5, 9, 13 (owned by Avataras, not Mahajanas)
-# Worker positions: 2-4, 6-8, 10-12, 14-16 (owned by Mahajanas)
+# HEAD positions: 0, 4, 8, 12 (0-indexed, per seed.py ALL_GUARDIANS)
+# Worker positions: 1-3, 5-7, 9-11, 13-15
 #
-# QUARTER 1: GENESIS (H K H K)
-#   HEAD: Prithu (SYS_WAKE) + Brahma, Narada, Shambhu
-# QUARTER 2: DHARMA (K K H H)
-#   HEAD: Vyasa (ASSERT_TRUTH) + Kumaras, Kapila, Manu
-# QUARTER 3: KARMA (H R H R)
-#   HEAD: Parashurama (FETCH_RES) + Prahlada, Janaka, Bhishma
-# QUARTER 4: MOKSHA (R R H H)
-#   HEAD: Nrisimha (CACHE_STATE) + Bali, Shuka, Yamaraja
-#
-# The Mahamantra is the CLOCK. Each word triggers an OpCode.
-# HEAD OpCodes are handled by Avataras (see vyuha.py).
-# Worker OpCodes are handled by Mahajanas (this table).
+# Position → Guardian (from seed.py ALL_GUARDIANS):
+#   0: VYASA (HEAD)     4: PRITHU (HEAD)    8: PARASHURAMA (HEAD)   12: NRISIMHA (HEAD)
+#   1: BRAHMA           5: KUMARAS          9: PRAHLADA             13: BALI
+#   2: NARADA           6: KAPILA          10: JANAKA               14: SHUKA
+#   3: SHAMBHU          7: MANU            11: BHISHMA              15: YAMARAJA
 
-# -----------------------------------------------------------------------------
-# VYUHA-ALIGNED ROUTING TABLE (NEW - 1:1 Mahajana:OpCode)
-# -----------------------------------------------------------------------------
-# This table maps the 12 Worker OpCodes to their Mahajanas.
-# HEAD OpCodes (positions 1, 5, 9, 13) are NOT in this table.
-# Use VyuhaRouter for full cycle-aware routing.
+# Import SSOT
+from vibe_core.mahamantra.substrate.opcode import MAHAJANA_OPCODES
 
-_VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = {
-    # --- QUARTER 1: GENESIS (Workers only) ---
-    MantraOpCode.LOAD_ROOT: MahajanaRoute(MantraOpCode.LOAD_ROOT, Mahajana.BRAHMA, quarter=1, position=2),
-    MantraOpCode.ALLOC_MEM: MahajanaRoute(MantraOpCode.ALLOC_MEM, Mahajana.NARADA, quarter=1, position=3),
-    MantraOpCode.INIT_THREAD: MahajanaRoute(MantraOpCode.INIT_THREAD, Mahajana.SHAMBHU, quarter=1, position=4),
-    # --- QUARTER 2: DHARMA (Workers only) ---
-    MantraOpCode.BIND_SYMBOL: MahajanaRoute(MantraOpCode.BIND_SYMBOL, Mahajana.KUMARAS, quarter=2, position=6),
-    MantraOpCode.TYPE_CHECK: MahajanaRoute(MantraOpCode.TYPE_CHECK, Mahajana.KAPILA, quarter=2, position=7),
-    MantraOpCode.DHARMA_TEST: MahajanaRoute(MantraOpCode.DHARMA_TEST, Mahajana.MANU, quarter=2, position=8),
-    # --- QUARTER 3: KARMA (Workers only) ---
-    MantraOpCode.EXTEND_CAP: MahajanaRoute(MantraOpCode.EXTEND_CAP, Mahajana.PRAHLADA, quarter=3, position=10),
-    MantraOpCode.STATE_SYNC: MahajanaRoute(MantraOpCode.STATE_SYNC, Mahajana.JANAKA, quarter=3, position=11),
-    MantraOpCode.LEDGER_SIGN: MahajanaRoute(MantraOpCode.LEDGER_SIGN, Mahajana.BHISHMA, quarter=3, position=12),
-    # --- QUARTER 4: MOKSHA (R R H H) - Vyuha 1:1 mapping ---
-    # HEAD: Nrisimha → YIELD_CPU (not in this table)
-    MantraOpCode.IO_FLUSH: MahajanaRoute(MantraOpCode.IO_FLUSH, Mahajana.BALI, quarter=4, position=14),
-    MantraOpCode.LOG_EMIT: MahajanaRoute(MantraOpCode.LOG_EMIT, Mahajana.SHUKA, quarter=4, position=15),
-    MantraOpCode.AUDIT_SEAL: MahajanaRoute(MantraOpCode.AUDIT_SEAL, Mahajana.YAMARAJA, quarter=4, position=16),
-}
 
-# HEAD OpCodes (owned by Avataras, not Mahajanas)
+def _derive_routing_table() -> Dict[MantraOpCode, MahajanaRoute]:
+    """
+    Derive routing table from SSOT (MAHAJANA_OPCODES in opcode.py).
+
+    NO MANUAL MAPPING. The SSOT determines everything.
+    """
+    table: Dict[MantraOpCode, MahajanaRoute] = {}
+
+    # Reverse MAHAJANA_OPCODES: opcode → mahajana_name
+    opcode_to_name = {opcode: name for name, opcode in MAHAJANA_OPCODES.items()}
+
+    for opcode in MantraOpCode:
+        position = opcode.value  # OpCode value IS the position (SSOT)
+        quarter = (position // 4) + 1  # 1-4 quarters
+
+        name = opcode_to_name.get(opcode)
+        if name is None:
+            continue  # Skip if not in MAHAJANA_OPCODES (shouldn't happen)
+
+        # Skip HEADs (Avataras) - they're not in Mahajana enum
+        if name in ("vyasa", "prithu", "parashurama", "nrisimha"):
+            continue
+
+        # Get Mahajana enum value
+        try:
+            mahajana = Mahajana(name)
+        except ValueError:
+            continue  # Not a Mahajana
+
+        table[opcode] = MahajanaRoute(
+            opcode=opcode,
+            mahajana=mahajana,
+            quarter=quarter,
+            position=position,
+        )
+
+    return table
+
+
+# SSOT-derived routing table (replaces manual _VYUHA_ROUTING_TABLE)
+_VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = _derive_routing_table()
+
+# HEAD OpCodes (positions 0, 4, 8, 12 - owned by Avataras per seed.py)
 HEAD_OPCODES: set = {
-    MantraOpCode.SYS_WAKE,  # Q1 HEAD: Prithu
-    MantraOpCode.COMPILE_AST,  # Q2 HEAD: Vyasa
-    MantraOpCode.EXEC_OP,  # Q3 HEAD: Parashurama
-    MantraOpCode.YIELD_CPU,  # Q4 HEAD: Nrisimha
+    MantraOpCode.SYS_WAKE,     # Position 0: VYASA (Genesis HEAD)
+    MantraOpCode.COMPILE_AST,  # Position 4: PRITHU (Dharma HEAD)
+    MantraOpCode.EXEC_OP,      # Position 8: PARASHURAMA (Karma HEAD)
+    MantraOpCode.YIELD_CPU,    # Position 12: NRISIMHA (Moksha HEAD)
 }
 
 # -----------------------------------------------------------------------------

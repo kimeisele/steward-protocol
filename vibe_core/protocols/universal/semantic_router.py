@@ -260,7 +260,7 @@ class SemanticRouter:
 
         # Intent defaults
         for item in mappings["intent_defaults"]:
-            opcode = MantraOpCode(item["opcode"].lower())
+            opcode = MantraOpCode[item["opcode"]]  # Get by name (e.g., "EXTEND_CAP")
             try:
                 route = self._router.get_route(opcode)
                 enhanced["intent_routes"].append(
@@ -285,7 +285,7 @@ class SemanticRouter:
 
         # Syscall routes
         for item in mappings["syscall_mappings"]:
-            opcode = MantraOpCode(item["opcode"].lower())
+            opcode = MantraOpCode[item["opcode"]]  # Get by name
             try:
                 route = self._router.get_route(opcode)
                 enhanced["syscall_routes"].append(
