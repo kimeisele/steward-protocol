@@ -62,24 +62,32 @@ INTENT_TO_DEFAULT_OPCODE: Dict[IntentType, MantraOpCode] = {
 # =============================================================================
 # SYSCALL → OPCODE MAPPING (Execute Intent Details)
 # =============================================================================
+# SSOT: Derived from substrate/opcode.py (Position = OpCode = Mahajana)
+#
+# Position 1: BRAHMA → LOAD_ROOT (Creation)
+# Position 2: NARADA → ALLOC_MEM (Communication)
+# Position 3: SHAMBHU → INIT_THREAD (Destruction)
+# Position 7: MANU → DHARMA_TEST (Law)
+# Position 10: JANAKA → STATE_SYNC (Duty)
+# Position 11: BHISHMA → LEDGER_SIGN (Vow)
 
 # When IntentType.EXECUTE, the SyscallType refines which OpCode
 SYSCALL_TO_OPCODE: Dict[SyscallType, MantraOpCode] = {
     # Agent Lifecycle (Creation = Brahma, Destruction = Shambhu)
-    SyscallType.SPAWN_COGNITION: MantraOpCode.ALLOC_MEM,  # Brahma creates
-    SyscallType.DESTROY_COGNITION: MantraOpCode.TYPE_CHECK,  # Shambhu destroys
+    SyscallType.SPAWN_COGNITION: MantraOpCode.LOAD_ROOT,  # Position 1 = Brahma creates
+    SyscallType.DESTROY_COGNITION: MantraOpCode.INIT_THREAD,  # Position 3 = Shambhu destroys
     # Capability Management (Manu = Law)
-    SyscallType.GRANT_MANDATE: MantraOpCode.INIT_THREAD,  # Manu binds permissions
-    SyscallType.REVOKE_MANDATE: MantraOpCode.TYPE_CHECK,  # Shambhu removes
-    # Resource Management (Allocation)
-    SyscallType.ALLOCATE_PRANA: MantraOpCode.ALLOC_MEM,  # Allocation
-    SyscallType.TRANSFER_PRANA: MantraOpCode.EXTEND_CAP,  # Transfer = service
+    SyscallType.GRANT_MANDATE: MantraOpCode.DHARMA_TEST,  # Position 7 = Manu binds permissions
+    SyscallType.REVOKE_MANDATE: MantraOpCode.INIT_THREAD,  # Position 3 = Shambhu removes
+    # Resource Management (Narada = Communication)
+    SyscallType.ALLOCATE_PRANA: MantraOpCode.ALLOC_MEM,  # Position 2 = Narada allocates
+    SyscallType.TRANSFER_PRANA: MantraOpCode.EXTEND_CAP,  # Position 9 = Prahlada transfer
     # Governance (Bhishma = Vow)
-    SyscallType.SWEAR_OATH: MantraOpCode.LEDGER_SIGN,  # Bhishma commits vows
-    SyscallType.RECORD_KARMA: MantraOpCode.LEDGER_SIGN,  # Bhishma writes ledger
+    SyscallType.SWEAR_OATH: MantraOpCode.LEDGER_SIGN,  # Position 11 = Bhishma commits vows
+    SyscallType.RECORD_KARMA: MantraOpCode.LEDGER_SIGN,  # Position 11 = Bhishma writes ledger
     # Communication (Narada = Messenger)
-    SyscallType.DISPATCH_TASK: MantraOpCode.EXTEND_CAP,  # Janaka executes
-    SyscallType.BROADCAST_EVENT: MantraOpCode.DHARMA_TEST,  # Narada broadcasts
+    SyscallType.DISPATCH_TASK: MantraOpCode.STATE_SYNC,  # Position 10 = Janaka executes
+    SyscallType.BROADCAST_EVENT: MantraOpCode.ALLOC_MEM,  # Position 2 = Narada broadcasts
 }
 
 

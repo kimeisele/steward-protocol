@@ -79,42 +79,50 @@ class TestIntentTypeTranslation:
 
 
 class TestSyscallTypeTranslation:
-    """Test SyscallType → OpCode translations (high priority)."""
+    """Test SyscallType → OpCode translations (high priority).
 
-    def test_spawn_cognition_maps_to_alloc_mem(self):
-        """SPAWN_COGNITION → ALLOC_MEM (Brahma creates)."""
+    SSOT: substrate/opcode.py defines Position = OpCode = Mahajana
+    - Position 1: BRAHMA → LOAD_ROOT (Creation)
+    - Position 2: NARADA → ALLOC_MEM (Communication)
+    - Position 3: SHAMBHU → INIT_THREAD (Destruction)
+    - Position 7: MANU → DHARMA_TEST (Law)
+    - Position 11: BHISHMA → LEDGER_SIGN (Vow)
+    """
+
+    def test_spawn_cognition_maps_to_load_root(self):
+        """SPAWN_COGNITION → LOAD_ROOT (Position 1 = Brahma creates)."""
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
             syscall_type="SPAWN_COGNITION"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.ALLOC_MEM
+        assert bridge_result.opcode == MantraOpCode.LOAD_ROOT
         assert bridge_result.confidence >= 0.9
         assert "syscall" in bridge_result.source
 
-    def test_destroy_cognition_maps_to_garbage_collect(self):
-        """DESTROY_COGNITION → GARBAGE_COLLECT (Shambhu destroys)."""
+    def test_destroy_cognition_maps_to_init_thread(self):
+        """DESTROY_COGNITION → INIT_THREAD (Position 3 = Shambhu destroys)."""
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
             syscall_type="DESTROY_COGNITION"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.TYPE_CHECK
+        assert bridge_result.opcode == MantraOpCode.INIT_THREAD
 
-    def test_grant_mandate_maps_to_bind_ctx(self):
-        """GRANT_MANDATE → BIND_CTX (Manu binds permissions)."""
+    def test_grant_mandate_maps_to_dharma_test(self):
+        """GRANT_MANDATE → DHARMA_TEST (Position 7 = Manu binds permissions)."""
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
             syscall_type="GRANT_MANDATE"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.INIT_THREAD
+        assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
 
-    def test_swear_oath_maps_to_commit_log(self):
-        """SWEAR_OATH → COMMIT_LOG (Bhishma commits vows)."""
+    def test_swear_oath_maps_to_ledger_sign(self):
+        """SWEAR_OATH → LEDGER_SIGN (Position 11 = Bhishma commits vows)."""
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
@@ -123,15 +131,15 @@ class TestSyscallTypeTranslation:
         bridge_result = translate(result)
         assert bridge_result.opcode == MantraOpCode.LEDGER_SIGN
 
-    def test_broadcast_event_maps_to_pulse_sync(self):
-        """BROADCAST_EVENT → PULSE_SYNC (Narada broadcasts)."""
+    def test_broadcast_event_maps_to_alloc_mem(self):
+        """BROADCAST_EVENT → ALLOC_MEM (Position 2 = Narada broadcasts)."""
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
             syscall_type="BROADCAST_EVENT"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.DHARMA_TEST
+        assert bridge_result.opcode == MantraOpCode.ALLOC_MEM
 
 
 class TestRouteTargetTranslation:
@@ -220,15 +228,15 @@ class TestTranslationPriority:
 
     def test_syscall_takes_priority_over_default(self):
         """SyscallType overrides default IntentType mapping."""
-        # EXECUTE defaults to EXEC_SERVICE
-        # But SPAWN_COGNITION should override to ALLOC_MEM
+        # EXECUTE defaults to EXTEND_CAP
+        # But SPAWN_COGNITION should override to LOAD_ROOT (Brahma)
         result = CognitiveResult(
             intent_type=IntentType.EXECUTE,
             confidence=0.9,
             syscall_type="SPAWN_COGNITION"
         )
         bridge_result = translate(result)
-        assert bridge_result.opcode == MantraOpCode.ALLOC_MEM
+        assert bridge_result.opcode == MantraOpCode.LOAD_ROOT
         assert "syscall" in bridge_result.source
 
     def test_target_takes_priority_for_route(self):
@@ -333,25 +341,34 @@ class TestBridgeResult:
 
 
 class TestSemanticConsistency:
-    """Test that mappings are semantically consistent."""
+    """Test that mappings are semantically consistent.
+
+    SSOT: substrate/opcode.py defines Position = OpCode = Mahajana
+    - Position 1: BRAHMA → LOAD_ROOT (Creation)
+    - Position 2: NARADA → ALLOC_MEM (Communication/Allocation)
+    - Position 3: SHAMBHU → INIT_THREAD (Destruction)
+    - Position 11: BHISHMA → LEDGER_SIGN (Vow/Commitment)
+    """
 
     def test_creation_syscalls_map_to_creation_opcodes(self):
-        """Creation-related syscalls map to creation opcodes."""
-        # SPAWN = creation → ALLOC_MEM (allocation/creation)
-        assert SYSCALL_TO_OPCODE[SyscallType.SPAWN_COGNITION] == MantraOpCode.ALLOC_MEM
+        """Creation-related syscalls map to BRAHMA (LOAD_ROOT)."""
+        # SPAWN = creation → LOAD_ROOT (Position 1 = Brahma)
+        assert SYSCALL_TO_OPCODE[SyscallType.SPAWN_COGNITION] == MantraOpCode.LOAD_ROOT
+        # ALLOCATE = allocation → ALLOC_MEM (Position 2 = Narada handles communication/allocation)
         assert SYSCALL_TO_OPCODE[SyscallType.ALLOCATE_PRANA] == MantraOpCode.ALLOC_MEM
 
     def test_destruction_syscalls_map_to_cleanup_opcodes(self):
-        """Destruction-related syscalls map to cleanup opcodes."""
-        # DESTROY = destruction → GARBAGE_COLLECT (cleanup)
-        assert SYSCALL_TO_OPCODE[SyscallType.DESTROY_COGNITION] == MantraOpCode.TYPE_CHECK
-        assert SYSCALL_TO_OPCODE[SyscallType.REVOKE_MANDATE] == MantraOpCode.TYPE_CHECK
+        """Destruction-related syscalls map to SHAMBHU (INIT_THREAD)."""
+        # DESTROY = destruction → INIT_THREAD (Position 3 = Shambhu)
+        assert SYSCALL_TO_OPCODE[SyscallType.DESTROY_COGNITION] == MantraOpCode.INIT_THREAD
+        assert SYSCALL_TO_OPCODE[SyscallType.REVOKE_MANDATE] == MantraOpCode.INIT_THREAD
 
-    def test_commitment_syscalls_map_to_commit_log(self):
-        """Commitment-related syscalls map to COMMIT_LOG (Bhishma)."""
+    def test_commitment_syscalls_map_to_ledger_sign(self):
+        """Commitment-related syscalls map to BHISHMA (LEDGER_SIGN)."""
         assert SYSCALL_TO_OPCODE[SyscallType.SWEAR_OATH] == MantraOpCode.LEDGER_SIGN
         assert SYSCALL_TO_OPCODE[SyscallType.RECORD_KARMA] == MantraOpCode.LEDGER_SIGN
 
-    def test_communication_syscalls_map_to_pulse_sync(self):
-        """Communication-related syscalls map to PULSE_SYNC (Narada)."""
-        assert SYSCALL_TO_OPCODE[SyscallType.BROADCAST_EVENT] == MantraOpCode.DHARMA_TEST
+    def test_communication_syscalls_map_to_alloc_mem(self):
+        """Communication-related syscalls map to NARADA (ALLOC_MEM)."""
+        # BROADCAST = communication → ALLOC_MEM (Position 2 = Narada)
+        assert SYSCALL_TO_OPCODE[SyscallType.BROADCAST_EVENT] == MantraOpCode.ALLOC_MEM
