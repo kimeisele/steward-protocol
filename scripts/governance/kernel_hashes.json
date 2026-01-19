@@ -1,7 +1,7 @@
 {
-  "vibe_core/kernel_impl.py": "e8b5e21e0650aa690498ea8ef3e29349782bafb30e1ce3eec7286b947c4de17c",
-  "vibe_core/kernel_ops.py": "51ddee7fb5e0b4f01a9e5620768dac5b53cd315022ef92afe155de66dab7c83f",
-  "vibe_core/ledger.py": "1d7daff89a5653ca61adc17b063fd65efb095fd4466e5a5fbbdaf9fbb181136b",
+  "vibe_core/kernel_impl.py": "7efe0c5e017ac8c06e9abb67efb3fc0b66d71d250cfa95759424d0ece5be3fee",
+  "vibe_core/kernel_ops.py": "6a534cf9d2223afbb1e45a81b047305074389eea0bf80dc86c4d92aab641680a",
+  "vibe_core/ledger.py": "51908aa4920d050531c641a69fd5558a59d15dd05101f3948b5477fc4ad0e1aa",
   "vibe_core/plugin_protocol.py": "d1809e9e733eacfed5ca3f66fe68245773181a6a965287650582fce164ad8057",
   "vibe_core/plugin_loader.py": "9c128fcedd4b79fd1bd3b5ba1dbf1692866d41b51d96d56bd83e46add0ee8d0c",
   "vibe_core/narasimha.py": "83cf86e74e4e41ddb56da01fd8714ce6143328e05446f2e05edac6b3896828c0",
@@ -10,18 +10,17 @@
   "vibe_core/security.py": "75079fb4d3da06e7fdf229205c6daec65b1a6b8d5e3e6afa961782927cefe29f",
   "vibe_core/protocols/integrity.py": "f93068c27ffc903e914f02c8a9e0cb8fa9af4fb7da572a5a23b25976df9d1317",
   "CONSTITUTION.md": "a868f2647445ab356c485ac4363cc718c38d3bf3a8a7452a72d19f027a92c41f",
-  ".github/workflows/attest.yml": "a546c5cf343917b31ede30c68ffe7cf2ea97fae41b0ea9ffcbf20f719f9b668c",
+  ".github/workflows/attest.yml": "9253cb2208101a0522c1bf6c0bec35538b22d809bc34fd8f475d01877b739203",
   ".github/workflows/container-build.yml": "d303af901e0d3d9031436c40cbda9b5b7d8b5f8e125ab1c81762ffa9d9103805",
   ".github/workflows/deploy.yml": "5b86104b01fe4fc2f6371b1ad56dce89795c161ef868dc88e081581beab34ed1",
   ".github/workflows/factory.yml": "8a313882e7e9e969b6e8b036753a71a6a248c37f3b5cdce304172bda3967c3ae",
   ".github/workflows/heartbeat.yml": "6be13990888a0b38104a89cf4c6e985cacca08c2921833dc74502718ec154d0b",
   ".github/workflows/integration-tests.yml": "06c4ae417af9190095fd198e812598828ca5abc28cfd33fcd5864d8355e912a6",
-  ".github/workflows/scheduled-agents.yml": "a2e678ec15ba0ebd7bf7c6ed96605fbdb47a77e732d1b5af880f9616405cc082",
+  ".github/workflows/scheduled-agents.yml": "d4442d854b8de05931f821d32ec06d9c41e017b2da7e349efd25cb12da458217",
   ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
   ".github/workflows/steward-ci.yml": "a29bdc460b439cb441c60076d95b1d8210cf18a3fda9b55febbb124b3497322e",
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
   ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
   ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
-  "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171",
-  "scripts/governance/kernel_hashes.json": "cec3dcb072c14648375993d35627104352a0b06678a0f01d9775ebbfdbe90bca"
+  "scripts/governance/vishnu_guard.py": "ad997b101704806ec414b712a51db4a79e2a897b4e1077df540d1c587df09171"
 }

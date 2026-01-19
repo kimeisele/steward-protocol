@@ -11,46 +11,47 @@ on:
 jobs:
   # =========================================================================
   # JOB 1: Agent City Leaderboard Update (Every 6 hours)
+  # DISABLED: Scripts do not exist yet (agent-city/scripts/*.py)
   # =========================================================================
-  agent-city-leaderboard:
-    name: "📊 Agent City Leaderboard"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Dependencies
-        run: |
-          pip install --upgrade pip
-          pip install Pillow
-
-      - name: Collect Stats
-        run: |
-          PYTHONPATH=. python3 agent-city/scripts/collect_stats.py
-
-      - name: Generate Leaderboard
-        run: |
-          PYTHONPATH=. python3 agent-city/scripts/generate_leaderboard.py
-
-      - name: Render Dashboard
-        run: |
-          PYTHONPATH=. python3 agent-city/scripts/render_dashboard.py
-
-      - name: Commit Changes
-        run: |
-          git config --global user.name "Agent City Bot"
-          git config --global user.email "agent-city@steward.protocol"
-          git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
-          git commit -m "chore: Update Agent City stats [skip ci]" || echo "No changes to commit"
-          git push
+  # agent-city-leaderboard:
+  #   name: "📊 Agent City Leaderboard"
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #
+  #     - name: Install Dependencies
+  #       run: |
+  #         pip install --upgrade pip
+  #         pip install Pillow
+  #
+  #     - name: Collect Stats
+  #       run: |
+  #         PYTHONPATH=. python3 agent-city/scripts/collect_stats.py
+  #
+  #     - name: Generate Leaderboard
+  #       run: |
+  #         PYTHONPATH=. python3 agent-city/scripts/generate_leaderboard.py
+  #
+  #     - name: Render Dashboard
+  #       run: |
+  #         PYTHONPATH=. python3 agent-city/scripts/render_dashboard.py
+  #
+  #     - name: Commit Changes
+  #       run: |
+  #         git config --global user.name "Agent City Bot"
+  #         git config --global user.email "agent-city@steward.protocol"
+  #         git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
+  #         git commit -m "chore: Update Agent City stats [skip ci]" || echo "No changes to commit"
+  #         git push
 
   # =========================================================================
   # JOB 2: AUDITOR Patrol (Daily at 6 UTC)
